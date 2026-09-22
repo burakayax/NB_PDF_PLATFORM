@@ -60,7 +60,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-white">Eklenecek Koltuk</p>
-              <p className="text-xs text-slate-500">her koltuk {fmt(unitPrice)}/ay (KDV hariç)</p>
+              <p className="text-xs text-slate-400">her koltuk {fmt(unitPrice)}/ay (KDV hariç)</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -100,18 +100,18 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
         {/* Pricing */}
         <div className="mb-5 grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Aylık</p>
+            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Aylık</p>
             <p className="text-2xl font-black text-white">{fmt(monthlyTotal)}</p>
-            <p className="text-xs text-slate-500 mt-0.5">/ay (KDV hariç)</p>
+            <p className="text-xs text-slate-400 mt-0.5">/ay (KDV hariç)</p>
           </div>
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Yıllık</p>
+            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Yıllık</p>
             <p className="text-2xl font-black text-white">{fmt(yearlyPerMonth)}</p>
             <p className="text-xs text-emerald-500 mt-0.5">{fmt(yearlyTotal)}/yıl · %17 tasarruf</p>
           </div>
         </div>
 
-        <p className="mb-3 text-xs text-slate-500 text-center">
+        <p className="mb-3 text-xs text-slate-400 text-center">
           Ödeme onayında KDV dökümü, promosyon kodu ve yasal onay adımları gösterilecektir.
         </p>
 

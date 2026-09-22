@@ -64,9 +64,9 @@ function KpiCard({ label, value, sub, icon: Icon, accent, delta, deltaLabel, spa
           </span>
         ) : null}
       </div>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
       <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-white">{value}</p>
-      <p className="mt-1 min-h-[16px] text-xs text-slate-500">{sub}{delta !== undefined && delta !== null && deltaLabel ? <span className="text-slate-600"> · {deltaLabel}</span> : null}</p>
+      <p className="mt-1 min-h-[16px] text-xs text-slate-400">{sub}{delta !== undefined && delta !== null && deltaLabel ? <span className="text-slate-400"> · {deltaLabel}</span> : null}</p>
       {spark && spark.length > 1 ? <div className="mt-3"><Spark data={spark} stroke={a.stroke} /></div> : null}
     </div>
   );
@@ -119,7 +119,7 @@ const PeriodToggle = ({ value, onChange }: { value: Period; onChange: (p: Period
   <div className="flex gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
     {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
       <button key={p} type="button" onClick={() => onChange(p)}
-        className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${value === p ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"}`}>
+        className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${value === p ? "bg-white/10 text-white" : "text-slate-400 hover:text-slate-300"}`}>
         {p === "daily" ? "Günlük" : p === "weekly" ? "Haftalık" : "Aylık"}
       </button>
     ))}
@@ -129,7 +129,7 @@ const PeriodToggle = ({ value, onChange }: { value: Period; onChange: (p: Period
 const Panel = ({ title, sub, right, children }: { title: string; sub?: ReactNode; right?: ReactNode; children: ReactNode }) => (
   <div className="rounded-2xl border border-white/[0.07] bg-white/[0.015] p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><h3 className="text-sm font-semibold text-white">{title}</h3>{sub ? <p className="mt-0.5 text-xs text-slate-500">{sub}</p> : null}</div>
+      <div><h3 className="text-sm font-semibold text-white">{title}</h3>{sub ? <p className="mt-0.5 text-xs text-slate-400">{sub}</p> : null}</div>
       {right}
     </div>
     {children}
@@ -173,7 +173,7 @@ export function AdminDashboardHome({ overview }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">Genel Bakış</h2>
-          <p className="text-xs text-slate-500">Canlı metrikler · otomatik yenilenir</p>
+          <p className="text-xs text-slate-400">Canlı metrikler · otomatik yenilenir</p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-300">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />Canlı · {updatedAt}
@@ -193,7 +193,7 @@ export function AdminDashboardHome({ overview }: Props) {
         <div className="lg:col-span-2">
           <Panel title="Operasyon hacmi" sub="Son 30 gün (UTC)">
             <div className="mt-4 h-[240px] w-full">
-              {trendData.length < 1 ? <p className="py-16 text-center text-sm text-slate-500">Günlük seri yok</p> : (
+              {trendData.length < 1 ? <p className="py-16 text-center text-sm text-slate-400">Günlük seri yok</p> : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                     <defs><linearGradient id="opFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="rgb(34 211 238)" stopOpacity={0.3} /><stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity={0} /></linearGradient></defs>
@@ -209,7 +209,7 @@ export function AdminDashboardHome({ overview }: Props) {
           </Panel>
         </div>
         <Panel title="En çok kullanılan araçlar" sub="Son 30 gün">
-          {overview.mostUsedTOOLS.length === 0 ? <p className="mt-4 text-sm text-slate-500">Henüz veri yok</p> : (
+          {overview.mostUsedTOOLS.length === 0 ? <p className="mt-4 text-sm text-slate-400">Henüz veri yok</p> : (
             <ul className="mt-4 space-y-3">
               {overview.mostUsedTOOLS.slice(0, 7).map((t) => (
                 <DistBar key={t.featureKey} label={pdfToolLabelTr(t.featureKey)} value={t.operationsAttributed} max={maxTool} accent="cyan" />
@@ -223,7 +223,7 @@ export function AdminDashboardHome({ overview }: Props) {
       {/* Yeni kayıtlar */}
       <Panel title="Yeni kayıtlar" sub={`Bugün ${regToday} · Bu hafta ${regWeek} · Bu ay ${regMonth}`} right={<PeriodToggle value={regPeriod} onChange={setRegPeriod} />}>
         <div className="mt-4 h-[170px] w-full">
-          {regChartData.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">Henüz kayıt verisi yok</p> : (
+          {regChartData.length === 0 ? <p className="py-12 text-center text-sm text-slate-400">Henüz kayıt verisi yok</p> : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={regChartData} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgb(51 65 85 / 0.35)" />
@@ -240,7 +240,7 @@ export function AdminDashboardHome({ overview }: Props) {
       {/* Abonelik satışları */}
       <Panel title="Abonelik satışları" sub="Tamamlanan ödemeler (plana göre)" right={<PeriodToggle value={salesPeriod} onChange={setSalesPeriod} />}>
         <div className="mt-4 h-[170px] w-full">
-          {salesChartData.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">Henüz satış verisi yok</p> : (
+          {salesChartData.length === 0 ? <p className="py-12 text-center text-sm text-slate-400">Henüz satış verisi yok</p> : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesChartData} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgb(51 65 85 / 0.35)" />
@@ -269,7 +269,7 @@ export function AdminDashboardHome({ overview }: Props) {
           </ul>
         </Panel>
         <Panel title="Ülke dağılımı" sub={<span className="inline-flex items-center gap-1"><Globe className="h-3 w-3" />En çok ziyaretçi</span>}>
-          {overview.geo.topCountries.length === 0 ? <p className="mt-4 text-sm text-slate-500">Konum verisi yok</p> : (
+          {overview.geo.topCountries.length === 0 ? <p className="mt-4 text-sm text-slate-400">Konum verisi yok</p> : (
             <ul className="mt-4 space-y-3">
               {overview.geo.topCountries.slice(0, 6).map((c) => (
                 <DistBar key={c.country} label={c.country} value={c.count} max={maxCountry} accent="emerald" />
@@ -278,12 +278,12 @@ export function AdminDashboardHome({ overview }: Props) {
           )}
           {overview.geo.topCities && overview.geo.topCities.length > 0 ? (
             <div className="mt-4 border-t border-white/[0.05] pt-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-600">Şehirler</p>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Şehirler</p>
               <ul className="space-y-1 text-xs">
                 {overview.geo.topCities.slice(0, 5).map((c) => (
                   <li key={`${c.city}-${c.country}`} className="flex items-center justify-between gap-2">
                     <span className="truncate text-slate-400">{c.city}{c.country ? ` · ${c.country}` : ""}</span>
-                    <span className="shrink-0 font-mono text-slate-500">{c.count}</span>
+                    <span className="shrink-0 font-mono text-slate-400">{c.count}</span>
                   </li>
                 ))}
               </ul>
@@ -291,7 +291,7 @@ export function AdminDashboardHome({ overview }: Props) {
           ) : null}
         </Panel>
         <Panel title="Araç kullanımı" sub="En çok işlem (30g)">
-          {overview.mostUsedTOOLS.length === 0 ? <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-500"><Wrench className="h-3.5 w-3.5" />Henüz veri yok</p> : (
+          {overview.mostUsedTOOLS.length === 0 ? <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400"><Wrench className="h-3.5 w-3.5" />Henüz veri yok</p> : (
             <ul className="mt-4 space-y-3">
               {overview.mostUsedTOOLS.slice(0, 6).map((t) => (
                 <DistBar key={t.featureKey} label={pdfToolLabelTr(t.featureKey)} value={t.operationsAttributed} max={maxTool} accent="amber" />

@@ -305,7 +305,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
               <Mail className="h-3.5 w-3.5" />
               E-postaları kopyala
             </button>
-            <button type="button" onClick={() => setSelected(new Set())} className="text-xs text-slate-500 underline">
+            <button type="button" onClick={() => setSelected(new Set())} className="text-xs text-slate-400 underline">
               Seçimi temizle
             </button>
           </div>
@@ -358,7 +358,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
       {err ? <p className="text-sm text-rose-300">{err}</p> : null}
 
       {loading && rows.length === 0 ? (
-        <p className="text-sm text-slate-500">Yükleniyor…</p>
+        <p className="text-sm text-slate-400">Yükleniyor…</p>
       ) : !loading && total === 0 ? (
         <EmptyState
           title="Kullanıcı bulunamadı"
@@ -375,7 +375,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
         />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-800/50 bg-slate-900/20">
-          <div className="hidden border-b border-slate-800/50 bg-slate-800/30 px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 sm:flex sm:items-center sm:gap-3">
+          <div className="hidden border-b border-slate-800/50 bg-slate-800/30 px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:flex sm:items-center sm:gap-3">
             <div className="w-6 shrink-0">
               <input
                 type="checkbox"
@@ -434,7 +434,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
                           </span>
                         )}
                       </div>
-                      <p className="truncate font-mono text-[11px] text-slate-500">{u.email}</p>
+                      <p className="truncate font-mono text-[11px] text-slate-400">{u.email}</p>
                       {ownerRow && (
                         <p className="truncate text-[10px] text-cyan-600">
                           ↳ {ownerRow.name || ownerRow.email}
@@ -444,7 +444,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
                   </div>
                   <div className="hidden w-24 shrink-0 flex-col gap-0.5 lg:flex">
                     <span className="truncate text-xs text-slate-300">{u.country ?? "—"}</span>
-                    <span className="truncate text-[11px] text-slate-500">{u.city ?? ""}</span>
+                    <span className="truncate text-[11px] text-slate-400">{u.city ?? ""}</span>
                   </div>
                   <div className="hidden w-28 shrink-0 xl:block">
                     <span className="text-[11px] font-mono text-slate-400">
@@ -482,7 +482,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-slate-400">
         <span>
           {total} kullanıcı — sayfa {page} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}
         </span>
@@ -627,11 +627,11 @@ function UsageGrantSection({
 
       {cur ? (
         <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 rounded-lg bg-slate-900/40 px-3 py-2 text-[11px] sm:grid-cols-3">
-          <span className="text-slate-500">Plan limiti: <span className="font-semibold text-slate-200">{fmtLimit(cur.planDailyLimit)}</span></span>
-          <span className="text-slate-500">Özel limit: <span className={`font-semibold ${cur.customDailyLimit != null ? "text-cyan-200" : "text-slate-400"}`}>{cur.customDailyLimit != null ? cur.customDailyLimit : "—"}</span></span>
-          <span className="text-slate-500">Bugünkü bonus: <span className={`font-semibold ${cur.bonusDailyOperations > 0 ? "text-emerald-300" : "text-slate-400"}`}>{cur.bonusDailyOperations > 0 ? `+${cur.bonusDailyOperations}` : "—"}</span></span>
-          <span className="text-slate-500">Efektif limit: <span className="font-semibold text-amber-200">{fmtLimit(cur.effectiveDailyLimit)}</span></span>
-          <span className="text-slate-500">Bugün kullanılan: <span className="font-semibold text-slate-200">{cur.currentDayOperations}</span></span>
+          <span className="text-slate-400">Plan limiti: <span className="font-semibold text-slate-200">{fmtLimit(cur.planDailyLimit)}</span></span>
+          <span className="text-slate-400">Özel limit: <span className={`font-semibold ${cur.customDailyLimit != null ? "text-cyan-200" : "text-slate-400"}`}>{cur.customDailyLimit != null ? cur.customDailyLimit : "—"}</span></span>
+          <span className="text-slate-400">Bugünkü bonus: <span className={`font-semibold ${cur.bonusDailyOperations > 0 ? "text-emerald-300" : "text-slate-400"}`}>{cur.bonusDailyOperations > 0 ? `+${cur.bonusDailyOperations}` : "—"}</span></span>
+          <span className="text-slate-400">Efektif limit: <span className="font-semibold text-amber-200">{fmtLimit(cur.effectiveDailyLimit)}</span></span>
+          <span className="text-slate-400">Bugün kullanılan: <span className="font-semibold text-slate-200">{cur.currentDayOperations}</span></span>
         </div>
       ) : null}
 
@@ -677,7 +677,7 @@ function UsageGrantSection({
               {busy === "bonus" ? "…" : "Ekle"}
             </button>
           </div>
-          <p className="mt-1.5 text-[10px] leading-snug text-slate-500">Sadece bugün geçerli; gece sıfırlanır.</p>
+          <p className="mt-1.5 text-[10px] leading-snug text-slate-400">Sadece bugün geçerli; gece sıfırlanır.</p>
         </div>
 
         {/* Kalıcı özel günlük limit */}
@@ -736,7 +736,7 @@ function UsageGrantSection({
               {busy === "clear" ? "…" : "Kaldır"}
             </button>
           </div>
-          <p className="mt-1.5 text-[10px] leading-snug text-slate-500">Plan limitini ezer; her gün geçerli.</p>
+          <p className="mt-1.5 text-[10px] leading-snug text-slate-400">Plan limitini ezer; her gün geçerli.</p>
         </div>
       </div>
 
@@ -817,29 +817,29 @@ function UserDetailPanel({
                     : "Cihaz kullanımı olağan"}
               </p>
               <p className="mt-0.5">{detail.paylasim.aciklama}</p>
-              <p className="mt-1 text-slate-500">
+              <p className="mt-1 text-slate-400">
                 Şu an açık oturum: {detail.paylasim.acikOturum} · Farklı ağ: {detail.paylasim.agSayisi}
               </p>
             </div>
           )}
 
           {loading ? (
-            <p className="py-8 text-center text-sm text-slate-500">Yükleniyor…</p>
+            <p className="py-8 text-center text-sm text-slate-400">Yükleniyor…</p>
           ) : !detail ? (
-            <p className="py-8 text-center text-sm text-slate-500">Veri yüklenemedi.</p>
+            <p className="py-8 text-center text-sm text-slate-400">Veri yüklenemedi.</p>
           ) : tab === "payments" ? (
             <div className="space-y-3">
               {detail.paymentCheckouts.length === 0 && detail.creditPackCheckouts.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-500">Ödeme kaydı yok.</p>
+                <p className="py-6 text-center text-sm text-slate-400">Ödeme kaydı yok.</p>
               ) : (
                 <>
                   {detail.paymentCheckouts.length > 0 ? (
                     <div>
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Abonelik Ödemeleri</p>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Abonelik Ödemeleri</p>
                       <div className="overflow-x-auto rounded-xl border border-slate-800/60">
                         <table className="w-full text-xs">
                           <thead>
-                            <tr className="border-b border-slate-800 text-left text-slate-500">
+                            <tr className="border-b border-slate-800 text-left text-slate-400">
                               <th className="px-3 py-2">Tarih</th>
                               <th className="px-3 py-2">Plan</th>
                               <th className="px-3 py-2 text-right">Tutar</th>
@@ -865,11 +865,11 @@ function UserDetailPanel({
 
                   {detail.creditPackCheckouts.length > 0 ? (
                     <div>
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Kredi Paketi Ödemeleri</p>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Kredi Paketi Ödemeleri</p>
                       <div className="overflow-x-auto rounded-xl border border-slate-800/60">
                         <table className="w-full text-xs">
                           <thead>
-                            <tr className="border-b border-slate-800 text-left text-slate-500">
+                            <tr className="border-b border-slate-800 text-left text-slate-400">
                               <th className="px-3 py-2">Tarih</th>
                               <th className="px-3 py-2">Paket</th>
                               <th className="px-3 py-2">Kredi</th>
@@ -900,12 +900,12 @@ function UserDetailPanel({
           ) : (
             <div className="space-y-2">
               {(detail.toolUsageDetails ?? []).length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-500">Araç kullanım kaydı yok.</p>
+                <p className="py-6 text-center text-sm text-slate-400">Araç kullanım kaydı yok.</p>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-slate-800/60">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-left text-slate-500">
+                      <tr className="border-b border-slate-800 text-left text-slate-400">
                         <th className="px-3 py-2">Araç</th>
                         <th className="px-3 py-2">Son kullanım</th>
                         <th className="px-3 py-2 text-right">Kullanım</th>
@@ -992,7 +992,7 @@ function UserManagePanel({
             </div>
             <div>
               <p className="text-sm font-semibold text-white">{user.name || "İsimsiz"}</p>
-              <p className="text-xs text-slate-500">{user.authProvider} · {user.preferredLanguage}</p>
+              <p className="text-xs text-slate-400">{user.authProvider} · {user.preferredLanguage}</p>
             </div>
             <span className={`ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${st.className}`}>
               {st.label}
@@ -1000,7 +1000,7 @@ function UserManagePanel({
           </div>
 
           <div className="space-y-3 rounded-2xl border border-slate-800/50 bg-slate-800/20 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Erişim</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Erişim</p>
             <AdminField label="Plan">
               <select
                 className={adminInputClass}
@@ -1102,11 +1102,11 @@ function UserManagePanel({
 
           <div className="grid grid-cols-2 gap-3 text-[11px]">
             <div className="rounded-xl border border-slate-800/50 bg-slate-800/20 p-3">
-              <p className="text-slate-500">Bugünkü işlem</p>
+              <p className="text-slate-400">Bugünkü işlem</p>
               <p className="mt-1 font-semibold text-slate-200">{user.usageToday ? `${user.usageToday.operationsCount} işlem` : "—"}</p>
             </div>
             <div className="rounded-xl border border-slate-800/50 bg-slate-800/20 p-3">
-              <p className="text-slate-500">Konum</p>
+              <p className="text-slate-400">Konum</p>
               <p className="mt-1 font-semibold text-slate-200">{[user.city, user.country].filter(Boolean).join(", ") || "—"}</p>
             </div>
           </div>

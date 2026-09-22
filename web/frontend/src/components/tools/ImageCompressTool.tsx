@@ -246,13 +246,13 @@ export function ImageCompressTool({ language }: { language: Language }) {
                     <img src={f.previewUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                      <p className="text-[11px] text-slate-500">{humanSize(f.file.size)}</p>
+                      <p className="text-[11px] text-slate-400">{humanSize(f.file.size)}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => remove(f.id)}
                       aria-label={tr ? "Kaldır" : "Remove"}
-                      className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+                      className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

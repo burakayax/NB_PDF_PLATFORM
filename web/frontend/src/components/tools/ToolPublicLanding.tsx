@@ -83,7 +83,7 @@ export function ToolPublicLanding({
           >
             {tr ? "Ücretsiz Kullan →" : "Use it free →"}
           </button>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-slate-400">
             {tr
               ? "Kurulum yok · kart gerekmez"
               : "No install · no card required"}
@@ -119,7 +119,7 @@ export function ToolPublicLanding({
                       <span className="text-sm font-semibold text-slate-200">
                         {item.q}
                       </span>
-                      <span className="shrink-0 text-slate-500">
+                      <span className="shrink-0 text-slate-400">
                         {isOpen ? "−" : "+"}
                       </span>
                     </button>

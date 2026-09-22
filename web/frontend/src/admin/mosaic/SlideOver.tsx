@@ -46,12 +46,12 @@ export function SlideOver({ open, title, description, onClose, children, widthCl
             <h2 id="slideover-title" className="text-base font-semibold tracking-tight text-slate-100">
               {title}
             </h2>
-            {description ? <p className="mt-0.5 text-sm text-slate-500">{description}</p> : null}
+            {description ? <p className="mt-0.5 text-sm text-slate-400">{description}</p> : null}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-800 hover:text-slate-200"
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-slate-200"
             aria-label="Kapat"
           >
             <X className="h-5 w-5" />

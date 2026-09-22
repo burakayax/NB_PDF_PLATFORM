@@ -45,7 +45,7 @@ export function NotFoundPage({
 
       <a
         href="/"
-        className="mt-4 text-xs text-slate-500 underline-offset-4 transition hover:text-slate-300 hover:underline"
+        className="mt-4 text-xs text-slate-400 underline-offset-4 transition hover:text-slate-300 hover:underline"
       >
         {tr ? "Tüm PDF araçları" : "All PDF tools"}
       </a>

@@ -654,7 +654,7 @@ function Hero({
                   {tr ? "Kamerayla tara" : "Scan with camera"}
                 </button>
               ) : (
-                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-500 sm:inline-flex">
+                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-400 sm:inline-flex">
                   <Lock className="h-3.5 w-3.5" />
                   {tr ? "Üyelik gerekmez" : "No account needed"}
                 </span>
@@ -935,7 +935,7 @@ function Hero({
           </div>
 
           {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] font-medium text-slate-500">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] font-medium text-slate-400">
             {[
               { Icon: Lock, tr: "Üyelik gerekmez", en: "No account needed" },
               { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı", en: "No watermark, no ads" },
@@ -944,14 +944,14 @@ function Hero({
               const TrustIcon = item.Icon;
               return (
                 <span key={item.en} className="inline-flex items-center gap-1.5">
-                  <TrustIcon className="h-3.5 w-3.5 text-slate-600" />
+                  <TrustIcon className="h-3.5 w-3.5 text-slate-400" />
                   {tr ? item.tr : item.en}
                 </span>
               );
             })}
           </div>
 
-          <p className="mt-5 text-center text-[13px] text-slate-500">
+          <p className="mt-5 text-center text-[13px] text-slate-400">
             {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
           </p>
         </motion.div>

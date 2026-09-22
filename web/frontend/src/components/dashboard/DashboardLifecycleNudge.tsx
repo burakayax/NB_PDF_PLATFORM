@@ -197,7 +197,7 @@ export function DashboardLifecycleNudge({
           snooze(variant);
           setDismissed(true);
         }}
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-white/10 hover:text-slate-200"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-white/10 hover:text-slate-200"
       >
         ×
       </button>

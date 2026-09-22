@@ -35,7 +35,7 @@ function MiniSparkline({ data }: { data: number[] }) {
   });
   const d = `M ${pts.join(" L ")}`;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-9 w-full text-slate-500/80" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-9 w-full text-slate-400/90" preserveAspectRatio="none">
       <defs>
         <linearGradient id="sparkfill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" />
@@ -63,16 +63,16 @@ export function MosaicStatCard({ label, value, sub, icon: Icon, spark, trendLabe
       />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
           <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-white md:text-3xl">{value}</p>
-          {sub ? <p className="mt-1 text-xs text-slate-500">{sub}</p> : null}
+          {sub ? <p className="mt-1 text-xs text-slate-400">{sub}</p> : null}
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800/80 text-slate-300 ring-1 ring-white/[0.06]">
           <Icon className="h-5 w-5" />
         </div>
       </div>
       <div className="relative mt-4 border-t border-slate-700/30 pt-3">
-        <div className="mb-1 flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-slate-500">
+        <div className="mb-1 flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-slate-400">
           <span className="flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
             {trendLabel ?? "7 gün"}

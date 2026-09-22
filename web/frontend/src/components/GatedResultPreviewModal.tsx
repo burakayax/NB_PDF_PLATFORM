@@ -299,7 +299,7 @@ function WatermarkedPdfJsPreview({
         ) : null}
         {Array.from({ length: shown }, (_, i) => i + 1).map((pn) => (
           <div key={pn} className="relative flex flex-col items-center gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
               {language === "tr" ? `Sayfa ${pn}` : `Page ${pn}`}
             </span>
             <PdfPageCanvas pdf={pdf} pageNumber={pn} widthCssPx={viewW} />
@@ -475,7 +475,7 @@ export function GatedResultPreviewModal({
                 </p>
                 <p className="mt-1 truncate text-[15px] font-semibold text-slate-50">{filename}</p>
                 {mode === "hero" ? (
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-400">
                     {language === "tr"
                       ? "Bu çıktı türünde yalnızca ilk sayfa görseli gösterilir."
                       : "For this output type only the first-page image is available."}

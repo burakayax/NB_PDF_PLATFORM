@@ -499,7 +499,7 @@ function CycleAwareCard({
               <p className="text-xs font-semibold text-slate-300">
                 {tr ? "Ekstra Kişi" : "Extra Seats"}
               </p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-slate-400">
                 {tr
                   ? `5 kişi dahil · +${currency === "TRY" ? "₺199" : "$5.99"}/kişi/ay`
                   : `5 seats included · +${currency === "TRY" ? "₺199" : "$5.99"}/seat/mo`}

@@ -219,7 +219,7 @@ export function SearchablePdfTool({
               <button
                 type="button"
                 onClick={() => removeFile(i)}
-                className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+                className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                 aria-label={tr ? "Kaldır" : "Remove"}
               >
                 <Trash2 className="h-4 w-4" />

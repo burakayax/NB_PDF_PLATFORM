@@ -16,10 +16,10 @@ export function EmptyState({ title, description, ctaLabel, onCta, icon }: Props)
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/60 bg-slate-900/30 px-8 py-16 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-800/60 ring-1 ring-white/[0.06]">
-        {icon ?? <Inbox className="h-9 w-9 text-slate-500" strokeWidth={1.25} />}
+        {icon ?? <Inbox className="h-9 w-9 text-slate-400" strokeWidth={1.25} />}
       </div>
       <p className="mt-4 text-base font-semibold text-slate-200">{title}</p>
-      {description ? <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p> : null}
+      {description ? <p className="mt-1 max-w-sm text-sm text-slate-400">{description}</p> : null}
       {ctaLabel && onCta ? (
         <button
           type="button"

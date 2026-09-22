@@ -126,7 +126,7 @@ export function OlcuKarti({
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
           {etiket}
         </p>
-        {Simge && <Simge className="h-4 w-4 shrink-0 text-slate-500" />}
+        {Simge && <Simge className="h-4 w-4 shrink-0 text-slate-400" />}
       </div>
 
       <p className="mt-2 text-[30px] font-bold leading-none tracking-tight text-white">
@@ -140,7 +140,7 @@ export function OlcuKarti({
             ? "karşılaştırma için yeterli geçmiş yok"
             : `%${Math.abs(degisimYuzde)}`}
           {degisimYuzde !== null && karsilastirmaMetni && (
-            <span className="font-normal text-slate-500">{karsilastirmaMetni}</span>
+            <span className="font-normal text-slate-400">{karsilastirmaMetni}</span>
           )}
         </p>
       )}
@@ -169,7 +169,7 @@ export function OlcuKarti({
           </ResponsiveContainer>
         </div>
       ) : !veriVar && bosMetin ? (
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">{bosMetin}</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-slate-400">{bosMetin}</p>
       ) : null}
     </div>
   );
@@ -230,7 +230,7 @@ export function Huni({ basamaklar, toplamOran }: { basamaklar: HuniBasamagi[]; t
                 style={{ width: `${Math.max(2, (b.deger / enBuyuk) * 100)}%` }}
               />
             </div>
-            <p className="mt-1 text-[11px] text-slate-500">{b.aciklama}</p>
+            <p className="mt-1 text-[11px] text-slate-400">{b.aciklama}</p>
           </div>
         ))}
       </div>
@@ -428,7 +428,7 @@ export function KirilimGrafigi({
 export function BosDurum({ metin }: { metin: string }) {
   return (
     <div className="flex h-full min-h-[120px] items-center justify-center rounded-xl border border-dashed border-white/[0.08] px-6">
-      <p className="max-w-sm text-center text-[12px] leading-relaxed text-slate-500">{metin}</p>
+      <p className="max-w-sm text-center text-[12px] leading-relaxed text-slate-400">{metin}</p>
     </div>
   );
 }
@@ -468,7 +468,7 @@ export function Katlanir({
           <span className="block text-[13px] font-bold uppercase tracking-[0.14em] text-slate-200">
             {baslik}
           </span>
-          {aciklama && <span className="mt-0.5 block text-[11px] text-slate-500">{aciklama}</span>}
+          {aciklama && <span className="mt-0.5 block text-[11px] text-slate-400">{aciklama}</span>}
         </span>
         <span className="shrink-0 text-[12px] font-semibold text-cyan-300">
           {acik ? "Gizle" : "Göster"}

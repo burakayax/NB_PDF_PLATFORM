@@ -795,7 +795,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                   value={(annos.find((a) => a.id === selected) as Extract<Anno, { kind: "text" }>).text}
                   onChange={(e) => updateText(selected, e.target.value)}
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
-                  className="w-36 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-500"
+                  className="w-36 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400"
                 />
               )}
 
@@ -864,9 +864,9 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                       }}
                       className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-amber-400" : "border-transparent hover:border-white/20"}`}
                     >
-                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>}
+                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
                       {has && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-black/40" />}
-                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-amber-300" : "text-slate-500"}`}>{i + 1}</span>
+                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-amber-300" : "text-slate-400"}`}>{i + 1}</span>
                     </button>
                   );
                 })}
@@ -1008,7 +1008,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                     })}
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">
+                <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-400">
                   {tool === "select"
                     ? tr ? "Bir nesneye tıklayıp sürükleyerek taşı, köşedeki tutamaktan boyutlandır; renk ve kalınlığı üstteki çubuktan değiştir." : "Click and drag an item to move it, resize from the corner handle; change color and thickness in the top bar."
                     : tr ? "Sayfada sürükleyerek çiz. Düzenlemek/taşımak için «Seç» aracına geç." : "Drag on the page to draw. Switch to «Select» to edit or move."}

@@ -33,13 +33,13 @@ export function AdminToolbar({
         }}
       >
         <div className="relative min-w-0 flex-1 max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full rounded-xl border border-slate-600/50 bg-slate-900/60 py-2.5 pl-10 pr-3 text-sm text-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] placeholder:text-slate-600 outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/15"
+            className="w-full rounded-xl border border-slate-600/50 bg-slate-900/60 py-2.5 pl-10 pr-3 text-sm text-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] placeholder:text-slate-400 outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/15"
             autoComplete="off"
           />
         </div>

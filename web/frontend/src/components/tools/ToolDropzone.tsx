@@ -207,7 +207,7 @@ export function ToolDropzone({
                     key={c.en}
                     className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"
                   >
-                    <ChipIcon className="h-3 w-3 text-slate-500" />
+                    <ChipIcon className="h-3 w-3 text-slate-400" />
                     {tr ? c.tr : c.en}
                   </span>
                 );

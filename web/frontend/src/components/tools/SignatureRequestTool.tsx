@@ -323,7 +323,7 @@ export function SignatureRequestTool({
         </p>
       )}
 
-      <p className="mt-4 text-[11px] leading-relaxed text-slate-500">{t.legalNote}</p>
+      <p className="mt-4 text-[11px] leading-relaxed text-slate-400">{t.legalNote}</p>
 
       <div className="mt-7">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -334,7 +334,7 @@ export function SignatureRequestTool({
             <Loader2 className="h-4 w-4 animate-spin" />
           </p>
         ) : istekler.length === 0 ? (
-          <p className="mt-3 text-[13px] text-slate-500">{t.empty}</p>
+          <p className="mt-3 text-[13px] text-slate-400">{t.empty}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {istekler.map((r) => (
@@ -344,7 +344,7 @@ export function SignatureRequestTool({
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-100">{r.title}</p>
-                  <p className="truncate text-[12px] text-slate-500">
+                  <p className="truncate text-[12px] text-slate-400">
                     {r.signerName ? `${r.signerName} · ` : ""}
                     {r.signerEmail}
                   </p>

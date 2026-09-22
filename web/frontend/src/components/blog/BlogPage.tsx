@@ -168,7 +168,7 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
                   </div>
                   <h2 className="text-[17px] font-extrabold leading-snug text-white transition group-hover:text-white">{c.title}</h2>
                   <p className="mt-2 line-clamp-2 flex-1 text-[13px] leading-relaxed text-slate-400">{c.excerpt}</p>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
+                  <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-400">
                     <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{fmtDate(p.date, tr)}</span>
                     <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{p.readMinutes} {tr ? "dk okuma" : "min read"}</span>
                   </div>
@@ -239,7 +239,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
           <div className="mt-4 flex flex-wrap items-center gap-4 text-[12px] text-slate-400">
             <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />{fmtDate(post.date, tr)}</span>
             <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{post.readMinutes} {tr ? "dk okuma" : "min read"}</span>
-            <span className="text-slate-500">PDF Platform</span>
+            <span className="text-slate-400">PDF Platform</span>
           </div>
         </div>
 
@@ -258,7 +258,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
             <div className="space-y-3">
               {c.faq.map((f, i) => (
                 <details key={i} className="group rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
-                  <summary className="flex cursor-pointer items-center justify-between gap-4 text-[15px] font-semibold text-slate-100">{f.q}<span className="text-slate-500 transition group-open:rotate-45">+</span></summary>
+                  <summary className="flex cursor-pointer items-center justify-between gap-4 text-[15px] font-semibold text-slate-100">{f.q}<span className="text-slate-400 transition group-open:rotate-45">+</span></summary>
                   <p className="mt-3 text-[14px] leading-relaxed text-slate-400">{f.a}</p>
                 </details>
               ))}

@@ -44,7 +44,7 @@ function CharMeter({ used, max }: { used: number; max: number }) {
       <div className="h-1 w-20 overflow-hidden rounded-full bg-slate-700/70">
         <div className={`h-full rounded-full transition-all ${tone}`} style={{ width: `${ratio * 100}%` }} />
       </div>
-      <span className={`tabular-nums text-[11px] ${used > max ? "text-rose-300" : "text-slate-500"}`}>
+      <span className={`tabular-nums text-[11px] ${used > max ? "text-rose-300" : "text-slate-400"}`}>
         {used}/{max}
       </span>
     </div>
@@ -124,7 +124,7 @@ export function PostPreviewCard({
         <PlatformBadge platform={post.platform} size={34} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-white">{brand.label}</p>
-          <p className="truncate text-[11px] text-slate-500">{post.title}</p>
+          <p className="truncate text-[11px] text-slate-400">{post.title}</p>
         </div>
         <span className={`rounded-lg border px-2 py-0.5 text-[11px] font-medium ${status.className}`}>
           {post.status === "PUBLISHING" ? (
@@ -172,13 +172,13 @@ export function PostPreviewCard({
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-200">{post.body}</p>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <CharMeter used={post.body.length} max={maxChars} />
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-slate-400">
                   {post.publishedAt
                     ? `Paylaşıldı · ${formatWhen(post.publishedAt)}`
                     : `Planlandı · ${formatWhen(post.scheduledAt)}`}
                 </span>
                 {post.attempts > 1 ? (
-                  <span className="text-[11px] text-slate-500">{post.attempts}. deneme</span>
+                  <span className="text-[11px] text-slate-400">{post.attempts}. deneme</span>
                 ) : null}
               </div>
             </>
@@ -304,7 +304,7 @@ export function PostPreviewCard({
               Sil
             </button>
           ) : (
-            <span className="ml-auto text-[11px] text-slate-500">Yayınlanmış gönderi düzenlenemez.</span>
+            <span className="ml-auto text-[11px] text-slate-400">Yayınlanmış gönderi düzenlenemez.</span>
           )}
         </div>
       ) : null}

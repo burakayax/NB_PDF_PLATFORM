@@ -79,7 +79,7 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
         <Star
           key={n}
           style={{ width: size, height: size }}
-          className={n <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-slate-700"}
+          className={n <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-slate-400"}
         />
       ))}
     </span>
@@ -95,14 +95,14 @@ function DistributionBars({ distribution, total }: { distribution: Distribution;
         const pct = total > 0 ? Math.round((n / total) * 100) : 0;
         return (
           <div key={k} className="flex items-center gap-2">
-            <span className="w-3 text-right text-[10px] text-slate-500">{k}</span>
+            <span className="w-3 text-right text-[10px] text-slate-400">{k}</span>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
               <div
                 className={`h-full rounded-full ${Number(k) >= 4 ? "bg-emerald-400/70" : Number(k) === 3 ? "bg-amber-400/70" : "bg-rose-400/70"}`}
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <span className="w-6 text-right text-[10px] tabular-nums text-slate-500">{n}</span>
+            <span className="w-6 text-right text-[10px] tabular-nums text-slate-400">{n}</span>
           </div>
         );
       })}
@@ -162,7 +162,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-black tracking-tight text-white">Araç puanları</h2>
-          <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-slate-400">
+          <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-slate-300">
             Kullanıcılar işlem biter bitmez puan veriyor. 4 yıldızın altında «ne olmadı?» sorusu
             açılıyor; yazdıkları aşağıda. Bir araç{" "}
             <b className="text-slate-300">{data?.minRatingsToPublish ?? 10} puana</b> ulaşana kadar
@@ -187,7 +187,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
           { label: "Yıldız yayınlanan", value: data?.totals.publishable ?? 0 },
         ].map((k) => (
           <div key={k.label} className={`${CARD} p-4`}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{k.label}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{k.label}</p>
             <p className="mt-1 text-2xl font-black tabular-nums text-white">{k.value}</p>
             {k.stars && typeof k.value === "number" && k.value > 0 ? (
               <div className="mt-1">
@@ -200,9 +200,9 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
 
       {empty ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.1] px-6 py-16 text-center">
-          <Star className="h-8 w-8 text-slate-700" />
+          <Star className="h-8 w-8 text-slate-400" />
           <p className="mt-3 text-sm font-semibold text-slate-300">Henüz puan yok</p>
-          <p className="mt-1 max-w-md text-[13px] text-slate-500">
+          <p className="mt-1 max-w-md text-[13px] text-slate-300">
             Kullanıcılar araçları kullanıp sonuç ekranına ulaştıkça puanlar burada birikecek.
           </p>
         </div>
@@ -212,7 +212,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
           <div className={CARD}>
             <div className="border-b border-white/[0.06] px-5 py-3">
               <p className="text-[13px] font-bold text-white">Araçlar</p>
-              <p className="text-[11px] text-slate-500">En düşük ortalama üstte — düzeltilecek yer orası.</p>
+              <p className="text-[11px] text-slate-400">En düşük ortalama üstte — düzeltilecek yer orası.</p>
             </div>
             <div className="divide-y divide-white/[0.05]">
               {data?.tools.map((t) => {
@@ -222,13 +222,13 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="truncate text-[13px] font-semibold text-slate-100">{toolName(t.toolSlug)}</span>
-                        <span className="truncate font-mono text-[11px] text-slate-600">{t.toolSlug}</span>
+                        <span className="truncate font-mono text-[11px] text-slate-400">{t.toolSlug}</span>
                         {t.publishable ? (
                           <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
                             yıldız yayında
                           </span>
                         ) : (
-                          <span className="rounded-full border border-white/[0.08] px-2 py-0.5 text-[10px] text-slate-500">
+                          <span className="rounded-full border border-white/[0.12] px-2 py-0.5 text-[10px] text-slate-300">
                             {(data?.minRatingsToPublish ?? 10) - t.ratingCount} puan kaldı
                           </span>
                         )}
@@ -238,7 +238,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
                           {t.ratingValue.toFixed(1)}
                         </span>
                         <Stars value={t.ratingValue} />
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-[11px] text-slate-400">
                           {t.ratingCount} puan · son {formatDate(t.lastAt)}
                         </span>
                       </div>
@@ -256,7 +256,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
               <p className="flex items-center gap-2 text-[13px] font-bold text-white">
                 <MessageSquareWarning className="h-4 w-4 text-amber-400" /> Ne ters gitti?
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 {data?.commentAskedBelow ?? 4} yıldızın altında yazılan açıklamalar, en yeniden eskiye.
               </p>
             </div>
@@ -268,7 +268,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
                       <span className="truncate text-[12px] font-semibold text-slate-300">{toolName(c.toolSlug)}</span>
                       <span className="flex shrink-0 items-center gap-2">
                         <Stars value={c.value} size={12} />
-                        <span className="text-[11px] text-slate-600">{formatDate(c.createdAt)}</span>
+                        <span className="text-[11px] text-slate-400">{formatDate(c.createdAt)}</span>
                       </span>
                     </div>
                     <p className="mt-1.5 text-[13px] leading-relaxed text-slate-200">{c.comment}</p>
@@ -277,8 +277,8 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
               </div>
             ) : (
               <div className="px-5 py-12 text-center">
-                <p className="text-[13px] text-slate-500">Henüz açıklama yazılmamış.</p>
-                <p className="mt-1 text-[12px] text-slate-600">
+                <p className="text-[13px] text-slate-300">Henüz açıklama yazılmamış.</p>
+                <p className="mt-1 text-[12px] text-slate-400">
                   Bu iyi haber — düşük puan veren olmamış ya da yazmamış.
                 </p>
               </div>

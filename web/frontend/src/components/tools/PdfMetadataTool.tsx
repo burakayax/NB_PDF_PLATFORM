@@ -277,7 +277,7 @@ export function PdfMetadataTool({
         />
         <span className="text-sm text-slate-200">
           {t.cleanImages}
-          <span className="block text-[12px] text-slate-500">{t.cleanImagesNote}</span>
+          <span className="block text-[12px] text-slate-400">{t.cleanImagesNote}</span>
         </span>
       </label>
 

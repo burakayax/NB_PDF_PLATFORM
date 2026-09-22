@@ -230,7 +230,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
                 {previewUrl && <img src={previewUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-400">
                     {srcDims ? `${srcDims.w} × ${srcDims.h} px · ` : ""}
                     {humanSize(file.size)}
                   </p>
@@ -239,7 +239,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
                   type="button"
                   onClick={reset}
                   aria-label={tr ? "Kaldır" : "Remove"}
-                  className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+                  className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

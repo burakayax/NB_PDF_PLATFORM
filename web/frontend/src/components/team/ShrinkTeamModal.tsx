@@ -105,7 +105,7 @@ export function ShrinkTeamModal({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-white">Kaldırılacak Koltuk</p>
-              <p className="text-xs text-slate-500">En fazla {maxRemovable} koltuk azaltılabilir</p>
+              <p className="text-xs text-slate-400">En fazla {maxRemovable} koltuk azaltılabilir</p>
             </div>
             <div className="flex items-center gap-3">
               <button

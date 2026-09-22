@@ -482,14 +482,14 @@ export function PdfCropTool({ language, initialFile }: Props) {
                 {thumbs[i] ? (
                   <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" />
                 ) : (
-                  <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>
+                  <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>
                 )}
                 {scope === "each" && pageCrops[i] ? (
                   <span className="absolute right-1 top-1 rounded-md bg-cyan-500/90 px-1 py-px text-[9px] font-bold text-white shadow" aria-hidden>
                     ✓
                   </span>
                 ) : null}
-                <span className={`block py-0.5 text-center text-[10px] ${pageIndex === i ? "text-cyan-300" : "text-slate-500"}`}>{i + 1}</span>
+                <span className={`block py-0.5 text-center text-[10px] ${pageIndex === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
               </button>
             ))}
           </div>
@@ -543,7 +543,7 @@ export function PdfCropTool({ language, initialFile }: Props) {
             </div>
           </div>
         </div>
-        <p className={`mt-2.5 text-center text-[12px] transition-colors ${dragging ? "text-cyan-300" : "text-slate-500"}`}>
+        <p className={`mt-2.5 text-center text-[12px] transition-colors ${dragging ? "text-cyan-300" : "text-slate-400"}`}>
           {t.dragHint}
         </p>
       </div>

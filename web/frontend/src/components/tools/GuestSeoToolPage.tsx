@@ -164,7 +164,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
                   className="group rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-slate-200">
                     {item.q}
-                    <span className="text-slate-500 transition group-open:rotate-45">+</span>
+                    <span className="text-slate-400 transition group-open:rotate-45">+</span>
                   </summary>
                   <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{item.a}</p>
                 </details>
