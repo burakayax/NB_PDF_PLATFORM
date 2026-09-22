@@ -1,6 +1,7 @@
 import { env } from "../config/env.js";
 import { escapeHtml } from "./email-html.js";
-import { renderCorporateEmail, ctaButton } from "./email-layout.js";
+import { renderCorporateEmail, ctaButton, commercialSubject } from "./email-layout.js";
+import { assertCommercialConsent } from "./commercial-email-gate.js";
 import { sendMail } from "./mailer.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
 import { emailT, type Locale } from "./email-i18n.js";
@@ -63,6 +64,10 @@ export async function sendLifecycleEmail(
     locale?: Locale;
   },
 ): Promise<void> {
+  // Ticari ileti → gönderim anında izin kapısı. Job katmanı da filtreliyor;
+  // bu ikinci savunma, yeni bir çağıran filtreyi unutursa devreye girer.
+  await assertCommercialConsent(vars.userId);
+
   const locale: Locale = vars.locale ?? "tr";
   const t = emailT[locale];
   const name = escapeHtml(vars.name);
@@ -110,7 +115,7 @@ export async function sendLifecycleEmail(
     unsubscribeUrl,
   });
 
-  const subject = lc.subject(product());
+  const subject = commercialSubject(lc.subject(product()), locale);
   await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
   await logAutomationEmailAudit(`email.lifecycle.${stage}`, vars.userId, `Lifecycle ${stage} → ${toEmail}`, {
     template: `lifecycle_${stage}`,
@@ -121,16 +126,23 @@ export async function sendLifecycleEmail(
 }
 
 /**
- * Checkout recovery — ödeme adımında yarıda kalmış (terk edilmiş) yükseltmeyi geri
- * kazanma e-postası. Transactional nitelikte: kullanıcı satın almayı KENDİ başlattı
- * ("kaldığın yerden devam et"). Yine de açık unsubscribe yolu + List-Unsubscribe
- * başlığı eklenir; açıkça çıkmış kullanıcıya job katmanında hiç gönderilmez.
+ * Checkout recovery — ödeme adımında yarıda kalmış yükseltmeyi geri kazanma.
+ *
+ * TİCARİ İLETİDİR, işlem e-postası DEĞİLDİR. Kodda daha önce "transactional"
+ * diye nitelenmişti; gerekçe kullanıcının satın almayı kendi başlatmış
+ * olmasıydı. Ticari İletişim Yönetmeliği md.6 buna izin vermiyor: devam eden
+ * üyelik/tahsilat bildirimleri onaysız gönderilebilir, ANCAK içlerinde mal
+ * veya hizmet özendirilemez. Bu e-posta "yükselttiğinde yapay zekâ araçları
+ * açılır" diyor ve yükseltmeye çağırıyor — tanım gereği özendirme.
+ *
  * Dedup: audit action'ı checkoutId içerir → aynı terk için tekrar gönderilmez.
  */
 export async function sendCheckoutRecoveryEmail(
   toEmail: string,
   vars: { name: string; userId: string; checkoutId: string; planLabel: string; ctaUrl: string; locale?: Locale },
 ): Promise<void> {
+  await assertCommercialConsent(vars.userId);
+
   const locale: Locale = vars.locale ?? "tr";
   const t = emailT[locale];
   const tr = locale === "tr";
@@ -166,7 +178,10 @@ export async function sendCheckoutRecoveryEmail(
     productName: product(),
     unsubscribeUrl,
   });
-  const subject = tr ? `${vars.planLabel} yükseltmen yarım kaldı` : `Your ${vars.planLabel} upgrade is unfinished`;
+  const subject = commercialSubject(
+    tr ? `${vars.planLabel} yükseltmen yarım kaldı` : `Your ${vars.planLabel} upgrade is unfinished`,
+    locale,
+  );
   await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${vars.ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
   await logAutomationEmailAudit(`email.checkout_recovery.${vars.checkoutId}`, vars.userId, `Checkout recovery → ${toEmail}`, {
     template: "checkout_recovery",
@@ -185,6 +200,8 @@ export async function sendLimitReachedEmail(
   toEmail: string,
   vars: { name: string; userId: string; periodKey: string; ctaUrl: string; locale?: Locale },
 ): Promise<void> {
+  await assertCommercialConsent(vars.userId);
+
   const locale: Locale = vars.locale ?? "tr";
   const t = emailT[locale];
   const tr = locale === "tr";
@@ -215,7 +232,10 @@ export async function sendLimitReachedEmail(
     productName: product(),
     unsubscribeUrl,
   });
-  const subject = tr ? "Aylık ücretsiz hakkın doldu — limitsize geç" : "Your free monthly quota is used up — go unlimited";
+  const subject = commercialSubject(
+    tr ? "Aylık ücretsiz hakkın doldu — limitsize geç" : "Your free monthly quota is used up — go unlimited",
+    locale,
+  );
   await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${vars.ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
   await logAutomationEmailAudit(`email.limit_reached.${vars.periodKey}`, vars.userId, `Limit reached → ${toEmail}`, {
     template: "limit_reached",
@@ -224,13 +244,28 @@ export async function sendLimitReachedEmail(
   });
 }
 
+/**
+ * Yönetim panelinden elle gönderilen toplu duyuru.
+ *
+ * TİCARİ İLETİDİR: İçeriğini yönetici yazar ve içinde tanıtım/kampanya olduğu
+ * varsayılmalıdır. Bu yüzden alıcının onayı çağıran tarafta (yalnız izinli
+ * listeye sorgu) VE burada (gönderim anında kapı) iki kez doğrulanır.
+ *
+ * NEDEN userId ZORUNLU: Önceden çıkış yolu olarak "bize e-posta atın" bağlantısı
+ * konuyordu; ret elle işlenmek zorundaydı ve tek-tık çıkış başlığı hiç yoktu.
+ * Kişiye özel token'lı çıkış için kullanıcı kimliği şart.
+ */
 export async function sendMassCampaignEmail(
+  userId: string,
   toEmail: string,
   subject: string,
   bodyHtml: string,
   sampleVars: { name: string; credits: number; email: string },
   locale: Locale = "tr",
 ): Promise<void> {
+  // Gönderim anındaki son kontrol: liste çekildikten sonra çıkmış olabilir.
+  await assertCommercialConsent(userId);
+
   const t = emailT[locale];
   const safe = {
     name: escapeHtml(sampleVars.name),
@@ -239,7 +274,7 @@ export async function sendMassCampaignEmail(
   };
   const safeSubject = applyTemplateVars(subject, safe);
   const inner = applyTemplateVars(bodyHtml, safe);
-  const unsubscribeUrl = `mailto:${env.SMTP_FROM_EMAIL}?subject=${encodeURIComponent("Ticari e-postalardan çıkmak istiyorum")}`;
+  const unsubscribeUrl = unsubscribeUrlFor(userId);
   const wrapped = renderCorporateEmail({
     eyebrow: t.newsletter_eyebrow,
     title: t.newsletter_title,
@@ -251,8 +286,9 @@ export async function sendMassCampaignEmail(
   });
   await sendMail({
     to: toEmail,
-    subject: safeSubject,
+    subject: commercialSubject(safeSubject, locale),
     html: wrapped,
     text: stripForText(safeSubject + " " + inner),
+    listUnsubscribeUrl: unsubscribeUrl,
   });
 }

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
+import { recordMarketingConsent } from "./marketing-consent.service.js";
 
 /**
  * Pazarlama e-postaları için imzalı abonelikten-çıkış token'ı.
@@ -38,13 +39,41 @@ export function unsubscribeUrlFor(userId: string): string {
   return `${base}/api/email/unsubscribe?token=${makeUnsubscribeToken(userId)}`;
 }
 
-/** Kullanıcıyı pazarlama listesinden çıkarır (idempotent). */
-export async function unsubscribeByToken(token: string): Promise<boolean> {
+/**
+ * Kullanıcıyı pazarlama listesinden çıkarır (idempotent).
+ *
+ * Ret ANINDA işlenir. Mevzuat 3 iş günü sınırı koyuyor; beklemek için bir
+ * sebep yok, gecikme yalnızca risk üretir.
+ */
+export async function unsubscribeByToken(
+  token: string,
+  context?: { ip?: string | null; userAgent?: string | null },
+): Promise<boolean> {
   const userId = verifyUnsubscribeToken(token);
   if (!userId) return false;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+
   await prisma.user.updateMany({
     where: { id: userId },
     data: { marketingConsent: false, marketingUnsubscribedAt: new Date() },
   });
+
+  // Reddin işlendiğinin KANITI. "Çıktım ama e-posta gelmeye devam etti"
+  // şikâyetinde tek savunma budur.
+  if (user?.email) {
+    await recordMarketingConsent({
+      userId,
+      email: user.email,
+      granted: false,
+      source: "unsubscribe_link",
+      ip: context?.ip ?? null,
+      userAgent: context?.userAgent ?? null,
+    });
+  }
+
   return true;
 }

@@ -9,6 +9,7 @@ import { ensureDefaultAdminUser } from "./lib/ensure-default-admin.js";
 import { ensureAppSettingsRow } from "./lib/ensure-app-settings.js";
 import { ensureToolRegistry } from "./lib/ensure-tool-registry.js";
 import { prepareLogFile, logger } from "./lib/file-log.js";
+import { missingCommercialIdentityFields } from "./lib/email-layout.js";
 
 // Log dizini hazırlığı — DB'ye bağlı değil; hata olsa bile başlangıcı bozmasın.
 try {
@@ -78,6 +79,23 @@ function listenMessage() {
   const scheme = useTls ? "https" : "http";
   logger.info("server",
     `PDF PLATFORM auth API listening on ${scheme}://0.0.0.0:${env.PORT}`,
+  );
+  warnIfCommercialIdentityMissing();
+}
+
+/**
+ * Ticari e-postalarda zorunlu kimlik bilgileri eksikse açılışta uyarır.
+ *
+ * Bu bilgiler olmadan gönderilen her tanıtım e-postası Ticari İletişim
+ * Yönetmeliği md.7'ye aykırıdır. Eksik sessizce sürmesin diye açılışta
+ * bir kez, görünür biçimde söylenir.
+ */
+function warnIfCommercialIdentityMissing() {
+  const missing = missingCommercialIdentityFields();
+  if (missing.length === 0) return;
+  logger.warn("server",
+    `[uyum] Ticari e-postalarda zorunlu kimlik bilgileri eksik: ${missing.join(", ")}. ` +
+      `Bu alanlar doldurulmadan gönderilen tanıtım e-postaları Ticari İletişim Yönetmeliği md.7'ye aykırıdır.`,
   );
 }
 

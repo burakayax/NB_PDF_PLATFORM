@@ -1000,3 +1000,39 @@ model ToolRating {
   @@index([toolSlug])
   @@map("tool_ratings")
 }
+
+/// Ticari elektronik ileti onayının KANITI.
+///
+/// NEDEN AYRI TABLO: Kullanıcı kaydındaki "izin var/yok" alanı yalnızca ANLIK
+/// durumu söyler. Ticari İletişim Yönetmeliği ise onayın kendisinin
+/// ispatlanmasını istiyor: kim, ne zaman, hangi kanaldan, hangi metni
+/// onayladı. Tek bir boolean bu soruların hiçbirini cevaplayamaz — denetimde
+/// "izni vardı" demek yetmez, gösterebilmek gerekir.
+///
+/// SAKLAMA: Kayıtlar onayın geçerliliği bittikten sonra 3 yıl saklanır.
+/// Bu yüzden kullanıcı silinse bile kanıt silinmez (ilişki kurulmamıştır,
+/// e-posta adresi kaydın içine kopyalanır) — kanıtın kendisi yasal
+/// yükümlülüktür.
+model MarketingConsentLog {
+  id        String   @id @default(cuid())
+  /// Kaydın ait olduğu kullanıcı. İlişki YOK: kullanıcı silinse de kanıt kalır.
+  userId    String   @map("user_id")
+  /// Onay anındaki e-posta adresi — onayın hangi adrese ait olduğunun kanıtı.
+  email     String
+  /// true = onay verildi, false = ret (listeden çıkış).
+  granted   Boolean
+  /// Onayın/reddin alındığı kanal: "signup" | "settings" | "unsubscribe_link" | "admin".
+  source    String
+  /// Onay anında kullanıcıya gösterilen metnin kendisi. Metin zamanla
+  /// değişir; kanıt, o gün gösterilen hâli olmalıdır.
+  consentText String? @map("consent_text")
+  /// İrade beyanının geldiği bağlantı — ispat için. Onay kanıtı dışında
+  /// kullanılmaz.
+  ip        String?
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("marketing_consent_logs")
+}

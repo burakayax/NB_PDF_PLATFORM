@@ -6,6 +6,10 @@ import { logger } from "../lib/file-log.js";
 import { readEmailAutomationConfig } from "../modules/marketing/email-automation.js";
 import { seedDefaultCampaigns, sendCampaignToUser } from "../modules/email/emailCampaign.service.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
+import {
+  CommercialConsentError,
+  commercialRecipientWhere,
+} from "../lib/commercial-email-gate.js";
 
 /**
  * Admin-yönetimli pazarlama e-postaları (EmailCampaign tablosundan).
@@ -49,12 +53,11 @@ async function runCampaign(c: EmailCampaign): Promise<void> {
     where: {
       plan: "FREE",
       role: "USER",
-      isVerified: true,
       createdAt: { gte: start, lte: end },
       teamMembership: { is: null },
       // HUKUKİ: yalnız pazarlama izni VEREN ve çıkmayan kullanıcılara (opt-in).
-      marketingConsent: true,
-      marketingUnsubscribedAt: null,
+      // Kural tek yerde tanımlı; elle tekrarlanmaz (bkz. commercial-email-gate).
+      ...commercialRecipientWhere(),
     },
     select: { id: true, email: true, firstName: true, lastName: true, name: true, preferredLanguage: true },
   });
@@ -71,6 +74,8 @@ async function runCampaign(c: EmailCampaign): Promise<void> {
       sent += 1;
       await new Promise((r) => setTimeout(r, 400)); // SMTP'yi boğmamak için
     } catch (err) {
+      // Kapı reddi hata değil: liste çekildikten sonra çıkmış olabilir.
+      if (err instanceof CommercialConsentError) continue;
       logger.error("lifecycle", `campaign ${c.id} email failed (non-fatal)`, { detail: String(err) });
     }
   }

@@ -4,6 +4,7 @@ import { logError } from "../lib/app-logger.js";
 import { logger } from "../lib/file-log.js";
 import { env } from "../config/env.js";
 import { sendCheckoutRecoveryEmail } from "../lib/email-service.js";
+import { commercialRecipientWhere } from "../lib/commercial-email-gate.js";
 import type { Locale } from "../lib/email-i18n.js";
 
 /**
@@ -58,11 +59,9 @@ async function runCheckoutRecovery(): Promise<void> {
       user: {
         plan: "FREE", // tamamlamış/yükseltmiş olsaydı FREE olmazdı
         role: "USER",
-        isVerified: true,
-        // HUKUKİ (KVKK/6563/GDPR): diğer pazarlama e-postalarıyla AYNI sıkı opt-in —
-        // yalnız açıkça izin VEREN ve çıkmayan kullanıcılara. Sıfır hukuki risk.
-        marketingConsent: true,
-        marketingUnsubscribedAt: null,
+        // HUKUKİ (6563/KVKK/GDPR): ticari ileti yalnız izin veren ve çıkmayan
+        // alıcıya. Kural tek yerde (bkz. commercial-email-gate).
+        ...commercialRecipientWhere(),
         teamMembership: { is: null },
       },
     },

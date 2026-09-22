@@ -4,6 +4,7 @@ import { logError } from "../lib/app-logger.js";
 import { logger } from "../lib/file-log.js";
 import { env } from "../config/env.js";
 import { sendLimitReachedEmail } from "../lib/email-service.js";
+import { commercialRecipientWhere } from "../lib/commercial-email-gate.js";
 import type { Locale } from "../lib/email-i18n.js";
 
 /**
@@ -50,9 +51,8 @@ async function runLimitReachedEmail(): Promise<void> {
       members: {
         where: {
           role: "USER",
-          isVerified: true,
-          marketingConsent: true, // sıkı opt-in
-          marketingUnsubscribedAt: null,
+          // Ticari ileti kuralı tek yerde (bkz. commercial-email-gate).
+          ...commercialRecipientWhere(),
           teamMembership: { is: null },
         },
         select: { id: true, email: true, firstName: true, name: true, preferredLanguage: true },
