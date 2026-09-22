@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
 import { motion, AnimatePresence } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
@@ -1008,12 +1009,12 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         <div className="mt-10 grid max-w-3xl mx-auto grid-cols-1 gap-3 sm:grid-cols-3">
           {(language === "tr"
             ? [
-                { b: "45 araç", a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
+                { b: `${ARAC_SAYISI} araç`, a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
                 { b: "Dosyan sende kalır", a: "Birleştirme, imzalama, kırpma gibi araçlar tarayıcında çalışır; dosya sunucuya gitmez." },
                 { b: "Tek tıkla iptal", a: "Hesabından kendin iptal edersin; arama yapmana, e-posta yazmana gerek yok." },
               ]
             : [
-                { b: "45 tools", a: "All included in one subscription — no separate products to buy." },
+                { b: `${ARAC_SAYISI} tools`, a: "All included in one subscription — no separate products to buy." },
                 { b: "Your file stays with you", a: "Merging, signing and cropping run in your browser; the file is never uploaded." },
                 { b: "Cancel in one click", a: "Cancel yourself from your account — no calls, no emails." },
               ]
