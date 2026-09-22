@@ -1066,6 +1066,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       ) : !file ? (
         <div className="tool-form">
           <WorkspaceUploadField
+            toolId="pdf-duzenle"
             language={language}
             accept="application/pdf,.pdf"
             note={tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}

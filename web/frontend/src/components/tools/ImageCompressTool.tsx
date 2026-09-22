@@ -15,7 +15,7 @@ import {
 
 /**
  * GÖRSEL SIKIŞTIR — Görsel→PDF (GuestToolCore) ile AYNI akış/kabuk:
- * ToolDropzone (sürükle-bırak) + dosya listesi + işle + sonuç ekranı
+ * ToolUploadPanel (ortak yükleme ekranı) + dosya listesi + işle + sonuç ekranı
  * (Tekrar indir / Paylaş / Yeni işlem). Tamamen CİHAZDA (canvas), dosya yüklenmez.
  * Tek görsel → sıkıştırılmış görsel; çok görsel → tek ZIP.
  */
@@ -320,6 +320,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
     <div>
       <div className="tool-form">
         <WorkspaceUploadField
+            toolId="gorsel-sikistir"
           language={language}
           accept="image/png,image/jpeg,image/jpg,image/webp"
           multiple

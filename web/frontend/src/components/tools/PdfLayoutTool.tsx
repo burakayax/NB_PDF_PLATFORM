@@ -9,7 +9,7 @@
  * çünkü yanlış yazdırma ancak kâğıt katlandıktan sonra fark edilir.
  */
 import { useCallback, useState } from "react";
-import { BookOpen, FileText, Grid2x2, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
+import { BookOpen, FileText, Grid2x2, Loader2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { nUpYap, kitapcikYap } from "../../lib/pdfImposition";
 import { ValueMomentNudge } from "./ValueMomentNudge";
@@ -129,6 +129,7 @@ export function PdfLayoutTool({
       <div className="mx-auto w-full max-w-2xl">
         <div className="tool-form">
           <WorkspaceUploadField
+            toolId="sayfa-duzeni"
             language={language}
             accept="application/pdf,.pdf"
             note={t.hint}
@@ -136,21 +137,6 @@ export function PdfLayoutTool({
           />
         </div>
         {hata && <p className="mt-3 text-[13px] text-rose-300">{hata}</p>}
-        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-          {[
-            { icon: <ShieldCheck className="h-4 w-4" />, t: t.chipDevice },
-            { icon: <Zap className="h-4 w-4" />, t: t.chipFree },
-            { icon: <Lock className="h-4 w-4" />, t: t.chipNoInstall },
-          ].map((c, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-2.5 text-[12px] font-medium text-slate-300"
-            >
-              <span className="text-cyan-300">{c.icon}</span>
-              {c.t}
-            </div>
-          ))}
-        </div>
       </div>
     );
   }

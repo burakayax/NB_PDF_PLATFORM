@@ -693,6 +693,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
       {!editorOpen && (
         <div className="tool-form">
           <WorkspaceUploadField
+            toolId="pdf-yorumla"
             language={language}
             accept=".pdf,application/pdf"
             note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}

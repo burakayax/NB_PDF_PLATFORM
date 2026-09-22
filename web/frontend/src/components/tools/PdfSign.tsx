@@ -424,6 +424,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
       {!editorOpen && (
         <div className="tool-form">
           <WorkspaceUploadField
+            toolId="pdf-imzala"
             language={language}
             accept=".pdf,application/pdf"
             note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}

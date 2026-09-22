@@ -280,6 +280,7 @@ export function UdfToPdfTool({ language }: { language: Language }) {
     <div>
       <div className="tool-form">
         <WorkspaceUploadField
+            toolId="udf-to-pdf"
           language={language}
           accept=".udf"
           multiple

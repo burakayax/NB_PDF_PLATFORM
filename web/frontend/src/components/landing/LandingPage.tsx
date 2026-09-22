@@ -27,7 +27,7 @@ import { PdfCropTool } from "../tools/PdfCropTool";
 import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
-import { toolAccent } from "../tools/ToolDropzone";
+import { toolVisual } from "../common/ToolUploadPanel";
 import {
   ArrowRightLeft,
   Camera,
@@ -677,8 +677,8 @@ function Hero({
                 ? (HERO_CATS.find((c) => c.id === heroCat) ?? HERO_CATS[0]).items.map((it) => {
                     if (it.k === "free") {
                       const t = FREE_TOOLS.find((x) => x.id === it.id)!;
-                      const A = toolAccent(it.id);
-                      const Icon = A.icon;
+                      const A = toolVisual(it.id);
+                      const Icon = A.Icon;
                       const active = !editorOn && freeTool === it.id;
                       return (
                         <button
@@ -696,7 +696,7 @@ function Hero({
                           }`}
                         >
                           <span
-                            className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${A.grad} ${A.text} ring-1 ring-white/10 transition group-hover:scale-105`}
+                            className={`flex h-9 w-9 items-center justify-center rounded-xl ring-1 ${A.tile} ${A.icon} transition group-hover:scale-105`}
                           >
                             <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
                           </span>
@@ -806,9 +806,9 @@ function Hero({
             {(() => {
               const freeMeta = (): HeroMeta => {
                 const t = FREE_TOOLS.find((x) => x.id === freeTool) ?? FREE_TOOLS[0];
-                const A = toolAccent(t.id);
+                const A = toolVisual(t.id);
                 return {
-                  Icon: A.icon,
+                  Icon: A.Icon,
                   tr: t.tr,
                   en: t.en,
                   trDesc: FREE_TOOL_DESC[t.id].tr,

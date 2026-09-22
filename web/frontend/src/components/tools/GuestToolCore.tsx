@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolRating } from "../common/ToolRating";
-import { ToolDropzone } from "./ToolDropzone";
+import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import {
   mergePdfs,
@@ -422,18 +422,26 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
 
   return (
     <div>
-      <ToolDropzone
+      <ToolUploadPanel
         toolId={activeTool}
-        tr={tr}
+        language={language}
         accept={accept}
         multiple
         busy={busy}
+        compact={files.length > 0}
+        showHeader={false}
         showBenefits={files.length === 0}
         onFiles={(fl) => addFiles(fl)}
-        titleTr={isImages ? "Görselleri buraya sürükle" : "PDF'leri buraya sürükle"}
-        titleEn={isImages ? "Drag your images here" : "Drag your PDFs here"}
-        hintTr={`ya da tıklayıp seç · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · 80 MB'a kadar`}
-        hintEn={`or click to choose · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · up to 80 MB`}
+        title={
+          tr
+            ? isImages ? "Görselleri buraya sürükle" : "PDF'leri buraya sürükle"
+            : isImages ? "Drag your images here" : "Drag your PDFs here"
+        }
+        hint={
+          tr
+            ? `ya da tıklayıp seç · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · 80 MB'a kadar`
+            : `or click to choose · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · up to 80 MB`
+        }
       />
 
       {files.length > 0 && (

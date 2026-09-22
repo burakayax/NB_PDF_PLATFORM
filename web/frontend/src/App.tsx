@@ -105,6 +105,7 @@ import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
+import { ToolUploadPanel } from "./components/common/ToolUploadPanel";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
@@ -1009,7 +1010,6 @@ function App() {
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const chainPendingRef = useRef<{ files: File[]; toolId: FeatureId } | null>(null);
-  const [uploadDragOver, setUploadDragOver] = useState(false);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
     null,
@@ -1936,17 +1936,6 @@ function App() {
     window.addEventListener("pointermove", onMove, { passive: false });
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
-  }
-
-  async function onFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = Array.from(event.target.files ?? []);
-    const inputElement = event.currentTarget;
-    await handleNewFiles(selectedFiles);
-    if (inputElement) inputElement.value = "";
-  }
-
-  function triggerFilePicker() {
-    fileInputRef.current?.click();
   }
 
   const refreshSubscriptionState = useCallback(async () => {
@@ -3565,8 +3554,6 @@ function App() {
       uploads.some((u) => u.pageCount === 0)) ||
     toolFilesStillInspecting ||
     deleteWouldRemoveEveryPage;
-  const pickerButtonText =
-    selectedFeature.multiple && uploads.length > 0 ? W.fileAdd : W.filePick;
 
   function openLegalPage(target: LegalView) {
     if (
@@ -7054,66 +7041,21 @@ function App() {
                           )}
 
                         {toolNeedsUpload ? (
-                          /* NOT: <label> yerine <div> — input bir label içinde olunca
-                             butona dokununca picker hem buton onClick'i hem label'ın
-                             implicit aktivasyonuyla İKİ kez açılıyordu; bu mobilde çoklu
-                             dosya seçimini bozuyordu. Artık picker'ı yalnızca buton açar. */
-                          <div
-                            className={`field upload-dropzone${uploadDragOver ? " upload-dropzone--over" : ""}`}
-                            onDragOver={(e) => {
-                              if (submitting) return;
-                              e.preventDefault();
-                              if (!uploadDragOver) setUploadDragOver(true);
-                            }}
-                            onDragLeave={(e) => {
-                              // Yalnız alanı gerçekten terk edince kapat (iç öğelere geçişte titremesin).
-                              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                              setUploadDragOver(false);
-                            }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              setUploadDragOver(false);
-                              if (submitting) return;
-                              const dropped = Array.from(e.dataTransfer.files ?? []);
-                              if (dropped.length) void handleNewFiles(dropped);
-                            }}
-                          >
-                            <span>{W.filePick}</span>
-                            <div className="file-picker-row flex-wrap">
-                              <button
-                                className="file-picker-button"
-                                type="button"
-                                onClick={triggerFilePicker}
-                                disabled={submitting}
-                              >
-                                {pickerButtonText}
-                              </button>
-                              <span className="file-picker-note">
-                                {selectedFeature.multiple
-                                  ? uploads.length > 0
-                                    ? W.filePickNoteAppend
-                                    : W.filePickNoteMulti
-                                  : W.filePickNoteSingle}
-                              </span>
-                            </div>
-                            <p className="upload-dropzone__hint">
-                              {uploadDragOver
-                                ? language === "tr"
-                                  ? "Bırak, ekleyelim"
-                                  : "Drop to add"
-                                : language === "tr"
-                                  ? "veya dosyayı buraya sürükleyip bırak"
-                                  : "or drag & drop your file here"}
-                            </p>
-                            <input
-                              key={selectedFeatureId}
-                              ref={fileInputRef}
-                              className="hidden-file-input"
-                              type="file"
+                          /* Yükleme ekranı artık TÜM araçlarda ortak (ToolUploadPanel): aracın
+                             rengi, ikonu, ne yaptığı ve nerede çalıştığı aynı düzende gösterilir.
+                             Burada eskiden küçük bir "Dosya Seç" kutusu vardı; ana sayfadaki
+                             ücretsiz araçlar ise geniş renkli bir alan çiziyordu — aynı ürün iki
+                             ayrı yükleme dili konuşuyordu. */
+                          <div className="field field--full">
+                            <ToolUploadPanel
+                              toolId={selectedFeature.id}
+                              language={language}
                               accept={selectedFeature.accept || "*"}
                               multiple={Boolean(selectedFeature.multiple)}
-                              onChange={onFilesChange}
                               disabled={submitting}
+                              busy={submitting}
+                              compact={uploads.length > 0}
+                              onFiles={(picked: File[]) => { void handleNewFiles(picked); }}
                             />
                           </div>
                         ) : null}
