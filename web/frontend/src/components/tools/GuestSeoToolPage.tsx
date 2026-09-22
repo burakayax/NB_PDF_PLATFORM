@@ -32,10 +32,43 @@ type Props = {
  * Genel misafir araç sayfası (SEO + tam sayfa) — herhangi bir aracı (AiPdfTool,
  * PdfEditor…) SEO içeriğiyle (H1 + açıklama + SSS) sarar. Prerender ile aynı içerik.
  */
-// Yalnızca bu araçlar tamamen cihazda (tarayıcıda) çalışır; dosya sunucuya
-// gitmez. Diğerleri (PDF Düzenle sunucuda, AI araçları Anthropic'e metin
-// gönderir) için "cihazdan çıkmaz" iddiası yanıltıcı olur — o yüzden ayrım.
-const ON_DEVICE_SEO_TOOLS = new Set<string>(["pdf-imzala", "pdf-yorumla"]);
+/**
+ * Tamamen cihazda (tarayıcıda) çalışan araçlar — dosya sunucuya GİTMEZ.
+ *
+ * Bu ayrım rozetleri belirlediği için doğruluğu önemlidir; iki yönde de yanlış
+ * olabilir. Cihazda çalışan bir araca "işlem sonrası dosyan silinir / şifreli
+ * aktarım" demek, hiç yaşanmayan bir yüklemeyi ima eder ve asıl üstünlüğümüzü
+ * gizler. Tersi ise çok daha kötüdür: sunucuya giden bir araca "cihazından
+ * çıkmaz" demek doğrudan yanlış beyandır.
+ *
+ * Bu yüzden listeye bir araç YALNIZCA bileşeni hiçbir işleme isteği
+ * göndermiyorsa eklenir. Yeni araç eklerken kontrol edin.
+ *
+ * Dışarıda bırakılanlar ve sebepleri:
+ *   • pdf-duzenle — gerçek metin değişimi sunucuda yapılır.
+ *   • pdf-ozetle, pdf-sohbet, pdf-veri-cikar, pdf-ceviri, ai-toplu-islem,
+ *     pdf-karsilastir, hassas-veri-gizle — yapay zekâ araçları; metin dışarı gider.
+ *   • imza-iste — imza isteği karşı tarafa sunucu üzerinden iletilir.
+ *
+ * Not: pdf-imzala, pdf-yorumla ve belge-tara'da işlem cihazda yapılır; kullanıcı
+ * sonucu KENDİ isteğiyle hesabına kaydederse yükleme o anda olur. İşlemin kendisi
+ * yine de cihazdadır.
+ */
+export const ON_DEVICE_SEO_TOOLS = new Set<string>([
+  "pdf-imzala",
+  "pdf-yorumla",
+  "crop-pdf",
+  "pdf-kesit-al",
+  "gorsel-sikistir",
+  "gorsel-boyutlandir",
+  "belge-tara",
+  "aranabilir-pdf",
+  "taranmis-pdf-ocr",
+  "form-doldur",
+  "ustveri-temizle",
+  "sayfa-duzeni",
+  "udf-to-pdf",
+]);
 
 export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, wide, isAuthenticated, onOpenApp, userName, overlay }: Props) {
   const tr = language === "tr";
