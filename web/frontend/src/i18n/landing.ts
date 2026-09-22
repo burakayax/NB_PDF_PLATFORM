@@ -1,3 +1,5 @@
+import { ARAC_SAYISI } from "../seo/seoContent.mjs";
+
 export type Language = "tr" | "en";
 
 type LandingFeature = {
@@ -171,7 +173,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // Ölçüldü (en): pdf to word → pdf to jpg → pdf to excel → pdf editor →
       // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
       headline:
-        "PDF to Word, Merge, Compress and Edit — 45 PDF Tools in One Place",
+        `PDF to Word, Merge, Compress and Edit — ${ARAC_SAYISI} PDF Tools in One Place`,
 
       alternatives: [
         "Fast, Secure PDF Management for Business Workflows",
@@ -516,7 +518,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
        * sayılan dört aracın olduğunu sanıyordu (kullanıcı bildirdi).
        */
       headline:
-        "PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — 45 PDF Aracı Tek Platformda",
+        `PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — ${ARAC_SAYISI} PDF Aracı Tek Platformda`,
 
       alternatives: [
         "İş Süreçleri İçin Hızlı ve Güvenli PDF Yönetimi",

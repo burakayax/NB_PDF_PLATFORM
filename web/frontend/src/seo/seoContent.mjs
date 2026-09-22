@@ -79,6 +79,16 @@ export const TOOL_SLUGS = [
 ];
 
 /**
+ * Sitede kaç araç olduğu — TEK KAYNAK.
+ *
+ * Bu sayı ana sayfa başlığı, H1, açıklama ve fiyat kartında geçiyordu ve HER
+ * BİRİNE ELLE yazılmıştı. Yeni araç eklendiğinde güncellenmesi unutuldu: site
+ * 46 araç sunarken Google'a ve ziyaretçiye "45 araç" diyordu. Artık listeden
+ * türetiliyor, kendiliğinden doğru kalıyor.
+ */
+export const ARAC_SAYISI = TOOL_SLUGS.length;
+
+/**
  * Başlığa marka ekini YALNIZCA 60 karakterlik görünür sınıra sığdığında ekler.
  *
  * Google arama sonucunda başlığı ~60 karakterde keser. Marka eki 15 karakter
@@ -1557,12 +1567,12 @@ export const LANDING_SEO = {
      * Ayrıca araç sayısı yazılıyor: sayılan üç-dört aracı okuyan kişi sitede
      * yalnızca onların olduğunu sanıyordu (kullanıcı bildirdi).
      */
-    title: markaEkle(`PDF Birleştirme, Word'e Çevirme ve Küçültme — 45 Araç`),
+    title: markaEkle(`PDF Birleştirme, Word'e Çevirme ve Küçültme — ${ARAC_SAYISI} Araç`),
     description:
       "PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.",
-    h1: "PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — 45 PDF Aracı Tek Platformda",
+    h1: `PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — ${ARAC_SAYISI} PDF Aracı Tek Platformda`,
     intro:
-      "PDF Platform 45 araç sunar: PDF birleştirme, ayırma, küçültme (sıkıştırma), Word/Excel/PowerPoint ve JPG dönüştürme, düzenleme, imzalama, form doldurma, tarama, filigran ve şifreleme. Birleştirme ve görselden PDF gibi araçlar üyelik gerektirmeden, tamamen tarayıcınızda çalışır — dosyalarınız cihazınızdan hiç çıkmaz, anında ve 80 MB'a kadar ücretsizdir. Kurulum gerekmez.",
+      `PDF Platform ${ARAC_SAYISI} araç sunar: PDF birleştirme, ayırma, küçültme (sıkıştırma), Word/Excel/PowerPoint ve JPG dönüştürme, düzenleme, imzalama, form doldurma, tarama, filigran ve şifreleme. Birleştirme ve görselden PDF gibi araçlar üyelik gerektirmeden, tamamen tarayıcınızda çalışır — dosyalarınız cihazınızdan hiç çıkmaz, anında ve 80 MB'a kadar ücretsizdir. Kurulum gerekmez.`,
     faq: [
       { q: "PDF birleştirmek için üye olmam gerekiyor mu?", a: "Hayır. Birleştirme, görselden PDF gibi temel araçları üyelik veya kayıt olmadan, ücretsiz ve sınırsız kullanabilirsiniz. Üyelik yalnızca işlem geçmişini kaydetmek, Word/Excel dönüştürme ve OCR gibi gelişmiş araçlar ve daha büyük dosyalar için gerekir." },
       { q: "Dosyalarım güvende mi? Sunucuya yükleniyor mu?", a: "Birleştirme ve görselden PDF gibi araçlarda dosyalarınız tamamen TARAYICINIZDA (cihazınızda) işlenir — sunucuya hiç gönderilmez, bilgisayarınızdan çıkmaz, %100 gizlidir. Sunucu gerektiren dönüştürme gibi işlemlerde ise içerik saklanmaz ve şifreli bağlantı kullanılır." },
@@ -1575,7 +1585,7 @@ export const LANDING_SEO = {
   en: {
     // Ölçüldü (en): pdf to word → pdf to jpg → pdf to excel → pdf editor →
     // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
-    title: markaEkle(`PDF to Word, Merge & Compress — 45 PDF Tools`),
+    title: markaEkle(`PDF to Word, Merge & Compress — ${ARAC_SAYISI} PDF Tools`),
     description:
       "PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.",
     h1: "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
