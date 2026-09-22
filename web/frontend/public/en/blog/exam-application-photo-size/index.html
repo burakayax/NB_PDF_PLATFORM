@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Exam Application Photo Size: 300×400 px, 60 KB</title>
+    <meta name="description" content="Photo rejected by an exam application system? A step-by-step way to hit the required pixel dimensions and file size, with nothing to install." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/exam-application-photo-size" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/exam-application-photo-size" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Exam Application Photo Size: 300×400 px, 60 KB" />
+    <meta property="og:description" content="Photo rejected by an exam application system? A step-by-step way to hit the required pixel dimensions and file size, with nothing to install." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/exam-application-photo-size.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Exam Application Photo Size: 300×400 px, 60 KB" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/exam-application-photo-size" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Exam Application Photo Size: 300×400 px, 60 KB" />
+    <meta name="twitter:description" content="Photo rejected by an exam application system? A step-by-step way to hit the required pixel dimensions and file size, with nothing to install." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/exam-application-photo-size.png" />
+    <meta name="twitter:image:alt" content="Exam Application Photo Size: 300×400 px, 60 KB" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"Exam Application Photo Size: 300×400 px, 60 KB","item":"https://www.pdfplatform.app/en/blog/exam-application-photo-size"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Exam Application Photo Size: 300×400 px, 60 KB","description":"Photo rejected by an exam application system? A step-by-step way to hit the required pixel dimensions and file size, with nothing to install.","datePublished":"2026-09-22","dateModified":"2026-09-22","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/exam-application-photo-size","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/exam-application-photo-size.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Exam Application Photo Size: 300×400 px, 60 KB","description":"Photo rejected by an exam application system? A step-by-step way to hit the required pixel dimensions and file size, with nothing to install.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Set the right dimensions","text":"In the resize tool, pick the exam application entry from the ready-made sizes; width and height come in at 300 × 400. You can also type them in."},{"@type":"HowToStep","position":2,"name":"Check the file size","text":"Look at the size of the downloaded file. Under 60 KB and you are done."},{"@type":"HowToStep","position":3,"name":"Compress if needed","text":"If it is still large, put it through the image compressor and lower the quality gradually. At passport-photo dimensions, 70% quality usually drops under 60 KB while keeping the face sharp."},{"@type":"HowToStep","position":4,"name":"Check by eye","text":"Open the photo at full size and make sure the face is sharp. Over-compression distorts facial features and the photo may be rejected."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What pixel size should an exam application photo be?","acceptedAnswer":{"@type":"Answer","text":"Commonly 300 × 400 pixels, at most 60 KB, in JPG format. Requirements change, so rely on the note shown on the application screen."}},{"@type":"Question","name":"My photo is the right size but the file is too big — what now?","acceptedAnswer":{"@type":"Answer","text":"Pixel dimensions and file size are different things. Keep the dimensions and compress the photo separately; at passport-photo size, 70% quality usually gets under the limit while keeping the face sharp."}},{"@type":"Question","name":"Can I use my phone photo directly?","acceptedAnswer":{"@type":"Answer","text":"You need to crop it first. Camera photos are 4:3 or 16:9 while a passport photo is 3:4. Crop with the face centred, then resize."}},{"@type":"Question","name":"Can I enlarge a small photo?","acceptedAnswer":{"@type":"Answer","text":"You can, but the result will be blurry; lost detail does not return. Start from the highest-resolution original you have."}},{"@type":"Question","name":"Does this tool make a photo biometric?","acceptedAnswer":{"@type":"Answer","text":"No. It only sets the size. A white background, the position of the face and a neutral expression depend on the photo itself and must be handled separately."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Exam Application Photo Size: 300×400 px, 60 KB</h1><p class="seo-intro">The application screen will not take your photo and does not say why. It is nearly always one of two things: the pixel dimensions or the file size do not match.</p><figure class="seo-cover"><img src="/en/covers/exam-application-photo-size.png" width="1200" height="630" loading="lazy" decoding="async" alt="Exam Application Photo Size: 300×400 px, 60 KB" /></figure><article class="seo-article"><p class="seo-lead">It is the last day of applications, the form is filled in, and you have reached the photo. The system will not accept it, and the error is rarely informative. The cause is almost always one of two things: the photo&#39;s pixel dimensions or its file size do not match what was asked for.</p><h2>The requirements</h2><p>Turkish exam applications commonly ask for:</p><ul><li>Pixel dimensions: 300 × 400 (width × height).</li><li>File size: 60 KB at most.</li><li>Format: JPG (JPEG).</li><li>Content: taken within the last six months, white background, face clearly visible.</li></ul><p>These requirements differ between institutions and change from year to year. The note on the application screen always governs; the method below works whatever size is asked for.</p><h2>Pixel dimensions and file size are different things</h2><p>This distinction is the real source of the confusion. Pixel dimensions are the photo&#39;s width and height — 300 × 400. File size is how much room it takes on disk — 60 KB.</p><p>A photo can be exactly 300 × 400 pixels and still weigh 400 KB. The reverse is possible too. So you have to satisfy the two conditions separately: set the dimensions first, then compress if the size is still high.</p><h2>Step by step</h2><ol><li><strong>Set the right dimensions:</strong> In the resize tool, pick the exam application entry from the ready-made sizes; width and height come in at 300 × 400. You can also type them in.</li><li><strong>Check the file size:</strong> Look at the size of the downloaded file. Under 60 KB and you are done.</li><li><strong>Compress if needed:</strong> If it is still large, put it through the image compressor and lower the quality gradually. At passport-photo dimensions, 70% quality usually drops under 60 KB while keeping the face sharp.</li><li><strong>Check by eye:</strong> Open the photo at full size and make sure the face is sharp. Over-compression distorts facial features and the photo may be rejected.</li></ol><p><a href="/en/tools/resize-image"><strong>Resize Image</strong> — Bring a photo to the pixel dimensions exam and official applications require — ready-made sizes, on your device.</a></p><h2>Common mistakes</h2><ul><li>Uploading an ordinary phone photo without cropping. Camera photos are 4:3 or 16:9; a passport photo is 3:4. You have to crop to that ratio first.</li><li>Using a screenshot. Screenshots come out as PNG and are usually both the wrong size and heavier than needed.</li><li>Enlarging a small photo. Taking a 150 × 200 image up to 300 × 400 gives a blurry result; lost detail does not come back.</li><li>Assuming the background is white. If the wall is light grey or cream, the system or a reviewer may reject it.</li></ul><p>Crop BEFORE you resize. First crop to a 3:4 ratio with the face centred, then set 300 × 400. Do it the other way round and the face gets squashed out of proportion.</p><h2>Common sizes for other applications</h2><p>The same method applies to every official photo size. In Turkey, ID card, passport and driving licence applications commonly use 50 × 60 mm; Schengen and many other visa applications ask for 35 × 45 mm. Sizes given in millimetres convert to pixels at 300 DPI.</p><p>Worth repeating: a tool bringing a photo to the right size does not make it biometrically compliant. Background, the position of the face and the expression all depend on how the photo was taken.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/resize-image">Resize Image</a></li><li><a href="/en/tools/compress-image">Compress Image</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>What pixel size should an exam application photo be?</h3><p>Commonly 300 × 400 pixels, at most 60 KB, in JPG format. Requirements change, so rely on the note shown on the application screen.</p></div><div class="seo-faq-item"><h3>My photo is the right size but the file is too big — what now?</h3><p>Pixel dimensions and file size are different things. Keep the dimensions and compress the photo separately; at passport-photo size, 70% quality usually gets under the limit while keeping the face sharp.</p></div><div class="seo-faq-item"><h3>Can I use my phone photo directly?</h3><p>You need to crop it first. Camera photos are 4:3 or 16:9 while a passport photo is 3:4. Crop with the face centred, then resize.</p></div><div class="seo-faq-item"><h3>Can I enlarge a small photo?</h3><p>You can, but the result will be blurry; lost detail does not return. Start from the highest-resolution original you have.</p></div><div class="seo-faq-item"><h3>Does this tool make a photo biometric?</h3><p>No. It only sets the size. A white background, the position of the face and a neutral expression depend on the photo itself and must be handled separately.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -473,6 +473,35 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "udf-to-pdf": S(
+    [
+      {
+        title: "UDF dosyanı seç",
+        detail:
+          "UYAP'tan indirdiğin, sonu «.udf» ile biten dosyayı seç. Birkaç dosyayı aynı anda da bırakabilirsin.",
+      },
+      {
+        title: "«PDF'e çevir» düğmesine bas",
+        detail:
+          "Belge bilgisayarının içinde çözülür; yazılar, tablolar ve varsa resimler olduğu gibi aktarılır.",
+      },
+      TR_DOWNLOAD,
+    ],
+    [
+      {
+        title: "Choose your UDF file",
+        detail:
+          "Pick the file ending in «.udf» that you downloaded from UYAP. You can drop several files at once.",
+      },
+      {
+        title: "Click «Convert to PDF»",
+        detail:
+          "The document is decoded on your own computer; text, tables and any images carry over as they are.",
+      },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   "pdf-ozetle": S(
     [

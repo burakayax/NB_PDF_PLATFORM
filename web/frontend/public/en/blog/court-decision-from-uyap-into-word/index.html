@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Getting a Court Decision from UYAP into Word</title>
+    <meta name="description" content="Need to edit the text of a .udf decision from Turkey&#39;s UYAP system in Word? A two-step route that keeps the formatting intact." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Getting a Court Decision from UYAP into Word" />
+    <meta property="og:description" content="Need to edit the text of a .udf decision from Turkey&#39;s UYAP system in Word? A two-step route that keeps the formatting intact." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/court-decision-from-uyap-into-word.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Getting a Court Decision from UYAP into Word" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Getting a Court Decision from UYAP into Word" />
+    <meta name="twitter:description" content="Need to edit the text of a .udf decision from Turkey&#39;s UYAP system in Word? A two-step route that keeps the formatting intact." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/court-decision-from-uyap-into-word.png" />
+    <meta name="twitter:image:alt" content="Getting a Court Decision from UYAP into Word" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"Getting a Court Decision from UYAP into Word","item":"https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Getting a Court Decision from UYAP into Word","description":"Need to edit the text of a .udf decision from Turkey's UYAP system in Word? A two-step route that keeps the formatting intact.","datePublished":"2026-09-22","dateModified":"2026-09-22","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/court-decision-from-uyap-into-word.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Getting a Court Decision from UYAP into Word","description":"Need to edit the text of a .udf decision from Turkey's UYAP system in Word? A two-step route that keeps the formatting intact.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Convert the UDF to PDF","text":"Drop the file into the UDF tool. The work happens in your browser; court documents are not uploaded."},{"@type":"HowToStep","position":2,"name":"Download the PDF","text":"Fonts, bold and underlined text, alignment and tables are preserved."},{"@type":"HowToStep","position":3,"name":"Convert the PDF to Word","text":"Feed the downloaded PDF to the PDF to Word tool and get an editable .docx."},{"@type":"HowToStep","position":4,"name":"Check in Word","text":"Review paragraph breaks and any tables after conversion. Small corrections in long documents are normal."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I open a UDF file directly in Word?","acceptedAnswer":{"@type":"Answer","text":"No. Word does not recognise the format, and renaming the extension does not help. Convert to PDF first, then to Word."}},{"@type":"Question","name":"I only need the text — what is fastest?","acceptedAnswer":{"@type":"Answer","text":"Download the plain text as .txt from the UDF tool and paste it into Word. Formatting does not come across, but the text arrives complete."}},{"@type":"Question","name":"Is formatting preserved?","acceptedAnswer":{"@type":"Answer","text":"Going via PDF preserves paragraph layout, bold text and tables to a large extent. Long documents may need small corrections."}},{"@type":"Question","name":"What if the decision is a scanned image?","acceptedAnswer":{"@type":"Answer","text":"Run OCR first; in a scanned document the writing is a picture and cannot be copied. After OCR the same steps take it into Word."}},{"@type":"Question","name":"Can the converted file be used officially?","acceptedAnswer":{"@type":"Answer","text":"No. The PDF copy does not carry the electronic signature held in the UDF. Use the signed original for official filings."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Getting a Court Decision from UYAP into Word</h1><p class="seo-intro">You want to bring the reasoning of a precedent decision into your own filing. You have a UDF file, Word does not recognise it, and retyping from the screen takes hours.</p><figure class="seo-cover"><img src="/en/covers/court-decision-from-uyap-into-word.png" width="1200" height="630" loading="lazy" decoding="async" alt="Getting a Court Decision from UYAP into Word" /></figure><article class="seo-article"><p class="seo-lead">You have a precedent decision and want a few paragraphs of its reasoning in your own filing. The file is a UDF; Word will not open it and you cannot copy from it. At this point most people retype from the screen. You do not have to — it transfers in two steps.</p><h2>Why it does not work directly</h2><p>UDF is UYAP&#39;s own document format and bears no relation to the formats Word recognises. Renaming the extension to «.doc» does not help either; that changes the name, not the structure inside the file.</p><p>The bridge is PDF. Convert the UDF to PDF and you have a widely supported document; from there, going to Word is a standard operation.</p><h2>Which route to take</h2><p>There are two routes and the choice is simple:</p><ul><li>If you only need the text: take the plain text (.txt) the UDF tool gives you and paste it into Word. This is the fastest route; formatting does not come, but the text does.</li><li>If you need the formatting too: convert UDF to PDF, then PDF to Word. Paragraph layout, bold text and tables are preserved.</li></ul><p>For quoting in a filing the first route is usually enough, since you will reformat the text to match your own document anyway. Choose the second when you need to carry over a table or a layout as it stands.</p><h2>Step by step: transferring with formatting</h2><ol><li><strong>Convert the UDF to PDF:</strong> Drop the file into the UDF tool. The work happens in your browser; court documents are not uploaded.</li><li><strong>Download the PDF:</strong> Fonts, bold and underlined text, alignment and tables are preserved.</li><li><strong>Convert the PDF to Word:</strong> Feed the downloaded PDF to the PDF to Word tool and get an editable .docx.</li><li><strong>Check in Word:</strong> Review paragraph breaks and any tables after conversion. Small corrections in long documents are normal.</li></ol><p><a href="/en/tools/udf-to-pdf"><strong>UDF to PDF</strong> — Convert a decision downloaded from UYAP to PDF with nothing installed, and take the text as .txt too.</a></p><h2>Scanned decisions need an extra step</h2><p>In older case files a decision sometimes arrives not as a UDF but as a scanned image. In such a document the writing is really a picture; you can neither copy nor search it.</p><p>Then you first need to run the document through OCR to extract the text. OCR turns the writing in the image into real text; after that the same steps get you into Word.</p><p><a href="/en/tools/ocr-pdf"><strong>Scanned PDF to Text (OCR)</strong> — Turn the writing inside a scanned decision into real text, then take it into Word.</a></p><h2>Always compare afterwards</h2><p>No conversion is flawless, and in a legal text a single shifted digit has serious consequences. After transferring into Word, compare these against the original:</p><ul><li>Case and decision numbers.</li><li>Dates.</li><li>Monetary amounts and interest rates.</li><li>Statutory article numbers.</li><li>The spelling of party names.</li></ul><p>Keep the PDF of the decision as well. If you later need to show that your quotation is accurate, you have a readable copy of the source to hand.</p><h2>A reminder: the PDF copy is not the signed original</h2><p>The electronic signature in a UDF does not carry into the PDF. The converted file is a readable copy for working and quoting. If an official filing needs the document, use the signed UDF original.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/udf-to-pdf">UDF to PDF</a></li><li><a href="/en/tools/pdf-to-word">PDF to Word converter</a></li><li><a href="/en/tools/ocr-pdf">Scanned PDF to Text (OCR)</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Can I open a UDF file directly in Word?</h3><p>No. Word does not recognise the format, and renaming the extension does not help. Convert to PDF first, then to Word.</p></div><div class="seo-faq-item"><h3>I only need the text — what is fastest?</h3><p>Download the plain text as .txt from the UDF tool and paste it into Word. Formatting does not come across, but the text arrives complete.</p></div><div class="seo-faq-item"><h3>Is formatting preserved?</h3><p>Going via PDF preserves paragraph layout, bold text and tables to a large extent. Long documents may need small corrections.</p></div><div class="seo-faq-item"><h3>What if the decision is a scanned image?</h3><p>Run OCR first; in a scanned document the writing is a picture and cannot be copied. After OCR the same steps take it into Word.</p></div><div class="seo-faq-item"><h3>Can the converted file be used officially?</h3><p>No. The PDF copy does not carry the electronic signature held in the UDF. Use the signed original for official filings.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

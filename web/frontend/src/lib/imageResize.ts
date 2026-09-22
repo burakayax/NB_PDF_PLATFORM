@@ -196,8 +196,14 @@ export async function resizeImage(file: File, opts: ResizeOptions): Promise<Resi
 }
 
 /**
- * Sosyal medya ölçüleri — platformların 2026'daki güncel önerileri.
- * Kullanıcı ölçüyü ezberlemek zorunda kalmasın diye hazır seçenekler.
+ * Sosyal medya ve resmî belge ölçüleri — kullanıcı ölçüyü ezberlemek zorunda
+ * kalmasın diye hazır seçenekler.
+ *
+ * "belge" grubu, Türkiye'deki başvuru sistemlerinin istediği ölçülerdir.
+ * Milimetre cinsinden tanımlı olanlar 300 DPI kabul edilerek piksele çevrildi
+ * (px = mm / 25,4 × 300). Bu araç YALNIZCA yeniden boyutlandırır: arka planı
+ * beyazlatmaz, yüzü ortalamaz, kırpmaz. Kurumların güncel şartı değişebilir;
+ * arayüzde ve rehberlerde kullanıcıya teyit etmesi söylenmelidir.
  */
 export type SizePreset = {
   id: string;
@@ -205,10 +211,16 @@ export type SizePreset = {
   en: string;
   w: number;
   h: number;
-  group: "instagram" | "facebook" | "x" | "linkedin" | "youtube" | "web";
+  group: "belge" | "instagram" | "facebook" | "x" | "linkedin" | "youtube" | "web";
 };
 
 export const SIZE_PRESETS: SizePreset[] = [
+  // ── Resmî başvurular (Türkiye) ────────────────────────────────────────────
+  { id: "osym", tr: "ÖSYM / sınav başvurusu", en: "Turkish exam application (ÖSYM)", w: 300, h: 400, group: "belge" },
+  { id: "biyometrik-50x60", tr: "Biyometrik 50×60 mm (kimlik, pasaport, ehliyet)", en: "Biometric 50×60 mm (Turkish ID, passport)", w: 591, h: 709, group: "belge" },
+  { id: "vize-35x45", tr: "Vize / Schengen 35×45 mm", en: "Visa / Schengen 35×45 mm", w: 413, h: 531, group: "belge" },
+  { id: "vesikalik-45x60", tr: "Vesikalık 45×60 mm", en: "Passport-style photo 45×60 mm", w: 531, h: 709, group: "belge" },
+
   { id: "ig-square", tr: "Instagram gönderi (kare)", en: "Instagram post (square)", w: 1080, h: 1080, group: "instagram" },
   { id: "ig-portrait", tr: "Instagram gönderi (dikey 4:5)", en: "Instagram post (portrait 4:5)", w: 1080, h: 1350, group: "instagram" },
   { id: "ig-story", tr: "Instagram hikâye / Reels", en: "Instagram story / Reels", w: 1080, h: 1920, group: "instagram" },

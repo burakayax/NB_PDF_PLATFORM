@@ -5861,6 +5861,1242 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  // ── Türkiye'ye özgü başvuru/evrak rehberleri ────────────────────────────────
+  post(
+    {
+      slug: "uyap-belge-yukleme-boyut-hatasi",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 7,
+      tags: { tr: ["UYAP", "Resmî Evrak", "Sıkıştırma"], en: ["UYAP", "Official Documents", "Compression"] },
+      accent: "amber",
+      tool: "/tools/compress",
+    },
+    {
+      title: "UYAP'a Belge Yüklenmiyor: Boyut Hatasını Çözme",
+      description:
+        "UYAP'a evrak yüklerken hata mı alıyorsunuz? Sorun çoğunlukla dosya boyutu. Sebebini bulmanın ve dosyayı sınırın altına indirmenin pratik yolu.",
+      excerpt:
+        "UYAP'ın en can sıkıcı tarafı, dosyayı neden kabul etmediğini çoğu zaman söylememesi. Ekranda genel bir hata belirir, siz de dilekçeyi tekrar tekrar yüklemeyi denersiniz. Sebep genellikle tek bir şeydir: dosya fazla büyüktür.",
+      blocks: [
+        { t: "lead", x: "Duruşma günü yaklaşıyor, dilekçeniz hazır, ekleri taradınız ve UYAP dosyayı kabul etmiyor. Hata mesajı da işe yaramıyor — sistem çoğu zaman sorunun boyut olduğunu açıkça söylemez. Bu yazı, hatanın gerçek sebebini nasıl bulacağınızı ve dosyayı nasıl sınırın altına indireceğinizi anlatıyor." },
+
+        { t: "h2", x: "Önce sebebi doğru teşhis edin" },
+        { t: "p", x: "Yükleme hatasının pratikte üç kaynağı olur ve çözümleri birbirinden tamamen farklıdır:" },
+        { t: "ul", items: [
+          "Dosya boyutu sınırı aşılmıştır. En sık görülen sebep budur ve genellikle taranmış eklerden kaynaklanır.",
+          "Dosya biçimi kabul edilmiyordur. Portal belirli uzantıları bekler; telefonla çektiğiniz fotoğrafı doğrudan yüklemeye çalışmak sık yapılan bir hatadır.",
+          "Dosya bozuktur ya da şifrelidir. Parola korumalı bir PDF karşı tarafta açılamaz.",
+        ] },
+        { t: "tip", x: "Hangisi olduğunu anlamanın en hızlı yolu: aynı işlemi tek sayfalık, küçük bir test PDF'iyle deneyin. O geçiyorsa sorun kesinlikle boyut ya da içerik; geçmiyorsa sorun portal tarafındadır ve beklemek gerekir." },
+
+        { t: "h2", x: "Boyutu asıl şişiren şey: taranmış ekler" },
+        { t: "p", x: "Dilekçenin kendisi birkaç yüz kilobayttır. Dosyayı onlarca megabayta çıkaran şey neredeyse her zaman eklerdir: tarayıcıdan yüksek çözünürlükte, renkli olarak alınmış sayfalar ya da telefonla çekilip PDF'e çevrilmiş fotoğraflar. Modern bir telefon kamerası tek bir sayfayı 4–6 MB'lık bir görsel olarak kaydeder; yirmi sayfalık bir ek kolayca 100 MB'ı geçer." },
+        { t: "p", x: "Bu yüzden çözüm dilekçeyi budamak değil, ekleri makul boyuta indirmektir. Metnin okunaklılığından ödün vermeden yapılabilir." },
+
+        { t: "h2", x: "Adım adım: dosyayı sınırın altına indirme" },
+        { t: "steps", items: [
+          { title: "Dosyayı sıkıştırın", x: "PDF Sıkıştırma aracına dosyayı verin ve bir sıkıştırma düzeyi seçin. Taranmış, görsel ağırlıklı belgelerde kazanç en yüksektir; çoğu dosya üçte birine kadar iner." },
+          { title: "Sonucu gözle kontrol edin", x: "İnen dosyayı açıp en küçük puntolu sayfaya bakın. Yazılar rahat okunuyorsa sorun yok. Bulanıklaştıysa bir alt sıkıştırma düzeyine geçin." },
+          { title: "Hâlâ büyükse belgeyi bölün", x: "Tek dosya sınırı aşıyorsa dilekçeyi ve ekleri ayrı dosyalar hâlinde yükleyin. PDF Bölme ile belgeyi sayfa aralıklarına ayırabilirsiniz." },
+          { title: "Parçaları anlamlı adlandırın", x: "«ek-1-bilirkisi-raporu.pdf» gibi. Kalem sizde olduğu sürece dosya adı, karşı tarafın işini kolaylaştıran en ucuz şeydir." },
+        ] },
+
+        { t: "cta", title: "PDF Sıkıştır", x: "Taranmış ekleri okunaklılığı bozmadan küçültün; portal sınırının altına inin.", btn: "Aracı aç", tool: "/tools/compress" },
+
+        { t: "h2", x: "Baştan küçük tarayın — en kolay çözüm" },
+        { t: "p", x: "Sonradan sıkıştırmak yerine baştan doğru taramak her zaman daha iyi sonuç verir. Resmî evrak için pratik ayarlar:" },
+        { t: "ul", items: [
+          "Siyah-beyaz ya da gri tonlama seçin. Belgede renkli bir mühür ya da imza yoksa renge ihtiyacınız yoktur ve renk dosyayı üç katına çıkarır.",
+          "300 DPI yeterlidir. Daha yükseği okunaklılığı artırmaz, yalnızca boyutu şişirir.",
+          "Telefonla çekiyorsanız fotoğraf olarak değil, belge tarayıcı ile tarayın. Tarayıcı kenarları bulur, perspektifi düzeltir ve çok daha küçük bir dosya üretir.",
+        ] },
+        { t: "tip", x: "Telefonunuzla çektiğiniz evrakı doğrudan PDF'e çevirmek yerine Belge Tarayıcı'dan geçirin: kenarlar otomatik bulunur, sayfa düzleştirilir ve ortaya gerçekten «taranmış» görünen, küçük bir dosya çıkar." },
+
+        { t: "h2", x: "UDF dosyaları ayrı bir konu" },
+        { t: "p", x: "UYAP'ın kendi belge biçimi olan UDF için sistem tarafında ayrı ve daha dar bir boyut sınırı uygulanır; uygulamada 10 MB üzerindeki UDF dosyalarının kabul edilmediği bildiriliyor. Üstelik sistem bunu açıkça söylemez, yalnızca genel bir hata verir." },
+        { t: "p", x: "UDF dosyanız büyükse sebebi neredeyse her zaman belgeye yapıştırılmış görsellerdir. Görselleri belgeden çıkarıp ek olarak ayrı yüklemek en temiz çözümdür." },
+        { t: "p", x: "Sınırlar kurumlara ve işlem türüne göre değişir ve zaman içinde güncellenir; kesin rakam için yükleme ekranındaki açıklamayı esas alın." },
+
+        { t: "h2", x: "Yüklemeden önce son kontrol" },
+        { t: "ul", items: [
+          "Dosya parolalı mı? Parola korumalı PDF karşı tarafta açılamaz; kilidi kaldırın.",
+          "Sayfalar doğru sırada ve doğru yönde mi? Yan yatmış bir ek, hâkimin belgeyi çevirerek okumasına sebep olur.",
+          "Kişisel veri var mı? Dosyaya konu dışı bir belge karışmışsa çıkarın.",
+          "Toplam boyut, ekrandaki sınırın altında mı?",
+        ] },
+        { t: "p", x: "Bu dört kontrol bir dakika sürer ve son gün yaşanan yükleme krizlerinin çoğunu baştan önler." },
+      ],
+      faq: [
+        { q: "UYAP'a yüklenecek dosya en fazla kaç MB olmalı?", a: "Sınır işlem türüne ve kuruma göre değişir; UDF dosyalarında uygulamada 10 MB'lık bir üst sınır bildiriliyor, bazı başvuru türlerinde dosya başına 40 MB'a kadar izin verilebiliyor. Güncel rakam için yükleme ekranındaki açıklamayı esas alın." },
+        { q: "Sıkıştırma belgenin okunaklılığını bozar mı?", a: "Dengeli düzeyde bozmaz. Taranmış belgelerde en büyük kazanç görsellerden gelir ve metin okunaklı kalır. İndirdikten sonra en küçük puntolu sayfayı kontrol edin; bulanıklaştıysa bir alt düzeye geçin." },
+        { q: "Dosyam neden bu kadar büyük?", a: "Neredeyse her zaman taranmış ekler yüzünden. Renkli ve yüksek çözünürlüklü tarama, ya da telefonla çekilmiş fotoğraflar bir sayfayı tek başına birkaç megabayta çıkarır." },
+        { q: "Tek dosya sınırı aşıyorsa ne yapmalıyım?", a: "Belgeyi mantıklı parçalara bölüp ayrı ayrı yükleyin: dilekçe bir dosya, her ek ayrı bir dosya. Dosya adlarını içeriğe göre verin." },
+        { q: "Belgem sıkıştırılırken sunucunuza yükleniyor mu?", a: "PDF sıkıştırma sunucuda çalışır ve dosya işlem sonrası silinir. Dosyanın cihazınızdan hiç çıkmamasını istiyorsanız birleştirme, bölme, döndürme ve sayfa silme gibi işlemler tarayıcınızda yapılır." },
+      ],
+    },
+    {
+      title: "UYAP Upload Fails: Fixing File Size Errors",
+      description:
+        "Getting an error when uploading documents to Turkey's UYAP court portal? It is usually file size. How to find the real cause and get under the limit.",
+      excerpt:
+        "The most frustrating thing about UYAP is that it rarely tells you why a file was rejected. A generic error appears and you keep retrying. The cause is usually one thing: the file is too big.",
+      blocks: [
+        { t: "lead", x: "The hearing is close, your petition is ready, you scanned the exhibits — and the portal will not take the file. The error message does not help, because the system rarely says the problem is size. This piece explains how to find the real cause and how to get the file under the limit." },
+
+        { t: "h2", x: "Diagnose the cause first" },
+        { t: "p", x: "In practice an upload failure has three sources, and the fixes are completely different:" },
+        { t: "ul", items: [
+          "The size limit was exceeded. This is the most common cause and it almost always comes from scanned exhibits.",
+          "The format is not accepted. The portal expects specific extensions; uploading a phone photo directly is a common mistake.",
+          "The file is corrupt or password protected. An encrypted PDF cannot be opened on the other side.",
+        ] },
+        { t: "tip", x: "The fastest way to tell: try the same upload with a small, one-page test PDF. If that goes through, the problem is size or content; if it does not, the problem is on the portal's side and you have to wait." },
+
+        { t: "h2", x: "What actually inflates the file: scanned exhibits" },
+        { t: "p", x: "The petition itself is a few hundred kilobytes. What pushes a filing into tens of megabytes is nearly always the exhibits: pages scanned in colour at high resolution, or photos taken with a phone and turned into a PDF. A modern phone camera saves a single page as a 4–6 MB image; twenty pages easily pass 100 MB." },
+        { t: "p", x: "So the fix is not to trim the petition but to bring the exhibits down to a sensible size — which can be done without losing legibility." },
+
+        { t: "h2", x: "Step by step: getting under the limit" },
+        { t: "steps", items: [
+          { title: "Compress the file", x: "Feed the file to the compression tool and pick a level. Scanned, image-heavy documents gain the most; most files drop to about a third." },
+          { title: "Check the result by eye", x: "Open the downloaded file and look at the page with the smallest type. If it reads comfortably, you are fine. If it blurred, step down one compression level." },
+          { title: "Still too big? Split it", x: "If one file exceeds the limit, upload the petition and the exhibits as separate files. Splitting lets you break a document into page ranges." },
+          { title: "Name the parts meaningfully", x: "Something like «exhibit-1-expert-report.pdf». File names are the cheapest way to make the reader's job easier." },
+        ] },
+
+        { t: "cta", title: "Compress PDF", x: "Shrink scanned exhibits without hurting legibility and get under the portal's limit.", btn: "Open the tool", tool: "/tools/compress" },
+
+        { t: "h2", x: "Scan small in the first place" },
+        { t: "p", x: "Scanning correctly beats compressing afterwards every time. Practical settings for official paperwork:" },
+        { t: "ul", items: [
+          "Choose black and white or greyscale. If there is no coloured stamp or signature, you do not need colour — and colour triples the file.",
+          "300 DPI is enough. Higher does not improve legibility, it only inflates the file.",
+          "If you are using a phone, scan the document rather than photographing it. A scanner finds the edges, corrects the perspective and produces a much smaller file.",
+        ] },
+        { t: "tip", x: "Instead of turning a phone photo straight into a PDF, run it through the document scanner: edges are detected automatically, the page is flattened, and what comes out actually looks scanned — and is far smaller." },
+
+        { t: "h2", x: "UDF files are a separate matter" },
+        { t: "p", x: "UYAP's own document format, UDF, has its own and tighter size limit on the system side; in practice UDF files above 10 MB are reported as rejected. Worse, the system does not say so — it just shows a generic error." },
+        { t: "p", x: "If your UDF is large, the cause is almost always images pasted into the document. Taking the images out and uploading them as separate exhibits is the cleanest fix." },
+        { t: "p", x: "Limits differ by institution and filing type and change over time; for the exact figure, trust the note on the upload screen." },
+
+        { t: "h2", x: "A final check before uploading" },
+        { t: "ul", items: [
+          "Is the file password protected? An encrypted PDF cannot be opened on the other side; remove the lock.",
+          "Are the pages in the right order and the right way up? A sideways exhibit makes the reader rotate the document.",
+          "Is there personal data that does not belong in this filing? Take it out.",
+          "Is the total size below the limit shown on screen?",
+        ] },
+        { t: "p", x: "These four checks take a minute and prevent most last-day upload crises." },
+      ],
+      faq: [
+        { q: "What is the maximum file size for a UYAP upload?", a: "The limit varies by filing type and institution; for UDF files a 10 MB ceiling is reported in practice, while some application types allow up to 40 MB per file. For the current figure, rely on the note shown on the upload screen." },
+        { q: "Does compression hurt legibility?", a: "Not at a balanced level. In scanned documents most of the gain comes from images and the text stays readable. After downloading, check the page with the smallest type; if it blurred, step down a level." },
+        { q: "Why is my file so large?", a: "Almost always because of scanned exhibits. Colour, high-resolution scans — or phone photos — can push a single page to several megabytes." },
+        { q: "What if a single file exceeds the limit?", a: "Split it into sensible parts and upload them separately: the petition as one file, each exhibit as its own. Name the files after their contents." },
+        { q: "Is my document uploaded to your server when compressing?", a: "PDF compression runs on the server and the file is deleted after processing. If you want the file never to leave your device, operations like merging, splitting, rotating and deleting pages run in your browser." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "udf-dosyasi-nasil-acilir",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 6,
+      tags: { tr: ["UYAP", "UDF", "Resmî Evrak"], en: ["UYAP", "UDF", "Official Documents"] },
+      accent: "violet",
+      tool: "/tools/udf-to-pdf",
+    },
+    {
+      title: "UDF Dosyası Nasıl Açılır? Program Kurmadan Çözüm",
+      description:
+        "UYAP'tan inen .udf dosyasını açamıyor musunuz? UDF'nin ne olduğunu ve dosyayı program kurmadan PDF olarak okumanın yolunu anlatıyoruz.",
+      excerpt:
+        "UYAP'tan bir karar indirdiniz, çift tıkladınız ve Windows «bu dosyayı hangi uygulamayla açmak istersiniz?» diye sordu. UDF, Türkiye'ye özgü bir belge biçimi ve alışılmış programların hiçbiri onu tanımıyor.",
+      blocks: [
+        { t: "lead", x: "UYAP'tan gerekçeli kararı ya da bir müzekkereyi indirdiniz; dosyanın sonu «.udf» ile bitiyor ve bilgisayarınızdaki hiçbir program onu açmıyor. Word denemeniz işe yaramıyor, çift tıklayınca uygulama seçme penceresi çıkıyor. Sorun sizde değil: UDF, yalnızca Türkiye'de kullanılan özel bir belge biçimi." },
+
+        { t: "h2", x: "UDF nedir?" },
+        { t: "p", x: "UDF, açılımıyla UYAP Doküman Formatı, Adalet Bakanlığı'nın Ulusal Yargı Ağı Bilişim Sistemi'nde kullandığı belge biçimidir. Dilekçeler, müzekkereler, tensip zabıtları ve gerekçeli kararlar bu uzantıyla indirilir." },
+        { t: "p", x: "Biçim, belgenin bütünlüğünü ve üzerindeki elektronik imzayı koruyacak şekilde tasarlanmıştır. Bu iyi bir tasarım tercihi — ama pratikte şu anlama gelir: sistemin dışına çıkan belge, karşı taraf için okunamaz bir dosyadır. Müvekkilinize gönderdiğiniz UDF, onun bilgisayarında açılmaz." },
+
+        { t: "h2", x: "Klasik yol: UYAP Doküman Editörü" },
+        { t: "p", x: "Resmî yol, Adalet Bakanlığı'nın UYAP Doküman Editörü programını kurmaktır. Program ücretsizdir ve dosyayı açıp «PDF olarak kaydet» seçeneğiyle dönüştürmenize izin verir." },
+        { t: "p", x: "İşe yarar, ama her duruma uymaz:" },
+        { t: "ul", items: [
+          "Kurulum gerektirir; çalışması için bilgisayarınızda Java bulunması gerekebilir.",
+          "Belgeyi göndereceğiniz kişinin de aynı programı kurmuş olması gerekir. Müvekkilinizden bunu beklemek çoğu zaman gerçekçi değildir.",
+          "Başka birinin bilgisayarındaysanız ya da telefondan bakıyorsanız kurulum yapamazsınız.",
+        ] },
+
+        { t: "h2", x: "Kurulumsuz yol: dosyayı PDF'ye çevirmek" },
+        { t: "p", x: "UDF dosyası aslında içinde belgenin metnini ve biçimlendirmesini taşıyan bir arşivdir. Bu yapı çözülüp yeniden çizilebilir — yani dosya, program kurmadan doğrudan tarayıcıda PDF'ye dönüştürülebilir." },
+        { t: "p", x: "PDF Platform'un UDF aracı tam olarak bunu yapar ve işlemi cihazınızda gerçekleştirir. Bu ayrıntı bu araçta önemlidir: adli evrak taraf isimleri, TC kimlik numaraları ve dava konusu gibi kişisel veriler taşır. Dosya sunucuya hiç gönderilmez." },
+        { t: "steps", items: [
+          { title: "Dosyayı bırakın", x: "UYAP'tan indirdiğiniz .udf dosyasını alana sürükleyin. Birden fazla dosyayı aynı anda da bırakabilirsiniz." },
+          { title: "«PDF'e çevir» deyin", x: "Belge tarayıcınızda çözülür; yazı tipi, kalın ve altı çizili biçimler, hizalamalar, tablolar ve gömülü görseller korunur." },
+          { title: "İndirin ya da metni alın", x: "PDF olarak indirin; dilerseniz belgenin düz metnini .txt olarak alıp doğrudan Word'e yapıştırın." },
+        ] },
+
+        { t: "cta", title: "UDF'yi PDF Yap", x: "UYAP'tan inen .udf dosyasını program kurmadan, cihazınızda PDF'ye çevirin.", btn: "Aracı aç", tool: "/tools/udf-to-pdf" },
+
+        { t: "h2", x: "Önemli: PDF kopyası imzalı asıl değildir" },
+        { t: "p", x: "Bu ayrımın altını çizmek gerekiyor. UDF dosyasındaki elektronik imza, belgenin o dosyadaki hâline aittir. PDF'ye çevirdiğinizde elinizde belgenin okunabilir bir kopyası olur — imzanın kendisi taşınmaz." },
+        { t: "p", x: "Yani: okumak, arşivlemek, müvekkile göndermek, avukat arkadaşınıza danışmak için PDF kopya tamamen uygundur. Resmî bir işlemde ibraz edecekseniz imzalı UDF aslını kullanmaya devam edin." },
+
+        { t: "h2", x: "UDF ile sık karşılaşılan diğer sorunlar" },
+        { t: "ul", items: [
+          "Dosya bozuk görünüyor: indirme yarıda kesilmiş olabilir. UYAP'tan yeniden indirin.",
+          "Dosya çok büyük ve yüklenmiyor: sebep genellikle belgeye yapıştırılmış görsellerdir; onları ayrı ek olarak yükleyin.",
+          "Telefonda açılmıyor: UYAP'ın mobil doküman editörü uygulaması var, ama PDF'ye çevirmek her cihazda çalışan daha pratik bir yoldur.",
+          "Karşı taraf açamıyor: ona UDF değil PDF gönderin. Kural olarak sistem dışına çıkan her belge PDF olmalıdır.",
+        ] },
+
+        { t: "h2", x: "Kararı Word'de düzenlemek isterseniz" },
+        { t: "p", x: "Bir kararın ya da dilekçenin metnini kendi belgenize almak istiyorsanız iki yolunuz var. Hızlı yol: aracın verdiği .txt metnini kopyalayıp yapıştırmak. Biçimlendirmeyi de korumak istiyorsanız önce PDF'ye çevirip sonra PDF'i Word'e dönüştürün." },
+      ],
+      faq: [
+        { q: "UDF dosyası nedir?", a: "UDF (UYAP Doküman Formatı), Adalet Bakanlığı'nın UYAP sisteminde kullandığı belge biçimidir. Dilekçe, müzekkere, tensip zaptı ve gerekçeli kararlar bu uzantıyla indirilir." },
+        { q: "UDF dosyasını Word ile açabilir miyim?", a: "Hayır. Word bu biçimi tanımaz. Belgeyi önce PDF'ye çevirmeniz, metni Word'de düzenlemek istiyorsanız ardından PDF'i Word'e dönüştürmeniz gerekir." },
+        { q: "Program kurmadan UDF açmanın yolu var mı?", a: "Evet. UDF dosyasını tarayıcıda PDF'ye çevirebilirsiniz; UYAP Doküman Editörü ya da Java kurulumu gerekmez, işlem cihazınızda yapılır." },
+        { q: "PDF'ye çevirince elektronik imza korunur mu?", a: "Hayır. Çıktı belgenin okunabilir bir kopyasıdır ve UDF dosyasındaki elektronik imzayı taşımaz. Resmî ibraz için imzalı UDF aslını kullanın." },
+        { q: "Belgem güvende mi?", a: "Dönüştürme tamamen tarayıcınızda yapılır; dosya sunucuya gönderilmez. Adli evrak kişisel veri taşıdığı için bu araçta işlem bilerek cihazda tutulur." },
+        { q: "Birden fazla UDF'yi tek seferde çevirebilir miyim?", a: "Evet. En fazla 20 dosya ekleyebilirsiniz; tek dosya PDF olarak, birden fazla dosya tek ZIP içinde iner." },
+      ],
+    },
+    {
+      title: "How to Open a UDF File Without Installing Anything",
+      description:
+        "Cannot open the .udf file you downloaded from Turkey's UYAP system? Here is what UDF is and how to read it as a PDF without installing software.",
+      excerpt:
+        "You downloaded a decision from UYAP, double-clicked it, and Windows asked which app should open it. UDF is a document format specific to Turkey, and none of the usual programs recognise it.",
+      blocks: [
+        { t: "lead", x: "You downloaded a reasoned decision or a writ from UYAP; the file ends in «.udf» and nothing on your computer will open it. Word does not help, and double-clicking brings up the app picker. The problem is not you: UDF is a proprietary document format used only in Turkey." },
+
+        { t: "h2", x: "What is UDF?" },
+        { t: "p", x: "UDF — UYAP Document Format — is the format used by Turkey's National Judiciary Informatics System, run by the Ministry of Justice. Petitions, writs, procedural orders and reasoned decisions are all downloaded with this extension." },
+        { t: "p", x: "The format is designed to preserve the document's integrity and the electronic signature on it. That is a sound design choice, but in practice it means a document that leaves the system is unreadable to the other side. The UDF you send a client will not open on their computer." },
+
+        { t: "h2", x: "The official route: the UYAP Document Editor" },
+        { t: "p", x: "The official answer is to install the Ministry's UYAP Document Editor. It is free and lets you open the file and use «save as PDF»." },
+        { t: "p", x: "It works, but it does not suit every situation:" },
+        { t: "ul", items: [
+          "It requires an installation, and may need Java on your machine.",
+          "Whoever you send the document to needs the same program installed. Expecting that of a client is rarely realistic.",
+          "On someone else's computer, or on a phone, you cannot install anything.",
+        ] },
+
+        { t: "h2", x: "The install-free route: convert it to PDF" },
+        { t: "p", x: "A UDF file is really an archive carrying the document's text and formatting. That structure can be decoded and redrawn — which means the file can be turned into a PDF right in the browser, with nothing installed." },
+        { t: "p", x: "The UDF tool on PDF Platform does exactly that, and does it on your device. That detail matters here: court documents carry party names, identity numbers and case details. The file is never sent to a server." },
+        { t: "steps", items: [
+          { title: "Drop the file in", x: "Drag the .udf file you downloaded from UYAP onto the area. You can drop several at once." },
+          { title: "Click «Convert to PDF»", x: "The document is decoded in your browser, keeping fonts, bold and underlined text, alignment, tables and embedded images." },
+          { title: "Download it, or take the text", x: "Download the PDF, or grab the plain text as a .txt file and paste it straight into Word." },
+        ] },
+
+        { t: "cta", title: "UDF to PDF", x: "Turn a .udf file from UYAP into a PDF on your own device, with nothing to install.", btn: "Open the tool", tool: "/tools/udf-to-pdf" },
+
+        { t: "h2", x: "Important: the PDF copy is not the signed original" },
+        { t: "p", x: "This distinction is worth underlining. The electronic signature in a UDF belongs to the document as it exists in that file. Convert it to PDF and you hold a readable copy — the signature itself does not carry over." },
+        { t: "p", x: "So: for reading, archiving, sending to a client or consulting a colleague, the PDF copy is perfectly fine. For an official filing, keep using the signed UDF original." },
+
+        { t: "h2", x: "Other common UDF problems" },
+        { t: "ul", items: [
+          "The file looks corrupt: the download may have been cut short. Download it again from UYAP.",
+          "The file is too large to upload: usually because of images pasted into it; upload those as separate exhibits.",
+          "It will not open on a phone: UYAP has a mobile editor app, but converting to PDF works on any device.",
+          "The recipient cannot open it: send a PDF, not a UDF. As a rule, any document leaving the system should be a PDF.",
+        ] },
+
+        { t: "h2", x: "If you want to edit the text in Word" },
+        { t: "p", x: "There are two routes. The quick one: copy the .txt text the tool gives you and paste it. To keep the formatting as well, convert to PDF first and then convert the PDF to Word." },
+      ],
+      faq: [
+        { q: "What is a UDF file?", a: "UDF (UYAP Document Format) is the document format used by Turkey's national judiciary system. Petitions, writs, procedural orders and reasoned decisions are downloaded with this extension." },
+        { q: "Can I open a UDF file with Word?", a: "No. Word does not recognise the format. Convert it to PDF first, and then to Word if you need to edit the text." },
+        { q: "Is there a way to open UDF without installing software?", a: "Yes. You can convert a UDF to PDF in your browser; no UYAP Document Editor or Java installation is needed and the work happens on your device." },
+        { q: "Is the electronic signature preserved in the PDF?", a: "No. The output is a readable copy and does not carry the electronic signature held in the UDF. Use the signed UDF original for official filings." },
+        { q: "Is my document safe?", a: "Conversion happens entirely in your browser; the file is never sent to a server. Court documents carry personal data, so this tool deliberately keeps the work on your machine." },
+        { q: "Can I convert several UDF files at once?", a: "Yes. You can add up to 20 files; one file downloads as a PDF, several download together in a ZIP." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "edevlet-belgelerini-tek-pdf-yapma",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 6,
+      tags: { tr: ["e-Devlet", "Resmî Evrak", "Birleştirme"], en: ["e-Government", "Official Documents", "Merge"] },
+      accent: "sky",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "e-Devlet Belgelerini Tek PDF'te Birleştirme",
+      description:
+        "e-Devlet'ten indirdiğiniz belgeleri tek dosyada toplamanın doğru yolu: karekodu bozmadan birleştirme, sıralama ve boyutu sınırın altında tutma.",
+      excerpt:
+        "Bir başvuru için e-Devlet'ten beş ayrı belge indirdiniz ve karşı taraf «hepsini tek PDF olarak gönderin» diyor. Bu işin bir inceliği var: barkodlu belgelerin doğrulanabilirliğini bozmamak.",
+      blocks: [
+        { t: "lead", x: "Kurum, başvuru için ikametgâh, nüfus kayıt örneği, adli sicil kaydı ve SGK hizmet dökümü istiyor; üstelik hepsini tek dosyada. e-Devlet bunların her birini ayrı PDF olarak veriyor. Birleştirmek kolay — ama barkodlu belgelerde dikkat edilmesi gereken bir nokta var." },
+
+        { t: "h2", x: "Önce şunu bilin: barkod belgenin kimliğidir" },
+        { t: "p", x: "e-Devlet'ten aldığınız belgelerin üzerinde bir barkod ya da karekod ile bir doğrulama kodu bulunur. Belgeyi alan kurum, bu kodu okutarak ya da e-Devlet'in doğrulama sayfasına girerek belgenin gerçekten sizin adınıza üretildiğini teyit eder." },
+        { t: "p", x: "Bu yüzden belgeye yapacağınız her işlemde tek bir kural geçerlidir: barkod okunabilir kalmalı. Kırpma, aşırı sıkıştırma ya da düşük çözünürlükte yeniden tarama barkodu okunamaz hâle getirebilir ve belge geçersiz sayılır." },
+        { t: "tip", x: "e-Devlet belgesini asla yazdırıp tekrar taramayın. Elinizdeki PDF zaten dijital ve nettir; yazdırıp taramak hem boyutu şişirir hem barkodun okunma ihtimalini düşürür. Orijinal PDF'i olduğu gibi kullanın." },
+
+        { t: "h2", x: "Adım adım: belgeleri tek dosyada toplama" },
+        { t: "steps", items: [
+          { title: "Belgeleri e-Devlet'ten PDF olarak indirin", x: "Ekran görüntüsü almayın, «PDF olarak indir» seçeneğini kullanın. Ekran görüntüsünde barkod çoğu zaman okunmaz." },
+          { title: "Hepsini birleştirme aracına ekleyin", x: "Dosyaları tek seferde seçebilirsiniz. Birleştirme tarayıcınızda çalışır; belgeleriniz sunucuya yüklenmez." },
+          { title: "Sırayı kurumun istediği gibi düzenleyin", x: "Listedeki dosyaları sürükleyerek sıralayın. Kurum bir sıra belirtmişse ona uyun; belirtmemişse en önemli belge başa gelsin." },
+          { title: "Birleştirip indirin", x: "Tek PDF olarak iner. Açıp sayfaları hızlıca kontrol edin: hepsi var mı, sıra doğru mu?" },
+        ] },
+
+        { t: "cta", title: "PDF Birleştir", x: "e-Devlet belgelerini sıraya dizip tek dosyada toplayın — üyeliksiz, cihazınızda.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Dosya çok büyükse" },
+        { t: "p", x: "e-Devlet belgeleri genelde küçüktür; toplamı nadiren birkaç megabaytı geçer. Dosyanız beklenmedik şekilde büyükse sebep neredeyse her zaman araya karışmış taranmış bir belgedir — diploma fotokopisi, kimlik taraması gibi." },
+        { t: "p", x: "Bu durumda tüm dosyayı değil, yalnızca o taranmış belgeyi küçültün ve öyle birleştirin. Böylece e-Devlet çıktılarının netliğine hiç dokunmamış olursunuz." },
+
+        { t: "h2", x: "Kişisel veri: paylaşmadan önce düşünün" },
+        { t: "p", x: "Resmî belgelerin üzerinde TC kimlik numarası, adres ve doğum tarihi gibi bilgiler bulunur. Belgeyi resmî bir kuruma veriyorsanız bunlar zaten gereklidir ve gizlenmemelidir." },
+        { t: "p", x: "Ama belge bir emlakçıya, bir işverene ya da bir internet sitesine gidiyorsa durum farklıdır. O zaman kurumun gerçekten ihtiyaç duymadığı alanları kapatmak makul bir korunmadır." },
+        { t: "tip", x: "Gizleme işlemini üzerine siyah kutu çizerek yapmayın. PDF'te çizilen kutu yalnızca görüntüdür; altındaki yazı kopyalanabilir durumda kalır. Veriyi gerçekten kaldıran bir araç kullanın." },
+
+        { t: "h2", x: "Gönderirken son kontrol" },
+        { t: "ul", items: [
+          "Tüm belgeler dosyanın içinde mi? Sayfa sayısını tek tek indirdiklerinizle karşılaştırın.",
+          "Barkodlar net görünüyor mu? Yakınlaştırıp bakın.",
+          "Belgelerin geçerlilik süresi dolmuş mu? Adli sicil ve ikametgâh gibi belgelerde kurumlar genellikle son tarihli olmasını ister.",
+          "Dosya adı anlaşılır mı? «basvuru-evraklari-ad-soyad.pdf» karşı tarafın işini kolaylaştırır.",
+        ] },
+      ],
+      faq: [
+        { q: "e-Devlet belgelerini birleştirince geçerliliği bozulur mu?", a: "Hayır. Sayfaları tek dosyada toplamak belgelerin içeriğine dokunmaz; üzerlerindeki barkod ve doğrulama kodu olduğu gibi kalır ve doğrulanabilir." },
+        { q: "Belgeleri birleştirirken sunucunuza yükleniyor mu?", a: "Hayır. PDF birleştirme tarayıcınızda (cihazınızda) çalışır; dosyalarınız internete hiç gönderilmez ve üyelik gerekmez." },
+        { q: "Belgenin sırasını nasıl değiştiririm?", a: "Dosyaları ekledikten sonra listede sürükleyerek istediğiniz sıraya dizin; yeni belge o sırayla oluşur." },
+        { q: "Ekran görüntüsü alıp birleştirebilir miyim?", a: "Önerilmez. Ekran görüntüsünde doğrulama barkodu çoğu zaman okunmaz ve belge geçersiz sayılabilir. e-Devlet'in «PDF olarak indir» seçeneğini kullanın." },
+        { q: "Dosya boyutu büyükse ne yapmalıyım?", a: "Genelde araya karışan taranmış bir belge sebeptir. Yalnızca onu sıkıştırıp öyle birleştirin; e-Devlet çıktılarının netliğine dokunmayın." },
+      ],
+    },
+    {
+      title: "Combine e-Government Documents into One PDF",
+      description:
+        "The right way to merge documents downloaded from a government portal: keep the verification barcode readable, order the pages and stay under size limits.",
+      excerpt:
+        "You downloaded five separate documents for an application and the other side wants them as a single PDF. There is a subtlety here: not breaking the verifiability of barcoded documents.",
+      blocks: [
+        { t: "lead", x: "The institution wants proof of address, a civil registry extract, a criminal record certificate and a social security statement — all in one file. The portal gives each as a separate PDF. Merging them is easy, but barcoded documents need one piece of care." },
+
+        { t: "h2", x: "First, know this: the barcode is the document's identity" },
+        { t: "p", x: "Documents downloaded from Turkey's e-Government portal carry a barcode or QR code together with a verification code. The receiving institution scans that code, or types it into the portal's verification page, to confirm the document really was issued in your name." },
+        { t: "p", x: "So one rule governs everything you do to the document: the barcode must stay readable. Cropping, heavy compression or rescanning at low resolution can render it unreadable, and then the document counts as invalid." },
+        { t: "tip", x: "Never print an e-government document and scan it again. The PDF you have is already digital and sharp; printing and rescanning inflates the file and lowers the chance the barcode scans. Use the original PDF as it is." },
+
+        { t: "h2", x: "Step by step: gathering everything into one file" },
+        { t: "steps", items: [
+          { title: "Download each document as a PDF", x: "Do not take screenshots — use the «download as PDF» option. Barcodes usually do not survive a screenshot." },
+          { title: "Add them all to the merge tool", x: "You can select the files in one go. Merging runs in your browser, so your documents are not uploaded." },
+          { title: "Put them in the order the institution asked for", x: "Drag the files in the list to reorder. If an order was specified, follow it; if not, lead with the most important document." },
+          { title: "Merge and download", x: "You get a single PDF. Open it and check quickly: is everything there, and in the right order?" },
+        ] },
+
+        { t: "cta", title: "Merge PDF", x: "Put official documents in order and combine them into one file — no signup, on your device.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "If the file is too large" },
+        { t: "p", x: "Official portal documents are usually small; together they rarely pass a few megabytes. If your file is unexpectedly large, the cause is almost always a scanned document that slipped in — a photocopied diploma, a scan of an ID card." },
+        { t: "p", x: "In that case shrink only that scanned document, then merge. That way you never touch the sharpness of the portal's own output." },
+
+        { t: "h2", x: "Personal data: think before you share" },
+        { t: "p", x: "Official documents carry identity numbers, addresses and dates of birth. If the document is going to a government body, those details are required and should not be hidden." },
+        { t: "p", x: "But if it is going to an estate agent, a prospective employer or a website, the situation differs. Covering the fields the recipient does not actually need is a reasonable precaution." },
+        { t: "tip", x: "Do not redact by drawing a black box over the text. A box drawn on a PDF is only a picture; the text beneath it stays selectable and copyable. Use a tool that truly removes the data." },
+
+        { t: "h2", x: "A final check before sending" },
+        { t: "ul", items: [
+          "Is every document inside the file? Compare the page count against what you downloaded.",
+          "Do the barcodes look sharp? Zoom in and check.",
+          "Have any documents expired? Institutions usually want recent criminal record and address certificates.",
+          "Is the file name clear? Something like «application-documents-name-surname.pdf» helps the reader.",
+        ] },
+      ],
+      faq: [
+        { q: "Does merging break the validity of official documents?", a: "No. Gathering pages into one file does not touch their contents; the barcode and verification code stay exactly as they were and remain verifiable." },
+        { q: "Are my documents uploaded when merging?", a: "No. PDF merging runs in your browser (on your device); your files are never sent over the internet and no account is needed." },
+        { q: "How do I change the order of documents?", a: "After adding the files, drag them into the order you want in the list; the new document is built in that order." },
+        { q: "Can I merge screenshots instead?", a: "Not advisable. Verification barcodes usually do not survive a screenshot and the document may be rejected. Use the portal's «download as PDF» option." },
+        { q: "What if the file size is large?", a: "Usually a scanned document that slipped in is the cause. Compress only that one and then merge; leave the portal's own output untouched." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "tc-kimlik-numarasi-gizleme-belge",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 6,
+      tags: { tr: ["KVKK", "Gizlilik", "Resmî Evrak"], en: ["Privacy", "Redaction", "Official Documents"] },
+      accent: "emerald",
+      tool: "/tools/hassas-veri-gizle",
+    },
+    {
+      title: "Belgedeki TC Kimlik Numarasını Gizleme Yolları",
+      description:
+        "Kimlik numarası, adres ve IBAN'ı paylaşmadan önce belgeden gerçekten kaldırmanın yolu. Siyah kutu çizmek neden işe yaramıyor, ne yapmalı?",
+      excerpt:
+        "Emlakçıya gönderilen ikametgâh, işverene gönderilen SGK dökümü, gruba atılan fatura... Resmî belgelerin üzerinde kimlik numaranız yazıyor ve çoğu zaman karşı tarafın ona ihtiyacı yok.",
+      blocks: [
+        { t: "lead", x: "Bir kiralama için emlakçı gelir belgesi istiyor. Belgenin üzerinde TC kimlik numaranız, adresiniz, doğum tarihiniz ve maaş bilginiz var. Emlakçının hepsine ihtiyacı yok ama belgeyi olduğu gibi göndermek en kolayı olduğu için çoğu kişi öyle yapıyor. Oysa bu bilgiler bir kez çıktıktan sonra geri alınamıyor." },
+
+        { t: "h2", x: "Önce en yaygın hata: siyah kutu çizmek" },
+        { t: "p", x: "İnsanların büyük çoğunluğu bu işi bir PDF görüntüleyicide bilginin üzerine siyah bir dikdörtgen çizerek yapıyor. Ekranda bilgi kayboluyor, iş bitmiş görünüyor." },
+        { t: "p", x: "Ama bitmiyor. PDF'te çizdiğiniz kutu belgenin ÜSTÜNE eklenen bir şekildir; altındaki yazı olduğu yerde durmaya devam eder. Karşı taraf o alanı fareyle seçip kopyalarsa kimlik numaranız olduğu gibi çıkar. Metni seçip kopyalamak teknik bilgi bile gerektirmez." },
+        { t: "tip", x: "Kendi belgenizde sınayın: üzerini kapattığınız alanı fareyle seçip kopyalayın ve bir metin kutusuna yapıştırın. Bilgi geliyorsa gizlemiş değil, yalnızca örtmüşsünüzdür." },
+        { t: "p", x: "Aynı sorun üzerine beyaz kutu koymakta, vurgu kalemiyle karartmakta ve yazıyı görselle kapatmakta da vardır. Görünmeyen ile silinmiş aynı şey değildir." },
+
+        { t: "h2", x: "Doğru yöntem: veriyi belgeden çıkarmak" },
+        { t: "p", x: "Gerçek gizleme, metni belgenin içinden kaldırır. Kapatılan alanda artık kopyalanacak bir şey kalmaz; arama da sonuç vermez. Uluslararası terimle buna «redaction» deniyor." },
+        { t: "steps", items: [
+          { title: "Belgeyi ekleyin", x: "PDF'i Hassas Veri Gizle aracına verin. Metin, belgede aranabilir durumdaysa doğrudan çalışır." },
+          { title: "Kaldırılacakları seçin", x: "TC kimlik numarası, telefon, IBAN gibi kalıplar otomatik bulunur. Listeden gizlemek istediklerinizi işaretleyin." },
+          { title: "Kontrol edip indirin", x: "Seçtikleriniz belgeden tamamen çıkarılır. İnen dosyada o alanları seçip kopyalamayı deneyin — boş gelmeli." },
+        ] },
+
+        { t: "cta", title: "Hassas Veri Gizle", x: "Kimlik numarası, IBAN ve adresi belgeden gerçekten kaldırın — üstünü boyamakla yetinmeyin.", btn: "Aracı aç", tool: "/tools/hassas-veri-gizle" },
+
+        { t: "h2", x: "Taranmış belgelerde durum farklı" },
+        { t: "p", x: "Belgeniz taranmış ya da fotoğrafla oluşturulmuşsa içindeki yazı aslında bir resimdir; seçilebilir bir metin katmanı yoktur. Bu, iki yönlü bir haberdir." },
+        { t: "p", x: "İyi tarafı: metin zaten kopyalanamaz. Kötü tarafı: gözle okunabilir olduğu için üzerini kapatmanız yine de gerekir, ve kapatma işleminin görselin kendisine uygulanması şarttır. Böyle bir belgede gizlediğiniz alanın gerçekten kapandığından emin olmak için indirdiğiniz dosyayı yakınlaştırarak kontrol edin." },
+
+        { t: "h2", x: "Neyi gizlemeli, neyi gizlememeli?" },
+        { t: "p", x: "Aşırı gizleme belgeyi işe yaramaz hâle getirir; az gizleme sizi korumaz. Pratik bir ölçü: karşı tarafın yapacağı iş için gerekmeyen her şey gizlenebilir." },
+        { t: "ul", items: [
+          "Resmî kuruma verilen belgede: genellikle hiçbir şeyi gizlemeyin. Kurum kimlik doğrulaması yapacaktır ve eksik belge reddedilir.",
+          "İşverene verilen belgede: kimlik numarası genelde gereklidir; ancak aile bilgileri, adres ve sağlık verisi çoğu zaman gerekmez.",
+          "Emlakçı, satıcı, internet sitesi gibi özel taraflarda: kimlik numarası ve doğum tarihi neredeyse hiç gerekmez.",
+          "İnternette paylaşacaksanız: belgeyi hiç paylaşmayın. Gizlenmiş bir belge bile sizi tanınabilir kılacak ayrıntılar taşır.",
+        ] },
+
+        { t: "h2", x: "Gizlemeden önce belgeyi bölmeyi düşünün" },
+        { t: "p", x: "Bazen en temiz çözüm gizlemek değil, yalnızca gereken sayfayı göndermektir. Sekiz sayfalık bir dökümün tamamını paylaşıp altı sayfasını karartmak yerine, tek ilgili sayfayı ayırıp onu göndermek hem daha güvenli hem daha nazik olur." },
+        { t: "p", x: "Belgeden tek bir sayfa ayırmak saniyeler sürer ve karşı tarafın da işini kolaylaştırır." },
+      ],
+      faq: [
+        { q: "PDF'te siyah kutu çizmek bilgiyi siler mi?", a: "Hayır. Çizilen kutu belgenin üstüne eklenen bir şekildir; altındaki metin yerinde kalır ve seçilip kopyalanabilir. Bilgiyi gerçekten kaldıran bir gizleme aracı kullanmanız gerekir." },
+        { q: "Gizlediğim bilginin gerçekten kaldırıldığını nasıl anlarım?", a: "İnen dosyada o alanı fareyle seçip kopyalamayı deneyin ve bir metin kutusuna yapıştırın. Hiçbir şey gelmiyorsa veri belgeden çıkarılmıştır." },
+        { q: "Hangi bilgiler otomatik bulunuyor?", a: "TC kimlik numarası, telefon numarası ve IBAN gibi belirli kalıba sahip veriler otomatik tespit edilir; listeden hangilerinin kaldırılacağını siz seçersiniz." },
+        { q: "Resmî kuruma verdiğim belgede kimlik numaramı gizlemeli miyim?", a: "Hayır. Kurum kimlik doğrulaması yapacaktır ve gizlenmiş belge eksik sayılarak reddedilebilir. Gizleme, bilgiye ihtiyacı olmayan özel taraflara gönderdiğiniz belgeler için anlamlıdır." },
+        { q: "Taranmış belgede gizleme çalışır mı?", a: "Taranmış belgede yazı bir görseldir; seçilebilir metin katmanı yoktur. Bu yüzden kapatma işlemi görselin kendisine uygulanır — indirdikten sonra alanı yakınlaştırarak kontrol edin." },
+      ],
+    },
+    {
+      title: "How to Hide ID Numbers in a Document You Share",
+      description:
+        "How to actually remove identity numbers, addresses and bank details before sharing a document — and why drawing a black box over them does not work.",
+      excerpt:
+        "Proof of address sent to an estate agent, a benefits statement sent to an employer, an invoice dropped into a group chat. Official documents carry your identity number, and often the recipient does not need it.",
+      blocks: [
+        { t: "lead", x: "An estate agent asks for proof of income for a rental. The document carries your identity number, your address, your date of birth and your salary. The agent does not need all of that — but sending the document as it is happens to be the easiest thing to do, so most people do exactly that. Once those details are out, they cannot be pulled back." },
+
+        { t: "h2", x: "The most common mistake: drawing a black box" },
+        { t: "p", x: "Most people do this in a PDF viewer by drawing a black rectangle over the detail. On screen the information disappears and the job looks done." },
+        { t: "p", x: "It is not. A box drawn on a PDF is a shape added ON TOP of the document; the text underneath stays exactly where it was. If the recipient selects that area with the mouse and copies it, your identity number comes out intact. Selecting and copying text takes no technical skill at all." },
+        { t: "tip", x: "Test it on your own document: select the area you covered, copy it, and paste into a text box. If the information appears, you have not redacted it — you have merely covered it." },
+        { t: "p", x: "The same flaw applies to white boxes, highlighter strokes and images pasted over text. Invisible is not the same as deleted." },
+
+        { t: "h2", x: "The right method: take the data out of the document" },
+        { t: "p", x: "Real redaction removes the text from inside the document. Nothing remains in the covered area to copy, and searching returns nothing either." },
+        { t: "steps", items: [
+          { title: "Add the document", x: "Give the PDF to the redaction tool. If the text is searchable in the document, it works directly." },
+          { title: "Choose what to remove", x: "Patterned data such as identity numbers, phone numbers and bank account numbers is found automatically. Tick the ones you want removed." },
+          { title: "Check and download", x: "Your selections are stripped out of the document. In the downloaded file, try selecting and copying those areas — nothing should come out." },
+        ] },
+
+        { t: "cta", title: "Redact Sensitive Data", x: "Truly remove identity numbers, bank details and addresses — do not settle for painting over them.", btn: "Open the tool", tool: "/tools/hassas-veri-gizle" },
+
+        { t: "h2", x: "Scanned documents behave differently" },
+        { t: "p", x: "If your document was scanned or photographed, the writing inside it is really an image; there is no selectable text layer. That is both good and bad news." },
+        { t: "p", x: "The good: the text cannot be copied anyway. The bad: it is still readable by eye, so you still need to cover it, and the covering has to be applied to the image itself. With such a document, zoom into the redacted area in the downloaded file to confirm it is genuinely covered." },
+
+        { t: "h2", x: "What to hide and what to leave" },
+        { t: "p", x: "Over-redacting makes a document useless; under-redacting does not protect you. A practical rule: anything the recipient does not need for the task at hand can be hidden." },
+        { t: "ul", items: [
+          "For a government body: usually hide nothing. They will verify your identity, and an incomplete document gets rejected.",
+          "For an employer: the identity number is often required, but family details, home address and health data usually are not.",
+            "For private parties such as agents, sellers or websites: identity number and date of birth are almost never needed.",
+          "For anything you will post publicly: do not share the document at all. Even a redacted document carries details that can identify you.",
+        ] },
+
+        { t: "h2", x: "Consider splitting before redacting" },
+        { t: "p", x: "Sometimes the cleanest answer is not to redact but to send only the page that matters. Rather than sharing an eight-page statement with six pages blacked out, pull out the single relevant page and send that. It is both safer and more considerate." },
+        { t: "p", x: "Extracting one page takes seconds, and it makes the recipient's job easier too." },
+      ],
+      faq: [
+        { q: "Does drawing a black box in a PDF delete the information?", a: "No. The box is a shape added on top; the text underneath stays in place and can be selected and copied. You need a redaction tool that actually removes the data." },
+        { q: "How do I know the information was really removed?", a: "In the downloaded file, select that area, copy it and paste into a text box. If nothing comes out, the data has been taken out of the document." },
+        { q: "Which details are detected automatically?", a: "Patterned data such as national identity numbers, phone numbers and bank account numbers is detected automatically; you choose from the list which ones to remove." },
+        { q: "Should I hide my identity number on a document for a government body?", a: "No. They will verify your identity, and a redacted document may be treated as incomplete and rejected. Redaction makes sense for private parties who do not need the data." },
+        { q: "Does redaction work on scanned documents?", a: "In a scanned document the writing is an image with no selectable text layer, so the covering is applied to the image itself. Zoom into the area after downloading to check it." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "vize-basvurusu-evrak-hazirlama",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 7,
+      tags: { tr: ["Vize", "Başvuru", "Resmî Evrak"], en: ["Visa", "Applications", "Official Documents"] },
+      accent: "cyan",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "Vize Başvurusu İçin Evrak Dosyası Hazırlama",
+      description:
+        "Vize başvurusunda evrakı dijital hazırlamanın düzeni: belgeleri sıraya dizme, tek dosyada toplama, boyutu düşürme ve fotoğraf ölçüsünü tutturma.",
+      excerpt:
+        "Vize başvurularında reddin sebebi çoğu zaman eksik bir belge değil, düzensiz bir dosyadır. Evrakınızı okunabilir ve sıralı sunmak, konsolosluğun işini kolaylaştırdığı kadar sizin lehinize de çalışır.",
+      blocks: [
+        { t: "lead", x: "Vize başvurusu, hayatınızın bir dönemini belgelerle anlatmaktır: nerede çalışıyorsunuz, paranız var mı, dönecek misiniz. Konsolosluk memuru bu dosyaya dakikalar ayırır. Belgeleriniz karışıksa, okunmuyorsa ya da eksik görünüyorsa bu, başvurunuz aleyhine işler. Bu yazı evrakı dijital olarak düzgün hazırlamanın yolunu anlatıyor." },
+
+        { t: "h2", x: "Önce listeyi çıkarın, sonra tarayın" },
+        { t: "p", x: "Her ülkenin ve her vize türünün istediği belge listesi farklıdır ve listeler değişir. İlk iş, başvuru yapacağınız konsolosluğun ya da yetkili başvuru merkezinin kendi sayfasındaki güncel listeyi almaktır. İnternette bulduğunuz eski bir listeye göre hazırlanmak en sık yapılan hatadır." },
+        { t: "p", x: "Listeyi elde ettikten sonra her maddeyi tek tek işaretleyerek ilerleyin. Eksik belge, düzenli bir dosyanın bile önüne geçer." },
+
+        { t: "h2", x: "Belgeleri doğru biçimde elde edin" },
+        { t: "ul", items: [
+          "e-Devlet'ten alınabilen belgeleri doğrudan PDF olarak indirin. Ekran görüntüsü almayın; doğrulama barkodu okunmayabilir.",
+          "Banka hesap dökümünü bankanızın uygulamasından PDF olarak alın. Ekran görüntüsü kabul edilmez.",
+          "Kâğıt üzerindeki belgeleri (imzalı izin yazısı, davetiye) telefonla fotoğraflamak yerine belge tarayıcıyla tarayın.",
+          "Pasaport sayfalarını net ve tam çerçeveli tarayın; köşeleri kesilmiş bir pasaport sayfası en sık geri dönen belgelerdendir.",
+        ] },
+        { t: "tip", x: "Telefonla çektiğiniz belgeyi doğrudan PDF yapmak yerine belge tarayıcıdan geçirin: kenarlar otomatik bulunur, sayfa düzleştirilir ve masa, parmak, gölge gibi ayrıntılar çerçeve dışında kalır. Sonuç gerçekten taranmış gibi görünür." },
+
+        { t: "h2", x: "Fotoğraf: en çok geri dönen madde" },
+        { t: "p", x: "Biyometrik fotoğraf, başvurularda en sık reddedilen kalemdir. Türkiye'de kimlik, pasaport ve ehliyet için yaygın ölçü 50×60 mm'dir; Schengen ve pek çok vize başvurusu ise 35×45 mm ister." },
+        { t: "p", x: "Dijital yükleme isteyen sistemlerde fotoğrafın hem piksel ölçüsü hem dosya boyutu tutmalıdır. Ölçüyü tutturmak için fotoğrafı yeniden boyutlandırabilir, dosya fazla büyükse ayrıca sıkıştırabilirsiniz." },
+        { t: "p", x: "Şunu net söyleyelim: bir aracın fotoğrafı doğru piksel ölçüsüne getirmesi, fotoğrafın biyometrik şartları karşıladığı anlamına gelmez. Arka planın düz beyaz olması, yüzün merkezde ve belirli oranda olması, gözlerin açık ve ifadenin nötr olması gibi şartlar fotoğrafın çekimiyle ilgilidir. Ölçü aracı yalnızca ölçüyü ayarlar." },
+
+        { t: "cta", title: "Görsel Boyutlandır", x: "Fotoğrafı vize ve biyometrik başvuruların istediği piksel ölçüsüne getirin — hazır ölçülerle.", btn: "Aracı aç", tool: "/tools/gorsel-boyutlandir" },
+
+        { t: "h2", x: "Dosyayı tek PDF olarak toplama" },
+        { t: "p", x: "Bazı başvuru merkezleri her belgeyi ayrı ister, bazıları tek dosya ister. Tek dosya isteniyorsa sıralama önemlidir; belgeleri listedeki sırayla dizin." },
+        { t: "steps", items: [
+          { title: "Belgeleri sırayla ekleyin", x: "Başvuru formu, pasaport, fotoğraf, seyahat sağlık sigortası, uçuş ve konaklama, çalışma ve gelir belgeleri — konsolosluğun listesindeki sıra en güvenlisidir." },
+          { title: "Sırayı kontrol edin", x: "Listede sürükleyerek düzenleyin. Yanlış sıra, memurun aradığı belgeyi bulamaması demektir." },
+          { title: "Birleştirip indirin", x: "Tek PDF olarak iner ve dosyanız cihazınızdan çıkmaz." },
+          { title: "Boyut sınırını kontrol edin", x: "Yükleme ekranında bir sınır varsa ve dosyanız üzerindeyse sıkıştırın; taranmış sayfalarda kazanç yüksektir." },
+        ] },
+
+        { t: "h2", x: "Göndermeden önce dosyayı bir de okuyucu gibi açın" },
+        { t: "ul", items: [
+          "Her sayfa düz mü, yan yatmış sayfa var mı?",
+          "En küçük yazı rahat okunuyor mu? Yakınlaştırmadan okunamıyorsa taramayı yenileyin.",
+          "Sayfa sırası listedeki sırayla aynı mı?",
+          "Kişisel veri içeren, listede istenmeyen bir belge karışmış mı?",
+          "Dosya adı anlaşılır mı? «vize-basvurusu-ad-soyad.pdf» iyi bir isimdir.",
+        ] },
+        { t: "p", x: "Bu kontrol beş dakika sürer. Randevu almak için beklediğiniz süre düşünülürse, dosyayı bir kez daha gözden geçirmek fazlasıyla değer." },
+      ],
+      faq: [
+        { q: "Vize başvurusunda evrakı tek PDF mi yapmalıyım?", a: "Başvuru merkezine göre değişir; bazıları tek dosya, bazıları belge başına ayrı dosya ister. Yükleme ekranındaki talimatı esas alın, tek dosya isteniyorsa belgeleri listedeki sırayla dizin." },
+        { q: "Vize fotoğrafı ölçüsü kaç olmalı?", a: "Schengen ve pek çok vize başvurusunda 35×45 mm istenir; Türkiye'de kimlik, pasaport ve ehliyet için yaygın ölçü 50×60 mm'dir. Başvuracağınız konsolosluğun güncel şartını mutlaka teyit edin." },
+        { q: "Fotoğrafı boyutlandırmak biyometrik şartları karşılar mı?", a: "Hayır. Boyutlandırma yalnızca piksel ölçüsünü ayarlar. Beyaz arka plan, yüzün konumu ve nötr ifade gibi şartlar çekimle ilgilidir ve ayrıca sağlanmalıdır." },
+        { q: "Belgeleri ekran görüntüsüyle hazırlayabilir miyim?", a: "Hayır. Ekran görüntüsünde doğrulama barkodları okunmaz ve görüntü kalitesi düşer. Belgeleri PDF olarak indirin, kâğıt belgeleri tarayın." },
+        { q: "Dosya boyutu sınırı aşıyorsa ne yapmalıyım?", a: "Taranmış sayfaları sıkıştırın; en büyük kazanç oradadır. Sıkıştırdıktan sonra en küçük puntolu sayfanın hâlâ okunaklı olduğunu kontrol edin." },
+      ],
+    },
+    {
+      title: "Preparing Your Visa Application Documents",
+      description:
+        "How to put a visa application file together digitally: ordering documents, combining them into one PDF, getting under size limits and matching photo dimensions.",
+      excerpt:
+        "Visa refusals often come down not to a missing document but to a disorganised file. Presenting your paperwork legibly and in order makes the officer's job easier — and works in your favour.",
+      blocks: [
+        { t: "lead", x: "A visa application is an account of a period of your life told through documents: where you work, whether you have funds, whether you will return. A consular officer gives that file minutes. If your documents are jumbled, unreadable or look incomplete, that works against you. This piece explains how to put the paperwork together properly." },
+
+        { t: "h2", x: "Get the list first, then start scanning" },
+        { t: "p", x: "Every country and every visa type asks for a different set of documents, and the lists change. The first job is to take the current list from the consulate's own page or the authorised application centre. Preparing from an old list found online is the most common mistake." },
+        { t: "p", x: "Once you have the list, work through it item by item. A missing document outranks even a beautifully organised file." },
+
+        { t: "h2", x: "Obtain each document in the right form" },
+        { t: "ul", items: [
+          "Download anything available from a government portal directly as a PDF. Do not screenshot it; the verification barcode may not be readable.",
+          "Take bank statements from your bank's own app as PDFs. Screenshots are not accepted.",
+          "For paper documents such as a signed leave letter or an invitation, scan them rather than photographing them.",
+          "Scan passport pages sharply and fully in frame; a passport page with clipped corners is among the most frequently returned items.",
+        ] },
+        { t: "tip", x: "Rather than turning a phone photo straight into a PDF, run it through a document scanner: edges are detected, the page is flattened, and the desk, your fingers and shadows stay out of frame. The result actually looks scanned." },
+
+        { t: "h2", x: "The photo: the item most often sent back" },
+        { t: "p", x: "The biometric photo is the single most frequently rejected item. In Turkey the common size for ID cards, passports and driving licences is 50×60 mm; Schengen and many other visa applications ask for 35×45 mm." },
+        { t: "p", x: "Where a system wants a digital upload, both the pixel dimensions and the file size have to fit. You can resize the photo to hit the dimensions, and compress it separately if the file is too large." },
+        { t: "p", x: "To be clear: a tool bringing a photo to the right pixel size does not make the photo biometrically compliant. A plain white background, the face centred and correctly proportioned, open eyes and a neutral expression are all matters of how the photo was taken. A resizing tool only sets the size." },
+
+        { t: "cta", title: "Resize Image", x: "Bring a photo to the pixel dimensions visa and biometric applications ask for, using ready-made sizes.", btn: "Open the tool", tool: "/tools/gorsel-boyutlandir" },
+
+        { t: "h2", x: "Combining into one PDF" },
+        { t: "p", x: "Some application centres want each document separately, others want a single file. If a single file is wanted, order matters — arrange the documents in the order given on the list." },
+        { t: "steps", items: [
+          { title: "Add the documents in order", x: "Application form, passport, photo, travel insurance, flights and accommodation, employment and financial documents — the consulate's own order is the safest." },
+          { title: "Check the order", x: "Drag to rearrange in the list. A wrong order means the officer cannot find the document they are looking for." },
+          { title: "Merge and download", x: "You get one PDF, and your files never leave your device." },
+          { title: "Check the size limit", x: "If the upload screen states a limit and you are over it, compress; scanned pages give the biggest gain." },
+        ] },
+
+        { t: "h2", x: "Before sending, open the file as a reader would" },
+        { t: "ul", items: [
+          "Is every page upright, or is something sideways?",
+          "Does the smallest text read comfortably? If you have to zoom, rescan it.",
+          "Does the page order match the list?",
+          "Has a document carrying personal data, not asked for on the list, slipped in?",
+          "Is the file name clear? Something like «visa-application-name-surname.pdf» works well.",
+        ] },
+        { t: "p", x: "That check takes five minutes. Set against how long you waited for the appointment, going through the file once more is well worth it." },
+      ],
+      faq: [
+        { q: "Should visa documents be combined into one PDF?", a: "It depends on the application centre; some want a single file, others one file per document. Follow the instruction on the upload screen, and if a single file is wanted, keep the documents in the order given on the list." },
+        { q: "What size should a visa photo be?", a: "Schengen and many other visa applications ask for 35×45 mm; in Turkey the common size for ID cards, passports and licences is 50×60 mm. Always confirm the current requirement with the consulate you are applying to." },
+        { q: "Does resizing a photo make it biometrically compliant?", a: "No. Resizing only sets the pixel dimensions. A white background, the position of the face and a neutral expression depend on how the photo was taken and must be handled separately." },
+        { q: "Can I prepare documents from screenshots?", a: "No. Verification barcodes do not survive screenshots and image quality drops. Download documents as PDFs and scan paper ones." },
+        { q: "What if the file exceeds the size limit?", a: "Compress the scanned pages — that is where the gain is. Afterwards, check that the page with the smallest type is still legible." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "ihale-dosyasi-pdf-hazirlama",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 7,
+      tags: { tr: ["İhale", "Resmî Evrak", "Birleştirme"], en: ["Tenders", "Official Documents", "Merge"] },
+      accent: "blue",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "İhale Dosyasını PDF Olarak Hazırlama Rehberi",
+      description:
+        "İhale teklif dosyasını dijital hazırlarken sıralama, sayfa numarası, boyut sınırı ve imza konularında dikkat edilmesi gerekenler.",
+      excerpt:
+        "İhale dosyasında biçim, içerik kadar önemlidir. Teklifi değerlendiren komisyon aradığı belgeyi bulamadığında bunu sizin lehinize yorumlamaz. Dosyanın düzeni, işin ciddiyetine dair ilk izlenimdir.",
+      blocks: [
+        { t: "lead", x: "İhale teklif dosyası, belgeler kadar düzen işidir. Komisyon onlarca dosyayı sırayla inceler; aradığı belgeyi hızla bulabildiği dosya avantajlıdır. Üstelik idarelerin çoğu artık teklifi elektronik ortamda istiyor ve bu, dosyayı bir arada, sıralı ve okunaklı sunma sorumluluğunu tamamen size bırakıyor." },
+
+        { t: "h2", x: "Şartname ne diyorsa o" },
+        { t: "p", x: "Bu yazıdaki hiçbir öneri, idarenin şartnamesindeki talimatın önüne geçmez. Şartname belge sırasını, dosya biçimini, adlandırmayı ya da boyut sınırını belirtmişse harfi harfine uyun. Biçim şartına uymamak, teklifin değerlendirme dışı bırakılması için tek başına yeterli bir sebep olabilir." },
+        { t: "p", x: "Şartnameyi indirip aramayla ilerlemek en hızlı yoldur: «dosya», «biçim», «PDF», «imza», «boyut» kelimelerini arayın ve çıkan her maddeyi not edin." },
+
+        { t: "h2", x: "Belgeleri şartname sırasıyla dizin" },
+        { t: "p", x: "İhale şartnameleri istenen belgeleri numaralı bir liste hâlinde verir. Dosyanızı tam olarak o sırayla kurun. Komisyon üyesi listeyi elinde tutarak ilerler; sizin dosyanız aynı sırayı izliyorsa inceleme akıcı olur." },
+        { t: "steps", items: [
+          { title: "Belgeleri tek tek PDF olarak hazırlayın", x: "e-Devlet ve resmî portallardan alınanları doğrudan PDF indirin; kâğıt belgeleri tarayın." },
+          { title: "Şartname sırasına dizin", x: "Birleştirme aracında dosyaları sürükleyerek listedeki numaralara göre sıralayın." },
+          { title: "Tek dosyada birleştirin", x: "İşlem tarayıcınızda yapılır; teklif dosyanız sunucuya yüklenmez." },
+          { title: "Sayfa numarası ekleyin", x: "Numaralı bir dosyada komisyon «şu belge kaçıncı sayfada» diye sorabilir ve siz cevap verebilirsiniz." },
+        ] },
+
+        { t: "cta", title: "PDF Birleştir", x: "Teklif belgelerini şartname sırasına dizip tek dosyada toplayın — cihazınızda, üyeliksiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Sayfa numarası neden işe yarar?" },
+        { t: "p", x: "Yüz sayfalık bir teklif dosyasında sayfa numarası, dosyanın içindekiler listesini mümkün kılar. Başa bir içindekiler sayfası koyup her belgenin hangi sayfada başladığını yazmak, komisyonun işini ciddi biçimde kolaylaştırır." },
+        { t: "p", x: "Bu küçük ayrıntı, dosyanızı özenle hazırlanmış bir iş gibi gösterir. Rakiplerin çoğu bunu yapmaz." },
+        { t: "cta", title: "Sayfa Numarası Ekle", x: "Teklif dosyasına sayfa numarası ekleyin; içindekiler listesi hazırlamak mümkün hâle gelsin.", btn: "Aracı aç", tool: "/tools/page-numbers" },
+
+        { t: "h2", x: "Boyut sınırı ve tarama kalitesi dengesi" },
+        { t: "p", x: "Elektronik ihale sistemlerinin dosya boyutu sınırı vardır. Aynı zamanda belgelerin okunaklı olması gerekir — okunamayan bir belge, eksik belge sayılır. Bu ikisi arasında denge kurmak gerekir." },
+        { t: "ul", items: [
+          "Belgeleri gri tonlamada, 300 DPI tarayın. Renk gerekli değilse kullanmayın; dosyayı katlar.",
+          "Şirket kaşesi ya da renkli imza varsa yalnızca o sayfaları renkli tarayın, gerisini gri bırakın.",
+          "Sıkıştırdıktan sonra mutlaka kontrol edin: kaşe okunuyor mu, imza net mi, en küçük punto seçilebiliyor mu?",
+          "Boyut hâlâ sınırın üzerindeyse dosyayı bölmek, kaliteyi düşürmekten daha güvenlidir.",
+        ] },
+        { t: "tip", x: "Asla tüm dosyayı en yüksek sıkıştırma düzeyinde ezmeyin. İhale dosyasında okunamayan bir kaşe, kazanılmış bir işi kaybettirebilir. Önce hangi sayfaların ağır olduğuna bakın; sorun genelde birkaç sayfadadır." },
+
+        { t: "h2", x: "İmza konusunda dikkatli olun" },
+        { t: "p", x: "Teklif dosyalarında imza kritik bir konudur ve idareler genellikle ıslak imza ya da nitelikli elektronik imza ister. PDF'e imza görseli yerleştirmek, bu şartların hiçbirini karşılamaz — bu yalnızca imzanın resmidir." },
+        { t: "p", x: "Pratikte doğru yol: belgeyi yazdırıp ıslak imzalayıp taramak, ya da idarenin kabul ettiği elektronik imza altyapısını kullanmak. Görsel imza, iç yazışma ve taslak paylaşımı gibi resmî olmayan durumlar için uygundur." },
+
+        { t: "h2", x: "Teslimden önce son kontrol" },
+        { t: "ul", items: [
+          "Şartnamedeki belge listesinin her maddesi dosyada var mı?",
+          "Sıra şartnamedeki sırayla aynı mı?",
+          "Geçerlilik süresi olan belgeler (faaliyet belgesi, oda kaydı, borcu yoktur yazısı) güncel mi?",
+          "Tüm sayfalar düz ve okunaklı mı?",
+          "Dosya adı idarenin istediği biçimde mi?",
+          "Son teklif saatine kaç saat var? Yüklemeyi son saate bırakmayın; sistem yoğunluğu gerçek bir risktir.",
+        ] },
+      ],
+      faq: [
+        { q: "İhale teklif dosyası tek PDF mi olmalı?", a: "İdarenin şartnamesine bağlıdır. Şartname biçim, adlandırma ve dosya sayısı konusunda ne diyorsa harfi harfine uyulmalıdır; biçim şartına uymamak teklifin değerlendirme dışı kalmasına yol açabilir." },
+        { q: "Belgeleri hangi sırayla dizmeliyim?", a: "Şartnamedeki numaralı listenin sırasıyla. Komisyon listeyi elinde tutarak ilerler; aynı sırayı izleyen dosyada aranan belge hemen bulunur." },
+        { q: "Dosya boyutu sınırı aşarsa kaliteyi düşürmeli miyim?", a: "Önce hangi sayfaların ağır olduğuna bakın; sorun genellikle birkaç taranmış sayfadadır. Kaşe ve imzaların okunaklılığından ödün vermek yerine dosyayı bölmek daha güvenlidir." },
+        { q: "PDF'e imza görseli eklemek yeterli mi?", a: "Hayır. Görsel imza yalnızca imzanın resmidir; ıslak imza ya da nitelikli elektronik imza yerine geçmez. İdarenin kabul ettiği imza yöntemini kullanın." },
+        { q: "Sayfa numarası eklemek gerekli mi?", a: "Şartname istemiyorsa zorunlu değildir, ama kalabalık dosyalarda işe yarar: içindekiler listesi hazırlamayı mümkün kılar ve komisyonun aradığı belgeyi hızla bulmasını sağlar." },
+      ],
+    },
+    {
+      title: "Preparing a Tender Submission as a PDF",
+      description:
+        "What to watch for when assembling a tender bid digitally: ordering, page numbers, size limits and what a signature image can and cannot do.",
+      excerpt:
+        "In a tender file, form matters as much as content. When the evaluating committee cannot find a document, they do not read that in your favour. The order of your file is the first impression of how seriously you take the job.",
+      blocks: [
+        { t: "lead", x: "A tender bid is as much about organisation as about documents. A committee works through dozens of files in turn, and the file where they can find things quickly has the advantage. Most authorities now want the bid electronically, which leaves the job of presenting it together, in order and legibly entirely to you." },
+
+        { t: "h2", x: "Whatever the specification says, wins" },
+        { t: "p", x: "Nothing in this piece overrides the instruction in the authority's own specification. If it states the order of documents, the file format, the naming or a size limit, follow it to the letter. Failing a formal requirement can be enough on its own to have a bid excluded." },
+        { t: "p", x: "The fastest approach is to download the specification and search it: look for «file», «format», «PDF», «signature» and «size», and note every clause that comes up." },
+
+        { t: "h2", x: "Order the documents as the specification lists them" },
+        { t: "p", x: "Tender specifications give the required documents as a numbered list. Build your file in exactly that order. A committee member works with the list in hand; if your file follows the same sequence, the review flows." },
+        { t: "steps", items: [
+          { title: "Prepare each document as a PDF", x: "Download anything from official portals directly as a PDF; scan the paper documents." },
+          { title: "Arrange in specification order", x: "In the merge tool, drag the files to match the numbering on the list." },
+          { title: "Combine into one file", x: "The work happens in your browser; your bid is not uploaded to a server." },
+          { title: "Add page numbers", x: "With a numbered file, the committee can ask which page a document is on — and you can answer." },
+        ] },
+
+        { t: "cta", title: "Merge PDF", x: "Put bid documents in specification order and combine them into one file — on your device, no signup.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Why page numbers help" },
+        { t: "p", x: "In a hundred-page bid, page numbers make a table of contents possible. Putting a contents page at the front, listing where each document begins, makes the committee's job markedly easier." },
+        { t: "p", x: "That small detail makes your file look like careful work. Most competitors will not bother." },
+        { t: "cta", title: "Add Page Numbers", x: "Number the pages of a bid so a table of contents becomes possible.", btn: "Open the tool", tool: "/tools/page-numbers" },
+
+        { t: "h2", x: "Balancing size limits against scan quality" },
+        { t: "p", x: "Electronic tender systems impose size limits. At the same time documents have to be legible — an unreadable document counts as a missing one. You have to balance the two." },
+        { t: "ul", items: [
+          "Scan in greyscale at 300 DPI. If colour is not needed, do not use it; it multiplies the file.",
+          "If there is a company stamp or a coloured signature, scan only those pages in colour and leave the rest grey.",
+          "After compressing, always check: is the stamp readable, is the signature sharp, is the smallest type still legible?",
+          "If you are still over the limit, splitting the file is safer than lowering quality.",
+        ] },
+        { t: "tip", x: "Never crush the whole file at maximum compression. An unreadable stamp in a tender file can lose you work you had already won. Look at which pages are heavy first — the problem is usually in a handful of them." },
+
+        { t: "h2", x: "Be careful about signatures" },
+        { t: "p", x: "Signatures are critical in bids, and authorities generally require a wet signature or a qualified electronic signature. Placing an image of a signature on a PDF meets neither requirement — it is only a picture of a signature." },
+        { t: "p", x: "In practice the right route is to print, sign by hand and scan, or to use the electronic signature infrastructure the authority accepts. Image signatures suit informal situations such as internal correspondence and draft sharing." },
+
+        { t: "h2", x: "A final check before submitting" },
+        { t: "ul", items: [
+          "Is every item on the specification's list present in the file?",
+          "Does the order match the specification?",
+          "Are time-limited documents such as registration and tax-clearance certificates current?",
+          "Is every page upright and legible?",
+          "Does the file name match what the authority asked for?",
+          "How many hours are left before the deadline? Do not leave the upload to the last hour; system load is a real risk.",
+        ] },
+      ],
+      faq: [
+        { q: "Should a tender bid be a single PDF?", a: "It depends on the authority's specification. Whatever it says about format, naming and the number of files must be followed to the letter; failing a formal requirement can have a bid excluded." },
+        { q: "In what order should the documents go?", a: "In the order of the numbered list in the specification. The committee works with that list in hand, so a file following the same sequence makes each document easy to find." },
+        { q: "If the file exceeds the size limit, should I lower quality?", a: "Look first at which pages are heavy; usually a handful of scanned pages are responsible. Splitting the file is safer than sacrificing the legibility of stamps and signatures." },
+        { q: "Is adding a signature image to a PDF enough?", a: "No. An image signature is only a picture; it does not stand in for a wet signature or a qualified electronic signature. Use the method the authority accepts." },
+        { q: "Do I need page numbers?", a: "Not unless the specification asks for them, but they help in large files: they make a table of contents possible and let the committee find a document quickly." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "bordro-sayfalarini-ayirma",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 5,
+      tags: { tr: ["İnsan Kaynakları", "Bölme", "Gizlilik"], en: ["HR", "Split", "Privacy"] },
+      accent: "fuchsia",
+      tool: "/tools/split-pdf",
+    },
+    {
+      title: "Bordroyu Kişi Kişi Ayırma: PDF'i Sayfalara Bölme",
+      description:
+        "Tek dosyada gelen bordroyu çalışan başına ayrı PDF'e ayırmanın pratik yolu. Yanlış kişiye yanlış bordro gitmesini önleyin.",
+      excerpt:
+        "Muhasebe programı bordroyu tek bir PDF olarak veriyor; içinde kırk çalışanın maaş pusulası var. Herkese kendi sayfasını göndermek gerekiyor ve bunu elle yapmak hem uzun sürüyor hem risk taşıyor.",
+      blocks: [
+        { t: "lead", x: "Ayın başı geldi, muhasebe bordroyu gönderdi ve elinizde tek bir PDF var: kırk sayfa, kırk çalışan. Herkese yalnızca kendi sayfası gitmeli. Bunu elle yapmak — her sayfayı tek tek kaydedip adlandırmak — hem yarım gününüzü alır hem de bir yerde karışma riski taşır. Karışırsa sonucu ağırdır: bir çalışanın maaşı başka birine gitmiş olur." },
+
+        { t: "h2", x: "Neden elle yapmamalı?" },
+        { t: "p", x: "Burada asıl mesele zaman değil, hata. Maaş bilgisi en hassas kişisel verilerden biridir ve yanlış kişiye ulaşması geri alınamaz. Elle yapılan tekrarlı bir işte kırkıncı sayfada dikkatin dağılması olağandır." },
+        { t: "p", x: "İşi tek hamlede yapan bir yöntem, hem süreyi dakikalara indirir hem de «acaba karıştı mı» sorusunu ortadan kaldırır." },
+
+        { t: "h2", x: "Adım adım: tek PDF'i sayfalara ayırma" },
+        { t: "steps", items: [
+          { title: "Bordro dosyasını ekleyin", x: "PDF Bölme aracına dosyayı verin. İşlem tarayıcınızda yapılır; maaş bilgileri sunucuya yüklenmez." },
+          { title: "Sayfaları görerek seçin", x: "Sayfalar küçük görseller hâlinde listelenir. Hangi sayfanın kime ait olduğunu buradan doğrulayabilirsiniz." },
+          { title: "Her sayfayı ayrı dosya olarak alın", x: "Sayfalar tek tek ayrılıp bir ZIP içinde iner; her sayfa kendi dosyasıdır." },
+          { title: "Dosyaları adlandırın", x: "Gönderim öncesi her dosyaya çalışanın adını verin. Bu adım, yanlış gönderime karşı son savunmadır." },
+        ] },
+
+        { t: "cta", title: "PDF Böl", x: "Tek dosyadaki bordroyu sayfa sayfa ayırın — cihazınızda, dosya yüklenmeden.", btn: "Aracı aç", tool: "/tools/split-pdf" },
+
+        { t: "h2", x: "Bir çalışanın bordrosu birden çok sayfaysa" },
+        { t: "p", x: "Bazı bordrolarda tek çalışan iki ya da üç sayfa tutar. Bu durumda her sayfayı ayrı dosya yapmak işe yaramaz; sayfa aralıklarıyla çalışmanız gerekir." },
+        { t: "p", x: "Bölme aracı sayfa aralığı seçmenize izin verir: 1–2 aralığı bir dosya, 3–4 aralığı başka bir dosya. Sayfa küçük görselleri sayesinde aralıkları gözle kontrol ederek ilerleyebilirsiniz — bu, kör bir numara girmekten çok daha güvenlidir." },
+
+        { t: "h2", x: "Göndermeden önce mutlaka kontrol edin" },
+        { t: "p", x: "Ayırma işlemi doğru çalışsa bile, gönderim listesindeki bir kaymayı hiçbir araç yakalayamaz. Gönderim öncesi şu iki kontrolü yapın:" },
+        { t: "ul", items: [
+          "Rastgele üç dosyayı açın ve içindeki ismin dosya adıyla aynı olduğunu doğrulayın.",
+          "Dosya sayısı çalışan sayısıyla aynı mı? Eksik ya da fazla dosya, aralıkların kaydığını gösterir.",
+        ] },
+        { t: "tip", x: "Bordroları toplu e-posta ile göndermeyin. Tek bir «tümünü yanıtla» ya da yanlış seçilmiş bir alıcı listesi, tüm şirketin maaşlarını ifşa edebilir. Her bordro kendi e-postasında, tek alıcıya gitmeli." },
+
+        { t: "h2", x: "Aynı yöntemin işe yaradığı diğer durumlar" },
+        { t: "ul", items: [
+          "Tek dosyada gelen faturaların müşteri başına ayrılması.",
+          "Toplu üretilen sertifika ya da katılım belgelerinin kişi başına bölünmesi.",
+          "Çok sayfalı bir raporun ilgili bölümlerinin farklı birimlere gönderilmesi.",
+          "Uzun bir sözleşmeden yalnızca imza sayfasının ayrılması.",
+        ] },
+      ],
+      faq: [
+        { q: "Tek PDF'teki her sayfayı ayrı dosya yapabilir miyim?", a: "Evet. Sayfalar tek tek ayrılıp bir ZIP içinde indirilir; her sayfa kendi dosyası olur." },
+        { q: "Bir kişinin bordrosu iki sayfaysa ne yapmalıyım?", a: "Sayfa aralığı seçerek bölün: 1–2 bir dosya, 3–4 başka bir dosya. Sayfa küçük görselleri üzerinden aralıkları gözle doğrulayabilirsiniz." },
+        { q: "Maaş bilgileri sunucunuza yükleniyor mu?", a: "Hayır. PDF bölme tarayıcınızda (cihazınızda) çalışır; dosya internete gönderilmez ve üyelik gerekmez." },
+        { q: "Dosyaların doğru kişilere ait olduğundan nasıl emin olurum?", a: "Gönderimden önce rastgele birkaç dosyayı açıp içindeki ismin dosya adıyla eşleştiğini doğrulayın ve dosya sayısının çalışan sayısıyla aynı olduğunu kontrol edin." },
+        { q: "Kaç sayfalık dosyaları bölebilirim?", a: "Dosya başına 80 MB'a kadar çalışabilirsiniz; sayfa sayısında ayrı bir sınır yoktur." },
+      ],
+    },
+    {
+      title: "Split Payslips into One File per Employee",
+      description:
+        "A practical way to break a single payroll PDF into one file per employee — and how to stop the wrong payslip reaching the wrong person.",
+      excerpt:
+        "The payroll system gives you one PDF holding forty payslips. Everyone needs to get only their own page, and doing that by hand is both slow and risky.",
+      blocks: [
+        { t: "lead", x: "It is the start of the month, payroll has sent the file, and you have a single PDF: forty pages, forty employees. Each person should receive only their own page. Doing that by hand — saving and naming each page in turn — costs you half a day and carries a risk of things getting mixed up. If they do, the consequence is serious: one employee's salary has gone to someone else." },
+
+        { t: "h2", x: "Why not do it by hand?" },
+        { t: "p", x: "The real issue here is not time but error. Salary information is among the most sensitive personal data there is, and reaching the wrong person cannot be undone. In a repetitive manual task, losing focus by the fortieth page is entirely normal." },
+        { t: "p", x: "A method that does the job in one move brings the time down to minutes and removes the question of whether anything got mixed up." },
+
+        { t: "h2", x: "Step by step: splitting one PDF into pages" },
+        { t: "steps", items: [
+          { title: "Add the payroll file", x: "Give the PDF to the split tool. The work happens in your browser; salary data is not uploaded." },
+          { title: "Pick pages visually", x: "Pages are listed as thumbnails, so you can confirm which page belongs to whom." },
+          { title: "Take each page as its own file", x: "Pages are separated individually and downloaded in a ZIP; each page is its own file." },
+          { title: "Name the files", x: "Before sending, give each file the employee's name. This step is your last defence against a misdirected email." },
+        ] },
+
+        { t: "cta", title: "Split PDF", x: "Break a combined payroll file page by page — on your device, with nothing uploaded.", btn: "Open the tool", tool: "/tools/split-pdf" },
+
+        { t: "h2", x: "When one employee spans several pages" },
+        { t: "p", x: "In some payrolls a single employee takes two or three pages. Then splitting page by page will not do; you need page ranges." },
+        { t: "p", x: "The split tool lets you choose ranges: pages 1–2 as one file, 3–4 as another. Thanks to the thumbnails you can confirm each range by eye — far safer than typing numbers blind." },
+
+        { t: "h2", x: "Always check before sending" },
+        { t: "p", x: "Even when the split is correct, no tool can catch a slip in your sending list. Do these two checks first:" },
+        { t: "ul", items: [
+          "Open three files at random and confirm the name inside matches the file name.",
+          "Does the number of files match the number of employees? A file too few or too many means the ranges have slipped.",
+        ] },
+        { t: "tip", x: "Do not send payslips as a group email. A single «reply all», or a wrongly chosen recipient list, can expose the whole company's salaries. Each payslip should go in its own email, to one recipient." },
+
+        { t: "h2", x: "Where else the same method helps" },
+        { t: "ul", items: [
+          "Separating combined invoice files by customer.",
+          "Splitting bulk-generated certificates into one per person.",
+          "Sending the relevant sections of a long report to different departments.",
+          "Pulling only the signature page out of a long contract.",
+        ] },
+      ],
+      faq: [
+        { q: "Can I turn every page of a PDF into its own file?", a: "Yes. Pages are separated individually and downloaded in a ZIP, each page as its own file." },
+        { q: "What if one person's payslip is two pages?", a: "Split by page range instead: 1–2 as one file, 3–4 as another. The thumbnails let you confirm each range by eye." },
+        { q: "Is salary data uploaded to your server?", a: "No. Splitting runs in your browser (on your device); the file is never sent over the internet and no account is needed." },
+        { q: "How can I be sure each file belongs to the right person?", a: "Before sending, open a few files at random and check the name inside matches the file name, and confirm the file count equals the employee count." },
+        { q: "How large a file can I split?", a: "Up to 80 MB per file; there is no separate limit on the number of pages." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "osym-sinav-basvurusu-fotograf-boyutu",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 5,
+      tags: { tr: ["Başvuru", "Görsel", "Boyutlandırma"], en: ["Applications", "Images", "Resize"] },
+      accent: "amber",
+      tool: "/tools/gorsel-boyutlandir",
+    },
+    {
+      title: "ÖSYM Fotoğraf Boyutu: 300×400 Piksel ve 60 KB",
+      description:
+        "Sınav başvurusunda fotoğraf yüklenmiyor mu? İstenen piksel ölçüsünü ve dosya boyutunu tutturmanın adım adım yolu — kurulum gerekmeden.",
+      excerpt:
+        "Başvuru ekranı fotoğrafı kabul etmiyor ve sebebini söylemiyor. Sorun neredeyse her zaman aynı iki şeyden biri: piksel ölçüsü ya da dosya boyutu tutmuyor.",
+      blocks: [
+        { t: "lead", x: "Sınav başvurusunun son günü, formu doldurdunuz ve sıra fotoğrafa geldi. Sistem fotoğrafı kabul etmiyor. Hata mesajı da genelde açıklayıcı değil. Sorun neredeyse her zaman iki şeyden birindedir: fotoğrafın piksel ölçüsü ya da dosya boyutu isteneni tutmuyordur." },
+
+        { t: "h2", x: "İstenen ölçüler" },
+        { t: "p", x: "Sınav başvurularında fotoğraf için yaygın olarak şu şartlar aranır:" },
+        { t: "ul", items: [
+          "Piksel ölçüsü: 300 × 400 (genişlik × yükseklik).",
+          "Dosya boyutu: en fazla 60 KB.",
+          "Biçim: JPG (JPEG).",
+          "İçerik: son altı ay içinde çekilmiş, beyaz arka planlı, yüzü net gösteren bir fotoğraf.",
+        ] },
+        { t: "p", x: "Bu şartlar kurumdan kuruma ve yıldan yıla değişebilir. Başvuru ekranındaki açıklama her zaman esastır; aşağıdaki yöntem hangi ölçü istenirse istensin aynı şekilde çalışır." },
+
+        { t: "h2", x: "Piksel ölçüsü ile dosya boyutu farklı şeylerdir" },
+        { t: "p", x: "Bu ayrım kafa karışıklığının asıl kaynağıdır. Piksel ölçüsü fotoğrafın eni ve boyudur — 300 × 400 gibi. Dosya boyutu ise fotoğrafın diskte kapladığı yerdir — 60 KB gibi." },
+        { t: "p", x: "Bir fotoğraf tam olarak 300 × 400 piksel olabilir ama yine de 400 KB tutabilir. Tersi de mümkündür. Bu yüzden iki şartı ayrı ayrı sağlamanız gerekir: önce ölçüyü ayarlayın, boyut hâlâ yüksekse ayrıca sıkıştırın." },
+
+        { t: "h2", x: "Adım adım çözüm" },
+        { t: "steps", items: [
+          { title: "Fotoğrafı doğru ölçüye getirin", x: "Görsel Boyutlandır aracında hazır ölçülerden sınav başvurusu seçeneğini seçin; genişlik ve yükseklik 300 × 400 olarak gelir. İsterseniz elle de girebilirsiniz." },
+          { title: "Dosya boyutunu kontrol edin", x: "İnen dosyanın boyutuna bakın. 60 KB'ın altındaysa işiniz bitti." },
+          { title: "Gerekirse sıkıştırın", x: "Hâlâ büyükse Görsel Sıkıştır aracına verin ve kaliteyi kademeli düşürün. Vesikalık boyutundaki bir fotoğrafta %70 kalite genellikle hem 60 KB'ın altına iner hem de yüz net kalır." },
+          { title: "Son kontrolü gözle yapın", x: "Fotoğrafı tam boyutta açıp yüzün net göründüğünden emin olun. Aşırı sıkıştırma yüz hatlarını bozar ve fotoğraf geri çevrilebilir." },
+        ] },
+
+        { t: "cta", title: "Görsel Boyutlandır", x: "Fotoğrafı sınav ve resmî başvuruların istediği piksel ölçüsüne getirin — hazır ölçülerle, cihazınızda.", btn: "Aracı aç", tool: "/tools/gorsel-boyutlandir" },
+
+        { t: "h2", x: "Sık yapılan hatalar" },
+        { t: "ul", items: [
+          "Telefonla çekilmiş normal bir fotoğrafı kırpmadan yüklemeye çalışmak. Kamera fotoğrafı 4:3 ya da 16:9 orandadır; vesikalık oranı 3:4'tür. Önce vesikalık oranında kırpmanız gerekir.",
+          "Ekran görüntüsü kullanmak. Ekran görüntüsü PNG olur ve genelde hem yanlış ölçüde hem gereğinden büyüktür.",
+          "Küçük bir fotoğrafı büyütmek. 150 × 200 bir fotoğrafı 300 × 400'e çıkarmak bulanık bir sonuç verir; kaybolan ayrıntı geri gelmez.",
+          "Arka planı beyaz sanmak. Duvar açık gri ya da kremse sistem ya da görevli bunu reddedebilir.",
+        ] },
+        { t: "tip", x: "Kırpmayı boyutlandırmadan ÖNCE yapın. Önce fotoğrafı 3:4 oranında, yüz merkezde olacak şekilde kırpın; sonra 300 × 400'e getirin. Ters sırada yaparsanız yüz orantısız biçimde ezilir." },
+
+        { t: "h2", x: "Diğer başvurular için yaygın ölçüler" },
+        { t: "p", x: "Aynı yöntem tüm resmî fotoğraf ölçüleri için geçerlidir. Türkiye'de kimlik, pasaport ve ehliyet başvurularında yaygın ölçü 50 × 60 mm; Schengen ve pek çok vize başvurusunda 35 × 45 mm istenir. Milimetre cinsinden verilen ölçüler 300 DPI kabul edilerek piksele çevrilir." },
+        { t: "p", x: "Şunu tekrar etmekte fayda var: bir aracın fotoğrafı doğru ölçüye getirmesi, fotoğrafın biyometrik şartları karşıladığı anlamına gelmez. Arka plan, yüzün konumu ve ifade gibi şartlar fotoğrafın çekimiyle ilgilidir." },
+      ],
+      faq: [
+        { q: "Sınav başvurusunda fotoğraf kaç piksel olmalı?", a: "Yaygın olarak 300 × 400 piksel ve en fazla 60 KB, JPG biçiminde istenir. Şartlar değişebildiği için başvuru ekranındaki açıklamayı esas alın." },
+        { q: "Fotoğrafım doğru ölçüde ama dosya boyutu büyük, ne yapmalıyım?", a: "Piksel ölçüsü ile dosya boyutu farklı şeylerdir. Ölçüyü koruyup fotoğrafı ayrıca sıkıştırın; vesikalık boyutta %70 kalite genellikle hem sınırın altına iner hem yüzü net bırakır." },
+        { q: "Telefon fotoğrafımı doğrudan kullanabilir miyim?", a: "Önce kırpmanız gerekir. Kamera fotoğrafı 4:3 ya da 16:9 orandadır; vesikalık 3:4 orandadır. Yüz merkezde olacak şekilde kırpıp sonra boyutlandırın." },
+        { q: "Küçük bir fotoğrafı büyütebilir miyim?", a: "Büyütebilirsiniz ama sonuç bulanık olur; kaybolan ayrıntı geri gelmez. Mümkünse fotoğrafın yüksek çözünürlüklü aslından başlayın." },
+        { q: "Bu araç fotoğrafı biyometrik hâle getirir mi?", a: "Hayır. Araç yalnızca ölçüyü ayarlar. Beyaz arka plan, yüzün konumu ve nötr ifade gibi şartlar çekimle ilgilidir ve ayrıca sağlanmalıdır." },
+      ],
+    },
+    {
+      title: "Exam Application Photo Size: 300×400 px, 60 KB",
+      description:
+        "Photo rejected by an exam application system? A step-by-step way to hit the required pixel dimensions and file size, with nothing to install.",
+      excerpt:
+        "The application screen will not take your photo and does not say why. It is nearly always one of two things: the pixel dimensions or the file size do not match.",
+      blocks: [
+        { t: "lead", x: "It is the last day of applications, the form is filled in, and you have reached the photo. The system will not accept it, and the error is rarely informative. The cause is almost always one of two things: the photo's pixel dimensions or its file size do not match what was asked for." },
+
+        { t: "h2", x: "The requirements" },
+        { t: "p", x: "Turkish exam applications commonly ask for:" },
+        { t: "ul", items: [
+          "Pixel dimensions: 300 × 400 (width × height).",
+          "File size: 60 KB at most.",
+          "Format: JPG (JPEG).",
+          "Content: taken within the last six months, white background, face clearly visible.",
+        ] },
+        { t: "p", x: "These requirements differ between institutions and change from year to year. The note on the application screen always governs; the method below works whatever size is asked for." },
+
+        { t: "h2", x: "Pixel dimensions and file size are different things" },
+        { t: "p", x: "This distinction is the real source of the confusion. Pixel dimensions are the photo's width and height — 300 × 400. File size is how much room it takes on disk — 60 KB." },
+        { t: "p", x: "A photo can be exactly 300 × 400 pixels and still weigh 400 KB. The reverse is possible too. So you have to satisfy the two conditions separately: set the dimensions first, then compress if the size is still high." },
+
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Set the right dimensions", x: "In the resize tool, pick the exam application entry from the ready-made sizes; width and height come in at 300 × 400. You can also type them in." },
+          { title: "Check the file size", x: "Look at the size of the downloaded file. Under 60 KB and you are done." },
+          { title: "Compress if needed", x: "If it is still large, put it through the image compressor and lower the quality gradually. At passport-photo dimensions, 70% quality usually drops under 60 KB while keeping the face sharp." },
+          { title: "Check by eye", x: "Open the photo at full size and make sure the face is sharp. Over-compression distorts facial features and the photo may be rejected." },
+        ] },
+
+        { t: "cta", title: "Resize Image", x: "Bring a photo to the pixel dimensions exam and official applications require — ready-made sizes, on your device.", btn: "Open the tool", tool: "/tools/gorsel-boyutlandir" },
+
+        { t: "h2", x: "Common mistakes" },
+        { t: "ul", items: [
+          "Uploading an ordinary phone photo without cropping. Camera photos are 4:3 or 16:9; a passport photo is 3:4. You have to crop to that ratio first.",
+          "Using a screenshot. Screenshots come out as PNG and are usually both the wrong size and heavier than needed.",
+          "Enlarging a small photo. Taking a 150 × 200 image up to 300 × 400 gives a blurry result; lost detail does not come back.",
+          "Assuming the background is white. If the wall is light grey or cream, the system or a reviewer may reject it.",
+        ] },
+        { t: "tip", x: "Crop BEFORE you resize. First crop to a 3:4 ratio with the face centred, then set 300 × 400. Do it the other way round and the face gets squashed out of proportion." },
+
+        { t: "h2", x: "Common sizes for other applications" },
+        { t: "p", x: "The same method applies to every official photo size. In Turkey, ID card, passport and driving licence applications commonly use 50 × 60 mm; Schengen and many other visa applications ask for 35 × 45 mm. Sizes given in millimetres convert to pixels at 300 DPI." },
+        { t: "p", x: "Worth repeating: a tool bringing a photo to the right size does not make it biometrically compliant. Background, the position of the face and the expression all depend on how the photo was taken." },
+      ],
+      faq: [
+        { q: "What pixel size should an exam application photo be?", a: "Commonly 300 × 400 pixels, at most 60 KB, in JPG format. Requirements change, so rely on the note shown on the application screen." },
+        { q: "My photo is the right size but the file is too big — what now?", a: "Pixel dimensions and file size are different things. Keep the dimensions and compress the photo separately; at passport-photo size, 70% quality usually gets under the limit while keeping the face sharp." },
+        { q: "Can I use my phone photo directly?", a: "You need to crop it first. Camera photos are 4:3 or 16:9 while a passport photo is 3:4. Crop with the face centred, then resize." },
+        { q: "Can I enlarge a small photo?", a: "You can, but the result will be blurry; lost detail does not return. Start from the highest-resolution original you have." },
+        { q: "Does this tool make a photo biometric?", a: "No. It only sets the size. A white background, the position of the face and a neutral expression depend on the photo itself and must be handled separately." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "uyap-karari-word-e-aktarma",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 5,
+      tags: { tr: ["UYAP", "UDF", "Word"], en: ["UYAP", "UDF", "Word"] },
+      accent: "violet",
+      tool: "/tools/udf-to-pdf",
+    },
+    {
+      title: "UYAP Kararını Word'e Aktarma: İki Adımlı Yol",
+      description:
+        "UYAP'tan inen .udf kararın metnini Word'de düzenlemek mi istiyorsunuz? Biçimlendirmeyi koruyarak aktarmanın iki adımlı yolu.",
+      excerpt:
+        "Emsal bir kararın gerekçesini kendi dilekçenize almak istiyorsunuz. Elinizde UDF dosyası var, Word onu tanımıyor ve ekrandan bakarak yeniden yazmak saatler alıyor.",
+      blocks: [
+        { t: "lead", x: "Elinizde emsal bir karar var ve gerekçesindeki birkaç paragrafı kendi dilekçenize almak istiyorsunuz. Dosya UDF; Word açmıyor, kopyalayamıyorsunuz. Çoğu kişi bu noktada ekrana bakıp metni yeniden yazıyor. Gerekmiyor — iki adımda aktarılabiliyor." },
+
+        { t: "h2", x: "Neden doğrudan olmuyor?" },
+        { t: "p", x: "UDF, UYAP'ın kendi belge biçimidir ve Word'ün tanıdığı biçimlerle akrabalığı yoktur. Uzantıyı «.doc» olarak değiştirmek de işe yaramaz; bu, dosyanın içindeki yapıyı değiştirmez, yalnızca adını değiştirir." },
+        { t: "p", x: "Aradaki köprü PDF'tir. UDF'yi PDF'ye çevirdiğinizde ortaya yaygın olarak desteklenen bir belge çıkar; oradan Word'e geçmek standart bir işlemdir." },
+
+        { t: "h2", x: "Hangi yolu seçmeli?" },
+        { t: "p", x: "İhtiyacınıza göre iki yol var ve seçim basit:" },
+        { t: "ul", items: [
+          "Sadece metin lazımsa: UDF aracının verdiği düz metni (.txt) alın ve Word'e yapıştırın. En hızlı yol budur; biçimlendirme gelmez, metin gelir.",
+          "Biçimlendirme de lazımsa: önce UDF'yi PDF'ye, sonra PDF'i Word'e çevirin. Paragraf düzeni, kalın yazılar ve tablolar korunur.",
+        ] },
+        { t: "p", x: "Dilekçeye alıntı yapacaksanız çoğu zaman birinci yol yeterlidir; zaten metni kendi belgenizin biçimine sokacaksınız. Kararın tablolu bir ekini ya da düzenini olduğu gibi taşımanız gerekiyorsa ikinci yolu seçin." },
+
+        { t: "h2", x: "Adım adım: biçimlendirmeyi koruyarak aktarma" },
+        { t: "steps", items: [
+          { title: "UDF'yi PDF'ye çevirin", x: "Dosyayı UDF aracına bırakın. İşlem tarayıcınızda yapılır; adli evrak sunucuya yüklenmez." },
+          { title: "PDF'i indirin", x: "Yazı tipi, kalın ve altı çizili biçimler, hizalamalar ve tablolar korunur." },
+          { title: "PDF'i Word'e çevirin", x: "İnen PDF'i PDF → Word aracına verin; düzenlenebilir bir .docx dosyası alın." },
+          { title: "Word'de kontrol edin", x: "Dönüştürme sonrası paragraf kırılmalarını ve varsa tabloları gözden geçirin. Uzun belgelerde küçük düzeltmeler normaldir." },
+        ] },
+
+        { t: "cta", title: "UDF'yi PDF Yap", x: "UYAP'tan inen kararı program kurmadan PDF'ye çevirin; metni de .txt olarak alın.", btn: "Aracı aç", tool: "/tools/udf-to-pdf" },
+
+        { t: "h2", x: "Taranmış kararlarda ek bir adım gerekir" },
+        { t: "p", x: "Eski dosyalarda karar bazen UDF değil, taranmış bir görüntü olarak gelir. Böyle bir belgede yazı aslında resimdir; kopyalayamaz, arayamazsınız." },
+        { t: "p", x: "Bu durumda önce belgeyi OCR'dan geçirip metni çıkarmanız gerekir. OCR, görüntüdeki yazıyı gerçek metne çevirir; ardından aynı adımlarla Word'e aktarabilirsiniz." },
+        { t: "cta", title: "Taranmış PDF'i Metne Çevir", x: "Taranmış kararın içindeki yazıyı gerçek metne çevirin, sonra Word'e aktarın.", btn: "Aracı aç", tool: "/tools/taranmis-pdf-ocr" },
+
+        { t: "h2", x: "Aktardıktan sonra mutlaka karşılaştırın" },
+        { t: "p", x: "Hiçbir dönüştürme kusursuz değildir ve hukuki metinde tek bir rakamın kayması ciddi sonuç doğurur. Word'e aktardıktan sonra şunları asıl belgeyle karşılaştırın:" },
+        { t: "ul", items: [
+          "Esas ve karar numaraları.",
+          "Tarihler.",
+          "Parasal tutarlar ve faiz oranları.",
+          "Kanun madde numaraları.",
+          "Taraf isimlerinin yazımı.",
+        ] },
+        { t: "tip", x: "Alıntı yaparken kararın PDF hâlini de saklayın. Metni kendi belgenize aldıktan sonra doğruluğunu göstermeniz gerekirse, elinizde asıl belgenin okunabilir bir kopyası bulunur." },
+
+        { t: "h2", x: "Bir hatırlatma: PDF kopya imzalı asıl değildir" },
+        { t: "p", x: "UDF dosyasındaki elektronik imza PDF'ye taşınmaz. Çevirdiğiniz dosya, çalışmak ve alıntılamak için okunabilir bir kopyadır. Resmî bir işlemde ibraz gerekiyorsa imzalı UDF aslını kullanın." },
+      ],
+      faq: [
+        { q: "UDF dosyasını doğrudan Word'de açabilir miyim?", a: "Hayır. Word bu biçimi tanımaz ve uzantıyı değiştirmek işe yaramaz. Önce PDF'ye, sonra Word'e çevirmeniz gerekir." },
+        { q: "Sadece metni almak istiyorum, en hızlı yol nedir?", a: "UDF aracının verdiği düz metni .txt olarak indirip Word'e yapıştırın. Biçimlendirme gelmez ama metin eksiksiz gelir." },
+        { q: "Biçimlendirme korunur mu?", a: "PDF üzerinden gidildiğinde paragraf düzeni, kalın yazılar ve tablolar büyük ölçüde korunur. Uzun belgelerde küçük düzeltmeler gerekebilir." },
+        { q: "Karar taranmış bir görüntüyse ne yapmalıyım?", a: "Önce OCR ile metni çıkarın; taranmış belgede yazı aslında resimdir ve kopyalanamaz. OCR sonrası aynı adımlarla Word'e aktarabilirsiniz." },
+        { q: "Dönüştürülen dosya resmî olarak kullanılabilir mi?", a: "Hayır. PDF kopya, UDF dosyasındaki elektronik imzayı taşımaz. Resmî ibraz için imzalı UDF aslını kullanın." },
+      ],
+    },
+    {
+      title: "Getting a Court Decision from UYAP into Word",
+      description:
+        "Need to edit the text of a .udf decision from Turkey's UYAP system in Word? A two-step route that keeps the formatting intact.",
+      excerpt:
+        "You want to bring the reasoning of a precedent decision into your own filing. You have a UDF file, Word does not recognise it, and retyping from the screen takes hours.",
+      blocks: [
+        { t: "lead", x: "You have a precedent decision and want a few paragraphs of its reasoning in your own filing. The file is a UDF; Word will not open it and you cannot copy from it. At this point most people retype from the screen. You do not have to — it transfers in two steps." },
+
+        { t: "h2", x: "Why it does not work directly" },
+        { t: "p", x: "UDF is UYAP's own document format and bears no relation to the formats Word recognises. Renaming the extension to «.doc» does not help either; that changes the name, not the structure inside the file." },
+        { t: "p", x: "The bridge is PDF. Convert the UDF to PDF and you have a widely supported document; from there, going to Word is a standard operation." },
+
+        { t: "h2", x: "Which route to take" },
+        { t: "p", x: "There are two routes and the choice is simple:" },
+        { t: "ul", items: [
+          "If you only need the text: take the plain text (.txt) the UDF tool gives you and paste it into Word. This is the fastest route; formatting does not come, but the text does.",
+          "If you need the formatting too: convert UDF to PDF, then PDF to Word. Paragraph layout, bold text and tables are preserved.",
+        ] },
+        { t: "p", x: "For quoting in a filing the first route is usually enough, since you will reformat the text to match your own document anyway. Choose the second when you need to carry over a table or a layout as it stands." },
+
+        { t: "h2", x: "Step by step: transferring with formatting" },
+        { t: "steps", items: [
+          { title: "Convert the UDF to PDF", x: "Drop the file into the UDF tool. The work happens in your browser; court documents are not uploaded." },
+          { title: "Download the PDF", x: "Fonts, bold and underlined text, alignment and tables are preserved." },
+          { title: "Convert the PDF to Word", x: "Feed the downloaded PDF to the PDF to Word tool and get an editable .docx." },
+          { title: "Check in Word", x: "Review paragraph breaks and any tables after conversion. Small corrections in long documents are normal." },
+        ] },
+
+        { t: "cta", title: "UDF to PDF", x: "Convert a decision downloaded from UYAP to PDF with nothing installed, and take the text as .txt too.", btn: "Open the tool", tool: "/tools/udf-to-pdf" },
+
+        { t: "h2", x: "Scanned decisions need an extra step" },
+        { t: "p", x: "In older case files a decision sometimes arrives not as a UDF but as a scanned image. In such a document the writing is really a picture; you can neither copy nor search it." },
+        { t: "p", x: "Then you first need to run the document through OCR to extract the text. OCR turns the writing in the image into real text; after that the same steps get you into Word." },
+        { t: "cta", title: "Scanned PDF to Text (OCR)", x: "Turn the writing inside a scanned decision into real text, then take it into Word.", btn: "Open the tool", tool: "/tools/taranmis-pdf-ocr" },
+
+        { t: "h2", x: "Always compare afterwards" },
+        { t: "p", x: "No conversion is flawless, and in a legal text a single shifted digit has serious consequences. After transferring into Word, compare these against the original:" },
+        { t: "ul", items: [
+          "Case and decision numbers.",
+          "Dates.",
+          "Monetary amounts and interest rates.",
+          "Statutory article numbers.",
+          "The spelling of party names.",
+        ] },
+        { t: "tip", x: "Keep the PDF of the decision as well. If you later need to show that your quotation is accurate, you have a readable copy of the source to hand." },
+
+        { t: "h2", x: "A reminder: the PDF copy is not the signed original" },
+        { t: "p", x: "The electronic signature in a UDF does not carry into the PDF. The converted file is a readable copy for working and quoting. If an official filing needs the document, use the signed UDF original." },
+      ],
+      faq: [
+        { q: "Can I open a UDF file directly in Word?", a: "No. Word does not recognise the format, and renaming the extension does not help. Convert to PDF first, then to Word." },
+        { q: "I only need the text — what is fastest?", a: "Download the plain text as .txt from the UDF tool and paste it into Word. Formatting does not come across, but the text arrives complete." },
+        { q: "Is formatting preserved?", a: "Going via PDF preserves paragraph layout, bold text and tables to a large extent. Long documents may need small corrections." },
+        { q: "What if the decision is a scanned image?", a: "Run OCR first; in a scanned document the writing is a picture and cannot be copied. After OCR the same steps take it into Word." },
+        { q: "Can the converted file be used officially?", a: "No. The PDF copy does not carry the electronic signature held in the UDF. Use the signed original for official filings." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "universite-kayit-evraklarini-hazirlama",
+      date: "2026-09-22",
+      updated: "2026-09-22",
+      readMinutes: 6,
+      tags: { tr: ["Öğrenci", "Başvuru", "Belge Tarama"], en: ["Students", "Applications", "Scanning"] },
+      accent: "emerald",
+      tool: "/tools/belge-tara",
+    },
+    {
+      title: "Üniversite Kayıt Evraklarını Dijital Hazırlama",
+      description:
+        "Üniversite kaydı için istenen belgeleri telefonla düzgün tarama, tek dosyada toplama ve yükleme sınırına sığdırma rehberi.",
+      excerpt:
+        "Kayıt döneminde herkes aynı yere takılıyor: sistem belgeyi kabul etmiyor. Sorun genelde belgede değil, belgenin nasıl hazırlandığında.",
+      blocks: [
+        { t: "lead", x: "Kayıt günleri sayılı, sistem yoğun ve elinizde bir yığın belge var: lise diploması, sınav sonuç belgesi, kimlik fotokopisi, ikametgâh, sağlık raporu, fotoğraf. Çoğu artık dijital yükleniyor. Bu yazı, belgelerin ilk seferde kabul edilmesi için nasıl hazırlanacağını anlatıyor." },
+
+        { t: "h2", x: "Telefonla fotoğraf çekmek yerine tarayın" },
+        { t: "p", x: "En sık yapılan hata bu. Belgeyi masaya koyup telefonla fotoğrafını çekmek hızlıdır ama sonuç genelde kabul edilmez: masa görünür, kenarlar eğridir, ışık bir köşeye vurur, dosya gereksiz büyüktür." },
+        { t: "p", x: "Belge tarayıcı ise belgenin kenarlarını bulur, perspektifi düzeltir ve kâğıdı düz bir sayfaya oturtur. Sonuç gerçekten taranmış gibi görünür ve dosya çok daha küçük olur — üstelik ek bir cihaz gerekmez, telefonunuzun kamerası yeter." },
+        { t: "steps", items: [
+          { title: "Belgeyi düz bir zemine koyun", x: "Koyu renk bir zemin kenarların bulunmasını kolaylaştırır. Kâğıdı mümkün olduğunca düzleştirin." },
+          { title: "Işığı yandan değil üstten alın", x: "Kendi gölgeniz belgenin üzerine düşmesin. Pencere ışığı yeterlidir, flaş genelde parlama yapar." },
+          { title: "Tarayıcıyı çalıştırın", x: "Kenarlar otomatik bulunur ve sayfa düzleştirilir. Gerekirse köşeleri elle düzeltebilirsiniz." },
+          { title: "PDF olarak alın", x: "Birden fazla sayfayı tek belgede toplayabilirsiniz." },
+        ] },
+
+        { t: "cta", title: "Belge Tarayıcı", x: "Telefonunuzla düzgün tarama yapın: kenarlar bulunur, sayfa düzleştirilir, dosya küçük kalır.", btn: "Aracı aç", tool: "/tools/belge-tara" },
+
+        { t: "h2", x: "e-Devlet'ten alınabilenleri taramayın" },
+        { t: "p", x: "Bazı belgeleri taramanıza hiç gerek yok. İkametgâh, nüfus kayıt örneği, adli sicil kaydı ve askerlik durum belgesi gibi belgeler e-Devlet'ten doğrudan PDF olarak indirilebilir." },
+        { t: "p", x: "İndirilen belge zaten dijital, net ve küçüktür; üstelik üzerindeki barkodla doğrulanabilir. Yazdırıp tekrar taramak bu avantajların hepsini kaybettirir." },
+        { t: "tip", x: "Ekran görüntüsü almayın, «PDF olarak indir» seçeneğini kullanın. Ekran görüntüsünde doğrulama barkodu çoğu zaman okunmaz ve belge geçersiz sayılabilir." },
+
+        { t: "h2", x: "Fotoğraf ölçüsü" },
+        { t: "p", x: "Öğrenci kimliği için istenen fotoğrafın belirli bir piksel ölçüsü ve dosya boyutu olur. Telefonla çektiğiniz fotoğraf hem yanlış oranda hem gereğinden büyüktür; önce vesikalık oranında kırpıp sonra istenen ölçüye getirin." },
+        { t: "p", x: "Ölçü tuttuğu hâlde dosya hâlâ büyükse fotoğrafı ayrıca sıkıştırın. Piksel ölçüsü ile dosya boyutu farklı şeylerdir ve çoğu sistem ikisini birden şart koşar." },
+
+        { t: "h2", x: "Tek dosya mı, ayrı dosyalar mı?" },
+        { t: "p", x: "Üniversiteler genelde her belgeyi kendi alanına ayrı yükletir. Tek dosya isteniyorsa belgeleri kayıt kılavuzundaki sırayla dizin." },
+        { t: "p", x: "Belgeleriniz birden çok sayfaysa (örneğin diplomanın iki yüzü) bunları tek PDF hâlinde birleştirip öyle yükleyin; sistem çoğu zaman alan başına tek dosya kabul eder." },
+
+        { t: "h2", x: "Yükleme sınırına takılırsanız" },
+        { t: "ul", items: [
+          "Taranmış belgeleri sıkıştırın; en büyük kazanç oradadır.",
+          "Belgeleri renkli değil gri tonlamada tarayın. Renkli mühür ya da imza yoksa renge gerek yoktur.",
+          "Sıkıştırdıktan sonra en küçük yazıyı kontrol edin; okunmayan bir belge eksik belge sayılır.",
+          "Yüklemeyi son güne bırakmayın. Kayıt sistemleri son gün yoğun olur ve hata alma ihtimali artar.",
+        ] },
+
+        { t: "h2", x: "Yüklemeden önce son kontrol" },
+        { t: "ul", items: [
+          "Her belge tam çerçevede mi, köşesi kesilmiş var mı?",
+          "Yazılar yakınlaştırmadan okunuyor mu?",
+          "Sayfalar düz mü, yan yatmış var mı?",
+          "Kılavuzdaki listenin her maddesi hazır mı?",
+          "Dosya adları anlaşılır mı? «diploma-ad-soyad.pdf» iyi bir isimdir.",
+        ] },
+        { t: "p", x: "Belgeyi yüklemeden önce kendi telefonunuzda açıp okuyun. Siz zor okuyorsanız, ekranın öbür ucundaki görevli hiç okuyamaz." },
+      ],
+      faq: [
+        { q: "Belgeleri telefonla çekip yükleyebilir miyim?", a: "Fotoğraf çekmek yerine belge tarayıcı kullanın. Tarayıcı kenarları bulur, sayfayı düzleştirir ve çok daha küçük, kabul edilebilir bir dosya üretir." },
+        { q: "e-Devlet'ten aldığım belgeyi yazdırıp taramalı mıyım?", a: "Hayır. İndirdiğiniz PDF zaten dijital, net ve doğrulanabilir. Yazdırıp taramak dosyayı büyütür ve barkodun okunma ihtimalini düşürür." },
+        { q: "Diplomanın iki yüzünü nasıl yüklerim?", a: "İki sayfayı tek PDF hâlinde birleştirip öyle yükleyin; sistemler genellikle alan başına tek dosya kabul eder." },
+        { q: "Dosya boyutu sınırı aşıyorsa ne yapmalıyım?", a: "Taranmış belgeleri sıkıştırın ve gri tonlamada tarayın. Sıkıştırdıktan sonra en küçük yazının hâlâ okunduğunu kontrol edin." },
+        { q: "Belgelerim tarama sırasında sunucunuza yükleniyor mu?", a: "Hayır. Belge tarama ve sayfa birleştirme tarayıcınızda (cihazınızda) çalışır; dosyalarınız internete gönderilmez." },
+      ],
+    },
+    {
+      title: "Preparing University Enrolment Documents Digitally",
+      description:
+        "How to scan enrolment documents properly with a phone, combine them into one file and fit them under the upload limit — first time.",
+      excerpt:
+        "During enrolment week everyone hits the same wall: the system will not accept the document. The problem is usually not the document but how it was prepared.",
+      blocks: [
+        { t: "lead", x: "Enrolment days are short, the system is busy, and you have a stack of documents: a school diploma, exam results, a copy of your ID, proof of address, a medical report, a photo. Most of it is uploaded digitally now. This piece explains how to prepare them so they are accepted the first time." },
+
+        { t: "h2", x: "Scan rather than photograph" },
+        { t: "p", x: "This is the most common mistake. Putting the document on a table and photographing it with a phone is quick, but the result is usually rejected: the table shows, the edges are skewed, light hits one corner and the file is needlessly large." },
+        { t: "p", x: "A document scanner finds the edges, corrects the perspective and sets the paper down as a flat page. The result actually looks scanned and the file is far smaller — and no extra hardware is needed, your phone camera is enough." },
+        { t: "steps", items: [
+          { title: "Put the document on a flat surface", x: "A dark surface makes the edges easier to find. Flatten the paper as much as you can." },
+          { title: "Light it from above, not the side", x: "Keep your own shadow off the document. Window light is enough; flash usually causes glare." },
+          { title: "Run the scanner", x: "Edges are found automatically and the page is flattened. You can adjust the corners by hand if needed." },
+          { title: "Save it as a PDF", x: "You can gather several pages into one document." },
+        ] },
+
+        { t: "cta", title: "Document Scanner", x: "Scan properly with your phone: edges found, page flattened, file kept small.", btn: "Open the tool", tool: "/tools/belge-tara" },
+
+        { t: "h2", x: "Do not scan what a portal can give you" },
+        { t: "p", x: "Some documents need no scanning at all. Proof of address, civil registry extracts and criminal record certificates can be downloaded straight from a government portal as PDFs." },
+        { t: "p", x: "A downloaded document is already digital, sharp and small, and it can be verified by the barcode on it. Printing and rescanning throws all of that away." },
+        { t: "tip", x: "Do not take screenshots — use the «download as PDF» option. Verification barcodes usually do not survive a screenshot and the document may be rejected." },
+
+        { t: "h2", x: "Photo dimensions" },
+        { t: "p", x: "The photo for a student card has specific pixel dimensions and a file size limit. A phone photo is both the wrong ratio and larger than needed; crop to passport-photo ratio first, then set the required size." },
+        { t: "p", x: "If the dimensions fit but the file is still large, compress the photo separately. Pixel dimensions and file size are different things, and most systems require both." },
+
+        { t: "h2", x: "One file or several?" },
+        { t: "p", x: "Universities usually have a separate upload field per document. If a single file is wanted, order the documents as the enrolment guide lists them." },
+        { t: "p", x: "Where a document runs to several pages — both sides of a diploma, say — merge them into one PDF before uploading; systems often accept only one file per field." },
+
+        { t: "h2", x: "If you hit the upload limit" },
+        { t: "ul", items: [
+          "Compress the scanned documents; that is where the gain is.",
+          "Scan in greyscale rather than colour. Without a coloured stamp or signature, colour is not needed.",
+          "After compressing, check the smallest text; an unreadable document counts as a missing one.",
+          "Do not leave uploading to the last day. Enrolment systems are busiest then and errors are more likely.",
+        ] },
+
+        { t: "h2", x: "A final check before uploading" },
+        { t: "ul", items: [
+          "Is each document fully in frame, with no clipped corners?",
+          "Does the text read without zooming?",
+          "Are the pages upright?",
+          "Is every item on the guide's list ready?",
+          "Are the file names clear? Something like «diploma-name-surname.pdf» works well.",
+        ] },
+        { t: "p", x: "Open the document on your own phone and read it before uploading. If you find it hard to read, the person at the other end will not manage at all." },
+      ],
+      faq: [
+        { q: "Can I photograph documents with my phone and upload them?", a: "Use a document scanner rather than taking a photo. It finds the edges, flattens the page and produces a much smaller, acceptable file." },
+        { q: "Should I print and scan a document I downloaded from a portal?", a: "No. The PDF you downloaded is already digital, sharp and verifiable. Printing and rescanning inflates the file and lowers the chance the barcode scans." },
+        { q: "How do I upload both sides of a diploma?", a: "Merge the two pages into one PDF and upload that; systems usually accept only one file per field." },
+        { q: "What if the file exceeds the size limit?", a: "Compress the scanned documents and scan in greyscale. Afterwards, check the smallest text is still readable." },
+        { q: "Are my documents uploaded to your server when scanning?", a: "No. Document scanning and page merging run in your browser (on your device); your files are never sent over the internet." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */

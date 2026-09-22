@@ -1,4 +1,512 @@
 {
+  "https://www.pdfplatform.app/blog/universite-kayit-evraklarini-hazirlama": {
+    "tr": [
+      "Öğrenci",
+      "Başvuru",
+      "Belge Tarama",
+      "pdf tara",
+      "telefonla belge tarama",
+      "belge tarayıcı",
+      "pdf tarayıcı",
+      "belge tarama ücretsiz",
+      "kamera ile pdf",
+      "camscanner alternatif"
+    ],
+    "en": [
+      "Students",
+      "Applications",
+      "Scanning",
+      "document scanner",
+      "scan to pdf",
+      "scan document with phone",
+      "pdf scanner",
+      "free document scanner",
+      "camera to pdf",
+      "camscanner alternative"
+    ],
+    "tool": "/tools/belge-tara"
+  },
+  "https://www.pdfplatform.app/en/blog/prepare-university-enrolment-documents": {
+    "tr": [
+      "Öğrenci",
+      "Başvuru",
+      "Belge Tarama",
+      "pdf tara",
+      "telefonla belge tarama",
+      "belge tarayıcı",
+      "pdf tarayıcı",
+      "belge tarama ücretsiz",
+      "kamera ile pdf",
+      "camscanner alternatif"
+    ],
+    "en": [
+      "Students",
+      "Applications",
+      "Scanning",
+      "document scanner",
+      "scan to pdf",
+      "scan document with phone",
+      "pdf scanner",
+      "free document scanner",
+      "camera to pdf",
+      "camscanner alternative"
+    ],
+    "tool": "/tools/belge-tara"
+  },
+  "https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma": {
+    "tr": [
+      "UYAP",
+      "UDF",
+      "Word",
+      "udf to pdf",
+      "udf dosyası nasıl açılır",
+      "udf pdf çevirme",
+      "udf açma",
+      "uyap udf",
+      "udf dönüştürücü",
+      "udf okuyucu",
+      "udf pdf yapma"
+    ],
+    "en": [
+      "UYAP",
+      "UDF",
+      "Word",
+      "udf to pdf",
+      "open udf file",
+      "convert udf",
+      "uyap document format",
+      "udf converter",
+      "udf reader",
+      "udf file opener"
+    ],
+    "tool": "/tools/udf-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word": {
+    "tr": [
+      "UYAP",
+      "UDF",
+      "Word",
+      "udf to pdf",
+      "udf dosyası nasıl açılır",
+      "udf pdf çevirme",
+      "udf açma",
+      "uyap udf",
+      "udf dönüştürücü",
+      "udf okuyucu",
+      "udf pdf yapma"
+    ],
+    "en": [
+      "UYAP",
+      "UDF",
+      "Word",
+      "udf to pdf",
+      "open udf file",
+      "convert udf",
+      "uyap document format",
+      "udf converter",
+      "udf reader",
+      "udf file opener"
+    ],
+    "tool": "/tools/udf-to-pdf"
+  },
+  "https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu": {
+    "tr": [
+      "Başvuru",
+      "Görsel",
+      "Boyutlandırma",
+      "görsel boyutlandırma",
+      "resim boyutlandırma",
+      "fotoğraf boyutu değiştirme",
+      "instagram görsel boyutu",
+      "sosyal medya görsel ölçüleri",
+      "resim yeniden boyutlandırma",
+      "online resize"
+    ],
+    "en": [
+      "Applications",
+      "Images",
+      "Resize",
+      "resize image",
+      "image resizer",
+      "change image size",
+      "instagram image size",
+      "social media image sizes",
+      "resize photo online",
+      "image dimensions"
+    ],
+    "tool": "/tools/gorsel-boyutlandir"
+  },
+  "https://www.pdfplatform.app/en/blog/exam-application-photo-size": {
+    "tr": [
+      "Başvuru",
+      "Görsel",
+      "Boyutlandırma",
+      "görsel boyutlandırma",
+      "resim boyutlandırma",
+      "fotoğraf boyutu değiştirme",
+      "instagram görsel boyutu",
+      "sosyal medya görsel ölçüleri",
+      "resim yeniden boyutlandırma",
+      "online resize"
+    ],
+    "en": [
+      "Applications",
+      "Images",
+      "Resize",
+      "resize image",
+      "image resizer",
+      "change image size",
+      "instagram image size",
+      "social media image sizes",
+      "resize photo online",
+      "image dimensions"
+    ],
+    "tool": "/tools/gorsel-boyutlandir"
+  },
+  "https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma": {
+    "tr": [
+      "İnsan Kaynakları",
+      "Bölme",
+      "Gizlilik",
+      "pdf ayırma",
+      "pdf bölme",
+      "pdf sayfa ayırma",
+      "pdf split",
+      "pdf'ten sayfa çıkarma"
+    ],
+    "en": [
+      "HR",
+      "Split",
+      "Privacy",
+      "split pdf",
+      "extract pdf pages",
+      "separate pdf pages",
+      "split pdf online"
+    ],
+    "tool": "/tools/split-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/split-payslips-per-employee": {
+    "tr": [
+      "İnsan Kaynakları",
+      "Bölme",
+      "Gizlilik",
+      "pdf ayırma",
+      "pdf bölme",
+      "pdf sayfa ayırma",
+      "pdf split",
+      "pdf'ten sayfa çıkarma"
+    ],
+    "en": [
+      "HR",
+      "Split",
+      "Privacy",
+      "split pdf",
+      "extract pdf pages",
+      "separate pdf pages",
+      "split pdf online"
+    ],
+    "tool": "/tools/split-pdf"
+  },
+  "https://www.pdfplatform.app/blog/ihale-dosyasi-pdf-hazirlama": {
+    "tr": [
+      "İhale",
+      "Resmî Evrak",
+      "Birleştirme",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Tenders",
+      "Official Documents",
+      "Merge",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/prepare-a-tender-submission-as-pdf": {
+    "tr": [
+      "İhale",
+      "Resmî Evrak",
+      "Birleştirme",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Tenders",
+      "Official Documents",
+      "Merge",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/blog/vize-basvurusu-evrak-hazirlama": {
+    "tr": [
+      "Vize",
+      "Başvuru",
+      "Resmî Evrak",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Visa",
+      "Applications",
+      "Official Documents",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/prepare-visa-application-documents": {
+    "tr": [
+      "Vize",
+      "Başvuru",
+      "Resmî Evrak",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Visa",
+      "Applications",
+      "Official Documents",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/blog/tc-kimlik-numarasi-gizleme-belge": {
+    "tr": [
+      "KVKK",
+      "Gizlilik",
+      "Resmî Evrak",
+      "pdf hassas veri gizleme",
+      "pdf redaction",
+      "kvkk pdf",
+      "pdf'te tc gizleme",
+      "pdf kişisel veri kaldırma",
+      "pdf karartma",
+      "belgeden bilgi silme"
+    ],
+    "en": [
+      "Privacy",
+      "Redaction",
+      "Official Documents",
+      "pdf redaction",
+      "redact pdf",
+      "remove sensitive data pdf",
+      "gdpr pdf",
+      "hide personal data pdf",
+      "black out pdf text"
+    ],
+    "tool": "/tools/hassas-veri-gizle"
+  },
+  "https://www.pdfplatform.app/en/blog/hide-id-numbers-in-documents": {
+    "tr": [
+      "KVKK",
+      "Gizlilik",
+      "Resmî Evrak",
+      "pdf hassas veri gizleme",
+      "pdf redaction",
+      "kvkk pdf",
+      "pdf'te tc gizleme",
+      "pdf kişisel veri kaldırma",
+      "pdf karartma",
+      "belgeden bilgi silme"
+    ],
+    "en": [
+      "Privacy",
+      "Redaction",
+      "Official Documents",
+      "pdf redaction",
+      "redact pdf",
+      "remove sensitive data pdf",
+      "gdpr pdf",
+      "hide personal data pdf",
+      "black out pdf text"
+    ],
+    "tool": "/tools/hassas-veri-gizle"
+  },
+  "https://www.pdfplatform.app/blog/edevlet-belgelerini-tek-pdf-yapma": {
+    "tr": [
+      "e-Devlet",
+      "Resmî Evrak",
+      "Birleştirme",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "e-Government",
+      "Official Documents",
+      "Merge",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/combine-government-documents-into-one-pdf": {
+    "tr": [
+      "e-Devlet",
+      "Resmî Evrak",
+      "Birleştirme",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "e-Government",
+      "Official Documents",
+      "Merge",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/blog/udf-dosyasi-nasil-acilir": {
+    "tr": [
+      "UYAP",
+      "UDF",
+      "Resmî Evrak",
+      "udf to pdf",
+      "udf dosyası nasıl açılır",
+      "udf pdf çevirme",
+      "udf açma",
+      "uyap udf",
+      "udf dönüştürücü",
+      "udf okuyucu",
+      "udf pdf yapma"
+    ],
+    "en": [
+      "UYAP",
+      "UDF",
+      "Official Documents",
+      "udf to pdf",
+      "open udf file",
+      "convert udf",
+      "uyap document format",
+      "udf converter",
+      "udf reader",
+      "udf file opener"
+    ],
+    "tool": "/tools/udf-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/how-to-open-udf-files": {
+    "tr": [
+      "UYAP",
+      "UDF",
+      "Resmî Evrak",
+      "udf to pdf",
+      "udf dosyası nasıl açılır",
+      "udf pdf çevirme",
+      "udf açma",
+      "uyap udf",
+      "udf dönüştürücü",
+      "udf okuyucu",
+      "udf pdf yapma"
+    ],
+    "en": [
+      "UYAP",
+      "UDF",
+      "Official Documents",
+      "udf to pdf",
+      "open udf file",
+      "convert udf",
+      "uyap document format",
+      "udf converter",
+      "udf reader",
+      "udf file opener"
+    ],
+    "tool": "/tools/udf-to-pdf"
+  },
+  "https://www.pdfplatform.app/blog/uyap-belge-yukleme-boyut-hatasi": {
+    "tr": [
+      "UYAP",
+      "Resmî Evrak",
+      "Sıkıştırma",
+      "pdf sıkıştırma",
+      "pdf boyut küçültme",
+      "pdf küçültme",
+      "compress pdf"
+    ],
+    "en": [
+      "UYAP",
+      "Official Documents",
+      "Compression",
+      "compress pdf",
+      "reduce pdf size",
+      "shrink pdf",
+      "compress pdf online"
+    ],
+    "tool": "/tools/compress"
+  },
+  "https://www.pdfplatform.app/en/blog/uyap-upload-size-error": {
+    "tr": [
+      "UYAP",
+      "Resmî Evrak",
+      "Sıkıştırma",
+      "pdf sıkıştırma",
+      "pdf boyut küçültme",
+      "pdf küçültme",
+      "compress pdf"
+    ],
+    "en": [
+      "UYAP",
+      "Official Documents",
+      "Compression",
+      "compress pdf",
+      "reduce pdf size",
+      "shrink pdf",
+      "compress pdf online"
+    ],
+    "tool": "/tools/compress"
+  },
   "https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit": {
     "tr": [
       "Karşılaştırma",
