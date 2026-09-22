@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Star, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { buildSaasApiUrl } from "../../api/saasHttp";
-import { ratingAlreadyAsked, rememberRating } from "../../lib/toolRatingMemory";
+import { promptAlreadyUsed, rememberPromptDismissed, rememberVote } from "../../lib/toolRatingMemory";
 
 /**
  * "Bu araç işini gördü mü?" — işlem biter bitmez sorulan tek soru.
@@ -63,7 +63,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
   const t = L[language === "tr" ? "tr" : "en"];
   // İlk render'da karar verilir; sonradan gizlemek soruyu bir an gösterip
   // kaybettirirdi.
-  const [asked, setAsked] = useState(() => ratingAlreadyAsked(toolSlug));
+  const [asked, setAsked] = useState(() => promptAlreadyUsed(toolSlug));
   const [hover, setHover] = useState(0);
   const [value, setValue] = useState(0);
   const [comment, setComment] = useState("");
@@ -80,7 +80,9 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
         body: JSON.stringify({ value: rating, comment: text }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      rememberRating(toolSlug, rating);
+      // `fromPrompt: true` — soruyu susturan tek şey, sorunun KENDİSİNDE
+      // verilen oydur. Kalıcı satırdan verilen oy burayı susturmaz.
+      rememberVote(toolSlug, rating, { fromPrompt: true });
       setState("done");
     } catch {
       // Puan verememek kullanıcının işini bölmemeli; sessizce geçilir.
@@ -117,7 +119,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
         aria-label={t.dismiss}
         title={t.dismiss}
         onClick={() => {
-          rememberRating(toolSlug, "skipped");
+          rememberPromptDismissed(toolSlug);
           setAsked(true);
         }}
         className="absolute right-0 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/[0.06] hover:text-white"

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { buildSaasApiUrl } from "../../api/saasHttp";
-import { myRatingFor, rememberRating } from "../../lib/toolRatingMemory";
+import { myRatingFor, rememberVote } from "../../lib/toolRatingMemory";
 import { COMMENT_ASKED_BELOW } from "./ToolRating";
 
 /**
@@ -146,7 +146,10 @@ export function ToolScore({
       });
       if (!res.ok) throw new Error(String(res.status));
       const data: { summary?: Summary } = await res.json();
-      rememberRating(slug, value);
+      // `fromPrompt: false` — buradan oy vermek iş bitimindeki soruyu
+      // SUSTURMAZ. Kullanıcı buraya fikrini değiştirmeye gelir; bu,
+      // "bir dahaki işlemde bana sorma" demek değildir.
+      rememberVote(slug, value, { fromPrompt: false });
       // Açıklama yalnızca düşük puanda anlamlı; teşhis değeri orada.
       setCommentSent(false);
       setComment("");
