@@ -21,6 +21,12 @@ export const SITE_SETTING_KEYS = {
   EMAIL_AUTOMATION: "email.automation",
   /** Sosyal medya otomasyonu: JSON { enabled, hour, minute, timeZone, lang, platforms[] } */
   SOCIAL_AUTOMATION: "social.automation",
+  /**
+   * Ticari e-postalarda görünen gönderen kimliği: JSON
+   * { legalName, entityType, mersisNo, tckn, phone, contactEmail, postalAddress }
+   * Ticari İletişim Yönetmeliği md.7 gereği zorunlu; eksikse gönderim durur.
+   */
+  EMAIL_SENDER_IDENTITY: "email.senderIdentity",
 } as const;
 
 export type SiteSettingKey = (typeof SITE_SETTING_KEYS)[keyof typeof SITE_SETTING_KEYS];

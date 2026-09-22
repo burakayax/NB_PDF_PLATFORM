@@ -10,6 +10,11 @@ import {
   CommercialConsentError,
   commercialRecipientWhere,
 } from "../lib/commercial-email-gate.js";
+import {
+  SenderIdentityError,
+  missingSenderIdentityFields,
+  refreshSenderIdentity,
+} from "../modules/email/sender-identity.service.js";
 
 /**
  * Admin-yönetimli pazarlama e-postaları (EmailCampaign tablosundan).
@@ -74,6 +79,11 @@ async function runCampaign(c: EmailCampaign): Promise<void> {
       sent += 1;
       await new Promise((r) => setTimeout(r, 400)); // SMTP'yi boğmamak için
     } catch (err) {
+      // Kimlik eksikse kimseye gönderilemez → kampanyayı komple bırak.
+      if (err instanceof SenderIdentityError) {
+        logger.warn("lifecycle", `campaign ${c.id} durduruldu: ${err.message}`);
+        return;
+      }
       // Kapı reddi hata değil: liste çekildikten sonra çıkmış olabilir.
       if (err instanceof CommercialConsentError) continue;
       logger.error("lifecycle", `campaign ${c.id} email failed (non-fatal)`, { detail: String(err) });
@@ -85,6 +95,19 @@ async function runCampaign(c: EmailCampaign): Promise<void> {
 async function runLifecycleDrip(): Promise<void> {
   const cfg = await readEmailAutomationConfig();
   if (!cfg.lifecycleEnabled) return;
+
+  // Gönderen kimliği eksikse otomasyon HİÇ çalışmaz. Eksik bilgiyle gönderilen
+  // tanıtım e-postası mevzuata aykırı; her gün sessizce ihlal üretmektense iş
+  // durur ve sebebini yazar.
+  await refreshSenderIdentity();
+  const missing = missingSenderIdentityFields();
+  if (missing.length > 0) {
+    logger.warn("lifecycle",
+      `otomasyon atlandı — gönderen kimlik bilgileri eksik: ${missing.join(", ")}`,
+    );
+    return;
+  }
+
   await seedDefaultCampaigns();
   const campaigns = await prisma.emailCampaign.findMany({ where: { enabled: true } });
   for (const c of campaigns) await runCampaign(c);

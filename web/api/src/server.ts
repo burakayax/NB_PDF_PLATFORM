@@ -9,7 +9,10 @@ import { ensureDefaultAdminUser } from "./lib/ensure-default-admin.js";
 import { ensureAppSettingsRow } from "./lib/ensure-app-settings.js";
 import { ensureToolRegistry } from "./lib/ensure-tool-registry.js";
 import { prepareLogFile, logger } from "./lib/file-log.js";
-import { missingCommercialIdentityFields } from "./lib/email-layout.js";
+import {
+  missingSenderIdentityFields,
+  primeSenderIdentity,
+} from "./modules/email/sender-identity.service.js";
 
 // Log dizini hazırlığı — DB'ye bağlı değil; hata olsa bile başlangıcı bozmasın.
 try {
@@ -80,22 +83,27 @@ function listenMessage() {
   logger.info("server",
     `PDF PLATFORM auth API listening on ${scheme}://0.0.0.0:${env.PORT}`,
   );
-  warnIfCommercialIdentityMissing();
+  void loadAndCheckSenderIdentity();
 }
 
 /**
- * Ticari e-postalarda zorunlu kimlik bilgileri eksikse açılışta uyarır.
+ * Gönderen kimliğini belleğe yükler; eksikse açılışta uyarır.
  *
- * Bu bilgiler olmadan gönderilen her tanıtım e-postası Ticari İletişim
- * Yönetmeliği md.7'ye aykırıdır. Eksik sessizce sürmesin diye açılışta
- * bir kez, görünür biçimde söylenir.
+ * Kimlik bilgileri yönetim panelinden girilir ve e-posta şablonu onları
+ * senkron okur — bu yüzden açılışta bir kez belleğe alınır.
+ *
+ * Eksikse yalnızca uyarılmaz, ticari e-posta gönderimi de durur
+ * (bkz. assertSenderIdentityComplete). Bu bilgiler olmadan gönderilen her
+ * tanıtım e-postası Ticari İletişim Yönetmeliği md.7'ye aykırıdır.
  */
-function warnIfCommercialIdentityMissing() {
-  const missing = missingCommercialIdentityFields();
+async function loadAndCheckSenderIdentity() {
+  await primeSenderIdentity();
+  const missing = missingSenderIdentityFields();
   if (missing.length === 0) return;
   logger.warn("server",
-    `[uyum] Ticari e-postalarda zorunlu kimlik bilgileri eksik: ${missing.join(", ")}. ` +
-      `Bu alanlar doldurulmadan gönderilen tanıtım e-postaları Ticari İletişim Yönetmeliği md.7'ye aykırıdır.`,
+    `[uyum] Ticari e-posta gönderimi KAPALI — gönderen kimlik bilgileri eksik: ${missing.join(", ")}. ` +
+      `Yönetim paneli → E-postalar → Gönderen kimliği bölümünden tamamlayın. ` +
+      `İşlem e-postaları (doğrulama, fatura, parola) etkilenmez.`,
   );
 }
 

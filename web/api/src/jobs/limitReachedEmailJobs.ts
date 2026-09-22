@@ -5,6 +5,10 @@ import { logger } from "../lib/file-log.js";
 import { env } from "../config/env.js";
 import { sendLimitReachedEmail } from "../lib/email-service.js";
 import { commercialRecipientWhere } from "../lib/commercial-email-gate.js";
+import {
+  missingSenderIdentityFields,
+  refreshSenderIdentity,
+} from "../modules/email/sender-identity.service.js";
 import type { Locale } from "../lib/email-i18n.js";
 
 /**
@@ -35,6 +39,15 @@ function safeRun(name: string, fn: () => Promise<void>) {
 }
 
 async function runLimitReachedEmail(): Promise<void> {
+  // Gönderen kimliği eksikse otomasyon HİÇ çalışmaz — eksik bilgiyle gönderilen
+  // tanıtım e-postası mevzuata aykırı olur.
+  await refreshSenderIdentity();
+  const missingIdentity = missingSenderIdentityFields();
+  if (missingIdentity.length > 0) {
+    logger.warn("limit-reached", `otomasyon atlandı — gönderen kimlik bilgileri eksik: ${missingIdentity.join(", ")}`);
+    return;
+  }
+
   const now = new Date();
   // Sayaç "bu aya ait" mi? lastMonthlyReset ay başından yeni olmalı (bayat sayacı ele).
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
