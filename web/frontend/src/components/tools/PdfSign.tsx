@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ToolRating } from "../common/ToolRating";
+import { ValueMomentNudge } from "./ValueMomentNudge";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
@@ -432,7 +433,12 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
       )}
 
       {applied && !editorOpen && (
-        <ToolRating toolSlug="pdf-imzala" language={language} />
+        <>
+          <ToolRating toolSlug="pdf-imzala" language={language} />
+          {/* Misafir burada değerini yeni aldı (belge işlendi, indirildi) ama hiçbir
+              kayıt daveti görmüyordu — araç bedava, doğal bir duvar yok. */}
+          <ValueMomentNudge language={language} source="sign_success" />
+        </>
       )}
 
       {error && !editorOpen && (
