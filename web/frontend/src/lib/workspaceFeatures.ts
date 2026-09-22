@@ -197,6 +197,17 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     multiple: false,
     fallbackFilename: "gorseller.zip",
   },
+  {
+    // PDF/A (arşiv biçimi). Sunucu ucu, uyumluluk düzeyi seçimi ve SEO sayfası
+    // hazırdı ama bu satır eksik olduğu için araç hiçbir yerden açılamıyordu:
+    // /tools/pdf-to-pdfa adresi site haritasındaydı, ziyaretçi ana sayfaya düşüyordu.
+    id: "pdf-to-pdfa",
+    icon: "🗄",
+    endpoint: "pdf-to-pdfa",
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    fallbackFilename: "arsiv.pdf",
+  },
 ];
 
 /** POST sonucu result_id dönen (önizleme + indirmede tüketim) araçlar */
@@ -223,6 +234,9 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "pdf-to-text",
   "flatten-pdf",
   "extract-images",
+  // Sunucu ucu çıktıyı sonuç deposuna yazıyor (önizleme + indirmede tüketim);
+  // listeye alınmazsa indirme akışı yanlış dalda ilerler.
+  "pdf-to-pdfa",
 ];
 
 export function isResultStoreTool(id: FeatureKey): boolean {

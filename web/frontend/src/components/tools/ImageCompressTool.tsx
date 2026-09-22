@@ -32,7 +32,52 @@ type Result = {
   outBytes: number;
   /** Sıkıştırma kazanç sağlamadığı için orijinali korunan görsel sayısı. */
   keptCount: number;
+  /** Hedef boyut modunda istenen sınır (bayt); kalite modunda undefined. */
+  targetBytes?: number;
+  /** Hedefin altına inebilen görsel sayısı. */
+  metCount?: number;
+  /** Hedefe inebilmek için ölçüsü küçültülen görsel sayısı. */
+  downscaledCount?: number;
+  /** Kullanılan en düşük kalite — kullanıcıya dürüst geri bildirim için. */
+  minQuality: number | null;
 };
+
+/** Sıkıştırma modu: kaliteyi kullanıcı seçer ya da hedef boyut belirler. */
+type Mode = "quality" | "target";
+
+/**
+ * Hazır hedef boyutlar (KB). Kurumların istediği ve insanların aradığı
+ * rakamlar bunlar — kullanıcı hesap yapmak zorunda kalmasın.
+ */
+const TARGET_PRESETS_KB = [20, 50, 100, 200, 500, 1024];
+
+/**
+ * Kullanılan kaliteyi düz Türkçeye çevirir.
+ *
+ * Yüzde tek başına hiçbir şey anlatmaz; kullanıcı "%42" görünce bunun fotoğrafına
+ * ne yaptığını bilemez. Beklentiyi indirmeden ÖNCE doğru kurmak, indirdikten sonra
+ * hayal kırıklığı yaşamasından iyidir.
+ */
+function kaliteYorumu(q: number, tr: boolean): string {
+  if (q >= 0.8) {
+    return tr
+      ? "kayıp gözle fark edilmez."
+      : "the loss is not visible to the eye.";
+  }
+  if (q >= 0.6) {
+    return tr
+      ? "ekranda fark edilmez; büyük baskıda hafif yumuşama görülebilir."
+      : "invisible on screen; slight softening may show in large prints.";
+  }
+  if (q >= 0.45) {
+    return tr
+      ? "yakından bakınca yumuşama ve hafif lekelenme görülür. Vesikalık ve belge için genelde yeterli, baskı için değil."
+      : "softening and slight blotching are visible up close. Usually fine for ID photos and documents, not for print.";
+  }
+  return tr
+    ? "gözle görülür kalite kaybı var: ince ayrıntılar ve yazılar bozulmuş olabilir. Sonucu indirmeden önce büyütüp kontrol edin."
+    : "there is visible quality loss: fine detail and text may be degraded. Zoom in and check before you rely on it.";
+}
 
 const MAX_FILES = 30;
 const MAX_BYTES = 80 * 1024 * 1024;
@@ -61,6 +106,9 @@ export function ImageCompressTool({ language }: { language: Language }) {
   const tr = language === "tr";
   const [files, setFiles] = useState<Picked[]>([]);
   const [quality, setQuality] = useState(70);
+  const [mode, setMode] = useState<Mode>("quality");
+  /** Hedef boyut, KB cinsinden (kullanıcı bu birimle düşünür). */
+  const [targetKb, setTargetKb] = useState(100);
   const [format, setFormat] = useState<Format>("auto");
   /** 0 = orijinal ölçü. Uzun kenar sınırı — en büyük kazancı bu sağlar. */
   const [maxDim, setMaxDim] = useState(0);
@@ -125,6 +173,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
       return;
     }
     const q = Math.min(0.95, Math.max(0.2, quality / 100));
+    const targetBytes = mode === "target" ? Math.max(1, Math.round(targetKb * 1024)) : undefined;
     const multi = files.length > 1;
     const first = files[0]!.file;
     const firstFormat = resolveFormat(format, first, webpOk);
@@ -142,6 +191,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
             quality: q,
             maxDim,
             format: resolveFormat(format, p.file, webpOk),
+            targetBytes,
           }),
         );
       }
@@ -168,6 +218,9 @@ export function ImageCompressTool({ language }: { language: Language }) {
           : `${(first.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${single.ext}`;
       }
 
+      // Kalite bilgisi dürüstlük için taşınır: kullanıcı hedefi tutturmak uğruna
+      // ne kadar kaliteden vazgeçtiğini görmeden indirmemeli.
+      const kaliteler = outcomes.map((o) => o.usedQuality).filter((x): x is number => x != null);
       setResult({
         blob: outBlob,
         filename,
@@ -175,6 +228,14 @@ export function ImageCompressTool({ language }: { language: Language }) {
         inBytes: totalIn,
         outBytes: multi ? outBlob.size : outSum,
         keptCount,
+        minQuality: kaliteler.length > 0 ? Math.min(...kaliteler) : null,
+        ...(targetBytes
+          ? {
+              targetBytes,
+              metCount: outcomes.filter((o) => o.targetMet).length,
+              downscaledCount: outcomes.filter((o) => o.downscaledForTarget).length,
+            }
+          : {}),
       });
     } catch {
       setError(tr ? "İşlem sırasında bir hata oluştu." : "Something went wrong.");
@@ -213,6 +274,41 @@ export function ImageCompressTool({ language }: { language: Language }) {
             {tr
               ? `${result.keptCount} görsel zaten optimizeydi; orijinali korundu.`
               : `${result.keptCount} image(s) were already optimized; the original was kept.`}
+          </p>
+        ) : null}
+
+        {/* HEDEF BOYUT — sonucu olduğu gibi söyle. Hedefe inilememişse bunu
+            saklamak, kullanıcıyı başvuru ekranında hataya sokar. */}
+        {result.targetBytes != null && result.metCount != null ? (
+          result.metCount === result.count ? (
+            <p className="mt-2 text-[12px] font-semibold text-emerald-300">
+              {tr
+                ? `Hedef tutturuldu: ${result.count > 1 ? "tüm görseller" : "görsel"} ${humanSize(result.targetBytes)} sınırının altında.`
+                : `Target met: ${result.count > 1 ? "all images are" : "the image is"} under ${humanSize(result.targetBytes)}.`}
+            </p>
+          ) : (
+            <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.07] px-3 py-2 text-left text-[12px] text-amber-200">
+              {tr
+                ? `${result.count - result.metCount} görsel ${humanSize(result.targetBytes)} sınırının altına indirilemedi. En küçük hâli verildi — daha da küçültmek görseli okunamaz hâle getirirdi. Ölçüyü elle düşürmeyi ya da hedefi biraz yükseltmeyi deneyin.`
+                : `${result.count - result.metCount} image(s) could not be brought under ${humanSize(result.targetBytes)}. You have the smallest version — going further would make the image unusable. Try lowering the dimensions or raising the target slightly.`}
+            </p>
+          )
+        ) : null}
+
+        {result.downscaledCount ? (
+          <p className="mt-1 text-[12px] text-amber-300/90">
+            {tr
+              ? `${result.downscaledCount} görselin piksel ölçüsü küçültüldü — hedefe yalnızca kaliteyle inilemedi.`
+              : `${result.downscaledCount} image(s) were reduced in dimensions — quality alone could not reach the target.`}
+          </p>
+        ) : null}
+
+        {/* Ne kadar kaliteden vazgeçildiği — tahmin değil, gerçekten kullanılan değer. */}
+        {result.minQuality != null ? (
+          <p className="mt-1 text-[12px] text-slate-400">
+            {tr
+              ? `Kullanılan kalite: %${Math.round(result.minQuality * 100)} — ${kaliteYorumu(result.minQuality, true)}`
+              : `Quality used: ${Math.round(result.minQuality * 100)}% — ${kaliteYorumu(result.minQuality, false)}`}
           </p>
         ) : null}
         <ValueMomentNudge language={language} source="guest_tool_success" />
@@ -269,6 +365,79 @@ export function ImageCompressTool({ language }: { language: Language }) {
               </button>
             </div>
 
+            {/* MOD SEÇİMİ — kullanıcı ya kaliteyi ya da sonucun boyutunu belirler.
+                Kurumlar şartı boyut olarak yazdığı için ikinci yol çoğu zaman
+                aranan şeydir; ama varsayılanı değiştirmiyoruz. */}
+            <div className="field field--full">
+              <span>{tr ? "Nasıl küçültelim?" : "How should we shrink it?"}</span>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { id: "quality" as Mode, tr: "Kaliteye göre", en: "By quality" },
+                  { id: "target" as Mode, tr: "Hedef boyuta göre", en: "To a target size" },
+                ]).map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setMode(m.id)}
+                    aria-pressed={mode === m.id}
+                    className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition ${
+                      mode === m.id
+                        ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-200"
+                        : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:border-white/20"
+                    }`}
+                  >
+                    {tr ? m.tr : m.en}
+                  </button>
+                ))}
+              </div>
+              <span className="field-hint">
+                {mode === "target"
+                  ? tr
+                    ? "Bir boyut yazın; kaliteyi o sınırın altına inen en yüksek değerde tutarız."
+                    : "Give a size; we keep quality at the highest value that stays under it."
+                  : tr
+                    ? "Kaliteyi siz belirlersiniz, boyut ona göre çıkar."
+                    : "You set the quality; the size follows from it."}
+              </span>
+            </div>
+
+            {mode === "target" && (
+              <div className="field field--full">
+                <span>{tr ? "Hedef dosya boyutu" : "Target file size"}</span>
+                <div className="flex flex-wrap gap-2">
+                  {TARGET_PRESETS_KB.map((kb) => (
+                    <button
+                      key={kb}
+                      type="button"
+                      onClick={() => setTargetKb(kb)}
+                      aria-pressed={targetKb === kb}
+                      className={`rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition ${
+                        targetKb === kb
+                          ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-200"
+                          : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:border-white/20"
+                      }`}
+                    >
+                      {kb >= 1024 ? `${kb / 1024} MB` : `${kb} KB`}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min={5}
+                  max={20480}
+                  value={targetKb}
+                  onChange={(e) => setTargetKb(Math.max(5, Number(e.target.value) || 5))}
+                  className="mt-2"
+                  aria-label={tr ? "Hedef boyut (KB)" : "Target size (KB)"}
+                />
+                <span className="field-hint">
+                  {tr
+                    ? "KB cinsinden. Hedef çok düşükse önce kalite düşer, yetmezse görselin piksel ölçüsü küçültülür — ikisini de sonuç ekranında açıkça yazarız. Görseli kırpmanıza gerek yok; kırpmak boyutu düşürmenin yanlış yoludur, görüntünün bir kısmını kaybedersiniz."
+                    : "In KB. If the target is very low we first reduce quality, then the pixel dimensions — and we state both plainly on the result screen. You do not need to crop: cropping is the wrong way to shrink a file, it throws away part of the picture."}
+                </span>
+              </div>
+            )}
+
             <label className="field">
               <span>{tr ? "Biçim" : "Format"}</span>
               <select value={format} onChange={(e) => setFormat(e.target.value as Format)}>
@@ -310,19 +479,23 @@ export function ImageCompressTool({ language }: { language: Language }) {
                 max={95}
                 step={5}
                 value={quality}
-                disabled={format === "image/png"}
+                disabled={format === "image/png" || mode === "target"}
                 onChange={(e) => setQuality(Number(e.target.value))}
                 className="accent-cyan-500 disabled:opacity-40"
                 style={{ padding: 0, border: 0, background: "transparent" }}
               />
               <span className="field-hint">
-                {format === "image/png"
+                {mode === "target"
                   ? tr
-                    ? "PNG kayıpsızdır — kalite ayarı işlemez. En çok kazanç için «Otomatik» veya WebP seçin."
-                    : "PNG is lossless — the quality slider has no effect. Pick «Automatic» or WebP for the biggest savings."
-                  : tr
-                    ? "%70 civarı çoğu fotoğrafta gözle fark edilmeyen kayıpla ciddi boyut düşüşü sağlar."
-                    : "Around 70% gives a big size reduction with loss that's usually invisible for photos."}
+                    ? "Hedef boyut modunda kaliteyi biz seçiyoruz — hedefin altında kalan en yüksek değeri buluruz ve kaç çıktığını sonuç ekranında yazarız."
+                    : "In target-size mode we choose the quality — the highest value that stays under your target — and tell you what it turned out to be."
+                  : format === "image/png"
+                    ? tr
+                      ? "PNG kayıpsızdır — kalite ayarı işlemez. En çok kazanç için «Otomatik» veya WebP seçin."
+                      : "PNG is lossless — the quality slider has no effect. Pick «Automatic» or WebP for the biggest savings."
+                    : tr
+                      ? "%70 civarı çoğu fotoğrafta gözle fark edilmeyen kayıpla ciddi boyut düşüşü sağlar. Altına indikçe önce yazılar ve ince ayrıntılar bozulur."
+                      : "Around 70% gives a big size reduction with loss that's usually invisible for photos. Below that, text and fine detail degrade first."}
               </span>
             </label>
           </>
