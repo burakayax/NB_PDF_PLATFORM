@@ -6457,6 +6457,7 @@ function App() {
           onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
+          onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6489,6 +6490,7 @@ function App() {
           onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
+          onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
@@ -6658,6 +6660,16 @@ function App() {
                 <ToolHowTo slug="gorsel-boyutlandir" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageResizeTool language={language} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {/* UDF'yi PDF Yap — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {contentPanel === "udf" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="udf-to-pdf" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <UdfToPdfTool language={language} />
                 </Suspense>
               </section>
             ) : null}

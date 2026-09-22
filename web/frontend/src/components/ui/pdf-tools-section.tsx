@@ -99,7 +99,7 @@ type Tool = {
   en: { name: string; desc: string };
 };
 
-const TOOLS: Tool[] = [
+export const TOOLS: Tool[] = [
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   {
     id: "pdf-ozetle", cat: "ai", Icon: Sparkles, ai: true,
@@ -328,7 +328,7 @@ const TOOLS: Tool[] = [
     en: { name: "Redact PDF", desc: "Black out IDs, account numbers and names for good." },
   },
   {
-    id: "udf-to-pdf", cat: "convert", Icon: Scale,
+    id: "udf-to-pdf", cat: "convert", Icon: Scale, free: true,
     tr: { name: "UDF'yi PDF Yap", desc: "UYAP'tan inen .udf belgesini program kurmadan PDF'ye çevirin." },
     en: { name: "UDF to PDF", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
   },

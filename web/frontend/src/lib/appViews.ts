@@ -50,6 +50,7 @@ export type ContentPanel =
   | "crop"
   | "compress-image"
   | "resize-image"
+  | "udf"
   | "snip"
   | "searchable"
   | "scanner"

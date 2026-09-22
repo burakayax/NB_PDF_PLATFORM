@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Crop, ImageDown, Scaling, Scissors } from "lucide-react";
+import { Crop, ImageDown, Scale, Scaling, Scissors } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -173,6 +173,7 @@ type DashboardSidebarProps = {
   onOpenCompressImage?: () => void;
   /** Görsel Boyutlandır aracını aç (cihazda ölçekleme). */
   onOpenResizeImage?: () => void;
+  onOpenUdf?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -221,6 +222,7 @@ export function DashboardSidebar({
   onOpenSnip,
   onOpenCompressImage,
   onOpenResizeImage,
+  onOpenUdf,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -508,6 +510,22 @@ export function DashboardSidebar({
     );
   };
 
+  const renderUdfRow = (keyPrefix = "") => {
+    if (!onOpenUdf) return null;
+    const label = tr ? "UDF'yi PDF Yap" : "UDF to PDF";
+    return (
+      <button
+        key={`${keyPrefix}udf`}
+        type="button"
+        onClick={onOpenUdf}
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "udf")}`}
+      >
+        <Scale className="h-5 w-5 text-cyan-300" aria-hidden />
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  };
+
   // Overlay modda: araç seçilince panel kendiliğinden kapanır; kategori başlıkları
   // (accordion) paneli kapatmaz — kullanıcı kategoriyi açıp aracı seçebilsin.
   const handleAsideClick = (e: ReactMouseEvent<HTMLElement>) => {
@@ -652,6 +670,8 @@ export function DashboardSidebar({
                   {group.id === "optimize" ? renderCompressImageRow("optimize-") : null}
                   {/* Görsel Boyutlandır — İyileştir grubu (sosyal medya ölçüleri) */}
                   {group.id === "optimize" ? renderResizeImageRow("optimize-") : null}
+                  {/* UDF'yi PDF Yap — Dönüştür grubu (UYAP belgesi, cihazda çevrilir) */}
+                  {group.id === "convert" ? renderUdfRow("convert-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}
@@ -791,6 +811,8 @@ export function DashboardSidebarMobileLauncher({
           ? tr ? "Görsel Boyutlandır" : "Resize Image"
           : contentPanel === "snip"
           ? tr ? "PDF'ten Kesit Al" : "Snip PDF to Image"
+          : contentPanel === "udf"
+          ? tr ? "UDF'yi PDF Yap" : "UDF to PDF"
           : contentPanel === "ai" && aiMode
             ? (() => {
                 const t = AI_TOOLS.find((x) => x.mode === aiMode);

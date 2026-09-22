@@ -235,6 +235,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "gorsel-sikistir": "compress-image",
   "gorsel-boyutlandir": "resize-image",
   "pdf-kesit-al": "snip",
+  "udf-to-pdf": "udf",
   "aranabilir-pdf": "searchable",
   "taranmis-pdf-ocr": "searchable",
   "belge-tara": "scanner",
