@@ -758,7 +758,7 @@ async def edit_text_download(
 ):
     """PDF Düzenle sonucunun indirilmesi — günlük limit BURADA düşer ("indirmede say").
 
-    Misafir: 2/gün (IP hash), oturum açmış FREE: 5/gün (user_id); PRO/PLUS/BUSINESS/ADMIN
+    Misafir: 1/gün (IP hash), oturum açmış FREE: 2/gün (user_id); PRO/PLUS/BUSINESS/ADMIN
     sınırsız. `dl` = hazırlamada dönen indirme jetonu (yalnız hazırlayan indirebilir)."""
     if not dl:
         raise HTTPException(status_code=400, detail="Geçersiz indirme jetonu.")
