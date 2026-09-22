@@ -30,6 +30,7 @@ import { HttpError } from "../../lib/http-error.js";
 import { createUrlSafeToken, hashToken } from "../../lib/token.js";
 import { sendMail } from "../../lib/mailer.js";
 import { logger } from "../../lib/file-log.js";
+import { bufferToBytes } from "../../lib/bytes.js";
 import { imzaliBelgeUret, sha256, type ImzaYerlesimi } from "./signature.pdf.js";
 
 
@@ -166,7 +167,7 @@ export async function imzaIstegiOlustur(
       ownerId,
       title: (girdi.title || girdi.filename || "Belge").slice(0, 200),
       filename: (girdi.filename || "belge.pdf").slice(0, 200),
-      originalData: girdi.belge,
+      originalData: bufferToBytes(girdi.belge),
       originalHash: sha256(girdi.belge),
       message: (girdi.message || "").slice(0, 1000) || null,
       signerEmail: eposta,

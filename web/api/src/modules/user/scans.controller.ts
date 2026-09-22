@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
+import { bufferToBytes } from "../../lib/bytes.js";
 
 /**
  * Belge Tarayıcı "Hesabıma kaydet" — kullanıcının son taramaları.
@@ -57,7 +58,7 @@ export async function uploadScanController(request: Request, response: Response)
   const limit = await tierLimit(userId);
 
   const scan = await prisma.scannedDocument.create({
-    data: { userId, filename, mime, sizeBytes: file.size, data: file.buffer },
+    data: { userId, filename, mime, sizeBytes: file.size, data: bufferToBytes(file.buffer) },
     select: { id: true, filename: true, mime: true, sizeBytes: true, createdAt: true },
   });
 
