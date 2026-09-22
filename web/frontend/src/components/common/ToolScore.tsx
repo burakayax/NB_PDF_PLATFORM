@@ -182,7 +182,7 @@ export function ToolScore({
           >
             <Star
               className={`h-4 w-4 transition ${
-                n <= shown ? "fill-amber-400 text-amber-400" : "text-slate-600"
+                n <= shown ? "fill-amber-400 text-amber-400" : "text-slate-500"
               }`}
             />
           </button>
@@ -190,18 +190,18 @@ export function ToolScore({
       </div>
 
       {hasVotes ? (
-        <span className="text-[13px] text-slate-400">
+        <span className="text-[13px] text-slate-300">
           <span className="font-semibold text-slate-200">{average}</span>{" "}
-          <span className="text-slate-500">·</span>{" "}
+          <span className="text-slate-400">·</span>{" "}
           {summary.ratingCount === 1 ? t.countOne : t.count(summary.ratingCount)}
         </span>
       ) : (
-        <span className="text-[13px] text-slate-500">{t.none}</span>
+        <span className="text-[13px] text-slate-300">{t.none}</span>
       )}
 
-      {saving ? <span className="text-[12px] text-slate-500">{t.saving}</span> : null}
+      {saving ? <span className="text-[12px] text-slate-400">{t.saving}</span> : null}
       {!saving && mine ? (
-        <span className="text-[12px] text-emerald-300/80">
+        <span className="text-[12px] font-medium text-emerald-300">
           {t.mine}: {mine}
         </span>
       ) : null}

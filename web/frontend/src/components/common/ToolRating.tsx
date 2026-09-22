@@ -98,7 +98,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
 
   if (state === "done") {
     return (
-      <p className="mt-4 text-center text-[13px] text-slate-400">
+      <p className="mt-4 text-center text-[13px] text-slate-300">
         {value < COMMENT_ASKED_BELOW ? t.thanksLow : t.thanks}
       </p>
     );
@@ -118,11 +118,11 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
           rememberRating(toolSlug, "skipped");
           setAsked(true);
         }}
-        className="absolute right-0 top-3 rounded-lg p-1.5 text-slate-600 transition hover:bg-white/[0.06] hover:text-slate-300"
+        className="absolute right-0 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
       >
         <X className="h-3.5 w-3.5" />
       </button>
-      <p className="text-center text-[13px] text-slate-400">{t.ask}</p>
+      <p className="text-center text-[13px] font-medium text-slate-200">{t.ask}</p>
 
       <div className="mt-2 flex items-center justify-center gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
@@ -138,7 +138,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
           >
             <Star
               className={`h-6 w-6 transition ${
-                n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-slate-600"
+                n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-slate-500"
               }`}
             />
           </button>
@@ -153,7 +153,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
             maxLength={300}
             onChange={(e) => setComment(e.target.value)}
             placeholder={t.placeholder}
-            className="min-w-0 flex-1 rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 text-[13px] text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
+            className="min-w-0 flex-1 rounded-lg border border-white/[0.15] bg-black/30 px-3 py-2 text-[13px] text-slate-100 outline-none placeholder:text-slate-400 focus:border-cyan-400/60"
           />
           <div className="flex gap-2">
             <button
@@ -166,7 +166,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
             <button
               type="button"
               onClick={() => void send(value)}
-              className="rounded-lg px-3 py-2 text-[13px] text-slate-400 hover:text-white"
+              className="rounded-lg px-3 py-2 text-[13px] text-slate-300 hover:text-white"
             >
               {t.skip}
             </button>
@@ -175,7 +175,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
       ) : null}
 
       {state === "error" ? (
-        <p className="mt-2 text-center text-[12px] text-slate-500">{t.failed}</p>
+        <p className="mt-2 text-center text-[12px] text-rose-300">{t.failed}</p>
       ) : null}
     </div>
   );
