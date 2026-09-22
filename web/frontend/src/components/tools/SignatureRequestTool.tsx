@@ -229,6 +229,7 @@ export function SignatureRequestTool({
           </div>
         ) : (
           <WorkspaceUploadField
+            toolId="imza-iste"
             language={language}
             accept="application/pdf,.pdf"
             note={t.hint}

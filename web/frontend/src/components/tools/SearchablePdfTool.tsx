@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Download, FileText, Loader2, Lock, Search, Share2, Sparkles, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolRating } from "../common/ToolRating";
-import { ToolDropzone } from "./ToolDropzone";
+import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdf";
 import {
   imageFileToCanvas,
@@ -195,17 +195,21 @@ export function SearchablePdfTool({
 
   return (
     <div>
-      <ToolDropzone
-        toolId="image-to-pdf"
-        tr={tr}
+      <ToolUploadPanel
+        toolId="aranabilir-pdf"
+        language={language}
         accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
         multiple
+        compact={files.length > 0}
+        showHeader={false}
         showBenefits={files.length === 0}
         onFiles={(fl) => addFiles(fl)}
-        titleTr="PDF veya görselleri buraya sürükle"
-        titleEn="Drag a PDF or images here"
-        hintTr="ya da tıklayıp seç · taranmış PDF, JPG, PNG · 80 MB'a kadar"
-        hintEn="or click to choose · scanned PDF, JPG, PNG · up to 80 MB"
+        title={tr ? "PDF veya görselleri buraya sürükle" : "Drag a PDF or images here"}
+        hint={
+          tr
+            ? "ya da tıklayıp seç · taranmış PDF, JPG, PNG · 80 MB'a kadar"
+            : "or click to choose · scanned PDF, JPG, PNG · up to 80 MB"
+        }
       />
 
       {files.length > 0 && (

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { HERO_CATS } from "../components/landing/heroToolCatalog";
-import { TOOLS } from "../components/ui/pdf-tools-section";
+import { TOOLS } from "../lib/toolCatalog";
 
 /**
  * ANA SAYFADAKİ HIZLI ARAÇ ALANI, ÜCRETSİZ ARAÇLARIN HEPSİNİ GÖSTERMELİ.

@@ -17,7 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { ToolDropzone } from "./ToolDropzone";
+import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { expandPagesString } from "../../i18n/workspace";
@@ -421,16 +421,16 @@ export function GuestPageToolCore({
   return (
     <>
       {/* Dropzone — her zaman görünür (premium, AI aracıyla aynı dil) */}
-      <ToolDropzone
+      <ToolUploadPanel
         toolId={tool}
-        tr={tr}
+        language={language}
         accept="application/pdf"
+        compact={!!file}
+        showHeader={false}
         showBenefits={!file}
         onFiles={(fl) => void pickFile(fl[0])}
-        titleTr="PDF'i buraya sürükle"
-        titleEn="Drag your PDF here"
-        hintTr="ya da tıklayıp seç · 80 MB'a kadar"
-        hintEn="or click to choose · up to 80 MB"
+        title={tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
+        hint={tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
       />
 
       {/* Seçili dosya satırı (merge'deki dosya listesi gibi) */}

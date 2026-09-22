@@ -213,6 +213,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
     <div>
       <div className="tool-form">
         <WorkspaceUploadField
+            toolId="gorsel-boyutlandir"
           language={language}
           accept="image/png,image/jpeg,image/jpg,image/webp"
           disabled={busy}

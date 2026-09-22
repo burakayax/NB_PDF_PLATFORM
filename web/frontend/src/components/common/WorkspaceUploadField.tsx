@@ -1,28 +1,36 @@
-import { useRef, useState } from "react";
 import type { Language } from "../../i18n/landing";
-import { ws } from "../../i18n/workspace";
+import { ToolUploadPanel } from "./ToolUploadPanel";
 
 type Props = {
+  /** Katalogdaki araç kimliği — panelin rengini, ikonunu ve metnini belirler. */
+  toolId: string;
   language: Language;
   accept: string;
   multiple?: boolean;
   disabled?: boolean;
-  /** Buton yazısı "Dosya Ekle" olsun (listede zaten dosya varken). */
+  /** Listede zaten dosya var → alan ince bir "dosya ekle" şeridine iner. */
   appendMode?: boolean;
-  /** Alan başlığı — varsayılan "Dosya Seç". */
+  /** Bırakma alanının başlığı — verilmezse araca göre standart metin. */
   label?: string;
-  /** Buton yanındaki açıklama — varsayılan araç tipine göre standart metin. */
+  /** Başlığın altındaki ince satır (kabul edilen biçimler, boyut sınırı…). */
   note?: string;
+  /** Üstteki araç adı + açıklama + çalışma yeri rozeti gizlensin mi? */
+  hideHeader?: boolean;
+  /** Üç fayda kutusu gizlensin mi? */
+  hideBenefits?: boolean;
   onFiles: (files: File[]) => void;
 };
 
 /**
- * Çalışma alanı standart yükleme alanı — diğer TÜM araçlarla aynı tasarım
- * (`.upload-dropzone` + "Dosya Seç" butonu + sürükle-bırak ipucu). Kendi özel
- * dropzone'unu çizen araçlar (Düzenle / Kırp / İmzala / İşaretle / Görsel
- * Sıkıştır) bunu kullanır ki çalışma alanında tek bir yükleme dili olsun.
+ * Çalışma alanı yükleme alanı — artık `ToolUploadPanel`'in ince bir sarmalayıcısı.
+ *
+ * Eskiden burada küçük bir "Dosya Seç" kutusu çizilirdi; ana sayfadaki ücretsiz
+ * araçlar ise geniş, renkli bir alan gösteriyordu. İki ayrı yükleme dili, aynı
+ * ürün içinde araç değiştiren kullanıcıya kopukluk hissettiriyordu. Bu bileşen
+ * korunuyor çünkü on iki araç onu çağırıyor; görünümü tek yerden geliyor.
  */
 export function WorkspaceUploadField({
+  toolId,
   language,
   accept,
   multiple,
@@ -30,74 +38,24 @@ export function WorkspaceUploadField({
   appendMode,
   label,
   note,
+  hideHeader,
+  hideBenefits,
   onFiles,
 }: Props) {
-  const W = ws(language);
-  const tr = language === "tr";
-  const [dragOver, setDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
   return (
-    <div
-      className={`field field--full upload-dropzone${dragOver ? " upload-dropzone--over" : ""}`}
-      onDragOver={(e) => {
-        if (disabled) return;
-        e.preventDefault();
-        if (!dragOver) setDragOver(true);
-      }}
-      onDragLeave={(e) => {
-        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-        setDragOver(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        setDragOver(false);
-        if (disabled) return;
-        const dropped = Array.from(e.dataTransfer.files ?? []);
-        if (dropped.length) onFiles(multiple ? dropped : dropped.slice(0, 1));
-      }}
-    >
-      <span>{label ?? W.filePick}</span>
-      <div className="file-picker-row flex-wrap">
-        <button
-          className="file-picker-button"
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={disabled}
-        >
-          {appendMode ? W.fileAdd : W.filePick}
-        </button>
-        <span className="file-picker-note">
-          {note ??
-            (multiple
-              ? appendMode
-                ? W.filePickNoteAppend
-                : W.filePickNoteMulti
-              : W.filePickNoteSingle)}
-        </span>
-      </div>
-      <p className="upload-dropzone__hint">
-        {dragOver
-          ? tr
-            ? "Bırak, ekleyelim"
-            : "Drop to add"
-          : tr
-            ? "veya dosyayı buraya sürükleyip bırak"
-            : "or drag & drop your file here"}
-      </p>
-      <input
-        ref={inputRef}
-        className="hidden-file-input"
-        type="file"
-        accept={accept}
-        multiple={multiple}
-        disabled={disabled}
-        onChange={(e) => {
-          const list = Array.from(e.target.files ?? []);
-          if (list.length) onFiles(list);
-          e.target.value = "";
-        }}
-      />
-    </div>
+    <ToolUploadPanel
+      className="field field--full"
+      toolId={toolId}
+      language={language}
+      accept={accept}
+      multiple={multiple}
+      disabled={disabled}
+      compact={appendMode}
+      showHeader={!hideHeader}
+      showBenefits={!hideBenefits}
+      title={label}
+      hint={note}
+      onFiles={onFiles}
+    />
   );
 }
