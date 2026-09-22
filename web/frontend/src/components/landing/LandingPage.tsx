@@ -32,15 +32,6 @@ import {
   ArrowRightLeft,
   Camera,
   Eraser,
-  FileSearch,
-  FileType2,
-  Minimize2,
-  PenTool,
-  Highlighter,
-  ScanLine,
-  Crop,
-  Maximize2,
-  Unlock,
   Languages,
   Lock,
   MessageSquareText,
@@ -103,12 +94,6 @@ const EDITOR_META: HeroMeta = {
  * Kaynak: web/api/src/modules/subscription/subscription.config.ts → FREE_TOOLS
  * ve cihazda çalışan OCR araçları (üye girişi ister).
  */
-const MEMBER_TOOLS: { slug: string; Icon: LucideIcon; tr: string; en: string }[] = [
-  { slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
-  { slug: "pdf-to-text", Icon: FileType2, tr: "PDF → Metin", en: "PDF → Text" },
-  { slug: "unlock-pdf", Icon: Unlock, tr: "Şifre Kaldır", en: "Unlock PDF" },
-  { slug: "aranabilir-pdf", Icon: FileSearch, tr: "Aranabilir PDF", en: "Searchable PDF" },
-];
 
 const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
   merge: { tr: "Birden çok dosyayı sıralayıp tek PDF yapın.", en: "Order several files into one PDF." },
@@ -121,27 +106,6 @@ const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
   "organize-pdf": { tr: "Sayfaların sırasını sürükleyerek değiştirin.", en: "Drag pages into the order you want." },
 };
 
-/**
- * ÜYELİKSİZ ama hero içinde çalışan sürümü OLMAYAN araçlar.
- *
- * Aşağıdaki tam araç listesinde bu araçların üzerinde "Üyeliksiz" yazıyor; ama
- * yukarıdaki hızlı kullanım alanında hiç görünmüyorlardı. Ziyaretçi aşağıda
- * gördüğü aracı yukarıda bulamayınca rozete güvenmiyor. Bunlar da ızgarada
- * gösterilir; tıklanınca kendi sayfalarında açılırlar (orada da üyelik istemez).
- */
-const SAYFADA_ACILAN_MISAFIR_ARACLARI: {
-  slug: string;
-  Icon: LucideIcon;
-  tr: string;
-  en: string;
-}[] = [
-  { slug: "pdf-imzala", Icon: PenTool, tr: "İmzala", en: "Sign" },
-  { slug: "pdf-yorumla", Icon: Highlighter, tr: "İşaretle", en: "Annotate" },
-  { slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan" },
-  { slug: "pdf-kesit-al", Icon: Crop, tr: "Kesit Al", en: "Snip" },
-  { slug: "gorsel-boyutlandir", Icon: Maximize2, tr: "Görsel Boyutlandır", en: "Resize Image" },
-];
-
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
   { id: "split", tr: "Böl", en: "Split" },
@@ -152,6 +116,8 @@ const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
   { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder" },
 ];
+
+import { HERO_CATS, catOfFreeTool, firstRunnable, type HeroCatId } from "./heroToolCatalog";
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
@@ -503,6 +469,8 @@ function Hero({
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
   const [aiTool, setAiTool] = useState<AiToolId | null>(null);
   const [editorOn, setEditorOn] = useState(false);
+  /** Hero ızgarasında açık olan araç kategorisi (AI sekmesi ayrı: aiTool). */
+  const [heroCat, setHeroCat] = useState<HeroCatId>("pages");
   // Ödemeler kapalıyken AI araçları "Yakında" (fiyat kartlarıyla aynı sinyal). ANCAK
   // zaten AI'a yetkili kullanıcı (ADMIN / PRO / BUSINESS) — backend erişim veriyor —
   // gerçek araçları görür; ödemeleri açmaya gerek yok.
@@ -524,12 +492,14 @@ function Hero({
         setScannedFile(file);
         setAiTool(null);
         setEditorOn(true);
+        setHeroCat("edit");
       } else if (isFreeToolId(toolId)) {
         // Cihazda çalışan araç → taranan PDF doğrudan aktarılır (initialFile).
         setScannedFile(file);
         setAiTool(null);
         setEditorOn(false);
         setFreeTool(toolId as FreeToolId);
+        setHeroCat(catOfFreeTool(toolId as FreeToolId));
       } else {
         // Dönüştürme (sunucu + üyelik) → PDF'i IndexedDB'de KORU, üyelik akışına al.
         // (Faz 2: giriş sonrası ilgili araç sayfası bu PDF'i geri yükler.)
@@ -617,23 +587,38 @@ function Hero({
           <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-2.5 shadow-[0_40px_90px_-40px_rgba(2,6,23,0.95)] backdrop-blur-xl sm:p-3.5">
             {/* Üst şerit: grup seçimi + (mobil) kamerayla tara */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-3">
-              <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
-                <button
-                  type="button"
-                  onClick={() => setAiTool(null)}
-                  className={`rounded-full px-4 py-1.5 text-[13px] font-bold transition ${
-                    !aiTool ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {tr ? "Hızlı araçlar" : "Quick tools"}
-                </button>
+              {/* Kategori sekmeleri — 20 araç tek ızgarada altı satır kaplıyordu.
+                  Her sekme geniş ekranda tek satır; dosya bırakma alanı ekranda
+                  kalır. Son sekme yapay zekâ araçlarıdır. */}
+              <div className="inline-flex flex-wrap items-center gap-0.5 rounded-2xl border border-white/10 bg-black/25 p-1">
+                {HERO_CATS.map((c) => {
+                  const active = !aiTool && heroCat === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setAiTool(null);
+                        setHeroCat(c.id);
+                        const next = firstRunnable(c.id);
+                        setEditorOn(next.editor);
+                        if (next.free) setFreeTool(next.free);
+                      }}
+                      className={`rounded-xl px-3 py-1.5 text-[13px] font-bold transition ${
+                        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {tr ? c.tr : c.en}
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
                   onClick={() => {
                     setAiTool("summarize");
                     setEditorOn(false);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-bold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[13px] font-bold transition ${
                     aiTool
                       ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-sm"
                       : "text-slate-400 hover:text-slate-200"
@@ -671,148 +656,150 @@ function Hero({
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                   {tr ? "Üyeliksiz kullan" : "Use without an account"}
                 </span>
-                <button
-                  type="button"
-                  onClick={onRegister}
-                  className="flex items-center gap-1.5 text-emerald-300 transition hover:text-emerald-200"
-                >
-                  <Lock className="h-3 w-3" />
-                  {tr ? "Ücretsiz üyelikle açılır — üye ol" : "Unlocks with a free account — sign up"}
-                </button>
+                {/* Kilit açıklaması yalnızca açık sekmede kilitli kutu varsa —
+                    yoksa ziyaretçi karşılığı olmayan bir göstergeyi arıyor. */}
+                {(HERO_CATS.find((c) => c.id === heroCat) ?? HERO_CATS[0]).items.some(
+                  (it) => it.k === "member",
+                ) ? (
+                  <button
+                    type="button"
+                    onClick={onRegister}
+                    className="flex items-center gap-1.5 text-emerald-300 transition hover:text-emerald-200"
+                  >
+                    <Lock className="h-3 w-3" />
+                    {tr ? "Ücretsiz üyelikle açılır — üye ol" : "Unlocks with a free account — sign up"}
+                  </button>
+                ) : null}
               </div>
             )}
             <div className="grid grid-cols-3 gap-2 px-1 sm:grid-cols-5 lg:grid-cols-6">
-              {!aiTool ? (
-                <>
-                  {FREE_TOOLS.map((t) => {
-                    const A = toolAccent(t.id);
-                    const Icon = A.icon;
-                    const active = !editorOn && freeTool === t.id;
+              {!aiTool
+                ? (HERO_CATS.find((c) => c.id === heroCat) ?? HERO_CATS[0]).items.map((it) => {
+                    if (it.k === "free") {
+                      const t = FREE_TOOLS.find((x) => x.id === it.id)!;
+                      const A = toolAccent(it.id);
+                      const Icon = A.icon;
+                      const active = !editorOn && freeTool === it.id;
+                      return (
+                        <button
+                          key={it.id}
+                          type="button"
+                          onClick={() => {
+                            setFreeTool(it.id);
+                            setAiTool(null);
+                            setEditorOn(false);
+                          }}
+                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                            active
+                              ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                              : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                          }`}
+                        >
+                          <span
+                            className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${A.grad} ${A.text} ring-1 ring-white/10 transition group-hover:scale-105`}
+                          >
+                            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          </span>
+                          <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                            {tr ? t.tr : t.en}
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    if (it.k === "editor") {
+                      return (
+                        <button
+                          key="editor"
+                          type="button"
+                          onClick={() => {
+                            setEditorOn(true);
+                            setAiTool(null);
+                          }}
+                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                            editorOn
+                              ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                              : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                          }`}
+                        >
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <Pencil className="h-[18px] w-[18px]" strokeWidth={2} />
+                          </span>
+                          <span className={`text-[12px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
+                            {tr ? EDITOR_META.tr : EDITOR_META.en}
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    if (it.k === "page") {
+                      const PageIcon = it.Icon;
+                      return (
+                        <button
+                          key={it.slug}
+                          type="button"
+                          onClick={() => onOpenTool(it.slug as FeatureKey)}
+                          className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
+                        >
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <PageIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          </span>
+                          <span className="text-[12px] font-semibold leading-tight text-slate-300">
+                            {tr ? it.tr : it.en}
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    // k === "member" — ücretsiz üyelikle açılır; girişli kullanıcıda gizlenir.
+                    if (accessToken) return null;
+                    const MemberIcon = it.Icon;
                     return (
                       <button
-                        key={t.id}
+                        key={it.slug}
+                        type="button"
+                        onClick={onRegister}
+                        title={tr ? "Ücretsiz üyelikle açılır" : "Unlocks with a free account"}
+                        className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-3.5 text-center transition hover:border-emerald-400/50 hover:bg-emerald-500/[0.12]"
+                      >
+                        <span className="absolute right-1.5 top-1.5">
+                          <Lock className="h-3 w-3 text-emerald-400/70" />
+                        </span>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
+                          <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </span>
+                        <span className="text-[12px] font-semibold leading-tight text-emerald-100/90">
+                          {tr ? it.tr : it.en}
+                        </span>
+                      </button>
+                    );
+                  })
+                : AI_TOOLS.map(({ id, meta }) => {
+                    const ChipIcon = meta.Icon;
+                    const active = aiTool === id;
+                    return (
+                      <button
+                        key={id}
                         type="button"
                         onClick={() => {
-                          setFreeTool(t.id);
-                          setAiTool(null);
+                          setAiTool(id);
                           setEditorOn(false);
                         }}
                         className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                           active
-                            ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
-                            : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                            ? "border-violet-400/45 bg-violet-500/15 shadow-[0_10px_30px_-16px_rgba(139,92,246,0.7)]"
+                            : "border-white/[0.07] bg-white/[0.02] hover:border-violet-400/30 hover:bg-white/[0.05]"
                         }`}
                       >
-                        <span
-                          className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${A.grad} ${A.text} ring-1 ring-white/10 transition group-hover:scale-105`}
-                        >
-                          <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                          <ChipIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                         </span>
                         <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
-                          {tr ? t.tr : t.en}
+                          {tr ? meta.tr : meta.en}
                         </span>
                       </button>
                     );
                   })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditorOn(true);
-                      setAiTool(null);
-                    }}
-                    className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
-                      editorOn
-                        ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
-                        : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
-                    }`}
-                  >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
-                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2} />
-                    </span>
-                    <span className={`text-[12px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
-                      {tr ? EDITOR_META.tr : EDITOR_META.en}
-                    </span>
-                  </button>
-
-                  {/* Üyeliksiz ama kendi sayfasında açılan araçlar — aşağıdaki
-                      tam listede "Üyeliksiz" rozeti taşıyorlar; burada da
-                      görünmeleri gerekiyor ki rozet tutarlı olsun. */}
-                  {SAYFADA_ACILAN_MISAFIR_ARACLARI.map((m) => {
-                    const MIcon = m.Icon;
-                    return (
-                      <button
-                        key={m.slug}
-                        type="button"
-                        onClick={() => onOpenTool(m.slug as FeatureKey)}
-                        className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
-                      >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
-                          <MIcon className="h-[18px] w-[18px]" strokeWidth={2} />
-                        </span>
-                        <span className="text-[12px] font-semibold leading-tight text-slate-300">
-                          {tr ? m.tr : m.en}
-                        </span>
-                      </button>
-                    );
-                  })}
-
-                  {/* ÜCRETSİZ ÜYELİKLE AÇILANLAR — araçların ALTINDA değil,
-                      aralarında. Blok araç alanının altındayken ekranın altında
-                      kalıyor ve kimse görmüyordu (kullanıcı bildirdi). Kilit
-                      simgesi ve yeşil çerçeve bunları ücretsiz araçlardan
-                      ayırır; tıklayınca kayıt ekranı açılır. */}
-                  {!accessToken &&
-                    MEMBER_TOOLS.map((m) => {
-                      const MemberIcon = m.Icon;
-                      return (
-                        <button
-                          key={m.slug}
-                          type="button"
-                          onClick={onRegister}
-                          title={tr ? "Ücretsiz üyelikle açılır" : "Unlocks with a free account"}
-                          className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-3.5 text-center transition hover:border-emerald-400/50 hover:bg-emerald-500/[0.12]"
-                        >
-                          <span className="absolute right-1.5 top-1.5">
-                            <Lock className="h-3 w-3 text-emerald-400/70" />
-                          </span>
-                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
-                            <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
-                          </span>
-                          <span className="text-[12px] font-semibold leading-tight text-emerald-100/90">
-                            {tr ? m.tr : m.en}
-                          </span>
-                        </button>
-                      );
-                    })}
-                </>
-              ) : (
-                AI_TOOLS.map(({ id, meta }) => {
-                  const ChipIcon = meta.Icon;
-                  const active = aiTool === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => {
-                        setAiTool(id);
-                        setEditorOn(false);
-                      }}
-                      className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
-                        active
-                          ? "border-violet-400/45 bg-violet-500/15 shadow-[0_10px_30px_-16px_rgba(139,92,246,0.7)]"
-                          : "border-white/[0.07] bg-white/[0.02] hover:border-violet-400/30 hover:bg-white/[0.05]"
-                      }`}
-                    >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
-                        <ChipIcon className="h-[18px] w-[18px]" strokeWidth={2} />
-                      </span>
-                      <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
-                        {tr ? meta.tr : meta.en}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
             </div>
 
             {/* Seçili aracın tanıtım şeridi */}
