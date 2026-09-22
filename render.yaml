@@ -76,9 +76,9 @@ services:
       - key: JWT_ACCESS_SECRET
         sync: false
       - key: EDITOR_GUEST_DAILY_LIMIT
-        value: "2"
+        value: "1"
       - key: EDITOR_FREE_DAILY_LIMIT
-        value: "5"
+        value: "2"
 
   # ─── Auth API (Express / Node.js) ─────────────────────────────────────────
   - type: web
@@ -121,9 +121,9 @@ services:
       - key: INTERNAL_SERVICE_SECRET
         sync: false
       - key: EDITOR_GUEST_DAILY_LIMIT
-        value: "2"
+        value: "1"
       - key: EDITOR_FREE_DAILY_LIMIT
-        value: "5"
+        value: "2"
       - key: BILLING_ENCRYPTION_KEY
         sync: false
       - key: IYZICO_API_KEY

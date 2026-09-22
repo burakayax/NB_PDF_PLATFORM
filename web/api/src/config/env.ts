@@ -71,8 +71,8 @@ const rawEnvSchema = z
     // FastAPI worker ↔ Node dahili çağrıları (PDF Düzenle indirme sayacı) için paylaşılan
     // secret. Boşsa Python yerel SQLite'a düşer (sayaç instance başına). İki serviste AYNI olmalı.
     INTERNAL_SERVICE_SECRET: z.string().optional().default(""),
-    EDITOR_GUEST_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(2),
-    EDITOR_FREE_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(5),
+    EDITOR_GUEST_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(1),
+    EDITOR_FREE_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(2),
     ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(15),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
     DESKTOP_ACCESS_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(4),

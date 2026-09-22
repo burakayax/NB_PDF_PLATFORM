@@ -200,7 +200,7 @@ teşvik için **indirmede düşen günlük bir limit** eklendi (önizleme/hazır
   (Render dashboard, `sync:false`). Boş kalırsa SQLite fallback çalışır.
 
 **Limitleri değiştirmek / gevşetmek:**
-- `EDITOR_GUEST_DAILY_LIMIT` (varsayılan 2), `EDITOR_FREE_DAILY_LIMIT` (varsayılan 5) —
+- `EDITOR_GUEST_DAILY_LIMIT` (varsayılan 1), `EDITOR_FREE_DAILY_LIMIT` (varsayılan 2) —
   hem Node hem Python bu env'leri okur; ikisinde de aynı olsun. Kaldırmak için çok
   yükseğe çek (ör. 99999). Sayaç Europe/Istanbul gün sınırında sıfırlanır.
 - SQLite fallback kalıcı olsun istersen `EDITOR_LIMIT_DB`'yi kalıcı disk yoluna al.

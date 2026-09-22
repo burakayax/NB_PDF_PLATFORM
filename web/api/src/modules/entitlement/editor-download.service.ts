@@ -14,8 +14,8 @@ import { prisma } from "../../lib/prisma.js";
  */
 
 const TZ = "Europe/Istanbul";
-const GUEST_DAILY_LIMIT = Number(process.env.EDITOR_GUEST_DAILY_LIMIT ?? 2);
-const FREE_DAILY_LIMIT = Number(process.env.EDITOR_FREE_DAILY_LIMIT ?? 5);
+const GUEST_DAILY_LIMIT = Number(process.env.EDITOR_GUEST_DAILY_LIMIT ?? 1);
+const FREE_DAILY_LIMIT = Number(process.env.EDITOR_FREE_DAILY_LIMIT ?? 2);
 
 function tzOffsetMs(timezone: string, at: Date): number {
   const utc = new Date(at.toLocaleString("en-US", { timeZone: "UTC" })).getTime();

@@ -36,8 +36,8 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ProductTour, type TourStep } from "../onboarding/ProductTour";
+import { analyzePdfLocal, fillPageTextColors, ocrScannedPagesLocal } from "../../lib/pdfAnalyzeClient";
 import {
-  analyzePdf,
   editPdfTextPrepare,
   downloadEditedPdf,
   EditDailyLimitError,
@@ -220,6 +220,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const pageEls = analysis?.pages[current]?.elements ?? [];
+  // Görseller ALTTA, metinler ÜSTTE çizilsin → taranmış sayfada (tam sayfa görsel + OCR metni)
+  // ya da görsel zemin üstündeki yazıda tıklama metne gider, görsel onu yutmaz.
+  const pageElsStacked = [...pageEls.filter((e) => e.type === "image"), ...pageEls.filter((e) => e.type !== "image")];
   const pageAdded = added.filter((a) => a.page === current);
   const pageImages = addedImages.filter((a) => a.page === current);
   const editCount = edits.size + added.length + addedImages.length;
@@ -235,10 +238,10 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       setFile(f);
       setLoadingMsg(tr ? "Belge analiz ediliyor…" : "Analyzing document…");
       const buf = await f.arrayBuffer();
-      const [d, a] = await Promise.all([
-        pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)), isEvalSupported: false }).promise,
-        analyzePdf(f, accessToken ?? null),
-      ]);
+      // Analiz CİHAZDA (pdf.js) — dosya açılırken sunucuya yüklenmez; yalnız kaydederken gider.
+      const d = await pdfjsLib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
+      const a = await analyzePdfLocal(d);
+      colorDoneRef.current.clear();
       setDoc(d);
       setAnalysis(a);
       setPageCount(d.numPages);
@@ -308,6 +311,26 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     })();
     return () => { cancelled = true; };
   }, [doc, current, editorOpen, zoom]);
+
+  // Metin renkleri cihaz analizinde yok → sayfa ilk açıldığında çizilmiş sayfadan örneklenir.
+  const colorDoneRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    if (!doc || !editorOpen || !analysis) return;
+    const pi = current;
+    if (colorDoneRef.current.has(pi)) return;
+    colorDoneRef.current.add(pi);
+    const els = analysis.pages[pi]?.elements;
+    if (!els) return;
+    void fillPageTextColors(doc, pi, els).then((colored) => {
+      if (colored === els) return;
+      setAnalysis((a) => {
+        if (!a || a.pages[pi]?.elements !== els) return a;
+        const pages = a.pages.slice();
+        pages[pi] = { ...pages[pi], elements: colored };
+        return { ...a, pages };
+      });
+    }).catch(() => { colorDoneRef.current.delete(pi); });
+  }, [doc, editorOpen, analysis, current]);
 
   const setEdit = useCallback((id: string, patch: Edit) => {
     setEdits((m) => { const n = new Map(m); n.set(id, { ...n.get(id), ...patch }); return n; });
@@ -693,14 +716,16 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shifts, current]);
 
-  // Taranmış PDF → sunucuda Tesseract OCR ile metni tanı, analizi düzenlenebilir metinle değiştir.
+  // Taranmış PDF → CİHAZDA Tesseract OCR ile metni tanı, analizi düzenlenebilir metinle değiştir.
   async function runOcr() {
-    if (!file || ocrBusy) return;
+    if (!file || !doc || !analysis || ocrBusy) return;
     setOcrBusy(true);
     setError(null);
-    setLoadingMsg(tr ? "Taranmış belge — OCR ile metin tanınıyor (birkaç saniye sürebilir)…" : "Scanned document — recognizing text with OCR (may take a few seconds)…");
+    setLoadingMsg(tr ? "Taranmış belge — metin cihazınızda tanınıyor (ilk kullanımda dil verisi indirilir)…" : "Scanned document — recognizing text on your device (language data downloads on first use)…");
     try {
-      const a = await analyzePdf(file, accessToken ?? null, true);
+      const a = await ocrScannedPagesLocal(doc, analysis, (r) =>
+        setLoadingMsg(tr ? `Metin tanınıyor… %${Math.round(r * 100)}` : `Recognizing text… ${Math.round(r * 100)}%`));
+      colorDoneRef.current.clear();
       setAnalysis(a);
       setEdits(new Map());
       setSelected(null);
@@ -799,11 +824,11 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     const reset = e.resetAt ? new Date(e.resetAt).toLocaleString(tr ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : null;
     if (tr) {
       return e.guest
-        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 5, Pro ile sınırsız indirebilirsiniz.${reset ? ` Yenilenme: ${reset}.` : ""}`
+        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 2, Pro ile sınırsız indirebilirsiniz.${reset ? ` Yenilenme: ${reset}.` : ""}`
         : `Bugünkü indirme limitiniz doldu (${e.limit}/gün). Pro'ya geçerek sınırsız indirin.${reset ? ` Yenilenme: ${reset}.` : ""}`;
     }
     return e.guest
-      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 5/day, or Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`
+      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 2/day, or Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`
       : `Daily download limit reached (${e.limit}/day). Upgrade to Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`;
   }
 
@@ -864,7 +889,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
       <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-amber-400/25 bg-amber-500/[0.07] px-4 py-3 text-[13px] text-amber-200">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-        <p><b>{tr ? "Bu araç farklı:" : "Different tool:"}</b> {tr ? "Gerçek düzenleme için dosyanız güvenli sunucumuzda işlenir (diğer araçlar cihazınızda), işlem biter bitmez silinir." : "For real editing, your file is processed on our secure server (other tools run on your device) and deleted right after."}</p>
+        <p>{tr
+          ? <>Dosyanız <b>cihazınızda</b> açılır ve düzenlenir. Yalnızca <b>kaydettiğinizde</b>, eski yazıyı gerçekten silip yenisini yazmak için güvenli sunucumuza gider ve işlem biter bitmez silinir. Ücretsiz kayıt hakkı: misafir günde 1, üye günde 2 — <b>Pro'da sınırsız</b>.</>
+          : <>Your file opens and is edited <b>on your device</b>. Only when you <b>save</b> is it sent to our secure server to truly remove the old text and write the new one, then deleted right away. Free saves: 1/day as a guest, 2/day with an account — <b>unlimited with Pro</b>.</>}</p>
       </div>
 
       {scanned && (
@@ -1048,8 +1075,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const [x0, y0, x1, y1] = el.bbox;
                     return <div key={`cover_${el.id}`} className="pointer-events-none absolute" style={{ left: x0 * scale - 1, top: y0 * scale - 1, width: Math.max((x1 - x0 + Math.max(0, shift)) * scale, 4) + 2, height: Math.max((y1 - y0) * scale, 6) + 2, backgroundColor: bgFor(el.id) }} />;
                   })}
-                  {/* İçerik katmanı — mevcut öğeler */}
-                  {pageEls.map((el) => {
+                  {/* İçerik katmanı — mevcut öğeler (görseller altta) */}
+                  {pageElsStacked.map((el) => {
                     const [x0, y0, x1, y1] = el.bbox;
                     const del = isDeleted(el.id);
                     const shift = shifts.get(el.id) ?? 0;

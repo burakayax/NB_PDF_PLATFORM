@@ -6,8 +6,8 @@ Burada PDF editörü için, indirme anında düşen, kimlik başına (oturum aç
 misafir → IP hash) küçük bir SQLite sayaç tutulur. Gelir kotasına dokunmaz.
 
 Politika (bkz. ürün kararı):
-  - Misafir           → 2 / gün
-  - Oturum açmış FREE → 5 / gün
+  - Misafir           → 1 / gün (sunucu yükü → ücretsiz deneme, Pro sınırsız)
+  - Oturum açmış FREE → 2 / gün
   - PRO/PLUS/BUSINESS/ADMIN → sınırsız (limiter hiç çağrılmaz)
 
 Gün sınırı, uygulamanın geri kalanıyla tutarlı olması için Europe/Istanbul'a göre.
@@ -30,8 +30,8 @@ except Exception:  # pragma: no cover
     _TZ = None  # type: ignore[assignment]
 
 # Limitler — tek yerden yönetilir.
-GUEST_DAILY_LIMIT = int(os.getenv("EDITOR_GUEST_DAILY_LIMIT", "2"))
-FREE_DAILY_LIMIT = int(os.getenv("EDITOR_FREE_DAILY_LIMIT", "5"))
+GUEST_DAILY_LIMIT = int(os.getenv("EDITOR_GUEST_DAILY_LIMIT", "1"))
+FREE_DAILY_LIMIT = int(os.getenv("EDITOR_FREE_DAILY_LIMIT", "2"))
 
 _SALT = os.getenv("EDITOR_LIMIT_SALT", "nb-pdf-editor-daily-v1")
 

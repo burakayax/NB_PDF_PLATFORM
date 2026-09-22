@@ -281,7 +281,7 @@ export async function editPdfText(
   return response.blob();
 }
 
-/** PDF Düzenle — İNDİRME adımı. Günlük limit BURADA düşer (misafir 2/gün, FREE 5/gün;
+/** PDF Düzenle — İNDİRME adımı. Günlük limit BURADA düşer (misafir 1/gün, FREE 2/gün;
  * PRO/BUSINESS sınırsız). Limit dolarsa `EditDailyLimitError` fırlatır. */
 export async function downloadEditedPdf(
   resultId: string,
