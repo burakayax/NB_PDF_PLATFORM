@@ -279,7 +279,8 @@ export async function editPdfTextPrepare(
 }
 
 /** Sunucu tarafı GERÇEK metin düzenleme (bytes döner) — AI çeviri gibi doğrudan blob
- * isteyen akışlar için (günlük editör limitine tabi DEĞİL). */
+ * isteyen akışlar için. Oturum GEREKİR; ücretli plan sınırsız, ücretsiz üye PDF Düzenle'nin
+ * günlük hakkından düşer (bu yol sınırı atlatmak için kullanılamasın). */
 export async function editPdfText(
   file: File,
   edits: PdfTextEdit[],
@@ -299,6 +300,7 @@ export async function editPdfText(
     try {
       const j = await response.json();
       if (j?.detail) msg = String(j.detail);
+      else if (j?.error === "daily_limit") msg = `Bugünkü ücretsiz düzenleme hakkınız doldu (${j.limit}/gün). Pro ile sınırsız kullanabilirsiniz.`;
     } catch { /* varsayılan */ }
     throw new Error(msg);
   }

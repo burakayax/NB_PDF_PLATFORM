@@ -27,6 +27,20 @@ def _no_fork_sandbox(monkeypatch):
     monkeypatch.setenv("PDF_SANDBOX_ENABLED", "false")
 
 
+_AUTH = {"Authorization": "Bearer test"}
+
+
+@pytest.fixture(autouse=True)
+def _paid_identity(monkeypatch):
+    """store'suz (PDF'i doğrudan döndüren) yol oturum ister — testte ücretli kullanıcı say."""
+    import app.api.tool_routes_extra as tre
+
+    async def _ident(_tok):
+        return {"user_id": "u1", "role": "USER", "plan": "PRO"}
+
+    monkeypatch.setattr(tre, "saas_user_identity", _ident)
+
+
 def _spans(page):
     return [s for b in page.get_text("dict")["blocks"] for l in b.get("lines", []) for s in l["spans"]]
 
@@ -116,7 +130,7 @@ def test_vector_text_edit_keeps_neighbor_lines_and_graphics():
         "font": "lsans", "by": round(mid["origin"][1], 1), "vt": True, "osz": 11,
     }
     r = client.post("/api/edit-text", files={"file": ("a.pdf", _tight_pdf(), "application/pdf")},
-                    data={"edits": json.dumps([op])})
+                    headers=_AUTH, data={"edits": json.dumps([op])})
     assert r.status_code == 200
     out = fitz.open("pdf", r.content)[0]
     texts = [s["text"] for s in _spans(out)]
@@ -131,7 +145,7 @@ def test_metric_family_uses_real_bold_face_and_fallback_glyph():
     op = {"page": 0, "bbox": [72, 90, 300, 104], "text": "Kalın 12.500 ₺", "size": 12, "font": "carlito",
           "bold": True, "by": 100}
     r = client.post("/api/edit-text", files={"file": ("a.pdf", d.tobytes(), "application/pdf")},
-                    data={"edits": json.dumps([op])})
+                    headers=_AUTH, data={"edits": json.dumps([op])})
     assert r.status_code == 200
     fonts = {s["font"] for s in _spans(fitz.open("pdf", r.content)[0])}
     assert "Carlito Bold" in fonts  # sahte (çift basım) değil, gerçek kalın kesit
@@ -165,13 +179,23 @@ def test_original_font_reused_only_for_verified_chars():
     base = {"page": 0, "bbox": el["bbox"], "size": el["size"], "font": el["font"], "by": el["by"],
             "vt": True, "osz": el["size"], "ofont": el["ofont"]}
     ops = [dict(base, text="Blind table")]  # yalnız belgedeki harfler → orijinal font
-    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, data={"edits": json.dumps(ops)})
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, headers=_AUTH, data={"edits": json.dumps(ops)})
     orig_font = next(s["font"] for s in _spans(fitz.open("pdf", pdf)[0]))
     fonts = {s["font"] for s in _spans(fitz.open("pdf", r.content)[0]) if "Blind" in s["text"]}
     assert fonts and all(f.split(" ")[0].split("-")[0] == orig_font.split("-")[0] or f.startswith("Carlito") for f in fonts)
     # yeni harf (Z, ş) → orijinal font KULLANILMAZ (boş glif riski), ölçü-uyumlu aile
     ops = [dict(base, text="Zeynep Şişli")]
-    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, data={"edits": json.dumps(ops)})
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, headers=_AUTH, data={"edits": json.dumps(ops)})
     out = [s for s in _spans(fitz.open("pdf", r.content)[0]) if "Zeynep" in s["text"]]
     assert out and out[0]["font"] == "Carlito Regular"
 
+
+
+def test_direct_pdf_path_requires_login():
+    """store'suz yol günlük sınırı atlatamaz: oturumsuz istek reddedilir."""
+    d = fitz.open()
+    d.new_page()
+    op = {"page": 0, "bbox": [72, 90, 300, 104], "text": "x", "size": 12, "font": "sans", "by": 100}
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", d.tobytes(), "application/pdf")},
+                    data={"edits": json.dumps([op])})
+    assert r.status_code == 401

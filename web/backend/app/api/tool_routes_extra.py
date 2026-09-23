@@ -444,6 +444,7 @@ async def tool_edit_text(
     edits: str = Form("[]"),
     password: str = Form(""),
     store: str = Form(""),
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
 ):
     # Not: bu araç misafire de açık (token gerekmez). Kötüye kullanımı boyut (50MB),
     # oran (15/dk) ve sandbox sınırları önler; entitlement/kredi tüketmez.
@@ -454,6 +455,25 @@ async def tool_edit_text(
     import json as _json
 
     decision = {"fileSizeLimitMB": 50}
+    # store YOKSA PDF doğrudan döner (çeviri aracı yolu) → günlük indirme sınırı atlanmasın:
+    # misafir reddedilir; ücretli plan/yönetici sınırsız; ücretsiz üye aynı günlük haktan düşer.
+    # (Kontrol dosya işlenmeden ÖNCE — boşuna sunucu işi yapılmaz.)
+    if str(store).strip().lower() not in ("1", "true", "yes"):
+        _tok = authorization[7:].strip() if authorization and authorization.startswith("Bearer ") else ""
+        if not _tok:
+            raise HTTPException(status_code=401, detail="Bu işlem için oturum açın.")
+        _ident = await saas_user_identity(_tok)
+        if not (_ident["role"] == "ADMIN" or _ident["plan"] in ("STARTER", "PLUS", "PRO", "BUSINESS")):
+            _key = _edl.user_key(_ident["user_id"])
+            _dec = await consume_editor_download(_key)
+            if _dec is None:
+                _ok, _used, _lim = _edl.consume(_key, _edl.FREE_DAILY_LIMIT)
+                _dec = {"allowed": _ok, "used": _used, "limit": _lim, "resetAt": _edl.reset_at_iso(), "guest": False}
+            if not _dec.get("allowed"):
+                return JSONResponse(status_code=429, content={
+                    "error": "daily_limit", "used": _dec.get("used"), "limit": _dec.get("limit"),
+                    "resetAt": _dec.get("resetAt"), "guest": False,
+                })
     workdir = create_workdir()
     try:
         saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
