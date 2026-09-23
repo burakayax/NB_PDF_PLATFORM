@@ -63,6 +63,8 @@ jobs:
   python-tests:
     name: Python Unit Tests
     runs-on: ubuntu-latest
+    # Takılan test (ör. fork kilitlenmesi) deploy'u 40 dk bekletmesin — net hata ile dur.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
