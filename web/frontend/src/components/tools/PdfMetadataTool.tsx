@@ -15,6 +15,7 @@ import { alanAdi, ustveriOku, ustveriTemizle, type UstveriOzeti } from "../../li
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { ToolFilePreview } from "../common/ToolFilePreview";
 
 const METIN = {
   tr: {
@@ -101,6 +102,8 @@ export function PdfMetadataTool({
   const t = METIN[dil];
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("belge.pdf");
+  /** Sayfa önizlemesi için özgün dosya — ızgara File ile çalışır. */
+  const [file, setFile] = useState<File | null>(null);
   const [ozet, setOzet] = useState<UstveriOzeti | null>(null);
   const [gorselleriTemizle, setGorselleriTemizle] = useState(true);
   const [okuyor, setOkuyor] = useState(false);
@@ -120,6 +123,7 @@ export function PdfMetadataTool({
         const bulunan = await ustveriOku(b);
         setBytes(b);
         setFileName(f.name);
+        setFile(f);
         setOzet(bulunan);
       } catch {
         setHata(t.failed);
@@ -204,10 +208,18 @@ export function PdfMetadataTool({
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="mb-3 flex items-center gap-2 text-[13px] text-slate-400">
-        <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
-        <span className="truncate">{fileName}</span>
-      </div>
+      {/* Temizlenecek belge kart kart görünür; kullanıcı gizli bilgileri
+          silmeden önce doğru dosyaya baktığını görür. */}
+      {file ? (
+        <div className="mb-3">
+          <ToolFilePreview file={file} password="" pageCount={null} language={language} />
+        </div>
+      ) : (
+        <div className="mb-3 flex items-center gap-2 text-[13px] text-slate-400">
+          <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
+          <span className="truncate">{fileName}</span>
+        </div>
+      )}
 
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
         {t.found}
@@ -281,6 +293,7 @@ export function PdfMetadataTool({
           type="button"
           onClick={() => {
             setBytes(null);
+            setFile(null);
             setOzet(null);
           }}
           className="shrink-0 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200"

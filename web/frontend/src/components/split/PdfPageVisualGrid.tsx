@@ -160,7 +160,13 @@ const THUMB_RETRY_MAX_ATTEMPTS = 40;
 /** pdf.js raster eşzamanlılığı — çok düşük olunca küçük resimler sırayla gelir; orta değer ana iş parçacığını korur. */
 const THUMB_MAX_PARALLEL = 6;
 
-export type PdfPageVisualMode = "split" | "delete" | "rotate" | "organize";
+/**
+ * Izgaranın çalışma kipi. "preview" hiçbir etkileşim sunmaz: belgeyi olduğu gibi
+ * gösterir. Çalışma alanındaki araçların çoğu (sıkıştır, filigran, dönüştür…)
+ * sayfa seçtirmez ama kullanıcı yine de doğru belgeyi yüklediğini görmek ister;
+ * onlarda boş bir "dosya seçildi" satırı yerine bu kip kullanılır.
+ */
+export type PdfPageVisualMode = "split" | "delete" | "rotate" | "organize" | "preview";
 
 export type PdfPageVisualGridHandle = {
   scrollToPage: (page1: number) => void;
@@ -1856,9 +1862,13 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             ? effectiveLang === "tr"
               ? "Kart üzerindeki ok butonlarıyla sırayı değiştirin veya pozisyon kutusuna hedef sayfa numarasını yazın. Ok tuşları ızgarayı kaydırır."
               : "Use the arrow buttons on each card to reorder, or type a target position in the number box. Arrow keys scroll the grid."
-            : effectiveLang === "tr"
-              ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
-              : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
+            : mode === "preview"
+              ? effectiveLang === "tr"
+                ? "Belgenin önizlemesi. Doğru dosyayı seçtiğinizden emin olun; işlem tüm sayfalara uygulanır."
+                : "A preview of your document. Check it is the right file — the operation applies to every page."
+              : effectiveLang === "tr"
+                ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
+                : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
 
     if (loadError) {
       return (

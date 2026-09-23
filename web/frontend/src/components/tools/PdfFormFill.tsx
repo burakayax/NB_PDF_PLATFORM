@@ -20,6 +20,7 @@ import {
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { ToolFilePreview } from "../common/ToolFilePreview";
 
 const METIN = {
   tr: {
@@ -98,6 +99,8 @@ export function PdfFormFill({
   const t = METIN[language === "tr" ? "tr" : "en"];
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("form.pdf");
+  /** Sayfa önizlemesi için özgün dosya — ızgara File ile çalışır. */
+  const [file, setFile] = useState<File | null>(null);
   const [alanlar, setAlanlar] = useState<FormAlani[] | null>(null);
   const [degerler, setDegerler] = useState<FormDegerleri>({});
   const [kilitle, setKilitle] = useState(true);
@@ -118,6 +121,7 @@ export function PdfFormFill({
         const bulunan = await formAlanlariniOku(b);
         setBytes(b);
         setFileName(f.name);
+        setFile(f);
         setAlanlar(bulunan);
         const baslangic: FormDegerleri = {};
         for (const a of bulunan) {
@@ -213,6 +217,7 @@ export function PdfFormFill({
           type="button"
           onClick={() => {
             setBytes(null);
+            setFile(null);
             setAlanlar(null);
           }}
           className="mt-3 rounded-xl border border-white/[0.1] px-4 py-2 text-[13px] font-semibold text-slate-200"
@@ -232,6 +237,14 @@ export function PdfFormFill({
           · {doldurulabilir.length} {t.fields}
         </span>
       </div>
+
+      {/* Formun kendisi kart kart görünür — hangi alanın belgede nereye denk
+          geldiğini görmeden doldurmak zor. */}
+      {file ? (
+        <div className="mb-4">
+          <ToolFilePreview file={file} password="" pageCount={null} language={language} />
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {doldurulabilir.map((a) => {

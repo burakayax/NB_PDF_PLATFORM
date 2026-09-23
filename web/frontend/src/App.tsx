@@ -106,6 +106,9 @@ import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { ToolUploadPanel } from "./components/common/ToolUploadPanel";
+const ToolFilePreview = lazyWithRetry(() =>
+  import("./components/common/ToolFilePreview").then((m) => ({ default: m.ToolFilePreview })),
+);
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
@@ -3554,6 +3557,22 @@ function App() {
       uploads.some((u) => u.pageCount === 0)) ||
     toolFilesStillInspecting ||
     deleteWouldRemoveEveryPage;
+
+  /**
+   * Seçilen dosyanın sayfa önizlemesi gösterilsin mi?
+   *
+   * Araçların çoğunda dosya seçilince ekranda yalnızca adı ve boyutu yazıyordu;
+   * kullanıcı doğru belgeyi yüklediğini ancak işlemi çalıştırdıktan sonra
+   * anlıyordu. Sayfa Sırala'daki kart görünümü artık burada da gösteriliyor.
+   *
+   * Yalnızca TEK PDF için: birden çok dosyada (birleştir gibi) sıralanabilir
+   * liste daha yararlıdır. Sayfa sayısı koşul DEĞİLDİR — o bilgi sunucudaki ön
+   * kontrolden gelir ve gecikebilir ya da hiç gelmeyebilir; ızgara sayfaları
+   * tarayıcıda kendisi sayar.
+   */
+  const previewItem = uploads.length === 1 ? uploads[0] : undefined;
+  const showToolFilePreview =
+    !!previewItem && previewItem.file.type === "application/pdf" && !previewItem.inspecting;
 
   function openLegalPage(target: LegalView) {
     if (
@@ -7865,6 +7884,20 @@ function App() {
                                 title={W.emptyStateTitle}
                                 hint={W.emptyStateHint}
                               />
+                            ) : showToolFilePreview ? (
+                              /* Tek PDF seçiliyse belgenin kendisi gösterilir —
+                                 Sayfa Sırala'daki sayfa kartlarının aynısı, salt
+                                 önizleme kipinde. Dosya adı + boyut satiri tek
+                                 basina "dogru dosyayi mi sectim?" sorusunu
+                                 cevaplamiyordu. */
+                              <Suspense fallback={<PageSkeleton />}>
+                                <ToolFilePreview
+                                  file={uploads[0]!.file}
+                                  password={password}
+                                  pageCount={uploads[0]!.pageCount}
+                                  language={language}
+                                />
+                              </Suspense>
                             ) : (
                               <div
                                 ref={mergeListScrollRef}

@@ -32,6 +32,7 @@ import {
 } from "../../api/signatures";
 import { ToolRating } from "../common/ToolRating";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { ToolFilePreview } from "../common/ToolFilePreview";
 
 const METIN = {
   tr: {
@@ -216,16 +217,21 @@ export function SignatureRequestTool({
     <div className="mx-auto w-full max-w-2xl">
       <div className="tool-form">
         {dosya ? (
-          <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] text-slate-200">
-            <FileSignature className="h-4 w-4 shrink-0 text-cyan-300" />
-            <span className="truncate">{dosya.name}</span>
-            <button
-              type="button"
-              onClick={() => setDosya(null)}
-              className="ml-auto shrink-0 text-[12px] font-semibold text-slate-400 hover:text-slate-200"
-            >
-              ×
-            </button>
+          /* Karşı tarafa imzaya gidecek belge kart kart görünür — yanlış dosyayı
+             göndermek geri alınamaz, ad satırı tek başına yetmiyordu. */
+          <div>
+            <div className="mb-2 flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] text-slate-200">
+              <FileSignature className="h-4 w-4 shrink-0 text-cyan-300" />
+              <span className="truncate">{dosya.name}</span>
+              <button
+                type="button"
+                onClick={() => setDosya(null)}
+                className="ml-auto shrink-0 text-[12px] font-semibold text-slate-400 hover:text-slate-200"
+              >
+                ×
+              </button>
+            </div>
+            <ToolFilePreview file={dosya} password="" pageCount={null} language={language} />
           </div>
         ) : (
           <WorkspaceUploadField
