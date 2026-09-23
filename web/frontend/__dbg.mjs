@@ -1,0 +1,21 @@
+import { chromium } from "playwright";
+const [SP, pdf] = process.argv.slice(2);
+const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1300, height: 1000 } });
+pg.on("pageerror", (e) => console.log("PAGEERR", e.message));
+pg.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") console.log("KONSOL", m.type(), m.text().slice(0, 200)); });
+await pg.addInitScript(() => { try { localStorage.setItem("pdfEditorTourSeen", "1"); } catch {} });
+await pg.goto("http://localhost:5173/tools/pdf-duzenle", { waitUntil: "networkidle" });
+await pg.locator("input[type=file]").first().setInputFiles(pdf);
+await pg.waitForTimeout(8000);
+await pg.screenshot({ path: `${SP}/dbg.png` });
+console.log(await pg.evaluate(() => { const c = document.querySelector("[data-tour='editor-canvas'] canvas"); return c ? JSON.stringify(c.getBoundingClientRect()) + " w=" + c.width : "canvas yok"; }));
+const info = await pg.evaluate(() => {
+  const c = document.querySelector("[data-tour='editor-canvas'] canvas").getBoundingClientRect();
+  const s = c.width / 595;
+  const x = c.x + 150 * s, y = c.y + 280 * s;
+  const el = document.elementFromPoint(x, y);
+  const texts = [...document.querySelectorAll("[data-tour='editor-canvas'] [title]")].map((d) => { const r = d.getBoundingClientRect(); return [d.title.slice(0, 12), Math.round((r.y - c.y) / s), Math.round((r.bottom - c.y) / s), Math.round((r.x - c.x) / s)]; }).filter((a) => a[1] > 250 && a[1] < 320);
+  return JSON.stringify({ tag: el?.tagName, title: el?.getAttribute("title"), cls: (el?.className || "").toString().slice(0, 60), texts });
+});
+console.log(info);
+await b.close();
