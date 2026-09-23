@@ -15,6 +15,7 @@ import { nUpYap, kitapcikYap } from "../../lib/pdfImposition";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { ToolFilePreview } from "../common/ToolFilePreview";
 
 const METIN = {
   tr: {
@@ -72,6 +73,8 @@ export function PdfLayoutTool({
   const t = METIN[language === "tr" ? "tr" : "en"];
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("belge.pdf");
+  /** Sayfa önizlemesi için özgün dosya — ızgara File ile çalışır. */
+  const [file, setFile] = useState<File | null>(null);
   const [kip, setKip] = useState<Kip>("nup");
   const [adet, setAdet] = useState(4);
   const [cerceve, setCerceve] = useState(false);
@@ -85,6 +88,7 @@ export function PdfLayoutTool({
     try {
       setBytes(new Uint8Array(await f.arrayBuffer()));
       setFileName(f.name);
+      setFile(f);
     } catch {
       setHata(METIN.tr.failed);
     }
@@ -143,10 +147,19 @@ export function PdfLayoutTool({
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="mb-4 flex items-center gap-2 text-[13px] text-slate-400">
-        <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
-        <span className="truncate">{fileName}</span>
-      </div>
+      {/* Seçilen belge kart kart görünür — sayfa düzeni işinde hangi sayfaların
+          hangi sırada olduğunu görmeden karar vermek zor. Dosya yoksa (nadiren)
+          eski ad satırına düşülür. */}
+      {file ? (
+        <div className="mb-4">
+          <ToolFilePreview file={file} password="" pageCount={null} language={language} />
+        </div>
+      ) : (
+        <div className="mb-4 flex items-center gap-2 text-[13px] text-slate-400">
+          <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
+          <span className="truncate">{fileName}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2.5">
         {([
@@ -212,7 +225,7 @@ export function PdfLayoutTool({
       <div className="mt-5 flex gap-2.5">
         <button
           type="button"
-          onClick={() => setBytes(null)}
+          onClick={() => { setBytes(null); setFile(null); }}
           className="shrink-0 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200"
         >
           {t.another}

@@ -141,6 +141,14 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/gorsel-boyutlandir" ||
     rawPath === "/tools/pdf-kesit-al" ||
     rawPath === "/tools/udf-to-pdf" ||
+    // Aşağıdaki dördü REGISTRY'de (workspace araç listesi) YOKTUR — kendi
+    // panelleri vardır. Bu yüzden parseWorkspaceToolPath onları tanımıyordu ve
+    // doğrudan adresle gelen ziyaretçi ana sayfaya atılıyordu (arama sonucundan
+    // ya da paylaşılan bağlantıdan gelen herkes).
+    rawPath === "/tools/sayfa-duzeni" ||
+    rawPath === "/tools/form-doldur" ||
+    rawPath === "/tools/ustveri-temizle" ||
+    rawPath === "/tools/imza-iste" ||
     rawPath === "/pdf-api" ||
     rawPath.startsWith("/pdf-api/") ||
     rawPath === "/blog" ||
@@ -213,6 +221,8 @@ export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/crop-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
+  "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
+  "/tools/imza-iste",
 ]);
 export function isFullPageSeoToolPath(p: string): boolean {
   return FULLPAGE_SEO_TOOL_PATHS.has(p);
