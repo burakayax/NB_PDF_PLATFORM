@@ -19,6 +19,14 @@ _app.include_router(_extra_router)
 client = TestClient(_app)
 
 
+@pytest.fixture(autouse=True)
+def _no_fork_sandbox(monkeypatch):
+    """Uç noktalar Linux'ta fork sandbox kullanır; TestClient uygulamayı ayrı bir iş parçacığında
+    çalıştırdığı için çok iş parçacıklı süreçte fork KİLİTLENEBİLİR (CI'da pytest 38 dk takıldı).
+    Testte işlev doğrudan çalışsın — davranış aynı, yalnız izolasyon yok."""
+    monkeypatch.setenv("PDF_SANDBOX_ENABLED", "false")
+
+
 def _spans(page):
     return [s for b in page.get_text("dict")["blocks"] for l in b.get("lines", []) for s in l["spans"]]
 
