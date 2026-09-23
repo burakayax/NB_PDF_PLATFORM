@@ -193,6 +193,8 @@ export type PdfElement = {
   ws?: number;
   /** Yeniden kullanılabilir orijinal gömülü font (PdfAnalysis.fonts anahtarı). */
   ofont?: string;
+  /** Görüntüdeki yazının (OCR/görünmez katman) GERÇEK mürekkep sınırı — silme/örtme bunu kapsar. */
+  ink?: [number, number, number, number];
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
