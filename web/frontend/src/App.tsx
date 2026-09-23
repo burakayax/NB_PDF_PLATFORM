@@ -847,10 +847,12 @@ function App() {
     ];
   }, [language, isMobileOrTablet]);
   const handleTourClose = useCallback(
-    ({ shown, dontShowAgain }: { completed: boolean; shown: boolean; dontShowAgain: boolean }) => {
+    ({ completed, shown, dontShowAgain }: { completed: boolean; shown: boolean; dontShowAgain: boolean }) => {
       setTourOpen(false);
-      if (dontShowAgain) {
-        // Kullanıcı "bir daha gösterme" dedi → kalıcı gizle.
+      if (dontShowAgain || completed) {
+        // "Bir daha gösterme" ya da turu sonuna kadar izledi → kalıcı gizle.
+        // Tamamlayan kullanıcıya turu bir daha açmak, öğrettiğimiz şeyi geri
+        // almak gibi: her girişte aynı pencereyle karşılaşıyordu.
         try {
           localStorage.setItem("nb_tour_optout_v1", "1");
         } catch {
@@ -860,7 +862,9 @@ function App() {
         // Hedefler hazır değildi → koşullar tekrar sağlanınca yeniden denensin.
         tourStartedRef.current = false;
       }
-      // shown && !dontShowAgain: işaretleme YOK → bir sonraki GİRİŞTE (yeni oturum) tekrar gösterilir.
+      // Gösterildi ama tamamlanmadı (atlandı): bu OTURUMDA bir daha açılmaz;
+      // işaret `tourStartedRef` değil sessionStorage'dadır, çünkü ref sayfa
+      // yenilenince sıfırlanıyor ve tur her yenilemede geri geliyordu.
     },
     [],
   );
@@ -892,11 +896,31 @@ function App() {
       /* yoksay */
     }
     if (optedOut && !forced) return;
+    // BU OTURUMDA zaten gösterildi mi? Eskiden tek engel `tourStartedRef`'ti;
+    // o bir ref olduğu için sayfa her yenilendiğinde sıfırlanıyor ve tur tekrar
+    // tekrar açılıyordu (canlıda görüldü: Pro kullanıcıda her yenilemede geldi,
+    // üstelik pencere altındaki araca tıklamayı da engelliyordu).
+    let gosterildiBuOturumda = false;
+    try {
+      gosterildiBuOturumda = sessionStorage.getItem("nb_tour_shown_session") === "1";
+    } catch {
+      /* private mode */
+    }
+    if (gosterildiBuOturumda && !forced) return;
+    // Kendi tam ekran ekranı olan araçlarda (PDF Düzenle, İmzala, İşaretle…)
+    // turu hiç başlatma: adımların hedefleri orada yok, tur "1/1"e düşüyor ve
+    // üstteki katman aracın kendisine tıklamayı engelliyor.
+    if (contentPanel !== "tool" && !forced) return;
     tourStartedRef.current = true;
+    try {
+      sessionStorage.setItem("nb_tour_shown_session", "1");
+    } catch {
+      /* private mode */
+    }
     // Layout (sidebar/form) otursun diye kısa gecikme sonra başlat.
     const timer = window.setTimeout(() => setTourOpen(true), 900);
     return () => window.clearTimeout(timer);
-  }, [isAuthenticated, isRestoring, view, user?.role]);
+  }, [isAuthenticated, isRestoring, view, user?.role, contentPanel]);
 
   // Masaüstü/telefon ayrımı (isMobileOrTablet yukarıda, tur adımlarından önce tanımlı).
   // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
