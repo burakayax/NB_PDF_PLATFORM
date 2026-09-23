@@ -152,6 +152,8 @@ export type PdfTextEdit = {
   hs?: number;
   cs?: number;
   ws?: number;
+  /** Orijinal gömülü fontun anahtarı — tüm harfler belgede bu fontla doğrulanmışsa sunucu onunla yazar. */
+  ofont?: string;
   /** Resim EKLEME op'u: base64 data URL. Doluysa bu op bir görsel yerleştirmedir
    * (altındaki içerik silinmez); bbox konum/boyut, rotate serbest açı (derece). */
   image?: string;
@@ -189,9 +191,13 @@ export type PdfElement = {
   hs?: number;
   cs?: number;
   ws?: number;
+  /** Yeniden kullanılabilir orijinal gömülü font (PdfAnalysis.fonts anahtarı). */
+  ofont?: string;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
+  /** Orijinal gömülü fontlar (onarılmış TTF, base64) + belgede doğrulanmış harfleri. */
+  fonts?: Record<string, { b64: string; chars: string }>;
 };
 
 /** PDF'in her sayfasındaki öğeleri (metin+görsel, bbox/renk/boyut) döndürür.

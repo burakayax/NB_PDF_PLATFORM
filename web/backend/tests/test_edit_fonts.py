@@ -6,10 +6,17 @@ import fitz
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core import edit_fonts as ef
-from app.main import app
+from fastapi import FastAPI
 
-client = TestClient(app)
+from app.api.tool_routes_extra import router as _extra_router
+from app.core import edit_fonts as ef
+from app.limiter import limiter
+
+# Yalnız ilgili router (app.main'in tamamı .env yükleyip diğer testlerin ortamını değiştirir).
+_app = FastAPI()
+_app.state.limiter = limiter
+_app.include_router(_extra_router)
+client = TestClient(_app)
 
 
 def _spans(page):
@@ -127,3 +134,36 @@ def test_rich_html_missing_glyph_goes_to_class_fallback():
     html = "<div style=\"font-family:'Carlito';font-size:14px\">Tutar &amp; 12.500 ₺</div>"
     out = ef.wrap_missing_glyphs(html)
     assert "font-family:'Roboto'\">₺</span>" in out and "&amp;" in out
+
+
+def _subset_font_pdf() -> bytes:
+    """Gömülü ALT KÜME TrueType font içeren belge (Word çıktısı gibi): yalnız kullanılan harfler dolu."""
+    d = fitz.open()
+    p = d.new_page()
+    path = ef.family_path("carlito")
+    p.insert_font(fontname="W", fontfile=path)
+    p.insert_text((72, 100), "Blind users table", fontname="W", fontsize=11)
+    d.subset_fonts()
+    return d.tobytes()
+
+
+def test_original_font_reused_only_for_verified_chars():
+    pdf = _subset_font_pdf()
+    a = client.post("/api/pdf-analyze", files={"file": ("a.pdf", pdf, "application/pdf")}).json()
+    el = next(e for e in a["pages"][0]["elements"] if e["type"] == "text")
+    assert el.get("ofont") and el["ofont"] in a["fonts"]
+    chars = a["fonts"][el["ofont"]]["chars"]
+    assert set("Blindusertab ") <= set(chars) and "ş" not in chars and "Z" not in chars
+    base = {"page": 0, "bbox": el["bbox"], "size": el["size"], "font": el["font"], "by": el["by"],
+            "vt": True, "osz": el["size"], "ofont": el["ofont"]}
+    ops = [dict(base, text="Blind table")]  # yalnız belgedeki harfler → orijinal font
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, data={"edits": json.dumps(ops)})
+    orig_font = next(s["font"] for s in _spans(fitz.open("pdf", pdf)[0]))
+    fonts = {s["font"] for s in _spans(fitz.open("pdf", r.content)[0]) if "Blind" in s["text"]}
+    assert fonts and all(f.split(" ")[0].split("-")[0] == orig_font.split("-")[0] or f.startswith("Carlito") for f in fonts)
+    # yeni harf (Z, ş) → orijinal font KULLANILMAZ (boş glif riski), ölçü-uyumlu aile
+    ops = [dict(base, text="Zeynep Şişli")]
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, data={"edits": json.dumps(ops)})
+    out = [s for s in _spans(fitz.open("pdf", r.content)[0]) if "Zeynep" in s["text"]]
+    assert out and out[0]["font"] == "Carlito Regular"
+

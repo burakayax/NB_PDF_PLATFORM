@@ -57,9 +57,9 @@ def metric_family_for(font_name: str | None) -> str | None:
     if not n:
         return None
     # Aynı adı taşıyan ama ölçüsü FARKLI kesitler (dar/siyah/Neue) eşleşmesin.
-    if "calibri" in n and "light" not in n:
+    if ("calibri" in n and "light" not in n) or "carlito" in n:
         return "carlito"
-    if "cambria" in n and "math" not in n:
+    if ("cambria" in n and "math" not in n) or "caladea" in n:
         return "caladea"
     if "georgia" in n or "gelasio" in n:
         return "gelasio"
@@ -204,6 +204,97 @@ def insert_spaced(page: Any, x: float, baseline: float, text: str, size: float, 
                 page.insert_text(fitz.Point(cx, baseline), ch, **kw)
             cx += f.text_length(ch, fontsize=size) * hs + cs + (ws if ch == " " else 0.0)
     return cx - x
+
+
+# ─── Orijinal (PDF'e gömülü) fontun yeniden kullanımı ────────────────────────────────────
+# Alt küme (subset) fontlarda belgede KULLANILMAYAN harfler BOŞ gliftir (ölçüldü: Calibri alt
+# kümesinde "ş/ğ/Z" boş) ve Word bazen harf tablosunu (cmap) boş/bozuk bırakır → font körü
+# körüne kullanılamaz. Güvenli yol: belgede o fontla GERÇEKTEN çizilmiş harflerin (texttrace:
+# unicode → glif no) doğrulanmış eşlemesinden cmap'i YENİDEN kur; yalnız bu harflerden oluşan
+# yeni metin orijinal fontla yazılır (glif şekli birebir), diğerleri ölçü-uyumlu aileye düşer.
+# Yalnız TrueType (glyf) fontlar: tarayıcı önizlemesi de aynı dosyayı yükleyebilsin diye.
+_ORIG_MAX_BYTES = 400_000
+_ORIG_MAX_PAGES = 60
+
+
+def _base_name(name: str) -> str:
+    return re.sub(r"^[A-Z]{6}\+", "", name or "")
+
+
+def original_fonts(doc: Any) -> dict[str, dict]:
+    """Belgedeki yeniden kullanılabilir gömülü TrueType fontlar.
+
+    Dönüş: {font_adı (alt küme öneki yok): {"key": xref, "buf": onarılmış TTF, "chars": str}}.
+    Aynı adı taşıyan birden çok gömülü font varsa (hangi span'in hangisini kullandığı
+    bilinemez) o ad ATLANIR — yanlış glif riski alınmaz."""
+    import io
+
+    from fontTools.ttLib import TTFont, newTable
+    from fontTools.ttLib.tables._c_m_a_p import cmap_format_4
+
+    xrefs_by_name: dict[str, set[int]] = {}
+    use: dict[str, dict[int, set[int]]] = {}
+    for pi in range(min(doc.page_count, _ORIG_MAX_PAGES)):
+        page = doc[pi]
+        for (xref, _ext, _typ, base, *_r) in page.get_fonts(full=True):
+            xrefs_by_name.setdefault(_base_name(base), set()).add(xref)
+        try:
+            for sp in page.get_texttrace():
+                if int(sp.get("type", 0)) == 3:  # görünmez katman: şekil doğrulanamaz
+                    continue
+                m = use.setdefault(str(sp.get("font", "")), {})
+                for ch in sp["chars"]:
+                    m.setdefault(int(ch[0]), set()).add(int(ch[1]))
+        except Exception:
+            continue
+    out: dict[str, dict] = {}
+    for name, xs in xrefs_by_name.items():
+        if len(xs) != 1 or name not in use:
+            continue
+        xref = next(iter(xs))
+        try:
+            _n, ext, _t, buf = doc.extract_font(xref)
+            if ext != "ttf" or not buf or len(buf) > _ORIG_MAX_BYTES:
+                continue
+            tt = TTFont(io.BytesIO(buf))
+            if "glyf" not in tt:
+                continue
+            order = tt.getGlyphOrder()
+            glyf = tt["glyf"]
+            verified: dict[int, str] = {}
+            for u, gids in use[name].items():
+                if len(gids) != 1:
+                    continue
+                g = next(iter(gids))
+                if g >= len(order):
+                    continue
+                gn = order[g]
+                if u == 32 or glyf[gn].numberOfContours != 0:
+                    verified[u] = gn
+            if 32 not in verified and "space" in order:
+                verified[32] = "space"
+            if len(verified) < 2:
+                continue
+            tabs = []
+            for pid, eid in ((0, 3), (3, 1)):
+                st = cmap_format_4(4)
+                st.platformID, st.platEncID, st.language = pid, eid, 0
+                st.cmap = dict(verified)
+                tabs.append(st)
+            tt["cmap"] = newTable("cmap")
+            tt["cmap"].tableVersion = 0
+            tt["cmap"].tables = tabs
+            bio = io.BytesIO()
+            tt.save(bio)
+            out[name] = {"key": str(xref), "buf": bio.getvalue(),
+                         "chars": "".join(sorted(chr(u) for u in verified))}
+        except Exception:
+            continue
+    return out
+
+
+def original_font_covers(info: dict, text: str) -> bool:
+    return bool(text) and all(ch in info["chars"] for ch in text)
 
 
 _FALLBACK_CSS = {"sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono"}
