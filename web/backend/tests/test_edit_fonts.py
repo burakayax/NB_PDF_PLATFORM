@@ -199,3 +199,18 @@ def test_direct_pdf_path_requires_login():
     r = client.post("/api/edit-text", files={"file": ("a.pdf", d.tobytes(), "application/pdf")},
                     data={"edits": json.dumps([op])})
     assert r.status_code == 401
+
+
+def test_searchable_scan_invisible_layer_fully_flagged():
+    """Aranabilir taramanın görünmez katmanı (Tr 3) EKSİKSİZ işaretlenmeli — yoksa sayfa
+    taranmış sayılmaz ve OCR önerilmez."""
+    d = fitz.open()
+    p = d.new_page()
+    pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 400, 560), False)
+    pix.clear_with(245)
+    p.insert_image(p.rect, pixmap=pix)
+    for i, w in enumerate(["Kira", "Sözleşmesi", "Şartları", "İşbu", "a", "b"]):
+        p.insert_text((60 + i * 70, 100), w, fontsize=18, render_mode=3)
+    r = client.post("/api/pdf-analyze", files={"file": ("a.pdf", d.tobytes(), "application/pdf")}).json()
+    txt = [e for e in r["pages"][0]["elements"] if e["type"] == "text"]
+    assert txt and all(e.get("inv") for e in txt)

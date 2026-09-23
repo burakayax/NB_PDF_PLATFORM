@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ProductTour, type TourStep } from "../onboarding/ProductTour";
-import { fillPageTextColors, ocrScannedPagesLocal } from "../../lib/pdfAnalyzeClient";
+import { fillPageTextColors, mergeInvisibleWords, ocrScannedPagesLocal, scannedPageIndexes } from "../../lib/pdfAnalyzeClient";
 import {
   analyzePdf,
   editPdfTextPrepare,
@@ -291,7 +291,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const pageImages = addedImages.filter((a) => a.page === current);
   const editCount = edits.size + added.length + addedImages.length;
   // Taranmış PDF: hiç metin katmanı yok (yalnız görsel) → var olan yazı düzenlenemez.
-  const scanned = !!analysis && !analysis.pages.some((p) => p.elements.some((e) => e.type === "text"));
+  // Sayfa bazlı: görüntü ağırlıklı ve düzenlenebilir yazısı olmayan sayfa varsa OCR önerilir
+  // (tek bir "Sayfa 1" yazısı artık tüm taramayı gizlemez).
+  const scanned = !!analysis && scannedPageIndexes(analysis).length > 0;
 
   async function pickFile(f: File | undefined) {
     setError(null);
@@ -310,7 +312,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       ]);
       colorDoneRef.current.clear();
       setDoc(d);
-      setAnalysis(a);
+      setAnalysis(mergeInvisibleWords(a));
       setPageCount(d.numPages);
       setCurrent(0);
       setEdits(new Map());
@@ -455,6 +457,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   // OCR / görünmez katman / görselde yazı görüntünün parçası → tam kutu (sunucu da orayı boyar).
   function coverY(el: PdfElement): [number, number] {
     const [, y0, , y1] = el.bbox;
+    if (el.ink) return [Math.min(y0, el.ink[1]), Math.max(y1, el.ink[3])];
     if (el.type !== "text" || el.ocr || el.inv || el.by == null) return [y0, y1];
     const sz = el.size ?? (y1 - y0) / 1.2;
     const topF = /[ÂÊÎÔÛÄËÏÖÜÀÈÌÒÙÁÉÍÓÚİÅÃÑ]/.test(el.text ?? "") ? 1.0 : 0.85;
@@ -874,14 +877,17 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         const [x0, y0, x1, y1] = el.bbox;
         if (ed?.deleted) {
           // Silme (metin veya görsel) → orijinali arka planla kapat.
-          ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by, ...vtOf(el) });
+          ops.push({ page: p, bbox: el.bbox, clear: el.ink, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by, ...vtOf(el) });
           continue;
         }
         if (el.type !== "text") continue;
         const richHtml = ed?.html && /<[a-z]/i.test(ed.html) ? ed.html : undefined;
         const changed = ed && ((ed.text !== undefined && ed.text !== el.text) || ed.color !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined || ed.italic !== undefined || ed.underline !== undefined || ed.strike !== undefined || ed.align !== undefined || !!richHtml);
         let drawBbox: [number, number, number, number] = shift > 0.5 ? [x0 + shift, y0, x1 + shift, y1] : el.bbox;
-        let clearBbox: [number, number, number, number] | undefined = shift > 0.5 ? [x0, y0, x1, y1] : undefined;
+        // Görüntüdeki yazıda (OCR/görünmez katman) silinecek alan = GERÇEK mürekkep sınırı (el.ink):
+        // OCR kutusu harf uçlarından dar → uçlar kalıyordu.
+        const clearBase: [number, number, number, number] = el.ink ?? [x0, y0, x1, y1];
+        let clearBbox: [number, number, number, number] | undefined = shift > 0.5 || el.ink ? clearBase : undefined;
         // Hizalama merkez/sağ → çizim kutusunu SAYFA genişliğine yay (orijinal x0'ı simetrik
         // marj al), orijinali `clear` ile temizle → ortala/sağa-yasla GERÇEKTEN çalışır
         // (öğenin dar kutusunda hizalama görünmezdi).
@@ -890,7 +896,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           const pageW = analysis.pages[p].width;
           const m = Math.max(0, Math.min(x0, pageW - x1));
           drawBbox = [m, y0, pageW - m, y1];
-          clearBbox = [x0, y0, x1, y1];
+          clearBbox = clearBase;
         }
         if (changed && richHtml) {
           // Kelime bazlı zengin biçim → insert_htmlbox ile parça parça renk/kalın/italik/
@@ -1203,7 +1209,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     if (!activeCover) return null;
                     const [x0, y0, x1, y1] = el.bbox;
                     const [cy0, cy1] = coverY(el);
-                    return <div key={`cover_${el.id}`} className="pointer-events-none absolute" style={{ left: x0 * scale - 1, top: cy0 * scale - 1, width: Math.max((x1 - x0 + Math.max(0, shift)) * scale, 4) + 2, height: Math.max((cy1 - cy0) * scale, 6) + 2, backgroundColor: bgFor(el.id) }} />;
+                    const cx0 = el.ink ? Math.min(x0, el.ink[0]) : x0, cx1 = el.ink ? Math.max(x1, el.ink[2]) : x1;
+                    return <div key={`cover_${el.id}`} className="pointer-events-none absolute" style={{ left: cx0 * scale - 1, top: cy0 * scale - 1, width: Math.max((cx1 - cx0 + Math.max(0, shift)) * scale, 4) + 2, height: Math.max((cy1 - cy0) * scale, 6) + 2, backgroundColor: bgFor(el.id) }} />;
                   })}
                   {/* İçerik katmanı — mevcut öğeler (görseller altta) */}
                   {pageElsStacked.map((el) => {

@@ -1110,13 +1110,23 @@ async def tool_pdf_analyze(
                     # görüntü pikselleri de örtülmeli (vektör yazı gibi yalnız harf silinmez).
                     _inv_boxes: list[Any] = []
                     _trace: list[tuple[Any, str, float]] = []  # (kutu, font, yatay boyut) — Tz ölçümü
+                    # Yalnız görünmez yazıda kullanılan fontlar (ör. OCR programlarının "GlyphLessFont"u):
+                    # kutu eşleştirmesi texttrace kutuları daha dar olduğu için kelimelerin ~yarısını
+                    # kaçırıyordu (ölçüldü: 31 kelimeden 16'sı) → font adına göre de işaretlenir.
+                    _vis_fonts: set[str] = set()
+                    _invis_fonts: set[str] = set()
                     try:
                         for _tt in page.get_texttrace():
+                            _tf = str(_tt.get("font", ""))
                             if int(_tt.get("type", 0)) == 3:
                                 _inv_boxes.append(_fitz.Rect(_tt["bbox"]))
-                            _trace.append((_fitz.Rect(_tt["bbox"]), str(_tt.get("font", "")), float(_tt.get("size", 0))))
+                                _invis_fonts.add(_tf)
+                            else:
+                                _vis_fonts.add(_tf)
+                            _trace.append((_fitz.Rect(_tt["bbox"]), _tf, float(_tt.get("size", 0))))
                     except Exception:
                         _inv_boxes = []
+                    _invis_only = _invis_fonts - _vis_fonts
                     # Taranmış sayfa (metin katmanı yok) + ocr=1 → Tesseract OCR ile metni tanı,
                     # KOORDİNATLI span'ler döndür (aynı yapı) → editörde düzenlenebilir olsun.
                     if want_ocr:
@@ -1186,9 +1196,9 @@ async def tool_pdf_analyze(
                                     # AYNI SATIRDA birleştirip tutarlı segment üretsin diye. PyMuPDF'in
                                     # kendi satır segmentasyonu blok/hücreye saygılıdır.
                                     "line": f"{pi}:{bi}:{li}",
-                                    "inv": bool(_inv_boxes) and any(
+                                    "inv": _fname in _invis_only or (bool(_inv_boxes) and any(
                                         _r.contains(_fitz.Point((x0 + x1) / 2, (y0 + y1) / 2)) for _r in _inv_boxes
-                                    ),
+                                    )),
                                     **_sp,
                                     **({"ofont": _orig[_fname]["key"]} if _fname in _orig else {}),
                                 })
