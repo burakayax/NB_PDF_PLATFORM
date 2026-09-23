@@ -501,6 +501,10 @@ export function seriHizala(tarihler: string[], harita: Map<string, number>): num
 }
 
 export function useAnalitikVeri<T>(fabrika: () => T, bagimliliklar: unknown[]): T {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Bağımlılık listesi bilerek dışarıdan geliyor: bu bir sarmalayıcı hook ve
+  // listeyi çağıran taraf belirliyor. React lint kuralları listeyi yerinde bir
+  // dizi olarak görmek istediği için ikisi de burada kapatılıyor — `use-memo`
+  // kuralı bunu hata sayıp CI'ı kırıyordu.
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   return useMemo(fabrika, bagimliliklar);
 }
