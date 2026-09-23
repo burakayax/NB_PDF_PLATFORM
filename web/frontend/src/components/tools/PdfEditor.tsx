@@ -178,6 +178,17 @@ function FillPatch({ src, rect, onClick, title }: {
     // Kenar şeritleri (kutunun hemen DIŞI): sol/sağ sütun, üst/alt satır.
     const left = sctx.getImageData(L - 1, T, 1, H).data, right = sctx.getImageData(L + W, T, 1, H).data;
     const top = sctx.getImageData(L, T - 1, W, 1).data, bottom = sctx.getImageData(L, T + H, W, 1).data;
+    // Bir kenar diğerlerinden çok farklıysa (ör. logo bandın tam kenarında → dışı beyaz sayfa) o kenar
+    // YOK sayılır; yoksa önizleme bantta açık renkli bir geçiş gösteriyordu (canlıda görüldü).
+    const mean = (d: Uint8ClampedArray) => { const m = [0, 0, 0]; const n = d.length / 4; for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; } return m.map((v) => v / Math.max(1, n)); };
+    const sides = { left: mean(left), right: mean(right), top: mean(top), bottom: mean(bottom) };
+    const dist = (a: number[], b: number[]) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+    const ok = (k: keyof typeof sides) => {
+      const others = (Object.keys(sides) as (keyof typeof sides)[]).filter((o) => o !== k).map((o) => sides[o]);
+      const med = [0, 1, 2].map((c) => others.map((o) => o[c]).sort((x, y) => x - y)[1]);
+      return dist(sides[k], med) < 90;
+    };
+    const useL = ok("left"), useR = ok("right"), useT = ok("top"), useB = ok("bottom");
     const img = octx.createImageData(W, H);
     for (let y = 0; y < H; y++) {
       const fy = H > 1 ? y / (H - 1) : 0;
@@ -185,9 +196,14 @@ function FillPatch({ src, rect, onClick, title }: {
         const fx = W > 1 ? x / (W - 1) : 0;
         const o = (y * W + x) * 4;
         for (let k = 0; k < 3; k++) {
-          const hz = left[y * 4 + k] * (1 - fx) + right[y * 4 + k] * fx;
-          const vt = top[x * 4 + k] * (1 - fy) + bottom[x * 4 + k] * fy;
-          img.data[o + k] = (hz + vt) / 2;
+          const L = useL ? left[y * 4 + k] : useR ? right[y * 4 + k] : NaN;
+          const R = useR ? right[y * 4 + k] : L;
+          const T = useT ? top[x * 4 + k] : useB ? bottom[x * 4 + k] : NaN;
+          const B = useB ? bottom[x * 4 + k] : T;
+          const hz = L * (1 - fx) + R * fx;
+          const vt = T * (1 - fy) + B * fy;
+          const hv = Number.isFinite(hz), vv = Number.isFinite(vt);
+          img.data[o + k] = hv && vv ? (hz + vt) / 2 : hv ? hz : vv ? vt : 255;
         }
         img.data[o + 3] = 255;
       }
