@@ -148,7 +148,7 @@ export async function ocrScannedPagesLocal(
         texts.push({
           id: `t${pi}_${ei++}`, type: "text",
           bbox: [r1(x0), r1(y0), r1(x1), r1(y1)],
-          text: g.map((w) => w.text).join(" "), size: r1(size), by: r1(by), font: "sans", bold: false, italic: false,
+          text: g.map((w) => w.text).join(" "), size: r1(size), by: r1(by), font: "sans", bold: false, italic: false, ocr: true,
           line: `${pi}:ocr:${li}`,
         });
       }

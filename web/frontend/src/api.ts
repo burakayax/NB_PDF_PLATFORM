@@ -113,7 +113,8 @@ function appendSaasAccessToken(formData: FormData, accessToken: string | null | 
   }
 }
 
-export type PdfFontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald";
+export type PdfFontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald"
+  | "carlito" | "caladea" | "lsans" | "lserif" | "lmono" | "gelasio";
 
 export type PdfTextEdit = {
   page: number;
@@ -142,6 +143,15 @@ export type PdfTextEdit = {
   bg?: string;
   /** Gerçek taban çizgisi (origin.y, PDF pt) — export'u orijinaliyle hizalar. */
   by?: number;
+  /** VEKTÖR yazı (OCR/görünmez katman değil): sunucu yalnız harfleri taban çizgisi şeridiyle
+   * siler — dolgu yok, altındaki görsel/çizgi korunur, komşu satır silinmez. */
+  vt?: boolean;
+  /** Orijinal font boyutu (pt) — silme şeridinin yüksekliği buna göre (size düzenlenmiş olabilir). */
+  osz?: number;
+  /** Orijinalin yatay ölçeği (Tz; 1 = normal), harf aralığı (Tc, pt), kelime aralığı (Tw, pt). */
+  hs?: number;
+  cs?: number;
+  ws?: number;
   /** Resim EKLEME op'u: base64 data URL. Doluysa bu op bir görsel yerleştirmedir
    * (altındaki içerik silinmez); bbox konum/boyut, rotate serbest açı (derece). */
   image?: string;
@@ -171,6 +181,14 @@ export type PdfElement = {
   italic?: boolean;
   /** Satır grubu id'si (sayfa:blok:satır) — aynı satırdaki span'ları gruplamak için. */
   line?: string;
+  /** Görünmez metin katmanı (aranabilir taranmış PDF) — yazı aslında görüntüde. */
+  inv?: boolean;
+  /** Cihazda OCR ile tanınan metin — yazı görüntüde. */
+  ocr?: boolean;
+  /** Yatay ölçek (Tz), harf aralığı (Tc, pt), kelime aralığı (Tw, pt) — yalnız anlamlıysa gelir. */
+  hs?: number;
+  cs?: number;
+  ws?: number;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
