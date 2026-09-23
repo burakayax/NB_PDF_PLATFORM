@@ -136,7 +136,6 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/hassas-veri-gizle" ||
     rawPath === "/tools/belge-tara" ||
     rawPath === "/tools/aranabilir-pdf" ||
-    rawPath === "/tools/crop-pdf" ||
     rawPath === "/tools/gorsel-sikistir" ||
     rawPath === "/tools/gorsel-boyutlandir" ||
     rawPath === "/tools/pdf-kesit-al" ||
@@ -219,7 +218,7 @@ export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/pdf-ozetle", "/tools/pdf-sohbet", "/tools/pdf-duzenle", "/tools/pdf-imzala",
   "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
   "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle",
-  "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/crop-pdf", "/tools/gorsel-sikistir",
+  "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
   "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
   "/tools/imza-iste",
@@ -241,7 +240,6 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "sayfa-duzeni": "layout",
   "imza-iste": "signrequest",
   "pdf-yorumla": "annotate",
-  "crop-pdf": "crop",
   "gorsel-sikistir": "compress-image",
   "gorsel-boyutlandir": "resize-image",
   "pdf-kesit-al": "snip",
@@ -263,6 +261,34 @@ export const AI_TOOL_MODES: Record<
   "ai-toplu-islem": "batch",
   "pdf-karsilastir": "compare",
 };
+/**
+ * Panel → araç slug'ı (SPECIAL_TOOL_PANELS'in tersi).
+ *
+ * Kenar çubuğundan özel bir panele geçerken ADRES DE değişmeli: adres eski araçta
+ * kalınca sayfayı yenileyen ya da bağlantıyı paylaşan kişi başka bir araca düşüyor,
+ * ve dosya teslim mantığı adresten okuduğu için bekleyen belge yanlış araca
+ * bağlanıyordu (bkz. App.tsx → openPanelWithOpenPdf).
+ *
+ * Bir panele birden çok slug bağlıysa (aranabilir-pdf / taranmis-pdf-ocr) ilki
+ * kanonik sayılır.
+ */
+export const PANEL_TO_TOOL_SLUG: Partial<Record<ContentPanel, string>> = (() => {
+  const out: Partial<Record<ContentPanel, string>> = {};
+  for (const [slug, panel] of Object.entries(SPECIAL_TOOL_PANELS)) {
+    if (!out[panel]) out[panel] = slug;
+  }
+  return out;
+})();
+
+/** AI modu → araç slug'ı (AI_TOOL_MODES'un tersi). */
+export const AI_MODE_TO_TOOL_SLUG: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  for (const [slug, mode] of Object.entries(AI_TOOL_MODES)) {
+    if (!out[mode]) out[mode] = slug;
+  }
+  return out;
+})();
+
 /** Slug'ın workspace içinde açılabilir bir karşılığı var mı? */
 export function hasInAppPanelForSeoSlug(slug: string): boolean {
   return !!SPECIAL_TOOL_PANELS[slug] || !!AI_TOOL_MODES[slug];
