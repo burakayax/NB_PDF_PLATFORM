@@ -47,7 +47,6 @@ export type ContentPanel =
   | "layout"
   | "signrequest"
   | "annotate"
-  | "crop"
   | "compress-image"
   | "resize-image"
   | "udf"

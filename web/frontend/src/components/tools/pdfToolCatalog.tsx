@@ -85,7 +85,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
       { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
       { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
-      { id: "crop-pdf", icon: <Crop className="h-5 w-5" />, tr: "Kırp", en: "Crop" },
       { id: "flatten-pdf", icon: <Combine className="h-5 w-5" />, tr: "Düzleştir", en: "Flatten" },
       { id: "form-doldur", icon: <FileText className="h-5 w-5" />, tr: "Form Doldur", en: "Fill form" },
       { id: "ustveri-temizle", icon: <Eraser className="h-5 w-5" />, tr: "Üstveri Temizle", en: "Remove metadata" },

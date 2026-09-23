@@ -161,11 +161,6 @@ export const TOOLS: Tool[] = [
     en: { name: "Rotate PDF", desc: "Turn sideways pages the right way up." },
   },
   {
-    id: "crop-pdf", cat: "edit", Icon: Crop, free: true,
-    tr: { name: "PDF Kırp", desc: "Kenar boşluklarını kesip sayfayı daraltın." },
-    en: { name: "Crop PDF", desc: "Cut the margins and tighten the page." },
-  },
-  {
     id: "pdf-kesit-al", cat: "edit", Icon: Scissors, free: true,
     tr: { name: "PDF'ten Kesit Al", desc: "Sayfadan bir alan seçip görsel olarak kaydedin." },
     en: { name: "Snip to Image", desc: "Select an area on the page and save it as an image." },
@@ -417,7 +412,6 @@ export const TOOL_HUE: Record<string, HueId> = {
   "organize-pdf": "sky",
   "delete-pages": "rose",
   "rotate-pdf": "cyan",
-  "crop-pdf": "teal",
   "pdf-kesit-al": "lime",
   compress: "emerald",
   "gorsel-sikistir": "emerald",

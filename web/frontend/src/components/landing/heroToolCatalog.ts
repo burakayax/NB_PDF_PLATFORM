@@ -64,7 +64,6 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
     en: "Edit",
     items: [
       { k: "editor" },
-      { k: "free", id: "crop-pdf" },
       { k: "page", slug: "pdf-kesit-al", Icon: Crop, tr: "Kesit Al", en: "Snip" },
       { k: "page", slug: "pdf-imzala", Icon: PenTool, tr: "İmzala", en: "Sign" },
       { k: "page", slug: "pdf-yorumla", Icon: Highlighter, tr: "İşaretle", en: "Annotate" },

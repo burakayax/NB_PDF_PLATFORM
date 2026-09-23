@@ -297,6 +297,20 @@ async function main() {
     }
   }
 
+  // 2b) EMEKLİ ARAÇLAR — kaldırılan bir aracın adresi 404 olmamalı.
+  //
+  // Araç siteden kaldırılınca prerender klasörü de silinir, yani yukarıdaki
+  // sayfa kuralı artık üretilmez ve adres en sondaki `/*` kuralına düşer:
+  // ziyaretçi "sayfa bulunamadı" görür, aramadaki sıralama da boşa gider.
+  // Kalıcı yönlendirme (301) hem ziyaretçiyi halef araca götürür hem de
+  // sıralamayı ona aktarır. Kural sayfa kurallarından ÖNCE gelir.
+  const emekliAraclar = [
+    // PDF Kırp kaldırıldı; işini PDF'ten Kesit Al görüyor (alan seçip PDF ya da
+    // görsel olarak kaydetme). 2026-09-23.
+    { type: "redirect", source: "/tools/crop-pdf", destination: "/tools/pdf-kesit-al" },
+    { type: "redirect", source: "/en/tools/crop-pdf", destination: "/en/tools/crop-pdf-to-image" },
+  ];
+
   // 3) Blog joker kuralları (sayfa kurallarından SONRA, /*'tan ÖNCE).
   const blogJoker = [
     { type: "rewrite", source: "/blog/:slug", destination: "/blog/:slug/index.html" },
@@ -306,6 +320,7 @@ async function main() {
   // 4) En sonda uygulama yedeği.
   const ham = [
     ...korunan,
+    ...emekliAraclar,
     ...sayfaKurallari,
     ...blogJoker,
     { type: "rewrite", source: "/*", destination: "/index.html" },

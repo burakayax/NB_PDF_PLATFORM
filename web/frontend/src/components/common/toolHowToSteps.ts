@@ -98,30 +98,18 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
-  "crop-pdf": S(
-    [
-      PICK_TR(),
-      { title: "Kalsın istediğin yeri seç", detail: "Sayfanın üstündeki kutuyu sürükle, köşelerinden büyütüp küçült. Kutunun dışı kesilir." },
-      { title: "Nereye uygulansın?", detail: "«Tüm sayfalar», «Bu sayfa» ya da «Sayfa sayfa» seç, sonra «Kırp ve İndir» de." },
-    ],
-    [
-      PICK_EN(),
-      { title: "Select what stays", detail: "Drag the box on the page and resize it from the corners. Everything outside the box is cut away." },
-      { title: "Where should it apply?", detail: "Choose «All pages», «This page» or «Each page», then click «Crop & Download»." },
-    ],
-  ),
   "pdf-kesit-al": S(
     [
       PICK_TR(),
       { title: "Sayfada bir alan seç", detail: "Almak istediğin yerin üstünde fareyi basılı tutup sürükle. Kutuyu köşelerinden büyütüp küçültebilirsin." },
       { title: "«Kesiti Ekle» düğmesine bas", detail: "Seçtiğin alan sağdaki listeye düşer. Başka sayfalardan da istediğin kadar ekleyebilirsin." },
-      { title: "Çalışma kâğıdı olarak indir", detail: "Sağ alttaki «Çalışma kâğıdı (A4)» düğmesine bas; kestiğin parçalar sırayla tek bir sayfaya dizilir." },
+      { title: "Nasıl kaydedileceğini seç ve indir", detail: "Sağ alttan biçimi seç: PDF (varsayılan) kesitleri tek belgede toplar, PNG ya da JPEG görsel verir. Sonra «İndir» de." },
     ],
     [
       PICK_EN(),
       { title: "Select an area on the page", detail: "Hold the mouse down and drag over the part you want. Resize the box from its corners." },
       { title: "Click «Add snip»", detail: "Your selection drops into the list on the right. Add as many as you like, from any page." },
-      { title: "Download as a worksheet", detail: "Click «Worksheet (A4)» on the right; your pieces are laid out in order on one page." },
+      { title: "Pick how to save it, then download", detail: "Choose a format on the right: PDF (the default) collects the snips into one document, PNG or JPEG gives you images. Then click «Download»." },
     ],
   ),
   "pdf-duzenle": S(

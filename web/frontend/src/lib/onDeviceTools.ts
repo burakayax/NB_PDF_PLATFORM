@@ -16,7 +16,6 @@
 export const ON_DEVICE_SEO_TOOLS: ReadonlySet<string> = new Set([
   "pdf-imzala",
   "pdf-yorumla",
-  "crop-pdf",
   "pdf-kesit-al",
   "gorsel-sikistir",
   "gorsel-boyutlandir",

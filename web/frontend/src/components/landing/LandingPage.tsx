@@ -23,7 +23,6 @@ import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 
-import { PdfCropTool } from "../tools/PdfCropTool";
 import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
@@ -46,13 +45,12 @@ import {
 } from "lucide-react";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
-export type FreeToolId = "merge" | "image-to-pdf" | "crop-pdf" | "gorsel-sikistir" | PageToolId;
+export type FreeToolId = "merge" | "image-to-pdf" | "gorsel-sikistir" | PageToolId;
 const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf", "split"]);
 const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
 export const isFreeToolId = (id: string): id is FreeToolId =>
   id === "merge" ||
   id === "image-to-pdf" ||
-  id === "crop-pdf" ||
   id === "gorsel-sikistir" ||
   PAGE_TOOL_IDS.has(id);
 /**
@@ -98,7 +96,6 @@ const EDITOR_META: HeroMeta = {
 const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
   merge: { tr: "Birden çok dosyayı sıralayıp tek PDF yapın.", en: "Order several files into one PDF." },
   split: { tr: "İstediğiniz sayfaları ayrı dosya olarak alın.", en: "Pull the pages you choose into a separate file." },
-  "crop-pdf": { tr: "Kenar boşluklarını kesip sayfayı daraltın.", en: "Cut the margins and tighten the page." },
   "image-to-pdf": { tr: "Fotoğrafları sıralayıp tek PDF'te toplayın.", en: "Order photos and collect them in one PDF." },
   "gorsel-sikistir": { tr: "Fotoğrafları kaliteyi koruyarak küçültün.", en: "Make photos smaller while keeping them sharp." },
   "rotate-pdf": { tr: "Yan duran sayfaları düz çevirin.", en: "Turn sideways pages the right way up." },
@@ -109,7 +106,6 @@ const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
   { id: "split", tr: "Böl", en: "Split" },
-  { id: "crop-pdf", tr: "Kırp", en: "Crop" },
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
   { id: "gorsel-sikistir", tr: "Görsel Sıkıştır", en: "Compress Image" },
   { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
@@ -893,8 +889,6 @@ function Hero({
               />
             ) : freeTool === "gorsel-sikistir" ? (
               <ImageCompressTool language={language} />
-            ) : freeTool === "crop-pdf" ? (
-              <PdfCropTool language={language} />
             ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} initialFile={scannedFile} />
             ) : (
