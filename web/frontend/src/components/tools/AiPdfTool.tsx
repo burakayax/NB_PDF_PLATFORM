@@ -421,7 +421,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       if (q) setQuota(q);
       // Her bloğu stil taşıyan HTML'e çevir.
       const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const cssFont = (f?: PdfFontKey) => (f === "serif" || f === "merriweather" ? "serif" : f === "mono" ? "monospace" : "sans-serif");
+      // Ölçü-uyumlu aile (Calibri→Carlito …) varsa sunucudaki gerçek kesitlerle yaz (edit_fonts.py).
+      const METRIC_CSS: Partial<Record<PdfFontKey, string>> = {
+        carlito: "'Carlito', sans-serif", caladea: "'Caladea', serif", lsans: "'Liberation Sans', sans-serif",
+        lserif: "'Liberation Serif', serif", lmono: "'Liberation Mono', monospace", gelasio: "'Gelasio', serif",
+      };
+      const cssFont = (f?: PdfFontKey) => (f && METRIC_CSS[f]) || (f === "serif" || f === "merriweather" ? "serif" : f === "mono" ? "monospace" : "sans-serif");
       // PyMuPDF bir paragraf + sonraki başlığı / bir listenin tüm maddelerini TEK blok sayabilir
       // → düz sarma bunları yan yana bindiriyordu. Çevrilmiş metinde YAPISAL İŞARETÇİ (a) b) …,
       // LOT-N:, Madde/Article N-) ile başlayan run'ların önüne <br> koyarak orijinal satır/liste

@@ -51,7 +51,10 @@ import {
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const uid = () => Math.random().toString(36).slice(2, 9);
-type FontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald";
+// Ölçü-uyumlu aileler (Calibri→carlito …) sunucudaki `edit_fonts.py` ile AYNI dosyalar
+// (public/fonts/edit/*.woff2) → önizleme ölçüsü = indirilen PDF ölçüsü.
+type MetricKey = "carlito" | "caladea" | "lsans" | "lserif" | "lmono" | "gelasio";
+type FontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald" | MetricKey;
 type AlignKey = "left" | "center" | "right";
 // Biçim bayrakları — kalın/italik/altı çizili/üstü çizili + hizalama.
 type Fmt = { bold?: boolean; italic?: boolean; underline?: boolean; strike?: boolean; align?: AlignKey };
@@ -75,15 +78,36 @@ const FONT_CSS: Record<FontKey, string> = {
   montserrat: "Montserrat, system-ui, sans-serif",
   merriweather: "Merriweather, Georgia, serif",
   oswald: "Oswald, 'Arial Narrow', sans-serif",
+  // Yerel kurulu aynı adlı (farklı sürüm) fontla karışmasın diye özel aile adları; eksik harf
+  // (ör. ₺) sunucudaki gibi aynı sınıfın yedeğinden (Roboto / Noto Serif / Roboto Mono).
+  carlito: "'PPE Carlito', Roboto, sans-serif",
+  caladea: "'PPE Caladea', 'Noto Serif', serif",
+  lsans: "'PPE Liberation Sans', Roboto, sans-serif",
+  lserif: "'PPE Liberation Serif', 'Noto Serif', serif",
+  lmono: "'PPE Liberation Mono', 'Roboto Mono', monospace",
+  gelasio: "'PPE Gelasio', 'Noto Serif', serif",
 };
+// Menüde görünen ad: orijinal fontun adı + birebir ölçü notu.
+const FONT_MENU: Record<FontKey, string> = {
+  sans: "Roboto", serif: "Noto Serif", mono: "Roboto Mono", lato: "Lato", montserrat: "Montserrat",
+  merriweather: "Merriweather", oswald: "Oswald",
+  carlito: "Calibri (birebir)", caladea: "Cambria (birebir)", lsans: "Arial / Helvetica (birebir)",
+  lserif: "Times New Roman (birebir)", lmono: "Courier New (birebir)", gelasio: "Georgia (birebir)",
+};
+const METRIC_FILES: Record<MetricKey, string> = {
+  carlito: "Carlito", caladea: "Caladea", lsans: "LiberationSans", lserif: "LiberationSerif", lmono: "LiberationMono", gelasio: "Gelasio",
+};
+const METRIC_CSS_NAME: Record<MetricKey, string> = {
+  carlito: "PPE Carlito", caladea: "PPE Caladea", lsans: "PPE Liberation Sans", lserif: "PPE Liberation Serif", lmono: "PPE Liberation Mono", gelasio: "PPE Gelasio",
+};
+const FONT_KEYS: FontKey[] = ["carlito", "caladea", "lsans", "lserif", "lmono", "gelasio", "sans", "serif", "mono", "lato", "montserrat", "merriweather", "oswald"];
+const isFontKey = (k: unknown): k is FontKey => typeof k === "string" && (FONT_KEYS as string[]).includes(k);
 const FONT_LABEL: Record<FontKey, string> = {
   sans: "Roboto", serif: "Noto Serif", mono: "Roboto Mono",
   lato: "Lato", montserrat: "Montserrat", merriweather: "Merriweather", oswald: "Oswald",
+  // Sunucu (insert_htmlbox) @font-face aile adları — edit_fonts.METRIC_FAMILIES ile aynı.
+  carlito: "Carlito", caladea: "Caladea", lsans: "Liberation Sans", lserif: "Liberation Serif", lmono: "Liberation Mono", gelasio: "Gelasio",
 };
-// Baseline'ı orijinaline oturtmak için: bir metin öğesinin taban çizgisi (origin.y)
-// bilinmiyorsa yaklaşık ascent oranı (Roboto ~0.80). Font-family bazında ufak farklar
-// olsa da göze batmaz; asıl hiza gerçek "by" değeriyle sağlanır.
-const ASCENT_RATIO = 0.8;
 // Hazır renk paleti — hızlı seçim.
 const PRESET_COLORS = ["#111111", "#ffffff", "#e11d48", "#f59e0b", "#16a34a", "#2563eb", "#7c3aed", "#0891b2", "#6b7280", "#000000"];
 
@@ -101,11 +125,35 @@ function sanitizeRichHtml(html: string): string {
     .replace(/\son\w+\s*=\s*[^\s>]+/gi, "");
 }
 
-function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boolean, italic: boolean): number {
+type Spacing = { hs: number; cs: number; ws: number };
+const NO_SPACING: Spacing = { hs: 1, cs: 0, ws: 0 };
+
+function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boolean, italic: boolean, sp: Spacing = NO_SPACING): number {
   const ctx = _measureCanvas?.getContext("2d");
   if (!ctx || !text) return 0;
   ctx.font = `${italic ? "italic " : ""}${bold ? "700 " : "400 "}${sizePt}px ${FONT_CSS[fontKey]}`;
-  return ctx.measureText(text).width;
+  // Sunucudaki edit_fonts.spaced_width ile aynı: glif genişliği×hs + harf başına cs + boşluk başına ws.
+  const spaces = (text.match(/ /g) ?? []).length;
+  return ctx.measureText(text).width * sp.hs + sp.cs * [...text].length + sp.ws * spaces;
+}
+
+// Satır yüksekliği 1 iken taban çizgisinin kutu üstünden uzaklığı (em) — fontun GERÇEK
+// ascent/descent'inden (CSS yarım-aralık kuralı): (1 − (A + D)) / 2 + A. Sabit 0.8 yerine
+// her font için ölçülür → önizleme taban çizgisi indirilen PDF'teki ile aynı.
+const _baselineCache = new Map<string, number>();
+function baselineRatio(fontCss: string, bold: boolean, italic: boolean): number {
+  const key = `${fontCss}|${bold}|${italic}`;
+  const hit = _baselineCache.get(key);
+  if (hit !== undefined) return hit;
+  const ctx = _measureCanvas?.getContext("2d");
+  if (!ctx) return 0.8;
+  ctx.font = `${italic ? "italic " : ""}${bold ? "700 " : "400 "}100px ${fontCss}`;
+  const m = ctx.measureText("Hg");
+  const A = m.fontBoundingBoxAscent, D = m.fontBoundingBoxDescent;
+  if (!(A > 0) || !(D >= 0)) return 0.8;
+  const r = (100 - (A + D)) / 2 / 100 + A / 100;
+  if (document.fonts?.check?.(ctx.font)) _baselineCache.set(key, r); // font yüklenince önbelleğe al
+  return r;
 }
 
 /** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
@@ -196,6 +244,18 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Serif:wght@400;600&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Merriweather:wght@400;700&family=Oswald:wght@400;500;600&display=swap";
     document.head.appendChild(link);
+    if (!document.getElementById("pdf-editor-metric-fonts")) {
+      const st = document.createElement("style");
+      st.id = "pdf-editor-metric-fonts";
+      const faces: string[] = [];
+      for (const k of Object.keys(METRIC_FILES) as MetricKey[]) {
+        for (const [suf, w, it] of [["Regular", 400, "normal"], ["Bold", 700, "normal"], ["Italic", 400, "italic"], ["BoldItalic", 700, "italic"]] as const) {
+          faces.push(`@font-face{font-family:'${METRIC_CSS_NAME[k]}';src:url('/fonts/edit/${METRIC_FILES[k]}-${suf}.woff2') format('woff2');font-weight:${w};font-style:${it};font-display:block;}`);
+        }
+      }
+      st.textContent = faces.join("");
+      document.head.appendChild(st);
+    }
   }, []);
 
   // Mini tur (madde 6): editör ilk açıldığında göster; ?tour=1 ile her zaman tekrar oynat.
@@ -345,7 +405,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   function elText(el: PdfElement): string { return edits.get(el.id)?.text ?? el.text ?? ""; }
   function elColor(el: PdfElement): string { return edits.get(el.id)?.color ?? el.color ?? "#111111"; }
   function elSize(el: PdfElement): number { return edits.get(el.id)?.size ?? el.size ?? 12; }
-  function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? "sans"; }
+  function elSpacing(el: PdfElement): Spacing { return { hs: el.hs ?? 1, cs: el.cs ?? 0, ws: el.ws ?? 0 }; }
+  function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? (isFontKey(el.font) ? el.font : "sans"); }
   function elBold(el: PdfElement): boolean { return edits.get(el.id)?.bold ?? el.bold ?? false; }
   function elItalic(el: PdfElement): boolean { return edits.get(el.id)?.italic ?? el.italic ?? false; }
   function elUnderline(el: PdfElement): boolean { return edits.get(el.id)?.underline ?? false; }
@@ -700,7 +761,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         if (!changed) continue;
         const txt = edits.get(el.id)?.text ?? el.text ?? "";
         const boxW = el.bbox[2] - el.bbox[0];
-        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, (edits.get(el.id)?.font ?? "sans") as FontKey, edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false);
+        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, elFont(el), edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false, elSpacing(el));
         const overflow = w - boxW;
         if (overflow > 1) cum += overflow + 2; // 2pt güvenlik payı
       }
@@ -747,6 +808,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   async function preparePdf() {
     if (!file || !analysis) return;
     const ops: PdfTextEdit[] = [];
+    // Vektör yazı → sunucu şeritle yalnız harfleri siler (dolgu/görsel/çizgiye dokunmaz).
+    const vtOf = (el: PdfElement): Partial<PdfTextEdit> =>
+      el.type === "text" && !el.ocr && !el.inv ? { vt: true, osz: el.size } : {};
     for (let p = 0; p < analysis.pages.length; p++) {
       const sMap = computeShifts(p);
       for (const el of analysis.pages[p].elements) {
@@ -755,7 +819,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         const [x0, y0, x1, y1] = el.bbox;
         if (ed?.deleted) {
           // Silme (metin veya görsel) → orijinali arka planla kapat.
-          ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by });
+          ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by, ...vtOf(el) });
           continue;
         }
         if (el.type !== "text") continue;
@@ -778,37 +842,41 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           // altı-üstü çizili/boyut korunur. Temel stil (renk/boyut/font/hizalama) wrapper'da;
           // iç span'ler parça bazında ezer. Boyut em oranıyla saklandığı için ölçek uyumlu.
           const size = ed!.size ?? el.size ?? 12;
-          const fk = (ed!.font ?? "sans") as FontKey;
+          const fk = elFont(el);
           const baseColor = ed!.color ?? el.color ?? "#111111";
           // Gerçek font adı (Roboto/Noto Serif/…) → backend @font-face ile gömülü TTF'ye çözülür
           // (7 font doğru). Tarayıcı önizlemesindeki adla birebir → önizleme = indirilen.
           const wrapped = `<div style="font-family:'${FONT_LABEL[fk]}';font-size:${size}px;color:${baseColor};text-align:${ed!.align ?? "left"};line-height:1.0;margin:0;padding:0">${sanitizeRichHtml(richHtml)}</div>`;
-          ops.push({ page: p, bbox: drawBbox, clear: clearBbox, html: wrapped, by: el.by, bg: bgMap.get(el.id) });
+          ops.push({ page: p, bbox: drawBbox, clear: clearBbox, html: wrapped, by: el.by, bg: bgMap.get(el.id), ...vtOf(el) });
           continue;
         }
         if (changed) {
           // Düzenlenmiş öğe. Önizlemedeki font ("sans" varsayılan) ile birebir olsun diye
           // ed.font ?? "sans" kullanılır. Taşma varsa noshrink (küçültme yerine komşu kaydı).
           const size = ed!.size ?? el.size ?? 12;
-          const fk = (ed!.font ?? "sans") as FontKey;
+          const fk = elFont(el);
           const bold = ed!.bold ?? el.bold ?? false;
           const italic = ed!.italic ?? el.italic ?? false;
           const txt = ed!.text ?? el.text ?? "";
-          const overflow = measureTextPt(txt, size, fk, bold, italic) - (drawBbox[2] - drawBbox[0]);
+          const overflow = measureTextPt(txt, size, fk, bold, italic, elSpacing(el)) - (drawBbox[2] - drawBbox[0]);
           ops.push({
             page: p, bbox: drawBbox, clear: clearBbox, text: txt, size, color: ed!.color ?? el.color,
             font: fk, by: el.by, bg: bgMap.get(el.id),
             noshrink: overflow > 1 ? true : undefined,
             bold: bold || undefined, italic: italic || undefined,
             underline: ed!.underline || undefined, strike: ed!.strike || undefined, align: ed!.align,
+            hs: el.hs, cs: el.cs, ws: el.ws,
+            ...vtOf(el),
           });
         } else if (shift > 0.5) {
           // Değişmemiş ama SAĞA KAYDIRILAN komşu → orijinalini temizle, aynı içeriği yeni yere
           // yaz (orijinal font/boyut/renk korunur, küçültme yok).
           ops.push({
             page: p, bbox: drawBbox, clear: clearBbox, text: el.text ?? "", size: el.size ?? 12,
-            color: el.color, font: (el.font ?? "sans") as FontKey, by: el.by, bg: bgMap.get(el.id),
+            color: el.color, font: elFont(el), by: el.by, bg: bgMap.get(el.id),
             noshrink: true, bold: el.bold || undefined, italic: el.italic || undefined,
+            hs: el.hs, cs: el.cs, ws: el.ws,
+            ...vtOf(el),
           });
         }
       }
@@ -995,7 +1063,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Font" : "Font"}
                   <select value={font} onMouseDown={captureSelectionForPicker} onChange={(e) => applyFont(e.target.value as FontKey)} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white">
-                    {(["sans", "serif", "mono", "lato", "montserrat", "merriweather", "oswald"] as FontKey[]).map((f) => <option key={f} value={f} className="text-black" style={{ fontFamily: FONT_CSS[f] }}>{FONT_LABEL[f]}</option>)}
+                    {FONT_KEYS.map((f) => <option key={f} value={f} className="text-black" style={{ fontFamily: FONT_CSS[f] }}>{FONT_MENU[f]}</option>)}
                   </select>
                 </label>
                 {/* Boyut — görsel seçicideki gibi buton çiftli (madde 9) */}
@@ -1128,7 +1196,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const richHtml = edits.get(el.id)?.html;
                     const isRich = !!richHtml && /<[a-z]/i.test(richHtml);
                     const rawPx = elSize(el) * scale;
-                    const _txtW = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el));
+                    const _sp = isRich ? NO_SPACING : elSpacing(el);
+                    const _txtW = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el), _sp);
                     const _boxW = x1 - x0;
                     const _noShrink = (edits.has(el.id) && _txtW - _boxW > 1) || shift > 0.5;
                     // Zengin (kelime bazlı) öğede küçültme yok — export htmlbox otomatik ölçekler.
@@ -1137,7 +1206,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                       : 1;
                     const fsPx = rawPx * _fit;
                     const baselinePt = el.by ?? (y0 + (el.size ?? 12));
-                    const textTop = (baselinePt - y0) * scale - ASCENT_RATIO * fsPx;
+                    const textTop = (baselinePt - y0) * scale - baselineRatio(FONT_CSS[elFont(el)], elBold(el), elItalic(el)) * fsPx;
                     const shiftPx = shift * scale;
                     const deco = [elUnderline(el) ? "underline" : "", elStrike(el) ? "line-through" : ""].filter(Boolean).join(" ") || "none";
                     const al = elAlign(el);
@@ -1155,7 +1224,11 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                           onClick={(e) => { e.stopPropagation(); selectEl(el, e.ctrlKey || e.metaKey || e.shiftKey); }}
                           onFocus={() => { if (!multiSel.size) selectEl(el); }}
                           className={`outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ position: "absolute", left: 0, top: textTop, width: textW, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: _aligned ? "transparent" : bgFor(el.id) }} />
+                          style={{ position: "absolute", left: 0, top: textTop, width: textW, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: _aligned ? "transparent" : bgFor(el.id),
+                            // Orijinal harf/kelime aralığı + yatay ölçek (Tc/Tw/Tz) — sunucu çizimiyle aynı.
+                            letterSpacing: _sp.cs ? `${_sp.cs * scale * _fit}px` : undefined,
+                            wordSpacing: _sp.ws ? `${_sp.ws * scale * _fit}px` : undefined,
+                            transform: _sp.hs !== 1 ? `scaleX(${_sp.hs})` : undefined, transformOrigin: "left center" }} />
                       </div>
                     );
                   })}

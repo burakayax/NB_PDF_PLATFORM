@@ -13,6 +13,7 @@ email-validator>=2.0.0
 # PDF motoru (proje kökündeki src.pdf_engine): /api/pdf-to-word, sıkıştırma vb.
 pikepdf>=10
 pymupdf>=1.24
+fonttools>=4.40  # PDF Düzenle: doc.subset_fonts() — gömülen fontların yalnız kullanılan harfleri (çıktı ~30x küçük)
 pdf2docx>=0.5
 pytesseract
 ocrmypdf
