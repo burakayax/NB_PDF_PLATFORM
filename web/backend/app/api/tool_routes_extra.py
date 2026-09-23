@@ -482,6 +482,17 @@ async def tool_edit_text(
                     if not pwd or not doc.authenticate(pwd):
                         raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
                 n = doc.page_count
+                # Orijinal font (op.ofont = xref): onarılmış TTF'i çalışma klasörüne yaz → yol tabanlı
+                # yardımcılar (genişlik/harf bazlı yazım) aynen kullanılır.
+                _orig_paths: dict[str, tuple[str, str]] = {}
+                if any(o.get("ofont") for o in ops):
+                    try:
+                        for _v in _ef.original_fonts(doc).values():
+                            _fp = str(Path(sp).parent / f"orig_{_v['key']}.ttf")
+                            Path(_fp).write_bytes(_v["buf"])
+                            _orig_paths[_v["key"]] = (_fp, _v["chars"])
+                    except Exception:
+                        _orig_paths = {}
                 by_page: dict[int, list] = {}
                 for op in ops:
                     try:
@@ -650,6 +661,11 @@ async def tool_edit_text(
                         baseline = float(by) if by is not None else (y0 + fs)
                         col = _hex_to_rgb01(op.get("color"))
                         _mt = _metric(op)
+                        _of = _orig_paths.get(str(op.get("ofont") or ""))
+                        if _of and all(ch in _of[1] for ch in (op.get("text") or "")):
+                            # Tüm harfler belgede bu fontla doğrulanmış → ORİJİNAL font (birebir glif).
+                            _fb0 = _mt[1] if _mt else _ef.FALLBACK_BY_CLASS["sans"]
+                            _mt = (_of[0], _fb0)
                         fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
                         # WRAP modu (konum-koruyan ÇEVİRİ): op bir PARAGRAF bloğudur → metni
                         # blok dikdörtgenine kelime-kaydırmayla sar (insert_textbox). Tek satır
@@ -677,7 +693,12 @@ async def tool_edit_text(
                         # Madde 3: noshrink → fontu KÜÇÜLTME (komşu metin frontend'de sağa
                         # kaydırıldığı için taşacak yer açıldı). Aksi halde eskisi gibi sığdır.
                         if not op.get("noshrink"):
-                            fs = _fit_size(t, op.get("font") if _mt else fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
+                            if _mt:  # seçilen gerçek fontun (orijinal / ölçü-uyumlu) genişliğiyle sığdır
+                                _tw0 = _ef.text_width(t, _mt[0], _mt[1], fs)
+                                if _tw0 > (x1 - x0) > 1:
+                                    fs = max(fs * ((x1 - x0) / _tw0), 5.0)
+                            else:
+                                fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
                         # Metin genişliği — hizalama + altı/üstü çizgi konumu için.
                         _af = _font_cache.get(fkey)
                         if _af is None:
@@ -1051,6 +1072,13 @@ async def tool_pdf_analyze(
                     if not pwd or not doc.authenticate(pwd):
                         raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
                 pages: list[dict[str, Any]] = []
+                # Yeniden kullanılabilir gömülü fontlar (doğrulanmış harf kümesiyle) — yeni metin
+                # yalnız bu harflerden oluşuyorsa orijinal fontla yazılır (glif şekli birebir).
+                try:
+                    _orig = _ef.original_fonts(doc)
+                except Exception:
+                    _orig = {}
+                _used_orig: set[str] = set()
                 for pi in range(doc.page_count):
                     page = doc[pi]
                     els: list[dict[str, Any]] = []
@@ -1142,6 +1170,7 @@ async def tool_pdf_analyze(
                                         _r.contains(_fitz.Point((x0 + x1) / 2, (y0 + y1) / 2)) for _r in _inv_boxes
                                     ),
                                     **_sp,
+                                    **({"ofont": _orig[_fname]["key"]} if _fname in _orig else {}),
                                 })
                                 ei += 1
                     for img in page.get_image_info():
@@ -1158,7 +1187,15 @@ async def tool_pdf_analyze(
                         "height": round(page.rect.height, 1),
                         "elements": els,
                     })
-                return {"pages": pages}
+                for _e in (e for p_ in pages for e in p_["elements"]):
+                    if _e.get("ofont"):
+                        _used_orig.add(_e["ofont"])
+                import base64 as _b64m
+                _fonts = {
+                    v["key"]: {"b64": _b64m.b64encode(v["buf"]).decode("ascii"), "chars": v["chars"]}
+                    for v in _orig.values() if v["key"] in _used_orig
+                }
+                return {"pages": pages, "fonts": _fonts}
             finally:
                 doc.close()
 

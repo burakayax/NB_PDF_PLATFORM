@@ -128,10 +128,10 @@ function sanitizeRichHtml(html: string): string {
 type Spacing = { hs: number; cs: number; ws: number };
 const NO_SPACING: Spacing = { hs: 1, cs: 0, ws: 0 };
 
-function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boolean, italic: boolean, sp: Spacing = NO_SPACING): number {
+function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boolean, italic: boolean, sp: Spacing = NO_SPACING, css?: string): number {
   const ctx = _measureCanvas?.getContext("2d");
   if (!ctx || !text) return 0;
-  ctx.font = `${italic ? "italic " : ""}${bold ? "700 " : "400 "}${sizePt}px ${FONT_CSS[fontKey]}`;
+  ctx.font = `${italic ? "italic " : ""}${bold ? "700 " : "400 "}${sizePt}px ${css ?? FONT_CSS[fontKey]}`;
   // Sunucudaki edit_fonts.spaced_width ile aynı: glif genişliği×hs + harf başına cs + boşluk başına ws.
   const spaces = (text.match(/ /g) ?? []).length;
   return ctx.measureText(text).width * sp.hs + sp.cs * [...text].length + sp.ws * spaces;
@@ -231,6 +231,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   // Öğe id → örneklenen arka plan rengi (#RRGGBB). Silgi/redaction bu renkle doldurulur
   // (beyaz varsayım yerine) → kırmızı/siyah/resimli zeminde beyaz kutu kalmaz.
   const [bgMap, setBgMap] = useState<Map<string, string>>(new Map());
+  // Orijinal gömülü fontlar: anahtar → (tarayıcı aile adı, belgede doğrulanmış harfler). Yalnız
+  // FontFace başarıyla yüklenenler — sunucu da AYNI kuralla (tüm harfler kümede) orijinali kullanır.
+  const [origFonts, setOrigFonts] = useState<Map<string, { family: string; chars: string }>>(new Map());
   // Eklenen metni serbest sürükleme (taşıma tutamacı).
   const [drag, setDrag] = useState<{ id: string; sx: number; sy: number; ox: number; oy: number } | null>(null);
 
@@ -376,6 +379,29 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     return () => { cancelled = true; };
   }, [doc, current, editorOpen, zoom]);
 
+  // Orijinal gömülü fontları tarayıcıya yükle (FontFace). Yüklenemeyen (tarayıcının reddettiği)
+  // font listeye girmez → o öğe ölçü-uyumlu aileyle önizlenir ve sunucuya ofont GÖNDERİLMEZ.
+  useEffect(() => {
+    const fonts = analysis?.fonts;
+    if (!fonts || !Object.keys(fonts).length) { setOrigFonts(new Map()); return; }
+    let alive = true;
+    const tag = uid();
+    void Promise.all(Object.entries(fonts).map(async ([key, f]) => {
+      try {
+        const bytes = Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0));
+        const family = `PPO ${tag} ${key}`;
+        const face = new FontFace(family, bytes);
+        await face.load();
+        document.fonts.add(face);
+        return [key, { family, chars: f.chars }] as const;
+      } catch { return null; }
+    })).then((res) => {
+      if (!alive) return;
+      setOrigFonts(new Map(res.filter((x): x is NonNullable<typeof x> => !!x)));
+    });
+    return () => { alive = false; };
+  }, [analysis?.fonts]);
+
   // OCR metninin vektör rengi yok → sayfa ilk açıldığında çizilmiş sayfadan örneklenir
   // (sunucu analizindeki öğelerin rengi zaten var; onlara dokunulmaz).
   const colorDoneRef = useRef<Set<number>>(new Set());
@@ -405,6 +431,35 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   function elText(el: PdfElement): string { return edits.get(el.id)?.text ?? el.text ?? ""; }
   function elColor(el: PdfElement): string { return edits.get(el.id)?.color ?? el.color ?? "#111111"; }
   function elSize(el: PdfElement): number { return edits.get(el.id)?.size ?? el.size ?? 12; }
+  // Orijinal font kullanılabilir mi: kullanıcı font/kalın/italik değiştirmemiş, zengin biçim yok ve
+  // metnin TÜM harfleri belgede bu fontla doğrulanmış → önizleme ve çıktı orijinal gliflerle.
+  function origFor(el: PdfElement): string | null {
+    const o = el.ofont ? origFonts.get(el.ofont) : undefined;
+    if (!o) return null;
+    const ed = edits.get(el.id);
+    if (ed?.font !== undefined) return null;
+    if (ed?.bold !== undefined && ed.bold !== (el.bold ?? false)) return null;
+    if (ed?.italic !== undefined && ed.italic !== (el.italic ?? false)) return null;
+    if (ed?.html && /<[a-z]/i.test(ed.html)) return null;
+    const t = ed?.text ?? el.text ?? "";
+    for (const ch of t) if (!o.chars.includes(ch)) return null;
+    return o.family;
+  }
+  function elCss(el: PdfElement): string {
+    const fam = origFor(el);
+    return fam ? `'${fam}', ${FONT_CSS[elFont(el)]}` : FONT_CSS[elFont(el)];
+  }
+  // Önizleme örtüsünün dikey sınırı — sunucu vektör yazıda yalnız HARFLERİ siler (dolgu yok), bu
+  // yüzden önizleme de tam font kutusunu boyamamalı (tablo çizgisini örtüyordu). Yazının mürekkep
+  // bandı: taban çizgisinin 0.85 em üstü (büyük harf üstü aksanı varsa 1 em) ile 0.27 em altı.
+  // OCR / görünmez katman / görselde yazı görüntünün parçası → tam kutu (sunucu da orayı boyar).
+  function coverY(el: PdfElement): [number, number] {
+    const [, y0, , y1] = el.bbox;
+    if (el.type !== "text" || el.ocr || el.inv || el.by == null) return [y0, y1];
+    const sz = el.size ?? (y1 - y0) / 1.2;
+    const topF = /[ÂÊÎÔÛÄËÏÖÜÀÈÌÒÙÁÉÍÓÚİÅÃÑ]/.test(el.text ?? "") ? 1.0 : 0.85;
+    return [Math.max(y0, el.by - topF * sz), Math.min(y1, el.by + 0.27 * sz)];
+  }
   function elSpacing(el: PdfElement): Spacing { return { hs: el.hs ?? 1, cs: el.cs ?? 0, ws: el.ws ?? 0 }; }
   function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? (isFontKey(el.font) ? el.font : "sans"); }
   function elBold(el: PdfElement): boolean { return edits.get(el.id)?.bold ?? el.bold ?? false; }
@@ -761,7 +816,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         if (!changed) continue;
         const txt = edits.get(el.id)?.text ?? el.text ?? "";
         const boxW = el.bbox[2] - el.bbox[0];
-        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, elFont(el), edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false, elSpacing(el));
+        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, elFont(el), edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false, elSpacing(el), elCss(el));
         const overflow = w - boxW;
         if (overflow > 1) cum += overflow + 2; // 2pt güvenlik payı
       }
@@ -858,14 +913,14 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           const bold = ed!.bold ?? el.bold ?? false;
           const italic = ed!.italic ?? el.italic ?? false;
           const txt = ed!.text ?? el.text ?? "";
-          const overflow = measureTextPt(txt, size, fk, bold, italic, elSpacing(el)) - (drawBbox[2] - drawBbox[0]);
+          const overflow = measureTextPt(txt, size, fk, bold, italic, elSpacing(el), elCss(el)) - (drawBbox[2] - drawBbox[0]);
           ops.push({
             page: p, bbox: drawBbox, clear: clearBbox, text: txt, size, color: ed!.color ?? el.color,
             font: fk, by: el.by, bg: bgMap.get(el.id),
             noshrink: overflow > 1 ? true : undefined,
             bold: bold || undefined, italic: italic || undefined,
             underline: ed!.underline || undefined, strike: ed!.strike || undefined, align: ed!.align,
-            hs: el.hs, cs: el.cs, ws: el.ws,
+            hs: el.hs, cs: el.cs, ws: el.ws, ofont: origFor(el) ? el.ofont : undefined,
             ...vtOf(el),
           });
         } else if (shift > 0.5) {
@@ -875,7 +930,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             page: p, bbox: drawBbox, clear: clearBbox, text: el.text ?? "", size: el.size ?? 12,
             color: el.color, font: elFont(el), by: el.by, bg: bgMap.get(el.id),
             noshrink: true, bold: el.bold || undefined, italic: el.italic || undefined,
-            hs: el.hs, cs: el.cs, ws: el.ws,
+            hs: el.hs, cs: el.cs, ws: el.ws, ofont: origFor(el) ? el.ofont : undefined,
             ...vtOf(el),
           });
         }
@@ -1146,7 +1201,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const activeCover = selected === el.id || multiSel.has(el.id) || edits.has(el.id) || shift > 0.5;
                     if (!activeCover) return null;
                     const [x0, y0, x1, y1] = el.bbox;
-                    return <div key={`cover_${el.id}`} className="pointer-events-none absolute" style={{ left: x0 * scale - 1, top: y0 * scale - 1, width: Math.max((x1 - x0 + Math.max(0, shift)) * scale, 4) + 2, height: Math.max((y1 - y0) * scale, 6) + 2, backgroundColor: bgFor(el.id) }} />;
+                    const [cy0, cy1] = coverY(el);
+                    return <div key={`cover_${el.id}`} className="pointer-events-none absolute" style={{ left: x0 * scale - 1, top: cy0 * scale - 1, width: Math.max((x1 - x0 + Math.max(0, shift)) * scale, 4) + 2, height: Math.max((cy1 - cy0) * scale, 6) + 2, backgroundColor: bgFor(el.id) }} />;
                   })}
                   {/* İçerik katmanı — mevcut öğeler (görseller altta) */}
                   {pageElsStacked.map((el) => {
@@ -1179,7 +1235,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const eb = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 4), height: Math.max((y1 - y0) * scale, 6) } as const;
                     if (del) {
                       // Silinmiş metin → orijinali arka plan rengiyle kapat, düzenleme yok (tıkla → geri al)
-                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300/70" style={{ ...eb, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300/70" style={{ ...eb, top: coverY(el)[0] * scale, height: Math.max((coverY(el)[1] - coverY(el)[0]) * scale, 6), backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                     }
                     // Değişmemiş, seçili değil ve KAYDIRILMAMIŞ → sadece şeffaf tıklama hedefi;
                     // canvas'taki NET orijinal metin görünür (çift görüntü yok).
@@ -1197,7 +1253,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const isRich = !!richHtml && /<[a-z]/i.test(richHtml);
                     const rawPx = elSize(el) * scale;
                     const _sp = isRich ? NO_SPACING : elSpacing(el);
-                    const _txtW = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el), _sp);
+                    const _txtW = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el), _sp, elCss(el));
                     const _boxW = x1 - x0;
                     const _noShrink = (edits.has(el.id) && _txtW - _boxW > 1) || shift > 0.5;
                     // Zengin (kelime bazlı) öğede küçültme yok — export htmlbox otomatik ölçekler.
@@ -1206,7 +1262,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                       : 1;
                     const fsPx = rawPx * _fit;
                     const baselinePt = el.by ?? (y0 + (el.size ?? 12));
-                    const textTop = (baselinePt - y0) * scale - baselineRatio(FONT_CSS[elFont(el)], elBold(el), elItalic(el)) * fsPx;
+                    const textTop = (baselinePt - y0) * scale - baselineRatio(elCss(el), elBold(el), elItalic(el)) * fsPx;
                     const shiftPx = shift * scale;
                     const deco = [elUnderline(el) ? "underline" : "", elStrike(el) ? "line-through" : ""].filter(Boolean).join(" ") || "none";
                     const al = elAlign(el);
@@ -1224,7 +1280,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                           onClick={(e) => { e.stopPropagation(); selectEl(el, e.ctrlKey || e.metaKey || e.shiftKey); }}
                           onFocus={() => { if (!multiSel.size) selectEl(el); }}
                           className={`outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ position: "absolute", left: 0, top: textTop, width: textW, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: _aligned ? "transparent" : bgFor(el.id),
+                          style={{ position: "absolute", left: 0, top: textTop, width: textW, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: elCss(el), padding: 0, backgroundColor: _aligned || (el.type === "text" && !el.ocr && !el.inv) ? "transparent" : bgFor(el.id),
                             // Orijinal harf/kelime aralığı + yatay ölçek (Tc/Tw/Tz) — sunucu çizimiyle aynı.
                             letterSpacing: _sp.cs ? `${_sp.cs * scale * _fit}px` : undefined,
                             wordSpacing: _sp.ws ? `${_sp.ws * scale * _fit}px` : undefined,
