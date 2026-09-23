@@ -208,6 +208,8 @@ import {
   getInitialViewFromLocation,
   isFullPageSeoToolPath,
   SPECIAL_TOOL_PANELS,
+  PANEL_TO_TOOL_SLUG,
+  AI_MODE_TO_TOOL_SLUG,
   AI_TOOL_MODES,
   hasInAppPanelForSeoSlug,
   currentToolSlugFromUrl,
@@ -351,9 +353,6 @@ const SearchablePdfTool = lazyWithRetry(() =>
 );
 const DocumentScanner = lazyWithRetry(() =>
   import("./components/tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
-);
-const PdfCropTool = lazyWithRetry(() =>
-  import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
 );
 const PdfSnipTool = lazyWithRetry(() =>
   import("./components/tools/PdfSnipTool").then((m) => ({ default: m.PdfSnipTool })),
@@ -3806,11 +3805,39 @@ function App() {
   }
 
   /** Özel panele geç — açık PDF varsa beraberinde taşı. */
+  /**
+   * KENAR ÇUBUĞUNDAN ARAÇ DEĞİŞTİRİNCE ÖNCEKİ BELGE PEŞİNDEN GELMEMELİ.
+   *
+   * Bir araca belge aktardıktan sonra kenar çubuğundan başka bir araca geçen
+   * kullanıcıya hep aynı dosya açılıyordu ("takılıyor"). İki ayrı sebep vardı:
+   *
+   * 1. Bu fonksiyon paneli değiştiriyor ama ADRESİ değiştirmiyordu. Teslim
+   *    effect'i hedefi adresten okuduğu için (tam sayfa yüklemede state henüz
+   *    oturmadığından böyle yapılmıştı) adres eski araçta kalınca effect
+   *    "hedef panel açılmadı" deyip erken çıkıyor, bekleyen dosyayı temizleme
+   *    adımına hiç varamıyordu.
+   * 2. `pendingToolFile` state'te duruyordu; yeni panel onu `initialFile` diye
+   *    alıp önceki belgeyi açıyordu.
+   *
+   * Çözüm: adresi de yeni araca taşı ve taşınacak bir belge YOKSA bekleyeni
+   * temizle. Taşıma varsa (`carryOpenPdfToPanel` true döndüyse) dosya bilerek
+   * götürülüyordur — ona dokunma.
+   */
+  function pushToolPath(slug: string | undefined) {
+    if (!slug) return;
+    const target = `/tools/${slug}`;
+    if (window.location.pathname !== target) {
+      window.history.pushState({}, "", target);
+    }
+  }
+
   async function openPanelWithOpenPdf(panel: ContentPanel) {
-    await carryOpenPdfToPanel();
+    const carried = await carryOpenPdfToPanel();
     // Açık "PDF hazır" ekranı geride kalmasın — forma dönünce tekrar karşılamasın.
     setMergeShareReady(null);
     setMergeShare(null);
+    if (!carried) setPendingToolFile(null);
+    pushToolPath(PANEL_TO_TOOL_SLUG[panel]);
     setContentPanel(panel);
   }
 
@@ -3818,11 +3845,12 @@ function App() {
   async function openAiWithOpenPdf(
     mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact",
   ) {
-    if (mode !== "batch" && mode !== "compare") {
-      await carryOpenPdfToPanel();
-    }
+    const carried =
+      mode !== "batch" && mode !== "compare" ? await carryOpenPdfToPanel() : false;
     setMergeShareReady(null);
     setMergeShare(null);
+    if (!carried) setPendingToolFile(null);
+    pushToolPath(AI_MODE_TO_TOOL_SLUG[mode]);
     setAiModal(mode);
     setContentPanel("ai");
   }
@@ -4046,6 +4074,9 @@ function App() {
       setMergeShareReady(null);
       setMergeShare(null);
     }
+    // Özel bir panelden (editör/imza/AI) form aracına dönerken önceki belge
+    // bekletilmeye devam etmesin; kullanıcı yeni bir işe başlıyor.
+    setPendingToolFile(null);
     setContentPanel("tool");
     setSelectedFeatureId(id);
   }
@@ -5275,15 +5306,6 @@ function App() {
         </GuestSeoToolPage>
       );
     }
-    if (seoSlug === "crop-pdf") {
-      return (
-        <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
-          <Suspense fallback={<PageSkeleton />}>
-            <PdfCropTool language={language} initialFile={pendingToolFile} />
-          </Suspense>
-        </GuestSeoToolPage>
-      );
-    }
     if (seoSlug === "gorsel-sikistir") {
       return (
         <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -6459,7 +6481,6 @@ function App() {
           onOpenEditor={() => { void openPanelWithOpenPdf("editor"); }}
           onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
-          onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
           onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
@@ -6492,7 +6513,6 @@ function App() {
           onOpenEditor={() => { void openPanelWithOpenPdf("editor"); }}
           onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
-          onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
           onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
@@ -6630,15 +6650,6 @@ function App() {
                 <ToolHowTo slug="pdf-yorumla" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
-                </Suspense>
-              </section>
-            ) : null}
-
-            {contentPanel === "crop" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="crop-pdf" language={language} className="mb-4" />
-                <Suspense fallback={<PageSkeleton />}>
-                  <PdfCropTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
