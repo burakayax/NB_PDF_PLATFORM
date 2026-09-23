@@ -1011,47 +1011,51 @@
     "tr": [
       "Nasıl Yapılır",
       "Kırpma",
-      "pdf kırpma",
-      "pdf kırp",
-      "pdf crop",
-      "pdf kenar boşluğu kesme",
-      "pdf sayfa kırpma",
-      "online pdf kırpma"
+      "pdf kesit alma",
+      "pdf'ten görsel kırpma",
+      "pdf'ten resim kesme",
+      "pdf tablo görsel kaydetme",
+      "pdf ekran görüntüsü",
+      "pdf'ten soru kırpma",
+      "pdf alan seçip kaydetme"
     ],
     "en": [
       "How-to",
       "Crop",
-      "crop pdf",
-      "pdf crop",
-      "trim pdf margins",
-      "crop pdf online",
-      "crop pdf pages",
-      "cut pdf margins"
+      "snip pdf",
+      "crop image from pdf",
+      "extract part of pdf as image",
+      "save pdf table as image",
+      "pdf screenshot tool",
+      "crop pdf region",
+      "pdf to png region"
     ],
-    "tool": "/tools/crop-pdf"
+    "tool": "/tools/pdf-kesit-al"
   },
   "https://www.pdfplatform.app/en/blog/crop-a-pdf-trim-margins": {
     "tr": [
       "Nasıl Yapılır",
       "Kırpma",
-      "pdf kırpma",
-      "pdf kırp",
-      "pdf crop",
-      "pdf kenar boşluğu kesme",
-      "pdf sayfa kırpma",
-      "online pdf kırpma"
+      "pdf kesit alma",
+      "pdf'ten görsel kırpma",
+      "pdf'ten resim kesme",
+      "pdf tablo görsel kaydetme",
+      "pdf ekran görüntüsü",
+      "pdf'ten soru kırpma",
+      "pdf alan seçip kaydetme"
     ],
     "en": [
       "How-to",
       "Crop",
-      "crop pdf",
-      "pdf crop",
-      "trim pdf margins",
-      "crop pdf online",
-      "crop pdf pages",
-      "cut pdf margins"
+      "snip pdf",
+      "crop image from pdf",
+      "extract part of pdf as image",
+      "save pdf table as image",
+      "pdf screenshot tool",
+      "crop pdf region",
+      "pdf to png region"
     ],
-    "tool": "/tools/crop-pdf"
+    "tool": "/tools/pdf-kesit-al"
   },
   "https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi": {
     "tr": [

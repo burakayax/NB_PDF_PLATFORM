@@ -167,7 +167,6 @@ type DashboardSidebarProps = {
   onOpenSign?: () => void;
   /** PDF Yorumla aracını aç (cihazda işaretleme). */
   onOpenAnnotate?: () => void;
-  onOpenCrop?: () => void;
   /** PDF'ten Kesit Al aracını aç (alan seçip görsel çıkarma). */
   onOpenSnip?: () => void;
   onOpenCompressImage?: () => void;
@@ -218,7 +217,6 @@ export function DashboardSidebar({
   onOpenAnnotate,
   onOpenScan,
   onScansClick,
-  onOpenCrop,
   onOpenSnip,
   onOpenCompressImage,
   onOpenResizeImage,
@@ -446,22 +444,6 @@ export function DashboardSidebar({
   };
 
   // PDF Kırp satırı — cihazda görsel kırpma; yapısal grup (Düzenle/Organize) içinde.
-  const renderCropRow = (keyPrefix = "") => {
-    if (!onOpenCrop) return null;
-    const label = tr ? "PDF Kırp" : "Crop PDF";
-    return (
-      <button
-        key={`${keyPrefix}crop`}
-        type="button"
-        onClick={onOpenCrop}
-        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "crop")}`}
-      >
-        <Crop className="h-5 w-5 text-cyan-300" aria-hidden />
-        <span className="truncate">{label}</span>
-      </button>
-    );
-  };
-
   const renderSnipRow = (keyPrefix = "") => {
     if (!onOpenSnip) return null;
     const label = tr ? "PDF'ten Kesit Al" : "Snip PDF to Image";
@@ -663,7 +645,6 @@ export function DashboardSidebar({
                   {group.id === "organize" ? renderScanRow("organize-") : null}
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
-                  {group.id === "organize" ? renderCropRow("organize-") : null}
                   {/* PDF'ten Kesit Al — sayfadan alan seçip görsel çıkarma */}
                   {group.id === "organize" ? renderSnipRow("organize-") : null}
                   {/* Görsel Sıkıştır — İyileştir grubu (PDF Sıkıştır'ın görsel karşılığı) */}
@@ -803,8 +784,6 @@ export function DashboardSidebarMobileLauncher({
         ? tr ? "PDF İmzala" : "Sign PDF"
         : contentPanel === "annotate"
           ? tr ? "PDF İşaretle" : "Markup PDF"
-          : contentPanel === "crop"
-          ? tr ? "PDF Kırp" : "Crop PDF"
           : contentPanel === "compress-image"
           ? tr ? "Görsel Sıkıştır" : "Compress Image"
           : contentPanel === "resize-image"

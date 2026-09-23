@@ -33,11 +33,6 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Anında", trDesc: "Sürükle-bırak, saniyeler içinde hazır.", en: "Instant", enDesc: "Drag & drop, ready in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Görsellerin cihazında kalır.", en: "Private", enDesc: "Your images stay on your device." },
   ],
-  "crop-pdf": [
-    { icon: Zap, tr: "Kenar boşluklarını kes", trDesc: "Kutuyu sürükleyerek istediğin alana daralt.", en: "Trim the margins", enDesc: "Drag the box to narrow to the area you want." },
-    { icon: Zap, tr: "Anında", trDesc: "Yükleme yok — cihazında saniyeler içinde.", en: "Instant", enDesc: "No upload — done on your device in seconds." },
-    { icon: Lock, tr: "Gizli", trDesc: "Belgen cihazından hiç çıkmaz.", en: "Private", enDesc: "Your document never leaves your device." },
-  ],
   "gorsel-sikistir": [
     { icon: Zap, tr: "Dosya boyutunu küçült", trDesc: "Kalite ve boyutu ayarla, JPEG/WebP olarak al.", en: "Shrink file size", enDesc: "Adjust quality and dimensions, export JPEG/WebP." },
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Yükleme yok — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "No upload — done on your device in seconds." },

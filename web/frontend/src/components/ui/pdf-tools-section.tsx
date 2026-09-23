@@ -38,7 +38,6 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "taranmis-pdf-ocr",
   "aranabilir-pdf",
   "belge-tara",
-  "crop-pdf",
   "gorsel-sikistir",
   "gorsel-boyutlandir",
   "pdf-kesit-al",

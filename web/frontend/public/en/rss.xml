@@ -804,7 +804,7 @@
 <ul><li>Trimming the wide margins on scanned documents.</li><li>Focusing on a single table, chart or section on a page.</li><li>Removing repeating header/footer areas from view.</li><li>Framing the page neatly for presentation or printing.</li></ul>
 <h2>How to crop a PDF — step by step</h2>
 <ol><li><strong>Upload the PDF</strong> — Drag and drop your PDF into the crop tool; the first page opens in the preview.</li><li><strong>Set the crop box</strong> — Drag the box to move it, and resize from the corners or edges to select the area you want to keep.</li><li><strong>Choose scope and download</strong> — Pick 'All pages' or 'This page only' and click 'Crop &amp; Download' to get the result.</li></ol>
-<p><strong>Crop PDF</strong> — Drag and resize the box, crop and download — on your device, free. <a href="https://www.pdfplatform.app/en/tools/crop-pdf">Open the tool</a></p>
+<p><strong>Snip PDF to Image</strong> — Select the area you want and save it as a PDF or an image — on your device, free. <a href="https://www.pdfplatform.app/en/tools/crop-pdf-to-image">Open the tool</a></p>
 <h2>Does cropping delete content?</h2>
 <p>No. Cropping is a standard PDF operation that narrows the page's visible area (CropBox); the remaining area displays and prints cleanly. It runs entirely in your browser, and your file is not sent to a server.</p>
 <blockquote><p>To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool.</p></blockquote>

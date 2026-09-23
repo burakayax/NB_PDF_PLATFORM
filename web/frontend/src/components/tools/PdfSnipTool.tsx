@@ -69,15 +69,23 @@ const L = {
     basket: "Kesitler",
     empty: "Henüz kesit yok. Sayfada bir alan seçip «Kesiti Ekle» deyin.",
     clear: "Tümünü sil",
-    output: "Çıktı",
-    sheet: "Çalışma kâğıdı (A4)",
-    sheetHint: "Kesitler A4 sayfalara sırayla dizilir — yazdırmaya hazır.",
+    output: "Nasıl kaydedilsin?",
+    saveAs: "Dosya biçimi",
+    fmtPdf: "PDF",
+    fmtPng: "PNG",
+    fmtJpeg: "JPEG",
+    layout: "Sayfa düzeni",
+    sheet: "Hepsi arka arkaya",
+    sheetHint: "Kesitler A4 sayfalara sırayla dizilir — yazdırmaya hazır bir çalışma kâğıdı olur.",
+    perPage: "Her kesit ayrı sayfa",
+    perPageHint: "Her kesit kendi sayfasında, kendi ölçüsünde durur — poster ya da tek tek kullanım için.",
     columns: "Sütun",
     col1: "Tek sütun",
     col2: "İki sütun",
-    colHint: "Tek sütun: kesitler sayfa genişliğinde. İki sütun: yan yana iki kesit — dar kesitler (tek soru, küçük tablo) için uygundur.",
-    perPage: "Her kesit ayrı sayfa",
-    downloadZip: "Görselleri ZIP indir",
+    colHint: "Tek sütun: her kesit sayfa genişliğinde, alt alta. İki sütun: kesitler ikişerli yan yana — dar kesitlerde (tek soru, küçük tablo) kâğıt israfını önler.",
+    imgOneHint: "Tek kesit doğrudan görsel olarak iner.",
+    imgManyHint: "Kesitler ayrı ayrı görsel olur; birden çok olduğu için ZIP içinde iner.",
+    download: "İndir",
     downloadOne: "İndir",
     up: "Yukarı taşı",
     down: "Aşağı taşı",
@@ -92,8 +100,9 @@ const L = {
     failed: "İşlem başarısız oldu. Lütfen tekrar deneyin.",
     encrypted: "Bu PDF şifre korumalı; önce kilidini kaldırın.",
     tooMany: (n: number) => `En fazla ${n} kesit ekleyebilirsiniz.`,
-    fmtPng: "PNG (keskin, metin/grafik için)",
-    fmtJpeg: "JPEG (küçük dosya, fotoğraf için)",
+    fmtPdfNote: "Kesit tek sayfalık bir PDF olarak iner.",
+    fmtPngNote: "Keskin — metin ve grafik için",
+    fmtJpegNote: "Daha küçük dosya — fotoğraf için",
     qLow: "1x — ekran",
     qMid: "2x — baskı (önerilen)",
     qHigh: "3x — en yüksek",
@@ -108,15 +117,23 @@ const L = {
     basket: "Snips",
     empty: "No snips yet. Select an area on the page and click «Add snip».",
     clear: "Clear all",
-    output: "Output",
-    sheet: "Worksheet (A4)",
-    sheetHint: "Snips are laid out in order on A4 pages — ready to print.",
+    output: "How should it be saved?",
+    saveAs: "File format",
+    fmtPdf: "PDF",
+    fmtPng: "PNG",
+    fmtJpeg: "JPEG",
+    layout: "Page layout",
+    sheet: "All one after another",
+    sheetHint: "Snips are laid out in order on A4 pages — a worksheet that is ready to print.",
+    perPageHint: "Each snip sits on its own page at its own size — for posters or one-off use.",
     columns: "Columns",
     col1: "One column",
     col2: "Two columns",
-    colHint: "One column: snips span the page width. Two columns: two snips side by side — best for narrow snips (a single question, a small table).",
+    colHint: "One column: each snip spans the page width, stacked. Two columns: snips sit side by side in pairs — saves paper with narrow snips (a single question, a small table).",
+    imgOneHint: "A single snip downloads straight as an image.",
+    imgManyHint: "Each snip becomes its own image; since there is more than one they arrive in a ZIP.",
+    download: "Download",
     perPage: "One snip per page",
-    downloadZip: "Download images as ZIP",
     downloadOne: "Download",
     up: "Move up",
     down: "Move down",
@@ -131,8 +148,9 @@ const L = {
     failed: "Something went wrong. Please try again.",
     encrypted: "This PDF is password-protected; unlock it first.",
     tooMany: (n: number) => `You can add up to ${n} snips.`,
-    fmtPng: "PNG (sharp, for text/graphics)",
-    fmtJpeg: "JPEG (smaller file, for photos)",
+    fmtPdfNote: "The snip downloads as a one-page PDF.",
+    fmtPngNote: "Sharp — for text and graphics",
+    fmtJpegNote: "Smaller file — for photos",
     qLow: "1x — screen",
     qMid: "2x — print (recommended)",
     qHigh: "3x — highest",
@@ -152,10 +170,30 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const [dragging, setDragging] = useState(false);
   const [snips, setSnips] = useState<Snip[]>([]);
   const [scaleMul, setScaleMul] = useState(2);
-  const [mime, setMime] = useState<"image/png" | "image/jpeg">("image/png");
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState<"zip" | "pdf" | "sheet" | null>(null);
   const [columns, setColumns] = useState<1 | 2>(1);
+  /**
+   * Kesitlerin nasıl kaydedileceği. VARSAYILAN PDF: kullanıcıların çoğu kesitleri
+   * tek bir belgede topluyor; görsel isteyen azınlık biçimi değiştirir.
+   *
+   * Eskiden ekranda üç ayrı indirme düğmesi vardı (çalışma kâğıdı A4 / her kesit
+   * ayrı sayfa / görselleri ZIP) ve hangisinin ne ürettiği düğme adından
+   * anlaşılmıyordu. Artık önce biçim, sonra (PDF ise) düzen seçilir; indirme tek
+   * düğmedir.
+   */
+  const [saveAs, setSaveAs] = useState<"pdf" | "png" | "jpeg">("pdf");
+  /** PDF düzeni: hepsi arka arkaya (çalışma kâğıdı) ya da her kesit ayrı sayfa. */
+  const [pdfLayout, setPdfLayout] = useState<"sheet" | "perPage">("sheet");
+  /** "Yeni PDF" doğrudan dosya seçiciyi açsın diye. */
+  const newFileInputRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Kesitin İÇ görüntü biçimi. Çıktı JPEG istenmişse JPEG, aksi halde PNG:
+   * PDF'e gömülen görselde PNG daha keskin durur, JPEG dosyayı küçültür.
+   * Ayrı bir "görsel biçimi" seçtirmek kullanıcıya aynı soruyu iki kez soruyordu.
+   */
+  const mime: "image/png" | "image/jpeg" = saveAs === "jpeg" ? "image/jpeg" : "image/png";
   const [error, setError] = useState<string | null>(null);
   /** Pencere yeniden boyutlandığında sayfayı yeniden çizmek için sayaç. */
   const [viewportTick, setViewportTick] = useState(0);
@@ -476,6 +514,30 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
    * `sheet` → A4 sayfalara sırayla dizer (çalışma kâğıdı);
    * `perPage` → her kesit kendi sayfasında (eski davranış, poster/tek görsel için).
    */
+  /**
+   * TEK İNDİRME DÜĞMESİ — seçilen biçime göre doğru çıktıyı üretir.
+   *   pdf   → düzene göre tek belge
+   *   png/jpeg → tek kesitse doğrudan görsel, birden çoksa ZIP
+   */
+  const downloadOutput = async () => {
+    if (snips.length === 0) return;
+    if (saveAs === "pdf") {
+      await downloadAsPdf(pdfLayout);
+      return;
+    }
+    if (snips.length === 1) {
+      const only = snips[0]!;
+      setExporting("zip");
+      try {
+        downloadBlob(only.blob, snipName(only, 0));
+      } finally {
+        setExporting(null);
+      }
+      return;
+    }
+    await downloadZip();
+  };
+
   const downloadAsPdf = async (mode: "sheet" | "perPage") => {
     if (snips.length === 0) return;
     setExporting(mode === "sheet" ? "sheet" : "pdf");
@@ -552,13 +614,26 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
+        {/* "Yeni PDF" belgeyi kapatıp boş yükleme ekranına dönüyordu; kullanıcı
+            araca yeni girmiş gibi oluyor, bir de dosya seçme düğmesini aramak
+            zorunda kalıyordu. Artık doğrudan dosya seçici açılır — vazgeçerse
+            üzerinde çalıştığı belge de yerinde kalır. */}
+        <input
+          ref={newFileInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            clearSnips();
+            void loadFile(f);
+          }}
+        />
         <button
           type="button"
-          onClick={() => {
-            clearSnips();
-            setBytes(null);
-            docRef.current = null;
-          }}
+          onClick={() => newFileInputRef.current?.click()}
           className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
         >
           {t.newFile}
@@ -646,7 +721,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
         <aside className="w-full shrink-0 space-y-3 lg:sticky lg:top-2 lg:max-h-[86vh] lg:w-[320px] lg:overflow-y-auto lg:pr-1">
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{t.settings}</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               <label className="flex flex-col gap-1">
                 <span className="text-[11px] font-medium text-slate-400">{t.quality}</span>
                 <select
@@ -659,19 +734,8 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                   <option value={3}>{t.qHigh}</option>
                 </select>
               </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-slate-400">{t.imgFormat}</span>
-                <select
-                  value={mime}
-                  onChange={(e) => setMime(e.target.value as "image/png" | "image/jpeg")}
-                  className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[12px] text-slate-100"
-                >
-                  <option value="image/png">PNG</option>
-                  <option value="image/jpeg">JPEG</option>
-                </select>
-              </label>
             </div>
-            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{t.imgFormatHint}</p>
+            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{t.qualityHint}</p>
             <button
               type="button"
               onClick={() => void addSnip()}
@@ -749,58 +813,110 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             )}
           </div>
 
-          {/* Çıktı */}
+          {/* Çıktı — önce biçim, sonra (PDF ise) düzen, en sonda tek indirme
+              düğmesi. Eskiden üç ayrı düğme vardı ve adlarından hangisinin ne
+              ürettiği anlaşılmıyordu. */}
           {snips.length > 0 && (
             <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] p-3">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-cyan-300/90">{t.output}</p>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-[11px] font-medium text-slate-400">{t.columns}</span>
-                <div className="flex items-center gap-1 rounded-lg bg-slate-950/40 p-0.5 ring-1 ring-white/[0.06]">
-                  {([1, 2] as const).map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setColumns(c)}
-                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
-                        columns === c ? "bg-cyan-500/25 text-cyan-100" : "text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {c === 1 ? t.col1 : t.col2}
-                    </button>
-                  ))}
-                </div>
+
+              <span className="mb-1.5 block text-[11px] font-medium text-slate-400">{t.saveAs}</span>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["pdf", "png", "jpeg"] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setSaveAs(f)}
+                    className={`rounded-lg px-2 py-2 text-[12px] font-bold transition ${
+                      saveAs === f
+                        ? "bg-cyan-500/25 text-cyan-100 ring-1 ring-cyan-400/40"
+                        : "bg-white/[0.04] text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {f === "pdf" ? t.fmtPdf : f === "png" ? t.fmtPng : t.fmtJpeg}
+                  </button>
+                ))}
               </div>
-              <p className="mb-2 text-[10px] leading-relaxed text-slate-400">{t.colHint}</p>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+                {saveAs === "png"
+                  ? t.fmtPngNote
+                  : saveAs === "jpeg"
+                    ? t.fmtJpegNote
+                    : snips.length > 1
+                      ? t.sheetHint
+                      : t.fmtPdfNote}
+              </p>
+
+              {saveAs === "pdf" ? (
+                <>
+                  <span className="mb-1.5 mt-3 block text-[11px] font-medium text-slate-400">{t.layout}</span>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {(["sheet", "perPage"] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setPdfLayout(m)}
+                        className={`rounded-lg px-2.5 py-2 text-left text-[12px] font-semibold transition ${
+                          pdfLayout === m
+                            ? "bg-cyan-500/20 text-cyan-100 ring-1 ring-cyan-400/35"
+                            : "bg-white/[0.04] text-slate-300 hover:text-white"
+                        }`}
+                      >
+                        {m === "sheet" ? t.sheet : t.perPage}
+                        <span className="mt-0.5 block text-[10px] font-normal leading-relaxed text-slate-400">
+                          {m === "sheet" ? t.sheetHint : t.perPageHint}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Sütun yalnızca "hepsi arka arkaya" düzeninde anlamlı. */}
+                  {pdfLayout === "sheet" && (
+                    <div className="mt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-medium text-slate-400">{t.columns}</span>
+                        <div className="flex items-center gap-1 rounded-lg bg-slate-950/40 p-0.5 ring-1 ring-white/[0.06]">
+                          {([1, 2] as const).map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setColumns(c)}
+                              className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                                columns === c ? "bg-cyan-500/25 text-cyan-100" : "text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              {c === 1 ? t.col1 : t.col2}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{t.colHint}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+                  {snips.length === 1 ? t.imgOneHint : t.imgManyHint}
+                </p>
+              )}
+
               <button
                 type="button"
-                onClick={() => void downloadAsPdf("sheet")}
+                onClick={() => void downloadOutput()}
                 disabled={exporting !== null}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2.5 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50"
               >
-                {exporting === "sheet" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileType2 className="h-4 w-4" />}
-                {t.sheet}
+                {exporting !== null ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : saveAs === "pdf" ? (
+                  <FileType2 className="h-4 w-4" />
+                ) : snips.length > 1 ? (
+                  <FileArchive className="h-4 w-4" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                {t.download}
               </button>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{t.sheetHint}</p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => void downloadAsPdf("perPage")}
-                  disabled={exporting !== null}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
-                >
-                  {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
-                  {t.perPage}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void downloadZip()}
-                  disabled={exporting !== null}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
-                >
-                  {exporting === "zip" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileArchive className="h-3.5 w-3.5" />}
-                  {t.downloadZip}
-                </button>
-              </div>
             </div>
           )}
 

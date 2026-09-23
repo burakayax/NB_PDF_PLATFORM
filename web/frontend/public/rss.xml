@@ -804,7 +804,7 @@
 <ul><li>Taranmış belgelerdeki geniş kenar boşluklarını kesmek.</li><li>Bir sayfadaki tek bir tabloya, grafiğe veya bölüme odaklanmak.</li><li>Tekrar eden üst bilgi/alt bilgi (header/footer) alanını görünümden çıkarmak.</li><li>Sunum veya baskı için sayfayı düzgün bir çerçeveye getirmek.</li></ul>
 <h2>PDF nasıl kırpılır — adım adım</h2>
 <ol><li><strong>PDF'i yükleyin</strong> — Kırpma aracına PDF'inizi sürükleyip bırakın; ilk sayfa önizlemede açılır.</li><li><strong>Kırpma kutusunu ayarlayın</strong> — Kutuyu sürükleyerek taşıyın, köşelerden veya kenarlardan boyutlandırarak tutmak istediğiniz alanı seçin.</li><li><strong>Kapsamı seçip indirin</strong> — 'Tüm sayfalar' ya da 'Yalnız bu sayfa' deyin ve 'Kırp ve İndir' ile sonucu alın.</li></ol>
-<p><strong>PDF Kırp</strong> — Kutuyu sürükleyip boyutlandırın, kırpın ve indirin — cihazınızda, ücretsiz. <a href="https://www.pdfplatform.app/tools/crop-pdf">Aracı aç</a></p>
+<p><strong>PDF'ten Kesit Al</strong> — İstediğiniz alanı seçip PDF ya da görsel olarak kaydedin — cihazınızda, ücretsiz. <a href="https://www.pdfplatform.app/tools/pdf-kesit-al">Aracı aç</a></p>
 <h2>Kırpma içeriği siler mi?</h2>
 <p>Hayır. Kırpma, sayfanın görünür alanını (CropBox) daraltan standart bir PDF işlemidir; kalan alan net biçimde görüntülenir ve yazdırılır. İşlem tamamen tarayıcınızda çalışır, dosyanız sunucuya gitmez.</p>
 <blockquote><p>Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın.</p></blockquote>
