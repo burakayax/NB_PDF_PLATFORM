@@ -608,6 +608,14 @@ async def tool_edit_text(
                     # metin/silme op'larından ayrılır.
                     text_ops = [o for o in page_ops if not o.get("image")]
                     image_ops = [o for o in page_ops if o.get("image")]
+                    # 0) Silinen GÖRSEL (logo/amblem): boyamadan gerçekten kaldır — diğer silmeler içerik
+                    #    akışını yeniden yazmadan ÖNCE (çizim komutu adıyla bulunur). Olmazsa eski dolgu yolu.
+                    for o in [o for o in text_ops if o.get("img") and not (o.get("text") or "").strip()]:
+                        try:
+                            if _ef.remove_image_placement(doc, page, o["bbox"]):
+                                text_ops.remove(o)
+                        except Exception:
+                            pass
 
                     # 1) Seçili bölgelerin mevcut içeriğini GERÇEKTEN kaldır (yalnız metin op'ları).
                     #    Redaction fill = frontend'in canvas'tan örneklediği ARKA PLAN rengi
@@ -744,6 +752,11 @@ async def tool_edit_text(
                             draw_x = x1 - tw
                         _hs = float(op.get("hs") or 1.0)
                         _cs = float(op.get("cs") or 0.0)
+                        _uses_orig = bool(_of and all(ch in _of[1] for ch in (op.get("text") or "")))
+                        if _uses_orig:
+                            _cs += float(op.get("ocs") or 0.0)  # orijinal font: satır genişliği harf aralığıyla
+                        else:
+                            _hs *= float(op.get("fit") or 1.0)  # yedek font: genişlik yatay ölçekle
                         _ws = float(op.get("ws") or 0.0)
                         if abs(_hs - 1) > 1e-3 or _cs or _ws:
                             # Orijinal harf aralığı / kelime aralığı / yatay ölçek korunur.
@@ -1185,12 +1198,57 @@ async def tool_pdf_analyze(
                                         _sp = _ef.span_spacing(_rs, span, _best)
                                 except Exception:
                                     _sp = {}
+                                # Font anahtarı: ölçü-uyumlu aile → aynı fontun kendisi (Lato/Montserrat/
+                                # Oswald/Merriweather elimizde) → sınıf ailesi + GENİŞLİK UYDURMA (yedek
+                                # font dar/geniş olabilir; orijinal satır genişliği korunur).
+                                _legacy = _map_font_to_key(_fname)
+                                if _mk:
+                                    _fkey = _mk
+                                elif _legacy in ("lato", "montserrat", "oswald", "merriweather"):
+                                    _fkey = _legacy
+                                else:
+                                    _fkey = _ef.class_family(_fname, _flags)
+                                    try:
+                                        _chs = [c_ for c_ in (_rs or {}).get("chars", []) if not c_["c"].isspace()]
+                                        if len(_chs) >= 3:
+                                            _nat = _chs[-1]["bbox"][2] - _chs[0]["origin"][0]
+                                            _n = len(txt.strip())
+                                            _nat -= float(_sp.get("cs", 0)) * (_n - 1) + float(_sp.get("ws", 0)) * txt.strip().count(" ")
+                                            _fit = _ef.fit_scale(txt, _fkey, _bold, _italic,
+                                                                 float(_sp.get("size", span.get("size", 11))), _nat)
+                                            if _fit:
+                                                # Ölçüm GERÇEK genişlikten (Tz dahil) → yedek fontta hs yerine geçer.
+                                                # Ayrı alan: orijinal font kullanılırsa UYGULANMAZ (o zaten doğru genişlikte).
+                                                _sp["fit"] = round(_fit / float(_sp.get("hs", 1.0)), 3)
+                                    except Exception:
+                                        pass
+                                # Orijinal fontla yazılırsa: Word vb. harfleri satır yerleşiminde mikro
+                                # sıkıştırır (TJ); yeni yazı font genişliğiyle yazılınca satır sonu ~2 pt
+                                # kayıyordu (ölçüldü) → farkı harf aralığına eşit dağıt (şekil bozulmaz).
+                                if _fname in _orig:
+                                    try:
+                                        _chs2 = [c_ for c_ in (_rs or {}).get("chars", [])]
+                                        _t2 = "".join(c_["c"] for c_ in _chs2).rstrip()
+                                        _n2 = len(_t2)
+                                        if _n2 >= 4:
+                                            _of_font = _orig[_fname].setdefault("_font", _fitz.Font(fontbuffer=_orig[_fname]["buf"]))
+                                            _sz2 = float(_sp.get("size", span.get("size", 11)))
+                                            _hs2 = float(_sp.get("hs", 1.0))
+                                            _nat2 = _chs2[_n2 - 1]["bbox"][2] - _chs2[0]["origin"][0]
+                                            _exp2 = (_of_font.text_length(_t2, fontsize=_sz2) * _hs2
+                                                     + float(_sp.get("cs", 0)) * (_n2 - 1) + float(_sp.get("ws", 0)) * _t2.count(" "))
+                                            _ocs = (_nat2 - _exp2) / (_n2 - 1)
+                                            if 0.004 < abs(_ocs) < 0.15 * _sz2:
+                                                _sp["ocs"] = round(_ocs, 4)
+                                    except Exception:
+                                        pass
                                 els.append({
                                     "id": f"t{pi}_{ei}", "type": "text",
                                     "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
-                                    "text": txt, "size": round(float(span.get("size", 11)), 1),
+                                    # 2 ondalık: 1 ondalık yuvarlama uzun satırda ~0.6 pt kayma yapıyordu (ölçüldü).
+                                    "text": txt, "size": round(float(span.get("size", 11)), 2),
                                     "color": f"#{c & 0xFFFFFF:06x}", "by": round(oy, 1),
-                                    "font": _mk or _map_font_to_key(_fname),
+                                    "font": _fkey,
                                     "bold": _bold, "italic": _italic,
                                     # Satır grubu (sayfa:blok:satır) — konum-koruyan çeviri span'ları
                                     # AYNI SATIRDA birleştirip tutarlı segment üretsin diye. PyMuPDF'in

@@ -158,6 +158,46 @@ function baselineRatio(fontCss: string, bold: boolean, italic: boolean): number 
 
 /** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
  * kutu içeriğe göre büyür (kırpmaz). Kontrolsüz: metin bir kez ayarlanır. */
+/** Silinen görselin ÖNİZLEMESİ: sunucu görseli boyamadan kaldırır (zemin aynen görünür); önizlemede
+ * de düz renk kutu yerine alan, çevresindeki piksellerden yatay+dikey doğrusal geçişle doldurulur
+ * (degrade/fotoğraf zeminde kutu görünmez). `src` = sayfanın çizildiği canvas, `rect` = CSS px. */
+function FillPatch({ src, rect, onClick, title }: {
+  src: HTMLCanvasElement | null; rect: { left: number; top: number; width: number; height: number };
+  onClick: (e: React.MouseEvent) => void; title: string;
+}) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const out = ref.current;
+    if (!src || !out) return;
+    const L = Math.max(1, Math.floor(rect.left)), T = Math.max(1, Math.floor(rect.top));
+    const W = Math.max(1, Math.min(src.width - L - 1, Math.ceil(rect.width))), H = Math.max(1, Math.min(src.height - T - 1, Math.ceil(rect.height)));
+    const sctx = src.getContext("2d", { willReadFrequently: true });
+    const octx = out.getContext("2d");
+    if (!sctx || !octx) return;
+    out.width = W; out.height = H;
+    // Kenar şeritleri (kutunun hemen DIŞI): sol/sağ sütun, üst/alt satır.
+    const left = sctx.getImageData(L - 1, T, 1, H).data, right = sctx.getImageData(L + W, T, 1, H).data;
+    const top = sctx.getImageData(L, T - 1, W, 1).data, bottom = sctx.getImageData(L, T + H, W, 1).data;
+    const img = octx.createImageData(W, H);
+    for (let y = 0; y < H; y++) {
+      const fy = H > 1 ? y / (H - 1) : 0;
+      for (let x = 0; x < W; x++) {
+        const fx = W > 1 ? x / (W - 1) : 0;
+        const o = (y * W + x) * 4;
+        for (let k = 0; k < 3; k++) {
+          const hz = left[y * 4 + k] * (1 - fx) + right[y * 4 + k] * fx;
+          const vt = top[x * 4 + k] * (1 - fy) + bottom[x * 4 + k] * fy;
+          img.data[o + k] = (hz + vt) / 2;
+        }
+        img.data[o + 3] = 255;
+      }
+    }
+    octx.putImageData(img, 0, 0);
+  }, [src, rect.left, rect.top, rect.width, rect.height]);
+  return <canvas ref={ref} onClick={onClick} title={title} className="absolute cursor-pointer outline-dashed outline-1 outline-slate-300/70"
+    style={{ left: Math.floor(rect.left), top: Math.floor(rect.top), width: Math.ceil(rect.width), height: Math.ceil(rect.height) }} />;
+}
+
 function AutoText({ id, initial, initialHtml, className, style, onInput, onClick, onFocus, autoFocus }: {
   id: string; initial: string; initialHtml?: string; className?: string; style?: React.CSSProperties;
   onInput: (text: string, html: string) => void; onClick: (e: React.MouseEvent) => void; onFocus: () => void; autoFocus?: boolean;
@@ -463,7 +503,11 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     const topF = /[ÂÊÎÔÛÄËÏÖÜÀÈÌÒÙÁÉÍÓÚİÅÃÑ]/.test(el.text ?? "") ? 1.0 : 0.85;
     return [Math.max(y0, el.by - topF * sz), Math.min(y1, el.by + 0.27 * sz)];
   }
-  function elSpacing(el: PdfElement): Spacing { return { hs: el.hs ?? 1, cs: el.cs ?? 0, ws: el.ws ?? 0 }; }
+  // hs = gerçek sıkıştırma (Tz) × genişlik uydurma (yalnız yedek fontta — orijinal font zaten birebir).
+  function elSpacing(el: PdfElement): Spacing {
+    const orig = !!origFor(el);
+    return { hs: (el.hs ?? 1) * (orig ? 1 : (el.fit ?? 1)), cs: (el.cs ?? 0) + (orig ? (el.ocs ?? 0) : 0), ws: el.ws ?? 0 };
+  }
   function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? (isFontKey(el.font) ? el.font : "sans"); }
   function elBold(el: PdfElement): boolean { return edits.get(el.id)?.bold ?? el.bold ?? false; }
   function elItalic(el: PdfElement): boolean { return edits.get(el.id)?.italic ?? el.italic ?? false; }
@@ -877,7 +921,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         const [x0, y0, x1, y1] = el.bbox;
         if (ed?.deleted) {
           // Silme (metin veya görsel) → orijinali arka planla kapat.
-          ops.push({ page: p, bbox: el.bbox, clear: el.ink, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by, ...vtOf(el) });
+          ops.push({ page: p, bbox: el.bbox, clear: el.ink, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by, img: el.type === "image" || undefined, ...vtOf(el) });
           continue;
         }
         if (el.type !== "text") continue;
@@ -926,7 +970,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             noshrink: overflow > 1 ? true : undefined,
             bold: bold || undefined, italic: italic || undefined,
             underline: ed!.underline || undefined, strike: ed!.strike || undefined, align: ed!.align,
-            hs: el.hs, cs: el.cs, ws: el.ws, ofont: origFor(el) ? el.ofont : undefined,
+            hs: el.hs, cs: el.cs, ws: el.ws, fit: el.fit, ocs: el.ocs, ofont: origFor(el) ? el.ofont : undefined,
             ...vtOf(el),
           });
         } else if (shift > 0.5) {
@@ -936,7 +980,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             page: p, bbox: drawBbox, clear: clearBbox, text: el.text ?? "", size: el.size ?? 12,
             color: el.color, font: elFont(el), by: el.by, bg: bgMap.get(el.id),
             noshrink: true, bold: el.bold || undefined, italic: el.italic || undefined,
-            hs: el.hs, cs: el.cs, ws: el.ws, ofont: origFor(el) ? el.ofont : undefined,
+            hs: el.hs, cs: el.cs, ws: el.ws, fit: el.fit, ocs: el.ocs, ofont: origFor(el) ? el.ofont : undefined,
             ...vtOf(el),
           });
         }
@@ -955,16 +999,30 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   }
 
   function limitText(e: EditDailyLimitError): string {
-    const reset = e.resetAt ? new Date(e.resetAt).toLocaleString(tr ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : null;
+    // Yenilenme anını SAAT olarak ("Yenilenme: 00:00") yazmak "00:00 kaldı" diye okunuyordu →
+    // KALAN SÜRE + saat. resetAt geçmişte/eksikse bir sonraki gece yarısı (Türkiye) kullanılır.
+    const now = Date.now();
+    let at = e.resetAt ? new Date(e.resetAt).getTime() : NaN;
+    if (!Number.isFinite(at) || at <= now) {
+      const ist = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
+      at = now + ((24 - ist.getHours()) * 60 - ist.getMinutes()) * 60000;
+    }
+    const mins = Math.max(1, Math.round((at - now) / 60000));
+    const h = Math.floor(mins / 60), m = mins % 60;
+    const clock = new Date(at).toLocaleTimeString(tr ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
+    const when = tr
+      ? ` Hakkınız ${h ? `${h} saat ` : ""}${m ? `${m} dakika ` : ""}sonra (${clock === "00:00" ? "gece 00:00" : clock}'da) yenilenir.`
+      : ` It renews in ${h ? `${h} h ` : ""}${m ? `${m} min ` : ""}(at ${clock}).`;
     if (tr) {
       return e.guest
-        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 2, Pro ile sınırsız indirebilirsiniz.${reset ? ` Yenilenme: ${reset}.` : ""}`
-        : `Bugünkü indirme limitiniz doldu (${e.limit}/gün). Pro'ya geçerek sınırsız indirin.${reset ? ` Yenilenme: ${reset}.` : ""}`;
+        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 2, Pro ile sınırsız indirebilirsiniz.${when}`
+        : `Bugünkü indirme limitiniz doldu (${e.limit}/gün). Pro'ya geçerek sınırsız indirin.${when}`;
     }
     return e.guest
-      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 2/day, or Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`
-      : `Daily download limit reached (${e.limit}/day). Upgrade to Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`;
+      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 2/day, or Pro for unlimited.${when}`
+      : `Daily download limit reached (${e.limit}/day). Upgrade to Pro for unlimited.${when}`;
   }
+
 
   // Sonucun blob'unu getir — İLK çağrıda sunucudan indirir (günlük limit düşer) ve önbelleğe
   // alır; sonraki aç/paylaş tekrar limit düşürmeden bu blob'u kullanır.
@@ -1222,7 +1280,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                       const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
                       // Silinmiş görsel → arka plan rengiyle kapat. Silgiyi bbox'tan ~3px taşır:
                       // amblem/logo kenarındaki ince hat çizgileri de örtülsün (indirmede zaten yok).
-                      if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300" style={{ left: style.left - 3, top: style.top - 3, width: style.width + 6, height: style.height + 6, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                      if (del) return <FillPatch key={el.id} src={canvasRef.current} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} rect={{ left: style.left - 1, top: style.top - 1, width: style.width + 2, height: style.height + 2 }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                       return (
                         <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, sonra sil" : "Image — select, then delete"}>
                           {sel && (
