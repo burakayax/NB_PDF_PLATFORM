@@ -112,7 +112,7 @@ export function QuotaWidget({
                 {quota.daily.used}/{quota.daily.limit}
               </span>
             </span>
-            {resetAt && <QuotaCountdown resetAt={resetAt} timezone={timezone} />}
+            {resetAt && <QuotaCountdown resetAt={resetAt} timezone={timezone} tr={tr} />}
           </div>
           <ProgressBar value={quota.daily.used} max={quota.daily.limit} warn={dailyPct >= 80} />
           {quota.plan === "FREE" && (

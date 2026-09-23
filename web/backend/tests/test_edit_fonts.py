@@ -214,3 +214,58 @@ def test_searchable_scan_invisible_layer_fully_flagged():
     r = client.post("/api/pdf-analyze", files={"file": ("a.pdf", d.tobytes(), "application/pdf")}).json()
     txt = [e for e in r["pages"][0]["elements"] if e["type"] == "text"]
     assert txt and all(e.get("inv") for e in txt)
+
+
+@pytest.mark.parametrize(
+    "name,flags,key",
+    [
+        ("HelveticaNeueLTStd-Roman", 4, "lsans"),  # "Roman" ağırlıktır; MuPDF serif bayrağı yanlış
+        ("SFTT1000", 12, "lmono"), ("CMTT9", 0, "lmono"),
+        ("MinionPro-Regular", 0, "lserif"), ("SegoeUI", 0, "lsans"), ("Verdana", 0, "lsans"),
+        ("XYZUnknown", 8, "lmono"), ("XYZUnknown", 4, "lserif"), ("XYZUnknown", 0, "lsans"),
+    ],
+)
+def test_class_family(name, flags, key):
+    assert ef.class_family(name, flags) == key
+
+
+def _logo_pdf(two_pages=False) -> bytes:
+    """Degrade (vektör) zemin üstünde şeffaf PNG logo; istenirse ikinci sayfada AYNI logo."""
+    from PIL import Image, ImageDraw
+
+    im = Image.new("RGBA", (120, 120), (0, 0, 0, 0))
+    ImageDraw.Draw(im).ellipse((5, 5, 115, 115), fill=(200, 30, 40, 255))
+    b = io.BytesIO()
+    im.save(b, "PNG")
+    d = fitz.open()
+    for _ in range(2 if two_pages else 1):
+        p = d.new_page()
+        for i in range(40):
+            p.draw_rect(fitz.Rect(40 + i * 10, 40, 50 + i * 10, 160), color=None, fill=(0.1 + i / 50, 0.3, 0.6 - i / 90))
+        p.insert_image(fitz.Rect(60, 55, 150, 145), stream=b.getvalue())
+    return d.tobytes()
+
+
+def test_logo_delete_removes_image_without_painting_box():
+    pdf = _logo_pdf()
+    op = {"page": 0, "bbox": [60, 55, 150, 145], "text": "", "size": 12, "font": "sans", "bg": "#204c96", "img": True}
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")},
+                    headers=_AUTH, data={"edits": json.dumps([op])})
+    out = fitz.open("pdf", r.content)[0]
+    assert not out.get_image_info()  # görsel gerçekten kaldırıldı
+    src = fitz.open("pdf", pdf)[0]
+    # Logo dışındaki zemin (degrade) birebir aynı; logo alanında düz renk kutu YOK (degrade sürüyor).
+    a = src.get_pixmap(dpi=36, clip=fitz.Rect(40, 40, 450, 160))
+    b_ = out.get_pixmap(dpi=36, clip=fitz.Rect(40, 40, 450, 160))
+    col = lambda pm, x, y: pm.pixel(int((x - 40) * 0.5), int((y - 40) * 0.5))
+    assert col(b_, 65, 100) != col(b_, 140, 100)  # degrade: kutunun iki ucu farklı renk (düz kutu değil)
+    assert col(a, 300, 100) == col(b_, 300, 100)
+
+
+def test_logo_delete_keeps_same_logo_on_other_page():
+    pdf = _logo_pdf(two_pages=True)
+    op = {"page": 0, "bbox": [60, 55, 150, 145], "text": "", "size": 12, "font": "sans", "img": True}
+    r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")},
+                    headers=_AUTH, data={"edits": json.dumps([op])})
+    out = fitz.open("pdf", r.content)
+    assert not out[0].get_image_info() and len(out[1].get_image_info()) == 1

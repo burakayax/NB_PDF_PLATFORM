@@ -154,6 +154,12 @@ export type PdfTextEdit = {
   ws?: number;
   /** Orijinal gömülü fontun anahtarı — tüm harfler belgede bu fontla doğrulanmışsa sunucu onunla yazar. */
   ofont?: string;
+  /** Yedek font için genişlik uydurma oranı (orijinal font kullanılırsa sunucu uygulamaz). */
+  fit?: number;
+  /** Orijinal fontta satır genişliğini koruyan ek harf aralığı (pt) — yalnız orijinal fontta. */
+  ocs?: number;
+  /** Silinen öğe bir GÖRSEL (logo/amblem): sunucu boyamadan çizim komutunu kaldırır (zemin korunur). */
+  img?: boolean;
   /** Resim EKLEME op'u: base64 data URL. Doluysa bu op bir görsel yerleştirmedir
    * (altındaki içerik silinmez); bbox konum/boyut, rotate serbest açı (derece). */
   image?: string;
@@ -193,6 +199,10 @@ export type PdfElement = {
   ws?: number;
   /** Yeniden kullanılabilir orijinal gömülü font (PdfAnalysis.fonts anahtarı). */
   ofont?: string;
+  /** Yedek (ölçü-uyumsuz) font orijinal genişliğe bu yatay oranla uydurulur; orijinal fontta 1. */
+  fit?: number;
+  /** Orijinal font kullanılırken satır genişliğini koruyan ek harf aralığı (pt). */
+  ocs?: number;
   /** Görüntüdeki yazının (OCR/görünmez katman) GERÇEK mürekkep sınırı — silme/örtme bunu kapsar. */
   ink?: [number, number, number, number];
 };

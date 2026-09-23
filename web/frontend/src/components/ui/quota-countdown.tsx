@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 interface QuotaCountdownProps {
   resetAt: Date;
   timezone: string;
+  tr?: boolean;
 }
 
 function formatDuration(ms: number): string {
@@ -42,7 +43,7 @@ function getNextMidnight(timezone: string): Date {
   return new Date(localMidnight.getTime() - offsetMs);
 }
 
-export function QuotaCountdown({ resetAt, timezone }: QuotaCountdownProps) {
+export function QuotaCountdown({ resetAt, timezone, tr = true }: QuotaCountdownProps) {
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, resetAt.getTime() - Date.now()),
   );
@@ -61,10 +62,13 @@ export function QuotaCountdown({ resetAt, timezone }: QuotaCountdownProps) {
     minute: "2-digit",
   });
 
+  // Eskiden "05:12:40 (00:00)" — parantezdeki gece yarısı saati "00:00 kaldı" diye okunuyordu;
+  // sunucu geçmiş bir an gönderince de sayaç 00:00:00'da takılıyordu. Artık açık cümle ve
+  // geçmiş/boş an için bir sonraki yerel gece yarısı.
+  const left = remaining > 0 ? remaining : Math.max(0, localMidnight.getTime() - Date.now());
   return (
-    <span className="font-mono text-xs text-gray-400">
-      {formatDuration(remaining)}{" "}
-      <span className="text-gray-600">({hhmm})</span>
+    <span className="text-xs text-gray-400" title={tr ? `Yenilenme saati: ${hhmm}` : `Resets at ${hhmm}`}>
+      {tr ? <><span className="font-mono">{formatDuration(left)}</span> sonra yenilenir</> : <>renews in <span className="font-mono">{formatDuration(left)}</span></>}
     </span>
   );
 }

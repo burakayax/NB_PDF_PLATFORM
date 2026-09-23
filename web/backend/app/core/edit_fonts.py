@@ -76,6 +76,51 @@ def metric_family_for(font_name: str | None) -> str | None:
     return None
 
 
+_MONO_HINTS = ("mono", "courier", "consol", "menlo", "typewriter", "cmtt", "sftt", "lucidaconsole", "inconsolata", "sourcecodepro", "firacode")
+_SERIF_HINTS = ("serif", "times", "georgia", "garamond", "minion", "cambria", "palatino", "baskerville", "caslon",
+                "bodoni", "didot", "century", "bookman", "bookantiqua", "constantia", "charter", "cmr", "cmbx", "cmti",
+                "nimbusrom", "merriweather", "playfair", "sabon", "utopia", "plantin", "perpetua", "rockwell")
+_SANS_HINTS = ("sans", "helvetica", "arial", "verdana", "tahoma", "segoe", "calibri", "roboto", "opensans", "lato",
+               "inter", "univers", "frutiger", "myriad", "futura", "avenir", "franklin", "gothic", "grotesk", "trebuchet",
+               "gill", "optima", "montserrat", "oswald", "ubuntu", "noto", "source", "din", "gotham", "proxima")
+
+
+def class_family(font_name: str | None, flags: int = 0) -> str:
+    """Ölçü-uyumlu karşılığı OLMAYAN font için sınıfa göre aile (gerçek kalın/italik kesitli).
+
+    Önce AD (MuPDF'in serif bayrağı güvenilmez: HelveticaNeue'yi serif işaretliyor — ölçüldü),
+    sonra eşit-genişlik bayrağı (8). "Roman" ağırlık adıdır ("HelveticaNeue-Roman" = normal),
+    serif ipucu DEĞİL — eskiden bu yüzden Helvetica Neue tırnaklı fonta dönüşüyordu."""
+    n = re.sub(r"[\s_\-,]", "", _base_name(font_name or "")).lower()
+    if any(k in n for k in _MONO_HINTS):
+        return "lmono"
+    if any(k in n for k in _SANS_HINTS):
+        return "lsans"
+    if any(k in n for k in _SERIF_HINTS):
+        return "lserif"
+    if flags & 8:
+        return "lmono"
+    if flags & 4:
+        return "lserif"
+    return "lsans"
+
+
+def fit_scale(text: str, key: str, bold: bool, italic: bool, size: float, natural_width: float) -> float | None:
+    """Yedek aile, orijinal fonttan dar/geniş olabilir → orijinal metnin GERÇEK genişliğine yatay
+    ölçekle uydur (profesyonel editörlerin yaklaşımı). Satır uzunluğu korunur; ±%3 içindeyse ölçek yok."""
+    t = text.strip()
+    if len(t) < 3 or natural_width <= 1 or size <= 0:
+        return None
+    p = family_path(key, bold, italic)
+    w = text_width(t, p, FALLBACK_BY_CLASS[family_class(key)], size)
+    if w <= 1:
+        return None
+    r = natural_width / w
+    if abs(r - 1) < 0.03 or not (0.55 <= r <= 1.6):
+        return None
+    return round(r, 3)
+
+
 def family_path(key: str, bold: bool = False, italic: bool = False) -> str:
     _css, stem, _cls = METRIC_FAMILIES[key]
     return str(_DIR / f"{stem}-{_STYLE_SUFFIX[(bool(bold), bool(italic))]}.ttf")
@@ -295,6 +340,49 @@ def original_fonts(doc: Any) -> dict[str, dict]:
 
 def original_font_covers(info: dict, text: str) -> bool:
     return bool(text) and all(ch in info["chars"] for ch in text)
+
+
+def remove_image_placement(doc: Any, page: Any, rect: Any) -> str | None:
+    """Silinen görseli (logo/amblem) BOYAMADAN kaldırır: altındaki zemin (degrade, fotoğraf, yazı)
+    olduğu gibi kalır. Eski yöntem görselin kutusunu örneklenen renkle boyuyordu → düz olmayan
+    zeminde kare kutu kalıyordu (ölçüldü). Sıra:
+      1) Bu sayfanın içerik akışında bu görselin TEK çizim komutu ("/Ad Do") varsa yalnız onu sil
+         (başka sayfalardaki aynı logo etkilenmez).
+      2) Kutuya başka görsel değmiyorsa silme aracıyla yalnız görseli kaldır (yazı/çizgiye dokunma).
+    Başarılıysa kullanılan yöntemin adı, değilse None (çağıran eski dolgu yöntemine düşer)."""
+    import fitz
+
+    r = fitz.Rect(rect)
+    try:
+        infos = page.get_image_info(xrefs=True)
+    except Exception:
+        return None
+
+    def _iou(a: Any, b: Any) -> float:
+        inter = (a & b).get_area()
+        u = a.get_area() + b.get_area() - inter
+        return inter / u if u > 0 else 0.0
+
+    matches = [i for i in infos if _iou(fitz.Rect(i["bbox"]), r) > 0.85]
+    if len(matches) == 1 and matches[0].get("xref", 0) > 0:
+        xref = matches[0]["xref"]
+        if sum(1 for i in infos if i.get("xref") == xref) == 1:
+            names = [im[7] for im in page.get_images(full=True) if im[0] == xref]
+            if len(names) == 1 and names[0]:
+                pat = re.compile(rb"/" + re.escape(names[0].encode("latin-1")) + rb"\s+Do\b")
+                streams = [(cx, doc.xref_stream(cx) or b"") for cx in page.get_contents()]
+                if sum(len(pat.findall(s)) for _, s in streams) == 1:
+                    for cx, s in streams:
+                        if pat.search(s):
+                            doc.update_stream(cx, pat.sub(b"", s, count=1))
+                            return "content"
+    others = [i for i in infos if (fitz.Rect(i["bbox"]) & r).get_area() > 1 and i not in matches]
+    if matches and not others:
+        page.add_redact_annot(r, fill=False)
+        page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_REMOVE, graphics=fitz.PDF_REDACT_LINE_ART_NONE,
+                              text=fitz.PDF_REDACT_TEXT_NONE)
+        return "redact"
+    return None
 
 
 _FALLBACK_CSS = {"sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono"}
