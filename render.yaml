@@ -11,7 +11,13 @@ services:
   - type: pserv
     name: nb-gotenberg
     branch: main
-    autoDeployTrigger: off  # CI yeşil olunca deploy hook tetikler (diğer servislerle aynı akış)
+    # NOT: CI'daki (.github/workflows/ci.yml) deploy job'ı şu an SADECE
+    # nb-pdf-api/nb-auth-api/nb-pdf-frontend için hook tetikliyor. Bu
+    # servise render.yaml/Dockerfile değişikliği push'ladığında CI onu
+    # OTOMATİK yeniden dağıtmaz — Render dashboard'dan elle "Manual Deploy"
+    # gerekir (ya da CI'ya RENDER_DEPLOY_HOOK_GOTENBERG eklenip HOOK_PDF
+    # deseni tekrarlanabilir).
+    autoDeployTrigger: off
     runtime: docker
     region: frankfurt        # nb-pdf-api ile AYNI bölge olmalı (internal ağ bölgeler arası çalışmaz)
     plan: starter
