@@ -407,20 +407,6 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
-      <div className="mb-4 flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/25 to-blue-600/20 text-cyan-200 ring-1 ring-cyan-400/30">
-          <PenLine className="h-7 w-7" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF İmzala" : "Sign PDF"}</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {tr
-              ? "İmzanı çiz, yaz ya da görsel yükle; PDF'e yerleştir. İmzan cihazından çıkmaz — %100 gizli, üyeliksiz."
-              : "Draw, type or upload your signature and place it on the PDF. Your signature never leaves your device — 100% private, no sign-up."}
-          </p>
-        </div>
-      </div>
-
       {!editorOpen && (
         <div className="tool-form">
           <WorkspaceUploadField

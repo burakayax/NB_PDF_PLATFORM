@@ -299,8 +299,8 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "udf-to-pdf", cat: "convert", Icon: Scale, free: true,
-    tr: { name: "UDF'yi PDF Yap", desc: "UYAP'tan inen .udf belgesini program kurmadan PDF'ye çevirin." },
-    en: { name: "UDF to PDF", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
+    tr: { name: "UDF → PDF", desc: "UYAP'tan inen .udf belgesini program kurmadan PDF'ye çevirin." },
+    en: { name: "UDF → PDF", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
   },
   {
     id: "repair-pdf", cat: "edit", Icon: Wrench,

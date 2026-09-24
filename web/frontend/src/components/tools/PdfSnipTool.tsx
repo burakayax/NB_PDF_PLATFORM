@@ -566,7 +566,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   // ── Yükleme durumu ─────────────────────────────────────────────────────────
   if (!bytes) {
     return (
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto w-full max-w-2xl">
         <div className="tool-form">
           <WorkspaceUploadField
             toolId="pdf-kesit-al"

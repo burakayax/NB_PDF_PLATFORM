@@ -494,7 +494,7 @@ export function DashboardSidebar({
 
   const renderUdfRow = (keyPrefix = "") => {
     if (!onOpenUdf) return null;
-    const label = tr ? "UDF'yi PDF Yap" : "UDF to PDF";
+    const label = tr ? "UDF → PDF" : "UDF → PDF";
     return (
       <button
         key={`${keyPrefix}udf`}

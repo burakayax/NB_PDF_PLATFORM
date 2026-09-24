@@ -253,6 +253,7 @@ import { runClientPdfTool } from "./lib/clientToolRun";
 import { reportTeamActivity } from "./lib/teamActivity";
 import { checkToolSubmission } from "./lib/toolSubmissionCheck";
 import { readAccessToken } from "./lib/accessTokenStore";
+import { WorkspaceToolShell } from "./components/common/WorkspaceToolShell";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -6661,58 +6662,52 @@ function App() {
             ) : null}
 
             {contentPanel === "sign" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="pdf-imzala" language={language} className="mb-4" />
+              <WorkspaceToolShell id="pdf-imzala" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "annotate" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="pdf-yorumla" language={language} className="mb-4" />
+              <WorkspaceToolShell id="pdf-yorumla" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "compress-image" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="gorsel-sikistir" language={language} className="mb-4" />
+              <WorkspaceToolShell id="gorsel-sikistir" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageCompressTool language={language} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "snip" ? (
-              <section className="mx-auto w-full max-w-6xl py-2">
-                <ToolHowTo slug="pdf-kesit-al" language={language} className="mb-4" />
+              <WorkspaceToolShell id="pdf-kesit-al" language={language} wide>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSnipTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "resize-image" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="gorsel-boyutlandir" language={language} className="mb-4" />
+              <WorkspaceToolShell id="gorsel-boyutlandir" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageResizeTool language={language} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
-            {/* UDF'yi PDF Yap — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
             {contentPanel === "udf" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="udf-to-pdf" language={language} className="mb-4" />
+              <WorkspaceToolShell id="udf-to-pdf" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <UdfToPdfTool language={language} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
