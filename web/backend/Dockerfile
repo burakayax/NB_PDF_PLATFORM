@@ -32,7 +32,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libreoffice-calc \
       libreoffice-impress \
       fonts-liberation \
+      curl \
     && rm -rf /var/lib/apt/lists/*
+
+# apt'nin tesseract-ocr-tur paketi "fast" (integerize, hız için isabetten
+# ödün veren) Türkçe modelini getirir. Aynı Tesseract 5 motoruna, yeni
+# bağımlılık eklemeden, tessdata_best (en isabetli) Türkçe/İngilizce modelini
+# koyup TESSDATA_PREFIX ile öne alıyoruz — taranmış PDF'lerde (Aranabilir PDF,
+# PDF→Word OCR akışı) daha isabetli metin tanıma, biraz daha CPU süresi karşılığında.
+RUN mkdir -p /usr/share/tessdata-best \
+    && curl -fsSL -o /usr/share/tessdata-best/tur.traineddata \
+      https://github.com/tesseract-ocr/tessdata_best/raw/main/tur.traineddata \
+    && curl -fsSL -o /usr/share/tessdata-best/eng.traineddata \
+      https://github.com/tesseract-ocr/tessdata_best/raw/main/eng.traineddata
+ENV TESSDATA_PREFIX=/usr/share/tessdata-best
 
 WORKDIR /app
 
