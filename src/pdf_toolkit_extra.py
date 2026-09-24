@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import zipfile
 from typing import Callable, Dict, List, Optional
+from urllib.parse import urlsplit
 
 import fitz
 
@@ -704,15 +705,42 @@ def render_url_via_browser(
                 )
                 page = context.new_page()
                 if request_guard is not None:
-                    def _route(route, _guard=request_guard):
+                    # Host başına önbellek: aynı alan adına (ör. Wikipedia'da
+                    # tek sayfa ~40 alt istek yapıyor, çoğu aynı CDN host'una)
+                    # her seferinde DNS sorgusu yapmak hem yavaş hem de
+                    # Playwright'ın eşzamanlı istek dağıtıcısında ara sıra
+                    # yarış durumuna (route.request erişiminde TypeError)
+                    # yol açıp ana belge isteğini iptal ettirebiliyordu —
+                    # kullanıcıya boş sayfa olarak yansıyordu.
+                    _guard_cache: Dict[str, bool] = {}
+
+                    # DİKKAT: Playwright, handler'ın parametre SAYISINA bakıp
+                    # 2+ parametreli fonksiyonları (route, request) ikilisiyle
+                    # çağırıyor. request_guard/_guard_cache'i "varsayılan
+                    # parametre" hilesiyle bağlamak handler'ı 2 parametreliymiş
+                    # gibi gösteriyor; Playwright ikinci argümana GERÇEK
+                    # request nesnesini basıp closure'ı bozuyordu (ana belge
+                    # isteği sessizce iptal oluyor, kullanıcı boş PDF görüyordu).
+                    # Bu yüzden TEK parametreli, dış değişkenlere closure ile
+                    # erişen bir fonksiyon kullanılmalı.
+                    def _route(route):
                         try:
-                            allowed = _guard(route.request.url)
+                            req_url = route.request.url
+                            host = urlsplit(req_url).netloc
+                            if host in _guard_cache:
+                                allowed = _guard_cache[host]
+                            else:
+                                allowed = bool(request_guard(req_url))
+                                _guard_cache[host] = allowed
                         except Exception:
                             allowed = False
-                        if allowed:
-                            route.continue_()
-                        else:
-                            route.abort()
+                        try:
+                            if allowed:
+                                route.continue_()
+                            else:
+                                route.abort()
+                        except Exception:
+                            pass
                     page.route("**/*", _route)
                 try:
                     page.goto(url, wait_until="networkidle", timeout=timeout_ms)
