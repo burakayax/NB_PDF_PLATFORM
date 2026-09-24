@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import fitz
 
@@ -672,9 +672,73 @@ def images_to_pdf(
     return True
 
 
+def render_url_via_browser(
+    url: str,
+    output_path: str,
+    request_guard: Optional[Callable[[str], bool]] = None,
+    timeout_ms: int = 45000,
+) -> bool:
+    """Gerçek Chromium (Playwright) ile URL'yi olduğu gibi PDF'e basar.
+
+    iLovePDF gibi rakiplerin kullandığı yaklaşım: sayfa gerçek bir tarayıcıda
+    açılır, CSS/webfont/görseller tam yüklenir, ardından tarayıcının kendi
+    "yazdır" motoruyla PDF üretilir. wkhtmltopdf/xhtml2pdf modern CSS'i
+    (flexbox/grid, webfont) düzgün işleyemediği için stilsiz, bozuk karakterli
+    çıktı veriyordu; bu fonksiyon birincil motor olarak onların yerini alır.
+
+    request_guard verilirse, sayfanın yaptığı HER alt istek (görsel/CSS/font)
+    bu callback'ten geçer — SSRF/DNS-rebinding koruması ana belgeyle sınırlı
+    kalmaz, tüm kaynaklara uygulanır. Playwright kurulu değilse veya render
+    başarısız olursa False döner (çağıran yedek motora düşer).
+    """
+    try:
+        from playwright.sync_api import Error as _PwError, sync_playwright
+    except ImportError:
+        return False
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+            try:
+                context = browser.new_context(
+                    user_agent="Mozilla/5.0 (compatible; PDFPlatformBot/1.0; +https://pdfplatform.app)",
+                )
+                page = context.new_page()
+                if request_guard is not None:
+                    def _route(route, _guard=request_guard):
+                        try:
+                            allowed = _guard(route.request.url)
+                        except Exception:
+                            allowed = False
+                        if allowed:
+                            route.continue_()
+                        else:
+                            route.abort()
+                    page.route("**/*", _route)
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=timeout_ms)
+                except _PwError:
+                    # Ağ hiç durulmadı (ör. sürekli analytics isteği) — sayfa
+                    # yine de DOM'a yüklenmiş olabilir, elimizdekiyle devam et.
+                    pass
+                page.emulate_media(media="print")
+                page.pdf(
+                    path=output_path,
+                    format="A4",
+                    print_background=True,
+                    margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
+                )
+            finally:
+                browser.close()
+    except Exception:
+        return False
+    return os.path.isfile(output_path) and os.path.getsize(output_path) > 32
+
+
 def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None) -> bool:
     """Önce wkhtmltopdf (daha uyumlu), sonra xhtml2pdf dener.
 
+    Bu, render_url_via_browser (Playwright) kullanılamadığında ya da ham HTML
+    metni (URL değil) verildiğinde devreye giren YEDEK yoldur.
     wkhtmltopdf sistemde yoksa xhtml2pdf ile devam eder (sınırlı CSS desteği).
     Her ikisi de başarısız olursa kullanıcı dostu bir hata mesajı fırlatır.
     """
