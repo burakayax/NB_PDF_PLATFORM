@@ -676,20 +676,6 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
-      <div className="mb-4 flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/25 to-orange-600/20 text-amber-200 ring-1 ring-amber-400/30">
-          <Highlighter className="h-7 w-7" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF İşaretle" : "Markup PDF"}</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {tr
-              ? "PDF'e fosforlu vurgu, serbest çizim, kutu, ok ve metin not ekle. Her şey cihazında işlenir — %100 gizli, üyeliksiz."
-              : "Highlight, draw, box, arrow and add text notes on a PDF. Everything runs on your device — 100% private, no sign-up."}
-          </p>
-        </div>
-      </div>
-
       {!editorOpen && (
         <div className="tool-form">
           <WorkspaceUploadField
