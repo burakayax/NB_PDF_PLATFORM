@@ -738,18 +738,36 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
             html_src = html_src.replace("<head>", '<head><meta charset="utf-8">', 1)
         else:
             html_src = f'<html><head><meta charset="utf-8"></head><body>{html_src}</body></html>'
-    with open(output_path, "wb") as out:
-        status = pisa.CreatePDF(
-            src=html_src.encode("utf-8"),
-            dest=out,
-            encoding="utf-8",
-            path_base=base_url or None,
-        )
-    if status.err or not (os.path.isfile(output_path) and os.path.getsize(output_path) > 32):
+    def _run_pisa(src: str) -> bool:
+        with open(output_path, "wb") as out:
+            status = pisa.CreatePDF(
+                src=src.encode("utf-8"),
+                dest=out,
+                encoding="utf-8",
+                path_base=base_url or None,
+            )
+        return not status.err and os.path.isfile(output_path) and os.path.getsize(output_path) > 32
+
+    try:
+        ok = _run_pisa(html_src)
+    except Exception:
+        ok = False
+
+    if not ok:
+        # xhtml2pdf/reportlab, rowspan/colspan uyuşmayan karmaşık tablolarda
+        # (ör. Wikipedia infobox tabloları) çöküyor. Tabloları kaldırıp yeniden dene.
+        html_no_tables = _re.sub(r'<table\b.*?</table>', '', html_src, flags=_re.IGNORECASE | _re.DOTALL)
+        if html_no_tables != html_src:
+            try:
+                ok = _run_pisa(html_no_tables)
+            except Exception:
+                ok = False
+
+    if not ok:
         raise Exception(
             "HTML PDF'e dönüştürülemedi. "
             "Sayfanın geçerli HTML içerdiğinden emin olun ve JavaScript gerektirmeyen basit sayfalar deneyin. "
-            "Karmaşık CSS/JS içeren sayfalar için URL yerine sayfa kaynağını (HTML metnini) kullanın."
+            "Karmaşık CSS/JS/tablo içeren sayfalar için URL yerine sayfa kaynağını (HTML metnini) kullanın."
         )
     return True
 
