@@ -456,9 +456,53 @@ def _word_to_pdf_win32com(docx_path: str, pdf_path: str) -> None:
             pass
 
 
+def gotenberg_convert_to_pdf(src_path: str, pdf_path: str) -> bool:
+    """Gotenberg (LibreOffice'i saran HTTP servisi) ile ofis belgesini PDF'e çevirir.
+
+    Web sunucusunda her dönüşümde yeni bir LibreOffice process'i açıp kapatmak
+    yavaş; Gotenberg aynı motoru (kalite değişmez) sürekli ayakta tutup HTTP
+    üzerinden hizmet veriyor. GOTENBERG_URL ortam değişkeni tanımlı değilse
+    (ör. masaüstü uygulaması, ya da Render'da servis henüz kurulmadıysa) ya da
+    servise ulaşılamazsa sessizce False döner — çağıran yerel LibreOffice/Office
+    COM yedeğine düşer, hiçbir şey kırılmaz.
+    """
+    base = os.environ.get("GOTENBERG_URL", "").strip().rstrip("/")
+    if not base:
+        return False
+    # Render'ın "hostport" şablonu (fromService) şemasız "host:port" verir;
+    # tam bir URL de (http://...) elle girilmiş olabilir — ikisini de kabul et.
+    if not base.startswith(("http://", "https://")):
+        base = f"http://{base}"
+    try:
+        import httpx
+    except ImportError:
+        return False
+    timeout_sec = max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "300")))
+    src_abs = os.path.abspath(src_path)
+    try:
+        with open(src_abs, "rb") as f:
+            data = f.read()
+        resp = httpx.post(
+            f"{base}/forms/libreoffice/convert",
+            files={"files": (os.path.basename(src_abs), data)},
+            timeout=timeout_sec,
+        )
+        resp.raise_for_status()
+        os.makedirs(os.path.dirname(os.path.abspath(pdf_path)) or ".", exist_ok=True)
+        with open(pdf_path, "wb") as out:
+            out.write(resp.content)
+        return os.path.isfile(pdf_path) and os.path.getsize(pdf_path) > 0
+    except Exception:
+        return False
+
+
 def _libreoffice_convert_to_pdf(src_path: str, pdf_path: str) -> bool:
     """LibreOffice (soffice --headless) ile ofis belgesini PDF'e çevirir.
-    Sunucu (Linux) tarafında Word/PowerPoint/Excel → PDF dönüşümlerinin ortak yolu."""
+    Sunucu (Linux) tarafında Word/PowerPoint/Excel → PDF dönüşümlerinin ortak yolu.
+    Önce Gotenberg denenir (bkz. gotenberg_convert_to_pdf); yalnız kurulu/erişilebilir
+    değilse buradaki doğrudan soffice subprocess yoluna düşülür."""
+    if gotenberg_convert_to_pdf(src_path, pdf_path):
+        return True
     soffice = shutil.which("soffice") or shutil.which("libreoffice")
     if not soffice:
         raise Exception(

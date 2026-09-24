@@ -2,6 +2,22 @@
 # Dökümantasyon: https://render.com/docs/blueprint-spec
 
 services:
+  # ─── Gotenberg (Word/Excel/PPT → PDF motoru, iç servis) ────────────────────
+  # Resmi imaj, LibreOffice'i sarıp HTTP üzerinden sunuyor — kalite LibreOffice
+  # ile birebir aynı (motor aynı), tek fark her istekte process açıp
+  # kapatmamak: hız + güvenilirlik (health check, kuyruk, timeout Gotenberg
+  # tarafında yönetiliyor). "pserv" = private service: dışarıya açık DEĞİL,
+  # sadece bu Render hesabındaki diğer servisler internal ağdan erişebilir.
+  - type: pserv
+    name: nb-gotenberg
+    branch: main
+    autoDeployTrigger: off  # CI yeşil olunca deploy hook tetikler (diğer servislerle aynı akış)
+    runtime: docker
+    region: frankfurt        # nb-pdf-api ile AYNI bölge olmalı (internal ağ bölgeler arası çalışmaz)
+    plan: starter
+    dockerfilePath: infra/gotenberg/Dockerfile
+    dockerContext: infra/gotenberg
+
   # ─── PDF API (FastAPI / Python) ───────────────────────────────────────────
   - type: web
     name: nb-pdf-api
@@ -79,6 +95,16 @@ services:
         value: "1"
       - key: EDITOR_FREE_DAILY_LIMIT
         value: "2"
+      # Word/Excel/PPT → PDF: Gotenberg (yukarıdaki nb-gotenberg private
+      # servisi) internal ağdan "host:port" olarak enjekte edilir. Kod tarafı
+      # (src/pdf_engine.py: gotenberg_convert_to_pdf) şemayı (http://) kendisi
+      # ekler. Servis her nedense ayakta değilse/ulaşılamazsa otomatik olarak
+      # yerel LibreOffice subprocess yoluna düşülür — tek nokta arızası değil.
+      - key: GOTENBERG_URL
+        fromService:
+          name: nb-gotenberg
+          type: pserv
+          property: hostport
 
   # ─── Auth API (Express / Node.js) ─────────────────────────────────────────
   - type: web

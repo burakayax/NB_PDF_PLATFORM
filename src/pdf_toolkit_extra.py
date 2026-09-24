@@ -17,7 +17,13 @@ from urllib.parse import urlsplit
 import fitz
 
 # pdf_engine'den parola açma + OCR (taranmış sayfalar için)
-from src.pdf_engine import _open_pdf_reader, is_pdf_encrypted, get_num_pages, ocr_page_text
+from src.pdf_engine import (
+    _open_pdf_reader,
+    is_pdf_encrypted,
+    get_num_pages,
+    ocr_page_text,
+    gotenberg_convert_to_pdf,
+)
 
 # Web SaaS: single quality tier (DPI not user-configurable).
 PDF_EXPORT_DPI_WEB = 300
@@ -1092,6 +1098,13 @@ def pdf_to_pptx(
 def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
     import shutil
     import subprocess
+
+    # Sunucuda (GOTENBERG_URL tanımlıysa) önce Gotenberg denenir — aynı
+    # LibreOffice motoru, ama process açıp kapatma maliyeti yok. Masaüstünde
+    # (env yok) hemen False döner, aşağıdaki PowerPoint COM/LibreOffice
+    # yoluna sorunsuz düşülür.
+    if gotenberg_convert_to_pdf(pptx_path, pdf_path):
+        return True
 
     timeout_sec = max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "300")))
 
