@@ -127,6 +127,46 @@ def _resolve_ssrf_safe(url: str) -> tuple[str, urllib.parse.ParseResult]:
     resolved_ip = infos[0][4][0]
     return resolved_ip, parsed
 
+
+def _ssrf_safe_request_guard(request_url: str) -> bool:
+    """HTML→PDF tarayıcı render'ı sırasında yapılan HER alt istek (görsel/CSS/
+    font) için True/False döner. _resolve_ssrf_safe ile aynı özel-ağ listesini
+    kullanır; tek fark HTTPException fırlatmak yerine sessizce reddetmesi
+    (Playwright route handler'ı sadece izin/red bekliyor)."""
+    try:
+        parsed = urllib.parse.urlparse(request_url)
+    except Exception:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return parsed.scheme in ("data", "blob")
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+    try:
+        addr = ipaddress.ip_address(hostname)
+        _check_ip_not_private(addr)
+        return True
+    except ValueError:
+        pass
+    except HTTPException:
+        return False
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except OSError:
+        return False
+    if not infos:
+        return False
+    for info in infos:
+        try:
+            addr = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            continue
+        try:
+            _check_ip_not_private(addr)
+        except HTTPException:
+            return False
+    return True
+
 router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS-extras"])
 
 
@@ -2042,7 +2082,17 @@ async def tool_html_to_pdf(
         _base_url = pre_fetched_base_url
 
         def _run():
-            ptx.html_to_pdf_file(_html_content, str(out_p), base_url=_base_url)
+            # Birincil motor: gerçek Chromium (Playwright) — sayfayı olduğu
+            # gibi (CSS/görsel/webfont) render eder. Alt istekler dahi SSRF
+            # filtresinden geçer. Yalnız URL girişinde denenir (ham HTML
+            # metninde base_url/relatif kaynak çözümü daha kırılgan).
+            rendered = False
+            if _url_valid:
+                rendered = ptx.render_url_via_browser(
+                    _url_stripped, str(out_p), request_guard=_ssrf_safe_request_guard
+                )
+            if not rendered:
+                ptx.html_to_pdf_file(_html_content, str(out_p), base_url=_base_url)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return _pack_pdf_result_file(out_p, "web.pdf", user_id, "html-to-pdf")
 

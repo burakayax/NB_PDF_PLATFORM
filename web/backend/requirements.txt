@@ -33,6 +33,10 @@ xhtml2pdf
 # NOT: pdfkit kaldırıldı (CVE-2025-26240). HTML→PDF için wkhtmltopdf ikilisi
 # artık doğrudan subprocess ile çağrılıyor (bkz. src/pdf_toolkit_extra.py).
 img2pdf
+# HTML→PDF birincil motor: gerçek Chromium ile render (CSS/webfont/görsel tam
+# destek). wkhtmltopdf/xhtml2pdf artık yalnız Playwright kullanılamazsa yedek.
+# Dockerfile'da `playwright install --with-deps chromium` ile tarayıcı kurulur.
+playwright>=1.47
 
 # S3-uyumlu nesne depolama (AWS S3 / Cloudflare R2)
 boto3>=1.34.0

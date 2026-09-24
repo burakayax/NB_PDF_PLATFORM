@@ -51,6 +51,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# HTML→PDF: gerçek Chromium motoru (iLovePDF vb. rakiplerle aynı yaklaşım).
+# --with-deps: Chromium'un çalışması için gereken sistem kütüphanelerini de kurar.
+RUN playwright install --with-deps chromium
+
 # Uygulama kodu + paylaşılan PDF motoru (kök src/). Dizin yapısı korunmalı:
 # /app/web/backend/app/core/operations.py → parents[4] = /app → /app/src erişilebilir.
 COPY web/backend /app/web/backend
