@@ -467,6 +467,10 @@ export async function registerUser(
     }
   }
   const cityTrim = input.city?.trim() ?? "";
+  // Ülke: frontend `geoCountry.ts` ile IP'den çözdüğü ISO kodu gönderirse ONU
+  // yaz (ör. "TR", "DE"). Önceden şehir girilince koşulsuz "Turkey" sabiti
+  // yazılıyordu — gerçek bir dağılım değil, tek bir uydurma değerdi.
+  const countryCode = input.country?.trim() || null;
 
   const passwordHash = await hashPassword(input.password);
   const resolvedRole = resolveRoleFromEmail(input.email);
@@ -477,7 +481,8 @@ export async function registerUser(
       lastName,
       name: displayName,
       phone: phoneE164,
-      ...(cityTrim ? { city: cityTrim, country: "Turkey" } : {}),
+      ...(cityTrim ? { city: cityTrim } : {}),
+      ...(countryCode ? { country: countryCode } : {}),
       passwordHash,
       authProvider: "local",
       role: resolvedRole,
