@@ -34,10 +34,10 @@ export function GuestPdfTool({
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-          <button type="button" onClick={onLogin} className="flex items-center gap-2">
+          <a href={tr ? "/" : "/en"} className="flex items-center gap-2">
             <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
             <span className="text-sm font-bold tracking-tight">PDF Platform</span>
-          </button>
+          </a>
           <div className="flex items-center gap-2">
             <button
               type="button"
