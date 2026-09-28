@@ -2,7 +2,6 @@ import {
   Star,
   Activity,
   BarChart3,
-  Building2,
   ChevronDown,
   FileText,
   FolderOpen,
@@ -31,7 +30,6 @@ export type MosaicNavGroup = { title: string; items: MosaicNavItem[] };
 const iconMap: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   users: Users,
-  "cmd-site": Building2,
   "cmd-mkt": Radio,
   "cmd-coupons": Ticket,
   "cmd-social": Share2,
