@@ -55,6 +55,13 @@ const RUBBER_MIN_PX = 5;
 const RENDER_OVERSAMPLE = 1.35;
 /** Sayfa Sil: daha küçük raster — büyük dosyada ana iş parçacığı ve bellek daha az yüklenir. */
 const RENDER_OVERSAMPLE_DELETE = 1.14;
+/**
+ * cssW CSS pikseli cinsindendi, devicePixelRatio hesaba katılmıyordu — HiDPI ekranlarda
+ * (Retina, Windows %125-150 ölçek) tarayıcı görseli fiziksel piksele büyütüp bulanıklaştırıyordu.
+ * Yakınlaştırınca hücre büyüyüp CSS-piksel açığı da büyüdüğü için sorun daha görünür oluyordu.
+ * 2x ile sınırlanır — 3x telefonlarda canvas belleği gereksiz şişmesin.
+ */
+const THUMB_DPR = typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1;
 /** Tek thumb için uzun kenar üst sınırı (px); uç PDF boyutlarında canvas şişmesini keser. */
 const MAX_THUMB_CANVAS_EDGE_PX = 1760;
 /** Kaydırıcı viewport minimum yüksekliği (px); modal içinde kaydırılabilir alanın sıfır görünmesini azaltır. */
@@ -905,7 +912,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           }
           try {
             const baseVp = page.getViewport({ scale: 1 });
-            const oversample = mode === "delete" ? RENDER_OVERSAMPLE_DELETE : RENDER_OVERSAMPLE;
+            const oversample = (mode === "delete" ? RENDER_OVERSAMPLE_DELETE : RENDER_OVERSAMPLE) * THUMB_DPR;
             let scale = (cssW / Math.max(1e-6, baseVp.width)) * oversample;
             let vp = page.getViewport({ scale });
             const maxEdge = MAX_THUMB_CANVAS_EDGE_PX;

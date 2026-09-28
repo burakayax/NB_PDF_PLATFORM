@@ -5,19 +5,16 @@ import {
   ArrowDown,
   ArrowUp,
   Check,
-  Download,
-  ExternalLink,
   FileText,
   GripVertical,
   Image as ImageIcon,
   Loader2,
   Lock,
-  Share2,
   Trash2,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { ToolRating } from "../common/ToolRating";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
+import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import {
   mergePdfs,
@@ -191,15 +188,34 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     setDragId(id);
   };
+  // document.elementFromPoint her çağrıda senkron layout hesaplatır; pointermove
+  // saniyede 100+ kez tetiklenebildiği için ham olayda çağırmak animasyonu kilitliyordu.
+  // Son pozisyonu ref'te tutup kareye (rAF) göre işleyerek en fazla saniyede ~60 kez çalışır.
+  const dragMoveRef = useRef<{ x: number; y: number } | null>(null);
+  const dragRafRef = useRef<number | null>(null);
   const onGripPointerMove = (e: ReactPointerEvent) => {
     if (!dragId) return;
     e.preventDefault();
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const row = el?.closest<HTMLElement>("[data-file-row]");
-    const overId = row?.dataset.fileRow;
-    if (overId && overId !== dragId) reorderTo(overId);
+    dragMoveRef.current = { x: e.clientX, y: e.clientY };
+    if (dragRafRef.current != null) return;
+    dragRafRef.current = requestAnimationFrame(() => {
+      dragRafRef.current = null;
+      const pos = dragMoveRef.current;
+      if (!pos || !dragId) return;
+      const el = document.elementFromPoint(pos.x, pos.y);
+      const row = el?.closest<HTMLElement>("[data-file-row]");
+      const overId = row?.dataset.fileRow;
+      if (overId && overId !== dragId) reorderTo(overId);
+    });
   };
-  const endDrag = () => setDragId(null);
+  const endDrag = () => {
+    if (dragRafRef.current != null) {
+      cancelAnimationFrame(dragRafRef.current);
+      dragRafRef.current = null;
+    }
+    dragMoveRef.current = null;
+    setDragId(null);
+  };
   const remove = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
   const clearAll = () => { setFiles([]); setError(null); };
   const reset = () => {
@@ -272,150 +288,26 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     }
   };
 
-  function downloadBlob(blob: Blob, name: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }
-
-  const [reSaved, setReSaved] = useState(false);
-  const [everDownloaded, setEverDownloaded] = useState(false);
-  /**
-   * İNDİRME YALNIZ BURADA OLUR: kaydetme yeri, kullanıcı bu düğmeye bastığında
-   * sorulur. Tıklama taze bir etkileşim olduğu için pencere güvenle açılır.
-   * Kaydetme başarılıysa düğme kısa süre "İndirildi" onayı gösterir, sonra
-   * "Tekrar indir" olarak kalır — dosya zaten alındığı için yeniden "İndir"
-   * yazması yanıltıcıydı.
-   */
-  async function redownload() {
-    if (!result) return;
-    const isaretle = () => {
-      setEverDownloaded(true);
-      setReSaved(true);
-      setTimeout(() => setReSaved(false), 3000);
-    };
-    const win = window as unknown as {
-      showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-    };
-    if (typeof win.showSaveFilePicker === "function") {
-      try {
-        const nh = await win.showSaveFilePicker({ suggestedName: result.filename, types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }] });
-        const w = await nh.createWritable(); await w.write(result.blob); await w.close();
-        isaretle();
-        return;
-      } catch (e) { if (e instanceof DOMException && e.name === "AbortError") return; }
-    }
-    downloadBlob(result.blob, result.filename);
-    isaretle();
-  }
-
-  // Sonucu yeni sekmede aç (PDF tarayıcıda görüntülenir).
-  function openResult() {
-    if (!result) return;
-    const url = URL.createObjectURL(result.blob);
-    window.open(url, "_blank", "noopener,noreferrer");
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  // Web Share API — tarayıcı özelliği, LOGIN GEREKTİRMEZ (çoğunlukla mobil).
-  const canShare =
-    typeof navigator !== "undefined" &&
-    typeof (navigator as Navigator & { canShare?: unknown }).canShare === "function";
-
-  async function shareResult() {
-    if (!result) return;
-    const file = new File([result.blob], result.filename, { type: "application/pdf" });
-    const nav = navigator as Navigator & {
-      canShare?: (d: { files: File[] }) => boolean;
-      share?: (d: { files: File[]; title?: string }) => Promise<void>;
-    };
-    try {
-      if (nav.canShare?.({ files: [file] }) && nav.share) {
-        await nav.share({ files: [file], title: result.filename });
-      }
-    } catch {
-      /* iptal / desteklenmiyor */
-    }
-  }
 
   if (result) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center"
       >
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
-          <Check className="h-8 w-8" />
-        </div>
-        <p className="mt-4 text-xl font-bold text-white">
-          {tr ? "PDF hazır 🎉" : "Your PDF is ready 🎉"}
-        </p>
-        <div className="mx-auto mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3.5 py-2 text-[13px] font-medium text-emerald-200">
-          <Check className="h-4 w-4 shrink-0" />
-          <span className="truncate">{result.filename}</span>
-        </div>
-        <p className="mt-2 text-sm text-slate-400">
-          {tr
-            ? "Dosyan cihazından hiç çıkmadı — tamamen gizli."
-            : "Your file never left your device — fully private."}
-        </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={openResult}
-            className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.12] px-6 py-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"
-          >
-            <ExternalLink className="h-4 w-4" />
-            {tr ? "Aç" : "Open"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void redownload()}
-            aria-live="polite"
-            className={
-              reSaved
-                ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
-                : everDownloaded
-                  ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
-                  : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
-            }
-          >
-            {reSaved ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-            {reSaved
-              ? tr ? "İndirildi" : "Downloaded"
-              : everDownloaded
-                ? tr ? "Tekrar indir" : "Download again"
-                : tr ? "İndir" : "Download"}
-          </button>
-          {canShare && (
-            <button
-              type="button"
-              onClick={() => void shareResult()}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
-            >
-              <Share2 className="h-4 w-4" />
-              {tr ? "Paylaş" : "Share"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
-          >
-            {tr ? "Yeni işlem" : "New task"}
-          </button>
-        </div>
-        <ToolRating
-          toolSlug={activeTool === "merge" ? "merge-pdf" : "image-to-pdf"}
+        <ToolResultPanel
+          blob={result.blob}
+          filename={result.filename}
           language={language}
-        />
-        <ValueMomentNudge language={language} source="guest_tool_success" />
+          processedOnDevice
+          onClose={reset}
+          ratingToolSlug={activeTool === "merge" ? "merge-pdf" : "image-to-pdf"}
+        >
+          <ValueMomentNudge
+            language={language}
+            source={activeTool === "merge" ? "merge_success" : "image_to_pdf_success"}
+          />
+        </ToolResultPanel>
       </motion.div>
     );
   }
