@@ -1,5 +1,5 @@
-import { type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import {
   AlertTriangle,
   ArrowDown,
@@ -65,6 +65,120 @@ type Props = {
    *  (verilmezse bileşen kendi iç state'ini kullanır). */
   filesState?: [Picked[], Dispatch<SetStateAction<Picked[]>>];
 };
+
+/**
+ * Dosya satırı — framer-motion'ın `Reorder.Item`'ı üzerine kurulu.
+ *
+ * Önceki sürüm `document.elementFromPoint` ile satır sırasını elle hesaplıyordu;
+ * sürüklenen kart imleci TAKİP ETMİYORDU, yalnız üstünden geçilen satırla yer
+ * değiştiriyordu — bu da "kaydırma" hissi yerine sıçramalı bir animasyona
+ * yol açıyordu. `Reorder.Group`/`Reorder.Item` framer-motion'ın kendi drag
+ * motoru üzerinde çalışır: kart parmağı/imleci gerçekten takip eder, listenin
+ * geri kalanı spring ile kayar, dokunmatikte de native gibi akar.
+ * https://motion.dev/docs/react-reorder
+ */
+function FileRow({
+  f,
+  i,
+  isImages,
+  filesLength,
+  tr,
+  onMove,
+  onRemove,
+}: {
+  f: Picked;
+  i: number;
+  isImages: boolean;
+  filesLength: number;
+  tr: boolean;
+  onMove: (i: number, dir: -1 | 1) => void;
+  onRemove: (id: string) => void;
+}) {
+  const controls = useDragControls();
+  const bad = f.status !== "ok" && f.status !== "checking";
+  const statusText =
+    f.status === "checking" ? (tr ? "Denetleniyor…" : "Checking…")
+    : f.status === "ok" ? (f.pages ? `${f.pages} ${tr ? "sayfa" : "pages"} · ${humanSize(f.file.size)}` : humanSize(f.file.size))
+    : f.status === "empty" ? (tr ? "Boş dosya (0 KB) — kullanılamaz" : "Empty file (0 KB) — unusable")
+    : f.status === "corrupt" ? (tr ? "Bozuk/okunamayan PDF" : "Corrupt/unreadable PDF")
+    : f.status === "toobig" ? (tr ? "80 MB sınırını aşıyor" : "Exceeds 80 MB limit")
+    : (tr ? "Şifre korumalı — cihazda açılamıyor" : "Password-protected — can't open on device");
+
+  return (
+    <Reorder.Item
+      as="li"
+      value={f}
+      dragListener={false}
+      dragControls={controls}
+      style={{ position: "relative" }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileDrag={{
+        boxShadow: "0 10px 30px -12px rgba(34,211,238,0.6)",
+        cursor: "grabbing",
+      }}
+      className={`flex items-center gap-2 rounded-xl border bg-white/[0.03] px-3 py-2.5 ${bad ? "border-amber-400/30 bg-amber-500/[0.06]" : "border-white/[0.08]"}`}
+    >
+      {!isImages && filesLength > 1 && (
+        <button
+          type="button"
+          onPointerDown={(e) => controls.start(e)}
+          className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-400 transition hover:text-white active:cursor-grabbing"
+          aria-label={tr ? "Sürükleyip sırala" : "Drag to reorder"}
+          title={tr ? "Sürükleyip sırala" : "Drag to reorder"}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      )}
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.status === "locked" ? "bg-amber-500/10 text-amber-300" : bad ? "bg-red-500/10 text-red-300" : "bg-white/[0.06] text-cyan-300"}`}>
+        {f.status === "checking" ? <Loader2 className="h-4 w-4 animate-spin" /> : f.status === "locked" ? <Lock className="h-4 w-4" /> : bad ? <AlertTriangle className="h-4 w-4" /> : isImages ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
+        <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-400"}`}>
+          {f.status === "locked" ? (
+            <>
+              {tr ? "Şifre korumalı — " : "Password-protected — "}
+              <a href="/tools/unlock-pdf" className="underline decoration-amber-400/50 underline-offset-2 hover:text-amber-100">
+                {tr ? "«PDF Kilidini Aç» aracını kullanın" : "use the «Unlock PDF» tool"}
+              </a>
+            </>
+          ) : statusText}
+        </p>
+      </div>
+      {!isImages && filesLength > 1 && (
+        <span className="flex shrink-0 items-center">
+          <button
+            type="button"
+            onClick={() => onMove(i, -1)}
+            disabled={i === 0}
+            className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
+            aria-label={tr ? "Yukarı" : "Up"}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onMove(i, 1)}
+            disabled={i === filesLength - 1}
+            className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
+            aria-label={tr ? "Aşağı" : "Down"}
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={() => onRemove(f.id)}
+        className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
+        aria-label={tr ? "Kaldır" : "Remove"}
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </Reorder.Item>
+  );
+}
 
 /**
  * Çalışan misafir araç ÇEKİRDEĞİ — dropzone + dosya listesi + işleme + sonuç.
@@ -169,53 +283,6 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       return n;
     });
 
-  // ── Dokunmatik + fare ile sürükle-bırak sıralama (mobilde HTML5 drag çalışmaz) ──
-  // Grip tutamacından pointer ile başlar; parmak hangi satırın üstündeyse dizide
-  // oraya taşır. framer-motion `layout` sayesinde canlı animasyonla akar.
-  const [dragId, setDragId] = useState<string | null>(null);
-  const reorderTo = (overId: string) =>
-    setFiles((prev) => {
-      const from = prev.findIndex((f) => f.id === dragId);
-      const to = prev.findIndex((f) => f.id === overId);
-      if (from < 0 || to < 0 || from === to) return prev;
-      const n = [...prev];
-      const [m] = n.splice(from, 1);
-      n.splice(to, 0, m!);
-      return n;
-    });
-  const onGripPointerDown = (e: ReactPointerEvent, id: string) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    setDragId(id);
-  };
-  // document.elementFromPoint her çağrıda senkron layout hesaplatır; pointermove
-  // saniyede 100+ kez tetiklenebildiği için ham olayda çağırmak animasyonu kilitliyordu.
-  // Son pozisyonu ref'te tutup kareye (rAF) göre işleyerek en fazla saniyede ~60 kez çalışır.
-  const dragMoveRef = useRef<{ x: number; y: number } | null>(null);
-  const dragRafRef = useRef<number | null>(null);
-  const onGripPointerMove = (e: ReactPointerEvent) => {
-    if (!dragId) return;
-    e.preventDefault();
-    dragMoveRef.current = { x: e.clientX, y: e.clientY };
-    if (dragRafRef.current != null) return;
-    dragRafRef.current = requestAnimationFrame(() => {
-      dragRafRef.current = null;
-      const pos = dragMoveRef.current;
-      if (!pos || !dragId) return;
-      const el = document.elementFromPoint(pos.x, pos.y);
-      const row = el?.closest<HTMLElement>("[data-file-row]");
-      const overId = row?.dataset.fileRow;
-      if (overId && overId !== dragId) reorderTo(overId);
-    });
-  };
-  const endDrag = () => {
-    if (dragRafRef.current != null) {
-      cancelAnimationFrame(dragRafRef.current);
-      dragRafRef.current = null;
-    }
-    dragMoveRef.current = null;
-    setDragId(null);
-  };
   const remove = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
   const clearAll = () => { setFiles([]); setError(null); };
   const reset = () => {
@@ -371,89 +438,27 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             </p>
           )}
         </div>
-        <ul ref={listRef} className="space-y-2">
-          {files.map((f, i) => {
-            const bad = f.status !== "ok" && f.status !== "checking";
-            const statusText =
-              f.status === "checking" ? (tr ? "Denetleniyor…" : "Checking…")
-              : f.status === "ok" ? (f.pages ? `${f.pages} ${tr ? "sayfa" : "pages"} · ${humanSize(f.file.size)}` : humanSize(f.file.size))
-              : f.status === "empty" ? (tr ? "Boş dosya (0 KB) — kullanılamaz" : "Empty file (0 KB) — unusable")
-              : f.status === "corrupt" ? (tr ? "Bozuk/okunamayan PDF" : "Corrupt/unreadable PDF")
-              : f.status === "toobig" ? (tr ? "80 MB sınırını aşıyor" : "Exceeds 80 MB limit")
-              : (tr ? "Şifre korumalı — cihazda açılamıyor" : "Password-protected — can't open on device");
-            return (
-            <motion.li
+        <Reorder.Group
+          as="ul"
+          ref={listRef}
+          axis="y"
+          values={files}
+          onReorder={setFiles}
+          className="space-y-2"
+        >
+          {files.map((f, i) => (
+            <FileRow
               key={f.id}
-              layout
-              data-file-row={f.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: dragId === f.id ? 0.85 : 1, y: 0 }}
-              className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${dragId === f.id ? "border-cyan-400/50 bg-cyan-500/[0.08] shadow-[0_10px_30px_-12px_rgba(34,211,238,0.6)]" : bad ? "border-amber-400/30 bg-amber-500/[0.06]" : "border-white/[0.08] bg-white/[0.03]"}`}
-            >
-              {!isImages && files.length > 1 && (
-                <button
-                  type="button"
-                  onPointerDown={(e) => onGripPointerDown(e, f.id)}
-                  onPointerMove={onGripPointerMove}
-                  onPointerUp={endDrag}
-                  onPointerCancel={endDrag}
-                  className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-400 transition hover:text-white active:cursor-grabbing"
-                  aria-label={tr ? "Sürükleyip sırala" : "Drag to reorder"}
-                  title={tr ? "Sürükleyip sırala" : "Drag to reorder"}
-                >
-                  <GripVertical className="h-4 w-4" />
-                </button>
-              )}
-              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.status === "locked" ? "bg-amber-500/10 text-amber-300" : bad ? "bg-red-500/10 text-red-300" : "bg-white/[0.06] text-cyan-300"}`}>
-                {f.status === "checking" ? <Loader2 className="h-4 w-4 animate-spin" /> : f.status === "locked" ? <Lock className="h-4 w-4" /> : bad ? <AlertTriangle className="h-4 w-4" /> : isImages ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-400"}`}>
-                  {f.status === "locked" ? (
-                    <>
-                      {tr ? "Şifre korumalı — " : "Password-protected — "}
-                      <a href="/tools/unlock-pdf" className="underline decoration-amber-400/50 underline-offset-2 hover:text-amber-100">
-                        {tr ? "«PDF Kilidini Aç» aracını kullanın" : "use the «Unlock PDF» tool"}
-                      </a>
-                    </>
-                  ) : statusText}
-                </p>
-              </div>
-              {!isImages && files.length > 1 && (
-                <span className="flex shrink-0 items-center">
-                  <button
-                    type="button"
-                    onClick={() => move(i, -1)}
-                    disabled={i === 0}
-                    className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
-                    aria-label={tr ? "Yukarı" : "Up"}
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(i, 1)}
-                    disabled={i === files.length - 1}
-                    className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
-                    aria-label={tr ? "Aşağı" : "Down"}
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => remove(f.id)}
-                className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
-                aria-label={tr ? "Kaldır" : "Remove"}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </motion.li>
-            );
-          })}
-        </ul>
+              f={f}
+              i={i}
+              isImages={isImages}
+              filesLength={files.length}
+              tr={tr}
+              onMove={move}
+              onRemove={remove}
+            />
+          ))}
+        </Reorder.Group>
         </>
       )}
 
