@@ -4,6 +4,8 @@
  * `App.tsx` içindeki geçici test bayrağı ile bu kural devre dışı bırakılabilir.
  */
 
+import { trackJourneyEvent } from "../api/analytics";
+
 declare global {
   interface Window {
     dataLayer: unknown[];
@@ -126,6 +128,32 @@ export function trackGAEvent(
     return;
   }
   window.gtag("event", name, params ?? {});
+}
+
+/**
+ * HUNİ OLAYI — hem GA'ya (mevcut davranış DEĞİŞMEZ) hem kendi backend'imize
+ * gider. Admin panelindeki "Kullanıcı Yolculuğu" sekmesi, misafirin hangi
+ * aracı kullanıp başarılı olduğunu ve üye-ol/ödeme ekranına ne yaptığını GA'ya
+ * gitmeden GÖREMİYORDU; bu sarmalayıcı aynı olayı backend'e de (sessionId ile)
+ * yazarak oturum bazında okunabilir bir hikaye kurulmasını sağlar.
+ *
+ * Yalnızca huniyle ilgili çağrı noktalarında (ValueMomentNudge, QuotaMeter,
+ * PlanUpgradeModal, PaymentSummaryModal, AuthPage, App.tsx ödeme akışı)
+ * `trackGAEvent` yerine kullanılır — GA'ya giden diğer olaylar (ör.
+ * `tool_result_ready`, `pwa_installed`) bu ekranla ilgisiz, değiştirilmedi.
+ */
+export function trackFunnelEvent(
+  name: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): void {
+  trackGAEvent(name, params);
+  const toolId = typeof params?.source === "string" ? params.source : undefined;
+  const extra: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (key === "source" || value === undefined) continue;
+    extra[key] = value;
+  }
+  trackJourneyEvent({ name, toolId, extra: Object.keys(extra).length ? extra : undefined });
 }
 
 /**

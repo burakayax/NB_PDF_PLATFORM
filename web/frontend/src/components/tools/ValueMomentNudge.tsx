@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Unlock, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { trackGAEvent } from "../../lib/analytics";
+import { trackFunnelEvent } from "../../lib/analytics";
 import { useCurrentPlan } from "../../lib/currentPlan";
 
 /**
@@ -88,13 +88,13 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   useEffect(() => {
     if (!gosterilir || bildirildiRef.current) return;
     bildirildiRef.current = true;
-    trackGAEvent("sign_up_cta_shown", { source });
+    trackFunnelEvent("sign_up_cta_shown", { source });
   }, [gosterilir, source]);
 
   if (!gosterilir) return null;
 
   const dismiss = () => {
-    trackGAEvent("sign_up_cta_dismissed", { source });
+    trackFunnelEvent("sign_up_cta_dismissed", { source });
     try {
       localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
     } catch {
@@ -156,7 +156,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
 
       <a
         href="/register"
-        onClick={() => trackGAEvent("sign_up_cta_click", { source })}
+        onClick={() => trackFunnelEvent("sign_up_cta_click", { source })}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(124,58,237,0.7)] ring-1 ring-white/10 transition hover:from-indigo-500 hover:to-fuchsia-500"
       >
         <Zap className="h-4 w-4" />

@@ -238,6 +238,7 @@ model User {
   apiKeys      ApiKey[]
   verificationTokens EmailVerificationToken[]
   pageViews    PageView[]
+  journeyEvents UserJourneyEvent[]
   clientErrorLogs ClientErrorLog[]
   desktopDevices DesktopDevice[]
   passwordResetCodes PasswordResetCode[]
@@ -568,6 +569,37 @@ model PageView {
   @@index([createdAt])
   @@index([view])
   @@index([userId])
+}
+
+/// Misafir/üye "yolculuk" olayı — kullanıcı yolculuğu (funnel) panelinin ham verisi.
+///
+/// NEDEN AYRI TABLO: `trackGAEvent` yalnızca Google Analytics'e gidiyordu; admin
+/// panelinde "hangi misafir hangi aracı kullandı, üye-ol ekranını ne yaptı"
+/// hiç görünmüyordu. Bu tablo aynı olayları (source/toolId ile) backend'e de
+/// yazar ki oturum (sessionId) bazında okunabilir bir hikayeye dönüştürülebilsin.
+model UserJourneyEvent {
+  id        String   @id @default(cuid())
+  /// Tarayıcı oturumu kimliği (localStorage) — misafir dahil HER ziyaretçide
+  /// sabittir; PageView.sessionId ile aynı değeri paylaşır (kaynak/referrer
+  /// eşleştirmesi buradan yapılır).
+  sessionId String   @map("session_id")
+  /// Örn. sign_up_cta_shown | sign_up_cta_dismissed | sign_up_cta_click |
+  /// quota_wall_hit | upgrade_cta_clicked | view_pricing | select_plan |
+  /// add_payment_info | checkout_abandoned | purchase | sign_up_completed.
+  name      String
+  /// Hangi araçla ilgili (varsa) — ValueMomentNudge'ın `source` değeri.
+  toolId    String?  @map("tool_id")
+  /// Küçük ek bağlam (plan, adım vb.) — JSON string olarak serbest saklanır.
+  extra     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([name])
+  @@map("user_journey_events")
 }
 
 model ClientErrorLog {

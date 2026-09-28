@@ -115,6 +115,7 @@ import {
 } from "./mosaic/adminPrimitives";
 import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
 import { ToolRatingsTab } from "./ratings/ToolRatingsTab";
+import { UserJourneyTab } from "./journey/UserJourneyTab";
 import { ConsentLogTab } from "./compliance/ConsentLogTab";
 import { SystemControlTab } from "./SystemControlTab";
 import { AdminToaster } from "./AdminToaster";
@@ -136,6 +137,7 @@ type AdminTabId =
   | "settings"
   | "analytics"
   | "ratings"
+  | "journeys"
   | "consents"
   | "audit";
 
@@ -170,6 +172,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "cmd-emails", label: "E-postalar" },
       { id: "cmd-social", label: "Sosyal medya" },
       { id: "ratings", label: "Araç puanları" },
+      { id: "journeys", label: "Kullanıcı yolculuğu" },
     ],
   },
   {
@@ -619,6 +622,7 @@ export function AdminPanel({
         ) : null}
         {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
         {tab === "ratings" ? <ToolRatingsTab accessToken={accessToken} /> : null}
+        {tab === "journeys" ? <UserJourneyTab accessToken={accessToken} /> : null}
         {tab === "consents" ? <ConsentLogTab accessToken={accessToken} /> : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
