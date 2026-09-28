@@ -311,7 +311,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
               : `Quality used: ${Math.round(result.minQuality * 100)}% — ${kaliteYorumu(result.minQuality, false)}`}
           </p>
         ) : null}
-        <ValueMomentNudge language={language} source="guest_tool_success" />
+        <ValueMomentNudge language={language} source="image_compress_success" />
       </ToolResultPanel>
     );
   }
