@@ -432,7 +432,6 @@ function Hero({
   onScannerUpgrade,
   onScannerLogin,
   aiAllowed,
-  onOpenTool,
 }: {
   language: Language;
   onUseWebApp: () => void;
@@ -444,7 +443,6 @@ function Hero({
   onScannerLogin?: () => void;
   aiAllowed?: boolean;
   windowsDownloadUrl: string;
-  onOpenTool: (id: FeatureKey) => void;
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
@@ -730,11 +728,15 @@ function Hero({
 
                     if (it.k === "page") {
                       const PageIcon = it.Icon;
+                      // "kendi sayfasında açılır" — misafirde de üyeliksiz çalışır (bkz.
+                      // heroToolCatalog.ts başındaki not). Önceden onOpenTool (=navigateToTool)
+                      // çağrılıyordu; bu, workspace'e özel state'i (selectedFeatureId vb.)
+                      // "sayfa-duzeni" gibi gerçek bir FeatureKey OLMAYAN bir kimlikle
+                      // kirletiyor, misafiri sıkıştırıyordu. Artık doğrudan /tools/<slug>'a gider.
                       return (
-                        <button
+                        <CrawlableLink
                           key={it.slug}
-                          type="button"
-                          onClick={() => onOpenTool(it.slug as FeatureKey)}
+                          href={localizedPath(`/tools/${it.slug}`, language)}
                           className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
                         >
                           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
@@ -743,7 +745,7 @@ function Hero({
                           <span className="text-[12px] font-semibold leading-tight text-slate-300">
                             {tr ? it.tr : it.en}
                           </span>
-                        </button>
+                        </CrawlableLink>
                       );
                     }
 
@@ -2014,7 +2016,6 @@ export function LandingPage({
           onScannerLogin={onScannerLogin}
           aiAllowed={aiAllowed}
           windowsDownloadUrl={windowsDownloadUrl}
-          onOpenTool={onOpenTool}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
             açmaz ücretsiz araçlara tıklayıp (login'siz) kullanabilir. */}
