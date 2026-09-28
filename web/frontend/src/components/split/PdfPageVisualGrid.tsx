@@ -1455,7 +1455,31 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       [numPages, cardHeight, sequenceLength, cols, cellWidth, innerWidth, organizeMode, pageOrder],
     );
 
-    const [rubberRect, setRubberRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    /**
+     * Mavi seçim kutusunun konumu BİLEREK React state'inde TUTULMUYOR.
+     *
+     * Bu bileşen (~2000 satır) sanal kaydırma ızgarasının tamamını içeriyor;
+     * kutu React state'iyle çizilirse her `mousemove`'da (saniyede 60-120 kez)
+     * TÜM bileşen fonksiyonu yeniden çalışıyor — sanal satırların tamamı yeniden
+     * hesaplanıyor. Bu da tam olarak "tutup sürükleme takılıyor" şikayetinin
+     * kaynağıydı. Kutunun stilini doğrudan DOM ref'i üzerinden yazmak React'i
+     * bu döngünün tamamen dışında tutar; yalnız SEÇİM (hangi sayfalar vurgulu)
+     * hâlâ rAF'la throttle'lanmış state üzerinden akıyor (bkz `rubberLiveSelection`).
+     */
+    const rubberRectElRef = useRef<HTMLDivElement>(null);
+    const setRubberRectStyle = useCallback((rect: { x: number; y: number; w: number; h: number } | null) => {
+      const el = rubberRectElRef.current;
+      if (!el) return;
+      if (!rect) {
+        el.style.display = "none";
+        return;
+      }
+      el.style.display = "block";
+      el.style.left = `${rect.x}px`;
+      el.style.top = `${rect.y}px`;
+      el.style.width = `${Math.max(rect.w, 1)}px`;
+      el.style.height = `${Math.max(rect.h, 1)}px`;
+    }, []);
     const [rubberActive, setRubberActive] = useState(false);
 
     useEffect(() => {
@@ -1570,7 +1594,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const y0 = Math.min(ptr.startY, y);
         const w = Math.abs(x - ptr.startX);
         const h = Math.abs(y - ptr.startY);
-        setRubberRect({ x: x0, y: y0, w, h });
+        setRubberRectStyle({ x: x0, y: y0, w, h });
         scheduleSelectionRaf();
       };
 
@@ -1592,7 +1616,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const ptr = rubberPointerRef.current;
         rubberPointerRef.current = null;
         setRubberActive(false);
-        setRubberRect(null);
+        setRubberRectStyle(null);
         setRubberLiveSelection(null);
 
         if (!ptr || !selectionMode) {
@@ -1637,7 +1661,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         document.removeEventListener("mousemove", onMove, capOpts);
         document.removeEventListener("mouseup", onUp, capOpts);
       };
-    }, [rubberActive, selectionMode, contentXY, collectPagesInBand, mergeRubberSelection, applySelection]);
+    }, [rubberActive, selectionMode, contentXY, collectPagesInBand, mergeRubberSelection, applySelection, setRubberRectStyle]);
 
     const onRubberMouseDown = (e: React.MouseEvent) => {
       if (e.button !== 0 || !selectionMode) {
@@ -1666,7 +1690,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         dragApplied: false,
         initialSelection: new Set(selected.current),
       };
-      setRubberRect({ x, y, w: 0, h: 0 });
+      setRubberRectStyle({ x, y, w: 0, h: 0 });
       setRubberActive(true);
     };
 
@@ -1951,17 +1975,11 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 position: "relative",
               }}
             >
-              {rubberRect && rubberRect.w >= 0 && rubberRect.h >= 0 ? (
-                <div
-                  className="pointer-events-none absolute z-[25] rounded-md border border-cyan-400/55 bg-cyan-400/20 shadow-[0_0_22px_-8px_rgba(34,211,238,0.45)]"
-                  style={{
-                    left: rubberRect.x,
-                    top: rubberRect.y,
-                    width: Math.max(rubberRect.w, 1),
-                    height: Math.max(rubberRect.h, 1),
-                  }}
-                />
-              ) : null}
+              <div
+                ref={rubberRectElRef}
+                className="pointer-events-none absolute z-[25] rounded-md border border-cyan-400/55 bg-cyan-400/20 shadow-[0_0_22px_-8px_rgba(34,211,238,0.45)]"
+                style={{ display: "none" }}
+              />
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const rowIdx = virtualRow.index;
                 const rowTop = virtualRow.start + GRID_PAD_Y;
