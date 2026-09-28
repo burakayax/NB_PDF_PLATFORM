@@ -16,6 +16,7 @@ import type { Language } from "../../i18n/landing";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
+import { savePendingTool } from "../../lib/appNavigation";
 import {
   mergePdfs,
   imagesToPdf,
@@ -139,9 +140,19 @@ function FileRow({
           {f.status === "locked" ? (
             <>
               {tr ? "Şifre korumalı — " : "Password-protected — "}
-              <a href="/tools/unlock-pdf" className="underline decoration-amber-400/50 underline-offset-2 hover:text-amber-100">
+              <button
+                type="button"
+                onClick={() => {
+                  // Doğrudan tanıtım sayfasına değil, üyelik/giriş akışına gönder —
+                  // oturum açılınca/üye olunca kullanıcı "PDF Kilidini Aç" aracına
+                  // otomatik düşsün (bkz. lib/appNavigation savePendingTool).
+                  savePendingTool("unlock-pdf");
+                  window.location.assign("/register");
+                }}
+                className="underline decoration-amber-400/50 underline-offset-2 hover:text-amber-100"
+              >
                 {tr ? "«PDF Kilidini Aç» aracını kullanın" : "use the «Unlock PDF» tool"}
-              </a>
+              </button>
             </>
           ) : statusText}
         </p>
