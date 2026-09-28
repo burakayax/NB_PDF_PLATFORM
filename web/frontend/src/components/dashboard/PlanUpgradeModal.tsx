@@ -6,7 +6,7 @@ import type { PlanId } from "../../lib/planConfig";
 import { BillingInfoModal } from "../pricing/BillingInfoModal";
 import { PaymentSummaryModal } from "./PaymentSummaryModal";
 import PricingSection from "../ui/pricing-section";
-import { trackGAEvent } from "../../lib/analytics";
+import { trackFunnelEvent } from "../../lib/analytics";
 
 /**
  * Server-gated araçların insan-okur adları (TR/EN) — modal açıldığında kullanıcının
@@ -83,7 +83,7 @@ export function PlanUpgradeModal({
     document.body.style.overflow = "hidden";
     // Huni 1. adım: kullanıcı paketleri/fiyatları görüntüledi. Hangi araçtan geldiğini de
     // iliştir → hangi araçların yükseltmeye ittiğini GA'da ölç.
-    trackGAEvent("view_pricing", reasonToolId ? { reason_tool: reasonToolId } : undefined);
+    trackFunnelEvent("view_pricing", reasonToolId ? { reason_tool: reasonToolId } : undefined);
     return () => { document.body.style.overflow = prev; };
   }, [open, reasonToolId]);
 
@@ -100,7 +100,7 @@ export function PlanUpgradeModal({
     (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: "MONTHLY" | "YEARLY" = "MONTHLY", extraSeats = 0) => {
       if (!accessToken || !user) return;
       // Huni 2. adım: kullanıcı bir plan seçti (fatura adımına geçiyor).
-      trackGAEvent("select_plan", { plan: planId, billing_cycle: billingCycle });
+      trackFunnelEvent("select_plan", { plan: planId, billing_cycle: billingCycle });
       setBillingInfoPlanId(planId);
       setSelectedBillingCycle(billingCycle);
       setSelectedExtraSeats(extraSeats);
@@ -113,7 +113,7 @@ export function PlanUpgradeModal({
     setBillingInfoOpen(false);
     if (billingInfoPlanId) {
       // Huni 3. adım: fatura bilgileri tamamlandı, ödeme özeti açılıyor.
-      trackGAEvent("add_payment_info", { plan: billingInfoPlanId });
+      trackFunnelEvent("add_payment_info", { plan: billingInfoPlanId });
       setSelectedPlanId(billingInfoPlanId);
       setSummaryOpen(true);
     }
@@ -180,7 +180,7 @@ export function PlanUpgradeModal({
           language={language}
           onClose={() => {
             // Fatura adımında vazgeçti (onComplete'i tetiklemeden kapattı).
-            trackGAEvent("checkout_abandoned", { step: "billing_info", plan: billingInfoPlanId });
+            trackFunnelEvent("checkout_abandoned", { step: "billing_info", plan: billingInfoPlanId });
             setBillingInfoOpen(false);
             setBillingInfoPlanId(null);
           }}
@@ -199,13 +199,13 @@ export function PlanUpgradeModal({
           initialCoupon={initialCoupon}
           onClose={() => {
             // Ödeme özeti adımında vazgeçti (ödemeyi tamamlamadan kapattı).
-            trackGAEvent("checkout_abandoned", { step: "payment_summary", plan: selectedPlanId });
+            trackFunnelEvent("checkout_abandoned", { step: "payment_summary", plan: selectedPlanId });
             setSummaryOpen(false);
             setSelectedPlanId(null);
           }}
           onPurchaseSuccess={() => {
             // Modal-içi (fake) ödeme başarısı. Gerçek iyzico başarısı App.tsx'te izlenir.
-            trackGAEvent("purchase", { plan: selectedPlanId, billing_cycle: selectedBillingCycle });
+            trackFunnelEvent("purchase", { plan: selectedPlanId, billing_cycle: selectedBillingCycle });
             setSummaryOpen(false);
             setSelectedPlanId(null);
             onClose();

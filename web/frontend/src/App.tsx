@@ -101,7 +101,7 @@ import {
 import {
   confirmFakeCheckout,
 } from "./api/fakePayment";
-import { trackGAEvent } from "./lib/analytics";
+import { trackFunnelEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
@@ -2550,7 +2550,7 @@ function App() {
 
     if (payment === "success") {
       // Huni son adım: gerçek iyzico ödemesi başarıyla tamamlandı.
-      trackGAEvent("purchase", { plan: plan ?? undefined });
+      trackFunnelEvent("purchase", { plan: plan ?? undefined });
       const seats = url.searchParams.get("seats");
       url.searchParams.delete("seats");
       window.history.replaceState(
@@ -2580,7 +2580,7 @@ function App() {
 
     if (payment === "failed") {
       // İyzico'dan iptal/başarısız dönüş — "ödeme iptal / son anda vazgeçti".
-      trackGAEvent("checkout_abandoned", { step: "payment_failed", plan: plan ?? undefined });
+      trackFunnelEvent("checkout_abandoned", { step: "payment_failed", plan: plan ?? undefined });
       showToast(
         "error",
         language === "tr" ? "Ödeme başarısız" : "Payment failed",

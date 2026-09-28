@@ -25,7 +25,7 @@ import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
   SESSION_POST_OAUTH_REDIRECT_KEY,
 } from "../../lib/oauthRedirect";
-import { trackGAEvent } from "../../lib/analytics";
+import { trackFunnelEvent } from "../../lib/analytics";
 
 /**
  * Giriş/kayıt ekranının SOL sütunu — marka ve kazanım paneli.
@@ -357,7 +357,7 @@ export function AuthPage({
           marketingConsent,
         });
         // Kazanım dönüşümü — onSubmit hata fırlatmadıysa kayıt başarılı.
-        trackGAEvent("sign_up_completed", { method: "email" });
+        trackFunnelEvent("sign_up_completed", { method: "email" });
         setFirstName("");
         setLastName("");
         setRegisterCity("");

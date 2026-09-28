@@ -13,7 +13,7 @@
 import { useEffect, useRef } from "react";
 import { AlertTriangle, Infinity as InfinityIcon, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { trackGAEvent } from "../../lib/analytics";
+import { trackFunnelEvent } from "../../lib/analytics";
 
 export type QuotaMeterProps = {
   language: Language;
@@ -75,7 +75,7 @@ export function QuotaMeter({
     const durum = bitti ? "wall" : azKaldi ? "warning" : "";
     if (!durum || bildirildiRef.current === durum) return;
     bildirildiRef.current = durum;
-    trackGAEvent(durum === "wall" ? "quota_wall_hit" : "quota_warning_shown", {
+    trackFunnelEvent(durum === "wall" ? "quota_wall_hit" : "quota_warning_shown", {
       used,
       limit: limit ?? 0,
       is_guest: Boolean(isGuest),
@@ -121,7 +121,7 @@ export function QuotaMeter({
           <button
             type="button"
             onClick={() => {
-              trackGAEvent("upgrade_cta_clicked", {
+              trackFunnelEvent("upgrade_cta_clicked", {
                 source: bitti ? "quota_wall" : "quota_warning",
                 is_guest: Boolean(isGuest),
               });
@@ -227,7 +227,7 @@ export function QuotaWall({
           <button
             type="button"
             onClick={() => {
-              trackGAEvent("upgrade_cta_clicked", { source: "quota_wall_panel", is_guest: Boolean(isGuest) });
+              trackFunnelEvent("upgrade_cta_clicked", { source: "quota_wall_panel", is_guest: Boolean(isGuest) });
               if (isGuest) onRegister?.();
               else onUpgrade?.();
             }}
