@@ -39,9 +39,8 @@ export function ToolPublicLanding({
     <div className="min-h-dvh bg-gradient-to-b from-[#0d1120] to-[#060910] text-white">
       {/* Üst bar */}
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-        <button
-          type="button"
-          onClick={onLogin}
+        <a
+          href={tr ? "/" : "/en"}
           className="flex items-center gap-2"
           aria-label="PDF Platform"
         >
@@ -49,7 +48,7 @@ export function ToolPublicLanding({
           <span className="text-sm font-bold tracking-tight text-white">
             PDF Platform
           </span>
-        </button>
+        </a>
         <button
           type="button"
           onClick={onLogin}
