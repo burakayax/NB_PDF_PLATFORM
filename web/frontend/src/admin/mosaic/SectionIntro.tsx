@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, Wrench, Search, Megaphone, Ticket, Mail,
+  LayoutDashboard, Users, Wrench, Megaphone, Ticket, Mail,
   Package, PenSquare, Image as ImageIcon, Settings, BarChart3, ScrollText,
   type LucideIcon,
 } from "lucide-react";
@@ -17,12 +17,6 @@ const INTRO: Record<string, { icon: LucideIcon; title: string; what: string; how
     title: "Kullanıcılar",
     what: "Tüm hesapları ara ve yönet: plan/rol değiştir, kredi ver, günlük limit ayarla, hesabı sil.",
     how: "Bir kullanıcıya tıkla → detay paneli açılır (ödemeleri ve araç kullanımı).",
-  },
-  "cmd-site": {
-    icon: Search,
-    title: "Uygulama & SEO",
-    what: "Sitenin arama motoru bilgilerini düzenler: sayfa başlıkları, açıklamalar, sosyal paylaşım görseli.",
-    how: "Buradaki metinler Google sonuçlarında ve WhatsApp/Twitter önizlemelerinde görünür.",
   },
   "cmd-mkt": {
     icon: Megaphone,

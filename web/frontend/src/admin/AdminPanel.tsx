@@ -16,6 +16,7 @@ import {
   type AdminAuditRow,
   type AdminDownloadLogRow,
   postAdminMarketingBroadcast,
+  putAdminAppSettings,
   putAdminCms,
   putAdminEmailAutomation,
   putAdminPackagesMarketing,
@@ -27,7 +28,6 @@ import {
   type AdminCouponRow,
   type AdminMediaItem,
   type AdminOverview,
-  type AppSettingsPayload,
   type EmailAutomationConfig,
 } from "../api/admin";
 import { saasAuthorizedFetch } from "../api/subscription";
@@ -66,7 +66,6 @@ function planCardDefault(id: string): PlanCardEdit {
   };
 }
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
-import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
 import { AdminCouponManager } from "./coupons/AdminCouponManager";
 import { EmailCampaignManager } from "./emails/EmailCampaignManager";
@@ -121,7 +120,6 @@ import { readAccessToken } from "../lib/accessTokenStore";
 type AdminTabId =
   | "dashboard"
   | "users"
-  | "cmd-site"
   | "cmd-mkt"
   | "cmd-coupons"
   | "cmd-emails"
@@ -161,7 +159,6 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
   {
     title: "Büyüme",
     items: [
-      { id: "cmd-site", label: "Uygulama & SEO" },
       { id: "cmd-mkt", label: "Pazarlama" },
       { id: "cmd-coupons", label: "Kuponlar" },
       { id: "cmd-emails", label: "E-postalar" },
@@ -327,10 +324,8 @@ export function AdminPanel({
     slot: CmsMediaBindSlot;
     url: string;
   } | null>(null);
-  const [cmdSite, setCmdSite] = useState<AppSettingsPayload | null>(null);
   const [cmdMkt, setCmdMkt] = useState<EmailAutomationConfig | null>(null);
   const [cmdCoupons, setCmdCoupons] = useState<AdminCouponRow[] | null>(null);
-  const [cmdSaving, setCmdSaving] = useState(false);
   const [bSubj, setBSubj] = useState("News from NB PDF");
   const [bHtml, setBHtml] = useState("<p>Hi {{name}}, you have <strong>{{credits}}</strong> credits.</p>");
   const [bBatch, setBBatch] = useState(40);
@@ -367,20 +362,6 @@ export function AdminPanel({
     }, 12_000);
     return () => window.clearInterval(id);
   }, [tab, loadOverview]);
-
-  useEffect(() => {
-    if (tab !== "cmd-site") {
-      return;
-    }
-    setCmdErr(null);
-    void (async () => {
-      try {
-        setCmdSite(await fetchAdminAppSettings(accessToken));
-      } catch (e) {
-        setCmdErr(e instanceof Error ? e.message : "Yüklenemedi");
-      }
-    })();
-  }, [tab, accessToken]);
 
   useEffect(() => {
     if (tab !== "cmd-mkt") {
@@ -427,7 +408,7 @@ export function AdminPanel({
     >
       <div className="px-4 py-6 md:px-8">
         <SectionIntro tab={tab} />
-        {cmdErr && ["cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (
+        {cmdErr && ["cmd-mkt", "cmd-coupons"].includes(tab) ? (
           <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{cmdErr}</p>
         ) : null}
         {loadErr && tab === "dashboard" ? (
@@ -442,17 +423,6 @@ export function AdminPanel({
           )
         ) : null}
         {tab === "users" ? <AdminUserManagement accessToken={accessToken} uiMode={uiMode} /> : null}
-
-        {tab === "cmd-site" ? (
-          <SiteForm
-            site={cmdSite}
-            accessToken={accessToken}
-            saving={cmdSaving}
-            setSaving={setCmdSaving}
-            onLoaded={setCmdSite}
-            onError={setCmdErr}
-          />
-        ) : null}
 
         {tab === "cmd-mkt" && cmdMkt ? (
           <div className="max-w-5xl space-y-6">
@@ -2347,6 +2317,14 @@ function SettingsTab({
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [saveStrip, setSaveStrip] = useState<AdminSaveStripState>("idle");
   const [saveDetail, setSaveDetail] = useState<string | null>(null);
+  // Bakım modu — kendi başına, ANLIK kaydolan acil durum anahtarı. Diğer
+  // ayarlarla aynı toplu "Ayarları kaydet" düğmesine bağlanmadı: bir site
+  // bakıma alınmak istendiğinde diğer alanların doğru dolu olmasını beklemek
+  // yanlış olur.
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceForcedByEnv, setMaintenanceForcedByEnv] = useState(false);
+  const [maintenanceBusy, setMaintenanceBusy] = useState(false);
+  const [maintenanceErr, setMaintenanceErr] = useState<string | null>(null);
   const advanced = uiMode === "advanced";
 
   const reload = useCallback(async () => {
@@ -2354,6 +2332,9 @@ function SettingsTab({
     setSaveStrip("idle");
     setSaveDetail(null);
     try {
+      const appSettings = await fetchAdminAppSettings(accessToken);
+      setMaintenanceMode(appSettings.globalMaintenanceMode);
+      setMaintenanceForcedByEnv(appSettings.maintenanceForcedByEnv === true);
       const all = await fetchAdminSettings(accessToken);
       const fr = all["global.flags"];
       flagsRef.current =
@@ -2400,6 +2381,27 @@ function SettingsTab({
     void reload();
   }, [reload]);
 
+  const toggleMaintenance = useCallback(
+    async (next: boolean) => {
+      const prev = maintenanceMode;
+      setMaintenanceMode(next);
+      setMaintenanceBusy(true);
+      setMaintenanceErr(null);
+      try {
+        const updated = await putAdminAppSettings(accessToken, { globalMaintenanceMode: next });
+        setMaintenanceMode(updated.globalMaintenanceMode);
+        setMaintenanceForcedByEnv(updated.maintenanceForcedByEnv === true);
+        notifyRuntimeRefresh();
+      } catch (e) {
+        setMaintenanceMode(prev);
+        setMaintenanceErr(e instanceof Error ? e.message : "Kayıt başarısız");
+      } finally {
+        setMaintenanceBusy(false);
+      }
+    },
+    [accessToken, maintenanceMode],
+  );
+
   return (
     <div className="space-y-6">
       {loadErr ? (
@@ -2417,6 +2419,39 @@ function SettingsTab({
       </div>
 
       <AdminSaveStrip state={saveStrip} detail={saveDetail} />
+
+      {/* Bakım modu — bilinçli olarak toplu kaydetme akışının DIŞINDA:
+          bu düğmeye basınca site AYNI ANDA bakıma girer/çıkar, "Ayarları
+          kaydet"i beklemez. Acil durum anahtarı budur. */}
+      <div className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.05] p-4">
+        <label className="flex cursor-pointer items-center justify-between gap-3">
+          <span>
+            <span className="font-semibold text-white">Bakım modu</span>
+            <span className="mt-0.5 block text-xs text-slate-400">
+              Açtığınız an ziyaretçilere bakım sayfası gösterilir — kaydetmeye gerek yok, anında etkili.
+              Şu an:{" "}
+              <span className={maintenanceMode ? "font-semibold text-amber-300" : "font-semibold text-emerald-400"}>
+                {maintenanceMode ? "AÇIK" : "kapalı"}
+              </span>
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={maintenanceMode}
+            disabled={maintenanceBusy}
+            onChange={(e) => void toggleMaintenance(e.target.checked)}
+            className="h-5 w-5 shrink-0 cursor-pointer accent-amber-500 disabled:opacity-40"
+            aria-label="Bakım modu"
+          />
+        </label>
+        {maintenanceForcedByEnv ? (
+          <p className="mt-2 rounded bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300">
+            ⚠ Sunucudaki acil-durum anahtarı (<code className="rounded bg-black/40 px-1">MAINTENANCE_MODE</code>) açık —
+            bunu kapatsanız bile site bakımda kalır. Normal kullanıma dönmek için bu anahtarı Render panelinden kapatın; bu env yalnızca acil durum içindir.
+          </p>
+        ) : null}
+        {maintenanceErr ? <p className="mt-2 text-xs text-rose-300">{maintenanceErr}</p> : null}
+      </div>
 
       <AdminMutedBox>
         {advanced
