@@ -279,6 +279,11 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/subscription/plans" && method === "GET") return true;
   if (p.startsWith("/public/") && method === "GET") return true;
   if (p === "/analytics/page-view" && method === "POST") return true;
+  // Kullanıcı yolculuğu olayları (üye-ol daveti, kota duvarı, ödeme adımları) —
+  // misafirin JWT'si yoktur; page-view ile aynı istisna gerekir, yoksa her
+  // misafir olayı bu global kapıda 401 ile sessizce düşer (attachOptionalAuth
+  // route seviyesinde doğruydu ama bu global liste ayrı ve öncelikliydi).
+  if (p === "/analytics/event" && method === "POST") return true;
   /**
    * Araç puanlama — puan verenlerin cogu uye DEGIL, araci kullanip cikan
    * ziyaretci. Uyelik sarti toplanacak veriyi yok ederdi. Kotuye kullanim
