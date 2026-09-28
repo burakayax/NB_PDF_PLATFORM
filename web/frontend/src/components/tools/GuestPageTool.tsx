@@ -2,23 +2,19 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import {
-  Check,
-  Download,
-  ExternalLink,
   FileText,
   Loader2,
   Lock,
-  Share2,
   ShieldCheck,
   Sliders,
   Sparkles,
   Trash2,
-  X,
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolResultPanel } from "../common/ToolResultPanel";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { expandPagesString } from "../../i18n/workspace";
 import {
@@ -31,7 +27,6 @@ import {
   zipBytesToBlob,
   PdfEncryptedError,
 } from "../../lib/clientPdfWorker";
-import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
@@ -45,13 +40,6 @@ const SplitPagePickerModal = lazyWithRetry(() =>
 export type PageToolId = "rotate-pdf" | "delete-pages" | "organize-pdf" | "split";
 
 const MAX_BYTES = 80 * 1024 * 1024;
-
-function canShare(): boolean {
-  return (
-    typeof navigator !== "undefined" &&
-    typeof (navigator as Navigator & { canShare?: unknown }).canShare === "function"
-  );
-}
 
 /**
  * Sayfa aracı ÇEKİRDEĞİ. Akış (dashboard mantığı):
@@ -187,83 +175,6 @@ export function GuestPageToolCore({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFile]);
 
-  function downloadBlob(blob: Blob, name: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }
-
-  // "İndir": dashboard'daki gibi KAYDETME YERİNİ SORAR (File System Access).
-  // İndir tıklaması kullanıcı aktivasyonudur; blob hazır olduğundan picker direkt
-  // çağrılır. Desteklemeyen tarayıcıda (Firefox/Safari/mobil) İndirilenler'e iner.
-  /**
-   * Düğmenin üç hâli: "İndir" → kısa süre "İndirildi" onayı → "Tekrar indir".
-   * Onay geçtikten sonra yeniden "İndir" yazması, dosya zaten alınmışken
-   * yanıltıcı oluyordu.
-   */
-  const [downloaded, setDownloaded] = useState(false);
-  const [everDownloaded, setEverDownloaded] = useState(false);
-  function markDownloaded() {
-    setEverDownloaded(true);
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 3000);
-  }
-
-  async function saveResult() {
-    if (!result) return;
-    const win = window as unknown as {
-      showSaveFilePicker?: (o: {
-        suggestedName?: string;
-        types?: Array<{ description: string; accept: Record<string, string[]> }>;
-      }) => Promise<FileSystemFileHandle>;
-    };
-    if (typeof win.showSaveFilePicker === "function") {
-      try {
-        const handle = await win.showSaveFilePicker({
-          suggestedName: result.filename,
-          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
-        });
-        const w = await handle.createWritable();
-        await w.write(result.blob);
-        await w.close();
-        markDownloaded();
-        return;
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return; // vazgeçti
-        // desteklenmiyor / hata → indirmeye düş
-      }
-    }
-    downloadBlob(result.blob, result.filename);
-    markDownloaded();
-  }
-
-  function openResult() {
-    if (!result) return;
-    const url = URL.createObjectURL(result.blob);
-    window.open(url, "_blank", "noopener");
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  async function shareResult() {
-    if (!result) return;
-    const f = new File([result.blob], result.filename, { type: "application/pdf" });
-    const nav = navigator as Navigator & {
-      canShare?: (d: { files: File[] }) => boolean;
-      share?: (d: { files: File[]; title?: string }) => Promise<void>;
-    };
-    try {
-      if (nav.canShare?.({ files: [f] }) && nav.share)
-        await nav.share({ files: [f], title: result.filename });
-    } catch {
-      /* iptal */
-    }
-  }
-
   // «PDF'i Hazırla» — görsel seçicideki seçimi cihazda uygular (indirme DEĞİL).
   const prepare = async () => {
     if (!file || pageCount === 0) return;
@@ -331,85 +242,31 @@ export function GuestPageToolCore({
     }
   };
 
-  // ── Sonuç: İndir / Paylaş / Aç / Kapat ──
+  // ── Sonuç: tüm araçlarda ORTAK panel (İndir / Paylaş / Aç / Kapat) ──
   if (result) {
     return (
-      <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
-          <Check className="h-8 w-8" />
-        </div>
-        <p className="mt-4 text-xl font-bold">
-          {resultIsZip
-            ? tr ? "Dosyaların hazır 🎉 (ZIP)" : "Your files are ready 🎉 (ZIP)"
-            : tr ? "PDF hazır 🎉" : "Your PDF is ready 🎉"}
-        </p>
-        <p className="mt-1 text-sm text-slate-400">
-          {tr ? "Dosyan cihazından hiç çıkmadı." : "Your file never left your device."}
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => void saveResult()}
-            aria-live="polite"
-            className={
-              downloaded
-                ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
-                : everDownloaded
-                  ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
-                  : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
-            }
-          >
-            {downloaded ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-            {downloaded
-              ? tr ? "İndirildi" : "Downloaded"
-              : everDownloaded
-                ? tr ? "Tekrar indir" : "Download again"
-                : tr ? "İndir" : "Download"}
-          </button>
-          {canShare() && (
-            <button
-              type="button"
-              onClick={() => void shareResult()}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
-            >
-              <Share2 className="h-4 w-4" />
-              {tr ? "Paylaş" : "Share"}
-            </button>
-          )}
-          {!resultIsZip && (
-            <button
-              type="button"
-              onClick={openResult}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
-            >
-              <ExternalLink className="h-4 w-4" />
-              {tr ? "Aç" : "Open"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
-          >
-            <X className="h-4 w-4" />
-            {tr ? "Kapat" : "Close"}
-          </button>
-        </div>
-        <ToolRating toolSlug={tool === "split" ? "split-pdf" : tool} language={language} />
-        <ValueMomentNudge language={language} source="page_tool_success" />
-      </div>
+      <ToolResultPanel
+        blob={result.blob}
+        filename={result.filename}
+        language={language}
+        processedOnDevice
+        subtitle={
+          resultIsZip
+            ? tr
+              ? "Dosyaların hazır (ZIP) — cihazından hiç çıkmadı."
+              : "Your files are ready (ZIP) — never left your device."
+            : undefined
+        }
+        hideOpen={resultIsZip}
+        onClose={reset}
+        ratingToolSlug={tool === "split" ? "split-pdf" : tool}
+      >
+        <ValueMomentNudge language={language} source={`${tool.replace(/-/g, "_")}_success`} />
+      </ToolResultPanel>
     );
   }
 
   // ── Sonuç yok: dropzone + (dosya satırı) + butonlar HER ZAMAN altta (merge gibi) ──
-  const selectorLabel =
-    mode === "rotate"
-      ? tr ? "Sayfaları Döndür" : "Rotate pages"
-      : mode === "delete"
-        ? tr ? "Sayfaları Sil" : "Delete pages"
-        : mode === "split"
-          ? tr ? "Ayrılacak Sayfalar" : "Select pages"
-          : tr ? "Sayfaları Düzenle" : "Reorder pages";
   // Görsel seçicide işlem yapıldı mı → "PDF'i Hazırla" o zaman aktif olur.
   const hasSelection =
     mode === "rotate"
@@ -417,6 +274,17 @@ export function GuestPageToolCore({
       : mode === "delete" || mode === "split"
         ? (expandPagesString(pagesText, pageCount, language) ?? []).length > 0
         : pageOrder.length === pageCount && pageOrder.some((p, i) => p !== i + 1);
+  // Bu buton, görsel seçim ekranını TEKRAR açıp önceki seçimi düzenlemeye yarar.
+  // Aracın adıyla aynı olmasın diye seçim yapıldıktan sonra "Seçimi Düzenle" gösterilir.
+  const selectorLabel = hasSelection
+    ? tr ? "Seçimi Düzenle" : "Edit selection"
+    : mode === "rotate"
+      ? tr ? "Döndürülecek Sayfaları Seç" : "Choose pages to rotate"
+      : mode === "delete"
+        ? tr ? "Silinecek Sayfaları Seç" : "Choose pages to delete"
+        : mode === "split"
+          ? tr ? "Ayrılacak Sayfaları Seç" : "Choose pages to split"
+          : tr ? "Sayfaların Sırasını Seç" : "Choose page order";
 
   return (
     <>
@@ -477,38 +345,45 @@ export function GuestPageToolCore({
         </div>
       )}
 
-      {/* AYIR modu seçici (yalnız split): tek PDF mi, ayrı dosyalar (ZIP) mı */}
+      {/* AYIR modu seçici (yalnız split): tek PDF mi, ayrı dosyalar (ZIP) mı.
+          Her seçeneğin açıklaması KENDİ butonunun içinde, her zaman görünür —
+          yalnızca seçili olanın açıklaması ayrı bir satırda gösterilmiyordu, karıştırılıyordu. */}
       {mode === "split" && (
         <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-1.5">
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => setSplitMode("single")}
-              className={`rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+              className={`rounded-xl px-3.5 py-3 text-left transition ${
                 splitMode === "single"
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                  : "text-slate-300 hover:bg-white/[0.06]"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 ring-1 ring-white/20"
+                  : "bg-white/[0.02] hover:bg-white/[0.06]"
               }`}
             >
-              {tr ? "Tek PDF" : "Single PDF"}
+              <span className={`block text-[13.5px] font-semibold ${splitMode === "single" ? "text-white" : "text-slate-200"}`}>
+                {tr ? "Tek PDF" : "Single PDF"}
+              </span>
+              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "single" ? "text-white/85" : "text-slate-400"}`}>
+                {tr ? "Seçili sayfalar tek bir PDF dosyasında birleşir." : "Selected pages are merged into one PDF file."}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setSplitMode("separate")}
-              className={`rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+              className={`rounded-xl px-3.5 py-3 text-left transition ${
                 splitMode === "separate"
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                  : "text-slate-300 hover:bg-white/[0.06]"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 ring-1 ring-white/20"
+                  : "bg-white/[0.02] hover:bg-white/[0.06]"
               }`}
             >
-              {tr ? "Ayrı dosyalar (ZIP)" : "Separate files (ZIP)"}
+              <span className={`block text-[13.5px] font-semibold ${splitMode === "separate" ? "text-white" : "text-slate-200"}`}>
+                {tr ? "Ayrı Dosyalar (ZIP)" : "Separate files (ZIP)"}
+              </span>
+              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "separate" ? "text-white/85" : "text-slate-400"}`}>
+                {tr ? "Her sayfa kendi PDF'i olur, hepsi bir ZIP içinde iner." : "Each page becomes its own PDF, all delivered inside one ZIP."}
+              </span>
             </button>
           </div>
-          <p className="px-2 py-1.5 text-center text-[11px] text-slate-400">
-            {splitMode === "single"
-              ? tr ? "Seçili sayfalar tek bir PDF'te birleşir." : "Selected pages merged into one PDF."
-              : tr ? "Her seçili sayfa ayrı PDF olur, ZIP ile iner." : "Each selected page becomes a separate PDF in a ZIP."}
-          </p>
         </div>
       )}
 

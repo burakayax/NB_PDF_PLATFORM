@@ -99,7 +99,7 @@ export function ToolUploadPanel({
     ? [
         { Icon: Zap, label: tr ? "Saniyeler içinde" : "In seconds" },
         { Icon: Lock, label: tr ? "Cihazında, gizli" : "On-device, private" },
-        { Icon: ShieldCheck, label: tr ? "Yükleme yok" : "No upload" },
+        { Icon: ShieldCheck, label: tr ? "Sunucuya yüklenmez" : "Never uploaded" },
       ]
     : [
         { Icon: Zap, label: tr ? "Saniyeler içinde" : "In seconds" },

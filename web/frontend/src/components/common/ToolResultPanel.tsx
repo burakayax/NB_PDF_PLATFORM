@@ -27,6 +27,8 @@ export type ToolResultPanelProps = {
   onClose: () => void;
   /** Düğmelerin altına eklenen içerik (ör. sıradaki araç önerileri, üyelik kartı). */
   children?: ReactNode;
+  /** "Aç" düğmesini gizler — ör. ZIP çıktısı tarayıcı sekmesinde önizlenemez. */
+  hideOpen?: boolean;
   /**
    * Araç kimliği — verilirse işlem bitiminde tek soruluk puanlama gösterilir.
    *
@@ -106,6 +108,7 @@ export function ToolResultPanel({
   onClose,
   children,
   ratingToolSlug,
+  hideOpen = false,
 }: ToolResultPanelProps) {
   const t = L[language] ?? L.tr;
   const isPdf = /\.pdf$/i.test(filename.trim());
@@ -281,9 +284,11 @@ export function ToolResultPanel({
             <Share2 className="h-4 w-4" /> {t.share}
           </button>
         )}
-        <button type="button" onClick={open} className={btnGhost}>
-          <ExternalLink className="h-4 w-4" /> {t.open}
-        </button>
+        {!hideOpen && (
+          <button type="button" onClick={open} className={btnGhost}>
+            <ExternalLink className="h-4 w-4" /> {t.open}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleClose}

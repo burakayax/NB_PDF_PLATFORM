@@ -25,7 +25,7 @@ const CUSTOM: Record<string, Benefit[]> = {
   ],
   split: [
     { icon: Zap, tr: "İstediğin sayfayı ayır", trDesc: "Sayfa aralığı seç, ayrı PDF olarak al.", en: "Split any pages", enDesc: "Pick a page range and export as a separate PDF." },
-    { icon: Zap, tr: "Hızlı", trDesc: "Yükleme yok — cihazında saniyeler içinde.", en: "Fast", enDesc: "No upload — done on your device in seconds." },
+    { icon: Zap, tr: "Hızlı", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Fast", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Belgen cihazından hiç çıkmaz.", en: "Private", enDesc: "Your document never leaves your device." },
   ],
   "image-to-pdf": [
@@ -35,7 +35,7 @@ const CUSTOM: Record<string, Benefit[]> = {
   ],
   "gorsel-sikistir": [
     { icon: Zap, tr: "Dosya boyutunu küçült", trDesc: "Kalite ve boyutu ayarla, JPEG/WebP olarak al.", en: "Shrink file size", enDesc: "Adjust quality and dimensions, export JPEG/WebP." },
-    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Yükleme yok — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "No upload — done on your device in seconds." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Görselin cihazından hiç çıkmaz.", en: "Private", enDesc: "Your image never leaves your device." },
   ],
   "rotate-pdf": [
@@ -73,9 +73,9 @@ function generate(toolId: string): Benefit[] {
     ? {
         icon: Zap,
         tr: "Anında & ücretsiz",
-        trDesc: "Yükleme yok — cihazında saniyeler içinde biter.",
+        trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde biter.",
         en: "Instant & free",
-        enDesc: "No upload — finished on your device in seconds.",
+        enDesc: "Never uploaded — finished on your device in seconds.",
       }
     : {
         icon: Zap,
