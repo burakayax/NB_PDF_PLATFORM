@@ -3,7 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { QuotaMeter } from "../components/workspace/QuotaMeter";
 
 const trackGAEvent = vi.fn();
-vi.mock("../lib/analytics", () => ({ trackGAEvent: (...a: unknown[]) => trackGAEvent(...a) }));
+vi.mock("../lib/analytics", () => ({
+  trackGAEvent: (...a: unknown[]) => trackGAEvent(...a),
+  trackFunnelEvent: (...a: unknown[]) => trackGAEvent(...a),
+}));
 
 /**
  * GÜNLÜK HAK GÖSTERGESİ.
