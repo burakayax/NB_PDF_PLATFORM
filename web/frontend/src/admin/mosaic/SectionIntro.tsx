@@ -18,12 +18,6 @@ const INTRO: Record<string, { icon: LucideIcon; title: string; what: string; how
     what: "Tüm hesapları ara ve yönet: plan/rol değiştir, kredi ver, günlük limit ayarla, hesabı sil.",
     how: "Bir kullanıcıya tıkla → detay paneli açılır (ödemeleri ve araç kullanımı).",
   },
-  "cmd-tools": {
-    icon: Wrench,
-    title: "Araç kataloğu",
-    what: "Hangi PDF araçlarının açık/kapalı olduğunu, hangi planda kullanılabildiğini ve kredi maliyetini belirler.",
-    how: "Bir aracı kapatırsan kullanıcılar onu göremez/kullanamaz.",
-  },
   "cmd-site": {
     icon: Search,
     title: "Uygulama & SEO",
