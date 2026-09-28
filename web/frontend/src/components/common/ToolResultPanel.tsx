@@ -158,6 +158,9 @@ export function ToolResultPanel({
     setDownloaded(true);
     if (downloadedTimerRef.current) window.clearTimeout(downloadedTimerRef.current);
     downloadedTimerRef.current = window.setTimeout(() => setDownloaded(false), 3000);
+    // ValueMomentNudge (üye-ol kartı) dosya elden gidene kadar beklesin diye
+    // bu olayı dinliyor — kayıt daveti, değeri teslim etmeden önüne geçmesin.
+    window.dispatchEvent(new Event("nb:file-downloaded"));
   }
 
   /**

@@ -23,13 +23,23 @@ import { useCurrentPlan } from "../../lib/currentPlan";
  * Kart YALNIZCA MİSAFİRE çıkar. Giriş yapmış kullanıcıya "ücretsiz hesap aç"
  * demek anlamsızdı; ücretsiz üyenin yükseltme daveti panelde ayrıca var.
  *
- * Nezaket: kapatılabilir; kapatınca 24 saat snooze (localStorage) → nag etmez. Sonuç
- * ekranında inline durur (popup/blocking DEĞİL). CTA gerçek link (/register) — SPA yükler.
+ * ZAMANLAMA — modal, ama DOSYADAN SONRA. Sonuç ekranı açılır açılmaz önüne
+ * çıkan bir pencere "dosyamı vermeden önce beni kaydolmaya zorluyor" hissi
+ * verir; bu, "dosyan cihazından hiç çıkmadı" güven vaadiyle çelişir. Bu yüzden
+ * kart, `ToolResultPanel`in gerçek indirme anında yaydığı `nb:file-downloaded`
+ * olayını bekler — değer teslim edildikten SONRA belirir. İndirme hiç
+ * olmazsa (ör. yalnız "Aç" kullanıldıysa) sonsuza dek beklemesin diye bir
+ * yedek süre de var. Kapatılabilir; kapatınca 24 saat snooze (localStorage).
+ * CTA gerçek link (/register) — SPA yükler.
  *
  * `source` → GA'da hangi araçtan dönüştüğünü ayırmak için (ör. "crop_success").
  */
 const SNOOZE_KEY = "nb_value_nudge_snooze_until";
 const SNOOZE_MS = 24 * 60 * 60 * 1000;
+/** İndirme hiç tetiklenmezse kartın en geç ne zaman görüneceği. */
+const FALLBACK_DELAY_MS = 5000;
+/** İndirme olduktan sonra kartın belirmesi için kısa bir nefes payı. */
+const AFTER_DOWNLOAD_DELAY_MS = 900;
 
 function isSnoozed(): boolean {
   try {
@@ -75,6 +85,34 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   const misafir = planState.plan === null && !planState.teamMember;
   const gosterilir = misafir && !hidden;
 
+  // Modal, indirme olayını (veya yedek süreyi) bekleyip SONRA belirir.
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!gosterilir) return;
+    let fallback: number | null = window.setTimeout(() => setVisible(true), FALLBACK_DELAY_MS);
+    const onDownloaded = () => {
+      if (fallback) window.clearTimeout(fallback);
+      fallback = null;
+      window.setTimeout(() => setVisible(true), AFTER_DOWNLOAD_DELAY_MS);
+    };
+    window.addEventListener("nb:file-downloaded", onDownloaded);
+    return () => {
+      if (fallback) window.clearTimeout(fallback);
+      window.removeEventListener("nb:file-downloaded", onDownloaded);
+    };
+  }, [gosterilir]);
+
+  // Esc ile kapatma (modal olduğu için beklenen davranış).
+  useEffect(() => {
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   /**
    * GÖSTERİM ÖLÇÜMÜ.
    *
@@ -82,16 +120,17 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
    * kişiye gösterildiği bilinmeden "kimse görmüyor" ile "herkes görüyor ama
    * ilgilenmiyor" ayırt edilemez — ve bu ikisinin çözümü birbirinin zıddıdır
    * (biri gösterim mantığını, diğeri teklifin kendisini düzeltmeyi gerektirir).
-   * Gösterim bir kez bildirilir; her yeniden çizimde değil.
+   * Gösterim bir kez bildirilir; her yeniden çizimde değil. Modal GERÇEKTEN
+   * ekrana geldiğinde (visible) sayılır — mount anında değil.
    */
   const bildirildiRef = useRef(false);
   useEffect(() => {
-    if (!gosterilir || bildirildiRef.current) return;
+    if (!visible || bildirildiRef.current) return;
     bildirildiRef.current = true;
     trackFunnelEvent("sign_up_cta_shown", { source });
-  }, [gosterilir, source]);
+  }, [visible, source]);
 
-  if (!gosterilir) return null;
+  if (!gosterilir || !visible) return null;
 
   const dismiss = () => {
     trackFunnelEvent("sign_up_cta_dismissed", { source });
@@ -101,71 +140,82 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
       /* private mode */
     }
     setHidden(true);
+    setVisible(false);
   };
 
-
   return (
-    <div className="relative mt-6 overflow-hidden rounded-2xl border border-indigo-400/25 bg-gradient-to-br from-indigo-500/[0.12] via-violet-500/[0.08] to-fuchsia-500/[0.10] p-5 text-left">
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label={tr ? "Kapat" : "Dismiss"}
-        className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-400 transition hover:bg-white/[0.06] hover:text-slate-300"
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={tr ? "Ücretsiz hesap daveti" : "Free account invite"}
+      onClick={dismiss}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-indigo-400/25 bg-[#0b1220] bg-gradient-to-br from-indigo-500/[0.14] via-violet-500/[0.08] to-fuchsia-500/[0.10] p-5 text-left shadow-2xl"
       >
-        <X className="h-4 w-4" />
-      </button>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label={tr ? "Kapat" : "Dismiss"}
+          className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-400 transition hover:bg-white/[0.06] hover:text-slate-300"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-400/30">
-          <Sparkles className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 pr-6">
-          <p className="text-[15px] font-bold leading-tight text-white">
-            {tr ? "Bu işlemi ücretsiz yaptın 🎉" : "You did this for free 🎉"}
-          </p>
-          <p className="text-[12.5px] leading-snug text-slate-400">
-            {tr
-              ? "PDF Platform bunları da yapar — ücretsiz hesapla başla:"
-              : "PDF Platform can do more too — start with a free account:"}
-          </p>
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-400/30">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 pr-6">
+            <p className="text-[15px] font-bold leading-tight text-white">
+              {tr ? "Bu işlemi ücretsiz yaptın 🎉" : "You did this for free 🎉"}
+            </p>
+            <p className="text-[12.5px] leading-snug text-slate-400">
+              {tr
+                ? "PDF Platform bunları da yapar — ücretsiz hesapla başla:"
+                : "PDF Platform can do more too — start with a free account:"}
+            </p>
+          </div>
         </div>
+
+        <div className="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {FREE_ACCOUNT_UNLOCKS.map((u) => {
+            const Icon = u.icon;
+            return (
+              <div
+                key={u.feature}
+                className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2"
+              >
+                <Icon className="h-4 w-4 shrink-0 text-fuchsia-300" />
+                <span className="text-[12.5px] font-medium text-slate-200">{tr ? u.tr : u.en}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Ücretli araçlar ücretsiz vaadin İÇİNE karıştırılmaz — ayrı satırda ve
+            hangi planın açtığı yazılı. Kayıt olan kullanıcı bulamadığına kızmasın. */}
+        <p className="mt-3 text-center text-[11.5px] leading-snug text-slate-400">
+          {tr
+            ? "Word · Excel · PPT'ye çevirme ve yapay zekâ araçları ücretli planlarda."
+            : "Word · Excel · PPT conversion and the AI tools are on the paid plans."}
+        </p>
+
+        <a
+          href="/register"
+          onClick={() => trackFunnelEvent("sign_up_cta_click", { source })}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(124,58,237,0.7)] ring-1 ring-white/10 transition hover:from-indigo-500 hover:to-fuchsia-500"
+        >
+          <Zap className="h-4 w-4" />
+          {tr ? "Ücretsiz hesap aç" : "Create free account"}
+        </a>
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400">
+          <CreditCard className="h-3.5 w-3.5" />
+          {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
+        </p>
       </div>
-
-      <div className="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {FREE_ACCOUNT_UNLOCKS.map((u) => {
-          const Icon = u.icon;
-          return (
-            <div
-              key={u.feature}
-              className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2"
-            >
-              <Icon className="h-4 w-4 shrink-0 text-fuchsia-300" />
-              <span className="text-[12.5px] font-medium text-slate-200">{tr ? u.tr : u.en}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Ücretli araçlar ücretsiz vaadin İÇİNE karıştırılmaz — ayrı satırda ve
-          hangi planın açtığı yazılı. Kayıt olan kullanıcı bulamadığına kızmasın. */}
-      <p className="mt-3 text-center text-[11.5px] leading-snug text-slate-400">
-        {tr
-          ? "Word · Excel · PPT'ye çevirme ve yapay zekâ araçları ücretli planlarda."
-          : "Word · Excel · PPT conversion and the AI tools are on the paid plans."}
-      </p>
-
-      <a
-        href="/register"
-        onClick={() => trackFunnelEvent("sign_up_cta_click", { source })}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(124,58,237,0.7)] ring-1 ring-white/10 transition hover:from-indigo-500 hover:to-fuchsia-500"
-      >
-        <Zap className="h-4 w-4" />
-        {tr ? "Ücretsiz hesap aç" : "Create free account"}
-      </a>
-      <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400">
-        <CreditCard className="h-3.5 w-3.5" />
-        {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
-      </p>
     </div>
   );
 }
