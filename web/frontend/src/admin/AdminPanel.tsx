@@ -1382,9 +1382,14 @@ type AdminTOOLSApiPayload = {
   catalog?: string[];
   planDefinitions?: Array<{ plan: string; dailyLimit: number | null; allowedFeatures: string[] }>;
   overrides?: Record<string, unknown> | null;
-  usageByTool?: Record<string, { rows: number; operations: number }>;
-  postLimitNote?: string;
+  usageByTool?: Record<string, { today: number; week: number; allTime: number; distinctUsers90d: number }>;
 };
+
+/** `buildUpgradeCta` (web/api conversion-upgrade.ts) ile birebir aynı varsayılan — admin alanı boş bırakırsa gerçekte gösterilecek metin budur. */
+const DEFAULT_UPGRADE_CTA_LABEL = "Continue without waiting";
+const DEFAULT_UPGRADE_CTA_SUBTITLE =
+  "Upgrade to Pro for instant processing, full quality, and unlimited daily use.";
+type UsagePeriod = "today" | "week" | "allTime";
 
 function readConversion(obj: Record<string, unknown>): Record<string, unknown> {
   const c = obj.conversion;
@@ -1434,8 +1439,10 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
   const [ctaSubtitle, setCtaSubtitle] = useState("");
   const [catalog, setCatalog] = useState<string[]>([]);
   const [planDefinitions, setPlanDefinitions] = useState<AdminTOOLSApiPayload["planDefinitions"]>([]);
-  const [usageByTool, setUsageByTool] = useState<Record<string, { rows: number; operations: number }>>({});
-  const [postLimitNote, setPostLimitNote] = useState<string | null>(null);
+  const [usageByTool, setUsageByTool] = useState<
+    Record<string, { today: number; week: number; allTime: number; distinctUsers90d: number }>
+  >({});
+  const [usagePeriod, setUsagePeriod] = useState<UsagePeriod>("week");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
@@ -1453,7 +1460,6 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       setCatalog(Array.isArray(d.catalog) ? d.catalog : []);
       setPlanDefinitions(Array.isArray(d.planDefinitions) ? d.planDefinitions : []);
       setUsageByTool(d.usageByTool && typeof d.usageByTool === "object" ? d.usageByTool : {});
-      setPostLimitNote(typeof d.postLimitNote === "string" ? d.postLimitNote : null);
       setMsg(null);
     } catch (e) {
       setLoadErr(e instanceof Error ? e.message : "Yükleme başarısız");
@@ -1493,65 +1499,76 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       {loadErr ? <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{loadErr}</p> : null}
 
       {advanced ? (
-      <section className="rounded-2xl border border-white/[0.08] bg-black/25 p-4">
-        <h3 className="text-sm font-semibold text-white">Araç kullanım özeti (tüm araçlar)</h3>
-        <p className="mt-1 text-[12px] text-slate-400">TÜM araçlar listelenir; hiç kullanılmayan araçlar 0 gösterir. Son dönemdeki işlem ve aktif kullanıcı-gün sayısı (salt okunur).</p>
-        <div className="mt-3 overflow-x-auto rounded-xl border border-white/[0.06]">
-          <table className="w-full min-w-[400px] text-left text-xs">
-            <thead className="border-b border-white/[0.08] text-slate-400">
-              <tr>
-                <th className="px-3 py-2">Araç</th>
-                <th className="px-3 py-2 text-right">Aktif kullanıcı-gün</th>
-                <th className="px-3 py-2 text-right">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {catalog.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-3 py-4 text-slate-400">
-                    Katalog yüklenemedi veya boş.
-                  </td>
-                </tr>
-              ) : (
-                catalog.map((fk) => {
-                  const u = usageByTool[fk] ?? { rows: 0, operations: 0 };
-                  return (
-                    <tr key={fk} className="border-b border-white/[0.04]">
-                      <td className="px-3 py-2 text-slate-200">{pdfToolLabelTr(fk)}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-slate-300">{u.rows}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-slate-300">{u.operations}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Araç kullanım özeti</h3>
+            <p className="mt-1 text-[12px] text-slate-400">
+              Yalnız <strong className="text-slate-200">giriş yapmış üyelerin</strong> sunucuya uğrayan işlemleri — misafirin cihazda çalışan araçları (birleştir/böl/döndür/sil/sırala/görsel→PDF) burada yoktur, <strong className="text-slate-200">Kullanıcı yolculuğu</strong> sekmesinde ayrıca gösterilir.
+            </p>
+          </div>
+          <div className="flex rounded-xl border border-white/[0.08] bg-black/30 p-1">
+            {(["today", "week", "allTime"] as UsagePeriod[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setUsagePeriod(p)}
+                className={`rounded-lg px-3 py-1.5 text-[12px] font-semibold transition ${
+                  usagePeriod === p ? "bg-white/10 text-white" : "text-slate-400 hover:text-slate-300"
+                }`}
+              >
+                {p === "today" ? "Bugün" : p === "week" ? "Bu hafta" : "En çok kullanılan"}
+              </button>
+            ))}
+          </div>
         </div>
+        <KirilimGrafigi
+          baslik={
+            usagePeriod === "today" ? "Bugün · işlem sayısı" : usagePeriod === "week" ? "Son 7 gün · işlem sayısı" : "Tüm zaman · işlem sayısı"
+          }
+          veri={catalog.map((fk) => ({ ad: pdfToolLabelTr(fk), deger: usageByTool[fk]?.[usagePeriod] ?? 0 }))}
+          renk="#38bdf8"
+          bosMetin="Bu dönemde üye tarafında kaydedilmiş bir işlem yok. Misafir kullanımı ayrı olarak Kullanıcı yolculuğu sekmesinde."
+        />
       </section>
       ) : null}
 
       {advanced && planDefinitions && planDefinitions.length > 0 ? (
-        <section className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.05] p-4">
-          <h3 className="text-sm font-semibold text-cyan-100">Planlara göre izinli araçlar (canlı çözümlenmiş)</h3>
-          <ul className="mt-2 space-y-2 text-xs text-slate-300">
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-white">Planlara göre izinli araçlar</h3>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[10.5px] font-semibold text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              Canlı · Paket &amp; fiyat ile aynı kaynak
+            </span>
+          </div>
+          <p className="text-[12px] text-slate-400">
+            Salt görüntüleme — burada değişiklik yapılmaz. Gösterilen erişim, sitedeki gerçek izin kontrolüyle birebir aynıdır. Bir planın erişimini değiştirmek için <strong className="text-slate-200">Paket &amp; fiyat</strong> sekmesini kullanın.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
             {planDefinitions.map((p) => (
-              <li key={p.plan} className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2">
-                <span className="font-semibold text-white">{p.plan}</span>
-                <span className="text-slate-400">
-                  {" "}
-                  · günlük limit: {p.dailyLimit === null ? "yok" : p.dailyLimit}
-                </span>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  {p.allowedFeatures.map((fk) => pdfToolLabelTr(fk)).join(" · ")}
-                </p>
-              </li>
+              <div key={p.plan} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-white">{p.plan}</span>
+                  <span className="shrink-0 rounded-full bg-cyan-500/10 px-2.5 py-1 text-[10.5px] font-semibold text-cyan-300 ring-1 ring-cyan-400/20">
+                    {p.dailyLimit === null ? "sınırsız" : `${p.dailyLimit}/gün`}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {p.allowedFeatures.length === 0 ? (
+                    <span className="text-[11px] text-slate-500">Bu planda açık araç yok.</span>
+                  ) : (
+                    p.allowedFeatures.map((fk) => (
+                      <span key={fk} className="rounded-lg bg-white/[0.05] px-2 py-1 text-[10.5px] text-slate-300">
+                        {pdfToolLabelTr(fk)}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
-      ) : null}
-
-      {advanced && postLimitNote ? (
-        <p className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-[12px] leading-relaxed text-slate-400">{postLimitNote}</p>
       ) : null}
 
       {advanced ? (
@@ -1613,52 +1630,83 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       ) : null}
 
       <AdminSection
-        title="Yükseltme mesajları ve yönetici notu"
-        description="Kota dolduğunda API’nin döndürdüğü yükseltme düğmesi etiketi ve alt satır (TOOLS.config.conversion)."
+        title="Yükseltme mesajları"
+        description="Yalnızca MASAÜSTÜ uygulamasında, kullanıcı günlük ücretsiz hakkını aşıp bekleme ekranına düştüğünde kullanılır (TOOLS.config.conversion). Web sitesinde bu metin şu an hiçbir yerde gösterilmiyor."
         variant="violet"
       >
-        {advanced ? (
-          <AdminField label="İç not (yalnız yönetici)" description="Ekibiniz için kısa hatırlatma; uygulamada gösterilmez.">
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={adminInputClass} />
-          </AdminField>
-        ) : null}
-        <AdminField label="Yükselt düğmesi etiketi" description="Örn. Pro’ya geç — API ve uygulama bu metni kullanır.">
-          <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={adminInputClass} placeholder="Örn. Pro'ya geç" />
-        </AdminField>
-        <AdminField label="Kısa açıklama (alt satır)" description="Hız, kalite veya sınırsız kullanım vurgusu.">
-          <textarea
-            value={ctaSubtitle}
-            onChange={(e) => setCtaSubtitle(e.target.value)}
-            rows={2}
-            className={adminInputClass}
-            placeholder="Örn. Anında işlem, tam kalite, sınırsız günlük kullanım."
-          />
-        </AdminField>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            setMsg(null);
-            try {
-              const next = disableLegacyFreeThrottleInTOOLSConfig(
-                mergeTOOLSQuickForm(full, notes, ctaLabel, ctaSubtitle),
-              );
-              await putAdminTOOLSConfig(accessToken, next);
-              setFull(next);
-              setMsg("Araç ayarları kaydedildi. Birkaç saniye içinde canlıya yansır.");
-              notifyRuntimeRefresh();
-              void reload();
-            } catch (e) {
-              setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
-            } finally {
-              setBusy(false);
-            }
-          }}
-          className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-        >
-          {busy ? "Kaydediliyor…" : "Araç ayarlarını kaydet"}
-        </button>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="space-y-4">
+            {advanced ? (
+              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-3">
+                <AdminField
+                  label="İç not (yalnız yönetici)"
+                  description="Yalnız bu ekranda görünür — hiçbir kullanıcıya, web sitesine veya masaüstü uygulamasına asla gitmez."
+                >
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={adminInputClass} />
+                </AdminField>
+              </div>
+            ) : null}
+            <AdminField label="Yükselt düğmesi etiketi" description="Boş bırakılırsa varsayılan İngilizce metin kullanılır (sağdaki önizlemede görürsünüz).">
+              <input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className={adminInputClass} placeholder={DEFAULT_UPGRADE_CTA_LABEL} />
+            </AdminField>
+            <AdminField label="Kısa açıklama (alt satır)" description="Hız, kalite veya sınırsız kullanım vurgusu.">
+              <textarea
+                value={ctaSubtitle}
+                onChange={(e) => setCtaSubtitle(e.target.value)}
+                rows={2}
+                className={adminInputClass}
+                placeholder={DEFAULT_UPGRADE_CTA_SUBTITLE}
+              />
+            </AdminField>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setMsg(null);
+                try {
+                  const next = disableLegacyFreeThrottleInTOOLSConfig(
+                    mergeTOOLSQuickForm(full, notes, ctaLabel, ctaSubtitle),
+                  );
+                  await putAdminTOOLSConfig(accessToken, next);
+                  setFull(next);
+                  setMsg("Araç ayarları kaydedildi. Birkaç saniye içinde canlıya yansır.");
+                  notifyRuntimeRefresh();
+                  void reload();
+                } catch (e) {
+                  setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {busy ? "Kaydediliyor…" : "Araç ayarlarını kaydet"}
+            </button>
+          </div>
+
+          {/* Canlı önizleme — admin yazarken anlık güncellenir. */}
+          <div className="rounded-2xl border border-violet-400/25 bg-gradient-to-br from-violet-500/[0.10] to-transparent p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-violet-300">Canlı önizleme</p>
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-400">
+              Masaüstü uygulamasında bekleme ekranı böyle görünür.{" "}
+              <strong className="text-amber-200">Web sitesinde şu an bu metin hiçbir yerde gösterilmiyor.</strong>
+            </p>
+            <div className="mt-4 rounded-2xl border border-white/10 bg-[#0b1220] p-4">
+              <p className="text-[13px] leading-snug text-slate-200">{ctaSubtitle.trim() || DEFAULT_UPGRADE_CTA_SUBTITLE}</p>
+              <button
+                type="button"
+                disabled
+                className="mt-3 w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-[13px] font-bold text-white opacity-90"
+              >
+                {ctaLabel.trim() || DEFAULT_UPGRADE_CTA_LABEL}
+              </button>
+            </div>
+            {!ctaLabel.trim() && !ctaSubtitle.trim() ? (
+              <p className="mt-2.5 text-[10.5px] text-slate-500">Henüz özelleştirilmedi — varsayılan metin gösteriliyor.</p>
+            ) : null}
+          </div>
+        </div>
       </AdminSection>
 
       {msg ? <p className="text-sm text-slate-400">{msg}</p> : null}

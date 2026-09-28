@@ -968,23 +968,79 @@ export async function putPackagesMarketing(marketing: unknown, actor: AdminActor
   await auditedPackagesPartial({ marketing }, actor, "packages.marketing", "Paket pazarlama metni güncellendi");
 }
 
+/**
+ * ARAÇ KULLANIM İSTATİSTİĞİ — `DailyUsage` DEĞİL, `OperationLog`. Aynı kök
+ * neden burada da geçerliydi: `DailyUsage.operationsCount`/`lastFeatureKey`'i
+ * güncelleyen tek fonksiyon (`recordUsage`) hiçbir yerden çağrılmıyor — ölü
+ * kod, bu yüzden "Araç kullanım özeti" hep sıfır görünüyordu. Gerçek işlemler
+ * indirme onaylandığında (`/entitlement/download-log/:id/ack` →
+ * `checkAndIncrementQuota`) `OperationLog`'a yazılır (bkz. `getAdminOverview`
+ * içindeki aynı düzeltme).
+ *
+ * SINIR: yalnızca GİRİŞ YAPMIŞ ÜYELERİN sunucuya uğrayan işlemleri — misafirin
+ * cihazda çalışan araçları (birleştir/böl/döndür/sil/sırala/görsel→PDF) burada
+ * yoktur, hiç sunucuya gitmez.
+ *
+ * Bugün/bu hafta/tüm-zaman filtrelerini FRONTEND'in kendisi hesaplayabilsin
+ * diye üç ayrı toplamı burada tek geçişte çıkarıyoruz (tek sorgu + JS).
+ */
+async function getToolUsageStats(): Promise<
+  Record<string, { today: number; week: number; allTime: number; distinctUsers90d: number }>
+> {
+  const today = todayKeyUtc();
+  const weekAgo = new Date(Date.now() - 7 * 86400000);
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000);
+
+  const [allTimeGroups, recentRows] = await Promise.all([
+    prisma.operationLog.groupBy({
+      by: ["toolType"],
+      where: { status: "SUCCESS" },
+      _count: { _all: true },
+    }),
+    prisma.operationLog.findMany({
+      where: { status: "SUCCESS", createdAt: { gte: ninetyDaysAgo } },
+      select: { toolType: true, createdAt: true, userId: true },
+    }),
+  ]);
+
+  type ToolStat = { today: number; week: number; distinctUsers: Set<string> };
+  const stats = new Map<string, ToolStat>();
+  const ensure = (fk: string): ToolStat => {
+    let s = stats.get(fk);
+    if (!s) {
+      s = { today: 0, week: 0, distinctUsers: new Set() };
+      stats.set(fk, s);
+    }
+    return s;
+  };
+  for (const row of recentRows) {
+    const s = ensure(row.toolType);
+    s.distinctUsers.add(row.userId);
+    if (row.createdAt.toISOString().slice(0, 10) === today) s.today += 1;
+    if (row.createdAt >= weekAgo) s.week += 1;
+  }
+  const allTimeByTool = new Map(allTimeGroups.map((g) => [g.toolType, g._count._all]));
+
+  return Object.fromEntries(
+    featureCatalog.map((fk) => {
+      const s = stats.get(fk);
+      return [
+        fk,
+        {
+          today: s?.today ?? 0,
+          week: s?.week ?? 0,
+          allTime: allTimeByTool.get(fk) ?? 0,
+          distinctUsers90d: s ? s.distinctUsers.size : 0,
+        },
+      ];
+    }),
+  );
+}
+
 export async function getTOOLSAdminPayload() {
   const defs = await getPlanDefinitionsResolved();
   const overrides = await getSetting(SITE_SETTING_KEYS.TOOLS_CONFIG);
-
-  const perTool = await prisma.dailyUsage.groupBy({
-    by: ["lastFeatureKey"],
-    where: { lastFeatureKey: { not: null } },
-    _count: { _all: true },
-    _sum: { operationsCount: true },
-  });
-
-  const usageByTool = Object.fromEntries(
-    featureCatalog.map((fk) => {
-      const hit = perTool.find((p) => p.lastFeatureKey === fk);
-      return [fk, { rows: hit?._count._all ?? 0, operations: hit?._sum.operationsCount ?? 0 }];
-    }),
-  );
+  const usageByTool = await getToolUsageStats();
 
   return {
     catalog: featureCatalog,
@@ -995,8 +1051,6 @@ export async function getTOOLSAdminPayload() {
     })),
     overrides,
     usageByTool,
-    postLimitNote:
-      "Monetization lives in SiteSetting `TOOLS.config`: `postLimitThrottle` (delaysEnabled, freeOpsBeforeThrottle, delayCapMs, delayFloorMs, delayTiers, featureWeights, fileTiers), `conversion` (upgradeCtaLabel, upgradeCtaSubtitle), and `conversionMessaging` (strong message thresholds). The Araçlar tab exposes these in the Monetization section.",
   };
 }
 
