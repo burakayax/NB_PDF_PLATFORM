@@ -2329,6 +2329,30 @@ textarea {
   }
 }
 
+/* "Yeni sürüm hazır" bildirimi — önceden animasyonsuz, DOM'a anide "zıplayarak"
+   giriyordu (kullanıcı bunu takılma olarak algıladı). Yükleme banner'ıyla aynı
+   yumuşatma eğrisi, üstten indiği için ters yönde kayar. */
+.pwa-update-toast {
+  animation: pwa-update-down 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pwa-update-down {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-update-toast {
+    animation: none;
+  }
+}
+
 .selected-files__info {
   max-width: 720px;
   color: var(--nb-muted);

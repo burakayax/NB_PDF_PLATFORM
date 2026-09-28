@@ -267,7 +267,7 @@ function UpdateToast({ lang }: { lang: "tr" | "en" }) {
   return (
     <div
       role="status"
-      className="fixed inset-x-3 top-[max(1rem,env(safe-area-inset-top))] z-[70] mx-auto max-w-sm rounded-2xl border border-nb-primary/30 bg-gradient-to-br from-nb-panel/95 to-nb-bg/95 p-4 shadow-[0_18px_44px_-10px_rgba(34,211,238,0.35)] backdrop-blur-xl sm:inset-x-auto sm:right-6"
+      className="pwa-update-toast fixed inset-x-3 top-[max(1rem,env(safe-area-inset-top))] z-[70] mx-auto max-w-sm rounded-2xl border border-nb-primary/30 bg-gradient-to-br from-nb-panel/95 to-nb-bg/95 p-4 shadow-[0_18px_44px_-10px_rgba(34,211,238,0.35)] backdrop-blur-xl sm:inset-x-auto sm:right-6"
     >
       <div className="flex items-start gap-3">
         <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-nb-primary" aria-hidden />
