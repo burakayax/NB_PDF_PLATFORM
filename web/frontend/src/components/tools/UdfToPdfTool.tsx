@@ -271,7 +271,7 @@ export function UdfToPdfTool({ language }: { language: Language }) {
           </div>
         ) : null}
 
-        <ValueMomentNudge language={language} source="guest_tool_success" />
+        <ValueMomentNudge language={language} source="udf_to_pdf_success" />
       </ToolResultPanel>
     );
   }
