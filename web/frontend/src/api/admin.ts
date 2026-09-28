@@ -62,12 +62,21 @@ export type AdminOverview = {
   generatedAt: string;
   usageDateUtc: string;
   totalUsers: number;
+  /** Bugün en az bir sunucu işlemi yapan ÜYE sayısı (misafiri kapsamaz). */
   activeUsersToday: number;
+  /** Bugünkü ÜYE işlem sayısı (misafiri kapsamaz, bkz. `guestToolUsage`). */
   todayTotalOperations: number;
   freeUsers: number;
   paidUsers: number;
   usersByPlan: { FREE: number; PRO: number; BUSINESS: number };
+  /** Son 30 günde ÜYE işlemleri, araca göre. */
   mostUsedTOOLS: Array<{ featureKey: string; userDayRows: number; operationsAttributed: number }>;
+  /** MİSAFİR araç kullanımı — ayrı kaynak (Kullanıcı Yolculuğu), asla mostUsedTOOLS ile toplanmaz. */
+  guestToolUsage: {
+    days: number;
+    todayToolSuccessCount: number;
+    byTool: Array<{ toolId: string; count: number }>;
+  };
   usagePerPackage: Array<{ plan: string; userCount: number }>;
   anonymousSessionsToday: number;
   registeredSessionsToday: number;

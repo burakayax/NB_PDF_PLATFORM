@@ -16,6 +16,7 @@ import { getPaymentPricesTry } from "../payment/payment-pricing.js";
 import { featureCatalog } from "../subscription/subscription.config.js";
 import { getPlanDefinitionsResolved, invalidatePlanRuntimeCache } from "../subscription/plan-runtime.js";
 import { updatePlanConfigAndPropagate } from "../organization/organization.service.js";
+import { getJourneyFunnelSummary } from "./journey/journey.service.js";
 
 function todayKeyUtc() {
   return new Date().toISOString().slice(0, 10);
@@ -26,27 +27,34 @@ function startOfTodayUtc(): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
 }
 
-/** `usageDate` alanı YYYY-MM-DD dizgesi; aralık için kullanılır. */
-function usageDateKeySubtractDays(days: number): string {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - days);
-  return d.toISOString().slice(0, 10);
-}
-
 export type AdminOverview = {
   generatedAt: string;
   usageDateUtc: string;
   totalUsers: number;
+  /** Bugün en az bir sunucu işlemi yapan ÜYE sayısı (misafiri kapsamaz). */
   activeUsersToday: number;
+  /** Bugünkü ÜYE işlem sayısı — `OperationLog`'dan (misafiri kapsamaz, bkz. `guestToolUsage`). */
   todayTotalOperations: number;
   freeUsers: number;
   paidUsers: number;
   usersByPlan: Record<string, number>;
+  /** Son 30 günde ÜYE işlemleri, araca göre — misafirin cihazda çalışan araçlarını kapsamaz. */
   mostUsedTOOLS: Array<{
     featureKey: string;
     userDayRows: number;
     operationsAttributed: number;
   }>;
+  /**
+   * MİSAFİR araç kullanımı — `UserJourneyEvent`'ten (`sign_up_cta_shown`,
+   * yani bir misafirin cihazda bir aracı BAŞARIYLA bitirip üye-ol kartını
+   * gördüğü an). `mostUsedTOOLS`'un (üye/OperationLog) TAMAMEN AYRI kaynağı;
+   * ikisi asla toplanmaz — biri diğerini kapsamaz.
+   */
+  guestToolUsage: {
+    days: number;
+    todayToolSuccessCount: number;
+    byTool: Array<{ toolId: string; count: number }>;
+  };
   usagePerPackage: Array<{ plan: string; userCount: number }>;
   anonymousSessionsToday: number;
   registeredSessionsToday: number;
@@ -106,21 +114,18 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   const dayStart = startOfTodayUtc();
   const presenceWindowMinutes = 5;
   const activePresenceSince = new Date(Date.now() - presenceWindowMinutes * 60 * 1000);
-  const TOOLStatsSince = usageDateKeySubtractDays(30);
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
 
   const [
     totalUsers,
-    activeUsersToday,
     planGroups,
-    todayAgg,
     anonSessions,
     regSessions,
     anonPv,
     checkoutDone,
     checkoutPending,
-    usageByDayRows,
+    opsLast30d,
     pageViewsRecent,
     pvsToday,
     freeTierEverHitLimit,
@@ -129,16 +134,9 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     pvsLastPresenceWindow,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.dailyUsage.count({
-      where: { usageDate: today, operationsCount: { gt: 0 } },
-    }),
     prisma.user.groupBy({
       by: ["plan"],
       _count: { _all: true },
-    }),
-    prisma.dailyUsage.aggregate({
-      where: { usageDate: today },
-      _sum: { operationsCount: true },
     }),
     prisma.pageView.groupBy({
       by: ["sessionId"],
@@ -153,11 +151,26 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     }),
     prisma.paymentCheckout.count({ where: { status: "completed" } }),
     prisma.paymentCheckout.count({ where: { status: "pending" } }),
-    prisma.dailyUsage.groupBy({
-      by: ["usageDate"],
-      _sum: { operationsCount: true },
-      orderBy: { usageDate: "desc" },
-      take: 30,
+    /**
+     * ÜYE İŞLEM HACMİ — `DailyUsage` DEĞİL. `DailyUsage.operationsCount`/
+     * `lastFeatureKey`'i güncelleyen tek fonksiyon (`recordUsage`, subscription
+     * servisinde) hiçbir yerden çağrılmıyor — ölü kod, tablo hep boş/sıfır
+     * kalıyordu (admin panelinde "çalışmıyor" görünmesinin sebebi buydu).
+     * Gerçek işlemler indirme onaylandığında (`POST /entitlement/download-log/:id/ack`
+     * → `checkAndIncrementQuota`) `OperationLog`'a yazılır. Tek sorguda 30
+     * günlük ham satırları çekip "bugün" + "günlük seri" + "en çok araç" ı
+     * burada JS'te türetiyoruz (Prisma'nın tarih-kırpma groupBy'ı yok; aynı
+     * desen bu dosyada `pageViewsByDay`/`registrationsByDay` için de kullanılıyor).
+     *
+     * SINIR: `OperationLog.userId` zorunlu — yalnızca GİRİŞ YAPMIŞ ÜYELERİN
+     * sunucuya uğrayan işlemleri burada. Misafirin (ve üyenin) TAMAMEN cihazda
+     * çalışan araçları (birleştir/böl/döndür/sil/sırala/görsel→PDF) sunucuya
+     * hiç gitmez — bu sayılar onları kapsamaz, aşağıda `guestToolUsage` ayrı
+     * tutulur (karıştırılmaz).
+     */
+    prisma.operationLog.findMany({
+      where: { status: "SUCCESS", createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true, toolType: true, userId: true },
     }),
     prisma.pageView.findMany({
       where: { createdAt: { gte: thirtyDaysAgo } },
@@ -189,24 +202,55 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     pvsLastPresenceWindow.filter((p) => p.userId == null).map((p) => p.sessionId),
   ).size;
 
-  const toolGroups30d = await prisma.dailyUsage.groupBy({
-    by: ["lastFeatureKey"],
-    where: {
-      lastFeatureKey: { not: null },
-      usageDate: { gte: TOOLStatsSince },
-    },
-    _count: { _all: true },
-    _sum: { operationsCount: true },
-  });
-  const mostUsedTOOLSAllTimeFallback = toolGroups30d.length === 0;
-  const toolGroups = mostUsedTOOLSAllTimeFallback
-    ? await prisma.dailyUsage.groupBy({
-        by: ["lastFeatureKey"],
-        where: { lastFeatureKey: { not: null } },
-        _count: { _all: true },
-        _sum: { operationsCount: true },
-      })
-    : toolGroups30d;
+  // ── Günlük işlem serisi + bugünkü toplam + bugün aktif üye — tek geçişte ──
+  const opsByDayMap = new Map<string, number>();
+  const activeUserIdsToday = new Set<string>();
+  const toolStats30d = new Map<string, { ops: number; users: Set<string> }>();
+  for (const op of opsLast30d) {
+    const dateKey = op.createdAt.toISOString().slice(0, 10);
+    opsByDayMap.set(dateKey, (opsByDayMap.get(dateKey) ?? 0) + 1);
+    if (dateKey === today) activeUserIdsToday.add(op.userId);
+    const t = toolStats30d.get(op.toolType) ?? { ops: 0, users: new Set<string>() };
+    t.ops += 1;
+    t.users.add(op.userId);
+    toolStats30d.set(op.toolType, t);
+  }
+  const todayTotalOperations = opsByDayMap.get(today) ?? 0;
+  const activeUsersToday = activeUserIdsToday.size;
+
+  const mostUsedTOOLSAllTimeFallback = toolStats30d.size === 0;
+  let toolGroups: Array<{ featureKey: string; userDayRows: number; operationsAttributed: number }>;
+  if (!mostUsedTOOLSAllTimeFallback) {
+    toolGroups = [...toolStats30d.entries()].map(([toolType, s]) => ({
+      featureKey: toolType,
+      userDayRows: s.users.size,
+      operationsAttributed: s.ops,
+    }));
+  } else {
+    // Son 30 günde hiç üye işlemi yoksa (yeni site / düşük hacim), tüm zamana düş.
+    const allTimeGroups = await prisma.operationLog.groupBy({
+      by: ["toolType"],
+      where: { status: "SUCCESS" },
+      _count: { _all: true },
+    });
+    toolGroups = allTimeGroups.map((g) => ({
+      featureKey: g.toolType,
+      userDayRows: g._count._all,
+      operationsAttributed: g._count._all,
+    }));
+  }
+
+  // ── Misafir araç kullanımı — Kullanıcı Yolculuğu event'lerinden (üye
+  // tarafındaki OperationLog'un TAMAMEN dışında; asla bu ikisi toplanmaz). ──
+  const [guestFunnel30d, guestFunnelToday] = await Promise.all([
+    getJourneyFunnelSummary(30),
+    getJourneyFunnelSummary(1),
+  ]);
+  const guestToolUsage = {
+    days: 30,
+    todayToolSuccessCount: guestFunnelToday.toolSuccessByTool.reduce((s, t) => s + t.count, 0),
+    byTool: guestFunnel30d.toolSuccessByTool,
+  };
 
   const usersByPlan: Record<string, number> = { FREE: 0, PLUS: 0, PRO: 0, BUSINESS: 0 };
   for (const row of planGroups) {
@@ -216,21 +260,13 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   const paidUsers = (usersByPlan.PLUS ?? 0) + (usersByPlan.PRO ?? 0) + (usersByPlan.BUSINESS ?? 0);
   const freeUsers = usersByPlan.FREE ?? 0;
 
-  const mostUsedTOOLS = toolGroups
-    .map((row) => ({
-      featureKey: row.lastFeatureKey as string,
-      userDayRows: row._count._all,
-      operationsAttributed: row._sum.operationsCount ?? 0,
-    }))
+  const mostUsedTOOLS = [...toolGroups]
     .sort((a, b) => b.operationsAttributed - a.operationsAttributed)
     .slice(0, 15);
 
-  const usageByDay = [...usageByDayRows]
-    .reverse()
-    .map((r) => ({
-      date: r.usageDate,
-      totalOperations: r._sum.operationsCount ?? 0,
-    }));
+  const usageByDay = [...opsByDayMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, totalOperations]) => ({ date, totalOperations }));
 
   const pvByDayMap = new Map<string, number>();
   for (const p of pageViewsRecent) {
@@ -254,10 +290,12 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     prisma.user.count({
       where: { AND: [{ city: { not: null } }, { city: { not: "" } }] },
     }),
-    prisma.user.groupBy({
-      by: ["country"],
+    // groupBy YERİNE findMany: eski kayıtlarda `country` sabit "Turkey" metni,
+    // yeni kayıtlarda ISO kodu ("TR") — DB seviyesinde groupBy ikisini AYRI
+    // gruplar sayardı (yanlış/bölünmüş dağılım). JS'te normalize edip topluyoruz.
+    prisma.user.findMany({
       where: { AND: [{ country: { not: null } }, { country: { not: "" } }] },
-      _count: { _all: true },
+      select: { country: true },
     }),
     prisma.user.findMany({
       where: { AND: [{ city: { not: null } }, { city: { not: "" } }] },
@@ -272,9 +310,18 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       select: { createdAt: true, plan: true },
     }),
   ]);
-  const topCountries = countryGroupRows
-    .filter((r) => r.country != null && r.country.length > 0)
-    .map((r) => ({ country: r.country as string, count: r._count?._all ?? 0 }))
+  // Kayıt akışı Eylül 2026'ya kadar şehir girilince ülkeyi koşulsuz "Turkey"
+  // yazıyordu (gerçek IP verisi değildi); artık ISO kodu ("TR") yazılıyor.
+  // Eski satırlar hâlâ tam adla duruyor — aynı ülkeyi tek grupta tutmak için normalize et.
+  const LEGACY_COUNTRY_NAME_TO_CODE: Record<string, string> = { Turkey: "TR" };
+  const countryCountMap = new Map<string, number>();
+  for (const r of countryGroupRows) {
+    if (!r.country) continue;
+    const code = LEGACY_COUNTRY_NAME_TO_CODE[r.country] ?? r.country;
+    countryCountMap.set(code, (countryCountMap.get(code) ?? 0) + 1);
+  }
+  const topCountries = [...countryCountMap.entries()]
+    .map(([country, count]) => ({ country, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
@@ -317,11 +364,12 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     usageDateUtc: today,
     totalUsers,
     activeUsersToday,
-    todayTotalOperations: todayAgg._sum.operationsCount ?? 0,
+    todayTotalOperations,
     freeUsers,
     paidUsers,
     usersByPlan: usersByPlan as Record<string, number>,
     mostUsedTOOLS,
+    guestToolUsage,
     usagePerPackage: [
       { plan: "FREE", userCount: usersByPlan["FREE"] ?? 0 },
       { plan: "PLUS", userCount: usersByPlan["PLUS"] ?? 0 },
@@ -414,8 +462,6 @@ export async function listUsersForAdmin(params: {
         ? { plan: dir }
         : { createdAt: dir };
 
-  const usageToday = todayKeyUtc();
-
   // Tek sorguda kullanıcılar + bugünkü kullanım: N+1 yok.
   const [total, rows] = await Promise.all([
     prisma.user.count({ where }),
@@ -443,19 +489,34 @@ export async function listUsersForAdmin(params: {
         teamOwnerId: true,
         organization: { select: { overrideExpiresAt: true, basePlan: true } },
         _count: { select: { dailyUsages: true } },
-        dailyUsages: {
-          where: { usageDate: usageToday },
-          select: { operationsCount: true, postLimitExtraOps: true, lastFeatureKey: true },
-          take: 1,
-        },
       },
     }),
   ]);
 
-  // dailyUsages include sonucu Map'e dönüştür (geriye dönük uyumluluk)
-  const todayByUser = new Map(
-    rows.map((r) => [r.id, r.dailyUsages?.[0] ? { ...r.dailyUsages[0], userId: r.id } : undefined]),
-  );
+  /**
+   * BUGÜNKÜ İŞLEM — `DailyUsage` yerine `OperationLog`'dan (bkz. getAdminOverview
+   * içindeki aynı düzeltmenin gerekçesi: `DailyUsage`'ı güncelleyen tek yol olan
+   * `recordUsage()` hiçbir yerden çağrılmıyor, ölü kod). Gerçek işlemler indirme
+   * onaylandığında (`/entitlement/download-log/:id/ack`) `OperationLog`'a yazılır.
+   * `orderBy: desc` sayesinde her kullanıcının İLK satırı en güncel aracı verir.
+   */
+  const userIds = rows.map((r) => r.id);
+  const todaysOps = userIds.length
+    ? await prisma.operationLog.findMany({
+        where: { userId: { in: userIds }, createdAt: { gte: startOfTodayUtc() }, status: "SUCCESS" },
+        orderBy: { createdAt: "desc" },
+        select: { userId: true, toolType: true },
+      })
+    : [];
+  const todayByUser = new Map<string, { operationsCount: number; lastFeatureKey: string | null }>();
+  for (const op of todaysOps) {
+    const cur = todayByUser.get(op.userId);
+    if (cur) {
+      cur.operationsCount += 1;
+    } else {
+      todayByUser.set(op.userId, { operationsCount: 1, lastFeatureKey: op.toolType });
+    }
+  }
 
   const items = rows.map((u) => {
     const d = todayByUser.get(u.id);
@@ -483,7 +544,9 @@ export async function listUsersForAdmin(params: {
       usageToday: d
         ? {
             operationsCount: d.operationsCount,
-            postLimitExtraOps: d.postLimitExtraOps,
+            // Ölü DailyUsage alanı; OperationLog'ta karşılığı yok, geriye dönük
+            // uyumluluk için 0 döner (frontend tipi bunu bekliyor, göstermiyor).
+            postLimitExtraOps: 0,
             lastFeatureKey: d.lastFeatureKey,
           }
         : null,

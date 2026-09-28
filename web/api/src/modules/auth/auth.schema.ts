@@ -52,6 +52,17 @@ export const registerSchema = z.object({
   /** Client should send E.164; server normalizes again. */
   phone: z.string().optional(),
   city: z.string().trim().max(80, "City name is too long.").optional(),
+  /**
+   * IP-tabanlı ülke kodu (ISO 3166-1 alpha-2, ör. "TR") — frontend `geoCountry.ts`
+   * ile çözer, kayıt isteğine ekler. Opsiyonel: gelmezse kayıt YİNE DE başarılı
+   * olur, sadece admin panelindeki ülke dağılımı o kullanıcıyı saymaz.
+   */
+  country: z
+    .string()
+    .trim()
+    .length(2, "Country code must be 2 letters.")
+    .transform((v) => v.toUpperCase())
+    .optional(),
   /** Ticari/pazarlama e-posta opt-in izni (GDPR/CASL/6563). Varsayılan izinsiz. */
   marketingConsent: z.boolean().optional(),
 });

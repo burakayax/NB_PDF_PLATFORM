@@ -1,5 +1,6 @@
 import type { Language } from "../i18n/landing";
 import { buildSaasApiUrl, saasFetch } from "./saasHttp";
+import { getCountryCode } from "../lib/geoCountry";
 
 /** useAuthSession ile aynı anahtar; yenileme sonrası güncel jetonu paylaşmak için dışa açık. */
 export const AUTH_ACCESS_TOKEN_STORAGE_KEY = "nbpdf-access-token";
@@ -158,6 +159,16 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   }
   if (payload.marketingConsent) {
     body.marketingConsent = true;
+  }
+  // Admin panelindeki "ülke dağılımı" için — opsiyonel, gelmezse kayıt yine
+  // başarılı olur (bkz. geoCountry.ts: sağlayıcı zinciri başarısız olursa null).
+  try {
+    const cc = await getCountryCode();
+    if (cc) {
+      body.country = cc;
+    }
+  } catch {
+    /* opsiyonel — kayıt asla bu yüzden engellenmez */
   }
   if (import.meta.env.DEV) {
     console.info("[auth] POST /api/auth/register", {

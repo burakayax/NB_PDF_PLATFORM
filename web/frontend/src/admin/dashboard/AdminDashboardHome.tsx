@@ -10,10 +10,24 @@ import {
   YAxis,
 } from "recharts";
 import type { LucideIcon } from "lucide-react";
-import { Activity, ArrowDownRight, ArrowUpRight, BarChart2, Globe, Radio, UserPlus, UserRound, Wrench } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, BarChart2, Globe, Radio, Users, UserRound, Wrench } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import type { AdminOverview } from "../../api/admin";
-import { pdfToolLabelTr } from "../lib/pdfToolLabels";
+import { pdfToolLabelTr, guestToolLabelTr } from "../lib/pdfToolLabels";
+
+/**
+ * ISO ülke kodunu ("TR") Türkçe okunur ada çevirir ("Türkiye"). Tarayıcının
+ * yerleşik yerelleştirme veritabanını kullanır — ayrı bir kod↔isim tablosu
+ * tutmaya gerek yok. Kod tanınmazsa (eski/bozuk veri) olduğu gibi gösterilir.
+ */
+const countryDisplay = (() => {
+  try {
+    const dn = new Intl.DisplayNames(["tr"], { type: "region" });
+    return (code: string) => dn.of(code) ?? code;
+  } catch {
+    return (code: string) => code;
+  }
+})();
 
 type Props = { overview: AdminOverview; uiMode?: unknown };
 type Period = "daily" | "weekly" | "monthly";
@@ -165,6 +179,7 @@ export function AdminDashboardHome({ overview }: Props) {
 
   const maxPkg = Math.max(1, ...overview.usagePerPackage.map((p) => p.userCount));
   const maxTool = Math.max(1, ...overview.mostUsedTOOLS.map((t) => t.operationsAttributed));
+  const maxGuestTool = Math.max(1, ...overview.guestToolUsage.byTool.map((t) => t.count));
   const maxCountry = Math.max(1, ...overview.geo.topCountries.map((c) => c.count));
 
   return (
@@ -180,18 +195,20 @@ export function AdminDashboardHome({ overview }: Props) {
         </span>
       </div>
 
-      {/* KPI satırı — gerçek delta */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* KPI satırı — gerçek delta. Üye ve misafir sayıları AYRI kartlarda:
+          toplayıp tek bir yanıltıcı rakam göstermek yerine ikisi de görünür. */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <KpiCard label="Kayıtlı kullanıcı" value={overview.totalUsers.toLocaleString("tr-TR")} sub={`+${regWeek} bu hafta`} icon={UserRound} accent="violet" delta={usersDelta} deltaLabel="geçen haftaya göre" spark={regSpark} />
-        <KpiCard label="Bugün işlem" value={opsToday.toLocaleString("tr-TR")} sub={`${overview.activeUsersToday} aktif kullanıcı`} icon={BarChart2} accent="cyan" delta={opsDelta} deltaLabel="düne göre" spark={opsSpark} />
-        <KpiCard label="Canlı oturum" value={String(overview.distinctSessionsActiveNow)} sub={`${overview.presenceWindowMinutes} dk pencere`} icon={Radio} accent="emerald" />
+        <KpiCard label="Bugün işlem (üye)" value={opsToday.toLocaleString("tr-TR")} sub={`${overview.activeUsersToday} aktif üye · misafiri kapsamaz`} icon={BarChart2} accent="cyan" delta={opsDelta} deltaLabel="düne göre" spark={opsSpark} />
+        <KpiCard label="Bugün araç kullanımı (misafir)" value={overview.guestToolUsage.todayToolSuccessCount.toLocaleString("tr-TR")} sub="cihazda tamamlanan, giriş yapmamış" icon={Users} accent="violet" />
+        <KpiCard label="Canlı oturum" value={String(overview.distinctSessionsActiveNow)} sub={`${overview.presenceWindowMinutes} dk pencere · üye+misafir`} icon={Radio} accent="emerald" />
         <KpiCard label="Tamamlanan ödeme" value={String(overview.checkoutsCompleted)} sub={`${overview.checkoutsPending} bekleyen`} icon={Activity} accent="amber" />
       </div>
 
-      {/* Operasyon hacmi + En çok araçlar */}
+      {/* Operasyon hacmi + En çok araçlar (ÜYE) */}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Panel title="Operasyon hacmi" sub="Son 30 gün (UTC)">
+          <Panel title="Operasyon hacmi (üye)" sub="Son 30 gün (UTC) · sunucuya uğrayan üye işlemleri — misafirin cihazda çalışan araçları (birleştir/böl/döndür/sil/sırala/görsel→PDF) bu grafiğe girmez">
             <div className="mt-4 h-[240px] w-full">
               {trendData.length < 1 ? <p className="py-16 text-center text-sm text-slate-400">Günlük seri yok</p> : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -208,7 +225,7 @@ export function AdminDashboardHome({ overview }: Props) {
             </div>
           </Panel>
         </div>
-        <Panel title="En çok kullanılan araçlar" sub="Son 30 gün">
+        <Panel title="En çok kullanılan araçlar (üye)" sub="Son 30 gün · sunucu işlemleri">
           {overview.mostUsedTOOLS.length === 0 ? <p className="mt-4 text-sm text-slate-400">Henüz veri yok</p> : (
             <ul className="mt-4 space-y-3">
               {overview.mostUsedTOOLS.slice(0, 7).map((t) => (
@@ -220,9 +237,24 @@ export function AdminDashboardHome({ overview }: Props) {
         </Panel>
       </div>
 
-      {/* Yeni kayıtlar */}
-      <Panel title="Yeni kayıtlar" sub={`Bugün ${regToday} · Bu hafta ${regWeek} · Bu ay ${regMonth}`} right={<PeriodToggle value={regPeriod} onChange={setRegPeriod} />}>
-        <div className="mt-4 h-[170px] w-full">
+      {/* Yeni kayıtlar — önce büyük özet sayılar, günlük çubuk detay altta */}
+      <Panel title="Yeni kayıtlar" right={<PeriodToggle value={regPeriod} onChange={setRegPeriod} />}>
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Bugün</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-white">{regToday}</p>
+          </div>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Bu hafta</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-white">{regWeek}</p>
+          </div>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Bu ay</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-white">{regMonth}</p>
+          </div>
+        </div>
+        <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Günlük detay</p>
+        <div className="mt-2 h-[150px] w-full">
           {regChartData.length === 0 ? <p className="py-12 text-center text-sm text-slate-400">Henüz kayıt verisi yok</p> : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={regChartData} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
@@ -268,11 +300,20 @@ export function AdminDashboardHome({ overview }: Props) {
             ))}
           </ul>
         </Panel>
-        <Panel title="Ülke dağılımı" sub={<span className="inline-flex items-center gap-1"><Globe className="h-3 w-3" />En çok ziyaretçi</span>}>
-          {overview.geo.topCountries.length === 0 ? <p className="mt-4 text-sm text-slate-400">Konum verisi yok</p> : (
+        <Panel
+          title="Ülke dağılımı"
+          sub={
+            <span className="inline-flex items-center gap-1">
+              <Globe className="h-3 w-3" />Yalnızca üye kaydı · IP'den çözülür, misafiri kapsamaz
+            </span>
+          }
+        >
+          {overview.geo.topCountries.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-400">Konum verisi yok — kayıt olan üye henüz olmadı ya da tarayıcısı IP tespitini engelledi.</p>
+          ) : (
             <ul className="mt-4 space-y-3">
               {overview.geo.topCountries.slice(0, 6).map((c) => (
-                <DistBar key={c.country} label={c.country} value={c.count} max={maxCountry} accent="emerald" />
+                <DistBar key={c.country} label={countryDisplay(c.country)} value={c.count} max={maxCountry} accent="emerald" />
               ))}
             </ul>
           )}
@@ -282,7 +323,7 @@ export function AdminDashboardHome({ overview }: Props) {
               <ul className="space-y-1 text-xs">
                 {overview.geo.topCities.slice(0, 5).map((c) => (
                   <li key={`${c.city}-${c.country}`} className="flex items-center justify-between gap-2">
-                    <span className="truncate text-slate-400">{c.city}{c.country ? ` · ${c.country}` : ""}</span>
+                    <span className="truncate text-slate-400">{c.city}{c.country ? ` · ${countryDisplay(c.country)}` : ""}</span>
                     <span className="shrink-0 font-mono text-slate-400">{c.count}</span>
                   </li>
                 ))}
@@ -290,11 +331,11 @@ export function AdminDashboardHome({ overview }: Props) {
             </div>
           ) : null}
         </Panel>
-        <Panel title="Araç kullanımı" sub="En çok işlem (30g)">
-          {overview.mostUsedTOOLS.length === 0 ? <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400"><Wrench className="h-3.5 w-3.5" />Henüz veri yok</p> : (
+        <Panel title="Araç kullanımı (misafir)" sub="Son 30 gün · cihazda tamamlanan, giriş yapmamış kullanıcılar">
+          {overview.guestToolUsage.byTool.length === 0 ? <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400"><Wrench className="h-3.5 w-3.5" />Henüz veri yok</p> : (
             <ul className="mt-4 space-y-3">
-              {overview.mostUsedTOOLS.slice(0, 6).map((t) => (
-                <DistBar key={t.featureKey} label={pdfToolLabelTr(t.featureKey)} value={t.operationsAttributed} max={maxTool} accent="amber" />
+              {overview.guestToolUsage.byTool.slice(0, 6).map((t) => (
+                <DistBar key={t.toolId} label={guestToolLabelTr(t.toolId)} value={t.count} max={maxGuestTool} accent="amber" />
               ))}
             </ul>
           )}
