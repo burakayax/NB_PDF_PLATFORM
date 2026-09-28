@@ -31,7 +31,6 @@ export type MosaicNavGroup = { title: string; items: MosaicNavItem[] };
 const iconMap: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   users: Users,
-  "cmd-tools": Wrench,
   "cmd-site": Building2,
   "cmd-mkt": Radio,
   "cmd-coupons": Ticket,

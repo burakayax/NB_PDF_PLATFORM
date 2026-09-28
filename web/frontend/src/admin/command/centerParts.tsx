@@ -1,72 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import { putAdminAppSettings, putAdminToolRegistry, type AppSettingsPayload, type ToolRegistryRow } from "../../api/admin";
+import { useEffect, useState } from "react";
+import { putAdminAppSettings, type AppSettingsPayload } from "../../api/admin";
 // postAdminAdjustCredits removed — credit system deprecated
 import { adminInputClass, AdminField } from "../mosaic/adminPrimitives";
-
-export function CCToolRow({
-  row,
-  accessToken,
-  onUpdated,
-  onError,
-}: {
-  row: ToolRegistryRow;
-  accessToken: string;
-  onUpdated: (r: ToolRegistryRow) => void;
-  onError: (e: string | null) => void;
-}) {
-  const [vis, setVis] = useState(row.isVisible);
-  const [maint, setMaint] = useState(row.isMaintenanceMode);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    setVis(row.isVisible);
-    setMaint(row.isMaintenanceMode);
-  }, [row]);
-
-  const save = useCallback(async () => {
-    setBusy(true);
-    onError(null);
-    try {
-      const next = await putAdminToolRegistry(accessToken, row.toolId || row.id, {
-        isVisible: vis,
-        isMaintenanceMode: maint,
-      });
-      onUpdated(next as ToolRegistryRow);
-    } catch (e) {
-      onError(e instanceof Error ? e.message : "Save failed");
-    } finally {
-      setBusy(false);
-    }
-  }, [accessToken, row.id, vis, maint, onError, onUpdated]);
-
-  return (
-    <tr className="transition hover:bg-slate-800/40">
-      <td className="px-4 py-3.5 font-mono text-xs text-cyan-100/90">{row.id}</td>
-      <td className="px-4 py-3.5 text-slate-400">{row.strategy}</td>
-      <td className="px-4 py-3.5">
-        <input type="checkbox" className="h-4 w-4 rounded border-slate-600" checked={vis} onChange={(e) => setVis(e.target.checked)} />
-      </td>
-      <td className="px-4 py-3.5">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-slate-600"
-          checked={maint}
-          onChange={(e) => setMaint(e.target.checked)}
-        />
-      </td>
-      <td className="px-4 py-3.5 text-right">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void save()}
-          className="rounded-lg bg-emerald-600/20 px-3 py-1.5 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-500/30 hover:bg-emerald-600/30 disabled:opacity-40"
-        >
-          {busy ? "…" : "Kaydet"}
-        </button>
-      </td>
-    </tr>
-  );
-}
 
 export function SiteForm({
   site,

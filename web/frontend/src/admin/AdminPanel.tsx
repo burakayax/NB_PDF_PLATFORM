@@ -9,7 +9,6 @@ import {
   fetchAdminOverview,
   fetchAdminPlans,
   fetchAdminSettings,
-  fetchAdminToolRegistry,
   fetchAdminTOOLS,
   downloadAdminDownloadLogProof,
   fetchAdminDownloadLogs,
@@ -30,7 +29,6 @@ import {
   type AdminOverview,
   type AppSettingsPayload,
   type EmailAutomationConfig,
-  type ToolRegistryRow,
 } from "../api/admin";
 import { saasAuthorizedFetch } from "../api/subscription";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../api/auth";
@@ -75,7 +73,6 @@ import { EmailCampaignManager } from "./emails/EmailCampaignManager";
 import { SocialAutomationManager } from "./social/SocialAutomationManager";
 import { SectionIntro } from "./mosaic/SectionIntro";
 import { AdminUserManagement } from "./users/AdminUserManagement";
-import { AdminToolCatalog } from "./tools/AdminToolCatalog";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
 import {
   BolumBasligi,
@@ -124,7 +121,6 @@ import { readAccessToken } from "../lib/accessTokenStore";
 type AdminTabId =
   | "dashboard"
   | "users"
-  | "cmd-tools"
   | "cmd-site"
   | "cmd-mkt"
   | "cmd-coupons"
@@ -165,7 +161,6 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
   {
     title: "Büyüme",
     items: [
-      { id: "cmd-tools", label: "Araç kataloğu" },
       { id: "cmd-site", label: "Uygulama & SEO" },
       { id: "cmd-mkt", label: "Pazarlama" },
       { id: "cmd-coupons", label: "Kuponlar" },
@@ -332,7 +327,6 @@ export function AdminPanel({
     slot: CmsMediaBindSlot;
     url: string;
   } | null>(null);
-  const [cmdTools, setCmdTools] = useState<ToolRegistryRow[] | null>(null);
   const [cmdSite, setCmdSite] = useState<AppSettingsPayload | null>(null);
   const [cmdMkt, setCmdMkt] = useState<EmailAutomationConfig | null>(null);
   const [cmdCoupons, setCmdCoupons] = useState<AdminCouponRow[] | null>(null);
@@ -373,20 +367,6 @@ export function AdminPanel({
     }, 12_000);
     return () => window.clearInterval(id);
   }, [tab, loadOverview]);
-
-  useEffect(() => {
-    if (tab !== "cmd-tools") {
-      return;
-    }
-    setCmdErr(null);
-    void (async () => {
-      try {
-        setCmdTools(await fetchAdminToolRegistry(accessToken));
-      } catch (e) {
-        setCmdErr(e instanceof Error ? e.message : "Yüklenemedi");
-      }
-    })();
-  }, [tab, accessToken]);
 
   useEffect(() => {
     if (tab !== "cmd-site") {
@@ -447,7 +427,7 @@ export function AdminPanel({
     >
       <div className="px-4 py-6 md:px-8">
         <SectionIntro tab={tab} />
-        {cmdErr && ["cmd-tools", "cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (
+        {cmdErr && ["cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (
           <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{cmdErr}</p>
         ) : null}
         {loadErr && tab === "dashboard" ? (
@@ -462,17 +442,6 @@ export function AdminPanel({
           )
         ) : null}
         {tab === "users" ? <AdminUserManagement accessToken={accessToken} uiMode={uiMode} /> : null}
-
-        {tab === "cmd-tools" ? (
-          <AdminToolCatalog
-            tools={cmdTools}
-            accessToken={accessToken}
-            onUpdated={(next) => {
-              setCmdTools((cur) => (cur ? cur.map((t) => (t.id === next.id ? { ...t, ...next } : t)) : cur));
-            }}
-            onError={setCmdErr}
-          />
-        ) : null}
 
         {tab === "cmd-site" ? (
           <SiteForm
