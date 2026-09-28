@@ -26,6 +26,8 @@ import {
   SESSION_POST_OAUTH_REDIRECT_KEY,
 } from "../../lib/oauthRedirect";
 import { trackFunnelEvent } from "../../lib/analytics";
+import { peekPendingTool } from "../../lib/appNavigation";
+import { TOOLS } from "../../lib/toolCatalog";
 
 /**
  * Giriş/kayıt ekranının SOL sütunu — marka ve kazanım paneli.
@@ -231,6 +233,19 @@ export function AuthPage({
 }: AuthPageProps) {
   const adminPortal = purpose === "admin";
   const copy = useMemo(() => getAuthCopy(language, mode), [language, mode]);
+
+  /**
+   * Misafir bir üyelik-gerektiren aracın "kullan" linkinden buraya düştüyse
+   * (bkz. lib/appNavigation savePendingTool) "neden buradayım" bandı gösterir.
+   * SİLMEDEN bakar (peek) — asıl tüketim (yönlendirme) girişten SONRA olur.
+   */
+  const pendingToolName = useMemo(() => {
+    if (adminPortal || mode !== "register") return null;
+    const id = peekPendingTool();
+    if (!id) return null;
+    const tool = TOOLS.find((t) => t.id === id);
+    return tool ? (language === "tr" ? tool.tr.name : tool.en.name) : null;
+  }, [adminPortal, mode, language]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -420,6 +435,14 @@ export function AuthPage({
             </>
           ) : (
             <>
+              {pendingToolName && (
+                <p className="mx-auto mb-4 flex w-fit max-w-full items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-500/[0.08] px-3.5 py-1.5 text-[12.5px] font-medium text-cyan-100">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                  {language === "tr"
+                    ? <>«{pendingToolName}» ücretsiz — hesap açman yeterli</>
+                    : <>«{pendingToolName}» is free — just create an account</>}
+                </p>
+              )}
               <h1 className="mt-5 text-center lg:mt-0 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
                 {copy.screen.title}
               </h1>

@@ -153,6 +153,11 @@ function FileRow({
               >
                 {tr ? "«PDF Kilidini Aç» aracını kullanın" : "use the «Unlock PDF» tool"}
               </button>
+              {/* Tıklamadan önce nereye gideceğini netleştirir: "üyelik gerekir" tek
+                  başına ücretli izlenimi verebiliyordu; yanına "ücretsiz" eklendi. */}
+              <span className="ml-1.5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-[1px] align-middle text-[10px] font-semibold text-slate-400">
+                {tr ? "Ücretsiz · Hesap gerekir" : "Free · Account required"}
+              </span>
             </>
           ) : statusText}
         </p>

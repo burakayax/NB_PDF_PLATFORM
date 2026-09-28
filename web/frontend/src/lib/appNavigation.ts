@@ -321,6 +321,15 @@ export function savePendingTool(id: FeatureKey): void {
   }
 }
 
+/** Silmeden bakar — kayıt/giriş EKRANINDA "neden buradayım" bandı göstermek için. */
+export function peekPendingTool(): FeatureKey | null {
+  try {
+    return (sessionStorage.getItem(PENDING_TOOL_STORAGE_KEY) as FeatureKey | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function readPendingToolAndClear(): FeatureKey | null {
   try {
     const v = sessionStorage.getItem(PENDING_TOOL_STORAGE_KEY);
