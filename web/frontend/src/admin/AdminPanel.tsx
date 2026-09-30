@@ -2381,8 +2381,15 @@ function SettingsTab({
     void reload();
   }, [reload]);
 
-  const toggleMaintenance = useCallback(
+  const setMaintenance = useCallback(
     async (next: boolean) => {
+      // Zaten o durumdaysa tekrar sorup istek atmaya gerek yok.
+      if (next === maintenanceMode) return;
+      const confirmMsg = next
+        ? "Bakım modunu AÇMAK üzeresiniz. Site anında ziyaretçilere bakım sayfası gösterecek. Emin misiniz?"
+        : "Bakım modunu KAPATMAK üzeresiniz. Site anında normale dönecek. Emin misiniz?";
+      if (!window.confirm(confirmMsg)) return;
+
       const prev = maintenanceMode;
       setMaintenanceMode(next);
       setMaintenanceBusy(true);
@@ -2424,26 +2431,39 @@ function SettingsTab({
           bu düğmeye basınca site AYNI ANDA bakıma girer/çıkar, "Ayarları
           kaydet"i beklemez. Acil durum anahtarı budur. */}
       <div className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.05] p-4">
-        <label className="flex cursor-pointer items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span>
             <span className="font-semibold text-white">Bakım modu</span>
             <span className="mt-0.5 block text-xs text-slate-400">
-              Açtığınız an ziyaretçilere bakım sayfası gösterilir — kaydetmeye gerek yok, anında etkili.
-              Şu an:{" "}
-              <span className={maintenanceMode ? "font-semibold text-amber-300" : "font-semibold text-emerald-400"}>
-                {maintenanceMode ? "AÇIK" : "kapalı"}
-              </span>
+              Değiştirdiğiniz an ziyaretçilere yansır — kaydetmeye gerek yok, anında etkili. Her iki düğme de
+              onay ister.
             </span>
           </span>
-          <input
-            type="checkbox"
-            checked={maintenanceMode}
-            disabled={maintenanceBusy}
-            onChange={(e) => void toggleMaintenance(e.target.checked)}
-            className="h-5 w-5 shrink-0 cursor-pointer accent-amber-500 disabled:opacity-40"
-            aria-label="Bakım modu"
-          />
-        </label>
+          <div className="flex overflow-hidden rounded-xl border border-white/[0.12]">
+            <button
+              type="button"
+              disabled={maintenanceBusy}
+              onClick={() => void setMaintenance(true)}
+              aria-pressed={maintenanceMode}
+              className={`px-4 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                maintenanceMode ? "bg-amber-500 text-black" : "bg-black/25 text-slate-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              Bakım Modu Açık
+            </button>
+            <button
+              type="button"
+              disabled={maintenanceBusy}
+              onClick={() => void setMaintenance(false)}
+              aria-pressed={!maintenanceMode}
+              className={`px-4 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                !maintenanceMode ? "bg-emerald-500 text-black" : "bg-black/25 text-slate-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              Bakım Modu Kapalı
+            </button>
+          </div>
+        </div>
         {maintenanceForcedByEnv ? (
           <p className="mt-2 rounded bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300">
             ⚠ Sunucudaki acil-durum anahtarı (<code className="rounded bg-black/40 px-1">MAINTENANCE_MODE</code>) açık —
