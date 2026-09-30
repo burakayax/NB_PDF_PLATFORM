@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { zipStore } from "../../lib/zipStore";
@@ -104,6 +105,9 @@ function resolveFormat(chosen: Format, file: File, webpOk: boolean): OutputForma
 
 export function ImageCompressTool({ language }: { language: Language }) {
   const tr = language === "tr";
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
+  // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
+  const { describesTool } = useToolPageContext();
   const [files, setFiles] = useState<Picked[]>([]);
   const [quality, setQuality] = useState(70);
   const [mode, setMode] = useState<Mode>("quality");
@@ -327,6 +331,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
           disabled={busy}
           appendMode={files.length > 0}
           note={tr ? "JPG, PNG, WebP · 80 MB'a kadar" : "JPG, PNG, WebP · up to 80 MB"}
+          hideHeader={describesTool}
           onFiles={(fl) => addFiles(fl)}
         />
 
