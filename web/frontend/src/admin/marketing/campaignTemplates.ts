@@ -21,6 +21,19 @@
  * abonelikten-çıkma linkiyle SARILIYOR (bkz. web/api/src/lib/email-service.ts
  * `sendMassCampaignEmail` → `renderCorporateEmail`). Bu yüzden şablonlar tam
  * bir HTML doküman DEĞİL, yalnızca gövde içeriğidir.
+ *
+ * DÜĞME HEDEFLERİ CANLIDA TEK TEK DOĞRULANDI (2026-09-30):
+ *  - `/tools/compress` gerçek, çalışan bir araç sayfası — "Şimdi Sıkıştır"
+ *    artık genel anasayfa yerine doğrudan oraya gidiyor.
+ *  - `/#pricing`, `/#faq`, `/#contact` — tarayıcının "sayfa açılınca #id'ye
+ *    kaydır" davranışı React içeriği DOM'a yazılmadan bir kez denenip
+ *    vazgeçiyordu; canlıda "İndirimi Kullan" (#pricing) bazen kullanıcıyı
+ *    sayfanın en tepesinde bırakıyordu. `LandingPage.tsx`'teki retry mantığı
+ *    bu üç hash'i de kapsayacak şekilde genişletildi (bkz. o dosyadaki not).
+ *  - "Geri Bildirim Ver" ÖNCEDEN `/#faq`'a gidiyordu — orası Sık Sorulan
+ *    Sorular, bir geri bildirim FORMU değil. Sitede gerçek geri bildirim yolu
+ *    üstteki "İletişim" düğmesinin açtığı formdur; artık `/#contact`'a
+ *    gidiyor ve o hash sayfa açılınca bu formu otomatik açıyor.
  */
 
 export type CampaignTemplate = {
@@ -77,7 +90,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       `<p>Merhaba {{name}},</p>` +
       `<p>Kısa bir ipucu: Büyük PDF'leri e-postayla göndermeden önce <strong>Sıkıştır</strong> aracımızdan geçirirsen, kaliteden neredeyse hiç ödün vermeden dosya boyutunu büyük ölçüde küçültebilirsin.</p>` +
       `<p>Bir sonraki e-postan geri dönmesin diye deneyebilirsin:</p>` +
-      `<p>${ctaButton("Şimdi Sıkıştır", "https://pdfplatform.app")}</p>`,
+      `<p>${ctaButton("Şimdi Sıkıştır", "https://pdfplatform.app/tools/compress")}</p>`,
   },
   {
     id: "milestone-social-proof",
@@ -99,6 +112,6 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
       `<p>Merhaba {{name}},</p>` +
       `<p>PDF Platform'u nasıl daha iyi yapabileceğimizi senden dinlemek istiyoruz — 30 saniyenizi alacak tek bir soru.</p>` +
       `<p>Görüşün doğrudan yol haritamıza yansıyor.</p>` +
-      `<p>${ctaButton("Geri Bildirim Ver", "https://pdfplatform.app/#faq")}</p>`,
+      `<p>${ctaButton("Geri Bildirim Ver", "https://pdfplatform.app/#contact")}</p>`,
   },
 ];

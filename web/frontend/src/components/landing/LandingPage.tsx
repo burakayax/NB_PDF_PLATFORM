@@ -28,6 +28,7 @@ import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolVisual } from "../common/ToolUploadPanel";
 import { TOOLS } from "../../lib/toolCatalog";
+import { ToolPageContext } from "../common/toolPageContext";
 import {
   ArrowRightLeft,
   Camera,
@@ -922,27 +923,43 @@ function Hero({
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
             <div className="mt-3 text-left">
             {editorOn ? (
-              <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
+              // ToolPageContext: yukarıdaki tanıtım şeridi aracı zaten anlattığı için
+              // WorkspaceUploadField'ın kendi başlığı TEKRAR çizilmesin (describesTool
+              // → hideHeader). GuestToolCore/GuestPageToolCore bunu zaten hardcode
+              // ediyor, o yüzden yalnızca WorkspaceUploadField kullanan araçları sarıyoruz.
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
+              </ToolPageContext.Provider>
             ) : pageTool === "sayfa-duzeni" ? (
-              <Suspense fallback={<HeroToolSkeleton />}>
-                <PdfLayoutTool language={language} accessToken={accessToken} initialFile={scannedFile} />
-              </Suspense>
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <PdfLayoutTool language={language} accessToken={accessToken} initialFile={scannedFile} />
+                </Suspense>
+              </ToolPageContext.Provider>
             ) : pageTool === "pdf-kesit-al" ? (
-              <Suspense fallback={<HeroToolSkeleton />}>
-                <PdfSnipTool language={language} initialFile={scannedFile} />
-              </Suspense>
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <PdfSnipTool language={language} initialFile={scannedFile} />
+                </Suspense>
+              </ToolPageContext.Provider>
             ) : pageTool === "pdf-imzala" ? (
-              <Suspense fallback={<HeroToolSkeleton />}>
-                <PdfSign language={language} accessToken={accessToken} initialFile={scannedFile} />
-              </Suspense>
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <PdfSign language={language} accessToken={accessToken} initialFile={scannedFile} />
+                </Suspense>
+              </ToolPageContext.Provider>
             ) : pageTool === "pdf-yorumla" ? (
-              <Suspense fallback={<HeroToolSkeleton />}>
-                <PdfAnnotate language={language} accessToken={accessToken} initialFile={scannedFile} />
-              </Suspense>
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <PdfAnnotate language={language} accessToken={accessToken} initialFile={scannedFile} />
+                </Suspense>
+              </ToolPageContext.Provider>
             ) : pageTool === "udf-to-pdf" ? (
-              <Suspense fallback={<HeroToolSkeleton />}>
-                <UdfToPdfTool language={language} />
-              </Suspense>
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <UdfToPdfTool language={language} />
+                </Suspense>
+              </ToolPageContext.Provider>
             ) : aiTool === "batch" ? (
               <AiBatchTool
                 language={language}
@@ -978,7 +995,9 @@ function Hero({
                 comingSoon={aiComingSoon}
               />
             ) : freeTool === "gorsel-sikistir" ? (
-              <ImageCompressTool language={language} />
+              <ToolPageContext.Provider value={{ describesTool: true }}>
+                <ImageCompressTool language={language} />
+              </ToolPageContext.Provider>
             ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} initialFile={scannedFile} />
             ) : (
@@ -2060,12 +2079,36 @@ export function LandingPage({
 
   // /pricing (ve /en/pricing) doğrudan açılınca fiyat bölümüne kaydır — aksi halde
   // landing'in tepesi (anasayfa) görünüyordu. Layout otursun diye kısa retry.
+  //
+  // AYNI SORUN #pricing / #faq / #contact HASH'LERİNDE DE VAR — tarayıcının
+  // yerleşik "sayfa yüklenince #id'ye kaydır" davranışı, React içeriği henüz
+  // DOM'a yazmadan bir kere denenip vazgeçiyor. Canlıda ölçüldü: pazarlama
+  // e-postalarındaki "https://pdfplatform.app/#pricing" gibi bağlantılar bazen
+  // çalışıyor bazen kullanıcıyı sayfanın en tepesinde bırakıyordu (yükleme
+  // hızına göre şansa bağlıydı). Aynı retry deseni buraya da uygulanıyor.
+  // #contact özel: kaydırılacak bir bölüm değil, iletişim FORMUNU açar.
   useEffect(() => {
     const p = window.location.pathname.replace(/\/+$/, "");
-    if (p !== "/pricing" && p !== "/en/pricing") return;
+    const hash = window.location.hash.replace("#", "");
+
+    if (hash === "contact") {
+      let tries = 0;
+      const tick = () => {
+        if (typeof onContactClick === "function") {
+          onContactClick();
+          return;
+        }
+        if (tries++ < 25) window.setTimeout(tick, 120);
+      };
+      const t = window.setTimeout(tick, 120);
+      return () => window.clearTimeout(t);
+    }
+
+    const targetId = p === "/pricing" || p === "/en/pricing" ? "pricing" : hash === "pricing" || hash === "faq" ? hash : null;
+    if (!targetId) return;
     let tries = 0;
     const tick = () => {
-      const el = document.getElementById("pricing");
+      const el = document.getElementById(targetId);
       if (el) {
         el.scrollIntoView({ behavior: "auto", block: "start" });
         return;
@@ -2074,6 +2117,9 @@ export function LandingPage({
     };
     const t = window.setTimeout(tick, 120);
     return () => window.clearTimeout(t);
+    // Yalnız ilk yüklemede (mount) çalışsın diye kasıtlı []; onContactClick
+    // referansı zaman içinde değişse bile bu efekt yeniden tetiklenmemeli.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
