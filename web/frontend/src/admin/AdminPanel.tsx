@@ -73,6 +73,7 @@ import { SocialAutomationManager } from "./social/SocialAutomationManager";
 import { SectionIntro } from "./mosaic/SectionIntro";
 import { AdminUserManagement } from "./users/AdminUserManagement";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
+import { CampaignEditor } from "./marketing/CampaignEditor";
 import {
   BolumBasligi,
   BosDurum,
@@ -326,8 +327,8 @@ export function AdminPanel({
   } | null>(null);
   const [cmdMkt, setCmdMkt] = useState<EmailAutomationConfig | null>(null);
   const [cmdCoupons, setCmdCoupons] = useState<AdminCouponRow[] | null>(null);
-  const [bSubj, setBSubj] = useState("News from NB PDF");
-  const [bHtml, setBHtml] = useState("<p>Hi {{name}}, you have <strong>{{credits}}</strong> credits.</p>");
+  const [bSubj, setBSubj] = useState("");
+  const [bHtml, setBHtml] = useState("");
   const [bBatch, setBBatch] = useState(40);
   const [bBusy, setBBusy] = useState(false);
   const [cBusy, setCBusy] = useState(false);
@@ -429,25 +430,28 @@ export function AdminPanel({
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <h2 className="text-sm font-semibold tracking-tight text-white">E-posta otomasyonu</h2>
-                <p className="mt-1 text-xs text-slate-400">Hoş geldin ve dönüşüm (lifecycle) tetikleyicileri</p>
+                <p className="mt-1 text-xs text-slate-400">Kullanıcıya kendiliğinden, tetikleyici bir olay üzerine giden e-postalar — siz göndermezsiniz, sistem otomatik gönderir.</p>
                 <div className="mt-5 space-y-4">
                   <AdminToggle
                     id="mkt-welcome"
                     label="Hoş geldin e-postası"
-                    description="Yeni hesaplara otomatik mesaj"
+                    description="Bir kişi kayıt olduğu AN, otomatik olarak gönderilir."
                     checked={cmdMkt.welcomeEnabled}
                     onChange={(welcomeEnabled) => setCmdMkt({ ...cmdMkt, welcomeEnabled })}
                   />
                   <AdminToggle
                     id="mkt-lifecycle"
-                    label="Lifecycle drip serisi"
-                    description="Dönüşmeyen FREE kullanıcılara 2/6/13. gün e-postaları"
+                    label="Otomatik hatırlatma serisi"
+                    description="Ücretsiz planda kalıp yükseltme yapmayan kullanıcılara, kayıttan sonraki 2., 6. ve 13. günlerde otomatik gönderilen 3 e-postalık dizi."
                     checked={cmdMkt.lifecycleEnabled}
                     onChange={(lifecycleEnabled) => setCmdMkt({ ...cmdMkt, lifecycleEnabled })}
                   />
                 </div>
                 <div className="mt-5">
-                  <AdminField label="Upgrade CTA URL" description="Lifecycle e-postalarındaki buton hedefi (boş → /#pricing)">
+                  <AdminField
+                    label="Yükselt düğmesi bağlantısı"
+                    description="Yukarıdaki otomatik hatırlatma e-postalarındaki 'Yükselt' düğmesine basınca kullanıcının gideceği adres. Boş bırakılırsa fiyatlandırma sayfası kullanılır."
+                  >
                     <input
                       className={adminInputClass}
                       value={cmdMkt.upgradeCtaUrl}
@@ -457,18 +461,21 @@ export function AdminPanel({
                   </AdminField>
                 </div>
                 <div className="mt-3">
-                  <AdminField label="Win-back kupon kodu" description="13. gün e-postasında öne çıkar (boş → indirimsiz, değer-odaklı)">
+                  <AdminField
+                    label="Geri kazanım indirim kodu"
+                    description="Serinin son (13. gün) e-postasında gösterilen özel indirim kodu. Boş bırakırsanız bu e-posta indirim önermeden, ürünün değerini anlatarak gönderilir."
+                  >
                     <input
                       className={adminInputClass}
                       value={cmdMkt.winbackCouponCode}
                       onChange={(e) => setCmdMkt({ ...cmdMkt, winbackCouponCode: e.target.value.toUpperCase() })}
-                      placeholder="WELCOME20"
+                      placeholder="Örn. WELCOME20"
                     />
                   </AdminField>
                 </div>
                 <p className="mt-3 rounded-xl border border-slate-700/60 bg-slate-800/30 px-3 py-2.5 text-[11px] leading-relaxed text-slate-400">
-                  ℹ️ <strong className="text-slate-300">Exit-intent indirimi</strong> (kullanıcı ödeme penceresini kapatınca çıkan teklif) ayrı ve otomatik bir sistemdir:
-                  sabit <strong className="text-slate-300">%15</strong>, yalnızca ilk satışta geçerli, faturaya iskonto olarak yansır. Bu alandan yönetilmez; senin kişisel kuponlarından bağımsızdır.
+                  ℹ️ <strong className="text-slate-300">Ödeme ekranından çıkan kullanıcıya gösterilen %15 indirim</strong> bundan tamamen AYRI, kendi başına çalışan bir sistemdir —
+                  sabittir, yalnızca ilk satışta geçerlidir, burada değiştirilemez.
                 </p>
                 <button
                   type="button"
@@ -484,19 +491,11 @@ export function AdminPanel({
               </div>
               <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/40 to-slate-900/30 p-5 shadow-[inset_0_1px_0_rgba(252,211,77,0.12)]">
                 <h2 className="text-sm font-semibold text-amber-100">Kampanya yayını</h2>
-                <p className="mt-1 text-xs text-amber-200/50">Toplu e-posta — dikkatli kullanın</p>
-                <input
-                  className={`${adminInputClass} mt-4`}
-                  value={bSubj}
-                  onChange={(e) => setBSubj(e.target.value)}
-                  placeholder="Konu"
-                />
-                <textarea
-                  className={`${adminInputClass} mt-2 min-h-[120px] font-mono text-xs`}
-                  value={bHtml}
-                  onChange={(e) => setBHtml(e.target.value)}
-                />
-                <div className="mt-2 flex items-center gap-2">
+                <p className="mt-1 text-xs text-amber-200/50">Sizin elle yazıp gönderdiğiniz, tek seferlik toplu e-posta — dikkatli kullanın, tüm üyelere gider.</p>
+                <div className="mt-4">
+                  <CampaignEditor subject={bSubj} onSubjectChange={setBSubj} html={bHtml} onHtmlChange={setBHtml} />
+                </div>
+                <div className="mt-3 flex items-center gap-2">
                   <span className="text-xs text-amber-200/60">Parti boyutu</span>
                   <input
                     className={`${adminInputClass} w-24`}
@@ -507,7 +506,7 @@ export function AdminPanel({
                 </div>
                 <button
                   type="button"
-                  disabled={bBusy}
+                  disabled={bBusy || bSubj.trim() === "" || bHtml.trim() === "" || bHtml === "<br>"}
                   className="mt-4 w-full rounded-xl border border-amber-500/40 bg-amber-500/20 px-4 py-2.5 text-sm font-semibold text-amber-50 shadow-sm transition hover:bg-amber-500/30 disabled:opacity-40"
                   onClick={() => {
                     if (!window.confirm("Tüm kullanıcılara gönderilsin mi?")) {
