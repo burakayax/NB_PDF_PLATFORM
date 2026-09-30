@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { zipStore } from "../../lib/zipStore";
@@ -160,6 +161,9 @@ const L = {
 export function PdfSnipTool({ language, initialFile }: { language: Language; initialFile?: File | null }) {
   const t = L[language] ?? L.tr;
   const tr = language === "tr";
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
+  // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
+  const { describesTool } = useToolPageContext();
 
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("belge.pdf");
@@ -573,6 +577,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             language={language}
             accept="application/pdf,.pdf"
             note={t.hint}
+            hideHeader={describesTool}
             onFiles={(files) => { void loadFile(files[0]!); }}
           />
         </div>

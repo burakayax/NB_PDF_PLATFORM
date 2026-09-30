@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
@@ -84,6 +85,9 @@ const TEXT_COLORS = ["#0b2447", "#111827", "#dc2626", "#2563eb", "#16a34a", "#ff
 
 export function PdfSign({ language, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
   const tr = language === "tr";
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
+  // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
+  const { describesTool } = useToolPageContext();
   const [file, setFile] = useState<File | null>(null);
   const [doc, setDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [srcBytes, setSrcBytes] = useState<Uint8Array | null>(null);
@@ -414,6 +418,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
             language={language}
             accept=".pdf,application/pdf"
             note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}
+            hideHeader={describesTool}
             onFiles={(files) => { void openFile(files[0]); }}
           />
         </div>

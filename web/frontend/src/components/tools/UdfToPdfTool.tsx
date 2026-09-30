@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FileText, Loader2, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ProBatchNotice } from "./ProBatchNotice";
@@ -71,6 +72,9 @@ function errorText(e: unknown, tr: boolean, fileName: string): string {
 
 export function UdfToPdfTool({ language }: { language: Language }) {
   const tr = language === "tr";
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
+  // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
+  const { describesTool } = useToolPageContext();
   // Toplu çevirme Pro kazanımıdır; tek dosya herkese açık kalır.
   const paid = isPaidPlan(useCurrentPlan());
   const [files, setFiles] = useState<Picked[]>([]);
@@ -295,6 +299,7 @@ export function UdfToPdfTool({ language }: { language: Language }) {
                 ? ".udf files from UYAP · up to 20 files at once · 40 MB"
                 : ".udf files from UYAP · one file free · batch conversion is Pro"
           }
+          hideHeader={describesTool}
           onFiles={(fl) => addFiles(fl)}
         />
 

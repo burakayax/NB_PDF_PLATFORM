@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
@@ -248,6 +249,9 @@ function AutoText({ id, initial, initialHtml, className, style, onInput, onClick
 
 export function PdfEditor({ language, accessToken, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
   const tr = language === "tr";
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
+  // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
+  const { describesTool } = useToolPageContext();
   const [file, setFile] = useState<File | null>(null);
   const [doc, setDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [analysis, setAnalysis] = useState<PdfAnalysis | null>(null);
@@ -1084,16 +1088,21 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
-      <div className="mb-4 flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/25 via-sky-500/20 to-blue-600/20 text-cyan-200 ring-1 ring-cyan-400/30 shadow-[0_0_30px_-8px_rgba(6,182,212,0.6)]"><Pencil className="h-7 w-7" /></div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF Düzenle" : "Edit PDF"}</h1>
-            <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-300">{tr ? "Tam düzenleme" : "Full editing"}</span>
+      {/* Ad/açıklama zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun
+          kendi tanıtım şeridinin İÇİNDEYSE bu başlık tekrar etmesin. Sunucu/limit
+          uyarısı (aşağıda) HER ZAMAN kalır — o, tanıtım şeridinde YOK ve tek bilgi kaynağı. */}
+      {!describesTool && (
+        <div className="mb-4 flex items-start gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/25 via-sky-500/20 to-blue-600/20 text-cyan-200 ring-1 ring-cyan-400/30 shadow-[0_0_30px_-8px_rgba(6,182,212,0.6)]"><Pencil className="h-7 w-7" /></div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF Düzenle" : "Edit PDF"}</h1>
+              <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-300">{tr ? "Tam düzenleme" : "Full editing"}</span>
+            </div>
+            <p className="mt-1 text-sm text-slate-400">{tr ? "Her yazıya ve görsele tıklayıp düzenleyin, silin, renk/boyut değiştirin — gerçek düzenleme." : "Click any text or image to edit, delete, or change color/size — real editing."}</p>
           </div>
-          <p className="mt-1 text-sm text-slate-400">{tr ? "Her yazıya ve görsele tıklayıp düzenleyin, silin, renk/boyut değiştirin — gerçek düzenleme." : "Click any text or image to edit, delete, or change color/size — real editing."}</p>
         </div>
-      </div>
+      )}
 
       <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-amber-400/25 bg-amber-500/[0.07] px-4 py-3 text-[13px] text-amber-200">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
@@ -1150,6 +1159,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             language={language}
             accept="application/pdf,.pdf"
             note={tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}
+            hideHeader={describesTool}
             onFiles={(files) => { void pickFile(files[0]); }}
           />
         </div>

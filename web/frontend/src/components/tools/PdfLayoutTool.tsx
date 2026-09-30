@@ -16,6 +16,7 @@ import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { ToolFilePreview } from "../common/ToolFilePreview";
+import { useToolPageContext } from "../common/toolPageContext";
 
 const METIN = {
   tr: {
@@ -71,6 +72,10 @@ export function PdfLayoutTool({
   initialFile?: File | null;
 }) {
   const t = METIN[language === "tr" ? "tr" : "en"];
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun
+  // kendi tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı
+  // (ikon+ad+açıklama+rozet) aynı şeyi bir kez daha söylüyordu.
+  const { describesTool } = useToolPageContext();
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("belge.pdf");
   /** Sayfa önizlemesi için özgün dosya — ızgara File ile çalışır. */
@@ -137,6 +142,7 @@ export function PdfLayoutTool({
             language={language}
             accept="application/pdf,.pdf"
             note={t.hint}
+            hideHeader={describesTool}
             onFiles={(files) => void dosyaYukle(files[0])}
           />
         </div>
