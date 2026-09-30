@@ -27,6 +27,7 @@ import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolVisual } from "../common/ToolUploadPanel";
+import { TOOLS } from "../../lib/toolCatalog";
 import {
   ArrowRightLeft,
   Camera,
@@ -39,6 +40,7 @@ import {
   Table2,
   FileStack,
   Infinity as InfinityIcon,
+  Loader2,
   ShieldCheck,
   Zap,
   type LucideIcon,
@@ -128,6 +130,34 @@ import { usePwaInstall } from "../../pwa/usePwaInstall";
 const DocumentScanner = lazyWithRetry(() =>
   import("../tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
 );
+
+// Hero'da "kendi sayfasında açılır" (page) türündeki araçlar — önceden /tools/<slug>'a
+// tam sayfa yönlendiriyordu; artık Birleştir/Böl gibi YERİNDE açılıyor. Ana pakete
+// girmesinler diye (yalnızca seçilince indirilsin) lazy.
+const PdfLayoutTool = lazyWithRetry(() =>
+  import("../tools/PdfLayoutTool").then((m) => ({ default: m.PdfLayoutTool })),
+);
+const PdfSnipTool = lazyWithRetry(() =>
+  import("../tools/PdfSnipTool").then((m) => ({ default: m.PdfSnipTool })),
+);
+const PdfSign = lazyWithRetry(() =>
+  import("../tools/PdfSign").then((m) => ({ default: m.PdfSign })),
+);
+const PdfAnnotate = lazyWithRetry(() =>
+  import("../tools/PdfAnnotate").then((m) => ({ default: m.PdfAnnotate })),
+);
+const UdfToPdfTool = lazyWithRetry(() =>
+  import("../tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
+);
+
+/** Yukarıdaki 5 aracın lazy chunk'ı inerken Hero'nun araç alanında gösterilen yer tutucu. */
+function HeroToolSkeleton() {
+  return (
+    <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
+      <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+    </div>
+  );
+}
 
 /**
  * Landing navbar'da kalıcı "Uygulamayı Yükle" butonu — sm+ (tablet/masaüstü)
@@ -463,6 +493,11 @@ function Hero({
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
   const [aiTool, setAiTool] = useState<AiToolId | null>(null);
   const [editorOn, setEditorOn] = useState(false);
+  /** Hero'da yerinde açılan "kendi sayfasında" türü araç (sayfa-duzeni, pdf-kesit-al,
+   *  pdf-imzala, pdf-yorumla, udf-to-pdf) — seçiliyse aşağıdaki gövde bunu render eder,
+   *  artık /tools/<slug>'a yönlendirilmez. "belge-tara" kameralı olduğu için ayrı
+   *  (zaten var olan scannerOpen modalını kullanır). */
+  const [pageTool, setPageTool] = useState<string | null>(null);
   /** Hero ızgarasında açık olan araç kategorisi (AI sekmesi ayrı: aiTool). */
   const [heroCat, setHeroCat] = useState<HeroCatId>("pages");
   // Ödemeler kapalıyken AI araçları "Yakında" (fiyat kartlarıyla aynı sinyal). ANCAK
@@ -486,12 +521,14 @@ function Hero({
         setScannedFile(file);
         setAiTool(null);
         setEditorOn(true);
+        setPageTool(null);
         setHeroCat("edit");
       } else if (isFreeToolId(toolId)) {
         // Cihazda çalışan araç → taranan PDF doğrudan aktarılır (initialFile).
         setScannedFile(file);
         setAiTool(null);
         setEditorOn(false);
+        setPageTool(null);
         setFreeTool(toolId as FreeToolId);
         setHeroCat(catOfFreeTool(toolId as FreeToolId));
       } else {
@@ -593,6 +630,7 @@ function Hero({
                       type="button"
                       onClick={() => {
                         setAiTool(null);
+                        setPageTool(null);
                         setHeroCat(c.id);
                         const next = firstRunnable(c.id);
                         setEditorOn(next.editor);
@@ -611,6 +649,7 @@ function Hero({
                   onClick={() => {
                     setAiTool("summarize");
                     setEditorOn(false);
+                    setPageTool(null);
                   }}
                   className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[13px] font-bold transition ${
                     aiTool
@@ -673,7 +712,7 @@ function Hero({
                       const t = FREE_TOOLS.find((x) => x.id === it.id)!;
                       const A = toolVisual(it.id);
                       const Icon = A.Icon;
-                      const active = !editorOn && freeTool === it.id;
+                      const active = !editorOn && !pageTool && freeTool === it.id;
                       return (
                         <button
                           key={it.id}
@@ -682,6 +721,7 @@ function Hero({
                             setFreeTool(it.id);
                             setAiTool(null);
                             setEditorOn(false);
+                            setPageTool(null);
                           }}
                           className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                             active
@@ -709,6 +749,7 @@ function Hero({
                           onClick={() => {
                             setEditorOn(true);
                             setAiTool(null);
+                            setPageTool(null);
                           }}
                           className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                             editorOn
@@ -728,24 +769,40 @@ function Hero({
 
                     if (it.k === "page") {
                       const PageIcon = it.Icon;
-                      // "kendi sayfasında açılır" — misafirde de üyeliksiz çalışır (bkz.
-                      // heroToolCatalog.ts başındaki not). Önceden onOpenTool (=navigateToTool)
-                      // çağrılıyordu; bu, workspace'e özel state'i (selectedFeatureId vb.)
-                      // "sayfa-duzeni" gibi gerçek bir FeatureKey OLMAYAN bir kimlikle
-                      // kirletiyor, misafiri sıkıştırıyordu. Artık doğrudan /tools/<slug>'a gider.
+                      // "kendi sayfasında açılır" türü — önceden /tools/<slug>'a TAM SAYFA
+                      // yönlendiriyordu (misafiri ana sayfadan koparıyordu, geri dönüş
+                      // sürtünme yaratıyordu). Artık Birleştir/Böl gibi YERİNDE açılıyor.
+                      // "belge-tara" kameralı olduğu için istisna: var olan scannerOpen
+                      // modalını açar (mobil dışında zaten "Kamerayla tara" ile aynı akış).
+                      const isScan = it.slug === "belge-tara";
+                      const active = !editorOn && pageTool === it.slug;
                       return (
-                        <CrawlableLink
+                        <button
                           key={it.slug}
-                          href={localizedPath(`/tools/${it.slug}`, language)}
-                          className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
+                          type="button"
+                          onClick={() => {
+                            setAiTool(null);
+                            setEditorOn(false);
+                            if (isScan) {
+                              setPageTool(null);
+                              setScannerOpen(true);
+                            } else {
+                              setPageTool(it.slug);
+                            }
+                          }}
+                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                            active
+                              ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                              : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                          }`}
                         >
-                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                          <span className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 ring-1 ring-white/10 transition group-hover:scale-105 ${active ? "text-white" : "text-slate-200"}`}>
                             <PageIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                           </span>
-                          <span className="text-[12px] font-semibold leading-tight text-slate-300">
+                          <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
                             {tr ? it.tr : it.en}
                           </span>
-                        </CrawlableLink>
+                        </button>
                       );
                     }
 
@@ -782,6 +839,7 @@ function Hero({
                         onClick={() => {
                           setAiTool(id);
                           setEditorOn(false);
+                          setPageTool(null);
                         }}
                         className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                           active
@@ -813,11 +871,21 @@ function Hero({
                   enDesc: FREE_TOOL_DESC[t.id].en,
                 };
               };
+              // "Kendi sayfasında açılır" türü artık yerinde açıldığı için (bkz. pageTool),
+              // adı/açıklaması katalogdan (TOOLS) okunuyor — FREE_TOOL_DESC yalnızca "free" türü
+              // araçları kapsıyordu.
+              const pageMeta = (): HeroMeta | null => {
+                const t = TOOLS.find((x) => x.id === pageTool);
+                if (!t) return null;
+                return { Icon: toolVisual(t.id).Icon, tr: t.tr.name, en: t.en.name, trDesc: t.tr.desc, enDesc: t.en.desc };
+              };
               const meta: HeroMeta = aiTool
                 ? (AI_TOOLS.find((a) => a.id === aiTool)?.meta ?? EDITOR_META)
                 : editorOn
                   ? EDITOR_META
-                  : freeMeta();
+                  : pageTool
+                    ? (pageMeta() ?? freeMeta())
+                    : freeMeta();
               const HeadIcon = meta.Icon;
               const onDevice = !aiTool && !editorOn;
               // Yapay zekâ araçları kendi başlığını çiziyor; iki başlık üst üste
@@ -855,6 +923,26 @@ function Hero({
             <div className="mt-3 text-left">
             {editorOn ? (
               <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
+            ) : pageTool === "sayfa-duzeni" ? (
+              <Suspense fallback={<HeroToolSkeleton />}>
+                <PdfLayoutTool language={language} accessToken={accessToken} initialFile={scannedFile} />
+              </Suspense>
+            ) : pageTool === "pdf-kesit-al" ? (
+              <Suspense fallback={<HeroToolSkeleton />}>
+                <PdfSnipTool language={language} initialFile={scannedFile} />
+              </Suspense>
+            ) : pageTool === "pdf-imzala" ? (
+              <Suspense fallback={<HeroToolSkeleton />}>
+                <PdfSign language={language} accessToken={accessToken} initialFile={scannedFile} />
+              </Suspense>
+            ) : pageTool === "pdf-yorumla" ? (
+              <Suspense fallback={<HeroToolSkeleton />}>
+                <PdfAnnotate language={language} accessToken={accessToken} initialFile={scannedFile} />
+              </Suspense>
+            ) : pageTool === "udf-to-pdf" ? (
+              <Suspense fallback={<HeroToolSkeleton />}>
+                <UdfToPdfTool language={language} />
+              </Suspense>
             ) : aiTool === "batch" ? (
               <AiBatchTool
                 language={language}
