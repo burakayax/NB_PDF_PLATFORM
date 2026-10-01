@@ -927,9 +927,9 @@ export type SocialConfig = {
   cadence: "daily" | "alternate" | "thrice";
   /** Gönderiler yayın saatinden kaç dakika önce hazırlanıp panelde görünsün. */
   prepareLeadMinutes: number;
-  /** İngilizce üstte, Türkçe altta çift dilli gönderi. */
+  /** Türkçe üstte, İngilizce altta çift dilli gönderi. */
   bilingual: boolean;
-  /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
+  /** Çift dil sığmayan ağlarda (X) kullanılacak dil — varsayılan Türkçe. */
   singleLang: "tr" | "en";
   /** Etiketler için canlı internet araştırması (ücretli). */
   researchKeywords: boolean;

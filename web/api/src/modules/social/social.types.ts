@@ -15,10 +15,11 @@ import type { SocialPlatform } from "@prisma/client";
  *
  * NEDEN SABİT: Türkçe ve İngilizce yazılar birebir eşleşiyor, dolayısıyla hangi
  * listeden başladığımız yalnızca "hangi yazı sırada" sorusunu etkilerdi ve
- * ayarlanabilir olması gereksiz bir karardı. İngilizce besleme esas alınır;
- * Türkçe karşılık çift dilli gönderinin alt bloğunu besler.
+ * ayarlanabilir olması gereksiz bir karardı. Türkçe besleme esas alınır (asıl
+ * pazar) — başlık/özet/bağlantı VE paylaşılan kapak GÖRSELİ buradan gelir;
+ * İngilizce karşılık çift dilli gönderinin alt bloğunu besler.
  */
-export const PRIMARY_FEED_LANG = "en" as const;
+export const PRIMARY_FEED_LANG = "tr" as const;
 
 /** Yayınlanacak içerik — RSS'ten türetilmiş, platformdan bağımsız hâli. */
 export type FeedItem = {

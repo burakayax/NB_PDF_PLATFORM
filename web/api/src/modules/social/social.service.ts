@@ -56,9 +56,9 @@ export type SocialAutomationConfig = {
    * 0 = eski davranış: tam yayın anında hazırla.
    */
   prepareLeadMinutes: number;
-  /** Gönderiler çift dilli mi yazılsın (İngilizce üstte, Türkçe altta)? */
+  /** Gönderiler çift dilli mi yazılsın (Türkçe üstte, İngilizce altta)? */
   bilingual: boolean;
-  /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
+  /** Çift dil sığmayan ağlarda (X) kullanılacak dil — varsayılan Türkçe (asıl pazar). */
   singleLang: "tr" | "en";
   /** Etiketler için internette canlı araştırma yapılsın mı? (Ücretli) */
   researchKeywords: boolean;
@@ -74,7 +74,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   // İki saat: sabah kahvesiyle bakıp düzeltmeye yetecek, içeriği bayatlatmayacak süre.
   prepareLeadMinutes: 120,
   bilingual: true,
-  singleLang: "en",
+  singleLang: "tr",
   researchKeywords: true,
 };
 
@@ -95,7 +95,7 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     // tempo hesabıyla çakışır.
     prepareLeadMinutes: clampInt(raw.prepareLeadMinutes, 0, 1440, DEFAULT_CONFIG.prepareLeadMinutes),
     bilingual: raw.bilingual !== false,
-    singleLang: raw.singleLang === "tr" ? "tr" : "en",
+    singleLang: raw.singleLang === "en" ? "en" : "tr",
     researchKeywords: raw.researchKeywords !== false,
   };
 }
