@@ -188,6 +188,27 @@ services:
         sync: false
       - key: REDIS_URL
         sync: false   # Upstash Redis önerilir (kötüye kullanım takibi + kalıcı sayaç)
+      # Admin panel "Medya" yüklemeleri — ayarlanmazsa dosyalar sunucunun
+      # GEÇİCİ diskine yazılır ve her deploy'da silinir (bulundu: 2026-10-01).
+      # MEDIA_STORAGE=s3 yapıp aşağıdaki 6 değeri doldurunca kalıcı olur.
+      # ÖNEMLİ: nb-pdf-api'nin S3_BUCKET'ını (nb-pdf-results) KULLANMAYIN —
+      # o bucket'ta 24 saatlik otomatik silme kuralı var (S3_RESULT_TTL_HOURS),
+      # logo/görsel gibi kalıcı kalması gereken dosyalar için AYRI, kuralsız
+      # bir bucket açın (aynı R2/S3 hesabında yeni bucket oluşturmak yeterli).
+      - key: MEDIA_STORAGE
+        sync: false   # "s3" yapın (boş/yoksa "local" varsayılanı kullanılır, kalıcı olmaz)
+      - key: S3_BUCKET
+        sync: false   # Yeni, AYRI bir bucket adı (ör. nb-pdf-media) — nb-pdf-results DEĞİL
+      - key: S3_REGION
+        sync: false   # R2 için genelde "auto"
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false   # R2 endpoint'i (nb-pdf-api'deki S3_ENDPOINT ile aynı hesap/endpoint olabilir, bucket farklı)
+      - key: MEDIA_PUBLIC_BASE_URL
+        sync: false   # Bucket'ın herkese açık adresi (R2 public bucket URL'si); boşsa dosyalar /api/media/files/... üzerinden sunucu üzerinden servis edilir
 
   # ─── Frontend (Static Site) ────────────────────────────────────────────────
   # Not: Static site'lar global CDN'den servis edilir; `region` ve `plan`
@@ -510,6 +531,22 @@ services:
       - path: "/*"
         name: Content-Security-Policy
         value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; worker-src 'self' blob:; manifest-src 'self'; connect-src 'self' blob: data: https://*.onrender.com https://*.pdfplatform.app https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://ipapi.co https://ipwho.is https://*.iyzipay.com; frame-src 'self' https://*.iyzipay.com; form-action 'self' https://*.iyzipay.com; upgrade-insecure-requests"
+      # Belge Tarayıcı'nın YAPAY SİNİR AĞI dedektörü çok-iş-parçacıklı WASM
+      # (SharedArrayBuffer) için yazılmış (bkz. lib/documentScan.ts `threaded: true`,
+      # kare başına ~7ms/~13ms karşılaştırması) ama SharedArrayBuffer yalnız sayfa
+      # "cross-origin isolated" ise açılır — bunun için COOP (zaten `/*` için var)
+      # YETMEZ, COEP de gerekir; o hiç gönderilmiyordu → tespit sessizce tek-
+      # iş-parçacıklı (yavaş) moda düşüyordu (ölçüldü: production response'da COEP yok).
+      # `credentialless` seçildi (require-corp değil) ki 3. taraf kaynaklar (font,
+      # analytics) CORP başlığı göndermek zorunda kalmasın. YALNIZ bu rotaya
+      # uygulanır — site genelinde (özellikle iyzico ödeme iframe'i olan sayfalarda)
+      # AÇILMAZ; onlar başka bir rotadır, bu yüzden risk yok.
+      - path: "/tools/belge-tara"
+        name: Cross-Origin-Embedder-Policy
+        value: credentialless
+      - path: "/en/tools/belge-tara"
+        name: Cross-Origin-Embedder-Policy
+        value: credentialless
       # Özel/işlevsel rotalar arama indeksinden çıkarılır. Google önerisi: bu sayfaları
       # robots.txt ile ENGELLEME (engelliyse noindex görülemez) — taramaya izin ver +
       # X-Robots-Tag: noindex ver. robots.txt yalnızca /api/'yi engeller.
