@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { canEncode, extForFormat, type OutputFormat } from "../../lib/imageCompress";
@@ -44,6 +45,9 @@ function resolveFormat(chosen: Format, file: File, webpOk: boolean): OutputForma
 
 export function ImageResizeTool({ language }: { language: Language }) {
   const tr = language === "tr";
+  // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
+  // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
+  const { describesTool } = useToolPageContext();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [srcDims, setSrcDims] = useState<{ w: number; h: number } | null>(null);
@@ -219,6 +223,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
           disabled={busy}
           appendMode={!!file}
           note={tr ? "JPG, PNG, WebP · 80 MB'a kadar" : "JPG, PNG, WebP · up to 80 MB"}
+          hideHeader={describesTool}
           onFiles={addFiles}
         />
 
