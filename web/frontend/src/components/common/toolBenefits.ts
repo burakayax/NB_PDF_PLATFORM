@@ -5,10 +5,14 @@ import { isOnDeviceTool } from "../../lib/onDeviceTools";
 /**
  * YÜKLEME EKRANINDAKİ ÜÇ FAYDA KUTUSU.
  *
- * Sekiz ücretsiz aracın elle yazılmış, aracın işine özel metinleri vardı; geri
- * kalan araçlarda bu kutular hiç yoktu. Elle yazılanlar korunur, yazılmamış
- * araçlar için katalogdan tutarlı bir üçlü üretilir — böylece yeni bir araç
- * eklendiğinde ekran boş kalmaz, ama iyi yazılmış metin de kaybolmaz.
+ * Birkaç aracın elle yazılmış, işine özel metinleri vardır; geri kalan
+ * araçlarda bu kutular jenerik üretilir — böylece yeni bir araç eklendiğinde
+ * ekran boş kalmaz, ama iyi yazılmış metin de kaybolmaz. Jenerik üretimin
+ * ilk kutusu aracın katalog adını/açıklamasını olduğu gibi tekrarlar; Hero'da
+ * (ana sayfa) bu, aracın üstündeki tanıtım şeridiyle birebir çakışıyordu —
+ * o yüzden Hero'ya sonradan gömülen araçlar da (sayfa-duzeni, pdf-duzenle,
+ * pdf-kesit-al, pdf-imzala, pdf-yorumla, udf-to-pdf, gorsel-boyutlandir)
+ * burada elle yazılmıştır.
  *
  * Üçüncü kutu gizlilik anlatır ve `lib/onDeviceTools.ts` listesine bakar:
  * sunucuya iş gönderen araçta "cihazından çıkmaz" DENMEZ.
@@ -52,6 +56,45 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Sırala & düzenle", trDesc: "Sayfaları sürükleyip yeniden diz.", en: "Reorder & organize", enDesc: "Drag pages into a new order." },
     { icon: Zap, tr: "Canlı önizleme", trDesc: "Değişikliği anında gör.", en: "Live preview", enDesc: "See changes as you make them." },
     { icon: Lock, tr: "Gizli", trDesc: "Cihazında işlenir, gizli kalır.", en: "Private", enDesc: "Processed on your device, stays private." },
+  ],
+  // Aşağıdaki 7'si önceden jenerik üretim kullanıyordu — ilk kutu aracın adını
+  // olduğu gibi tekrarlıyordu (ör. "Görsel Boyutlandır / Görsel Boyutlandır").
+  // Yalnızca ilk kutu özelleşti; hız+gizlilik kutuları ON_DEVICE_TOOLS'a göre
+  // generate()'teki standart metinle aynı tutuldu (ses tutarlılığı için).
+  "sayfa-duzeni": [
+    { icon: Zap, tr: "Kâğıt tasarrufu", trDesc: "2, 4, 6, 8, 9 ya da 16 sayfayı tek yaprağa sığdırın ya da kitapçık dizin.", en: "Save paper", enDesc: "Fit 2 to 16 pages on one sheet, or impose a booklet." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "pdf-duzenle": [
+    { icon: Zap, tr: "Gerçek düzenleme", trDesc: "Mevcut yazıyı silip yerine istediğinizi yazın — görüntü değil, gerçek metin.", en: "Real editing", enDesc: "Delete existing text and type new text — not an image overlay." },
+    { icon: Zap, tr: "Hızlı ve kolay", trDesc: "Kurulum yok, hesap adımı yok; dosyanı bırak yeter.", en: "Fast and simple", enDesc: "Nothing to install, no setup — just drop your file." },
+    { icon: Trash2, tr: "Dosyan sende kalır", trDesc: "Şifreli aktarılır, işlem biter bitmez sunucudan silinir.", en: "Your file stays yours", enDesc: "Transferred encrypted and deleted from the server right after." },
+  ],
+  "pdf-kesit-al": [
+    { icon: Zap, tr: "Alanı seç, görsele al", trDesc: "Sayfadan istediğiniz bölgeyi kırpıp PNG/JPG olarak indirin.", en: "Crop to image", enDesc: "Select any area on the page and save it as PNG or JPG." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "pdf-imzala": [
+    { icon: Zap, tr: "Çiz, yerine koy", trDesc: "İmzanızı fare ya da parmağınızla çizip belgenin istediğiniz yerine yerleştirin.", en: "Draw & place", enDesc: "Draw your signature and place it anywhere on the page." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "pdf-yorumla": [
+    { icon: Zap, tr: "Vurgula & not al", trDesc: "Metni vurgulayın, kenara not düşün, ok ve kutu çizin.", en: "Highlight & annotate", enDesc: "Highlight text, add notes, draw arrows and boxes." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "udf-to-pdf": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "UYAP'tan indirdiğiniz .udf belgesini doğrudan tarayıcıda PDF'ye çevirin.", en: "No software needed", enDesc: "Convert a .udf file from UYAP straight in your browser." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "gorsel-boyutlandir": [
+    { icon: Zap, tr: "Tam ölçüye getir", trDesc: "Fotoğrafı piksel piksel istediğiniz genişlik ve yüksekliğe ayarlayın.", en: "Exact dimensions", enDesc: "Set a photo to the precise width and height you need." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Görselin cihazından hiç çıkmaz.", en: "Private", enDesc: "Your image never leaves your device." },
   ],
 };
 
