@@ -313,9 +313,9 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
   };
 
   const bilingualPossible = req.bilingual && Boolean(item.alt) && PLATFORM_SPECS[platform].bilingual;
-  // Çift dilde İngilizce üstte: uluslararası kitle önce okur, Türkçe altta tam
-  // karşılığıyla durur (Make.com'daki düzenin aynısı).
-  if (bilingualPossible) return [sideOf("en"), sideOf("tr")];
+  // Çift dilde Türkçe üstte: asıl kitle Türkiye, İngilizce altta tam
+  // karşılığıyla durur.
+  if (bilingualPossible) return [sideOf("tr"), sideOf("en")];
   return [sideOf(req.singleLang)];
 }
 
