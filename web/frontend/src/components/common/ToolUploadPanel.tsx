@@ -83,7 +83,7 @@ export function ToolUploadPanel({
   const benefits = getToolBenefits(toolId);
   // Araç zaten kendini anlatan bir sayfanın içindeyse (misafir araç sayfası)
   // başlık şeridi ve fayda kutuları aynı şeyi üçüncü kez söylemiş olur.
-  const { describesTool } = useToolPageContext();
+  const { describesTool, showBenefitsAnyway } = useToolPageContext();
 
   const pick = () => {
     if (!busy && !disabled) inputRef.current?.click();
@@ -229,7 +229,7 @@ export function ToolUploadPanel({
         )}
       </div>
 
-      {showBenefits && !compact && !describesTool && (
+      {showBenefits && !compact && (!describesTool || showBenefitsAnyway) && (
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {benefits.map((b) => {
             const BIcon = b.icon;

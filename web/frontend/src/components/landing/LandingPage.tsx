@@ -150,8 +150,13 @@ const PdfAnnotate = lazyWithRetry(() =>
 const UdfToPdfTool = lazyWithRetry(() =>
   import("../tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
 );
+// "gorsel-boyutlandir" de heroToolCatalog'da "page" türü ama ilk turda atlanmıştı
+// (6 değil 7 araç varmış) — kullanıcı geri bildirimiyle fark edildi.
+const ImageResizeTool = lazyWithRetry(() =>
+  import("../tools/ImageResizeTool").then((m) => ({ default: m.ImageResizeTool })),
+);
 
-/** Yukarıdaki 5 aracın lazy chunk'ı inerken Hero'nun araç alanında gösterilen yer tutucu. */
+/** Yukarıdaki 6 aracın lazy chunk'ı inerken Hero'nun araç alanında gösterilen yer tutucu. */
 function HeroToolSkeleton() {
   return (
     <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
@@ -927,37 +932,43 @@ function Hero({
               // WorkspaceUploadField'ın kendi başlığı TEKRAR çizilmesin (describesTool
               // → hideHeader). GuestToolCore/GuestPageToolCore bunu zaten hardcode
               // ediyor, o yüzden yalnızca WorkspaceUploadField kullanan araçları sarıyoruz.
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
               </ToolPageContext.Provider>
             ) : pageTool === "sayfa-duzeni" ? (
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <PdfLayoutTool language={language} accessToken={accessToken} initialFile={scannedFile} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "pdf-kesit-al" ? (
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <PdfSnipTool language={language} initialFile={scannedFile} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "pdf-imzala" ? (
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <PdfSign language={language} accessToken={accessToken} initialFile={scannedFile} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "pdf-yorumla" ? (
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={scannedFile} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "udf-to-pdf" ? (
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <UdfToPdfTool language={language} />
+                </Suspense>
+              </ToolPageContext.Provider>
+            ) : pageTool === "gorsel-boyutlandir" ? (
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <ImageResizeTool language={language} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : aiTool === "batch" ? (
@@ -995,7 +1006,7 @@ function Hero({
                 comingSoon={aiComingSoon}
               />
             ) : freeTool === "gorsel-sikistir" ? (
-              <ToolPageContext.Provider value={{ describesTool: true }}>
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <ImageCompressTool language={language} />
               </ToolPageContext.Provider>
             ) : isPageToolId(freeTool) ? (
