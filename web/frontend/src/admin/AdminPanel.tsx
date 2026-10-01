@@ -1583,32 +1583,39 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
         description="İşaretlediğiniz araç web ve masaüstünde geçici olarak kullanılamaz (bakım veya pilot için). Paket bazlı izinler «Plan ve fiyatlandırma» sekmesindedir."
         variant="amber"
       >
-        <div className="flex flex-wrap gap-2">
-          {catalog.map((fk) => {
-            const dis = Array.isArray(full.disabledFeatures) ? full.disabledFeatures : [];
-            const off = dis.includes(fk);
-            return (
-              <label
-                key={fk}
-                className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[12px] ${
-                  off ? "border-amber-500/40 bg-amber-500/15 text-amber-100" : "border-white/[0.08] bg-black/25 text-slate-200"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={off}
-                  onChange={() => {
-                    const set = new Set(dis);
-                    if (off) set.delete(fk);
-                    else set.add(fk);
-                    setFull({ ...full, disabledFeatures: [...set] });
-                  }}
-                  className="h-3.5 w-3.5 rounded border-white/30"
-                />
-                {pdfToolLabelTr(fk)}
-              </label>
-            );
-          })}
+        <div className="space-y-4">
+          {groupFeatureKeysByCategory(catalog).map((group) => (
+            <div key={group.cat}>
+              <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-amber-300/80">{group.label}</p>
+              <div className="flex flex-wrap gap-2">
+                {group.keys.map((fk) => {
+                  const dis = Array.isArray(full.disabledFeatures) ? full.disabledFeatures : [];
+                  const off = dis.includes(fk);
+                  return (
+                    <label
+                      key={fk}
+                      className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[12px] ${
+                        off ? "border-amber-500/40 bg-amber-500/15 text-amber-100" : "border-white/[0.08] bg-black/25 text-slate-200"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={off}
+                        onChange={() => {
+                          const set = new Set(dis);
+                          if (off) set.delete(fk);
+                          else set.add(fk);
+                          setFull({ ...full, disabledFeatures: [...set] });
+                        }}
+                        className="h-3.5 w-3.5 rounded border-white/30"
+                      />
+                      {pdfToolLabelTr(fk)}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
         <AdminField
           label="Ücretsiz günlük kota — sitede gösterilen sayı"
@@ -1921,6 +1928,11 @@ function ContentTab({
           {!advanced ? " (İngilizce metinler + özellik kartları «Gelişmiş» moddadır.)" : null}
         </AdminMutedBox>
 
+        <Katlanir
+          baslik="Üst bölüm — başlık ve metin"
+          aciklama="Ana sayfanın en üstündeki en görünür başlık ve açıklama — en sık değiştirilen bölüm."
+          varsayilanAcik
+        >
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="hero">
           <AdminSection
             title="Üst bölüm — başlık ve metin"
@@ -1996,7 +2008,9 @@ function ContentTab({
               : null}
           </AdminSection>
         </CmsPreviewAnchor>
+        </Katlanir>
 
+        <Katlanir baslik="Üst bölümdeki düğmeler" aciklama="Ana sayfa karşılama alanındaki iki büyük buton — metin ve hedef bağlantı.">
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="hero-buttons">
           <AdminSection title="Üst bölümdeki düğmeler" description="Ana sayfa hero alanındaki iki büyük buton.">
             <div className="grid gap-5 sm:grid-cols-2">
@@ -2019,8 +2033,10 @@ function ContentTab({
             </div>
           </AdminSection>
         </CmsPreviewAnchor>
+        </Katlanir>
 
         {advanced ? (
+        <Katlanir baslik="Öne çıkanlar — bölüm başlığı ve kartlar" aciklama="Araçlar ızgarasının üstündeki başlık ve dil bazlı kart metinleri (ilk üç kart).">
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="features">
           <AdminSection
             title="Öne çıkanlar — bölüm başlığı ve kartlar"
@@ -2067,9 +2083,11 @@ function ContentTab({
             ))}
           </AdminSection>
         </CmsPreviewAnchor>
+        </Katlanir>
         ) : null}
 
         {advanced ? (
+        <Katlanir baslik="Üst duyuru şeridi" aciklama="İsteğe bağlı ince şerit; uygulama üst kısmında duyuru göstermek için.">
         <AdminSection
           title="Üst duyuru şeridi"
           description="İsteğe bağlı ince şerit; uygulama üst kısmında duyuru göstermek için."
@@ -2095,9 +2113,11 @@ function ContentTab({
             />
           </AdminField>
         </AdminSection>
+        </Katlanir>
         ) : null}
 
         {advanced ? (
+        <Katlanir baslik="Çalışma alanı — üst şerit ve araç metinleri" aciklama="Giriş yapmış kullanıcıların PDF araçları ekranındaki şerit ve her araç için özel başlık / açıklama / düğme.">
         <AdminSection
           title="Çalışma alanı — üst şerit ve araç metinleri"
           description="Giriş yapmış kullanıcıların PDF araçları ekranındaki şerit ve her araç için özel başlık / açıklama / düğme."
@@ -2158,8 +2178,10 @@ function ContentTab({
             ))}
           </div>
         </AdminSection>
+        </Katlanir>
         ) : null}
 
+        <Katlanir baslik="Görseller ve logo" aciklama="Karşılama görseli, logo ve ekran görüntüleri — adresi yapıştırın veya Medya sekmesinden seçin.">
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="visuals">
           <AdminSection
             title="Görseller ve logo"
@@ -2210,8 +2232,10 @@ function ContentTab({
             })}
           </AdminSection>
         </CmsPreviewAnchor>
+        </Katlanir>
 
         {advanced ? (
+        <Katlanir baslik="Alt bilgi" aciklama="Sayfa sonundaki kısa tanıtım metni (dil bazlı).">
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="footer">
           <AdminSection title="Alt bilgi" description="Sayfa sonundaki kısa tanıtım metni (dil bazlı).">
             {(["tr", "en"] as const).map((lang) => (
@@ -2230,9 +2254,11 @@ function ContentTab({
             ))}
           </AdminSection>
         </CmsPreviewAnchor>
+        </Katlanir>
         ) : null}
 
         {advanced ? (
+        <Katlanir baslik="Son çağrı" aciklama="Sayfanın altındaki harekete geçir bölümü başlığı.">
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="final-cta">
           <AdminSection title="Son çağrı" description="Sayfanın altındaki harekete geçir bölümü başlığı.">
             {(["tr", "en"] as const).map((lang) => (
@@ -2251,9 +2277,11 @@ function ContentTab({
             ))}
           </AdminSection>
         </CmsPreviewAnchor>
+        </Katlanir>
         ) : null}
 
         {advanced ? (
+        <Katlanir baslik="Yükseltme mesajı" aciklama="Ücretsiz plandayken gösterilen kısa teşvik.">
         <AdminSection title="Yükseltme mesajı" description="Ücretsiz plandayken gösterilen kısa teşvik.">
           <AdminField label="Kısa metin" description="Aboneliğe yönlendiren bir iki cümle.">
             <textarea
@@ -2264,6 +2292,7 @@ function ContentTab({
             />
           </AdminField>
         </AdminSection>
+        </Katlanir>
         ) : null}
 
         <div className="flex flex-wrap gap-3">
