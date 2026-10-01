@@ -451,12 +451,15 @@ export function Katlanir({
   baslik,
   aciklama,
   children,
+  varsayilanAcik = false,
 }: {
   baslik: string;
   aciklama?: string;
   children: React.ReactNode;
+  /** En sık değiştirilen bölüm için — sayfa ilk açıldığında bu kapalı başlamasın. */
+  varsayilanAcik?: boolean;
 }) {
-  const [acik, setAcik] = useState(false);
+  const [acik, setAcik] = useState(varsayilanAcik);
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02]">
       <button
