@@ -330,6 +330,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
           multiple
           disabled={busy}
           appendMode={files.length > 0}
+          label={tr ? "Görselleri buraya sürükle" : "Drag your images here"}
           note={tr ? "JPG, PNG, WebP · 80 MB'a kadar" : "JPG, PNG, WebP · up to 80 MB"}
           hideHeader={describesTool}
           onFiles={(fl) => addFiles(fl)}

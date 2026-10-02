@@ -417,6 +417,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
             toolId="pdf-imzala"
             language={language}
             accept=".pdf,application/pdf"
+            label={tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
             note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}
             hideHeader={describesTool}
             onFiles={(files) => { void openFile(files[0]); }}

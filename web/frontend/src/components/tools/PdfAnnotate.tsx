@@ -686,6 +686,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
             toolId="pdf-yorumla"
             language={language}
             accept=".pdf,application/pdf"
+            label={tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
             note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}
             hideHeader={describesTool}
             onFiles={(files) => { void openFile(files[0]); }}

@@ -1158,6 +1158,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             toolId="pdf-duzenle"
             language={language}
             accept="application/pdf,.pdf"
+            label={tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
             note={tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}
             hideHeader={describesTool}
             onFiles={(files) => { void pickFile(files[0]); }}

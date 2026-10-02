@@ -141,6 +141,7 @@ export function PdfLayoutTool({
             toolId="sayfa-duzeni"
             language={language}
             accept="application/pdf,.pdf"
+            label={language === "tr" ? "PDF'i buraya sürükle" : "Drag your PDF here"}
             note={t.hint}
             hideHeader={describesTool}
             onFiles={(files) => void dosyaYukle(files[0])}

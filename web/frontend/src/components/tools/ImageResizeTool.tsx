@@ -222,6 +222,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
           accept="image/png,image/jpeg,image/jpg,image/webp"
           disabled={busy}
           appendMode={!!file}
+          label={tr ? "Görseli buraya sürükle" : "Drag your image here"}
           note={tr ? "JPG, PNG, WebP · 80 MB'a kadar" : "JPG, PNG, WebP · up to 80 MB"}
           hideHeader={describesTool}
           onFiles={addFiles}
