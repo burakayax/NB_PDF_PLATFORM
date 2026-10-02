@@ -290,6 +290,7 @@ export function UdfToPdfTool({ language }: { language: Language }) {
           multiple
           disabled={busy}
           appendMode={files.length > 0}
+          label={tr ? "UDF dosyalarını buraya sürükle" : "Drag your UDF files here"}
           note={
             tr
               ? paid

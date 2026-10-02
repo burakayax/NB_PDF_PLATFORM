@@ -576,6 +576,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             toolId="pdf-kesit-al"
             language={language}
             accept="application/pdf,.pdf"
+            label={tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
             note={t.hint}
             hideHeader={describesTool}
             onFiles={(files) => { void loadFile(files[0]!); }}
