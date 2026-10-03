@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ocrPdfToText } from "../../lib/ocr";
-import { fetchAiQuota, type AiError, type AiQuota } from "../../api/ai";
+import { fetchAiQuota, fetchAiToolNotes, type AiError, type AiQuota } from "../../api/ai";
 import {
   deleteContractReview,
   estimateContractCredits,
@@ -127,6 +127,11 @@ export function ContractReviewTool({ language, accessToken, onLogin, onUpgrade, 
   const [quota, setQuota] = useState<AiQuota | null>(null);
   // Araç henüz satışa açılmadı: sunucu kapalıysa (admin hariç) "Çok Yakında" gösterilir.
   const comingSoon = comingSoonProp || quota?.contractReviewOpen === false;
+  const [closedNote, setClosedNote] = useState("");
+  useEffect(() => {
+    if (!comingSoon) return;
+    void fetchAiToolNotes().then((n) => setClosedNote(n["sozlesme-denetci"] ?? ""));
+  }, [comingSoon]);
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [pageCount, setPageCount] = useState(0);
@@ -392,6 +397,9 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
           <div className="mx-auto mt-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500/25 to-indigo-600/25 text-fuchsia-200 ring-1 ring-white/10"><Gavel className="h-9 w-9" /></div>
           <p className="mt-5 text-xl font-black text-white">Sözleşme Denetçisi</p>
           <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-slate-300">Sözleşmenizdeki riskleri güncel mevzuata göre bulan ve belge üzerinde işaretleyen yapay zekâ asistanı çok yakında açılıyor.</p>
+          {closedNote ? (
+            <p className="mx-auto mt-4 max-w-md rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/10 px-4 py-3 text-[13px] leading-relaxed text-fuchsia-100">{closedNote}</p>
+          ) : null}
         </div>
       ) : gate ? (
         <div className="rounded-3xl border border-fuchsia-400/25 bg-fuchsia-500/[0.06] p-8 text-center">

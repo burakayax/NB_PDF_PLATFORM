@@ -13,6 +13,9 @@ export type AiQuota = {
   byOp?: Record<string, number>;
   /** Sözleşme Denetçisi bu kullanıcıya açık mı? (kapalıyken yalnızca admin) */
   contractReviewOpen?: boolean;
+  /** Kapalı araçların kimlikleri ve admin'in yazdığı notlar. */
+  closedTools?: string[];
+  closedNotes?: Record<string, string>;
 };
 
 export type TopupPack = { id: string; credits: number; priceUSD: number; priceTRY: number; popular?: boolean };
@@ -66,6 +69,18 @@ async function postAi<T>(path: string, body: unknown, token: string | null): Pro
 }
 
 /** Bu ayki AI kotası (kalan hak göstergesi). */
+/** Kapalı AI araçları için admin notları (giriş gerekmez). Hata → boş. */
+export async function fetchAiToolNotes(): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${getSaasApiBase()}/api/ai/tool-status`, { credentials: "include" });
+    if (!res.ok) return {};
+    const data = (await res.json()) as { notes?: Record<string, string> };
+    return data.notes ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export async function fetchAiQuota(token: string | null): Promise<AiQuota | null> {
   try {
     const res = await fetch(`${getSaasApiBase()}/api/ai/quota`, {
@@ -73,8 +88,10 @@ export async function fetchAiQuota(token: string | null): Promise<AiQuota | null
       credentials: "include",
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as { quota?: AiQuota; contractReviewOpen?: boolean };
-    return data.quota ? { ...data.quota, contractReviewOpen: data.contractReviewOpen } : null;
+    const data = (await res.json()) as { quota?: AiQuota; contractReviewOpen?: boolean; closedTools?: string[]; closedNotes?: Record<string, string> };
+    return data.quota
+      ? { ...data.quota, contractReviewOpen: data.contractReviewOpen, closedTools: data.closedTools, closedNotes: data.closedNotes }
+      : null;
   } catch {
     return null;
   }
