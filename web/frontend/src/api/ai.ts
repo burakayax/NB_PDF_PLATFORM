@@ -11,6 +11,8 @@ export type AiQuota = {
   resetAt: string;
   /** Bu ay araç bazında istek sayıları: { summarize: 5, chat: 3, ... } */
   byOp?: Record<string, number>;
+  /** Sözleşme Denetçisi bu kullanıcıya açık mı? (kapalıyken yalnızca admin) */
+  contractReviewOpen?: boolean;
 };
 
 export type TopupPack = { id: string; credits: number; priceUSD: number; priceTRY: number; popular?: boolean };
@@ -71,8 +73,8 @@ export async function fetchAiQuota(token: string | null): Promise<AiQuota | null
       credentials: "include",
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as { quota?: AiQuota };
-    return data.quota ?? null;
+    const data = (await res.json()) as { quota?: AiQuota; contractReviewOpen?: boolean };
+    return data.quota ? { ...data.quota, contractReviewOpen: data.contractReviewOpen } : null;
   } catch {
     return null;
   }

@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { logApiFailure } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
+import { env } from "../../config/env.js";
 import {
   getAiQuota,
   reserveAiQuota,
@@ -190,9 +191,18 @@ export async function recoverContractReviewJobs(): Promise<number> {
  * POST /api/ai/contract-review/prescan — { text } → belgeyi tanır, analizden ÖNCE sorulacak
  * soruları üretir. Hak düşmez (kısa ve ucuz) ama saatlik/günlük sınırı vardır.
  */
+/** Araç herkese kapalıyken (CONTRACT_REVIEW_ENABLED=false) yalnızca ADMIN kullanabilir. */
+export function isContractReviewOpen(role: string | undefined): boolean {
+  return env.CONTRACT_REVIEW_ENABLED || role === "ADMIN";
+}
+function assertContractReviewOpen(role: string | undefined): void {
+  if (!isContractReviewOpen(role)) throw new HttpError(503, "Sözleşme Denetçisi henüz kullanıma açılmadı. Çok yakında.");
+}
+
 export async function prescanContractController(req: Request, res: Response): Promise<void> {
   const u = req.authUser;
   if (!u) throw new HttpError(401, "Oturum gerekli.");
+  assertContractReviewOpen(u.role);
   const text = typeof req.body?.text === "string" ? req.body.text : "";
   checkText(text);
   if (prescanBusy.has(u.id)) throw new HttpError(409, "Önceki belge hâlâ taranıyor. Lütfen bekleyin.");
@@ -234,6 +244,7 @@ export async function prescanContractController(req: Request, res: Response): Pr
 export async function startContractReviewController(req: Request, res: Response): Promise<void> {
   const u = req.authUser;
   if (!u) throw new HttpError(401, "Oturum gerekli.");
+  assertContractReviewOpen(u.role);
 
   const text = typeof req.body?.text === "string" ? req.body.text : "";
   checkText(text);
