@@ -33,7 +33,7 @@ const m = vi.hoisted(() => ({
 vi.mock("../config/env.js", () => ({
   env: { JWT_ACCESS_SECRET: "x".repeat(40), ANTHROPIC_API_KEY: "k", CONTRACT_REVIEW_MODEL: "m" },
 }));
-vi.mock("../lib/site-config.service.js", () => ({ getSetting: vi.fn(async () => ({ featureFlags: { contractReviewDisabled: false } })) }));
+vi.mock("../lib/site-config.service.js", () => ({ getSetting: vi.fn(async () => ({ aiToolStates: { "sozlesme-denetci": "open" } })) }));
 vi.mock("../lib/app-logger.js", () => ({ logApiFailure: vi.fn() }));
 vi.mock("../lib/prisma.js", () => ({
   prisma: {

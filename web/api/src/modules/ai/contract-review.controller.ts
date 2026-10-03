@@ -3,8 +3,7 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { logApiFailure } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
-import { getSetting } from "../../lib/site-config.service.js";
-import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
+import { isAiToolOpen } from "./ai-tool-switch.js";
 import {
   getAiQuota,
   reserveAiQuota,
@@ -192,23 +191,9 @@ export async function recoverContractReviewJobs(): Promise<number> {
  * POST /api/ai/contract-review/prescan — { text } → belgeyi tanır, analizden ÖNCE sorulacak
  * soruları üretir. Hak düşmez (kısa ve ucuz) ama saatlik/günlük sınırı vardır.
  */
-/**
- * Admin paneli → Sistem Kontrol → "Sözleşme Denetçisi'ni kapat" anahtarı (`featureFlags.contractReviewDisabled`).
- * Anlam "Ödemeleri kapat" ile aynı (kill-switch, güvenli varsayılan KAPALI): yalnızca anahtar açıkça
- * KAPATILINCA (=== false) araç herkese açılır. Bayrak yok / okuma hatası → kapalı. ADMIN her zaman kullanabilir.
- */
+/** Araç, admin paneli → Sistem Kontrol → "Yapay zekâ araçları" bölümünden açılıp kapatılır (ADMIN her zaman kullanabilir). */
 export async function isContractReviewOpen(role: string | undefined): Promise<boolean> {
-  if (role === "ADMIN") return true;
-  try {
-    const raw = await getSetting(SITE_SETTING_KEYS.GLOBAL_FLAGS);
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-      const ff = (raw as Record<string, unknown>).featureFlags;
-      if (ff && typeof ff === "object" && !Array.isArray(ff)) return (ff as Record<string, unknown>).contractReviewDisabled === false;
-    }
-    return false;
-  } catch {
-    return false; // kayıt okunamazsa güvenli taraf: kapalı
-  }
+  return isAiToolOpen("sozlesme-denetci", role);
 }
 async function assertContractReviewOpen(role: string | undefined): Promise<void> {
   if (!(await isContractReviewOpen(role))) throw new HttpError(503, "Sözleşme Denetçisi henüz kullanıma açılmadı. Çok yakında.");

@@ -67,6 +67,9 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
   const [flagsRoot, setFlagsRoot] = useState<Record<string, unknown>>({});
   const [featureMap, setFeatureMap] = useState<Record<string, boolean>>({});
   const [betaMap, setBetaMap] = useState<Record<string, boolean>>({});
+  // Yapay zekâ araçları: id → açık mı? `saved` sunucudaki hâl; `aiOpen` ekrandaki (kaydedilmemiş olabilir).
+  const [aiOpen, setAiOpen] = useState<Record<string, boolean>>({});
+  const [aiSaved, setAiSaved] = useState<Record<string, boolean>>({});
   const [notif, setNotif] = useState(DEFAULT_NOTIF);
   // Site ayarları (site.settings) — sosyal medya hesaplarını düzenlemek için.
   const [siteRoot, setSiteRoot] = useState<Record<string, unknown>>({});
@@ -94,6 +97,14 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
         Object.fromEntries(meta.featureFlagCatalog.map((f) => [f.key, frMap[f.key] !== false])),
       );
       setBetaMap(Object.fromEntries(meta.betaFlagCatalog.map((f) => [f.key, brMap[f.key] !== false])));
+      const st = root.aiToolStates && typeof root.aiToolStates === "object" && !Array.isArray(root.aiToolStates)
+        ? (root.aiToolStates as Record<string, unknown>)
+        : {};
+      const aiNow = Object.fromEntries(
+        (meta.aiToolCatalog ?? []).map((t) => [t.id, st[t.id] === "open" ? true : st[t.id] === "closed" ? false : t.defaultOpen]),
+      );
+      setAiOpen(aiNow);
+      setAiSaved(aiNow);
     }
 
     const n = all["global.notifications"];
@@ -200,6 +211,31 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
       });
       setFlagsRoot(nextFlags);
       setMsg("Bayraklar ve sistem bildirimi kaydedildi.");
+      notifyRuntimeRefresh();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const aiDirty = (meta?.aiToolCatalog ?? []).some((t) => aiOpen[t.id] !== aiSaved[t.id]);
+
+  const saveAiTools = async () => {
+    if (!meta?.aiToolCatalog) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      // Güncel ayarı yeniden oku: başka alanları (bayraklar, bildirim) ezmeden yalnızca aiToolStates'i yaz.
+      const all = await fetchAdminSettings(accessToken);
+      const fr = all["global.flags"];
+      const root = fr && typeof fr === "object" && !Array.isArray(fr) ? { ...(fr as Record<string, unknown>) } : {};
+      const states = Object.fromEntries(meta.aiToolCatalog.map((t) => [t.id, aiOpen[t.id] ? "open" : "closed"]));
+      const next = { ...root, aiToolStates: states };
+      await putAdminSettingsPatches(accessToken, { "global.flags": next });
+      setFlagsRoot(next);
+      setAiSaved({ ...aiOpen });
+      setMsg("Yapay zekâ araçlarının durumu kaydedildi.");
       notifyRuntimeRefresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
@@ -382,6 +418,74 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
           Desteklenen URL'ler otomatik etiketlenir (Instagram, X, LinkedIn, YouTube, Facebook, TikTok, GitHub, Telegram, Pinterest…). Geçersiz veya http(s) olmayan adresler sunucuda elenir.
         </AdminMutedBox>
       </AdminSection>
+
+      {meta?.aiToolCatalog && meta.aiToolCatalog.length > 0 ? (
+        <AdminSection
+          title="Yapay zekâ araçları"
+          description="Her aracı tek tek açıp kapatın. Kapalı araç kullanıcılara 'Çok Yakında' görünür, çalışmaz ve kredi düşmez. Siz (admin) kapalı araçları da deneyebilirsiniz."
+          variant="violet"
+        >
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {meta.aiToolCatalog.map((t) => {
+              const on = aiOpen[t.id] === true;
+              const changed = aiOpen[t.id] !== aiSaved[t.id];
+              return (
+                <li
+                  key={t.id}
+                  className={`flex items-start gap-3 rounded-2xl border p-4 transition ${
+                    on ? "border-emerald-400/25 bg-emerald-500/[0.05]" : "border-white/[0.08] bg-black/20"
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-white">{t.label}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${
+                          on ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-500/20 text-slate-300"
+                        }`}
+                      >
+                        {on ? "Herkese açık" : "Kapalı · Çok Yakında"}
+                      </span>
+                      {changed ? <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10.5px] font-semibold text-amber-200">Kaydedilmedi</span> : null}
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-400">{t.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={on}
+                    aria-label={`${t.label} — ${on ? "açık" : "kapalı"}`}
+                    onClick={() => setAiOpen((prev) => ({ ...prev, [t.id]: !on }))}
+                    className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition ${on ? "bg-emerald-500" : "bg-slate-600"}`}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={busy || !aiDirty}
+              onClick={() => void saveAiTools()}
+              className="rounded-xl bg-violet-600/80 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {busy ? "Kaydediliyor…" : "Araç durumlarını kaydet"}
+            </button>
+            {aiDirty ? (
+              <button type="button" onClick={() => setAiOpen({ ...aiSaved })} className="text-xs font-semibold text-slate-300 underline-offset-2 hover:underline">
+                Değişiklikleri geri al
+              </button>
+            ) : (
+              <span className="text-xs text-slate-500">Tüm değişiklikler kaydedildi.</span>
+            )}
+          </div>
+          <AdminMutedBox>
+            Araç açılınca hemen herkese görünür; kullanıcının ayrıca planı ya da kredisi olması gerekir. «Toplu AI işlem» kendi anahtarına sahip değildir; kullandığı araçlar kapalıysa o işlemler de çalışmaz.
+          </AdminMutedBox>
+        </AdminSection>
+      ) : null}
 
       <AdminSection title="Özellik bayrakları" description="İstemci bu anahtarları okuyarak davranışı açıp kapatabilir (ör. iletişim formu)." variant="emerald">
         {meta ? (

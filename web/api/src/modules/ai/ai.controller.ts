@@ -14,6 +14,7 @@ import {
   type ChatTurn,
 } from "./ai.service.js";
 import { isContractReviewOpen } from "./contract-review.controller.js";
+import { closedAiTools } from "./ai-tool-switch.js";
 import { getAiQuota, reserveAiQuota, refundAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
 
 /** Gönderilebilecek ham metin üst sınırı (service ayrıca 60K'ya kırpar). */
@@ -105,7 +106,7 @@ export async function quotaController(req: Request, res: Response): Promise<void
     throw new HttpError(401, "Oturum gerekli.");
   }
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ quota, contractReviewOpen: await isContractReviewOpen(u.role) });
+  res.json({ quota, contractReviewOpen: await isContractReviewOpen(u.role), closedTools: await closedAiTools(u.role) });
 }
 
 /** POST /api/ai/summarize — { text, lang? } → { summary, quota } */
