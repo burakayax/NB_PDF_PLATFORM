@@ -119,11 +119,14 @@ function download(bytes: Uint8Array, name: string) {
  * güncel mevzuatı resmî kaynaklardan kontrol eden ve riskli yerleri belge üzerinde boyayan asistan.
  * Metin CİHAZDA çıkarılır; PDF dosyası cihazda kalır. Sunucuda saklanmaz.
  */
-export function ContractReviewTool({ language, accessToken, onLogin, onUpgrade, comingSoon }: Props) {
+export function ContractReviewTool({ language, accessToken, onLogin, onUpgrade, comingSoon: comingSoonProp }: Props) {
   const tr = language === "tr";
   const fileRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<number | null>(null);
 
+  const [quota, setQuota] = useState<AiQuota | null>(null);
+  // Araç henüz satışa açılmadı: sunucu kapalıysa (admin hariç) "Çok Yakında" gösterilir.
+  const comingSoon = comingSoonProp || quota?.contractReviewOpen === false;
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [pageCount, setPageCount] = useState(0);
@@ -146,7 +149,6 @@ export function ContractReviewTool({ language, accessToken, onLogin, onUpgrade, 
   const [playbook, setPlaybook] = useState("");
   const [concerns, setConcerns] = useState("");
 
-  const [quota, setQuota] = useState<AiQuota | null>(null);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);

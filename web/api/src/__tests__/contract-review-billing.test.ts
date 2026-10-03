@@ -31,7 +31,7 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock("../config/env.js", () => ({
-  env: { JWT_ACCESS_SECRET: "x".repeat(40), ANTHROPIC_API_KEY: "k", CONTRACT_REVIEW_MODEL: "m" },
+  env: { JWT_ACCESS_SECRET: "x".repeat(40), ANTHROPIC_API_KEY: "k", CONTRACT_REVIEW_MODEL: "m", CONTRACT_REVIEW_ENABLED: true },
 }));
 vi.mock("../lib/app-logger.js", () => ({ logApiFailure: vi.fn() }));
 vi.mock("../lib/prisma.js", () => ({
