@@ -24,15 +24,15 @@ type Props = {
 /** Tipik (≈50 sayfa) bir sözleşme denetiminin kredi bedeli — paket kartındaki "≈ N denetim" için. */
 const TYPICAL_AUDIT = estimateContractCredits(125_000);
 
-/** Paketin ne işe yaradığını anlatan örnek: küçük paketler basit işlem; büyükler sözleşme denetimi + kalan basit işlem. */
+/** Paketin ne işe yaradığını anlatan örnek: küçük paketler AI işlemi; büyükler sözleşme denetimi + kalan AI işlemi. */
 export function packExample(credits: number, tr: boolean): string {
   if (credits < TYPICAL_AUDIT) {
-    return tr ? `≈ ${credits} basit işlem (özet, sohbet, çeviri…)` : `≈ ${credits} standard operations (summary, chat, translation…)`;
+    return tr ? `≈ ${credits} AI işlemi (özet, sohbet, çeviri…)` : `≈ ${credits} AI operations (summary, chat, translation…)`;
   }
   const audits = Math.floor(credits / TYPICAL_AUDIT);
   const rest = credits - audits * TYPICAL_AUDIT;
-  const restTr = rest > 0 ? ` + ${rest} basit işlem` : "";
-  const restEn = rest > 0 ? ` + ${rest} standard operations` : "";
+  const restTr = rest > 0 ? ` + ${rest} AI işlemi` : "";
+  const restEn = rest > 0 ? ` + ${rest} AI operations` : "";
   return tr
     ? `Örn. ${audits} detaylı sözleşme denetimi (50 sayfa)${restTr}`
     : `E.g. ${audits} detailed contract audit${audits > 1 ? "s" : ""} (50 pages)${restEn}`;
@@ -88,7 +88,7 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/25 to-indigo-600/25 text-fuchsia-200"><Zap className="h-5 w-5" /></span>
             <div>
               <h2 className="flex items-center gap-2 text-lg font-black text-white">{tr ? "Ek AI Kredisi" : "Extra AI Credits"}<AiCreditHelp language={language} /></h2>
-              <p className="text-[12px] text-slate-400">{tr ? "Süresi dolmaz, ay sonunda sıfırlanmaz. Basit araçlarda ve sözleşme hızlı taramasında aylık hakkın bitince kullanılır; detaylı sözleşme denetimi yalnızca krediyle çalışır." : "Never expires, never resets. Used by standard tools and the contract quick scan once your monthly allowance runs out; the detailed contract audit works only with credits."}</p>
+              <p className="text-[12px] text-slate-400">{tr ? "Süresi dolmaz, ay sonunda sıfırlanmaz. Özet, sohbet, çeviri gibi araçlarda ve sözleşme hızlı taramasında aylık hakkın bitince kullanılır; detaylı sözleşme denetimi yalnızca krediyle çalışır." : "Never expires, never resets. Used by tools like summary, chat and translation and by the contract quick scan once your monthly allowance runs out; the detailed contract audit works only with credits."}</p>
             </div>
           </div>
           {typeof bonus === "number" && bonus > 0 && (
