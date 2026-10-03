@@ -318,5 +318,5 @@ Sistemimizde kayıtlarımıza göre:
 Herhangi bir sorun yaşadıysanız lütfen doğrudan bizimle iletişime geçin.
 Sorununuzu birlikte çözebiliriz.
 
-Bize ulaşın: nbglobalstudio@gmail.com
+Bize ulaşın: info@pdfplatform.app
 ```
