@@ -3,7 +3,8 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { logApiFailure } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
-import { env } from "../../config/env.js";
+import { getSetting } from "../../lib/site-config.service.js";
+import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import {
   getAiQuota,
   reserveAiQuota,
@@ -191,18 +192,32 @@ export async function recoverContractReviewJobs(): Promise<number> {
  * POST /api/ai/contract-review/prescan — { text } → belgeyi tanır, analizden ÖNCE sorulacak
  * soruları üretir. Hak düşmez (kısa ve ucuz) ama saatlik/günlük sınırı vardır.
  */
-/** Araç herkese kapalıyken (CONTRACT_REVIEW_ENABLED=false) yalnızca ADMIN kullanabilir. */
-export function isContractReviewOpen(role: string | undefined): boolean {
-  return env.CONTRACT_REVIEW_ENABLED || role === "ADMIN";
+/**
+ * Admin paneli → Sistem Kontrol → "Sözleşme Denetçisi'ni kapat" anahtarı (`featureFlags.contractReviewDisabled`).
+ * Anlam "Ödemeleri kapat" ile aynı (kill-switch, güvenli varsayılan KAPALI): yalnızca anahtar açıkça
+ * KAPATILINCA (=== false) araç herkese açılır. Bayrak yok / okuma hatası → kapalı. ADMIN her zaman kullanabilir.
+ */
+export async function isContractReviewOpen(role: string | undefined): Promise<boolean> {
+  if (role === "ADMIN") return true;
+  try {
+    const raw = await getSetting(SITE_SETTING_KEYS.GLOBAL_FLAGS);
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const ff = (raw as Record<string, unknown>).featureFlags;
+      if (ff && typeof ff === "object" && !Array.isArray(ff)) return (ff as Record<string, unknown>).contractReviewDisabled === false;
+    }
+    return false;
+  } catch {
+    return false; // kayıt okunamazsa güvenli taraf: kapalı
+  }
 }
-function assertContractReviewOpen(role: string | undefined): void {
-  if (!isContractReviewOpen(role)) throw new HttpError(503, "Sözleşme Denetçisi henüz kullanıma açılmadı. Çok yakında.");
+async function assertContractReviewOpen(role: string | undefined): Promise<void> {
+  if (!(await isContractReviewOpen(role))) throw new HttpError(503, "Sözleşme Denetçisi henüz kullanıma açılmadı. Çok yakında.");
 }
 
 export async function prescanContractController(req: Request, res: Response): Promise<void> {
   const u = req.authUser;
   if (!u) throw new HttpError(401, "Oturum gerekli.");
-  assertContractReviewOpen(u.role);
+  await assertContractReviewOpen(u.role);
   const text = typeof req.body?.text === "string" ? req.body.text : "";
   checkText(text);
   if (prescanBusy.has(u.id)) throw new HttpError(409, "Önceki belge hâlâ taranıyor. Lütfen bekleyin.");
@@ -244,7 +259,7 @@ export async function prescanContractController(req: Request, res: Response): Pr
 export async function startContractReviewController(req: Request, res: Response): Promise<void> {
   const u = req.authUser;
   if (!u) throw new HttpError(401, "Oturum gerekli.");
-  assertContractReviewOpen(u.role);
+  await assertContractReviewOpen(u.role);
 
   const text = typeof req.body?.text === "string" ? req.body.text : "";
   checkText(text);
