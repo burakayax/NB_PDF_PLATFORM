@@ -276,3 +276,26 @@ describe("hızlı tarama fiyatı", () => {
     expect(num("quickMax")).toBe(QUICK_SCAN.maxCredits);
   });
 });
+
+describe("kredi paketi ödeme tutarı (KDV iki kez eklenmemeli)", () => {
+  it("TL: ödeme akışının KDV ekledikten sonraki tutarı, ekranda gösterilen KDV dahil fiyatla AYNI olur", async () => {
+    const { buildCheckoutPricing } = await import("../lib/vat.js");
+    const { topupCheckoutAmount, TOPUP_PACKS } = await import("../lib/plan-catalogue.js");
+    for (const p of TOPUP_PACKS) {
+      const { currency, amount } = topupCheckoutAmount(p, false);
+      expect(currency).toBe("TRY");
+      const final = buildCheckoutPricing(amount, "TR", "TRY");
+      expect(final.grossAmount).toBe(p.priceTRY.toFixed(2));
+    }
+  });
+
+  it("yurt dışı: USD, KDV'siz — ödenen tutar gösterilen tutardır", async () => {
+    const { buildCheckoutPricing } = await import("../lib/vat.js");
+    const { topupCheckoutAmount, TOPUP_PACKS } = await import("../lib/plan-catalogue.js");
+    for (const p of TOPUP_PACKS) {
+      const { currency, amount } = topupCheckoutAmount(p, true);
+      expect(currency).toBe("USD");
+      expect(buildCheckoutPricing(amount, "DE", "USD").grossAmount).toBe(p.priceUSD.toFixed(2));
+    }
+  });
+});

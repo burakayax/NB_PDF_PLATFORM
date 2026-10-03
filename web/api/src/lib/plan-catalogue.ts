@@ -123,6 +123,20 @@ export function netFromGrossTry(gross: string): string {
 }
 
 /**
+ * Kredi paketi için ödeme sağlayıcısına gidecek tutar ve para birimi.
+ * TL fiyat KDV DAHİLDİR; ödeme altyapısı KDV'yi üstüne eklediği için buraya NET (KDV hariç) tutar verilir
+ * (abonelikle aynı kural). Yurt dışı: USD, KDV'siz (ihracat) — gösterilen tutar ödenen tutardır.
+ */
+export function topupCheckoutAmount(
+  pack: { priceTRY: number; priceUSD: number },
+  isForeign: boolean,
+): { currency: "TRY" | "USD"; amount: string } {
+  return isForeign
+    ? { currency: "USD", amount: String(pack.priceUSD) }
+    : { currency: "TRY", amount: netFromGrossTry(String(pack.priceTRY)) };
+}
+
+/**
  * EK AI KREDİSİ PAKETLERİ (top-up) — tek fiyat kaynağı. `ai.quota.ts` buradan okur.
  *
  * İKİ CÜZDAN: Plandan gelen AYLIK HAK her ay sıfırlanır ve yalnız basit araçlarda
