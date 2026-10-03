@@ -297,7 +297,7 @@ export function DashboardTopNav({
   // Aylık hak + kredi ayrı iki rozet (her birinin kendi "?" açıklaması var). Aylık rozeti yalnız
   // planından aylık hak gelenlerde görünür; kredi rozeti herkeste, bakiye 0 ise "Kredi: 0".
   const aiChips = showCreditsCenter && !creditBalanceLoading && !!aiQuota && !aiQuota.unlimited;
-  const chipBase = "items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-2 text-[13px] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20";
+  const chipBase = "items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-1.5 text-[13px] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20";
 
   // AI erişimi olanlarda AI rozeti (Sparkles), diğerlerinde kredi (Coins).
   const PillIcon = hasAiAccess ? Sparkles : Coins;
@@ -348,10 +348,24 @@ export function DashboardTopNav({
                   }`}
                 >
                   <Coins className={`h-4 w-4 shrink-0 ${aiCreditBalance(aiQuota) > 0 ? "text-emerald-300" : "text-amber-300/90"}`} strokeWidth={2.25} aria-hidden />
-                  <button type="button" onClick={() => onOpenCreditsPanel?.()} className="focus:outline-none">
+                  <button
+                    type="button"
+                    onClick={() => setTopUpOpen(true)}
+                    title={tr ? "Kredi yükle" : "Add credits"}
+                    className="focus:outline-none"
+                  >
                     {tr ? "Kredi" : "Credits"} {aiCreditBalance(aiQuota)}
                   </button>
                   <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} topic="credit" align="right" />
+                  <button
+                    type="button"
+                    onClick={() => setTopUpOpen(true)}
+                    aria-label={tr ? "Kredi yükle" : "Add credits"}
+                    className="nb-transition inline-flex items-center gap-1 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/20 px-2 py-0.5 text-[11px] font-bold text-fuchsia-100 hover:bg-fuchsia-500/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/45"
+                  >
+                    <Zap className="h-3 w-3" aria-hidden />
+                    {tr ? "Yükle" : "Add"}
+                  </button>
                 </span>
               </span>
             ) : creditsPanelVisible ? (
