@@ -551,6 +551,18 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       { title: "See the differences", detail: "What was added, removed or changed is highlighted in colour." },
     ],
   ),
+  "sozlesme-denetci": S(
+    [
+      { title: "Sözleşmeni yükle ve soruları cevapla", detail: "PDF'i seç; metin cihazında okunur. Sistem belgeyi tanır, birkaç soru sorar; hangi tarafta olduğunu sen seçersin. İstersen kendi kurallarını ve notlarını yaz." },
+      { title: "Hızlı tarama ya da detaylı denetim seç", detail: "Hızlı tarama ~1-2 dakikada en önemli riskleri bulur (mevzuat kontrolü yok). Detaylı denetim hukuki noktaları resmî kaynaklarda arar, yeni madde metni önerir ve notlarına yanıt verir (~6-12 dakika)." },
+      { title: "Raporu ve boyalı PDF'i hemen indir", detail: "Riskli yerler belgede renkle işaretlenir. Sonuç yalnızca bu sayfada durur: indirmeden sayfayı kapatırsan kaybolur." },
+    ],
+    [
+      { title: "Upload your contract and answer the questions", detail: "Pick the PDF; text is read on your device. The system recognises the document and asks a few questions; you choose which side you are on. Add your own rules and notes if you like." },
+      { title: "Choose a quick scan or a detailed audit", detail: "The quick scan finds the most important risks in ~1-2 minutes (no law check). The detailed audit checks legal points in official sources, proposes replacement clauses and answers your notes (~6-12 minutes)." },
+      { title: "Download the report and highlighted PDF right away", detail: "Risky spots are colour-marked in the document. The result stays only on this page: closing it before downloading loses it." },
+    ],
+  ),
   "ai-toplu-islem": S(
     [
       PICK_TR("Belgelerini"),

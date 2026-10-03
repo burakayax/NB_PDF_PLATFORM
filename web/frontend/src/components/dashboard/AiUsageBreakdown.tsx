@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { fetchAiQuota, type AiQuota } from "../../api/ai";
+import { AiCreditHelp, creditBalance, monthlyLeft } from "../tools/AiCreditBadge";
 
 /** AI işlem türü → kullanıcıya gösterilen araç adı + ikon. */
 const OP_LABELS: Record<string, { tr: string; en: string; emoji: string }> = {
@@ -11,6 +12,8 @@ const OP_LABELS: Record<string, { tr: string; en: string; emoji: string }> = {
   extract: { tr: "PDF Veri Çıkar", en: "Extract Data", emoji: "📋" },
   compare: { tr: "PDF Karşılaştır", en: "Compare PDFs", emoji: "⚖️" },
   redact: { tr: "Hassas Veri Gizle", en: "Redact Data", emoji: "🛡️" },
+  "contract-review": { tr: "Sözleşme Denetçisi — detaylı", en: "Contract Auditor — detailed", emoji: "⚖️" },
+  "contract-quick": { tr: "Sözleşme Denetçisi — hızlı tarama", en: "Contract Auditor — quick scan", emoji: "⚡" },
 };
 
 /**
@@ -65,7 +68,8 @@ export function AiUsageBreakdown({
           : "How many requests you made to each AI tool this month."}
         {quota.unlimited
           ? ""
-          : ` · ${tr ? "Kalan" : "Remaining"}: ${quota.remaining}/${quota.limit}`}
+          : ` · ${tr ? "Aylık hak" : "Monthly"}: ${monthlyLeft(quota)}/${quota.limit} · ${tr ? "Kredi" : "Credits"}: ${creditBalance(quota)}`}{" "}
+        <AiCreditHelp language={language} quota={quota} />
       </p>
 
       {entries.length === 0 ? (

@@ -41,6 +41,7 @@ import {
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 import { ToolRating } from "../common/ToolRating";
+import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
 
 type AiMode = "summarize" | "chat" | "extract" | "translate";
@@ -204,8 +205,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       if (err.quota) setQuota(err.quota);
       setError(
         tr
-          ? "Bu ayki yapay zekâ kotan doldu — ay başında otomatik yenilenir."
-          : "Your monthly AI quota is used up — it resets at the start of the month.",
+          ? "Aylık AI hakkın ve kredin bitti — aylık hak ay başında yenilenir; ek kredi alabilirsin."
+          : "Your monthly allowance and credits are used up — the allowance renews monthly; you can buy extra credits.",
       );
     } else if (err?.status === 503) {
       setError(tr ? "AI şu an kullanılamıyor." : "AI is currently unavailable.");
@@ -692,28 +693,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
               Pro
             </span>
-            {quota ? (
-              <span
-                title={tr ? "Bu ayki AI hakkın" : "Your monthly AI allowance"}
-                className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
-                  !quota.unlimited && (quota.remaining ?? 0) <= 0
-                    ? "border-red-400/35 bg-red-500/10 text-red-300"
-                    : "border-white/10 bg-white/[0.04] text-slate-300"
-                }`}
-              >
-                {quota.unlimited
-                  ? tr ? "Sınırsız" : "Unlimited"
-                  : tr
-                    ? `Bu ay: ${quota.remaining}/${quota.limit}${quota.bonus ? ` (+${quota.bonus})` : ""}`
-                    : `This month: ${quota.remaining}/${quota.limit}${quota.bonus ? ` (+${quota.bonus})` : ""}`}
-              </span>
-            ) : null}
-            {quota && !quota.unlimited ? (
-              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
-                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
-                + {tr ? "Kredi" : "Credits"}
-              </button>
-            ) : null}
+            {quota ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
         </div>

@@ -32,6 +32,7 @@ import {
   Type,
   Unlock,
   Wrench,
+  Gavel,
 } from "lucide-react";
 
 /**
@@ -131,6 +132,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "pdf-sohbet", icon: <MessageSquare className="h-5 w-5" />, tr: "Sohbet", en: "Chat" },
       { id: "pdf-veri-cikar", icon: <Braces className="h-5 w-5" />, tr: "Veri Çıkar", en: "Extract data" },
       { id: "pdf-ceviri", icon: <Languages className="h-5 w-5" />, tr: "Çeviri", en: "Translate" },
+      { id: "sozlesme-denetci", icon: <Gavel className="h-5 w-5" />, tr: "Sözleşme Denetle", en: "Audit contract" },
       { id: "hassas-veri-gizle", icon: <EyeOff className="h-5 w-5" />, tr: "Veri Gizle", en: "Redact" },
     ],
   },

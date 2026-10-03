@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü</title>
+    <meta name="description" content="İhaleye teklif vermeden önce şartname ve sözleşme tasarısında bakılacak noktalar: süreler, cezalar, teminat, ödeme, ekler ve öncelik sırası." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/tender-specification-risk-check" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü" />
+    <meta property="og:description" content="İhaleye teklif vermeden önce şartname ve sözleşme tasarısında bakılacak noktalar: süreler, cezalar, teminat, ödeme, ekler ve öncelik sırası." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü" />
+    <meta name="twitter:description" content="İhaleye teklif vermeden önce şartname ve sözleşme tasarısında bakılacak noktalar: süreler, cezalar, teminat, ödeme, ekler ve öncelik sırası." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" />
+    <meta name="twitter:image:alt" content="İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü","item":"https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü","description":"İhaleye teklif vermeden önce şartname ve sözleşme tasarısında bakılacak noktalar: süreler, cezalar, teminat, ödeme, ekler ve öncelik sırası.","datePublished":"2026-10-02","dateModified":"2026-10-02","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Sözleşme tasarısını değiştirtebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Genellikle hayır; teklif vermekle kabul etmiş olursunuz. Bu yüzden itirazlar ve açıklama talepleri, teklif vermeden önce ve ilgili süreler içinde yapılmalıdır."}},{"@type":"Question","name":"Sözleşme Denetçisi kamu ihalelerini de inceler mi?","acceptedAnswer":{"@type":"Answer","text":"Evet. “Kamu ihalesi / şartname” seçeneğini işaretlediğinizde, ihale mevzuatına aykırılık soruları da dikkate alınır. Sonuç bir ön değerlendirmedir; önemli ihalelerde bir uzmana danışın."}},{"@type":"Question","name":"Taranmış şartnameyi yükleyebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet; metin cihazınızda OCR ile okunur (ilk 30 sayfa). Metin içeren PDF’ler daha hızlı ve daha doğru sonuç verir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü</h1><p class="seo-intro">İhaleye teklif verdiğiniz anda şartnamenin ve sözleşme tasarısının tüm hükümlerini kabul etmiş olursunuz. Teklif vermeden önce bu belgelerde hangi noktalara bakmanız gerektiğini sıraladık.</p><figure class="seo-cover"><img src="/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" width="1200" height="630" loading="lazy" decoding="async" alt="İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü" /></figure><article class="seo-article"><p class="seo-lead">İhalelerde sözleşme tasarısı genellikle pazarlığa kapalıdır: teklif verdiğinizde şartnamedeki ve tasarıdaki hükümleri kabul etmiş sayılırsınız. Bu yüzden asıl karar teklif vermeden önce, belgeler okunurken verilir. Okuma sırasında şu noktalara özellikle bakın.</p><h2>Belgeler arasındaki tutarlılık</h2><p>İhale dosyası genellikle idari şartname, teknik şartname, sözleşme tasarısı ve eklerden oluşur. Bunlardan biri iş bitirme süresini 90 gün, diğeri 60 gün diyebilir. Belgelerin hangisinin öncelikli olduğunu belirleyen hükmü bulun ve çelişen her yeri yazılı açıklama başvurusuyla netleştirmeyi düşünün.</p><h2>Kontrol edilecek başlıca noktalar</h2><ul><li>İş bitirme/teslim süresi ve süre uzatımı verilen haller: Mücbir sebep ve idare kaynaklı gecikmeler süreyi uzatıyor mu?</li><li>Gecikme cezası: Günlük oran, tavan ve hangi bedel üzerinden hesaplandığı.</li><li>Teminatlar: Geçici ve kesin teminat tutarları, iade koşulları ve hangi hallerde gelir kaydedileceği.</li><li>Ödeme: Hakediş sıklığı, ödeme süresi ve gecikmede faiz var mı?</li><li>Fiyat farkı: Uzun süren işlerde girdi maliyeti artışı için bir düzenleme var mı?</li><li>İş artışı ve eksilişi: İdarenin işi artırma/azaltma hakkının sınırı nedir?</li><li>Fesih: İdare hangi hallerde, nasıl fesheder? Feshin mali sonuçları sizin açınızdan ne?</li><li>Eksik ekler: Tasarıda atıf yapılan ama dosyada bulunmayan belgeler.</li></ul><h2>Öncelik sırası maddesi</h2><p>Belgeler çelişirse hangisinin geçerli olacağını söyleyen bir madde sıkça bulunur. Bu madde, bir ekteki küçük görünen bir hükmü ana sözleşmenin üstüne çıkarabilir. Ekleri bu gözle okuyun.</p><p><a href="/tools/sozlesme-denetci"><strong>Sözleşme Denetçisi</strong> — Şartname ve sözleşme tasarısını “Kamu ihalesi” seçeneğiyle denetleyin: çelişkileri, ceza hesaplarını ve eksik ekleri bulur.</a></p><h2>Mevzuat değişir</h2><p>Kamu ihaleleri, Kamu İhale Kanunu ve Kamu İhale Sözleşmeleri Kanunu ile bunlara bağlı düzenlemelere tabidir ve bu düzenlemeler zaman zaman değişir. Bir hükmün mevzuata uygun olup olmadığını değerlendirirken güncel metinleri Resmî Gazete, mevzuat.gov.tr ve Kamu İhale Kurumu gibi resmî kaynaklardan kontrol edin. Önemli ihalelerde bir hukuk danışmanından destek almak, itiraz ve başvuru sürelerini kaçırmamanız için de değerlidir.</p><p>Açıklama başvuru ve itirazlar için süreler kısadır. Belgeleri teklif gününe yakın değil, ilk günlerde okumak size hem soru sorma hem karar verme zamanı bırakır.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/sozlesme-denetci">Sözleşme Denetçisi</a></li><li><a href="/tools/pdf-ozetle">PDF Özetle</a></li><li><a href="/tools/pdf-veri-cikar">PDF Veri Çıkarma</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Sözleşme tasarısını değiştirtebilir miyim?</h3><p>Genellikle hayır; teklif vermekle kabul etmiş olursunuz. Bu yüzden itirazlar ve açıklama talepleri, teklif vermeden önce ve ilgili süreler içinde yapılmalıdır.</p></div><div class="seo-faq-item"><h3>Sözleşme Denetçisi kamu ihalelerini de inceler mi?</h3><p>Evet. “Kamu ihalesi / şartname” seçeneğini işaretlediğinizde, ihale mevzuatına aykırılık soruları da dikkate alınır. Sonuç bir ön değerlendirmedir; önemli ihalelerde bir uzmana danışın.</p></div><div class="seo-faq-item"><h3>Taranmış şartnameyi yükleyebilir miyim?</h3><p>Evet; metin cihazınızda OCR ile okunur (ilk 30 sayfa). Metin içeren PDF’ler daha hızlı ve daha doğru sonuç verir.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

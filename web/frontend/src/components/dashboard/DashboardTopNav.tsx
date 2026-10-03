@@ -1,6 +1,7 @@
 import type { AuthUser } from "../../api/auth";
 import type { PlanName } from "../../api/entitlement";
 import { fetchAiQuota, type AiQuota } from "../../api/ai";
+import { AiCreditHelp, creditBalance as aiCreditBalance, monthlyLeft } from "../tools/AiCreditBadge";
 import { getSaasApiBase } from "../../api/saasBase";
 import { useSettings } from "../../hooks/useSettings";
 import type { Language } from "../../i18n/landing";
@@ -280,8 +281,9 @@ export function DashboardTopNav({
     if (hasAiAccess) {
       if (!aiQuota) return planLabel();
       if (aiQuota.unlimited) return tr ? "AI · Sınırsız" : "AI · Unlimited";
-      if (aiExhausted) return tr ? "AI hakkın doldu" : "AI quota reached";
-      return `AI · ${aiQuota.remaining}/${aiQuota.limit}`;
+      if (aiExhausted) return tr ? "AI hakkın ve kredin bitti" : "AI allowance & credits used up";
+      const credit = aiCreditBalance(aiQuota);
+      return `AI · ${monthlyLeft(aiQuota)}/${aiQuota.limit}${credit > 0 ? ` + ${credit} ${tr ? "kredi" : "credits"}` : ""}`;
     }
     if (limitsizProActive) return W.unlimitedAccessActive;
     if (hasActiveSubscription) return W.usageUnlimited;
@@ -353,6 +355,11 @@ export function DashboardTopNav({
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </span>
             )}
+            {hasAiAccess && aiQuota ? (
+              <span className="hidden sm:inline-flex">
+                <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} align="right" />
+              </span>
+            ) : null}
             {aiLow ? (
               <button
                 type="button"

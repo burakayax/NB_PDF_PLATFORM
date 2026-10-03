@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { saveBlobToUser } from "../../api";
+import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
 import { ToolRating } from "../common/ToolRating";
 import { extractPdfText } from "../../lib/pdfText";
@@ -105,7 +106,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
     if (err?.status === 403) { setGate("upgrade"); return "other"; }
     if (err?.status === 429) {
       if (err.quota) setQuota(err.quota);
-      setError(tr ? "Bu ayki AI kotan doldu — kalan dosyalar atlandı." : "Monthly AI quota reached — remaining files skipped.");
+      setError(tr ? "Aylık hakkın ve kredin bitti — kalan dosyalar atlandı. Ek kredi alabilirsin." : "Allowance and credits used up — remaining files skipped. You can buy extra credits.");
       return "quota";
     }
     if (err?.status === 503) { setError(tr ? "AI şu an kullanılamıyor." : "AI is currently unavailable."); return "other"; }
@@ -233,17 +234,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "AI Toplu İşlem" : "AI Batch"}</h1>
             <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
-            {quota && !comingSoon ? (
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${!quota.unlimited && (quota.remaining ?? 0) <= 0 ? "border-red-400/35 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.04] text-slate-300"}`}>
-                {quota.unlimited ? (tr ? "Sınırsız" : "Unlimited") : tr ? `Bu ay: ${quota.remaining}/${quota.limit}` : `This month: ${quota.remaining}/${quota.limit}`}
-              </span>
-            ) : null}
-            {quota && !quota.unlimited && !comingSoon ? (
-              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
-                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
-                + {tr ? "Kredi" : "Credits"}
-              </button>
-            ) : null}
+            {quota && !comingSoon ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">
             {tr ? "Bir klasör dolusu PDF'i tek seferde işle: her belgeyi özetle, verisini çıkar ya da çevir; sonuçları tek CSV/PDF olarak indir." : "Process a whole folder of PDFs at once: summarize, extract data or translate each; export results as one CSV/PDF."}

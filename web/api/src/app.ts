@@ -24,6 +24,7 @@ import { Sentry } from "./lib/sentry.js";
 import { v1Router } from "./modules/v1/v1.routes.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
 import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
+import { registerContractReviewJobs } from "./jobs/contractReviewJobs.js";
 import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
 import { registerLifecycleEmailJobs } from "./jobs/lifecycleEmailJobs.js";
 import { registerCheckoutRecoveryJobs } from "./jobs/checkoutRecoveryJobs.js";
@@ -197,6 +198,7 @@ registerCheckoutRecoveryJobs();
 registerLimitReachedEmailJobs();
 registerPlanOverrideJobs();
 registerSocialPostJobs();
+registerContractReviewJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.

@@ -7,6 +7,7 @@ import type { Language } from "../../i18n/landing";
 import { p } from "../../i18n/profile";
 import { getSaasApiBase } from "../../api/saasBase";
 import { fetchAiQuota, type AiQuota } from "../../api/ai";
+import { AiCreditHelp, creditBalance, monthlyLeft } from "../tools/AiCreditBadge";
 import { TopUpModal } from "../tools/TopUpModal";
 import { Sparkles, Zap } from "lucide-react";
 import { readAccessToken } from "../../lib/accessTokenStore";
@@ -275,8 +276,10 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
   const aiUnlimited = aiQuota?.unlimited === true;
   const aiLimit = aiQuota?.limit ?? 0;
-  const aiRemaining = aiQuota?.remaining ?? 0;
-  const aiUsedPct = aiUnlimited || aiLimit <= 0 ? 0 : Math.min(100, Math.round(((aiLimit - aiRemaining) / aiLimit) * 100));
+  const aiRemaining = aiQuota?.remaining ?? 0; // aylık hak + kredi (basit araçlar için toplam)
+  const aiMonthly = aiQuota ? monthlyLeft(aiQuota) : 0; // yalnız aylık hak
+  const aiCredit = aiQuota ? creditBalance(aiQuota) : 0; // satın alınan kredi
+  const aiUsedPct = aiUnlimited || aiLimit <= 0 ? 0 : Math.min(100, Math.round(((aiLimit - aiMonthly) / aiLimit) * 100));
   const aiLow = !!aiQuota && !aiUnlimited && aiLimit > 0 && aiRemaining <= Math.max(5, Math.ceil(aiLimit * 0.15));
 
   return (
@@ -458,6 +461,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           <div className="mt-1 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-fuchsia-300" aria-hidden />
             <h2 className="text-xl font-semibold tracking-tight text-nb-text">{lang === "tr" ? "AI Kullanımı" : "AI Usage"}</h2>
+            <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} />
           </div>
 
           {aiUnlimited ? (
@@ -467,9 +471,9 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           ) : aiQuota ? (
             <>
               <div className="mt-4 flex items-baseline justify-between gap-2">
-                <span className="text-sm text-slate-400">{lang === "tr" ? "Bu ay kalan hak" : "Remaining this month"}</span>
-                <span className={`text-lg font-bold ${aiRemaining <= 0 ? "text-red-400" : "text-nb-text"}`}>
-                  {aiRemaining}
+                <span className="text-sm text-slate-400">{lang === "tr" ? "Aylık hak (bu ay kalan)" : "Monthly allowance (left this month)"}</span>
+                <span className={`text-lg font-bold ${aiMonthly <= 0 ? "text-red-400" : "text-nb-text"}`}>
+                  {aiMonthly}
                   <span className="text-sm font-medium text-slate-400">/{aiLimit}</span>
                 </span>
               </div>
@@ -480,14 +484,13 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                 />
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                <span>{lang === "tr" ? `Kullanılan: ${aiLimit - aiRemaining}/${aiLimit}` : `Used: ${aiLimit - aiRemaining}/${aiLimit}`}</span>
+                <span>{lang === "tr" ? `Kullanılan: ${aiLimit - aiMonthly}/${aiLimit}` : `Used: ${aiLimit - aiMonthly}/${aiLimit}`}</span>
                 {aiQuota.resetAt && <span>{lang === "tr" ? "Yenilenme" : "Resets"}: {formatDate(aiQuota.resetAt, language)}</span>}
               </div>
-              {typeof aiQuota.bonus === "number" && aiQuota.bonus > 0 && (
-                <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">
-                  +{aiQuota.bonus} {lang === "tr" ? "bonus kredi (ek AI)" : "bonus credits"}
-                </p>
-              )}
+              <div className="mt-4 flex items-baseline justify-between gap-2 border-t border-white/[0.06] pt-3">
+                <span className="text-sm text-slate-400">{lang === "tr" ? "Kredi (satın alınan, süresi dolmaz)" : "Credits (purchased, never expire)"}</span>
+                <span className={`text-lg font-bold ${aiCredit > 0 ? "text-emerald-300" : "text-slate-400"}`}>{aiCredit}</span>
+              </div>
             </>
           ) : (
             <p className="mt-4 text-sm text-slate-400">{lang === "tr" ? "AI kullanım bilgisi yükleniyor…" : "Loading AI usage…"}</p>
@@ -505,7 +508,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
               {aiLow && (
                 <span className="text-xs font-semibold text-amber-300">
                   {aiRemaining <= 0
-                    ? (lang === "tr" ? "AI hakkın doldu — ek kredi alarak devam et." : "AI quota reached — buy credits to continue.")
+                    ? (lang === "tr" ? "Aylık hakkın ve kredin bitti — ek kredi alarak devam et." : "Allowance and credits used up — buy credits to continue.")
                     : (lang === "tr" ? "AI hakkın azaldı." : "AI quota running low.")}
                 </span>
               )}

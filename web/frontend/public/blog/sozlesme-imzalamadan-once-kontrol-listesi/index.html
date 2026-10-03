@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey</title>
+    <meta name="description" content="Tedarik, kira ya da hizmet sözleşmesini imzalamadan önce bakmanız gereken 12 madde: ceza, fesih, ödeme, süreler, ekler ve eksik hükümler." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey" />
+    <meta property="og:description" content="Tedarik, kira ya da hizmet sözleşmesini imzalamadan önce bakmanız gereken 12 madde: ceza, fesih, ödeme, süreler, ekler ve eksik hükümler." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/sozlesme-imzalamadan-once-kontrol-listesi.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey" />
+    <meta name="twitter:description" content="Tedarik, kira ya da hizmet sözleşmesini imzalamadan önce bakmanız gereken 12 madde: ceza, fesih, ödeme, süreler, ekler ve eksik hükümler." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/sozlesme-imzalamadan-once-kontrol-listesi.png" />
+    <meta name="twitter:image:alt" content="Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey","item":"https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey","description":"Tedarik, kira ya da hizmet sözleşmesini imzalamadan önce bakmanız gereken 12 madde: ceza, fesih, ödeme, süreler, ekler ve eksik hükümler.","datePublished":"2026-10-02","dateModified":"2026-10-02","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/sozlesme-imzalamadan-once-kontrol-listesi.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hangi madde en çok sorun çıkarır?","acceptedAnswer":{"@type":"Answer","text":"En sık sorun; ceza ve fesih maddelerinden, ödeme koşullarından ve belgede olmayan eklerden çıkar. Parasal etkisi büyük olduğu için önce bunlara bakın."}},{"@type":"Question","name":"Standart bir metni değiştirtmek mümkün mü?","acceptedAnswer":{"@type":"Answer","text":"Çoğu zaman en azından en riskli birkaç maddede pazarlık mümkündür. Karşı tarafa “karşılıklılık” ve “makul tavan” gibi dengeli talepler sunmak, tümüyle reddedilme ihtimalini azaltır."}},{"@type":"Question","name":"Sözleşmeyi yapay zekâ ile kontrol edebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet; Sözleşme Denetçisi belgeyi okuyup çelişkileri, ceza hesaplarını ve eksik maddeleri bulur. Sonuç bir ön değerlendirmedir ve hukuki danışmanlık değildir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey</h1><p class="seo-intro">Sözleşmelerdeki sorunların çoğu uzun ve karmaşık hükümlerde değil, gözden kaçan küçük ayrıntılarda saklanır. İmzadan önce her sözleşmede bakılması gereken 12 noktayı derledik.</p><figure class="seo-cover"><img src="/covers/sozlesme-imzalamadan-once-kontrol-listesi.png" width="1200" height="630" loading="lazy" decoding="async" alt="Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey" /></figure><article class="seo-article"><p class="seo-lead">Çoğu sözleşme uyuşmazlığı, imza anında kimsenin fark etmediği küçük bir ayrıntıdan çıkar: bir ekte farklı yazan süre, tavanı olmayan bir ceza ya da yalnızca bir tarafa tanınmış bir fesih hakkı. Aşağıdaki liste, imzadan önce her sözleşmede gözden geçirmeniz gereken 12 noktayı sıralar.</p><h2>1-4: Temel bilgiler</h2><ol><li>Taraflar ve yetki: Unvanlar, vergi numaraları ve imzayı atan kişinin şirketi bağlama yetkisi doğru mu?</li><li>Konu ve kapsam: Neyin, ne miktarda, hangi nitelikte teslim edileceği ya da yapılacağı açık mı? Belirsiz ifadeler (“makul süre”, “gerekli görülen”) sonradan tartışma çıkarır.</li><li>Bedel ve ödeme: Tutar KDV dahil mi hariç mi? Vade kaç gün ve neresinden başlıyor? Fatura kesmek bir onaya bağlıysa o onayın süresi var mı?</li><li>Süreler: Teslim, bildirim, itiraz ve yenilememe süreleri kaç gün? Her süre için kim, nasıl bildirim yapacak (noter, e-posta, iadeli taahhütlü)?</li></ol><h2>5-8: Para ve sorumluluk</h2><ol start="5"><li>Gecikme cezası ve cezai şart: Oran nedir, üst sınırı var mı, hangi tutar üzerinden hesaplanıyor? Ayrıca tazminat da isteniyorsa ceza fiilen tavansız demektir.</li><li>Fesih: Hak karşılıklı mı? Bildirim süresi kaç gün? Fesihte yapılan işin bedeli ödeniyor mu?</li><li>Sorumluluk sınırı: Dolaylı zararlar, kâr kaybı ve ağır kusur nasıl düzenlenmiş? Üst sınır yalnızca bir taraf için mi var?</li><li>Fikri mülkiyet ve gizlilik: Sizin tasarım, kalıp ya da yönteminiz karşı tarafa devrediliyor mu? Gizlilik süresiz mi ve istisnalar karşılıklı mı?</li></ol><h2>9-12: Yapı ve eksikler</h2><ol start="9"><li>Ekler: Atıf yapılan her ek elinizde mi? “Ek ile madde çelişirse ek geçerlidir” gibi bir öncelik kuralı varsa ekler dikkatle okunmalı.</li><li>Süre ve yenileme: Sözleşme kendiliğinden uzuyor mu? Yenilememe bildirimi için son tarih ne?</li><li>Uyuşmazlık: Hangi mahkeme ya da tahkim yetkili? Uygulanacak hukuk yazılı mı? Uzak bir şehir, takip maliyetini artırır.</li><li>Olmayanlar: Mücbir sebep, hasarın geçişi, garanti ve ayıp süresi, devir yasağı, veri koruma gibi olması gereken hükümler eksik mi?</li></ol><p>Yalnızca okumak yetmez: oranları rakama dökün. “Günlük %1” bir cümle olarak masum görünür; 2.400.000 TL’lik bir işte günde 24.000 TL demektir.</p><p><a href="/tools/sozlesme-denetci"><strong>Sözleşme Denetçisi</strong> — Bu listeyi sizin yerinize uygular: çelişkileri, ceza hesaplarını ve eksik maddeleri bulur, riskli yerleri belgede boyar.</a></p><h2>Listeyi nasıl kullanmalı?</h2><p>Önce ceza, fesih, ödeme ve sorumluluk maddelerine bakın; parasal etkisi en büyük olan yerler bunlardır. Sonra ekleri ve öncelik kurallarını kontrol edin. Sorun gördüğünüz her madde için iki şey yazın: neden sorun olduğu ve karşı tarafın kabul edebileceği, dengeli bir alternatif.</p><p>Bu liste bir ön değerlendirme aracıdır ve hukuki danışmanlık yerine geçmez. Yüksek tutarlı ya da uzun süreli sözleşmelerde imzadan önce bir avukatın görüşünü almak, bulduğunuz sorunları çok daha etkili müzakere etmenizi sağlar.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/sozlesme-denetci">Sözleşme Denetçisi</a></li><li><a href="/tools/pdf-karsilastir">PDF Karşılaştırma</a></li><li><a href="/tools/pdf-sohbet">PDF ile Sohbet</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Hangi madde en çok sorun çıkarır?</h3><p>En sık sorun; ceza ve fesih maddelerinden, ödeme koşullarından ve belgede olmayan eklerden çıkar. Parasal etkisi büyük olduğu için önce bunlara bakın.</p></div><div class="seo-faq-item"><h3>Standart bir metni değiştirtmek mümkün mü?</h3><p>Çoğu zaman en azından en riskli birkaç maddede pazarlık mümkündür. Karşı tarafa “karşılıklılık” ve “makul tavan” gibi dengeli talepler sunmak, tümüyle reddedilme ihtimalini azaltır.</p></div><div class="seo-faq-item"><h3>Sözleşmeyi yapay zekâ ile kontrol edebilir miyim?</h3><p>Evet; Sözleşme Denetçisi belgeyi okuyup çelişkileri, ceza hesaplarını ve eksik maddeleri bulur. Sonuç bir ön değerlendirmedir ve hukuki danışmanlık değildir.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

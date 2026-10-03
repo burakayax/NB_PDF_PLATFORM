@@ -590,7 +590,7 @@ function renderBlogBlocksHtml(blocks, lang) {
       if (b.t === "h2") return `<h2>${escapeHtml(b.x)}</h2>`;
       if (b.t === "h3") return `<h3>${escapeHtml(b.x)}</h3>`;
       if (b.t === "ul") return `<ul>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`;
-      if (b.t === "ol") return `<ol>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ol>`;
+      if (b.t === "ol") return `<ol${b.start && b.start > 1 ? ` start="${b.start}"` : ""}>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ol>`;
       if (b.t === "steps") return `<ol>${b.items.map((s) => `<li><strong>${escapeHtml(s.title)}:</strong> ${escapeHtml(s.x)}</li>`).join("")}</ol>`;
       if (b.t === "cta") return `<p><a href="${escapeHtml(localize(b.tool))}"><strong>${escapeHtml(b.title)}</strong> — ${escapeHtml(b.x)}</a></p>`;
       return "";

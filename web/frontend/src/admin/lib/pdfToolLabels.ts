@@ -27,6 +27,7 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "sayfa-duzeni": "Sayfa Düzeni",
   "imza-iste": "İmza İste",
   "extract-images": "PDF'ten Görsel Çıkar",
+  "sozlesme-denetci": "Sözleşme Denetçisi",
 };
 
 export function pdfToolLabelTr(featureKey: string): string {

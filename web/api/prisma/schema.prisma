@@ -241,6 +241,7 @@ model User {
   desktopDevices DesktopDevice[]
   passwordResetCodes PasswordResetCode[]
   downloadLogs     DownloadLog[]
+  contractReviewLogs ContractReviewLog[]
   couponUses       CouponUse[]
   operationLogs    OperationLog[]
   paymentCheckouts PaymentCheckout[]
@@ -1067,4 +1068,34 @@ model MarketingConsentLog {
   @@index([userId, createdAt])
   @@index([createdAt])
   @@map("marketing_consent_logs")
+}
+
+/// SÖZLEŞME DENETÇİSİ — her analizin HESAP DEFTERİ satırı: kullanıcının açık onayı, düşülen hak/kredi,
+/// iade ve rapor imzası. Belge/rapor İÇERİĞİ saklanmaz; yalnızca SHA-256 özetleri tutulur.
+model ContractReviewLog {
+  id              String    @id @map("id")
+  userId          String    @map("user_id")
+  mode            String    @map("mode")
+  units           Int       @map("units")
+  chargeSource    String    @map("charge_source")
+  chars           Int       @map("chars")
+  docSha256       String    @map("doc_sha256")
+  consentVersion  String    @map("consent_version")
+  consentAt       DateTime  @map("consent_at")
+  clientIp        String?   @map("client_ip")
+  userAgent       String?   @map("user_agent")
+  status          String    @default("RUNNING") @map("status")
+  failReason      String?   @map("fail_reason")
+  refundedAt      DateTime? @map("refunded_at")
+  reportSha256    String?   @map("report_sha256")
+  reportSignature String?   @map("report_signature")
+  finishedAt      DateTime? @map("finished_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("contract_review_logs")
 }

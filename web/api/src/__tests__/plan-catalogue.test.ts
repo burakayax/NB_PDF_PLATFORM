@@ -22,6 +22,13 @@ import {
   EXTRA_SEAT_PRICE,
   AI_MONTHLY_CREDITS,
   AI_COST_PER_CREDIT_USD,
+  TOPUP_PACKS,
+  CONTRACT_AUDIT,
+  contractAuditCredits,
+  contractAuditCostUsd,
+  QUICK_SCAN,
+  quickScanCredits,
+  quickScanCostUsd,
   YEARLY_BILLING_PLANS,
   KDV_RATE,
   netFromGrossTry,
@@ -151,5 +158,121 @@ describe("fiyat merdiveni", () => {
     const perSeatUsd = Number.parseFloat(PLAN_PRICES.BUSINESS.usdMonthly) / 5;
     expect(Number.parseFloat(EXTRA_SEAT_PRICE.tryGrossMonthly)).toBeLessThanOrEqual(perSeatTry);
     expect(Number.parseFloat(EXTRA_SEAT_PRICE.usdMonthly)).toBeLessThanOrEqual(perSeatUsd);
+  });
+});
+
+
+describe("ek kredi paketleri ve sözleşme denetimi", () => {
+  const MIN_MARGIN = 0.55;
+  const PSP_FEE_RATE = 0.035;
+  /** Paket TL fiyatları bu kura göre kurulur (gerçek kur 2026-10-02: ~60,4); kur aşarsa TL paketler yükseltilmelidir. */
+  const TRY_PER_USD = 60;
+  const SIZES = [3_700, 125_000, 240_000]; // küçük / ~50 sayfa / en uzun kabul edilen belge
+
+  it("kredi başı fiyat paket büyüdükçe düşer (her iki para biriminde)", () => {
+    for (let i = 1; i < TOPUP_PACKS.length; i++) {
+      const a = TOPUP_PACKS[i - 1]!;
+      const b = TOPUP_PACKS[i]!;
+      expect(b.priceUSD / b.credits).toBeLessThan(a.priceUSD / a.credits);
+      expect(b.priceTRY / b.credits).toBeLessThan(a.priceTRY / a.credits);
+    }
+  });
+
+  it.each(SIZES)("sözleşme denetimi (%i karakter) HER pakette en az %55 marj bırakır", (chars) => {
+    const credits = contractAuditCredits(chars);
+    const cost = contractAuditCostUsd(chars);
+    for (const pack of TOPUP_PACKS) {
+      // USD kanalı: KDV yok, gösterilen tutar gelirdir.
+      const usdRev = credits * (pack.priceUSD / pack.credits);
+      expect((usdRev - cost - usdRev * PSP_FEE_RATE) / usdRev, `${pack.id} USD`).toBeGreaterThanOrEqual(MIN_MARGIN);
+      // TL kanalı: gelir KDV hariç nettir; komisyon KDV dahil tutar üzerinden.
+      const grossUsd = (credits * (pack.priceTRY / pack.credits)) / TRY_PER_USD;
+      const netUsd = grossUsd / (1 + KDV_RATE);
+      expect((netUsd - cost - grossUsd * PSP_FEE_RATE) / netUsd, `${pack.id} TRY`).toBeGreaterThanOrEqual(MIN_MARGIN);
+    }
+  });
+
+  it.each(SIZES)("USD kanalında sağlayıcı vergisi (%20) GERİ ALINAMASA bile (%i karakter) marj pozitif ve ≥ %40", (chars) => {
+    // Anthropic bakiye yüklemesinde fiyatın üstüne ~%20 vergi eklenir (20 $ → 24 $). Şirket bunu
+    // KDV olarak geri alamazsa gerçek maliyet ×1,2 olur. TL kanalı zaten 60 ₺/$ ile bunu içerir.
+    const credits = contractAuditCredits(chars);
+    const cost = contractAuditCostUsd(chars) * 1.2;
+    for (const pack of TOPUP_PACKS) {
+      const rev = credits * (pack.priceUSD / pack.credits);
+      expect((rev - cost - rev * PSP_FEE_RATE) / rev, `${pack.id} USD (vergili maliyet)`).toBeGreaterThanOrEqual(0.4);
+    }
+  });
+
+  it("denetim bedeli belge uzadıkça artar ve sınırlar içinde kalır", () => {
+    expect(contractAuditCredits(0)).toBe(CONTRACT_AUDIT.minCredits);
+    expect(contractAuditCredits(125_000)).toBeGreaterThan(contractAuditCredits(3_700));
+    expect(contractAuditCredits(10_000_000)).toBe(CONTRACT_AUDIT.maxCredits);
+  });
+
+  it("en uzun denetim bile tek bir paketle karşılanabilir", () => {
+    expect(TOPUP_PACKS.some((p) => p.credits >= CONTRACT_AUDIT.maxCredits)).toBe(true);
+    // (Aylık hakkın ağır araca geçmemesi bir KURALDIR; ai-quota-reserve.test.ts doğrular.)
+  });
+
+  it("ön yüzdeki tahmin formülü sunucuyla aynıdır", () => {
+    const src = readFileSync(join(here, "..", "..", "..", "frontend", "src", "lib", "aiCredits.ts"), "utf8");
+    const num = (k: string) => Number(new RegExp(`${k}:\\s*([\\d_]+)`).exec(src)?.[1]?.replace(/_/g, ""));
+    expect(num("baseCredits")).toBe(CONTRACT_AUDIT.baseCredits);
+    expect(num("charsPerCredit")).toBe(CONTRACT_AUDIT.charsPerCredit);
+    expect(num("minCredits")).toBe(CONTRACT_AUDIT.minCredits);
+    expect(num("maxCredits")).toBe(CONTRACT_AUDIT.maxCredits);
+  });
+});
+
+
+describe("hızlı tarama fiyatı", () => {
+  const MIN_MARGIN = 0.55;
+  const PSP_FEE_RATE = 0.035;
+  const TRY_PER_USD = 60;
+  const SIZES = [3_700, 125_000, 240_000];
+
+  it.each(SIZES)("(%i karakter) HER pakette en az %55 marj bırakır (USD ve TL)", (chars) => {
+    const credits = quickScanCredits(chars);
+    const cost = quickScanCostUsd(chars);
+    for (const pack of TOPUP_PACKS) {
+      const usdRev = credits * (pack.priceUSD / pack.credits);
+      expect((usdRev - cost - usdRev * PSP_FEE_RATE) / usdRev, `${pack.id} USD`).toBeGreaterThanOrEqual(MIN_MARGIN);
+      const grossUsd = (credits * (pack.priceTRY / pack.credits)) / TRY_PER_USD;
+      const netUsd = grossUsd / (1 + KDV_RATE);
+      expect((netUsd - cost - grossUsd * PSP_FEE_RATE) / netUsd, `${pack.id} TRY`).toBeGreaterThanOrEqual(MIN_MARGIN);
+    }
+  });
+
+  it.each(SIZES)("(%i karakter) aylık haktan düşse bile (hak başı 0,035 $) maliyeti aşmaz", (chars) => {
+    // Plan testi her hakkı 0,035 $ maliyetli sayar; hızlı tarama bunun altında kalmalı.
+    expect(quickScanCredits(chars) * AI_COST_PER_CREDIT_USD).toBeGreaterThanOrEqual(quickScanCostUsd(chars));
+  });
+
+  it("vergi geri alınamasa bile (maliyet ×1,2) USD kanalında marj ≥ %40", () => {
+    for (const chars of SIZES) {
+      const credits = quickScanCredits(chars);
+      const cost = quickScanCostUsd(chars) * 1.2;
+      for (const pack of TOPUP_PACKS) {
+        const rev = credits * (pack.priceUSD / pack.credits);
+        expect((rev - cost - rev * PSP_FEE_RATE) / rev, `${pack.id}`).toBeGreaterThanOrEqual(0.4);
+      }
+    }
+  });
+
+  it("belge uzadıkça artar, sınırlar içinde kalır; tam denetimden her zaman ucuzdur", () => {
+    expect(quickScanCredits(0)).toBe(QUICK_SCAN.baseCredits);
+    expect(quickScanCredits(125_000)).toBeGreaterThan(quickScanCredits(3_700));
+    expect(quickScanCredits(99_999_999)).toBe(QUICK_SCAN.maxCredits);
+    for (const chars of SIZES) {
+      expect(quickScanCredits(chars)).toBeLessThan(contractAuditCredits(chars) / 4);
+    }
+  });
+
+  it("ön yüzdeki tahmin formülü sunucuyla aynıdır", () => {
+    const src = readFileSync(join(here, "..", "..", "..", "frontend", "src", "lib", "aiCredits.ts"), "utf8");
+    const num = (k: string) => Number(new RegExp(`${k}:\\s*([\\d_]+)`).exec(src)?.[1]?.replace(/_/g, ""));
+    expect(num("quickBase")).toBe(QUICK_SCAN.baseCredits);
+    expect(num("quickCharsPerStep")).toBe(QUICK_SCAN.charsPerStep);
+    expect(num("quickMax")).toBe(QUICK_SCAN.maxCredits);
   });
 });

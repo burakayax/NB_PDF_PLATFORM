@@ -273,6 +273,8 @@ export async function ocrImagesToWords(
 export async function ocrPdfToText(
   file: File,
   onProgress?: (p: OcrProgress) => void,
+  /** true → her sayfa `<<<SAYFA n>>>` satırıyla başlar (sözleşme denetçisi sayfa no hesaplar). */
+  pageMarkers = false,
 ): Promise<string> {
   const data = new Uint8Array(await file.arrayBuffer());
   const doc = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
@@ -306,7 +308,7 @@ export async function ocrPdfToText(
       const {
         data: { text },
       } = await worker.recognize(canvas);
-      out += text + "\n\n";
+      out += (pageMarkers ? `<<<SAYFA ${i}>>>\n` : "") + text + "\n\n";
       completedPages = i;
       onProgress?.({ page: i, totalPages, ratio: i / totalPages });
       canvas.width = 0;

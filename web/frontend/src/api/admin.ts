@@ -878,6 +878,81 @@ export async function fetchAdminDownloadLogs(accessToken: string, limit = 200): 
   return r.json() as Promise<{ items: AdminDownloadLogRow[] }>;
 }
 
+// ─── Sözleşme Denetçisi: kayıt defteri, delil çıktısı, PDF doğrulama ───────────
+export type AdminContractReviewRow = {
+  id: string;
+  userId: string;
+  userEmail: string;
+  mode: "quick" | "full";
+  units: number;
+  chargeSource: string;
+  status: "RUNNING" | "DONE" | "FAILED";
+  failReason: string | null;
+  refundedAt: string | null;
+  consentVersion: string;
+  consentAt: string;
+  clientIp: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  downloads: Array<{ kind: string; at: string }>;
+};
+
+export async function fetchAdminContractReviews(accessToken: string, limit = 100): Promise<{ total: number; items: AdminContractReviewRow[] }> {
+  const r = await adminFetch(accessToken, `/contract-reviews?limit=${encodeURIComponent(String(limit))}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ total: number; items: AdminContractReviewRow[] }>;
+}
+
+export async function downloadAdminContractReviewProof(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/contract-reviews/${encodeURIComponent(id)}/proof`);
+  if (!r.ok) throw new Error(await r.text());
+  const url = URL.createObjectURL(await r.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `sozlesme-denetcisi-kayit-${id}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export type AdminContractVerifyResult = {
+  verified: boolean;
+  found: boolean;
+  reason?: string;
+  checks?: Array<{ name: string; ok: boolean }>;
+  log?: {
+    id: string;
+    userEmail: string;
+    mode: string;
+    units: number;
+    createdAt: string;
+    consentAt: string;
+    status: string;
+    refundedAt: string | null;
+    downloads: Array<{ kind: string; at: string }>;
+  } | null;
+  issuedAt?: string;
+  original?: {
+    headline: string | null;
+    riskLevel: string | null;
+    summary: string | null;
+    findings: Array<{ severity: string; title: string; clause: string; page: number | null }>;
+  };
+  note?: string;
+};
+
+/** Kullanıcının elindeki PDF'i yükler; dosyaya gömülü imzalı kaydı sınar. */
+export async function verifyAdminContractReviewPdf(accessToken: string, file: File): Promise<AdminContractVerifyResult> {
+  const r = await adminFetch(accessToken, "/contract-reviews/verify", {
+    method: "POST",
+    body: await file.arrayBuffer(),
+    headers: { "Content-Type": "application/pdf" },
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<AdminContractVerifyResult>;
+}
+
 export async function downloadAdminDownloadLogProof(accessToken: string, id: string): Promise<void> {
   const r = await adminFetch(accessToken, `/download-logs/${encodeURIComponent(id)}/proof`);
   if (!r.ok) {

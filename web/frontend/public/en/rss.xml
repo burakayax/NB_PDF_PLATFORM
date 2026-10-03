@@ -10,7 +10,7 @@
     <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
     <language>en-US</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Tue, 22 Sep 2026 20:53:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 17:38:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,152 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/en/blog</link>
     </image>
+    <item>
+      <title>AI Contract Review: How It Works and What to Trust</title>
+      <link>https://www.pdfplatform.app/en/blog/ai-contract-review-how-it-works</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/ai-contract-review-how-it-works</guid>
+      <pubDate>Fri, 02 Oct 2026 17:38:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir" />
+      <description><![CDATA[What happens behind the scenes when you give an AI a contract? How far can you trust what it finds, and which limits should you know? An honest explanation.]]></description>
+      <content:encoded><![CDATA[<p>“Having AI read the contract” sounds easy, but whether the result is useful depends on how it is done. In this article we explain plainly what the Contract Auditor does step by step, what assurances it offers and what its limits are.</p>
+<h2>Step by step: what happens?</h2>
+<ol><li><strong>Text is extracted on your device</strong> — Your PDF itself is not sent; only its text goes to the server for analysis. For scanned documents, text is read on your device with OCR.</li><li><strong>The document is recognised and questions are asked</strong> — The system identifies the document type and parties and asks a few questions whose answers change the analysis. You choose which side you are on; the system does not assume.</li><li><strong>The analysis runs</strong> — In the quick scan, the most important risks are found in a single pass. In the detailed audit the document is read several times, numbers are calculated, legal points are searched in official sources and findings go through a second check.</li><li><strong>The result is shown in the document</strong> — Risky spots are highlighted in your PDF; each finding states why, the impact and (in the detailed audit) suggested replacement wording.</li></ol>
+<h2>Safeguards</h2>
+<ul><li>Every finding comes with a verbatim quote, and that quote is searched in the document text by software; a finding that cannot be found does not enter the report.</li><li>Page numbers are computed from the quote's real position in the document, not guessed by the model.</li><li>In the detailed audit, statute articles are not written from the model's memory; only content read from an official source is shown, with a source link. A point that could not be read is marked “could not verify”.</li><li>Unknown information is stated openly in the assumptions section.</li></ul>
+<h2>Limits you should know</h2>
+<ul><li>It can be wrong: it may miss a risk or overstate one. This is a preliminary assessment, not legal advice.</li><li>It cannot judge documents it has not seen: annexes whose text is not in the document cannot be analysed; the report says so.</li><li>The current-law check is done only in the detailed audit; the quick scan gives no statutory basis.</li><li>Very long documents (over about 240,000 characters) must be split; for scanned documents the first 30 pages are read.</li></ul>
+<h2>Quick scan or detailed audit?</h2>
+<p>The quick scan suits a first look at a document: it takes about 1-2 minutes and uses 8 to 20 units depending on length (monthly allowance first, then credits). The detailed audit is for an important contract you are about to sign: it takes about 6-12 minutes and uses 85 to 122 credits, from purchased credits only. The detailed audit costs more because the strongest model reads the document several times and searches legal points in official sources.</p>
+<p><strong>Contract Auditor</strong> — Start with a quick scan; if it matters, move to the detailed audit. Text is read on your device. <a href="https://www.pdfplatform.app/en/tools/contract-review-ai">Open the tool</a></p>
+<h2>Privacy</h2>
+<p>Document text is not stored on our servers; the result is deleted within 30 minutes. Our AI provider does not use API data to train models by default; it may retain it for up to 30 days for safety review only. The result stays only on the page where the analysis finished: download the report right away.</p>]]></content:encoded>
+      <category>AI</category>
+      <category>Contract Analysis</category>
+      <category>Reliability</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/ai-contract-review-how-it-works.png" type="image/png" length="54690" />
+      <media:content url="https://www.pdfplatform.app/en/covers/ai-contract-review-how-it-works.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/ai-contract-review-how-it-works.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/ai-contract-review-how-it-works.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/ai-contract-review-how-it-works.png" />
+    </item>
+    <item>
+      <title>How to Calculate a Late-Delivery Penalty (Penalty Clause)</title>
+      <link>https://www.pdfplatform.app/en/blog/how-to-calculate-a-late-delivery-penalty</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/how-to-calculate-a-late-delivery-penalty</guid>
+      <pubDate>Fri, 02 Oct 2026 16:25:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/gecikme-cezasi-cezai-sart-hesaplama" />
+      <description><![CDATA[“0.5% per day” sounds harmless as a sentence. Yet in 20 days it reaches 10% of the price. We show how to put a penalty clause into numbers, why the cap is critical and what to watch for.]]></description>
+      <content:encoded><![CDATA[<p>Late-delivery penalties are usually written as “for each day of delay, X percent of the contract price”. The sentence is short; the outcome can be large. Converting the rate into numbers before you sign shows exactly where this clause can take you.</p>
+<h2>The basic calculation</h2>
+<p>Late penalty = base amount × daily rate × days of delay. On a 1,000,000 TL job with a 0.5% daily rate, the penalty is 5,000 TL per day. 20 days of delay is 100,000 TL, i.e. 10% of the price. Written as 1% per day, the same amount would be reached in 10 days.</p>
+<ul><li>0.1% per day: 1% in 10 days, 10% in 100 days.</li><li>0.5% per day: 10% in 20 days, 50% in 100 days.</li><li>1% per day: 10% in 10 days, the whole price in 100 days.</li></ul>
+<h2>Is there a cap?</h2>
+<p>The most important limit on a penalty clause is a cap: “total penalties may not exceed 10% of the contract price”. Without one, the penalty can grow to the whole price and beyond. If the clause also says “damages may be claimed in addition”, the penalty is effectively uncapped.</p>
+<h2>On which amount is it calculated?</h2>
+<p>Is the “contract price” VAT-inclusive or exclusive, or only the delayed portion? If it is not defined, the other side may take the highest figure. A penalty calculated on a VAT-inclusive price comes out 20% higher than on the VAT-exclusive one.</p>
+<h2>Whose fault is the delay?</h2>
+<p>If the delivery period depends on an approval, sample or document the other side must supply, that delay should not be charged to you. Check whether the contract says time is extended for delays caused by the other side; if not, ask to add it.</p>
+<p><strong>Contract Auditor</strong> — Converts penalty rates into money using your contract price and shows whether there is a cap and which deadlines conflict with annexes. <a href="https://www.pdfplatform.app/en/tools/contract-review-ai">Open the tool</a></p>
+<h2>A note on the legal framework</h2>
+<p>Although there is a general rule that a court may reduce an excessive penalty, commercial matters between merchants fall under a separate provision and the room to reduce may be limited. So if you are a merchant, negotiating a heavy penalty clause before signing is far safer than relying on a court to fix it afterwards. Verify the current text of the provisions at an official source such as mevzuat.gov.tr; this article is not legal advice.</p>
+<blockquote><p>Two requests are often accepted in negotiation: a cap on total penalties, and mutuality (a penalty or interest for late payment of what you are owed).</p></blockquote>]]></content:encoded>
+      <category>Penalty Clause</category>
+      <category>Late Penalty</category>
+      <category>Calculation</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-calculate-a-late-delivery-penalty.png" type="image/png" length="56691" />
+      <media:content url="https://www.pdfplatform.app/en/covers/how-to-calculate-a-late-delivery-penalty.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/how-to-calculate-a-late-delivery-penalty.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/how-to-calculate-a-late-delivery-penalty.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-calculate-a-late-delivery-penalty.png" />
+    </item>
+    <item>
+      <title>12 Things to Check Before Signing a Contract</title>
+      <link>https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract</guid>
+      <pubDate>Fri, 02 Oct 2026 15:06:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+      <description><![CDATA[Most contract problems hide in small details nobody noticed, not in long complicated clauses. Here are 12 points to review in every contract before you sign.]]></description>
+      <content:encoded><![CDATA[<p>Most contract disputes start with a small detail nobody noticed at signing: a different deadline in an annex, an uncapped penalty, or a termination right granted to one side only. The list below sets out 12 points to review in every contract before you sign.</p>
+<h2>1-4: The basics</h2>
+<ol><li>Parties and authority: Are names, tax numbers and the signatory's authority to bind the company correct?</li><li>Subject and scope: Is it clear what is delivered or done, in what quantity and quality? Vague wording (“reasonable time”, “as deemed necessary”) causes arguments later.</li><li>Price and payment: Is the amount VAT-inclusive or exclusive? How many days is the term and from when does it run? If invoicing depends on an approval, is there a deadline for that approval?</li><li>Deadlines: What are the delivery, notice, objection and non-renewal periods? For each, who gives notice and how (notary, email, registered mail)?</li></ol>
+<h2>5-8: Money and liability</h2>
+<ol><li>Late-delivery penalty: What is the rate, is there a cap, and on what amount is it calculated? If damages can also be claimed, the penalty is effectively uncapped.</li><li>Termination: Is the right mutual? What is the notice period? Is work already done paid for on termination?</li><li>Liability cap: How are indirect losses, lost profit and gross negligence treated? Is a cap given to one side only?</li><li>IP and confidentiality: Are your designs, tooling or methods transferred to the other side? Is confidentiality unlimited, and are exceptions mutual?</li></ol>
+<h2>9-12: Structure and gaps</h2>
+<ol><li>Annexes: Do you have every annex referred to? If there is a priority rule like “if an annex and a clause conflict, the annex prevails”, read the annexes carefully.</li><li>Term and renewal: Does the contract renew automatically? What is the deadline for a non-renewal notice?</li><li>Disputes: Which court or arbitration has jurisdiction? Is the governing law stated? A distant city raises enforcement costs.</li><li>What is missing: force majeure, transfer of risk, warranty and defect periods, assignment, data protection — are expected clauses absent?</li></ol>
+<blockquote><p>Reading is not enough: turn rates into numbers. “1% per day” sounds harmless as a sentence; on a 2,400,000 TL job it is 24,000 TL per day.</p></blockquote>
+<p><strong>Contract Auditor</strong> — Applies this list for you: finds contradictions, penalty maths and missing clauses, and highlights risky spots in your document. <a href="https://www.pdfplatform.app/en/tools/contract-review-ai">Open the tool</a></p>
+<h2>How to use the list</h2>
+<p>Start with penalty, termination, payment and liability clauses; they have the largest financial effect. Then check annexes and priority rules. For each clause you flag, write two things: why it is a problem and a balanced alternative the other side could accept.</p>
+<p>This list is a preliminary aid and does not replace legal advice. For high-value or long-term contracts, getting a lawyer's view before signing lets you negotiate what you found far more effectively.</p>]]></content:encoded>
+      <category>Contracts</category>
+      <category>Checklist</category>
+      <category>Risk</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/12-things-to-check-before-signing-a-contract.png" type="image/png" length="54971" />
+      <media:content url="https://www.pdfplatform.app/en/covers/12-things-to-check-before-signing-a-contract.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/12-things-to-check-before-signing-a-contract.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/12-things-to-check-before-signing-a-contract.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/12-things-to-check-before-signing-a-contract.png" />
+    </item>
+    <item>
+      <title>Risk Check for Tender Specifications and Draft Contracts</title>
+      <link>https://www.pdfplatform.app/en/blog/tender-specification-risk-check</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/tender-specification-risk-check</guid>
+      <pubDate>Fri, 02 Oct 2026 11:46:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu" />
+      <description><![CDATA[The moment you bid, you accept every provision of the specification and draft contract. Here is what to look for in these documents before you submit an offer.]]></description>
+      <content:encoded><![CDATA[<p>In tenders the draft contract is usually not negotiable: by submitting a bid you are deemed to accept the provisions of the specification and the draft. So the real decision is made before bidding, while reading the documents. Pay particular attention to the following.</p>
+<h2>Consistency between documents</h2>
+<p>A tender file usually consists of an administrative specification, a technical specification, a draft contract and annexes. One may give a completion period of 90 days and another 60. Find the provision that sets which document prevails, and consider clarifying every conflict through a written clarification request.</p>
+<h2>Main points to check</h2>
+<ul><li>Completion/delivery period and the cases that extend it: do force majeure and delays caused by the authority extend the period?</li><li>Late penalty: the daily rate, the cap and the amount it is calculated on.</li><li>Guarantees: bid and performance bond amounts, return conditions and when they are forfeited.</li><li>Payment: frequency of interim payments, payment period and whether late payment bears interest.</li><li>Price adjustment: is there a mechanism for input-cost increases on long jobs?</li><li>Variations: what limit applies to the authority's right to increase or reduce the work?</li><li>Termination: in what cases and how does the authority terminate? What are the financial consequences for you?</li><li>Missing annexes: documents referred to in the draft but absent from the file.</li></ul>
+<h2>The order-of-precedence clause</h2>
+<p>A clause stating which document prevails if they conflict is common. It can lift an innocent-looking provision in an annex above the main contract. Read the annexes with that in mind.</p>
+<p><strong>Contract Auditor</strong> — Audit the specification and draft contract with the “Public tender” option: it finds contradictions, penalty maths and missing annexes. <a href="https://www.pdfplatform.app/en/tools/contract-review-ai">Open the tool</a></p>
+<h2>Legislation changes</h2>
+<p>Public tenders are governed by the Public Procurement Law and the Public Procurement Contracts Law and the regulations under them, which change from time to time. When judging whether a provision complies with legislation, check current texts at official sources such as the Official Gazette, mevzuat.gov.tr and the Public Procurement Authority. For important tenders, legal support also helps you avoid missing objection and application deadlines.</p>
+<blockquote><p>Deadlines for clarification requests and objections are short. Reading the documents in the first days rather than near the bid date leaves time both to ask questions and to decide.</p></blockquote>]]></content:encoded>
+      <category>Tender</category>
+      <category>Specification</category>
+      <category>Draft Contract</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/tender-specification-risk-check.png" type="image/png" length="52516" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tender-specification-risk-check.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/tender-specification-risk-check.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/tender-specification-risk-check.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/tender-specification-risk-check.png" />
+    </item>
+    <item>
+      <title>Annex vs Clause Conflict: Which One Prevails?</title>
+      <link>https://www.pdfplatform.app/en/blog/annex-vs-clause-conflict-which-prevails</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/annex-vs-clause-conflict-which-prevails</guid>
+      <pubDate>Fri, 02 Oct 2026 09:54:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/sozlesmede-ek-madde-celiski-oncelik" />
+      <description><![CDATA[Clause 4 says delivery in 45 days; Annex 1 says 30. If the contract says “the annex prevails”, your penalty maths change. Here is how to find and resolve conflicts.]]></description>
+      <content:encoded><![CDATA[<p>In long contracts the same subject is regulated in several places: the main text, the technical specification, the price list. When these disagree, the real question is which prevails. The answer is often hidden in a small “order of precedence” clause.</p>
+<h2>An example</h2>
+<p>Clause 4 gives the delivery period as 45 days, while the Annex 1 technical specification says 30. Clause 13 states “if the contract and its annexes conflict, the annexes prevail”. Result: 30 days applies. If you deliver on day 45 you are 15 days late and the daily penalty starts running.</p>
+<h2>Order-of-precedence clauses</h2>
+<ul><li>“Annexes prevail”: a detail in an annex can override the main text. Read annexes as carefully as the main text.</li><li>“The main text prevails”: conflicting annex provisions do not apply; it is still safer to clean up the conflict.</li><li>No clause at all: which prevails is open to argument, which means a dispute.</li></ul>
+<h2>How to find conflicts</h2>
+<ol><li><strong>List the subjects</strong> — Mark subjects with numbers and names in the main text: period, price, penalty, payment term, parties and jurisdiction.</li><li><strong>Search each subject in the annexes</strong> — Compare how the same subject is written in the annex; figures, days and rates matter most.</li><li><strong>Find the precedence clause</strong> — Find the clause stating which document prevails if they conflict.</li></ol>
+<p><strong>Contract Auditor</strong> — Finds conflicts between clauses and annexes and shows which would prevail under the precedence rule and the financial effect. <a href="https://www.pdfplatform.app/en/tools/contract-review-ai">Open the tool</a></p>
+<h2>What to do before signing</h2>
+<ol><li>Notify the other side in writing of every conflicting place and agree on a single figure.</li><li>Turn the precedence clause into a balanced one (for example, the later-dated or more specific document prevails).</li><li>Request and read every annex whose text is not in the document; do not let an annex you have not seen bind you.</li></ol>
+<blockquote><p>To see what changed between two versions, use the Compare PDFs tool; to find conflicts, use the Contract Auditor, which examines clauses and annexes in the same document together.</p></blockquote>
+<p><strong>Compare PDFs</strong> — See the clauses added, removed and changed between two versions of a contract. <a href="https://www.pdfplatform.app/en/tools/compare-pdf">Open the tool</a></p>]]></content:encoded>
+      <category>Contracts</category>
+      <category>Conflict</category>
+      <category>Annexes</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/annex-vs-clause-conflict-which-prevails.png" type="image/png" length="51212" />
+      <media:content url="https://www.pdfplatform.app/en/covers/annex-vs-clause-conflict-which-prevails.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/annex-vs-clause-conflict-which-prevails.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/annex-vs-clause-conflict-which-prevails.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/annex-vs-clause-conflict-which-prevails.png" />
+    </item>
     <item>
       <title>Getting a Court Decision from UYAP into Word</title>
       <link>https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word</link>
@@ -936,190 +1082,6 @@
       <media:content url="https://www.pdfplatform.app/en/covers/square/ilovepdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/en/covers/tall/ilovepdf-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" />
-    </item>
-    <item>
-      <title>SmallPDF Alternative: No Daily Limit, No Watermark</title>
-      <link>https://www.pdfplatform.app/en/blog/smallpdf-alternative</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/smallpdf-alternative</guid>
-      <pubDate>Wed, 22 Jul 2026 11:15:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz" />
-      <description><![CDATA[The usual snag when looking for a SmallPDF alternative: the daily task limit and the signup wall. A comparison with unlimited, signup-free, watermark-free tools.]]></description>
-      <content:encoded><![CDATA[<p>SmallPDF is a solid tool, but on the free tier you hit a daily task limit and frequent signup/Pro walls. Is it possible to do the same tasks with no limit and no account? Yes.</p>
-<h2>The limits of SmallPDF's free tier</h2>
-<ul><li>Daily task limit: After a set number of free tasks you're asked to wait or upgrade to Pro.</li><li>Signup/Pro pressure: Some tools or batch operations require an account.</li><li>Upload: For most operations your file goes to a server.</li></ul>
-<h2>On PDF Platform there's no limit and no signup</h2>
-<p>On PDF Platform, structural tools like merge, split, rotate, delete pages, reorder pages and image-to-PDF work with no signup, no daily limit and no forced watermark. And these operations run entirely in your browser (on your device) — your file never goes to a server.</p>
-<p><strong>Merge PDF</strong> — Add your files, reorder and download one PDF — unlimited and free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
-<h2>Which tasks are free, which need an account?</h2>
-<p>The honest split: structural tools are fully free and signup-free. Word/Excel conversion, OCR and AI tools (summarize, chat, translate) run on the server; those need an account for larger files and history, but content is not stored.</p>
-<ul><li>Unlimited &amp; signup-free: merge, split, rotate, delete, reorder, image → PDF, document scan, sign, annotate.</li><li>Account/plan: Word/Excel/PowerPoint conversion, OCR, compression and AI tools (for larger files + history).</li></ul>
-<blockquote><p>If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device.</p></blockquote>
-<h2>Where SmallPDF is genuinely good</h2>
-<p>An honest comparison names the other side's strengths too. SmallPDF has been doing this a long time and it shows: the interface is clean and easy to learn, the tool range is broad, there are desktop and mobile apps, and team accounts and cloud integrations help in corporate use. If you want a shared cloud workflow for a team, those are not features to dismiss.</p>
-<h2>Where the real difference lies</h2>
-<p>The difference is not in the feature list but in where the work happens. Every server-side tool costs money to run, and that cost has to be capped somewhere; daily and hourly limits exist for that reason. Page operations need no server. Done in the browser, there is nothing left to meter: the limit disappears because the server cost disappeared — not out of generosity.</p>
-<h2>Which jobs are genuinely unlimited?</h2>
-<ul><li>Merge, split, delete pages, reorder, rotate and crop: run on your device, with no limit and no account.</li><li>Images to PDF, document scanning, signing and markup: also on your device.</li><li>Word/Excel conversion, OCR and compression: run on a server, with a daily allowance on the free plan.</li><li>AI tools (summarize, translate, extract, compare): server-side and plan-dependent.</li></ul>
-<h2>Measure your own need properly</h2>
-<p>The practical way to decide is to look at what you actually did over the last month and how often. For most people the bulk of it is page editing, and a tool that runs without limits or an account covers that. If you convert to Word or run OCR regularly, you will need to look at paid plans on both sides, and at that point what you compare is the monthly cost.</p>
-<h2>Testing takes thirty seconds</h2>
-<p>Rather than reading claims, test them: open the merge tool, switch off your connection and run the operation. If it completes, the file never left your device and there is no server work to count. You can run the same test on the other tools you use, and the result speaks more clearly than either side's privacy page.</p>]]></content:encoded>
-      <category>Comparison</category>
-      <category>Free</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="54441" />
-      <media:content url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/smallpdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/smallpdf-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" />
-    </item>
-    <item>
-      <title>Free PDF Editor: Add and Delete Text, Sign and Fill Forms</title>
-      <link>https://www.pdfplatform.app/en/blog/free-pdf-editor</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/free-pdf-editor</guid>
-      <pubDate>Wed, 22 Jul 2026 09:18:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi" />
-      <description><![CDATA[There's no single way to edit a PDF: changing text, adding text, signing, annotating... A guide to which tool to use for what you actually need.]]></description>
-      <content:encoded><![CDATA[<p>"Editing a PDF" means different things to different people: some want to change existing text, some to add notes on top, some to sign. Pick the right tool and it takes seconds. Here's a roadmap by need.</p>
-<h2>1) Change or delete existing text</h2>
-<p>If you want to actually remove text in a PDF and type new text, use the "Edit PDF" tool. Draw a box over the text to change, type the new text (leave empty to delete) and download.</p>
-<p><strong>Edit PDF</strong> — Truly delete and replace existing text — draw a box, type the new text, download. <a href="https://www.pdfplatform.app/en/tools/edit-pdf">Open the tool</a></p>
-<h2>2) Add text, notes or marks on top</h2>
-<p>To add text, highlights, boxes or drawings on top without touching existing text, the "Annotate PDF" tool is ideal. You can also use it to fill in blanks on forms.</p>
-<h2>3) Sign</h2>
-<p>To sign a document, use the "Sign PDF" tool to draw, type or upload your signature and place it anywhere on the page. Signing happens entirely on your device.</p>
-<h2>4) Fill forms</h2>
-<p>For forms with no fillable fields (flat), you can fill them by adding text directly on top — see our form-filling guide for detailed steps.</p>
-<blockquote><p>For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing.</p></blockquote>
-<h2>Ask the right question first: what do you want to edit?</h2>
-<p>«Editing a PDF» is not one job; it is a shared name for several similar-looking jobs with different results. Picking the wrong tool makes the task look impossible or produces an unexpected outcome. Four questions separate what you need:</p>
-<ul><li>Are you changing text in the document? — you need text editing.</li><li>Are you adding your own notes? — markup is enough.</li><li>Are you arranging pages (delete, reorder, merge)? — page tools.</li><li>Are you removing information permanently? — redaction; markup or cropping will not do.</li></ul>
-<h2>What to watch for in free tools</h2>
-<p>A tool offered free usually charges somewhere else, and it is worth seeing where before you start. The common patterns: a watermark on the output, a daily or hourly limit, your document uploaded to a server, a mandatory account before download, and reduced quality in the downloaded file. Checking those five points while trying a tool keeps you from getting stuck mid-task.</p>
-<h2>Before you start editing</h2>
-<p>The type of document largely decides what you can do. In a PDF with a text layer you can change the text; in a scan the page is an image and needs converting to text first. If the document is password-protected, no tool can read its content until the password is removed. Those two checks answer most of the «why is it not working?» questions upfront.</p>
-<h2>Common scenarios and the right order</h2>
-<ul><li>Changing a clause in a scanned contract: convert to text first, then edit.</li><li>Turning several documents into one file: merge, then reorder, then add numbers last.</li><li>Cleaning a document before sharing: delete unneeded pages, redact sensitive data, clear metadata.</li><li>Filling and returning a form: fill, sign, lock, and compress if needed.</li></ul>
-<h2>The limits of editing</h2>
-<p>Text in a PDF does not flow; replacing a word with a longer one does not reflow the line. For small corrections that is no problem, but if paragraphs will be rewritten, producing the document from its source or converting to Word is less work. The test is simple: a few words means edit directly, pages of rewriting means convert.</p>]]></content:encoded>
-      <category>How-to</category>
-      <category>Editing</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="54836" />
-      <media:content url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/free-pdf-editor.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/free-pdf-editor.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" />
-    </item>
-    <item>
-      <title>Convert Word to PDF Without Breaking Formatting</title>
-      <link>https://www.pdfplatform.app/en/blog/convert-word-to-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-word-to-pdf</guid>
-      <pubDate>Tue, 21 Jul 2026 20:01:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/word-pdf-cevirme" />
-      <description><![CDATA[Converting your Word file to PDF before sharing guarantees the layout looks the same for everyone. Here's the most practical way to go from Word to PDF without breaking formatting.]]></description>
-      <content:encoded><![CDATA[<p>When you send a Word document, a different Office version or a missing font on the other end can shift your layout. PDF fixes this: the document looks identical for everyone. Here's how to convert Word to PDF without breaking formatting.</p>
-<h2>Why convert Word to PDF?</h2>
-<ul><li>Locks the layout: fonts, tables and spacing look the same everywhere.</li><li>Opens on any device: phone, tablet, computer — no special software.</li><li>Can't be edited by accident: safe for proposals, contracts and CVs.</li><li>Official submissions usually require PDF.</li></ul>
-<h2>Step by step</h2>
-<ol><li><strong>Upload the document</strong> — Drag your .doc, .docx, .odt or .rtf file into the Word to PDF tool.</li><li><strong>Convert</strong> — The document is processed on the server and converted to PDF with layout, fonts and tables preserved.</li><li><strong>Preview and download</strong> — Check the result and download the PDF. The page structure matches your original document.</li></ol>
-<p><strong>Word to PDF</strong> — Convert your Word document to PDF with layout intact. <a href="https://www.pdfplatform.app/en/tools/word-to-pdf">Open the tool</a></p>
-<h2>Tips for preserving formatting</h2>
-<blockquote><p>If your document uses standard fonts (Arial, Times New Roman, Calibri), the output will be closest to the original. Very custom, non-installed fonts may render differently on some systems.</p></blockquote>
-<p>Need the other direction — turning a PDF back into an editable Word file? We have a separate tool for that.</p>
-<p><strong>PDF to Word</strong> — No editable version on hand? Convert the PDF back to Word. <a href="https://www.pdfplatform.app/en/tools/pdf-to-word">PDF → Word</a></p>
-<h2>Prepare the document before converting</h2>
-<p>A PDF freezes the Word document as it stands, so whatever is in the file ends up in the output. A few minutes of preparation prevents surprises you would otherwise notice after sending.</p>
-<ul><li>Turn off track changes and accept all revisions, or the markup can end up in the output.</li><li>Clear comments, especially leftovers from internal review.</li><li>Run the spell check once; fixing it in a PDF is far harder.</li><li>Update the automatic contents page and field codes, or old page numbers get frozen in.</li><li>Review the author and company details in document properties.</li></ul>
-<h2>Why fonts shift</h2>
-<p>A Word file usually does not embed its typefaces; it only records their names. If the font is not installed on the other end, the program substitutes something similar, line lengths change, tables overflow and even the page count differs. A PDF embeds the fonts it uses. That is PDF's most useful property, and it explains why official submissions ask for it.</p>
-<h2>A note on CVs and applications</h2>
-<p>Documents sent with job applications are often uploaded into a system and scanned automatically, so it matters that the text inside the PDF is real text. A document produced straight from Word satisfies that; a CV exported as an image from a design tool or captured as a screenshot does not. There is a simple test: open the PDF and try to select your name with the cursor. If you cannot, the document is an image.</p>
-<h2>Checklist after converting</h2>
-<ul><li>Is the page count as expected, or did an extra blank page appear?</li><li>Are tables split across a page break?</li><li>Is there an unwanted break between a heading and its text?</li><li>Did links stay clickable?</li><li>Does the file size fit the channel you are sending through?</li></ul>
-<h2>What you can do afterwards</h2>
-<p>Once you have the PDF you can keep working on it: merge it with annexes, add page numbers, reduce its size or permanently remove sensitive details. Most of these operate at page level, so they leave the content and appearance of the document untouched.</p>]]></content:encoded>
-      <category>Convert</category>
-      <category>Word</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" type="image/png" length="55336" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-word-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-word-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" />
-    </item>
-    <item>
-      <title>The Best Free Online PDF Tools (2026 Guide)</title>
-      <link>https://www.pdfplatform.app/en/blog/best-free-pdf-tools</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/best-free-pdf-tools</guid>
-      <pubDate>Tue, 21 Jul 2026 19:55:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari" />
-      <description><![CDATA[There's no single answer to "the best free PDF tool" — it depends on the job. This guide splits PDF tasks into categories and shows the right tool for each, plus what to watch for.]]></description>
-      <content:encoded><![CDATA[<p>There are hundreds of PDF tools online, but which one when? This guide splits PDF work into five categories and shows the right tool for each — and what to watch for (privacy, watermark, file size) when choosing.</p>
-<h2>1) Editing and organizing</h2>
-<p>Merging, splitting, deleting, rotating or reordering pages is the most common need. These tasks are light and, in good tools, run on your device (in the browser) — your file doesn't go to a server and you get an instant result.</p>
-<p><strong>Merge PDF</strong> — Combine multiple PDFs into one — on your device. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
-<h2>2) Converting</h2>
-<p>Turning PDF into Word/Excel/PowerPoint or back; getting a PDF as JPG. These are heavy tasks usually done on the server. The key criterion when choosing a converter: how well formatting (layout, tables, fonts) is preserved.</p>
-<p><strong>PDF to Word</strong> — Convert a PDF into an editable Word document. <a href="https://www.pdfplatform.app/en/tools/pdf-to-word">Open the tool</a></p>
-<h2>3) Optimizing and securing</h2>
-<p>Reducing file size (compression), adding/removing a password, adding a watermark or page numbers. Compression to email a file and encryption before sharing are common.</p>
-<p><strong>Compress PDF</strong> — Make your PDF small enough to email. <a href="https://www.pdfplatform.app/en/tools/compress">Open the tool</a></p>
-<h2>4) PDF with AI</h2>
-<p>Summarizing long documents, asking a document questions, extracting data from invoices, or comparing two contracts. In AI tools the file itself usually isn't uploaded; text is extracted and only the text is processed.</p>
-<p><strong>Summarize PDF</strong> — Summarize a long document in seconds. <a href="https://www.pdfplatform.app/en/tools/summarize-pdf">Open the tool</a></p>
-<h2>5) What to watch for when choosing a tool</h2>
-<ul><li>Privacy: Is the file uploaded to a server, or processed on your device? For sensitive documents, prefer on-device processing.</li><li>Watermark: Does the free output get a forced watermark?</li><li>Signup: Does it force an account for a simple task?</li><li>File size/limits: Up to how many MB, how many operations a day?</li></ul>
-<blockquote><p>On PDF Platform, structural tools (merge, split, rotate, scan) run on your device, no forced watermark is added, and most tasks can be done without an account.</p></blockquote>]]></content:encoded>
-      <category>Guide</category>
-      <category>PDF Tools</category>
-      <category>Free</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" type="image/png" length="53083" />
-      <media:content url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/best-free-pdf-tools.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/best-free-pdf-tools.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" />
-    </item>
-    <item>
-      <title>How to Convert Excel to PDF Keeping Tables and Layout (2026)</title>
-      <link>https://www.pdfplatform.app/en/blog/convert-excel-to-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-excel-to-pdf</guid>
-      <pubDate>Tue, 21 Jul 2026 18:34:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/excel-pdf-cevirme" />
-      <description><![CDATA[Sending an Excel file as-is often results in shifted cells and broken page layout. Here's how to convert Excel to PDF while keeping tables intact and print-ready.]]></description>
-      <content:encoded><![CDATA[<p>Sending an Excel table often ends with shifted columns, split pages and a broken print area on the other end. PDF fixes this: the table looks identical and print-ready for everyone. Here's how to convert Excel to PDF without breaking the layout.</p>
-<h2>Why convert Excel to PDF?</h2>
-<ul><li>Locks the layout: cells, column widths and page breaks look the same everywhere.</li><li>Print-ready: print-area and fit-to-page issues disappear.</li><li>Can't be changed by accident: safe for report, quote and invoice tables.</li><li>Opens on devices without Excel installed.</li></ul>
-<h2>Step by step</h2>
-<ol><li><strong>Upload the Excel file</strong> — Add your .xls, .xlsx, .ods or .csv file to the Excel to PDF tool.</li><li><strong>Convert</strong> — The file is processed on the server and converted to PDF with tables, cells and formatting preserved.</li><li><strong>Preview and download</strong> — Check the result and download the PDF — your table is share- and print-ready.</li></ol>
-<p><strong>Excel to PDF</strong> — Convert your Excel table to PDF with layout intact. <a href="https://www.pdfplatform.app/en/tools/excel-to-pdf">Open the tool</a></p>
-<h2>Tip for wide tables</h2>
-<blockquote><p>For wide, many-column tables, setting the page orientation to Landscape and adjusting the print area in Excel before converting helps everything fit and stay readable.</p></blockquote>
-<h2>The reverse: getting a table out of a PDF</h2>
-<p>If you have a PDF and want to edit the table inside it in Excel, we have a separate tool that extracts tables to .xlsx.</p>
-<p><strong>PDF to Excel</strong> — Export tables from a PDF into editable Excel. <a href="https://www.pdfplatform.app/en/tools/pdf-to-excel">PDF → Excel</a></p>
-<h2>Set the print options before converting</h2>
-<p>What the resulting PDF looks like is decided by the print settings in the file. A wide table converted without them comes out with columns scattered across pages and is unreadable. A couple of minutes of setup completely changes how usable the output is.</p>
-<ul><li>Set orientation to landscape: with many columns this is almost always needed.</li><li>Define the print area to stop empty cells spreading across pages.</li><li>Use the «fit all columns on one page» option.</li><li>Set the header row to repeat on every page — it decides readability on multi-page tables.</li><li>Decide whether gridlines should print.</li></ul>
-<h2>Files with several sheets</h2>
-<p>An Excel file usually holds several worksheets, and not all of them need sharing. When working calculations, raw data or old period tabs end up in the output, the document both bloats and can carry information that was never meant to leave. Deciding which sheets go into the output before converting is cleaner than deleting pages from the PDF afterwards.</p>
-<h2>Watch for hidden information</h2>
-<p>Excel files carry more than they show: hidden rows and columns, data concealed by filters, cell notes and other sheets that formulas point at. Hidden rows usually stay out of the PDF, but cell notes and filtered data can appear unexpectedly. Reviewing everything hidden before converting a table that is going outside is a good habit.</p>
-<h2>For invoice and quote tables</h2>
-<p>The real reason for converting quotes and invoices prepared in Excel is to create a fixed document whose figures the recipient cannot change. Two extra steps help when sending it: page numbers show completeness on multi-page quotes, and a permissions password restricts copying and editing.</p>
-<h2>Before you send the output</h2>
-<ul><li>Do page breaks fall in sensible places, or is a line item split in half?</li><li>Do amounts and currency display correctly?</li><li>Is the smallest type readable, especially if it will be printed?</li><li>Is there a note or column left in that you did not want shown?</li></ul>]]></content:encoded>
-      <category>Convert</category>
-      <category>Excel</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" type="image/png" length="56728" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-excel-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-excel-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" />
     </item>
   </channel>
 </rss>

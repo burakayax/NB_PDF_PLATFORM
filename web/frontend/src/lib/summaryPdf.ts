@@ -30,6 +30,9 @@ function stripEmptySections(md: string): string {
   return kept.join("\n");
 }
 
+/** Türkçe destekli gömülü Roboto (normal + kalın) — başka PDF çıktıları da kullanır. */
+export const loadPdfFonts = loadFonts;
+
 type Run = { t: string; b: boolean };
 function toRuns(line: string): Run[] {
   const out: Run[] = [];

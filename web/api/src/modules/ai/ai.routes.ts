@@ -14,6 +14,13 @@ import {
   topupPacksController,
   topupGrantController,
 } from "./ai.controller.js";
+import {
+  startContractReviewController,
+  prescanContractController,
+  contractReviewStatusController,
+  deleteContractReviewController,
+  contractReviewDownloadController,
+} from "./contract-review.controller.js";
 
 export const aiRouter = Router();
 
@@ -33,6 +40,13 @@ aiRouter.post("/translate", requireAuth, requireAiAccess, asyncHandler(translate
 aiRouter.post("/translate-segments", requireAuth, requireAiAccess, asyncHandler(translateSegmentsController));
 aiRouter.post("/compare", requireAuth, requireAiAccess, asyncHandler(compareController));
 aiRouter.post("/detect-sensitive", requireAuth, requireAiAccess, asyncHandler(detectSensitiveController));
+
+// Sözleşme Denetçisi — uzun süren iş: başlat → durumu yokla → (isteğe bağlı) sil.
+aiRouter.post("/contract-review/prescan", requireAuth, requireAiAccess, asyncHandler(prescanContractController));
+aiRouter.post("/contract-review", requireAuth, requireAiAccess, asyncHandler(startContractReviewController));
+aiRouter.get("/contract-review/:id", requireAuth, requireAiAccess, asyncHandler(contractReviewStatusController));
+aiRouter.post("/contract-review/:id/download", requireAuth, requireAiAccess, asyncHandler(contractReviewDownloadController));
+aiRouter.delete("/contract-review/:id", requireAuth, requireAiAccess, asyncHandler(deleteContractReviewController));
 
 // Top-up (ek AI kredisi paketleri) — katalog herkese açık; grant admin-gated (controller içinde).
 aiRouter.get("/topup/packs", requireAuth, asyncHandler(topupPacksController));
