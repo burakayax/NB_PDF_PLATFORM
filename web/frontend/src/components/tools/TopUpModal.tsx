@@ -24,6 +24,20 @@ type Props = {
 /** Tipik (≈50 sayfa) bir sözleşme denetiminin kredi bedeli — paket kartındaki "≈ N denetim" için. */
 const TYPICAL_AUDIT = estimateContractCredits(125_000);
 
+/** Paketin ne işe yaradığını anlatan örnek: küçük paketler basit işlem; büyükler sözleşme denetimi + kalan basit işlem. */
+export function packExample(credits: number, tr: boolean): string {
+  if (credits < TYPICAL_AUDIT) {
+    return tr ? `≈ ${credits} basit işlem (özet, sohbet, çeviri…)` : `≈ ${credits} standard operations (summary, chat, translation…)`;
+  }
+  const audits = Math.floor(credits / TYPICAL_AUDIT);
+  const rest = credits - audits * TYPICAL_AUDIT;
+  const restTr = rest > 0 ? ` + ${rest} basit işlem` : "";
+  const restEn = rest > 0 ? ` + ${rest} standard operations` : "";
+  return tr
+    ? `Örn. ${audits} detaylı sözleşme denetimi (50 sayfa)${restTr}`
+    : `E.g. ${audits} detailed contract audit${audits > 1 ? "s" : ""} (50 pages)${restEn}`;
+}
+
 /** Ek AI kredisi (top-up) satın alma penceresi. Ödeme açılınca "Satın Al" aktif olur;
  * şimdilik "Yakında". Admin test için kredi ekleyebilir. */
 export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onGranted }: Props) {
@@ -91,13 +105,8 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
                   {p.popular && <span className="rounded-full bg-fuchsia-500/20 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200">{tr ? "Popüler" : "Popular"}</span>}
                 </p>
                 <p className="text-[12px] text-slate-400">{price(p)}</p>
-                {p.credits >= TYPICAL_AUDIT && (
-                  <p className="mt-0.5 text-[11.5px] text-fuchsia-300/90">
-                    {tr
-                      ? `≈ ${Math.floor(p.credits / TYPICAL_AUDIT)} detaylı sözleşme denetimi (≈50 sayfalık belge)`
-                      : `≈ ${Math.floor(p.credits / TYPICAL_AUDIT)} detailed contract audit${Math.floor(p.credits / TYPICAL_AUDIT) > 1 ? "s" : ""} (≈50-page document)`}
-                  </p>
-                )}
+                <p className="mt-1 text-[11.5px] text-slate-300">{tr ? "Tüm AI araçlarında kullanılır" : "Works in every AI tool"}</p>
+                <p className="mt-0.5 text-[11.5px] text-fuchsia-300/90">{packExample(p.credits, tr)}</p>
               </div>
               {paymentsDisabled ? (
                 isAdmin ? (

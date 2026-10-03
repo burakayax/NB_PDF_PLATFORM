@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { TopUpModal } from "../components/tools/TopUpModal";
+import { TopUpModal, packExample } from "../components/tools/TopUpModal";
 
 // ── Bağımlılıklar mock'lanır (ödeme + kota + iyzico) ─────────────────────────
 vi.mock("../hooks/useSettings", () => ({
@@ -111,5 +111,16 @@ describe("TopUpModal", () => {
     await screen.findAllByText(/AI kredisi/);
     expect(screen.getAllByText(/Yakında/).length).toBeGreaterThan(0);
     expect(createTopupCheckout).not.toHaveBeenCalled();
+  });
+});
+
+describe("paket örnek cümlesi", () => {
+  it("küçük paket basit işlem, büyük paket sözleşme denetimi + kalan basit işlem der; 125 ve 150 farklı görünür", () => {
+    expect(packExample(5, true)).toMatch(/≈ 5 basit işlem/);
+    const a = packExample(125, true);
+    const b = packExample(150, true);
+    expect(a).toMatch(/1 detaylı sözleşme denetimi/);
+    expect(a).not.toBe(b);
+    expect(packExample(500, true)).toMatch(/4 detaylı sözleşme denetimi/);
   });
 });
