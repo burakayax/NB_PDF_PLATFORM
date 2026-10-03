@@ -140,8 +140,6 @@ const rawEnvSchema = z
     /** AI modeli — varsayılan ucuz/hızlı Haiku. */
     AI_MODEL: z.string().min(1).default("claude-haiku-4-5-20251001"),
     /** Sözleşme Denetçisi modeli — derin analiz için güçlü model (Haiku yetersiz kalır). */
-    /** Sözleşme Denetçisi herkese açık mı? Varsayılan KAPALI (satış öncesi). Yalnızca ADMIN deneyebilir. Açmak için "true". */
-    CONTRACT_REVIEW_ENABLED: z.string().optional().default("false").transform((v) => v.trim().toLowerCase() === "true"),
     CONTRACT_REVIEW_MODEL: z.string().min(1).default("claude-opus-5-5"),
     /** Aylık AI işlem kotası (adil kullanım) — plan başına. ADMIN sınırsız.
      * Ay başında sıfırlanır. Değiştirmek için env'i güncelle (ör. Render). */

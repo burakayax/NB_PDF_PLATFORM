@@ -105,7 +105,7 @@ export async function quotaController(req: Request, res: Response): Promise<void
     throw new HttpError(401, "Oturum gerekli.");
   }
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ quota, contractReviewOpen: isContractReviewOpen(u.role) });
+  res.json({ quota, contractReviewOpen: await isContractReviewOpen(u.role) });
 }
 
 /** POST /api/ai/summarize — { text, lang? } → { summary, quota } */
