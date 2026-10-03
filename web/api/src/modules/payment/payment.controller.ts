@@ -6,6 +6,7 @@ import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentBodySchema } from "./payment.schema.js";
 import { prisma } from "../../lib/prisma.js";
 import { topupPackById, topupInvoiceLabel } from "../ai/ai.quota.js";
+import { topupCheckoutAmount } from "../../lib/plan-catalogue.js";
 import {
   createPaymentCheckoutSession,
   paymentWorkspaceRedirectUrl,
@@ -66,15 +67,16 @@ export async function createTopupCheckoutController(request: Request, response: 
   // (Eskiden TRY'ye sabitti → yurtdışı müşteriye de yanlışlıkla KDV kesiliyordu.)
   const country = (user?.billingCountryCode ?? "").toUpperCase().trim();
   const isForeign = country !== "" && country !== "TR";
-  const checkoutCurrency: "TRY" | "USD" = isForeign ? "USD" : "TRY";
-  const price = isForeign ? pack.priceUSD : pack.priceTRY;
+  // TL fiyat KDV dahil gösterilir; ödeme akışı KDV'yi üstüne eklediği için net tutar gönderilir
+  // (eskiden brüt gönderiliyordu → müşteri gösterilen fiyatın %20 fazlasını ödüyordu).
+  const { currency: checkoutCurrency, amount: price } = topupCheckoutAmount(pack, isForeign);
 
   const session = await createPaymentCheckoutSession({
     userId,
     plan: placeholderPlan,
     billing: "monthly",
     clientIp: getClientIp(request),
-    priceTryOverride: String(price),
+    priceTryOverride: price,
     checkoutCurrency,
     topupCredits: pack.credits,
     basketItemName: topupInvoiceLabel(pack),
