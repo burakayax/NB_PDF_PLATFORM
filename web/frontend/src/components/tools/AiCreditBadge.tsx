@@ -31,11 +31,14 @@ export function AiCreditHelp({
   quota,
   onTopUp,
   align = "left",
+  topic = "all",
 }: {
   language: Language;
   quota?: AiQuota | null;
   onTopUp?: () => void;
   align?: "left" | "right";
+  /** Hangi başlığın açıklaması: yalnız aylık hak, yalnız kredi ya da ikisi birden. */
+  topic?: "monthly" | "credit" | "all";
 }) {
   const tr = language === "tr";
   const [open, setOpen] = useState(false);
@@ -57,13 +60,17 @@ export function AiCreditHelp({
 
   const reset = fmtDate(quota?.resetAt, tr);
   const unlimited = !!quota?.unlimited;
+  const showMonthly = topic !== "credit";
+  const showCredit = topic !== "monthly";
+  const title =
+    topic === "monthly" ? (tr ? "Aylık hak" : "Monthly allowance") : topic === "credit" ? (tr ? "Kredi" : "Credits") : tr ? "Aylık hak ve kredi" : "Monthly allowance & credits";
 
   return (
     <span ref={wrapRef} className="relative inline-flex">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={tr ? "Aylık hak ve kredi nedir?" : "What are monthly allowance and credits?"}
+        aria-label={topic === "monthly" ? (tr ? "Aylık hak nedir?" : "What is the monthly allowance?") : topic === "credit" ? (tr ? "Kredi nedir?" : "What are credits?") : tr ? "Aylık hak ve kredi nedir?" : "What are monthly allowance and credits?"}
         aria-expanded={open}
         className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-slate-300 transition hover:bg-white/[0.1] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50"
       >
@@ -72,29 +79,43 @@ export function AiCreditHelp({
       {open && (
         <div
           role="dialog"
-          aria-label={tr ? "Aylık hak ve kredi" : "Monthly allowance and credits"}
-          className={`absolute top-7 z-[60] w-[min(23rem,88vw)] rounded-2xl border border-white/[0.12] bg-[#0b1020] p-4 text-left shadow-2xl ${align === "right" ? "right-0" : "left-0"}`}
+          aria-label={title}
+          className={`absolute top-7 z-[60] max-h-[min(75vh,32rem)] w-[min(23rem,88vw)] overflow-y-auto overscroll-contain rounded-2xl border border-white/[0.12] bg-[#0b1020] p-4 text-left shadow-2xl ${align === "right" ? "right-0" : "left-0"}`}
         >
-          <p className="text-[13px] font-black text-white">{tr ? "Aylık hak ve kredi" : "Monthly allowance & credits"}</p>
+          <p className="text-[13px] font-black text-white">{title}</p>
 
+          {showMonthly && (<>
           <p className="mt-2.5 text-[12px] font-bold text-fuchsia-200">{tr ? "Aylık hak nedir?" : "What is the monthly allowance?"}</p>
           <p className="mt-0.5 text-[12px] leading-relaxed text-slate-300">
             {tr
               ? `Paketinizle gelir. Her ay başında yenilenir${reset ? ` (sıradaki yenilenme: ${reset})` : ""}; kullanılmayan hak bir sonraki aya devretmez. Basit araçlarda (özet, sohbet, çeviri, veri çıkarma, karşılaştırma, veri gizleme) ve sözleşmenin hızlı taramasında kullanılır.`
               : `Comes with your plan. Renews at the start of each month${reset ? ` (next renewal: ${reset})` : ""}; unused allowance does not roll over. Used by the standard tools and the contract quick scan.`}
           </p>
+          <p className="mt-2 text-[12px] leading-relaxed text-slate-300">
+            {tr
+              ? "Hakkınız bitince basit araçlar otomatik olarak kredinizden düşmeye başlar. Detaylı sözleşme denetimi aylık hakka hiç dokunmaz."
+              : "When it runs out, standard tools start using your credits automatically. The detailed contract audit never uses the monthly allowance."}
+          </p>
+          </>)}
 
+          {showCredit && (<>
           <p className="mt-2.5 text-[12px] font-bold text-fuchsia-200">{tr ? "Kredi nedir?" : "What are credits?"}</p>
           <p className="mt-0.5 text-[12px] leading-relaxed text-slate-300">
             {tr
               ? "Ek kredi paketinden satın alırsınız. Süresi dolmaz, ay sonunda sıfırlanmaz."
               : "Bought in extra credit packs. They never expire and do not reset at month end."}
           </p>
+          <p className="mt-2 text-[12px] leading-relaxed text-slate-300">
+            {tr
+              ? "Kredi bakiyeniz sıfırsa hiç kredi satın almamışsınız ya da hepsini kullanmışsınız demektir. Detaylı sözleşme denetimi yalnızca krediyle çalışır."
+              : "A zero balance means you have not bought credits or have used them all. The detailed contract audit only runs on credits."}
+          </p>
+          </>)}
 
           <p className="mt-2.5 text-[12px] font-bold text-fuchsia-200">{tr ? "Hangi durumda düşer?" : "When are they deducted?"}</p>
           <ul className="mt-0.5 space-y-1 text-[12px] leading-relaxed text-slate-300">
-            <li>• {tr ? "Basit araçlar ve sözleşme hızlı taraması: önce aylık hakkınızdan düşer; hakkınız bitince otomatik olarak krediden düşer." : "Standard tools and the contract quick scan: your monthly allowance is used first; credits are used automatically once it runs out."}</li>
-            <li>• {tr ? "Detaylı sözleşme denetimi (ağır araç): aylık hakka dokunmaz, yalnızca krediden düşer." : "Detailed contract audit (heavy tool): never uses the monthly allowance, only credits."}</li>
+            {showMonthly && <li>• {tr ? "Basit araçlar ve sözleşme hızlı taraması: önce aylık hakkınızdan düşer; hakkınız bitince otomatik olarak krediden düşer." : "Standard tools and the contract quick scan: your monthly allowance is used first; credits are used automatically once it runs out."}</li>}
+            {showCredit && <li>• {tr ? "Detaylı sözleşme denetimi (ağır araç): aylık hakka dokunmaz, yalnızca krediden düşer." : "Detailed contract audit (heavy tool): never uses the monthly allowance, only credits."}</li>}
             <li>• {tr ? "İşlem başarısız olursa harcanan hak/kredi iade edilir." : "If an operation fails, the allowance/credits spent are refunded."}</li>
             {unlimited && <li>• {tr ? "Yönetici hesabında sınır yoktur; hiçbir şey düşülmez." : "Admin accounts have no limit; nothing is deducted."}</li>}
           </ul>
@@ -151,19 +172,24 @@ export function AiCreditBadge({
   const monthlyEmpty = monthly <= 0;
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
-      <span
-        title={tr ? "Aylık hak: paketinizle gelir, her ay yenilenir" : "Monthly allowance: comes with your plan, renews monthly"}
-        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${monthlyEmpty ? "border-red-400/35 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.04] text-slate-300"}`}
-      >
-        {tr ? "Aylık" : "Monthly"}: {monthly}/{quota.limit ?? 0}
-      </span>
+      {(quota.limit ?? 0) > 0 && (
+        <>
+          <span
+            title={tr ? "Aylık hak: paketinizle gelir, her ay yenilenir" : "Monthly allowance: comes with your plan, renews monthly"}
+            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${monthlyEmpty ? "border-red-400/35 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.04] text-slate-300"}`}
+          >
+            {tr ? "Aylık" : "Monthly"}: {monthly}/{quota.limit ?? 0}
+          </span>
+          <AiCreditHelp language={language} quota={quota} topic="monthly" />
+        </>
+      )}
       <span
         title={tr ? "Kredi: satın aldığınız, süresi dolmayan bakiye" : "Credits: purchased balance, never expires"}
         className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${credits > 0 ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-white/[0.04] text-slate-400"}`}
       >
         {tr ? "Kredi" : "Credits"}: {credits}
       </span>
-      <AiCreditHelp language={language} quota={quota} onTopUp={onTopUp} />
+      <AiCreditHelp language={language} quota={quota} onTopUp={onTopUp} topic="credit" />
       {onTopUp && (
         <button
           type="button"

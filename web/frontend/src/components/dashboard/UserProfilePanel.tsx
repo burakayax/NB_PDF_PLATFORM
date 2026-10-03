@@ -461,7 +461,6 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           <div className="mt-1 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-fuchsia-300" aria-hidden />
             <h2 className="text-xl font-semibold tracking-tight text-nb-text">{lang === "tr" ? "AI Kullanımı" : "AI Usage"}</h2>
-            <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} />
           </div>
 
           {aiUnlimited ? (
@@ -471,7 +470,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           ) : aiQuota ? (
             <>
               <div className="mt-4 flex items-baseline justify-between gap-2">
-                <span className="text-sm text-slate-400">{lang === "tr" ? "Aylık hak (bu ay kalan)" : "Monthly allowance (left this month)"}</span>
+                <span className="inline-flex items-center gap-1.5 text-sm text-slate-400">{lang === "tr" ? "Aylık hak (bu ay kalan)" : "Monthly allowance (left this month)"}<AiCreditHelp language={language} quota={aiQuota} topic="monthly" /></span>
                 <span className={`text-lg font-bold ${aiMonthly <= 0 ? "text-red-400" : "text-nb-text"}`}>
                   {aiMonthly}
                   <span className="text-sm font-medium text-slate-400">/{aiLimit}</span>
@@ -488,7 +487,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                 {aiQuota.resetAt && <span>{lang === "tr" ? "Yenilenme" : "Resets"}: {formatDate(aiQuota.resetAt, language)}</span>}
               </div>
               <div className="mt-4 flex items-baseline justify-between gap-2 border-t border-white/[0.06] pt-3">
-                <span className="text-sm text-slate-400">{lang === "tr" ? "Kredi (satın alınan, süresi dolmaz)" : "Credits (purchased, never expire)"}</span>
+                <span className="inline-flex items-center gap-1.5 text-sm text-slate-400">{lang === "tr" ? "Kredi (satın alınan, süresi dolmaz)" : "Credits (purchased, never expire)"}<AiCreditHelp language={language} quota={aiQuota} topic="credit" onTopUp={() => setTopUpOpen(true)} /></span>
                 <span className={`text-lg font-bold ${aiCredit > 0 ? "text-emerald-300" : "text-slate-400"}`}>{aiCredit}</span>
               </div>
             </>

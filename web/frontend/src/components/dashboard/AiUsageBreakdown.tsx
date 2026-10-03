@@ -66,11 +66,21 @@ export function AiUsageBreakdown({
         {tr
           ? "Bu ay her AI aracından kaç istek yaptığın."
           : "How many requests you made to each AI tool this month."}
-        {quota.unlimited
-          ? ""
-          : ` · ${tr ? "Aylık hak" : "Monthly"}: ${monthlyLeft(quota)}/${quota.limit} · ${tr ? "Kredi" : "Credits"}: ${creditBalance(quota)}`}{" "}
-        <AiCreditHelp language={language} quota={quota} />
       </p>
+      {quota.unlimited ? (
+        <p className="mt-1.5"><AiCreditHelp language={language} quota={quota} /></p>
+      ) : (
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-slate-300">
+          <span className="inline-flex items-center gap-1.5">
+            {tr ? "Aylık hak" : "Monthly"}: {monthlyLeft(quota)}/{quota.limit}
+            <AiCreditHelp language={language} quota={quota} topic="monthly" />
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            {tr ? "Kredi" : "Credits"}: {creditBalance(quota)}
+            <AiCreditHelp language={language} quota={quota} topic="credit" />
+          </span>
+        </p>
+      )}
 
       {entries.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">

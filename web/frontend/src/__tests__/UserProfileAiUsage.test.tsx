@@ -73,11 +73,12 @@ describe("UserProfilePanel — AI Kullanımı", () => {
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
-  it("\"?\" düğmesi hak/kredi açıklamasını (sıfırlanma, düşme kuralı, araç bedelleri) açar", async () => {
+  it("aylık hak ve kredi satırlarının ayrı \"?\" düğmeleri kendi açıklamalarını açar", async () => {
     render(<UserProfilePanel {...baseProps} user={proUser} />);
     await screen.findByText(/Kullanılan: 40\/50/);
-    fireEvent.click(screen.getByRole("button", { name: /Aylık hak ve kredi nedir/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Aylık hak nedir/ }));
     expect(screen.getByText(/Her ay başında yenilenir/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Kredi nedir/ }));
     expect(screen.getByText(/yalnızca krediden düşer/)).toBeInTheDocument();
     expect(screen.getAllByText(/Sözleşme Denetçisi/).length).toBeGreaterThan(0);
   });
