@@ -12,6 +12,7 @@ import {
   compareController,
   detectSensitiveController,
   quotaController,
+  toolStatusController,
   topupPacksController,
   topupGrantController,
 } from "./ai.controller.js";
@@ -24,6 +25,9 @@ import {
 } from "./contract-review.controller.js";
 
 export const aiRouter = Router();
+
+// Kapalı araçların admin notları — giriş gerektirmez (misafir de "Çok Yakında" notunu görür).
+aiRouter.get("/tool-status", asyncHandler(toolStatusController));
 
 // Kota göstergesi (araç bunu okuyup "kalan hak"ı gösterir).
 aiRouter.get("/quota", requireAuth, requireAiAccess, asyncHandler(quotaController));

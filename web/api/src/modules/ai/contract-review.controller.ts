@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { logApiFailure } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
-import { isAiToolOpen } from "./ai-tool-switch.js";
+import { aiToolClosedMessage, isAiToolOpen } from "./ai-tool-switch.js";
 import {
   getAiQuota,
   reserveAiQuota,
@@ -196,7 +196,7 @@ export async function isContractReviewOpen(role: string | undefined): Promise<bo
   return isAiToolOpen("sozlesme-denetci", role);
 }
 async function assertContractReviewOpen(role: string | undefined): Promise<void> {
-  if (!(await isContractReviewOpen(role))) throw new HttpError(503, "Sözleşme Denetçisi henüz kullanıma açılmadı. Çok yakında.");
+  if (!(await isContractReviewOpen(role))) throw new HttpError(503, await aiToolClosedMessage("sozlesme-denetci"));
 }
 
 export async function prescanContractController(req: Request, res: Response): Promise<void> {

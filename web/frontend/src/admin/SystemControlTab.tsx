@@ -62,6 +62,9 @@ function betaRecord(root: Record<string, unknown>): Record<string, boolean> {
   return {};
 }
 
+/** Sunucudaki sınırla aynı (ai-tool-switch.ts). */
+const AI_NOTE_MAX = 200;
+
 export function SystemControlTab({ accessToken }: { accessToken: string }) {
   const [meta, setMeta] = useState<AdminControlMeta | null>(null);
   const [flagsRoot, setFlagsRoot] = useState<Record<string, unknown>>({});
@@ -70,6 +73,9 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
   // Yapay zekâ araçları: id → açık mı? `saved` sunucudaki hâl; `aiOpen` ekrandaki (kaydedilmemiş olabilir).
   const [aiOpen, setAiOpen] = useState<Record<string, boolean>>({});
   const [aiSaved, setAiSaved] = useState<Record<string, boolean>>({});
+  // Aracı kapatırken yazılan not: kullanıcıya 'Çok Yakında' ekranında ve hata mesajında aynen gösterilir.
+  const [aiNote, setAiNote] = useState<Record<string, string>>({});
+  const [aiNoteSaved, setAiNoteSaved] = useState<Record<string, string>>({});
   const [notif, setNotif] = useState(DEFAULT_NOTIF);
   // Site ayarları (site.settings) — sosyal medya hesaplarını düzenlemek için.
   const [siteRoot, setSiteRoot] = useState<Record<string, unknown>>({});
@@ -105,6 +111,14 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
       );
       setAiOpen(aiNow);
       setAiSaved(aiNow);
+      const nt = root.aiToolNotes && typeof root.aiToolNotes === "object" && !Array.isArray(root.aiToolNotes)
+        ? (root.aiToolNotes as Record<string, unknown>)
+        : {};
+      const notesNow = Object.fromEntries(
+        (meta.aiToolCatalog ?? []).map((t) => [t.id, typeof nt[t.id] === "string" ? (nt[t.id] as string) : ""]),
+      );
+      setAiNote(notesNow);
+      setAiNoteSaved(notesNow);
     }
 
     const n = all["global.notifications"];
@@ -219,7 +233,9 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
     }
   };
 
-  const aiDirty = (meta?.aiToolCatalog ?? []).some((t) => aiOpen[t.id] !== aiSaved[t.id]);
+  const aiDirty = (meta?.aiToolCatalog ?? []).some(
+    (t) => aiOpen[t.id] !== aiSaved[t.id] || (aiNote[t.id] ?? "") !== (aiNoteSaved[t.id] ?? ""),
+  );
 
   const saveAiTools = async () => {
     if (!meta?.aiToolCatalog) return;
@@ -231,10 +247,16 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
       const fr = all["global.flags"];
       const root = fr && typeof fr === "object" && !Array.isArray(fr) ? { ...(fr as Record<string, unknown>) } : {};
       const states = Object.fromEntries(meta.aiToolCatalog.map((t) => [t.id, aiOpen[t.id] ? "open" : "closed"]));
-      const next = { ...root, aiToolStates: states };
+      const notes = Object.fromEntries(
+        meta.aiToolCatalog
+          .map((t) => [t.id, (aiNote[t.id] ?? "").trim().slice(0, AI_NOTE_MAX)] as const)
+          .filter(([, v]) => v),
+      );
+      const next = { ...root, aiToolStates: states, aiToolNotes: notes };
       await putAdminSettingsPatches(accessToken, { "global.flags": next });
       setFlagsRoot(next);
       setAiSaved({ ...aiOpen });
+      setAiNoteSaved({ ...aiNote });
       setMsg("Yapay zekâ araçlarının durumu kaydedildi.");
       notifyRuntimeRefresh();
     } catch (e) {
@@ -428,7 +450,7 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
           <ul className="grid gap-3 sm:grid-cols-2">
             {meta.aiToolCatalog.map((t) => {
               const on = aiOpen[t.id] === true;
-              const changed = aiOpen[t.id] !== aiSaved[t.id];
+              const changed = aiOpen[t.id] !== aiSaved[t.id] || (aiNote[t.id] ?? "") !== (aiNoteSaved[t.id] ?? "");
               return (
                 <li
                   key={t.id}
@@ -449,6 +471,22 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
                       {changed ? <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10.5px] font-semibold text-amber-200">Kaydedilmedi</span> : null}
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-slate-400">{t.description}</p>
+                    {!on ? (
+                      <label className="mt-3 block">
+                        <span className="text-[11px] font-semibold text-slate-300">Kullanıcıya gösterilecek not</span>
+                        <textarea
+                          value={aiNote[t.id] ?? ""}
+                          maxLength={AI_NOTE_MAX}
+                          rows={2}
+                          onChange={(e) => setAiNote((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                          placeholder="Örn. Şirketleşme sürecindeyiz, Kasım'da açılacak. (Boş bırakırsanız: «Bu araç şu an kullanıma kapalı. Çok yakında.»)"
+                          className={`${adminInputClass} mt-1 min-h-[56px] text-xs`}
+                        />
+                        <span className="mt-0.5 block text-right text-[10.5px] text-slate-500">
+                          {(aiNote[t.id] ?? "").length}/{AI_NOTE_MAX}
+                        </span>
+                      </label>
+                    ) : null}
                   </div>
                   <button
                     type="button"
@@ -474,7 +512,7 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
               {busy ? "Kaydediliyor…" : "Araç durumlarını kaydet"}
             </button>
             {aiDirty ? (
-              <button type="button" onClick={() => setAiOpen({ ...aiSaved })} className="text-xs font-semibold text-slate-300 underline-offset-2 hover:underline">
+              <button type="button" onClick={() => { setAiOpen({ ...aiSaved }); setAiNote({ ...aiNoteSaved }); }} className="text-xs font-semibold text-slate-300 underline-offset-2 hover:underline">
                 Değişiklikleri geri al
               </button>
             ) : (

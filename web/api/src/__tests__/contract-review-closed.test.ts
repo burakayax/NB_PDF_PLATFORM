@@ -13,7 +13,7 @@ vi.mock("../modules/ai/contract-review.service.js", () => ({}));
 vi.mock("../modules/ai/contract-review.ledger.js", () => ({}));
 
 import { isContractReviewOpen, startContractReviewController, prescanContractController } from "../modules/ai/contract-review.controller.js";
-import { AI_TOOL_CATALOG, closedAiTools, isAiToolOpen, requireAiTool } from "../modules/ai/ai-tool-switch.js";
+import { AI_TOOL_CATALOG, AI_TOOL_CLOSED_MESSAGE, aiToolClosedMessage, closedAiToolNotes, closedAiTools, isAiToolOpen, requireAiTool } from "../modules/ai/ai-tool-switch.js";
 
 // Açma/kapama: admin paneli → Sistem Kontrol → "Yapay zekâ araçları" bölümü (global.flags.aiToolStates).
 describe("AI araçlarını tek tek açma/kapama", () => {
@@ -59,6 +59,24 @@ describe("AI araçlarını tek tek açma/kapama", () => {
     expect(json).toHaveBeenCalledWith(expect.objectContaining({ error: "ai_unavailable" }));
     await requireAiTool("pdf-ozetle")({ authUser: { role: "USER" } } as never, res, next);
     expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("admin'in yazdığı not kapalı araçta kullanıcıya gösterilir; yoksa varsayılan mesaj", async () => {
+    reg.get.mockResolvedValue({
+      aiToolStates: { "pdf-ceviri": "closed" },
+      aiToolNotes: { "pdf-ceviri": "  Bakımdayız, yarın açılacak.  ", "pdf-ozetle": "açık araçta not görünmez" },
+    });
+    expect(await aiToolClosedMessage("pdf-ceviri")).toBe("Bakımdayız, yarın açılacak.");
+    expect(await aiToolClosedMessage("pdf-sohbet")).toBe(AI_TOOL_CLOSED_MESSAGE);
+    expect(await closedAiToolNotes(undefined)).toEqual({ "pdf-ceviri": "Bakımdayız, yarın açılacak." });
+    const json = vi.fn();
+    await requireAiTool("pdf-ceviri")({ authUser: { role: "USER" } } as never, { status: vi.fn(() => ({ json })) } as never, vi.fn());
+    expect(json).toHaveBeenCalledWith({ error: "ai_unavailable", message: "Bakımdayız, yarın açılacak." });
+  });
+
+  it("çok uzun not 200 karakterde kesilir", async () => {
+    reg.get.mockResolvedValue({ aiToolStates: { "pdf-ceviri": "closed" }, aiToolNotes: { "pdf-ceviri": "a".repeat(500) } });
+    expect((await aiToolClosedMessage("pdf-ceviri")).length).toBe(200);
   });
 
   it("katalogdaki her araç benzersiz", () => {

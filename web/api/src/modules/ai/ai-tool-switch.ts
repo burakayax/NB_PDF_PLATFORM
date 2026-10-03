@@ -33,15 +33,25 @@ export const AI_TOOL_CATALOG: readonly { id: AiToolId; label: string; descriptio
 
 export type AiToolStates = Record<string, "open" | "closed">;
 
-async function readStates(): Promise<AiToolStates | null> {
+export const AI_TOOL_NOTE_MAX = 200;
+
+async function readFlags(): Promise<{ states: AiToolStates; notes: Record<string, string> } | null> {
   try {
     const raw = await getSetting(SITE_SETTING_KEYS.GLOBAL_FLAGS);
-    const s = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>).aiToolStates : undefined;
-    const out: AiToolStates = {};
+    const root = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+    const states: AiToolStates = {};
+    const notes: Record<string, string> = {};
+    const s = root.aiToolStates;
     if (s && typeof s === "object" && !Array.isArray(s)) {
-      for (const [k, v] of Object.entries(s as Record<string, unknown>)) if (v === "open" || v === "closed") out[k] = v;
+      for (const [k, v] of Object.entries(s as Record<string, unknown>)) if (v === "open" || v === "closed") states[k] = v;
     }
-    return out;
+    const n = root.aiToolNotes;
+    if (n && typeof n === "object" && !Array.isArray(n)) {
+      for (const [k, v] of Object.entries(n as Record<string, unknown>)) {
+        if (typeof v === "string" && v.trim()) notes[k] = v.trim().slice(0, AI_TOOL_NOTE_MAX);
+      }
+    }
+    return { states, notes };
   } catch {
     return null;
   }
@@ -50,10 +60,10 @@ async function readStates(): Promise<AiToolStates | null> {
 /** Araç bu rol için açık mı? ADMIN her zaman kullanabilir. */
 export async function isAiToolOpen(id: AiToolId, role: string | undefined): Promise<boolean> {
   if (role === "ADMIN") return true;
-  const states = await readStates();
-  if (!states) return false;
+  const f = await readFlags();
+  if (!f) return false;
   const def = AI_TOOL_CATALOG.find((t) => t.id === id)?.defaultOpen ?? false;
-  return states[id] ? states[id] === "open" : def;
+  return f.states[id] ? f.states[id] === "open" : def;
 }
 
 /** Kapalı araçların kimlikleri (arayüzün "Çok Yakında" göstermesi için). */
@@ -65,11 +75,26 @@ export async function closedAiTools(role: string | undefined): Promise<AiToolId[
 
 export const AI_TOOL_CLOSED_MESSAGE = "Bu araç şu an kullanıma kapalı. Çok yakında.";
 
+/** Admin'in araç kapatılırken yazdığı not; yoksa varsayılan mesaj. Kullanıcıya aynen gösterilir. */
+export async function aiToolClosedMessage(id: AiToolId): Promise<string> {
+  const f = await readFlags();
+  return f?.notes[id] || AI_TOOL_CLOSED_MESSAGE;
+}
+
+/** Kapalı araçlar için admin notları (yalnızca not yazılmış olanlar). */
+export async function closedAiToolNotes(role: string | undefined): Promise<Record<string, string>> {
+  const f = await readFlags();
+  const out: Record<string, string> = {};
+  if (!f) return out;
+  for (const id of await closedAiTools(role)) if (f.notes[id]) out[id] = f.notes[id];
+  return out;
+}
+
 /** Rota koruması: araç kapalıysa 503 (maliyet ve kredi doğmadan). */
 export function requireAiTool(id: AiToolId) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!(await isAiToolOpen(id, req.authUser?.role))) {
-      res.status(503).json({ error: "ai_unavailable", message: AI_TOOL_CLOSED_MESSAGE });
+      res.status(503).json({ error: "ai_unavailable", message: await aiToolClosedMessage(id) });
       return;
     }
     next();
