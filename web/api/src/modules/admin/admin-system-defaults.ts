@@ -61,7 +61,6 @@ export const FEATURE_FLAG_CATALOG = [
   { key: "contactForm", label: "İletişim formu", description: "Karşılama sayfasındaki iletişim bölümü." },
   { key: "workspaceTOOLS", label: "Çalışma alanı araçları", description: "Kapatıldığında üst düzeyde araçlara erişim kısıtlanabilir (istemci kontrolü)." },
   { key: "paymentsDisabled", label: "🔒 Ödemeleri kapat (ücretsiz lansman)", description: "AÇIK iken planlar 'Yakında' görünür ve hiçbir ödeme alınmaz (sandbox dahil). Güvenli varsayılan AÇIK. Şirket + gerçek iyzico hazır olunca BU ANAHTARI KAPAT." },
-  { key: "contractReviewDisabled", label: "🔒 Sözleşme Denetçisi'ni kapat (satış öncesi)", description: "AÇIK iken araç kullanıcılara 'Çok Yakında' görünür ve analiz başlatılamaz (yalnızca admin deneyebilir). Güvenli varsayılan AÇIK. Şirket kurulup satışa hazır olunca BU ANAHTARI KAPAT." },
 ] as const;
 
 export const BETA_FLAG_CATALOG = [

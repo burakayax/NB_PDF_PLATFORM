@@ -2,6 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { requireAiAccess } from "./ai.middleware.js";
+import { requireAiTool } from "./ai-tool-switch.js";
 import {
   summarizeController,
   chatController,
@@ -32,14 +33,15 @@ aiRouter.post(
   "/summarize",
   requireAuth,
   requireAiAccess,
+  requireAiTool("pdf-ozetle"),
   asyncHandler(summarizeController),
 );
-aiRouter.post("/chat", requireAuth, requireAiAccess, asyncHandler(chatController));
-aiRouter.post("/extract", requireAuth, requireAiAccess, asyncHandler(extractController));
-aiRouter.post("/translate", requireAuth, requireAiAccess, asyncHandler(translateController));
-aiRouter.post("/translate-segments", requireAuth, requireAiAccess, asyncHandler(translateSegmentsController));
-aiRouter.post("/compare", requireAuth, requireAiAccess, asyncHandler(compareController));
-aiRouter.post("/detect-sensitive", requireAuth, requireAiAccess, asyncHandler(detectSensitiveController));
+aiRouter.post("/chat", requireAuth, requireAiAccess, requireAiTool("pdf-sohbet"), asyncHandler(chatController));
+aiRouter.post("/extract", requireAuth, requireAiAccess, requireAiTool("pdf-veri-cikar"), asyncHandler(extractController));
+aiRouter.post("/translate", requireAuth, requireAiAccess, requireAiTool("pdf-ceviri"), asyncHandler(translateController));
+aiRouter.post("/translate-segments", requireAuth, requireAiAccess, requireAiTool("pdf-ceviri"), asyncHandler(translateSegmentsController));
+aiRouter.post("/compare", requireAuth, requireAiAccess, requireAiTool("pdf-karsilastir"), asyncHandler(compareController));
+aiRouter.post("/detect-sensitive", requireAuth, requireAiAccess, requireAiTool("hassas-veri-gizle"), asyncHandler(detectSensitiveController));
 
 // Sözleşme Denetçisi — uzun süren iş: başlat → durumu yokla → (isteğe bağlı) sil.
 aiRouter.post("/contract-review/prescan", requireAuth, requireAiAccess, asyncHandler(prescanContractController));

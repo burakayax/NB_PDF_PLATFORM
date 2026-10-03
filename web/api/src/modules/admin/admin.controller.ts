@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { AI_TOOL_CATALOG } from "../ai/ai-tool-switch.js";
 import type { Express } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
@@ -490,6 +491,7 @@ export async function adminControlMetaController(
   response.json({
     featureFlagCatalog: FEATURE_FLAG_CATALOG,
     betaFlagCatalog: BETA_FLAG_CATALOG,
+    aiToolCatalog: AI_TOOL_CATALOG,
     resettableScopes: RESETTABLE_SCOPES,
   });
 }

@@ -493,6 +493,8 @@ export async function uploadAdminMedia(accessToken: string, file: File): Promise
 export type AdminControlMeta = {
   featureFlagCatalog: readonly { key: string; label: string; description: string }[];
   betaFlagCatalog: readonly { key: string; label: string; description: string }[];
+  /** Tek tek açılıp kapatılabilen yapay zekâ araçları. */
+  aiToolCatalog?: readonly { id: string; label: string; description: string; defaultOpen: boolean }[];
   resettableScopes: readonly string[];
 };
 
