@@ -30,7 +30,8 @@ export const aiRouter = Router();
 aiRouter.get("/tool-status", asyncHandler(toolStatusController));
 
 // Kota göstergesi (araç bunu okuyup "kalan hak"ı gösterir).
-aiRouter.get("/quota", requireAuth, requireAiAccess, asyncHandler(quotaController));
+// Bakiye göstergesi AI erişimi olmayanlara da "Kredi 0" gösterebilsin diye yalnızca giriş ister (salt okunur).
+aiRouter.get("/quota", requireAuth, asyncHandler(quotaController));
 
 // requireAuth → authUser'ı set eder; requireAiAccess → anahtar/flag/plan kontrolü.
 aiRouter.post(

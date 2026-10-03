@@ -36,16 +36,31 @@ describe("AiCreditBadge — iki cüzdan", () => {
     expect(screen.queryByText(/\+ Kredi/)).not.toBeInTheDocument();
   });
 
-  it("'?' açıklaması: sıfırlanma tarihi, düşme kuralı ve araç bedelleri", () => {
+  it("aylık hak ve kredinin ayrı ayrı '?' açıklaması var; her biri yalnız kendi konusunu anlatır", () => {
     render(<AiCreditBadge quota={base} language="tr" onTopUp={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /Aylık hak ve kredi nedir/ }));
+    // Aylık hak açıklaması: yenilenme + devretmez; kredi anlatımı yok.
+    fireEvent.click(screen.getByRole("button", { name: /Aylık hak nedir/ }));
     expect(screen.getByText(/Her ay başında yenilenir/)).toBeInTheDocument();
     expect(screen.getByText(/devretmez/)).toBeInTheDocument();
+    expect(screen.queryByText(/Süresi dolmaz/)).not.toBeInTheDocument();
+    // Kredi açıklaması: süresi dolmaz + yalnız krediyle çalışan araç + iade; araç bedelleri.
+    fireEvent.click(screen.getByRole("button", { name: /Kredi nedir/ }));
     expect(screen.getByText(/Süresi dolmaz/)).toBeInTheDocument();
     expect(screen.getByText(/aylık hakka dokunmaz, yalnızca krediden düşer/)).toBeInTheDocument();
-    expect(screen.getByText(/iade edilir/)).toBeInTheDocument();
-    // Her araç ve bedeli listelenir.
+    expect(screen.getAllByText(/iade edilir/).length).toBeGreaterThan(0);
     for (const t of AI_TOOL_COSTS) expect(screen.getAllByText(t.tr, { exact: false }).length).toBeGreaterThan(0);
+  });
+
+  it("açıklama kutusu uzun olduğunda kaydırılabilir", () => {
+    render(<AiCreditBadge quota={base} language="tr" />);
+    fireEvent.click(screen.getByRole("button", { name: /Kredi nedir/ }));
+    expect(screen.getByRole("dialog").className).toMatch(/overflow-y-auto/);
+  });
+
+  it("aylık hakkı olmayan (limit 0) kullanıcıda yalnız kredi gösterilir: Kredi: 0", () => {
+    render(<AiCreditBadge quota={{ ...base, limit: 0, used: 0, remaining: 0, monthlyRemaining: 0, bonus: 0 }} language="tr" />);
+    expect(screen.queryByText(/Aylık:/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Kredi: 0/)).toBeInTheDocument();
   });
 
   it("yönetici için açıklama 'sınır yoktur' der", () => {

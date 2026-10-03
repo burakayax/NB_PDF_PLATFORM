@@ -228,17 +228,20 @@ export function DashboardTopNav({
   const [aiQuota, setAiQuota] = useState<AiQuota | null>(null);
   const [topUpOpen, setTopUpOpen] = useState(false);
 
+  // Bakiye (aylık hak + kredi) FREE dahil herkese gösterilir; ekip üyesi hariç.
+  const showAiBalance = !isTeamMember;
+
   const reloadAiQuota = useCallback(async () => {
-    if (!hasAiAccess) {
+    if (!showAiBalance) {
       setAiQuota(null);
       return;
     }
     const q = await fetchAiQuota(accessToken ?? null);
     setAiQuota(q);
-  }, [hasAiAccess, accessToken]);
+  }, [showAiBalance, accessToken]);
 
   useEffect(() => {
-    if (!hasAiAccess) {
+    if (!showAiBalance) {
       setAiQuota(null);
       return;
     }
@@ -253,7 +256,7 @@ export function DashboardTopNav({
       alive = false;
       window.clearInterval(id);
     };
-  }, [hasAiAccess, accessToken]);
+  }, [showAiBalance, accessToken]);
 
   const aiExhausted =
     hasAiAccess && !!aiQuota && !aiQuota.unlimited && (aiQuota.remaining ?? 0) <= 0;
@@ -291,6 +294,11 @@ export function DashboardTopNav({
     return tr ? "Ücretsiz" : "Free";
   };
 
+  // Aylık hak + kredi ayrı iki rozet (her birinin kendi "?" açıklaması var). Aylık rozeti yalnız
+  // planından aylık hak gelenlerde görünür; kredi rozeti herkeste, bakiye 0 ise "Kredi: 0".
+  const aiChips = showCreditsCenter && !creditBalanceLoading && !!aiQuota && !aiQuota.unlimited;
+  const chipBase = "items-center gap-1.5 rounded-full border py-1 pl-3.5 pr-2 text-[13px] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20";
+
   // AI erişimi olanlarda AI rozeti (Sparkles), diğerlerinde kredi (Coins).
   const PillIcon = hasAiAccess ? Sparkles : Coins;
 
@@ -319,7 +327,34 @@ export function DashboardTopNav({
       <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2 md:gap-3 lg:gap-4">
         {showCreditsCenter ? (
           <>
-            {creditsPanelVisible ? (
+            {aiChips && aiQuota ? (
+              <span className="hidden sm:inline-flex items-center gap-2">
+                {(aiQuota.limit ?? 0) > 0 ? (
+                  <span
+                    className={`inline-flex ${chipBase} ${
+                      monthlyLeft(aiQuota) <= 0 ? "border-red-500/50 bg-red-950/80 text-red-200" : "border-white/[0.06] bg-slate-800/95 text-slate-100"
+                    }`}
+                  >
+                    <Sparkles className={`h-4 w-4 shrink-0 ${monthlyLeft(aiQuota) <= 0 ? "text-red-400" : "text-amber-300/90"}`} strokeWidth={2.25} aria-hidden />
+                    <button type="button" onClick={() => onOpenCreditsPanel?.()} className="focus:outline-none">
+                      {tr ? "Aylık" : "Monthly"} {monthlyLeft(aiQuota)}/{aiQuota.limit}
+                    </button>
+                    <AiCreditHelp language={language} quota={aiQuota} topic="monthly" align="right" />
+                  </span>
+                ) : null}
+                <span
+                  className={`inline-flex ${chipBase} ${
+                    aiCreditBalance(aiQuota) > 0 ? "border-emerald-400/30 bg-emerald-950/60 text-emerald-100" : "border-white/[0.06] bg-slate-800/95 text-slate-300"
+                  }`}
+                >
+                  <Coins className={`h-4 w-4 shrink-0 ${aiCreditBalance(aiQuota) > 0 ? "text-emerald-300" : "text-amber-300/90"}`} strokeWidth={2.25} aria-hidden />
+                  <button type="button" onClick={() => onOpenCreditsPanel?.()} className="focus:outline-none">
+                    {tr ? "Kredi" : "Credits"} {aiCreditBalance(aiQuota)}
+                  </button>
+                  <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} topic="credit" align="right" />
+                </span>
+              </span>
+            ) : creditsPanelVisible ? (
               <button
                 type="button"
                 onClick={() => onOpenCreditsPanel?.()}
@@ -355,7 +390,7 @@ export function DashboardTopNav({
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </span>
             )}
-            {hasAiAccess && aiQuota ? (
+            {hasAiAccess && aiQuota && !aiChips ? (
               <span className="hidden sm:inline-flex">
                 <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} align="right" />
               </span>
