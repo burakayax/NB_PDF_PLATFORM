@@ -115,8 +115,8 @@ describe("TopUpModal", () => {
 });
 
 describe("paket örnek cümlesi", () => {
-  it("küçük paket basit işlem, büyük paket sözleşme denetimi + kalan basit işlem der; 125 ve 150 farklı görünür", () => {
-    expect(packExample(5, true)).toMatch(/≈ 5 basit işlem/);
+  it("küçük paket AI işlemi, büyük paket sözleşme denetimi + kalan AI işlemi der; 125 ve 150 farklı görünür", () => {
+    expect(packExample(5, true)).toMatch(/≈ 5 AI işlemi/);
     const a = packExample(125, true);
     const b = packExample(150, true);
     expect(a).toMatch(/1 detaylı sözleşme denetimi/);

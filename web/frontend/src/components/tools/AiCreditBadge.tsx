@@ -88,13 +88,13 @@ export function AiCreditHelp({
           <p className="mt-2.5 text-[12px] font-bold text-fuchsia-200">{tr ? "Aylık hak nedir?" : "What is the monthly allowance?"}</p>
           <p className="mt-0.5 text-[12px] leading-relaxed text-slate-300">
             {tr
-              ? `Paketinizle gelir. Her ay başında yenilenir${reset ? ` (sıradaki yenilenme: ${reset})` : ""}; kullanılmayan hak bir sonraki aya devretmez. Basit araçlarda (özet, sohbet, çeviri, veri çıkarma, karşılaştırma, veri gizleme) ve sözleşmenin hızlı taramasında kullanılır.`
-              : `Comes with your plan. Renews at the start of each month${reset ? ` (next renewal: ${reset})` : ""}; unused allowance does not roll over. Used by the standard tools and the contract quick scan.`}
+              ? `Paketinizle gelir. Her ay başında yenilenir${reset ? ` (sıradaki yenilenme: ${reset})` : ""}; kullanılmayan hak bir sonraki aya devretmez. Özet, sohbet, çeviri, veri çıkarma, karşılaştırma ve veri gizleme araçlarında, ayrıca sözleşmenin hızlı taramasında kullanılır.`
+              : `Comes with your plan. Renews at the start of each month${reset ? ` (next renewal: ${reset})` : ""}; unused allowance does not roll over. Used by the summary, chat, translation, data extraction, comparison and redaction tools, and by the contract quick scan.`}
           </p>
           <p className="mt-2 text-[12px] leading-relaxed text-slate-300">
             {tr
-              ? "Hakkınız bitince basit araçlar otomatik olarak kredinizden düşmeye başlar. Detaylı sözleşme denetimi aylık hakka hiç dokunmaz."
-              : "When it runs out, standard tools start using your credits automatically. The detailed contract audit never uses the monthly allowance."}
+              ? "Hakkınız bitince özet, sohbet, çeviri gibi araçlar otomatik olarak kredinizden düşmeye başlar. Detaylı sözleşme denetimi aylık hakka hiç dokunmaz."
+              : "When it runs out, tools like summary, chat and translation start using your credits automatically. The detailed contract audit never uses the monthly allowance."}
           </p>
           </>)}
 
@@ -114,8 +114,8 @@ export function AiCreditHelp({
 
           <p className="mt-2.5 text-[12px] font-bold text-fuchsia-200">{tr ? "Hangi durumda düşer?" : "When are they deducted?"}</p>
           <ul className="mt-0.5 space-y-1 text-[12px] leading-relaxed text-slate-300">
-            {showMonthly && <li>• {tr ? "Basit araçlar ve sözleşme hızlı taraması: önce aylık hakkınızdan düşer; hakkınız bitince otomatik olarak krediden düşer." : "Standard tools and the contract quick scan: your monthly allowance is used first; credits are used automatically once it runs out."}</li>}
-            {showCredit && <li>• {tr ? "Detaylı sözleşme denetimi (ağır araç): aylık hakka dokunmaz, yalnızca krediden düşer." : "Detailed contract audit (heavy tool): never uses the monthly allowance, only credits."}</li>}
+            {showMonthly && <li>• {tr ? "Özet, sohbet, çeviri gibi araçlar ve sözleşme hızlı taraması: önce aylık hakkınızdan düşer; hakkınız bitince otomatik olarak krediden düşer." : "Tools like summary, chat and translation, and the contract quick scan: your monthly allowance is used first; credits are used automatically once it runs out."}</li>}
+            {showCredit && <li>• {tr ? "Detaylı sözleşme denetimi: aylık hakka dokunmaz, yalnızca krediden düşer." : "Detailed contract audit: never uses the monthly allowance, only credits."}</li>}
             <li>• {tr ? "İşlem başarısız olursa harcanan hak/kredi iade edilir." : "If an operation fails, the allowance/credits spent are refunded."}</li>
             {unlimited && <li>• {tr ? "Yönetici hesabında sınır yoktur; hiçbir şey düşülmez." : "Admin accounts have no limit; nothing is deducted."}</li>}
           </ul>
