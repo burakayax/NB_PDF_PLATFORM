@@ -3,7 +3,7 @@
  * Bu bölüm mobil kullanıcının kalan AI hakkını profilden görmesini sağlar.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { UserProfilePanel } from "../components/dashboard/UserProfilePanel";
 import type { AuthUser } from "../api/auth";
 import { writeAccessToken } from "../lib/accessTokenStore";
@@ -67,7 +67,19 @@ describe("UserProfilePanel — AI Kullanımı", () => {
     expect(screen.getByRole("button", { name: /Ek AI Kredisi Al/ })).toBeInTheDocument();
     // Kota yüklendikten sonra kullanım ayrıntıları
     expect(await screen.findByText(/Kullanılan: 40\/50/)).toBeInTheDocument();
-    expect(screen.getByText(/bonus kredi/)).toBeInTheDocument();
+    // İki cüzdan: aylık hak (10/50 kaldı) ve satın alınan kredi (5) AYRI gösterilir.
+    expect(screen.getByText(/Aylık hak \(bu ay kalan\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Kredi \(satın alınan, süresi dolmaz\)/)).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
+  });
+
+  it("\"?\" düğmesi hak/kredi açıklamasını (sıfırlanma, düşme kuralı, araç bedelleri) açar", async () => {
+    render(<UserProfilePanel {...baseProps} user={proUser} />);
+    await screen.findByText(/Kullanılan: 40\/50/);
+    fireEvent.click(screen.getByRole("button", { name: /Aylık hak ve kredi nedir/ }));
+    expect(screen.getByText(/Her ay başında yenilenir/)).toBeInTheDocument();
+    expect(screen.getByText(/yalnızca krediden düşer/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Sözleşme Denetçisi/).length).toBeGreaterThan(0);
   });
 
   it("AI erişimi olmayan (FREE) planda AI Kullanımı bölümü gösterilmez", () => {

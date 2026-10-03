@@ -19,6 +19,7 @@ import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 import { AiPdfTool } from "../tools/AiPdfTool";
 import { AiBatchTool } from "../tools/AiBatchTool";
 import { AiCompareTool } from "../tools/AiCompareTool";
+import { ContractReviewTool } from "../tools/ContractReviewTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
@@ -45,6 +46,7 @@ import {
   ShieldCheck,
   Zap,
   type LucideIcon,
+  Gavel,
 } from "lucide-react";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
@@ -62,7 +64,7 @@ export const isFreeToolId = (id: string): id is FreeToolId =>
  * baş başa kalmaz.
  */
 type AiToolId =
-  | "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact";
+  | "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract";
 
 type HeroMeta = { Icon: LucideIcon; tr: string; en: string; trDesc: string; enDesc: string };
 
@@ -81,6 +83,8 @@ const AI_TOOLS: { id: AiToolId; meta: HeroMeta }[] = [
     trDesc: "İki sürüm arasındaki farkları gösterir.", enDesc: "Shows what changed between two versions." } },
   { id: "redact", meta: { Icon: Eraser, tr: "Veri Gizle", en: "Redact",
     trDesc: "Kimlik ve IBAN gibi bilgileri karartır.", enDesc: "Blacks out IDs and account numbers." } },
+  { id: "contract", meta: { Icon: Gavel, tr: "Sözleşme Denetle", en: "Audit Contract",
+    trDesc: "Riskli maddeleri bulur, belgede boyar. Hızlı tarama ya da mevzuatlı detaylı denetim.", enDesc: "Finds and highlights risky clauses. Quick scan or a detailed audit with a current-law check." } },
 ];
 
 const EDITOR_META: HeroMeta = {
@@ -981,6 +985,14 @@ function Hero({
               />
             ) : aiTool === "compare" ? (
               <AiCompareTool
+                language={language}
+                accessToken={accessToken}
+                onLogin={onLogin}
+                onUpgrade={onUpgrade}
+                comingSoon={aiComingSoon}
+              />
+            ) : aiTool === "contract" ? (
+              <ContractReviewTool
                 language={language}
                 accessToken={accessToken}
                 onLogin={onLogin}

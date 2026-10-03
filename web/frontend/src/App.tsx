@@ -324,6 +324,9 @@ const AiBatchTool = lazyWithRetry(() =>
 const AiCompareTool = lazyWithRetry(() =>
   import("./components/tools/AiCompareTool").then((m) => ({ default: m.AiCompareTool })),
 );
+const ContractReviewTool = lazyWithRetry(() =>
+  import("./components/tools/ContractReviewTool").then((m) => ({ default: m.ContractReviewTool })),
+);
 const AiRedactTool = lazyWithRetry(() =>
   import("./components/tools/AiRedactTool").then((m) => ({ default: m.AiRedactTool })),
 );
@@ -958,7 +961,7 @@ function App() {
    * IndexedDB'yi boş bulup aynı dosyayı siliyordu. Aynı araçtaysak silmeyi atlıyoruz.
    */
   const deliveredForRef = useRef<{ slug: string; file: File } | null>(null);
-  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -3003,6 +3006,7 @@ function App() {
         p === "/tools/ai-toplu-islem" ||
         p === "/tools/pdf-karsilastir" ||
         p === "/tools/hassas-veri-gizle" ||
+        p === "/tools/sozlesme-denetci" ||
         p === "/tools/belge-tara" ||
         p === "/tools/aranabilir-pdf" ||
         p === "/tools/udf-to-pdf" ||
@@ -3868,10 +3872,10 @@ function App() {
 
   /** AI aracına geç — açık PDF varsa beraberinde taşı (batch/compare çok dosyalı, taşınmaz). */
   async function openAiWithOpenPdf(
-    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact",
+    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract",
   ) {
     const carried =
-      mode !== "batch" && mode !== "compare" ? await carryOpenPdfToPanel() : false;
+      mode !== "batch" && mode !== "compare" && mode !== "contract" ? await carryOpenPdfToPanel() : false;
     setMergeShareReady(null);
     setMergeShare(null);
     if (!carried) setPendingToolFile(null);
@@ -5448,6 +5452,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "sozlesme-denetci") {
+      return (
+        <GuestSeoToolPage slug="sozlesme-denetci" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <ContractReviewTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "hassas-veri-gizle") {
       return (
         <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -6585,6 +6598,14 @@ function App() {
                     />
                   ) : aiModal === "compare" ? (
                     <AiCompareTool
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                      comingSoon={aiComingSoon}
+                    />
+                  ) : aiModal === "contract" ? (
+                    <ContractReviewTool
                       language={language}
                       accessToken={accessToken}
                       onLogin={() => setView("login")}

@@ -121,3 +121,105 @@ export function netFromGrossTry(gross: string): string {
   }
   return (Math.round((g / (1 + KDV_RATE)) * 100) / 100).toFixed(2);
 }
+
+/**
+ * EK AI KREDİSİ PAKETLERİ (top-up) — tek fiyat kaynağı. `ai.quota.ts` buradan okur.
+ *
+ * İKİ CÜZDAN: Plandan gelen AYLIK HAK her ay sıfırlanır ve yalnız basit araçlarda
+ * geçer. Satın alınan KREDİ kalıcıdır; basit araçlarda aylık hak bitince devreye girer,
+ * ağır araçlar (Sözleşme Denetçisi) YALNIZ krediyle çalışır.
+ *
+ * FİYAT GEREKÇESİ (2026-10-02, ölçülerek): Sözleşme Denetçisi tek çalışmada ~2,1 $
+ * (küçük belge) ile ~3 $ (en uzun belge) arasında maliyet çıkarır — basit bir
+ * araçtan (~0,035 $) 60-90 kat. TL paketleri eskiden USD paketlerinin kabaca yarı
+ * fiyatındaydı ve TL kanalında denetim zarar yazdırıyordu. TL fiyatları USD fiyatının
+ * 60 ₺/$ kuruyla ve %20 KDV dahil karşılığına çekildi (ör. 500 kredi: 29,99 $ ↔ 2.299 ₺);
+ * böylece her paket, en uzun belgede bile en az %55 marj bırakır.
+ *
+ * KUR ÖLÇÜMÜ (2026-10-02, Anthropic bakiye yüklemesi): 20 $ + 4 $ vergi = 24 $ → 1.208 ₺;
+ * gerçek kur ~50,3 ₺/$. Vergi dahil 1 API dolarının bize maliyeti ~60,4 ₺'dir (vergi geri
+ * alınamıyorsa). 60 ₺/$ varsayımı, maliyete bu %20 vergiyi de KATAR: yani TL fiyatlar
+ * vergi geri alınamasa bile %55 marj verir. Kur 60'ı aşarsa TL paketler yükseltilmelidir;
+ * zarar ancak kur ~150 ₺/$ olunca başlar (`plan-catalogue.test.ts` her derlemede doğrular).
+ *
+ * Kredi başına fiyat, paket büyüdükçe düşer (50 → 500).
+ */
+export const TOPUP_PACKS = [
+  // Pay-per-use — abone olmayan kullanıcı için tek/az işlem (basit araçlar).
+  { id: "ai-1", credits: 1, priceUSD: 0.99, priceTRY: 29 },
+  { id: "ai-5", credits: 5, priceUSD: 3.49, priceTRY: 89 },
+  // Toplu paketler.
+  { id: "ai-50", credits: 50, priceUSD: 4.99, priceTRY: 359 },
+  // Tek bir (en uzun belge dahil) sözleşme denetimini karşılayan en küçük paket.
+  { id: "ai-125", credits: 125, priceUSD: 10.49, priceTRY: 759 },
+  { id: "ai-150", credits: 150, priceUSD: 11.99, priceTRY: 869, popular: true },
+  { id: "ai-500", credits: 500, priceUSD: 29.99, priceTRY: 2299 },
+] as const;
+
+/**
+ * SÖZLEŞME DENETÇİSİ hak bedeli ve maliyet modeli.
+ *
+ * ÖLÇÜM: 3,7 bin karakterlik tuzaklı örnek sözleşmede, claude-opus-5-5 ile 4 aşama
+ * (ön tarama + iki paralel analiz + 16 resmî-kaynak araması + denetim) ≈ 117 bin giriş +
+ * 54 bin çıkış token + 40 arama ≈ 2,1 $. Maliyetin çoğu çıktıdır (belge uzunluğundan
+ * bağımsız); belge uzadıkça yalnızca giriş payı artar: en uzun belgede (240 bin karakter)
+ * ~3 $ tahmin edilir (UZUN BELGE ÖLÇÜLMEDİ — gerçek kullanım günlüğüyle doğrulanmalı).
+ *
+ * Hak bedeli, en ucuz paketin (500 kredi) kredi başı fiyatında bile %55 marj bırakacak
+ * şekilde seçildi; bu yüzden basit araçların aylık hakkından DÜŞMEZ, yalnız kredi geçer.
+ */
+export const CONTRACT_AUDIT = {
+  baseCredits: 85,
+  charsPerCredit: 6_500,
+  minCredits: 85,
+  maxCredits: 122,
+  /** Küçük belgede ölçülen maliyet (USD). */
+  costUsdSmall: 2.1,
+  /** Belge uzadıkça eklenen (giriş) maliyet: 1000 karakter başına USD. */
+  costUsdPerThousandChars: 0.0038,
+} as const;
+
+/** Bir sözleşme denetiminin kredi bedeli (belge uzunluğuna göre). */
+export function contractAuditCredits(chars: number): number {
+  const c = CONTRACT_AUDIT;
+  const raw = c.baseCredits + Math.ceil(Math.max(0, chars) / c.charsPerCredit);
+  return Math.min(c.maxCredits, Math.max(c.minCredits, raw));
+}
+
+/** Tahmini gerçek maliyet (USD) — marj testi ve kalibrasyon için. */
+export function contractAuditCostUsd(chars: number): number {
+  return CONTRACT_AUDIT.costUsdSmall + (Math.max(0, chars) / 1000) * CONTRACT_AUDIT.costUsdPerThousandChars;
+}
+
+/**
+ * SÖZLEŞME DENETÇİSİ — HIZLI TARAMA: tek geçiş, mevzuat araması yok, en çok 8 bulgu.
+ *
+ * ÖLÇÜM (2026-10-02, 5 sayfalık örnek, claude-opus-5-5): ~11 bin giriş + ~7,3 bin çıkış
+ * token ≈ 0,19 $ ve ~66 sn — tam denetimin (~2,3 $) yaklaşık on ikide biri. Belge uzadıkça
+ * yalnız giriş payı artar (uzun belge ÖLÇÜLMEDİ; 240 bin karakterde ~0,45 $ tahmin).
+ *
+ * Basit bir araçtan (~0,035 $) pahalı olduğu için birkaç hak harcar: basit araçlar gibi önce
+ * AYLIK HAKTAN, hak bitince krediden düşer (tam denetimden farkı bu). Bedel, en ucuz paketin
+ * kredi başı fiyatında bile %55 marj bırakacak şekilde seçildi; plan testindeki "hak başı
+ * 0,035 $" varsayımıyla da maliyetini aşmaz (20 hak × 0,035 $ ≥ 0,45 $).
+ */
+export const QUICK_SCAN = {
+  baseCredits: 8,
+  charsPerStep: 20_000,
+  maxCredits: 20,
+  /** Küçük belgede ölçülen maliyet (USD). */
+  costUsdSmall: 0.19,
+  /** Belge uzadıkça eklenen (giriş) maliyet: 1000 karakter başına USD. */
+  costUsdPerThousandChars: 0.0011,
+} as const;
+
+/** Bir hızlı taramanın hak/kredi bedeli (belge uzunluğuna göre). */
+export function quickScanCredits(chars: number): number {
+  const q = QUICK_SCAN;
+  return Math.min(q.maxCredits, q.baseCredits + Math.floor(Math.max(0, chars) / q.charsPerStep));
+}
+
+/** Tahmini gerçek maliyet (USD) — marj testi ve kalibrasyon için. */
+export function quickScanCostUsd(chars: number): number {
+  return QUICK_SCAN.costUsdSmall + (Math.max(0, chars) / 1000) * QUICK_SCAN.costUsdPerThousandChars;
+}

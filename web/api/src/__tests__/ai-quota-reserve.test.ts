@@ -40,7 +40,7 @@ vi.mock("../config/env.js", () => ({
   },
 }));
 
-const { reserveAiQuota, refundAiQuota } = await import("../modules/ai/ai.quota.js");
+const { reserveAiQuota, refundAiQuota, reservePurchasedCredits, refundPurchasedCredits } = await import("../modules/ai/ai.quota.js");
 
 beforeEach(() => {
   usageUpdateMany.mockReset();
@@ -225,5 +225,39 @@ describe("translationCreditCost", () => {
     expect(translationCreditCost(["x".repeat(250_000)])).toBe(13);
 
     expect(totalSegmentChars(["abc", "de"])).toBe(5);
+  });
+});
+
+
+describe("ağır araç: yalnız satın alınan kredi", () => {
+  it("aylık hakka DOKUNMADAN yalnız kredi düşer", async () => {
+    userUpdateMany.mockResolvedValue({ count: 1 });
+    const ok = await reservePurchasedCredits("u1", "USER", "contract-review", 100);
+    expect(ok).toBe(true);
+    expect(usageUpdateMany).not.toHaveBeenCalled(); // aylık sayaç artmaz
+    expect(userUpdateMany).toHaveBeenCalledWith({
+      where: { id: "u1", bonusAiCredits: { gte: 100 } },
+      data: { bonusAiCredits: { decrement: 100 } },
+    });
+  });
+
+  it("kredi yetmiyorsa reddeder (aylık hak kalsa bile)", async () => {
+    userUpdateMany.mockResolvedValue({ count: 0 });
+    expect(await reservePurchasedCredits("u1", "USER", "contract-review", 100)).toBe(false);
+    expect(usageUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("YÖNETİCİ muaftır: kredi düşülmez, her zaman izin verilir", async () => {
+    expect(await reservePurchasedCredits("admin1", "ADMIN", "contract-review", 120)).toBe(true);
+    expect(userUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("iade krediyi geri yükler; yöneticide işlem yapmaz", async () => {
+    userUpdateMany.mockResolvedValue({ count: 1 });
+    await refundPurchasedCredits("u1", "USER", 100);
+    expect(userUpdateMany).toHaveBeenCalledWith({ where: { id: "u1" }, data: { bonusAiCredits: { increment: 100 } } });
+    userUpdateMany.mockClear();
+    await refundPurchasedCredits("admin1", "ADMIN", 100);
+    expect(userUpdateMany).not.toHaveBeenCalled();
   });
 });

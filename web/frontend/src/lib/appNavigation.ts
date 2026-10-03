@@ -134,6 +134,7 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/ai-toplu-islem" ||
     rawPath === "/tools/pdf-karsilastir" ||
     rawPath === "/tools/hassas-veri-gizle" ||
+    rawPath === "/tools/sozlesme-denetci" ||
     rawPath === "/tools/belge-tara" ||
     rawPath === "/tools/aranabilir-pdf" ||
     rawPath === "/tools/gorsel-sikistir" ||
@@ -217,7 +218,7 @@ export function getInitialViewFromLocation(): AppView {
 export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/pdf-ozetle", "/tools/pdf-sohbet", "/tools/pdf-duzenle", "/tools/pdf-imzala",
   "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
-  "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle",
+  "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle", "/tools/sozlesme-denetci",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
   "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
@@ -251,7 +252,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
 /** AI araç slug'ı → "ai" panelinin modu. */
 export const AI_TOOL_MODES: Record<
   string,
-  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare"
+  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare" | "contract"
 > = {
   "pdf-ozetle": "summarize",
   "pdf-sohbet": "chat",
@@ -260,6 +261,7 @@ export const AI_TOOL_MODES: Record<
   "hassas-veri-gizle": "redact",
   "ai-toplu-islem": "batch",
   "pdf-karsilastir": "compare",
+  "sozlesme-denetci": "contract",
 };
 /**
  * Panel → araç slug'ı (SPECIAL_TOOL_PANELS'in tersi).

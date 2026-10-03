@@ -7,10 +7,444 @@
 
 export const BLOG_BASE = "/blog";
 
-/** Blok tipleri: p | lead | h2 | h3 | ul | ol | tip | steps | cta */
+/** Blok tipleri: p | lead | h2 | h3 | ul | ol (isteğe bağlı start: başlangıç numarası) | tip | steps | cta */
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
 export const BLOG_POSTS = [
+  post(
+    {
+      slug: "sozlesme-imzalamadan-once-kontrol-listesi",
+      date: "2026-10-02",
+      updated: "2026-10-02",
+      readMinutes: 6,
+      tags: { tr: ["Sözleşme", "Kontrol Listesi", "Risk"], en: ["Contracts", "Checklist", "Risk"] },
+      accent: "violet",
+      tool: "/tools/sozlesme-denetci",
+    },
+    {
+      title: "Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey",
+      description:
+        "Tedarik, kira ya da hizmet sözleşmesini imzalamadan önce bakmanız gereken 12 madde: ceza, fesih, ödeme, süreler, ekler ve eksik hükümler.",
+      excerpt:
+        "Sözleşmelerdeki sorunların çoğu uzun ve karmaşık hükümlerde değil, gözden kaçan küçük ayrıntılarda saklanır. İmzadan önce her sözleşmede bakılması gereken 12 noktayı derledik.",
+      blocks: [
+        { t: "lead", x: "Çoğu sözleşme uyuşmazlığı, imza anında kimsenin fark etmediği küçük bir ayrıntıdan çıkar: bir ekte farklı yazan süre, tavanı olmayan bir ceza ya da yalnızca bir tarafa tanınmış bir fesih hakkı. Aşağıdaki liste, imzadan önce her sözleşmede gözden geçirmeniz gereken 12 noktayı sıralar." },
+        { t: "h2", x: "1-4: Temel bilgiler" },
+        { t: "ol", items: [
+          "Taraflar ve yetki: Unvanlar, vergi numaraları ve imzayı atan kişinin şirketi bağlama yetkisi doğru mu?",
+          "Konu ve kapsam: Neyin, ne miktarda, hangi nitelikte teslim edileceği ya da yapılacağı açık mı? Belirsiz ifadeler (“makul süre”, “gerekli görülen”) sonradan tartışma çıkarır.",
+          "Bedel ve ödeme: Tutar KDV dahil mi hariç mi? Vade kaç gün ve neresinden başlıyor? Fatura kesmek bir onaya bağlıysa o onayın süresi var mı?",
+          "Süreler: Teslim, bildirim, itiraz ve yenilememe süreleri kaç gün? Her süre için kim, nasıl bildirim yapacak (noter, e-posta, iadeli taahhütlü)?",
+        ] },
+        { t: "h2", x: "5-8: Para ve sorumluluk" },
+        { t: "ol", start: 5, items: [
+          "Gecikme cezası ve cezai şart: Oran nedir, üst sınırı var mı, hangi tutar üzerinden hesaplanıyor? Ayrıca tazminat da isteniyorsa ceza fiilen tavansız demektir.",
+          "Fesih: Hak karşılıklı mı? Bildirim süresi kaç gün? Fesihte yapılan işin bedeli ödeniyor mu?",
+          "Sorumluluk sınırı: Dolaylı zararlar, kâr kaybı ve ağır kusur nasıl düzenlenmiş? Üst sınır yalnızca bir taraf için mi var?",
+          "Fikri mülkiyet ve gizlilik: Sizin tasarım, kalıp ya da yönteminiz karşı tarafa devrediliyor mu? Gizlilik süresiz mi ve istisnalar karşılıklı mı?",
+        ] },
+        { t: "h2", x: "9-12: Yapı ve eksikler" },
+        { t: "ol", start: 9, items: [
+          "Ekler: Atıf yapılan her ek elinizde mi? “Ek ile madde çelişirse ek geçerlidir” gibi bir öncelik kuralı varsa ekler dikkatle okunmalı.",
+          "Süre ve yenileme: Sözleşme kendiliğinden uzuyor mu? Yenilememe bildirimi için son tarih ne?",
+          "Uyuşmazlık: Hangi mahkeme ya da tahkim yetkili? Uygulanacak hukuk yazılı mı? Uzak bir şehir, takip maliyetini artırır.",
+          "Olmayanlar: Mücbir sebep, hasarın geçişi, garanti ve ayıp süresi, devir yasağı, veri koruma gibi olması gereken hükümler eksik mi?",
+        ] },
+        { t: "tip", x: "Yalnızca okumak yetmez: oranları rakama dökün. “Günlük %1” bir cümle olarak masum görünür; 2.400.000 TL’lik bir işte günde 24.000 TL demektir." },
+        { t: "cta", title: "Sözleşme Denetçisi", x: "Bu listeyi sizin yerinize uygular: çelişkileri, ceza hesaplarını ve eksik maddeleri bulur, riskli yerleri belgede boyar.", btn: "Aracı aç", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "Listeyi nasıl kullanmalı?" },
+        { t: "p", x: "Önce ceza, fesih, ödeme ve sorumluluk maddelerine bakın; parasal etkisi en büyük olan yerler bunlardır. Sonra ekleri ve öncelik kurallarını kontrol edin. Sorun gördüğünüz her madde için iki şey yazın: neden sorun olduğu ve karşı tarafın kabul edebileceği, dengeli bir alternatif." },
+        { t: "p", x: "Bu liste bir ön değerlendirme aracıdır ve hukuki danışmanlık yerine geçmez. Yüksek tutarlı ya da uzun süreli sözleşmelerde imzadan önce bir avukatın görüşünü almak, bulduğunuz sorunları çok daha etkili müzakere etmenizi sağlar." },
+      ],
+      faq: [
+        { q: "Hangi madde en çok sorun çıkarır?", a: "En sık sorun; ceza ve fesih maddelerinden, ödeme koşullarından ve belgede olmayan eklerden çıkar. Parasal etkisi büyük olduğu için önce bunlara bakın." },
+        { q: "Standart bir metni değiştirtmek mümkün mü?", a: "Çoğu zaman en azından en riskli birkaç maddede pazarlık mümkündür. Karşı tarafa “karşılıklılık” ve “makul tavan” gibi dengeli talepler sunmak, tümüyle reddedilme ihtimalini azaltır." },
+        { q: "Sözleşmeyi yapay zekâ ile kontrol edebilir miyim?", a: "Evet; Sözleşme Denetçisi belgeyi okuyup çelişkileri, ceza hesaplarını ve eksik maddeleri bulur. Sonuç bir ön değerlendirmedir ve hukuki danışmanlık değildir." },
+      ],
+    },
+    {
+      title: "12 Things to Check Before Signing a Contract",
+      description:
+        "Before signing a supply, lease or services contract, check these 12 points: penalties, termination, payment, deadlines, annexes and missing clauses.",
+      excerpt:
+        "Most contract problems hide in small details nobody noticed, not in long complicated clauses. Here are 12 points to review in every contract before you sign.",
+      blocks: [
+        { t: "lead", x: "Most contract disputes start with a small detail nobody noticed at signing: a different deadline in an annex, an uncapped penalty, or a termination right granted to one side only. The list below sets out 12 points to review in every contract before you sign." },
+        { t: "h2", x: "1-4: The basics" },
+        { t: "ol", items: [
+          "Parties and authority: Are names, tax numbers and the signatory's authority to bind the company correct?",
+          "Subject and scope: Is it clear what is delivered or done, in what quantity and quality? Vague wording (“reasonable time”, “as deemed necessary”) causes arguments later.",
+          "Price and payment: Is the amount VAT-inclusive or exclusive? How many days is the term and from when does it run? If invoicing depends on an approval, is there a deadline for that approval?",
+          "Deadlines: What are the delivery, notice, objection and non-renewal periods? For each, who gives notice and how (notary, email, registered mail)?",
+        ] },
+        { t: "h2", x: "5-8: Money and liability" },
+        { t: "ol", start: 5, items: [
+          "Late-delivery penalty: What is the rate, is there a cap, and on what amount is it calculated? If damages can also be claimed, the penalty is effectively uncapped.",
+          "Termination: Is the right mutual? What is the notice period? Is work already done paid for on termination?",
+          "Liability cap: How are indirect losses, lost profit and gross negligence treated? Is a cap given to one side only?",
+          "IP and confidentiality: Are your designs, tooling or methods transferred to the other side? Is confidentiality unlimited, and are exceptions mutual?",
+        ] },
+        { t: "h2", x: "9-12: Structure and gaps" },
+        { t: "ol", start: 9, items: [
+          "Annexes: Do you have every annex referred to? If there is a priority rule like “if an annex and a clause conflict, the annex prevails”, read the annexes carefully.",
+          "Term and renewal: Does the contract renew automatically? What is the deadline for a non-renewal notice?",
+          "Disputes: Which court or arbitration has jurisdiction? Is the governing law stated? A distant city raises enforcement costs.",
+          "What is missing: force majeure, transfer of risk, warranty and defect periods, assignment, data protection — are expected clauses absent?",
+        ] },
+        { t: "tip", x: "Reading is not enough: turn rates into numbers. “1% per day” sounds harmless as a sentence; on a 2,400,000 TL job it is 24,000 TL per day." },
+        { t: "cta", title: "Contract Auditor", x: "Applies this list for you: finds contradictions, penalty maths and missing clauses, and highlights risky spots in your document.", btn: "Open the tool", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "How to use the list" },
+        { t: "p", x: "Start with penalty, termination, payment and liability clauses; they have the largest financial effect. Then check annexes and priority rules. For each clause you flag, write two things: why it is a problem and a balanced alternative the other side could accept." },
+        { t: "p", x: "This list is a preliminary aid and does not replace legal advice. For high-value or long-term contracts, getting a lawyer's view before signing lets you negotiate what you found far more effectively." },
+      ],
+      faq: [
+        { q: "Which clause causes the most trouble?", a: "Most often penalty and termination clauses, payment terms and annexes that are not in the document. Check these first because their financial effect is largest." },
+        { q: "Can a standard form be changed?", a: "Usually at least the few riskiest clauses can be negotiated. Asking for balanced terms such as “mutuality” and “a reasonable cap” lowers the chance of a flat refusal." },
+        { q: "Can I check a contract with AI?", a: "Yes; the Contract Auditor reads the document and finds contradictions, penalty maths and missing clauses. The result is a preliminary assessment, not legal advice." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "gecikme-cezasi-cezai-sart-hesaplama",
+      date: "2026-10-02",
+      updated: "2026-10-02",
+      readMinutes: 6,
+      tags: { tr: ["Cezai Şart", "Gecikme Cezası", "Hesaplama"], en: ["Penalty Clause", "Late Penalty", "Calculation"] },
+      accent: "rose",
+      tool: "/tools/sozlesme-denetci",
+    },
+    {
+      title: "Gecikme Cezası ve Cezai Şart Nasıl Hesaplanır?",
+      description:
+        "Sözleşmedeki günlük ceza oranını TL'ye çevirin: örnek hesaplar, tavanın önemi, KDV tuzağı ve imzadan önce bakılacak noktalar.",
+      excerpt:
+        "“Günlük %0,5” bir cümle olarak masum görünür. Ama 20 günde bedelin %10’una ulaşır. Cezai şartı rakama dökmeyi, tavanın neden kritik olduğunu ve nelere dikkat edeceğinizi anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Sözleşmelerde gecikme cezası genellikle “her gecikilen gün için sözleşme bedelinin yüzde X’i” biçiminde yazılır. Cümle kısa, sonuç ise büyüktür. İmzadan önce oranı rakama çevirmek, bu maddenin sizi nereye götürebileceğini açıkça gösterir." },
+        { t: "h2", x: "Temel hesap" },
+        { t: "p", x: "Gecikme cezası = Hesaplamaya esas bedel × günlük oran × gecikilen gün sayısı. Bedeli 1.000.000 TL, günlük oranı %0,5 olan bir işte gün başına ceza 5.000 TL’dir. 20 günlük gecikme 100.000 TL, yani bedelin %10’udur. Aynı iş %1 günlük oranla yazılsaydı aynı tutara 10 günde ulaşılırdı." },
+        { t: "ul", items: [
+          "Günlük %0,1: 10 günde %1, 100 günde %10.",
+          "Günlük %0,5: 20 günde %10, 100 günde %50.",
+          "Günlük %1: 10 günde %10, 100 günde bedelin tamamı.",
+        ] },
+        { t: "h2", x: "Tavan var mı?" },
+        { t: "p", x: "Bir cezai şartı sınırlayan en önemli unsur tavandır: “toplam ceza sözleşme bedelinin %10’unu geçemez” gibi. Tavan yoksa ceza, bedelin tamamına ve hatta ötesine büyüyebilir. Cezanın yanında “ayrıca tazminat da istenebilir” yazıyorsa ceza fiilen tavansızdır." },
+        { t: "h2", x: "Hangi bedel üzerinden hesaplanıyor?" },
+        { t: "p", x: "“Sözleşme bedeli” KDV dahil mi hariç mi, yoksa yalnızca geciken kısım mı? Tanım yazılı değilse karşı taraf en yüksek rakamı esas alabilir. KDV dahil bedel üzerinden hesaplanan ceza, KDV hariç hesaba göre %20 daha yüksek çıkar." },
+        { t: "h2", x: "Gecikmenin sebebi kimde?" },
+        { t: "p", x: "Teslim süresi, karşı tarafın vermesi gereken bir onaya, numuneye ya da belgeye bağlıysa, o gecikme sizin hesabınıza yazılmamalıdır. Sözleşmede “karşı tarafın kaynaklı gecikmelerde süre uzar” şeklinde bir hüküm olup olmadığını kontrol edin; yoksa eklemek isteyin." },
+        { t: "cta", title: "Sözleşme Denetçisi", x: "Ceza oranlarını sözleşme bedelinize göre TL’ye çevirir, tavan olup olmadığını ve ekle çelişen süreleri gösterir.", btn: "Aracı aç", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "Hukuki çerçeve konusunda dikkat" },
+        { t: "p", x: "Cezai şartın fahiş olması halinde hâkimin indirim yapabileceği genel bir kural olsa da, tacirler arasındaki ticari işlerde bu konuda ayrı bir düzenleme bulunur ve indirim imkânı kısıtlı olabilir. Bu nedenle tacirseniz, ağır bir ceza maddesini imzadan sonra mahkemede düzeltmeye güvenmek yerine imzadan önce müzakere etmek çok daha güvenlidir. Hükümlerin güncel metnini mevzuat.gov.tr gibi resmî kaynaktan doğrulayın; bu yazı hukuki danışmanlık değildir." },
+        { t: "tip", x: "Müzakerede iki talep çoğu zaman kabul görür: toplam cezaya bir tavan konması ve cezanın karşılıklı olması (yani sizin alacağınızın gecikmesi için de bir ceza ya da faiz öngörülmesi)." },
+      ],
+      faq: [
+        { q: "Makul bir günlük ceza oranı nedir?", a: "Sektöre ve işin niteliğine göre değişir; tek bir doğru yoktur. Asıl önemli olan, oranın tavanla birlikte düşünülmesidir: günlük küçük bir oran bile tavansız bırakılırsa büyür." },
+        { q: "Ceza ile tazminat birlikte istenebilir mi?", a: "Sözleşme buna izin veriyorsa evet. “Ceza zararı karşılamazsa ayrıca tazminat” hükmü cezanın tavanını fiilen kaldırır; imzadan önce bu cümleyi görmek önemlidir." },
+        { q: "Cezayı otomatik hesaplatabilir miyim?", a: "Sözleşme Denetçisi, belgedeki oranları sizin verdiğiniz sözleşme bedeline göre TL’ye çevirir ve tavan yoksa bunu açıkça belirtir. Sonuç bir ön değerlendirmedir." },
+      ],
+    },
+    {
+      title: "How to Calculate a Late-Delivery Penalty (Penalty Clause)",
+      description:
+        "Turn the daily penalty rate in your contract into money: worked examples, why a cap matters, the VAT trap and what to check before signing.",
+      excerpt:
+        "“0.5% per day” sounds harmless as a sentence. Yet in 20 days it reaches 10% of the price. We show how to put a penalty clause into numbers, why the cap is critical and what to watch for.",
+      blocks: [
+        { t: "lead", x: "Late-delivery penalties are usually written as “for each day of delay, X percent of the contract price”. The sentence is short; the outcome can be large. Converting the rate into numbers before you sign shows exactly where this clause can take you." },
+        { t: "h2", x: "The basic calculation" },
+        { t: "p", x: "Late penalty = base amount × daily rate × days of delay. On a 1,000,000 TL job with a 0.5% daily rate, the penalty is 5,000 TL per day. 20 days of delay is 100,000 TL, i.e. 10% of the price. Written as 1% per day, the same amount would be reached in 10 days." },
+        { t: "ul", items: [
+          "0.1% per day: 1% in 10 days, 10% in 100 days.",
+          "0.5% per day: 10% in 20 days, 50% in 100 days.",
+          "1% per day: 10% in 10 days, the whole price in 100 days.",
+        ] },
+        { t: "h2", x: "Is there a cap?" },
+        { t: "p", x: "The most important limit on a penalty clause is a cap: “total penalties may not exceed 10% of the contract price”. Without one, the penalty can grow to the whole price and beyond. If the clause also says “damages may be claimed in addition”, the penalty is effectively uncapped." },
+        { t: "h2", x: "On which amount is it calculated?" },
+        { t: "p", x: "Is the “contract price” VAT-inclusive or exclusive, or only the delayed portion? If it is not defined, the other side may take the highest figure. A penalty calculated on a VAT-inclusive price comes out 20% higher than on the VAT-exclusive one." },
+        { t: "h2", x: "Whose fault is the delay?" },
+        { t: "p", x: "If the delivery period depends on an approval, sample or document the other side must supply, that delay should not be charged to you. Check whether the contract says time is extended for delays caused by the other side; if not, ask to add it." },
+        { t: "cta", title: "Contract Auditor", x: "Converts penalty rates into money using your contract price and shows whether there is a cap and which deadlines conflict with annexes.", btn: "Open the tool", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "A note on the legal framework" },
+        { t: "p", x: "Although there is a general rule that a court may reduce an excessive penalty, commercial matters between merchants fall under a separate provision and the room to reduce may be limited. So if you are a merchant, negotiating a heavy penalty clause before signing is far safer than relying on a court to fix it afterwards. Verify the current text of the provisions at an official source such as mevzuat.gov.tr; this article is not legal advice." },
+        { t: "tip", x: "Two requests are often accepted in negotiation: a cap on total penalties, and mutuality (a penalty or interest for late payment of what you are owed)." },
+      ],
+      faq: [
+        { q: "What is a reasonable daily penalty rate?", a: "It varies by industry and the nature of the job; there is no single right answer. What matters is considering the rate together with a cap: even a small daily rate grows if left uncapped." },
+        { q: "Can a penalty and damages be claimed together?", a: "Yes, if the contract allows it. A clause such as “if the penalty does not cover the loss, damages in addition” effectively removes the cap; it is important to see this sentence before signing." },
+        { q: "Can I have the penalty calculated automatically?", a: "The Contract Auditor converts the rates in the document into money using the contract price you provide, and states clearly when there is no cap. The result is a preliminary assessment." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu",
+      date: "2026-10-02",
+      updated: "2026-10-02",
+      readMinutes: 6,
+      tags: { tr: ["İhale", "Şartname", "Sözleşme Tasarısı"], en: ["Tender", "Specification", "Draft Contract"] },
+      accent: "emerald",
+      tool: "/tools/sozlesme-denetci",
+    },
+    {
+      title: "İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü",
+      description:
+        "İhaleye teklif vermeden önce şartname ve sözleşme tasarısında bakılacak noktalar: süreler, cezalar, teminat, ödeme, ekler ve öncelik sırası.",
+      excerpt:
+        "İhaleye teklif verdiğiniz anda şartnamenin ve sözleşme tasarısının tüm hükümlerini kabul etmiş olursunuz. Teklif vermeden önce bu belgelerde hangi noktalara bakmanız gerektiğini sıraladık.",
+      blocks: [
+        { t: "lead", x: "İhalelerde sözleşme tasarısı genellikle pazarlığa kapalıdır: teklif verdiğinizde şartnamedeki ve tasarıdaki hükümleri kabul etmiş sayılırsınız. Bu yüzden asıl karar teklif vermeden önce, belgeler okunurken verilir. Okuma sırasında şu noktalara özellikle bakın." },
+        { t: "h2", x: "Belgeler arasındaki tutarlılık" },
+        { t: "p", x: "İhale dosyası genellikle idari şartname, teknik şartname, sözleşme tasarısı ve eklerden oluşur. Bunlardan biri iş bitirme süresini 90 gün, diğeri 60 gün diyebilir. Belgelerin hangisinin öncelikli olduğunu belirleyen hükmü bulun ve çelişen her yeri yazılı açıklama başvurusuyla netleştirmeyi düşünün." },
+        { t: "h2", x: "Kontrol edilecek başlıca noktalar" },
+        { t: "ul", items: [
+          "İş bitirme/teslim süresi ve süre uzatımı verilen haller: Mücbir sebep ve idare kaynaklı gecikmeler süreyi uzatıyor mu?",
+          "Gecikme cezası: Günlük oran, tavan ve hangi bedel üzerinden hesaplandığı.",
+          "Teminatlar: Geçici ve kesin teminat tutarları, iade koşulları ve hangi hallerde gelir kaydedileceği.",
+          "Ödeme: Hakediş sıklığı, ödeme süresi ve gecikmede faiz var mı?",
+          "Fiyat farkı: Uzun süren işlerde girdi maliyeti artışı için bir düzenleme var mı?",
+          "İş artışı ve eksilişi: İdarenin işi artırma/azaltma hakkının sınırı nedir?",
+          "Fesih: İdare hangi hallerde, nasıl fesheder? Feshin mali sonuçları sizin açınızdan ne?",
+          "Eksik ekler: Tasarıda atıf yapılan ama dosyada bulunmayan belgeler.",
+        ] },
+        { t: "h2", x: "Öncelik sırası maddesi" },
+        { t: "p", x: "Belgeler çelişirse hangisinin geçerli olacağını söyleyen bir madde sıkça bulunur. Bu madde, bir ekteki küçük görünen bir hükmü ana sözleşmenin üstüne çıkarabilir. Ekleri bu gözle okuyun." },
+        { t: "cta", title: "Sözleşme Denetçisi", x: "Şartname ve sözleşme tasarısını “Kamu ihalesi” seçeneğiyle denetleyin: çelişkileri, ceza hesaplarını ve eksik ekleri bulur.", btn: "Aracı aç", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "Mevzuat değişir" },
+        { t: "p", x: "Kamu ihaleleri, Kamu İhale Kanunu ve Kamu İhale Sözleşmeleri Kanunu ile bunlara bağlı düzenlemelere tabidir ve bu düzenlemeler zaman zaman değişir. Bir hükmün mevzuata uygun olup olmadığını değerlendirirken güncel metinleri Resmî Gazete, mevzuat.gov.tr ve Kamu İhale Kurumu gibi resmî kaynaklardan kontrol edin. Önemli ihalelerde bir hukuk danışmanından destek almak, itiraz ve başvuru sürelerini kaçırmamanız için de değerlidir." },
+        { t: "tip", x: "Açıklama başvuru ve itirazlar için süreler kısadır. Belgeleri teklif gününe yakın değil, ilk günlerde okumak size hem soru sorma hem karar verme zamanı bırakır." },
+      ],
+      faq: [
+        { q: "Sözleşme tasarısını değiştirtebilir miyim?", a: "Genellikle hayır; teklif vermekle kabul etmiş olursunuz. Bu yüzden itirazlar ve açıklama talepleri, teklif vermeden önce ve ilgili süreler içinde yapılmalıdır." },
+        { q: "Sözleşme Denetçisi kamu ihalelerini de inceler mi?", a: "Evet. “Kamu ihalesi / şartname” seçeneğini işaretlediğinizde, ihale mevzuatına aykırılık soruları da dikkate alınır. Sonuç bir ön değerlendirmedir; önemli ihalelerde bir uzmana danışın." },
+        { q: "Taranmış şartnameyi yükleyebilir miyim?", a: "Evet; metin cihazınızda OCR ile okunur (ilk 30 sayfa). Metin içeren PDF’ler daha hızlı ve daha doğru sonuç verir." },
+      ],
+    },
+    {
+      title: "Risk Check for Tender Specifications and Draft Contracts",
+      description:
+        "Before bidding, check these points in the specification and draft contract: deadlines, penalties, guarantees, payment, annexes and order of precedence.",
+      excerpt:
+        "The moment you bid, you accept every provision of the specification and draft contract. Here is what to look for in these documents before you submit an offer.",
+      blocks: [
+        { t: "lead", x: "In tenders the draft contract is usually not negotiable: by submitting a bid you are deemed to accept the provisions of the specification and the draft. So the real decision is made before bidding, while reading the documents. Pay particular attention to the following." },
+        { t: "h2", x: "Consistency between documents" },
+        { t: "p", x: "A tender file usually consists of an administrative specification, a technical specification, a draft contract and annexes. One may give a completion period of 90 days and another 60. Find the provision that sets which document prevails, and consider clarifying every conflict through a written clarification request." },
+        { t: "h2", x: "Main points to check" },
+        { t: "ul", items: [
+          "Completion/delivery period and the cases that extend it: do force majeure and delays caused by the authority extend the period?",
+          "Late penalty: the daily rate, the cap and the amount it is calculated on.",
+          "Guarantees: bid and performance bond amounts, return conditions and when they are forfeited.",
+          "Payment: frequency of interim payments, payment period and whether late payment bears interest.",
+          "Price adjustment: is there a mechanism for input-cost increases on long jobs?",
+          "Variations: what limit applies to the authority's right to increase or reduce the work?",
+          "Termination: in what cases and how does the authority terminate? What are the financial consequences for you?",
+          "Missing annexes: documents referred to in the draft but absent from the file.",
+        ] },
+        { t: "h2", x: "The order-of-precedence clause" },
+        { t: "p", x: "A clause stating which document prevails if they conflict is common. It can lift an innocent-looking provision in an annex above the main contract. Read the annexes with that in mind." },
+        { t: "cta", title: "Contract Auditor", x: "Audit the specification and draft contract with the “Public tender” option: it finds contradictions, penalty maths and missing annexes.", btn: "Open the tool", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "Legislation changes" },
+        { t: "p", x: "Public tenders are governed by the Public Procurement Law and the Public Procurement Contracts Law and the regulations under them, which change from time to time. When judging whether a provision complies with legislation, check current texts at official sources such as the Official Gazette, mevzuat.gov.tr and the Public Procurement Authority. For important tenders, legal support also helps you avoid missing objection and application deadlines." },
+        { t: "tip", x: "Deadlines for clarification requests and objections are short. Reading the documents in the first days rather than near the bid date leaves time both to ask questions and to decide." },
+      ],
+      faq: [
+        { q: "Can I get the draft contract changed?", a: "Usually not; by bidding you accept it. So objections and clarification requests must be made before bidding and within the applicable time limits." },
+        { q: "Does the Contract Auditor review public tenders too?", a: "Yes. When you tick the “Public tender / specification” option, questions about compliance with procurement legislation are also considered. The result is a preliminary assessment; for important tenders consult a specialist." },
+        { q: "Can I upload a scanned specification?", a: "Yes; text is read on your device with OCR (first 30 pages). PDFs with real text give faster and more accurate results." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "sozlesmede-ek-madde-celiski-oncelik",
+      date: "2026-10-02",
+      updated: "2026-10-02",
+      readMinutes: 5,
+      tags: { tr: ["Sözleşme", "Çelişki", "Ekler"], en: ["Contracts", "Conflict", "Annexes"] },
+      accent: "amber",
+      tool: "/tools/sozlesme-denetci",
+    },
+    {
+      title: "Sözleşmede Ek ile Madde Çelişirse Hangisi Geçerli?",
+      description:
+        "Sözleşme maddesi ile ek birbirini tutmuyorsa ne olur? Öncelik sırası hükümleri, çelişkiyi bulma yöntemi ve imzadan önce yapılacaklar.",
+      excerpt:
+        "Madde 4 teslimi 45 gün diyor, Ek-1 ise 30 gün. “Ek geçerlidir” yazıyorsa ceza hesabınız değişir. Çelişkileri nasıl bulacağınızı ve nasıl çözeceğinizi anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Uzun sözleşmelerde aynı konu birden fazla yerde düzenlenir: ana metinde, teknik şartnamede, fiyat listesinde. Bu yerler birbirini tutmadığında asıl soru, hangisinin geçerli olduğudur. Cevap çoğu zaman sözleşmedeki küçük bir “öncelik sırası” maddesinde saklıdır." },
+        { t: "h2", x: "Örnek" },
+        { t: "p", x: "Madde 4 teslim süresini 45 gün olarak yazıyor, Ek-1 teknik şartname ise 30 gün diyor. Madde 13’te de “Sözleşme ile ekleri arasında çelişki bulunması halinde ekler geçerlidir” yazıyor. Sonuç: 30 gün uygulanır. 45. günde teslim ettiğinizde 15 gün gecikmiş sayılırsınız ve günlük ceza işlemeye başlar." },
+        { t: "h2", x: "Öncelik sırası hükümleri" },
+        { t: "ul", items: [
+          "“Ekler geçerlidir”: Eklerdeki ayrıntı ana metni geçersiz kılabilir. Ekleri ana metin kadar dikkatle okuyun.",
+          "“Ana metin geçerlidir”: Eklerdeki çelişkili hükümler uygulanmaz; yine de çelişkiyi temizlemek daha güvenlidir.",
+          "Hiçbir hüküm yoksa: Hangisinin geçerli olacağı tartışmaya açıktır; bu da uyuşmazlık demektir.",
+        ] },
+        { t: "h2", x: "Çelişkileri nasıl bulursunuz?" },
+        { t: "steps", items: [
+          { title: "Konuları listeleyin", x: "Süre, bedel, ceza, ödeme vadesi, taraflar ve yetkili mahkeme gibi rakam ve isim içeren konuları ana metinde işaretleyin." },
+          { title: "Her konuyu eklerde arayın", x: "Aynı konunun ekte nasıl yazıldığını karşılaştırın; rakamlar, günler ve oranlar özellikle önemlidir." },
+          { title: "Öncelik sırası hükmünü bulun", x: "Çelişki olursa hangi belgenin geçerli olduğunu söyleyen maddeyi bulun." },
+        ] },
+        { t: "cta", title: "Sözleşme Denetçisi", x: "Madde ve ekler arasındaki çelişkileri bulur, öncelik kuralına göre hangisinin geçerli olacağını ve parasal etkisini gösterir.", btn: "Aracı aç", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "İmzadan önce ne yapmalı?" },
+        { t: "ol", items: [
+          "Çelişen yerlerin hepsini karşı tarafa yazılı olarak bildirin ve tek bir rakamda anlaşın.",
+          "Öncelik sırası maddesini, sizin için dengeli olan hâline getirin (örneğin sonraki tarihli ya da daha özel belgenin geçerli sayılması).",
+          "Belgede metni olmayan her eki talep edin ve okuyun; görmediğiniz bir ekin sizi bağlamasına izin vermeyin.",
+        ] },
+        { t: "tip", x: "İki sürüm arasında neyin değiştiğini görmek için PDF Karşılaştır aracını kullanın; çelişkiyi bulmak için ise aynı belge içindeki madde ve ekleri birlikte inceleyen Sözleşme Denetçisi’ni." },
+        { t: "cta", title: "PDF Karşılaştır", x: "Sözleşmenin iki sürümü arasında eklenen, çıkarılan ve değişen maddeleri görün.", btn: "Aracı aç", tool: "/tools/pdf-karsilastir" },
+      ],
+      faq: [
+        { q: "Öncelik sırası maddesi yoksa ne olur?", a: "Hangi hükmün geçerli olacağı yorum meselesi olur ve uyuşmazlığa açılır. İmzadan önce bu boşluğu bir öncelik hükmüyle kapatmak en güvenli yoldur." },
+        { q: "Eki göremiyorsam ne yapmalıyım?", a: "Eki talep edin. Sözleşme eke atıf yapıyor ve ek üstün tutuluyorsa, görmediğiniz bir belge sizi bağlayabilir." },
+        { q: "Sözleşme Denetçisi çelişkileri bulur mu?", a: "Evet; aynı konunun farklı yerlerde farklı düzenlenmesini, öncelik kurallarını ve belgede olmayan eklere atıfları arar. Sonuç bir ön değerlendirmedir." },
+      ],
+    },
+    {
+      title: "Annex vs Clause Conflict: Which One Prevails?",
+      description:
+        "What happens when a contract clause and an annex disagree? Order-of-precedence clauses, how to spot conflicts and what to do before signing.",
+      excerpt:
+        "Clause 4 says delivery in 45 days; Annex 1 says 30. If the contract says “the annex prevails”, your penalty maths change. Here is how to find and resolve conflicts.",
+      blocks: [
+        { t: "lead", x: "In long contracts the same subject is regulated in several places: the main text, the technical specification, the price list. When these disagree, the real question is which prevails. The answer is often hidden in a small “order of precedence” clause." },
+        { t: "h2", x: "An example" },
+        { t: "p", x: "Clause 4 gives the delivery period as 45 days, while the Annex 1 technical specification says 30. Clause 13 states “if the contract and its annexes conflict, the annexes prevail”. Result: 30 days applies. If you deliver on day 45 you are 15 days late and the daily penalty starts running." },
+        { t: "h2", x: "Order-of-precedence clauses" },
+        { t: "ul", items: [
+          "“Annexes prevail”: a detail in an annex can override the main text. Read annexes as carefully as the main text.",
+          "“The main text prevails”: conflicting annex provisions do not apply; it is still safer to clean up the conflict.",
+          "No clause at all: which prevails is open to argument, which means a dispute.",
+        ] },
+        { t: "h2", x: "How to find conflicts" },
+        { t: "steps", items: [
+          { title: "List the subjects", x: "Mark subjects with numbers and names in the main text: period, price, penalty, payment term, parties and jurisdiction." },
+          { title: "Search each subject in the annexes", x: "Compare how the same subject is written in the annex; figures, days and rates matter most." },
+          { title: "Find the precedence clause", x: "Find the clause stating which document prevails if they conflict." },
+        ] },
+        { t: "cta", title: "Contract Auditor", x: "Finds conflicts between clauses and annexes and shows which would prevail under the precedence rule and the financial effect.", btn: "Open the tool", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "What to do before signing" },
+        { t: "ol", items: [
+          "Notify the other side in writing of every conflicting place and agree on a single figure.",
+          "Turn the precedence clause into a balanced one (for example, the later-dated or more specific document prevails).",
+          "Request and read every annex whose text is not in the document; do not let an annex you have not seen bind you.",
+        ] },
+        { t: "tip", x: "To see what changed between two versions, use the Compare PDFs tool; to find conflicts, use the Contract Auditor, which examines clauses and annexes in the same document together." },
+        { t: "cta", title: "Compare PDFs", x: "See the clauses added, removed and changed between two versions of a contract.", btn: "Open the tool", tool: "/tools/pdf-karsilastir" },
+      ],
+      faq: [
+        { q: "What if there is no order-of-precedence clause?", a: "Which provision prevails becomes a matter of interpretation and open to dispute. Closing that gap with a precedence clause before signing is the safest route." },
+        { q: "What if I cannot see the annex?", a: "Request it. If the contract refers to the annex and the annex prevails, a document you have not seen can bind you." },
+        { q: "Does the Contract Auditor find conflicts?", a: "Yes; it looks for the same subject regulated differently in different places, precedence rules and references to annexes that are not in the document. The result is a preliminary assessment." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "yapay-zeka-ile-sozlesme-inceleme-nasil-calisir",
+      date: "2026-10-02",
+      updated: "2026-10-02",
+      readMinutes: 7,
+      tags: { tr: ["Yapay Zekâ", "Sözleşme Analizi", "Güvenilirlik"], en: ["AI", "Contract Analysis", "Reliability"] },
+      accent: "blue",
+      tool: "/tools/sozlesme-denetci",
+    },
+    {
+      title: "Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?",
+      description:
+        "Yapay zekâ sözleşmeyi nasıl okur, hangi sonuçlara güvenebilirsiniz, nerede hata yapabilir? Hızlı tarama ile detaylı denetimin farkı.",
+      excerpt:
+        "Yapay zekâya bir sözleşme verdiğinizde arka planda ne olur? Bulduklarına ne kadar güvenebilirsiniz, hangi sınırları bilmelisiniz? Dürüst bir anlatım.",
+      blocks: [
+        { t: "lead", x: "“Sözleşmeyi yapay zekâya okutmak” kulağa kolay gelir, ama sonucun işe yaraması, nasıl yapıldığına bağlıdır. Bu yazıda Sözleşme Denetçisi’nin adım adım ne yaptığını, hangi güvenceleri sunduğunu ve hangi sınırları olduğunu açıkça anlatıyoruz." },
+        { t: "h2", x: "Adım adım: ne oluyor?" },
+        { t: "steps", items: [
+          { title: "Metin cihazınızda çıkarılır", x: "PDF’inizin kendisi gönderilmez; yalnızca metni analiz için sunucuya iletilir. Taranmış belgelerde metin cihazınızda OCR ile okunur." },
+          { title: "Belge tanınır, sorular sorulur", x: "Sistem belgenin türünü ve taraflarını çıkarır, cevabı analizi değiştirecek birkaç soru sorar. Hangi tarafta olduğunuzu siz seçersiniz; sistem varsaymaz." },
+          { title: "Analiz yapılır", x: "Hızlı taramada tek geçişte en önemli riskler bulunur. Detaylı denetimde belge birkaç kez okunur, rakamlar hesaplanır, hukuki noktalar resmî kaynaklarda aranır ve bulgular ikinci bir kontrolden geçer." },
+          { title: "Sonuç belgede gösterilir", x: "Riskli yerler PDF’inizde boyanır; her bulgunun nedeni, etkisi ve (detaylı denetimde) önerilen yeni madde metni yazılır." },
+        ] },
+        { t: "h2", x: "Güvenceler" },
+        { t: "ul", items: [
+          "Her bulgu belgeden birebir alıntıyla gelir ve bu alıntı, belge metninde yazılımla aranır; bulunamayan bulgu rapora girmez.",
+          "Sayfa numarası modelin tahmininden değil, alıntının belgedeki gerçek konumundan hesaplanır.",
+          "Detaylı denetimde kanun maddesi modelin hafızasından yazılmaz; yalnızca resmî kaynakta okunan içerik gösterilir ve kaynak bağlantısı verilir. Okunamayan nokta “doğrulanamadı” diye işaretlenir.",
+          "Bilinmeyen bilgi varsayımlar bölümünde açıkça belirtilir.",
+        ] },
+        { t: "h2", x: "Sınırlar: bilmeniz gerekenler" },
+        { t: "ul", items: [
+          "Hata yapabilir: bir riski kaçırabilir ya da gereğinden önemli gösterebilir. Bu bir ön değerlendirmedir, hukuki danışmanlık değildir.",
+          "Görmediği belgeyi değerlendiremez: belgede metni olmayan ekler analiz edilemez; bu rapora yazılır.",
+          "Güncel mevzuat kontrolü yalnızca detaylı denetimde yapılır; hızlı tarama kanun maddesi dayanağı vermez.",
+          "Çok uzun belgeler (yaklaşık 240 bin karakter üstü) bölümlere ayrılmalıdır; taranmış belgelerde ilk 30 sayfa okunur.",
+        ] },
+        { t: "h2", x: "Hızlı tarama mı, detaylı denetim mi?" },
+        { t: "p", x: "Hızlı tarama, belgeye ilk bakış için uygundur: yaklaşık 1-2 dakika sürer ve belge uzunluğuna göre 8 ile 20 hak harcar (önce aylık hakkınızdan, bitince krediden). Detaylı denetim, imzalanacak önemli bir sözleşme içindir: yaklaşık 6-12 dakika sürer ve 85 ile 122 kredi harcar; yalnızca satın alınan krediden düşer. Detaylı denetim daha pahalıdır çünkü en güçlü model belgeyi birkaç kez okur ve hukuki noktaları resmî kaynaklarda arar." },
+        { t: "cta", title: "Sözleşme Denetçisi", x: "Önce hızlı tarama ile belgeye bakın, önemliyse detaylı denetime geçin. Metin cihazınızda okunur.", btn: "Aracı aç", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "Gizlilik" },
+        { t: "p", x: "Belge metni bizim sunucumuzda saklanmaz; sonuç en geç 30 dakikada silinir. Yapay zekâ sağlayıcımız API üzerinden gelen veriyi varsayılan olarak model eğitiminde kullanmaz; yalnızca güvenlik denetimi için en fazla 30 gün tutabilir. Sonuç yalnızca analizin bittiği sayfada durur: raporu hemen indirin." },
+      ],
+      faq: [
+        { q: "Yapay zekâ bir avukatın yerini tutar mı?", a: "Hayır. Sonuç bir ön değerlendirmedir. Kritik ve yüksek riskli maddeler için imzadan önce bir avukata danışın; rapor bu görüşmeyi daha verimli yapar." },
+        { q: "Bulgulara ne kadar güvenebilirim?", a: "Her bulgunun alıntısı belgede doğrulanır ve nedeni yazılır; yine de yorum hatası olabilir. Önemli bulguları belgenin kendisinden teyit edin." },
+        { q: "Sonucu sonra tekrar açabilir miyim?", a: "Hayır. Sonuç yalnızca analizin bittiği sayfada gösterilir ve sunucudan 30 dakika içinde silinir. Raporu ve boyalı PDF’i hemen indirin." },
+        { q: "Analiz başarısız olursa ne olur?", a: "Harcanan hak ya da kredi iade edilir." },
+      ],
+    },
+    {
+      title: "AI Contract Review: How It Works and What to Trust",
+      description:
+        "How does AI read a contract, which results can you trust, where can it be wrong? The difference between a quick scan and a detailed audit.",
+      excerpt:
+        "What happens behind the scenes when you give an AI a contract? How far can you trust what it finds, and which limits should you know? An honest explanation.",
+      blocks: [
+        { t: "lead", x: "“Having AI read the contract” sounds easy, but whether the result is useful depends on how it is done. In this article we explain plainly what the Contract Auditor does step by step, what assurances it offers and what its limits are." },
+        { t: "h2", x: "Step by step: what happens?" },
+        { t: "steps", items: [
+          { title: "Text is extracted on your device", x: "Your PDF itself is not sent; only its text goes to the server for analysis. For scanned documents, text is read on your device with OCR." },
+          { title: "The document is recognised and questions are asked", x: "The system identifies the document type and parties and asks a few questions whose answers change the analysis. You choose which side you are on; the system does not assume." },
+          { title: "The analysis runs", x: "In the quick scan, the most important risks are found in a single pass. In the detailed audit the document is read several times, numbers are calculated, legal points are searched in official sources and findings go through a second check." },
+          { title: "The result is shown in the document", x: "Risky spots are highlighted in your PDF; each finding states why, the impact and (in the detailed audit) suggested replacement wording." },
+        ] },
+        { t: "h2", x: "Safeguards" },
+        { t: "ul", items: [
+          "Every finding comes with a verbatim quote, and that quote is searched in the document text by software; a finding that cannot be found does not enter the report.",
+          "Page numbers are computed from the quote's real position in the document, not guessed by the model.",
+          "In the detailed audit, statute articles are not written from the model's memory; only content read from an official source is shown, with a source link. A point that could not be read is marked “could not verify”.",
+          "Unknown information is stated openly in the assumptions section.",
+        ] },
+        { t: "h2", x: "Limits you should know" },
+        { t: "ul", items: [
+          "It can be wrong: it may miss a risk or overstate one. This is a preliminary assessment, not legal advice.",
+          "It cannot judge documents it has not seen: annexes whose text is not in the document cannot be analysed; the report says so.",
+          "The current-law check is done only in the detailed audit; the quick scan gives no statutory basis.",
+          "Very long documents (over about 240,000 characters) must be split; for scanned documents the first 30 pages are read.",
+        ] },
+        { t: "h2", x: "Quick scan or detailed audit?" },
+        { t: "p", x: "The quick scan suits a first look at a document: it takes about 1-2 minutes and uses 8 to 20 units depending on length (monthly allowance first, then credits). The detailed audit is for an important contract you are about to sign: it takes about 6-12 minutes and uses 85 to 122 credits, from purchased credits only. The detailed audit costs more because the strongest model reads the document several times and searches legal points in official sources." },
+        { t: "cta", title: "Contract Auditor", x: "Start with a quick scan; if it matters, move to the detailed audit. Text is read on your device.", btn: "Open the tool", tool: "/tools/sozlesme-denetci" },
+        { t: "h2", x: "Privacy" },
+        { t: "p", x: "Document text is not stored on our servers; the result is deleted within 30 minutes. Our AI provider does not use API data to train models by default; it may retain it for up to 30 days for safety review only. The result stays only on the page where the analysis finished: download the report right away." },
+      ],
+      faq: [
+        { q: "Does AI replace a lawyer?", a: "No. The result is a preliminary assessment. For critical and high-risk clauses consult a lawyer before signing; the report makes that conversation more efficient." },
+        { q: "How far can I trust the findings?", a: "Each finding's quote is verified in the document and the reason is stated; interpretation errors are still possible. Confirm important findings against the document itself." },
+        { q: "Can I reopen the result later?", a: "No. The result is shown only on the page where the analysis finished and is deleted from the server within 30 minutes. Download the report and highlighted PDF right away." },
+        { q: "What happens if the analysis fails?", a: "The allowance or credits used are refunded." },
+      ],
+    },
+  ),
+
   post(
     {
       slug: "sejda-alternatifi-saatlik-limit",

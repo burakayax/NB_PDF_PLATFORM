@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { env } from "../../config/env.js";
+import { TOPUP_PACKS as TOPUP_PACKS_LIST } from "../../lib/plan-catalogue.js";
 
 /** Geçerli ay anahtarı, ör. "2026-07" (UTC). */
 export function currentYearMonth(d = new Date()): string {
@@ -32,7 +33,9 @@ export type AiQuota = {
   used: number;
   limit: number | null; // null = sınırsız (admin)
   remaining: number | null; // aylık kalan + bonus kredi
-  bonus: number; // top-up ile alınan ek kredi (kalıcı)
+  /** Yalnızca plandan gelen AYLIK hakkın kalanı (kredi hariç); admin → null. */
+  monthlyRemaining: number | null;
+  bonus: number; // satın alınan kredi (kalıcı; ağır araçlar yalnız bunu kullanır)
   unlimited: boolean;
   resetAt: string;
   /** Bu ay araç bazında istek sayıları: { summarize: 5, chat: 3, ... } */
@@ -70,6 +73,7 @@ export async function getAiQuota(
     limit,
     // Aylık kalan bittiğinde bonus kredi devreye girer → toplam kalan gösterilir.
     remaining: limit === null ? null : (monthlyRemaining ?? 0) + bonus,
+    monthlyRemaining,
     bonus,
     unlimited: limit === null,
     resetAt: nextMonthResetAt(),
@@ -166,6 +170,38 @@ export async function reserveAiQuota(
   return reserveFromBonus(userId, yearMonth, op, need);
 }
 
+/**
+ * AĞIR ARAÇLAR için rezervasyon: YALNIZCA satın alınmış krediden düşer, aylık hakka dokunmaz.
+ * Yönetici (ADMIN) bu kuralın DIŞINDADIR: hiçbir şey düşülmez, yalnız kullanım sayacı ilerler.
+ *
+ * @returns rezerve edildiyse `true`; kredi yetmediyse `false`.
+ */
+export async function reservePurchasedCredits(
+  userId: string,
+  role: string | undefined,
+  op: string | undefined,
+  units: number,
+): Promise<boolean> {
+  const need = Math.max(1, Math.floor(units));
+  const yearMonth = currentYearMonth();
+  if (role === "ADMIN") {
+    await bumpUsageCounters(userId, yearMonth, op, { incrementCount: false });
+    return true;
+  }
+  return reserveFromBonus(userId, yearMonth, op, need);
+}
+
+/** `reservePurchasedCredits` ile düşülen krediyi (iş hata verirse) geri yükler. Admin: işlem yok. */
+export async function refundPurchasedCredits(
+  userId: string,
+  role: string | undefined,
+  units: number,
+): Promise<void> {
+  if (role === "ADMIN") return;
+  const back = Math.max(1, Math.floor(units));
+  await prisma.user.updateMany({ where: { id: userId }, data: { bonusAiCredits: { increment: back } } });
+}
+
 /** Ek (satın alınmış) krediden koşullu düşüm — tamamı yoksa hiç düşmez. */
 async function reserveFromBonus(
   userId: string,
@@ -254,17 +290,8 @@ export async function grantAiCredits(userId: string, amount: number): Promise<vo
   await prisma.user.update({ where: { id: userId }, data: { bonusAiCredits: { increment: Math.floor(amount) } } });
 }
 
-/** Ek AI kredisi paketleri (top-up). Fiyatlar ödeme açılınca kullanılır; kredi aylar
- * arası kalıcıdır ve aylık kota bitince devreye girer. */
-export const TOPUP_PACKS = [
-  // Pay-per-use — abone olmayan kullanıcı için tek/az işlem.
-  { id: "ai-1", credits: 1, priceUSD: 0.99, priceTRY: 29 },
-  { id: "ai-5", credits: 5, priceUSD: 3.49, priceTRY: 89 },
-  // Toplu paketler (top-up).
-  { id: "ai-50", credits: 50, priceUSD: 4.99, priceTRY: 149 },
-  { id: "ai-150", credits: 150, priceUSD: 11.99, priceTRY: 349, popular: true },
-  { id: "ai-500", credits: 500, priceUSD: 29.99, priceTRY: 899 },
-] as const;
+/** Ek AI kredisi paketleri — tek kaynak `lib/plan-catalogue.ts`. */
+export { TOPUP_PACKS } from "../../lib/plan-catalogue.js";
 
 /** Fatura kalem adı — top-up ödeme akışı bağlanınca payment.service basketItemName /
  * triggerInvoiceGeneration'a bu geçilecek (KDV + bireysel/kurumsal fatura zaten destekli). */
@@ -274,5 +301,5 @@ export function topupInvoiceLabel(pack: { credits: number }): string {
 }
 
 export function topupPackById(id: string) {
-  return TOPUP_PACKS.find((p) => p.id === id) ?? null;
+  return TOPUP_PACKS_LIST.find((p) => p.id === id) ?? null;
 }

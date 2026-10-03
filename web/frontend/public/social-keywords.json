@@ -1,4 +1,272 @@
 {
+  "https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir": {
+    "tr": [
+      "Yapay Zekâ",
+      "Sözleşme Analizi",
+      "Güvenilirlik",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "AI",
+      "Contract Analysis",
+      "Reliability",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/en/blog/ai-contract-review-how-it-works": {
+    "tr": [
+      "Yapay Zekâ",
+      "Sözleşme Analizi",
+      "Güvenilirlik",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "AI",
+      "Contract Analysis",
+      "Reliability",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/blog/sozlesmede-ek-madde-celiski-oncelik": {
+    "tr": [
+      "Sözleşme",
+      "Çelişki",
+      "Ekler",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Contracts",
+      "Conflict",
+      "Annexes",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/en/blog/annex-vs-clause-conflict-which-prevails": {
+    "tr": [
+      "Sözleşme",
+      "Çelişki",
+      "Ekler",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Contracts",
+      "Conflict",
+      "Annexes",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu": {
+    "tr": [
+      "İhale",
+      "Şartname",
+      "Sözleşme Tasarısı",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Tender",
+      "Specification",
+      "Draft Contract",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/en/blog/tender-specification-risk-check": {
+    "tr": [
+      "İhale",
+      "Şartname",
+      "Sözleşme Tasarısı",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Tender",
+      "Specification",
+      "Draft Contract",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/blog/gecikme-cezasi-cezai-sart-hesaplama": {
+    "tr": [
+      "Cezai Şart",
+      "Gecikme Cezası",
+      "Hesaplama",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Penalty Clause",
+      "Late Penalty",
+      "Calculation",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/en/blog/how-to-calculate-a-late-delivery-penalty": {
+    "tr": [
+      "Cezai Şart",
+      "Gecikme Cezası",
+      "Hesaplama",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Penalty Clause",
+      "Late Penalty",
+      "Calculation",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi": {
+    "tr": [
+      "Sözleşme",
+      "Kontrol Listesi",
+      "Risk",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Contracts",
+      "Checklist",
+      "Risk",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract": {
+    "tr": [
+      "Sözleşme",
+      "Kontrol Listesi",
+      "Risk",
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "Contracts",
+      "Checklist",
+      "Risk",
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
   "https://www.pdfplatform.app/blog/universite-kayit-evraklarini-hazirlama": {
     "tr": [
       "Öğrenci",

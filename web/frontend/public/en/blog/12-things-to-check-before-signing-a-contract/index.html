@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>12 Things to Check Before Signing a Contract</title>
+    <meta name="description" content="Before signing a supply, lease or services contract, check these 12 points: penalties, termination, payment, deadlines, annexes and missing clauses." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="12 Things to Check Before Signing a Contract" />
+    <meta property="og:description" content="Before signing a supply, lease or services contract, check these 12 points: penalties, termination, payment, deadlines, annexes and missing clauses." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/12-things-to-check-before-signing-a-contract.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="12 Things to Check Before Signing a Contract" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="12 Things to Check Before Signing a Contract" />
+    <meta name="twitter:description" content="Before signing a supply, lease or services contract, check these 12 points: penalties, termination, payment, deadlines, annexes and missing clauses." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/12-things-to-check-before-signing-a-contract.png" />
+    <meta name="twitter:image:alt" content="12 Things to Check Before Signing a Contract" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"12 Things to Check Before Signing a Contract","item":"https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"12 Things to Check Before Signing a Contract","description":"Before signing a supply, lease or services contract, check these 12 points: penalties, termination, payment, deadlines, annexes and missing clauses.","datePublished":"2026-10-02","dateModified":"2026-10-02","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/12-things-to-check-before-signing-a-contract.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Which clause causes the most trouble?","acceptedAnswer":{"@type":"Answer","text":"Most often penalty and termination clauses, payment terms and annexes that are not in the document. Check these first because their financial effect is largest."}},{"@type":"Question","name":"Can a standard form be changed?","acceptedAnswer":{"@type":"Answer","text":"Usually at least the few riskiest clauses can be negotiated. Asking for balanced terms such as “mutuality” and “a reasonable cap” lowers the chance of a flat refusal."}},{"@type":"Question","name":"Can I check a contract with AI?","acceptedAnswer":{"@type":"Answer","text":"Yes; the Contract Auditor reads the document and finds contradictions, penalty maths and missing clauses. The result is a preliminary assessment, not legal advice."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>12 Things to Check Before Signing a Contract</h1><p class="seo-intro">Most contract problems hide in small details nobody noticed, not in long complicated clauses. Here are 12 points to review in every contract before you sign.</p><figure class="seo-cover"><img src="/en/covers/12-things-to-check-before-signing-a-contract.png" width="1200" height="630" loading="lazy" decoding="async" alt="12 Things to Check Before Signing a Contract" /></figure><article class="seo-article"><p class="seo-lead">Most contract disputes start with a small detail nobody noticed at signing: a different deadline in an annex, an uncapped penalty, or a termination right granted to one side only. The list below sets out 12 points to review in every contract before you sign.</p><h2>1-4: The basics</h2><ol><li>Parties and authority: Are names, tax numbers and the signatory&#39;s authority to bind the company correct?</li><li>Subject and scope: Is it clear what is delivered or done, in what quantity and quality? Vague wording (“reasonable time”, “as deemed necessary”) causes arguments later.</li><li>Price and payment: Is the amount VAT-inclusive or exclusive? How many days is the term and from when does it run? If invoicing depends on an approval, is there a deadline for that approval?</li><li>Deadlines: What are the delivery, notice, objection and non-renewal periods? For each, who gives notice and how (notary, email, registered mail)?</li></ol><h2>5-8: Money and liability</h2><ol start="5"><li>Late-delivery penalty: What is the rate, is there a cap, and on what amount is it calculated? If damages can also be claimed, the penalty is effectively uncapped.</li><li>Termination: Is the right mutual? What is the notice period? Is work already done paid for on termination?</li><li>Liability cap: How are indirect losses, lost profit and gross negligence treated? Is a cap given to one side only?</li><li>IP and confidentiality: Are your designs, tooling or methods transferred to the other side? Is confidentiality unlimited, and are exceptions mutual?</li></ol><h2>9-12: Structure and gaps</h2><ol start="9"><li>Annexes: Do you have every annex referred to? If there is a priority rule like “if an annex and a clause conflict, the annex prevails”, read the annexes carefully.</li><li>Term and renewal: Does the contract renew automatically? What is the deadline for a non-renewal notice?</li><li>Disputes: Which court or arbitration has jurisdiction? Is the governing law stated? A distant city raises enforcement costs.</li><li>What is missing: force majeure, transfer of risk, warranty and defect periods, assignment, data protection — are expected clauses absent?</li></ol><p>Reading is not enough: turn rates into numbers. “1% per day” sounds harmless as a sentence; on a 2,400,000 TL job it is 24,000 TL per day.</p><p><a href="/en/tools/contract-review-ai"><strong>Contract Auditor</strong> — Applies this list for you: finds contradictions, penalty maths and missing clauses, and highlights risky spots in your document.</a></p><h2>How to use the list</h2><p>Start with penalty, termination, payment and liability clauses; they have the largest financial effect. Then check annexes and priority rules. For each clause you flag, write two things: why it is a problem and a balanced alternative the other side could accept.</p><p>This list is a preliminary aid and does not replace legal advice. For high-value or long-term contracts, getting a lawyer&#39;s view before signing lets you negotiate what you found far more effectively.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/contract-review-ai">Contract Auditor</a></li><li><a href="/en/tools/compare-pdf">Compare PDFs</a></li><li><a href="/en/tools/chat-with-pdf">Chat with PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Which clause causes the most trouble?</h3><p>Most often penalty and termination clauses, payment terms and annexes that are not in the document. Check these first because their financial effect is largest.</p></div><div class="seo-faq-item"><h3>Can a standard form be changed?</h3><p>Usually at least the few riskiest clauses can be negotiated. Asking for balanced terms such as “mutuality” and “a reasonable cap” lowers the chance of a flat refusal.</p></div><div class="seo-faq-item"><h3>Can I check a contract with AI?</h3><p>Yes; the Contract Auditor reads the document and finds contradictions, penalty maths and missing clauses. The result is a preliminary assessment, not legal advice.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

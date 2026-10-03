@@ -142,7 +142,7 @@ export const legalDocuments = {
           title: "5. Sharing and processors",
           paragraphs: [
             "We use trusted service providers (for example hosting, email delivery, or analytics) who process data on our instructions and under appropriate safeguards.",
-            "AI processor: our AI-powered features rely on Anthropic (Anthropic PBC, United States). Text extracted from your document is sent to Anthropic solely to generate your result; per Anthropic's API terms it is not used to train models. Only the document text is sent, not the file itself.",
+            "AI processor: our AI-powered features rely on Anthropic (Anthropic PBC, United States). Text extracted from your document is sent to Anthropic solely to generate your result; per Anthropic's API terms it is not used to train models, though the provider may retain it for up to 30 days for safety review only. Only the document text is sent, not the file itself.",
             "We do not sell your personal data. We may disclose information if required by law, to protect rights and safety, or in connection with a merger or asset transfer subject to continued protection of your information.",
           ],
         },
@@ -498,7 +498,7 @@ export const legalDocuments = {
           title: "5. Paylaşım ve işleyenler",
           paragraphs: [
             "Barındırma, e-posta gönderimi veya analitik gibi güvenilir hizmet sağlayıcıları, talimatlarımız ve uygun güvenceler çerçevesinde veri işleyebilir.",
-            "Yapay zekâ işleyeni: Yapay zekâ destekli özelliklerimiz Anthropic (Anthropic PBC, ABD) altyapısını kullanır. Yapay zekâ araçlarına gönderdiğiniz belge metni yalnızca sonucunuzu üretmek amacıyla Anthropic'e iletilir; Anthropic'in API şartları gereği modellerin eğitiminde kullanılmaz. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
+            "Yapay zekâ işleyeni: Yapay zekâ destekli özelliklerimiz Anthropic (Anthropic PBC, ABD) altyapısını kullanır. Yapay zekâ araçlarına gönderdiğiniz belge metni yalnızca sonucunuzu üretmek amacıyla Anthropic'e iletilir; Anthropic'in API şartları gereği modellerin eğitiminde kullanılmaz; ancak sağlayıcı bu veriyi yalnızca güvenlik denetimi amacıyla en fazla 30 gün saklayabilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
             "Kişisel verilerinizi satmayız. Yasal zorunluluk, hakların ve güvenliğin korunması veya birleşme veya varlık devri (verilerinizin korunmasının sürmesi koşuluyla) hallerinde bilgi açıklanabilir.",
           ],
         },
@@ -599,7 +599,7 @@ export const legalDocuments = {
             "Ödeme ve fatura bilgileri: Ad, soyad, adres, posta kodu, şehir, ülke, cep telefonu; ödeme altyapısı sağlayıcısına (İyzico) iletilerek güvenli tahsilat ve fatura düzenlenmesi amacıyla işlenir. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan İyzico’nun PCI DSS uyumlu altyapısında işlenir.",
             "Teknik ve kullanım verileri: IP adresi, tarayıcı/cihaz bilgisi, oturum bilgileri; güvenlik, sahteciliğin önlenmesi ve sistem performansı amaçlarıyla işlenir.",
             "Yüklenen belgeler: PDF ve diğer dosyalar işlem için geçici olarak sunucularımızda tutulur; işlem tamamlandıktan kısa süre sonra otomatik olarak silinir. Yapısal araçlarda (birleştirme, dönüştürme vb.) belge içeriğine anlamsal analiz uygulanmaz.",
-            "Yapay zekâ araç içeriği: Yapay zekâ destekli araçları (özetleme, sohbet, çeviri, veri çıkarma, karşılaştırma, gizleme) kullandığınızda, belgenizden çıkarılan metin sonucu üretmek amacıyla yapay zekâ sağlayıcımıza (Anthropic, ABD) aktarılır; bu metin dosyanızda mevcutsa kişisel veri içerebilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
+            "Yapay zekâ araç içeriği: Yapay zekâ destekli araçları (özetleme, sohbet, çeviri, veri çıkarma, karşılaştırma, gizleme, sözleşme denetimi) kullandığınızda, belgenizden çıkarılan metin sonucu üretmek amacıyla yapay zekâ sağlayıcımıza (Anthropic, ABD) aktarılır; bu metin dosyanızda mevcutsa kişisel veri içerebilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
           ],
         },
         {
@@ -617,7 +617,7 @@ export const legalDocuments = {
           paragraphs: [
             "Kişisel verileriniz; hizmetlerimizin sunulabilmesi için ihtiyaç duyulan ölçüde aşağıdaki alıcı gruplarına aktarılabilir:",
             "Ödeme kuruluşu (İyzico): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
-            "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz.",
+            "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz (yalnızca güvenlik denetimi için en fazla 30 gün saklanabilir).",
             "Bulut altyapısı ve barındırma hizmet sağlayıcıları: Hizmetin çalıştırıldığı sunucu altyapısını sunan şirketler; veri işleme sözleşmeleri çerçevesinde sınırlı erişim.",
             "Analitik hizmet sağlayıcıları (onay halinde): Ürün iyileştirme amacıyla anonimleştirilmiş kullanım verileri.",
             "Yasal zorunluluk: Mahkeme kararı veya yetkili kamu kurumu talebi halinde ilgili makamlarla paylaşılabilir.",

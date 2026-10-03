@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?</title>
+    <meta name="description" content="Yapay zekâ sözleşmeyi nasıl okur, hangi sonuçlara güvenebilirsiniz, nerede hata yapabilir? Hızlı tarama ile detaylı denetimin farkı." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/ai-contract-review-how-it-works" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?" />
+    <meta property="og:description" content="Yapay zekâ sözleşmeyi nasıl okur, hangi sonuçlara güvenebilirsiniz, nerede hata yapabilir? Hızlı tarama ile detaylı denetimin farkı." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?" />
+    <meta name="twitter:description" content="Yapay zekâ sözleşmeyi nasıl okur, hangi sonuçlara güvenebilirsiniz, nerede hata yapabilir? Hızlı tarama ile detaylı denetimin farkı." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" />
+    <meta name="twitter:image:alt" content="Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?","item":"https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?","description":"Yapay zekâ sözleşmeyi nasıl okur, hangi sonuçlara güvenebilirsiniz, nerede hata yapabilir? Hızlı tarama ile detaylı denetimin farkı.","datePublished":"2026-10-02","dateModified":"2026-10-02","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?","description":"Yapay zekâ sözleşmeyi nasıl okur, hangi sonuçlara güvenebilirsiniz, nerede hata yapabilir? Hızlı tarama ile detaylı denetimin farkı.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"Metin cihazınızda çıkarılır","text":"PDF’inizin kendisi gönderilmez; yalnızca metni analiz için sunucuya iletilir. Taranmış belgelerde metin cihazınızda OCR ile okunur."},{"@type":"HowToStep","position":2,"name":"Belge tanınır, sorular sorulur","text":"Sistem belgenin türünü ve taraflarını çıkarır, cevabı analizi değiştirecek birkaç soru sorar. Hangi tarafta olduğunuzu siz seçersiniz; sistem varsaymaz."},{"@type":"HowToStep","position":3,"name":"Analiz yapılır","text":"Hızlı taramada tek geçişte en önemli riskler bulunur. Detaylı denetimde belge birkaç kez okunur, rakamlar hesaplanır, hukuki noktalar resmî kaynaklarda aranır ve bulgular ikinci bir kontrolden geçer."},{"@type":"HowToStep","position":4,"name":"Sonuç belgede gösterilir","text":"Riskli yerler PDF’inizde boyanır; her bulgunun nedeni, etkisi ve (detaylı denetimde) önerilen yeni madde metni yazılır."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Yapay zekâ bir avukatın yerini tutar mı?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Sonuç bir ön değerlendirmedir. Kritik ve yüksek riskli maddeler için imzadan önce bir avukata danışın; rapor bu görüşmeyi daha verimli yapar."}},{"@type":"Question","name":"Bulgulara ne kadar güvenebilirim?","acceptedAnswer":{"@type":"Answer","text":"Her bulgunun alıntısı belgede doğrulanır ve nedeni yazılır; yine de yorum hatası olabilir. Önemli bulguları belgenin kendisinden teyit edin."}},{"@type":"Question","name":"Sonucu sonra tekrar açabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Sonuç yalnızca analizin bittiği sayfada gösterilir ve sunucudan 30 dakika içinde silinir. Raporu ve boyalı PDF’i hemen indirin."}},{"@type":"Question","name":"Analiz başarısız olursa ne olur?","acceptedAnswer":{"@type":"Answer","text":"Harcanan hak ya da kredi iade edilir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?</h1><p class="seo-intro">Yapay zekâya bir sözleşme verdiğinizde arka planda ne olur? Bulduklarına ne kadar güvenebilirsiniz, hangi sınırları bilmelisiniz? Dürüst bir anlatım.</p><figure class="seo-cover"><img src="/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" width="1200" height="630" loading="lazy" decoding="async" alt="Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?" /></figure><article class="seo-article"><p class="seo-lead">“Sözleşmeyi yapay zekâya okutmak” kulağa kolay gelir, ama sonucun işe yaraması, nasıl yapıldığına bağlıdır. Bu yazıda Sözleşme Denetçisi’nin adım adım ne yaptığını, hangi güvenceleri sunduğunu ve hangi sınırları olduğunu açıkça anlatıyoruz.</p><h2>Adım adım: ne oluyor?</h2><ol><li><strong>Metin cihazınızda çıkarılır:</strong> PDF’inizin kendisi gönderilmez; yalnızca metni analiz için sunucuya iletilir. Taranmış belgelerde metin cihazınızda OCR ile okunur.</li><li><strong>Belge tanınır, sorular sorulur:</strong> Sistem belgenin türünü ve taraflarını çıkarır, cevabı analizi değiştirecek birkaç soru sorar. Hangi tarafta olduğunuzu siz seçersiniz; sistem varsaymaz.</li><li><strong>Analiz yapılır:</strong> Hızlı taramada tek geçişte en önemli riskler bulunur. Detaylı denetimde belge birkaç kez okunur, rakamlar hesaplanır, hukuki noktalar resmî kaynaklarda aranır ve bulgular ikinci bir kontrolden geçer.</li><li><strong>Sonuç belgede gösterilir:</strong> Riskli yerler PDF’inizde boyanır; her bulgunun nedeni, etkisi ve (detaylı denetimde) önerilen yeni madde metni yazılır.</li></ol><h2>Güvenceler</h2><ul><li>Her bulgu belgeden birebir alıntıyla gelir ve bu alıntı, belge metninde yazılımla aranır; bulunamayan bulgu rapora girmez.</li><li>Sayfa numarası modelin tahmininden değil, alıntının belgedeki gerçek konumundan hesaplanır.</li><li>Detaylı denetimde kanun maddesi modelin hafızasından yazılmaz; yalnızca resmî kaynakta okunan içerik gösterilir ve kaynak bağlantısı verilir. Okunamayan nokta “doğrulanamadı” diye işaretlenir.</li><li>Bilinmeyen bilgi varsayımlar bölümünde açıkça belirtilir.</li></ul><h2>Sınırlar: bilmeniz gerekenler</h2><ul><li>Hata yapabilir: bir riski kaçırabilir ya da gereğinden önemli gösterebilir. Bu bir ön değerlendirmedir, hukuki danışmanlık değildir.</li><li>Görmediği belgeyi değerlendiremez: belgede metni olmayan ekler analiz edilemez; bu rapora yazılır.</li><li>Güncel mevzuat kontrolü yalnızca detaylı denetimde yapılır; hızlı tarama kanun maddesi dayanağı vermez.</li><li>Çok uzun belgeler (yaklaşık 240 bin karakter üstü) bölümlere ayrılmalıdır; taranmış belgelerde ilk 30 sayfa okunur.</li></ul><h2>Hızlı tarama mı, detaylı denetim mi?</h2><p>Hızlı tarama, belgeye ilk bakış için uygundur: yaklaşık 1-2 dakika sürer ve belge uzunluğuna göre 8 ile 20 hak harcar (önce aylık hakkınızdan, bitince krediden). Detaylı denetim, imzalanacak önemli bir sözleşme içindir: yaklaşık 6-12 dakika sürer ve 85 ile 122 kredi harcar; yalnızca satın alınan krediden düşer. Detaylı denetim daha pahalıdır çünkü en güçlü model belgeyi birkaç kez okur ve hukuki noktaları resmî kaynaklarda arar.</p><p><a href="/tools/sozlesme-denetci"><strong>Sözleşme Denetçisi</strong> — Önce hızlı tarama ile belgeye bakın, önemliyse detaylı denetime geçin. Metin cihazınızda okunur.</a></p><h2>Gizlilik</h2><p>Belge metni bizim sunucumuzda saklanmaz; sonuç en geç 30 dakikada silinir. Yapay zekâ sağlayıcımız API üzerinden gelen veriyi varsayılan olarak model eğitiminde kullanmaz; yalnızca güvenlik denetimi için en fazla 30 gün tutabilir. Sonuç yalnızca analizin bittiği sayfada durur: raporu hemen indirin.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/sozlesme-denetci">Sözleşme Denetçisi</a></li><li><a href="/tools/pdf-sohbet">PDF ile Sohbet</a></li><li><a href="/tools/pdf-ozetle">PDF Özetle</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Yapay zekâ bir avukatın yerini tutar mı?</h3><p>Hayır. Sonuç bir ön değerlendirmedir. Kritik ve yüksek riskli maddeler için imzadan önce bir avukata danışın; rapor bu görüşmeyi daha verimli yapar.</p></div><div class="seo-faq-item"><h3>Bulgulara ne kadar güvenebilirim?</h3><p>Her bulgunun alıntısı belgede doğrulanır ve nedeni yazılır; yine de yorum hatası olabilir. Önemli bulguları belgenin kendisinden teyit edin.</p></div><div class="seo-faq-item"><h3>Sonucu sonra tekrar açabilir miyim?</h3><p>Hayır. Sonuç yalnızca analizin bittiği sayfada gösterilir ve sunucudan 30 dakika içinde silinir. Raporu ve boyalı PDF’i hemen indirin.</p></div><div class="seo-faq-item"><h3>Analiz başarısız olursa ne olur?</h3><p>Harcanan hak ya da kredi iade edilir.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

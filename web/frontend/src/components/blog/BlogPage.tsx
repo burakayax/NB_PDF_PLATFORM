@@ -101,7 +101,7 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
         if (b.t === "h2") return <h2 key={i} className="!mt-11 flex items-center gap-3 text-[22px] font-extrabold tracking-tight text-white sm:text-2xl"><span className={`h-6 w-1.5 rounded-full bg-gradient-to-b ${accent.grad}`} />{b.x}</h2>;
         if (b.t === "h3") return <h3 key={i} className="!mt-7 text-lg font-bold text-white">{b.x}</h3>;
         if (b.t === "ul") return <ul key={i} className="space-y-2 pl-1">{b.items.map((it, j) => <li key={j} className="flex gap-2.5 text-[15px] leading-relaxed text-slate-300"><span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r ${accent.grad}`} />{it}</li>)}</ul>;
-        if (b.t === "ol") return <ol key={i} className="space-y-2 pl-1">{b.items.map((it, j) => <li key={j} className="flex gap-2.5 text-[15px] leading-relaxed text-slate-300"><span className={`shrink-0 font-bold ${accent.text}`}>{j + 1}.</span>{it}</li>)}</ol>;
+        if (b.t === "ol") return <ol key={i} className="space-y-2 pl-1">{b.items.map((it, j) => <li key={j} className="flex gap-2.5 text-[15px] leading-relaxed text-slate-300"><span className={`shrink-0 font-bold ${accent.text}`}>{(b.start ?? 1) + j}.</span>{it}</li>)}</ol>;
         if (b.t === "tip") return (
           <div key={i} className={`flex gap-3 rounded-2xl border ${accent.ring} bg-white/[0.03] p-4`}>
             <Lightbulb className={`mt-0.5 h-5 w-5 shrink-0 ${accent.text}`} />

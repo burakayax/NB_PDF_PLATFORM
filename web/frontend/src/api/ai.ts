@@ -4,7 +4,9 @@ export type AiQuota = {
   used: number;
   limit: number | null; // null = sınırsız (admin)
   remaining: number | null;
-  bonus?: number; // top-up ile alınan ek kredi (kalıcı)
+  /** Yalnızca plandan gelen AYLIK hakkın kalanı (kredi hariç); admin → null. */
+  monthlyRemaining?: number | null;
+  bonus?: number; // satın alınan kredi (kalıcı; ağır araçlar yalnız bunu kullanır)
   unlimited: boolean;
   resetAt: string;
   /** Bu ay araç bazında istek sayıları: { summarize: 5, chat: 3, ... } */

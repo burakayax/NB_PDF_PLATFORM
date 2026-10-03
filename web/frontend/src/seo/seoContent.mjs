@@ -74,6 +74,7 @@ export const TOOL_SLUGS = [
   "ai-toplu-islem",
   "pdf-karsilastir",
   "hassas-veri-gizle",
+  "sozlesme-denetci",
   "udf-to-pdf",
 ];
 
@@ -1457,6 +1458,45 @@ export const TOOL_SEO = {
     ),
   },
 
+  "sozlesme-denetci": {
+    tr: T(
+      "Sözleşme Denetçisi — Riskli Maddeleri Bulun (Yapay Zekâ)",
+      "Sözleşmenizi yükleyin; yapay zekâ riskli maddeleri bulur, belgede boyar. Hızlı tarama ya da mevzuatı da kontrol eden detaylı denetim.",
+      "Sözleşme Denetçisi: Riskli Maddeleri Bulun",
+      "Tedarik sözleşmesi, kira, hizmet ya da ihale şartnamesi — imzalamadan önce sizin tarafınızı tutan bir asistan belgeyi baştan sona okur. Maddeler arasındaki çelişkileri, ceza ve gecikme hesaplarını, tek taraflı hakları ve eksik maddeleri yakalar; riskli yerleri PDF'inizde renkle işaretler. İki seçenek sunar: yaklaşık 1-2 dakikada en önemli riskleri bulan ucuz bir hızlı tarama ya da hukuki noktaları Resmî Gazete ve mevzuat.gov.tr gibi resmî kaynaklarda güncel haliyle arayan, her bulgu için yeni madde metni öneren ve yazdığınız her nota tek tek yanıt veren detaylı denetim. Metin cihazınızda okunur; belgenizin kendisi cihazınızdan çıkmaz. Bu bir ön değerlendirmedir, hukuki danışmanlık değildir.",
+      ["sözleşme analizi", "sözleşme inceleme yapay zeka", "riskli madde bulma", "ihale şartname analizi", "sözleşme risk analizi", "tedarik sözleşmesi inceleme", "cezai şart kontrolü", "sözleşme kontrol"],
+      [
+        { q: "Hızlı tarama ile detaylı denetim arasındaki fark nedir?", a: "Hızlı tarama tek geçişte belgeyi tarar ve en önemli yaklaşık 8 riski bulup belgede boyar (yaklaşık 1-2 dakika). Güncel mevzuat kontrolü, önerilen yeni madde metinleri, notlarınıza tek tek yanıt ve müzakere öncelikleri içermez. Detaylı denetim belgeyi birkaç kez okur, rakamları hesaplar, hukuki noktaları resmî kaynaklarda arar, her bulgu için yeni madde metni önerir ve her notunuza yanıt yazar (yaklaşık 6-12 dakika)." },
+        { q: "Ne kadar hak ya da kredi harcar?", a: "Hızlı tarama belge uzunluğuna göre 8 ile 20 hak harcar; basit araçlar gibi önce aylık hakkınızdan, hakkınız bitince satın aldığınız krediden düşer. Detaylı denetim 85 ile 122 kredi harcar (yaklaşık 50 sayfalık belge ≈ 105 kredi); aylık hakkınıza dokunmaz, yalnızca satın alınan krediden düşer. Kredi, ek kredi paketlerinden alınır; süresi dolmaz ve ay sonunda sıfırlanmaz. Analiz başarısız olursa harcanan hak ya da kredi iade edilir." },
+        { q: "Güncel mevzuata gerçekten bakıyor mu?", a: "Detaylı denetimde evet: hukuki bir iddia gerektiren her nokta için Resmî Gazete, mevzuat.gov.tr, Kamu İhale Kurumu, Yargıtay ve Danıştay gibi resmî kaynaklarda hükmün güncel halini arar. Resmî kaynakta okuyamadığı bir şeyi madde numarası vererek söylemez; \"doğrulanamadı\" der. Hızlı taramada mevzuat kontrolü yapılmaz ve bulgulara kanun maddesi dayanağı eklenmez." },
+        { q: "Analizden önce neden bana soru soruyor?", a: "Belgeyi yükledikten sonra sistem önce belgeyi tanır ve cevabı risk değerlendirmesini değiştirecek birkaç soru sorar (ör. sözleşme imzalandı mı, ekler elinizde mi, metin karşı tarafın standart formu mu). Cevaplarınız analize kesin bilgi olarak girer; bilmiyorsanız \"Bilmiyorum\" diyebilirsiniz. Hangi tarafta olduğunuzu da siz seçersiniz; sistem bunu sizin yerinize varsaymaz." },
+        { q: "Kendi standartlarımı ve notlarımı ekleyebilir miyim?", a: "Evet. \"Ödeme vadesi en fazla 60 gün olmalı\" gibi kurallarınızı yazarsanız sözleşme bunlara karşı tek tek denetlenir. \"Fesih koşulları bizim için en önemli konu\" gibi notlarınız her iki seçenekte de analizde öncelikle dikkate alınır; raporda her nota tek tek yanıt yazılması yalnızca detaylı denetimde yapılır." },
+        { q: "Riskli yerleri belgede görebilir miyim?", a: "Evet. Raporla birlikte, riskli maddelerin renkle boyandığı, kenarında numara ve açılabilir not simgesi bulunan PDF'inizi indirebilirsiniz. Orijinal metin bozulmaz. Önemli: sonuç yalnızca analiz bittiği sayfada durur; raporu ve boyalı PDF'i hemen indirin, sayfayı kapatırsanız sonuç kaybolur." },
+        { q: "Belgem yapay zekâ eğitiminde kullanılır mı, saklanır mı?", a: "Bizim sunucumuzda saklanmaz: metin cihazınızda çıkarılır, yalnızca analiz süresince işlenir ve sonuç en geç 30 dakika içinde silinir. Yapay zekâ sağlayıcımız, API üzerinden gelen veriyi varsayılan olarak model eğitiminde kullanmaz; yalnızca güvenlik denetimi için en fazla 30 gün tutabilir. PDF dosyanızın kendisi gönderilmez, yalnızca metni gönderilir." },
+        { q: "Hangi belgeler ve boyutlar desteklenir?", a: "Metin içeren PDF'ler. Taranmış (resim) belgelerde metin cihazınızda OCR ile okunur ve ilk 30 sayfa işlenir. Tek seferde yaklaşık 240 bin karakterden uzun belgeler (kabaca 100 sayfa üstü) bölümlere ayrılmalıdır." },
+        { q: "Avukatın yerini tutar mı?", a: "Hayır. Bu bir yapay zekâ ön değerlendirmesidir ve hukuki danışmanlık değildir; hata yapabilir. Kritik ve yüksek riskli maddeler için imzadan önce bir avukata danışmanızı öneririz; rapor bu görüşmeyi çok daha verimli hale getirir." },
+      ],
+    ),
+    en: T(
+      "Contract Auditor — Find Risky Clauses with AI",
+      "Upload a contract; AI finds risky clauses and highlights them in your PDF. Quick scan, or a detailed audit that also checks current law.",
+      "Contract Auditor: Find the Risky Clauses",
+      "Supply contract, lease, services agreement or tender specification — an assistant on your side reads the document end to end before you sign. It catches contradictions between clauses, penalty and delay maths, one-sided rights and missing clauses, and colour-marks risky spots in your PDF. Two options: a cheap quick scan that finds the most important risks in about 1-2 minutes, or a detailed audit that looks up legal points in current form from official Turkish sources, proposes replacement wording for each finding and answers each note you wrote. Text is read on your device; the document itself never leaves it. This is a preliminary assessment, not legal advice.",
+      ["contract review ai", "contract risk analysis", "tender specification analysis", "supply contract review", "penalty clause check", "contract checker"],
+      [
+        { q: "What is the difference between the quick scan and the detailed audit?", a: "The quick scan reads the document in a single pass and finds the most important ~8 risks, highlighted in your PDF (about 1-2 minutes). It does not include a current-law check, suggested replacement clauses, per-note answers or negotiation priorities. The detailed audit reads the document several times, calculates the numbers, looks up legal points in official sources, proposes replacement wording per finding and answers each of your notes (about 6-12 minutes)." },
+        { q: "How many allowance units or credits does it use?", a: "The quick scan uses 8 to 20 units depending on length; like standard tools it draws on your monthly allowance first, then on purchased credits. The detailed audit uses 85 to 122 credits (an ≈50-page document ≈ 105); it never touches your monthly allowance, only purchased credits. Credits come from extra credit packs, never expire and do not reset at month end. If the analysis fails, what was used is refunded." },
+        { q: "Does it really check current law?", a: "In the detailed audit, yes: for every point that needs a legal claim it searches official sources such as the Official Gazette, mevzuat.gov.tr, the Public Procurement Authority and the high courts for the provision in its current form. It never states an article number it could not read; it says \"could not verify\". The quick scan does no law check and adds no statutory references." },
+        { q: "Why does it ask me questions before the analysis?", a: "After you upload, the system first recognises the document and asks a few questions whose answers change the risk assessment (e.g. is the contract signed, do you have the annexes, is it the other side's standard form). Your answers enter the analysis as facts; you can answer \"I don't know\". You also choose which side you are on; the system never assumes it for you." },
+        { q: "Can I add my own standards and notes?", a: "Yes. Write rules such as \"payment terms must not exceed 60 days\" and the contract is checked against each. Notes like \"termination terms matter most to us\" are prioritised in both options; a written answer to each note appears only in the detailed audit." },
+        { q: "Can I see the risky spots in the document?", a: "Yes. Along with the report you can download your PDF with risky clauses colour-highlighted and numbered, with an openable note icon in the margin. The original text is untouched. Important: the result stays only on the page where the analysis finished; download the report and highlighted PDF right away — closing the page loses the result." },
+        { q: "Is my document used for AI training or stored?", a: "Not on our servers: text is extracted on your device, processed only while the analysis runs, and the result is deleted within 30 minutes. Our AI provider does not use API data to train models by default; it may retain it for up to 30 days for safety review only. Your PDF file itself is not sent, only its text." },
+        { q: "Which documents and sizes are supported?", a: "PDFs containing text. For scanned (image) documents, text is read on your device with OCR and the first 30 pages are processed. Documents longer than about 240,000 characters (roughly 100+ pages) must be split into sections." },
+        { q: "Does it replace a lawyer?", a: "No. This is an AI preliminary assessment, not legal advice, and it can make mistakes. For critical and high-risk clauses we recommend consulting a lawyer before signing; the report makes that conversation far more efficient." },
+      ],
+    ),
+  },
+
   "ai-toplu-islem": {
     tr: T(
       "AI Toplu İşlem — Çok Sayıda PDF'i Tek Seferde İşle",
@@ -1863,6 +1903,7 @@ export const RELATED_TOOLS = {
   "ai-toplu-islem": ["pdf-ozetle", "pdf-veri-cikar", "pdf-ceviri"],
   "pdf-karsilastir": ["pdf-ozetle", "pdf-sohbet", "pdf-duzenle"],
   "hassas-veri-gizle": ["pdf-duzenle", "encrypt", "watermark"],
+  "sozlesme-denetci": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle", "hassas-veri-gizle"],
   // UYAP evrakıyla gelen kullanıcının bir sonraki işi neredeyse her zaman aynı:
   // dosyayı küçültüp portala yüklemek ya da parçaları tek dosyada toplamak.
   "udf-to-pdf": ["compress", "merge-pdf", "pdf-to-word", "hassas-veri-gizle"],
@@ -1885,6 +1926,11 @@ export const BLOG_RELATED_TOOLS = {
   "telefonda-pdf-islemleri-uygulamasiz": ["merge-pdf", "belge-tara", "split-pdf"],
   "en-iyi-ucretsiz-pdf-araclari": ["merge-pdf", "pdf-to-word", "compress", "pdf-ozetle", "html-to-pdf"],
   "pdf-karsilastirma-farklari-bulma": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle"],
+  "sozlesme-imzalamadan-once-kontrol-listesi": ["sozlesme-denetci", "pdf-karsilastir", "pdf-sohbet"],
+  "gecikme-cezasi-cezai-sart-hesaplama": ["sozlesme-denetci", "pdf-sohbet", "pdf-ozetle"],
+  "ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu": ["sozlesme-denetci", "pdf-ozetle", "pdf-veri-cikar"],
+  "sozlesmede-ek-madde-celiski-oncelik": ["sozlesme-denetci", "pdf-karsilastir", "pdf-sohbet"],
+  "yapay-zeka-ile-sozlesme-inceleme-nasil-calisir": ["sozlesme-denetci", "pdf-sohbet", "pdf-ozetle"],
   "pdf-hassas-veri-gizleme-kvkk": ["hassas-veri-gizle", "pdf-duzenle"],
   "dosya-yuklemeden-pdf-isleme-gizlilik": ["ustveri-temizle", "merge-pdf", "belge-tara", "hassas-veri-gizle"],
   "excel-pdf-cevirme": ["excel-to-pdf", "pdf-to-excel"],

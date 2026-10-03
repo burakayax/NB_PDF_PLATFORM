@@ -73,8 +73,8 @@ function copyFor(variant: NudgeVariant, tr: boolean, pct: number) {
         icon: "✨",
         title: tr ? "Yapay zekâyı denedin mi?" : "Have you tried AI yet?",
         body: tr
-          ? "Başlangıç planıyla PDF'lerini özetle, veri çıkar ve çevir — aylık 10 yapay zekâ işlemi dahil."
-          : "With Starter, summarize, extract and translate your PDFs — 10 AI operations/month included.",
+          ? "Başlangıç planıyla PDF'lerini özetle, veri çıkar ve çevir — aylık 5 yapay zekâ işlemi dahil."
+          : "With Starter, summarize, extract and translate your PDFs — 5 AI operations/month included.",
         cta: tr ? "Yapay zekâyı aç" : "Unlock AI",
         tone: "value" as const,
       };

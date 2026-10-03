@@ -3,7 +3,7 @@ export type BlogLang = "tr" | "en";
 
 export type BlogBlock =
   | { t: "p" | "lead" | "h2" | "h3" | "tip"; x: string }
-  | { t: "ul" | "ol"; items: string[] }
+  | { t: "ul" | "ol"; items: string[]; start?: number }
   | { t: "steps"; items: Array<{ title: string; x: string }> }
   | { t: "cta"; title: string; x: string; btn: string; tool: string };
 

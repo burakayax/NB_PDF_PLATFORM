@@ -18,6 +18,7 @@ import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { aiCompare, fetchAiQuota, type AiError, type AiQuota, type CompareResult } from "../../api/ai";
 import { ToolRating } from "../common/ToolRating";
+import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
 
 type Slot = { name: string; text: string; status: "empty" | "reading" | "ready" | "error" };
@@ -84,7 +85,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
       const err = e as AiError;
       if (err?.status === 401) setGate("login");
       else if (err?.status === 403) setGate("upgrade");
-      else if (err?.status === 429) { if (err.quota) setQuota(err.quota); setError(tr ? "Bu ayki AI kotan doldu." : "Monthly AI quota reached."); }
+      else if (err?.status === 429) { if (err.quota) setQuota(err.quota); setError(tr ? "Aylık hakkın ve kredin bitti; ek kredi alabilirsin." : "Allowance and credits used up; you can buy extra credits."); }
       else if (err?.status === 503) setError(tr ? "AI şu an kullanılamıyor." : "AI is currently unavailable.");
       else setError(err?.message || (tr ? "Bir hata oluştu." : "Something went wrong."));
     } finally {
@@ -139,17 +140,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF Karşılaştır" : "Compare PDFs"}</h1>
             <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
-            {quota && !comingSoon ? (
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${!quota.unlimited && (quota.remaining ?? 0) <= 0 ? "border-red-400/35 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.04] text-slate-300"}`}>
-                {quota.unlimited ? (tr ? "Sınırsız" : "Unlimited") : tr ? `Bu ay: ${quota.remaining}/${quota.limit}` : `This month: ${quota.remaining}/${quota.limit}`}
-              </span>
-            ) : null}
-            {quota && !quota.unlimited && !comingSoon ? (
-              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
-                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
-                + {tr ? "Kredi" : "Credits"}
-              </button>
-            ) : null}
+            {quota && !comingSoon ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{tr ? "İki belgeyi (ör. sözleşmenin iki sürümü) yükleyin; yapay zekâ eklenen, çıkarılan ve değişen maddeleri çıkarsın." : "Upload two documents (e.g. two versions of a contract); AI extracts added, removed and changed clauses."}</p>
         </div>

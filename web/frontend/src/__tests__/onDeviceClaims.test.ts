@@ -23,6 +23,7 @@ const SUNUCUYA_GIDENLER = [
   "ai-toplu-islem",
   "pdf-karsilastir",
   "hassas-veri-gizle",
+  "sozlesme-denetci",
   "imza-iste", // imza isteği karşı tarafa iletilir
   "compress",
   "pdf-to-word",

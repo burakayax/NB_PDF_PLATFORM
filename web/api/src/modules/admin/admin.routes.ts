@@ -1,7 +1,12 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import multer from "multer";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { requireAdmin } from "../../middleware/admin.middleware.js";
+import {
+  adminContractReviewProofController,
+  adminListContractReviewsController,
+  adminVerifyContractReviewController,
+} from "../ai/contract-review.admin.js";
 import {
   adminAddBlockedEmailController,
   adminAdjustCreditsController,
@@ -137,6 +142,15 @@ adminRouter.get("/reports/usage-series", asyncHandler(adminUsageSeriesController
 adminRouter.get("/reports/usage-export", asyncHandler(adminUsageExportController));
 adminRouter.get("/download-logs", asyncHandler(adminListDownloadLogsController));
 adminRouter.get("/download-logs/:id/proof", asyncHandler(adminDownloadLogProofController));
+
+// Sözleşme Denetçisi: kayıt defteri, delil çıktısı ve PDF doğrulama (anlaşmazlık/dava için).
+adminRouter.get("/contract-reviews", asyncHandler(adminListContractReviewsController));
+adminRouter.get("/contract-reviews/:id/proof", asyncHandler(adminContractReviewProofController));
+adminRouter.post(
+  "/contract-reviews/verify",
+  express.raw({ type: ["application/pdf", "application/octet-stream"], limit: "40mb" }),
+  asyncHandler(adminVerifyContractReviewController),
+);
 
 adminRouter.post("/credits/grant", asyncHandler(adminGrantCreditsController));
 adminRouter.post("/credits/adjust", asyncHandler(adminAdjustCreditsController));

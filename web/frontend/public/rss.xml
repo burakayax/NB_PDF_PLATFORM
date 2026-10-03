@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Tue, 22 Sep 2026 20:53:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 17:38:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,152 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>Yapay Zekâ ile Sözleşme İnceleme: Nasıl Çalışır?</title>
+      <link>https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir</guid>
+      <pubDate>Fri, 02 Oct 2026 17:38:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/ai-contract-review-how-it-works" />
+      <description><![CDATA[Yapay zekâya bir sözleşme verdiğinizde arka planda ne olur? Bulduklarına ne kadar güvenebilirsiniz, hangi sınırları bilmelisiniz? Dürüst bir anlatım.]]></description>
+      <content:encoded><![CDATA[<p>“Sözleşmeyi yapay zekâya okutmak” kulağa kolay gelir, ama sonucun işe yaraması, nasıl yapıldığına bağlıdır. Bu yazıda Sözleşme Denetçisi’nin adım adım ne yaptığını, hangi güvenceleri sunduğunu ve hangi sınırları olduğunu açıkça anlatıyoruz.</p>
+<h2>Adım adım: ne oluyor?</h2>
+<ol><li><strong>Metin cihazınızda çıkarılır</strong> — PDF’inizin kendisi gönderilmez; yalnızca metni analiz için sunucuya iletilir. Taranmış belgelerde metin cihazınızda OCR ile okunur.</li><li><strong>Belge tanınır, sorular sorulur</strong> — Sistem belgenin türünü ve taraflarını çıkarır, cevabı analizi değiştirecek birkaç soru sorar. Hangi tarafta olduğunuzu siz seçersiniz; sistem varsaymaz.</li><li><strong>Analiz yapılır</strong> — Hızlı taramada tek geçişte en önemli riskler bulunur. Detaylı denetimde belge birkaç kez okunur, rakamlar hesaplanır, hukuki noktalar resmî kaynaklarda aranır ve bulgular ikinci bir kontrolden geçer.</li><li><strong>Sonuç belgede gösterilir</strong> — Riskli yerler PDF’inizde boyanır; her bulgunun nedeni, etkisi ve (detaylı denetimde) önerilen yeni madde metni yazılır.</li></ol>
+<h2>Güvenceler</h2>
+<ul><li>Her bulgu belgeden birebir alıntıyla gelir ve bu alıntı, belge metninde yazılımla aranır; bulunamayan bulgu rapora girmez.</li><li>Sayfa numarası modelin tahmininden değil, alıntının belgedeki gerçek konumundan hesaplanır.</li><li>Detaylı denetimde kanun maddesi modelin hafızasından yazılmaz; yalnızca resmî kaynakta okunan içerik gösterilir ve kaynak bağlantısı verilir. Okunamayan nokta “doğrulanamadı” diye işaretlenir.</li><li>Bilinmeyen bilgi varsayımlar bölümünde açıkça belirtilir.</li></ul>
+<h2>Sınırlar: bilmeniz gerekenler</h2>
+<ul><li>Hata yapabilir: bir riski kaçırabilir ya da gereğinden önemli gösterebilir. Bu bir ön değerlendirmedir, hukuki danışmanlık değildir.</li><li>Görmediği belgeyi değerlendiremez: belgede metni olmayan ekler analiz edilemez; bu rapora yazılır.</li><li>Güncel mevzuat kontrolü yalnızca detaylı denetimde yapılır; hızlı tarama kanun maddesi dayanağı vermez.</li><li>Çok uzun belgeler (yaklaşık 240 bin karakter üstü) bölümlere ayrılmalıdır; taranmış belgelerde ilk 30 sayfa okunur.</li></ul>
+<h2>Hızlı tarama mı, detaylı denetim mi?</h2>
+<p>Hızlı tarama, belgeye ilk bakış için uygundur: yaklaşık 1-2 dakika sürer ve belge uzunluğuna göre 8 ile 20 hak harcar (önce aylık hakkınızdan, bitince krediden). Detaylı denetim, imzalanacak önemli bir sözleşme içindir: yaklaşık 6-12 dakika sürer ve 85 ile 122 kredi harcar; yalnızca satın alınan krediden düşer. Detaylı denetim daha pahalıdır çünkü en güçlü model belgeyi birkaç kez okur ve hukuki noktaları resmî kaynaklarda arar.</p>
+<p><strong>Sözleşme Denetçisi</strong> — Önce hızlı tarama ile belgeye bakın, önemliyse detaylı denetime geçin. Metin cihazınızda okunur. <a href="https://www.pdfplatform.app/tools/sozlesme-denetci">Aracı aç</a></p>
+<h2>Gizlilik</h2>
+<p>Belge metni bizim sunucumuzda saklanmaz; sonuç en geç 30 dakikada silinir. Yapay zekâ sağlayıcımız API üzerinden gelen veriyi varsayılan olarak model eğitiminde kullanmaz; yalnızca güvenlik denetimi için en fazla 30 gün tutabilir. Sonuç yalnızca analizin bittiği sayfada durur: raporu hemen indirin.</p>]]></content:encoded>
+      <category>Yapay Zekâ</category>
+      <category>Sözleşme Analizi</category>
+      <category>Güvenilirlik</category>
+      <enclosure url="https://www.pdfplatform.app/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" type="image/png" length="53627" />
+      <media:content url="https://www.pdfplatform.app/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png" />
+    </item>
+    <item>
+      <title>Gecikme Cezası ve Cezai Şart Nasıl Hesaplanır?</title>
+      <link>https://www.pdfplatform.app/blog/gecikme-cezasi-cezai-sart-hesaplama</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/gecikme-cezasi-cezai-sart-hesaplama</guid>
+      <pubDate>Fri, 02 Oct 2026 16:25:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/how-to-calculate-a-late-delivery-penalty" />
+      <description><![CDATA[“Günlük %0,5” bir cümle olarak masum görünür. Ama 20 günde bedelin %10’una ulaşır. Cezai şartı rakama dökmeyi, tavanın neden kritik olduğunu ve nelere dikkat edeceğinizi anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Sözleşmelerde gecikme cezası genellikle “her gecikilen gün için sözleşme bedelinin yüzde X’i” biçiminde yazılır. Cümle kısa, sonuç ise büyüktür. İmzadan önce oranı rakama çevirmek, bu maddenin sizi nereye götürebileceğini açıkça gösterir.</p>
+<h2>Temel hesap</h2>
+<p>Gecikme cezası = Hesaplamaya esas bedel × günlük oran × gecikilen gün sayısı. Bedeli 1.000.000 TL, günlük oranı %0,5 olan bir işte gün başına ceza 5.000 TL’dir. 20 günlük gecikme 100.000 TL, yani bedelin %10’udur. Aynı iş %1 günlük oranla yazılsaydı aynı tutara 10 günde ulaşılırdı.</p>
+<ul><li>Günlük %0,1: 10 günde %1, 100 günde %10.</li><li>Günlük %0,5: 20 günde %10, 100 günde %50.</li><li>Günlük %1: 10 günde %10, 100 günde bedelin tamamı.</li></ul>
+<h2>Tavan var mı?</h2>
+<p>Bir cezai şartı sınırlayan en önemli unsur tavandır: “toplam ceza sözleşme bedelinin %10’unu geçemez” gibi. Tavan yoksa ceza, bedelin tamamına ve hatta ötesine büyüyebilir. Cezanın yanında “ayrıca tazminat da istenebilir” yazıyorsa ceza fiilen tavansızdır.</p>
+<h2>Hangi bedel üzerinden hesaplanıyor?</h2>
+<p>“Sözleşme bedeli” KDV dahil mi hariç mi, yoksa yalnızca geciken kısım mı? Tanım yazılı değilse karşı taraf en yüksek rakamı esas alabilir. KDV dahil bedel üzerinden hesaplanan ceza, KDV hariç hesaba göre %20 daha yüksek çıkar.</p>
+<h2>Gecikmenin sebebi kimde?</h2>
+<p>Teslim süresi, karşı tarafın vermesi gereken bir onaya, numuneye ya da belgeye bağlıysa, o gecikme sizin hesabınıza yazılmamalıdır. Sözleşmede “karşı tarafın kaynaklı gecikmelerde süre uzar” şeklinde bir hüküm olup olmadığını kontrol edin; yoksa eklemek isteyin.</p>
+<p><strong>Sözleşme Denetçisi</strong> — Ceza oranlarını sözleşme bedelinize göre TL’ye çevirir, tavan olup olmadığını ve ekle çelişen süreleri gösterir. <a href="https://www.pdfplatform.app/tools/sozlesme-denetci">Aracı aç</a></p>
+<h2>Hukuki çerçeve konusunda dikkat</h2>
+<p>Cezai şartın fahiş olması halinde hâkimin indirim yapabileceği genel bir kural olsa da, tacirler arasındaki ticari işlerde bu konuda ayrı bir düzenleme bulunur ve indirim imkânı kısıtlı olabilir. Bu nedenle tacirseniz, ağır bir ceza maddesini imzadan sonra mahkemede düzeltmeye güvenmek yerine imzadan önce müzakere etmek çok daha güvenlidir. Hükümlerin güncel metnini mevzuat.gov.tr gibi resmî kaynaktan doğrulayın; bu yazı hukuki danışmanlık değildir.</p>
+<blockquote><p>Müzakerede iki talep çoğu zaman kabul görür: toplam cezaya bir tavan konması ve cezanın karşılıklı olması (yani sizin alacağınızın gecikmesi için de bir ceza ya da faiz öngörülmesi).</p></blockquote>]]></content:encoded>
+      <category>Cezai Şart</category>
+      <category>Gecikme Cezası</category>
+      <category>Hesaplama</category>
+      <enclosure url="https://www.pdfplatform.app/covers/gecikme-cezasi-cezai-sart-hesaplama.png" type="image/png" length="54413" />
+      <media:content url="https://www.pdfplatform.app/covers/gecikme-cezasi-cezai-sart-hesaplama.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/gecikme-cezasi-cezai-sart-hesaplama.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/gecikme-cezasi-cezai-sart-hesaplama.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/gecikme-cezasi-cezai-sart-hesaplama.png" />
+    </item>
+    <item>
+      <title>Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey</title>
+      <link>https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi</guid>
+      <pubDate>Fri, 02 Oct 2026 15:06:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/12-things-to-check-before-signing-a-contract" />
+      <description><![CDATA[Sözleşmelerdeki sorunların çoğu uzun ve karmaşık hükümlerde değil, gözden kaçan küçük ayrıntılarda saklanır. İmzadan önce her sözleşmede bakılması gereken 12 noktayı derledik.]]></description>
+      <content:encoded><![CDATA[<p>Çoğu sözleşme uyuşmazlığı, imza anında kimsenin fark etmediği küçük bir ayrıntıdan çıkar: bir ekte farklı yazan süre, tavanı olmayan bir ceza ya da yalnızca bir tarafa tanınmış bir fesih hakkı. Aşağıdaki liste, imzadan önce her sözleşmede gözden geçirmeniz gereken 12 noktayı sıralar.</p>
+<h2>1-4: Temel bilgiler</h2>
+<ol><li>Taraflar ve yetki: Unvanlar, vergi numaraları ve imzayı atan kişinin şirketi bağlama yetkisi doğru mu?</li><li>Konu ve kapsam: Neyin, ne miktarda, hangi nitelikte teslim edileceği ya da yapılacağı açık mı? Belirsiz ifadeler (“makul süre”, “gerekli görülen”) sonradan tartışma çıkarır.</li><li>Bedel ve ödeme: Tutar KDV dahil mi hariç mi? Vade kaç gün ve neresinden başlıyor? Fatura kesmek bir onaya bağlıysa o onayın süresi var mı?</li><li>Süreler: Teslim, bildirim, itiraz ve yenilememe süreleri kaç gün? Her süre için kim, nasıl bildirim yapacak (noter, e-posta, iadeli taahhütlü)?</li></ol>
+<h2>5-8: Para ve sorumluluk</h2>
+<ol><li>Gecikme cezası ve cezai şart: Oran nedir, üst sınırı var mı, hangi tutar üzerinden hesaplanıyor? Ayrıca tazminat da isteniyorsa ceza fiilen tavansız demektir.</li><li>Fesih: Hak karşılıklı mı? Bildirim süresi kaç gün? Fesihte yapılan işin bedeli ödeniyor mu?</li><li>Sorumluluk sınırı: Dolaylı zararlar, kâr kaybı ve ağır kusur nasıl düzenlenmiş? Üst sınır yalnızca bir taraf için mi var?</li><li>Fikri mülkiyet ve gizlilik: Sizin tasarım, kalıp ya da yönteminiz karşı tarafa devrediliyor mu? Gizlilik süresiz mi ve istisnalar karşılıklı mı?</li></ol>
+<h2>9-12: Yapı ve eksikler</h2>
+<ol><li>Ekler: Atıf yapılan her ek elinizde mi? “Ek ile madde çelişirse ek geçerlidir” gibi bir öncelik kuralı varsa ekler dikkatle okunmalı.</li><li>Süre ve yenileme: Sözleşme kendiliğinden uzuyor mu? Yenilememe bildirimi için son tarih ne?</li><li>Uyuşmazlık: Hangi mahkeme ya da tahkim yetkili? Uygulanacak hukuk yazılı mı? Uzak bir şehir, takip maliyetini artırır.</li><li>Olmayanlar: Mücbir sebep, hasarın geçişi, garanti ve ayıp süresi, devir yasağı, veri koruma gibi olması gereken hükümler eksik mi?</li></ol>
+<blockquote><p>Yalnızca okumak yetmez: oranları rakama dökün. “Günlük %1” bir cümle olarak masum görünür; 2.400.000 TL’lik bir işte günde 24.000 TL demektir.</p></blockquote>
+<p><strong>Sözleşme Denetçisi</strong> — Bu listeyi sizin yerinize uygular: çelişkileri, ceza hesaplarını ve eksik maddeleri bulur, riskli yerleri belgede boyar. <a href="https://www.pdfplatform.app/tools/sozlesme-denetci">Aracı aç</a></p>
+<h2>Listeyi nasıl kullanmalı?</h2>
+<p>Önce ceza, fesih, ödeme ve sorumluluk maddelerine bakın; parasal etkisi en büyük olan yerler bunlardır. Sonra ekleri ve öncelik kurallarını kontrol edin. Sorun gördüğünüz her madde için iki şey yazın: neden sorun olduğu ve karşı tarafın kabul edebileceği, dengeli bir alternatif.</p>
+<p>Bu liste bir ön değerlendirme aracıdır ve hukuki danışmanlık yerine geçmez. Yüksek tutarlı ya da uzun süreli sözleşmelerde imzadan önce bir avukatın görüşünü almak, bulduğunuz sorunları çok daha etkili müzakere etmenizi sağlar.</p>]]></content:encoded>
+      <category>Sözleşme</category>
+      <category>Kontrol Listesi</category>
+      <category>Risk</category>
+      <enclosure url="https://www.pdfplatform.app/covers/sozlesme-imzalamadan-once-kontrol-listesi.png" type="image/png" length="55560" />
+      <media:content url="https://www.pdfplatform.app/covers/sozlesme-imzalamadan-once-kontrol-listesi.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/sozlesme-imzalamadan-once-kontrol-listesi.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/sozlesme-imzalamadan-once-kontrol-listesi.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/sozlesme-imzalamadan-once-kontrol-listesi.png" />
+    </item>
+    <item>
+      <title>İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü</title>
+      <link>https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu</guid>
+      <pubDate>Fri, 02 Oct 2026 11:46:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/tender-specification-risk-check" />
+      <description><![CDATA[İhaleye teklif verdiğiniz anda şartnamenin ve sözleşme tasarısının tüm hükümlerini kabul etmiş olursunuz. Teklif vermeden önce bu belgelerde hangi noktalara bakmanız gerektiğini sıraladık.]]></description>
+      <content:encoded><![CDATA[<p>İhalelerde sözleşme tasarısı genellikle pazarlığa kapalıdır: teklif verdiğinizde şartnamedeki ve tasarıdaki hükümleri kabul etmiş sayılırsınız. Bu yüzden asıl karar teklif vermeden önce, belgeler okunurken verilir. Okuma sırasında şu noktalara özellikle bakın.</p>
+<h2>Belgeler arasındaki tutarlılık</h2>
+<p>İhale dosyası genellikle idari şartname, teknik şartname, sözleşme tasarısı ve eklerden oluşur. Bunlardan biri iş bitirme süresini 90 gün, diğeri 60 gün diyebilir. Belgelerin hangisinin öncelikli olduğunu belirleyen hükmü bulun ve çelişen her yeri yazılı açıklama başvurusuyla netleştirmeyi düşünün.</p>
+<h2>Kontrol edilecek başlıca noktalar</h2>
+<ul><li>İş bitirme/teslim süresi ve süre uzatımı verilen haller: Mücbir sebep ve idare kaynaklı gecikmeler süreyi uzatıyor mu?</li><li>Gecikme cezası: Günlük oran, tavan ve hangi bedel üzerinden hesaplandığı.</li><li>Teminatlar: Geçici ve kesin teminat tutarları, iade koşulları ve hangi hallerde gelir kaydedileceği.</li><li>Ödeme: Hakediş sıklığı, ödeme süresi ve gecikmede faiz var mı?</li><li>Fiyat farkı: Uzun süren işlerde girdi maliyeti artışı için bir düzenleme var mı?</li><li>İş artışı ve eksilişi: İdarenin işi artırma/azaltma hakkının sınırı nedir?</li><li>Fesih: İdare hangi hallerde, nasıl fesheder? Feshin mali sonuçları sizin açınızdan ne?</li><li>Eksik ekler: Tasarıda atıf yapılan ama dosyada bulunmayan belgeler.</li></ul>
+<h2>Öncelik sırası maddesi</h2>
+<p>Belgeler çelişirse hangisinin geçerli olacağını söyleyen bir madde sıkça bulunur. Bu madde, bir ekteki küçük görünen bir hükmü ana sözleşmenin üstüne çıkarabilir. Ekleri bu gözle okuyun.</p>
+<p><strong>Sözleşme Denetçisi</strong> — Şartname ve sözleşme tasarısını “Kamu ihalesi” seçeneğiyle denetleyin: çelişkileri, ceza hesaplarını ve eksik ekleri bulur. <a href="https://www.pdfplatform.app/tools/sozlesme-denetci">Aracı aç</a></p>
+<h2>Mevzuat değişir</h2>
+<p>Kamu ihaleleri, Kamu İhale Kanunu ve Kamu İhale Sözleşmeleri Kanunu ile bunlara bağlı düzenlemelere tabidir ve bu düzenlemeler zaman zaman değişir. Bir hükmün mevzuata uygun olup olmadığını değerlendirirken güncel metinleri Resmî Gazete, mevzuat.gov.tr ve Kamu İhale Kurumu gibi resmî kaynaklardan kontrol edin. Önemli ihalelerde bir hukuk danışmanından destek almak, itiraz ve başvuru sürelerini kaçırmamanız için de değerlidir.</p>
+<blockquote><p>Açıklama başvuru ve itirazlar için süreler kısadır. Belgeleri teklif gününe yakın değil, ilk günlerde okumak size hem soru sorma hem karar verme zamanı bırakır.</p></blockquote>]]></content:encoded>
+      <category>İhale</category>
+      <category>Şartname</category>
+      <category>Sözleşme Tasarısı</category>
+      <enclosure url="https://www.pdfplatform.app/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" type="image/png" length="52884" />
+      <media:content url="https://www.pdfplatform.app/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png" />
+    </item>
+    <item>
+      <title>Sözleşmede Ek ile Madde Çelişirse Hangisi Geçerli?</title>
+      <link>https://www.pdfplatform.app/blog/sozlesmede-ek-madde-celiski-oncelik</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/sozlesmede-ek-madde-celiski-oncelik</guid>
+      <pubDate>Fri, 02 Oct 2026 09:54:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/annex-vs-clause-conflict-which-prevails" />
+      <description><![CDATA[Madde 4 teslimi 45 gün diyor, Ek-1 ise 30 gün. “Ek geçerlidir” yazıyorsa ceza hesabınız değişir. Çelişkileri nasıl bulacağınızı ve nasıl çözeceğinizi anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Uzun sözleşmelerde aynı konu birden fazla yerde düzenlenir: ana metinde, teknik şartnamede, fiyat listesinde. Bu yerler birbirini tutmadığında asıl soru, hangisinin geçerli olduğudur. Cevap çoğu zaman sözleşmedeki küçük bir “öncelik sırası” maddesinde saklıdır.</p>
+<h2>Örnek</h2>
+<p>Madde 4 teslim süresini 45 gün olarak yazıyor, Ek-1 teknik şartname ise 30 gün diyor. Madde 13’te de “Sözleşme ile ekleri arasında çelişki bulunması halinde ekler geçerlidir” yazıyor. Sonuç: 30 gün uygulanır. 45. günde teslim ettiğinizde 15 gün gecikmiş sayılırsınız ve günlük ceza işlemeye başlar.</p>
+<h2>Öncelik sırası hükümleri</h2>
+<ul><li>“Ekler geçerlidir”: Eklerdeki ayrıntı ana metni geçersiz kılabilir. Ekleri ana metin kadar dikkatle okuyun.</li><li>“Ana metin geçerlidir”: Eklerdeki çelişkili hükümler uygulanmaz; yine de çelişkiyi temizlemek daha güvenlidir.</li><li>Hiçbir hüküm yoksa: Hangisinin geçerli olacağı tartışmaya açıktır; bu da uyuşmazlık demektir.</li></ul>
+<h2>Çelişkileri nasıl bulursunuz?</h2>
+<ol><li><strong>Konuları listeleyin</strong> — Süre, bedel, ceza, ödeme vadesi, taraflar ve yetkili mahkeme gibi rakam ve isim içeren konuları ana metinde işaretleyin.</li><li><strong>Her konuyu eklerde arayın</strong> — Aynı konunun ekte nasıl yazıldığını karşılaştırın; rakamlar, günler ve oranlar özellikle önemlidir.</li><li><strong>Öncelik sırası hükmünü bulun</strong> — Çelişki olursa hangi belgenin geçerli olduğunu söyleyen maddeyi bulun.</li></ol>
+<p><strong>Sözleşme Denetçisi</strong> — Madde ve ekler arasındaki çelişkileri bulur, öncelik kuralına göre hangisinin geçerli olacağını ve parasal etkisini gösterir. <a href="https://www.pdfplatform.app/tools/sozlesme-denetci">Aracı aç</a></p>
+<h2>İmzadan önce ne yapmalı?</h2>
+<ol><li>Çelişen yerlerin hepsini karşı tarafa yazılı olarak bildirin ve tek bir rakamda anlaşın.</li><li>Öncelik sırası maddesini, sizin için dengeli olan hâline getirin (örneğin sonraki tarihli ya da daha özel belgenin geçerli sayılması).</li><li>Belgede metni olmayan her eki talep edin ve okuyun; görmediğiniz bir ekin sizi bağlamasına izin vermeyin.</li></ol>
+<blockquote><p>İki sürüm arasında neyin değiştiğini görmek için PDF Karşılaştır aracını kullanın; çelişkiyi bulmak için ise aynı belge içindeki madde ve ekleri birlikte inceleyen Sözleşme Denetçisi’ni.</p></blockquote>
+<p><strong>PDF Karşılaştır</strong> — Sözleşmenin iki sürümü arasında eklenen, çıkarılan ve değişen maddeleri görün. <a href="https://www.pdfplatform.app/tools/pdf-karsilastir">Aracı aç</a></p>]]></content:encoded>
+      <category>Sözleşme</category>
+      <category>Çelişki</category>
+      <category>Ekler</category>
+      <enclosure url="https://www.pdfplatform.app/covers/sozlesmede-ek-madde-celiski-oncelik.png" type="image/png" length="52346" />
+      <media:content url="https://www.pdfplatform.app/covers/sozlesmede-ek-madde-celiski-oncelik.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/sozlesmede-ek-madde-celiski-oncelik.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/sozlesmede-ek-madde-celiski-oncelik.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/sozlesmede-ek-madde-celiski-oncelik.png" />
+    </item>
     <item>
       <title>UYAP Kararını Word&apos;e Aktarma: İki Adımlı Yol</title>
       <link>https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma</link>
@@ -936,190 +1082,6 @@
       <media:content url="https://www.pdfplatform.app/covers/square/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" />
-    </item>
-    <item>
-      <title>SmallPDF Alternatifi: Günlük Sınır ve Filigran Olmadan</title>
-      <link>https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz</guid>
-      <pubDate>Wed, 22 Jul 2026 11:15:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/smallpdf-alternative" />
-      <description><![CDATA[SmallPDF alternatifi ararken en çok takılınan yer: günlük işlem sınırı ve üyelik duvarı. Sınırsız, üyeliksiz ve zorunlu filigransız araçlarla karşılaştırma.]]></description>
-      <content:encoded><![CDATA[<p>SmallPDF iyi bir araç, ama ücretsiz kullanımda günlük işlem sınırına ve sık sık üyelik/Pro duvarına takılırsınız. Peki aynı işleri sınır olmadan, üye olmadan yapmak mümkün mü? Evet.</p>
-<h2>SmallPDF ücretsiz sürümünün sınırları</h2>
-<ul><li>Günlük işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemeniz ya da Pro'ya geçmeniz istenir.</li><li>Üyelik/Pro baskısı: Bazı araçlar veya toplu işlemler hesap ister.</li><li>Yükleme: Çoğu işlemde dosyanız sunucuya gider.</li></ul>
-<h2>PDF Platform'da sınır yok, üyelik yok</h2>
-<p>PDF Platform'da birleştirme, bölme, döndürme, sayfa silme, sayfa sıralama ve görselden PDF gibi yapısal araçlar üyeliksiz, günlük sınır olmadan ve zorunlu filigran eklenmeden çalışır. Üstelik bu işlemler tamamen tarayıcınızda (cihazınızda) yapılır — dosyanız sunucuya hiç gitmez.</p>
-<p><strong>PDF Birleştir</strong> — Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — sınırsız ve ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
-<h2>Hangi işler ücretsiz, hangileri hesap ister?</h2>
-<p>Dürüst ayrım: yapısal araçlar tamamen ücretsiz ve üyeliksizdir. Word/Excel dönüştürme, OCR ve yapay zekâ araçları (özet, sohbet, çeviri) sunucuda çalışır; bunlar için daha büyük dosyalar ve geçmiş kaydı hesap gerektirir ancak içerik saklanmaz.</p>
-<ul><li>Sınırsız &amp; üyeliksiz: birleştir, böl, döndür, sil, sırala, görsel → PDF, belge tara, imza, işaretleme.</li><li>Hesap/plan: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve AI araçları (daha büyük dosya + geçmiş için).</li></ul>
-<blockquote><p>Sadece birleştir/böl/döndür gibi bir iş yapacaksanız hiç hesap açmadan, günlük sınıra takılmadan halledebilirsiniz — dosyanız da cihazınızdan çıkmaz.</p></blockquote>
-<h2>SmallPDF'in gerçekten iyi olduğu yerler</h2>
-<p>Dürüst bir karşılaştırma, rakibin güçlü yanlarını da yazar. SmallPDF uzun süredir bu işi yapıyor ve bunun karşılığı var: arayüzü sade ve öğrenmesi kolay, araç yelpazesi geniş, masaüstü ve mobil uygulamaları mevcut, ekip hesabı ve bulut entegrasyonları kurumsal kullanımda işe yarıyor. Ekip olarak ortak bir bulut akışı istiyorsanız bunlar hafife alınacak özellikler değildir.</p>
-<h2>Asıl fark nerede?</h2>
-<p>Fark özellik listesinde değil, işin nerede yapıldığında. Sunucuda çalışan her aracın maliyeti vardır ve bu maliyet bir yerden sınırlanmak zorundadır; günlük ya da saatlik sınırlar bu yüzden konur. Sayfa işlemleri ise sunucu gerektirmez. Bunlar tarayıcıda yapıldığında sayılacak bir işlem kalmaz: sınır, sunucu maliyeti ortadan kalktığı için kalkar — cömertlikten değil.</p>
-<h2>Hangi işler gerçekten sınırsız?</h2>
-<ul><li>Birleştirme, bölme, sayfa silme, sıralama, döndürme ve kırpma: cihazda çalışır, sınır ve üyelik yoktur.</li><li>Görselleri PDF yapmak, belge taramak, imza ve işaretleme: yine cihazda.</li><li>Word/Excel'e dönüştürme, OCR, sıkıştırma: sunucuda çalışır; ücretsiz planda günlük hak vardır.</li><li>Yapay zekâ araçları (özet, çeviri, veri çıkarma, karşılaştırma): sunucuda, plana bağlı.</li></ul>
-<h2>Kendi ihtiyacınızı doğru ölçün</h2>
-<p>Karar vermenin en pratik yolu, son bir ayda hangi işi kaç kez yaptığınıza bakmaktır. Çoğu kişinin yaptığı işlerin büyük bölümü sayfa düzenlemedir; bu durumda sınırsız ve üyeliksiz çalışan bir araç ihtiyacı karşılar. Düzenli olarak Word'e dönüştürme ya da OCR yapıyorsanız iki tarafta da ücretli plana bakmanız gerekir; o noktada karşılaştırılacak şey aylık maliyettir.</p>
-<h2>Sınamak otuz saniye sürer</h2>
-<p>İddiaları okumak yerine sınayın: birleştirme aracını açın, internet bağlantınızı kesin ve işlemi çalıştırın. Tamamlanıyorsa dosya cihazınızdan çıkmamıştır ve sayılacak bir sunucu işlemi yoktur. Aynı sınamayı kullandığınız diğer araçlarda da yapabilirsiniz; sonuç, her iki tarafın gizlilik metninden daha açık konuşur.</p>]]></content:encoded>
-      <category>Karşılaştırma</category>
-      <category>Ücretsiz</category>
-      <enclosure url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" type="image/png" length="56555" />
-      <media:content url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" />
-    </item>
-    <item>
-      <title>Ücretsiz PDF Düzenleyici: Metin, İmza ve Form Doldurma</title>
-      <link>https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi</guid>
-      <pubDate>Wed, 22 Jul 2026 09:18:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/free-pdf-editor" />
-      <description><![CDATA[PDF düzenlemenin tek bir yolu yok: yazıyı değiştirmek, metin eklemek, imzalamak, işaretlemek... İhtiyacınıza göre hangi aracı kullanacağınızı gösteren rehber.]]></description>
-      <content:encoded><![CDATA[<p>"PDF düzenleme" herkes için aynı şey değildir: kimi mevcut yazıyı değiştirmek, kimi üzerine not eklemek, kimi imzalamak ister. Doğru aracı seçince iş saniyeler sürer. İşte ihtiyaca göre yol haritası.</p>
-<h2>1) Mevcut yazıyı değiştirmek veya silmek</h2>
-<p>PDF'teki bir yazıyı gerçekten silip yenisini yazmak istiyorsanız "PDF Düzenle" aracını kullanın. Değiştirmek istediğiniz metnin üzerine kutu çizin, yenisini yazın (boş bırakırsanız silinir) ve indirin.</p>
-<p><strong>PDF Düzenle</strong> — Mevcut yazıyı gerçekten silip değiştirin — kutu çizin, yeni metni yazın, indirin. <a href="https://www.pdfplatform.app/tools/pdf-duzenle">Aracı aç</a></p>
-<h2>2) Üzerine metin, not veya işaret eklemek</h2>
-<p>Mevcut yazıya dokunmadan üzerine metin, vurgu, kutu veya çizim eklemek istiyorsanız "PDF İşaretle" aracı idealdir. Formlardaki boşlukları doldurmak için de bunu kullanabilirsiniz.</p>
-<h2>3) İmza atmak</h2>
-<p>Belgeyi imzalamak için "PDF İmzala" aracıyla imzanızı çizin, yazın veya yükleyin; sayfada istediğiniz yere yerleştirin. İmzalama tamamen cihazınızda yapılır.</p>
-<h2>4) Form doldurmak</h2>
-<p>Doldurulabilir alanı olmayan (düz) formlarda metni doğrudan üzerine ekleyerek doldurabilirsiniz — ayrıntılı adımlar için form doldurma rehberimize bakın.</p>
-<blockquote><p>Gizli belgelerde işaretleme ve imza tamamen cihazınızda çalışır; dosyanız sunucuya gitmez. Gerçek metin silme/değiştirme ise güvenli sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p></blockquote>
-<h2>Önce doğru soruyu sorun: ne düzenlemek istiyorsunuz?</h2>
-<p>«PDF düzenleme» tek bir iş değil; birbirine benzeyen ama farklı sonuçlar veren birkaç işin ortak adıdır. Yanlış aracı seçmek, işin yapılamaz görünmesine ya da beklenmedik bir sonuç çıkmasına yol açar. İhtiyacınızı şu dört soruyla ayırt edebilirsiniz:</p>
-<ul><li>Belgedeki bir yazıyı değiştirecek misiniz? — metin düzenleme gerekir.</li><li>Belgeye kendi notunuzu mu ekleyeceksiniz? — işaretleme yeterlidir.</li><li>Sayfaları mı düzenleyeceksiniz (silme, sıralama, birleştirme)? — sayfa araçları.</li><li>Bir bilgiyi kalıcı olarak kaldıracak mısınız? — kalıcı kaldırma; işaretleme ya da kırpma yetmez.</li></ul>
-<h2>Ücretsiz araçlarda nelere dikkat etmeli?</h2>
-<p>Ücretsiz sunulan bir aracın bedeli genellikle başka bir yerdedir ve kullanmadan önce bunu görmek gerekir. En sık karşılaşılanlar: çıktıya basılan filigran, günlük ya da saatlik işlem sınırı, belgenin sunucuya yüklenmesi, indirme öncesi zorunlu üyelik ve indirilen dosyanın kalitesinin düşürülmesi. Bir aracı denerken bu beş noktayı kontrol etmek, işin ortasında takılmanızı önler.</p>
-<h2>Düzenlemeye başlamadan önce</h2>
-<p>Belgenin türü, ne yapabileceğinizi büyük ölçüde belirler. Metin katmanı olan bir PDF'te yazıyı değiştirebilirsiniz; taranmış bir belgede sayfa görüntüdür ve önce metne çevrilmesi gerekir. Belge parolalıysa hiçbir araç içeriğini okuyamaz; önce parolanın kaldırılması gerekir. Bu iki kontrol, «neden çalışmıyor?» sorularının büyük kısmını baştan çözer.</p>
-<h2>Sık karşılaşılan senaryolar ve doğru sıra</h2>
-<ul><li>Taranmış sözleşmede bir maddeyi değiştirmek: önce metne çevir, sonra düzenle.</li><li>Birden çok evrakı tek dosya yapmak: önce birleştir, sonra sırala, en son numara ekle.</li><li>Belgeyi paylaşmadan önce temizlemek: gereksiz sayfaları sil, hassas veriyi kalıcı kaldır, üstveriyi temizle.</li><li>Formu doldurup göndermek: doldur, imzala, kilitle, gerekirse küçült.</li></ul>
-<h2>Düzenlemenin sınırı</h2>
-<p>PDF'te metin akışkan değildir; bir kelimeyi uzun bir kelimeyle değiştirdiğinizde satır kendiliğinden yeniden dizilmez. Küçük düzeltmeler için bu bir sorun değildir, ama paragraflar yeniden yazılacaksa belgeyi kaynağından üretmek ya da Word'e çevirip düzenlemek daha az iş çıkarır. Ölçüt basittir: değişiklik birkaç kelimeyse doğrudan düzenleyin, sayfalar yeniden yazılacaksa dönüştürün.</p>]]></content:encoded>
-      <category>Nasıl Yapılır</category>
-      <category>Düzenleme</category>
-      <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" type="image/png" length="54604" />
-      <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" />
-    </item>
-    <item>
-      <title>Word&apos;ü PDF&apos;e Çevirme: Biçimi Bozmadan (2026 Rehberi)</title>
-      <link>https://www.pdfplatform.app/blog/word-pdf-cevirme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/word-pdf-cevirme</guid>
-      <pubDate>Tue, 21 Jul 2026 20:01:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/convert-word-to-pdf" />
-      <description><![CDATA[Word belgenizi paylaşmadan önce PDF'e çevirmek, düzenin herkeste aynı görünmesini garanti eder. Biçimi bozmadan Word'den PDF'e dönüştürmenin en pratik yolunu ve püf noktalarını anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Bir Word belgesini başkasına gönderdiğinizde, karşı taraftaki farklı Office sürümü veya eksik yazı tipi yüzünden düzen kayabilir. PDF bu sorunu çözer: belge herkeste birebir aynı görünür. İşte Word'ü biçimi bozmadan PDF'e çevirmenin yolu.</p>
-<h2>Neden Word'ü PDF'e çevirmelisiniz?</h2>
-<ul><li>Düzen kilitlenir: yazı tipleri, tablolar ve boşluklar herkeste aynı görünür.</li><li>Her cihazda açılır: telefon, tablet, bilgisayar — özel program gerekmez.</li><li>Yanlışlıkla değiştirilmez: teklif, sözleşme ve CV'ler için güvenli.</li><li>Resmî gönderimler genelde PDF ister.</li></ul>
-<h2>Adım adım dönüştürme</h2>
-<ol><li><strong>Belgeyi yükleyin</strong> — Word'den PDF'e aracına .doc, .docx, .odt veya .rtf dosyanızı sürükleyip bırakın.</li><li><strong>Dönüştürün</strong> — Belge sunucuda işlenir; düzen, yazı tipleri ve tablolar korunarak PDF'e çevrilir.</li><li><strong>Önizleyip indirin</strong> — Sonucu kontrol edin ve PDF'i indirin. Sayfa yapısı orijinal belgenizle aynı kalır.</li></ol>
-<p><strong>Word'den PDF'e</strong> — Word belgenizi düzeni bozulmadan PDF'e çevirin. <a href="https://www.pdfplatform.app/tools/word-to-pdf">Aracı aç</a></p>
-<h2>Biçim korunması için ipuçları</h2>
-<blockquote><p>Belgenizde standart yazı tipleri (Arial, Times New Roman, Calibri) kullanırsanız çıktı orijinaline en yakın olur. Çok özel/kurulu olmayan yazı tipleri bazı sistemlerde farklı görünebilir.</p></blockquote>
-<p>Ters yönde ihtiyacınız varsa — yani PDF'i tekrar düzenlenebilir Word'e çevirmek — bunun için ayrı bir aracımız var.</p>
-<p><strong>PDF'den Word'e</strong> — Elinizde düzenlenebilir hâli yoksa, PDF'i tekrar Word'e çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-word">PDF → Word</a></p>
-<h2>Dönüştürmeden önce belgeyi hazırlayın</h2>
-<p>PDF, Word belgesinin o anki hâlini dondurur; belgede ne varsa çıktıya o girer. Bu yüzden dönüştürmeden önceki birkaç dakikalık hazırlık, gönderdikten sonra fark edilen sürprizleri önler.</p>
-<ul><li>Değişiklik izlemeyi kapatın ve tüm düzeltmeleri kabul edin; aksi hâlde işaretler çıktıya girebilir.</li><li>Yorumları temizleyin — özellikle iç yazışmadan kalanları.</li><li>Yazım denetimini bir kez çalıştırın; PDF'te düzeltmek çok daha zordur.</li><li>Otomatik içindekiler ve alan kodlarını güncelleyin, yoksa eski sayfa numaraları donar.</li><li>Belge özelliklerindeki yazar adı ve şirket bilgisini gözden geçirin.</li></ul>
-<h2>Yazı tipi neden kayar?</h2>
-<p>Word dosyası yazı tipini çoğu zaman içine gömmez; yalnızca adını taşır. Karşı tarafta o yazı tipi kurulu değilse program benzerini koyar ve satır uzunlukları değişir, tablolar taşar, sayfa sayısı bile farklılaşır. PDF'te ise kullanılan yazı tipleri belgenin içine gömülür. Bu, PDF'in en çok işe yarayan yanıdır ve resmî gönderimlerin neden PDF istediğini de açıklar.</p>
-<h2>CV ve başvuru belgelerinde dikkat</h2>
-<p>İş başvurularında gönderilen belgeler çoğu zaman bir sisteme yüklenir ve otomatik olarak taranır. Bu nedenle PDF'in içindeki metnin gerçek metin olması önemlidir: Word'den doğrudan PDF üreten bir belge bu koşulu sağlar, ama CV'yi ekran görüntüsü ya da tasarım programından resim olarak dışa aktarırsanız metin okunamaz. Basit bir sınama vardır: PDF'i açıp adınızı fareyle seçmeye çalışın, seçilemiyorsa belge resimdir.</p>
-<h2>Dönüştürdükten sonra kontrol listesi</h2>
-<ul><li>Sayfa sayısı beklediğiniz gibi mi, fazladan boş sayfa oluşmuş mu?</li><li>Tablolar sayfa sonunda bölünmüş mü?</li><li>Başlıklarla metin arasında istenmeyen kopma var mı?</li><li>Bağlantılar tıklanabilir kalmış mı?</li><li>Dosya boyutu göndereceğiniz kanala sığıyor mu?</li></ul>
-<h2>Sonrasında yapabilecekleriniz</h2>
-<p>PDF elinize geçtikten sonra belge üzerinde çalışmaya devam edebilirsiniz: eklerle birleştirmek, sayfa numarası eklemek, boyutu küçültmek ya da hassas bilgileri kalıcı olarak kaldırmak. Bu işlemlerin çoğu sayfa düzeyinde çalıştığı için belgenin içeriğine ve görünümüne dokunmaz.</p>]]></content:encoded>
-      <category>Dönüştürme</category>
-      <category>Word</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" type="image/png" length="55963" />
-      <media:content url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/word-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/word-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" />
-    </item>
-    <item>
-      <title>En İyi Ücretsiz Online PDF Araçları (2026 Rehberi)</title>
-      <link>https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari</guid>
-      <pubDate>Tue, 21 Jul 2026 19:55:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/best-free-pdf-tools" />
-      <description><![CDATA["En iyi ücretsiz PDF aracı" diye tek bir cevap yok — işe göre değişir. Bu rehberde PDF işlerini kategorilere ayırıp her biri için doğru aracı ve nelere dikkat etmeniz gerektiğini anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>İnternette yüzlerce PDF aracı var ama hangisi ne zaman gerekir? Bu rehber, PDF işlerini beş kategoriye ayırıp her biri için doğru aracı gösteriyor — ve bir aracı seçerken nelere (gizlilik, filigran, dosya boyutu) dikkat etmeniz gerektiğini.</p>
-<h2>1) Düzenleme ve organizasyon</h2>
-<p>Sayfaları birleştirmek, ayırmak, silmek, döndürmek veya yeniden sıralamak en sık ihtiyaçtır. Bu işlemler hafiftir ve iyi araçlarda cihazınızda (tarayıcıda) çalışır — dosyanız sunucuya gitmez, anında sonuç alırsınız.</p>
-<p><strong>PDF Birleştir</strong> — Birden çok PDF'i tek belgede toplayın — cihazınızda. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
-<h2>2) Dönüştürme</h2>
-<p>PDF'i Word/Excel/PowerPoint'e ya da tersine çevirmek; PDF'i JPG'ye almak. Bunlar ağır işlemlerdir ve genelde sunucuda yapılır. Bir dönüştürücü seçerken en önemli ölçüt: biçimin (düzen, tablo, yazı tipi) ne kadar korunduğu.</p>
-<p><strong>PDF → Word</strong> — PDF'i düzenlenebilir Word belgesine çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-word">Aracı aç</a></p>
-<h2>3) Optimizasyon ve güvenlik</h2>
-<p>Dosya boyutunu küçültmek (sıkıştırma), şifre koymak/kaldırmak, filigran veya sayfa numarası eklemek. E-postayla göndermek için sıkıştırma, paylaşmadan önce şifreleme sık kullanılır.</p>
-<p><strong>PDF Sıkıştır</strong> — PDF boyutunu e-postaya uygun hâle getirin. <a href="https://www.pdfplatform.app/tools/compress">Aracı aç</a></p>
-<h2>4) Yapay zekâ ile PDF</h2>
-<p>Uzun belgeleri özetlemek, belgeye soru sormak, faturalardan veri çıkarmak veya iki sözleşmeyi karşılaştırmak. Yapay zekâ araçlarında genelde dosyanın kendisi yüklenmez; metin çıkarılıp yalnızca metin işlenir.</p>
-<p><strong>PDF Özetle</strong> — Uzun bir belgeyi saniyeler içinde özetleyin. <a href="https://www.pdfplatform.app/tools/pdf-ozetle">Aracı aç</a></p>
-<h2>5) Bir aracı seçerken nelere dikkat etmeli?</h2>
-<ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa cihazınızda mı işleniyor? Hassas belgelerde cihazda işleme tercih edin.</li><li>Filigran: Ücretsiz çıktıya zorunlu filigran ekleniyor mu?</li><li>Üyelik: Basit bir iş için hesap açmaya zorluyor mu?</li><li>Dosya boyutu/limit: Kaç MB'a kadar, günde kaç işlem?</li></ul>
-<blockquote><p>PDF Platform'da yapısal araçlar (birleştir, böl, döndür, tara) cihazınızda çalışır, çıktıya zorunlu filigran eklenmez ve çoğu işlem üyeliksiz yapılabilir.</p></blockquote>]]></content:encoded>
-      <category>Rehber</category>
-      <category>PDF Araçları</category>
-      <category>Ücretsiz</category>
-      <enclosure url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" type="image/png" length="54657" />
-      <media:content url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" />
-    </item>
-    <item>
-      <title>Excel&apos;i PDF&apos;e Çevirme: Tabloları ve Düzeni Koruyarak (2026)</title>
-      <link>https://www.pdfplatform.app/blog/excel-pdf-cevirme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/excel-pdf-cevirme</guid>
-      <pubDate>Tue, 21 Jul 2026 18:34:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/convert-excel-to-pdf" />
-      <description><![CDATA[Excel dosyasını olduğu gibi göndermek çoğu zaman kayan hücreler ve bozuk sayfa düzeniyle sonuçlanır. Tabloları koruyarak Excel'i PDF'e çevirmenin ve baskıya hazır hâle getirmenin yolunu anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Bir Excel tablosunu göndermek, çoğu zaman karşı tarafta kayan sütunlar, bölünen sayfalar ve bozuk yazdırma alanıyla sonuçlanır. PDF bu sorunu çözer: tablo herkeste birebir aynı, baskıya hazır görünür. İşte Excel'i düzeni bozmadan PDF'e çevirmenin yolu.</p>
-<h2>Neden Excel'i PDF'e çevirmelisiniz?</h2>
-<ul><li>Düzen kilitlenir: hücreler, sütun genişlikleri ve sayfa sonları herkeste aynı görünür.</li><li>Baskıya hazır: yazdırma alanı ve sığdırma sorunları ortadan kalkar.</li><li>Yanlışlıkla değiştirilmez: rapor, teklif ve fatura tabloları için güvenli.</li><li>Excel kurulu olmayan cihazlarda da açılır.</li></ul>
-<h2>Adım adım dönüştürme</h2>
-<ol><li><strong>Excel'i yükleyin</strong> — Excel'den PDF'e aracına .xls, .xlsx, .ods veya .csv dosyanızı ekleyin.</li><li><strong>Dönüştürün</strong> — Belge sunucuda işlenir; tablolar, hücreler ve biçimlendirme korunarak PDF'e çevrilir.</li><li><strong>Önizleyip indirin</strong> — Sonucu kontrol edip PDF'i indirin — tablonuz paylaşıma ve baskıya hazırdır.</li></ol>
-<p><strong>Excel'den PDF'e</strong> — Excel tablonuzu düzeni bozulmadan PDF'e çevirin. <a href="https://www.pdfplatform.app/tools/excel-to-pdf">Aracı aç</a></p>
-<h2>Geniş tablolar için ipucu</h2>
-<blockquote><p>Çok sütunlu geniş tablolarda, çevirmeden önce Excel'de sayfa düzenini 'Yatay (Landscape)' yapmak ve yazdırma alanını ayarlamak, çıktının sığmasını ve okunaklı olmasını sağlar.</p></blockquote>
-<h2>Tersi: PDF'teki tabloyu Excel'e almak</h2>
-<p>Elinizde bir PDF var ve içindeki tabloyu Excel'de düzenlemek istiyorsanız, bunun için ayrı bir aracımız var — tabloları .xlsx'e çıkarır.</p>
-<p><strong>PDF'den Excel'e</strong> — PDF'teki tabloları düzenlenebilir Excel'e aktarın. <a href="https://www.pdfplatform.app/tools/pdf-to-excel">PDF → Excel</a></p>
-<h2>Çevirmeden önce yazdırma ayarlarını yapın</h2>
-<p>Excel'den üretilen PDF'in nasıl görüneceğini belirleyen şey, dosyadaki yazdırma ayarlarıdır. Bu ayarlar yapılmadan çevrilen geniş bir tablo, sütunları farklı sayfalara dağılmış hâlde çıkar ve okunmaz olur. Birkaç dakikalık ayar, çıktının kullanılabilirliğini tamamen değiştirir.</p>
-<ul><li>Sayfa yönünü yatay yapın: sütun sayısı fazlaysa neredeyse her zaman gerekir.</li><li>Yazdırma alanını tanımlayın; boş hücrelerin sayfalara dağılmasını önler.</li><li>«Tüm sütunları tek sayfaya sığdır» seçeneğini kullanın.</li><li>Başlık satırının her sayfada tekrarlanmasını ayarlayın — çok sayfalı tablolarda okunabilirliği belirler.</li><li>Kılavuz çizgilerinin basılmasını isteyip istemediğinize karar verin.</li></ul>
-<h2>Birden çok sayfa (sekme) olan dosyalar</h2>
-<p>Bir Excel dosyasında çoğu zaman birden çok çalışma sayfası bulunur ve hepsinin paylaşılması gerekmez. Ara hesaplar, ham veri ya da eski dönem sekmeleri çıktıya girdiğinde belge hem şişer hem de paylaşılmaması gereken bilgiyi taşıyabilir. Çevirmeden önce hangi sekmelerin çıktıya gireceğine karar vermek, sonradan PDF'ten sayfa silmekten daha temizdir.</p>
-<h2>Gizli bilgi sızıntısına dikkat</h2>
-<p>Excel dosyaları göründüğünden fazlasını taşır: gizlenmiş satır ve sütunlar, filtreyle saklanan veriler, hücre notları ve formüllerin baktığı diğer sekmeler. PDF'e çevirirken gizli satırlar genellikle çıktıya girmez, ama hücre notları ve filtrelenmiş veriler beklenmedik biçimde görünebilir. Dışarı gidecek bir tabloyu çevirmeden önce gizli her şeyi bir kez gözden geçirmek iyi bir alışkanlıktır.</p>
-<h2>Fatura ve teklif tablolarında</h2>
-<p>Excel'de hazırlanan teklif ve fatura tablolarının PDF'e çevrilmesinin asıl nedeni, karşı tarafın rakamları değiştiremeyeceği sabit bir belge oluşturmaktır. Bu belgeyi gönderirken iki ek adım işe yarar: sayfa numarası eklemek, çok sayfalı tekliflerde eksiksizliği gösterir; belgeye izin parolası eklemek ise kopyalama ve düzenlemeyi kısıtlar.</p>
-<h2>Çıktıyı göndermeden önce</h2>
-<ul><li>Sayfa sonları mantıklı yerlerde mi, bir kalem ortadan bölünüyor mu?</li><li>Tutarlar ve para birimi doğru biçimde görünüyor mu?</li><li>En küçük punto okunabiliyor mu — özellikle baskı alınacaksa?</li><li>Belgede görünmesini istemediğiniz not ya da sütun kalmış mı?</li></ul>]]></content:encoded>
-      <category>Dönüştürme</category>
-      <category>Excel</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" type="image/png" length="56033" />
-      <media:content url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/excel-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/excel-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" />
     </item>
   </channel>
 </rss>

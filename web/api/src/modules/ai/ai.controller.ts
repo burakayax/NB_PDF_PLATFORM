@@ -40,7 +40,7 @@ async function reserveQuota(req: Request, res: Response, op: string, units = 1):
     res.status(429).json({
       error: "quota_exceeded",
       message:
-        "Bu ayki yapay zekâ kotan doldu. Kotan ay başında otomatik yenilenir.",
+        "Aylık AI hakkın ve kredin bitti. Aylık hak ay başında yenilenir; dilersen ek kredi alabilirsin.",
       quota,
     });
     return true;

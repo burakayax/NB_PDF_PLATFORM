@@ -56,6 +56,7 @@ import {
   Unlock,
   Wrench,
   type LucideIcon,
+  Gavel,
 } from "lucide-react";
 
 /** Araç kategorileri — ana sayfadaki listede başlık ve süzgeç olarak kullanılır. */
@@ -95,6 +96,11 @@ export const TOOLS: Tool[] = [
     id: "pdf-karsilastir", cat: "ai", Icon: ArrowRightLeft, ai: true,
     tr: { name: "PDF Karşılaştır", desc: "İki sürüm arasındaki farkları madde madde gösterir." },
     en: { name: "Compare PDFs", desc: "Lists what changed between two versions." },
+  },
+  {
+    id: "sozlesme-denetci", cat: "ai", Icon: Gavel, ai: true,
+    tr: { name: "Sözleşme Denetçisi", desc: "Riskli maddeleri bulur, belgede boyar; detaylı denetim mevzuatı da kontrol eder." },
+    en: { name: "Contract Auditor", desc: "Finds and highlights risky clauses; the detailed audit also checks current law." },
   },
   {
     id: "pdf-veri-cikar", cat: "ai", Icon: Table2, ai: true,
@@ -397,6 +403,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "pdf-sohbet": "purple",
   "pdf-ceviri": "indigo",
   "pdf-karsilastir": "violet",
+  "sozlesme-denetci": "fuchsia",
   "pdf-veri-cikar": "teal",
   "ai-toplu-islem": "purple",
   "taranmis-pdf-ocr": "cyan",

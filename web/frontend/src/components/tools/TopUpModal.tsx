@@ -6,6 +6,8 @@ import { useSettings } from "../../hooks/useSettings";
 import { fetchTopupPacks, topupGrant, type TopupPack } from "../../api/ai";
 import { createTopupCheckout } from "../../api/payment";
 import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
+import { estimateContractCredits } from "../../lib/aiCredits";
+import { AiCreditHelp } from "./AiCreditBadge";
 
 type Props = {
   language: Language;
@@ -18,6 +20,9 @@ type Props = {
   /** Kredi verildikten sonra (admin test) kotayı tazele. */
   onGranted?: () => void;
 };
+
+/** Tipik (≈50 sayfa) bir sözleşme denetiminin kredi bedeli — paket kartındaki "≈ N denetim" için. */
+const TYPICAL_AUDIT = estimateContractCredits(125_000);
 
 /** Ek AI kredisi (top-up) satın alma penceresi. Ödeme açılınca "Satın Al" aktif olur;
  * şimdilik "Yakında". Admin test için kredi ekleyebilir. */
@@ -68,8 +73,8 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
           <div className="flex items-center gap-2">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/25 to-indigo-600/25 text-fuchsia-200"><Zap className="h-5 w-5" /></span>
             <div>
-              <h2 className="text-lg font-black text-white">{tr ? "Ek AI Kredisi" : "Extra AI Credits"}</h2>
-              <p className="text-[12px] text-slate-400">{tr ? "Aylık hakkın bitince kullanılır, aylar arası kalıcı." : "Used when your monthly quota runs out; carries over."}</p>
+              <h2 className="flex items-center gap-2 text-lg font-black text-white">{tr ? "Ek AI Kredisi" : "Extra AI Credits"}<AiCreditHelp language={language} /></h2>
+              <p className="text-[12px] text-slate-400">{tr ? "Süresi dolmaz, ay sonunda sıfırlanmaz. Basit araçlarda ve sözleşme hızlı taramasında aylık hakkın bitince kullanılır; detaylı sözleşme denetimi yalnızca krediyle çalışır." : "Never expires, never resets. Used by standard tools and the contract quick scan once your monthly allowance runs out; the detailed contract audit works only with credits."}</p>
             </div>
           </div>
           {typeof bonus === "number" && bonus > 0 && (
@@ -86,6 +91,13 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
                   {p.popular && <span className="rounded-full bg-fuchsia-500/20 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200">{tr ? "Popüler" : "Popular"}</span>}
                 </p>
                 <p className="text-[12px] text-slate-400">{price(p)}</p>
+                {p.credits >= TYPICAL_AUDIT && (
+                  <p className="mt-0.5 text-[11.5px] text-fuchsia-300/90">
+                    {tr
+                      ? `≈ ${Math.floor(p.credits / TYPICAL_AUDIT)} detaylı sözleşme denetimi (≈50 sayfalık belge)`
+                      : `≈ ${Math.floor(p.credits / TYPICAL_AUDIT)} detailed contract audit${Math.floor(p.credits / TYPICAL_AUDIT) > 1 ? "s" : ""} (≈50-page document)`}
+                  </p>
+                )}
               </div>
               {paymentsDisabled ? (
                 isAdmin ? (
