@@ -52,6 +52,7 @@ const METIN = {
     layoutLabel: "Seçili düzen",
     bookletShort: "Kitapçık",
     remove: "Kaldır",
+    zoom: "Yakınlaştır",
     gridHintNup: "Çıktının yaprakları. Her kart bir kâğıttır; içindeki küçük sayfalar sırayla dizilir.",
     gridHintBooklet:
       "Her kart bir kâğıdın bir YÜZÜDÜR (sol ve sağ yarı). Çift taraflı basınca kartlar sırayla ön/arka yüz olur; kâğıtları üst üste koyup ortadan katla.",
@@ -91,6 +92,7 @@ const METIN = {
     layoutLabel: "Selected layout",
     bookletShort: "Booklet",
     remove: "Remove",
+    zoom: "Zoom",
     gridHintNup: "The output sheets. Each card is one sheet; the small pages on it are laid out in order.",
     gridHintBooklet:
       "Each card is one SIDE of a sheet (left and right half). Printed double-sided, the cards become front/back in order; stack the sheets and fold in the middle.",
@@ -108,6 +110,7 @@ const METIN = {
 type Kip = "nup" | "kitapcik";
 type Sonuc = { blob: Blob; filename: string };
 
+const ZOOM_LEVELS = [25, 50, 75, 100] as const;
 const ADETLER = [2, 4, 6, 8, 9, 16] as const;
 
 /** Çıktının kaç yaprak olacağı — önizleme beklemeden özet yazabilmek için. */
@@ -158,6 +161,7 @@ function LayoutModal(p: ModalProps) {
   const [onizleme, setOnizleme] = useState<{ file: File; v: number } | null>(null);
   const [hazirlaniyor, setHazirlaniyor] = useState(false);
   const surum = useRef(0);
+  const [zoom, setZoom] = useState<number>(50);
 
   // Ayar değişince çıktıyı yeniden üretip ızgarada göster. Eski istek geç dönerse yok sayılır.
   useEffect(() => {
@@ -289,6 +293,28 @@ function LayoutModal(p: ModalProps) {
               {hazirlaniyor ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-300" aria-label={t.previewBusy} />
               ) : null}
+              <span className="ml-auto flex items-center gap-1">
+                <span className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-400 sm:inline">
+                  {t.zoom}
+                </span>
+                <span className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
+                  {ZOOM_LEVELS.map((z) => (
+                    <button
+                      key={z}
+                      type="button"
+                      onClick={() => setZoom(z)}
+                      aria-pressed={zoom === z}
+                      className={`rounded px-1.5 py-1 text-[10px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
+                        zoom === z
+                          ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50"
+                          : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
+                      }`}
+                    >
+                      %{z}
+                    </button>
+                  ))}
+                </span>
+              </span>
             </p>
             {kip === "kitapcik" ? (
               <div className="mb-2 rounded-lg border border-cyan-400/20 bg-cyan-500/[0.06] px-3 py-2 text-[12px] leading-relaxed text-cyan-100">
@@ -317,7 +343,7 @@ function LayoutModal(p: ModalProps) {
                     onPageRotationsChange={() => {}}
                     pageOrder={[]}
                     onPageOrderChange={() => {}}
-                    zoomPercent={50}
+                    zoomPercent={zoom}
                     hintOverride={kip === "kitapcik" ? t.gridHintBooklet : t.gridHintNup}
                   />
                 </PdfErrorBoundary>
