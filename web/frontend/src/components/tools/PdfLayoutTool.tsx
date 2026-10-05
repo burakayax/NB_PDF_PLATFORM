@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import { BookOpen, FileText, Grid2x2, Loader2, Sliders, Trash2, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { nUpYap, kitapcikYap, izgara } from "../../lib/pdfImposition";
+import { sayfaNumaralariniBulOnbellekli } from "../../lib/pdfPageNumberMask";
 import { getPdfPageCount, PdfEncryptedError } from "../../lib/clientPdfWorker";
 import { PdfPageVisualGrid } from "../split/PdfPageVisualGrid";
 import PdfErrorBoundary from "../split/PdfErrorBoundary";
@@ -37,6 +38,8 @@ const METIN = {
     bookletNote:
       "Sayfaları öyle dizer ki çift taraflı yazdırıp ortadan katladığında sırayla okunan bir kitapçık olur.",
     frame: "Her sayfanın çevresine ince çerçeve çiz",
+    hideNums: "Sayfa numaralarını gizle, yaprağa tek numara koy",
+    hideNumsNote: "Belgenin kendi sayfa altı numaralarını bulup kapatır. Yalnız metin tabanlı PDF'lerde çalışır; taranmış (resim) PDF'lerde numaralar kalır.",
     printHint: "Yazdırırken: çift taraflı, «kısa kenardan çevir» seçeneğiyle bas; sonra ortadan katla.",
     pageCount: "sayfa",
     working: "Uygulanıyor…",
@@ -77,6 +80,8 @@ const METIN = {
     bookletNote:
       "Orders the pages so that printing double-sided and folding in the middle gives a booklet that reads in order.",
     frame: "Draw a thin frame around each page",
+    hideNums: "Hide page numbers, add one number per sheet",
+    hideNumsNote: "Finds and covers the document's own page numbers. Works only on text-based PDFs; numbers on scanned (image) PDFs stay.",
     printHint: "When printing: use double-sided, «flip on short edge», then fold in the middle.",
     pageCount: "pages",
     working: "Applying…",
@@ -111,6 +116,19 @@ type Kip = "nup" | "kitapcik";
 type Sonuc = { blob: Blob; filename: string };
 
 const ZOOM_LEVELS = [25, 50, 75, 100] as const;
+/** Yaprağa sığdır çıktısı; numara gizleme açıksa belgenin kendi numaraları kapatılır. */
+async function nupUret(bytes: Uint8Array, adet: number, cerceve: boolean, gizle: boolean): Promise<Uint8Array> {
+  let kapatilacakNumaralar;
+  if (gizle) {
+    try {
+      kapatilacakNumaralar = await sayfaNumaralariniBulOnbellekli(bytes);
+    } catch {
+      kapatilacakNumaralar = undefined; // tespit edilemediyse belge olduğu gibi kalır
+    }
+  }
+  return nUpYap(bytes, { adet, cerceve, kapatilacakNumaralar });
+}
+
 const ADETLER = [2, 4, 6, 8, 9, 16] as const;
 
 /** Çıktının kaç yaprak olacağı — önizleme beklemeden özet yazabilmek için. */
@@ -148,6 +166,8 @@ type ModalProps = {
   onAdet: (n: number) => void;
   cerceve: boolean;
   onCerceve: (b: boolean) => void;
+  gizle: boolean;
+  onGizle: (b: boolean) => void;
   busy: boolean;
   error: string | null;
   onClose: () => void;
@@ -157,7 +177,7 @@ type ModalProps = {
 /** Tam ekran düzen penceresi: ayarlar + ÇIKTININ canlı önizlemesi. */
 function LayoutModal(p: ModalProps) {
   const t = METIN[p.language === "tr" ? "tr" : "en"];
-  const { open, bytes, kip, adet, cerceve } = p;
+  const { open, bytes, kip, adet, cerceve, gizle } = p;
   const [onizleme, setOnizleme] = useState<{ file: File; v: number } | null>(null);
   const [hazirlaniyor, setHazirlaniyor] = useState(false);
   const surum = useRef(0);
@@ -170,7 +190,7 @@ function LayoutModal(p: ModalProps) {
     const zamanlayici = setTimeout(async () => {
       setHazirlaniyor(true);
       try {
-        const cikti = kip === "kitapcik" ? await kitapcikYap(bytes) : await nUpYap(bytes, { adet, cerceve });
+        const cikti = kip === "kitapcik" ? await kitapcikYap(bytes) : await nupUret(bytes, adet, cerceve, gizle);
         if (v !== surum.current) return;
         const f = new File([cikti as unknown as BlobPart], "onizleme.pdf", { type: "application/pdf" });
         setOnizleme({ file: f, v });
@@ -181,7 +201,7 @@ function LayoutModal(p: ModalProps) {
       }
     }, 250);
     return () => clearTimeout(zamanlayici);
-  }, [open, bytes, kip, adet, cerceve]);
+  }, [open, bytes, kip, adet, cerceve, gizle]);
 
   if (!open) return null;
   const yaprak = yaprakSayisi(kip, p.pageCount, adet);
@@ -277,6 +297,18 @@ function LayoutModal(p: ModalProps) {
                     className="h-4 w-4 rounded border-white/20 bg-transparent"
                   />
                   <span className="text-[13px] text-slate-200">{t.frame}</span>
+                </label>
+                <label className="mt-3 flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={gizle}
+                    onChange={(e) => p.onGizle(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent"
+                  />
+                  <span>
+                    <span className="block text-[13px] text-slate-200">{t.hideNums}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{t.hideNumsNote}</span>
+                  </span>
                 </label>
               </div>
             ) : (
@@ -398,6 +430,7 @@ export function PdfLayoutTool({
   const [kip, setKip] = useState<Kip>("nup");
   const [adet, setAdet] = useState(4);
   const [cerceve, setCerceve] = useState(false);
+  const [gizle, setGizle] = useState(false);
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [sonuc, setSonuc] = useState<Sonuc | null>(null);
@@ -439,7 +472,7 @@ export function PdfLayoutTool({
     setCalisiyor(true);
     setHata(null);
     try {
-      const cikti = kip === "kitapcik" ? await kitapcikYap(bytes) : await nUpYap(bytes, { adet, cerceve });
+      const cikti = kip === "kitapcik" ? await kitapcikYap(bytes) : await nupUret(bytes, adet, cerceve, gizle);
       const ek = kip === "kitapcik" ? "kitapcik" : `${adet}li`;
       setSonuc({
         blob: new Blob([cikti as unknown as BlobPart], { type: "application/pdf" }),
@@ -572,6 +605,11 @@ export function PdfLayoutTool({
           cerceve={cerceve}
           onCerceve={(b) => {
             setCerceve(b);
+            setSecildi(true);
+          }}
+          gizle={gizle}
+          onGizle={(b) => {
+            setGizle(b);
             setSecildi(true);
           }}
           busy={calisiyor}
