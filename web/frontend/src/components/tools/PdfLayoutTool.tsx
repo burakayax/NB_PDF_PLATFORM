@@ -326,7 +326,7 @@ function LayoutModal(p: ModalProps) {
                 {bosYer > 0 ? <p className="mt-1 text-cyan-100/75">{t.blankNote(bosYer)}</p> : null}
               </div>
             ) : null}
-            <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-white/[0.08] bg-black/20">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-black/20">
               {onizleme ? (
                 <PdfErrorBoundary>
                   <PdfPageVisualGrid
@@ -344,6 +344,7 @@ function LayoutModal(p: ModalProps) {
                     pageOrder={[]}
                     onPageOrderChange={() => {}}
                     zoomPercent={zoom}
+                    hidePageNumbers={kip === "nup"}
                     hintOverride={kip === "kitapcik" ? t.gridHintBooklet : t.gridHintNup}
                   />
                 </PdfErrorBoundary>

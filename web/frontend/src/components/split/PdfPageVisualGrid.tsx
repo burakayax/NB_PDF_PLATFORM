@@ -206,6 +206,8 @@ export type PdfPageVisualGridProps = {
   strictTurkishUi?: boolean;
   /** Üstteki yönerge satırının metnini değiştirir (ör. kitapçık önizlemesi). */
   hintOverride?: string;
+  /** Kartların altındaki sayfa numarası şeridini gizler (çıktı önizlemesinde karttaki numara kaynak sayfa değil). */
+  hidePageNumbers?: boolean;
   /** Seçim tüm sayfaları silmiş olurdu (en az bir sayfa şartı). */
   onDeleteWouldRemoveWholeDocument?: () => void;
 };
@@ -321,6 +323,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       onRubberBandActiveChange,
       strictTurkishUi = false,
       hintOverride,
+      hidePageNumbers = false,
       onDeleteWouldRemoveWholeDocument,
     },
     ref,
@@ -1788,6 +1791,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             )
           ) : null}
 
+          {hidePageNumbers ? null : (
           <div
             className={`pointer-events-none absolute bottom-0 left-0 right-0 z-[2] py-0.5 text-center text-[10px] font-bold tabular-nums leading-tight ${
               selectionMode && isOn
@@ -1799,6 +1803,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           >
             {page1}
           </div>
+          )}
         </div>
       );
 
