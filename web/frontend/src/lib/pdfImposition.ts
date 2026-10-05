@@ -22,7 +22,8 @@
  * kullanıcı kâğıdı çöpe atar. Bu yüzden sıralama ayrı bir işlevde tutulur ve
  * testlerle sabitlenir.
  */
-import { PDFDocument, type PDFEmbeddedPage } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFEmbeddedPage } from "pdf-lib";
+import type { NumaraKutusu } from "./pdfPageNumberMask";
 
 /** A4 dikey (nokta cinsinden, 72 nokta = 1 inç). */
 export const A4 = { en: 595.28, boy: 841.89 };
@@ -34,6 +35,11 @@ export type NUpSecenekleri = {
   bosluk?: number;
   /** Her küçük sayfanın çevresine ince çerçeve çiz. */
   cerceve?: boolean;
+  /**
+   * Verilirse: kaynak sayfaların KENDİ numaraları (sayfa başına kutu listesi) beyazla
+   * kapatılır ve her yaprağın altına tek bir yaprak numarası yazılır.
+   */
+  kapatilacakNumaralar?: NumaraKutusu[][];
 };
 
 /** Bir yaprakta kaç sütun/satır olacağını verir (kâğıdı en verimli dolduracak biçimde). */
@@ -147,6 +153,8 @@ export async function nUpYap(
 
   const cikti = await PDFDocument.create();
   const gomulu = await sayfalariGom(cikti, kaynak);
+  const numaraYaz = !!secenekler.kapatilacakNumaralar;
+  const yaziTipi = numaraYaz ? await cikti.embedFont(StandardFonts.Helvetica) : null;
 
   const hucreEn = (yaprakEn - bosluk * (sutun + 1)) / sutun;
   const hucreBoy = (yaprakBoy - bosluk * (satir + 1)) / satir;
@@ -165,7 +173,22 @@ export async function nUpYap(
         boy: hucreBoy,
       };
       const g = gomulu[i + j];
-      if (g) yaprak.drawPage(g, kutuyaYerlestir(g, kutu));
+      if (g) {
+        const yer = kutuyaYerlestir(g, kutu);
+        yaprak.drawPage(g, yer);
+        // Belgenin kendi sayfa numarasını beyazla kapat (kutular sayfa köşesine göre).
+        const olcek = yer.width / g.width;
+        for (const k of secenekler.kapatilacakNumaralar?.[i + j] ?? []) {
+          yaprak.drawRectangle({
+            x: yer.x + k.x * olcek,
+            y: yer.y + k.y * olcek,
+            width: k.w * olcek,
+            height: k.h * olcek,
+            color: rgb(1, 1, 1),
+            borderWidth: 0,
+          });
+        }
+      }
       if (secenekler.cerceve) {
         yaprak.drawRectangle({
           x: kutu.x,
@@ -177,6 +200,18 @@ export async function nUpYap(
           opacity: 0,
         });
       }
+    }
+    if (yaziTipi) {
+      // Yaprağın TEK numarası: alt orta, kenar boşluğunun içinde.
+      const etiket = String(i / adet + 1);
+      const boyut = 8;
+      yaprak.drawText(etiket, {
+        x: (yaprakEn - yaziTipi.widthOfTextAtSize(etiket, boyut)) / 2,
+        y: Math.max(2, (bosluk - boyut) / 2),
+        size: boyut,
+        font: yaziTipi,
+        color: rgb(0.25, 0.25, 0.25),
+      });
     }
   }
 
