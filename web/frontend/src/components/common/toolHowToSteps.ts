@@ -309,14 +309,14 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
   "sayfa-duzeni": S(
     [
       PICK_TR(),
-      { title: "Kipi seç", detail: "«Yaprağa sığdır» birden çok sayfayı tek kâğıda koyar; «Kitapçık» katlanınca sırayla okunan düzen üretir." },
-      { title: "Ayarını yap", detail: "Yaprağa kaç sayfa gireceğini seç; istersen her sayfanın çevresine ince çerçeve çizdir." },
+      { title: "Düzeni seç", detail: "Açılan pencerede «Yaprağa sığdır» (birden çok sayfa tek kâğıda) ya da «Kitapçık» (katlanınca sırayla okunur) seç; yaprağa kaç sayfa gireceğini belirle." },
+      { title: "Önizlemeye bak", detail: "Pencerenin sağında çıktının nasıl görüneceği anında çizilir; beğenmezsen ayarı değiştir." },
       TR_DOWNLOAD,
     ],
     [
       PICK_EN(),
-      { title: "Pick a mode", detail: "«Fit on sheet» puts several pages on one sheet; «Booklet» produces a foldable, in-order layout." },
-      { title: "Set it up", detail: "Choose how many pages go on a sheet, and optionally draw a thin frame around each page." },
+      { title: "Choose a layout", detail: "In the window that opens, pick «Fit on sheet» (several pages on one sheet) or «Booklet» (reads in order once folded), and set pages per sheet." },
+      { title: "Check the preview", detail: "The right side draws the result instantly; change the setting if it isn't what you want." },
       EN_DOWNLOAD,
     ],
   ),
