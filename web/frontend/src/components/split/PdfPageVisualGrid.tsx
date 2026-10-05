@@ -204,6 +204,8 @@ export type PdfPageVisualGridProps = {
   onRubberBandActiveChange?: (active: boolean) => void;
   /** Sayfa Sil görünümünde metinleri zorunlu Türkçe gösterir. */
   strictTurkishUi?: boolean;
+  /** Üstteki yönerge satırının metnini değiştirir (ör. kitapçık önizlemesi). */
+  hintOverride?: string;
   /** Seçim tüm sayfaları silmiş olurdu (en az bir sayfa şartı). */
   onDeleteWouldRemoveWholeDocument?: () => void;
 };
@@ -318,6 +320,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       onStatsChange,
       onRubberBandActiveChange,
       strictTurkishUi = false,
+      hintOverride,
       onDeleteWouldRemoveWholeDocument,
     },
     ref,
@@ -1928,7 +1931,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             <span className="font-bold text-cyan-400">
               {effectiveLang === "tr" ? "Nasıl kullanılır: " : "How to use: "}
             </span>
-            {hint}
+            {hintOverride ?? hint}
           </div>
           {selectionMode ? (
             <button

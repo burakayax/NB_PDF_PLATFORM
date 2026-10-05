@@ -52,6 +52,12 @@ const METIN = {
     layoutLabel: "Seçili düzen",
     bookletShort: "Kitapçık",
     remove: "Kaldır",
+    gridHintNup: "Çıktının yaprakları. Her kart bir kâğıttır; içindeki küçük sayfalar sırayla dizilir.",
+    gridHintBooklet:
+      "Her kart bir kâğıdın bir YÜZÜDÜR (sol ve sağ yarı). Çift taraflı basınca kartlar sırayla ön/arka yüz olur; kâğıtları üst üste koyup ortadan katla.",
+    sheetLine: (i: number, on: number, arka: number) => `${i}. kâğıt: ön yüz = kart ${on}, arka yüz = kart ${arka}`,
+    blankNote: (b: number) =>
+      `Sayfa sayısı 4'ün katı olmadığı için ${b} boş yer kaldı. Bunlar kapak içi ve arka kapak olarak boş bırakılır; sayfa sırası bozulmaz.`,
     nupShort: (adet: number) => `Yaprağa ${adet} sayfa`,
     summaryNup: (n: number, adet: number, y: number) =>
       `${n} sayfa → her yaprakta ${adet} sayfa → ${y} yaprak`,
@@ -85,6 +91,12 @@ const METIN = {
     layoutLabel: "Selected layout",
     bookletShort: "Booklet",
     remove: "Remove",
+    gridHintNup: "The output sheets. Each card is one sheet; the small pages on it are laid out in order.",
+    gridHintBooklet:
+      "Each card is one SIDE of a sheet (left and right half). Printed double-sided, the cards become front/back in order; stack the sheets and fold in the middle.",
+    sheetLine: (i: number, on: number, arka: number) => `Sheet ${i}: front = card ${on}, back = card ${arka}`,
+    blankNote: (b: number) =>
+      `The page count is not a multiple of 4, so ${b} slot(s) stay blank (inside covers / back cover). Page order is unaffected.`,
     nupShort: (adet: number) => `${adet} pages per sheet`,
     summaryNup: (n: number, adet: number, y: number) =>
       `${n} pages → ${adet} per sheet → ${y} sheets`,
@@ -169,6 +181,7 @@ function LayoutModal(p: ModalProps) {
 
   if (!open) return null;
   const yaprak = yaprakSayisi(kip, p.pageCount, adet);
+  const bosYer = Math.ceil(p.pageCount / 4) * 4 - p.pageCount;
   const ozet =
     kip === "kitapcik" ? t.summaryBooklet(p.pageCount, yaprak) : t.summaryNup(p.pageCount, adet, yaprak);
 
@@ -277,6 +290,16 @@ function LayoutModal(p: ModalProps) {
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-300" aria-label={t.previewBusy} />
               ) : null}
             </p>
+            {kip === "kitapcik" ? (
+              <div className="mb-2 rounded-lg border border-cyan-400/20 bg-cyan-500/[0.06] px-3 py-2 text-[12px] leading-relaxed text-cyan-100">
+                {Array.from({ length: yaprak }, (_, i) => (
+                  <p key={i} className="font-medium">
+                    {t.sheetLine(i + 1, i * 2 + 1, i * 2 + 2)}
+                  </p>
+                ))}
+                {bosYer > 0 ? <p className="mt-1 text-cyan-100/75">{t.blankNote(bosYer)}</p> : null}
+              </div>
+            ) : null}
             <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-white/[0.08] bg-black/20">
               {onizleme ? (
                 <PdfErrorBoundary>
@@ -295,6 +318,7 @@ function LayoutModal(p: ModalProps) {
                     pageOrder={[]}
                     onPageOrderChange={() => {}}
                     zoomPercent={50}
+                    hintOverride={kip === "kitapcik" ? t.gridHintBooklet : t.gridHintNup}
                   />
                 </PdfErrorBoundary>
               ) : (
