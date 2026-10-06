@@ -11,6 +11,8 @@
  * ve dosya adında bozuk görünür).
  */
 
+// Kontrol karakterleri dosya adında bilerek ayıklanır.
+// eslint-disable-next-line no-control-regex
 const ILLEGAL = /[/\\?%*:|"<>\u0000-\u001f]/g;
 
 /** Yüklenen dosyanın adından ".pdf" ve yasak karakterleri atar; makul uzunlukta tutar. */

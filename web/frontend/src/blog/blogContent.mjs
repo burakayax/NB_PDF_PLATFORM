@@ -63,9 +63,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Contract Review Checklist: 12 Clauses to Read Before You Sign",
+      title: "Contract Review Checklist: 12 Clauses Before You Sign",
       description:
-        "A practical pre-signature checklist for supply, lease and service contracts: penalties, termination, payment terms, annexes, liability caps and the clauses that are usually missing.",
+        "A pre-signature checklist for supply, lease and service contracts: penalties, termination, payment terms, annexes, liability caps and missing clauses.",
       excerpt:
         "Contracts rarely go wrong in the long, complicated clauses. They go wrong in a deadline buried in an annex or a termination right that only one side has. Twelve checks, grouped by what they protect.",
       blocks: [
@@ -148,9 +148,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Late-Delivery Penalty Calculator: Put the Clause Into Numbers",
+      title: "Late-Delivery Penalty Calculator: Clause Into Numbers",
       description:
-        "A step-by-step method for converting a daily delay-penalty rate into real money, with worked figures, the cap question, the VAT base and a note on how courts treat heavy penalties.",
+        "Turn a daily delay-penalty rate into real money with worked figures, the cap question, the VAT base and how courts treat heavy penalties.",
       excerpt:
         "A rate of 0.5% per day looks small until you multiply it out. This guide shows the arithmetic, where the traps hide and what to ask for before signing.",
       blocks: [
@@ -227,9 +227,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Tender Documents Risk Review: What to Check Before You Bid",
+      title: "Tender Documents Risk Review: Check Before You Bid",
       description:
-        "A pre-bid review guide for public tender specifications and draft contracts: conflicting documents, penalties, guarantees, payment terms, price adjustment and missing annexes.",
+        "A pre-bid review of tender specifications and draft contracts: conflicting documents, penalties, guarantees, payment terms and missing annexes.",
       excerpt:
         "Submitting a bid means accepting everything in the specification and draft contract, usually without negotiation. The review therefore has to happen before the bid.",
       blocks: [
@@ -313,7 +313,7 @@ export const BLOG_POSTS = [
     {
       title: "When a Contract Annex Contradicts the Main Text",
       description:
-        "How order-of-precedence clauses decide between a contract clause and its annex, a worked example with real consequences, and the checks that expose conflicts before signing.",
+        "How order-of-precedence clauses decide between a clause and its annex, with a worked example and checks that expose conflicts before you sign.",
       excerpt:
         "The body says 45 days. The annex says 30. A single 'annexes prevail' sentence decides which one you are held to, and when your penalty starts.",
       blocks: [
@@ -403,9 +403,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Can You Trust AI to Review a Contract? How It Works and Where It Fails",
+      title: "Can AI Review a Contract? How It Works and Where It Fails",
       description:
-        "What an AI contract review actually does, which checks keep its findings honest, the limits you should plan around and when to choose a quick scan or a detailed audit.",
+        "What an AI contract review really does, which checks keep findings honest, its limits and when to choose a quick scan or a detailed audit.",
       excerpt:
         "Handing a contract to an AI is easy. Knowing how far to trust the answer is the hard part. This is a plain account of the process, the safeguards and the limits.",
       blocks: [
@@ -659,9 +659,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "DocuSign Alternatives for Small Teams: Signature Requests Without Envelope Limits",
+      title: "DocuSign Alternatives for Small Teams, No Envelope Limits",
       description:
-        "DocuSign's personal plan stops at five envelopes a month. Compare real prices, what you give up, how signature requests and audit certificates work, and when a qualified signature is required.",
+        "DocuSign's personal plan stops at five envelopes a month. Compare prices, trade-offs, audit certificates and when a qualified signature is required.",
       excerpt:
         "DocuSign built the category, but it bills per envelope. If you send ten contracts a month the personal plan is spent by mid-month. Here are the numbers and the trade-offs.",
       blocks: [
@@ -801,9 +801,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF24 on Mac or Linux: Private Alternatives to the Windows-Only App",
+      title: "PDF24 on Mac or Linux: Private Alternatives",
       description:
-        "PDF24's offline Creator exists only for Windows, so Mac and Linux users end up uploading files. Here is what each PDF24 product does and how to keep PDFs on your machine on any system.",
+        "PDF24's offline Creator is Windows-only, so Mac and Linux users end up uploading files. See what each product does and how to keep PDFs local.",
       excerpt:
         "PDF24 Creator keeps your files on your computer, but only if that computer runs Windows. On Mac or Linux the online tools are the only option, and they upload.",
       blocks: [
@@ -935,9 +935,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Microsoft Lens Alternative: Scan Documents on Your Phone After the Shutdown",
+      title: "Microsoft Lens Alternative: Scan on Your Phone",
       description:
-        "Microsoft Lens stopped creating scans in March 2026. See the timeline, what your phone already does, and a browser-based scanner that keeps documents on your device.",
+        "Microsoft Lens stopped creating scans in March 2026. See the timeline, what your phone already does and a browser scanner that keeps files on your device.",
       excerpt:
         "Lens is gone and Microsoft suggests OneDrive. If you would rather not put every scanned page in a cloud, there are other routes, starting with what your phone already has.",
       blocks: [
@@ -1054,9 +1054,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Save the Original Images From a PDF (Not Screenshots)",
+      title: "How to Save Original Images From a PDF",
       description:
-        "Screenshots of a PDF blur logos and photos. Learn the three ways to get images out, why extracting embedded files beats converting pages, and how to do it in three clicks.",
+        "Screenshots blur logos and photos. Learn three ways to get images out, why extracting embedded files beats converting pages, and how in three clicks.",
       excerpt:
         "Converting a page to a picture and pulling out the pictures inside it are two different operations with very different results. Here is when to use which.",
       blocks: [
@@ -1154,9 +1154,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Invoice PDF to Excel: Pull Totals and Line Items Without Retyping",
+      title: "Invoice PDF to Excel: Totals and Lines Without Retyping",
       description:
-        "Compare manual entry, OCR and AI extraction for moving invoice data into Excel or CSV, and see how to turn a folder of invoices into one table.",
+        "Compare manual entry, OCR and AI extraction for moving invoice data into Excel or CSV, and turn a folder of invoices into one table.",
       excerpt:
         "Retyping invoices is slow and every typo travels into your books. Here is how the three approaches compare and how to get a whole folder into one spreadsheet.",
       blocks: [
@@ -1244,9 +1244,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Combine PDF Files Into One, Free and Without Uploading",
+      title: "Combine PDF Files Into One: Free, No Upload",
       description:
-        "Join several PDFs into a single file in your browser: no account, no install, nothing uploaded. Includes ordering tips, what to do after merging and how mixed page sizes behave.",
+        "Join several PDFs in your browser with no account, no install and nothing uploaded. Includes ordering tips and how mixed page sizes behave.",
       excerpt:
         "Merging is simple. Getting the order right and finishing the document properly is where the time goes. Steps, tips and the reason it can run without a server.",
       blocks: [
@@ -1341,9 +1341,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Translate a PDF Into Another Language and Keep the Layout",
+      title: "Translate a PDF Into Another Language, Keep the Layout",
       description:
-        "How to translate a PDF with AI into 12+ languages while keeping headings, lists and tables, what to leave untranslated and when you still need a sworn translator.",
+        "Translate a PDF with AI into 12+ languages while keeping headings, lists and tables, what to leave untranslated and when you need a sworn translator.",
       excerpt:
         "Pasting a PDF into a translation page destroys its structure. Here is a way to translate that keeps headings, lists and tables, and an honest list of its limits.",
       blocks: [
@@ -1434,7 +1434,7 @@ export const BLOG_POSTS = [
     },
     {
       title: "PDF to Word: Edit a PDF Without Retyping It",
-      description: "How to convert a PDF to an editable .docx, which documents come through cleanly, what to check afterwards and when editing the PDF directly is the better choice.",
+      description: "Convert a PDF to an editable .docx, which documents come through cleanly, what to check afterwards and when editing the PDF directly is better.",
       excerpt: "Converting to Word is the quickest way to rework a PDF's text. Here is what converts well, what does not, and how to avoid the usual formatting surprises.",
       blocks: [
         { t: "lead", x: "A PDF is made to be shared, not changed. When the text inside needs real rewriting, converting the file to Word is usually the shortest route." },
@@ -1518,8 +1518,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Too Big to Email? How to Compress It Without Visible Loss",
-      description: "Why PDFs get large, how much each kind of file will shrink, what to try before compressing and how to check quality afterwards.",
+      title: "PDF Too Big to Email? Compress It Without Visible Loss",
+      description: "Why PDFs get large, how much each kind of file shrinks, what to try before compressing and how to check quality afterwards.",
       excerpt: "A 'file too large' bounce usually traces back to images inside the PDF. Set realistic expectations, remove what you do not need, then compress.",
       blocks: [
         { t: "lead", x: "Email services typically cap attachments at 20 to 25 MB, and a scanned or image-heavy PDF passes that easily. Most PDFs can be reduced a lot with no loss you would notice." },
@@ -1605,8 +1605,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Passwords Explained: How to Remove One or Add One Safely",
-      description: "The difference between an open password and a permissions password, how to unlock a PDF you own, how to protect a sensitive file and how to share the password safely.",
+      title: "PDF Passwords: How to Remove or Add One Safely",
+      description: "Open password versus permissions password, how to unlock a PDF you own, how to protect a sensitive file and how to share the password safely.",
       excerpt: "A PDF can carry two very different kinds of password. Knowing which one you are dealing with decides what to remove, what to add and how to send it.",
       blocks: [
         { t: "lead", x: "People ask about PDF passwords for two opposite reasons: they want a password they already know gone for good, or they want to put one on a document before sharing it. Separate tools handle each, and a little background avoids the usual confusion." },
@@ -1693,8 +1693,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Turn Photos and Scans Into a Single PDF: Free, in Your Browser",
-      description: "Combine JPG and PNG images into one PDF without signing up or uploading anything. Includes photo tips, ordering, file size, searchable text and format advice.",
+      title: "Turn Photos and Scans Into One PDF, Free in Your Browser",
+      description: "Combine JPG and PNG images into one PDF without signing up or uploading. Includes photo tips, ordering, file size and searchable-text advice.",
       excerpt: "Ten loose photos are awkward to send. One ordered PDF is not. Here is how to build it, and how to avoid the problems that make people send it twice.",
       blocks: [
         { t: "lead", x: "Whether it is photographed paperwork for an application, scanned receipts for expenses or pages for your archive, a single PDF is easier to send, print and keep than a pile of images." },
@@ -1778,8 +1778,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "AI Document Summaries: Get the Key Points From a 50-Page Contract",
-      description: "How AI summarizes long contracts, tenders and reports into parties, dates, amounts and takeaways, how to verify the result and when a summary is not enough.",
+      title: "AI Summaries: Key Points From a 50-Page Contract",
+      description: "How AI turns long contracts, tenders and reports into parties, dates, amounts and takeaways, how to verify the result and when a summary falls short.",
       excerpt: "You rarely need every page; you need to know what it says and what to watch for. Here is how to get that quickly and how far to trust it.",
       blocks: [
         { t: "lead", x: "When a long contract, tender or report arrives, the real question is simple: what does it say, and what should I watch for? A good AI summary answers that in seconds instead of an hour of reading." },
@@ -1862,8 +1862,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "OCR Explained: Make a Scanned PDF Searchable and Copyable",
-      description: "Why text in a scanned PDF cannot be selected, what OCR does about it, what limits its accuracy and how to prepare a document for the best results. Turkish and English, on your device.",
+      title: "OCR Explained: Make a Scanned PDF Searchable",
+      description: "Why text in a scanned PDF cannot be selected, what OCR does about it, what limits its accuracy and how to prepare a document. Turkish and English, on-device.",
       excerpt: "A scanned PDF is a stack of photographs of text. OCR reads those photographs and gives the words back to you. Here is what affects the result.",
       blocks: [
         { t: "lead", x: "Scan a document into a PDF and the writing on the page is really a picture. That is why you cannot select, search or copy it. OCR, short for optical character recognition, reads the picture and turns it back into real text." },
@@ -1956,8 +1956,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Reading a Tender Document: A Bid Manager's Order of Attack",
-      description: "In what order to read a tender or RFP, which clauses decide whether you bid, the formal mistakes that disqualify bids and how AI and a clean archive speed it up.",
+      title: "Reading a Tender Document: A Bid Manager's Order",
+      description: "In what order to read a tender or RFP, which clauses decide whether you bid, the formal mistakes that disqualify bids and how AI speeds the work.",
       excerpt: "Winning or being disqualified often hinges on a handful of clauses buried in dozens of pages. Read them in the right order and you decide faster and miss less.",
       blocks: [
         { t: "lead", x: "Tender documents are long, technical and dense, yet the outcome often hinges on a few critical clauses. Experienced bid writers do not read from page one; they first decide whether the bid is worth making." },
@@ -2054,8 +2054,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Lease Agreement Checklist: Deposit, Rent Increase and Move-Out Traps",
-      description: "What to check in a rental contract before you sign: deposit return, rent increase basis, who pays for what, notice periods and how to keep proof of the property's condition.",
+      title: "Lease Agreement Checklist: Deposit, Rent, Move-Out Traps",
+      description: "What to check in a rental contract before signing: deposit return, rent increase basis, who pays what, notice periods and proof of the property's condition.",
       excerpt: "Most tenancy disputes begin at move-out and revolve around the deposit. A short list of clauses and one set of photos can prevent nearly all of them.",
       blocks: [
         { t: "lead", x: "A lease can look standard and still hide the clauses that cause the biggest fights: how the deposit is returned, how the rent rises, and how a tenancy ends. Read these points before you sign, not after the first dispute." },
@@ -2226,8 +2226,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Understand a Contract Written in a Language You Do Not Speak",
-      description: "A practical routine for reading a foreign-language contract: translate with structure intact, summarize, find the clauses that carry risk and compare versions.",
+      title: "Understanding a Contract in a Language You Don't Speak",
+      description: "A routine for reading a foreign-language contract: translate with structure intact, summarize, find the risky clauses and compare versions.",
       excerpt: "You do not need to read every line. Translate, summarize, then spend your attention on the handful of clauses where the risk sits.",
       blocks: [
         { t: "lead", x: "Contracts, proposals and technical documents often arrive in a language you do not read well. Translating every line with a dictionary is slow. A better routine is to translate the document with its structure intact, summarize it, and then concentrate on the few clauses that matter." },
@@ -2310,8 +2310,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Screening Research Papers Faster: A Three-Stage Method for Literature Reviews",
-      description: "How to screen dozens of academic papers for a literature review: the three-stage method, what to check in the method section, limits of AI summaries and note-keeping habits.",
+      title: "Screening Research Papers Faster for Literature Reviews",
+      description: "How to screen dozens of papers for a literature review: a three-stage method, what to check in methods, the limits of AI summaries and note-keeping.",
       excerpt: "The skill in a literature review is not reading everything. It is deciding quickly what deserves a full read. A staged method plus structured summaries gets you there.",
       blocks: [
         { t: "lead", x: "For a thesis, assignment or research project, reading dozens of papers in full is nearly impossible. The real skill is screening quickly for the papers that will actually enter your review." },
@@ -2394,8 +2394,8 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Month-End Invoice Batch: Prepare Dozens of PDF Invoices for Your Accountant",
-      description: "Tidy a folder of invoices, process them in one run into a single CSV, check the totals sensibly and keep an archive your accountant and an auditor can both use.",
+      title: "Month-End Invoice Batch: PDFs Ready for Your Accountant",
+      description: "Tidy a folder of invoices, process it in one run into a single CSV, check the totals and keep an archive that an accountant and auditor can both use.",
       excerpt: "The time saving is not only in the extraction. It comes from tidying the folder before and checking the table after. A practical month-end routine.",
       blocks: [
         { t: "lead", x: "For small businesses and freelancers, month-end often means opening PDF invoices one at a time and keying them into a sheet. Batch processing handles the lot in one pass, and a little preparation makes the result far more reliable." },
@@ -2504,9 +2504,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Remove Pages From a PDF Without Uploading It Anywhere",
+      title: "Remove Pages From a PDF Without Uploading It",
       description:
-        "Delete blank, duplicate or confidential pages from a PDF in your browser. Includes what to remove before sharing, scanner leftovers and what deleting does not do.",
+        "Delete blank, duplicate or confidential pages from a PDF in your browser, plus what to remove before sharing and what deleting does not do.",
       excerpt:
         "Deleting pages takes seconds. Knowing which pages to remove, and what deleting cannot hide, is what keeps documents clean and safe to share.",
       blocks: [
@@ -2622,9 +2622,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Why Your PDF Keeps Opening Sideways, and How to Fix It for Good",
+      title: "Why Your PDF Opens Sideways, and How to Fix It",
       description:
-        "Rotate sideways or upside-down pages and save the new orientation permanently, in your browser and without signing up. Includes the difference between view and saved rotation.",
+        "Rotate sideways or upside-down pages and save the new orientation for good, in your browser without signing up. Covers view versus saved rotation.",
       excerpt:
         "The rotate button in a PDF viewer only turns your screen. Here is how to change the pages themselves, so they look right for everyone who opens the file.",
       blocks: [
@@ -2737,9 +2737,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Rearrange PDF Pages, Including Fixing a Scan That Came Out Backwards",
+      title: "How to Rearrange PDF Pages and Fix Backwards Scans",
       description:
-        "Move pages to a new position, fix batch-scan order problems and plan a clean order. Free, with no signup, and your file stays on your device.",
+        "Move pages to a new position, fix batch-scan order problems and plan a clean order. Free, no signup, and your file stays on your device.",
       excerpt:
         "Two-sided scans often arrive as 1, 3, 5 and then 6, 4, 2. The content is all there; only the order needs fixing. Here is how to do it quickly.",
       blocks: [
@@ -2861,9 +2861,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Split a PDF: Extract Pages, Cut Sections or Save Every Page Separately",
+      title: "Split a PDF: Extract Pages, Sections or Every Page",
       description:
-        "Break a PDF into single pages, ranges or sections in your browser. Includes how to find the right pages, share only what is needed and name the parts.",
+        "Break a PDF into single pages, ranges or sections in your browser. Includes finding the right pages, sharing only what is needed and naming the parts.",
       excerpt:
         "Often you need only the signature page or one section. Splitting gets you exactly that, and sending less is also a good privacy habit.",
       blocks: [
@@ -2965,9 +2965,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Sign a PDF Online Without Printing It: Draw, Type or Upload Your Signature",
+      title: "Sign a PDF Online: Draw, Type or Upload Your Signature",
       description:
-        "Add your signature, a date and a short note to a PDF in your browser. Learn the difference between a visual signature and a qualified one, and how to sign every page.",
+        "Add your signature, a date and a note to a PDF in your browser. Learn how a visual signature differs from a qualified one and how to sign every page.",
       excerpt:
         "Printing, signing and scanning a contract wastes time and quality. Signing the PDF directly takes a minute, and nothing leaves your device.",
       blocks: [
@@ -3058,9 +3058,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Watermark Guide: What to Write, How Light to Make It and What It Cannot Do",
+      title: "PDF Watermark Guide: Wording, Opacity and Limits",
       description:
-        "Stamp DRAFT, CONFIDENTIAL or a name across a PDF with colour, font and opacity control. Covers wording, readability, what a watermark really protects and version control.",
+        "Stamp DRAFT, CONFIDENTIAL or a name across a PDF with colour, font and opacity control. Covers wording, readability, what a watermark protects and versions.",
       excerpt:
         "A watermark is a quick way to label status and ownership. It is a deterrent, not a lock, so the wording and the settings matter more than the stamp itself.",
       blocks: [
@@ -3160,9 +3160,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Marking Up a PDF: Highlight, Draw and Add Notes Without Touching the Text",
+      title: "Mark Up a PDF: Highlight, Draw and Add Notes",
       description:
-        "How to review a PDF with highlights, freehand drawing, boxes, arrows and text notes in your browser, and how markup differs from editing and redaction.",
+        "Review a PDF with highlights, freehand drawing, boxes, arrows and text notes in your browser, and learn how markup differs from editing and redaction.",
       excerpt:
         "Reviewing a document, you want a pen in your hand. Markup adds highlights, drawings and notes on top of the page and leaves the original text exactly as it was.",
       blocks: [
@@ -3330,9 +3330,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Searchable PDF Explained: Why Ctrl+F Fails on Scans and How OCR Fixes It",
+      title: "Searchable PDF: Why Ctrl+F Fails on Scans and How OCR Helps",
       description:
-        "A scanned PDF is a picture of text, so you cannot search it. Learn how an invisible OCR text layer makes it searchable and copyable without changing how it looks.",
+        "A scanned PDF is a picture of text. Learn how an invisible OCR text layer makes it searchable and copyable without changing how it looks.",
       excerpt:
         "If Ctrl+F finds nothing in your scan, the words are pixels, not text. A searchable PDF puts real text behind the picture and the document looks exactly the same.",
       blocks: [
@@ -3407,9 +3407,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Document Photo to Clean PDF: Straighten, Remove Shadows and Choose a Filter",
+      title: "Document Photo to Clean PDF: Straighten and Filter",
       description:
-        "How a scanner app turns a skewed, shadowed phone photo into a flat, clean PDF: perspective correction, shadow removal and which filter suits which document.",
+        "How a scanner app turns a skewed, shadowed phone photo into a flat, clean PDF: perspective correction, shadow removal and choosing the right filter.",
       excerpt:
         "A photographed page is slanted, has a desk behind it and a shadow on one side. Four corners and a lighting correction turn it into something that looks scanned.",
       blocks: [
@@ -3481,9 +3481,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "CamScanner Alternative: A Scanner That Is Free, Watermark-Free and Private",
+      title: "CamScanner Alternative: Free, Watermark-Free, Private",
       description:
-        "Compare app-based scanning with a browser scanner that works on your device: no install, no forced watermark, no cloud upload, with a clear split between free and Pro features.",
+        "Compare app-based scanning with a browser scanner that works on your device: no install, no forced watermark, no cloud upload, clear free and Pro split.",
       excerpt:
         "Scanner apps are handy, but many show ads, stamp the output or send your pages to their cloud. Here is an honest look at the alternative and its limits.",
       blocks: [
@@ -3568,9 +3568,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Word to PDF: A Pre-Flight Checklist So Nothing Shifts or Leaks",
+      title: "Word to PDF: A Pre-Flight Checklist So Nothing Shifts",
       description:
-        "Convert .doc, .docx, .odt and .rtf files to PDF with layout and fonts intact. What to clean up first, why fonts move, and how to check the result before you send it.",
+        "Convert .doc, .docx, .odt and .rtf to PDF with layout and fonts intact: what to clean up first, why fonts move and how to check before sending.",
       excerpt:
         "A PDF freezes your Word file exactly as it stands, including track changes and old comments. A short pre-flight check keeps the result clean.",
       blocks: [
@@ -3677,9 +3677,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF to JPG or PNG: Choosing Resolution and Format for Each Use",
+      title: "PDF to JPG or PNG: Pick the Right Format and Resolution",
       description:
-        "Turn PDF pages into high-resolution JPG or PNG images, one per page. When to pick JPG or PNG, why screenshots fall short and when to extract images or snip an area instead.",
+        "Turn PDF pages into high-resolution JPG or PNG images. When to pick each, why screenshots fall short and when to extract images or snip an area instead.",
       excerpt:
         "A PDF cannot go everywhere, but an image can. Here is how to convert pages cleanly, which format to pick and the side effects to expect.",
       blocks: [
@@ -3782,9 +3782,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Editing Text Inside a PDF: Why a White Box Is Not a Fix",
+      title: "Editing PDF Text: Why a White Box Is Not a Fix",
       description:
-        "Most PDF editors only cover old text. Learn the difference between covering and truly deleting, what limits PDF editing has and when to rebuild from the source instead.",
+        "Most PDF editors only cover old text. Learn covering versus truly deleting, the limits of PDF editing and when to rebuild from the source instead.",
       excerpt:
         "A wrong date or price in a PDF is easy to hide and surprisingly hard to really fix. Here is how real editing differs from covering text, and where its limits are.",
       blocks: [
@@ -3878,9 +3878,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Tables to Excel: Why Copy and Paste Fails and What Works Better",
+      title: "PDF Tables to Excel: Why Copy-Paste Fails",
       description:
-        "Export tables from a PDF into an editable .xlsx file, understand why tables sometimes come out wrong, and decide between plain conversion and AI field extraction.",
+        "Export PDF tables into an editable .xlsx, understand why tables sometimes come out wrong and decide between plain conversion and AI field extraction.",
       excerpt:
         "A PDF has no real table, only lines and aligned text. Knowing that explains the odd results, and tells you when to convert and when to extract fields instead.",
       blocks: [
@@ -3978,9 +3978,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Excel to PDF Without Split Columns: Print Setup, Hidden Data and Final Checks",
+      title: "Excel to PDF Without Split Columns: Print Setup Tips",
       description:
-        "Convert .xls, .xlsx, .ods and .csv files to a clean, print-ready PDF. How to set orientation and print area, avoid leaking hidden data and check wide tables before sending.",
+        "Convert .xls, .xlsx, .ods and .csv to a clean PDF: set orientation and print area, avoid leaking hidden data and check wide tables before you send.",
       excerpt:
         "What the PDF looks like is decided by the print settings in your workbook. Two minutes of setup separates a clean quote from a scatter of columns.",
       blocks: [
@@ -4083,9 +4083,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PowerPoint to PDF: What Survives, What Gets Flattened and How to Hand It Out",
+      title: "PowerPoint to PDF: What Survives and What Gets Flattened",
       description:
-        "Convert PPT or PPTX decks to one PDF with the design intact, or turn a PDF back into editable slides. Covers lost animations, fonts, handouts and last checks.",
+        "Convert PPT or PPTX decks to one PDF with the design intact, or turn a PDF back into slides. Covers lost animations, fonts, handouts and final checks.",
       excerpt:
         "A PDF keeps every slide looking the same for everyone, but it flattens anything interactive. Know what you keep and what you lose before you send the deck.",
       blocks: [
@@ -4186,9 +4186,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Page Numbers for Reports, Theses and Contracts: Formats, Starting Points and Mistakes",
+      title: "Page Numbers for Reports, Theses and Contracts",
       description:
-        "Add page numbers to a PDF with the position and format you choose. Which style suits which document, where numbering should start and what to finish first.",
+        "Add page numbers to a PDF with the position and format you choose: which style suits which document, where numbering should start and what to finish first.",
       excerpt:
         "Page numbers do more than label pages. In a contract they show nothing is missing, and in a thesis they follow a convention. Here is how to choose well.",
       blocks: [
@@ -4291,9 +4291,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Won't Open or Says It Is Damaged? Diagnose It, Then Repair It",
+      title: "PDF Won't Open or Looks Damaged? Diagnose, Then Repair",
       description:
-        "Check whether a PDF is really corrupt, understand what repair does to the file's structure, and learn what to verify in the recovered document and how to prevent it next time.",
+        "Check whether a PDF is really corrupt, understand what repair does to its structure, what to verify in the recovered file and how to prevent it next time.",
       excerpt:
         "Not every PDF that refuses to open is broken. Run a few quick checks first, then repair. In most damaged files the pages are still inside and only the index is wrecked.",
       blocks: [
@@ -4397,9 +4397,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Spot the Quiet Change: Comparing Two Contract Versions Without Reading Both",
+      title: "Compare Two Contract Versions Without Reading Both",
       description:
-        "Compare two PDF versions with AI and see added, removed and changed clauses, with attention on amounts, dates and obligations. Includes which changes matter and how to prepare.",
+        "Compare two PDF versions with AI and see added, removed and changed clauses, with attention on amounts, dates and obligations. Includes which changes matter.",
       excerpt:
         "'Only minor edits' is one of the riskiest phrases in a negotiation. A comparison shows what really changed, and which of it deserves a second look.",
       blocks: [
@@ -4503,9 +4503,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Real PDF Redaction: Remove Personal Data Before You Share It (GDPR and KVKK)",
+      title: "Real PDF Redaction: Remove Personal Data Before Sharing",
       description:
-        "A black box does not hide data. Learn how permanent redaction removes IDs, IBANs, phone numbers and addresses from a PDF, what people overlook and how to verify the result.",
+        "A black box does not hide data. See how permanent redaction removes IDs, IBANs, phone numbers and addresses from a PDF and how to verify the result.",
       excerpt:
         "Drawing a black rectangle over text leaves the text in the file. Real redaction deletes it. Here is the difference, the fields people forget and a verification routine.",
       blocks: [
@@ -4604,9 +4604,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Privacy: Which Tools Really Keep Your File on Your Device",
+      title: "PDF Privacy: Which Tools Keep Your File on Your Device",
       description:
-        "Most online PDF tools upload your file to a server. Learn what on-device processing means, how to test any tool in thirty seconds, which jobs genuinely need a server and what privacy does not cover.",
+        "Most online PDF tools upload your file. Learn what on-device processing means, a thirty-second test for any tool and which jobs truly need a server.",
       excerpt:
         "'We delete files after an hour' is not the same as 'we never received your file'. Here is how to tell the difference and how to handle sensitive documents.",
       blocks: [
@@ -4702,9 +4702,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Doing PDF Work on Your Phone Without Installing an App",
+      title: "PDF Work on Your Phone Without Installing an App",
       description:
-        "Merge, split, delete pages, rotate, turn photos into a PDF and scan documents in your phone's browser. What runs on the device, what needs a connection and what a phone cannot handle.",
+        "Merge, split, delete pages, rotate, turn photos into a PDF and scan in your phone's browser. What runs on-device, what needs a connection and the limits.",
       excerpt:
         "Free PDF apps usually charge in something other than money. Most everyday jobs run in your phone's browser instead, and the file stays on your device.",
       blocks: [
@@ -4793,7 +4793,7 @@ export const BLOG_POSTS = [
     {
       title: "Best Free PDF Tools in 2026: Match the Tool to the Job",
       description:
-        "No single free PDF tool is best at everything. See which kind of tool suits editing, converting, optimizing and AI work, and the four things to check before you trust one with a document.",
+        "No single free PDF tool is best at everything. See which kind suits editing, converting, optimizing and AI work, and four checks before you trust one.",
       excerpt:
         "The best free PDF tool depends on the task. This guide groups the jobs into five categories and tells you what to look for in each.",
       blocks: [
@@ -4901,9 +4901,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "iLovePDF Alternative: Free, No Watermark and Nothing Uploaded",
+      title: "iLovePDF Alternative: Free, No Watermark, Nothing Uploaded",
       description:
-        "Compare where your file goes in iLovePDF-style tools with browser tools that process on your device. An honest list of what iLovePDF does well, and a thirty-second test you can run yourself.",
+        "Compare where your file goes in iLovePDF-style tools with browser tools that work on your device, plus an honest list of what iLovePDF does well.",
       excerpt:
         "The question behind most iLovePDF alternative searches is where your file goes. Here is a straight comparison, including what you would give up by switching.",
       blocks: [
@@ -5024,9 +5024,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Sending Your CV as a PDF: Format, File Name and What Application Systems Read",
+      title: "Sending Your CV as a PDF: Format, Name and ATS Checks",
       description:
-        "Convert a Word résumé to PDF without breaking its layout, then check that automatic screening software can actually read it. Includes file naming, layout pitfalls and a last check.",
+        "Convert a Word résumé to PDF without breaking the layout, then check that screening software can read it. Includes file naming and layout pitfalls.",
       excerpt:
         "Your CV is often read by software before a person sees it. A PDF with real text, a clean layout and a sensible name gets through that first step.",
       blocks: [
@@ -5125,9 +5125,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "SmallPDF Alternative: Why Some PDF Jobs Can Be Unlimited and Others Cannot",
+      title: "SmallPDF Alternative: Why Some PDF Jobs Can Be Unlimited",
       description:
-        "Hit SmallPDF's daily task limit? See why limits exist, which jobs can run with no cap and no account, where SmallPDF is strong and how to test the difference yourself.",
+        "Hit SmallPDF's daily limit? See why limits exist, which jobs can run with no cap or account, where SmallPDF is strong and how to test the difference.",
       excerpt:
         "Daily limits are not meanness; they are what server costs look like. The interesting question is which jobs need a server at all.",
       blocks: [
@@ -5222,9 +5222,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Fill In a PDF Form Without Printing It, Even If It Has No Fields",
+      title: "Fill In a PDF Form Without Printing, Even With No Fields",
       description:
-        "Work out whether your PDF form is fillable or flat, type into it directly or place text on top, align it properly, sign it and send it back as one file.",
+        "Work out whether your PDF form is fillable or flat, type into it or place text on top, align it, sign it and send it back as one file.",
       excerpt:
         "Most PDF forms you receive are flat, with nothing to click. Here is a thirty-second way to tell, and how to fill each kind cleanly.",
       blocks: [
@@ -5320,9 +5320,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Do You Really Need Adobe Acrobat? A Free Browser Alternative for Everyday PDF Work",
+      title: "Do You Need Adobe Acrobat? A Free Browser Alternative",
       description:
-        "What Acrobat Pro does that browser tools do not, what most people actually need, why Acrobat Reader will not delete pages and how to check any alternative before you switch.",
+        "What Acrobat Pro does that browser tools don't, what most people need, why Reader won't delete pages and how to test an alternative before you switch.",
       excerpt:
         "Acrobat is excellent software for specialist work. Most everyday PDF jobs are far simpler. Here is how to tell which group you are in.",
       blocks: [
@@ -5412,9 +5412,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Free PDF Editor Guide: Pick the Right Tool for Text, Notes, Signatures and Forms",
+      title: "Free PDF Editor Guide: Text, Notes, Signatures, Forms",
       description:
-        "Editing a PDF means four different jobs. A roadmap to changing text, adding notes, signing and filling forms, plus what to watch for in free tools and the limits of editing.",
+        "Editing a PDF means four different jobs. A roadmap to changing text, adding notes, signing and filling forms, plus limits and what to watch for in free tools.",
       excerpt:
         "Most failed PDF edits come from using the wrong tool for the job. Four questions tell you which one you need.",
       blocks: [
@@ -5512,9 +5512,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Cropping a PDF: Trim Wide Margins and Why Cropped Content Is Not Deleted",
+      title: "Cropping a PDF: Trim Margins, and Why It Hides Nothing",
       description:
-        "Narrow a PDF page to the area you want, in your browser. Where cropping helps on scans, what order to work in, how it prints and why it should never be used to hide information.",
+        "Narrow a PDF page to the area you want in your browser. Where cropping helps on scans, how it prints and why it must never be used to hide information.",
       excerpt:
         "Cropping makes a page look right. It does not remove anything. That distinction is harmless for margins and important for anything sensitive.",
       blocks: [
@@ -5619,9 +5619,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Choosing a Free PDF Tool: Six Checks Before You Upload Anything",
+      title: "Choosing a Free PDF Tool: Six Checks Before You Upload",
       description:
-        "Not all free PDF tools are the same. Check uploading, signup, watermarks, limits, installation and coverage, and use a quick test to see where your file really goes.",
+        "Not all free PDF tools are the same. Check uploading, signup, watermarks, limits, installation and coverage, and run a quick test to see where your file goes.",
       excerpt:
         "Free tools pay their bills somewhere. Six checks show where, and a thirty-second test shows whether your file is uploaded.",
       blocks: [
@@ -5723,9 +5723,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "PDF Too Large for Gmail, Outlook or WhatsApp? Get It Under the Limit",
+      title: "PDF Too Large for Gmail or WhatsApp? Get It Under the Limit",
       description:
-        "Typical attachment limits, why encoding makes files bigger than they look, how to shrink a PDF without hurting legibility and what to do when compressing is not enough.",
+        "Typical attachment limits, why encoding makes files bigger than they look, how to shrink a PDF without hurting legibility and what to do when that isn't enough.",
       excerpt:
         "A 25 MB file often fails a 25 MB limit. Learn the real numbers, compress once and well, and know the alternatives when compression is not enough.",
       blocks: [
@@ -5832,9 +5832,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Edit and Sign a PDF on Your Phone in the Browser (Android and iPhone)",
+      title: "Edit and Sign a PDF on Your Phone, No App Needed",
       description:
-        "Add text, sign and annotate a PDF on a phone with no app. What is comfortable on a small screen, what is not, how to prepare a signature and how to keep documents private.",
+        "Add text, sign and annotate a PDF on Android or iPhone in the browser. What is comfortable on a small screen, what isn't and how to keep documents private.",
       excerpt:
         "Signing is something phones do better than computers. Here is what to do on a small screen, and what to leave for a bigger one.",
       blocks: [
@@ -5959,9 +5959,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Social Media Image Sizes for 2026, and How to Hit Them Exactly",
+      title: "Social Media Image Sizes for 2026, Hit Them Exactly",
       description:
-        "Current pixel sizes for Instagram, Facebook, X, LinkedIn and YouTube, plus how to resize with Fill, Fit or Stretch, preserve sharpness and avoid confusing resizing with compression.",
+        "Current pixel sizes for Instagram, Facebook, X, LinkedIn and YouTube, plus how to resize with Fill, Fit or Stretch and keep images sharp.",
       excerpt:
         "Upload an image at the wrong size and the platform decides how to crop it. Resize first, and you decide the framing and the sharpness yourself.",
       blocks: [
@@ -6095,9 +6095,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Why PDF Screenshots Look Blurry, and How to Snip a Table or Chart Sharply",
+      title: "Why PDF Screenshots Blur, and How to Snip Sharply",
       description:
-        "Save any region of a PDF page as a high-resolution image instead of a screenshot. Resolution options, the snip basket, worksheets and how snipping differs from other image tools.",
+        "Save any region of a PDF page as a high-resolution image instead of a screenshot. Resolution options, the snip basket, worksheets and how snipping differs.",
       excerpt:
         "A screenshot is limited to your screen. A snip is drawn from the document at the resolution you choose, so charts and tables stay crisp on a slide or in print.",
       blocks: [
@@ -6229,9 +6229,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "UYAP Court Portal Rejecting Your Upload? The Size Checklist That Usually Fixes It",
+      title: "UYAP Upload Rejected? The Size Checklist That Fixes It",
       description:
-        "Uploading to Turkey's UYAP e-filing system fails with a vague error? Work out whether it is size, format or protection, then bring scanned exhibits under the limit without losing legibility.",
+        "Uploading to Turkey's UYAP system fails with a vague error? Work out whether it is size, format or protection, then bring scanned exhibits under the limit.",
       excerpt:
         "The portal rarely tells you why a file was rejected, and the cause is usually the size of the scanned exhibits. Diagnose first, then shrink the right thing.",
       blocks: [
@@ -6353,9 +6353,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "What Is a .udf File? How to Read UYAP Documents as PDF Without Software",
+      title: "What Is a .udf File? Read UYAP Documents as PDF",
       description:
-        "Received a .udf document from Turkey's judiciary system and nothing opens it? Learn what UDF is, why the official editor is awkward and how to convert it to a readable PDF on your own device.",
+        "Received a .udf document from Turkey's judiciary system and nothing opens it? Learn what UDF is and how to convert it to a readable PDF on your own device.",
       excerpt:
         "UDF is a proprietary format used only by Turkey's court system, so Word, Preview and every PDF viewer ignore it. Here is how to read one in a minute.",
       blocks: [
@@ -6462,9 +6462,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Merging e-Government Documents Without Breaking Their Barcodes",
+      title: "Merging e-Government Documents Without Breaking Barcodes",
       description:
-        "Combine documents downloaded from Turkey's e-Government portal into one PDF while keeping the verification barcode readable, the order correct and the file under the size limit.",
+        "Combine documents from Turkey's e-Government portal into one PDF with the verification barcode readable, the order correct and the size under the limit.",
       excerpt:
         "Merging is easy. The subtlety is that every barcoded document must stay verifiable, which rules out screenshots, rescanning and heavy compression.",
       blocks: [
@@ -6566,9 +6566,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Hiding ID Numbers and Addresses in a Document Before You Share It",
+      title: "Hiding ID Numbers and Addresses Before You Share a File",
       description:
-        "Why a black box does not hide an identity number, how real redaction works, what to hide for which recipient and when it is better to send a single page.",
+        "Why a black box does not hide an identity number, how real redaction works, what to hide for which recipient and when to send a single page instead.",
       excerpt:
         "Official documents carry your identity number and address, and the recipient often does not need either. Covering them is not the same as removing them.",
       blocks: [
@@ -6677,9 +6677,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Visa Application Documents: How to Assemble a File an Officer Can Read in Minutes",
+      title: "Visa Application Documents: A File an Officer Can Read",
       description:
-        "Build a visa application file digitally: work from the current list, get each document in the right form, handle the photo size, merge in order and check the file as a reader would.",
+        "Build a visa application file digitally: work from the current list, get each document in the right form, size the photo, merge in order, check it as a reader.",
       excerpt:
         "Visa applications are often weakened not by a missing paper but by a messy file. A clean, ordered, legible set of documents helps your case.",
       blocks: [
@@ -6800,9 +6800,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Assembling a Tender Bid as a PDF: Order, Page Numbers, Size and Signatures",
+      title: "Assembling a Tender Bid PDF: Order, Numbers, Signatures",
       description:
-        "How to build a tender submission digitally: follow the specification to the letter, order the documents, number the pages, balance file size against legibility and handle signatures correctly.",
+        "Build a tender submission digitally: follow the specification exactly, order the documents, number pages, balance size and legibility and handle signatures.",
       excerpt:
         "In a tender, how the file is organised is the first thing the committee sees. A bid they can navigate quickly starts ahead of one they cannot.",
       blocks: [
@@ -6916,9 +6916,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "One Payroll PDF, Forty Payslips: Splitting Them Safely Per Employee",
+      title: "One Payroll PDF, Forty Payslips: Split Per Employee",
       description:
-        "Break a combined payroll PDF into one file per employee without sending anyone else's salary to the wrong person. Includes handling multi-page payslips and a pre-send checklist.",
+        "Break a combined payroll PDF into one file per employee without sending anyone else's salary to the wrong person. Includes multi-page payslips and a checklist.",
       excerpt:
         "The risk in payslip distribution is not time but mistakes. A split that is visual, fast and checked removes most of it.",
       blocks: [
@@ -7025,9 +7025,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Exam Application Photo Rejected? Fix the Pixel Size and File Size Separately",
+      title: "Exam Photo Rejected? Fix Pixel Size and File Size",
       description:
-        "A photo that is the right size can still be rejected for weighing too much. How pixel dimensions and file size differ, a four-step fix for 300 x 400 px under 60 KB and common mistakes.",
+        "A photo of the right size can still be rejected for weighing too much. Pixel size versus file size, plus a four-step fix for 300 x 400 px under 60 KB.",
       excerpt:
         "Application systems rarely tell you why a photo failed. It is nearly always the pixel dimensions, the file size, or both, and they are fixed separately.",
       blocks: [
@@ -7143,9 +7143,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "From a UYAP Decision to a Word Document: Two Routes and a Verification Step",
+      title: "From a UYAP Decision to Word: Two Routes and a Check",
       description:
-        "Copy the reasoning of a .udf court decision from Turkey's UYAP system into Word. Choose between the quick text route and the formatted route, handle scans and verify every figure afterwards.",
+        "Copy the reasoning of a .udf court decision from Turkey's UYAP into Word. Choose the quick text route or the formatted one, handle scans, verify every figure.",
       excerpt:
         "Word cannot open a UDF and you cannot copy from it. The bridge is PDF, and the choice is whether you need the text only or the formatting too.",
       blocks: [
@@ -7264,9 +7264,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "University Enrolment Documents: Prepare Them So the Portal Accepts Them First Time",
+      title: "University Enrolment Documents the Portal Accepts First Time",
       description:
-        "Scan enrolment paperwork properly with a phone, skip scanning where a portal can issue a PDF, size the photo, merge multi-page documents and meet upload limits without rework.",
+        "Scan enrolment paperwork properly with a phone, skip scanning where a portal can issue a PDF, size the photo, merge multi-page documents and meet upload limits.",
       excerpt:
         "Enrolment week is short and the system is busy. Most rejected uploads trace back to how the document was captured, not to the document itself.",
       blocks: [
