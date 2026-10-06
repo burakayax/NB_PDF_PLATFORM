@@ -37,7 +37,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   if (!user) throw new HttpError(404, "User not found.");
   const uid = user.id;
 
-  const [payments, invoices, operations, downloads, outputs, aiUsage, contractReviews, aiRequests] = await Promise.all([
+  const [payments, invoices, operations, downloads, outputs, aiUsage, contractReviews, aiRequests, operationCount, downloadCount] = await Promise.all([
     prisma.paymentCheckout.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.invoice.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.operationLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
@@ -46,6 +46,8 @@ export async function adminUserDisputeFileController(req: Request, res: Response
     prisma.aiUsage.findMany({ where: { userId: uid }, orderBy: { yearMonth: "desc" }, take: 24 }),
     prisma.contractReviewLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.aiRequestLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
+    prisma.operationLog.count({ where: { userId: uid } }),
+    prisma.downloadLog.count({ where: { userId: uid } }),
   ]);
 
   const org = user.organization;
@@ -58,6 +60,8 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       lastLoginAt: iso(user.lastLoginAt),
       plan: user.plan,
       country: user.country,
+      termsAcceptedAt: iso(user.termsAcceptedAt),
+      termsVersion: user.termsVersion,
       kvkkConsentedAt: iso(user.kvkkConsentedAt),
       distanceSalesConsentedAt: iso(user.distanceSalesConsentedAt),
       withdrawalWaivedAt: iso(user.withdrawalWaivedAt),
@@ -65,6 +69,9 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       firstRefundedAt: iso(user.firstRefundedAt),
       lastRefundedAt: iso(user.lastRefundedAt),
       totalOperationsCount: user.totalOperationsCount,
+      isAdminAccount: user.role === "ADMIN",
+      operationLogCount: operationCount,
+      downloadLogCount: downloadCount,
     },
     subscription: org
       ? {
@@ -169,13 +176,15 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   const u = dossier.user;
   L.push(`  Kullanıcı No: ${u.id}`);
   L.push(`  E-posta: ${u.email}`);
-  L.push(`  Kayıt tarihi: ${u.createdAt}   Son giriş: ${u.lastLoginAt ?? "-"}`);
-  L.push(`  Güncel plan: ${u.plan}   Ülke: ${u.country ?? "-"}`);
-  L.push(`  KVKK onayı: ${u.kvkkConsentedAt ?? "-"}`);
-  L.push(`  Mesafeli satış onayı: ${u.distanceSalesConsentedAt ?? "-"}`);
-  L.push(`  Cayma hakkından feragat onayı: ${u.withdrawalWaivedAt ?? "-"}`);
+  L.push(`  Kayıt tarihi: ${u.createdAt}`);
+  L.push(`  Son giriş: ${u.lastLoginAt ?? "kayıt yok (bu hesap kayıttan bu yana giriş kaydı oluşturmamış ya da bu özellikten önce giriş yapmış)"}`);
+  L.push(`  Güncel plan: ${u.plan}   Ülke: ${u.country ?? "-"}${u.isAdminAccount ? "   [YÖNETİCİ HESABI]" : ""}`);
+  L.push(`  Hesap açılırken Hizmet Şartları/Gizlilik kabulü: ${u.termsAcceptedAt ? `${u.termsAcceptedAt} (sürüm ${u.termsVersion ?? "-"})` : "kayıt yok (bu özellikten önce açılmış hesap)"}`);
+  L.push(`  KVKK aydınlatma/fatura bilgisi onayı (ödeme öncesi adım): ${u.kvkkConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
+  L.push(`  Mesafeli satış sözleşmesi onayı (ödeme öncesi adım): ${u.distanceSalesConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
+  L.push(`  Cayma hakkından feragat onayı (ödeme öncesi adım): ${u.withdrawalWaivedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Toplam iade: ${u.totalRefunds}   İlk iade: ${u.firstRefundedAt ?? "-"}   Son iade: ${u.lastRefundedAt ?? "-"}`);
-  L.push(`  Toplam işlem sayısı: ${u.totalOperationsCount}`);
+  L.push(`  İşlem kaydı sayısı: ${u.operationLogCount}   İndirme kaydı sayısı: ${u.downloadLogCount}   Sayaç (kota işlemleri): ${u.totalOperationsCount}${u.isAdminAccount ? "   (yönetici hesaplarında kota sayacı işlemez)" : ""}`);
   L.push("");
   L.push("[2] ABONELİK");
   const s = dossier.subscription;

@@ -16,7 +16,7 @@ export const legalDocuments = {
       summary:
         "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding PDF Platform. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "24 March 2026",
+      effectiveDate: "6 October 2026",
       sections: [
         {
           title: "1. Who we are and what you accept",
@@ -102,7 +102,7 @@ export const legalDocuments = {
       summary:
         "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use PDF Platform (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "24 March 2026",
+      effectiveDate: "6 October 2026",
       sections: [
         {
           title: "1. Data controller",
@@ -375,7 +375,7 @@ export const legalDocuments = {
       summary:
         "İşbu Hizmet Şartları (“Şartlar”), PDF Platform’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "24 Mart 2026",
+      effectiveDate: "6 Ekim 2026",
       sections: [
         {
           title: "1. Taraflar ve kabul",
@@ -461,7 +461,7 @@ export const legalDocuments = {
       summary:
         "Bu Gizlilik Politikası, PDF Platform’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "24 Mart 2026",
+      effectiveDate: "6 Ekim 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",

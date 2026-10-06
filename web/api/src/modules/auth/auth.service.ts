@@ -43,6 +43,7 @@ import {
   previewSecret,
 } from "./google-oauth.console.js";
 import { createOrganizationForUser } from "../organization/organization.service.js";
+import { TERMS_VERSION } from "../../lib/legal-version.js";
 import {
   SIGNUP_CONSENT_TEXT,
   recordMarketingConsent,
@@ -489,6 +490,8 @@ export async function registerUser(
       isVerified: options?.skipEmailVerification === true,
       preferredLanguage: input.preferredLanguage ?? "en",
       plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
+      termsAcceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
       // Pazarlama e-posta izni (opt-in) — yalnız kutu işaretlenmişse kaydedilir.
       ...(input.marketingConsent
         ? { marketingConsent: true, marketingConsentAt: new Date() }
@@ -1056,6 +1059,8 @@ export async function signInWithGoogle(params: {
         data: { plan: "BUSINESS" },
       });
     }
+    // Önceden yalnızca parolayla girişte yazılıyordu; Google ile giren kullanıcıda "son giriş" hep boştu.
+    await prisma.user.update({ where: { id: synced.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
     const session = await createSession(isAdminUser(synced) ? (synced.plan === "BUSINESS" ? synced : user) : synced);
     logGoogleOAuthSessionIssued(session, "google-login");
     return session;
@@ -1084,6 +1089,9 @@ export async function signInWithGoogle(params: {
       verifiedAt: new Date(),
       preferredLanguage: params.preferredLanguage,
       plan: resolveRoleFromEmail(email) === "ADMIN" ? "BUSINESS" : "FREE",
+      termsAcceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
+      lastLoginAt: new Date(),
     },
   });
 
