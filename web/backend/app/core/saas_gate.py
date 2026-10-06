@@ -511,3 +511,62 @@ async def get_user_file_size_limit_bytes(token: str) -> int | None:
         return None
 
 
+
+
+def sha256_file(path: Any) -> str:
+    """Dosyanın SHA-256 özeti (parça parça okur; belleğe tümünü almaz)."""
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+async def record_output_proof(
+    user_id: str,
+    tool: str,
+    result_id: str,
+    *,
+    sha256: str | None = None,
+    size_bytes: int | None = None,
+    produced_at: float | None = None,
+    path: Any = None,
+) -> None:
+    """Sunucudan çıkan dosyanın parmak izini Node'a (output_records) kaydeder.
+
+    Anlaşmazlıkta "elindeki dosya bizim ürettiğimizle aynı mı?" sorusunu yanıtlar. Dosya
+    İÇERİĞİ gönderilmez/saklanmaz. Tamamen non-fatal: kayıt başarısız olsa bile indirme etkilenmez
+    (arka plan görevi olarak çalışır)."""
+    try:
+        secret = internal_service_secret()
+        if not secret or not user_id or user_id.startswith("ed:"):
+            return
+        if not sha256 and path is not None:
+            sha256 = await asyncio.to_thread(sha256_file, path)
+            if size_bytes is None:
+                import os as _os
+
+                size_bytes = _os.path.getsize(path)
+        if not sha256 or size_bytes is None:
+            return
+        body: dict[str, Any] = {
+            "userId": user_id,
+            "toolId": (tool or "unknown")[:64],
+            "resultId": result_id[:256],
+            "sha256": sha256,
+            "sizeBytes": int(size_bytes),
+        }
+        if produced_at:
+            body["producedAt"] = float(produced_at)
+        r = await _httpx_post_json_with_retry(
+            f"{saas_api_base()}/api/entitlement/internal/output-record",
+            headers={"X-Internal-Secret": secret},
+            json_body=body,
+            attempts=2,
+        )
+        if r.status_code not in (200, 201):
+            logger.warning("record_output_proof non-2xx: %s %s", r.status_code, r.text[:200])
+    except Exception as exc:  # noqa: BLE001 — kanıt kaydı indirmeyi asla bozmamalı
+        logger.warning("record_output_proof failed: %s", exc)

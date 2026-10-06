@@ -5,6 +5,7 @@ import {
   downloadLogAckController,
   downloadLogCreateController,
   editorDownloadConsumeController,
+  outputRecordController,
   entitlementBalanceController,
   entitlementCheckController,
   entitlementConsumeController,
@@ -27,3 +28,5 @@ entitlementRouter.post("/download-log/:id/ack", asyncHandler(downloadLogAckContr
 // Dahili (FastAPI worker) — X-Internal-Secret ile korunur; JWT bypass'ı için
 // `isPublicApiPath`'e eklendi (kendi secret'ıyla yetkilenir).
 entitlementRouter.post("/internal/editor-download", asyncHandler(editorDownloadConsumeController));
+// Çıktı dosyası parmak izi kaydı (FastAPI → Node; X-Internal-Secret ile yetkilenir).
+entitlementRouter.post("/internal/output-record", asyncHandler(outputRecordController));

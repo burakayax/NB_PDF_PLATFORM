@@ -4,6 +4,8 @@ import { logError } from "../lib/app-logger.js";
 
 const OPERATION_LOG_RETENTION_DAYS = 90;
 const DOWNLOAD_LOG_RETENTION_DAYS = 90;
+/** Çıktı dosyası parmak izi kayıtları (SHA-256; içerik yok): itiraz/iade anlaşmazlıkları için 1 yıl. */
+const OUTPUT_RECORD_RETENTION_DAYS = 365;
 /** VUK Madde 253: Faturalar 10 yıl arşivlenir (silinmez). */
 const INVOICE_ARCHIVE_DAYS = 10 * 365;
 /**
@@ -83,6 +85,22 @@ async function archiveOldDownloadLogs(): Promise<void> {
   }
 }
 
+/** Çıktı parmak izi kayıtlarını 1 yıl sonra SİLER (amaç — itiraz kanıtı — biter; KVKK md.4). */
+async function purgeOldOutputRecords(): Promise<void> {
+  const result = await prisma.outputRecord.deleteMany({
+    where: { createdAt: { lt: daysAgo(OUTPUT_RECORD_RETENTION_DAYS) } },
+  });
+  if (result.count > 0) {
+    await prisma.adminAuditLog.create({
+      data: {
+        userEmail: "system@retention",
+        action: "RETENTION_PURGE_OUTPUT_RECORDS",
+        summary: `${result.count} çıktı parmak izi kaydı silindi (${OUTPUT_RECORD_RETENTION_DAYS} günden eski).`,
+      },
+    });
+  }
+}
+
 /** Fatura arşivleme — VUK Madde 253 gereği 10 yıllık kayıtlar arşivlenir (silinmez). */
 async function archiveOldInvoices(): Promise<void> {
   const cutoff = daysAgo(INVOICE_ARCHIVE_DAYS);
@@ -156,6 +174,7 @@ export function registerDataRetentionJobs() {
     safeRun("archiveOldOperationLogs", archiveOldOperationLogs);
     safeRun("archiveOldDownloadLogs", archiveOldDownloadLogs);
     safeRun("archiveOldInvoices", archiveOldInvoices);
+    safeRun("purgeOldOutputRecords", purgeOldOutputRecords);
     safeRun("purgeExpiredConsentLogs", purgeExpiredConsentLogs);
     safeRun("purgeOldRatingComments", purgeOldRatingComments);
   });

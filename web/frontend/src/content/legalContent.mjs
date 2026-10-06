@@ -64,6 +64,7 @@ export const legalDocuments = {
             "We are not liable for loss of profits, loss of data, business interruption, or indirect, incidental, special, consequential, or punitive damages arising from your use of the service, even if we have been advised of the possibility of such damages.",
             "Our aggregate liability for any claim arising out of or related to these Terms or the service shall not exceed the greater of (a) the amount you paid us for the service in the twelve (12) months before the event giving rise to the claim, or (b) fifty U.S. dollars (USD 50), except where liability cannot be limited under mandatory law.",
             "Some jurisdictions do not allow certain limitations; in those cases our liability is limited to the maximum extent permitted.",
+            "Output files and AI results: AI-generated results may contain errors or omissions and must be reviewed by you before use or reliance. For files produced on our servers we keep a technical record (time, tool, plan and a cryptographic fingerprint of the file, never its content). Tools that run entirely in your browser do not send files to us and produce no such record. If you modify a file after downloading it, we cannot be responsible for the modified file; any refund or credit request is assessed against our records.",
           ],
         },
         {
@@ -167,6 +168,7 @@ export const legalDocuments = {
             "Account data: retained while your account is active and for 30 days after a deletion request is processed.",
             "Operation logs: 90 days from the date of creation, after which records are archived and no longer accessible for regular use.",
             "Download logs: 90 days from the date of creation.",
+            "Output file fingerprints (a SHA-256 hash, size, tool and plan of files produced on our servers; never the file content), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
             "Invoices and billing records: 10 years, as required by Turkish Tax Procedure Law (VUK) Article 253 and equivalent accounting regulations.",
             "Analytics data: 13 months (aligned with Google Analytics 4 default retention).",
             "Error and diagnostic logs: 30 days.",
@@ -420,6 +422,7 @@ export const legalDocuments = {
             "Hizmeti kullanımınızdan doğan kâr kaybı, veri kaybı, işin kesintiye uğraması veya dolaylı, arızi, özel, sonuç olarak doğan veya cezai zararlar için; bu tür zararların olasılığı konusunda uyarılmış olsak bile sorumlu tutulmayız.",
             "Bu Şartlar veya hizmetle bağlantılı herhangi bir talebe ilişkin toplam sorumluluğumuz, talebe konu olayı tetikleyen tarihten önceki on iki (12) ay içinde hizmet için bize ödediğiniz tutar ile elli ABD doları (50 USD) tutarından yüksek olanı aşamaz; zorunlu kanunda sınır konulamayan haller hariç.",
             "Bazı hukuk düzenleri belirli sınırlamalara izin vermez; bu durumlarda sorumluluğumuz kanunun izin verdiği azami ölçüde sınırlıdır.",
+            "Çıktı dosyaları ve yapay zekâ sonuçları: Yapay zekâ ile üretilen sonuçlar hata veya eksiklik içerebilir; kullanmadan veya dayanmadan önce kontrol etmek sizin sorumluluğunuzdadır. Sunucularımızda üretilen dosyalar için teknik bir kayıt tutarız (zaman, araç, plan ve dosyanın kriptografik parmak izi; dosyanın içeriği asla saklanmaz). Tamamen tarayıcınızda çalışan araçlar dosyanızı bize göndermez ve bu kaydı oluşturmaz. Dosyayı indirdikten sonra değiştirirseniz değiştirilmiş dosyadan sorumlu olmayız; her türlü iade veya kredi talebi kayıtlarımıza göre değerlendirilir.",
           ],
         },
         {
@@ -524,6 +527,7 @@ export const legalDocuments = {
             "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
             "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; bu sürenin ardından kayıtlar arşivlenir.",
             "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün.",
+            "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
             "Fatura ve ödeme kayıtları: Vergi Usul Kanunu (VUK) Madde 253 ve ilgili muhasebe mevzuatı gereği 10 yıl.",
             "Analitik veriler: 13 ay (Google Analytics 4 varsayılan saklama süresiyle uyumlu).",
             "Hata ve tanı günlükleri: 30 gün.",

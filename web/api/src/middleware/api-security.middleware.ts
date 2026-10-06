@@ -296,6 +296,7 @@ export function isPublicApiPath(method: string, path: string): boolean {
   // PDF Düzenle indirme sayacı — dahili FastAPI çağrısı; X-Internal-Secret ile
   // yetkilenir (kullanıcı JWT'si yok, misafir de sayılır). Controller secret'ı doğrular.
   if (p === "/entitlement/internal/editor-download" && method === "POST") return true;
+  if (p === "/entitlement/internal/output-record" && method === "POST") return true;
   if (p.startsWith("/auth/")) {
     if (p === "/auth/register" && method === "POST") return true;
     if (p === "/auth/login" && method === "POST") return true;

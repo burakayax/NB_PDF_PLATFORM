@@ -47,6 +47,7 @@ from app.core.jobs import create_conversion_job
 from app.core.saas_gate import (
     consume_editor_download,
     entitlement_check,
+    record_output_proof,
     saas_current_user_id,
     saas_user_identity,
 )
@@ -952,6 +953,7 @@ async def edit_text_download(
         token = authorization[7:].strip()
 
     unlimited = False
+    proof_user_id: str | None = None
     key = _edl.guest_key(_client_ip(request))
     limit = _edl.GUEST_DAILY_LIMIT
     if token:
@@ -960,6 +962,7 @@ async def edit_text_download(
             if ident["role"] == "ADMIN" or ident["plan"] in ("PRO", "PLUS", "BUSINESS"):
                 unlimited = True
             key = _edl.user_key(ident["user_id"])
+            proof_user_id = ident["user_id"]
             limit = _edl.FREE_DAILY_LIMIT
         except HTTPException:
             # Token geçersiz/eksik → misafir muamelesi (key/limit misafir kalır).
@@ -985,6 +988,17 @@ async def edit_text_download(
             )
 
     read = get_result(result_id, f"ed:{dl}")
+    if proof_user_id:
+        background_tasks.add_task(
+            record_output_proof,
+            proof_user_id,
+            str(meta.get("tool") or "edit-text"),
+            result_id,
+            sha256=meta.get("sha256"),
+            size_bytes=meta.get("size_bytes"),
+            produced_at=meta.get("created_at"),
+            path=read.payload_path,
+        )
     background_tasks.add_task(delete_result, result_id)
 
     if read.presigned_url:

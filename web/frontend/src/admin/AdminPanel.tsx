@@ -75,6 +75,7 @@ import { SectionIntro } from "./mosaic/SectionIntro";
 import { AdminUserManagement } from "./users/AdminUserManagement";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
 import { CampaignEditor } from "./marketing/CampaignEditor";
+import { DisputeAdminSection } from "./DisputeAdminSection";
 import { ContractReviewAdminSection } from "./ContractReviewAdminSection";
 import {
   BolumBasligi,
@@ -3042,6 +3043,7 @@ function AnalyticsTab({
         </Katlanir>
 
         <ContractReviewAdminSection accessToken={accessToken} />
+        <DisputeAdminSection accessToken={accessToken} />
 
         {advanced && (
           <Katlanir baslik="CSV dışa aktarma" aciklama="Seçilen tarih aralığı için kullanım dökümü">

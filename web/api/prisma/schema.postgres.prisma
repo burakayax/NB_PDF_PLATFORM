@@ -243,6 +243,7 @@ model User {
   desktopDevices DesktopDevice[]
   passwordResetCodes PasswordResetCode[]
   downloadLogs     DownloadLog[]
+  outputRecords    OutputRecord[]
   contractReviewLogs ContractReviewLog[]
   couponUses       CouponUse[]
   operationLogs    OperationLog[]
@@ -1098,4 +1099,25 @@ model ContractReviewLog {
   @@index([status, createdAt])
   @@index([createdAt])
   @@map("contract_review_logs")
+}
+
+// Sunucunun ürettiği her çıktı dosyasının parmak izi (SHA-256). Dosya İÇERİĞİ saklanmaz.
+// Anlaşmazlıkta: "elindeki dosya bizim ürettiğimizle aynı mı?" sorusunu yanıtlar.
+model OutputRecord {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  toolId       String   @map("tool_id")
+  resultId     String   @map("result_id")
+  fileSha256   String   @map("file_sha256")
+  fileSizeBytes Int     @map("file_size_bytes")
+  planAtTime   String?  @map("plan_at_time")
+  producedAt   DateTime? @map("produced_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resultId])
+  @@index([fileSha256])
+  @@index([userId, createdAt])
+  @@map("output_records")
 }
