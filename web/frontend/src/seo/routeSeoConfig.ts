@@ -144,8 +144,14 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     };
   }
 
+  // /pricing, uygulamada "landing" görünümüyle (fiyat bölümüne kaydırılarak) açılır.
+  // Landing dalı yola bakmadan önce yakalarsa, sayfa açıldıktan sonra canonical "/"
+  // olur ve Google /pricing'i ana sayfanın kopyası sayar (tarayıcıda ölçüldü).
+  // Araç sayfalarındaki "başlık önce adresten" kuralının aynısı.
+  const isPricingPath = pathname === "/pricing" || pathname === "/en/pricing";
+
   // ── Landing / home ─────────────────────────────────────────────────────────
-  if (context.view === "landing" || pathname === "/") {
+  if (!isPricingPath && (context.view === "landing" || pathname === "/")) {
     return {
       ...landingSeo(context.language),
       canonicalPath: "/",
@@ -178,7 +184,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   }
 
   // ── Pricing ────────────────────────────────────────────────────────────────
-  if (context.view === "pricing" || pathname === "/pricing") {
+  if (context.view === "pricing" || isPricingPath) {
     return {
       title:
         context.language === "tr"
