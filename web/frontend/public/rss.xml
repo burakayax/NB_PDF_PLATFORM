@@ -938,35 +938,33 @@
       <media:thumbnail url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" />
     </item>
     <item>
-      <title>PDF Kırpma: Kenar Boşluklarını Kesme (Ücretsiz)</title>
+      <title>PDF Kırpma: İstediğiniz Alanı Seçip Kesin (Ücretsiz)</title>
       <link>https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme</link>
       <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme</guid>
       <pubDate>Wed, 22 Jul 2026 19:20:00 GMT</pubDate>
       <dc:creator>PDF Platform</dc:creator>
       <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/crop-a-pdf-trim-margins" />
-      <description><![CDATA[Taranmış belgelerin geniş boşlukları, tek bir tabloya odaklanma ya da üst/alt bilgiyi çıkarma... PDF'i cihazınızda nasıl kırparsınız — adım adım.]]></description>
-      <content:encoded><![CDATA[<p>Taranmış bir belgenin kocaman beyaz kenarları mı var, yoksa bir sayfadaki tek bir tabloya mı odaklanmak istiyorsunuz? PDF kırpma, sayfanın görünür alanını istediğiniz dikdörtgene daraltır — hem de dosyanız cihazınızdan hiç çıkmadan.</p>
+      <description><![CDATA[Sayfanın tamamı değil, yalnızca bir tablo, bir soru ya da bir imza lazım. PDF'ten o alanı nasıl keser, tek dosyada ya da ayrı ayrı nasıl kaydedersiniz — adım adım.]]></description>
+      <content:encoded><![CDATA[<p>Elinizde onlarca sayfalık bir PDF var ama işinize yarayan yalnızca bir tablo, bir soru ya da bir imza kutusu. PDF kırpmanın en pratik yolu, sayfanın tamamını değiştirmek yerine istediğiniz alanı seçip kesit olarak almaktır; dosyanız da cihazınızdan çıkmaz.</p>
 <h2>PDF kırpma ne işe yarar?</h2>
-<ul><li>Taranmış belgelerdeki geniş kenar boşluklarını kesmek.</li><li>Bir sayfadaki tek bir tabloya, grafiğe veya bölüme odaklanmak.</li><li>Tekrar eden üst bilgi/alt bilgi (header/footer) alanını görünümden çıkarmak.</li><li>Sunum veya baskı için sayfayı düzgün bir çerçeveye getirmek.</li></ul>
+<ul><li>Bir sayfadaki tek bir tabloyu, grafiği ya da bölümü ayırıp paylaşmak.</li><li>Bir sınav kâğıdından tek bir soruyu çıkarmak.</li><li>Dekontun ya da faturanın yalnızca gerekli kısmını göndermek.</li><li>Taranmış belgede geniş kenar boşluklarını dışarıda bırakıp içeriği almak.</li></ul>
 <h2>PDF nasıl kırpılır — adım adım</h2>
-<ol><li><strong>PDF'i yükleyin</strong> — Kırpma aracına PDF'inizi sürükleyip bırakın; ilk sayfa önizlemede açılır.</li><li><strong>Kırpma kutusunu ayarlayın</strong> — Kutuyu sürükleyerek taşıyın, köşelerden veya kenarlardan boyutlandırarak tutmak istediğiniz alanı seçin.</li><li><strong>Kapsamı seçip indirin</strong> — 'Tüm sayfalar' ya da 'Yalnız bu sayfa' deyin ve 'Kırp ve İndir' ile sonucu alın.</li></ol>
+<ol><li><strong>PDF'i yükleyin</strong> — PDF'i PDF'ten Kesit Al aracına sürükleyip bırakın; ilk sayfa ekranda açılır, sayfalar arasında gezebilirsiniz.</li><li><strong>Alanı seçin</strong> — Sayfada sürükleyerek bir kutu çizin. Kutuyu taşıyabilir, köşelerinden tutup boyutlandırabilirsiniz; pencereye yakınlaştırarak ince ayar yapın.</li><li><strong>«Kesiti Ekle» deyin</strong> — Seçtiğiniz alan listeye girer. Aynı belgenin başka sayfalarından da kesit ekleyebilir, listede sıralarını değiştirebilirsiniz.</li><li><strong>Biçimi seçip indirin</strong> — PDF, PNG ya da JPEG olarak kaydedin. Çözünürlüğü baskı için 2x ya da 3x yapabilirsiniz.</li></ol>
 <p><strong>PDF'ten Kesit Al</strong> — İstediğiniz alanı seçip PDF ya da görsel olarak kaydedin — cihazınızda, ücretsiz. <a href="https://www.pdfplatform.app/tools/pdf-kesit-al">Aracı aç</a></p>
-<h2>Kırpma içeriği siler mi?</h2>
-<p>Hayır. Kırpma, sayfanın görünür alanını (CropBox) daraltan standart bir PDF işlemidir; kalan alan net biçimde görüntülenir ve yazdırılır. İşlem tamamen tarayıcınızda çalışır, dosyanız sunucuya gitmez.</p>
-<blockquote><p>Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın.</p></blockquote>
-<h2>Kırpma, silmek değildir — bunun bir sonucu var</h2>
-<p>PDF'te kırpma, sayfanın görünür alanını daraltır; kesilen kısım dosyadan çıkarılmaz, yalnızca gösterilmez. Günlük kullanımda bu fark önemsizdir: belge ekranda ve baskıda istediğiniz gibi görünür. Ancak kırpmayı bir bilgiyi saklamak için kullanıyorsanız fark kritik hâle gelir; kırpılan alandaki metin dosyada durmaya devam eder ve teknik olarak geri getirilebilir. Bir bilginin gerçekten gitmesi gerekiyorsa kalıcı kaldırma yapan bir araç kullanmak gerekir.</p>
-<h2>Taranmış belgelerde en çok işe yaradığı yer</h2>
-<p>Tarayıcılar belgeyi kâğıt boyutuna göre tarar; A5 bir dekont A4 tarandığında sayfanın yarısı boş kalır. Böyle bir belgeyi okurken sürekli kaydırmak gerekir, baskıda ise küçük içerik büyük kâğıdın ortasında kalır. Kenar boşluklarını kırpmak belgeyi hem okunur hem düzgün hâle getirir; birden çok dekontu birleştirdiğinizde de sayfalar tutarlı görünür.</p>
-<h2>Kırpmadan önce sırayı doğru kurmak</h2>
-<ul><li>Yan duran sayfalar varsa önce döndürün; kırpma kutusu sayfanın yönüne göre çalışır.</li><li>Gereksiz sayfaları önce silin; kırpacak daha az sayfa kalır.</li><li>Farklı ölçüdeki sayfalar varsa aynı kırpmayı hepsine uygulamak bazılarında içerik kesebilir.</li><li>Kırpma sonrası sayfa numarası ekleyecekseniz numarayı en sona bırakın — numara yeni kenara göre yerleşir.</li></ul>
-<h2>Baskıda ne olur?</h2>
-<p>Kırpılmış bir sayfa, yazıcıya daha küçük bir sayfa olarak gider. Yazıcı bunu kâğıda sığdırmak için büyütebilir; bu, metnin daha okunaklı çıkması anlamına gelir ve çoğu zaman istenen sonuçtur. Ancak belgenin kâğıt üzerinde belirli bir ölçüde olması gerekiyorsa (örneğin resmî bir form), kırpma bu ölçüyü değiştirir. Böyle belgelerde kırpmadan önce iki kez düşünmek gerekir.</p>
-<h2>Dosya boyutu değişir mi?</h2>
-<p>Kırpma içeriği çıkarmadığı için dosya boyutu kayda değer biçimde düşmez. Boyut sorununuz varsa kırpma yerine sıkıştırma gerekir. İkisini birlikte kullanmak mantıklıdır: önce sayfayı istediğiniz alana daraltın, sonra dosyayı sıkıştırın.</p>]]></content:encoded>
+<h2>Kesitleri PDF olarak nasıl kaydedersiniz?</h2>
+<p>PDF seçtiğinizde üç düzenden birini seçersiniz. Bu seçim, kesitlerin sonunda nasıl bir dosya olacağını belirler.</p>
+<ul><li>Hepsi arka arkaya: kesitler A4 sayfalara sırayla dizilir. Tek ya da iki sütun seçebilirsiniz; iki sütun dar kesitlerde (tek soru, küçük tablo) kâğıt israfını önler. Yazdırmaya hazır bir çalışma kâğıdı olur.</li><li>Her kesit ayrı sayfa: tek bir PDF'te, her kesit kendi sayfasında ve kendi ölçüsünde durur.</li><li>Her kesit ayrı PDF dosyası: her kesit kendi PDF'i olur. Birden çok kesit varsa hepsi tek bir ZIP içinde iner; tek kesitte doğrudan PDF iner. Her soruyu ya da her dekontu ayrı göndereceğiniz zaman en uygunudur.</li></ul>
+<blockquote><p>Kesitleri ayrı PDF olarak alıp sonra bir kısmını «PDF Birleştir» ile bir araya getirebilir, ya da tek PDF alıp «PDF Ayır» ile bölebilirsiniz. Önce her kesitin kime gideceğini düşünmek, hangi düzeni seçeceğinizi belirler.</p></blockquote>
+<h2>Kesit almak, sayfa kutusunu daraltmaktan farklıdır</h2>
+<p>Bazı programlar PDF'in sayfa kutusunu (CropBox) daraltır; bu durumda kesilen kısım dosyada durmaya devam eder, yalnızca görünmez. Kesit almada böyle değil: seçtiğiniz alan görüntü olarak çizilir ve yalnızca o alan çıktıya girer. Dışarıda bıraktığınız kısım dosyaya hiç taşınmaz.</p>
+<p>Bunun iki sonucu var. Olumlu olan: bir belgeden yalnızca bir kısmı paylaşırken gerisinin dosyada gizli kalmasından endişe etmezsiniz. Dikkat edilecek olan: kesit bir görüntüdür, içindeki yazı seçilip kopyalanamaz ve aranamaz. Metni de istiyorsanız kesiti aldıktan sonra «Aranabilir PDF» ile metin katmanı ekleyebilirsiniz.</p>
+<h2>Çözünürlük ve dosya boyutu</h2>
+<p>Çözünürlük arttıkça kesit netleşir ama dosya büyür. 2x çoğu iş için yeterlidir ve baskıda da temiz çıkar; 3x ince yazılı tablolarda ya da büyük baskıda işe yarar, 1x ise yalnızca ekranda görülecek kesitler için uygundur. Dosya e-postaya sığmayacak kadar büyürse sonucu «PDF Küçült» ile sıkıştırın.</p>
+<h2>Telefonda da çalışır mı?</h2>
+<p>Evet. Araç tarayıcıda çalıştığı için kurulum gerekmez. Küçük ekranda alanı seçerken parmakla sürükleyip köşelerden ayarlayabilirsiniz; hassas seçim gerekiyorsa sayfayı yakınlaştırın.</p>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Kırpma</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" type="image/png" length="54434" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" type="image/png" length="55233" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" width="1200" height="630" />
       <media:content url="https://www.pdfplatform.app/covers/square/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" width="1000" height="1500" />
