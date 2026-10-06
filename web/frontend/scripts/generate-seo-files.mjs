@@ -661,6 +661,16 @@ function renderVisibleBody(baseUrl, meta, lang) {
   parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
   parts.push(`<p class="seo-intro">${escapeHtml(meta.intro)}</p>`);
 
+  // Yayınlanmış (≥10 gerçek oy) araç puanı: JSON-LD'deki aggregateRating'in sayfada GÖRÜNÜR karşılığı.
+  // Google yalnızca ziyaretçiye görünen puanın işaretlenmesine izin veriyor. Puan yoksa hiçbir şey basılmaz.
+  if (meta.kind === "tool" && meta.slug && TOOL_RATINGS[meta.slug]) {
+    const r = TOOL_RATINGS[meta.slug];
+    const sayi = String(r.ratingValue).replace(".", lang === "tr" ? "," : ".");
+    parts.push(
+      `<p class="seo-rating">${lang === "tr" ? `Kullanıcı puanı: ${sayi} / ${RATING_BEST} (${r.ratingCount} değerlendirme)` : `User rating: ${sayi} / ${RATING_BEST} (${r.ratingCount} ratings)`}</p>`,
+    );
+  }
+
   // Blog yazısının KAPAK GÖRSELİ — gövdede de görünsün.
   // Kapaklar üretiliyordu ama yalnızca paylaşım etiketinde kullanılıyordu;
   // yazının kendi sayfasında hiç görsel yoktu. Bu, görsel aramasında hiç
