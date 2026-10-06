@@ -297,6 +297,12 @@ async function main() {
     }
   }
 
+  // 2a) API belge sayfası: /pdf-api/docs sitemap'te slash'sız yazılı ama kuralı yoktu;
+  //     ana sayfa kopyası dönüyordu (Google'da "kopya" sinyali). 2026-10-06.
+  for (const yol of ["/pdf-api/docs", "/en/pdf-api/docs"]) {
+    sayfaKurallari.push({ type: "rewrite", source: yol, destination: `${yol}/index.html` });
+  }
+
   // 2b) EMEKLİ ARAÇLAR — kaldırılan bir aracın adresi 404 olmamalı.
   //
   // Araç siteden kaldırılınca prerender klasörü de silinir, yani yukarıdaki
