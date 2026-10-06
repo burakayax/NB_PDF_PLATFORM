@@ -37,7 +37,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   if (!user) throw new HttpError(404, "User not found.");
   const uid = user.id;
 
-  const [payments, invoices, operations, downloads, outputs, aiUsage, contractReviews] = await Promise.all([
+  const [payments, invoices, operations, downloads, outputs, aiUsage, contractReviews, aiRequests] = await Promise.all([
     prisma.paymentCheckout.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.invoice.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.operationLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
@@ -45,6 +45,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
     prisma.outputRecord.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
     prisma.aiUsage.findMany({ where: { userId: uid }, orderBy: { yearMonth: "desc" }, take: 24 }),
     prisma.contractReviewLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
+    prisma.aiRequestLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
   ]);
 
   const org = user.organization;
@@ -124,6 +125,17 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       planAtTime: o.planAtTime,
     })),
     aiUsageByMonth: aiUsage.map((a) => ({ month: a.yearMonth, count: a.count, byTool: a.operationCounts })),
+    aiRequests: aiRequests.map((a) => ({
+      at: iso(a.createdAt),
+      op: a.op,
+      units: a.units,
+      status: a.status,
+      refunded: a.refunded,
+      planAtTime: a.planAtTime,
+      inputSha256: a.inputSha256,
+      outputSha256: a.outputSha256,
+      ip: a.clientIp,
+    })),
     contractReviews: contractReviews.map((c) => ({
       id: c.id,
       at: iso(c.createdAt),
@@ -192,6 +204,9 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push("");
   L.push("[8] YAPAY ZEKÂ KULLANIMI (aylık)");
   dossier.aiUsageByMonth.forEach((a) => row(a.month, a.count, a.byTool ? JSON.stringify(a.byTool) : "-"));
+  L.push("");
+  L.push(`[8b] YAPAY ZEKÂ İSTEKLERİ (son ${dossier.aiRequests.length})  — tarih | araç | hak | durum | iade | o günkü plan | girdi özeti | çıktı özeti`);
+  dossier.aiRequests.forEach((a) => row(a.at, a.op, a.units, a.status, a.refunded ? "İADE" : "-", a.planAtTime, a.inputSha256?.slice(0, 16), a.outputSha256?.slice(0, 16)));
   L.push("");
   L.push(`[9] SÖZLEŞME DENETÇİSİ (${dossier.contractReviews.length})  — no | tarih | mod | hak | durum | iade | onay sürümü`);
   dossier.contractReviews.forEach((c) => row(c.id, c.at, c.mode, c.units, c.status, c.refundedAt, c.consentVersion));

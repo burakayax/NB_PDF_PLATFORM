@@ -19,6 +19,7 @@ import type { Language } from "../../i18n/landing";
 import { saveBlobToUser } from "../../api";
 import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
+import { AiResultNotice } from "./AiResultNotice";
 import { ToolRating } from "../common/ToolRating";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
@@ -369,6 +370,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                 </button>
               )}
 
+              {doneFiles.length > 0 && <AiResultNotice language={language} />}
               {/* Birleşik dışa aktarım */}
               {doneFiles.length > 0 && !running && (
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">

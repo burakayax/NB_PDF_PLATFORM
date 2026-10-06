@@ -43,6 +43,7 @@ import { SimpleMarkdown } from "../common/SimpleMarkdown";
 import { ToolRating } from "../common/ToolRating";
 import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
+import { AiResultNotice } from "./AiResultNotice";
 
 type AiMode = "summarize" | "chat" | "extract" | "translate";
 
@@ -816,6 +817,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               {tr ? "Yeni PDF" : "New PDF"}
             </button>
           </div>
+          <div className="mb-4 -mt-2"><AiResultNotice language={language} /></div>
 
           {mode === "summarize" ? (
             summary ? (

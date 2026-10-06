@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import type { Request, Response } from "express";
+import { prisma } from "../../lib/prisma.js";
 import { HttpError } from "../../lib/http-error.js";
 import {
   summarizeDocument,
@@ -71,11 +73,46 @@ async function runWithQuota<T>(
   if (await reserveQuota(req, res, op, units)) {
     return { ok: false };
   }
+  const logId = await openAiLedger(req, op, units);
   try {
-    return { ok: true, value: await work() };
+    const value = await work();
+    await closeAiLedger(logId, "DONE", false, value);
+    return { ok: true, value };
   } catch (error) {
     await releaseQuota(req, units);
+    await closeAiLedger(logId, "FAILED", true);
     throw error;
+  }
+}
+
+/** Defter yazımı HİÇBİR ZAMAN işi bozmaz: hata olursa sessizce atlanır. */
+const sha = (v: unknown): string => createHash("sha256").update(typeof v === "string" ? v : JSON.stringify(v ?? null)).digest("hex");
+
+async function openAiLedger(req: Request, op: string, units: number): Promise<string | null> {
+  try {
+    const u = req.authUser;
+    if (!u) return null;
+    const xff = req.headers["x-forwarded-for"];
+    const ip = typeof xff === "string" && xff.trim() ? xff.split(",")[0]?.trim() ?? null : req.ip ?? null;
+    const row = await prisma.aiRequestLog.create({
+      data: { userId: u.id, op, units, planAtTime: u.plan ?? null, inputSha256: sha(req.body), clientIp: ip },
+      select: { id: true },
+    });
+    return row.id;
+  } catch {
+    return null;
+  }
+}
+
+async function closeAiLedger(id: string | null, status: "DONE" | "FAILED", refunded: boolean, output?: unknown): Promise<void> {
+  if (!id) return;
+  try {
+    await prisma.aiRequestLog.update({
+      where: { id },
+      data: { status, refunded, outputSha256: output === undefined ? null : sha(output), finishedAt: new Date() },
+    });
+  } catch {
+    /* defter hatası işi etkilemez */
   }
 }
 

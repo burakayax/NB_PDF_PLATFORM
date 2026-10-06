@@ -20,6 +20,7 @@ import { aiCompare, fetchAiQuota, type AiError, type AiQuota, type CompareResult
 import { ToolRating } from "../common/ToolRating";
 import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
+import { AiResultNotice } from "./AiResultNotice";
 
 type Slot = { name: string; text: string; status: "empty" | "reading" | "ready" | "error" };
 const EMPTY: Slot = { name: "", text: "", status: "empty" };
@@ -172,6 +173,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
             {busy ? <><Loader2 className="h-5 w-5 animate-spin" />{tr ? "Karşılaştırılıyor…" : "Comparing…"}</> : <><GitCompareArrows className="h-5 w-5" />{tr ? "Belgeleri Karşılaştır" : "Compare Documents"}</>}
           </button>
 
+          {result && <AiResultNotice language={language} />}
           {result && (
             <div className="mt-5 overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
               <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-2.5 sm:px-6">
