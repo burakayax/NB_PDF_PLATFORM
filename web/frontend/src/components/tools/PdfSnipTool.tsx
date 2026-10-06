@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { createPortal } from "react-dom";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
@@ -206,9 +207,13 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   // Misafir/tanıtım sayfalarında düzenleyici, diğer araçlardaki görsel seçici gibi
   // ayrı tam ekran pencerede açılır.
   const [modalOpen, setModalOpen] = useState(false);
+  /** Tam ekran pencerede sayfa, boş alanın tamamını dolduracak biçimde ölçeklenir. */
+  const fill = describesTool && modalOpen;
+  useBodyScrollLock(fill);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
   const dragRef = useRef<{ handle: Handle; start: Rect; px: number; py: number } | null>(null);
   const snipsRef = useRef<Snip[]>([]);
@@ -293,11 +298,19 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       const stage = stageRef.current;
       const canvas = canvasRef.current;
       if (!stage || !canvas) return;
-      const cssW = Math.min(stage.clientWidth || 680, 1100);
-      // Sayfayı olabildiğince büyük göster: ekrana sığmıyorsa kullanıcı kaydırır.
-      const maxH = Math.max(680, window.innerHeight - 120);
       const base = page.getViewport({ scale: 1 });
-      const cssScale = Math.min(cssW / base.width, maxH / base.height);
+      const area = areaRef.current;
+      let cssScale: number;
+      if (fill && area && area.clientWidth > 0) {
+        // Tam ekran pencere: sayfa ayrılan boş alanın genişliğini sonuna kadar doldurur;
+        // aşağısı yalnızca pencerenin kendi içinde kaydırılır.
+        cssScale = area.clientWidth / base.width;
+      } else {
+        const cssW = Math.min(stage.clientWidth || 680, 1100);
+        // Sayfayı olabildiğince büyük göster: ekrana sığmıyorsa kullanıcı kaydırır.
+        const maxH = Math.max(680, window.innerHeight - 120);
+        cssScale = Math.min(cssW / base.width, maxH / base.height);
+      }
       // Tuval EKRAN PİKSELİ kadar çizilir (retina/125-150% ölçekte 1 CSS pikseli
       // 2-3 gerçek piksel eder). Yalnızca CSS ölçüsünde çizersek tarayıcı görüntüyü
       // büyütür ve sayfa bulanık görünür. Üst sınır: aşırı büyük tuval açmayalım.
@@ -314,7 +327,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
     })();
     return () => { cancelled = true; };
-  }, [bytes, pageIndex, viewportTick, modalOpen]);
+  }, [bytes, pageIndex, viewportTick, modalOpen, fill]);
 
   // Pencere boyutu değişince sayfayı yeni ölçüde yeniden çiz (sabit kalıp
   // küçücük görünmesin). Sık tetiklenmesin diye gecikmeli.
@@ -653,7 +666,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       </div>
 
       {/* Sol şerit · sayfa · sağ panel */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+      <div className={`flex flex-col gap-3 lg:flex-row lg:items-start`}>
         {pageCount > 1 ? (
           <div className="flex max-h-[24vh] shrink-0 gap-2 overflow-x-auto rounded-2xl border border-white/[0.07] bg-black/20 p-2 lg:sticky lg:top-2 lg:max-h-[76vh] lg:w-24 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
             {Array.from({ length: pageCount }).map((_, i) => (
@@ -684,6 +697,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
 
         {/* Sayfa + seçim */}
         <div ref={stageRef} className="min-w-0 flex-1 select-none">
+          <div ref={areaRef} className={fill ? "w-full min-w-0" : ""}>
           <div className="relative mx-auto inline-block overflow-hidden rounded-xl bg-slate-950/40 shadow-2xl ring-1 ring-white/10">
             <canvas ref={canvasRef} className="block max-w-full" />
             <div
@@ -724,13 +738,14 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
               </div>
             </div>
           </div>
+          </div>
           <p className={`mt-2.5 text-center text-[12px] transition-colors ${dragging ? "text-cyan-300" : "text-slate-400"}`}>
             {t.dragHint}
           </p>
         </div>
 
         {/* Sağ panel: ayarlar · sepet · çıktı */}
-        <aside className="w-full shrink-0 space-y-3 lg:sticky lg:top-2 lg:max-h-[86vh] lg:w-[320px] lg:overflow-y-auto lg:pr-1">
+        <aside className="w-full shrink-0 space-y-3 lg:sticky lg:top-2 lg:max-h-[86vh] lg:w-[320px] lg:self-start lg:overflow-y-auto lg:pr-1">
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{t.settings}</p>
             <div className="grid grid-cols-1 gap-2">
@@ -1009,7 +1024,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                   {tr ? "Tamam" : "Done"}
                 </button>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-3">{editor}</div>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">{editor}</div>
             </div>
           </div>,
           document.body,
