@@ -85,6 +85,9 @@ const L = {
     sheetHint: "Kesitler A4 sayfalara sırayla dizilir — yazdırmaya hazır bir çalışma kâğıdı olur.",
     perPage: "Her kesit ayrı sayfa",
     perPageHint: "Her kesit kendi sayfasında, kendi ölçüsünde durur — poster ya da tek tek kullanım için.",
+    separate: "Her kesit ayrı PDF dosyası",
+    separateHint: "Her kesit kendi PDF dosyası olur; birden çok olduğu için hepsi tek ZIP içinde iner.",
+    separateOneHint: "Tek kesit olduğu için doğrudan PDF olarak iner.",
     columns: "Sütun",
     col1: "Tek sütun",
     col2: "İki sütun",
@@ -133,6 +136,9 @@ const L = {
     sheet: "All one after another",
     sheetHint: "Snips are laid out in order on A4 pages — a worksheet that is ready to print.",
     perPageHint: "Each snip sits on its own page at its own size — for posters or one-off use.",
+    separate: "Each snip as a separate PDF file",
+    separateHint: "Each snip becomes its own PDF file; since there is more than one they all arrive in one ZIP.",
+    separateOneHint: "With a single snip it downloads straight as a PDF.",
     columns: "Columns",
     col1: "One column",
     col2: "Two columns",
@@ -194,7 +200,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
    */
   const [saveAs, setSaveAs] = useState<"pdf" | "png" | "jpeg">("pdf");
   /** PDF düzeni: hepsi arka arkaya (çalışma kâğıdı) ya da her kesit ayrı sayfa. */
-  const [pdfLayout, setPdfLayout] = useState<"sheet" | "perPage">("sheet");
+  const [pdfLayout, setPdfLayout] = useState<"sheet" | "perPage" | "separate">("sheet");
   /** "Yeni PDF" doğrudan dosya seçiciyi açsın diye. */
   const newFileInputRef = useRef<HTMLInputElement>(null);
   const summaryFileInputRef = useRef<HTMLInputElement>(null);
@@ -567,7 +573,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
     await downloadZip();
   };
 
-  const downloadAsPdf = async (mode: "sheet" | "perPage") => {
+  const downloadAsPdf = async (mode: "sheet" | "perPage" | "separate") => {
     if (snips.length === 0) return;
     setExporting(mode === "sheet" ? "sheet" : "pdf");
     try {
@@ -576,6 +582,23 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       const images = await Promise.all(
         snips.map(async (s) => ({ bytes: await s.blob.arrayBuffer(), mime: s.mime })),
       );
+      if (mode === "separate") {
+        // Her kesit kendi tek sayfalık PDF'i; birden çoksa tek ZIP.
+        const pdfs = await Promise.all(images.map((img) => imagesToPdf([img], "original")));
+        if (pdfs.length === 1) {
+          downloadBlob(pdfBytesToBlob(pdfs[0]!), `${baseName}-kesit1.pdf`);
+        } else {
+          const entries = pdfs.map((p, i) => ({
+            name: `${baseName}-s${snips[i]!.page}-kesit${i + 1}.pdf`,
+            data: p instanceof Uint8Array ? p : new Uint8Array(p as ArrayBuffer),
+          }));
+          downloadBlob(
+            new Blob([zipStore(entries) as BlobPart], { type: "application/zip" }),
+            `${baseName}-kesitler-pdf.zip`,
+          );
+        }
+        return;
+      }
       const out =
         mode === "sheet"
           ? await imagesToSheets(images, { columns })
@@ -906,7 +929,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                 <>
                   <span className="mb-1.5 mt-3 block text-[11px] font-medium text-slate-400">{t.layout}</span>
                   <div className="grid grid-cols-1 gap-1.5">
-                    {(["sheet", "perPage"] as const).map((m) => (
+                    {(["sheet", "perPage", "separate"] as const).map((m) => (
                       <button
                         key={m}
                         type="button"
@@ -917,9 +940,15 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                             : "bg-white/[0.04] text-slate-300 hover:text-white"
                         }`}
                       >
-                        {m === "sheet" ? t.sheet : t.perPage}
+                        {m === "sheet" ? t.sheet : m === "perPage" ? t.perPage : t.separate}
                         <span className="mt-0.5 block text-[10px] font-normal leading-relaxed text-slate-400">
-                          {m === "sheet" ? t.sheetHint : t.perPageHint}
+                          {m === "sheet"
+                            ? t.sheetHint
+                            : m === "perPage"
+                              ? t.perPageHint
+                              : snips.length === 1
+                                ? t.separateOneHint
+                                : t.separateHint}
                         </span>
                       </button>
                     ))}
