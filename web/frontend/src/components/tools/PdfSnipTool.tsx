@@ -61,10 +61,13 @@ function humanSize(b: number): string {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
+const ZOOM_LEVELS = [25, 50, 75, 100] as const;
+
 const L = {
   tr: {
     hint: "Dosyanız cihazınızda işlenir, sunucuya yüklenmez.",
     page: "Sayfa",
+    zoom: "Yakınlaştır",
     newFile: "Yeni PDF",
     dragHint: "Sayfada sürükleyerek alan seçin · kutuyu taşıyın, köşelerden boyutlandırın",
     add: "Kesiti Ekle",
@@ -113,6 +116,7 @@ const L = {
   en: {
     hint: "Your file is processed on your device, never uploaded.",
     page: "Page",
+    zoom: "Zoom",
     newFile: "New PDF",
     dragHint: "Drag on the page to select an area · move the box, resize from the corners",
     add: "Add snip",
@@ -209,6 +213,8 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const [modalOpen, setModalOpen] = useState(false);
   /** Tam ekran pencerede sayfa, boş alanın tamamını dolduracak biçimde ölçeklenir. */
   const fill = describesTool && modalOpen;
+  /** Tam ekran penceredeki yakınlaştırma (% = boş alan genişliğinin yüzdesi). */
+  const [zoom, setZoom] = useState<number>(50);
   useBodyScrollLock(fill);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -304,7 +310,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       if (fill && area && area.clientWidth > 0) {
         // Tam ekran pencere: sayfa ayrılan boş alanın genişliğini sonuna kadar doldurur;
         // aşağısı yalnızca pencerenin kendi içinde kaydırılır.
-        cssScale = area.clientWidth / base.width;
+        cssScale = (area.clientWidth * zoom) / 100 / base.width;
       } else {
         const cssW = Math.min(stage.clientWidth || 680, 1100);
         // Sayfayı olabildiğince büyük göster: ekrana sığmıyorsa kullanıcı kaydırır.
@@ -327,7 +333,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
     })();
     return () => { cancelled = true; };
-  }, [bytes, pageIndex, viewportTick, modalOpen, fill]);
+  }, [bytes, pageIndex, viewportTick, modalOpen, fill, zoom]);
 
   // Pencere boyutu değişince sayfayı yeni ölçüde yeniden çiz (sabit kalıp
   // küçücük görünmesin). Sık tetiklenmesin diye gecikmeli.
@@ -639,6 +645,28 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
+        {fill ? (
+          <div className="flex items-center gap-1">
+            <span className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-400 sm:inline">{t.zoom}</span>
+            <span className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
+              {ZOOM_LEVELS.map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  onClick={() => setZoom(z)}
+                  aria-pressed={zoom === z}
+                  className={`rounded px-1.5 py-1 text-[10px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
+                    zoom === z
+                      ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50"
+                      : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
+                  }`}
+                >
+                  %{z}
+                </button>
+              ))}
+            </span>
+          </div>
+        ) : null}
         {/* "Yeni PDF" belgeyi kapatıp boş yükleme ekranına dönüyordu; kullanıcı
             araca yeni girmiş gibi oluyor, bir de dosya seçme düğmesini aramak
             zorunda kalıyordu. Artık doğrudan dosya seçici açılır — vazgeçerse
@@ -697,7 +725,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
 
         {/* Sayfa + seçim */}
         <div ref={stageRef} className="min-w-0 flex-1 select-none">
-          <div ref={areaRef} className={fill ? "w-full min-w-0" : ""}>
+          <div ref={areaRef} className={fill ? "flex w-full min-w-0 justify-center" : ""}>
           <div className="relative mx-auto inline-block overflow-hidden rounded-xl bg-slate-950/40 shadow-2xl ring-1 ring-white/10">
             <canvas ref={canvasRef} className="block max-w-full" />
             <div
