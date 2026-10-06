@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Language } from "../i18n/landing";
+import { API_DOCS_SEO } from "../seo/seoContent.mjs";
 
 /**
  * API dokümantasyonu.
@@ -70,7 +71,7 @@ function Params({ rows, tr }: { rows: [string, string, string][]; tr: boolean })
 
 export function ApiDocsPage({ language, isAuthenticated, onLogin, onRegister, onOpenApiKeys }: { language: Language; isAuthenticated?: boolean; onLogin: () => void; onRegister: () => void; onOpenApiKeys?: () => void }) {
   const tr = language === "tr";
-  useEffect(() => { document.title = tr ? "API Dokümantasyonu — PDF Platform" : "API Documentation — PDF Platform"; }, [tr]);
+  useEffect(() => { document.title = API_DOCS_SEO[tr ? "tr" : "en"].title; }, [tr]);
 
   /** Kategorili gezinme. Sıra, alttaki önceki/sonraki bağlantılarını da belirler. */
   const groups = useMemo(() => [

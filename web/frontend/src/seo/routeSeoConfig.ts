@@ -4,7 +4,7 @@ import { toolSlugForFeature } from "../lib/toolRoutes";
 import type { FeatureKey } from "../api/subscription";
 // Tek gerçek SEO içerik kaynağı — statik prerender (generate-seo-files.mjs) ile
 // runtime'ın aynı metni kullanmasını garanti eder.
-import { getToolSeo, LANDING_SEO } from "./seoContent.mjs";
+import { getToolSeo, LANDING_SEO, LEGAL_SEO, PRICING_SEO } from "./seoContent.mjs";
 import { toolSlugToTr } from "./enSlugs.mjs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -186,14 +186,9 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   // ── Pricing ────────────────────────────────────────────────────────────────
   if (context.view === "pricing" || isPricingPath) {
     return {
-      title:
-        context.language === "tr"
-          ? `PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi | ${BRAND}`
-          : `PDF Tools Pricing — 7-Day Money-Back Guarantee | ${BRAND}`,
-      description:
-        context.language === "tr"
-          ? "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün koşulsuz para iade garantisi. Ücretsiz başlayın, istediğiniz zaman iptal edin."
-          : "Explore plans for PDF merge, convert, and compress tools. 7-day money-back guarantee, cancel anytime. Start free today.",
+      // Başlık/açıklama statik prerender ile AYNI kaynaktan (seoContent.mjs).
+      title: PRICING_SEO[context.language].title,
+      description: PRICING_SEO[context.language].description,
       canonicalPath: "/pricing",
       index: true,
       follow: true,
@@ -206,11 +201,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   // ── Terms ──────────────────────────────────────────────────────────────────
   if (context.view === "terms") {
     return {
-      title: `${context.language === "tr" ? "Hizmet Şartları" : "Terms of Service"} | ${BRAND}`,
-      description:
-        context.language === "tr"
-          ? "PDF Platform hizmet şartlarını okuyun."
-          : "Read the terms of service for PDF Platform.",
+      title: LEGAL_SEO.terms[context.language].title,
+      description: LEGAL_SEO.terms[context.language].description,
       canonicalPath: "/terms",
       index: true,
       follow: true,
@@ -222,11 +214,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   // ── Privacy ────────────────────────────────────────────────────────────────
   if (context.view === "privacy") {
     return {
-      title: `${context.language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"} | ${BRAND}`,
-      description:
-        context.language === "tr"
-          ? "PDF Platform gizlilik politikasını okuyun."
-          : "Read the privacy policy for PDF Platform.",
+      title: LEGAL_SEO.privacy[context.language].title,
+      description: LEGAL_SEO.privacy[context.language].description,
       canonicalPath: "/privacy",
       index: true,
       follow: true,
@@ -238,9 +227,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   // ── KVKK ──────────────────────────────────────────────────────────────────
   if (context.view === "kvkk") {
     return {
-      title: `KVKK Aydınlatma Metni | ${BRAND}`,
-      description:
-        "PDF Platform kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
+      title: LEGAL_SEO.kvkk[context.language].title,
+      description: LEGAL_SEO.kvkk[context.language].description,
       canonicalPath: "/kvkk",
       index: true,
       follow: true,
