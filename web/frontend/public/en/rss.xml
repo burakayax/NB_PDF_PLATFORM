@@ -912,33 +912,31 @@
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" />
     </item>
     <item>
-      <title>Cropping a PDF: Trim Margins, and Why It Hides Nothing</title>
+      <title>How to Crop a PDF: Select an Area, Save It as PDF or Image</title>
       <link>https://www.pdfplatform.app/en/blog/crop-a-pdf-trim-margins</link>
       <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/crop-a-pdf-trim-margins</guid>
       <pubDate>Wed, 22 Jul 2026 19:20:00 GMT</pubDate>
       <dc:creator>PDF Platform</dc:creator>
       <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme" />
-      <description><![CDATA[Cropping makes a page look right. It does not remove anything. That distinction is harmless for margins and important for anything sensitive.]]></description>
-      <content:encoded><![CDATA[<p>A scanned document with huge white borders, or a single table you want to focus on: cropping narrows a page's visible area to any rectangle you choose, and your file never leaves your device.</p>
-<h2>What cropping is good for</h2>
-<ul><li>Trimming the wide margins on scanned documents.</li><li>Focusing on a single table, chart or section on a page.</li><li>Taking repeating header and footer areas out of view.</li><li>Framing the page neatly for presentation or printing.</li></ul>
-<h2>Three steps</h2>
-<ol><li><strong>Upload the PDF</strong> — Drag and drop your PDF into the tool, and the first page opens in the preview.</li><li><strong>Set the crop box</strong> — Drag the box to move it, and resize from the corners or edges to select the area you want to keep.</li><li><strong>Choose scope and download</strong> — Pick All pages or This page only, then crop and download the result.</li></ol>
-<p><strong>Snip PDF to Image</strong> — Select the area you want and save it as a PDF or an image, on your device and free. <a href="https://www.pdfplatform.app/en/tools/crop-pdf-to-image">Open the tool</a></p>
-<blockquote><p>To crop different areas on different pages, use This page only and apply it page by page. If you need to rotate pages first, use the Rotate PDF tool.</p></blockquote>
-<h2>Cropping hides, it does not delete</h2>
-<p>Cropping is a standard PDF operation that narrows the page's visible area (the CropBox). The trimmed part is not removed from the file, only hidden. For everyday use that makes no difference, and the document looks as you want on screen and in print. It becomes critical if you crop in order to hide information, because the text in the cropped area stays in the file and can technically be restored. When something genuinely has to go, use a tool that removes content permanently.</p>
-<h2>Where it helps most on scans</h2>
-<p>Scanners work to the paper size, so an A5 receipt scanned on A4 leaves half the page blank. Reading such a document means constant scrolling, and in print the small content sits marooned in the middle of a large sheet. Trimming the margins makes the document readable and tidy, and pages look consistent when you merge several receipts.</p>
-<h2>Order of work</h2>
-<ul><li>Rotate sideways pages first, because the crop box works relative to page orientation.</li><li>Delete unwanted pages first, leaving fewer pages to crop.</li><li>With mixed page sizes, applying one crop to all of them can cut content on some.</li><li>If you will add page numbers, leave them until last, since the number is placed relative to the new edge.</li></ul>
-<h2>What happens in print</h2>
-<p>A cropped page reaches the printer as a smaller page, and the printer may enlarge it to fit the sheet. That usually makes the text more legible and is often exactly what you want. But if the document must be a specific size on paper, such as an official form, cropping changes that size, so think twice on such documents.</p>
-<h2>Does file size change?</h2>
-<p>Because cropping does not remove content, file size does not drop meaningfully. If size is your problem, you need compression rather than cropping. Using both makes sense: narrow the page to the area you want, then compress the file.</p>]]></content:encoded>
+      <description><![CDATA[Most of the time you do not need to shrink a page. You need one table, one question or one signature box out of it. Here is how to cut exactly that out, and how it differs from trimming the page box.]]></description>
+      <content:encoded><![CDATA[<p>When people search for how to crop a PDF, they usually want one of two things: to cut away white margins, or to pull one specific part out of a page. Both come down to the same move. You draw a box over what you want to keep and save only that. Everything runs in your browser, so the file stays on your device.</p>
+<h2>Where cropping a PDF is useful</h2>
+<ul><li>Sharing one table or chart without the rest of the page.</li><li>Pulling a single question out of an exam paper.</li><li>Sending only the relevant part of a receipt or invoice.</li><li>Leaving the wide empty borders of a scan out of the result.</li></ul>
+<h2>Step by step</h2>
+<ol><li><strong>Open the PDF</strong> — Drop it into the Snip PDF tool. The first page appears on screen and you can move between pages.</li><li><strong>Draw the box</strong> — Drag across the page. You can move the box and resize it from its corners, and zoom the window to fine-tune the edges.</li><li><strong>Click Add snip</strong> — The area goes into a list. Add more from this or other pages and reorder them in the list.</li><li><strong>Pick a format and download</strong> — Save as PDF, PNG or JPEG. Choose 2x or 3x resolution if it will be printed.</li></ol>
+<p><strong>Snip PDF to Image</strong> — Select the area you want and save it as a PDF or an image, on your device, free. <a href="https://www.pdfplatform.app/en/tools/crop-pdf-to-image">Open the tool</a></p>
+<h2>Three ways to save the PDF</h2>
+<ul><li>All one after another: snips are placed on A4 pages in order, in one or two columns. Two columns suit narrow snips and save paper. The result is a printable worksheet.</li><li>One snip per page: a single PDF where each snip sits on its own page at its own size.</li><li>Each snip as a separate PDF file: every snip becomes its own PDF. With more than one they arrive together in a ZIP; a single snip downloads as a plain PDF. This is the one to pick when each piece goes to a different person.</li></ul>
+<h2>Snipping versus trimming the page box</h2>
+<p>Some programs crop by shrinking the page's CropBox. The trimmed part stays inside the file and is only hidden, so text in it can still be found and copied. Snipping works differently: the selected area is drawn as an image and only that area reaches the output. What you left out never makes it into the file.</p>
+<p>That cuts both ways. It is reassuring when you share part of a document. The trade-off is that the snip is a picture, so its text cannot be selected or searched. If you need the text, run the result through Searchable PDF afterwards.</p>
+<h2>Resolution and file size</h2>
+<p>Higher resolution gives a sharper snip and a bigger file. 2x is enough for most jobs and prints cleanly. 3x helps with fine print in tables. 1x is only for something viewed on a screen. If the file grows too large to email, compress the result with Compress PDF.</p>
+<h2>On a phone</h2>
+<p>It works in a phone browser with nothing to install. Drag with a finger and adjust from the corners, and zoom in when you need a precise edge.</p>]]></content:encoded>
       <category>How-to</category>
       <category>Crop</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="55551" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="55725" />
       <media:content url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1200" height="630" />
       <media:content url="https://www.pdfplatform.app/en/covers/square/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/en/covers/tall/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1000" height="1500" />
