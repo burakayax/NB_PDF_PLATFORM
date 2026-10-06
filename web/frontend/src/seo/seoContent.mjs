@@ -250,6 +250,8 @@ export const TOOL_SEO = {
         { q: "PDF'i her sayfa ayrı dosya olacak şekilde bölebilir miyim?", a: "Evet. 'Her sayfa ayrı dosya' seçeneğiyle tüm sayfalar tek tek PDF'e ayrılır ve bir ZIP olarak indirilir." },
         { q: "Bölme işlemi dosyalarımı sunucuya yükler mi?", a: "Hayır. Bölme tamamen tarayıcınızda yapılır; PDF'iniz cihazınızdan çıkmaz, %100 gizlidir." },
         { q: "Bölünen PDF'lerin kalitesi düşer mi?", a: "Hayır. Sayfalar birebir kopyalanır; metin, görsel ve biçim orijinaliyle aynı kalır." },
+        { q: "PDF ayırma ile PDF bölme aynı şey mi?", a: "Evet. İkisi de bir PDF'i parçalara ayırma işleminin adıdır; burada hangisini ararsanız aynı araca ulaşırsınız." },
+        { q: "PDF'ten tek bir sayfayı nasıl çıkarırım?", a: "PDF'inizi yükleyip yalnızca o sayfayı seçin ve «Tek PDF'de birleştir» ile indirin; sonuç tek sayfalık yeni bir PDF olur. Birden çok sayfa seçerseniz isterseniz «Ayrı ayrı kaydet (ZIP)» ile her birini ayrı dosya olarak da alabilirsiniz." },
       ],
     ),
     en: T(
@@ -264,6 +266,7 @@ export const TOOL_SEO = {
         { q: "Can I split a PDF so every page becomes a separate file?", a: "Yes. Use the 'each page as a separate file' option to split all pages into individual PDFs, downloaded together as a ZIP." },
         { q: "Does splitting upload my files to a server?", a: "No. Splitting happens entirely in your browser — your PDF never leaves your device and stays 100% private." },
         { q: "Will the split PDFs lose quality?", a: "No. Pages are copied exactly, so text, images, and formatting stay identical to the original." },
+        { q: "How do I pull a single page out of a PDF?", a: "Upload the PDF, select only that page and download it with Single merged PDF; the result is a new one-page PDF. If you select several pages you can also save each as its own file with Separate files (ZIP)." },
       ],
     ),
   },
