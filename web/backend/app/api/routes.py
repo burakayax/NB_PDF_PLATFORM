@@ -66,6 +66,7 @@ from app.core.saas_gate import (
     saas_current_user_id,
     saas_session_ok,
     get_user_file_size_limit_bytes,
+    record_output_proof,
 )
 from app.limiter import limiter
 from app.core.pdf_security import validate_pdf_before_processing
@@ -284,7 +285,9 @@ async def download_job_output(
             status_code=402,
             content={"error": "payment_required", "saasGating": _saas_gating_from_check(decision)},
         )
-    output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
+    _uid = await saas_current_user_id(token)
+    output_path, output_name, _workdir = get_job_download(job_id, _uid)
+    background_tasks.add_task(record_output_proof, _uid, "merge", f"job:{job_id}", path=output_path)
     background_tasks.add_task(cleanup_job, job_id)
     # Content-Disposition'ı RFC 5987 helper ile elle kur (filename* + ASCII fallback).
     # Starlette'in FileResponse(filename=) varsayılanı bazı sürümlerde Türkçe adı
@@ -1410,6 +1413,17 @@ async def download_result(
         )
 
     read = get_result(result_id, user_id)
+    # Parmak izi kaydı (non-fatal, arka plan) — silme görevinden ÖNCE çalışsın.
+    background_tasks.add_task(
+        record_output_proof,
+        user_id,
+        tool,
+        result_id,
+        sha256=meta.get("sha256"),
+        size_bytes=meta.get("size_bytes"),
+        produced_at=meta.get("created_at"),
+        path=read.payload_path,
+    )
     background_tasks.add_task(delete_result, result_id)
 
     # S3 backend: download from S3 and stream to browser (avoids CORS issues).

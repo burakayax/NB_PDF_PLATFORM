@@ -1179,3 +1179,39 @@ export async function deleteSocialPost(accessToken: string, id: string): Promise
   const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
   if (!r.ok) throw new Error(await r.text());
 }
+
+
+// ─── İtiraz / anlaşmazlık dosyası ve çıktı dosyası doğrulama ───────────────────
+export type AdminOutputVerifyResult = {
+  sha256: string;
+  sizeBytes: number;
+  matched: boolean;
+  records: Array<{ userId: string; userEmail: string; tool: string; resultId: string; producedAt: string; planAtTime: string | null }>;
+  explanation: string;
+};
+
+/** Müşterinin elindeki dosyayı yükler; parmak izi sunucudan çıkan bir çıktıyla eşleşiyor mu? */
+export async function verifyAdminOutputFile(accessToken: string, file: File): Promise<AdminOutputVerifyResult> {
+  const r = await adminFetch(accessToken, "/output-records/verify", {
+    method: "POST",
+    body: await file.arrayBuffer(),
+    headers: { "Content-Type": "application/octet-stream" },
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<AdminOutputVerifyResult>;
+}
+
+/** Kullanıcı numarası veya e-postası ile itiraz dosyasını (düz metin) indirir. */
+export async function downloadAdminDisputeFile(accessToken: string, userIdOrEmail: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/users/${encodeURIComponent(userIdOrEmail.trim())}/dispute-file`);
+  if (!r.ok) throw new Error(r.status === 404 ? "Kullanıcı bulunamadı." : await r.text());
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "itiraz-dosyasi.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

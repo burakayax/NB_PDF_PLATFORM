@@ -332,3 +332,55 @@ export async function editorDownloadConsumeController(
   const decision = await consumeEditorDownload(idKey);
   response.status(200).json(decision);
 }
+
+const outputRecordSchema = z.object({
+  userId: z.string().min(1).max(64),
+  toolId: z.string().min(1).max(64),
+  resultId: z.string().min(1).max(256),
+  sha256: z.string().regex(/^[0-9a-f]{64}$/i),
+  sizeBytes: z.number().int().min(0).max(2_000_000_000),
+  producedAt: z.number().positive().optional(),
+});
+
+/**
+ * POST /api/entitlement/internal/output-record
+ *
+ * Sunucunun ürettiği çıktı dosyasının SHA-256 parmak izini kaydeder (dosya içeriği ASLA
+ * saklanmaz). Anlaşmazlıkta "elindeki dosya bizim ürettiğimizle aynı mı?" sorusunu yanıtlar.
+ * Yalnızca FastAPI worker çağırır (X-Internal-Secret). Aynı (userId, resultId) tekrar gelirse
+ * ilk kayıt korunur (kanıt değiştirilemez).
+ */
+export async function outputRecordController(request: Request, response: Response) {
+  if (!(process.env.INTERNAL_SERVICE_SECRET ?? "").trim()) {
+    throw new HttpError(503, "Internal service secret not configured.");
+  }
+  if (!requestHasInternalServiceSecret(request)) {
+    throw new HttpError(403, "Forbidden.");
+  }
+  const body = outputRecordSchema.parse(request.body);
+  const user = await prisma.user.findUnique({ where: { id: body.userId }, select: { id: true, plan: true } });
+  if (!user) {
+    // Misafir/bilinmeyen kimlik: kayıt tutulmaz (hata değil).
+    response.status(200).json({ ok: true, recorded: false });
+    return;
+  }
+  try {
+    await prisma.outputRecord.create({
+      data: {
+        userId: user.id,
+        toolId: body.toolId,
+        resultId: body.resultId,
+        fileSha256: body.sha256.toLowerCase(),
+        fileSizeBytes: body.sizeBytes,
+        planAtTime: user.plan,
+        producedAt: body.producedAt ? new Date(body.producedAt * 1000) : null,
+      },
+    });
+  } catch (err) {
+    // Benzersizlik çakışması: kayıt zaten var → ilk kayıt korunur.
+    if ((err as { code?: string }).code !== "P2002") throw err;
+    response.status(200).json({ ok: true, recorded: false, already: true });
+    return;
+  }
+  response.status(201).json({ ok: true, recorded: true });
+}

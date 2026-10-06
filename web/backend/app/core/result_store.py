@@ -31,6 +31,7 @@ handler can redirect the browser directly to the object.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -257,6 +258,14 @@ class ResultRead:
 # Core API
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def save_result(
     payload: bytes,
     filename: str,
@@ -273,6 +282,7 @@ def save_result(
         "filename": filename,
         "mime": mime,
         "size_bytes": len(payload),
+        "sha256": hashlib.sha256(payload).hexdigest(),
         "user_id": user_id,
         "created_at": time.time(),
         "has_thumbnail": bool(thumbnail_png),
@@ -326,6 +336,7 @@ def save_result_from_file(
             "filename": filename,
             "mime": mime,
             "size_bytes": size_bytes,
+            "sha256": hashlib.sha256(payload).hexdigest(),
             "user_id": user_id,
             "created_at": time.time(),
             "has_thumbnail": bool(thumbnail_png),
@@ -347,6 +358,7 @@ def save_result_from_file(
             "filename": filename,
             "mime": mime,
             "size_bytes": size_bytes,
+            "sha256": _file_sha256(dest),
             "user_id": user_id,
             "created_at": time.time(),
             "has_thumbnail": bool(thumbnail_png),
