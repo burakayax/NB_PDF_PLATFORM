@@ -61,6 +61,34 @@ export function getDisplayMode(): "standalone" | "browser" {
   return standalone ? "standalone" : "browser";
 }
 
+const INTERNAL_FLAG_KEY = "nb_internal_traffic";
+
+/**
+ * KENDİ ZİYARETLERİMİZ ANALİTİĞİ KİRLETMESİN.
+ *
+ * Site sahibinin ve test amaçlı tarayıcı oturumlarının girişleri gerçek
+ * kullanıcı sayılırsa raporlar (kullanıcı sayısı, kaynaklar, şehirler,
+ * etkileşim süresi) yanıltıcı olur. Bir tarayıcıda `?internal=1` ile açıp
+ * bayrak kaydedilir; bundan sonra o tarayıcının ölçümü GA4'te
+ * `traffic_type=internal` ile işaretlenir. `?internal=0` bayrağı kaldırır.
+ * GA4 tarafında "Dahili trafik" veri filtresi etkinleştirilince bu oturumlar
+ * raporlardan çıkar. Kişisel veri içermez; yalnızca yerel bir işarettir.
+ */
+export function isInternalTraffic(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const q = new URLSearchParams(window.location.search).get("internal");
+    if (q === "1") window.localStorage.setItem(INTERNAL_FLAG_KEY, "1");
+    else if (q === "0") window.localStorage.removeItem(INTERNAL_FLAG_KEY);
+    return window.localStorage.getItem(INTERNAL_FLAG_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Modül yüklenirken okunur: SPA yönlendirmesi `?internal=` parametresini silmeden önce. */
+const INTERNAL_TRAFFIC = isInternalTraffic();
+
 let gaInitialized = false;
 /** İlk sayfa görüntülemesi `config` ile zaten gönderildi mi? */
 let firstPageViewSent = false;
@@ -91,6 +119,7 @@ export function initializeGA(): boolean {
   window.gtag("config", id, {
     page_location: LANDING_HREF || undefined,
     page_referrer: LANDING_REFERRER || undefined,
+    ...(INTERNAL_TRAFFIC ? { traffic_type: "internal" } : {}),
   });
   // Bu `config` çağrısı giriş sayfası için bir görüntüleme kaydı gönderir;
   // aynı sayfa iki kez sayılmasın diye ilk `trackGAPageView` atlanır.
