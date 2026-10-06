@@ -12,11 +12,21 @@ import { NotFoundPage } from "./components/common/NotFoundPage";
 import { SignDocumentPage } from "./components/tools/SignDocumentPage";
 import { TOOL_SLUGS } from "./seo/seoContent.mjs";
 import { toolSlugToTr } from "./seo/enSlugs.mjs";
+import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/usePreferredLanguage";
 import "./styles/app.css";
 
 // Belge dilini kullanıcı konumu ve tercihine göre ayarlar.
 // Geolokasyon paylaşılan, önbellekli `getCountryCode` ile yapılır (CheckoutCurrency ile tek istek paylaşılır).
 async function setDocumentLanguage() {
+  // Herkese açık SEO sayfasında dil URL'den gelir (Google en-US ile işler; IP/tarayıcı dili
+  // Türkçe sayfayı İngilizce etiketlememeli). Elle seçim yoksa: /en → en, öneksiz → tr.
+  if (isPublicSeoPath(window.location.pathname)) {
+    document.documentElement.lang = isEnglishPath(window.location.pathname)
+      ? "en"
+      : (getExplicitLanguage() ?? "tr");
+    return;
+  }
+
   const storedLang = localStorage.getItem("nbpdf-language");
 
   // Kullanıcının kayıtlı tercihi varsa onu kullan (ağ beklemeden).
