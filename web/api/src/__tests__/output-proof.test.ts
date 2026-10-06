@@ -27,6 +27,7 @@ vi.mock("../lib/prisma.js", () => ({
     downloadLog: { findMany: vi.fn(async () => []) },
     aiUsage: { findMany: vi.fn(async () => []) },
     contractReviewLog: { findMany: vi.fn(async () => []) },
+    aiRequestLog: { findMany: vi.fn(async () => []) },
   },
 }));
 vi.mock("../middleware/api-security.middleware.js", () => ({ requestHasInternalServiceSecret: m.hasSecret }));

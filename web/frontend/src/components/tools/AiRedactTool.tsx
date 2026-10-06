@@ -18,6 +18,7 @@ import { aiDetectSensitive, fetchAiQuota, type AiError, type AiQuota } from "../
 import { ToolRating } from "../common/ToolRating";
 import { AiCreditBadge } from "./AiCreditBadge";
 import { TopUpModal } from "./TopUpModal";
+import { AiResultNotice } from "./AiResultNotice";
 import { detectSensitiveByRegex } from "../../lib/redactDetectors";
 
 type Item = { id: string; type: string; label: string; value: string; checked: boolean };
@@ -186,6 +187,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"><Check className="h-8 w-8" /></div>
           <p className="mt-4 text-xl font-bold text-white">{tr ? "Veriler gizlendi 🎉" : "Data redacted 🎉"}</p>
           <p className="mt-1 text-sm text-slate-400">{tr ? "Seçtiğiniz bilgiler PDF'ten kalıcı olarak kaldırıldı." : "The selected information was permanently removed from the PDF."}</p>
+          <div className="mx-auto mt-4 max-w-xl text-left"><AiResultNotice language={language} variant="redact" /></div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button type="button" onClick={download} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><Download className="h-4 w-4" />{tr ? "İndir" : "Download"}</button>
             <button type="button" onClick={() => { setResult(null); setFile(null); setItems([]); setDocText(""); setAiDone(false); }} className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]">{tr ? "Yeni belge" : "New document"}</button>

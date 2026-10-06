@@ -242,6 +242,7 @@ model User {
   passwordResetCodes PasswordResetCode[]
   downloadLogs     DownloadLog[]
   outputRecords    OutputRecord[]
+  aiRequestLogs    AiRequestLog[]
   contractReviewLogs ContractReviewLog[]
   couponUses       CouponUse[]
   operationLogs    OperationLog[]
@@ -1120,4 +1121,27 @@ model OutputRecord {
   @@index([fileSha256])
   @@index([userId, createdAt])
   @@map("output_records")
+}
+
+// Yapay zekâ isteği defteri: kim, ne zaman, hangi araç, kaç hak düşüldü, sonuç, iade.
+// Belge metni ve sonuç İÇERİĞİ saklanmaz; yalnızca SHA-256 özetleri.
+model AiRequestLog {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  op           String    @map("op")
+  units        Int       @default(1) @map("units")
+  planAtTime   String?   @map("plan_at_time")
+  status       String    @default("RUNNING") @map("status")
+  refunded     Boolean   @default(false) @map("refunded")
+  inputSha256  String?   @map("input_sha256")
+  outputSha256 String?   @map("output_sha256")
+  clientIp     String?   @map("client_ip")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  finishedAt   DateTime? @map("finished_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("ai_request_logs")
 }
