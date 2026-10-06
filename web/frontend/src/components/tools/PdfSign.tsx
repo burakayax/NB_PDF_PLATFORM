@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { createPortal } from "react-dom";
 import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
@@ -118,6 +119,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   const [rendering, setRendering] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
+  useBodyScrollLock(editorOpen);
   /** Çıktı gerçekten kaydedildi mi — puanlama yalnız o zaman sorulur. */
   const [applied, setApplied] = useState(false);
   const [sigModalOpen, setSigModalOpen] = useState(false);

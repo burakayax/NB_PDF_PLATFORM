@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { createPortal } from "react-dom";
 import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
@@ -275,6 +276,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
   const [tourOpen, setTourOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  useBodyScrollLock(editorOpen);
   const [busy, setBusy] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);

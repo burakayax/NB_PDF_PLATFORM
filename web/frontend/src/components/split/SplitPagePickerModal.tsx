@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from "react";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Language } from "../../i18n/landing";
 import { ws } from "../../i18n/workspace";
@@ -109,6 +110,8 @@ export function SplitPagePickerModal({
     gridRef.current?.scrollToPage(n);
     setGitInput("");
   }, [gitInput, totalPages]);
+
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (!open) {

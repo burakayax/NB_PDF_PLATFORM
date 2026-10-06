@@ -12,6 +12,7 @@
  * çünkü yanlış yazdırma ancak kâğıt katlandıktan sonra fark edilir.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { createPortal } from "react-dom";
 import { BookOpen, FileText, Grid2x2, Loader2, Sliders, Trash2, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -178,6 +179,7 @@ type ModalProps = {
 function LayoutModal(p: ModalProps) {
   const t = METIN[p.language === "tr" ? "tr" : "en"];
   const { open, bytes, kip, adet, cerceve, gizle } = p;
+  useBodyScrollLock(open);
   const [onizleme, setOnizleme] = useState<{ file: File; v: number } | null>(null);
   const [hazirlaniyor, setHazirlaniyor] = useState(false);
   const surum = useRef(0);
