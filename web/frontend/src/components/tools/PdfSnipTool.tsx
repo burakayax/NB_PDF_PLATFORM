@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
@@ -191,6 +192,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const [pdfLayout, setPdfLayout] = useState<"sheet" | "perPage">("sheet");
   /** "Yeni PDF" doğrudan dosya seçiciyi açsın diye. */
   const newFileInputRef = useRef<HTMLInputElement>(null);
+  const summaryFileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * Kesitin İÇ görüntü biçimi. Çıktı JPEG istenmişse JPEG, aksi halde PNG:
@@ -201,6 +203,9 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const [error, setError] = useState<string | null>(null);
   /** Pencere yeniden boyutlandığında sayfayı yeniden çizmek için sayaç. */
   const [viewportTick, setViewportTick] = useState(0);
+  // Misafir/tanıtım sayfalarında düzenleyici, diğer araçlardaki görsel seçici gibi
+  // ayrı tam ekran pencerede açılır.
+  const [modalOpen, setModalOpen] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -233,6 +238,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
         setPageIndex(0);
         setRect(DEFAULT_RECT);
         setThumbs([]);
+        setModalOpen(true);
       } catch (err) {
         setError(err instanceof Error && /password/i.test(err.message) ? t.encrypted : t.failed);
       }
@@ -308,7 +314,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
     })();
     return () => { cancelled = true; };
-  }, [bytes, pageIndex, viewportTick]);
+  }, [bytes, pageIndex, viewportTick, modalOpen]);
 
   // Pencere boyutu değişince sayfayı yeni ölçüde yeniden çiz (sabit kalıp
   // küçücük görünmesin). Sık tetiklenmesin diye gecikmeli.
@@ -591,7 +597,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const bracket = "absolute h-6 w-6 border-cyan-400";
   const edgeBar = "absolute rounded-full bg-cyan-400 shadow ring-2 ring-slate-900/40";
 
-  return (
+  const editor = (
     <div className="flex flex-col gap-4">
       {/* Üst bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2">
@@ -940,6 +946,74 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
           ? "Kesitler yalnızca seçtiğiniz bölge çizilerek alınır — belgeniz cihazınızdan çıkmaz."
           : "Only the area you select is rendered — your document never leaves your device."}
       </p>
+    </div>
+  );
+
+  if (!describesTool) return editor;
+
+  return (
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="tool-form flex flex-col gap-3">
+        <div className="flex items-center gap-2 rounded-xl bg-white/[0.05] px-3 py-2">
+          <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
+          <span className="truncate text-[13px] font-medium text-slate-200">{fileName}</span>
+          <span className="ml-auto shrink-0 text-[12px] text-slate-400">
+            {snips.length > 0 ? `${t.basket} (${snips.length})` : `${pageCount} ${t.page.toLowerCase()}`}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:brightness-110"
+        >
+          <Crop className="h-4 w-4" />
+          {tr ? "Kesit seçiciyi aç" : "Open snip editor"}
+        </button>
+        <input
+          ref={summaryFileInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            clearSnips();
+            void loadFile(f);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => summaryFileInputRef.current?.click()}
+          className="text-[13px] font-medium text-slate-400 transition hover:text-white"
+        >
+          {t.newFile}
+        </button>
+      </div>
+      {modalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[11000] flex items-center justify-center p-1 sm:p-1.5" role="presentation">
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setModalOpen(false)} />
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="relative z-10 flex h-[min(94vh,100dvh)] w-[min(96vw,100vw)] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/[0.98] via-slate-950/[0.99] to-[#070b12]"
+            >
+              <div className="flex shrink-0 items-center justify-between border-b border-cyan-500/15 bg-slate-950/50 px-3 py-2">
+                <h2 className="text-sm font-semibold text-slate-50">{tr ? "Kesit al" : "Snip"}</h2>
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="rounded-md border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-400/20"
+                >
+                  {tr ? "Tamam" : "Done"}
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">{editor}</div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
