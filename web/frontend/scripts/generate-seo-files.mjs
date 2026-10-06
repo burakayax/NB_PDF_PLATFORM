@@ -35,6 +35,7 @@ import {
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
+import { relatedBlogPosts } from "../src/seo/relatedPosts.mjs";
 import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "../src/seo/toolRatings.mjs";
 import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
 import { writeBlogCovers } from "./generate-covers.mjs";
@@ -681,6 +682,18 @@ function renderVisibleBody(baseUrl, meta, lang) {
       parts.push(
         `<nav aria-label="${t.ariaToolsForTask}" class="seo-related-tools"><h2>${t.toolsForTask}</h2><ul>${rel.map((s) => toolLi(s, lang)).join("")}</ul></nav>`,
       );
+    }
+    // Konuca yakın diğer rehberler (React sayfasıyla aynı sıralama).
+    if (meta.post) {
+      const sib = relatedBlogPosts(meta.post.slug, 3, (p) => routeHasLang(`/blog/${p.slug}`, lang));
+      if (sib.length) {
+        const gl = sib
+          .map((p) => `<li><a href="${href(`/blog/${p.slug}`, lang)}">${escapeHtml((p[lang] || p[PRIMARY_LANG]).title)}</a></li>`)
+          .join("");
+        parts.push(
+          `<nav aria-label="${t.ariaRelatedGuides}" class="seo-related-guides"><h2>${t.relatedGuides}</h2><ul>${gl}</ul></nav>`,
+        );
+      }
     }
   }
 
