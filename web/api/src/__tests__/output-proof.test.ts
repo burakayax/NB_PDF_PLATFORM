@@ -23,8 +23,8 @@ vi.mock("../lib/prisma.js", () => ({
     outputRecord: { create: m.outCreate, findMany: m.outFindMany },
     paymentCheckout: { findMany: vi.fn(async () => []) },
     invoice: { findMany: vi.fn(async () => []) },
-    operationLog: { findMany: vi.fn(async () => []) },
-    downloadLog: { findMany: vi.fn(async () => []) },
+    operationLog: { findMany: vi.fn(async () => []), count: vi.fn(async () => 0) },
+    downloadLog: { findMany: vi.fn(async () => []), count: vi.fn(async () => 0) },
     aiUsage: { findMany: vi.fn(async () => []) },
     contractReviewLog: { findMany: vi.fn(async () => []) },
     aiRequestLog: { findMany: vi.fn(async () => []) },
@@ -126,6 +126,8 @@ describe("adminUserDisputeFileController", () => {
     const r = res();
     await adminUserDisputeFileController({ params: { id: "u1" }, query: {}, authUser: { id: "admin1", email: "a@x.com" } } as never, r);
     const text = String(r.send.mock.calls[0]?.[0]);
+    expect(text).toContain("Hizmet Şartları/Gizlilik kabulü");
+    expect(text).toContain("İşlem kaydı sayısı");
     expect(text).toContain("u@x.com");
     expect(text).not.toContain("11111111110");
     expect(text).not.toContain("+905551112233");

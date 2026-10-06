@@ -795,7 +795,12 @@ export function AuthPage({
             </p>
           ) : null}
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
+          <p className="mt-6 text-center text-[11px] leading-relaxed text-nb-muted">
+            {language === "tr"
+              ? "Hesap oluşturarak veya Google ile devam ederek Hizmet Şartları’nı ve Gizlilik Politikası’nı okuduğunuzu ve kabul ettiğinizi beyan edersiniz."
+              : "By creating an account or continuing with Google, you confirm that you have read and accept the Terms of Service and Privacy Policy."}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
             <button
               type="button"
               onClick={onOpenTerms}
