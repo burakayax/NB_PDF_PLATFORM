@@ -646,7 +646,7 @@ export const TOOL_SEO = {
       "Telefonunuzun kamerasıyla belge tarayıp PDF yapın. Kenarlar otomatik bulunur, perspektif düzeltilir — uygulamasız, ücretsiz ve cihazınızda.",
       "Telefonla Belge Tarama — Ücretsiz PDF Tarayıcı",
       "Belgenizi telefon kameranızla tarayıp saniyeler içinde PDF yapın. Kenarlar otomatik bulunur ve perspektif düzeltilir; her şey cihazınızda işlenir — belgeniz sunucuya gitmez, uygulama kurmanız gerekmez. Çok sayfalı tarama, gölge temizleme ve aranabilir PDF (OCR) desteğiyle.",
-      ["belge tarama", "pdf tara", "telefonla belge tarama", "belge tarayıcı", "pdf tarayıcı", "belge tarama ücretsiz", "kamera ile pdf", "camscanner alternatif"],
+      ["belge tarama", "pdf tara", "telefonla belge tarama", "belge tarayıcı", "pdf tarayıcı", "belge tarama ücretsiz", "online belge tarama", "fotoğraftan belge tarama", "belge tarama uygulaması", "kamera ile pdf", "camscanner alternatif"],
       [
         { q: "Telefonla belge taramak için uygulama gerekir mi?", a: "Hayır. Sayfayı telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli; kamerayı belgeye doğrultun, kenarlar otomatik bulunur ve PDF oluşur. Kurulum veya üyelik gerekmez." },
         { q: "Taradığım belge sunucuya yüklenir mi?", a: "Hayır. Kamera görüntüsü, otomatik kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez." },
@@ -654,6 +654,9 @@ export const TOOL_SEO = {
         { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa, gölge temizleme ve aranabilir PDF (OCR) Pro özellikleridir." },
         { q: "Taranan belgenin kalitesi nasıl artırılıyor?", a: "Araç perspektifi düzeltir (eğik çekimi düzleştirir), kenarları kırpar ve kontrastı iyileştirir; sonuç tarayıcıdan çıkmış gibi net olur." },
         { q: "Bilgisayardan da tarama yapabilir miyim?", a: "Evet. Telefon kamerasının yanı sıra bilgisayarınızdaki fotoğrafları da yükleyip belge PDF'ine dönüştürebilirsiniz." },
+        { q: "Fotoğraftan belge taraması nasıl yapılır?", a: "Galerinizdeki ya da bilgisayarınızdaki belge fotoğrafını yükleyin. Kenarlar otomatik bulunur, eğik çekim düzeltilir ve fotoğraf, taranmış gibi düz bir PDF sayfasına dönüşür." },
+        { q: "Online belge tarama için ne gerekir?", a: "Yalnızca bir tarayıcı. Sayfayı açıp kamera iznini verirsiniz; belgeyi çerçeveye aldığınızda tarama başlar. Uygulama indirmeniz ya da hesap açmanız gerekmez." },
+        { q: "Belge tarama uygulaması yerine kullanabilir miyim?", a: "Evet, kurulum istemeyen işler için. Tarama cihazınızda yapıldığı için belgeniz bir sunucuya yüklenmez. Ücretsizde tek taramada 3 sayfa alınır; daha fazlası ve OCR Pro özelliğidir." },
       ],
     ),
     en: T(
@@ -669,6 +672,9 @@ export const TOOL_SEO = {
         { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages, shadow removal and searchable PDF (OCR) are Pro features." },
         { q: "How is the scan quality improved?", a: "The tool corrects perspective (flattens angled shots), crops the edges, and boosts contrast, so the result looks as crisp as a real scanner." },
         { q: "Can I scan from a computer too?", a: "Yes. Besides the phone camera, you can upload photos from your computer and turn them into a document PDF." },
+        { q: "How do I scan a document from a photo?", a: "Upload the photo from your gallery or computer. The edges are found automatically, a tilted shot is straightened, and the photo becomes a flat PDF page that looks scanned." },
+        { q: "What do I need to scan a document online?", a: "Only a browser. Open the page, allow camera access and frame the document; scanning starts from there. There is no app to download and no account to create." },
+        { q: "Can this replace a document scanner app?", a: "For jobs where you do not want to install anything, yes. The scan happens on your device, so the document is not uploaded to a server. The free plan takes 3 pages per scan; more pages and OCR are Pro features." },
       ],
     ),
   },
