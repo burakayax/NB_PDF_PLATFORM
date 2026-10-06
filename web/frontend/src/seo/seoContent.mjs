@@ -239,8 +239,8 @@ export const TOOL_SEO = {
 
   "split-pdf": {
     tr: T(
-      "PDF Ayırma — sayfaları online ayırın",
-      "PDF'i ayrı sayfalara veya özel aralıklara bölün. İhtiyacınız olan sayfaları hızlıca çıkarın — tarayıcıda ücretsiz.",
+      "PDF Ayırma ve Bölme — sayfaları online ayırın",
+      "PDF ayırma ve PDF bölme: sayfaları ayrı dosyalara veya özel aralıklara bölün, istediğiniz sayfaları çıkarın — tarayıcıda ücretsiz.",
       "PDF Ayırma ve Bölme",
       "Bir PDF'i sayfa sayfa ayırın veya özel sayfa aralıkları seçerek bölün. İhtiyacınız olan sayfaları çıkarın, tek veya çoklu dosya olarak indirin.",
       ["pdf ayırma", "pdf bölme", "pdf sayfa ayırma", "pdf split", "pdf'ten sayfa çıkarma"],
@@ -642,7 +642,7 @@ export const TOOL_SEO = {
 
   "belge-tara": {
     tr: T(
-      "Belge Tarama — Telefonla PDF'e Tara",
+      "Belge Tara — Telefonla Ücretsiz PDF Tarayıcı",
       "Telefonunuzun kamerasıyla belge tarayıp PDF yapın. Kenarlar otomatik bulunur, perspektif düzeltilir — uygulamasız, ücretsiz ve cihazınızda.",
       "Telefonla Belge Tarama — Ücretsiz PDF Tarayıcı",
       "Belgenizi telefon kameranızla tarayıp saniyeler içinde PDF yapın. Kenarlar otomatik bulunur ve perspektif düzeltilir; her şey cihazınızda işlenir — belgeniz sunucuya gitmez, uygulama kurmanız gerekmez. Çok sayfalı tarama, gölge temizleme ve aranabilir PDF (OCR) desteğiyle.",
