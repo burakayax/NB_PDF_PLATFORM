@@ -141,7 +141,7 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
 export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, onOpenApp, onSwitchLanguage }: { language: Language; onLogin: () => void; onRegister: () => void; isAuthenticated: boolean; onOpenApp: () => void; onSwitchLanguage: (lang: "tr" | "en") => void }) {
   const tr = language === "tr";
   const posts = getBlogPostsSorted() as BlogPost[];
-  useEffect(() => { document.title = tr ? "Blog — PDF Platform" : "Blog — PDF Platform"; }, [tr]);
+  useEffect(() => { document.title = tr ? "Blog — Rehberler & İpuçları | PDF Platform" : "Blog — Guides & Tips | PDF Platform"; }, [tr]);
   return (
     <Shell>
       <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />

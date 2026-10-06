@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ArrowRight, Code2, FileText, Languages, KeyRound, Table2, Zap, ShieldCheck } from "lucide-react";
 import type { Language } from "../i18n/landing";
+import { API_SEO } from "../seo/seoContent.mjs";
 
 type Props = {
   language: Language;
@@ -13,7 +14,7 @@ type Props = {
 
 export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegister, onOpenApiKeys, onOpenPricing }: Props) {
   const tr = language === "tr";
-  useEffect(() => { document.title = tr ? "PDF & Yapay Zekâ API — PDF Platform" : "PDF & AI API — PDF Platform"; }, [tr]);
+  useEffect(() => { document.title = API_SEO[tr ? "tr" : "en"].title; }, [tr]);
 
   // Oturum açıksa birincil eylem: panelde anahtar oluştur. Değilse: ücretsiz kaydol.
   const primaryAction = isAuthenticated ? (onOpenApiKeys ?? onRegister) : onRegister;
