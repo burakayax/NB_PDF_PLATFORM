@@ -36,6 +36,9 @@ type Placement = SigSource & {
   /** Metin/tarih alanı ise dolu; imza görselinde undefined. Düzenlenebilir. */
   text?: string;
   color?: string;
+  fontKey?: string;
+  bold?: boolean;
+  italic?: boolean;
   opacity?: number; // 0..1 (varsayılan 1)
   rotation?: number; // ekran saat yönü derece (varsayılan 0)
 };
@@ -53,16 +56,31 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
   return out;
 }
 
+const FONTS = [
+  { key: "sans", label: "Sans", stack: '"Segoe UI", Arial, "Helvetica Neue", sans-serif', italic: false },
+  { key: "serif", label: "Serif", stack: '"Times New Roman", Georgia, serif', italic: false },
+  { key: "georgia", label: "Georgia", stack: 'Georgia, "Times New Roman", serif', italic: false },
+  { key: "mono", label: "Mono", stack: '"Courier New", Consolas, monospace', italic: false },
+  { key: "script", label: "Script", stack: '"Segoe Script", "Brush Script MT", "Snell Roundhand", cursive', italic: true },
+  { key: "hand", label: "Hand", stack: '"Lucida Handwriting", "Bradley Hand", "Comic Sans MS", cursive', italic: true },
+] as const;
+const fontStack = (key?: string) => (FONTS.find((f) => f.key === key) ?? FONTS[0]).stack;
+
+const TEXT_FONT_PX = 40;
+const TEXT_CANVAS_H = TEXT_FONT_PX * 1.5;
+
+type TextStyle = { fontKey?: string; bold?: boolean; italic?: boolean };
+
 /** Metin/tarih alanını yüksek çözünürlüklü şeffaf PNG'ye çizer (Türkçe tam destekli). */
-function renderTextToPng(text: string, color = "#0b2447"): SigSource {
+function renderTextToPng(text: string, color = "#0b2447", style: TextStyle = {}): SigSource {
   const t = text && text.trim() ? text : " ";
   const scale = 3;
-  const fontPx = 40;
-  const font = `600 ${fontPx}px "Segoe UI", Arial, "Helvetica Neue", sans-serif`;
+  const fontPx = TEXT_FONT_PX;
+  const font = `${style.italic ? "italic " : ""}${style.bold ? 800 : 600} ${fontPx}px ${fontStack(style.fontKey)}`;
   const measure = document.createElement("canvas").getContext("2d")!;
   measure.font = font;
   const w = Math.ceil(measure.measureText(t).width) + 24;
-  const h = Math.ceil(fontPx * 1.5);
+  const h = TEXT_CANVAS_H;
   const c = document.createElement("canvas");
   c.width = Math.max(1, w * scale);
   c.height = Math.max(1, h * scale);
@@ -81,6 +99,7 @@ function todayStr(): string {
 }
 
 /** Metin/tarih alanı renk seçenekleri (lacivert, siyah, kırmızı, mavi, yeşil, beyaz). */
+const SIGN_COLORS = ["#0b2447", "#111827", "#2563eb", "#dc2626"];
 const TEXT_COLORS = ["#0b2447", "#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"];
 
 export function PdfSign({ language, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
@@ -109,6 +128,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [textColor, setTextColor] = useState("#0b2447"); // metin/tarih rengi
+  const [editingId, setEditingId] = useState<string | null>(null); // çift tıkla yerinde düzenleme
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -374,36 +394,43 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   }
 
   // Metin/tarih alanı ekle — sayfanın ortasına, seçili renkte, düzenlenebilir.
-  function addTextField(defaultText: string) {
-    const r = renderTextToPng(defaultText, textColor);
-    const wNorm = 0.3;
+  function addTextField(defaultText: string, color = textColor, style: TextStyle = {}, wNorm = 0.3) {
+    const r = renderTextToPng(defaultText, color, style);
     const hNorm = (wNorm * (dims.w || 1)) / (r.aspect || 1) / (dims.h || 1);
     const xNorm = Math.max(0, Math.min(1 - wNorm, 0.5 - wNorm / 2));
     const yNorm = Math.max(0, Math.min(1 - hNorm, 0.5 - hNorm / 2));
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    setPlacements((ps) => [...ps, { ...r, id, page: current, xNorm, yNorm, wNorm, text: defaultText, color: textColor }]);
+    setPlacements((ps) => [...ps, { ...r, id, page: current, xNorm, yNorm, wNorm, text: defaultText, color, ...style }]);
     setSelected(id);
   }
 
-  function updateTextField(id: string, newText: string) {
+  // Yazı boyutu (pt) ↔ kutu genişliği dönüşümü: PNG sabit 40px yükseklikte çizilir.
+  function fontPtOf(p: Placement): number {
+    if (!dims.w || !scale) return 0;
+    return (TEXT_FONT_PX * p.wNorm * dims.w) / (TEXT_CANVAS_H * (p.aspect || 1)) / scale;
+  }
+  function wNormForPt(pt: number, aspect: number): number {
+    return Math.max(0.03, Math.min(0.95, (pt * scale * TEXT_CANVAS_H * aspect) / (TEXT_FONT_PX * (dims.w || 1))));
+  }
+
+  // Metin / renk / yazı tipi değişiminde PNG'yi yeniden üretir; yazı boyutu (pt) korunur.
+  function restyleText(id: string, patch: { text?: string; color?: string } & TextStyle) {
     setPlacements((ps) =>
       ps.map((p) => {
         if (p.id !== id || p.text === undefined) return p;
-        const r = renderTextToPng(newText, p.color);
-        return { ...p, text: newText, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect };
+        const next = { ...p, ...patch };
+        const r = renderTextToPng(next.text ?? "", next.color, next);
+        const pt = fontPtOf(p);
+        return { ...next, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect, wNorm: pt > 0 ? wNormForPt(pt, r.aspect) : p.wNorm };
       }),
     );
   }
+  const updateTextField = (id: string, newText: string) => restyleText(id, { text: newText });
+  const updateTextColor = (id: string, color: string) => restyleText(id, { color });
 
-  // Metin/tarih rengini değiştir — PNG'yi yeni renkle yeniden üretir.
-  function updateTextColor(id: string, color: string) {
-    setPlacements((ps) =>
-      ps.map((p) => {
-        if (p.id !== id || p.text === undefined) return p;
-        const r = renderTextToPng(p.text, color);
-        return { ...p, color, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect };
-      }),
-    );
+  function setFontSize(id: string, pt: number) {
+    if (!(pt > 0)) return;
+    setPlacements((ps) => ps.map((p) => (p.id === id && p.text !== undefined ? { ...p, wNorm: wNormForPt(pt, p.aspect) } : p)));
   }
 
   const selectedPlacement = placements.find((p) => p.id === selected) ?? null;
@@ -517,6 +544,49 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
                   className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400"
                 />
+              )}
+              {selectedPlacement?.text !== undefined && (
+                <span className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1">
+                  <select
+                    value={selectedPlacement.fontKey ?? "sans"}
+                    onChange={(e) => {
+                      const f = FONTS.find((x) => x.key === e.target.value);
+                      restyleText(selectedPlacement.id, { fontKey: e.target.value, italic: f?.italic ? true : selectedPlacement.italic });
+                    }}
+                    title={tr ? "Yazı tipi" : "Font"}
+                    className="rounded-md border border-white/15 bg-[#0b1020] px-1.5 py-1 text-[12px] text-slate-100 outline-none"
+                    style={{ fontFamily: fontStack(selectedPlacement.fontKey) }}
+                  >
+                    {FONTS.map((f) => (
+                      <option key={f.key} value={f.key} style={{ fontFamily: f.stack }}>{f.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => restyleText(selectedPlacement.id, { bold: !selectedPlacement.bold })}
+                    title={tr ? "Kalın" : "Bold"}
+                    className={`h-7 w-7 rounded-md text-[13px] font-black ${selectedPlacement.bold ? "bg-cyan-500/30 text-cyan-100" : "text-slate-300 hover:bg-white/10"}`}
+                  >B</button>
+                  <button
+                    type="button"
+                    onClick={() => restyleText(selectedPlacement.id, { italic: !selectedPlacement.italic })}
+                    title={tr ? "İtalik" : "Italic"}
+                    className={`h-7 w-7 rounded-md text-[13px] font-semibold italic ${selectedPlacement.italic ? "bg-cyan-500/30 text-cyan-100" : "text-slate-300 hover:bg-white/10"}`}
+                  >I</button>
+                  <span className="mx-0.5 h-4 w-px bg-white/15" />
+                  <button type="button" onClick={() => setFontSize(selectedPlacement.id, Math.max(4, Math.round(fontPtOf(selectedPlacement)) - 1))} title={tr ? "Yazı boyutunu küçült" : "Smaller"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">−</button>
+                  <input
+                    type="number"
+                    min={4}
+                    max={200}
+                    value={Math.round(fontPtOf(selectedPlacement))}
+                    onChange={(e) => setFontSize(selectedPlacement.id, Number(e.target.value))}
+                    title={tr ? "Yazı boyutu (pt)" : "Font size (pt)"}
+                    className="w-12 rounded-md border border-white/15 bg-white/[0.06] px-1 py-1 text-center text-[12px] tabular-nums text-white outline-none"
+                  />
+                  <button type="button" onClick={() => setFontSize(selectedPlacement.id, Math.round(fontPtOf(selectedPlacement)) + 1)} title={tr ? "Yazı boyutunu büyüt" : "Larger"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">+</button>
+                  <span className="text-[11px] text-slate-400">pt</span>
+                </span>
               )}
               {selectedPlacement && (
                 <span className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5">
@@ -635,7 +705,12 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                             e.stopPropagation();
                             setSelected(p.id);
                           }}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            if (p.text !== undefined) setEditingId(p.id);
+                          }}
                           onPointerDown={(e) => {
+                            if (editingId === p.id) return;
                             e.stopPropagation();
                             setSelected(p.id);
                             setDrag({ id: p.id, mode: "move", sx: e.clientX, sy: e.clientY, ox: p.xNorm, oy: p.yNorm });
@@ -651,7 +726,29 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                             transform: p.rotation ? `rotate(${p.rotation}deg)` : undefined,
                           }}
                         >
-                          <img src={p.dataUrl} alt="signature" className="pointer-events-none h-full w-full object-contain" draggable={false} />
+                          <img src={p.dataUrl} alt="signature" className="pointer-events-none h-full w-full object-contain" style={{ opacity: editingId === p.id ? 0 : 1 }} draggable={false} />
+                          {editingId === p.id && p.text !== undefined && (
+                            <input
+                              autoFocus
+                              onFocus={(e) => e.currentTarget.select()}
+                              value={p.text}
+                              onChange={(e) => updateTextField(p.id, e.target.value)}
+                              onBlur={() => setEditingId(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === "Escape") setEditingId(null);
+                              }}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              className="absolute inset-0 w-full bg-white/90 outline-none"
+                              style={{
+                                color: p.color,
+                                fontFamily: fontStack(p.fontKey),
+                                fontWeight: p.bold ? 800 : 600,
+                                fontStyle: p.italic ? "italic" : "normal",
+                                fontSize: (TEXT_FONT_PX * width) / (TEXT_CANVAS_H * (p.aspect || 1)),
+                                paddingLeft: (12 * width) / (TEXT_CANVAS_H * (p.aspect || 1)),
+                              }}
+                            />
+                          )}
                           {isSel && (
                             <>
                               <button
@@ -707,6 +804,10 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                 <SignatureModal
                   tr={tr}
                   onClose={() => setSigModalOpen(false)}
+                  onDoneText={(text, color, fontKey) => {
+                    addTextField(text, color, { fontKey, italic: !!FONTS.find((f) => f.key === fontKey)?.italic }, 0.28);
+                    setSigModalOpen(false);
+                  }}
                   onDone={(dataUrl, aspect) => {
                     const sig = { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect };
                     setActiveSig(sig);
@@ -724,24 +825,81 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
 }
 
 // ── İmza oluşturma penceresi: Çiz / Yaz / Yükle ─────────────────────────────
-function SignatureModal({ tr, onClose, onDone }: { tr: boolean; onClose: () => void; onDone: (dataUrl: string, aspect: number) => void }) {
+function SignatureModal({ tr, onClose, onDone, onDoneText }: { tr: boolean; onClose: () => void; onDone: (dataUrl: string, aspect: number) => void; onDoneText: (text: string, color: string, fontKey: string) => void }) {
   const [tab, setTab] = useState<"draw" | "type" | "upload">("draw");
   const [typed, setTyped] = useState("");
   const drawRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
   const hasInk = useRef(false);
+  const [penColor, setPenColor] = useState(SIGN_COLORS[0]);
+  const [penWidth, setPenWidth] = useState(5); // 2x çözünürlüklü tuval pikseli
+  const [typedFont, setTypedFont] = useState<string>("script");
+  const stroke = useRef<{ lx: number; ly: number; mx: number; my: number; w: number; t: number } | null>(null);
 
-  useEffect(() => {
-    const c = drawRef.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, c.width, c.height);
-    ctx.lineWidth = 2.5;
+  // Yumuşak çizim: orta noktalar arası ikinci derece eğri + hıza bağlı çizgi kalınlığı.
+  function penDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    const c = drawRef.current!;
+    c.setPointerCapture(e.pointerId);
+    const ctx = c.getContext("2d")!;
+    const p = pos(e);
+    ctx.fillStyle = penColor;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, penWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+    hasInk.current = true;
+    stroke.current = { lx: p.x, ly: p.y, mx: p.x, my: p.y, w: penWidth, t: performance.now() };
+  }
+
+  function penMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    const st = stroke.current;
+    if (!st) return;
+    const c = drawRef.current!;
+    const ctx = c.getContext("2d")!;
+    ctx.strokeStyle = penColor;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.strokeStyle = "#0b2447";
-  }, [tab]);
+    const native = e.nativeEvent;
+    const coalesced = native.getCoalescedEvents?.() ?? [];
+    const evs = coalesced.length ? coalesced : [native];
+    const r = c.getBoundingClientRect();
+    for (const ev of evs) {
+      const x = ((ev.clientX - r.left) / r.width) * c.width;
+      const y = ((ev.clientY - r.top) / r.height) * c.height;
+      const dist = Math.hypot(x - st.lx, y - st.ly);
+      if (dist < 0.8) continue;
+      const now = performance.now();
+      const speed = dist / Math.max(1, now - st.t); // px/ms
+      const target = Math.max(penWidth * 0.55, Math.min(penWidth * 1.15, penWidth * 1.15 - speed * penWidth * 0.25));
+      const w = st.w + (target - st.w) * 0.25;
+      const mx = (st.lx + x) / 2;
+      const my = (st.ly + y) / 2;
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(st.mx, st.my);
+      ctx.quadraticCurveTo(st.lx, st.ly, mx, my);
+      ctx.stroke();
+      st.lx = x;
+      st.ly = y;
+      st.mx = mx;
+      st.my = my;
+      st.w = w;
+      st.t = now;
+    }
+  }
+
+  function penUp() {
+    const st = stroke.current;
+    if (st) {
+      const ctx = drawRef.current!.getContext("2d")!;
+      ctx.strokeStyle = penColor;
+      ctx.lineWidth = st.w;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(st.mx, st.my);
+      ctx.lineTo(st.lx, st.ly);
+      ctx.stroke();
+    }
+    stroke.current = null;
+  }
 
   function pos(e: React.PointerEvent) {
     const c = drawRef.current!;
@@ -788,25 +946,11 @@ function SignatureModal({ tr, onClose, onDone }: { tr: boolean; onClose: () => v
     if (t) onDone(t.url, t.aspect);
   }
 
+  // Yazılan imza düzenlenebilir bir metin öğesi olarak eklenir (renk/yazı tipi/boyut/çift tık).
   function useTyped() {
     const text = typed.trim();
     if (!text) return;
-    const c = document.createElement("canvas");
-    const scale = 3;
-    const fontPx = 64;
-    const tmp = c.getContext("2d")!;
-    tmp.font = `italic ${fontPx}px "Segoe Script", "Brush Script MT", "Snell Roundhand", cursive`;
-    const w = Math.ceil(tmp.measureText(text).width) + 40;
-    const h = Math.ceil(fontPx * 1.6);
-    c.width = w * scale;
-    c.height = h * scale;
-    const ctx = c.getContext("2d")!;
-    ctx.scale(scale, scale);
-    ctx.fillStyle = "#0b2447";
-    ctx.font = `italic ${fontPx}px "Segoe Script", "Brush Script MT", "Snell Roundhand", cursive`;
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 20, h / 2);
-    onDone(c.toDataURL("image/png"), w / h);
+    onDoneText(text, penColor, typedFont);
   }
 
   function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -845,30 +989,28 @@ function SignatureModal({ tr, onClose, onDone }: { tr: boolean; onClose: () => v
             <>
               <canvas
                 ref={drawRef}
-                width={520}
-                height={220}
+                width={1040}
+                height={440}
                 className="w-full touch-none rounded-xl border border-slate-300 bg-white"
-                onPointerDown={(e) => {
-                  drawing.current = true;
-                  const c = drawRef.current!;
-                  const ctx = c.getContext("2d")!;
-                  const p = pos(e);
-                  ctx.beginPath();
-                  ctx.moveTo(p.x, p.y);
-                }}
-                onPointerMove={(e) => {
-                  if (!drawing.current) return;
-                  const ctx = drawRef.current!.getContext("2d")!;
-                  const p = pos(e);
-                  ctx.lineTo(p.x, p.y);
-                  ctx.stroke();
-                  hasInk.current = true;
-                }}
-                onPointerUp={() => (drawing.current = false)}
-                onPointerLeave={() => (drawing.current = false)}
+                style={{ cursor: "crosshair" }}
+                onPointerDown={penDown}
+                onPointerMove={penMove}
+                onPointerUp={penUp}
+                onPointerCancel={penUp}
               />
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="flex items-center gap-1.5">
+                  {SIGN_COLORS.map((c) => (
+                    <button key={c} type="button" onClick={() => setPenColor(c)} title={c} className={`h-6 w-6 rounded-full border transition ${penColor === c ? "scale-110 border-cyan-300 ring-2 ring-cyan-400/50" : "border-white/25"}`} style={{ backgroundColor: c }} />
+                  ))}
+                </span>
+                <span className="flex items-center gap-2 text-[12px] text-slate-300">
+                  {tr ? "Kalınlık" : "Thickness"}
+                  <input type="range" min={3} max={12} step={1} value={penWidth} onChange={(e) => setPenWidth(Number(e.target.value))} className="w-24 accent-cyan-400" />
+                </span>
+              </div>
               <div className="mt-3 flex justify-between">
-                <button type="button" onClick={() => { const c = drawRef.current!; c.getContext("2d")!.clearRect(0, 0, c.width, c.height); hasInk.current = false; }} className="rounded-lg border border-white/10 px-3 py-1.5 text-[12px] font-medium text-slate-300 hover:bg-white/[0.06]">{tr ? "Temizle" : "Clear"}</button>
+                <button type="button" onClick={() => { const c = drawRef.current!; c.getContext("2d")!.clearRect(0, 0, c.width, c.height); hasInk.current = false; stroke.current = null; }} className="rounded-lg border border-white/10 px-3 py-1.5 text-[12px] font-medium text-slate-300 hover:bg-white/[0.06]">{tr ? "Temizle" : "Clear"}</button>
                 <button type="button" onClick={useDrawn} className="rounded-lg bg-cyan-600 px-4 py-1.5 text-[13px] font-bold text-white hover:brightness-110">{tr ? "Kullan" : "Use"}</button>
               </div>
             </>
@@ -884,7 +1026,17 @@ function SignatureModal({ tr, onClose, onDone }: { tr: boolean; onClose: () => v
                 className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none placeholder:text-slate-400"
               />
               <div className="mt-3 flex min-h-[90px] items-center justify-center rounded-xl border border-slate-300 bg-white px-4">
-                <span style={{ fontFamily: '"Segoe Script","Brush Script MT","Snell Roundhand",cursive', fontStyle: "italic", fontSize: 40, color: "#0b2447" }}>{typed || (tr ? "önizleme" : "preview")}</span>
+                <span style={{ fontFamily: fontStack(typedFont), fontStyle: FONTS.find((f) => f.key === typedFont)?.italic ? "italic" : "normal", fontSize: 40, color: penColor }}>{typed || (tr ? "önizleme" : "preview")}</span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="flex items-center gap-1.5">
+                  {SIGN_COLORS.map((c) => (
+                    <button key={c} type="button" onClick={() => setPenColor(c)} title={c} className={`h-6 w-6 rounded-full border transition ${penColor === c ? "scale-110 border-cyan-300 ring-2 ring-cyan-400/50" : "border-white/25"}`} style={{ backgroundColor: c }} />
+                  ))}
+                </span>
+                <select value={typedFont} onChange={(e) => setTypedFont(e.target.value)} className="rounded-md border border-white/15 bg-[#0b1020] px-2 py-1 text-[12px] text-slate-100 outline-none">
+                  {FONTS.map((f) => (<option key={f.key} value={f.key}>{f.label}</option>))}
+                </select>
               </div>
               <div className="mt-3 flex justify-end">
                 <button type="button" onClick={useTyped} disabled={!typed.trim()} className="rounded-lg bg-cyan-600 px-4 py-1.5 text-[13px] font-bold text-white hover:brightness-110 disabled:opacity-50">{tr ? "Kullan" : "Use"}</button>
