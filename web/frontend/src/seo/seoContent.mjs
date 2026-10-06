@@ -1551,6 +1551,8 @@ export const TOOL_SEO = {
         { q: "Tablolar ve biçimlendirme korunuyor mu?", a: "Evet. Paragraf hizalaması, kalın ve altı çizili yazılar, yazı boyutu, renkler, tablolar ve belgeye gömülü görseller PDF'ye aktarılır." },
         { q: "Birden fazla UDF'yi tek seferde çevirebilir miyim?", a: "Tek dosya çevirme herkese açık ve ücretsizdir. Toplu çevirme (tek seferde 20 dosyaya kadar, sonuç tek ZIP) Pro aboneliğe dahildir; ücretsiz kullanımda eklediğiniz dosyalardan ilki çevrilir." },
         { q: "PDF'nin e-imzası geçerli olur mu?", a: "Hayır. Çıktı, belgenin okunabilir bir PDF kopyasıdır; UDF dosyasındaki elektronik imzayı taşımaz. Resmî işlemlerde imzalı UDF aslını kullanmaya devam edin." },
+        { q: "Çıkan PDF'te yazı seçilebilir ve aranabilir mi?", a: "Evet. Metin görüntü olarak değil gerçek metin olarak yazılır ve Türkçe karakterler (ş, ğ, ı, İ) için yazı tipi PDF'e gömülür; yazıyı seçip kopyalayabilir, Ctrl+F ile arayabilirsiniz." },
+        { q: "Dosya boyutu ya da adet sınırı var mı?", a: "Tek seferde toplam 40 MB'a kadar dosya eklenebilir. Tek dosya çevirme ücretsizdir; tek seferde 20 dosyaya kadar toplu çevirme Pro'ya dahildir." },
       ],
     ),
     en: T(
@@ -1566,6 +1568,8 @@ export const TOOL_SEO = {
         { q: "Are tables and formatting preserved?", a: "Yes. Paragraph alignment, bold and underlined text, font size, colours, tables and images embedded in the document are carried into the PDF." },
         { q: "Can I convert several UDF files at once?", a: "Converting a single file is free for everyone. Batch conversion (up to 20 files at once, delivered as one ZIP) is included with Pro; on the free tier the first file you added is converted." },
         { q: "Is the electronic signature valid on the PDF?", a: "No. The output is a readable PDF copy of the document; it does not carry the electronic signature held in the UDF file. Keep using the signed original UDF for official filings." },
+        { q: "Can I select and search the text in the PDF?", a: "Yes. The text is written as real text rather than as an image, and a font covering the Turkish characters (ş, ğ, ı, İ) is embedded, so you can select and copy it and search it with Ctrl+F." },
+        { q: "Is there a file size or count limit?", a: "Up to 40 MB in total can be added at once. Converting a single file is free; batch conversion of up to 20 files at once is included with Pro." },
       ],
     ),
   },
