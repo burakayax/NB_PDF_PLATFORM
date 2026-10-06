@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Clock, Lightbulb, Newspaper, Spark
 import type { Language } from "../../i18n/landing";
 import { getBlogPost, getBlogPostsSorted } from "../../blog/blogContent.mjs";
 import { localizedPath } from "../../seo/enSlugs.mjs";
+import { relatedBlogPosts } from "../../seo/relatedPosts.mjs";
 import type { BlogBlock, BlogPost, BlogPostCopy } from "../../blog/blogContent.mjs";
 import { SiteFooter } from "../common/SiteFooter";
 
@@ -206,7 +207,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
 
   const a = accentOf(post.accent);
   const tags = post.tags[tr ? "tr" : "en"];
-  const related = getBlogPostsSorted().filter((p) => p.slug !== post.slug).slice(0, 2) as BlogPost[];
+  const related = relatedBlogPosts(post.slug, 3, (p) => Boolean(p[tr ? "tr" : "en"]?.title));
 
   const jsonLd = {
     "@context": "https://schema.org",
