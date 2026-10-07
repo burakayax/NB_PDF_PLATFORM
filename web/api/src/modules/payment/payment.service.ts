@@ -620,7 +620,7 @@ export async function createPaymentCheckoutSession(params: {
                 ? "PDF PLATFORM PRO (1 yıl)"
                 : "PDF PLATFORM PRO (1 ay)";
         })(),
-        category1: "Subscription",
+        category1: params.cvPassHours != null ? "CV Pass" : params.topupCredits != null ? "AI Credits" : "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
         price: grossPrice,

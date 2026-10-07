@@ -550,17 +550,23 @@ export function makeSheet(photo: HTMLCanvasElement, photoMm: { w: number; h: num
   const dpi = 300;
   const px = (mm: number) => Math.round((mm / 25.4) * dpi);
   const SW = px(sheetMm.w), SH = px(sheetMm.h);
-  let pw = px(photoMm.w), ph = px(photoMm.h);
-  const gap = px(2.5);
-  const margin = px(5);
-  // Fotoğraf kâğıda sığmıyorsa dönüştür
-  let rotate = false;
-  if (pw > SW - margin * 2 || ph > SH - margin * 2) {
-    if (ph <= SW - margin * 2 && pw <= SH - margin * 2) rotate = true;
+  // Kâğıda EN ÇOK kopya sığdıran dizilimi seç: düz/döndürülmüş × (geniş boşluk → kenarlıksız).
+  // 10×15 cm'ye 50×60 mm yalnızca kenar boşluksuz dizilimle 4 adet sığar; fotoğrafçılar
+  // kenarlıksız basar. Eşitlikte daha ferah (boşluklu) dizilim tercih edilir.
+  const layouts = [{ margin: px(5), gap: px(2.5) }, { margin: px(2), gap: px(1) }, { margin: 0, gap: 0 }];
+  let best = { count: 0, rotate: false, pw: 0, ph: 0, cols: 1, rows: 1, gap: 0 };
+  for (const rotate of [false, true]) {
+    const pw0 = rotate ? px(photoMm.h) : px(photoMm.w);
+    const ph0 = rotate ? px(photoMm.w) : px(photoMm.h);
+    for (const L of layouts) {
+      // +2 px: mm→piksel yuvarlaması yüzünden 2×50 mm tam 100 mm'ye 1 px fazla çıkıyordu
+      const cols = Math.floor((SW - L.margin * 2 + L.gap + 2) / (pw0 + L.gap));
+      const rows = Math.floor((SH - L.margin * 2 + L.gap + 2) / (ph0 + L.gap));
+      if (cols >= 1 && rows >= 1 && cols * rows > best.count) best = { count: cols * rows, rotate, pw: pw0, ph: ph0, cols, rows, gap: L.gap };
+    }
   }
-  if (rotate) [pw, ph] = [ph, pw];
-  const cols = Math.max(1, Math.floor((SW - margin * 2 + gap) / (pw + gap)));
-  const rows = Math.max(1, Math.floor((SH - margin * 2 + gap) / (ph + gap)));
+  if (best.count === 0) best = { count: 1, rotate: false, pw: Math.min(px(photoMm.w), SW), ph: Math.min(px(photoMm.h), SH), cols: 1, rows: 1, gap: 0 };
+  const { rotate, pw, ph, cols, rows, gap } = best;
   const sheet = document.createElement("canvas");
   sheet.width = SW;
   sheet.height = SH;
@@ -569,8 +575,8 @@ export function makeSheet(photo: HTMLCanvasElement, photoMm: { w: number; h: num
   c.fillRect(0, 0, SW, SH);
   const totalW = cols * pw + (cols - 1) * gap;
   const totalH = rows * ph + (rows - 1) * gap;
-  const ox = Math.round((SW - totalW) / 2);
-  const oy = Math.round((SH - totalH) / 2);
+  const ox = Math.max(0, Math.round((SW - totalW) / 2));
+  const oy = Math.max(0, Math.round((SH - totalH) / 2));
   c.imageSmoothingQuality = "high";
   for (let r = 0; r < rows; r++)
     for (let k = 0; k < cols; k++) {

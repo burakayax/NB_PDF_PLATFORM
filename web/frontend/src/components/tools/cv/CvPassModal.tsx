@@ -39,7 +39,7 @@ export function CvPassModal({ language, accessToken, onClose, onUpgrade }: Props
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  useEffect(() => { void fetchCvPasses().then(setPasses); }, []);
+  useEffect(() => { void fetchCvPasses(accessToken).then(setPasses); }, [accessToken]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);

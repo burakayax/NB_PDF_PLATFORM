@@ -49,10 +49,13 @@ export async function createPaymentCheckout(
 
 export type CvPass = { id: string; hours: number; priceUSD: number; priceTRY: number; popular?: boolean };
 
-/** CV Geçişi seçenekleri (fiyatın tek kaynağı sunucudur). Hata olursa boş liste. */
-export async function fetchCvPasses(): Promise<CvPass[]> {
+/** CV Geçişi seçenekleri (fiyatın tek kaynağı sunucudur; /api/payment altı oturum ister). Hata olursa boş liste. */
+export async function fetchCvPasses(accessToken: string | null): Promise<CvPass[]> {
   try {
-    const res = await fetch(`${getSaasApiBase()}/api/payment/cv-passes`, { credentials: "include" });
+    const res = await fetch(`${getSaasApiBase()}/api/payment/cv-passes`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      credentials: "include",
+    });
     if (!res.ok) return [];
     const data = (await res.json()) as { passes?: CvPass[] };
     return data.passes ?? [];
