@@ -43,7 +43,7 @@ import {
   previewSecret,
 } from "./google-oauth.console.js";
 import { createOrganizationForUser } from "../organization/organization.service.js";
-import { TERMS_VERSION } from "../../lib/legal-version.js";
+import { TERMS_VERSION, legalAcceptanceRows } from "../../lib/legal-version.js";
 import { archiveFinancialRecordsBeforeDelete } from "../../lib/financial-archive.js";
 import {
   SIGNUP_CONSENT_TEXT,
@@ -493,6 +493,8 @@ export async function registerUser(
       plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
       termsAcceptedAt: new Date(),
       termsVersion: TERMS_VERSION,
+      // Kayıt anındaki zorunlu kabuller (kanıt): şartlar+gizlilik, aydınlatma okundu, 18 yaş — aynı işlemde yazılır.
+      legalAcceptances: { create: legalAcceptanceRows("email", options?.consentContext) },
       // Pazarlama e-posta izni (opt-in) — yalnız kutu işaretlenmişse kaydedilir.
       ...(input.marketingConsent
         ? { marketingConsent: true, marketingConsentAt: new Date() }
@@ -986,6 +988,9 @@ export async function signInWithGoogle(params: {
   familyName: string | null;
   avatar: string | null;
   preferredLanguage: Language;
+  /** Yeni hesap açılacaksa kullanıcının kayıt ekranında şartları kabul ettiği (OAuth başlangıcında alınır). */
+  termsAccepted?: boolean;
+  consentContext?: { ip?: string | null; userAgent?: string | null };
 }): Promise<AuthSessionResult> {
   const email = normalizeEmailForStorage(params.email);
   const googleId = params.googleId.trim();
@@ -1079,6 +1084,14 @@ export async function signInWithGoogle(params: {
     );
   }
 
+  // Yeni hesap: Hizmet Şartları/Gizlilik/aydınlatma/18 yaş onayı olmadan Google ile de hesap açılmaz.
+  if (!params.termsAccepted) {
+    throw new HttpError(
+      403,
+      "To create an account with Google, please use the Register page and accept the Terms of Service first.",
+    );
+  }
+
   let persistedGoogleUser: User = await prisma.user.create({
     data: {
       email,
@@ -1097,6 +1110,7 @@ export async function signInWithGoogle(params: {
       termsAcceptedAt: new Date(),
       termsVersion: TERMS_VERSION,
       lastLoginAt: new Date(),
+      legalAcceptances: { create: legalAcceptanceRows("google", params.consentContext) },
     },
   });
 

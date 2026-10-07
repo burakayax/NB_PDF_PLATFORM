@@ -37,7 +37,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   if (!user) throw new HttpError(404, "User not found.");
   const uid = user.id;
 
-  const [payments, invoices, operations, downloads, outputs, aiUsage, contractReviews, aiRequests, operationCount, downloadCount] = await Promise.all([
+  const [payments, invoices, operations, downloads, outputs, aiUsage, contractReviews, aiRequests, operationCount, downloadCount, acceptances] = await Promise.all([
     prisma.paymentCheckout.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.invoice.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.operationLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
@@ -48,6 +48,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
     prisma.aiRequestLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 300 }),
     prisma.operationLog.count({ where: { userId: uid } }),
     prisma.downloadLog.count({ where: { userId: uid } }),
+    prisma.legalAcceptanceLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "asc" } }),
   ]);
 
   const org = user.organization;
@@ -132,6 +133,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       planAtTime: o.planAtTime,
     })),
     aiUsageByMonth: aiUsage.map((a) => ({ month: a.yearMonth, count: a.count, byTool: a.operationCounts })),
+    legalAcceptances: acceptances.map((a) => ({ at: iso(a.createdAt), kind: a.kind, version: a.version, via: a.via, ip: a.ip })),
     aiRequests: aiRequests.map((a) => ({
       at: iso(a.createdAt),
       op: a.op,
@@ -180,6 +182,8 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push(`  Son giriş: ${u.lastLoginAt ?? "kayıt yok (bu hesap kayıttan bu yana giriş kaydı oluşturmamış ya da bu özellikten önce giriş yapmış)"}`);
   L.push(`  Güncel plan: ${u.plan}   Ülke: ${u.country ?? "-"}${u.isAdminAccount ? "   [YÖNETİCİ HESABI]" : ""}`);
   L.push(`  Hesap açılırken Hizmet Şartları/Gizlilik kabulü: ${u.termsAcceptedAt ? `${u.termsAcceptedAt} (sürüm ${u.termsVersion ?? "-"})` : "kayıt yok (bu özellikten önce açılmış hesap)"}`);
+  L.push(`  Kayıt anı onayları (zaman | tür | sürüm | yol | IP): ${dossier.legalAcceptances.length === 0 ? "kayıt yok (bu özellikten önce açılmış hesap)" : ""}`);
+  dossier.legalAcceptances.forEach((a) => row(a.at, a.kind, a.version, a.via, a.ip));
   L.push(`  KVKK aydınlatma metni ödeme öncesi adımda gösterildi (onay değil, bilgilendirme): ${u.kvkkConsentedAt ?? "gösterilmedi (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Mesafeli satış sözleşmesi onayı (ödeme öncesi adım): ${u.distanceSalesConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Cayma hakkından feragat onayı (ödeme öncesi adım): ${u.withdrawalWaivedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);

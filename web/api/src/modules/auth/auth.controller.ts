@@ -150,11 +150,12 @@ function clearCookieMatching(
 }
 
 /** Cookie: `csrf|lang` | … | `desktop|port` | … | `fe|encodeURIComponent(origin)` */
-function parseOAuthStateCookieValue(rawCookie: string): {
+export function parseOAuthStateCookieValue(rawCookie: string): {
   csrfToken: string;
   preferredLanguage: "tr" | "en";
   desktopLocalPort: number | null;
   frontendOriginRaw: string | null;
+  termsAccepted: boolean;
 } {
   const parts = rawCookie.split("|");
   const csrfToken = parts[0] ?? "";
@@ -183,7 +184,10 @@ function parseOAuthStateCookieValue(rawCookie: string): {
     }
   }
 
-  return { csrfToken, preferredLanguage, desktopLocalPort, frontendOriginRaw };
+  // "…|terms|1": kullanıcı kayıt ekranında zorunlu onayları işaretleyip Google'a gitti.
+  const termsAccepted = parts.some((p, i) => p === "terms" && parts[i + 1] === "1");
+
+  return { csrfToken, preferredLanguage, desktopLocalPort, frontendOriginRaw, termsAccepted };
 }
 
 function oauthRedirectBaseFromRequestCookie(request: Request): string {
@@ -721,6 +725,9 @@ export async function googleOAuthStartController(
   if (trustedFrontendOrigin) {
     oauthCookieValue += `|fe|${encodeURIComponent(trustedFrontendOrigin)}`;
   }
+  if (request.query.terms === "1") {
+    oauthCookieValue += "|terms|1";
+  }
   response.cookie(
     OAUTH_STATE_COOKIE,
     oauthCookieValue,
@@ -928,6 +935,8 @@ export async function googleOAuthCallbackController(
       familyName: profile.familyName,
       avatar: profile.avatar,
       preferredLanguage,
+      termsAccepted: parsedOAuth.termsAccepted,
+      consentContext: { ip: request.ip ?? null, userAgent: request.get("user-agent") ?? null },
     });
 
     response.cookie(

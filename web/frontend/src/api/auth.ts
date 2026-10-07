@@ -122,6 +122,10 @@ export type RegisterAuthPayload = {
   city?: string;
   /** Ticari/pazarlama e-posta opt-in izni (isteğe bağlı kutu). */
   marketingConsent?: boolean;
+  /** ZORUNLU kayıt onayları (sunucu da doğrular). */
+  termsAccepted: true;
+  privacyNoticeRead: true;
+  ageConfirmed: true;
 };
 
 type RegisterPayload = RegisterAuthPayload;
@@ -160,6 +164,9 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   if (payload.marketingConsent) {
     body.marketingConsent = true;
   }
+  body.termsAccepted = true;
+  body.privacyNoticeRead = true;
+  body.ageConfirmed = true;
   // Admin panelindeki "ülke dağılımı" için — opsiyonel, gelmezse kayıt yine
   // başarılı olur (bkz. geoCountry.ts: sağlayıcı zinciri başarısız olursa null).
   try {
@@ -292,9 +299,11 @@ export async function fetchAuthenticatedUser(
   return payload.user;
 }
 
-export function getGoogleOAuthStartUrl(language: Language) {
+export function getGoogleOAuthStartUrl(language: Language, termsAccepted = false) {
   const lang = language === "tr" ? "tr" : "en";
   let url = buildSaasApiUrl(`/api/auth/google?lang=${encodeURIComponent(lang)}`);
+  // Yeni hesap açılacaksa sunucu bu işareti ister (kayıt ekranındaki zorunlu kutular işaretlendi).
+  if (termsAccepted) url += "&terms=1";
   if (typeof window !== "undefined" && window.location?.origin) {
     url += `&frontend_origin=${encodeURIComponent(window.location.origin)}`;
   }
