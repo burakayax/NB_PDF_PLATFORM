@@ -5,12 +5,15 @@
 // İçerik ÜRÜNÜN GERÇEK özelliklerine sadıktır — uydurma özellik/istatistik yoktur.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { CV_PHOTO_POSTS } from "./blogContentCv.mjs";
+
 export const BLOG_BASE = "/blog";
 
 /** Blok tipleri: p | lead | h2 | h3 | ul | ol (isteğe bağlı start: başlangıç numarası) | tip | steps | cta */
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
 export const BLOG_POSTS = [
+  ...CV_PHOTO_POSTS,
   post(
     {
       slug: "sozlesme-imzalamadan-once-kontrol-listesi",

@@ -57,6 +57,8 @@ import {
   Wrench,
   type LucideIcon,
   Gavel,
+  FileUser,
+  UserRound,
 } from "lucide-react";
 
 /** Araç kategorileri — ana sayfadaki listede başlık ve süzgeç olarak kullanılır. */
@@ -103,6 +105,11 @@ export const TOOLS: Tool[] = [
     en: { name: "Contract Auditor", desc: "Finds and highlights risky clauses; the detailed audit also checks current law." },
   },
   {
+    id: "ai-fotograf-studyosu", cat: "ai", Icon: UserRound, ai: true,
+    tr: { name: "AI Fotoğraf Stüdyosu", desc: "Vesikalık, biyometrik, CV ve LinkedIn fotoğrafınızı hazırlar; arka planı değiştirir. Fotoğraf cihazınızdan çıkmaz." },
+    en: { name: "AI Photo Studio", desc: "Prepares ID, biometric, CV and LinkedIn photos and swaps the background. The photo never leaves your device." },
+  },
+  {
     id: "pdf-veri-cikar", cat: "ai", Icon: Table2, ai: true,
     tr: { name: "PDF Veri Çıkar", desc: "Fatura ve formlardaki bilgileri tabloya döker." },
     en: { name: "Extract Data", desc: "Turns invoice and form fields into a clean table." },
@@ -128,6 +135,11 @@ export const TOOLS: Tool[] = [
     id: "pdf-duzenle", cat: "edit", Icon: FileType2,
     tr: { name: "PDF Düzenle", desc: "Mevcut yazıyı gerçekten silip yerine yenisini yazın." },
     en: { name: "Edit PDF", desc: "Really delete existing text and type new text in its place." },
+  },
+  {
+    id: "cv-olustur", cat: "edit", Icon: FileUser, account: true,
+    tr: { name: "CV Oluştur", desc: "Hazır şablonlardan seçin, bilgilerinizi girin; CV'niz yanda canlı oluşsun ve PDF olarak insin." },
+    en: { name: "CV Maker", desc: "Pick a template, fill in your details and watch your CV build live, then download it as a PDF." },
   },
   {
     id: "pdf-imzala", cat: "edit", Icon: PenTool, free: true,
@@ -400,6 +412,7 @@ export const HUES: Record<HueId, { tile: string; icon: string; ring: string; glo
 export const TOOL_HUE: Record<string, HueId> = {
   // Yapay zekâ
   "pdf-ozetle": "fuchsia",
+  "ai-fotograf-studyosu": "rose",
   "pdf-sohbet": "purple",
   "pdf-ceviri": "indigo",
   "pdf-karsilastir": "violet",
@@ -410,6 +423,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "aranabilir-pdf": "sky",
   // Düzenle
   "pdf-duzenle": "amber",
+  "cv-olustur": "sky",
   "pdf-imzala": "rose",
   "pdf-yorumla": "amber",
   merge: "violet",

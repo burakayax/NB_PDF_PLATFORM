@@ -21,6 +21,7 @@
  */
 import {
   Crop,
+  FileUser,
   FileSearch,
   FileType2,
   Grid2x2,
@@ -68,6 +69,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
       { k: "page", slug: "pdf-imzala", Icon: PenTool, tr: "İmzala", en: "Sign" },
       { k: "page", slug: "pdf-yorumla", Icon: Highlighter, tr: "İşaretle", en: "Annotate" },
       { k: "member", slug: "unlock-pdf", Icon: Unlock, tr: "Şifre Kaldır", en: "Unlock PDF" },
+      { k: "member", slug: "cv-olustur", Icon: FileUser, tr: "CV Oluştur", en: "CV Maker" },
     ],
   },
   {

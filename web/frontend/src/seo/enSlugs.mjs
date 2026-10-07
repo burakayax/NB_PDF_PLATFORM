@@ -33,6 +33,8 @@ export const EN_TOOL_SLUGS = {
   "pdf-karsilastir": "compare-pdf",
   "hassas-veri-gizle": "redact-pdf",
   "sozlesme-denetci": "contract-review-ai",
+  "ai-fotograf-studyosu": "ai-photo-studio",
+  "cv-olustur": "cv-maker",
   "form-doldur": "fill-pdf-form",
   "ustveri-temizle": "remove-pdf-metadata",
   "sayfa-duzeni": "pdf-page-layout",
@@ -41,6 +43,12 @@ export const EN_TOOL_SLUGS = {
 
 /** TR blog slug'ı → EN blog slug'ı. */
 export const EN_BLOG_SLUGS = {
+  "cv-nasil-hazirlanir": "how-to-write-a-cv",
+  "ats-uyumlu-cv-nasil-yazilir": "ats-friendly-cv",
+  "cv-fotografi-nasil-olmali": "cv-photo-guide",
+  "biyometrik-fotograf-olculeri-ve-kurallari": "biometric-photo-sizes-and-rules",
+  "vesikalik-fotograf-evde-nasil-cekilir": "take-id-photo-at-home",
+  "linkedin-profil-fotografi-ipuclari": "linkedin-profile-photo-tips",
   "sejda-alternatifi-saatlik-limit": "sejda-alternative",
   "docusign-alternatifi-imza-istegi": "docusign-alternatives",
   "pdf24-alternatifi-mac-linux": "pdf24-alternative-mac-linux",

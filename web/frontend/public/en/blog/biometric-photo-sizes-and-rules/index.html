@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Biometric Photo Sizes and Rules by Country (2026)</title>
+    <meta name="description" content="Biometric photo sizes for ID, passport, driving licence and visa: Turkey 50×60, Schengen 35×45, US 2×2 in, plus head-size and background rules." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/biometric-photo-sizes-and-rules" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/biyometrik-fotograf-olculeri-ve-kurallari" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/biometric-photo-sizes-and-rules" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/biyometrik-fotograf-olculeri-ve-kurallari" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Biometric Photo Sizes and Rules by Country (2026)" />
+    <meta property="og:description" content="Biometric photo sizes for ID, passport, driving licence and visa: Turkey 50×60, Schengen 35×45, US 2×2 in, plus head-size and background rules." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/biometric-photo-sizes-and-rules.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Biometric Photo Sizes and Rules by Country (2026)" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/biometric-photo-sizes-and-rules" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Biometric Photo Sizes and Rules by Country (2026)" />
+    <meta name="twitter:description" content="Biometric photo sizes for ID, passport, driving licence and visa: Turkey 50×60, Schengen 35×45, US 2×2 in, plus head-size and background rules." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/biometric-photo-sizes-and-rules.png" />
+    <meta name="twitter:image:alt" content="Biometric Photo Sizes and Rules by Country (2026)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"Biometric Photo Sizes and Rules by Country (2026)","item":"https://www.pdfplatform.app/en/blog/biometric-photo-sizes-and-rules"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Biometric Photo Sizes and Rules by Country (2026)","description":"Biometric photo sizes for ID, passport, driving licence and visa: Turkey 50×60, Schengen 35×45, US 2×2 in, plus head-size and background rules.","datePublished":"2026-10-07","dateModified":"2026-10-07","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/biometric-photo-sizes-and-rules","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/biometric-photo-sizes-and-rules.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Biometric Photo Sizes and Rules by Country (2026)","description":"Biometric photo sizes for ID, passport, driving licence and visa: Turkey 50×60, Schengen 35×45, US 2×2 in, plus head-size and background rules.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Shoot in front of a plain wall","text":"In window light, facing the camera at eye level, with the phone fixed in place."},{"@type":"HowToStep","position":2,"name":"Choose the size","text":"In AI Photo Studio pick a preset such as “Turkey biometric (50×60)”, “Schengen” or “US”; the head proportion is set automatically."},{"@type":"HowToStep","position":3,"name":"Make the background white","text":"AI separates the background down to strands of hair; apply white or light grey."},{"@type":"HowToStep","position":4,"name":"Read the suitability list","text":"Warnings for head size, expression and light are shown; retake if needed."},{"@type":"HowToStep","position":5,"name":"Set a size limit if required","text":"Portals may cap file size in KB; enter the maximum and the tool fits the file."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I take a biometric photo at home?","acceptedAnswer":{"@type":"Answer","text":"Some applications accept it; for others a photographer's shot is required. Find out the authority's method in advance."}},{"@type":"Question","name":"Can I wear glasses?","acceptedAnswer":{"@type":"Answer","text":"Many official applications require no glasses. Check the current rule of the authority."}},{"@type":"Question","name":"Must the background be pure white?","acceptedAnswer":{"@type":"Answer","text":"Turkey asks for plain white; some countries accept light grey or other light colours. Your preset applies the suggested colour."}},{"@type":"Question","name":"Where is my photo uploaded?","acceptedAnswer":{"@type":"Answer","text":"Nowhere: processing happens on your device and nothing is uploaded."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Biometric Photo Sizes and Rules by Country (2026)</h1><p class="seo-intro">Don&#39;t get your ID, passport or visa photo rejected: sizes, head proportions, backgrounds and the usual mistakes by country in one post.</p><figure class="seo-cover"><img src="/en/covers/biometric-photo-sizes-and-rules.png" width="1200" height="630" loading="lazy" decoding="async" alt="Biometric Photo Sizes and Rules by Country (2026)" /></figure><article class="seo-article"><p class="seo-lead">A biometric photo is an official document photo taken to specific size and rules so that face-recognition systems can use it too. A small deviation in size, background or head proportion can get an application rejected. The list below summarises common sizes.</p><h2>Common sizes</h2><ul><li>Turkey (ID card, passport, driving licence): 50×60 mm, plain white background; the face covers roughly 70–80% of the photo.</li><li>Schengen and EU countries: 35×45 mm; head height about 32–36 mm; light, plain background.</li><li>United Kingdom: 35×45 mm; head height about 29–34 mm.</li><li>United States: 2×2 in (51×51 mm); head height about 25–35 mm; white background.</li><li>Canada: 50×70 mm; head height about 31–36 mm.</li><li>China (visa): 33×48 mm; white background.</li></ul><p>Rules differ by country and change over time. The above is general information; always check the current requirements of the authority or consulate you apply to.</p><h2>Basic rules that apply almost everywhere</h2><ul><li>Facing the camera straight on; head not tilted or turned.</li><li>Neutral expression, mouth closed, eyes open.</li><li>Shadow-free, plain, light background; no glare on face or eyes.</li><li>No hat, hair or accessories covering the face; the glasses rule varies by country and most applications want none.</li><li>No digital filters or retouching that alters facial features.</li><li>Recent photo (usually within the last 6 months).</li></ul><h2>How to prepare the photo</h2><ol><li><strong>Shoot in front of a plain wall:</strong> In window light, facing the camera at eye level, with the phone fixed in place.</li><li><strong>Choose the size:</strong> In AI Photo Studio pick a preset such as “Turkey biometric (50×60)”, “Schengen” or “US”; the head proportion is set automatically.</li><li><strong>Make the background white:</strong> AI separates the background down to strands of hair; apply white or light grey.</li><li><strong>Read the suitability list:</strong> Warnings for head size, expression and light are shown; retake if needed.</li><li><strong>Set a size limit if required:</strong> Portals may cap file size in KB; enter the maximum and the tool fits the file.</li></ol><p><a href="/en/tools/ai-photo-studio"><strong>AI Photo Studio</strong> — Crops to biometric sizes, swaps the background and prepares a print sheet. The photo never leaves your device.</a></p><p>For printing, you can lay out many copies on 10×15 cm photo paper; choose “100% / actual size” when printing so the sheet isn&#39;t scaled down.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/ai-photo-studio">ID, Passport &amp; CV Photo Maker with AI</a></li><li><a href="/en/tools/resize-image">Resize Image</a></li><li><a href="/en/tools/compress-image">Reduce Image Size in KB</a></li></ul></nav><nav aria-label="Related guides" class="seo-related-guides"><h2>Related Guides</h2><ul><li><a href="/en/blog/cv-photo-guide">What Makes a Good CV Photo? Size, Background, Framing</a></li><li><a href="/en/blog/take-id-photo-at-home">How to Take an ID Photo at Home: 8 Tips</a></li><li><a href="/en/blog/linkedin-profile-photo-tips">LinkedIn Profile Photo: Size and 7 Tips</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Can I take a biometric photo at home?</h3><p>Some applications accept it; for others a photographer&#39;s shot is required. Find out the authority&#39;s method in advance.</p></div><div class="seo-faq-item"><h3>Can I wear glasses?</h3><p>Many official applications require no glasses. Check the current rule of the authority.</p></div><div class="seo-faq-item"><h3>Must the background be pure white?</h3><p>Turkey asks for plain white; some countries accept light grey or other light colours. Your preset applies the suggested colour.</p></div><div class="seo-faq-item"><h3>Where is my photo uploaded?</h3><p>Nowhere: processing happens on your device and nothing is uploaded.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

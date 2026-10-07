@@ -104,3 +104,6 @@ web/frontend/render-routes-canli.json
 
 # Instagram carousel slaytları: her yayında üretilir (generate-carousels.mjs), depoya girmez.
 web/frontend/public/social/
+
+# AI Fotoğraf Stüdyosu model/wasm dosyaları (build-zamanı: scripts/setup-photo-ai.mjs)
+web/frontend/public/photo-ai/

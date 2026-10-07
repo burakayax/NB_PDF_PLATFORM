@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu</title>
+    <meta name="description" content="Telefonla evde vesikalık çekmek için 8 ipucu: ışık, duvar, mesafe, poz ve hatalar. Sonra arka planı beyaz yapıp doğru ölçüye getirin." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/take-id-photo-at-home" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu" />
+    <meta property="og:description" content="Telefonla evde vesikalık çekmek için 8 ipucu: ışık, duvar, mesafe, poz ve hatalar. Sonra arka planı beyaz yapıp doğru ölçüye getirin." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/vesikalik-fotograf-evde-nasil-cekilir.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu" />
+    <meta name="twitter:description" content="Telefonla evde vesikalık çekmek için 8 ipucu: ışık, duvar, mesafe, poz ve hatalar. Sonra arka planı beyaz yapıp doğru ölçüye getirin." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/vesikalik-fotograf-evde-nasil-cekilir.png" />
+    <meta name="twitter:image:alt" content="Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu","item":"https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu","description":"Telefonla evde vesikalık çekmek için 8 ipucu: ışık, duvar, mesafe, poz ve hatalar. Sonra arka planı beyaz yapıp doğru ölçüye getirin.","datePublished":"2026-10-07","dateModified":"2026-10-07","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/vesikalik-fotograf-evde-nasil-cekilir.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Telefon fotoğrafı resmî başvuruda geçerli mi?","acceptedAnswer":{"@type":"Answer","text":"Bu kuruma göre değişir. Bazı başvurular dijital fotoğrafı kabul eder, bazıları (ör. pasaport) kurum yöntemini şart koşar. Önceden öğrenin."}},{"@type":"Question","name":"Arka planı sonradan beyaz yapmak sorun olur mu?","acceptedAnswer":{"@type":"Answer","text":"Çoğu dijital başvuruda düz arka plan yeterlidir; ancak doğal olmayan kenarlar kabul edilmeyebilir. Mümkünse çekim sırasında da açık, düz bir duvar kullanın."}},{"@type":"Question","name":"Aynı fotoğraftan baskı alabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet; 10×15 cm baskı sayfasında aynı fotoğraftan birçok kopya gerçek boyutta dizilir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu</h1><p class="seo-intro">Fotoğrafçıya gitmeden telefonla vesikalık çekmek mümkün. Işığı, mesafeyi ve duruşu doğru ayarlamak sonucun çoğunu belirler.</p><figure class="seo-cover"><img src="/covers/vesikalik-fotograf-evde-nasil-cekilir.png" width="1200" height="630" loading="lazy" decoding="async" alt="Evde Vesikalık Fotoğraf Nasıl Çekilir? 8 İpucu" /></figure><article class="seo-article"><p class="seo-lead">Bir başvuru için aceleyle vesikalık gerektiğinde fotoğrafçıya gitmek zaman alabilir. Telefonla evde çekilen bir fotoğraf, ışığı ve duruşu doğru ayarlandığında iyi bir başlangıçtır; arka planı ve ölçüyü sonradan düzeltmek kolaydır. Kimlik ve pasaport gibi resmî belgelerde fotoğrafın nasıl çekilmesi gerektiğini ilgili kurumun güncel şartından kontrol edin.</p><h2>Çekim öncesi 8 ipucu</h2><ol><li>Pencere ışığını kullanın: Pencereye dönük durun. Işık yüzünüze yumuşak düşsün; güneşin sert vurduğu saatlerde perde ya da tül ile yumuşatın.</li><li>Düz bir duvar seçin: Açık renkli, desensiz bir duvar önünde durun. Arka plan sonradan değiştirilebilir ama düz bir zemin sonucu iyileştirir.</li><li>Telefonu sabitleyin: Göz hizasında, bir yere dayayın ya da birinden isteyin. Aşağıdan ya da yukarıdan çekim yüzü bozar.</li><li>Mesafeyi koruyun: Telefon yaklaşık 1,5–2 metre uzakta olsun; çok yakın çekim burun ve alnı büyütür. Sonra yakınlaştırarak kırpmak daha doğal sonuç verir.</li><li>Arka kamerayı kullanın: Ön kamera daha düşük kalitelidir ve yüzü bozabilir; zamanlayıcıyla çekin.</li><li>Doğrudan kameraya bakın: Baş düz, omuzlar karşıdan; ifade nötr, gözler açık.</li><li>Saçı ve yüzü açık tutun: Alın ve kulak çizgisini kapatan saç, gözlük yansıması ve parlayan alın sorun çıkarır.</li><li>Birkaç kare çekin: Gözün kırpılmadığı, ifadenin doğal olduğu en iyi kareyi seçin.</li></ol><h2>Çekimden sonra</h2><p>Çektiğiniz fotoğrafı AI Fotoğraf Stüdyosu&#39;na yükleyin; yapay zekâ yüzü bulup başı doğru orana yerleştirir, eğik duruşu düzeltir, arka planı beyaz yapar ve istenen ölçüye kırpar. Dosya boyutu sınırı varsa KB olarak girin. Fotoğraf cihazınızdan çıkmaz.</p><p><a href="/tools/ai-fotograf-studyosu"><strong>AI Fotoğraf Stüdyosu</strong> — Vesikalık, biyometrik ve vize ölçüleri hazır; arka planı beyaz yapar, baskı sayfası verir.</a></p><p>Bu araç resmî uygunluğu garanti etmez; uygunluk denetimi yardımcı bir kılavuzdur. Önemli başvurularda kurumun şartını ayrıca kontrol edin.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/ai-fotograf-studyosu">Vesikalık ve Biyometrik Fotoğraf Hazırlama (AI)</a></li><li><a href="/tools/gorsel-sikistir">Görsel Sıkıştırma</a></li><li><a href="/tools/image-to-pdf">JPG&#39;den PDF&#39;e Dönüştürme</a></li></ul></nav><nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul><li><a href="/blog/biyometrik-fotograf-olculeri-ve-kurallari">Biyometrik Fotoğraf Ölçüleri ve Kuralları (2026)</a></li><li><a href="/blog/gorsel-boyutlandirma-sosyal-medya">Görsel Boyutlandırma: Sosyal Medya Piksel Ölçüleri 2026</a></li><li><a href="/blog/cv-fotografi-nasil-olmali">CV Fotoğrafı Nasıl Olmalı? Ölçü, Arka Plan, Kadraj</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Telefon fotoğrafı resmî başvuruda geçerli mi?</h3><p>Bu kuruma göre değişir. Bazı başvurular dijital fotoğrafı kabul eder, bazıları (ör. pasaport) kurum yöntemini şart koşar. Önceden öğrenin.</p></div><div class="seo-faq-item"><h3>Arka planı sonradan beyaz yapmak sorun olur mu?</h3><p>Çoğu dijital başvuruda düz arka plan yeterlidir; ancak doğal olmayan kenarlar kabul edilmeyebilir. Mümkünse çekim sırasında da açık, düz bir duvar kullanın.</p></div><div class="seo-faq-item"><h3>Aynı fotoğraftan baskı alabilir miyim?</h3><p>Evet; 10×15 cm baskı sayfasında aynı fotoğraftan birçok kopya gerçek boyutta dizilir.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
