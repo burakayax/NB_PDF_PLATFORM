@@ -29,6 +29,7 @@ vi.mock("../lib/prisma.js", () => ({
     contractReviewLog: { findMany: vi.fn(async () => []) },
     aiRequestLog: { findMany: vi.fn(async () => []) },
     legalAcceptanceLog: { findMany: vi.fn(async () => []) },
+    serviceHealthEvent: { findMany: vi.fn(async () => []) },
   },
 }));
 vi.mock("../middleware/api-security.middleware.js", () => ({ requestHasInternalServiceSecret: m.hasSecret }));
@@ -129,6 +130,7 @@ describe("adminUserDisputeFileController", () => {
     const text = String(r.send.mock.calls[0]?.[0]);
     expect(text).toContain("Hizmet Şartları/Gizlilik kabulü");
     expect(text).toContain("İşlem kaydı sayısı");
+    expect(text).toContain("HİZMET DURUMU");
     expect(text).toContain("u@x.com");
     expect(text).not.toContain("11111111110");
     expect(text).not.toContain("+905551112233");

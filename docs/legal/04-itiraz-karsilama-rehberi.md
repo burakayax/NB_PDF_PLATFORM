@@ -32,11 +32,13 @@ Müşteri "hizmet çalışmadı", "dosyam bozuldu", "ihaleyi kaçırdım, zarar�
 |---|---|---|
 | Müşteri gerçekten kullandı mı, işlemler başarılı mı? | Yönetim → Analitik → **İtiraz dosyası** (müşterinin e-postası) | İşlem, indirme, yapay zekâ kayıtları (başarılı/hata/iade), kabul kayıtları, ödeme, abonelik |
 | Elindeki dosya bizim çıktımız mı, değiştirilmiş mi? | **Dosya doğrula** | Parmak izi eşleşiyor mu |
-| O saatte sistem ayakta mıydı? | Dış uptime izleyici geçmişi (UptimeRobot/benzeri) + Render panelindeki olay geçmişi | Kesinti var mıydı, ne kadar sürdü |
+| O saatte sistem ayakta mıydı? | Analitik → **Hizmet durumu** (kendi kaydımız) + UptimeRobot geçmişi + Render olay geçmişi | Kesinti var mıydı, ne kadar sürdü |
 | O saatte başkaları işlem yaptı mı? | Analitik → kullanım serisi | Aynı saatte başarılı işlem sayısı |
 | Tarayıcıda hata var mıydı? | Sentry (yalnız onay veren kullanıcılar) | İstemci hataları |
 
-**Bugünkü eksik:** Sistem kendi başına kesinti kaydı tutmuyor; işlem hataları da "başarısız" diye kaydedilmiyor. Bu yüzden şu an en güçlü bağımsız delil **dış uptime izleyicisidir** (ücretsiz kurulabilir). Önerilen: (a) UptimeRobot/Better Stack ile 1 dakikalık izleme ve herkese açık durum sayfası, (b) iç sağlık kaydı + başarısız işlem kaydı (yapılabilir, onayınızı bekliyor).
+**Kendi hizmet durumu kaydımız (7 Ekim'de kuruldu):** Yönetim → Analitik → "Hizmet durumu". Auth API, veritabanı ve PDF API için çalışma oranı, kesinti dönemleri, "sinyal yok" (kayıt boşluğu) dönemleri ve PDF API'nin 5xx hataları görünür. İtiraz dosyasında da "[10] HİZMET DURUMU" bölümü vardır; itiraz tarihini (ve isteğe bağlı aralığı) seçerek indirin.
+
+Sınırı: kayıt yalnız sistem ayaktayken yazılır. Auth API tamamen kapalıysa o dönem "sinyal yok" olur. Bağımsız doğrulama için **UptimeRobot geçmişiyle birlikte** okuyun. Hâlâ yok: işlem başına "başarısız" kaydı (yalnız 5xx hatalar toplu görünür, hangi müşterinin işlemi olduğu tutulmaz; kişisel veri toplamamak için bilinçli).
 
 ---
 

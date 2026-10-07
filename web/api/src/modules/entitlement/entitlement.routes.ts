@@ -10,6 +10,7 @@ import {
   downloadLogCreateController,
   editorDownloadConsumeController,
   outputRecordController,
+  serviceEventController,
   entitlementBalanceController,
   entitlementCheckController,
   entitlementConsumeController,
@@ -37,3 +38,5 @@ entitlementRouter.post("/internal/output-record", asyncHandler(outputRecordContr
 // Misafir PDF Sıkıştır: panelden ayarlanan değerler + hak sayacı (FastAPI → Node; X-Internal-Secret).
 entitlementRouter.get("/internal/guest-compress/config", asyncHandler(guestCompressConfigController));
 entitlementRouter.post("/internal/guest-compress/usage", asyncHandler(guestCompressUsageController));
+// PDF API kalp atışı + 5xx bildirimi (kendi kesinti kaydımız).
+entitlementRouter.post("/internal/service-event", asyncHandler(serviceEventController));
