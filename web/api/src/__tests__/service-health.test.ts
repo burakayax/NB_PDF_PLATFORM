@@ -65,6 +65,12 @@ describe("recordHttpFailure", () => {
 });
 
 describe("PDF kalp atışı kaybı", () => {
+  it("gizli anahtar yoksa (köprü kapalı) kontrol edilmez: yanlış alarm yok", async () => {
+    delete process.env["INTERNAL_SERVICE_SECRET"];
+    await checkPdfHeartbeatMissing(Date.now() + mins(10));
+    expect(m.create).not.toHaveBeenCalled();
+  });
+
   it("3 dakikadır kalp atışı yoksa 'kapalı' yazar", async () => {
     await checkPdfHeartbeatMissing(Date.now() + mins(4));
     expect(m.create).toHaveBeenCalledTimes(1);

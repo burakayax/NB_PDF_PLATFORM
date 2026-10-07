@@ -15,7 +15,7 @@ const min = (n: number) => n * 60_000;
 beforeEach(() => {
   __resetServiceHealthState();
   __resetServiceAlertState();
-  delete process.env["SERVICE_ALERTS"];
+  process.env["SERVICE_ALERTS"] = "on";
 });
 
 describe("evaluateAlerts", () => {
@@ -78,6 +78,14 @@ describe("evaluateAlerts", () => {
     });
     await recordHealth("db", false, undefined, T0);
     await expect(evaluateAlerts(send, T0 + min(3))).resolves.toBeUndefined();
+  });
+
+  it("geliştirme ortamında (production değil, SERVICE_ALERTS=on değil) e-posta göndermez", async () => {
+    delete process.env["SERVICE_ALERTS"];
+    const send = vi.fn(async () => {});
+    await recordHealth("db", false, undefined, T0);
+    await evaluateAlerts(send, T0 + min(10));
+    expect(send).not.toHaveBeenCalled();
   });
 
   it("SERVICE_ALERTS=off iken hiçbir şey göndermez", async () => {

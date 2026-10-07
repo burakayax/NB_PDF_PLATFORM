@@ -63,7 +63,10 @@ async function send(send_: AlertSender, now: number, subject: string, title: str
 
 /** Her dakika çağrılır. */
 export async function evaluateAlerts(sender: AlertSender, now = Date.now()): Promise<void> {
-  if ((process.env["SERVICE_ALERTS"] ?? "").toLowerCase() === "off") return;
+  const mode = (process.env["SERVICE_ALERTS"] ?? "").toLowerCase();
+  if (mode === "off") return;
+  // Geliştirme makinesinde (NODE_ENV production değil) e-posta gönderilmez; yanlış alarm üretir. Zorla açmak için SERVICE_ALERTS=on.
+  if (process.env["NODE_ENV"] !== "production" && mode !== "on") return;
 
   for (const st of getComponentStates()) {
     const name = NAMES[st.component];

@@ -91,6 +91,11 @@ export async function recordHttpFailure(component: HealthComponent, path: string
   }
 }
 
+/** Son PDF API kalp atışından beri geçen süre (hiç gelmediyse null). */
+export function pdfHeartbeatAgeMs(now = Date.now()): number | null {
+  return lastPdfHeartbeatAt === null ? null : now - lastPdfHeartbeatAt;
+}
+
 /** PDF API kalp atışı geldi. */
 export async function notePdfHeartbeat(ok = true, latencyMs?: number, now = Date.now()) {
   lastPdfHeartbeatAt = now;
@@ -99,6 +104,8 @@ export async function notePdfHeartbeat(ok = true, latencyMs?: number, now = Date
 
 /** Her dakika çağrılır: PDF API'den 3 dakikadır kalp atışı gelmiyorsa "kapalı" kaydı düşer. */
 export async function checkPdfHeartbeatMissing(now = Date.now()): Promise<void> {
+  // Gizli anahtar yoksa PDF API kalp atışı gönderemez (köprü kapalı): "yok" demek yanlış alarm olur → kontrol edilmez.
+  if (!(process.env["INTERNAL_SERVICE_SECRET"] ?? "").trim()) return;
   const reference = lastPdfHeartbeatAt ?? processStartedAt; // Node yeni açıldıysa PDF API'ye 3 dk süre tanı
   if (now - reference >= 3 * 60 * 1000) {
     await recordHealth("pdf", false, { detail: "heartbeat missing" }, now);
