@@ -1,3 +1,4 @@
+import { archiveFinancialRecordsBeforeDelete } from "../../lib/financial-archive.js";
 import type { Plan, Prisma, UserRole } from "@prisma/client";
 import { listBlockedEmails, removeBlockedEmail, upsertBlockedEmail } from "../../lib/blocked-email.js";
 import { env } from "../../config/env.js";
@@ -754,6 +755,7 @@ export async function deleteUserForAdmin(userId: string, actor: AdminActor, bloc
     await upsertBlockedEmail(target.email, "admin_delete_user");
   }
 
+  await archiveFinancialRecordsBeforeDelete(userId, "admin_deleted");
   await prisma.user.delete({ where: { id: userId } });
   await logAdminAudit(actor, "user.delete", userId, `Kullanıcı silindi: ${target.email}`, { blockEmail });
 }

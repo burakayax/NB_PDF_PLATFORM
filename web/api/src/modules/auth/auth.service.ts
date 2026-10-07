@@ -44,6 +44,7 @@ import {
 } from "./google-oauth.console.js";
 import { createOrganizationForUser } from "../organization/organization.service.js";
 import { TERMS_VERSION } from "../../lib/legal-version.js";
+import { archiveFinancialRecordsBeforeDelete } from "../../lib/financial-archive.js";
 import {
   SIGNUP_CONSENT_TEXT,
   recordMarketingConsent,
@@ -770,6 +771,10 @@ export async function deleteUserAccount(userId: string, password?: string): Prom
   // Explicitly delete refresh tokens before the user row so any in-flight
   // token rotation cannot race past the cascade (defensive; cascade covers it).
   await prisma.refreshToken.deleteMany({ where: { userId } });
+
+  // Ödeme/fatura kayıtları yasal saklama yükümlülüğü altındadır: kullanıcıya bağlı olmayan arşive kopyala.
+  // Kopya başarısız olursa hesap SİLİNMEZ (kayıt kaybı kabul edilemez).
+  await archiveFinancialRecordsBeforeDelete(userId, "account_deleted");
 
   // Deleting the user cascades to: RefreshToken, DailyUsage, PaymentCheckout,
   // CreditTransaction, EmailVerificationToken, DeviceToken, CouponUsage,

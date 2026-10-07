@@ -1,4 +1,5 @@
 import { adminUserDisputeFileController, adminVerifyOutputFileController } from "./dispute.admin.js";
+import { adminFinancialExportController } from "./financial-export.admin.js";
 import express, { Router } from "express";
 import multer from "multer";
 import { asyncHandler } from "../../lib/async-handler.js";
@@ -146,6 +147,7 @@ adminRouter.get("/download-logs/:id/proof", asyncHandler(adminDownloadLogProofCo
 
 // İtiraz/anlaşmazlık: kullanıcı dosyası (ödeme+kullanım+indirme+parmak izi) ve dosya doğrulama.
 adminRouter.get("/users/:id/dispute-file", asyncHandler(adminUserDisputeFileController));
+adminRouter.get("/financial-export", asyncHandler(adminFinancialExportController));
 adminRouter.post(
   "/output-records/verify",
   express.raw({ type: ["application/pdf", "application/octet-stream", "application/zip"], limit: "100mb" }),

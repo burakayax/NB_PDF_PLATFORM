@@ -1148,3 +1148,20 @@ model AiRequestLog {
   @@index([createdAt])
   @@map("ai_request_logs")
 }
+
+// Hesap silinirken ödeme/fatura satırlarının KOPYASI. Kullanıcıya bağlı DEĞİL (ilişki yok): hesap silinse de
+// kalır. VUK md. 253 (5 yıl) / TTK md. 82 (10 yıl) saklama yükümlülüğü; retainUntil sonrası silinir.
+model FinancialRecordArchive {
+  id             String   @id @default(cuid())
+  originalUserId String   @map("original_user_id")
+  emailSnapshot  String   @map("email_snapshot")
+  nameSnapshot   String?  @map("name_snapshot")
+  reason         String   @map("reason")
+  payload        Json     @map("payload")
+  retainUntil    DateTime @map("retain_until")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([emailSnapshot])
+  @@index([retainUntil])
+  @@map("financial_record_archives")
+}

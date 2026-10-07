@@ -525,8 +525,8 @@ export function PaymentSummaryModal({
                   )}
                   <p className="mt-2 text-center text-xs text-slate-400">
                     {billingCycle === "YEARLY"
-                      ? (tr ? "/ yıl · Yıllık faturalandırılır" : "/ yr · Billed annually")
-                      : (tr ? "/ ay · Aylık otomatik yenilenir" : "/ mo · Auto-renews monthly")}
+                      ? (tr ? "/ yıl · Tek dönemlik ödeme, kendiliğinden yenilenmez" : "/ yr · One-period payment, does not renew automatically")
+                      : (tr ? "/ ay · Tek dönemlik ödeme, kendiliğinden yenilenmez" : "/ mo · One-period payment, does not renew automatically")}
                   </p>
                 </div>
 

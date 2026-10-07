@@ -35,7 +35,7 @@ export function createPaymentSuccessEmailTemplate({
     { label: tr ? "Tutar" : "Amount", value: safeAmount },
   ];
   if (safePeriod) {
-    rows.push({ label: tr ? "Sonraki yenileme" : "Next renewal", value: safePeriod });
+    rows.push({ label: tr ? "Dönem bitişi" : "Period ends", value: safePeriod });
   }
 
   const html = renderCorporateEmail({
@@ -61,7 +61,7 @@ export function createPaymentSuccessEmailTemplate({
     "",
     `${tr ? "Plan" : "Plan"}: ${planName}`,
     `${tr ? "Tutar" : "Amount"}: ${amount} ${currency}`,
-    ...(periodEnd ? [`${tr ? "Sonraki yenileme" : "Next renewal"}: ${periodEnd}`] : []),
+    ...(periodEnd ? [`${tr ? "Dönem bitişi" : "Period ends"}: ${periodEnd}`] : []),
   ].join("\n");
 
   return { subject, html, text };
@@ -157,12 +157,12 @@ export function createRenewalReminderEmailTemplate({
   const safeDate = escapeHtml(renewalDate);
 
   const subject = tr
-    ? `Aboneliğiniz yakında yenilenecek — ${PRODUCT}`
-    : `Your subscription renews soon — ${PRODUCT}`;
+    ? `Aboneliğiniz yakında sona erecek — ${PRODUCT}`
+    : `Your subscription ends soon — ${PRODUCT}`;
 
   const rows = [
     { label: tr ? "Plan" : "Plan", value: safePlan },
-    { label: tr ? "Yenileme tarihi" : "Renewal date", value: safeDate },
+    { label: tr ? "Bitiş tarihi" : "End date", value: safeDate },
   ];
   if (amount && currency) {
     rows.push({ label: tr ? "Tutar" : "Amount", value: escapeHtml(`${amount} ${currency}`) });
@@ -170,16 +170,16 @@ export function createRenewalReminderEmailTemplate({
 
   const html = renderCorporateEmail({
     eyebrow: tr ? "Hatırlatma" : "Reminder",
-    title: tr ? "Aboneliğiniz yakında yenilenecek" : "Your subscription renews soon",
+    title: tr ? "Aboneliğiniz yakında sona erecek" : "Your subscription ends soon",
     intro: tr
-      ? `${safePlan} aboneliğiniz ${safeDate} tarihinde otomatik olarak yenilenecek. Devam etmek için bir şey yapmanıza gerek yok.`
-      : `Your ${safePlan} subscription will automatically renew on ${safeDate}. No action is needed to continue.`,
+      ? `${safePlan} aboneliğiniz ${safeDate} tarihinde sona erecek. Aboneliğiniz kendiliğinden yenilenmez ve kartınızdan sizin onayınız olmadan ücret çekilmez.`
+      : `Your ${safePlan} subscription ends on ${safeDate}. It does not renew automatically and your card is never charged without your confirmation.`,
     bodyHtml: `
       ${detailTable(rows)}
       <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">${
         tr
-          ? "Yenilemeyi durdurmak isterseniz, yenileme tarihinden önce hesap ayarlarınızdan aboneliğinizi iptal edebilirsiniz."
-          : "If you'd like to stop the renewal, you can cancel your subscription from your account settings before the renewal date."
+          ? "Devam etmek isterseniz, bitiş tarihinden önce hesabınızdaki Abonelik bölümünden yenileme için onay verebilirsiniz. Hiçbir şey yapmazsanız süre dolunca hesabınız ücretsiz plana döner."
+          : "If you'd like to continue, confirm the renewal from the Subscription section of your account before the end date. If you do nothing, your account returns to the free plan when the period ends."
       }</p>
     `,
     footerText: `${PRODUCT} — NB Global Studio`,
@@ -190,7 +190,7 @@ export function createRenewalReminderEmailTemplate({
     subject,
     "",
     `${tr ? "Plan" : "Plan"}: ${planName}`,
-    `${tr ? "Yenileme tarihi" : "Renewal date"}: ${renewalDate}`,
+    `${tr ? "Bitiş tarihi" : "End date"}: ${renewalDate}`,
     ...(amount && currency ? [`${tr ? "Tutar" : "Amount"}: ${amount} ${currency}`] : []),
   ].join("\n");
 
