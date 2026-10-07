@@ -76,17 +76,9 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 );
 
 // ─── Blok renderer ────────────────────────────────────────────────────────────
-/**
- * Arama motorları için sayfaya gömülen yapılandırılmış veriyi güvenli hale getirir.
- *
- * Metin içinde kapanış etiketi geçerse tarayıcı betiği erken kapatır ve kalan
- * içerik sayfaya kod olarak sızabilir. Bu karakterler kaçırılarak engellenir.
- */
-function safeJsonLd(data: unknown): string {
-  return JSON.stringify(data).replace(/[<>&]/g, (ch) =>
-    ch === "<" ? "\\u003c" : ch === ">" ? "\\u003e" : "\\u0026",
-  );
-}
+// BlogPosting yapılandırılmış verisi BURADA ÜRETİLMEZ: prerender HTML zaten görsel, yayıncı kimliği ve
+// tarihlerle tam bir BlogPosting taşıyor. Buradan ikincisi basılınca sayfada iki BlogPosting oluyordu
+// (tarayıcıda 142 yazıda ölçüldü).
 
 function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; tr: boolean }) {
   // EN yazılarda araç CTA'ları da /en/ önekli olmalı — aksi hâlde İngilizce sayfa
@@ -209,25 +201,9 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
   const tags = post.tags[tr ? "tr" : "en"];
   const related = relatedBlogPosts(post.slug, 3, (p) => Boolean(p[tr ? "tr" : "en"]?.title));
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: c.title,
-    description: c.description,
-    datePublished: post.date,
-    dateModified: post.updated,
-    inLanguage: tr ? "tr" : "en",
-    author: { "@type": "Organization", name: "PDF Platform" },
-    publisher: { "@type": "Organization", name: "PDF Platform", logo: { "@type": "ImageObject", url: "https://www.pdfplatform.app/logo.png" } },
-    // Canonical ile AYNI olmalı: EN sayfada TR URL vermek Google'a çelişkili
-    // canonical sinyali verir ("Google kullanıcıdan farklı standart sayfa seçti").
-    mainEntityOfPage: `https://www.pdfplatform.app${localizedPath(`/blog/${post.slug}`, tr ? "tr" : "en")}`,
-  };
-
   return (
     <Shell>
       <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8">
         <a href={tr ? "/blog" : "/en/blog"} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{tr ? "Tüm yazılar" : "All posts"}</a>
 

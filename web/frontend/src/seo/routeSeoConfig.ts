@@ -206,6 +206,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: "/terms",
       index: true,
       follow: true,
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
@@ -219,6 +220,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: "/privacy",
       index: true,
       follow: true,
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
@@ -232,6 +234,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: "/kvkk",
       index: true,
       follow: true,
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
