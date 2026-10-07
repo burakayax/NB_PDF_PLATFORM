@@ -173,3 +173,29 @@ Kullanım Şartları'na "doğrulama kaydı taşımayan/değiştirilmiş dosyalar
 3. `npm test --prefix web/api` çalıştır — ayrışma veya marj sorunu varsa
    test söyler.
 4. Bu dosyadaki tabloyu güncelle.
+
+## CV Geçişi (tek seferlik, yenilenmeyen)
+
+**Ne?** Abonelik istemeyen biri küçük bir ücret öder; **tüm CV şablonları 24 saat ya da 7 gün açılır**, süre bitince yeniden
+kilitlenir. Yenileme yok. Pro/Business aboneler tüm şablonları zaten süresiz kullanır. Ücretsiz katmanda 4 şablon vardır
+(Sade, Net, Klasik Serif, Modern Mavi); hangilerinin ücretsiz olduğu `web/frontend/src/components/tools/cv/cvTemplates.tsx`
+içinde `free` alanıdır.
+
+**Fiyatlar** (KDV dahil, yer tutucudur — şirket kurulunca ve piyasa bakılınca değiştir):
+`web/api/src/lib/plan-catalogue.ts` → `CV_PASSES`: 24 saat = 49 ₺ / 2,99 $; 7 gün = 99 ₺ / 5,99 $. Cihazda çalıştığı için
+marjinal maliyeti sıfırdır; fiyat değer bazlıdır. Fiyat değişince `npm test --prefix web/api` çalıştır
+(KDV iki kez eklenmesin diye tutar testi vardır).
+
+**Nasıl çalışır?** Kredi paketiyle aynı ödeme hattını kullanır (ayrı bir ödeme sistemi YOKTUR):
+`POST /api/payment/cv-pass` → iyzico → callback `User.cvPassUntil` alanını uzatır (kalan süreye **eklenir**).
+Plan değişmez, abonelik e-postası ve ekip kurulumu tetiklenmez, terk edilmiş ödeme hatırlatma e-postası gitmez.
+Fatura kalemi: "CV Şablon Geçişi (24 saat / 7 gün)". Seçenekler `GET /api/payment/cv-passes` ile sunucudan okunur.
+
+**İade:** `processRefund` CV Geçişi'ni iptal eder (`cvPassUntil = şimdi`) ve **planı FREE'ye düşürmez** (plan hiç değişmemişti).
+Aynı düzeltme kredi paketi iadesine de uygulandı (önceden kredi paketi iadesi kullanıcının planını FREE yapıyordu).
+
+**Canlıya alırken:** Ödemeler `paymentsDisabled=false` yapılınca CV Geçişi satın alma düğmesi kendiliğinden açılır
+(kapalıyken "Yakında" yazar). Veritabanı alanları (`users.cv_pass_until`, `payment_checkouts.cv_pass_hours`) üretimde
+`prisma db push` ile otomatik eklenir. **Açmadan önce iyzico sandbox'ta bir CV Geçişi alıp** (a) tutarın ekrandakiyle aynı
+çıktığını, (b) şablonların açıldığını, (c) iadede kilitlendiğini kontrol et. Canlı iyzico akışı henüz denenmedi.
+SEO metinlerine ("CV Geçişi ile açılır") ödeme açılınca eklenmelidir; şimdilik yazılmadı.

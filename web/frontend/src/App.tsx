@@ -706,8 +706,8 @@ function App() {
   // Plan bilgisini uygulama geneline duyur — sonuç ekranındaki üyelik daveti
   // ücretli aboneye çıkmasın (araçların çoğu kimlik bilgisini prop almıyor).
   useEffect(() => {
-    setCurrentPlan(user?.plan ?? null, Boolean(user?.isTeamMember));
-  }, [user?.plan, user?.isTeamMember]);
+    setCurrentPlan(user?.plan ?? null, Boolean(user?.isTeamMember), user?.cvPassUntil ?? null);
+  }, [user?.plan, user?.isTeamMember, user?.cvPassUntil]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
@@ -2586,6 +2586,24 @@ function App() {
         {},
         "",
         url.pathname +
+    if (payment === "success" && url.searchParams.get("cvpass")) {
+      // CV Geçişi: plan değişmedi → "Pro'ya geçtiniz" penceresi değil, kısa bir bildirim.
+      const hours = Number(url.searchParams.get("cvpass")) || 0;
+      url.searchParams.delete("cvpass");
+      window.history.replaceState({}, "", url.pathname + (url.search ? `?${url.searchParams.toString()}` : "") + url.hash);
+      trackFunnelEvent("purchase", { plan: "cv-pass" });
+      void refreshSession().then(() => {
+        showToast(
+          "success",
+          language === "tr" ? "CV Geçişi açıldı" : "CV pass unlocked",
+          language === "tr"
+            ? `Tüm CV şablonları ${hours >= 168 ? "7 gün" : `${hours} saat`} boyunca açık.`
+            : `All CV templates are unlocked for ${hours >= 168 ? "7 days" : `${hours} hours`}.`,
+        );
+      });
+      return;
+    }
+
           (url.search ? `?${url.searchParams.toString()}` : "") +
           url.hash,
       );

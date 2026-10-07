@@ -47,6 +47,32 @@ export async function createPaymentCheckout(
   return response.json() as Promise<CreatePaymentResponse>;
 }
 
+export type CvPass = { id: string; hours: number; priceUSD: number; priceTRY: number; popular?: boolean };
+
+/** CV Geçişi seçenekleri (fiyatın tek kaynağı sunucudur). Hata olursa boş liste. */
+export async function fetchCvPasses(): Promise<CvPass[]> {
+  try {
+    const res = await fetch(`${getSaasApiBase()}/api/payment/cv-passes`, { credentials: "include" });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { passes?: CvPass[] };
+    return data.passes ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** CV Geçişi satın alma oturumu başlatır (tek seferlik, yenilenmez). Ödeme açık olmalı (aksi 403). */
+export async function createCvPassCheckout(accessToken: string, passId: string): Promise<CreatePaymentResponse> {
+  const response = await fetch(`${getSaasApiBase()}/api/payment/cv-pass`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ passId }),
+  });
+  await ensureOk(response, "Payment could not be started.");
+  return response.json() as Promise<CreatePaymentResponse>;
+}
+
 /** Ek AI kredisi (top-up) satın alma oturumu başlatır. Ödeme açık olmalı (aksi 403). */
 export async function createTopupCheckout(
   accessToken: string,

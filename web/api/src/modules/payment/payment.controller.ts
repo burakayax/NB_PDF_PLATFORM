@@ -6,7 +6,7 @@ import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentBodySchema } from "./payment.schema.js";
 import { prisma } from "../../lib/prisma.js";
 import { topupPackById, topupInvoiceLabel } from "../ai/ai.quota.js";
-import { topupCheckoutAmount } from "../../lib/plan-catalogue.js";
+import { topupCheckoutAmount, CV_PASSES, cvPassById, cvPassCheckoutAmount, cvPassInvoiceLabel } from "../../lib/plan-catalogue.js";
 import {
   createPaymentCheckoutSession,
   paymentWorkspaceRedirectUrl,
@@ -80,6 +80,50 @@ export async function createTopupCheckoutController(request: Request, response: 
     checkoutCurrency,
     topupCredits: pack.credits,
     basketItemName: topupInvoiceLabel(pack),
+  });
+
+  response.status(200).json(session);
+}
+
+/** GET /api/payment/cv-passes — CV Geçişi seçenekleri (fiyatın tek kaynağı sunucudur). */
+export function listCvPassesController(_request: Request, response: Response) {
+  response.status(200).json({ passes: CV_PASSES });
+}
+
+/**
+ * POST /api/payment/cv-pass — CV Geçişi (tüm CV şablonlarını süreli açar; yenilenmez).
+ * Abonelik checkout'unu yeniden kullanır; callback plan yerine User.cvPassUntil'i uzatır.
+ * FREE kullanıcı da satın alabilir (e-posta doğrulaması createPaymentCheckoutSession'da zorunlu).
+ */
+export async function createCvPassCheckoutController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) {
+    throw new HttpError(401, "Authentication is required.");
+  }
+  const passId = typeof request.body?.passId === "string" ? request.body.passId : "";
+  const pass = cvPassById(passId);
+  if (!pass) {
+    throw new HttpError(400, "Geçersiz geçiş türü.");
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true, billingCountryCode: true },
+  });
+  // Plan yalnız PaymentCheckout kaydına yazılır; CV Geçişi'nde AKTİVE EDİLMEZ → geçerli placeholder.
+  const placeholderPlan = user?.plan === "BUSINESS" ? "BUSINESS" : "PRO";
+  const country = (user?.billingCountryCode ?? "").toUpperCase().trim();
+  const isForeign = country !== "" && country !== "TR";
+  const { currency: checkoutCurrency, amount: price } = cvPassCheckoutAmount(pass, isForeign);
+
+  const session = await createPaymentCheckoutSession({
+    userId,
+    plan: placeholderPlan,
+    billing: "monthly",
+    clientIp: getClientIp(request),
+    priceTryOverride: price,
+    checkoutCurrency,
+    cvPassHours: pass.hours,
+    basketItemName: cvPassInvoiceLabel(pass),
   });
 
   response.status(200).json(session);

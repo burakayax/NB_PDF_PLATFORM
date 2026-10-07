@@ -4,6 +4,8 @@ import express from "express";
 import {
   createPaymentController,
   createTopupCheckoutController,
+  createCvPassCheckoutController,
+  listCvPassesController,
   paymentCallbackController,
   paymentCallbackUrlencoded,
   paymentRefundWebhookController,
@@ -16,5 +18,7 @@ export const paymentRouter = Router();
 paymentRouter.post("/callback", paymentCallbackLimiter, paymentCallbackUrlencoded, asyncHandler(paymentCallbackController));
 paymentRouter.post("/create", requirePaymentsEnabled, asyncHandler(createPaymentController));
 paymentRouter.post("/topup", requirePaymentsEnabled, asyncHandler(createTopupCheckoutController));
+paymentRouter.get("/cv-passes", listCvPassesController);
+paymentRouter.post("/cv-pass", requirePaymentsEnabled, asyncHandler(createCvPassCheckoutController));
 // iyzico iade bildirimi — JSON body kabul eder
 paymentRouter.post("/refund-notify", express.json(), asyncHandler(paymentRefundWebhookController));

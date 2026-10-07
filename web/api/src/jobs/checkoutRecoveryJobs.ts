@@ -68,6 +68,7 @@ async function runCheckoutRecovery(): Promise<void> {
       createdAt: { gte: notBefore, lte: notAfter },
       // Yalnız gerçek PLAN yükseltmeleri — top-up (AI kredisi) ve koltuk-satın-alma değil.
       bonusAiCredits: null,
+      cvPassHours: null, // CV Geçişi terk edenlere "planı tamamla" e-postası gitmez
       seatsOnly: false,
       user: {
         plan: "FREE", // tamamlamış/yükseltmiş olsaydı FREE olmazdı
