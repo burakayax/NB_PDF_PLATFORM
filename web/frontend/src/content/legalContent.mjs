@@ -166,8 +166,8 @@ export const legalDocuments = {
           paragraphs: [
             "We retain personal data for the specific periods set out below, after which data is deleted or anonymized:",
             "Account data: retained while your account is active and for 30 days after a deletion request is processed.",
-            "Operation logs: 90 days from the date of creation, after which records are archived and no longer accessible for regular use.",
-            "Download logs: 90 days from the date of creation.",
+            "Operation logs: 90 days from the date of creation, then archived; archived records are deleted one year after creation.",
+            "Download logs: 90 days from the date of creation (including IP address and browser information); after that the IP address and browser information are erased, and the record is deleted one year after creation.",
             "Output file fingerprints (a SHA-256 hash, size, tool and plan of files produced on our servers; never the file content), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
             "AI request records (tool, time, credits used, outcome and SHA-256 digests of the input and result; never the document text or the result itself), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
             "Invoices and billing records: 10 years, as required by Turkish Tax Procedure Law (VUK) Article 253 and equivalent accounting regulations.",
@@ -175,7 +175,7 @@ export const legalDocuments = {
             "Error and diagnostic logs: 30 days.",
             "Comment text attached to tool ratings: 180 days. After that the comment is deleted; the star rating itself is kept because it forms the average.",
             "Commercial electronic message consent records: 3 years after the consent ceases to be valid, as required by Turkish regulations on commercial electronic messages.",
-            "Uploaded files: automatically deleted within 24 hours of processing completion.",
+            "Uploaded files: automatically deleted within 24 hours of processing completion. Two features keep documents until you delete them or your account is deleted: scans you choose to \"save to my account\" in Document Scanner (older scans are removed automatically beyond your plan's scan limit), and documents sent through Signature Requests together with their signed copies (the signing link itself is valid for 14 days).",
           ],
         },
         {
@@ -477,7 +477,7 @@ export const legalDocuments = {
             "Destek ve iletişim: iletişim veya destek kanalları aracılığıyla gönderdiğiniz içerik, e-posta adresiniz ve mesaj metni.",
             "Araç puanları ve geri bildirim: Bir araca yıldız verdiğinizde puanınız ve (düşük puanlarda) yazdığınız kısa açıklama kaydedilir. Bu kayıt kimliğinizle ilişkilendirilmez: adınız, e-postanız veya hesap bilginiz saklanmaz. Aynı aracın aynı kişi tarafından tekrar tekrar puanlanmasını önlemek için IP adresiniz ve tarayıcı bilginizden geri döndürülemez bir imza üretilir; ham IP adresi saklanmaz. Bu nedenle belirli bir puanı geri izleyip sahibine ulaşmamız teknik olarak mümkün değildir; tek bir puanın silinmesi talebi de aynı sebeple karşılanamaz. Lütfen açıklama kutusuna kişisel bilgi yazmayınız.",
             "Teknik veriler: IP adresi, tarayıcı türü, cihaz veya işletim sistemi ipuçları ve izin verdiğiniz hata raporları (kısa yığın izi veya tanı metni içerebilir).",
-            "Yapay zekâ araç içeriği: Yapay zekâ destekli araçları (örneğin özetleme, sohbet, çeviri, veri çıkarma, karşılaştırma, gizleme) kullandığınızda, belgenizden cihazınızda çıkarılan metin sonucu üretmek üzere yapay zekâ sağlayıcımıza gönderilir. Bu metin, dosyanızda mevcutsa kişisel veri içerebilir. Yapısal araçlar (birleştirme, bölme, döndürme, imzalama, işaretleme vb.) tarayıcınızda çalışır ve dosyanız bunlar için gönderilmez.",
+            "Yapay zekâ araç içeriği: Yapay zekâ destekli araçları (örneğin özetleme, sohbet, çeviri, veri çıkarma, karşılaştırma, gizleme) kullandığınızda, belgenizden cihazınızda çıkarılan metin sonucu üretmek üzere yapay zekâ sağlayıcımıza gönderilir. Bu metin, dosyanızda mevcutsa kişisel veri içerebilir. Yapısal araçlar (birleştirme, bölme, döndürme, imzalama, işaretleme vb.) tarayıcınızda çalışır ve dosyanız bunlar için gönderilmez; parola korumalı veya 80 MB'tan büyük dosyalar bu araçlarda işlenmek üzere sunucuya gönderilebilir.",
             "İşlediğiniz dosyaların tam içeriğini bu politika ayrıntılı olarak listelemez; dosya içeriği ürünün teknik işleyişi kapsamında işlenir ve yalnızca kişisel veri içermesi hâlinde bu açıklamalarla ilişkilidir.",
           ],
         },
@@ -526,8 +526,8 @@ export const legalDocuments = {
           paragraphs: [
             "Kişisel verileri aşağıda belirtilen süreler boyunca saklarız; süre dolduğunda veriler silinir veya anonimleştirilir:",
             "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
-            "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; bu sürenin ardından kayıtlar arşivlenir.",
-            "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün.",
+            "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; sonrasında arşivlenir ve oluşturulmasından 1 yıl sonra silinir.",
+            "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün (IP adresi ve tarayıcı bilgisi dahil); sonrasında IP adresi ve tarayıcı bilgisi silinir, kayıt oluşturulmasından 1 yıl sonra tamamen silinir.",
             "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
             "Yapay zekâ istek kayıtları (araç, zaman, düşülen hak, sonuç durumu ile girdi ve sonucun SHA-256 özeti; belge metni ve sonucun kendisi asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
             "Fatura ve ödeme kayıtları: Vergi Usul Kanunu (VUK) Madde 253 ve ilgili muhasebe mevzuatı gereği 10 yıl.",
@@ -535,7 +535,7 @@ export const legalDocuments = {
             "Hata ve tanı günlükleri: 30 gün.",
             "Araç puanlarındaki açıklama metinleri: 180 gün. Bu sürenin sonunda açıklama silinir; puanın kendisi (yıldız) ortalamayı oluşturduğu için kalır.",
             "Ticari elektronik ileti onay kayıtları: Ticari İletişim ve Ticari Elektronik İletiler Hakkında Yönetmelik gereği, onayın geçerliliği sona erdikten sonra 3 yıl.",
-            "Yüklenen dosyalar: İşlemin tamamlanmasının ardından 24 saat içinde otomatik olarak silinir.",
+            "Yüklenen dosyalar: İşlemin tamamlanmasının ardından 24 saat içinde otomatik olarak silinir. İki özellik bunun istisnasıdır ve belgeleri siz silene veya hesabınız silinene kadar saklar: Belge Tarayıcı'da «Hesabıma kaydet» ile sakladığınız taramalar (planınızın tarama sınırını aşan eski taramalar otomatik silinir) ve «İmza İste» ile gönderdiğiniz belgeler ile imzalı kopyaları (imza bağlantısı 14 gün geçerlidir).",
           ],
         },
         {
@@ -634,8 +634,8 @@ export const legalDocuments = {
           paragraphs: [
             "Hesap bilgileri: Hesabınız aktif olduğu süre boyunca ve hesap silme talebinin ardından en fazla 30 gün.",
             "Ödeme ve fatura kayıtları: Vergi mevzuatı gereği en az 5 yıl; ilgili mevzuat uyarınca daha uzun süreler uygulanabilir.",
-            "Teknik günlükler (log): En fazla 90 gün; güvenlik ihlali şüphesi varsa ilgili soruşturma tamamlanana kadar.",
-            "Yüklenen belgeler: İşlemin tamamlanmasının ardından otomatik olarak 24 saat içinde silinir.",
+            "Teknik günlükler (log): IP adresi ve tarayıcı bilgisi en fazla 90 gün; kimliksiz kayıt iskeleti 1 yıl; güvenlik ihlali şüphesi varsa ilgili soruşturma tamamlanana kadar.",
+            "Yüklenen belgeler: İşlemin tamamlanmasının ardından otomatik olarak 24 saat içinde silinir (Belge Tarayıcı'daki «Hesabıma kaydet» taramaları ile «İmza İste» belgeleri bu kuralın istisnasıdır; siz silene veya hesabınız silinene kadar saklanır).",
           ],
         },
         {
@@ -690,7 +690,7 @@ export const legalDocuments = {
           paragraphs: [
             "Fiyatlar, seçtiğiniz plana ve ödeme dönemine (aylık/yıllık) göre belirlenmektedir. Türkiye'de mukim kullanıcılar için %20 KDV dahil toplam tutar tahsil edilmektedir.",
             "Ödeme iyzico altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
-            "Abonelik süresi başladıktan sonra kalan süre için kanuni bir iade yükümlülüğü bulunmamakla birlikte, SATICI kendi ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde yapılan iade taleplerini gerekçe aranmaksızın karşılar (aşağıda «Ticari İade Garantisi»). Bu süre dışındaki iptallerde, ödenmiş dönem sonuna kadar hizmete erişim devam eder.",
+            "Abonelik süresi başladıktan sonra kalan süre için kanuni bir iade yükümlülüğü bulunmamakla birlikte, SATICI kendi ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde yapılan iade taleplerini gerekçe aranmaksızın karşılar (tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar saklıdır) (aşağıda «Ticari İade Garantisi»). Bu süre dışındaki iptallerde, ödenmiş dönem sonuna kadar hizmete erişim devam eder.",
           ],
         },
         {
@@ -775,7 +775,7 @@ export const legalDocuments = {
     cookieNotice: {
       title: "Çerez Bildirimi",
       description:
-        "Çerezler ve benzer teknolojiler kullanıyoruz. GDPR/KVKK Madde 7 gereği her kategori için ayrı onayınız gereklidir. Zorunlu ve Ödeme İşleme çerezleri hizmetin çalışması için zorunludur. Analitik ve Hata İzleme isteğe bağlıdır — her birini bağımsız olarak kabul veya reddedebilirsiniz.\n\n• Zorunlu (her zaman aktif): giriş oturumu, dil tercihi, onay kaydı.\n• Analitik (Google Analytics GA4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri.\n• Hata İzleme (Sentry): hataları daha hızlı çözmek için tanı raporları — yalnızca onayınızla aktif olur.\n• Ödeme İşleme (İyzico, her zaman aktif): abonelik ödemelerini güvenli şekilde işlemek için zorunludur.",
+        "Çerezler ve benzer teknolojiler kullanıyoruz. Her kategori için ayrı onayınız gereklidir. Zorunlu ve Ödeme İşleme çerezleri hizmetin çalışması için zorunludur. Analitik ve Hata İzleme isteğe bağlıdır — her birini bağımsız olarak kabul veya reddedebilirsiniz.\n\n• Zorunlu (her zaman aktif): giriş oturumu, dil tercihi, onay kaydı.\n• Analitik (Google Analytics GA4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri.\n• Hata İzleme (Sentry): hataları daha hızlı çözmek için tanı raporları — yalnızca onayınızla aktif olur.\n• Ödeme İşleme (İyzico, her zaman aktif): abonelik ödemelerini güvenli şekilde işlemek için zorunludur.",
       accept: "Tümünü kabul et",
       learnMore: "Gizlilik Politikası",
     },

@@ -17,6 +17,16 @@ function notifyCookieConsentChanged(): void {
   }
 }
 
+/** Analitik onayı VERİLDİ mi? (kararsız veya reddedilmişse false) — ölçüm çağrıları bundan önce çalışmamalı. */
+export function isAnalyticsConsentGranted(): boolean {
+  try {
+    const s = readStored();
+    return s.decided && s.prefs.analytics === true;
+  } catch {
+    return false;
+  }
+}
+
 /** Kullanıcı çerez tercihini verdi mi? (App dışı bileşenler için senkron okuma) */
 export function isCookieConsentDecided(): boolean {
   try {

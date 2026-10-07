@@ -568,7 +568,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trustedText: {
-      trusted: "Dosyalarınız cihazınızdan çıkmaz — %100 gizli",
+      trusted: "Dosyalarınız cihazınızdan çıkmaz",
       payment: "Güvenli Ödeme",
       freePlan: "Kullandığın Kadar Öde — Kredi Paketi & Aylık Abonelik",
     },

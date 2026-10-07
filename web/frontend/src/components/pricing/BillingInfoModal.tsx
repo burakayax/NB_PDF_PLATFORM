@@ -794,8 +794,8 @@ export function BillingInfoModal({
                 <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[11px] leading-relaxed text-slate-400">
                   <p className="mb-1 font-semibold text-emerald-400/80">
                     {tr
-                      ? "✓ 7 Günlük Koşulsuz İade Garantisi"
-                      : "✓ 7-Day Unconditional Refund Guarantee"}
+                      ? "✓ 7 Günlük İade Garantisi"
+                      : "✓ 7-Day Refund Guarantee"}
                   </p>
                   {tr
                     ? "Yasal zorunluluk olmaksızın, memnun kalmamanız halinde ilk 7 gün içinde destek ekibimize başvurarak tam iade talep edebilirsiniz. Bu gönüllü taahhüdümüzdür."
