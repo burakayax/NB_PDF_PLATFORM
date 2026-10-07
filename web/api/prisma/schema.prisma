@@ -912,6 +912,11 @@ model SocialPost {
   externalUrl String?          @map("external_url")
   attempts    Int              @default(0)
   lastError   String?          @map("last_error")
+  /// Panelde "Temizle" ile gizlenen geçmiş kaydı. SİLİNMEZ: hangi yazının hangi ağda
+  /// paylaşıldığı bilgisi, paylaşım sırasının (pickNextItem) başa dönmemesi için kalır.
+  clearedAt   DateTime?        @map("cleared_at")
+  /// Yayınlanırken kullanılan carousel slayt adresleri (JSON dizi). Boşsa tek görsel/video.
+  slidesJson  String?          @map("slides_json")
   createdAt   DateTime         @default(now()) @map("created_at")
   updatedAt   DateTime         @updatedAt @map("updated_at")
 

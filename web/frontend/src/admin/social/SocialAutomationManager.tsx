@@ -10,11 +10,13 @@ import {
   RefreshCw,
   Rss,
   Send,
+  Trash2,
   TriangleAlert,
   Wand2,
 } from "lucide-react";
 import {
   checkSocialFeed,
+  clearSocialHistory,
   deleteSocialPost,
   disconnectSocialAccount,
   testSocialAccount,
@@ -33,6 +35,7 @@ import {
 } from "../../api/admin";
 import { AccountConnectCard } from "./AccountConnectCard";
 import { PostPreviewCard } from "./PostPreviewCard";
+import { RecentPostsPanel } from "./RecentPostsPanel";
 import { PlatformBadge } from "./platformBrand";
 
 /**
@@ -173,6 +176,10 @@ function EmptyState({
 export function SocialAutomationManager({ accessToken }: { accessToken: string }) {
   const [overview, setOverview] = useState<SocialOverview | null>(null);
   const [posts, setPosts] = useState<SocialPostRow[]>([]);
+  /** Her ağın son 5 paylaşımı (sunucudan gelir; ağ başına ayrı). */
+  const [recent, setRecent] = useState<Partial<Record<SocialPlatformId, SocialPostRow[]>>>({});
+  const [clearOpen, setClearOpen] = useState(false);
+  const [resetRotation, setResetRotation] = useState(false);
   const [tab, setTab] = useState<TabId>("flow");
   const [busy, setBusy] = useState(false);
   const [busyPostId, setBusyPostId] = useState<string | null>(null);
@@ -198,6 +205,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
       ]);
       setOverview(data);
       setPosts(postList.posts);
+      setRecent(postList.recent ?? {});
       setErr(null);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Panel yüklenemedi");
@@ -244,7 +252,9 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
   const pendingPosts = posts.filter((p) => p.status === "DRAFT" || p.status === "QUEUED" || p.status === "FAILED");
   // Bağlı olmayan ağların gönderileri: otomatik yayına girmez, elle paylaşılır.
   const manualPosts = posts.filter((p) => p.status === "MANUAL");
-  const historyPosts = posts.filter((p) => p.status === "PUBLISHED" || p.status === "SKIPPED" || p.status === "PUBLISHING");
+  // Geçmiş artık ağ başına son 5 paylaşım olarak (`recent`) gösterilir.
+  const recentCount = Object.values(recent).reduce((n, list) => n + (list?.length ?? 0), 0);
+  const historyCount = overview?.stats.published ?? 0;
 
   if (!overview || !config) {
     return (
@@ -442,7 +452,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
       {/* ── Gönderi akışı ─────────────────────────────────────────────────── */}
       {tab === "flow" ? (
         <div className="space-y-5">
-          {pendingPosts.length === 0 && manualPosts.length === 0 && historyPosts.length === 0 ? (
+          {pendingPosts.length === 0 && manualPosts.length === 0 && recentCount === 0 ? (
             <EmptyState
               icon={Inbox}
               title="Henüz gönderi yok"
@@ -484,6 +494,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   key={`${post.id}:${post.updatedAt}`}
                   post={post}
                   spec={specByPlatform.get(post.platform)}
+                  accountLabel={accountByPlatform.get(post.platform)?.displayName ?? null}
                   busyId={busyPostId}
                   onPublish={(id) => {
                     setBusyPostId(id);
@@ -527,6 +538,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   key={`${post.id}:${post.updatedAt}`}
                   post={post}
                   spec={specByPlatform.get(post.platform)}
+                  accountLabel={accountByPlatform.get(post.platform)?.displayName ?? null}
                   busyId={busyPostId}
                   onPublish={() => undefined}
                   onDelete={(id) => {
@@ -555,22 +567,37 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             </div>
           ) : null}
 
-          {historyPosts.length > 0 ? (
+          {recentCount > 0 || historyCount > 0 ? (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-white">Geçmiş</h3>
-              {historyPosts.slice(0, 20).map((post) => (
-                <PostPreviewCard
-                  // Sunucudan yeni içerik gelince kart sıfırdan kurulur:
-                  // düzenleme taslağını efektle senkronlamaya gerek kalmaz.
-                  key={`${post.id}:${post.updatedAt}`}
-                  post={post}
-                  spec={specByPlatform.get(post.platform)}
-                  busyId={busyPostId}
-                  onPublish={() => undefined}
-                  onDelete={() => undefined}
-                  onSaveBody={() => undefined}
-                />
-              ))}
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-sm font-semibold text-white">Son paylaşımlar</h3>
+                <span className="text-[11px] text-slate-400">her ağın son 5 gönderisi</span>
+                <button
+                  type="button"
+                  className={`${ghostButton} ml-auto text-rose-300 hover:border-rose-500/50 hover:text-rose-200`}
+                  disabled={busy || historyCount === 0}
+                  onClick={() => {
+                    setResetRotation(false);
+                    setClearOpen(true);
+                  }}
+                  title="Geçmiş paylaşım kayıtlarını panelden temizler"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Temizle
+                </button>
+              </div>
+              <RecentPostsPanel
+                recent={recent}
+                accounts={overview.accounts}
+                busyId={busyPostId}
+                onRemove={(id) => {
+                  setBusyPostId(id);
+                  void run(async () => {
+                    await deleteSocialPost(accessToken, id);
+                    await refresh();
+                  }, "Kayıt panelden kaldırıldı.");
+                }}
+              />
             </div>
           ) : null}
         </div>
@@ -846,6 +873,61 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
               </span>
             </p>
           </SectionCard>
+        </div>
+      ) : null}
+
+      {clearOpen ? (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/80 p-4" role="presentation" onClick={() => setClearOpen(false)}>
+          <div
+            className="w-full max-w-md space-y-4 rounded-2xl border border-slate-700/60 bg-slate-900 p-5 shadow-2xl"
+            role="dialog"
+            aria-label="Geçmişi temizle"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold text-white">Geçmişi temizle</h3>
+            <p className="text-sm leading-relaxed text-slate-300">
+              Panelde görünen <strong>{historyCount}</strong> paylaşım kaydı temizlenecek. Instagram, Facebook ve
+              diğer ağlardaki gerçek gönderilere <strong>dokunulmaz</strong>; yalnızca bu paneldeki kayıtlar gider.
+            </p>
+            <label className="flex items-start gap-2.5 rounded-xl border border-slate-700/60 bg-slate-950/50 p-3 text-xs leading-relaxed text-slate-300">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={resetRotation}
+                onChange={(e) => setResetRotation(e.target.checked)}
+              />
+              <span>
+                <strong className="text-white">Paylaşım sırasını da sıfırla.</strong> İşaretlemezsen kayıtlar yalnızca
+                gizlenir ve sıra kaldığı yerden devam eder (aynı yazılar tekrar paylaşılmaz). İşaretlersen kayıtlar
+                gerçekten silinir ve en baştaki yazılar yeniden paylaşılabilir.
+              </span>
+            </label>
+            <div className="flex justify-end gap-2">
+              <button type="button" className={ghostButton} onClick={() => setClearOpen(false)}>
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-9 items-center gap-2 rounded-xl bg-rose-600 px-4 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:opacity-40"
+                disabled={busy}
+                onClick={() => {
+                  setClearOpen(false);
+                  void run(async () => {
+                    const r = await clearSocialHistory(accessToken, resetRotation);
+                    await refresh();
+                    setNote(
+                      r.resetRotation
+                        ? `${r.cleared} kayıt silindi; paylaşım sırası sıfırlandı.`
+                        : `${r.cleared} kayıt panelden temizlendi; paylaşım sırası korundu.`,
+                    );
+                  });
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {resetRotation ? "Sil ve sırayı sıfırla" : "Temizle"}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

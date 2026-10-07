@@ -15,11 +15,11 @@ import { env } from "../../config/env.js";
 import { isGscConfigured } from "./gsc.service.js";
 import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
+import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
   deletePost,
   disconnectAccount,
   listAccounts,
-  listPosts,
   markPostShared,
   nextRunAt,
   postStats,
@@ -170,7 +170,35 @@ socialRouter.get(
   "/posts",
   asyncHandler(async (request, response) => {
     const limit = Number.parseInt(String(request.query.limit ?? "50"), 10);
-    response.json({ posts: await listPosts(Number.isFinite(limit) ? limit : 50) });
+    const [posts, recent] = await Promise.all([
+      listPanelPosts(Number.isFinite(limit) ? limit : 50),
+      recentPublishedByPlatform(),
+    ]);
+    // `recent`: her ağın son 5 paylaşımı (panelde ağ başına ayrı gösterilir).
+    response.json({ posts, recent });
+  }),
+);
+
+/**
+ * Geçmişi temizler (yayınlanmış + atlanmış kayıtlar).
+ * Varsayılan: panelden gizler, paylaşım sırası korunur. `?reset=1`: kayıtları siler,
+ * sıra başa döner. Ağlardaki gerçek gönderilere dokunmaz.
+ */
+socialRouter.delete(
+  "/posts-history",
+  asyncHandler(async (request, response) => {
+    const reset = String(request.query.reset ?? "") === "1";
+    const cleared = await clearHistory(reset);
+    await logAdminAudit(
+      actorOf(request),
+      "social.history.clear",
+      "social.automation",
+      reset
+        ? `Sosyal medya geçmişi silindi (${cleared} kayıt; paylaşım sırası sıfırlandı)`
+        : `Sosyal medya geçmişi panelden temizlendi (${cleared} kayıt; paylaşım sırası korundu)`,
+      { cleared, resetRotation: reset },
+    );
+    response.json({ ok: true, cleared, resetRotation: reset });
   }),
 );
 

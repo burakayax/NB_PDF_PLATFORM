@@ -123,7 +123,7 @@ async function publishInstagramCarousel(
     });
     const id = (json.id as string | undefined) ?? null;
     logger.info("social", `Instagram carousel yayınlandı (${slideUrls.length} slayt): ${item.title}`);
-    return { externalId: id, externalUrl: id ? `https://www.instagram.com/p/${id}` : null };
+    return { externalId: id, externalUrl: id ? `https://www.instagram.com/p/${id}` : null, slides: slideUrls };
   } catch (err) {
     throw new PublishStageError(err instanceof Error ? err.message : String(err));
   }
