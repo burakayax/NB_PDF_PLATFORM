@@ -69,8 +69,6 @@ export const registerSchema = z.object({
   termsAccepted: z.literal(true, { message: "You must accept the Terms of Service and Privacy Policy." }),
   /** ZORUNLU: KVKK aydınlatma metninin okunduğu beyanı (bilgilendirme; açık rıza DEĞİL). */
   privacyNoticeRead: z.literal(true, { message: "You must confirm that you have read the privacy notice." }),
-  /** ZORUNLU: 18 yaşını doldurduğu beyanı. */
-  ageConfirmed: z.literal(true, { message: "You must confirm that you are at least 18 years old." }),
 });
 
 export const preferredLanguageSchema = z.object({

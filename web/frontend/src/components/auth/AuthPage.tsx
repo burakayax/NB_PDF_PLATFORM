@@ -136,7 +136,6 @@ type AuthSubmitPayload = {
   marketingConsent?: boolean;
   termsAccepted?: boolean;
   privacyNoticeRead?: boolean;
-  ageConfirmed?: boolean;
 };
 
 type AuthPageProps = {
@@ -259,8 +258,7 @@ export function AuthPage({
   // Kayıtta ZORUNLU onaylar (üçü de varsayılan KAPALI; sunucu da zorunlu tutar).
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyNoticeRead, setPrivacyNoticeRead] = useState(false);
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const requiredAccepted = termsAccepted && privacyNoticeRead && ageConfirmed;
+  const requiredAccepted = termsAccepted && privacyNoticeRead;
   const tr = language === "tr";
   const [acceptErr, setAcceptErr] = useState("");
   const [urlAuthError, setUrlAuthError] = useState("");
@@ -386,7 +384,6 @@ export function AuthPage({
           marketingConsent,
           termsAccepted,
           privacyNoticeRead,
-          ageConfirmed,
         });
         // Kazanım dönüşümü — onSubmit hata fırlatmadıysa kayıt başarılı.
         trackFunnelEvent("sign_up_completed", { method: "email" });
@@ -398,7 +395,6 @@ export function AuthPage({
         setMarketingConsent(false);
         setTermsAccepted(false);
         setPrivacyNoticeRead(false);
-        setAgeConfirmed(false);
       } else {
         await onSubmit({ email, password });
       }
@@ -747,7 +743,7 @@ export function AuthPage({
             ) : null}
 
             {mode === "register" ? (
-              /* ZORUNLU kayıt onayları: Hizmet Şartları + Gizlilik, KVKK aydınlatma (okundu), 18 yaş.
+              /* ZORUNLU kayıt onayları: Hizmet Şartları + Gizlilik, KVKK aydınlatma (okundu). Yaş sınırı yoktur.
                  Aydınlatma bir bilgilendirmedir, açık rıza değildir; bu yüzden ayrı bir "okudum" kutusudur.
                  Metinler değişirse sunucudaki TERMS_VERSION da güncellenmelidir. */
               <div className="space-y-2.5 text-left">
@@ -785,12 +781,6 @@ export function AuthPage({
                         <button type="button" onClick={onOpenKvkk} className="underline underline-offset-2 hover:text-white">privacy (KVKK) notice</button>. <span className="text-red-400">*</span>
                       </>
                     )}
-                  </span>
-                </label>
-                <label className="flex cursor-pointer items-start gap-2.5">
-                  <input type="checkbox" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500" />
-                  <span className="text-[12px] leading-relaxed text-slate-300">
-                    {tr ? "18 yaşını doldurduğumu beyan ederim." : "I confirm that I am at least 18 years old."} <span className="text-red-400">*</span>
                   </span>
                 </label>
                 {acceptErr && !requiredAccepted ? <p role="alert" className="text-xs leading-snug text-rose-400">{acceptErr}</p> : null}

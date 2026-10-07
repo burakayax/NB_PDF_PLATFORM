@@ -23,7 +23,6 @@ export const legalDocuments = {
           paragraphs: [
             "PDF Platform is operated by NB Global Studio (“we”, “us”). By creating an account, subscribing, or otherwise using the service, you confirm that you have read these Terms and agree to be bound by them.",
             "If you use the service on behalf of a company, you represent that you are authorized to accept these Terms for that organization.",
-            "You must be at least 18 years old to create an account and use the service.",
           ],
         },
         {
@@ -47,6 +46,7 @@ export const legalDocuments = {
           paragraphs: [
             "You must provide accurate registration information and keep it up to date. You are responsible for safeguarding passwords, API tokens, and any other credentials.",
             "You must notify us promptly if you suspect unauthorized use of your account. We may require additional verification before restoring access.",
+            "Users under 18 should use the service with the knowledge of their parent or legal guardian. Paid subscriptions and purchases by a minor require the consent of the legal guardian; without it the transaction may be invalid under mandatory law.",
           ],
         },
         {
@@ -167,7 +167,7 @@ export const legalDocuments = {
           paragraphs: [
             "We retain personal data for the specific periods set out below, after which data is deleted or anonymized:",
             "Account data: retained while your account is active and for 30 days after a deletion request is processed.",
-            "Sign-up confirmation records (acceptance of the Terms and Privacy Policy, privacy notice read, age declaration; time, version and IP address): until your account is deleted.",
+            "Sign-up confirmation records (acceptance of the Terms and Privacy Policy, privacy notice read; time, version and IP address): until your account is deleted.",
             "Operation logs: 90 days from the date of creation, then archived; archived records are deleted one year after creation.",
             "Download logs: 90 days from the date of creation (including IP address and browser information); after that the IP address and browser information are erased, and the record is deleted one year after creation.",
             "Output file fingerprints (a SHA-256 hash, size, tool and plan of files produced on our servers; never the file content), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
@@ -211,7 +211,7 @@ export const legalDocuments = {
         {
           title: "10. Children",
           paragraphs: [
-            "PDF Platform is not directed at anyone under 18; you must be at least 18 years old to create an account. We do not knowingly collect personal data from persons under 18.",
+            "PDF Platform is not specifically directed at children. If you are a parent or legal guardian and believe your child's personal data has been processed, contact info@pdfplatform.app and we will review and, where appropriate, delete it.",
           ],
         },
         {
@@ -384,7 +384,6 @@ export const legalDocuments = {
           paragraphs: [
             "PDF Platform, NB Global Studio (“biz”) tarafından işletilir. Hesap oluşturarak, abone olarak veya hizmeti başka şekilde kullanarak bu Şartları okuduğunuzu ve bunlara uymayı kabul ettiğinizi beyan edersiniz.",
             "Hizmeti bir işletme adına kullanıyorsanız, bu Şartları o kuruluş adına kabul etmeye yetkili olduğunuzu taahhüt edersiniz.",
-            "Hesap oluşturmak ve hizmeti kullanmak için 18 yaşını doldurmuş olmanız gerekir.",
           ],
         },
         {
@@ -408,6 +407,7 @@ export const legalDocuments = {
           paragraphs: [
             "Doğru kayıt bilgileri vermeli ve güncel tutmalısınız. Parolalar, API anahtarları ve diğer kimlik bilgilerinin korunması sizin sorumluluğunuzdadır.",
             "Hesabınızın yetkisiz kullanıldığından şüphelenirseniz bizi gecikmeksizin bilgilendirin. Erişimi yeniden açmadan önce ek doğrulama talep edebiliriz.",
+            "18 yaşından küçük kullanıcılar hizmeti anne-babasının veya yasal temsilcisinin bilgisi dahilinde kullanmalıdır. Ücretli abonelik ve satın almalarda reşit olmayanlar için yasal temsilcinin onayı gerekir; onay yoksa işlem emredici mevzuat uyarınca geçersiz olabilir.",
           ],
         },
         {
@@ -529,7 +529,7 @@ export const legalDocuments = {
           paragraphs: [
             "Kişisel verileri aşağıda belirtilen süreler boyunca saklarız; süre dolduğunda veriler silinir veya anonimleştirilir:",
             "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
-            "Hesap açılışındaki onay kayıtları (Hizmet Şartları/Gizlilik kabulü, aydınlatma okundu, 18 yaş beyanı; zaman, sürüm ve IP adresi): hesabınız silinene kadar.",
+            "Hesap açılışındaki onay kayıtları (Hizmet Şartları/Gizlilik kabulü, aydınlatma okundu; zaman, sürüm ve IP adresi): hesabınız silinene kadar.",
             "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; sonrasında arşivlenir ve oluşturulmasından 1 yıl sonra silinir.",
             "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün (IP adresi ve tarayıcı bilgisi dahil); sonrasında IP adresi ve tarayıcı bilgisi silinir, kayıt oluşturulmasından 1 yıl sonra tamamen silinir.",
             "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
@@ -573,7 +573,7 @@ export const legalDocuments = {
         {
           title: "10. Çocuklar",
           paragraphs: [
-            "PDF Platform 18 yaşın altındaki kişilere yönelik değildir; hesap oluşturmak için 18 yaşını doldurmuş olmanız gerekir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
+            "PDF Platform çocuklara özel olarak yönelik değildir. Anne-baba veya yasal temsilci olarak çocuğunuzun kişisel verilerinin işlendiğini düşünüyorsanız info@pdfplatform.app adresine başvurabilirsiniz; talebiniz incelenir ve uygun olduğunda veriler silinir.",
           ],
         },
         {

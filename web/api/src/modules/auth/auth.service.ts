@@ -493,7 +493,7 @@ export async function registerUser(
       plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
       termsAcceptedAt: new Date(),
       termsVersion: TERMS_VERSION,
-      // Kayıt anındaki zorunlu kabuller (kanıt): şartlar+gizlilik, aydınlatma okundu, 18 yaş — aynı işlemde yazılır.
+      // Kayıt anındaki zorunlu kabuller (kanıt): şartlar+gizlilik, aydınlatma okundu — aynı işlemde yazılır.
       legalAcceptances: { create: legalAcceptanceRows("email", options?.consentContext) },
       // Pazarlama e-posta izni (opt-in) — yalnız kutu işaretlenmişse kaydedilir.
       ...(input.marketingConsent
@@ -1091,7 +1091,7 @@ export async function signInWithGoogle(params: {
     );
   }
 
-  // Yeni hesap: Hizmet Şartları/Gizlilik/aydınlatma/18 yaş onayı olmadan Google ile de hesap açılmaz.
+  // Yeni hesap: Hizmet Şartları/Gizlilik/aydınlatma onayı olmadan Google ile de hesap açılmaz.
   if (!params.termsAccepted) {
     throw new GoogleTermsRequiredError();
   }
