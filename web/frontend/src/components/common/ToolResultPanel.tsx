@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Download, ExternalLink, Share2, X } from "lucide-react";
+import { Check, Download, ExternalLink, FileCheck2, Share2, X } from "lucide-react";
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
@@ -8,7 +8,7 @@ import { trackGAEvent } from "../../lib/analytics";
  * TÜM araçların ortak "işlem bitti" ekranı.
  *
  * Referans tasarım PDF Kırp'tır: yeşil çerçeveli büyük panel, tik dairesi,
- * "PDF hazır 🎉" başlığı ve İndir · Paylaş · Aç · Kapat düğmeleri. Yeni bir
+ * "PDF hazır" başlığı (yanında belge-tik simgesi) ve İndir · Paylaş · Aç · Kapat düğmeleri. Yeni bir
  * araç eklendiğinde sonuç ekranı için BU bileşen kullanılmalıdır; araca özel
  * ayrı bir sonuç kutusu yazılmamalıdır.
  *
@@ -40,8 +40,8 @@ export type ToolResultPanelProps = {
 
 const L = {
   tr: {
-    ready: "PDF hazır 🎉",
-    readyGeneric: "Dosyan hazır 🎉",
+    ready: "PDF hazır",
+    readyGeneric: "Dosyan hazır",
     subDevice: "Dosyan cihazından hiç çıkmadı.",
     subServer: "İşlem tamamlandı. İndir'e basınca kaydetme yerini soracağız.",
     download: "İndir",
@@ -53,8 +53,8 @@ const L = {
     close: "Kapat",
   },
   en: {
-    ready: "Your PDF is ready 🎉",
-    readyGeneric: "Your file is ready 🎉",
+    ready: "Your PDF is ready",
+    readyGeneric: "Your file is ready",
     subDevice: "Your file never left your device.",
     subServer: "All done — hit Download and we'll ask where to save it.",
     download: "Download",
@@ -248,8 +248,9 @@ export function ToolResultPanel({
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
         <Check className="h-8 w-8" />
       </div>
-      <p className="mt-4 text-xl font-bold text-white">
+      <p className="mt-4 inline-flex items-center justify-center gap-2.5 text-xl font-bold text-white">
         {isPdf ? t.ready : t.readyGeneric}
+        <FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden />
       </p>
       <p className="mt-1 text-sm text-slate-400">
         {subtitle ?? (processedOnDevice ? t.subDevice : t.subServer)}

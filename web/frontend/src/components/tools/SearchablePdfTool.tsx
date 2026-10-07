@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Download, FileText, Loader2, Lock, Search, Share2, Sparkles, Trash2 } from "lucide-react";
+import { Check, Download, FileCheck2, FileText, Loader2, Lock, Search, Share2, Sparkles, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolRating } from "../common/ToolRating";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
@@ -155,8 +155,9 @@ export function SearchablePdfTool({
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
           <Check className="h-8 w-8" />
         </div>
-        <p className="mt-4 text-xl font-bold text-white">
-          {tr ? "Aranabilir PDF hazır 🎉" : "Searchable PDF ready 🎉"}
+        <p className="mt-4 inline-flex items-center justify-center gap-2.5 text-xl font-bold text-white">
+          {tr ? "Aranabilir PDF hazır" : "Searchable PDF ready"}
+          <FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden />
         </p>
         <p className="mt-1 text-sm text-slate-400">
           {tr ? "Artık Ctrl+F ile arayabilir, metni kopyalayabilirsiniz." : "You can now search with Ctrl+F and copy text."}

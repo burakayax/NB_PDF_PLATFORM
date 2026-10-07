@@ -87,12 +87,12 @@ export function extractContentSlides(blocks) {
 /** Slayt metinleri (kapanış slaytı dahil) — dile göre sabit ifadeler. */
 export const CAROUSEL_COPY = {
   tr: {
-    swipe: "Kaydır",
+    swipe: "Kaydırın",
     stepLabel: (n, total) => `ADIM ${n}/${total}`,
     pointLabel: (n, total) => `${n}/${total}`,
-    ctaTitle: "İşine yaradıysa kaydet",
-    ctaBody: "Lazım olunca bulursun. Aynı işi yapan birine gönder.",
-    ctaTry: "Ücretsiz dene",
+    ctaTitle: "İşinize yaradıysa kaydedin",
+    ctaBody: "Lazım olduğunda kolayca ulaşın; aynı işi yapan meslektaşlarınıza da iletin.",
+    ctaTry: "Ücretsiz deneyin",
   },
   en: {
     swipe: "Swipe",
