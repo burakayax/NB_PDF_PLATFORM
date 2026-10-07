@@ -8,23 +8,27 @@ export type { LegalDocKey };
 export type LegalDocumentBodyProps = {
   language: Language;
   documentKey: LegalDocKey;
+  /** Tam sayfada başlık H1 olmalı (aranabilir sayfa); ödeme içindeki modalda H2 kalır. */
+  titleAs?: "h1" | "h2";
 };
 
 /** Shared body for full-page legal and in-payment nested modal. */
 export function LegalDocumentBody({
   language,
   documentKey,
+  titleAs = "h2",
 }: LegalDocumentBodyProps) {
   const document = legalDocuments[language][documentKey];
+  const Title = titleAs;
 
   return (
     <>
       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-nb-accent sm:text-sm">
         PDF Platform
       </p>
-      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-nb-text sm:text-3xl">
+      <Title className="mt-3 text-2xl font-semibold tracking-tight text-nb-text sm:text-3xl">
         {document.title}
-      </h2>
+      </Title>
       <p className="mt-3 text-sm leading-relaxed text-nb-muted sm:text-base">
         {document.summary}
       </p>
@@ -78,7 +82,7 @@ export function LegalPage({ language, documentKey, onBack }: LegalPageProps) {
         </button>
 
         <section className="mt-10 rounded-[28px] border border-white/[0.08] bg-nb-panel/50 p-8 shadow-[0_40px_90px_-24px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-11">
-          <LegalDocumentBody language={language} documentKey={documentKey} />
+          <LegalDocumentBody language={language} documentKey={documentKey} titleAs="h1" />
         </section>
       </main>
     </div>
