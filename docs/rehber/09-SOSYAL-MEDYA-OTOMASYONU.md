@@ -169,6 +169,28 @@ mor bir rozetle durur:
 Sayaç satırındaki **"Elle paylaşılacak"** kutusu kaç gönderinin seni beklediğini
 gösterir.
 
+## Instagram: kaydırmalı gönderi (carousel)
+
+Instagram'da tek görselli gönderiler çoğunlukla takipçilere gösterilir; takipçi
+olmayanlara erişim paylaşma, kaydetme ve izleme/okuma süresi gibi etkileşim
+sinyalleriyle gelir (Instagram'ın kendi sıralama açıklaması). Bu yüzden Instagram
+gönderileri artık **kaydırmalı** çıkar: kapak + yazının adımları (3-5 slayt) +
+"işine yaradıysa kaydet" kapanışı.
+
+- **İçerik uydurulmaz:** slaytlardaki her cümle yazının kendi adımlarından alınır
+  (adım listesi yoksa başlık + ilk cümle çiftleri). 2'den az içerik çıkan yazı
+  (şu an yalnızca "sözleşme imzalamadan önce kontrol listesi") tek görselle çıkar.
+- **Boyut:** 1080×1350 (4:5), yalnızca JPEG (Instagram şartı), yalnızca Türkçe
+  (besleme dili). Dosyalar her yayında sitenin build'inde üretilir
+  (`/social/carousel/…`) ve depoya girmez.
+- **Güvenlik ağı:** slaytlar bulunamazsa ya da bir slayt Instagram'da hazırlanamazsa
+  gönderi eski tek görselle çıkar; yayın bu yüzden durmaz. Ama yayın isteği
+  (`media_publish`) başladıktan sonra hata alınırsa tek görsele **düşülmez** —
+  gönderi yayına çıkmış olabilir, düşmek aynı gönderiyi iki kez paylaşırdı.
+- **Panelde:** önizleme hâlâ tek kapak görselini gösterir; gerçek gönderi
+  kaydırmalıdır. "Elle paylaşılacaklar"da slaytlar indirilmez (yalnızca kapak).
+- **Etiket:** carousel'de de toplam 5 etiket (Türkçe 3 + İngilizce 2).
+
 ## Bağlantı her ağda aynı görünmez
 
 | Ağ | Bağlantı |
