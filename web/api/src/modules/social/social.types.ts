@@ -69,8 +69,17 @@ export type PlatformSpec = {
   imageRequired: boolean;
   /** Tercih edilen kapak kesimi. */
   imageFormat: "wide" | "square" | "tall";
-  /** Kaç etiket (hashtag) üretilsin. */
+  /** Bir DİL BLOĞUNDA kaç etiket (hashtag) üretilsin. */
   hashtagCount: number;
+  /**
+   * Gönderinin TOPLAMINDA geçerli etiket üst sınırı (varsa).
+   *
+   * Instagram, 18 Aralık 2025'ten beri gönderi başına en fazla 5 etiket sayıyor;
+   * fazlası yok sayılıyor. Çift dilli gönderide iki blok ayrı etiket taşıdığı için
+   * bloklar başına değil TOPLAM üzerinden bölüştürülür; yoksa ikinci bloğun
+   * etiketleri (ve marka etiketi) hiç sayılmaz.
+   */
+  hashtagTotalCap?: number;
   /**
    * Bağlantı metinde nasıl görünsün?
    *   "url"  → tam adres (tıklanabilir ağlar)
@@ -145,7 +154,8 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     // Instagram görselsiz gönderi kabul etmez.
     imageRequired: true,
     imageFormat: "square",
-    hashtagCount: 6,
+    hashtagCount: 5,
+    hashtagTotalCap: 5,
     bilingual: true,
     linkStyle: "bio",
     secretFields: [

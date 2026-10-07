@@ -549,3 +549,62 @@ describe("isPostingDay", () => {
     expect(next?.toISOString().slice(0, 10)).toBe("2026-09-21");
   });
 });
+
+// ─── Instagram etiket sınırı (18 Aralık 2025'ten beri gönderi başına 5) ──────
+
+describe("Instagram — toplam etiket sınırı bloklara paylaştırılır", () => {
+  it("çift dilde 3 + 2, tek dilde 5; sınırsız ağlar blok başına tam pay alır", async () => {
+    const { tagCountFor } = await import("../modules/social/copy.service.js");
+    expect(tagCountFor("INSTAGRAM", 2, 0)).toBe(3);
+    expect(tagCountFor("INSTAGRAM", 2, 1)).toBe(2);
+    expect(tagCountFor("INSTAGRAM", 1, 0)).toBe(5);
+    // Facebook'ta toplam sınır yok: her blok kendi 3 etiketini alır.
+    expect(tagCountFor("FACEBOOK", 2, 0)).toBe(3);
+    expect(tagCountFor("FACEBOOK", 2, 1)).toBe(3);
+  });
+
+  it("çift dilli Instagram gönderisinde toplam etiket sayısı 5'i aşmaz", async () => {
+    // Yapay zekâ kapalı: şablon yedeği çalışır (ağa çıkmaz, hızlı ve deterministik).
+    vi.resetModules();
+    vi.doMock("../modules/ai/ai.service.js", () => ({
+      isAiConfigured: () => false,
+      callClaude: async () => "",
+    }));
+    const { writePostBodies } = await import("../modules/social/copy.service.js");
+    const body = (
+      await writePostBodies({
+        item: {
+          guid: "https://example.test/blog/a",
+          lang: "tr",
+          title: "PDF Birleştirme Rehberi",
+          summary: "İki PDF'i tek dosyada toplamanın yolu.",
+          link: "https://example.test/blog/a",
+          publishedAt: Date.now(),
+          categories: [],
+          images: {},
+          alt: {
+            lang: "en",
+            title: "Merge PDF guide",
+            summary: "How to combine two PDFs into one file.",
+            link: "https://example.test/en/blog/a",
+          },
+        },
+        platforms: ["INSTAGRAM"],
+        keywords: {
+          tr: ["pdf birleştirme"],
+          en: ["merge pdf"],
+          tagsTr: ["pdf birleştirme", "belge", "ofis"],
+          tagsEn: ["merge pdf", "documents", "office"],
+        },
+        bilingual: true,
+        singleLang: "tr",
+      })
+    ).INSTAGRAM;
+
+    const tags = body.match(/#[\p{L}\p{N}]+/gu) ?? [];
+    expect(tags.length).toBeGreaterThan(0);
+    expect(tags.length).toBeLessThanOrEqual(5);
+    // İki dilin de en az bir etiketi sayılmalı (ikinci blok boşa gitmesin).
+    expect(body.split("— — —").every((blk) => /#[\p{L}\p{N}]+/u.test(blk))).toBe(true);
+  });
+});

@@ -99,8 +99,15 @@ boşlukları kesime göre ölçekleniyor:
 | X | 1200×630 | 280 | 2 |
 | LinkedIn | 1200×630 | 3.000 | 3 |
 | Facebook | 1200×630 | 2.200 | 3 |
-| Instagram | 1080×1080 | 2.200 | 6 |
+| Instagram | 1080×1080 | 2.200 | 5 (toplam) |
 | Pinterest | 1000×1500 | 500 | 2 |
+
+**Instagram etiket sınırı:** Instagram 18 Aralık 2025'ten beri gönderi başına en fazla
+**5 etiket** sayıyor (fazlası yok sayılıyor). Çift dilli gönderide bu 5 etiket iki blok
+arasında paylaştırılır: Türkçe blok 3, İngilizce blok 2. (Eskiden her blok 6 etiket
+taşıyordu; yani 12 etiketten yalnızca ilk 5'i sayılıyor, İngilizce blok ve marka etiketi boşa gidiyordu.)
+Etiketler erişim artırmaz — Instagram yetkilileri bunu açıkça söylüyor; konu etiketi olarak
+çalışırlar.
 
 Sınırlar ağların 2026'da yayımladığı gerçek değerler. Facebook'un sınırı aslında
 63.206 ama metin Instagram ve LinkedIn ile ortak olduğu için en dar sınır
