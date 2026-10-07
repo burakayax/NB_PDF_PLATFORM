@@ -19,6 +19,7 @@ import { getPaymentPricesTry } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
+import { cvPassInvoiceLabel, cvPassNewExpiry } from "../../lib/plan-catalogue.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
 
@@ -476,6 +477,8 @@ export async function createPaymentCheckoutSession(params: {
   seatsOnly?: boolean;
   /** Top-up: ek AI kredisi satın alması. Doluysa callback planı aktive etmez, kredi ekler. */
   topupCredits?: number;
+  /** CV Geçişi satın alması (saat). Doluysa callback planı aktive etmez, User.cvPassUntil uzatılır. */
+  cvPassHours?: number;
 }): Promise<{
   token: string;
   checkoutFormContent: string;
@@ -553,6 +556,7 @@ export async function createPaymentCheckoutSession(params: {
       extraSeats: params.extraSeats ?? 0,
       seatsOnly: params.seatsOnly ?? false,
       bonusAiCredits: params.topupCredits ?? null,
+      cvPassHours: params.cvPassHours ?? null,
     },
   });
 
@@ -713,11 +717,14 @@ export async function createCreditPackIyzicoSession(_params: {
 }
 
 /** SPA dönüş adresi (iyzico callback sonrası `303` ile gider; inline script kullanmıyoruz — üretimde Helmet CSP `script-src 'none'`.) */
-export function paymentWorkspaceRedirectUrl(success: boolean, plan?: string, extraSeats?: number, seatsOnly?: boolean): string {
+export function paymentWorkspaceRedirectUrl(success: boolean, plan?: string, extraSeats?: number, seatsOnly?: boolean, cvPassHours?: number | null): string {
   const origin = env.FRONTEND_ORIGIN.replace(/\/+$/, "");
   const params = new URLSearchParams({ payment: success ? "success" : "failed" });
   if (success) {
-    if (seatsOnly && extraSeats && extraSeats > 0) {
+    if (cvPassHours != null) {
+      // CV Geçişi: plan değişmedi → "plan" gönderme (yoksa arayüz "Pro'ya geçtiniz" der).
+      params.set("cvpass", String(cvPassHours));
+    } else if (seatsOnly && extraSeats && extraSeats > 0) {
       params.set("seats", String(extraSeats));
     } else if (plan) {
       params.set("plan", plan);
@@ -793,6 +800,7 @@ async function triggerInvoiceGeneration(
     discountPercent?: number | null;
     originalNetAmount?: string | null;
     bonusAiCredits?: number | null;
+    cvPassHours?: number | null;
   },
   retrieveResult: IyzicoRetrieveResult,
 ): Promise<void> {
@@ -903,7 +911,15 @@ async function triggerInvoiceGeneration(
         taxOffice: user.taxOffice ?? "",
       },
       basketItems: [
-        checkout.bonusAiCredits != null
+        checkout.cvPassHours != null
+          ? {
+              id: "cv-pass",
+              name: cvPassInvoiceLabel({ hours: checkout.cvPassHours }),
+              category1: "CV Pass",
+              itemType: "VIRTUAL",
+              price: actualPaidPrice,
+            }
+          : checkout.bonusAiCredits != null
           ? {
               id: "ai-topup",
               name: `Ek AI Hizmet Bedeli (${checkout.bonusAiCredits} kredi)`,
@@ -1150,7 +1166,7 @@ export async function processPaymentCallback(
       logger.info("payment",
         `${PC_LOG} subscription checkout already completed — idempotent success`,
       );
-      return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly);
+      return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly, pending.cvPassHours);
     }
 
     const expectedPrice = pending.priceTry;
@@ -1182,7 +1198,17 @@ export async function processPaymentCallback(
           return;
         }
 
-        if (current.bonusAiCredits != null) {
+        if (current.cvPassHours != null) {
+          // CV GEÇİŞİ: plan/org değişmez — süre, mevcut geçişin (varsa) ÜSTÜNE eklenir.
+          const holder = await tx.user.findUnique({
+            where: { id: current.userId },
+            select: { cvPassUntil: true },
+          });
+          await tx.user.update({
+            where: { id: current.userId },
+            data: { cvPassUntil: cvPassNewExpiry(holder?.cvPassUntil, current.cvPassHours) },
+          });
+        } else if (current.bonusAiCredits != null) {
           // TOP-UP: plan/org değişmez — kullanıcıya ek AI kredisi eklenir.
           await tx.user.update({
             where: { id: current.userId },
@@ -1241,7 +1267,7 @@ export async function processPaymentCallback(
 
       // Auto-create team for new BUSINESS subscribers (idempotent — returns existing if already created).
       // Top-up satın almasında (bonusAiCredits) plan değişmediği için ekip oluşturulmaz.
-      if (pending.plan === "BUSINESS" && pending.bonusAiCredits == null) {
+      if (pending.plan === "BUSINESS" && pending.bonusAiCredits == null && pending.cvPassHours == null) {
         try {
           const owner = await prisma.user.findUnique({
             where: { id: pending.userId },
@@ -1291,7 +1317,7 @@ export async function processPaymentCallback(
     // abonelik e-postası gönderilmez (plan değişmedi; fatura + kredi yeterli).
     void (async () => {
       try {
-        if (pending.bonusAiCredits != null) return;
+        if (pending.bonusAiCredits != null || pending.cvPassHours != null) return;
         const buyer = await prisma.user.findUnique({
           where: { id: pending.userId },
           select: { email: true, preferredLanguage: true },
@@ -1343,7 +1369,7 @@ export async function processPaymentCallback(
       );
     });
 
-    return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly);
+    return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly, pending.cvPassHours);
   } catch (unexpected) {
     // Re-throw DB fulfillment errors — the controller must return 500 for these.
     if (unexpected instanceof PaymentFulfillmentDbError) {
@@ -1549,18 +1575,20 @@ export async function processRefund(
       },
     });
 
-    // Kullanıcı planını FREE'ye düşür; iade sayacını güncelle
+    // CV Geçişi / kredi paketi iadesi PLANI düşürmez (plan hiç değişmemişti): geçiş iptal edilir.
+    const isAddOn = checkout.cvPassHours != null || checkout.bonusAiCredits != null;
     await tx.user.update({
       where: { id: checkout.userId },
       data: {
-        plan: "FREE",
+        ...(isAddOn ? {} : { plan: "FREE" as const }),
+        ...(checkout.cvPassHours != null ? { cvPassUntil: new Date() } : {}),
         totalRefunds: { increment: 1 },
         lastRefundedAt: new Date(),
       },
     });
 
     // Organizasyon varsa org planını da düşür ve subscription'ı sona erdir
-    if (checkout.organizationId) {
+    if (checkout.organizationId && !isAddOn) {
       await tx.organization.update({
         where: { id: checkout.organizationId },
         data: {
@@ -1637,7 +1665,7 @@ async function triggerCreditNote(
   // Checkout'tan plan adı ve iskonto bilgisini al
   const checkout = await prisma.paymentCheckout.findUnique({
     where: { id: checkoutId },
-    select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true, subscriptionDays: true, bonusAiCredits: true },
+    select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true, subscriptionDays: true, bonusAiCredits: true, cvPassHours: true },
   });
 
   const planLabel = checkout?.plan ?? "PRO";
@@ -1645,7 +1673,9 @@ async function triggerCreditNote(
   const isYearly = checkout?.billingCycle === "YEARLY" || (checkout?.subscriptionDays ?? 30) >= 365;
   const billingLabel = isYearly ? "(1 yıl)" : "(1 ay)";
   // Top-up (ek AI) iadesi abonelik değil → kalem adı da öyle olmalı.
-  const productName = checkout?.bonusAiCredits != null
+  const productName = checkout?.cvPassHours != null
+    ? `${cvPassInvoiceLabel({ hours: checkout.cvPassHours })} İadesi`
+    : checkout?.bonusAiCredits != null
     ? `Ek AI Hizmet Bedeli (${checkout.bonusAiCredits} kredi) İadesi`
     : `PDF Platform ${planLabel} Abonelik ${billingLabel} İadesi`;
 

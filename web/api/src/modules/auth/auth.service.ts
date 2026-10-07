@@ -77,6 +77,8 @@ type PublicUser = {
   isTeamMember: boolean;
   teamOwnerId: string | null;
   teamMemberRole: "MEMBER" | "MANAGER" | null;
+  /** CV Geçişi bitiş zamanı (ISO) — süresi dolmuşsa da dönebilir; istemci karşılaştırır. */
+  cvPassUntil: string | null;
 };
 
 type EmailVerificationTokenWithUser = EmailVerificationToken & {
@@ -138,6 +140,7 @@ function toPublicUser(user: User): PublicUser {
     isTeamMember: user.isTeamMember,
     teamOwnerId: user.teamOwnerId ?? null,
     teamMemberRole: (user.teamMemberRole as "MEMBER" | "MANAGER" | null) ?? null,
+    cvPassUntil: user.cvPassUntil ? user.cvPassUntil.toISOString() : null,
   };
 }
 

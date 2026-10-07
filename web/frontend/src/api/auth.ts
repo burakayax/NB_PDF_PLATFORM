@@ -36,6 +36,8 @@ export type AuthUser = {
   teamOwnerId?: string | null;
   /** Role within the team when isTeamMember is true. */
   teamMemberRole?: "MEMBER" | "MANAGER" | null;
+  /** CV Geçişi bitiş zamanı (ISO); süresi dolmuş olabilir — istemci karşılaştırır. */
+  cvPassUntil?: string | null;
 };
 
 /** PATCH /api/auth/profile and PATCH /api/user/profile (same backend handler). */

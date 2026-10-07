@@ -93,6 +93,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       priceTry: p.priceTry,
       couponId: p.couponId,
       bonusAiCredits: p.bonusAiCredits,
+      cvPassHours: p.cvPassHours,
       refundedAt: iso(p.refundedAt),
       refundReason: p.refundReason,
       iyzicoPaymentId: p.iyzicoPaymentId,

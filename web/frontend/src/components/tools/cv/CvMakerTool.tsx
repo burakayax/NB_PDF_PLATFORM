@@ -2,8 +2,9 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import { Download, Eye, FileDown, Loader2, Lock, PencilLine, Sparkles, Trash2, Wand2, FileUser } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
-import { isPaidPlan } from "../../../lib/currentPlan";
+import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
 import { CvForm } from "./CvForm";
+import { CvPassModal, remainingLabel } from "./CvPassModal";
 import { buildModel, EMPTY_CV, isCvEmpty, sampleCv, type CvData } from "./cvModel";
 import { buildCvPdf, paginate } from "./cvPdf";
 import { CV_TEMPLATES, CvPage, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type CvTemplate } from "./cvTemplates";
@@ -84,7 +85,19 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
   const [done, setDone] = useState<string | null>(null);
   const [pages, setPages] = useState(1);
   const tpl = getTemplate(templateId);
-  const paid = !!isAdmin || isPaidPlan();
+  const planState = useCurrentPlan();
+  const [passOpen, setPassOpen] = useState(false);
+  const [, setClock] = useState(0);
+  const passActive = hasCvPass(planState);
+  const paid = !!isAdmin || isPaidPlan(planState) || passActive;
+  // CV Geçişi bitince sayfa yenilenmeden şablonlar yeniden kilitlensin
+  useEffect(() => {
+    if (!planState.cvPassUntil) return;
+    const ms = Date.parse(planState.cvPassUntil) - Date.now();
+    if (!(ms > 0) || ms > 2_000_000_000) return;
+    const id = window.setTimeout(() => setClock((c) => c + 1), ms + 500);
+    return () => window.clearTimeout(id);
+  }, [planState.cvPassUntil]);
   const locked = !tpl.free && !paid;
   const signedIn = !!accessToken;
 
@@ -176,7 +189,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
       <section aria-label={tr ? "Şablonlar" : "Templates"} className="mb-5">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-[13px] font-bold uppercase tracking-wide text-slate-300">{tr ? `Şablonlar (${CV_TEMPLATES.length})` : `Templates (${CV_TEMPLATES.length})`}</h2>
-          {!paid ? <span className="text-[12px] text-slate-400">{tr ? "2 şablon ücretsiz · diğerleri Pro üyelere özel" : "2 templates free · the rest are for Pro members"}</span> : null}
+          {!paid ? <span className="text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</span> : passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 px-3 py-1 text-[12px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : null}
         </div>
         <div role="radiogroup" aria-label={tr ? "CV şablonu" : "CV template"} className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]">
           {CV_TEMPLATES.map((t) => {
@@ -248,7 +261,8 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                           <p className="mt-2 text-[15px] font-bold text-white">{tr ? "Bu şablon Pro üyelere özel" : "This template is for Pro members"}</p>
                           <p className="mt-1 text-[12.5px] leading-relaxed text-slate-300">{tr ? "Önizleme örnek içerikle gösteriliyor. Pro ile tüm şablonları kullanın ya da ücretsiz şablonlardan birini seçin." : "The preview shows sample content. Go Pro to use every template, or pick one of the free ones."}</p>
                           <div className="mt-4 flex flex-col gap-2">
-                            <button type="button" onClick={onUpgrade} className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-[13px] font-bold text-slate-900 hover:brightness-105">{tr ? "Pro'ya geç" : "Go Pro"}</button>
+                            <button type="button" onClick={onUpgrade} className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-[13px] font-bold text-slate-900 hover:brightness-105">{tr ? "Pro'ya geç (süresiz)" : "Go Pro (permanent)"}</button>
+                            <button type="button" onClick={() => setPassOpen(true)} className="rounded-xl bg-sky-500/20 px-4 py-2.5 text-[13px] font-bold text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30">{tr ? "CV Geçişi al (tek seferlik)" : "Get a CV pass (one-off)"}</button>
                             <button type="button" onClick={() => setTemplateId("sade")} className="rounded-xl bg-white/10 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/15">{tr ? "Ücretsiz şablona dön" : "Back to a free template"}</button>
                           </div>
                         </div>
@@ -295,6 +309,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
           </div>
         </>
       )}
+      {passOpen ? <CvPassModal language={language} accessToken={accessToken} onClose={() => setPassOpen(false)} onUpgrade={onUpgrade} /> : null}
     </div>
   );
 }

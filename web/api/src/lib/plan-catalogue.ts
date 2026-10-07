@@ -171,6 +171,43 @@ export const TOPUP_PACKS = [
 ] as const;
 
 /**
+ * CV GEÇİŞİ — tüm CV şablonlarını SÜRELİ açan tek seferlik ürün (abonelik DEĞİL, yenilenmez).
+ *
+ * NEDEN: Rakipler (Zety, Resume.io) ucuz deneme + pahalı otomatik yenileme satar ve en çok
+ * şikâyeti buradan alır. Biz "bir kez öde, bitir, git" diyen kullanıcıya yenilemesiz kısa geçiş
+ * satarız; abone olmak isteyen zaten Pro'ya geçer (Pro/Business tüm şablonları süresiz açar).
+ * Cihazda çalıştığı için marjinal maliyet SIFIRDIR → fiyat değer bazlıdır, maliyet bazlı değil.
+ * TL fiyat KDV dahildir. Fiyatlar tek yerden değişir; ücretsiz şablon sayısı frontend'dedir.
+ */
+export const CV_PASSES = [
+  { id: "cv-24h", hours: 24, priceUSD: 2.99, priceTRY: 49 },
+  { id: "cv-7d", hours: 168, priceUSD: 5.99, priceTRY: 99, popular: true },
+] as const;
+
+export function cvPassById(id: string) {
+  return CV_PASSES.find((p) => p.id === id) ?? null;
+}
+
+/** CV Geçişi için ödeme sağlayıcısına gidecek tutar (kredi paketiyle AYNI KDV kuralı). */
+export function cvPassCheckoutAmount(
+  pass: { priceTRY: number; priceUSD: number },
+  isForeign: boolean,
+): { currency: "TRY" | "USD"; amount: string } {
+  return topupCheckoutAmount(pass, isForeign);
+}
+
+/** Geçiş bitiş zamanı: süre, hâlâ geçerli bir geçişin ÜSTÜNE eklenir (üst üste satın almak süre kaybettirmez). */
+export function cvPassNewExpiry(current: Date | null | undefined, hours: number, nowMs: number = Date.now()): Date {
+  const base = Math.max(nowMs, current?.getTime() ?? 0);
+  return new Date(base + hours * 3_600_000);
+}
+
+/** Fatura kalemi adı. */
+export function cvPassInvoiceLabel(pass: { hours: number }): string {
+  return pass.hours >= 168 ? "CV Şablon Geçişi (7 gün)" : `CV Şablon Geçişi (${pass.hours} saat)`;
+}
+
+/**
  * SÖZLEŞME DENETÇİSİ hak bedeli ve maliyet modeli.
  *
  * ÖLÇÜM: 3,7 bin karakterlik tuzaklı örnek sözleşmede, claude-opus-5-5 ile 4 aşama

@@ -61,7 +61,7 @@ export const CV_PHOTO_POSTS = [
         { q: "CV kaç sayfa olmalı?", a: "Birkaç yıllık deneyimde tek sayfa genellikle yeterli, uzun kariyerlerde iki sayfa makuldür. Önemli olan sayfa sayısı değil, en ilgili bilginin ilk yarım sayfada görünmesidir." },
         { q: "CV'de hangi bilgiler yer almamalı?", a: "Başvuruyla ilgisiz kişisel ayrıntılar (T.C. kimlik numarası, tam ev adresi, banka bilgisi vb.) yazılmamalıdır. Şehir ve iletişim bilgisi yeterlidir." },
         { q: "Referansları yazmalı mıyım?", a: "Zorunlu değildir. İlan istiyorsa ya da referansınız güçlüyse ekleyin; değilse bu bölümü boş bırakın. CV Oluştur'da boş bölümler PDF'e eklenmez." },
-        { q: "CV'mi ücretsiz hazırlayabilir miyim?", a: "Evet. Ücretsiz üyelikle iki şablonu kullanıp PDF olarak indirebilirsiniz; bilgileriniz tarayıcınızda kalır." },
+        { q: "CV'mi ücretsiz hazırlayabilir miyim?", a: "Evet. Ücretsiz üyelikle dört şablonu kullanıp PDF olarak indirebilirsiniz; bilgileriniz tarayıcınızda kalır." },
       ],
     },
     {
@@ -106,7 +106,7 @@ export const CV_PHOTO_POSTS = [
         { q: "How long should a CV be?", a: "One page is usually enough for a few years of experience; two is reasonable for a long career. What matters is that the most relevant information appears in the first half page." },
         { q: "What should not be on a CV?", a: "Personal details unrelated to the application (national ID number, full home address, bank details) should be left out. A city and contact details are enough." },
         { q: "Do I need to list references?", a: "Not necessarily. Add them if the ad asks or your references are strong; otherwise leave the section out. In CV Maker, empty sections are not added to the PDF." },
-        { q: "Can I make my CV for free?", a: "Yes. With a free account you can use two templates and download a PDF; your details stay in your browser." },
+        { q: "Can I make my CV for free?", a: "Yes. With a free account you can use four templates and download a PDF; your details stay in your browser." },
       ],
     },
   ),

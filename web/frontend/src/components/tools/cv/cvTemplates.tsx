@@ -642,11 +642,11 @@ export const CV_TEMPLATES: CvTemplate[] = [
   T("net", "Net", "Clean", "Sol çizgili başlıklar ve ferah boşluklarla modern, okunaklı tek sütun.", "Modern single column with left-bar headings and airy spacing.", "single", true,
     { font: "carlito", accent: "#2563eb", heading: "bar", skills: "tags", photo: { shape: "rounded", w: 100, h: 100 } }),
   // ── Pro ──
-  T("klasik-serif", "Klasik Serif", "Classic Serif", "Ortalanmış ad, ince çizgiler: akademik ve hukuk başvurularına uygun ciddi bir görünüm.", "Centred name and fine rules — a serious look for academic and legal roles.", "single", false,
+  T("klasik-serif", "Klasik Serif", "Classic Serif", "Ortalanmış ad, ince çizgiler: akademik ve hukuk başvurularına uygun ciddi bir görünüm.", "Centred name and fine rules — a serious look for academic and legal roles.", "single", true,
     { font: "caladea", accent: "#3b3b3b", heading: "caps", align: "center", skills: "tags", photo: { shape: "rect", w: 92, h: 116 } }),
   T("zarif", "Zarif", "Elegant", "Bordo vurgulu, zarif serif yazı tipi; yönetici ve danışmanlık profilleri için.", "Burgundy accents with an elegant serif; suited to executive and consulting profiles.", "single", false,
     { font: "gelasio", accent: "#8a1c3b", heading: "rule", align: "center", skills: "tags", photo: { shape: "circle", w: 104, h: 104 } }),
-  T("modern-mavi", "Modern Mavi", "Modern Blue", "Mavi kenar çubuğu, yuvarlak fotoğraf ve beceri çubukları.", "Blue sidebar, round photo and skill bars.", "sidebar", false,
+  T("modern-mavi", "Modern Mavi", "Modern Blue", "Mavi kenar çubuğu, yuvarlak fotoğraf ve beceri çubukları.", "Blue sidebar, round photo and skill bars.", "sidebar", true,
     { font: "carlito", accent: "#1d4ed8", heading: "rule", skills: "bars", photo: { shape: "circle", w: 128, h: 128 }, side: { pos: "left", bg: "#1e3a8a", fg: "#ffffff", muted: "#bfd0ff", width: 260 } }),
   T("kurumsal", "Kurumsal Lacivert", "Corporate Navy", "Koyu lacivert kenar çubuğu; kurumsal başvurular için ağırbaşlı bir düzen.", "Dark navy sidebar; a dignified layout for corporate applications.", "sidebar", false,
     { font: "arial", accent: "#0f2a4a", heading: "caps", skills: "plain", photo: { shape: "rect", w: 150, h: 180 }, side: { pos: "left", bg: "#0f2a4a", fg: "#ffffff", muted: "#aebed3", width: 250 } }),

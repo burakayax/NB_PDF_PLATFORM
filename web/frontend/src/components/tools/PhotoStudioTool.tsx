@@ -19,7 +19,7 @@ import {
 import { zipSync } from "fflate";
 import type { Language } from "../../i18n/landing";
 import { ToolRating } from "../common/ToolRating";
-import { isPaidPlan } from "../../lib/currentPlan";
+import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
 import { warmUp } from "../../lib/photoStudio/ai";
 import {
   analyzeBase,
@@ -143,7 +143,8 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
   const composedRef = useRef<HTMLCanvasElement | null>(null);
   const [guides, setGuides] = useState<ReturnType<typeof compose>["guides"] | null>(null);
 
-  const gate: null | "login" | "upgrade" = !accessToken ? "login" : !(isAdmin || isPaidPlan()) ? "upgrade" : null;
+  const planState = useCurrentPlan();
+  const gate: null | "login" | "upgrade" = !accessToken ? "login" : !(isAdmin || isPaidPlan(planState)) ? "upgrade" : null;
 
   const preset: PhotoPreset = useMemo(() => {
     if (presetId === CUSTOM_PRESET_ID) {

@@ -231,6 +231,8 @@ model User {
   lastLoginAt     DateTime?        @map("last_login_at")
   // Top-up ile satın alınan ek AI kredisi (aylık kota bitince kullanılır, aylar arası kalıcı).
   bonusAiCredits  Int              @default(0) @map("bonus_ai_credits")
+  // CV Geçişi: bu tarihe kadar tüm CV şablonları açık (tek seferlik satın alma; yenilenmez).
+  cvPassUntil     DateTime?        @map("cv_pass_until")
 
   refreshTokens RefreshToken[]
   signatureRequests SignatureRequest[] @relation("SignatureRequestOwner")
@@ -327,6 +329,8 @@ model PaymentCheckout {
   seatsOnly                   Boolean   @default(false) @map("seats_only")
   // Top-up (ek AI kredisi) satın alması → bu değer doluysa plan aktive edilmez, kredi eklenir.
   bonusAiCredits              Int?      @map("bonus_ai_credits")
+  // CV Geçişi satın alması (saat). Doluysa plan aktive edilmez, User.cvPassUntil uzatılır.
+  cvPassHours                 Int?      @map("cv_pass_hours")
   createdAt        DateTime  @default(now())
   completedAt      DateTime?
   refundedAt       DateTime? @map("refunded_at")
