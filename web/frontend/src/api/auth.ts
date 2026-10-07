@@ -299,11 +299,9 @@ export async function fetchAuthenticatedUser(
   return payload.user;
 }
 
-export function getGoogleOAuthStartUrl(language: Language, termsAccepted = false) {
+export function getGoogleOAuthStartUrl(language: Language) {
   const lang = language === "tr" ? "tr" : "en";
   let url = buildSaasApiUrl(`/api/auth/google?lang=${encodeURIComponent(lang)}`);
-  // Yeni hesap açılacaksa sunucu bu işareti ister (kayıt ekranındaki zorunlu kutular işaretlendi).
-  if (termsAccepted) url += "&terms=1";
   if (typeof window !== "undefined" && window.location?.origin) {
     url += `&frontend_origin=${encodeURIComponent(window.location.origin)}`;
   }
@@ -462,4 +460,23 @@ export async function kapatDigerOturumlar(accessToken: string): Promise<number> 
   await ensureOk(response, "Sessions could not be closed.");
   const payload = (await response.json()) as { closed?: number };
   return payload.closed ?? 0;
+}
+
+export type GoogleSignupCompletePayload = {
+  token: string;
+  termsAccepted: true;
+  privacyNoticeRead: true;
+  ageConfirmed: true;
+  marketingConsent?: boolean;
+};
+
+/** Google ile gelen YENİ kişi onay ekranını tamamlayınca hesabı açar; { accessToken } döner. */
+export async function completeGoogleSignup(payload: GoogleSignupCompletePayload): Promise<{ accessToken: string }> {
+  const response = await saasFetch("/api/auth/google/complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  await ensureOk(response, "Could not complete sign-up.");
+  return response.json() as Promise<{ accessToken: string }>;
 }
