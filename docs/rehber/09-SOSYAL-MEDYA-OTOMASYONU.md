@@ -145,6 +145,25 @@ yayın anında” seçilirse eski davranışa dönülür — gönderi üretildi�
 Durum kartında hazırlığa ne kadar kaldığı, hazırlık yapıldıysa da “yayın saatini
 bekliyor” bilgisi yazar.
 
+## Panelde önizleme, son paylaşımlar ve Temizle
+
+- **Tam önizleme:** Her gönderi kartındaki görsel, gideceği gibi gösterilir: Instagram'da
+  kaydırmalı gönderinin **tüm slaytları** (ok düğmeleri ya da klavye okları), Reels'te video.
+  "Tam önizleme" düğmesi gönderiyi platformdaki düzeniyle açar: hesap adı, medya ve metnin
+  **tamamı** (kısaltma yok). Yayınlanmış gönderilerde, yayın anında gerçekten kullanılan
+  slaytlar kaydedilir ve onlar gösterilir; bu özellikten önce paylaşılmış gönderiler tek
+  görsel olarak görünür.
+- **Son paylaşımlar:** Akış sekmesinin altında **her ağ için ayrı** son 5 paylaşım listelenir
+  (Instagram'ın son 5'i, Facebook'un son 5'i …). Her satırdan önizleme açılır, gerçek
+  gönderi bağlantısı açılır, kayıt panelden kaldırılır.
+- **Temizle:** "Son paylaşımlar" başlığındaki düğme, paylaşılmış ve atlanmış kayıtları
+  temizler. Önemli: Instagram/Facebook'taki **gerçek gönderilere dokunulmaz**; yalnızca bu
+  paneldeki kayıtlar gider. Varsayılan olarak kayıtlar silinmez, **gizlenir** — çünkü
+  sistem bir yazının daha önce paylaşılıp paylaşılmadığını bu kayıtlara bakarak anlar;
+  gerçekten silinirse sıra başa döner ve aynı yazılar yeniden paylaşılır. Onay penceresindeki
+  "Paylaşım sırasını da sıfırla" kutusunu işaretlersen kayıtlar gerçekten silinir ve sıra
+  en baştan başlar. İşlem denetim kaydına yazılır.
+
 ## Elle paylaşmak
 
 **Her gönderi kartında** — taslakta, sırada bekleyende ve geçmişte paylaşılmış
