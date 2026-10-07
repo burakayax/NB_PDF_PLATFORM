@@ -134,6 +134,9 @@ type AuthSubmitPayload = {
   phone?: string;
   city?: string;
   marketingConsent?: boolean;
+  termsAccepted?: boolean;
+  privacyNoticeRead?: boolean;
+  ageConfirmed?: boolean;
 };
 
 type AuthPageProps = {
@@ -253,6 +256,13 @@ export function AuthPage({
   const [showPassword, setShowPassword] = useState(false);
   const [registerCity, setRegisterCity] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
+  // Kayıtta ZORUNLU onaylar (üçü de varsayılan KAPALI; sunucu da zorunlu tutar).
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyNoticeRead, setPrivacyNoticeRead] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const requiredAccepted = termsAccepted && privacyNoticeRead && ageConfirmed;
+  const tr = language === "tr";
+  const [acceptErr, setAcceptErr] = useState("");
   const [urlAuthError, setUrlAuthError] = useState("");
   const [urlEmailVerifiedNotice, setUrlEmailVerifiedNotice] = useState(false);
 
@@ -360,6 +370,10 @@ export function AuthPage({
     }
 
     if (hasErr) return;
+    if (mode === "register" && !requiredAccepted) {
+      setAcceptErr(tr ? "Devam etmek için zorunlu onay kutularını işaretleyin." : "Please tick the required boxes to continue.");
+      return;
+    }
 
     try {
       if (mode === "register") {
@@ -370,6 +384,9 @@ export function AuthPage({
           password,
           city: registerCity.trim() || undefined,
           marketingConsent,
+          termsAccepted,
+          privacyNoticeRead,
+          ageConfirmed,
         });
         // Kazanım dönüşümü — onSubmit hata fırlatmadıysa kayıt başarılı.
         trackFunnelEvent("sign_up_completed", { method: "email" });
@@ -379,6 +396,9 @@ export function AuthPage({
         setEmail("");
         setPassword("");
         setMarketingConsent(false);
+        setTermsAccepted(false);
+        setPrivacyNoticeRead(false);
+        setAgeConfirmed(false);
       } else {
         await onSubmit({ email, password });
       }
@@ -478,8 +498,14 @@ export function AuthPage({
           )}
 
           <a
-            href={getGoogleOAuthStartUrl(language)}
-            onClick={() => {
+            href={getGoogleOAuthStartUrl(language, mode === "register" && requiredAccepted)}
+            aria-disabled={mode === "register" && !requiredAccepted}
+            onClick={(e) => {
+              if (mode === "register" && !requiredAccepted) {
+                e.preventDefault();
+                setAcceptErr(tr ? "Google ile devam etmeden önce aşağıdaki zorunlu onay kutularını işaretleyin." : "Please tick the required boxes below before continuing with Google.");
+                return;
+              }
               if (adminPortal) {
                 sessionStorage.setItem(
                   SESSION_POST_OAUTH_REDIRECT_KEY,
@@ -492,6 +518,9 @@ export function AuthPage({
             <GoogleMark />
             {copy.shared.continueWithGoogle}
           </a>
+          {mode === "register" && acceptErr && !requiredAccepted ? (
+            <p role="alert" className="mt-2 text-xs leading-snug text-rose-400">{acceptErr}</p>
+          ) : null}
 
           <div className="relative my-8">
             <div
@@ -720,6 +749,57 @@ export function AuthPage({
             ) : null}
 
             {mode === "register" ? (
+              /* ZORUNLU kayıt onayları: Hizmet Şartları + Gizlilik, KVKK aydınlatma (okundu), 18 yaş.
+                 Aydınlatma bir bilgilendirmedir, açık rıza değildir; bu yüzden ayrı bir "okudum" kutusudur.
+                 Metinler değişirse sunucudaki TERMS_VERSION da güncellenmelidir. */
+              <div className="space-y-2.5 text-left">
+                <label className="flex cursor-pointer items-start gap-2.5">
+                  <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500" />
+                  <span className="text-[12px] leading-relaxed text-slate-300">
+                    {tr ? (
+                      <>
+                        <button type="button" onClick={onOpenTerms} className="underline underline-offset-2 hover:text-white">Hizmet Şartları</button>
+                        {" ve "}
+                        <button type="button" onClick={onOpenPrivacy} className="underline underline-offset-2 hover:text-white">Gizlilik Politikası</button>
+                        {"’nı okudum ve kabul ediyorum."} <span className="text-red-400">*</span>
+                      </>
+                    ) : (
+                      <>
+                        I have read and accept the{" "}
+                        <button type="button" onClick={onOpenTerms} className="underline underline-offset-2 hover:text-white">Terms of Service</button>
+                        {" and "}
+                        <button type="button" onClick={onOpenPrivacy} className="underline underline-offset-2 hover:text-white">Privacy Policy</button>. <span className="text-red-400">*</span>
+                      </>
+                    )}
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-2.5">
+                  <input type="checkbox" checked={privacyNoticeRead} onChange={(e) => setPrivacyNoticeRead(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500" />
+                  <span className="text-[12px] leading-relaxed text-slate-300">
+                    {tr ? (
+                      <>
+                        <button type="button" onClick={onOpenKvkk} className="underline underline-offset-2 hover:text-white">KVKK Aydınlatma Metni</button>
+                        {"’ni okudum."} <span className="text-red-400">*</span>
+                      </>
+                    ) : (
+                      <>
+                        I have read the{" "}
+                        <button type="button" onClick={onOpenKvkk} className="underline underline-offset-2 hover:text-white">privacy (KVKK) notice</button>. <span className="text-red-400">*</span>
+                      </>
+                    )}
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-2.5">
+                  <input type="checkbox" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500" />
+                  <span className="text-[12px] leading-relaxed text-slate-300">
+                    {tr ? "18 yaşını doldurduğumu beyan ederim." : "I confirm that I am at least 18 years old."} <span className="text-red-400">*</span>
+                  </span>
+                </label>
+                {acceptErr && !requiredAccepted ? <p role="alert" className="text-xs leading-snug text-rose-400">{acceptErr}</p> : null}
+              </div>
+            ) : null}
+
+            {mode === "register" ? (
               /* Ticari ileti onayı.
                  Kutu varsayılan olarak KAPALI ve işaretlenmesi isteğe bağlı —
                  önceden işaretli kutu geçerli onay sayılmaz.
@@ -757,7 +837,7 @@ export function AuthPage({
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || (mode === "register" && !requiredAccepted)}
               className="inline-flex min-h-[3.25rem] w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-6 text-base font-semibold text-slate-950 shadow-[0_16px_40px_-12px_rgba(34,211,238,0.45)] transition duration-200 ease-out hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting && mode === "login" ? (
@@ -795,11 +875,13 @@ export function AuthPage({
             </p>
           ) : null}
 
-          <p className="mt-6 text-center text-[11px] leading-relaxed text-nb-muted">
-            {language === "tr"
-              ? "Hesap oluşturarak veya Google ile devam ederek Hizmet Şartları’nı ve Gizlilik Politikası’nı okuduğunuzu ve kabul ettiğinizi beyan edersiniz."
-              : "By creating an account or continuing with Google, you confirm that you have read and accept the Terms of Service and Privacy Policy."}
-          </p>
+          {mode === "login" ? (
+            <p className="mt-6 text-center text-[11px] leading-relaxed text-nb-muted">
+              {language === "tr"
+                ? "Yeni hesap açmak için «Kayıt ol» ekranında Hizmet Şartları, Gizlilik ve KVKK onaylarını işaretlemeniz gerekir."
+                : "To create a new account, tick the Terms, Privacy and KVKK confirmations on the Register screen."}
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
             <button
               type="button"

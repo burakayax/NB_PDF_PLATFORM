@@ -16,13 +16,14 @@ export const legalDocuments = {
       summary:
         "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding PDF Platform. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "6 October 2026",
+      effectiveDate: "7 October 2026",
       sections: [
         {
           title: "1. Who we are and what you accept",
           paragraphs: [
             "PDF Platform is operated by NB Global Studio (“we”, “us”). By creating an account, subscribing, or otherwise using the service, you confirm that you have read these Terms and agree to be bound by them.",
             "If you use the service on behalf of a company, you represent that you are authorized to accept these Terms for that organization.",
+            "You must be at least 18 years old to create an account and use the service.",
           ],
         },
         {
@@ -102,7 +103,7 @@ export const legalDocuments = {
       summary:
         "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use PDF Platform (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "6 October 2026",
+      effectiveDate: "7 October 2026",
       sections: [
         {
           title: "1. Data controller",
@@ -166,6 +167,7 @@ export const legalDocuments = {
           paragraphs: [
             "We retain personal data for the specific periods set out below, after which data is deleted or anonymized:",
             "Account data: retained while your account is active and for 30 days after a deletion request is processed.",
+            "Sign-up confirmation records (acceptance of the Terms and Privacy Policy, privacy notice read, age declaration; time, version and IP address): until your account is deleted.",
             "Operation logs: 90 days from the date of creation, then archived; archived records are deleted one year after creation.",
             "Download logs: 90 days from the date of creation (including IP address and browser information); after that the IP address and browser information are erased, and the record is deleted one year after creation.",
             "Output file fingerprints (a SHA-256 hash, size, tool and plan of files produced on our servers; never the file content), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
@@ -209,7 +211,7 @@ export const legalDocuments = {
         {
           title: "10. Children",
           paragraphs: [
-            "PDF Platform is not directed at children under the age where parental consent is required in their jurisdiction. We do not knowingly collect personal data from such children.",
+            "PDF Platform is not directed at anyone under 18; you must be at least 18 years old to create an account. We do not knowingly collect personal data from persons under 18.",
           ],
         },
         {
@@ -375,13 +377,14 @@ export const legalDocuments = {
       summary:
         "İşbu Hizmet Şartları (“Şartlar”), PDF Platform’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "6 Ekim 2026",
+      effectiveDate: "7 Ekim 2026",
       sections: [
         {
           title: "1. Taraflar ve kabul",
           paragraphs: [
             "PDF Platform, NB Global Studio (“biz”) tarafından işletilir. Hesap oluşturarak, abone olarak veya hizmeti başka şekilde kullanarak bu Şartları okuduğunuzu ve bunlara uymayı kabul ettiğinizi beyan edersiniz.",
             "Hizmeti bir işletme adına kullanıyorsanız, bu Şartları o kuruluş adına kabul etmeye yetkili olduğunuzu taahhüt edersiniz.",
+            "Hesap oluşturmak ve hizmeti kullanmak için 18 yaşını doldurmuş olmanız gerekir.",
           ],
         },
         {
@@ -461,7 +464,7 @@ export const legalDocuments = {
       summary:
         "Bu Gizlilik Politikası, PDF Platform’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "6 Ekim 2026",
+      effectiveDate: "7 Ekim 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",
@@ -526,6 +529,7 @@ export const legalDocuments = {
           paragraphs: [
             "Kişisel verileri aşağıda belirtilen süreler boyunca saklarız; süre dolduğunda veriler silinir veya anonimleştirilir:",
             "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
+            "Hesap açılışındaki onay kayıtları (Hizmet Şartları/Gizlilik kabulü, aydınlatma okundu, 18 yaş beyanı; zaman, sürüm ve IP adresi): hesabınız silinene kadar.",
             "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; sonrasında arşivlenir ve oluşturulmasından 1 yıl sonra silinir.",
             "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün (IP adresi ve tarayıcı bilgisi dahil); sonrasında IP adresi ve tarayıcı bilgisi silinir, kayıt oluşturulmasından 1 yıl sonra tamamen silinir.",
             "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
@@ -569,7 +573,7 @@ export const legalDocuments = {
         {
           title: "10. Çocuklar",
           paragraphs: [
-            "PDF Platform, bulunduğu ülkede ebeveyn onayı gerektiren yaşın altındaki çocuklara yönelik değildir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
+            "PDF Platform 18 yaşın altındaki kişilere yönelik değildir; hesap oluşturmak için 18 yaşını doldurmuş olmanız gerekir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
           ],
         },
         {

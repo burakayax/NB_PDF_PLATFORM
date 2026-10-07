@@ -65,6 +65,12 @@ export const registerSchema = z.object({
     .optional(),
   /** Ticari/pazarlama e-posta opt-in izni (GDPR/CASL/6563). Varsayılan izinsiz. */
   marketingConsent: z.boolean().optional(),
+  /** ZORUNLU: Hizmet Şartları ve Gizlilik Politikası'nın kabulü. */
+  termsAccepted: z.literal(true, { message: "You must accept the Terms of Service and Privacy Policy." }),
+  /** ZORUNLU: KVKK aydınlatma metninin okunduğu beyanı (bilgilendirme; açık rıza DEĞİL). */
+  privacyNoticeRead: z.literal(true, { message: "You must confirm that you have read the privacy notice." }),
+  /** ZORUNLU: 18 yaşını doldurduğu beyanı. */
+  ageConfirmed: z.literal(true, { message: "You must confirm that you are at least 18 years old." }),
 });
 
 export const preferredLanguageSchema = z.object({

@@ -248,6 +248,7 @@ model User {
   downloadLogs     DownloadLog[]
   outputRecords    OutputRecord[]
   aiRequestLogs    AiRequestLog[]
+  legalAcceptances LegalAcceptanceLog[]
   contractReviewLogs ContractReviewLog[]
   couponUses       CouponUse[]
   operationLogs    OperationLog[]
@@ -1164,4 +1165,22 @@ model FinancialRecordArchive {
   @@index([emailSnapshot])
   @@index([retainUntil])
   @@map("financial_record_archives")
+}
+
+// Kayıt anındaki yasal kabul kayıtları (kanıt): hangi sürüm, ne zaman, hangi bağlantıdan.
+// kind: terms_and_privacy (Hizmet Şartları + Gizlilik Politikası kabulü) | privacy_notice_read (KVKK aydınlatma okundu) | age_18 (18 yaşını doldurdu)
+model LegalAcceptanceLog {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  kind      String   @map("kind")
+  version   String   @map("version")
+  via       String   @default("email") @map("via")
+  ip        String?  @map("ip")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("legal_acceptance_logs")
 }

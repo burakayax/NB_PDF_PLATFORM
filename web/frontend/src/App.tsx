@@ -4171,6 +4171,9 @@ function App() {
     phone?: string;
     city?: string;
     marketingConsent?: boolean;
+    termsAccepted?: boolean;
+    privacyNoticeRead?: boolean;
+    ageConfirmed?: boolean;
   }) {
     try {
       setAuthSubmitting(true);
@@ -4196,6 +4199,9 @@ function App() {
           phone: payload.phone?.trim() || undefined,
           city: payload.city?.trim() || undefined,
           marketingConsent: payload.marketingConsent === true,
+          termsAccepted: payload.termsAccepted === true ? true : (undefined as unknown as true),
+          privacyNoticeRead: payload.privacyNoticeRead === true ? true : (undefined as unknown as true),
+          ageConfirmed: payload.ageConfirmed === true ? true : (undefined as unknown as true),
         });
         setRegistrationSuccessBanner(
           language === "tr"
@@ -4298,6 +4304,9 @@ function App() {
     phone?: string;
     city?: string;
     marketingConsent?: boolean;
+    termsAccepted?: boolean;
+    privacyNoticeRead?: boolean;
+    ageConfirmed?: boolean;
   }) {
     try {
       setAuthSubmitting(true);
@@ -4323,6 +4332,9 @@ function App() {
           phone: payload.phone?.trim() || undefined,
           city: payload.city?.trim() || undefined,
           marketingConsent: payload.marketingConsent === true,
+          termsAccepted: payload.termsAccepted === true ? true : (undefined as unknown as true),
+          privacyNoticeRead: payload.privacyNoticeRead === true ? true : (undefined as unknown as true),
+          ageConfirmed: payload.ageConfirmed === true ? true : (undefined as unknown as true),
         });
         setRegistrationSuccessBanner(
           language === "tr"
