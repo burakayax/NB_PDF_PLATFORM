@@ -307,6 +307,7 @@ export function isPublicApiPath(method: string, path: string): boolean {
     if (p === "/auth/logout" && method === "POST") return true;
     if (p === "/auth/google" && method === "GET") return true;
     if (p === "/auth/google/callback" && method === "GET") return true;
+    if (p === "/auth/google/complete" && method === "POST") return true;
     if (p === "/auth/verify-email" && method === "GET") return true;
     if (p.startsWith("/auth/forgot-password/") && method === "POST") return true;
   }

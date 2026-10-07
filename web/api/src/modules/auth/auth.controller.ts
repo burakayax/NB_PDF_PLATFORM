@@ -1,4 +1,8 @@
 import type { CookieOptions, Request, Response } from "express";
+import { z } from "zod";
+import { prisma } from "../../lib/prisma.js";
+import { signGoogleSignupToken, verifyGoogleSignupToken } from "../../lib/google-signup-token.js";
+import { recordMarketingConsent, SIGNUP_CONSENT_TEXT } from "../email/marketing-consent.service.js";
 import {
   logGoogleOAuth,
   logLoginAttempt,
@@ -42,6 +46,7 @@ import {
   refreshSession,
   registerUser,
   signInWithGoogle,
+  GoogleTermsRequiredError,
   type AuthSessionResult,
   updatePreferredLanguage,
   updateUserProfile,
@@ -155,7 +160,6 @@ export function parseOAuthStateCookieValue(rawCookie: string): {
   preferredLanguage: "tr" | "en";
   desktopLocalPort: number | null;
   frontendOriginRaw: string | null;
-  termsAccepted: boolean;
 } {
   const parts = rawCookie.split("|");
   const csrfToken = parts[0] ?? "";
@@ -184,10 +188,7 @@ export function parseOAuthStateCookieValue(rawCookie: string): {
     }
   }
 
-  // "…|terms|1": kullanıcı kayıt ekranında zorunlu onayları işaretleyip Google'a gitti.
-  const termsAccepted = parts.some((p, i) => p === "terms" && parts[i + 1] === "1");
-
-  return { csrfToken, preferredLanguage, desktopLocalPort, frontendOriginRaw, termsAccepted };
+  return { csrfToken, preferredLanguage, desktopLocalPort, frontendOriginRaw };
 }
 
 function oauthRedirectBaseFromRequestCookie(request: Request): string {
@@ -201,7 +202,7 @@ function oauthRedirectBaseFromRequestCookie(request: Request): string {
 
 /** Google OAuth sonrası SPA yönlendirmeleri (JSON yok; yalnızca redirect). */
 function oauthFrontendRedirect(
-  path: "login-success" | "login-error",
+  path: "login-success" | "login-error" | "google-signup",
   query?: Record<string, string>,
   redirectOriginBase?: string,
 ) {
@@ -725,9 +726,6 @@ export async function googleOAuthStartController(
   if (trustedFrontendOrigin) {
     oauthCookieValue += `|fe|${encodeURIComponent(trustedFrontendOrigin)}`;
   }
-  if (request.query.terms === "1") {
-    oauthCookieValue += "|terms|1";
-  }
   response.cookie(
     OAUTH_STATE_COOKIE,
     oauthCookieValue,
@@ -927,17 +925,43 @@ export async function googleOAuthCallbackController(
     );
     const profile = await fetchGoogleProfile(googleAccess);
 
-    const session = await signInWithGoogle({
-      email: profile.email,
-      googleId: profile.googleId,
-      name: profile.name,
-      givenName: profile.givenName,
-      familyName: profile.familyName,
-      avatar: profile.avatar,
-      preferredLanguage,
-      termsAccepted: parsedOAuth.termsAccepted,
-      consentContext: { ip: request.ip ?? null, userAgent: request.get("user-agent") ?? null },
-    });
+    let session: AuthSessionResult;
+    try {
+      session = await signInWithGoogle({
+        email: profile.email,
+        googleId: profile.googleId,
+        name: profile.name,
+        givenName: profile.givenName,
+        familyName: profile.familyName,
+        avatar: profile.avatar,
+        preferredLanguage,
+        termsAccepted: false,
+      });
+    } catch (e) {
+      if (!(e instanceof GoogleTermsRequiredError)) throw e;
+      // Yeni kişi: hesap AÇILMADAN önce onay ekranı (Hizmet Şartları, Gizlilik, KVKK aydınlatma, 18 yaş).
+      if (desktopLocalPort !== null) {
+        const url = oauthFrontendRedirect(
+          "login-error",
+          { reason: "Please create your account on pdfplatform.app first, then sign in from the desktop app." },
+          oauthSpaRedirectBase,
+        );
+        response.redirect(url);
+        return;
+      }
+      const token = signGoogleSignupToken({
+        email: profile.email,
+        googleId: profile.googleId,
+        name: profile.name,
+        givenName: profile.givenName,
+        familyName: profile.familyName,
+        avatar: profile.avatar,
+        preferredLanguage,
+      });
+      logGoogleOAuth({ outcome: "success", step: "callback", email: profile.email, ...meta });
+      response.redirect(oauthFrontendRedirect("google-signup", { token }, oauthSpaRedirectBase));
+      return;
+    }
 
     response.cookie(
       REFRESH_COOKIE_NAME,
@@ -1143,4 +1167,45 @@ export async function revokeOtherSessionsController(request: Request, response: 
   const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as string | undefined;
   const kapatilan = await kapatDigerOturumlar(userId, refreshToken);
   response.json({ closed: kapatilan });
+}
+
+const googleSignupCompleteSchema = z.object({
+  token: z.string().min(20).max(4000),
+  termsAccepted: z.literal(true, { message: "You must accept the Terms of Service and Privacy Policy." }),
+  privacyNoticeRead: z.literal(true, { message: "You must confirm that you have read the privacy notice." }),
+  ageConfirmed: z.literal(true, { message: "You must confirm that you are at least 18 years old." }),
+  marketingConsent: z.boolean().optional(),
+});
+
+/**
+ * POST /api/auth/google/complete — Google ile gelen YENİ kişi, onay ekranında zorunlu kutuları işaretledikten
+ * sonra hesabı burada açılır. Jeton /google/callback'te üretilir (15 dk). Yanıt: { accessToken }.
+ */
+export async function googleSignupCompleteController(request: Request, response: Response) {
+  const parsed = googleSignupCompleteSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request.");
+  }
+  let profile;
+  try {
+    profile = verifyGoogleSignupToken(parsed.data.token);
+  } catch {
+    throw new HttpError(400, "The sign-up link has expired. Please try Google sign-in again.");
+  }
+  const ctx = { ip: request.ip ?? null, userAgent: request.get("user-agent") ?? null };
+  const session = await signInWithGoogle({ ...profile, termsAccepted: true, consentContext: ctx });
+  if (parsed.data.marketingConsent === true) {
+    await prisma.user.update({ where: { id: session.user.id }, data: { marketingConsent: true, marketingConsentAt: new Date() } });
+    await recordMarketingConsent({
+      userId: session.user.id,
+      email: session.user.email,
+      granted: true,
+      source: "signup",
+      consentText: SIGNUP_CONSENT_TEXT[profile.preferredLanguage],
+      ip: ctx.ip,
+      userAgent: ctx.userAgent,
+    });
+  }
+  response.cookie(REFRESH_COOKIE_NAME, session.refreshToken, getCookieOptions());
+  response.status(200).json({ accessToken: session.accessToken });
 }

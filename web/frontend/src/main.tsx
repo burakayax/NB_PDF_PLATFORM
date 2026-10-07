@@ -10,6 +10,7 @@ import { installProductionGuards, installChunkReloadGuard } from "./lib/producti
 import { getCountryCode } from "./lib/geoCountry";
 import { NotFoundPage } from "./components/common/NotFoundPage";
 import { SignDocumentPage } from "./components/tools/SignDocumentPage";
+import { GoogleSignupPage } from "./components/auth/GoogleSignupPage";
 import { TOOL_SLUGS } from "./seo/seoContent.mjs";
 import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/usePreferredLanguage";
@@ -98,8 +99,17 @@ function imzaAnahtari(): string | null {
 
 const kok = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 const imzaToken = imzaAnahtari();
+const googleKayitSayfasi = window.location.pathname.replace(/\/+$/, "") === "/google-signup";
 
-if (imzaToken) {
+if (googleKayitSayfasi) {
+  kok.render(
+    <React.StrictMode>
+      <GlobalErrorBoundary>
+        <GoogleSignupPage />
+      </GlobalErrorBoundary>
+    </React.StrictMode>,
+  );
+} else if (imzaToken) {
   kok.render(
     <React.StrictMode>
       <GlobalErrorBoundary>

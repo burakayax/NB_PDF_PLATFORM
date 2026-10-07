@@ -498,14 +498,8 @@ export function AuthPage({
           )}
 
           <a
-            href={getGoogleOAuthStartUrl(language, mode === "register" && requiredAccepted)}
-            aria-disabled={mode === "register" && !requiredAccepted}
-            onClick={(e) => {
-              if (mode === "register" && !requiredAccepted) {
-                e.preventDefault();
-                setAcceptErr(tr ? "Google ile devam etmeden önce aşağıdaki zorunlu onay kutularını işaretleyin." : "Please tick the required boxes below before continuing with Google.");
-                return;
-              }
+            href={getGoogleOAuthStartUrl(language)}
+            onClick={() => {
               if (adminPortal) {
                 sessionStorage.setItem(
                   SESSION_POST_OAUTH_REDIRECT_KEY,
@@ -518,8 +512,12 @@ export function AuthPage({
             <GoogleMark />
             {copy.shared.continueWithGoogle}
           </a>
-          {mode === "register" && acceptErr && !requiredAccepted ? (
-            <p role="alert" className="mt-2 text-xs leading-snug text-rose-400">{acceptErr}</p>
+          {!adminPortal ? (
+            <p className="mt-2 text-center text-[11px] leading-relaxed text-nb-muted">
+              {tr
+                ? "Google ile ilk kez devam ediyorsanız hesabınızı açmadan önce Hizmet Şartları, Gizlilik ve KVKK onaylarınız ayrıca istenir."
+                : "If this is your first time with Google, you will be asked to confirm the Terms, Privacy and KVKK notices before your account is created."}
+            </p>
           ) : null}
 
           <div className="relative my-8">
@@ -875,13 +873,7 @@ export function AuthPage({
             </p>
           ) : null}
 
-          {mode === "login" ? (
-            <p className="mt-6 text-center text-[11px] leading-relaxed text-nb-muted">
-              {language === "tr"
-                ? "Yeni hesap açmak için «Kayıt ol» ekranında Hizmet Şartları, Gizlilik ve KVKK onaylarını işaretlemeniz gerekir."
-                : "To create a new account, tick the Terms, Privacy and KVKK confirmations on the Register screen."}
-            </p>
-          ) : null}
+
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
             <button
               type="button"

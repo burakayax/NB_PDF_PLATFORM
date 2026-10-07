@@ -8,6 +8,7 @@ import {
   exportMyDataController,
   googleOAuthCallbackController,
   googleOAuthStartController,
+  googleSignupCompleteController,
   loginController,
   logoutController,
   meController,
@@ -33,6 +34,8 @@ export const authRouter = Router();
 
 authRouter.get("/google", asyncHandler(googleOAuthStartController));
 authRouter.get("/google/callback", asyncHandler(googleOAuthCallbackController));
+// Google ile YENİ hesap: onay ekranından sonra hesabı açar (kayıt benzeri; aynı hız sınırı).
+authRouter.post("/google/complete", loginLimiter, asyncHandler(googleSignupCompleteController));
 authRouter.post("/forgot-password/request", forgotPasswordLimiter, asyncHandler(forgotPasswordRequestController));
 authRouter.post("/forgot-password/verify-code", forgotPasswordLimiter, asyncHandler(forgotPasswordVerifyController));
 authRouter.post("/forgot-password/reset", forgotPasswordLimiter, asyncHandler(forgotPasswordResetController));

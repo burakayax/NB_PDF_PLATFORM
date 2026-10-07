@@ -980,6 +980,13 @@ export async function setInitialPasswordForUser(
   return toPublicUser(updated);
 }
 
+/** Google ile gelen kişi yeni; hesap açmadan önce onay ekranı gösterilmeli. */
+export class GoogleTermsRequiredError extends HttpError {
+  constructor() {
+    super(403, "Terms acceptance is required to create an account with Google.");
+  }
+}
+
 export async function signInWithGoogle(params: {
   email: string;
   googleId: string;
@@ -1086,10 +1093,7 @@ export async function signInWithGoogle(params: {
 
   // Yeni hesap: Hizmet Şartları/Gizlilik/aydınlatma/18 yaş onayı olmadan Google ile de hesap açılmaz.
   if (!params.termsAccepted) {
-    throw new HttpError(
-      403,
-      "To create an account with Google, please use the Register page and accept the Terms of Service first.",
-    );
+    throw new GoogleTermsRequiredError();
   }
 
   let persistedGoogleUser: User = await prisma.user.create({
