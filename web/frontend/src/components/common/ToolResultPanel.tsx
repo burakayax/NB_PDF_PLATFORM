@@ -42,7 +42,7 @@ const L = {
   tr: {
     ready: "PDF hazır",
     readyGeneric: "Dosyan hazır",
-    subDevice: "Dosyan cihazından hiç çıkmadı.",
+    subDevice: "Dosyan sunucuya yüklenmedi.",
     subServer: "İşlem tamamlandı. İndir'e basınca kaydetme yerini soracağız.",
     download: "İndir",
     downloaded: "İndirildi",
@@ -55,7 +55,7 @@ const L = {
   en: {
     ready: "Your PDF is ready",
     readyGeneric: "Your file is ready",
-    subDevice: "Your file never left your device.",
+    subDevice: "Your file was not uploaded to any server.",
     subServer: "All done — hit Download and we'll ask where to save it.",
     download: "Download",
     downloaded: "Downloaded",

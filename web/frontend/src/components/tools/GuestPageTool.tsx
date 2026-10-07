@@ -253,8 +253,8 @@ export function GuestPageToolCore({
         subtitle={
           resultIsZip
             ? tr
-              ? "Dosyaların hazır (ZIP) — cihazından hiç çıkmadı."
-              : "Your files are ready (ZIP) — never left your device."
+              ? "Dosyaların hazır (ZIP) — sunucuya yüklenmedi."
+              : "Your files are ready (ZIP) — not uploaded to any server."
             : undefined
         }
         hideOpen={resultIsZip}

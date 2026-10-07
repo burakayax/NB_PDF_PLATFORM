@@ -1606,8 +1606,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
                   {tr
-                    ? `${pages.length} sayfa · ${(result.filename.split(".").pop() || "pdf").toUpperCase()} · cihazından hiç çıkmadı.`
-                    : `${pages.length} page(s) · ${(result.filename.split(".").pop() || "pdf").toUpperCase()} · never left your device.`}
+                    ? `${pages.length} sayfa · ${(result.filename.split(".").pop() || "pdf").toUpperCase()} · sunucuya yüklenmedi.`
+                    : `${pages.length} page(s) · ${(result.filename.split(".").pop() || "pdf").toUpperCase()} · not uploaded to any server.`}
                 </p>
 
                 <p className="mt-6 text-[13px] font-semibold text-slate-300">
