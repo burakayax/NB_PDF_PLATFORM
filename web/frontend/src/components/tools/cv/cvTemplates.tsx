@@ -506,10 +506,13 @@ function SidebarLayout({ m, th }: { m: CvModel; th: CvTheme }) {
       <MainSections m={m} th={th} include={{}} />
     </main>
   );
+  // DOM sırası = PDF metin sırası = başvuru sistemlerinin (ATS) okuma sırası. Ad, unvan ve
+  // deneyim ANA sütunda olduğundan o önce gelir; kenar çubuğu görsel olarak solda kalsın diye
+  // flex yönü ters çevrilir (görünüm değişmez, yalnızca metin akışı düzelir).
   return (
-    <div style={{ display: "flex", flexDirection: s.pos === "left" ? "row" : "row-reverse", alignItems: "stretch", minHeight: "100%" }}>
-      {sideEl}
+    <div style={{ display: "flex", flexDirection: s.pos === "left" ? "row-reverse" : "row", alignItems: "stretch", minHeight: "100%" }}>
       {mainEl}
+      {sideEl}
     </div>
   );
 }
