@@ -651,7 +651,7 @@ function CycleAwareCard({
 function GuvenSatiri({ language }: { language: Language }) {
   const tr = language === "tr";
   const maddeler = tr
-    ? ["7 gün koşulsuz iade", "İstediğin an iptal", "Güvenli ödeme (iyzico)"]
+    ? ["7 gün iade garantisi", "İstediğin an iptal", "Güvenli ödeme (iyzico)"]
     : ["7-day money-back", "Cancel anytime", "Secure payment (iyzico)"];
   return (
     <ul className="mt-3 space-y-1">
@@ -981,8 +981,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         {/* Trust line */}
         <p className="text-center text-gray-600 text-sm mt-4">
           {tr
-            ? "SSL şifreli · GDPR uyumlu · İstediğiniz zaman iptal · 7 gün para iade garantisi"
-            : "SSL encryption · GDPR compliant · Cancel anytime · 7-day money-back guarantee"}
+            ? "SSL şifreli · İstediğiniz zaman iptal · 7 gün para iade garantisi"
+            : "SSL encryption · Cancel anytime · 7-day money-back guarantee"}
           <span className="block mt-2 font-semibold">
             🔒 {tr ? "iyzico ile güvenli ödeme" : "Secure payments via iyzico"}
           </span>

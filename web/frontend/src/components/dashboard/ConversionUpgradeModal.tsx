@@ -35,7 +35,7 @@ function copy(language: Language) {
           "Priority processing queue",
         ],
     guarantee: tr
-      ? "🛡️ 7 gün koşulsuz para-iade garantisi — risksiz deneyin."
+      ? "🛡️ 7 gün para iade garantisi — risksiz deneyin."
       : "🛡️ 7-day money-back guarantee — no questions asked.",
     usageLine: (ops: number) =>
       tr

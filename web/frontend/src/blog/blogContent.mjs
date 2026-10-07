@@ -2960,7 +2960,7 @@ export const BLOG_POSTS = [
       ],
       faq: [
         { q: "PDF'e nasıl imza atarım?", a: "PDF'i yükleyin, «İmza Ekle» ile imzanızı çizin/yazın/yükleyin; imza sayfaya yerleşir. Sürükleyerek konumlandırın, köşeden boyutlandırın, «Uygula ve İndir» deyin. Tümü tarayıcınızda çalışır." },
-        { q: "İmzam sunucuya yükleniyor mu?", a: "Hayır. İmzalama tamamen cihazınızda yapılır; PDF ve imza asla karşıya yüklenmez. %100 gizli ve üyeliksizdir." },
+        { q: "İmzam sunucuya yükleniyor mu?", a: "Hayır. İmzalama tamamen cihazınızda yapılır; PDF ve imza asla karşıya yüklenmez. Üyeliksizdir." },
         { q: "Birden çok sayfaya aynı imzayı atabilir miyim?", a: "Evet. İmzayı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde aynı imza tüm sayfalarda aynı hizaya eklenir." },
       ],
     },
@@ -4456,7 +4456,7 @@ export const BLOG_POSTS = [
       tool: "/tools/hassas-veri-gizle",
     },
     {
-      title: "PDF'te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım",
+      title: "PDF'te Hassas Veri Gizleme (Redaction): Güvenli Paylaşım",
       description:
         "PDF'teki TC, IBAN, telefon, e-posta ve adres gibi kişisel verileri kalıcı olarak kaldırın — üzerini örtme değil, gerçek redaction. Adım adım.",
       excerpt:
@@ -4472,7 +4472,7 @@ export const BLOG_POSTS = [
           { title: "Hassas alanlar bulunsun", x: "TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda; isim ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir." },
           { title: "Kalıcı olarak kaldırın", x: "Onayladığınız alanlar belgenin içeriğinden gerçekten silinir. Temizlenmiş PDF'i indirin." },
         ] },
-        { t: "cta", title: "Hassas Veri Gizle", x: "Kişisel verileri kalıcı olarak kaldırıp belgeyi KVKK uyumlu paylaşın.", btn: "Aracı aç", tool: "/tools/hassas-veri-gizle" },
+        { t: "cta", title: "Hassas Veri Gizle", x: "Kişisel verileri kalıcı olarak kaldırıp belgeyi güvenle paylaşın.", btn: "Aracı aç", tool: "/tools/hassas-veri-gizle" },
         { t: "h2", x: "Ne zaman gerekir?" },
         { t: "ul", items: [
           "Sözleşme veya faturayı üçüncü tarafla paylaşmadan önce.",
@@ -5805,7 +5805,7 @@ export const BLOG_POSTS = [
         ] },
         { t: "cta", title: "Telefonda PDF İşaretle", x: "Metin ekle, imzala, işaretle — telefonunda, uygulamasız ve ücretsiz.", btn: "Aracı aç", tool: "/tools/pdf-yorumla" },
         { t: "h2", x: "Dosyam güvende mi?" },
-        { t: "p", x: "İşaretleme ve imzalama tamamen telefonunun tarayıcısında (cihazında) yapılır; PDF sunucuya yüklenmez, %100 gizlidir. Yalnızca gerçek metin silme/değiştirme sunucuda yapılır ve dosya işlem sonrası saklanmaz." },
+        { t: "p", x: "İşaretleme ve imzalama tamamen telefonunun tarayıcısında (cihazında) yapılır; PDF sunucuya yüklenmez. Yalnızca gerçek metin silme/değiştirme sunucuda yapılır ve dosya işlem sonrası saklanmaz." },
         { t: "tip", x: "İmza için imzanı bir kez beyaz kağıda atıp fotoğrafını yükleyebilirsin; araç arka planı temizleyip belgeye yerleştirir. Formu doldurup imzaladıktan sonra e-postayla ya da WhatsApp'la doğrudan telefondan gönderebilirsin." },
         {"t": "h2", "x": "Telefonda çalışırken hangi işler rahat, hangileri zor?"},
         {"t": "p", "x": "Küçük ekran bazı işleri kolaylaştırır, bazılarını zorlaştırır. Beklentiyi doğru kurmak, telefonla uğraşıp sonunda bilgisayara koşmayı önler."},
@@ -5955,7 +5955,7 @@ export const BLOG_POSTS = [
         { q: "Görseli oranını bozmadan boyutlandırabilir miyim?", a: "Evet. Oranı koru seçeneğiyle bir kenarı yazdığınızda diğeri otomatik hesaplanır. Sabit bir ölçüye oran bozulmadan oturması için Doldur (ortadan kırpar) veya Sığdır (boşluk ekler) modunu kullanın." },
         { q: "Görseli büyütünce kalite artar mı?", a: "Hayır. Büyütme var olmayan detayı geri getiremez; yalnızca mevcut pikselleri esnetir. En iyi sonuç için mümkün olan en büyük kaynak görselden başlayın." },
         { q: "Boyutlandırma ile sıkıştırma arasındaki fark ne?", a: "Boyutlandırma piksel ölçüsünü (ör. 1920 × 1080) değiştirir; sıkıştırma ölçüyü koruyarak dosyanın MB cinsinden boyutunu küçültür." },
-        { q: "Görselim sunucuya yüklenir mi?", a: "Hayır. İşlem tamamen tarayıcınızda yapılır; görseliniz internete gönderilmez, %100 gizlidir." },
+        { q: "Görselim sunucuya yüklenir mi?", a: "Hayır. İşlem tamamen tarayıcınızda yapılır; görseliniz internete gönderilmez." },
       ],
     },
     {
@@ -6090,7 +6090,7 @@ export const BLOG_POSTS = [
         { q: "Ekran görüntüsünden farkı ne?", a: "Ekran görüntüsü ekranınızın çözünürlüğüyle sınırlıdır. Kesit doğrudan PDF'ten, seçtiğiniz çözünürlükte (2x veya 3x) çizilir; yazılar ve çizgiler baskıya uygun netlikte çıkar." },
         { q: "Birden fazla kesiti tek dosyada alabilir miyim?", a: "Evet. Tüm kesitleri tek bir ZIP arşivi olarak indirebilir veya hepsini tek bir PDF belgesinde toplayabilirsiniz." },
         { q: "PNG mi JPEG mi seçmeliyim?", a: "Metin, tablo, grafik ve çizim içeren kesitlerde PNG (kayıpsız, keskin); fotoğraf ağırlıklı kesitlerde JPEG (daha küçük dosya) daha iyidir." },
-        { q: "Belgem sunucuya yüklenir mi?", a: "Hayır. İşlem tamamen tarayıcınızda yapılır; PDF'iniz internete hiç gönderilmez, %100 gizlidir." },
+        { q: "Belgem sunucuya yüklenir mi?", a: "Hayır. İşlem tamamen tarayıcınızda yapılır; PDF'iniz internete hiç gönderilmez." },
         { q: "PDF'ten kesit almak ücretsiz mi?", a: "Evet. Üyeliksiz ve ücretsizdir, kurulum gerekmez; bilgisayar, tablet ve telefonda doğrudan tarayıcıda çalışır." },
       ],
     },

@@ -1,5 +1,6 @@
 import type { Language } from "../i18n/landing";
 import { getSaasApiBase } from "./saasBase";
+import { isAnalyticsConsentGranted } from "../hooks/useCookieConsent";
 const SESSION_KEY = "nbpdf-analytics-session-id";
 
 export type PageViewPayload = {
@@ -33,6 +34,8 @@ export type JourneyEventPayload = {
  * yutulur (ölçüm asla kullanıcı akışını bozmamalı).
  */
 export function trackJourneyEvent(payload: JourneyEventPayload, accessToken?: string | null) {
+  // Analitik onayı yoksa HİÇBİR şey gönderilmez ve cihaza kalıcı oturum kimliği yazılmaz.
+  if (!isAnalyticsConsentGranted()) return;
   try {
     void fetch(`${getSaasApiBase()}/api/analytics/event`, {
       method: "POST",
@@ -55,6 +58,7 @@ export function trackJourneyEvent(payload: JourneyEventPayload, accessToken?: st
 }
 
 export async function trackPageView(payload: Omit<PageViewPayload, "sessionId">, accessToken?: string | null) {
+  if (!isAnalyticsConsentGranted()) return;
   await fetch(`${getSaasApiBase()}/api/analytics/page-view`, {
     method: "POST",
     headers: {

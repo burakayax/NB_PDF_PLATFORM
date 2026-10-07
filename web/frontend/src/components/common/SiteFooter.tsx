@@ -52,7 +52,13 @@ export function SiteFooter({ language }: { language: Language }) {
       links: [
         { label: tr ? "Kullanım Şartları" : "Terms", href: yol("/terms") },
         { label: tr ? "Gizlilik" : "Privacy", href: yol("/privacy") },
-        ...(tr ? [{ label: "KVKK", href: yol("/kvkk") }] : []),
+        ...(tr
+          ? [
+              { label: "KVKK", href: yol("/kvkk") },
+              { label: "Ön Bilgilendirme", href: yol("/legal/on-bilgilendirme") },
+              { label: "Mesafeli Satış", href: yol("/legal/mesafeli-satis") },
+            ]
+          : []),
       ],
     },
   ];

@@ -42,24 +42,15 @@ async function fetchWithTimeout(url: string): Promise<Response> {
   }
 }
 
-// Sağlayıcı zinciri: önce ipwho.is, sonra ipapi.co. Biri 403/429 verirse diğerine düşer.
+// Ülke, KENDİ alan adımızdaki Cloudflare ucundan (/cdn-cgi/trace) okunur: istek zaten bizim CDN'imize
+// gider, ek bir üçüncü tarafa IP adresi gönderilmez. (Eskiden ipwho.is / ipapi.co'ya gidiyordu; onaysız ve
+// gizlilik metninde yoktu — KVKK md. 9 ve aydınlatma sorunu.) Yerelde (dev) uç yoktur → null döner, sorun değil.
 const PROVIDERS: Array<() => Promise<string | null>> = [
   async () => {
-    // NOT: "/me" ucu KALDIRILMIS, kalici 404 donuyor (canli sitede olculdu).
-    // Kok adres ayni govdeyi (success + country_code) donduruyor. Yanlis uc
-    // yuzunden birincil saglayici hic calismiyordu ve tum yuk yedege biniyordu.
-    const r = await fetchWithTimeout("https://ipwho.is/");
+    const r = await fetchWithTimeout(`${window.location.origin}/cdn-cgi/trace`);
     if (!r.ok) return null;
-    const j = (await r.json()) as { success?: boolean; country_code?: string };
-    if (j.success === false || !j.country_code) return null;
-    return String(j.country_code).trim().toUpperCase();
-  },
-  async () => {
-    const r = await fetchWithTimeout("https://ipapi.co/json/");
-    if (!r.ok) return null;
-    const j = (await r.json()) as { country_code?: string; error?: boolean };
-    if (j.error || !j.country_code) return null;
-    return j.country_code.trim().toUpperCase();
+    const m = /^loc=([A-Z]{2})$/m.exec(await r.text());
+    return m?.[1] && m[1] !== "XX" && m[1] !== "T1" ? m[1] : null;
   },
 ];
 

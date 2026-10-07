@@ -180,7 +180,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push(`  Son giriş: ${u.lastLoginAt ?? "kayıt yok (bu hesap kayıttan bu yana giriş kaydı oluşturmamış ya da bu özellikten önce giriş yapmış)"}`);
   L.push(`  Güncel plan: ${u.plan}   Ülke: ${u.country ?? "-"}${u.isAdminAccount ? "   [YÖNETİCİ HESABI]" : ""}`);
   L.push(`  Hesap açılırken Hizmet Şartları/Gizlilik kabulü: ${u.termsAcceptedAt ? `${u.termsAcceptedAt} (sürüm ${u.termsVersion ?? "-"})` : "kayıt yok (bu özellikten önce açılmış hesap)"}`);
-  L.push(`  KVKK aydınlatma/fatura bilgisi onayı (ödeme öncesi adım): ${u.kvkkConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
+  L.push(`  KVKK aydınlatma metni ödeme öncesi adımda gösterildi (onay değil, bilgilendirme): ${u.kvkkConsentedAt ?? "gösterilmedi (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Mesafeli satış sözleşmesi onayı (ödeme öncesi adım): ${u.distanceSalesConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Cayma hakkından feragat onayı (ödeme öncesi adım): ${u.withdrawalWaivedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Toplam iade: ${u.totalRefunds}   İlk iade: ${u.firstRefundedAt ?? "-"}   Son iade: ${u.lastRefundedAt ?? "-"}`);

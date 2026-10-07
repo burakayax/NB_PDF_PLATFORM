@@ -14,7 +14,7 @@ export function pricingSectionCopy(lang: Language) {
     trustSecure: tr ? "Güvenli ödeme" : "Secure payment",
     trustRefund: tr ? "7 gün para iade garantisi" : "7-day money-back guarantee",
     refundBadge: tr ? "💰 7 Gün İade Garantisi" : "💰 7-Day Money-Back Guarantee",
-    refundHeading: tr ? "7 Gün Koşulsuz İade" : "7-Day No-Questions-Asked Refund",
+    refundHeading: tr ? "7 Gün İade Garantisi" : "7-Day Refund Guarantee",
     refundBody: tr
       ? "Satın alma tarihinden itibaren 7 gün içinde memnun kalmazsanız ücretin tamamını iade ediyoruz. Gerekçe belirtmenize gerek yok."
       : "Not satisfied within 7 days of purchase? We'll refund every penny. No questions asked.",

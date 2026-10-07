@@ -322,6 +322,11 @@ export function SignDocumentPage({ token }: { token: string }) {
               </span>
             </label>
 
+            <p className="mt-3 text-[11.5px] leading-relaxed text-slate-400">
+              İmzanızla birlikte adınız, imza zamanı ve bağlantı bilgisinin özeti, imzanın size ait olduğunu ve belgenin değişmediğini
+              kanıtlamak için saklanır. Ayrıntı: Gizlilik Politikası ve KVKK Aydınlatma Metni (pdfplatform.app).
+            </p>
+
             {hata && <p className="mt-3 text-[13px] text-rose-300">{hata}</p>}
 
             <button

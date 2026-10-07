@@ -6,6 +6,12 @@ const OPERATION_LOG_RETENTION_DAYS = 90;
 const DOWNLOAD_LOG_RETENTION_DAYS = 90;
 /** Çıktı dosyası parmak izi kayıtları (SHA-256; içerik yok): itiraz/iade anlaşmazlıkları için 1 yıl. */
 const OUTPUT_RECORD_RETENTION_DAYS = 365;
+/** İşlem/indirme günlüğü: 90 gün sonra IP ve tarayıcı bilgisi silinir, kayıt arşivlenir; 1 yıl sonra tamamen silinir. */
+const LOG_PURGE_DAYS = 365;
+/** Sayfa görüntüleme ve yolculuk olayları: 13 ay (politikadaki "analitik veriler"). */
+const ANALYTICS_RETENTION_DAYS = 395;
+/** İstemci hata günlüğü: 30 gün. */
+const ERROR_LOG_RETENTION_DAYS = 30;
 /** Yapay zekâ istek defteri (içerik yok, yalnızca özet): aynı gerekçeyle 1 yıl. */
 const AI_REQUEST_LOG_RETENTION_DAYS = 365;
 /** VUK Madde 253: Faturalar 10 yıl arşivlenir (silinmez). */
@@ -75,6 +81,11 @@ async function archiveOldDownloadLogs(): Promise<void> {
     where: { createdAt: { lt: cutoff }, isArchived: false },
     data: { isArchived: true, archivedAt: now },
   });
+  // Kişisel veri sayılan alanlar (IP, tarayıcı) arşivde TUTULMAZ.
+  await prisma.downloadLog.updateMany({
+    where: { createdAt: { lt: cutoff }, OR: [{ clientIp: { not: null } }, { userAgent: { not: null } }] },
+    data: { clientIp: null, userAgent: null },
+  });
 
   if (result.count > 0) {
     await prisma.adminAuditLog.create({
@@ -128,6 +139,42 @@ async function purgeExpiredFinancialArchives(): Promise<void> {
         userEmail: "system@retention",
         action: "RETENTION_PURGE_FINANCIAL_ARCHIVE",
         summary: `${result.count} mali kayıt arşivi silindi (yasal saklama süresi doldu).`,
+      },
+    });
+  }
+}
+
+/** Arşivdeki işlem/indirme günlüklerini 1 yıl sonra SİLER. */
+export async function purgeArchivedLogs(): Promise<void> {
+  const cutoff = daysAgo(LOG_PURGE_DAYS);
+  const ops = await prisma.operationLog.deleteMany({ where: { createdAt: { lt: cutoff }, isArchived: true } });
+  const dls = await prisma.downloadLog.deleteMany({ where: { createdAt: { lt: cutoff }, isArchived: true } });
+  if (ops.count + dls.count > 0) {
+    await prisma.adminAuditLog.create({
+      data: {
+        userEmail: "system@retention",
+        action: "RETENTION_PURGE_LOGS",
+        summary: `${ops.count} işlem günlüğü ve ${dls.count} indirme günlüğü silindi (${LOG_PURGE_DAYS} günden eski).`,
+      },
+    });
+  }
+}
+
+/** Sayfa görüntüleme + yolculuk olayları 13 ay, istemci hata günlüğü 30 gün sonra silinir. */
+export async function purgeAnalyticsAndErrorLogs(): Promise<void> {
+  const analyticsCutoff = daysAgo(ANALYTICS_RETENTION_DAYS);
+  const errorCutoff = daysAgo(ERROR_LOG_RETENTION_DAYS);
+  const [pv, je, ce] = await Promise.all([
+    prisma.pageView.deleteMany({ where: { createdAt: { lt: analyticsCutoff } } }),
+    prisma.userJourneyEvent.deleteMany({ where: { createdAt: { lt: analyticsCutoff } } }),
+    prisma.clientErrorLog.deleteMany({ where: { createdAt: { lt: errorCutoff } } }),
+  ]);
+  if (pv.count + je.count + ce.count > 0) {
+    await prisma.adminAuditLog.create({
+      data: {
+        userEmail: "system@retention",
+        action: "RETENTION_PURGE_ANALYTICS",
+        summary: `${pv.count} sayfa görüntüleme, ${je.count} yolculuk olayı (>${ANALYTICS_RETENTION_DAYS} gün) ve ${ce.count} hata günlüğü (>${ERROR_LOG_RETENTION_DAYS} gün) silindi.`,
       },
     });
   }
@@ -209,6 +256,8 @@ export function registerDataRetentionJobs() {
     safeRun("purgeOldOutputRecords", purgeOldOutputRecords);
     safeRun("purgeOldAiRequestLogs", purgeOldAiRequestLogs);
     safeRun("purgeExpiredFinancialArchives", purgeExpiredFinancialArchives);
+    safeRun("purgeArchivedLogs", purgeArchivedLogs);
+    safeRun("purgeAnalyticsAndErrorLogs", purgeAnalyticsAndErrorLogs);
     safeRun("purgeExpiredConsentLogs", purgeExpiredConsentLogs);
     safeRun("purgeOldRatingComments", purgeOldRatingComments);
   });

@@ -169,7 +169,7 @@ function buildPricingOffer(input: SchemaInput): JsonLdNode {
       ? "PDF Platform — Abonelik Planları"
       : "PDF Platform — Subscription Plans",
     description: isTr
-      ? "Ücretsiz plan dahil aylık ve yıllık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi."
+      ? "Ücretsiz plan dahil aylık ve yıllık abonelik seçenekleri. 7 gün para iade garantisi."
       : "Monthly and annual subscription plans including a free tier. 7-day no-questions-asked money-back guarantee.",
     url: input.canonicalUrl,
     priceCurrency: isTr ? "TRY" : "USD",

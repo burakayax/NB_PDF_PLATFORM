@@ -32,7 +32,7 @@ export function upgradeModalCopy(lang: Language) {
     ctaAnnual: tr ? "Yıllık Pro" : "Get annual Pro",
     close: tr ? "Kapat" : "Close",
     refundGuarantee: tr
-      ? "💰 7 gün koşulsuz iade garantisi"
+      ? "💰 7 gün iade garantisi"
       : "💰 7-day no-questions-asked refund",
     refundSub: tr
       ? "Memnun kalmazsanız, 7 gün içinde tam iade."

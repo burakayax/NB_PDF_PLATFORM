@@ -24,9 +24,9 @@ export const refundPolicyCopy: Record<"tr" | "en", RefundCopy> = {
   tr: {
     pricingBadge: "7 gün para iade garantisi",
     badge: "💰 7 Gün İade Garantisi",
-    headline: "7 Gün Koşulsuz İade",
+    headline: "7 Gün İade Garantisi",
     subtext:
-      "Satın alma tarihinden itibaren 7 gün içinde memnun kalmazsanız ücretin tamamını iade ediyoruz. Gerekçe belirtmenize gerek yok — hesabınızdan tek tıkla talep edebilirsiniz.",
+      "Satın alma tarihinden itibaren 7 gün içinde memnun kalmazsanız ücretin tamamını iade ediyoruz. Gerekçe belirtmenize gerek yok — hesabınızdan tek tıkla talep edebilirsiniz. Tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar uygulanır.",
     afterWindowMessage:
       "7 günü geçtikten sonra iptal ederseniz mevcut abonelik döneminiz sonuna kadar tüm özelliklere erişiminiz kesintisiz devam eder. Paranız boşa gitmez.",
     faqQuestion: "Para iade politikanız nedir?",
@@ -36,9 +36,9 @@ export const refundPolicyCopy: Record<"tr" | "en", RefundCopy> = {
   en: {
     pricingBadge: "7-day money-back guarantee",
     badge: "💰 7-Day Money-Back Guarantee",
-    headline: "7-Day No-Questions-Asked Refund",
+    headline: "7-Day Refund Guarantee",
     subtext:
-      "Not satisfied within 7 days of purchase? We'll refund every penny. No questions asked — one email and it's done.",
+      "Not satisfied within 7 days of purchase? We'll refund the full amount, no reason needed. Reasonable limits apply to repeated or abusive requests.",
     afterWindowMessage:
       "Cancel after 7 days and you keep full access until your current billing period ends. Your money never goes to waste.",
     faqQuestion: "What is your refund policy?",
