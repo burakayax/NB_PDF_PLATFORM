@@ -857,12 +857,24 @@ async def pdf_to_excel_start(
         cleanup_and_raise(workdir, error)
 
 
+def _parse_compress_target(target_kb: int, allow_rasterize: str) -> tuple[int, bool]:
+    """Hedef boyut alanlarını doğrular. Döner: (hedef_bayt — 0 = hedef yok, görüntüye çevirme izni)."""
+    if not target_kb:
+        return 0, False
+    # Motorun sınırlarıyla aynı: 20 KB … 200 MB.
+    if target_kb < 20 or target_kb > 200 * 1024:
+        raise HTTPException(status_code=400, detail="Hedef boyut 20 KB ile 200 MB arasında olmalıdır.")
+    return int(target_kb) * 1024, (allow_rasterize or "").strip().lower() in ("1", "true", "on", "yes")
+
+
 @router.post("/compress/start")
 async def compress_pdf_start(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     password: str = Form(default=""),
     quality: str = Form(default="auto"),
+    target_kb: int = Form(default=0),
+    allow_rasterize: str = Form(default=""),
 ):
     """Sıkıştırmayı ARKA PLANDA başlatır.
 
@@ -871,6 +883,7 @@ async def compress_pdf_start(
     sessiz bekleme kullanıcının sekmeyi kapattığı yer. Arka plan işinde ilerleme
     gösterilir ve bağlantı kopsa bile iş sunucuda devam eder.
     """
+    target_bytes, want_raster = _parse_compress_target(target_kb, allow_rasterize)
     decision = await entitlement_check(token, "compress")
     workdir = create_workdir()
     try:
@@ -884,6 +897,20 @@ async def compress_pdf_start(
         q = quality if quality in ("auto", "low", "medium", "high") else "auto"
 
         def _run(progress_cb):
+            if target_bytes:
+                info = engine.compress_pdf_to_target(
+                    sp, str(output_path), target_bytes,
+                    password=pwd, allow_rasterize=want_raster, progress_callback=progress_cb,
+                )
+                if info.get("rasterized"):
+                    # Sayfalar görüntüye çevrildi → yazı artık seçilemez. Arayüz bunu dosya
+                    # adındaki "-görüntü" işaretinden tanıyıp kullanıcıya açıkça söyler.
+                    marked = workdir / format_derived_filename(
+                        file.filename or saved_file.name, "Sıkıştırılmış-görüntü", "pdf"
+                    )
+                    output_path.replace(marked)
+                    return marked
+                return output_path
             engine.compress_pdf(sp, str(output_path), progress_callback=progress_cb, password=pwd, quality=q)
             return output_path
 
@@ -924,9 +951,12 @@ async def compress_pdf(
     file: UploadFile = File(...),
     password: str = Form(default=""),
     quality: str = Form(default="auto"),
+    target_kb: int = Form(default=0),
+    allow_rasterize: str = Form(default=""),
 ):
     """Result-store: build preview; credits are charged on
     ``GET /api/pdf/result/{id}/download`` (not on this POST)."""
+    target_bytes, want_raster = _parse_compress_target(target_kb, allow_rasterize)
     decision = await entitlement_check(token, "compress")
 
     workdir = create_workdir()
@@ -943,8 +973,20 @@ async def compress_pdf(
         q = quality if quality in ("auto", "low", "medium", "high") else "auto"
 
         def _compress_and_store() -> Any:
-            engine.compress_pdf(sp, out_str, password=pwd, quality=q)
-            outp = Path(out_str)
+            if target_bytes:
+                info = engine.compress_pdf_to_target(
+                    sp, out_str, target_bytes, password=pwd, allow_rasterize=want_raster
+                )
+                outp = Path(out_str)
+                if info.get("rasterized"):
+                    marked = workdir / format_derived_filename(
+                        file.filename or saved_file.name, "Sıkıştırılmış-görüntü", "pdf"
+                    )
+                    outp.replace(marked)
+                    outp = marked
+            else:
+                engine.compress_pdf(sp, out_str, password=pwd, quality=q)
+                outp = Path(out_str)
             _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
             thumb = None
             try:

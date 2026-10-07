@@ -23,6 +23,10 @@ export type ToolFormState = {
   pagesText: string;
   splitMode: string;
   compressQuality: string;
+  /** PDF sıkıştırma hedef boyutu (KB); 0 = hedef yok, kalite menüsü geçerli. */
+  compressTargetKb?: number;
+  /** Hedefe inilemezse sayfaları görüntüye çevirmeye izin (yazı seçilemez olur). */
+  compressAllowRaster?: boolean;
   deletePagesText: string;
   rotatePageRotations: Record<string, number>;
   organizePageOrder: number[];
@@ -72,6 +76,10 @@ export function buildToolFormData(
       case "compress":
         formData.append("quality", s.compressQuality);
         formData.append("password", s.password.trim());
+        if (fid === "compress" && s.compressTargetKb && s.compressTargetKb > 0) {
+          formData.append("target_kb", String(Math.round(s.compressTargetKb)));
+          if (s.compressAllowRaster) formData.append("allow_rasterize", "1");
+        }
         break;
       case "delete-pages":
         formData.append("pages_to_delete", s.deletePagesText.trim());

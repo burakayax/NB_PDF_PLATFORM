@@ -249,6 +249,11 @@ import {
   buildToolFormData,
   buildBatchFormData,
 } from "./lib/toolFormData";
+import {
+  COMPRESS_TARGET_PRESETS_KB,
+  compressTargetOutcome,
+  formatTargetKb,
+} from "./lib/compressTarget";
 import { runClientPdfTool } from "./lib/clientToolRun";
 import { reportTeamActivity } from "./lib/teamActivity";
 import { checkToolSubmission } from "./lib/toolSubmissionCheck";
@@ -589,6 +594,12 @@ function App() {
   const [compressQuality, setCompressQuality] = useState<
     "auto" | "low" | "medium" | "high"
   >("auto");
+  /** PDF sıkıştırma hedef boyutu (KB); 0 = hedef yok, kalite menüsü geçerli. */
+  const [compressTargetKb, setCompressTargetKb] = useState(0);
+  /** Hedefe inilemezse sayfaları görüntüye çevirmeye izin (yazı seçilemez olur). */
+  const [compressAllowRaster, setCompressAllowRaster] = useState(false);
+  const lastRunCompressTargetKbRef = useRef(0);
+  const lastRunCompressRasterRef = useRef(false);
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
   /** PDF/A uyumluluk düzeyi — 2b çoğu kurumun istediği düzey. */
   const [pdfaVersion, setPdfaVersion] = useState("2b");
@@ -1037,6 +1048,10 @@ function App() {
     onDevice?: boolean;
     /** İşleme giren dosyanın boyutu — sıkıştırmada kazancı göstermek için. */
     sourceBytes?: number;
+    /** Sıkıştırmada istenen hedef boyut (KB); yoksa hedef kullanılmadı. */
+    compressTargetKb?: number;
+    /** Hedef boyutta görüntüye çevirmeye izin verilmiş miydi. */
+    compressRasterAllowed?: boolean;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const chainPendingRef = useRef<{ files: File[]; toolId: FeatureId } | null>(null);
@@ -2171,6 +2186,8 @@ function App() {
             filename: outcome.download.filename ?? clientFileName,
             toolId,
             sourceBytes: lastRunInputBytesRef.current || undefined,
+            compressTargetKb: lastRunCompressTargetKbRef.current || undefined,
+            compressRasterAllowed: lastRunCompressRasterRef.current,
           });
         } else {
           showToast(
@@ -3553,6 +3570,25 @@ function App() {
     if (from <= 0 || to <= 0) {
       return undefined;
     }
+    // Hedef boyut kullanıldıysa sonucu HEDEFE göre ve dürüstçe yorumla.
+    if (resultReady.compressTargetKb) {
+      const targetKb = resultReady.compressTargetKb;
+      const o = compressTargetOutcome({
+        sourceBytes: from,
+        resultBytes: to,
+        targetKb,
+        filename: resultReady.filename,
+      });
+      const tgt = formatTargetKb(targetKb);
+      if (o.kind === "already") {
+        return W.compressTargetAlready(formatFileSize(from), tgt);
+      }
+      const base =
+        o.kind === "reached"
+          ? W.compressTargetReached(formatFileSize(from), formatFileSize(to), tgt)
+          : W.compressTargetMissed(formatFileSize(to), tgt, !!resultReady.compressRasterAllowed);
+      return o.rasterized ? `${base} ${W.compressRasterNote}` : base;
+    }
     const pct = Math.round((1 - to / from) * 100);
     if (pct <= 0) {
       return W.compressResultNoGain;
@@ -4670,6 +4706,10 @@ function App() {
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
       lastRunInputBytesRef.current = runBytes;
+      // Hedef boyut yalnızca tek dosyada çalışır (toplu sıkıştırma kalite menüsünü kullanır).
+      lastRunCompressTargetKbRef.current =
+        selectedFeature.id === "compress" && uploads.length <= 1 ? compressTargetKb : 0;
+      lastRunCompressRasterRef.current = compressAllowRaster;
       setToolRunClock(0);
 
       genericToolStalemateTriggeredRef.current = false;
@@ -4689,6 +4729,8 @@ function App() {
         pagesText,
         splitMode,
         compressQuality,
+        compressTargetKb: uploads.length <= 1 ? compressTargetKb : 0,
+        compressAllowRaster,
         deletePagesText,
         rotatePageRotations,
         organizePageOrder,
@@ -4847,6 +4889,8 @@ function App() {
           filename: dl.filename ?? selectedFeature.fallbackFilename,
           toolId: selectedFeature.id,
           sourceBytes: lastRunInputBytesRef.current || undefined,
+          compressTargetKb: lastRunCompressTargetKbRef.current || undefined,
+          compressRasterAllowed: lastRunCompressRasterRef.current,
         });
         applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
       } else {
@@ -7767,11 +7811,57 @@ function App() {
 
                         {selectedFeature.id === "compress" ? (
                           <>
+                            {uploads.length <= 1 ? (
+                              <>
+                                <label className="field">
+                                  <span>{W.compressTargetLabel}</span>
+                                  <select
+                                    value={compressTargetKb}
+                                    onChange={(e) => {
+                                      const kb = Number(e.target.value) || 0;
+                                      setCompressTargetKb(kb);
+                                      if (!kb) setCompressAllowRaster(false);
+                                    }}
+                                  >
+                                    {COMPRESS_TARGET_PRESETS_KB.map((kb) => (
+                                      <option key={kb} value={kb}>
+                                        {kb === 0
+                                          ? W.compressTargetNone
+                                          : `${language === "tr" ? "En fazla" : "At most"} ${formatTargetKb(kb)}`}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <span className="field-hint">
+                                    {W.compressTargetHint}
+                                  </span>
+                                </label>
+                                {compressTargetKb > 0 ? (
+                                  <label className="field field--full field--checkbox">
+                                    <input
+                                      type="checkbox"
+                                      checked={compressAllowRaster}
+                                      onChange={(e) =>
+                                        setCompressAllowRaster(e.target.checked)
+                                      }
+                                    />
+                                    <span>{W.compressRasterLabel}</span>
+                                  </label>
+                                ) : null}
+                              </>
+                            ) : (
+                              <p className="field-hint">{W.compressTargetBatchNote}</p>
+                            )}
                             <label className="field">
                               <span>
                                 {language === "tr" ? "Kalite" : "Quality"}
                               </span>
                               <select
+                                disabled={compressTargetKb > 0 && uploads.length <= 1}
+                                title={
+                                  compressTargetKb > 0 && uploads.length <= 1
+                                    ? W.compressQualityDisabledByTarget
+                                    : undefined
+                                }
                                 value={compressQuality}
                                 onChange={(e) => {
                                   const val = e.target.value as
@@ -8057,7 +8147,7 @@ function App() {
                                               <span className="selected-file-card__size">
                                                 {formatFileSize(item.file.size)}
                                               </span>
-                                              {compressEst ? (
+                                              {compressEst && !compressTargetKb ? (
                                                 <span
                                                   className="selected-file-card__compress"
                                                   title={
