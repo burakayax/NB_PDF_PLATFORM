@@ -280,6 +280,41 @@ export function ws(lang: Language) {
     compressResultNoGain: tr
       ? "Bu dosya daha fazla küçültülemedi: içeriği zaten sıkıştırılmış durumdaydı."
       : "This file could not be reduced further: its content was already compressed.",
+    compressTargetLabel: tr ? "Hedef boyut" : "Target size",
+    compressTargetNone: tr ? "Yok — kaliteyi ben seçerim" : "None — I will pick the quality",
+    compressTargetHint: tr
+      ? "Sınırın altına inen en yüksek kaliteyi arar. İnemezse bunu açıkça söyler; boyutu tutturmak için sessizce bozmaz."
+      : "Finds the highest quality that fits under the limit. If it cannot, it says so; it never quietly degrades the file to hit the number.",
+    compressTargetBatchNote: tr
+      ? "Hedef boyut tek dosyada çalışır; birden çok dosyada kalite menüsü kullanılır."
+      : "Target size works on a single file; with several files the quality menu is used.",
+    compressRasterLabel: tr
+      ? "Hedefe inemezse sayfaları görüntüye çevir (yazı seçilemez ve aranamaz olur)"
+      : "If it cannot reach the target, turn pages into images (text becomes unselectable and unsearchable)",
+    compressQualityDisabledByTarget: tr
+      ? "Hedef boyut seçiliyken kalite kademesini araç kendisi belirler."
+      : "While a target size is set, the tool chooses the quality level itself.",
+    compressTargetReached: (from: string, to: string, target: string) =>
+      tr
+        ? `${from} → ${to} · hedef olan ${target} altına inildi`
+        : `${from} → ${to} · got under the ${target} target`,
+    compressTargetAlready: (size: string, target: string) =>
+      tr
+        ? `Dosya zaten ${size}; hedef olan ${target} altında olduğu için değiştirilmedi.`
+        : `The file is already ${size}, under the ${target} target, so it was left unchanged.`,
+    compressTargetMissed: (to: string, target: string, rasterAllowed: boolean) =>
+      tr
+        ? `Hedef olan ${target} altına inilemedi. En küçük hâli ${to}. ` +
+          (rasterAllowed
+            ? "Daha fazla küçültmek sayfaları okunamaz hâle getirirdi. Hedefi yükseltmeyi, gereksiz sayfaları silmeyi ya da belgeyi ikiye bölmeyi deneyin."
+            : "Daha fazla küçültmek için «Hedefe inemezse sayfaları görüntüye çevir» kutusunu işaretleyip yeniden deneyebilir, hedefi yükseltebilir ya da gereksiz sayfaları silebilirsiniz.")
+        : `Could not get under the ${target} target. The smallest result is ${to}. ` +
+          (rasterAllowed
+            ? "Going smaller would make the pages unreadable. Try a higher target, delete pages you do not need, or split the document in two."
+            : "To go further you can tick \"turn pages into images\" and run again, raise the target, or delete pages you do not need."),
+    compressRasterNote: tr
+      ? "Sayfalar görüntüye çevrildi: yazı artık seçilemez, kopyalanamaz ve aranamaz."
+      : "Pages were turned into images: the text can no longer be selected, copied or searched.",
     compressTextHeavyNote: tr
       ? "Bu PDF metin ağırlıklı: içindeki metin zaten sıkıştırılmış geldiği için kazanç sınırlı olur. Kalite kademesi yalnızca görselleri etkiler."
       : "This PDF is text-heavy: its text is already compressed, so savings are limited. The quality level only affects images.",

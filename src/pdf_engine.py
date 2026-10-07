@@ -3091,6 +3091,7 @@ def _ghostscript_compress_to_path(
     pdfsettings: str,
     password: str,
     timeout_sec: int,
+    dpi_override: Optional[int] = None,
 ) -> bool:
     """Ghostscript pdfwrite ile sıkıştırma; başarıda ``output_path`` yazar."""
     exe = _resolve_ghostscript_executable()
@@ -3104,7 +3105,7 @@ def _ghostscript_compress_to_path(
     tmp_keep: Optional[str] = tmp_out
     try:
         dpi_map = {"/printer": 300, "/ebook": 150, "/screen": 96, "/prepress": 300}
-        dpi = dpi_map.get(pdfsettings, 150)
+        dpi = dpi_override or dpi_map.get(pdfsettings, 150)
         cmd: List[str] = [
             exe,
             "-sDEVICE=pdfwrite",
@@ -3186,6 +3187,8 @@ def _fast_image_compress_pipeline(
         "auto":   {"max_px": 1400, "jpeg_q": 52},
         "medium": {"max_px": 1600, "jpeg_q": 65},
         "high":   {"max_px": 2200, "jpeg_q": 78},
+        # Yalnızca hedef boyut modunun son metin-koruyan basamağı (menüde görünmez).
+        "extreme": {"max_px": 640, "jpeg_q": 30},
     }
     c = cfg.get(quality, cfg["auto"])
     max_px: int = c["max_px"]
@@ -3338,8 +3341,8 @@ def _fitz_render_compress(
     import fitz
     from PIL import Image as PilImage
 
-    dpi_map   = {"low": 96,  "auto": 120, "medium": 150, "high": 200}
-    jpegq_map = {"low": 35,  "auto": 50,  "medium": 62,  "high": 75}
+    dpi_map   = {"extreme": 72, "low": 96,  "auto": 120, "medium": 150, "high": 200}
+    jpegq_map = {"extreme": 30, "low": 35,  "auto": 50,  "medium": 62,  "high": 75}
     dpi   = dpi_map.get(quality, 120)
     jpegq = jpegq_map.get(quality, 50)
 
@@ -3444,11 +3447,14 @@ def _fmt_mb(n: int) -> str:
 # --- 7. PDF SIKIŞTIRMA ---
 # Kaliteye göre GS preset ve kazanım eşiği
 _COMPRESS_GS_SETTINGS = {
+    "extreme": "/screen",
     "low":    "/screen",
     "auto":   "/ebook",
     "medium": "/ebook",
     "high":   "/printer",
 }
+# GS görüntü çözünürlüğü (dpi) — preset'in varsayılanını ezer; yalnızca "extreme" için.
+_COMPRESS_GS_DPI = {"extreme": 60}
 # pikepdf sonrası bu oran altında kazanım varsa GS devreye girer (0.45 = %45)
 _COMPRESS_GS_FALLBACK_THRESHOLD = 0.40
 
@@ -3565,6 +3571,7 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
                     pdfsettings=gs_preset,
                     password=open_password,
                     timeout_sec=timeout_sec,
+                    dpi_override=_COMPRESS_GS_DPI.get(quality),
                 )
             else:
                 # GS yok → fitz sayfa render pipeline (metin aranabilirliği kaybolur
@@ -3605,6 +3612,225 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
             if _tmp and os.path.isfile(_tmp):
                 try:
                     os.remove(_tmp)
+                except OSError:
+                    pass
+
+
+# --- 7b. PDF SIKIŞTIRMA: HEDEF BOYUT ---
+#
+# NEDEN: Kurum yükleme ekranları sınırı sayıyla yazar ("en fazla 1 MB", "200 KB").
+# Kalite menüsüyle tek tek denemek yerine kullanıcı sınırı söyler, araç o sınırın
+# altına inen EN YÜKSEK kaliteyi bulur. Basamaklar kaliteden kayba doğru sıralıdır;
+# ilk hedefi geçen basamak seçilir.
+#
+# DÜRÜSTLÜK KURALLARI:
+#  * Hedefe inilemezse bunu SÖYLERİZ ve en küçük sonucu veririz (boyutu tutturmak için
+#    sessizce okunmaz hale getirmeyiz).
+#  * Basamaklar metni korur. Ghostscript yoksa / bir basamak sayfaları sessizce
+#    görüntüye çevirdiyse (metin kaybı) o aday REDDEDİLİR.
+#  * Sayfaları görüntüye çevirmek (yazı seçilemez olur) yalnızca kullanıcı açıkça
+#    izin verdiğinde ve metin-koruyan basamaklar yetmediğinde denenir.
+_TARGET_LADDER = ("auto", "low", "extreme")  # kaliteden kayba doğru
+_TARGET_RASTER_DPIS = (130, 110, 96, 80, 66, 56)
+_TARGET_RASTER_JPEG_QS = (55, 45, 35, 25)  # yüksekten düşüğe
+TARGET_MIN_BYTES = 20 * 1024
+TARGET_MAX_BYTES = 200 * 1024 * 1024
+
+
+def _pdf_text_chars(path: str, password: str = "", max_pages: int = 8) -> int:
+    """İlk sayfalardaki seçilebilir metin karakter sayısı; okunamazsa -1."""
+    try:
+        import fitz
+
+        doc = fitz.open(path)
+        try:
+            if doc.needs_pass and not (password and doc.authenticate(password)):
+                return -1
+            total = 0
+            for i, page in enumerate(doc):
+                if i >= max_pages:
+                    break
+                total += len((page.get_text("text") or "").strip())
+            return total
+        finally:
+            doc.close()
+    except Exception:
+        return -1
+
+
+def _keeps_text(in_chars: int, out_path: str) -> bool:
+    """Çıktı, girdinin metin katmanını büyük ölçüde koruyor mu?"""
+    if in_chars < 40:
+        return True  # kaybedilecek metin yok (zaten taranmış / görsel PDF)
+    out_chars = _pdf_text_chars(out_path)
+    if out_chars < 0:
+        return True  # ölçülemedi; adayı haksız yere eleme
+    return out_chars >= 0.5 * in_chars
+
+
+def _rasterize_to_target(
+    input_path: str, output_path: str, target_bytes: int, password: str, deadline: float
+) -> Optional[int]:
+    """Sayfaları görüntüye çevirerek hedefin altına inmeyi dener (YAZI SEÇİLEMEZ OLUR).
+
+    Çözünürlük ve JPEG kalitesini kademeli düşürür; hedefi geçen ilk (en kaliteli)
+    sonucu yazar. Hedefe inemezse en küçük sonucu yazar. Başarıda boyutu, hata olursa
+    None döndürür.
+    """
+    import time
+    import fitz
+    from PIL import Image as PilImage
+
+    out_dir = os.path.dirname(os.path.abspath(output_path)) or None
+    best: Optional[Tuple[int, str]] = None  # (boyut, geçici yol)
+    src = fitz.open(input_path)
+    try:
+        if src.needs_pass and not (password and src.authenticate(password)):
+            return None
+        for dpi in _TARGET_RASTER_DPIS:
+            if time.monotonic() > deadline:
+                break
+            mat = fitz.Matrix(dpi / 72.0, dpi / 72.0)
+            docs = {q: fitz.open() for q in _TARGET_RASTER_JPEG_QS}
+            try:
+                for page in src:
+                    pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
+                    pil = PilImage.frombytes("RGB", (pix.width, pix.height), pix.samples)
+                    rect = page.rect
+                    for q in _TARGET_RASTER_JPEG_QS:
+                        buf = io.BytesIO()
+                        pil.save(buf, format="JPEG", quality=q, optimize=True)
+                        new_page = docs[q].new_page(width=rect.width, height=rect.height)
+                        new_page.insert_image(rect, stream=buf.getvalue())
+                    if time.monotonic() > deadline:
+                        raise TimeoutError("hedef boyut süre bütçesi doldu")
+                for q in _TARGET_RASTER_JPEG_QS:
+                    fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+                    os.close(fd)
+                    docs[q].save(tmp, garbage=4, deflate=True)
+                    size = os.path.getsize(tmp)
+                    if best is None or size < best[0]:
+                        if best is not None and os.path.isfile(best[1]):
+                            os.remove(best[1])
+                        best = (size, tmp)
+                    else:
+                        os.remove(tmp)
+                    if size <= target_bytes:
+                        os.replace(best[1], output_path)
+                        best = None
+                        return size
+            except TimeoutError:
+                break
+            finally:
+                for d in docs.values():
+                    d.close()
+        if best is not None:
+            size = best[0]
+            os.replace(best[1], output_path)
+            best = None
+            return size
+        return None
+    finally:
+        src.close()
+        if best is not None and os.path.isfile(best[1]):
+            try:
+                os.remove(best[1])
+            except OSError:
+                pass
+
+
+def compress_pdf_to_target(
+    input_path: str,
+    output_path: str,
+    target_bytes: int,
+    *,
+    password: Optional[str] = None,
+    allow_rasterize: bool = False,
+    progress_callback=None,
+) -> Dict[str, Any]:
+    """PDF'i ``target_bytes`` altına indirmeyi dener; ne olduğunu DÜRÜSTÇE bildirir.
+
+    Döner: ``reached`` (hedefe inildi mi), ``bytes`` (çıktı boyutu), ``original_bytes``,
+    ``rasterized`` (sayfalar görüntüye çevrildi mi → yazı seçilemez), ``method``.
+    Çıktı her durumda yazılır: hedefe inilemediyse eldeki EN KÜÇÜK sonuç verilir.
+    """
+    import time
+
+    target = int(target_bytes)
+    if target < TARGET_MIN_BYTES or target > TARGET_MAX_BYTES:
+        raise ValueError("Hedef boyut 20 KB ile 200 MB arasında olmalıdır.")
+    in_size = os.path.getsize(input_path)
+    pwd = (password or "").strip()
+    result: Dict[str, Any] = {
+        "original_bytes": in_size,
+        "target_bytes": target,
+        "rasterized": False,
+        "method": "unchanged",
+    }
+    if in_size <= target:
+        shutil.copy2(input_path, output_path)
+        result.update(reached=True, bytes=in_size)
+        return result
+
+    deadline = time.monotonic() + max(120, 3 * _tool_subprocess_timeout_sec())
+    in_chars = _pdf_text_chars(input_path, pwd)
+    out_dir = os.path.dirname(os.path.abspath(output_path)) or None
+    total_steps = len(_TARGET_LADDER) + (1 if allow_rasterize else 0)
+    best: Optional[Tuple[int, str, str]] = None  # (boyut, yol, yöntem)
+    temps: List[str] = []
+    try:
+        for i, q in enumerate(_TARGET_LADDER):
+            if time.monotonic() > deadline:
+                break
+            if progress_callback:
+                progress_callback(i, total_steps, f"Hedef boyuta iniliyor ({i + 1}/{total_steps})...")
+            fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+            os.close(fd)
+            temps.append(tmp)
+            try:
+                compress_pdf(input_path, tmp, password=pwd or None, quality=q)
+            except Exception:
+                if i == 0:
+                    raise  # parola vb. hata kullanıcıya iletilmeli
+                continue
+            size = os.path.getsize(tmp)
+            if size >= in_size or not _keeps_text(in_chars, tmp):
+                continue  # kazanç yok ya da sayfalar sessizce görüntüye çevrilmiş
+            if best is None or size < best[0]:
+                best = (size, tmp, q)
+            if size <= target:
+                break
+
+        reached = best is not None and best[0] <= target
+        if not reached and allow_rasterize and time.monotonic() < deadline:
+            if progress_callback:
+                progress_callback(len(_TARGET_LADDER), total_steps, "Sayfalar görüntüye çevrilerek deneniyor...")
+            fd, rtmp = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+            os.close(fd)
+            temps.append(rtmp)
+            rsize = _rasterize_to_target(input_path, rtmp, target, pwd, deadline)
+            if rsize is not None and rsize < in_size and (best is None or rsize < best[0]):
+                best = (rsize, rtmp, "rasterize")
+                result["rasterized"] = True
+
+        if best is None:
+            shutil.copy2(input_path, output_path)
+            result.update(reached=False, bytes=in_size, method="unchanged")
+        else:
+            shutil.copy2(best[1], output_path)
+            result.update(reached=best[0] <= target, bytes=best[0], method=best[2])
+        if progress_callback:
+            progress_callback(total_steps, total_steps, "Tamamlandı")
+        logger.info(
+            "compress_pdf_to_target: %s → %s (hedef %s, ulaşıldı=%s, yöntem=%s)",
+            _fmt_mb(in_size), _fmt_mb(result["bytes"]), _fmt_mb(target), result["reached"], result["method"],
+        )
+        return result
+    finally:
+        for t in temps:
+            if os.path.isfile(t):
+                try:
+                    os.remove(t)
                 except OSError:
                     pass
 

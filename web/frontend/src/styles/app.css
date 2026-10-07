@@ -897,6 +897,18 @@ textarea {
   grid-column: 1 / -1;
 }
 
+/* Onay kutusu satırı: kutu solda, açıklama yanında (hedef boyut → görüntüye çevirme izni). */
+.field--checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+.field--checkbox input[type="checkbox"] {
+  width: auto;
+  margin-top: 3px;
+  flex: none;
+}
+
 /* Eski yükleme alanı stilleri (.upload-dropzone / .file-picker-*) kaldırıldı:
    yükleme ekranı artık tüm araçlarda ortak React bileşeninden (ToolUploadPanel)
    geliyor ve stilini Tailwind sınıflarıyla taşıyor. */
