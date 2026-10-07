@@ -246,6 +246,22 @@ function tagTermsFor(side: LangSide, count: number): string[] {
   return out;
 }
 
+/**
+ * Bir dil bloğuna düşen etiket sayısı.
+ *
+ * Ağın TOPLAM etiket sınırı varsa (Instagram: 5) bloklar arasında paylaştırılır,
+ * artık ilk bloğa (Türkçe — asıl kitle) kalır: iki blokta 3 + 2. Sınır yoksa her
+ * blok kendi tam payını alır.
+ */
+export function tagCountFor(platform: SocialPlatform, blockCount: number, blockIndex: number): number {
+  const spec = PLATFORM_SPECS[platform];
+  const cap = spec.hashtagTotalCap;
+  if (!cap || blockCount <= 1) return Math.min(spec.hashtagCount, cap ?? spec.hashtagCount);
+  const base = Math.floor(cap / blockCount);
+  const share = base + (blockIndex < cap % blockCount ? 1 : 0);
+  return Math.min(spec.hashtagCount, share);
+}
+
 /** Bir blok için etiket dizesi (karışım kuralına göre, sabit yazımla). */
 function tagsFor(side: LangSide, count: number): string {
   return tagTermsFor(side, count).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
@@ -283,7 +299,7 @@ function fallbackBody(sides: LangSide[], platform: SocialPlatform): string {
   const spec = PLATFORM_SPECS[platform];
   const per = Math.floor(effectiveMax(platform, sides) / sides.length);
   return sides
-    .map((side) => fallbackBlock(side, per, spec.linkStyle, spec.hashtagCount))
+    .map((side, i) => fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i)))
     .join(LANG_SEPARATOR);
 }
 
@@ -339,7 +355,7 @@ function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
   const sides = sidesFor(req, platform);
   const perBlock = Math.floor(effectiveMax(platform, sides) / Math.max(1, sides.length));
   const side = sides[0];
-  const tagLen = side ? tagsFor(side, spec.hashtagCount).length : 0;
+  const tagLen = side ? tagsFor(side, tagCountFor(platform, sides.length, 0)).length : 0;
   const linkLen = side ? linkLine(side, spec.linkStyle).length : 0;
   // +4: bloğu ayıran satır sonları.
   return Math.max(60, perBlock - tagLen - linkLen - 4);
@@ -367,13 +383,18 @@ function linkLine(side: LangSide, style: "url" | "bio" | "none"): string {
 }
 
 /** Bir dil bloğunu kurar: gövde + (varsa) bağlantı + etiketler. */
-function buildBlock(body: string, side: LangSide, platform: SocialPlatform): string {
+function buildBlock(
+  body: string,
+  side: LangSide,
+  platform: SocialPlatform,
+  tagCount: number,
+): string {
   const spec = PLATFORM_SPECS[platform];
   const clean = sanitizeHashtags(body, side.lang)
     .replace(URL_PATTERN_GLOBAL, "")
     .replace(/[ \t]+\n/g, "\n")
     .trim();
-  const tags = tagsFor(side, spec.hashtagCount);
+  const tags = tagsFor(side, tagCount);
   const parts = [clean];
   const link = linkLine(side, spec.linkStyle);
   if (link) parts.push(link);
@@ -448,9 +469,9 @@ Uzunluklar:
   for (const p of req.platforms) {
     const sides = sidesFor(req, p);
     const kind = bodyKind(p);
-    const blocks = sides.map((side) => {
+    const blocks = sides.map((side, i) => {
       const body = bodies[kind][side.lang];
-      return body ? buildBlock(body, side, p) : "";
+      return body ? buildBlock(body, side, p, tagCountFor(p, sides.length, i)) : "";
     });
     // Bir dil için metin gelmediyse o platformda şablon korunur.
     if (blocks.some((b) => !b)) continue;
