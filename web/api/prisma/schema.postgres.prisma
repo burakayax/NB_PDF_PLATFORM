@@ -1208,3 +1208,20 @@ model LegalAcceptanceLog {
   @@index([userId, createdAt])
   @@map("legal_acceptance_logs")
 }
+
+// Hizmet sağlık kaydı: bileşen durumu (api/db/pdf) ve 5xx olayları. Kişisel veri YOK. 400 gün saklanır.
+model ServiceHealthEvent {
+  id        String   @id @default(cuid())
+  at        DateTime @default(now())
+  component String   @map("component")
+  kind      String   @map("kind")
+  ok        Boolean  @map("ok")
+  latencyMs Int?     @map("latency_ms")
+  path      String?  @map("path")
+  status    Int?     @map("status")
+  detail    String?  @map("detail")
+
+  @@index([component, at])
+  @@index([at])
+  @@map("service_health_events")
+}

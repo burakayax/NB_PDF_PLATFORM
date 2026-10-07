@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import { logAdminAudit } from "./admin-audit.service.js";
+import { loadServiceStatus } from "../../lib/service-health.js";
 
 /**
  * YÖNETİM — İTİRAZ / ANLAŞMAZLIK DOSYASI.
@@ -50,6 +51,16 @@ export async function adminUserDisputeFileController(req: Request, res: Response
     prisma.downloadLog.count({ where: { userId: uid } }),
     prisma.legalAcceptanceLog.findMany({ where: { userId: uid }, orderBy: { createdAt: "asc" } }),
   ]);
+
+  // Hizmet durumu penceresi (itiraz tarihi): ?from=YYYY-MM-DD&to=YYYY-MM-DD; yoksa son 30 gün.
+  const parseDay = (v: unknown, endOfDay: boolean): Date | null => {
+    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+    const d = new Date(`${v}T${endOfDay ? "23:59:59" : "00:00:00"}Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const winTo = parseDay(req.query["to"], true) ?? new Date();
+  const winFrom = parseDay(req.query["from"], false) ?? new Date(winTo.getTime() - 30 * 24 * 3600 * 1000);
+  const serviceStatus = await loadServiceStatus(winFrom, winTo > new Date() ? new Date() : winTo);
 
   const org = user.organization;
   const dossier = {
@@ -134,6 +145,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       planAtTime: o.planAtTime,
     })),
     aiUsageByMonth: aiUsage.map((a) => ({ month: a.yearMonth, count: a.count, byTool: a.operationCounts })),
+    serviceStatus,
     legalAcceptances: acceptances.map((a) => ({ at: iso(a.createdAt), kind: a.kind, version: a.version, via: a.via, ip: a.ip })),
     aiRequests: aiRequests.map((a) => ({
       at: iso(a.createdAt),
@@ -221,6 +233,14 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push("");
   L.push(`[8b] YAPAY ZEKÂ İSTEKLERİ (son ${dossier.aiRequests.length})  — tarih | araç | hak | durum | iade | o günkü plan | girdi özeti | çıktı özeti`);
   dossier.aiRequests.forEach((a) => row(a.at, a.op, a.units, a.status, a.refunded ? "İADE" : "-", a.planAtTime, a.inputSha256?.slice(0, 16), a.outputSha256?.slice(0, 16)));
+  L.push("");
+  L.push(`[10] HİZMET DURUMU  ${serviceStatus.from.slice(0, 16)} → ${serviceStatus.to.slice(0, 16)} (UTC)  — kendi sağlık kaydımız; kayıt yazımı yalnız sistem ayaktayken mümkündür`);
+  (["api", "db", "pdf"] as const).forEach((c) => {
+    const s = serviceStatus.components[c];
+    row(c.toUpperCase(), s.uptimePct === null ? "veri yok" : `%${s.uptimePct} çalışma`, `kapalı ${s.downMinutes} dk`, `sinyal yok ${s.noSignalMinutes} dk`, `${s.incidents.length} dönem`);
+    s.incidents.slice(0, 20).forEach((i) => row("   ", i.type === "down" ? "KESİNTİ" : "SİNYAL YOK", i.start.slice(0, 16), i.end.slice(0, 16), `${i.minutes} dk`));
+  });
+  serviceStatus.failures.slice(0, 15).forEach((f) => row("5xx", f.path, f.status, `${f.count} kez`, `${f.first.slice(0, 16)} … ${f.last.slice(0, 16)}`));
   L.push("");
   L.push(`[9] SÖZLEŞME DENETÇİSİ (${dossier.contractReviews.length})  — no | tarih | mod | hak | durum | iade | onay sürümü`);
   dossier.contractReviews.forEach((c) => row(c.id, c.at, c.mode, c.units, c.status, c.refundedAt, c.consentVersion));

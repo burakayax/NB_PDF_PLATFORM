@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { downloadAdminDisputeFile, downloadAdminFinancialExport, verifyAdminOutputFile, type AdminOutputVerifyResult } from "../api/admin";
+import { downloadAdminFinancialExport, verifyAdminOutputFile, type AdminOutputVerifyResult } from "../api/admin";
+import { downloadDisputeFileForWindow } from "../api/serviceStatus";
 import { Katlanir } from "./analytics/AdminAnalytics";
 
 const ts = (iso: string) => iso.slice(0, 19).replace("T", " ");
@@ -14,6 +15,8 @@ export function DisputeAdminSection({ accessToken }: { accessToken: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [verify, setVerify] = useState<AdminOutputVerifyResult | null>(null);
   const [who, setWho] = useState("");
+  const [winFrom, setWinFrom] = useState("");
+  const [winTo, setWinTo] = useState("");
   const [busy, setBusy] = useState(false);
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [err, setErr] = useState<string | null>(null);
@@ -38,7 +41,7 @@ export function DisputeAdminSection({ accessToken }: { accessToken: string }) {
     setBusy(true);
     setErr(null);
     try {
-      await downloadAdminDisputeFile(accessToken, who);
+      await downloadDisputeFileForWindow(accessToken, who, winFrom || undefined, winTo || undefined);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Dosya oluşturulamadı.");
     } finally {
@@ -95,6 +98,12 @@ export function DisputeAdminSection({ accessToken }: { accessToken: string }) {
           <button type="button" disabled={busy || !who.trim()} onClick={() => void onDossier()} className={btn}>
             Dosyayı indir
           </button>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-slate-400">
+          <span>Hizmet durumu aralığı (itiraz tarihi, isteğe bağlı):</span>
+          <input type="date" value={winFrom} onChange={(e) => setWinFrom(e.target.value)} className="rounded-lg border border-white/[0.1] bg-black/40 px-2 py-1 text-[12px] text-slate-100" />
+          <span>→</span>
+          <input type="date" value={winTo} onChange={(e) => setWinTo(e.target.value)} className="rounded-lg border border-white/[0.1] bg-black/40 px-2 py-1 text-[12px] text-slate-100" />
         </div>
       </div>
       <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 p-4">

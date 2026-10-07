@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -97,7 +98,12 @@ async def _app_lifespan(app: FastAPI):
     app.state.pdf_library_versions = log_pdf_library_versions()
     init_pdf_thread_pool()
     start_ttl_sweeper()
+    # Hizmet sağlık kaydı: her dakika Node'a kalp atışı (kendi kesinti kaydımız; dış izleyiciden bağımsız).
+    from app.core.service_health import heartbeat_loop
+
+    heartbeat_task = asyncio.create_task(heartbeat_loop())
     yield
+    heartbeat_task.cancel()
     shutdown_pdf_thread_pool(wait=True, cancel_futures=False)
 
 
@@ -201,6 +207,21 @@ async def unhandled_exception_safety_net(request: Request, call_next):
             status_code=500,
             content={"detail": GENERIC_TOOL_FAILURE_TR},
         )
+
+
+@app.middleware("http")
+async def report_server_errors(request: Request, call_next):
+    """5xx yanıtlarını (yol + durum kodu) hizmet sağlık kaydına bildirir; içerik/kullanıcı bilgisi gönderilmez."""
+    response = await call_next(request)
+    path = request.url.path
+    if response.status_code >= 500 and path.startswith("/api") and not path.startswith("/api/health"):
+        try:
+            from app.core.service_health import report_http_failure
+
+            asyncio.create_task(report_http_failure(path, response.status_code))
+        except Exception:  # noqa: BLE001 — bildirim asla yanıtı bozmamalı
+            pass
+    return response
 
 
 @app.middleware("http")

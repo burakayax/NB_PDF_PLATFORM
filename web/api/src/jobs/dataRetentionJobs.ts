@@ -12,6 +12,8 @@ const LOG_PURGE_DAYS = 365;
 const ANALYTICS_RETENTION_DAYS = 395;
 /** İstemci hata günlüğü: 30 gün. */
 const ERROR_LOG_RETENTION_DAYS = 30;
+/** Hizmet sağlık kaydı (kişisel veri yok): 400 gün. */
+const SERVICE_HEALTH_RETENTION_DAYS = 400;
 /** Yapay zekâ istek defteri (içerik yok, yalnızca özet): aynı gerekçeyle 1 yıl. */
 const AI_REQUEST_LOG_RETENTION_DAYS = 365;
 /** VUK Madde 253: Faturalar 10 yıl arşivlenir (silinmez). */
@@ -160,6 +162,11 @@ export async function purgeArchivedLogs(): Promise<void> {
   }
 }
 
+/** Hizmet sağlık kayıtlarını 400 gün sonra siler. */
+export async function purgeOldServiceHealth(): Promise<void> {
+  await prisma.serviceHealthEvent.deleteMany({ where: { at: { lt: daysAgo(SERVICE_HEALTH_RETENTION_DAYS) } } });
+}
+
 /** Sayfa görüntüleme + yolculuk olayları 13 ay, istemci hata günlüğü 30 gün sonra silinir. */
 export async function purgeAnalyticsAndErrorLogs(): Promise<void> {
   const analyticsCutoff = daysAgo(ANALYTICS_RETENTION_DAYS);
@@ -258,6 +265,7 @@ export function registerDataRetentionJobs() {
     safeRun("purgeExpiredFinancialArchives", purgeExpiredFinancialArchives);
     safeRun("purgeArchivedLogs", purgeArchivedLogs);
     safeRun("purgeAnalyticsAndErrorLogs", purgeAnalyticsAndErrorLogs);
+    safeRun("purgeOldServiceHealth", purgeOldServiceHealth);
     safeRun("purgeExpiredConsentLogs", purgeExpiredConsentLogs);
     safeRun("purgeOldRatingComments", purgeOldRatingComments);
   });

@@ -11,6 +11,7 @@ import {
   getQuotaSummary,
 } from "../../lib/quota.js";
 import { canExecute } from "./entitlement.engine.js";
+import { notePdfHeartbeat, recordHttpFailure } from "../../lib/service-health.js";
 import { consumeEditorDownload } from "./editor-download.service.js";
 import { downloadLogCreateSchema, entitlementBodySchema } from "./entitlement.schema.js";
 
@@ -383,4 +384,33 @@ export async function outputRecordController(request: Request, response: Respons
     return;
   }
   response.status(201).json({ ok: true, recorded: true });
+}
+
+const serviceEventSchema = z.object({
+  kind: z.enum(["heartbeat", "http_5xx"]),
+  component: z.literal("pdf"),
+  ok: z.boolean().optional(),
+  latencyMs: z.number().int().min(0).max(600_000).optional(),
+  path: z.string().max(300).optional(),
+  status: z.number().int().min(500).max(599).optional(),
+});
+
+/**
+ * POST /api/entitlement/internal/service-event — PDF API'nin kalp atışı ve 5xx bildirimi (X-Internal-Secret).
+ * Kişisel veri/dosya içeriği kabul edilmez; yalnız bileşen, durum, yol (kimlikler maskeli) ve durum kodu.
+ */
+export async function serviceEventController(request: Request, response: Response) {
+  if (!(process.env.INTERNAL_SERVICE_SECRET ?? "").trim()) {
+    throw new HttpError(503, "Internal service secret not configured.");
+  }
+  if (!requestHasInternalServiceSecret(request)) {
+    throw new HttpError(403, "Forbidden.");
+  }
+  const body = serviceEventSchema.parse(request.body);
+  if (body.kind === "heartbeat") {
+    await notePdfHeartbeat(body.ok !== false, body.latencyMs);
+  } else if (body.path && body.status) {
+    await recordHttpFailure("pdf", body.path, body.status);
+  }
+  response.status(200).json({ ok: true });
 }

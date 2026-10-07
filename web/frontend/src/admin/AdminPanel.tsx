@@ -76,6 +76,7 @@ import { AdminUserManagement } from "./users/AdminUserManagement";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
 import { CampaignEditor } from "./marketing/CampaignEditor";
 import { DisputeAdminSection } from "./DisputeAdminSection";
+import { ServiceStatusSection } from "./ServiceStatusSection";
 import { ContractReviewAdminSection } from "./ContractReviewAdminSection";
 import {
   BolumBasligi,
@@ -3043,6 +3044,7 @@ function AnalyticsTab({
         </Katlanir>
 
         <ContractReviewAdminSection accessToken={accessToken} />
+        <ServiceStatusSection accessToken={accessToken} />
         <DisputeAdminSection accessToken={accessToken} />
 
         {advanced && (
