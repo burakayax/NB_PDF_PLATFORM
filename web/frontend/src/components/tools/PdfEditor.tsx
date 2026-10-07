@@ -17,6 +17,7 @@ import {
   ExternalLink,
   FileText,
   HelpCircle,
+  FileCheck2,
   Italic,
   Loader2,
   ImagePlus,
@@ -1138,7 +1139,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       {result ? (
         <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"><Check className="h-8 w-8" /></div>
-          <p className="mt-4 text-xl font-bold text-white">{tr ? "PDF hazır 🎉" : "Ready 🎉"}</p>
+          <p className="mt-4 inline-flex items-center justify-center gap-2.5 text-xl font-bold text-white">{tr ? "PDF hazır" : "Ready"}<FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden /></p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button type="button" onClick={() => void downloadResult()} disabled={fetching} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50">{fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "İndir" : "Download"}</button>
             <button type="button" onClick={() => void openResult()} disabled={fetching} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08] disabled:opacity-50"><ExternalLink className="h-4 w-4" />{tr ? "Aç" : "Open"}</button>
