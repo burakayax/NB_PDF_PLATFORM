@@ -52,8 +52,8 @@ export const legalDocuments = {
           title: "5. Subscription terms",
           paragraphs: [
             "Certain features or higher usage limits may require a paid plan. Plan names, prices, included features, and fair-use rules are those shown in the product, checkout, or order confirmation at the time you subscribe.",
-            "Subscriptions renew according to the billing cycle you select (for example monthly or annual) until you cancel in accordance with the cancellation process we provide. Failure to pay may result in downgrade or loss of paid features.",
-            "We may change plan prices or features for new purchases or renewals with reasonable notice where required by law. Continued use after a renewal may constitute acceptance of the updated plan terms.",
+            "Subscriptions do not renew automatically. Before your period ends we send you a reminder; if you wish to continue, you confirm the renewal and pay for the new period. If you do not confirm, paid features end when the period ends and your account returns to the free plan.",
+            "We may change plan prices or features for new purchases or renewals with reasonable notice. Changes apply only to a new period, and the current price and terms are shown to you before you confirm a renewal.",
             "Taxes, if any, are your responsibility unless we state otherwise at checkout.",
           ],
         },
@@ -264,7 +264,7 @@ export const legalDocuments = {
           paragraphs: [
             "Seller: NB Global Studio",
             "Email: info@pdfplatform.app",
-            "Website: nbglobalstudio.com",
+            "Website: pdfplatform.app",
             "Service: PDF Platform — cloud-based PDF processing services",
           ],
         },
@@ -272,7 +272,7 @@ export const legalDocuments = {
           title: "2. Key Features of the Service",
           paragraphs: [
             "PDF Platform is a cloud-based SaaS (Software as a Service) subscription offering tools for PDF merging, splitting, compression, conversion, encryption, and other PDF processing operations.",
-            "Different usage limits, file size limits, and features apply depending on the subscription plan. Visit nbpdf.app/pricing for details.",
+            "Different usage limits, file size limits, and features apply depending on the subscription plan. Visit pdfplatform.app/pricing for details.",
           ],
         },
         {
@@ -317,7 +317,7 @@ export const legalDocuments = {
         {
           title: "2. Subject of the Agreement",
           paragraphs: [
-            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF Platform digital service subscription for the plan selected by the BUYER at nbpdf.app.",
+            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF Platform digital service subscription for the plan selected by the BUYER at pdfplatform.app.",
             "Service content and features vary by the selected plan.",
           ],
         },
@@ -333,7 +333,7 @@ export const legalDocuments = {
           title: "4. Subscription and Renewal",
           paragraphs: [
             "The subscription is activated immediately upon payment confirmation. The subscription term is determined by the selected plan (monthly/yearly).",
-            "Subscriptions do not renew automatically. A new payment must be made for renewal.",
+            "Subscriptions do not renew automatically. A reminder is sent before the period ends; renewal requires your confirmation and a new payment. No charge is made without your confirmation.",
             "When the subscription term expires, paid features are deactivated and the account automatically reverts to the free plan.",
           ],
         },
@@ -411,8 +411,8 @@ export const legalDocuments = {
           title: "5. Abonelik şartları",
           paragraphs: [
             "Bazı özellikler veya daha yüksek kullanım limitleri ücretli plan gerektirebilir. Plan adları, fiyatlar, dahil özellikler ve makul kullanım kuralları; abone olduğunuz andaki ürün, ödeme veya sipariş onayındaki hükümlerdir.",
-            "Abonelikler, iptal sürecine uygun şekilde iptal edilene kadar seçtiğiniz faturalama döngüsüne (örneğin aylık veya yıllık) göre yenilenir. Ödeme yapılmaması plan düşürülmesine veya ücretli özelliklerin kaybına yol açabilir.",
-            "Yasal gerekliliklere uygun makul bildirimle plan fiyatlarını veya özelliklerini yeni satın alımlar veya yenilemeler için değiştirebiliriz. Yenileme sonrası kullanım, güncellenmiş plan koşullarının kabulü anlamına gelebilir.",
+            "Abonelikler kendiliğinden yenilenmez. Dönem sona ermeden önce size bir hatırlatma gönderilir; devam etmek isterseniz yenilemeyi onaylar ve yeni dönemin ücretini ödersiniz. Onay vermezseniz dönem sonunda ücretli özellikler sona erer ve hesabınız ücretsiz plana döner.",
+            "Yasal gerekliliklere uygun makul bildirimle plan fiyatlarını veya özelliklerini yeni satın alımlar veya yenilemeler için değiştirebiliriz. Değişiklikler yalnızca yeni dönem için geçerli olur; yenilemeyi onaylamadan önce güncel fiyat ve koşullar size gösterilir.",
             "Ödeme sırasında aksi belirtilmedikçe vergiler sizin sorumluluğunuzdadır.",
           ],
         },
@@ -674,7 +674,7 @@ export const legalDocuments = {
           paragraphs: [
             "Satıcı: NB Global Studio",
             "E-posta: info@pdfplatform.app",
-            "Web sitesi: nbglobalstudio.com",
+            "Web sitesi: pdfplatform.app",
             "Hizmet: PDF Platform — bulut tabanlı PDF işleme hizmetleri",
           ],
         },
@@ -682,7 +682,7 @@ export const legalDocuments = {
           title: "2. Hizmetin Temel Özellikleri",
           paragraphs: [
             "PDF Platform; PDF birleştirme, bölme, sıkıştırma, dönüştürme, şifreleme ve diğer PDF işleme araçlarını içeren bulut tabanlı bir SaaS (Hizmet Olarak Yazılım) abonelik hizmetidir.",
-            "Abonelik planlarına göre farklı işlem limitleri, dosya boyutu limitleri ve özellikler uygulanmaktadır. Detaylar için nbpdf.app/pricing adresini ziyaret ediniz.",
+            "Abonelik planlarına göre farklı işlem limitleri, dosya boyutu limitleri ve özellikler uygulanmaktadır. Detaylar için pdfplatform.app/pricing adresini ziyaret ediniz.",
           ],
         },
         {
@@ -728,7 +728,7 @@ export const legalDocuments = {
         {
           title: "2. Sözleşme Konusu",
           paragraphs: [
-            "Bu sözleşmenin konusu; ALICI'nın nbpdf.app adresinden seçtiği abonelik planına ait PDF Platform dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
+            "Bu sözleşmenin konusu; ALICI'nın pdfplatform.app adresinden seçtiği abonelik planına ait PDF Platform dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
             "Hizmet içeriği ve özellikleri seçilen plana göre değişmektedir.",
           ],
         },
@@ -744,7 +744,7 @@ export const legalDocuments = {
           title: "4. Abonelik ve Yenileme",
           paragraphs: [
             "Abonelik, ödeme onayının ardından derhal aktive edilir. Abonelik süresi seçilen plana göre belirlenir (aylık/yıllık).",
-            "Abonelik otomatik olarak yenilenmez. Yenileme için yeni bir ödeme yapılması gerekmektedir.",
+            "Abonelik otomatik olarak yenilenmez. Dönem sona ermeden önce size hatırlatma gönderilir; yenileme için onayınızın alınması ve yeni bir ödeme yapılması gerekmektedir. Onayınız olmadan ücret tahsil edilmez.",
             "Abonelik süresi dolduğunda ücretli özellikler devre dışı kalır, ücretsiz plana geçiş otomatik olarak gerçekleşir.",
           ],
         },

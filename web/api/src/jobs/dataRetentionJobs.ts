@@ -119,6 +119,20 @@ async function purgeOldAiRequestLogs(): Promise<void> {
   }
 }
 
+/** Mali kayıt arşivi: yasal saklama süresi (retainUntil) dolunca silinir. */
+async function purgeExpiredFinancialArchives(): Promise<void> {
+  const result = await prisma.financialRecordArchive.deleteMany({ where: { retainUntil: { lt: new Date() } } });
+  if (result.count > 0) {
+    await prisma.adminAuditLog.create({
+      data: {
+        userEmail: "system@retention",
+        action: "RETENTION_PURGE_FINANCIAL_ARCHIVE",
+        summary: `${result.count} mali kayıt arşivi silindi (yasal saklama süresi doldu).`,
+      },
+    });
+  }
+}
+
 /** Fatura arşivleme — VUK Madde 253 gereği 10 yıllık kayıtlar arşivlenir (silinmez). */
 async function archiveOldInvoices(): Promise<void> {
   const cutoff = daysAgo(INVOICE_ARCHIVE_DAYS);
@@ -194,6 +208,7 @@ export function registerDataRetentionJobs() {
     safeRun("archiveOldInvoices", archiveOldInvoices);
     safeRun("purgeOldOutputRecords", purgeOldOutputRecords);
     safeRun("purgeOldAiRequestLogs", purgeOldAiRequestLogs);
+    safeRun("purgeExpiredFinancialArchives", purgeExpiredFinancialArchives);
     safeRun("purgeExpiredConsentLogs", purgeExpiredConsentLogs);
     safeRun("purgeOldRatingComments", purgeOldRatingComments);
   });

@@ -1215,3 +1215,18 @@ export async function downloadAdminDisputeFile(accessToken: string, userIdOrEmai
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+/** Seçilen yılın ödeme + fatura kayıtlarını (silinmiş hesap arşivi dahil) CSV olarak indirir. */
+export async function downloadAdminFinancialExport(accessToken: string, year: number): Promise<void> {
+  const r = await adminFetch(accessToken, `/financial-export?year=${encodeURIComponent(String(year))}&format=csv`);
+  if (!r.ok) throw new Error(await r.text());
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `muhasebe-${year}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

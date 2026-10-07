@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { downloadAdminDisputeFile, verifyAdminOutputFile, type AdminOutputVerifyResult } from "../api/admin";
+import { downloadAdminDisputeFile, downloadAdminFinancialExport, verifyAdminOutputFile, type AdminOutputVerifyResult } from "../api/admin";
 import { Katlanir } from "./analytics/AdminAnalytics";
 
 const ts = (iso: string) => iso.slice(0, 19).replace("T", " ");
@@ -15,6 +15,7 @@ export function DisputeAdminSection({ accessToken }: { accessToken: string }) {
   const [verify, setVerify] = useState<AdminOutputVerifyResult | null>(null);
   const [who, setWho] = useState("");
   const [busy, setBusy] = useState(false);
+  const [year, setYear] = useState(String(new Date().getFullYear()));
   const [err, setErr] = useState<string | null>(null);
 
   async function onFile(f: File | undefined) {
@@ -93,6 +94,40 @@ export function DisputeAdminSection({ accessToken }: { accessToken: string }) {
           />
           <button type="button" disabled={busy || !who.trim()} onClick={() => void onDossier()} className={btn}>
             Dosyayı indir
+          </button>
+        </div>
+      </div>
+      <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 p-4">
+        <p className="text-[12px] font-bold text-slate-200">Muhasebe dökümü (yıllık)</p>
+        <p className="mt-1 text-[11.5px] leading-relaxed text-slate-400">
+          Seçilen yılın tüm ödeme ve fatura kayıtlarını (hesabını silen kullanıcıların arşivlenmiş kayıtları dahil) tek CSV dosyasında indirir.
+          Veritabanı dışında da bir kopyanız olsun diye her yıl sonunda (tercihen her ay) indirip muhasebecinizle paylaşın veya kendi diskinize kaydedin.
+          Kart bilgisi içermez.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input
+            value={year}
+            onChange={(e) => setYear(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))}
+            inputMode="numeric"
+            className="w-24 rounded-xl border border-white/[0.1] bg-black/40 px-3 py-2 text-[12px] text-slate-100"
+          />
+          <button
+            type="button"
+            disabled={busy || year.length !== 4}
+            onClick={async () => {
+              setBusy(true);
+              setErr(null);
+              try {
+                await downloadAdminFinancialExport(accessToken, Number(year));
+              } catch (e) {
+                setErr(e instanceof Error ? e.message : "Döküm indirilemedi.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className={btn}
+          >
+            CSV indir
           </button>
         </div>
       </div>
