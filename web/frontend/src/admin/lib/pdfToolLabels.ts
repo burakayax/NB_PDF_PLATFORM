@@ -28,6 +28,8 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "imza-iste": "İmza İste",
   "extract-images": "PDF'ten Görsel Çıkar",
   "sozlesme-denetci": "Sözleşme Denetçisi",
+  "ai-fotograf-studyosu": "AI Fotoğraf Stüdyosu",
+  "cv-olustur": "CV Oluştur",
 };
 
 export function pdfToolLabelTr(featureKey: string): string {

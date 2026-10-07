@@ -91,6 +91,16 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
   ],
+  "ai-fotograf-studyosu": [
+    { icon: Zap, tr: "Amaca göre hazır", trDesc: "Vesikalık, biyometrik, vize, CV ve LinkedIn ölçülerine tek tıkla kırpar; arka planı değiştirir.", en: "Ready for the purpose", enDesc: "Crops to ID, biometric, visa, CV and LinkedIn sizes in one click and swaps the background." },
+    { icon: Zap, tr: "Uygunluk denetimi", trDesc: "Baş oranı, ifade ve ışığı kontrol edip uyarır.", en: "Suitability check", enDesc: "Checks head size, expression and light, and warns you." },
+    { icon: Lock, tr: "Fotoğraf cihazından çıkmaz", trDesc: "Yapay zekâ cihazında çalışır; fotoğrafın sunucuya yüklenmez, saklanmaz.", en: "Photo stays on your device", enDesc: "The AI runs on your device; your photo is never uploaded or stored." },
+  ],
+  "cv-olustur": [
+    { icon: Zap, tr: "Canlı önizleme", trDesc: "Yazdıkça CV'niz yanda anında oluşur; birden çok hazır şablon.", en: "Live preview", enDesc: "Your CV builds beside the form as you type; many ready templates." },
+    { icon: Zap, tr: "Boş alan çıktıya girmez", trDesc: "Doldurmadığınız bölümler PDF'e eklenmez, CV'niz temiz kalır.", en: "Empty fields stay out", enDesc: "Sections you skip are left out of the PDF, so the CV stays clean." },
+    { icon: Lock, tr: "Bilgileriniz size kalır", trDesc: "CV'niz tarayıcınızda hazırlanır; sunucuya gönderilmez.", en: "Your details stay yours", enDesc: "Your CV is built in your browser and never sent to a server." },
+  ],
   "gorsel-boyutlandir": [
     { icon: Zap, tr: "Tam ölçüye getir", trDesc: "Fotoğrafı piksel piksel istediğiniz genişlik ve yüksekliğe ayarlayın.", en: "Exact dimensions", enDesc: "Set a photo to the precise width and height you need." },
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },

@@ -26,6 +26,9 @@ export const ON_DEVICE_SEO_TOOLS: ReadonlySet<string> = new Set([
   "ustveri-temizle",
   "sayfa-duzeni",
   "udf-to-pdf",
+  // Fotoğraf ve CV bilgisi tarayıcıdan çıkmaz: modeller cihazda (WASM) çalışır, CV tarayıcıda çizilir.
+  "ai-fotograf-studyosu",
+  "cv-olustur",
 ]);
 
 /** Yapısal araçlar — pdf-lib ile tarayıcıda işlenir, sunucuya dosya gitmez. */

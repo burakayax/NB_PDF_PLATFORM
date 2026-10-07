@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural</title>
+    <meta name="description" content="Başvuru takip sistemlerinin (ATS) CV&#39;nizi doğru okuması için 9 kural: gerçek metin PDF, standart başlıklar, sade yerleşim ve anahtar kelimeler." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/ats-friendly-cv" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural" />
+    <meta property="og:description" content="Başvuru takip sistemlerinin (ATS) CV&#39;nizi doğru okuması için 9 kural: gerçek metin PDF, standart başlıklar, sade yerleşim ve anahtar kelimeler." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/ats-uyumlu-cv-nasil-yazilir.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural" />
+    <meta name="twitter:description" content="Başvuru takip sistemlerinin (ATS) CV&#39;nizi doğru okuması için 9 kural: gerçek metin PDF, standart başlıklar, sade yerleşim ve anahtar kelimeler." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/ats-uyumlu-cv-nasil-yazilir.png" />
+    <meta name="twitter:image:alt" content="ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural","item":"https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural","description":"Başvuru takip sistemlerinin (ATS) CV'nizi doğru okuması için 9 kural: gerçek metin PDF, standart başlıklar, sade yerleşim ve anahtar kelimeler.","datePublished":"2026-10-07","dateModified":"2026-10-07","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/ats-uyumlu-cv-nasil-yazilir.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"ATS nedir?","acceptedAnswer":{"@type":"Answer","text":"Başvuru takip sistemi; şirketlerin başvuruları topladığı, CV'lerden bilgi çıkarıp aday listesi oluşturduğu yazılımdır."}},{"@type":"Question","name":"Fotoğraf ATS'yi bozar mı?","acceptedAnswer":{"@type":"Answer","text":"Görsel genellikle sistem tarafından yok sayılır, ancak bazı sistemler resimli CV'lerde sorun çıkarabilir. Tek sütunlu sade bir şablon ve metin olarak yazılmış bilgiler en güvenli yoldur."}},{"@type":"Question","name":"CV'mi Word olarak mı PDF olarak mı göndermeliyim?","acceptedAnswer":{"@type":"Answer","text":"İlan başka bir biçim istemiyorsa gerçek metinli PDF güvenli bir seçimdir; her cihazda aynı görünür."}},{"@type":"Question","name":"Bu araçtaki CV'ler ATS'ye uygun mu?","acceptedAnswer":{"@type":"Answer","text":"PDF'teki yazılar seçilebilir gerçek metindir ve tek akışta okunur. Yine de hiçbir araç belirli bir sistemde sonuç garantisi veremez."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural</h1><p class="seo-intro">Birçok şirket CV&#39;leri önce bir başvuru takip sisteminden geçirir. Sistemin CV&#39;nizi eksiksiz okuyabilmesi için dikkat edilecek dokuz pratik kural.</p><figure class="seo-cover"><img src="/covers/ats-uyumlu-cv-nasil-yazilir.png" width="1200" height="630" loading="lazy" decoding="async" alt="ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural" /></figure><article class="seo-article"><p class="seo-lead">Birçok şirket başvuruları bir başvuru takip sistemi (ATS) üzerinden toplar. Bu sistemler CV&#39;nizi okuyup bilgileri alanlara ayırır; okuyamadıkları ya da yanlış yerleştirdikleri bilgi, işe alımcının ekranında eksik görünür. Güzel görünen ama makinenin okuyamadığı bir CV, görünmez bir CV olabilir. Aşağıdaki kurallar bunu önlemenin pratik yolları.</p><h2>Dosya ve metin</h2><ol><li>Gerçek metin içeren PDF kullanın. Ekran görüntüsü ya da taranmış resim olarak kaydedilmiş bir CV&#39;deki yazı sisteme okunmayabilir. PDF&#39;te metni fareyle seçebiliyorsanız doğru yoldasınız.</li><li>Bilgileri resmin içine gömmeyin. Telefon, e-posta ve beceriler gibi önemli bilgiler logo ya da görsel olarak değil, yazı olarak bulunmalı.</li><li>Standart yazı tipleri seçin. Okunaklı, yaygın yazı tipleri hem insanlar hem sistemler için en güvenli seçenektir; Türkçe karakterlerin (ş, ğ, ı, İ) eksiksiz göründüğünden emin olun.</li></ol><h2>Yapı ve başlıklar</h2><ol start="4"><li>Bilinen başlıkları kullanın: “İş Deneyimi”, “Eğitim”, “Beceriler”. Yaratıcı başlıklar (“Yolculuğum”) sistemin bölümü tanımasını zorlaştırabilir.</li><li>Sade bir yerleşim tercih edin. Bazı sistemler çok sütunlu, tablolu ya da kutulu tasarımları yanlış sırada okuyabilir. Emin değilseniz tek sütunlu bir şablon seçin.</li><li>Tarihleri tutarlı yazın: “Mar 2020 – Devam ediyor” gibi. Her kalemde pozisyon, şirket ve tarih bulunsun.</li></ol><h2>İçerik</h2><ol start="7"><li>İlandaki anahtar kelimeleri doğal biçimde kullanın. İlan “proje yönetimi” diyorsa ve bu deneyiminiz varsa aynı ifadeyi kullanın; ancak sırf kelime eklemek için olmayan bir beceriyi yazmayın.</li><li>Kısaltmaları bir kez açın: “Müşteri İlişkileri Yönetimi (CRM)”. Hem insanlar hem sistemler her iki biçimi de tanır.</li><li>Üst bilgi/alt bilgi alanına kritik bilgi yazmayın. Bazı sistemler sayfa üst ve alt bölgesini okumaz; iletişim bilgilerinizi sayfanın ana gövdesine koyun.</li></ol><p>ATS kuralları sistemden sisteme değişir; hiçbiri her sistemde kusursuz sonuç garanti etmez. Amaç, bilgiyi hem insanın hem makinenin kolay okuyacağı biçimde sunmaktır.</p><p><a href="/tools/cv-olustur"><strong>CV Oluştur</strong> — Şablonlarımızdaki yazılar resim değil, seçilebilir gerçek metin olarak PDF&#39;e yazılır. En sade yerleşim için Sade şablonunu deneyin.</a></p><h2>Göndermeden önce 1 dakikalık kontrol</h2><ul><li>PDF&#39;i açın, tümünü seçip (Ctrl+A) bir metin düzenleyiciye yapıştırın: sıra ve içerik mantıklı mı?</li><li>Telefon ve e-posta başlıkta, açık biçimde yazılı mı?</li><li>Dosya adı ad-soyad-cv.pdf gibi anlaşılır mı?</li></ul></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/cv-olustur">CV Oluştur</a></li><li><a href="/tools/pdf-duzenle">PDF Düzenle</a></li><li><a href="/tools/compress">PDF Sıkıştırma</a></li></ul></nav><nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul><li><a href="/blog/cv-nasil-hazirlanir">CV Nasıl Hazırlanır? Adım Adım Rehber</a></li><li><a href="/blog/cv-fotografi-nasil-olmali">CV Fotoğrafı Nasıl Olmalı? Ölçü, Arka Plan, Kadraj</a></li><li><a href="/blog/linkedin-profil-fotografi-ipuclari">LinkedIn Profil Fotoğrafı: Ölçü ve 7 İpucu</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>ATS nedir?</h3><p>Başvuru takip sistemi; şirketlerin başvuruları topladığı, CV&#39;lerden bilgi çıkarıp aday listesi oluşturduğu yazılımdır.</p></div><div class="seo-faq-item"><h3>Fotoğraf ATS&#39;yi bozar mı?</h3><p>Görsel genellikle sistem tarafından yok sayılır, ancak bazı sistemler resimli CV&#39;lerde sorun çıkarabilir. Tek sütunlu sade bir şablon ve metin olarak yazılmış bilgiler en güvenli yoldur.</p></div><div class="seo-faq-item"><h3>CV&#39;mi Word olarak mı PDF olarak mı göndermeliyim?</h3><p>İlan başka bir biçim istemiyorsa gerçek metinli PDF güvenli bir seçimdir; her cihazda aynı görünür.</p></div><div class="seo-faq-item"><h3>Bu araçtaki CV&#39;ler ATS&#39;ye uygun mu?</h3><p>PDF&#39;teki yazılar seçilebilir gerçek metindir ve tek akışta okunur. Yine de hiçbir araç belirli bir sistemde sonuç garantisi veremez.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

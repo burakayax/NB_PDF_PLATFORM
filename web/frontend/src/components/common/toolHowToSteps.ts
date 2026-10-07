@@ -563,6 +563,30 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       { title: "Download the report and highlighted PDF right away", detail: "Risky spots are colour-marked in the document. The result stays only on this page: closing it before downloading loses it." },
     ],
   ),
+  "ai-fotograf-studyosu": S(
+    [
+      { title: "Fotoğrafını seç", detail: "Yüzünün net göründüğü bir fotoğraf yükle. Fotoğraf cihazından çıkmaz; sunucuya yüklenmez." },
+      { title: "Ne için kullanacağını ve arka planı seç", detail: "Kimlik, pasaport, vize, CV ya da LinkedIn gibi bir seçenek işaretle; arka planı beyaz, gri ya da istediğin renk yap. Sonucu anında yanda görürsün." },
+      { title: "Kontrol et ve indir", detail: "Altındaki uygunluk listesine bak, gerekirse baş boyutunu ayarla. Dosya boyutu sınırı varsa KB olarak yaz, sonra indir." },
+    ],
+    [
+      { title: "Choose your photo", detail: "Upload a photo where your face is clear. It never leaves your device and is not uploaded." },
+      { title: "Pick the purpose and background", detail: "Tick ID, passport, visa, CV or LinkedIn; make the background white, grey or any colour. You see the result beside it instantly." },
+      { title: "Check and download", detail: "Look at the suitability list below, adjust the head size if needed. If a portal limits the file size, type it in KB, then download." },
+    ],
+  ),
+  "cv-olustur": S(
+    [
+      { title: "Bir şablon seç", detail: "Üstteki listeden beğendiğin tasarıma tıkla. Soldaki sayfada örnek CV görünür." },
+      { title: "Bilgilerini sağa yaz", detail: "Adını yazdığın anda CV solda değişir. Fotoğraf da ekleyebilirsin. Boş bıraktığın yerler soluk görünür ama PDF'e eklenmez." },
+      { title: "PDF olarak indir", detail: "Önce «PDF görünümü»ne geçip sonucu kontrol et, sonra mavi «CV'yi PDF olarak indir» düğmesine bas." },
+    ],
+    [
+      { title: "Pick a template", detail: "Click a design in the list at the top. A sample CV appears on the left." },
+      { title: "Type your details on the right", detail: "The CV updates the moment you type your name. You can add a photo too. Empty spots look faded but are left out of the PDF." },
+      { title: "Download as PDF", detail: "Switch to «PDF view» to check the result, then click the blue «Download CV as PDF» button." },
+    ],
+  ),
   "ai-toplu-islem": S(
     [
       PICK_TR("Belgelerini"),

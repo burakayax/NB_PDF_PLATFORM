@@ -329,6 +329,12 @@ const AiBatchTool = lazyWithRetry(() =>
 const AiCompareTool = lazyWithRetry(() =>
   import("./components/tools/AiCompareTool").then((m) => ({ default: m.AiCompareTool })),
 );
+const PhotoStudioTool = lazyWithRetry(() =>
+  import("./components/tools/PhotoStudioTool").then((m) => ({ default: m.PhotoStudioTool })),
+);
+const CvMakerTool = lazyWithRetry(() =>
+  import("./components/tools/cv/CvMakerTool").then((m) => ({ default: m.CvMakerTool })),
+);
 const ContractReviewTool = lazyWithRetry(() =>
   import("./components/tools/ContractReviewTool").then((m) => ({ default: m.ContractReviewTool })),
 );
@@ -975,7 +981,7 @@ function App() {
    * IndexedDB'yi boş bulup aynı dosyayı siliyordu. Aynı araçtaysak silmeyi atlıyoruz.
    */
   const deliveredForRef = useRef<{ slug: string; file: File } | null>(null);
-  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | null>(null);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -3031,6 +3037,8 @@ function App() {
         p === "/tools/aranabilir-pdf" ||
         p === "/tools/udf-to-pdf" ||
         p === "/pdf-api" ||
+        p === "/tools/ai-fotograf-studyosu" ||
+        p === "/tools/cv-olustur" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
         p.startsWith("/blog/")
@@ -3918,10 +3926,10 @@ function App() {
 
   /** AI aracına geç — açık PDF varsa beraberinde taşı (batch/compare çok dosyalı, taşınmaz). */
   async function openAiWithOpenPdf(
-    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract",
+    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo",
   ) {
     const carried =
-      mode !== "batch" && mode !== "compare" && mode !== "contract" ? await carryOpenPdfToPanel() : false;
+      mode !== "batch" && mode !== "compare" && mode !== "contract" && mode !== "photo" ? await carryOpenPdfToPanel() : false;
     setMergeShareReady(null);
     setMergeShare(null);
     if (!carried) setPendingToolFile(null);
@@ -5542,6 +5550,24 @@ function App() {
           </Suspense>
         </GuestSeoToolPage>
       );
+    if (seoSlug === "ai-fotograf-studyosu") {
+      return (
+        <GuestSeoToolPage slug="ai-fotograf-studyosu" wide language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PhotoStudioTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} isAdmin={aiIsAdmin} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "cv-olustur") {
+      return (
+        <GuestSeoToolPage slug="cv-olustur" wide language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <CvMakerTool language={language} accessToken={accessToken} onLogin={goLogin} onRegister={goRegister} onUpgrade={goRegister} isAdmin={aiIsAdmin} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     }
     // Taranmış PDF → Metin (OCR): SEO içeriği "cihazda OCR ile aranabilir/düzenlenebilir
     // metin" vaat ediyor → AI özet yerine gerçek OCR aracı (SearchablePdfTool).
@@ -6604,6 +6630,7 @@ function App() {
           onOverlayOpenChange={setToolsPanelOpen}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
+          onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
         <div
           className={`w-full flex-1 bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-60"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
@@ -6693,6 +6720,15 @@ function App() {
                       onUpgrade={() => setUpgradeModalOpen(true)}
                       comingSoon={aiComingSoon}
                       initialFile={pendingToolFile}
+                  ) : aiModal === "photo" ? (
+                    <PhotoStudioTool
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                      comingSoon={aiComingSoon}
+                      isAdmin={aiIsAdmin}
+                    />
                     />
                   ) : (
                     <AiPdfTool
@@ -6803,6 +6839,15 @@ function App() {
                 </Suspense>
               </WorkspaceToolShell>
             ) : null}
+            {/* CV Oluştur — canlı önizlemeli CV hazırlayıcı (üyelik ister, cihazda çalışır). */}
+            {contentPanel === "cv" ? (
+              <section className="mx-auto w-full max-w-[1500px] py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <CvMakerTool language={language} accessToken={accessToken} onLogin={() => setView("login")} onRegister={() => setView("register")} onUpgrade={() => setUpgradeModalOpen(true)} isAdmin={aiIsAdmin} />
+                </Suspense>
+              </section>
+            ) : null}
+
 
             {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
             {contentPanel === "searchable" ? (

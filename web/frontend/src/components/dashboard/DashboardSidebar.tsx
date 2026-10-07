@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Crop, ImageDown, Scale, Scaling, Scissors } from "lucide-react";
+import { Crop, FileUser, ImageDown, Scale, Scaling, Scissors } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -116,7 +116,7 @@ const CATEGORY_ACCENT: Record<
 };
 
 /** AI araç modları — FeatureKey DEĞİL; kendi modal'ını açar (onOpenAi). */
-export type AiToolMode = "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract";
+export type AiToolMode = "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo";
 const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
   { mode: "summarize", tr: "PDF Özetle", en: "Summarize PDF" },
   { mode: "chat", tr: "PDF ile Sohbet", en: "Chat with PDF" },
@@ -124,6 +124,7 @@ const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
   { mode: "translate", tr: "PDF Çevir", en: "Translate PDF" },
   { mode: "compare", tr: "PDF Karşılaştır", en: "Compare PDFs" },
   { mode: "contract", tr: "Sözleşme Denetçisi", en: "Contract Auditor" },
+  { mode: "photo", tr: "AI Fotoğraf Stüdyosu", en: "AI Photo Studio" },
   { mode: "redact", tr: "Hassas Veri Gizle", en: "Redact Data" },
   { mode: "batch", tr: "AI Toplu İşlem", en: "AI Batch" },
 ];
@@ -174,6 +175,7 @@ type DashboardSidebarProps = {
   /** Görsel Boyutlandır aracını aç (cihazda ölçekleme). */
   onOpenResizeImage?: () => void;
   onOpenUdf?: () => void;
+  onOpenCv?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -222,6 +224,7 @@ export function DashboardSidebar({
   onOpenCompressImage,
   onOpenResizeImage,
   onOpenUdf,
+  onOpenCv,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -493,6 +496,22 @@ export function DashboardSidebar({
     );
   };
 
+  const renderCvRow = (keyPrefix = "") => {
+    if (!onOpenCv) return null;
+    const label = tr ? "CV Oluştur" : "CV Maker";
+    return (
+      <button
+        key={`${keyPrefix}cv`}
+        type="button"
+        onClick={onOpenCv}
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "cv")}`}
+      >
+        <FileUser className="h-5 w-5 text-sky-300" aria-hidden />
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  };
+
   const renderUdfRow = (keyPrefix = "") => {
     if (!onOpenUdf) return null;
     const label = tr ? "UDF → PDF" : "UDF → PDF";
@@ -652,6 +671,8 @@ export function DashboardSidebar({
                   {group.id === "optimize" ? renderCompressImageRow("optimize-") : null}
                   {/* Görsel Boyutlandır — İyileştir grubu (sosyal medya ölçüleri) */}
                   {group.id === "optimize" ? renderResizeImageRow("optimize-") : null}
+                  {/* CV Oluştur — Düzenle grubu (canlı önizlemeli CV hazırlayıcı) */}
+                  {group.id === "organize" ? renderCvRow("organize-") : null}
                   {/* UDF'yi PDF Yap — Dönüştür grubu (UYAP belgesi, cihazda çevrilir) */}
                   {group.id === "convert" ? renderUdfRow("convert-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
@@ -793,6 +814,8 @@ export function DashboardSidebarMobileLauncher({
           ? tr ? "PDF'ten Kesit Al" : "Snip PDF to Image"
           : contentPanel === "udf"
           ? tr ? "UDF'yi PDF Yap" : "UDF to PDF"
+          : contentPanel === "cv"
+          ? tr ? "CV Oluştur" : "CV Maker"
           : contentPanel === "ai" && aiMode
             ? (() => {
                 const t = AI_TOOLS.find((x) => x.mode === aiMode);

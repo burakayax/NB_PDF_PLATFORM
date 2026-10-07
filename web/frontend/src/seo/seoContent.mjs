@@ -76,6 +76,8 @@ export const TOOL_SLUGS = [
   "hassas-veri-gizle",
   "sozlesme-denetci",
   "udf-to-pdf",
+  "ai-fotograf-studyosu",
+  "cv-olustur",
 ];
 
 /**
@@ -1510,6 +1512,80 @@ export const TOOL_SEO = {
     ),
   },
 
+  "ai-fotograf-studyosu": {
+    tr: T(
+      "Vesikalık ve Biyometrik Fotoğraf Hazırlama (AI)",
+      "Fotoğrafınızı yükleyin; yapay zekâ vesikalık, biyometrik, CV ve LinkedIn ölçüsüne kırpsın, arka planı değiştirsin. Fotoğraf cihazınızdan çıkmaz.",
+      "Vesikalık, Biyometrik ve CV Fotoğrafı Hazırlayın (Yapay Zekâ)",
+      "Telefonla çektiğiniz bir fotoğrafı saniyeler içinde başvuruya hazır hâle getirin. Yapay zekâ yüzünüzü bulur, başı doğru oranda ortalar, eğik duruşu düzeltir ve arka planı beyaz, açık gri ya da istediğiniz renkle değiştirir. Kimlik ve pasaport (50×60), Schengen vizesi (35×45), ABD (2×2 inç), CV portresi, LinkedIn ve yuvarlak profil resmi gibi hazır ölçüler arasından seçersiniz; dosya boyutu sınırı (KB) koyabilir, aynı fotoğraftan 10×15 baskı sayfası alabilirsiniz. İşlem tamamen cihazınızda yapılır: fotoğrafınız sunucumuza yüklenmez ve saklanmaz. Sonuçtaki uygunluk denetimi (baş oranı, ifade, ışık) yardımcıdır; başvuracağınız kurumun güncel şartını ayrıca kontrol edin.",
+      ["vesikalık fotoğraf hazırlama", "biyometrik fotoğraf", "fotoğraf arka planı silme", "cv fotoğrafı", "pasaport fotoğrafı ölçüleri", "linkedin profil fotoğrafı", "vize fotoğrafı", "fotoğraf boyutlandırma"],
+      [
+        { q: "Fotoğrafım sunucunuza yükleniyor mu?", a: "Hayır. Arka plan ayırma ve yüz bulma modelleri tarayıcınızda, cihazınızda çalışır. Fotoğrafınız internet üzerinden bize gönderilmez ve saklanmaz; sayfayı kapattığınızda cihazınızın belleğinden silinir." },
+        { q: "Biyometrik fotoğraf ölçüsü nedir?", a: "Türkiye'de kimlik kartı, pasaport ve ehliyet için 50×60 mm, düz beyaz fon ve yüzün fotoğrafın yaklaşık %70–80'ini kapladığı, karşıdan çekilmiş, nötr ifadeli bir fotoğraf istenir. Kurallar değişebilir; başvuru yapacağınız kurumun güncel şartını kontrol edin." },
+        { q: "Arka planı beyaz yapabilir miyim?", a: "Evet. Beyaz, açık gri, açık mavi, krem, stüdyo grisi, lacivert, bulanık arka plan ya da seçtiğiniz bir renk uygulayabilir; şeffaf PNG de alabilirsiniz. Saç telleri dahil kenarlar yapay zekâ ile ayrılır." },
+        { q: "e-Devlet ya da başvuru formu dosya boyutu sınırı koyuyor, ne yapmalıyım?", a: "Çıktı bölümünde en fazla boyutu KB olarak yazın (ör. 100 KB). Araç kaliteyi kademeli ayarlayarak dosyayı sınırın altına indirir; yetmezse çözünürlüğü hafifçe düşürür ve size bildirir." },
+        { q: "CV için hangi fotoğraf ölçüsü uygun?", a: "Çoğu CV şablonu dikey 3:4 portre ya da kare alan kullanır. CV portre ve CV kare ön ayarları, yüzü kadrajın yaklaşık yarısında tutan ferah bir kadraj üretir; LinkedIn için kare 800×800 ön ayarı da vardır." },
+        { q: "Telefonla çektiğim fotoğraf olur mu?", a: "Evet. Düz bir duvarın önünde, pencere ışığıyla, kameraya karşıdan ve göz hizasında çekilmiş bir fotoğraf yeterlidir. Çok karanlık, bulanık ya da yüzün kısmen kapalı olduğu fotoğraflarda araç sizi uyarır." },
+        { q: "Aynı fotoğraftan birden fazla ölçü alabilir miyim?", a: "Evet. Birden fazla ölçüyü işaretleyip hepsini tek ZIP dosyası olarak indirebilirsiniz. 10×15 cm ya da A4 baskı sayfası seçerseniz fotoğraf kâğıda gerçek boyutunda dizilir." },
+        { q: "Bu araç ücretsiz mi?", a: "Yapay zekâ araçları gibi Pro üyelere açılır. Çok yakında kullanıma sunulacak." },
+      ],
+    ),
+    en: T(
+      "ID, Passport & CV Photo Maker with AI",
+      "Upload a photo; AI crops it to ID, biometric, CV or LinkedIn size and swaps the background. The photo never leaves your device.",
+      "Make ID, Passport and CV Photos with AI",
+      "Turn a phone photo into an application-ready picture in seconds. AI finds your face, centres the head at the right size, levels a tilted pose and replaces the background with white, light grey or any colour. Pick from ready sizes such as Turkish ID and passport (50×60), Schengen visa (35×45), US (2×2 in), CV portrait, LinkedIn and round avatars; set a file size limit in KB and print a 10×15 sheet of copies. Everything runs on your device: the photo is never uploaded or stored. The suitability check (head size, expression, light) is a guide; always confirm the current rules of the institution you apply to.",
+      ["passport photo maker", "id photo online", "remove photo background", "cv photo", "biometric photo size", "linkedin headshot", "visa photo size", "resize photo for application"],
+      [
+        { q: "Is my photo uploaded to your server?", a: "No. The background-removal and face-detection models run in your browser, on your device. Your photo is not sent to us or stored, and it is gone from memory when you close the page." },
+        { q: "What is the biometric photo size?", a: "For Turkish ID cards, passports and driving licences the photo is 50×60 mm on a plain white background, with the face covering roughly 70–80% of the frame, front-facing and neutral. Rules can change, so check the current requirements of the institution you apply to." },
+        { q: "Can I make the background white?", a: "Yes. Choose white, light grey, light blue, cream, studio grey, navy, a blurred background or your own colour; transparent PNG is available too. Edges, including strands of hair, are separated by AI." },
+        { q: "A portal limits the file size. What should I do?", a: "Type the maximum size in KB in the Output section (for example 100 KB). The tool lowers quality step by step to fit; if that is not enough it reduces the resolution slightly and tells you." },
+        { q: "What photo size works for a CV?", a: "Most CV templates use a 3:4 portrait or a square. The CV portrait and CV square presets keep the face at about half the frame with comfortable space around it; an 800×800 LinkedIn preset is included." },
+        { q: "Can I use a photo taken with my phone?", a: "Yes. A photo taken front-on at eye level, in window light in front of a plain wall, is enough. If the image is too dark, blurry or the face is partly covered the tool warns you." },
+        { q: "Can I get several sizes from one photo?", a: "Yes. Tick several sizes and download them together as one ZIP. If you pick a 10×15 cm or A4 print sheet, copies are laid out at true size." },
+        { q: "Is it free?", a: "Like the other AI tools it is for Pro members, and it is opening very soon." },
+      ],
+    ),
+  },
+
+  "cv-olustur": {
+    tr: T(
+      "CV Oluştur — Hazır Şablonlar, PDF İndir",
+      "Hazır CV şablonunu seçin, bilgilerinizi girin; CV'niz canlı oluşsun. Fotoğraf ekleyin, PDF olarak indirin. Boş alanlar çıktıya eklenmez.",
+      "Online CV Oluşturun — Canlı Önizlemeli Hazır Şablonlar",
+      "Bir şablon seçin, sağdaki forma bilgilerinizi yazın; CV'niz solda anında şekillensin. Adınızı yazdığınız an CV'nin üzerinde görürsünüz. Fotoğraf ekleyebilir, rengi ve yazı boyutunu değiştirebilir, Türkçe ya da İngilizce başlıklar seçebilirsiniz. Boş bıraktığınız bölümler önizlemede soluk görünür ama indirdiğiniz PDF'e hiç eklenmez; böylece \"Referanslar\" gibi başlıklar boş kalmaz. PDF'teki yazılar seçilebilir gerçek metindir, başvuru sistemleri (ATS) okuyabilir. Bilgileriniz yalnızca tarayıcınızda işlenir. İki şablon ücretsiz üyelikle kullanılır; diğer şablonlar Pro üyelere özeldir. İsterseniz boş şablonu indirip kendiniz de doldurabilirsiniz.",
+      ["cv oluşturma", "online cv hazırlama", "ücretsiz cv şablonu", "cv örnekleri", "ats uyumlu cv", "cv şablonu indir", "özgeçmiş hazırlama", "cv maker türkçe"],
+      [
+        { q: "CV oluşturmak ücretsiz mi?", a: "Ücretsiz üyelikle iki şablonu sınırsız kullanabilirsiniz. Diğer şablonlar Pro üyelere özeldir; ücretsiz kullanıcılar bu şablonları örnek içerikle, soluk önizlemede görür." },
+        { q: "Boş bıraktığım alanlar CV'de görünür mü?", a: "Hayır. Önizlemede boş alanlar soluk yer tutucu olarak görünür ki neyi doldurabileceğinizi bilin; ancak PDF'e boş alan ya da boş bölüm eklenmez. \"PDF görünümü\"ne geçerek sonucu önceden görebilirsiniz." },
+        { q: "CV'me fotoğraf ekleyebilir miyim?", a: "Evet. Fotoğraf yükleyip sürükleyerek konumlandırır, yakınlaştırırsınız. İsterseniz fotoğrafsız CV de oluşturabilirsiniz. Fotoğrafı CV'ye uygun hazırlamak için AI Fotoğraf Stüdyosu'nu kullanabilirsiniz." },
+        { q: "CV'm başvuru sistemlerine (ATS) uygun mu?", a: "PDF'teki yazılar resim değil gerçek metindir ve tek akışta okunur; Türkçe karakterler yazı tipine gömülüdür. En sade yerleşim için Sade şablonunu öneririz." },
+        { q: "Bilgilerim sunucuya gönderiliyor mu?", a: "Hayır. CV'niz tarayıcınızda hazırlanır; taslağınız yalnızca bu cihazda saklanır, sunucumuza gönderilmez." },
+        { q: "CV kaç sayfa olur?", a: "İçeriğe göre kendiliğinden sayfalanır. Bir deneyim kalemi ya da başlık sayfa sonunda ikiye bölünmez; sonraki sayfaya taşınır." },
+        { q: "İngilizce CV hazırlayabilir miyim?", a: "Evet. \"Görünüm ve dil\" bölümünden CV dilini seçersiniz; bölüm başlıkları ve tarih biçimi buna göre değişir. İçeriği dilediğiniz dilde yazabilirsiniz." },
+        { q: "Hazır şablonu indirip elle doldurabilir miyim?", a: "Evet. \"Boş şablonu indir\" ile yer tutucu metinli PDF alır, PDF Düzenle aracıyla üzerine yazabilirsiniz." },
+      ],
+    ),
+    en: T(
+      "CV Maker — Ready Templates, Download as PDF",
+      "Pick a ready-made CV template, enter your details and watch it build live. Add a photo and download a PDF. Empty fields are left out of the file.",
+      "Build Your CV Online — Ready Templates with Live Preview",
+      "Choose a template, type your details into the form on the right and watch your CV take shape on the left — your name appears the moment you type it. Add a photo, change the colour and text size, and pick English or Turkish headings. Sections you leave empty appear faded in the preview but are never included in the PDF you download, so you won't end up with an empty \"References\" heading. The text in the PDF is real, selectable text that hiring systems (ATS) can read. Your details are processed only in your browser. Two templates are available with a free account; the rest are for Pro members. You can also download a blank template and fill it in yourself.",
+      ["cv maker", "online resume builder", "free cv template", "resume templates pdf", "ats friendly resume", "cv builder with photo", "download cv template", "resume maker"],
+      [
+        { q: "Is making a CV free?", a: "With a free account you can use two templates without limits. The other templates are for Pro members; free users see them faded with sample content." },
+        { q: "Do fields I leave empty show up on the CV?", a: "No. In the preview, empty fields appear as faded placeholders so you know what you can fill in, but no empty field or section is added to the PDF. Switch to \"PDF view\" to see the result beforehand." },
+        { q: "Can I add a photo?", a: "Yes. Upload a photo, drag to position it and zoom. You can also make a CV without a photo. Use the AI Photo Studio to prepare a photo suited to your CV." },
+        { q: "Is my CV ATS-friendly?", a: "The text in the PDF is real text, not an image, and reads in a single flow; the fonts are embedded with full Turkish character support. For the simplest layout choose the Plain template." },
+        { q: "Is my information sent to a server?", a: "No. Your CV is built in your browser; the draft is stored only on this device and never sent to us." },
+        { q: "How many pages will it be?", a: "It paginates automatically. A job entry or a heading is never split across a page break; it moves to the next page." },
+        { q: "Can I make an English CV?", a: "Yes. Choose the CV language under \"Look & language\"; section headings and date formats follow. You can write the content in any language." },
+        { q: "Can I download a template and fill it in by hand?", a: "Yes. \"Download blank template\" gives a PDF with placeholder text that you can type over with the Edit PDF tool." },
+      ],
+    ),
+  },
+
   "ai-toplu-islem": {
     tr: T(
       "AI Toplu İşlem — Çok Sayıda PDF'i Tek Seferde İşle",
@@ -1924,10 +2000,18 @@ export const RELATED_TOOLS = {
   // UYAP evrakıyla gelen kullanıcının bir sonraki işi neredeyse her zaman aynı:
   // dosyayı küçültüp portala yüklemek ya da parçaları tek dosyada toplamak.
   "udf-to-pdf": ["compress", "merge-pdf", "pdf-to-word", "hassas-veri-gizle"],
+  "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
+  "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };
 
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
 export const BLOG_RELATED_TOOLS = {
+  "cv-nasil-hazirlanir": ["cv-olustur", "ai-fotograf-studyosu", "compress"],
+  "ats-uyumlu-cv-nasil-yazilir": ["cv-olustur", "pdf-duzenle", "compress"],
+  "cv-fotografi-nasil-olmali": ["ai-fotograf-studyosu", "cv-olustur", "gorsel-boyutlandir"],
+  "biyometrik-fotograf-olculeri-ve-kurallari": ["ai-fotograf-studyosu", "gorsel-boyutlandir", "gorsel-sikistir"],
+  "vesikalik-fotograf-evde-nasil-cekilir": ["ai-fotograf-studyosu", "gorsel-sikistir", "image-to-pdf"],
+  "linkedin-profil-fotografi-ipuclari": ["ai-fotograf-studyosu", "cv-olustur", "gorsel-boyutlandir"],
   "ucretsiz-pdf-araci-nasil-secilir": ["merge-pdf", "split-pdf", "compress", "pdf-to-word"],
   "pdf-kucultme-eposta-whatsapp": ["compress", "split-pdf", "merge-pdf"],
   "gorsel-boyutlandirma-sosyal-medya": ["gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],

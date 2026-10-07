@@ -135,6 +135,8 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/pdf-karsilastir" ||
     rawPath === "/tools/hassas-veri-gizle" ||
     rawPath === "/tools/sozlesme-denetci" ||
+    rawPath === "/tools/ai-fotograf-studyosu" ||
+    rawPath === "/tools/cv-olustur" ||
     rawPath === "/tools/belge-tara" ||
     rawPath === "/tools/aranabilir-pdf" ||
     rawPath === "/tools/gorsel-sikistir" ||
@@ -218,7 +220,7 @@ export function getInitialViewFromLocation(): AppView {
 export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/pdf-ozetle", "/tools/pdf-sohbet", "/tools/pdf-duzenle", "/tools/pdf-imzala",
   "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
-  "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle", "/tools/sozlesme-denetci",
+  "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle", "/tools/sozlesme-denetci", "/tools/ai-fotograf-studyosu", "/tools/cv-olustur",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
   "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
@@ -245,6 +247,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "gorsel-boyutlandir": "resize-image",
   "pdf-kesit-al": "snip",
   "udf-to-pdf": "udf",
+  "cv-olustur": "cv",
   "aranabilir-pdf": "searchable",
   "taranmis-pdf-ocr": "searchable",
   "belge-tara": "scanner",
@@ -252,7 +255,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
 /** AI araç slug'ı → "ai" panelinin modu. */
 export const AI_TOOL_MODES: Record<
   string,
-  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare" | "contract"
+  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare" | "contract" | "photo"
 > = {
   "pdf-ozetle": "summarize",
   "pdf-sohbet": "chat",
@@ -262,6 +265,7 @@ export const AI_TOOL_MODES: Record<
   "ai-toplu-islem": "batch",
   "pdf-karsilastir": "compare",
   "sozlesme-denetci": "contract",
+  "ai-fotograf-studyosu": "photo",
 };
 /**
  * Panel → araç slug'ı (SPECIAL_TOOL_PANELS'in tersi).

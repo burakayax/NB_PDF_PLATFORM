@@ -21,6 +21,7 @@ import { AiBatchTool } from "../tools/AiBatchTool";
 import { AiCompareTool } from "../tools/AiCompareTool";
 import { ContractReviewTool } from "../tools/ContractReviewTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
+
 import { PdfEditor } from "../tools/PdfEditor";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 
@@ -47,6 +48,7 @@ import {
   Zap,
   type LucideIcon,
   Gavel,
+  UserRound,
 } from "lucide-react";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
@@ -64,7 +66,7 @@ export const isFreeToolId = (id: string): id is FreeToolId =>
  * baş başa kalmaz.
  */
 type AiToolId =
-  | "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract";
+  | "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo";
 
 type HeroMeta = { Icon: LucideIcon; tr: string; en: string; trDesc: string; enDesc: string };
 
@@ -85,6 +87,8 @@ const AI_TOOLS: { id: AiToolId; meta: HeroMeta }[] = [
     trDesc: "Kimlik ve IBAN gibi bilgileri karartır.", enDesc: "Blacks out IDs and account numbers." } },
   { id: "contract", meta: { Icon: Gavel, tr: "Sözleşme Denetle", en: "Audit Contract",
     trDesc: "Riskli maddeleri bulur, belgede boyar. Hızlı tarama ya da mevzuatlı detaylı denetim.", enDesc: "Finds and highlights risky clauses. Quick scan or a detailed audit with a current-law check." } },
+  { id: "photo", meta: { Icon: UserRound, tr: "AI Fotoğraf", en: "AI Photo",
+    trDesc: "Vesikalık, CV ve LinkedIn fotoğrafınızı hazırlar; arka planı değiştirir. Fotoğraf cihazdan çıkmaz.", enDesc: "Prepares ID, CV and LinkedIn photos and swaps the background. The photo never leaves your device." } },
 ];
 
 const EDITOR_META: HeroMeta = {
@@ -150,6 +154,9 @@ const PdfSign = lazyWithRetry(() =>
 );
 const PdfAnnotate = lazyWithRetry(() =>
   import("../tools/PdfAnnotate").then((m) => ({ default: m.PdfAnnotate })),
+);
+const PhotoStudioTool = lazyWithRetry(() =>
+  import("../tools/PhotoStudioTool").then((m) => ({ default: m.PhotoStudioTool })),
 );
 const UdfToPdfTool = lazyWithRetry(() =>
   import("../tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
@@ -999,6 +1006,16 @@ function Hero({
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+            ) : aiTool === "photo" ? (
+              <Suspense fallback={<HeroToolSkeleton />}>
+                <PhotoStudioTool
+                  language={language}
+                  accessToken={accessToken}
+                  onLogin={onLogin}
+                  onUpgrade={onUpgrade}
+                  comingSoon={aiComingSoon}
+                />
+              </Suspense>
             ) : aiTool === "redact" ? (
               <AiRedactTool
                 language={language}

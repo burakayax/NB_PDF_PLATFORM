@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>ATS-Friendly CV: 9 Practical Rules</title>
+    <meta name="description" content="Nine rules so applicant tracking systems (ATS) read your CV correctly: real-text PDF, standard headings, a simple layout and the right keywords." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/ats-friendly-cv" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/ats-friendly-cv" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="ATS-Friendly CV: 9 Practical Rules" />
+    <meta property="og:description" content="Nine rules so applicant tracking systems (ATS) read your CV correctly: real-text PDF, standard headings, a simple layout and the right keywords." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/ats-friendly-cv.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ATS-Friendly CV: 9 Practical Rules" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/ats-friendly-cv" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="ATS-Friendly CV: 9 Practical Rules" />
+    <meta name="twitter:description" content="Nine rules so applicant tracking systems (ATS) read your CV correctly: real-text PDF, standard headings, a simple layout and the right keywords." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/ats-friendly-cv.png" />
+    <meta name="twitter:image:alt" content="ATS-Friendly CV: 9 Practical Rules" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"ATS-Friendly CV: 9 Practical Rules","item":"https://www.pdfplatform.app/en/blog/ats-friendly-cv"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"ATS-Friendly CV: 9 Practical Rules","description":"Nine rules so applicant tracking systems (ATS) read your CV correctly: real-text PDF, standard headings, a simple layout and the right keywords.","datePublished":"2026-10-07","dateModified":"2026-10-07","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/ats-friendly-cv","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/ats-friendly-cv.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is an ATS?","acceptedAnswer":{"@type":"Answer","text":"An applicant tracking system: software companies use to collect applications and extract information from CVs into a candidate list."}},{"@type":"Question","name":"Does a photo break the ATS?","acceptedAnswer":{"@type":"Answer","text":"The image is usually ignored, but some systems struggle with CVs that include pictures. A simple single-column template with information written as text is the safest route."}},{"@type":"Question","name":"Should I send Word or PDF?","acceptedAnswer":{"@type":"Answer","text":"Unless the ad asks for another format, a PDF with real text is a safe choice; it looks the same on every device."}},{"@type":"Question","name":"Are the CVs from this tool ATS-ready?","acceptedAnswer":{"@type":"Answer","text":"The text in the PDF is selectable real text and reads in a single flow. Still, no tool can guarantee a result in a specific system."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>ATS-Friendly CV: 9 Practical Rules</h1><p class="seo-intro">Many companies run CVs through an applicant tracking system first. Nine practical rules to make sure it reads yours completely.</p><figure class="seo-cover"><img src="/en/covers/ats-friendly-cv.png" width="1200" height="630" loading="lazy" decoding="async" alt="ATS-Friendly CV: 9 Practical Rules" /></figure><article class="seo-article"><p class="seo-lead">Many companies collect applications through an applicant tracking system (ATS). These systems read your CV and split the information into fields; anything they can&#39;t read, or place wrongly, looks incomplete on the recruiter&#39;s screen. A CV that looks beautiful but can&#39;t be read by a machine can be an invisible CV. These rules are practical ways to avoid that.</p><h2>File and text</h2><ol><li>Use a PDF that contains real text. Text in a CV saved as a screenshot or scanned image may not be read. If you can select text in the PDF with your mouse, you&#39;re on the right track.</li><li>Don&#39;t bury information in images. Phone, email and skills should be text, not part of a logo or graphic.</li><li>Choose standard fonts. Common, readable fonts are safest for people and systems alike; make sure Turkish characters (ş, ğ, ı, İ) display fully.</li></ol><h2>Structure and headings</h2><ol start="4"><li>Use familiar headings: “Work Experience”, “Education”, “Skills”. Creative headings (“My Journey”) can stop a system recognising the section.</li><li>Prefer a simple layout. Some systems read multi-column, table or boxed designs in the wrong order. If unsure, choose a single-column template.</li><li>Write dates consistently, such as “Mar 2020 – Present”. Give every entry a title, company and date.</li></ol><h2>Content</h2><ol start="7"><li>Use the ad&#39;s keywords naturally. If the ad says “project management” and you have that experience, use the same phrase — but never list a skill you don&#39;t have just to add a word.</li><li>Spell out abbreviations once: “Customer Relationship Management (CRM)”. People and systems recognise both forms.</li><li>Don&#39;t put key details in the page header or footer. Some systems skip those areas; place your contact details in the main body.</li></ol><p>ATS behaviour varies from system to system and none guarantees a perfect read everywhere. The aim is to present information so that both people and machines read it easily.</p><p><a href="/en/tools/cv-maker"><strong>CV Maker</strong> — The text in our templates is written to the PDF as selectable real text, not an image. For the simplest layout try the Plain template.</a></p><h2>A one-minute check before you send</h2><ul><li>Open the PDF, select all (Ctrl+A) and paste into a text editor: do the order and content make sense?</li><li>Are your phone and email written plainly in the header?</li><li>Is the file name clear, like first-last-cv.pdf?</li></ul></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/cv-maker">CV Maker</a></li><li><a href="/en/tools/edit-pdf">Edit PDF</a></li><li><a href="/en/tools/compress">Compress PDF</a></li></ul></nav><nav aria-label="Related guides" class="seo-related-guides"><h2>Related Guides</h2><ul><li><a href="/en/blog/how-to-write-a-cv">How to Write a CV: A Step-by-Step Guide</a></li><li><a href="/en/blog/cv-photo-guide">What Makes a Good CV Photo? Size, Background, Framing</a></li><li><a href="/en/blog/linkedin-profile-photo-tips">LinkedIn Profile Photo: Size and 7 Tips</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>What is an ATS?</h3><p>An applicant tracking system: software companies use to collect applications and extract information from CVs into a candidate list.</p></div><div class="seo-faq-item"><h3>Does a photo break the ATS?</h3><p>The image is usually ignored, but some systems struggle with CVs that include pictures. A simple single-column template with information written as text is the safest route.</p></div><div class="seo-faq-item"><h3>Should I send Word or PDF?</h3><p>Unless the ad asks for another format, a PDF with real text is a safe choice; it looks the same on every device.</p></div><div class="seo-faq-item"><h3>Are the CVs from this tool ATS-ready?</h3><p>The text in the PDF is selectable real text and reads in a single flow. Still, no tool can guarantee a result in a specific system.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
