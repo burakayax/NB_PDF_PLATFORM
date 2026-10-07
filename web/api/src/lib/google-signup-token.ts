@@ -3,7 +3,7 @@ import { env } from "../config/env.js";
 
 /**
  * GOOGLE İLE YENİ HESAP: Google'dan dönen kişi sistemde YOKSA hesap hemen açılmaz. Önce kullanıcıya
- * Hizmet Şartları/Gizlilik/aydınlatma/18 yaş onayları gösterilir; onay gelince hesap açılır.
+ * Hizmet Şartları/Gizlilik/aydınlatma onayları gösterilir; onay gelince hesap açılır.
  * Bu kısa ömürlü jeton, onay ekranı açıkken Google'dan alınan profil bilgisini taşır (15 dakika).
  */
 export type GoogleSignupProfile = {

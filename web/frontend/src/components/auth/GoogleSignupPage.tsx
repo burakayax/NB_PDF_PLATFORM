@@ -9,7 +9,6 @@ export function GoogleSignupPage() {
   const [token, setToken] = useState<string | null>(null);
   const [terms, setTerms] = useState(false);
   const [notice, setNotice] = useState(false);
-  const [age, setAge] = useState(false);
   const [marketing, setMarketing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -27,14 +26,14 @@ export function GoogleSignupPage() {
     setToken(t);
   }, []);
 
-  const ok = terms && notice && age;
+  const ok = terms && notice;
 
   async function submit() {
     if (!token || !ok || busy) return;
     setBusy(true);
     setError("");
     try {
-      const r = await completeGoogleSignup({ token, termsAccepted: true, privacyNoticeRead: true, ageConfirmed: true, marketingConsent: marketing });
+      const r = await completeGoogleSignup({ token, termsAccepted: true, privacyNoticeRead: true, marketingConsent: marketing });
       window.location.replace(`/login-success?token=${encodeURIComponent(r.accessToken)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "Hesap açılamadı. Lütfen Google ile tekrar deneyin." : "Could not create the account. Please try Google sign-in again.");
@@ -95,12 +94,6 @@ export function GoogleSignupPage() {
                     I have read the <a href="/kvkk" target="_blank" rel="noopener noreferrer" className={link}>privacy (KVKK) notice</a>. <span className="text-red-400">*</span>
                   </>
                 )}
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-2.5">
-              <input type="checkbox" checked={age} onChange={(e) => setAge(e.target.checked)} className={box} />
-              <span className="text-[12px] leading-relaxed text-slate-300">
-                {tr ? "18 yaşını doldurduğumu beyan ederim." : "I confirm that I am at least 18 years old."} <span className="text-red-400">*</span>
               </span>
             </label>
             <label className="flex cursor-pointer items-start gap-2.5 pt-1">

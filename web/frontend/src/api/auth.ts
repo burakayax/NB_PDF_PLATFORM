@@ -125,7 +125,6 @@ export type RegisterAuthPayload = {
   /** ZORUNLU kayıt onayları (sunucu da doğrular). */
   termsAccepted: true;
   privacyNoticeRead: true;
-  ageConfirmed: true;
 };
 
 type RegisterPayload = RegisterAuthPayload;
@@ -166,7 +165,6 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   }
   body.termsAccepted = true;
   body.privacyNoticeRead = true;
-  body.ageConfirmed = true;
   // Admin panelindeki "ülke dağılımı" için — opsiyonel, gelmezse kayıt yine
   // başarılı olur (bkz. geoCountry.ts: sağlayıcı zinciri başarısız olursa null).
   try {
@@ -466,7 +464,6 @@ export type GoogleSignupCompletePayload = {
   token: string;
   termsAccepted: true;
   privacyNoticeRead: true;
-  ageConfirmed: true;
   marketingConsent?: boolean;
 };
 

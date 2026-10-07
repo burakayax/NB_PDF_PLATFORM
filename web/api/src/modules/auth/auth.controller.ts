@@ -939,7 +939,7 @@ export async function googleOAuthCallbackController(
       });
     } catch (e) {
       if (!(e instanceof GoogleTermsRequiredError)) throw e;
-      // Yeni kişi: hesap AÇILMADAN önce onay ekranı (Hizmet Şartları, Gizlilik, KVKK aydınlatma, 18 yaş).
+      // Yeni kişi: hesap AÇILMADAN önce onay ekranı (Hizmet Şartları, Gizlilik, KVKK aydınlatma).
       if (desktopLocalPort !== null) {
         const url = oauthFrontendRedirect(
           "login-error",
@@ -1173,7 +1173,6 @@ const googleSignupCompleteSchema = z.object({
   token: z.string().min(20).max(4000),
   termsAccepted: z.literal(true, { message: "You must accept the Terms of Service and Privacy Policy." }),
   privacyNoticeRead: z.literal(true, { message: "You must confirm that you have read the privacy notice." }),
-  ageConfirmed: z.literal(true, { message: "You must confirm that you are at least 18 years old." }),
   marketingConsent: z.boolean().optional(),
 });
 
