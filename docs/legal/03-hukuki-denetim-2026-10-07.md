@@ -185,3 +185,38 @@ Yöntem: Her bulgu kodda, canlı sitede veya resmi kaynakta doğrulandı. Doğru
 - Anthropic API veri saklama (30 gün) ve ticari şartlar
 - VERBİS muafiyet eşikleri (50 çalışan / 100 milyon TL)
 - DocuSign Personal planı, Microsoft Lens kapanış tarihleri
+
+---
+
+## Sorumluluk sınırı: piyasa karşılaştırması (7 Ekim)
+
+Kaynaklar şartların kendisinden okundu. (Smallpdf şartlarına ulaşılamadı, doğrulanmadı.)
+
+| Firma | Sınır |
+|---|---|
+| Adobe | **100 ABD doları** veya önceki 3 ayda ödenen tutar, hangisi büyükse. Kast, ağır kusur, ölüm/yaralanma hariç |
+| DocuSign | Önceki **12 ayda ödenen tutar** veya **100 ABD doları**, hangisi büyükse. Tüketici için ülkelere göre istisnalar |
+| iLovePDF | Ücretli ticari müşteri: önceki 16 ayın ödemesi. Ücretli tüketici: toplam ödemenin 1,5 katı. **Ücretsiz kullanıcı: kast/ağır kusur dışında sorumluluk yok**. Emredici hukuk saklı |
+| Sejda | Önceki 12 ayda ödenen tutar; **ücretsiz ürünlerde 20 ABD doları** |
+
+Sonuç: Sınır koymak sektör standardı; kaldırmak sizi korumasız bırakır (özellikle şirket kurulmadığı sürece sorumluluk **kişisel** olur). Bu yüzden kaldırılmadı, **yeniden yapılandırıldı**: ücretsiz / ücretli ticari / tüketici ayrımı, kast ve ağır kusur istisnası, emredici tüketici hukuku saklı. Avukat gözden geçirmeli.
+
+---
+
+## Şirket kurulunca yapılacaklar (sırayla)
+
+1. Şirket veya şahıs işletmesi kur: unvan, MERSİS/vergi no, merkez adresi, telefon, KEP.
+2. Bu bilgileri alt bilgiye ("İletişim"), Ön Bilgilendirme "Satıcı" bölümüne, Mesafeli Satış "Taraflar"a, KVKK "Veri sorumlusu"na ve e-posta alt bilgisine yerleştir. Yönetim panelindeki "Gönderen kimliği" ayarını doldur.
+3. İYS kaydı (ticari e-posta için zorunlu). ETBİS kaydı. VERBİS muafiyet kontrolü (çalışan ve bilanço eşikleri).
+4. iyzico üye işyeri başvurusu (şahıs işletmesi kabul ediliyor mu sor). Onay sonrası ödemeleri aç.
+5. Fatura entegratörünü (Paraşüt veya BirFatura) gerçek hesapla bağla, deneme fatura kes. Mali müşavirle yurt dışı satış KDV (ihracat istisnası) teyidi.
+6. Mesafeli Satış Sözleşmesi'ni ödeme adımına ekle, onayı sunucuda zorunlu kıl, satın alma e-postasına sözleşme + ön bilgilendirme kopyası koy.
+7. "Onaylı yenileme" kur: süre bitmeden hatırlatma, "Yenile" düğmesi, onay kaydı (zaman, IP, fiyat, metin sürümü).
+8. Hizmet Şartları'nı avukata yeniden yazdır: tüketici/ticari ayrımı, Türk hukuku, yetkili mahkeme ve tüketici hakem heyeti, 18 yaş şartı.
+9. Anthropic ile veri işleme sözleşmesi; yurt dışı aktarım için standart sözleşme ve Kuruma 5 iş günü içinde bildirim; Google (GA4) ve e-posta sağlayıcısı için aynısı.
+10. Muhasebeci ile aylık CSV dökümü rutini; Render veritabanı planı ve yedek kontrolü.
+11. "PDF Platform" marka tescili (TÜRKPATENT).
+12. Yürürlük tarihlerini yayın gününe çek.
+
+### Şirketten bağımsız, bekleyen kod işleri
+K3 (IP'yi üçüncü taraf servislere gönderme), K4 (onaysız yolculuk ölçümü), Y6 (eski kayıtların gerçekten silinmesi), Y7 (taranmış belge ve imza belgesi saklama metni/süresi), O1-O3 ("koşulsuz iade", "GDPR uyumlu", "%100 gizli" ifadeleri), O7 (alt bilgiye yasal sayfa bağlantıları).
