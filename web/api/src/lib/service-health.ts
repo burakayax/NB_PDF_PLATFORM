@@ -20,6 +20,10 @@ const FAILURE_THROTTLE_MS = 30_000;
 
 type State = { ok: boolean; writtenAt: number };
 const lastState = new Map<HealthComponent, State>();
+/** Anlık durum (yazma kuralından BAĞIMSIZ): e-posta uyarıları buna bakar. since = bu durumun başladığı an. */
+const currentState = new Map<HealthComponent, { ok: boolean; since: number }>();
+/** Alınan 5xx bildirimlerinin zamanları (uyarı için; aralıklı temizlenir). */
+let recentFailureTimes: number[] = [];
 const lastFailureWrite = new Map<string, number>();
 let lastPdfHeartbeatAt: number | null = null;
 const processStartedAt = Date.now();
@@ -27,12 +31,16 @@ const processStartedAt = Date.now();
 /** Test için sıfırlama. */
 export function __resetServiceHealthState() {
   lastState.clear();
+  currentState.clear();
+  recentFailureTimes = [];
   lastFailureWrite.clear();
   lastPdfHeartbeatAt = null;
 }
 
 /** Bir bileşenin durumunu kaydeder (değişim veya 10 dk heartbeat kuralıyla). Hata yutulur: kayıt asla işi bozmaz. */
 export async function recordHealth(component: HealthComponent, ok: boolean, opts?: { latencyMs?: number; detail?: string }, now = Date.now()): Promise<boolean> {
+  const cur = currentState.get(component);
+  if (!cur || cur.ok !== ok) currentState.set(component, { ok, since: now });
   const prev = lastState.get(component);
   const due = !prev || prev.ok !== ok || now - prev.writtenAt >= HEARTBEAT_WRITE_INTERVAL_MS;
   if (!due) return false;
@@ -66,6 +74,8 @@ export function normalizePath(path: string): string {
 
 /** 5xx olayını kaydeder (aynı yol+durum için en çok 30 sn'de bir). */
 export async function recordHttpFailure(component: HealthComponent, path: string, status: number, now = Date.now()): Promise<boolean> {
+  recentFailureTimes = recentFailureTimes.filter((t) => now - t < 60 * 60 * 1000);
+  recentFailureTimes.push(now);
   const p = normalizePath(path);
   const key = `${component}|${p}|${status}`;
   if (now - (lastFailureWrite.get(key) ?? 0) < FAILURE_THROTTLE_MS) return false;
@@ -195,4 +205,15 @@ export async function loadServiceStatus(from: Date, to: Date): Promise<ServiceSt
     select: { at: true, component: true, kind: true, ok: true, path: true, status: true },
   });
   return computeServiceStatus(rows, from, to);
+}
+
+// ───────────────── Uyarı için okuma yardımcıları
+
+export function getComponentStates(): Array<{ component: HealthComponent; ok: boolean; since: number }> {
+  return [...currentState.entries()].map(([component, v]) => ({ component, ok: v.ok, since: v.since }));
+}
+
+/** Son `windowMs` içinde alınan 5xx bildirimi sayısı. */
+export function countRecentFailures(windowMs: number, now = Date.now()): number {
+  return recentFailureTimes.filter((t) => now - t < windowMs).length;
 }

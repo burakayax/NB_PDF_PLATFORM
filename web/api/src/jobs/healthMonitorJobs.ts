@@ -1,6 +1,9 @@
 import cron from "node-cron";
 import { prisma } from "../lib/prisma.js";
 import { checkPdfHeartbeatMissing, recordHealth } from "../lib/service-health.js";
+import { evaluateAlerts } from "../lib/service-alerts.js";
+import { sendMail } from "../lib/mailer.js";
+import { env } from "../config/env.js";
 
 /**
  * Her dakika: veritabanı ve bu servis için sağlık kaydı; PDF API'den kalp atışı gelmiyorsa "kapalı" kaydı.
@@ -16,6 +19,10 @@ export async function runHealthChecks(): Promise<void> {
   }
   await recordHealth("api", true);
   await checkPdfHeartbeatMissing();
+  // Sorun varsa yöneticiye otomatik e-posta (SERVICE_ALERTS=off ile kapatılır).
+  await evaluateAlerts(async (subject, text, html) => {
+    await sendMail({ to: env.ADMIN_EMAIL, subject, text, html });
+  });
 }
 
 export function registerHealthMonitorJobs() {
