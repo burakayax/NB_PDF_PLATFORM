@@ -370,13 +370,14 @@ export const TOOL_SEO = {
       "PDF dosyalarını kalite kaybı olmadan sıkıştırın. E-posta ekleri ve yüklemeler için PDF'i optimize edin — ücretsiz online araç.",
       "PDF Sıkıştırma",
       "Büyük PDF dosyalarının boyutunu, metin ve görselleri okunaklı tutarak küçültün. E-posta ekleri, portal yüklemeleri ve hızlı paylaşım için idealdir.",
-      ["pdf sıkıştırma", "pdf boyut küçültme", "pdf küçültme", "compress pdf"],
+      ["pdf sıkıştırma", "pdf boyut küçültme", "pdf küçültme", "pdf boyutunu mb'a düşürme", "compress pdf"],
       [
         { q: "PDF dosyasını boyutunu küçültmek için nasıl sıkıştırırım?", a: "PDF'inizi yükleyin, sıkıştırma düzeyini seçin ve optimize edilmiş dosyayı indirin. Metin ve görseller okunaklı kalır." },
         { q: "Sıkıştırma kaliteyi bozar mı?", a: "Dengeli düzeyde belirgin bir kalite kaybı olmaz; daha yüksek sıkıştırmada boyut daha çok düşer." },
         { q: "PDF'i e-postaya sığdıracak kadar küçültebilir miyim?", a: "Evet. Sıkıştırma düzeyini yükselterek büyük PDF'leri e-posta ve portal yükleme sınırlarının altına indirebilirsiniz." },
         { q: "Sıkıştırılmış PDF'in metni seçilebilir kalır mı?", a: "Evet. Metin katmanı korunur; sıkıştırılan PDF'te de metni seçebilir, arayabilir ve kopyalayabilirsiniz." },
         { q: "Taranmış (görsel) PDF'leri sıkıştırabilir miyim?", a: "Evet. Görsel ağırlıklı, taranmış PDF'lerde sıkıştırma genellikle en yüksek boyut kazancını sağlar." },
+        { q: "PDF'i belirli bir boyuta (örneğin 1 MB ya da 500 KB) nasıl indiririm?", a: "Araç hedef boyut girmenize izin vermez; bunun yerine «Kalite» menüsünden bir kademe seçersiniz. En küçük dosya için «Agresif — en küçük dosya» kademesini seçin; sonuç ekranında dosyanın kaç MB'tan kaç MB'a indiği görünür. Hâlâ büyükse gereksiz sayfaları silin ya da belgeyi PDF Ayırma ile iki dosyaya bölün. Kalite kademesi yalnızca görselleri etkiler, bu yüzden metin ağırlıklı PDF'lerde kazanç sınırlı kalır." },
       ],
     ),
     en: T(
@@ -391,6 +392,7 @@ export const TOOL_SEO = {
         { q: "Can I shrink a PDF small enough to email?", a: "Yes. Increase the compression level to bring large PDFs under email and portal upload limits." },
         { q: "Does the compressed PDF keep selectable text?", a: "Yes. The text layer is preserved, so you can still select, search, and copy text in the compressed PDF." },
         { q: "Can I compress scanned (image) PDFs?", a: "Yes. Image-heavy scanned PDFs usually see the biggest size reduction from compression." },
+        { q: "How do I get a PDF under a specific size, such as 1 MB or 500 KB?", a: "The tool does not take a target size; you pick a level in the Quality menu instead. For the smallest file choose \"Aggressive — smallest file\"; the result screen shows how many MB the file went from and to. If it is still too big, delete pages you do not need or split the document into two files with Split PDF. The quality level only affects images, so text-heavy PDFs shrink less." },
       ],
     ),
   },
