@@ -101,3 +101,6 @@ web/frontend/render-routes-yedek-*.json
 web/frontend/render-headers-yedek-*.json
 web/frontend/chk.mjs
 web/frontend/render-routes-canli.json
+
+# Instagram carousel slaytları: her yayında üretilir (generate-carousels.mjs), depoya girmez.
+web/frontend/public/social/

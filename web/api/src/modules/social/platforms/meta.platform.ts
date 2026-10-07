@@ -6,6 +6,8 @@
  * yazının görsele gömülmesi diye bir durum yok.
  */
 
+import { logger } from "../../../lib/file-log.js";
+import { carouselSlidesFor } from "../carousel.service.js";
 import { coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 
@@ -39,7 +41,95 @@ export const publishToFacebook: Publisher = async ({ body, imageUrl, item, secre
   return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null };
 };
 
-export const publishToInstagram: Publisher = async ({ body, imageUrl, item, secrets }) => {
+/**
+ * `media_publish` çağrısı BAŞLADIKTAN sonra oluşan hata.
+ *
+ * Bu noktadan sonra gönderi yayına çıkmış olabilir (istek zaman aşımına uğrasa bile
+ * Instagram işlemi tamamlayabilir). Burada tek görsele düşersek aynı gönderi iki kez
+ * çıkar; bu yüzden bu hata yukarı iletilir, yedek yola GİDİLMEZ.
+ */
+class PublishStageError extends Error {}
+
+export const publishToInstagram: Publisher = async (input) => {
+  // Carousel varsa onu dene; yayın başlamadan bir şey ters giderse tek görsele düş.
+  const slides = await carouselSlidesFor(input.item).catch(() => [] as string[]);
+  if (slides.length >= 2) {
+    try {
+      return await publishInstagramCarousel(input, slides);
+    } catch (err) {
+      if (err instanceof PublishStageError) throw err;
+      logger.warn("social", `Instagram carousel hazırlanamadı, tek görsele düşülüyor: ${String(err)}`);
+    }
+  }
+  return publishInstagramSingle(input);
+};
+
+/**
+ * Kaydırmalı gönderi: her slayt için alt kap, sonra bunları birleştiren ana kap.
+ *
+ * NEDEN: Takipçi olmayanlara erişimi belirleyen sinyaller (kaydetme, paylaşma,
+ * görüntüleme süresi) tek görselde zayıf kalır; adım adım kaydırmalı içerik bu
+ * sinyalleri üretir.
+ */
+async function publishInstagramCarousel(
+  { body, item, secrets }: Parameters<Publisher>[0],
+  slideUrls: string[],
+) {
+  const igUserId = requireSecret(secrets, "igUserId", "Instagram İşletme Hesabı ID");
+  const token = requireSecret(secrets, "pageAccessToken", "Instagram Sayfa Erişim Anahtarı");
+
+  // 1) Her slayt için alt kap.
+  const childIds: string[] = [];
+  for (const url of slideUrls) {
+    const child = new URLSearchParams();
+    child.set("access_token", token);
+    child.set("image_url", url);
+    child.set("is_carousel_item", "true");
+    const created = await requestJson("Instagram", `${GRAPH}/${igUserId}/media`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: child.toString(),
+    });
+    const id = created.id as string | undefined;
+    if (!id) throw new Error("Instagram carousel alt kabı kimliği dönmedi");
+    childIds.push(id);
+  }
+  for (const id of childIds) await waitForContainer(id, token);
+
+  // 2) Ana kap: alt kapları ve açıklamayı birleştirir.
+  const parent = new URLSearchParams();
+  parent.set("access_token", token);
+  parent.set("media_type", "CAROUSEL");
+  parent.set("children", childIds.join(","));
+  parent.set("caption", body);
+  const created = await requestJson("Instagram", `${GRAPH}/${igUserId}/media`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: parent.toString(),
+  });
+  const creationId = created.id as string | undefined;
+  if (!creationId) throw new Error("Instagram carousel ana kap kimliği dönmedi");
+  await waitForContainer(creationId, token);
+
+  // 3) Yayınla — bundan sonrası geri dönüşsüz kabul edilir.
+  try {
+    const publish = new URLSearchParams();
+    publish.set("access_token", token);
+    publish.set("creation_id", creationId);
+    const json = await requestJson("Instagram", `${GRAPH}/${igUserId}/media_publish`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: publish.toString(),
+    });
+    const id = (json.id as string | undefined) ?? null;
+    logger.info("social", `Instagram carousel yayınlandı (${slideUrls.length} slayt): ${item.title}`);
+    return { externalId: id, externalUrl: id ? `https://www.instagram.com/p/${id}` : null };
+  } catch (err) {
+    throw new PublishStageError(err instanceof Error ? err.message : String(err));
+  }
+}
+
+const publishInstagramSingle: Publisher = async ({ body, imageUrl, item, secrets }) => {
   const igUserId = requireSecret(secrets, "igUserId", "Instagram İşletme Hesabı ID");
   const token = requireSecret(secrets, "pageAccessToken", "Instagram Sayfa Erişim Anahtarı");
   if (!imageUrl) throw new Error("Instagram görselsiz gönderi kabul etmiyor");

@@ -40,6 +40,7 @@ import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "../src/seo/toolRatings.
 import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
 import { writeBlogCovers } from "./generate-covers.mjs";
 import { writeSocialKeywords } from "./generate-social-keywords.mjs";
+import { writeCarousels } from "./generate-carousels.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -1166,6 +1167,18 @@ if (rss.skipped) {
 // Otomasyon etiketleri buradan alır; sitenin hedef arama terimleriyle aynı.
 const social = writeSocialKeywords({ publicDir, baseUrl: base });
 console.log(`[seo] sosyal medya anahtar kelimeleri: ${social.count} yazı → ${social.path}`);
+
+// ─── Instagram carousel slaytları ─────────────────────────────────────────────
+// Yazının adımlarından 4:5 kaydırmalı görseller; dosyalar gitignore'da, her yayında
+// üretilir. Üretilemezse otomasyon tek görselle devam eder (yayın bloke olmaz).
+try {
+  const carousel = await writeCarousels({ frontendRoot, publicDir, baseUrl: base });
+  console.log(
+    `[seo] carousel: ${carousel.posts} yazı, ${carousel.written} slayt yazıldı, ${carousel.skipped} değişmedi → ${carousel.path}`,
+  );
+} catch (err) {
+  console.warn(`[seo] carousel üretilemedi (otomasyon tek görselle sürer): ${err instanceof Error ? err.message : err}`);
+}
 
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",

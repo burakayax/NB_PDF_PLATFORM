@@ -321,3 +321,5 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
 }
 
 export { coverRelPath, socialCoverRelPath, FORMATS as COVER_FORMATS };
+// Carousel üretici (generate-carousels.mjs) aynı yazı çizim yardımcılarını kullanır.
+export { loadFont, measure, textPath, wrap, accentPair, BG, TITLE_COLOR, FOOTER_COLOR };
