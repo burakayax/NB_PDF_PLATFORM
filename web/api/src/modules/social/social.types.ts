@@ -58,6 +58,8 @@ export type PreparedPost = {
 export type PublishResult = {
   externalId: string | null;
   externalUrl: string | null;
+  /** Kaydırmalı gönderide yayınlanan slayt adresleri (panelde gerçek hâli göstermek için). */
+  slides?: string[];
 };
 
 export type PlatformSpec = {

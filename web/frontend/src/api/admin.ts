@@ -1048,6 +1048,11 @@ export type SocialPostRow = {
   lastError: string | null;
   createdAt: string;
   updatedAt: string;
+  /**
+   * Kaydırmalı (carousel) gönderinin slaytları — Instagram'da gerçekte gidecek/giden hâl.
+   * Boşsa tek görsel (ya da video) paylaşılır.
+   */
+  carouselSlides?: string[];
 };
 
 export type SocialStats = {
@@ -1126,10 +1131,32 @@ export async function testSocialAccount(
   return r.json() as Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }>;
 }
 
-export async function fetchSocialPosts(accessToken: string): Promise<{ posts: SocialPostRow[] }> {
+export type SocialPostsResponse = {
+  posts: SocialPostRow[];
+  /** Her ağın son paylaşımları (en fazla 5), ağ başına ayrı. */
+  recent?: Partial<Record<SocialPlatformId, SocialPostRow[]>>;
+};
+
+export async function fetchSocialPosts(accessToken: string): Promise<SocialPostsResponse> {
   const r = await adminFetch(accessToken, "/social/posts");
   if (!r.ok) throw new Error(await r.text());
-  return r.json() as Promise<{ posts: SocialPostRow[] }>;
+  return r.json() as Promise<SocialPostsResponse>;
+}
+
+/**
+ * Geçmişi temizler (paylaşılmış + atlanmış kayıtlar). Ağlardaki gerçek gönderilere dokunmaz.
+ * `resetRotation` false: panelden gizler, paylaşım sırası korunur. true: kayıtları siler,
+ * sıra başa döner (aynı yazılar yeniden paylaşılabilir).
+ */
+export async function clearSocialHistory(
+  accessToken: string,
+  resetRotation: boolean,
+): Promise<{ cleared: number; resetRotation: boolean }> {
+  const r = await adminFetch(accessToken, `/social/posts-history${resetRotation ? "?reset=1" : ""}`, {
+    method: "DELETE",
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ cleared: number; resetRotation: boolean }>;
 }
 
 export async function checkSocialFeed(accessToken: string): Promise<{

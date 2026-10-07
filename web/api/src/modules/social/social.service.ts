@@ -569,6 +569,7 @@ async function publishOne(postId: string, secrets: Record<string, string>): Prom
         publishedAt: new Date(),
         externalId: outcome.externalId,
         externalUrl: outcome.externalUrl,
+        slidesJson: outcome.slides?.length ? JSON.stringify(outcome.slides) : null,
         lastError: null,
       },
     });
@@ -686,7 +687,16 @@ export async function markPostShared(postId: string): Promise<void> {
 }
 
 export async function deletePost(postId: string): Promise<void> {
-  await prisma.socialPost.deleteMany({ where: { id: postId, status: { not: "PUBLISHED" } } });
+  // Yayınlanmış/atlanmış kayıt GERÇEKTEN silinmez, panelden gizlenir: paylaşım sırası
+  // (pickNextItem) bu kayıtlara bakıyor; silinirse aynı yazılar yeniden paylaşılırdı.
+  await prisma.socialPost.updateMany({
+    where: { id: postId, status: { in: ["PUBLISHED", "SKIPPED"] }, clearedAt: null },
+    data: { clearedAt: new Date() },
+  });
+  // Bekleyen / başarısız / elle kayıtlar eskisi gibi silinir.
+  await prisma.socialPost.deleteMany({
+    where: { id: postId, status: { notIn: ["PUBLISHED", "SKIPPED", "PUBLISHING"] } },
+  });
 }
 
 export async function updatePostBody(postId: string, body: string): Promise<void> {
@@ -706,7 +716,8 @@ export async function postStats(): Promise<{
   lastPublishedAt: string | null;
 }> {
   const [grouped, last] = await Promise.all([
-    prisma.socialPost.groupBy({ by: ["status"], _count: { _all: true } }),
+    // Temizlenen (gizlenen) geçmiş sayaçlara girmez: panel "paylaşılan 0" göstermeli.
+    prisma.socialPost.groupBy({ by: ["status"], where: { clearedAt: null }, _count: { _all: true } }),
     prisma.socialPost.findFirst({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
