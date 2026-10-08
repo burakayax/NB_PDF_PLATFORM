@@ -97,7 +97,8 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Lock, tr: "Fotoğraf cihazından çıkmaz", trDesc: "Yapay zekâ cihazında çalışır; fotoğrafın sunucuya yüklenmez, saklanmaz.", en: "Photo stays on your device", enDesc: "The AI runs on your device; your photo is never uploaded or stored." },
   ],
   "cv-olustur": [
-    { icon: Zap, tr: "Canlı önizleme", trDesc: "Yazdıkça CV'niz yanda anında oluşur; birden çok hazır şablon.", en: "Live preview", enDesc: "Your CV builds beside the form as you type; many ready templates." },
+    { icon: Zap, tr: "Canlı önizleme, 22 şablon", trDesc: "Yazdıkça CV'niz yanda anında oluşur; Europass tarzı dahil 22 hazır şablon.", en: "Live preview, 22 templates", enDesc: "Your CV builds beside the form as you type; 22 ready templates incl. Europass-style." },
+    { icon: Zap, tr: "ATS röntgeni ve ilan eşleştirici", trDesc: "PDF'inizin başvuru sistemlerince nasıl okunduğunu görün; ilandaki eksik anahtar kelimeleri bulun.", en: "ATS X-ray and job matcher", enDesc: "See how hiring systems read your PDF and find the keywords your CV is missing." },
     { icon: Zap, tr: "Boş alan çıktıya girmez", trDesc: "Doldurmadığınız bölümler PDF'e eklenmez, CV'niz temiz kalır.", en: "Empty fields stay out", enDesc: "Sections you skip are left out of the PDF, so the CV stays clean." },
     { icon: Lock, tr: "Bilgileriniz size kalır", trDesc: "CV'niz tarayıcınızda hazırlanır; sunucuya gönderilmez.", en: "Your details stay yours", enDesc: "Your CV is built in your browser and never sent to a server." },
   ],

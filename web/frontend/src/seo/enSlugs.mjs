@@ -45,6 +45,9 @@ export const EN_TOOL_SLUGS = {
 export const EN_BLOG_SLUGS = {
   "cv-nasil-hazirlanir": "how-to-write-a-cv",
   "ats-uyumlu-cv-nasil-yazilir": "ats-friendly-cv",
+  "cv-is-ilanina-gore-nasil-uyarlanir": "tailor-cv-to-job-ad",
+  "europass-tarzi-cv-nasil-hazirlanir": "europass-style-cv",
+  "cv-on-yazi-nasil-yazilir": "how-to-write-a-cover-letter",
   "cv-fotografi-nasil-olmali": "cv-photo-guide",
   "biyometrik-fotograf-olculeri-ve-kurallari": "biometric-photo-sizes-and-rules",
   "vesikalik-fotograf-evde-nasil-cekilir": "take-id-photo-at-home",

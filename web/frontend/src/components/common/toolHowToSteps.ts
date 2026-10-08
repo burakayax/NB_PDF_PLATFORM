@@ -579,12 +579,14 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     [
       { title: "Bir şablon seç", detail: "Üstteki listeden beğendiğin tasarıma tıkla. Soldaki sayfada örnek CV görünür." },
       { title: "Bilgilerini sağa yaz", detail: "Adını yazdığın anda CV solda değişir. Fotoğraf da ekleyebilirsin. Boş bıraktığın yerler soluk görünür ama PDF'e eklenmez." },
-      { title: "PDF olarak indir", detail: "Önce «PDF görünümü»ne geçip sonucu kontrol et, sonra mavi «CV'yi PDF olarak indir» düğmesine bas." },
+      { title: "Analiz et (isteğe bağlı)", detail: "Analiz sekmesinde hataları ve zayıf ifadeleri gör, iş ilanını yapıştırıp eksik kelimeleri bul, ATS röntgeniyle PDF'inin nasıl okunduğunu kontrol et." },
+      { title: "PDF olarak indir", detail: "Önce «PDF görünümü»ne geçip sonucu kontrol et, sonra mavi «CV'yi PDF olarak indir» düğmesine bas. Word ve metin olarak da indirebilirsin." },
     ],
     [
       { title: "Pick a template", detail: "Click a design in the list at the top. A sample CV appears on the left." },
       { title: "Type your details on the right", detail: "The CV updates the moment you type your name. You can add a photo too. Empty spots look faded but are left out of the PDF." },
-      { title: "Download as PDF", detail: "Switch to «PDF view» to check the result, then click the blue «Download CV as PDF» button." },
+      { title: "Analyse (optional)", detail: "In the Analysis tab, see errors and weak phrasing, paste a job ad to find missing keywords and use the ATS X-ray to check how your PDF reads." },
+      { title: "Download as PDF", detail: "Switch to «PDF view» to check the result, then click the blue «Download CV as PDF» button. You can also download Word and text." },
     ],
   ),
   "ai-toplu-islem": S(
