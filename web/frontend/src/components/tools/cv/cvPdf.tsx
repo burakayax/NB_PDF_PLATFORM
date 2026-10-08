@@ -16,7 +16,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDF_SAVE_OPTIONS } from "../../../lib/pdfSaveOptions";
 import { buildModel, type CvData, type BuildMode } from "./cvModel";
 import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
-import { CvPage, FONT_CSS, FONT_FILE, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type FontKey } from "./cvTemplates";
+import { CoverLetterPage, CvPage, FONT_CSS, FONT_FILE, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type FontKey } from "./cvTemplates";
 
 const PAD_TOP = 42;
 const PAD_BOTTOM = 40;
@@ -321,6 +321,30 @@ async function withOffscreen<T>(data: CvData, templateId: string, mode: BuildMod
     }
     await Promise.all(Array.from(root.querySelectorAll("img")).map((i) => i.decode().catch(() => undefined)));
     return await fn({ root, render });
+  } finally {
+    rootEl.unmount();
+    host.remove();
+  }
+}
+
+/** Ön yazı PDF'i: seçili CV şablonunun görünümüyle (yazı tipi, renk, başlık). Her şey cihazda. */
+export async function buildCoverLetterPdf(data: CvData, templateId: string, text: string, opts: { company?: string; position?: string } = {}): Promise<{ bytes: Uint8Array; pages: number }> {
+  ensureCvStyles();
+  const tpl = getTemplate(templateId);
+  const host = document.createElement("div");
+  host.style.cssText = `position:fixed;left:-12000px;top:0;width:${PAGE_W}px;pointer-events:none;`;
+  document.body.appendChild(host);
+  const rootEl = createRoot(host);
+  try {
+    const model = buildModel(data, "export");
+    const dateText = new Date().toLocaleDateString(data.settings.lang === "tr" ? "tr-TR" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
+    flushSync(() => rootEl.render(<CoverLetterPage m={model} tpl={tpl} text={text} size={data.settings.size} accent={data.settings.accent} company={opts.company} position={opts.position} dateText={dateText} />));
+    await Promise.all((Object.keys(FONT_CSS) as FontKey[]).flatMap((k) => [`400 16px '${FONT_CSS[k]}'`, `700 16px '${FONT_CSS[k]}'`]).map((f) => document.fonts.load(f).catch(() => undefined)));
+    await document.fonts.ready;
+    const root = host.firstElementChild as HTMLElement;
+    const pages = paginate(root);
+    const bytes = await domToPdf(root, pages, { title: `${data.name.trim() || "CV"} — ${data.settings.lang === "tr" ? "Ön Yazı" : "Cover Letter"}` });
+    return { bytes, pages };
   } finally {
     rootEl.unmount();
     host.remove();

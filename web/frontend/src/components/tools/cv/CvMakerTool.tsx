@@ -372,7 +372,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                 {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} /> : null}
                 {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
                 {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
-                {rightTab === "ai" ? <CvAiPanel data={data} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
+                {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
               </div>
 
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}

@@ -3,7 +3,8 @@ import { AlertTriangle, Check, ChevronDown, Copy, FileDown, FileUp, Loader2, Mai
 import type { Language } from "../../../i18n/landing";
 import { fetchAiQuota, type AiError, type AiQuota } from "../../../api/ai";
 import { ocrPdfToText } from "../../../lib/ocr";
-import { pdfBytesToBlob, summaryToPdf } from "../../../lib/summaryPdf";
+import { pdfBytesToBlob } from "../../../lib/summaryPdf";
+import { buildCoverLetterPdf } from "./cvPdf";
 import { AiCreditBadge } from "../AiCreditBadge";
 import { TopUpModal } from "../TopUpModal";
 import type { CvData } from "./cvModel";
@@ -21,6 +22,8 @@ import {
 
 type Props = {
   data: CvData;
+  /** Seçili CV şablonu: ön yazı PDF'i aynı tasarımla üretilir. */
+  templateId: string;
   onChange: (d: CvData) => void;
   onNewCv: (d: CvData, name: string) => void;
   tr: boolean;
@@ -67,7 +70,7 @@ function Added({ words, tr }: { words: string[]; tr: boolean }) {
   );
 }
 
-export function CvAiPanel({ data, onChange, onNewCv, tr, language, accessToken, onLogin, onUpgrade, comingSoon, isAdmin, ad, setAd, disabled }: Props) {
+export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, accessToken, onLogin, onUpgrade, comingSoon, isAdmin, ad, setAd, disabled }: Props) {
   const lang = data.settings.lang;
   const [quota, setQuota] = useState<AiQuota | null>(null);
   const [topUpOpen, setTopUpOpen] = useState(false);
@@ -160,7 +163,7 @@ export function CvAiPanel({ data, onChange, onNewCv, tr, language, accessToken, 
   };
   const coverPdf = async () => {
     if (!cover) return;
-    const bytes = await summaryToPdf(cover.text, tr ? "Ön Yazı" : "Cover Letter");
+    const { bytes } = await buildCoverLetterPdf(data, templateId, cover.text, { company: company.trim() || undefined, position: position.trim() || undefined });
     const url = URL.createObjectURL(pdfBytesToBlob(bytes));
     const a = document.createElement("a");
     a.href = url; a.download = `${(data.name || "on-yazi").trim().replace(/\s+/g, "-").toLowerCase()}-on-yazi.pdf`;
@@ -325,7 +328,7 @@ export function CvAiPanel({ data, onChange, onNewCv, tr, language, accessToken, 
             <textarea value={cover.text} onChange={(e) => setCover({ ...cover, text: e.target.value })} rows={14} className="w-full resize-y rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2.5 text-[13px] leading-relaxed text-slate-100" aria-label={tr ? "Ön yazı metni (düzenleyebilirsiniz)" : "Letter text (editable)"} />
             {cover.unsupported.length ? <p className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-amber-200"><AlertTriangle className="h-3.5 w-3.5" />{tr ? "CV'nizde bulunmayan şunlar geçiyor, kontrol edin:" : "These aren't in your CV, please check:"}{cover.unsupported.map((w) => <span key={w} className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold ring-1 ring-amber-400/25">{w}</span>)}</p> : null}
             <p className="text-[11.5px] text-slate-500">{tr ? "Bu bir taslaktır: göndermeden önce her cümlenin doğru olduğunu kontrol edin." : "This is a draft: check that every sentence is true before sending."}</p>
-            <div className="flex flex-wrap gap-2"><button type="button" className={ghost} onClick={() => void copyCover()}>{copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}{copied ? (tr ? "Kopyalandı" : "Copied") : (tr ? "Kopyala" : "Copy")}</button><button type="button" className={ghost} onClick={() => void coverPdf()}><FileDown className="h-3.5 w-3.5" />{tr ? "PDF indir" : "Download PDF"}</button></div>
+            <div className="flex flex-wrap gap-2"><button type="button" className={ghost} onClick={() => void copyCover()}>{copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}{copied ? (tr ? "Kopyalandı" : "Copied") : (tr ? "Kopyala" : "Copy")}</button><button type="button" className={ghost} onClick={() => void coverPdf()}><FileDown className="h-3.5 w-3.5" />{tr ? "PDF indir (CV tasarımıyla)" : "Download PDF (matching your CV)"}</button></div>
           </div>
         ) : null}
       </Card>
