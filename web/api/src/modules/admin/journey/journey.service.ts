@@ -169,33 +169,41 @@ export type JourneyFunnelSummary = {
 export async function getJourneyFunnelSummary(days: number): Promise<JourneyFunnelSummary> {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const [
-    toolSuccessGroups,
-    signupPromptShown,
-    signupPromptDismissed,
-    signupPromptClicked,
-    signupCompleted,
-    quotaWallHit,
-    upgradeClicked,
-    checkoutAbandoned,
-    purchaseCompleted,
-  ] = await Promise.all([
+  // NEDEN TEK SORGU: Eskiden her olay adı için ayrı bir COUNT çalışıyordu (8 sorgu); Sentry bunu
+  // "N+1" olarak işaretledi — her biri ayrı bağlantı alıp ~90 ms bekliyor, /admin/overview 1,2 sn sürüyordu.
+  // Şimdi tek bir GROUP BY ile hepsi birlikte sayılır (toplam 2 sorgu).
+  const sayilanAdlar = [
+    "sign_up_cta_shown",
+    "sign_up_cta_dismissed",
+    "sign_up_cta_click",
+    "sign_up_completed",
+    "quota_wall_hit",
+    "quota_warning_shown",
+    "upgrade_cta_clicked",
+    "checkout_abandoned",
+    "purchase",
+  ];
+  const [toolSuccessGroups, adGruplari] = await Promise.all([
     prisma.userJourneyEvent.groupBy({
       by: ["toolId"],
       where: { name: "sign_up_cta_shown", toolId: { not: null }, createdAt: { gte: since } },
       _count: { _all: true },
     }),
-    prisma.userJourneyEvent.count({ where: { name: "sign_up_cta_shown", createdAt: { gte: since } } }),
-    prisma.userJourneyEvent.count({ where: { name: "sign_up_cta_dismissed", createdAt: { gte: since } } }),
-    prisma.userJourneyEvent.count({ where: { name: "sign_up_cta_click", createdAt: { gte: since } } }),
-    prisma.userJourneyEvent.count({ where: { name: "sign_up_completed", createdAt: { gte: since } } }),
-    prisma.userJourneyEvent.count({
-      where: { name: { in: ["quota_wall_hit", "quota_warning_shown"] }, createdAt: { gte: since } },
+    prisma.userJourneyEvent.groupBy({
+      by: ["name"],
+      where: { name: { in: sayilanAdlar }, createdAt: { gte: since } },
+      _count: { _all: true },
     }),
-    prisma.userJourneyEvent.count({ where: { name: "upgrade_cta_clicked", createdAt: { gte: since } } }),
-    prisma.userJourneyEvent.count({ where: { name: "checkout_abandoned", createdAt: { gte: since } } }),
-    prisma.userJourneyEvent.count({ where: { name: "purchase", createdAt: { gte: since } } }),
   ]);
+  const adSayisi = (ad: string): number => adGruplari.find((g) => g.name === ad)?._count._all ?? 0;
+  const signupPromptShown = adSayisi("sign_up_cta_shown");
+  const signupPromptDismissed = adSayisi("sign_up_cta_dismissed");
+  const signupPromptClicked = adSayisi("sign_up_cta_click");
+  const signupCompleted = adSayisi("sign_up_completed");
+  const quotaWallHit = adSayisi("quota_wall_hit") + adSayisi("quota_warning_shown");
+  const upgradeClicked = adSayisi("upgrade_cta_clicked");
+  const checkoutAbandoned = adSayisi("checkout_abandoned");
+  const purchaseCompleted = adSayisi("purchase");
 
   return {
     toolSuccessByTool: toolSuccessGroups

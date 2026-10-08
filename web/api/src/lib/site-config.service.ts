@@ -35,27 +35,78 @@ export async function getSettingDirect(key: string): Promise<unknown | null> {
   }
 }
 
+function parseSettingValue(value: string | null | undefined): unknown | null {
+  if (!value?.trim()) {
+    return null;
+  }
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * TOPLU OKUMA: Aynı anda (aynı olay-döngüsü turunda) istenen ayar anahtarları tek bir
+ * `WHERE key IN (...)` sorgusunda okunur.
+ *
+ * NEDEN: Üye tarafındaki abonelik özeti uç noktası ~10 ayarı `Promise.all` ile ister. Bellek
+ * (15 sn) bu uç dakikada bir çağrıldığı için çoğu kez boştur; her ayar ayrı sorgu olup ayrı bağlantı
+ * bekliyordu (Sentry "N+1 sorgu": 1,5 sn, bunun 0,9 sn'si yalnızca bağlantı beklemesi).
+ */
+type SettingWaiter = { resolve: (v: unknown | null) => void; reject: (e: unknown) => void };
+const pendingLoads = new Map<string, SettingWaiter[]>();
+let flushScheduled = false;
+
+function loadSettingBatched(key: string): Promise<unknown | null> {
+  return new Promise((resolve, reject) => {
+    const waiter: SettingWaiter = { resolve, reject };
+    const list = pendingLoads.get(key);
+    if (list) {
+      list.push(waiter);
+    } else {
+      pendingLoads.set(key, [waiter]);
+    }
+    if (!flushScheduled) {
+      flushScheduled = true;
+      setImmediate(() => void flushPendingLoads());
+    }
+  });
+}
+
+async function flushPendingLoads(): Promise<void> {
+  flushScheduled = false;
+  const batch = new Map(pendingLoads);
+  pendingLoads.clear();
+  if (batch.size === 0) {
+    return;
+  }
+  try {
+    const rows = await prisma.siteSetting.findMany({ where: { key: { in: [...batch.keys()] } } });
+    const byKey = new Map(rows.map((r) => [r.key, r.value] as const));
+    for (const [key, waiters] of batch) {
+      const parsed = parseSettingValue(byKey.get(key));
+      bumpCache(key, parsed);
+      for (const w of waiters) {
+        w.resolve(parsed);
+      }
+    }
+  } catch (err) {
+    for (const waiters of batch.values()) {
+      for (const w of waiters) {
+        w.reject(err);
+      }
+    }
+  }
+}
+
 export async function getSetting(key: string): Promise<unknown | null> {
   const now = Date.now();
   const hit = cache.get(key);
   if (hit && now - hit.at < TTL_MS) {
     return hit.value;
   }
-
-  const row = await prisma.siteSetting.findUnique({ where: { key } });
-  if (!row?.value?.trim()) {
-    bumpCache(key, null);
-    return null;
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(row.value) as unknown;
-  } catch {
-    parsed = row.value;
-  }
-  bumpCache(key, parsed);
-  return parsed;
+  return loadSettingBatched(key);
 }
 
 /**
