@@ -37,6 +37,15 @@ const METIN = {
     cleanImages: "Gömülü fotoğrafların EXIF/GPS bilgisini de temizle",
     cleanImagesNote: "Renk profili korunur, görüntü kalitesi değişmez.",
     apply: "Üstveriyi temizle",
+    applyWithNew: "Temizle ve yeni bilgileri yaz",
+    newInfoTitle: "İstersen belgeye yeni bilgi yaz",
+    newInfoNote:
+      "Boş bıraktığın alanlar silinir; yazdığın alanlar yeni değer olarak kaydedilir. Böylece örneğin eski yazar adını silip kurumunun adını yazabilirsin.",
+    fillCurrent: "Mevcut değerleri doldur (düzenlemek için)",
+    fTitle: "Başlık",
+    fAuthor: "Yazar",
+    fSubject: "Konu",
+    fKeywords: "Anahtar kelimeler (virgülle)",
     working: "Temizleniyor…",
     another: "Başka dosya seç",
     cleanedImages: "fotoğrafın üstverisi temizlendi",
@@ -66,6 +75,15 @@ const METIN = {
     cleanImages: "Also strip EXIF/GPS from embedded photos",
     cleanImagesNote: "The colour profile is kept, image quality is unchanged.",
     apply: "Remove metadata",
+    applyWithNew: "Clean and write the new info",
+    newInfoTitle: "Optionally write new info into the document",
+    newInfoNote:
+      "Fields you leave empty are removed; fields you fill are saved as the new value. For example, drop the old author name and put your organisation's name instead.",
+    fillCurrent: "Fill in current values (to edit them)",
+    fTitle: "Title",
+    fAuthor: "Author",
+    fSubject: "Subject",
+    fKeywords: "Keywords (comma separated)",
     working: "Cleaning…",
     another: "Choose another file",
     cleanedImages: "photos had their metadata removed",
@@ -106,6 +124,14 @@ export function PdfMetadataTool({
   const [file, setFile] = useState<File | null>(null);
   const [ozet, setOzet] = useState<UstveriOzeti | null>(null);
   const [gorselleriTemizle, setGorselleriTemizle] = useState(true);
+  /** Kullanıcının yeni yazmak istediği alanlar (boş = silinir). */
+  const [yeniAlanlar, setYeniAlanlar] = useState<Record<"Title" | "Author" | "Subject" | "Keywords", string>>({
+    Title: "",
+    Author: "",
+    Subject: "",
+    Keywords: "",
+  });
+  const yeniVar = Object.values(yeniAlanlar).some((v) => v.trim().length > 0);
   const [okuyor, setOkuyor] = useState(false);
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
@@ -145,6 +171,7 @@ export function PdfMetadataTool({
     try {
       const { bytes: cikti, temizlenenGorsel } = await ustveriTemizle(bytes, {
         gorselleriTemizle,
+        yeniAlanlar,
       });
       setSonuc({
         blob: new Blob([cikti as unknown as BlobPart], { type: "application/pdf" }),
@@ -266,6 +293,47 @@ export function PdfMetadataTool({
         </div>
       )}
 
+      <div className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+        <p className="text-[13px] font-semibold text-slate-100">{t.newInfoTitle}</p>
+        <p className="mt-0.5 text-[12px] leading-relaxed text-slate-400">{t.newInfoNote}</p>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {(
+            [
+              ["Title", t.fTitle],
+              ["Author", t.fAuthor],
+              ["Subject", t.fSubject],
+              ["Keywords", t.fKeywords],
+            ] as const
+          ).map(([anahtar, etiket]) => (
+            <label key={anahtar} className="block">
+              <span className="mb-1 block text-[11.5px] text-slate-400">{etiket}</span>
+              <input
+                type="text"
+                maxLength={300}
+                value={yeniAlanlar[anahtar]}
+                onChange={(e) => setYeniAlanlar((m) => ({ ...m, [anahtar]: e.target.value }))}
+                className="w-full rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-2 text-[13px] text-white placeholder:text-slate-500"
+                placeholder={ozet.alanlar[anahtar] ?? ""}
+              />
+            </label>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setYeniAlanlar({
+              Title: ozet.alanlar.Title ?? "",
+              Author: ozet.alanlar.Author ?? "",
+              Subject: ozet.alanlar.Subject ?? "",
+              Keywords: ozet.alanlar.Keywords ?? "",
+            })
+          }
+          className="mt-3 text-[12px] font-semibold text-cyan-300 hover:text-cyan-200"
+        >
+          {t.fillCurrent}
+        </button>
+      </div>
+
       <label className="mt-5 flex items-start gap-2.5">
         <input
           type="checkbox"
@@ -313,7 +381,7 @@ export function PdfMetadataTool({
           ) : (
             <Lock className="h-4 w-4" />
           )}
-          {calisiyor ? t.working : t.apply}
+          {calisiyor ? t.working : yeniVar ? t.applyWithNew : t.apply}
         </button>
       </div>
 

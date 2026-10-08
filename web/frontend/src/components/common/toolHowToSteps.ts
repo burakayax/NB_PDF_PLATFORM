@@ -362,6 +362,86 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "grayscale-pdf": S(
+    [
+      PICK_TR(),
+      { title: "«Gri Tonlama» düğmesine bas", detail: "Sayfadaki renkler griye çevrilir; yazılar seçilebilir kalır, görseller siyah-beyaz olur." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Click «Grayscale»", detail: "Colours on the page turn grey; text stays selectable and images become black-and-white." },
+      EN_DOWNLOAD,
+    ],
+  ),
+  "resize-pdf": S(
+    [
+      PICK_TR(),
+      { title: "Hedef kâğıt boyutunu seç", detail: "A4, A5, A3, Letter ya da kendi ölçünü yaz; yönü ve sığdırma biçimini belirle." },
+      { title: "«Boyutlandır» düğmesine bas", detail: "Her sayfa yeni ölçüye oranı bozulmadan yerleşir; yazılar ve çizimler keskin kalır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Choose the target paper size", detail: "A4, A5, A3, Letter or type your own size; set the orientation and fit mode." },
+      { title: "Click «Resize»", detail: "Every page is placed into the new size without distortion; text and drawings stay sharp." },
+      EN_DOWNLOAD,
+    ],
+  ),
+  "flip-pdf": S(
+    [
+      PICK_TR(),
+      { title: "Yönü seç", detail: "Soldan sağa (yatay) ya da baş aşağı (dikey) çevir; istersen yalnızca belirli sayfaları çevir." },
+      { title: "«Çevir» düğmesine bas", detail: "Sayfalar ayna gibi çevrilir. Forma ait alanlar ve notlar çevrilmez, yalnızca sayfa içeriği çevrilir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Choose the direction", detail: "Flip left-to-right (horizontal) or upside-down (vertical); optionally only specific pages." },
+      { title: "Click «Flip»", detail: "Pages are mirrored. Form fields and notes are not flipped, only the page content." },
+      EN_DOWNLOAD,
+    ],
+  ),
+  "alternate-mix-pdf": S(
+    [
+      { title: "İki (ya da daha fazla) PDF seç", detail: "İlk seçtiğin belgenin sayfaları 1., 3., 5. sıraya; ikincinin sayfaları 2., 4., 6. sıraya yerleşir." },
+      { title: "Gerekirse «İkinciyi ters sırada oku»yu işaretle", detail: "Çift taraflı taramada önce ön yüzleri, sonra arka yüzleri ters sırada taradıysan doğru sıra budur." },
+      { title: "«Serpiştir» düğmesine bas", detail: "Tek bir PDF çıkar. Sayfa sayıları farklıysa uzun olanın kalanı sona eklenir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose two (or more) PDFs", detail: "Pages of the first document go to positions 1, 3, 5; the second's go to 2, 4, 6." },
+      { title: "Tick «Read the second in reverse» if needed", detail: "For double-sided scans where you scanned the fronts first and then the backs in reverse order." },
+      { title: "Click «Interleave»", detail: "One PDF is produced. If page counts differ, the rest of the longer one is appended." },
+      EN_DOWNLOAD,
+    ],
+  ),
+  "deskew-pdf": S(
+    [
+      PICK_TR(),
+      { title: "«Eğriliği Düzelt» düğmesine bas", detail: "Taranmış (resimden oluşan) sayfaların eğriliği otomatik bulunup düzeltilir; yazı katmanı olan sayfalara dokunulmaz." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Click «Straighten»", detail: "The skew of scanned (image-only) pages is detected and corrected automatically; pages with a text layer are left alone." },
+      EN_DOWNLOAD,
+    ],
+  ),
+  "crop-pdf": S(
+    [
+      PICK_TR(),
+      { title: "Kırpma biçimini seç", detail: "«Otomatik» içeriğin etrafındaki boş kenarları kendisi bulur; «Elle» her kenardan kaç milimetre kırpılacağını sen yazarsın." },
+      { title: "«Kırp» düğmesine bas", detail: "Seçtiğin sayfaların görünen alanı küçülür; istersen yalnızca belirli sayfaları kırp." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Choose how to crop", detail: "«Automatic» finds the empty edges around your content; «Manual» lets you type how many millimetres to trim from each side." },
+      { title: "Click «Crop»", detail: "The visible area of the chosen pages shrinks; you can crop only specific pages if you like." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "flatten-pdf": S(
     [
       PICK_TR(),

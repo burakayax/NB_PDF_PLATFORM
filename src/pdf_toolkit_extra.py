@@ -85,23 +85,12 @@ def delete_pages_pdf(
         if len(to_del) >= n:
             raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
         keep = [i for i in range(n) if (i + 1) not in to_del]
-        new_doc = _fitz_local.open()
-        try:
-            ranges: list[tuple[int, int]] = []
-            if keep:
-                s = keep[0]; e = keep[0]
-                for k in keep[1:]:
-                    if k == e + 1:
-                        e = k
-                    else:
-                        ranges.append((s, e))
-                        s = e = k
-                ranges.append((s, e))
-            for from_p, to_p in ranges:
-                new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
-            new_doc.save(output_path, garbage=0, deflate=False, linear=False)
-        finally:
-            new_doc.close()
+        # NEDEN select(): Bitişik olmayan sayfalar silinince aralık aralık insert_pdf
+        # her aralıkta yazı tipi/görselleri YENİDEN kopyalıyordu (2 aralık = dosya ~2 kat,
+        # garbage=0 olduğu için tekilleştirme de yok). select() aynı belge üzerinde
+        # çalışır, ortak kaynaklar bir kez kalır; garbage=3 kullanılmayan nesneleri atar.
+        src.select(keep)
+        src.save(output_path, garbage=3, deflate=True, linear=False)
     finally:
         src.close()
     return True
@@ -228,10 +217,19 @@ def add_watermark_text(
     password: Optional[str] = None,
     font_name: str = "helv",
     font_color: str = "#8C8C8C",
+    rotation: float = 45.0,
+    size_pct: float = 70.0,
+    from_page: int = 1,
+    to_page: int = 0,
 ) -> bool:
+    """rotation: derece (0 = yatay, 45 = çapraz). size_pct: metnin sayfa genişliğine oranı (%).
+    from_page/to_page: filigranlanacak aralık (1 tabanlı, to_page=0 → son sayfa)."""
     if not (text or "").strip():
         raise Exception("Filigran metni boş olamaz.")
-    op = max(0.01, min(0.5, float(opacity)))
+    # Üst sınır %100: rakiplerde tam opak filigran var; kullanıcı isterse okunaklı basabilmeli.
+    op = max(0.01, min(1.0, float(opacity)))
+    rot = max(-360.0, min(360.0, float(rotation)))
+    boyut_orani = max(10.0, min(100.0, float(size_pct))) / 100.0
     color = _hex_to_rgb(font_color)
     metin = (text or "").strip()
 
@@ -256,15 +254,17 @@ def add_watermark_text(
 
     doc = _fitz_open(input_path, password=password)
     try:
-        for i in range(doc.page_count):
+        ilk = max(1, int(from_page))
+        son = doc.page_count if int(to_page) <= 0 else min(doc.page_count, int(to_page))
+        for i in range(ilk - 1, son):
             page = doc[i]
             r = page.rect
             genislik = r.x1 - r.x0
             yukseklik = r.y1 - r.y0
 
-            # Boyut sayfaya göre: metin sayfanın yaklaşık %70'ini kaplasın.
+            # Boyut sayfaya göre: metin sayfanın (varsayılan) yaklaşık %70'ini kaplasın.
             # Sabit 22 punto A4'te kaybolacak kadar küçük kalıyordu.
-            punto = max(14.0, min(72.0, (genislik * 0.70) / max(1, len(metin)) * 1.9))
+            punto = max(14.0, min(150.0, (genislik * boyut_orani) / max(1, len(metin)) * 1.9))
 
             if ttf_yolu:
                 yazici = fitz.TextWriter(r)
@@ -278,10 +278,10 @@ def add_watermark_text(
                 orta_y = r.y0 + yukseklik / 2
                 baslangic = fitz.Point(orta_x - uzunluk / 2, orta_y)
                 yazici.append(baslangic, metin, font=font, fontsize=punto)
-                # 45 derece çapraz: filigranın beklenen görünümü budur.
+                # Varsayılan 45 derece çapraz: filigranın beklenen görünümü budur.
                 yazici.write_text(page, color=color, opacity=op, morph=(
                     fitz.Point(orta_x, orta_y),
-                    fitz.Matrix(45),
+                    fitz.Matrix(rot),
                 ))
             else:
                 # Gömülü yazı tipi bulunamazsa eski davranış (yalnız acil yedek).
@@ -290,7 +290,860 @@ def add_watermark_text(
                     c, metin, fontname="helv", fontsize=22,
                     color=color, render_mode=0, fill_opacity=op,
                 )
-        doc.save(output_path, garbage=0, deflate=False, linear=False)
+        # Gömülü yazı tipi tamamı eklenip dosyayı şişiriyordu (+100-166 KB). Alt kümeleme yalnızca
+        # kullanılan harfleri tutar; fontTools yoksa ya da başarısız olursa sessizce atlanır.
+        try:
+            doc.subset_fonts()
+        except Exception:
+            pass
+        # garbage=3 + deflate: kullanılmayan nesneleri atar, akışları sıkıştırır.
+        doc.save(output_path, garbage=3, deflate=True, linear=False)
+    finally:
+        doc.close()
+    return True
+
+
+def add_watermark_image(
+    input_path: str,
+    output_path: str,
+    image_bytes: bytes,
+    opacity: float = 0.3,
+    password: Optional[str] = None,
+    rotation: float = 0.0,
+    size_pct: float = 40.0,
+    from_page: int = 1,
+    to_page: int = 0,
+    position: str = "center",
+) -> bool:
+    """Logo/görsel filigranı ekler.
+
+    size_pct: görselin sayfa genişliğine oranı (%). rotation: derece. opacity: 0.05–1.
+    position: center | top-left | top-right | bottom-left | bottom-right.
+    Saydam PNG'lerin saydamlığı korunur; opaklık görselin alfa kanalına uygulanır.
+    """
+    import io
+
+    from PIL import Image
+
+    if not image_bytes:
+        raise Exception("Filigran görseli boş.")
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        img.load()
+    except Exception as e:
+        raise Exception("Filigran görseli okunamadı. PNG, JPG veya WebP kullanın.") from e
+    img = img.convert("RGBA")
+    # Çok büyük görseller dosyayı şişirmesin: en uzun kenar 1600 px ile sınırlı.
+    if max(img.size) > 1600:
+        oran = 1600 / max(img.size)
+        img = img.resize((max(1, int(img.width * oran)), max(1, int(img.height * oran))), Image.LANCZOS)
+    op = max(0.05, min(1.0, float(opacity)))
+    alfa = img.getchannel("A").point(lambda v: int(v * op))
+    img.putalpha(alfa)
+    rot = max(-360.0, min(360.0, float(rotation)))
+    if rot % 360 != 0:
+        img = img.rotate(rot, expand=True, resample=Image.BICUBIC)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    png = buf.getvalue()
+    oran_genislik = max(5.0, min(100.0, float(size_pct))) / 100.0
+    kenar = 24.0
+
+    doc = _fitz_open(input_path, password=password)
+    try:
+        ilk = max(1, int(from_page))
+        son = doc.page_count if int(to_page) <= 0 else min(doc.page_count, int(to_page))
+        xref = 0
+        for i in range(ilk - 1, son):
+            page = doc[i]
+            r = page.rect
+            w = r.width * oran_genislik
+            h = w * img.height / img.width
+            if h > r.height * 0.95:  # sayfadan uzun olmasın
+                h = r.height * 0.95
+                w = h * img.width / img.height
+            if position == "top-left":
+                x0, y0 = r.x0 + kenar, r.y0 + kenar
+            elif position == "top-right":
+                x0, y0 = r.x1 - kenar - w, r.y0 + kenar
+            elif position == "bottom-left":
+                x0, y0 = r.x0 + kenar, r.y1 - kenar - h
+            elif position == "bottom-right":
+                x0, y0 = r.x1 - kenar - w, r.y1 - kenar - h
+            else:
+                x0, y0 = r.x0 + (r.width - w) / 2, r.y0 + (r.height - h) / 2
+            kutu = fitz.Rect(x0, y0, x0 + w, y0 + h)
+            if xref:
+                page.insert_image(kutu, xref=xref, overlay=True, keep_proportion=True)
+            else:
+                xref = page.insert_image(kutu, stream=png, overlay=True, keep_proportion=True)
+        doc.save(output_path, garbage=3, deflate=True, linear=False)
+    finally:
+        doc.close()
+    return True
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GRİ TONLAMA · SAYFA BOYUTLANDIRMA · AYNA · DÖNÜŞÜMLÜ BİRLEŞTİRME · BÖLME KİPLERİ
+# (Rakip karşılaştırması, 8 Ekim 2026: Sejda'da olup bizde olmayan araçlar)
+# ═══════════════════════════════════════════════════════════════════════════
+
+_GRI_RENK_OPERATORLERI = {"rg", "RG", "k", "K", "sc", "SC", "scn", "SCN"}
+
+
+def _luma(r: float, g: float, b: float) -> float:
+    return max(0.0, min(1.0, 0.299 * r + 0.587 * g + 0.114 * b))
+
+
+def _cmyk_gri(c: float, m: float, y: float, k: float) -> float:
+    return max(0.0, min(1.0, 1.0 - min(1.0, 0.299 * c + 0.587 * m + 0.114 * y + k)))
+
+
+def _icerik_akisini_griye_cevir(pdf, nesne, pikepdf) -> bool:
+    """Bir sayfa/form içerik akışındaki renk komutlarını gri komutlarına çevirir.
+
+    rg/RG (RGB) ve k/K (CMYK) → g/G; sc/scn/SC/SCN yalnızca 3 ya da 4 SAYI işlenenliyse
+    (DeviceRGB/CMYK) çevrilir. Desen/gölgeleme/ICC tabanlı renk uzayları (işlenen
+    sayısı farklı ya da ad içeren) olduğu gibi bırakılır. Değişiklik olduysa True döner.
+    """
+    try:
+        komutlar = pikepdf.parse_content_stream(nesne)
+    except Exception:
+        return False
+    yeni = []
+    degisti = False
+    for ops, op in komutlar:
+        o = str(op)
+        if o in _GRI_RENK_OPERATORLERI:
+            try:
+                sayilar = [float(x) for x in ops]
+            except (TypeError, ValueError):
+                sayilar = None
+            if sayilar is not None and len(sayilar) == 3:
+                g = _luma(*sayilar)
+            elif sayilar is not None and len(sayilar) == 4:
+                g = _cmyk_gri(*sayilar)
+            else:
+                g = None
+            if g is not None:
+                yeni_op = "G" if o in ("RG", "K", "SC", "SCN") else "g"
+                yeni.append(pikepdf.ContentStreamInstruction([round(g, 4)], pikepdf.Operator(yeni_op)))
+                degisti = True
+                continue
+        yeni.append(pikepdf.ContentStreamInstruction(ops, op))
+    if degisti:
+        nesne.write(pikepdf.unparse_content_stream(yeni))
+    return degisti
+
+
+def _gorseli_griye_cevir(xobj, pikepdf, io, Image, kalite: int = 85) -> bool:
+    """Görsel XObject'i 8 bit gri JPEG'e çevirir. Maske/ardıl yapılar bozulmasın diye yalnızca
+    düz renkli (RGB/CMYK/gri-olmayan) görsellerde çalışır. Başarısızsa False (görsel olduğu gibi kalır)."""
+    try:
+        cs = xobj.get("/ColorSpace")
+        ad = str(cs) if cs is not None and not isinstance(cs, pikepdf.Array) else (str(cs[0]) if cs is not None else "")
+        if ad in ("/DeviceGray", "/CalGray") or xobj.get("/ImageMask", False):
+            return False
+        pdfimg = pikepdf.PdfImage(xobj)
+        im = pdfimg.as_pil_image()
+        if im.mode in ("1", "L"):
+            return False
+        gri = im.convert("L")
+        buf = io.BytesIO()
+        gri.save(buf, format="JPEG", quality=kalite, optimize=True)
+        veri = buf.getvalue()
+        xobj.write(veri, filter=pikepdf.Name.DCTDecode)
+        xobj.ColorSpace = pikepdf.Name.DeviceGray
+        xobj.BitsPerComponent = 8
+        for anahtar in ("/Decode", "/DecodeParms", "/Intent"):
+            if anahtar in xobj:
+                del xobj[anahtar]
+        return True
+    except Exception:
+        return False
+
+
+def grayscale_pdf(input_path: str, output_path: str, password: Optional[str] = None) -> dict:
+    """PDF'in tüm renklerini gri tonlamaya çevirir (metin ve vektörler seçilebilir kalır).
+
+    Görseller 8 bit gri JPEG olur, renk komutları (RGB/CMYK) gri komutlarına çevrilir.
+    Döner: {"gorsel": n, "icerik": m} (çevrilen görsel ve içerik akışı sayısı).
+    SINIRLAMA: Desen, gölgeleme ve ICC/Separation renk uzaylarındaki renkler değişmeyebilir.
+    """
+    import io
+
+    import pikepdf
+    from PIL import Image
+
+    op = (password or "").strip()
+    try:
+        pdf = pikepdf.open(input_path, password=op) if op else pikepdf.open(input_path)
+    except pikepdf.PasswordError:
+        raise Exception("PDF şifreli; doğru parolayı girin.")
+    gorsel = icerik = 0
+    try:
+        gorulen: set = set()
+
+        def nesne_isle(obj) -> None:
+            nonlocal gorsel, icerik
+            try:
+                anahtar = obj.objgen
+            except Exception:
+                anahtar = None
+            if anahtar and anahtar != (0, 0):
+                if anahtar in gorulen:
+                    return
+                gorulen.add(anahtar)
+            res = obj.get("/Resources") if hasattr(obj, "get") else None
+            if res is not None:
+                xobjs = res.get("/XObject")
+                if xobjs is not None:
+                    for ad in list(xobjs.keys()):
+                        x = xobjs[ad]
+                        alt = str(x.get("/Subtype", ""))
+                        if alt == "/Image":
+                            k = x.objgen
+                            if k not in gorulen:
+                                gorulen.add(k)
+                                if _gorseli_griye_cevir(x, pikepdf, io, Image):
+                                    gorsel += 1
+                        elif alt == "/Form":
+                            if _icerik_akisini_griye_cevir(pdf, x, pikepdf):
+                                icerik += 1
+                            nesne_isle(x)
+
+        for page in pdf.pages:
+            for ic in (page.Contents if isinstance(page.get("/Contents"), pikepdf.Array) else [page.get("/Contents")]):
+                if ic is None:
+                    continue
+                if _icerik_akisini_griye_cevir(pdf, ic, pikepdf):
+                    icerik += 1
+            nesne_isle(page.obj)
+        pdf.save(output_path, compress_streams=True, object_stream_mode=pikepdf.ObjectStreamMode.generate)
+    finally:
+        pdf.close()
+    return {"gorsel": gorsel, "icerik": icerik}
+
+
+_SAYFA_BOYUTLARI_MM = {
+    "a3": (297.0, 420.0),
+    "a4": (210.0, 297.0),
+    "a5": (148.0, 210.0),
+    "a6": (105.0, 148.0),
+    "letter": (215.9, 279.4),
+    "legal": (215.9, 355.6),
+}
+
+
+def resize_pdf_pages(
+    input_path: str,
+    output_path: str,
+    size: str = "a4",
+    custom_w_mm: float = 0.0,
+    custom_h_mm: float = 0.0,
+    orientation: str = "auto",
+    fit: str = "fit",
+    margin_mm: float = 0.0,
+    password: Optional[str] = None,
+) -> dict:
+    """Her sayfayı hedef kâğıt boyutuna getirir (vektör içerik korunur, görüntülenemez hale gelmez).
+
+    size: a3|a4|a5|a6|letter|legal|custom (custom_w_mm × custom_h_mm).
+    orientation: auto (her sayfanın yönü korunur) | portrait | landscape.
+    fit: fit (oranı koru, sığdır, ortala) | fill (oranı koru, doldur, taşan kırpılır) | stretch (esnet).
+    margin_mm: hedef sayfanın her kenarında bırakılacak boşluk.
+    """
+    if size == "custom":
+        w_mm, h_mm = float(custom_w_mm), float(custom_h_mm)
+        if not (20 <= w_mm <= 2000 and 20 <= h_mm <= 2000):
+            raise Exception("Özel ölçü 20 ile 2000 mm arasında olmalıdır.")
+    elif size in _SAYFA_BOYUTLARI_MM:
+        w_mm, h_mm = _SAYFA_BOYUTLARI_MM[size]
+    else:
+        raise Exception("Sayfa boyutu geçersiz.")
+    if orientation not in ("auto", "portrait", "landscape"):
+        orientation = "auto"
+    if fit not in ("fit", "fill", "stretch"):
+        fit = "fit"
+    marj = max(0.0, min(100.0, float(margin_mm))) * _MM
+
+    src = _fitz_open(input_path, password=password)
+    out = fitz.open()
+    try:
+        for pno in range(src.page_count):
+            kaynak_sayfa = src[pno]
+            r = kaynak_sayfa.rect
+            w, h = w_mm * _MM, h_mm * _MM
+            yatay = r.width > r.height
+            if orientation == "landscape" or (orientation == "auto" and yatay):
+                w, h = max(w, h), min(w, h)
+            else:
+                w, h = min(w, h), max(w, h)
+            yeni = out.new_page(width=w, height=h)
+            hedef = fitz.Rect(marj, marj, w - marj, h - marj)
+            if hedef.is_empty:
+                raise Exception("Boşluk sayfadan büyük.")
+            if fit == "stretch":
+                yeni.show_pdf_page(hedef, src, pno, keep_proportion=False)
+            elif fit == "fill":
+                oran = max(hedef.width / r.width, hedef.height / r.height)
+                gw, gh = r.width * oran, r.height * oran
+                dx = hedef.x0 + (hedef.width - gw) / 2
+                dy = hedef.y0 + (hedef.height - gh) / 2
+                kutu = fitz.Rect(dx, dy, dx + gw, dy + gh)
+                # Taşan kısım sayfa sınırının dışında kaldığı için görünmez (kenar boşluğu 0 iken kesilir).
+                yeni.show_pdf_page(kutu, src, pno, keep_proportion=True)
+            else:
+                yeni.show_pdf_page(hedef, src, pno, keep_proportion=True)
+        out.save(output_path, garbage=3, deflate=True, linear=False)
+        return {"sayfa": src.page_count, "genislik_mm": round(w_mm, 1), "yukseklik_mm": round(h_mm, 1)}
+    finally:
+        out.close()
+        src.close()
+
+
+def flip_pdf(
+    input_path: str,
+    output_path: str,
+    direction: str = "horizontal",
+    from_page: int = 1,
+    to_page: int = 0,
+    password: Optional[str] = None,
+) -> dict:
+    """Sayfaları ayna gibi çevirir: horizontal (soldan sağa), vertical (baş aşağı).
+
+    Görünen yöne göre uygulanır (döndürülmüş sayfalarda da "yatay" ekrandaki yataydır).
+    Not: Etkileşimli form alanı/not gibi açıklamalar çevrilmez, yalnızca sayfa içeriği çevrilir.
+    """
+    import pikepdf
+
+    if direction not in ("horizontal", "vertical"):
+        raise Exception("Çevirme yönü geçersiz.")
+    op = (password or "").strip()
+    try:
+        pdf = pikepdf.open(input_path, password=op) if op else pikepdf.open(input_path)
+    except pikepdf.PasswordError:
+        raise Exception("PDF şifreli; doğru parolayı girin.")
+    try:
+        toplam = len(pdf.pages)
+        ilk = max(1, int(from_page))
+        son = toplam if int(to_page) <= 0 else min(toplam, int(to_page))
+        if ilk > son:
+            raise Exception("Sayfa aralığı geçersiz.")
+        for i in range(ilk - 1, son):
+            page = pdf.pages[i]
+            kutu = [float(x) for x in (page.get("/CropBox") or page.MediaBox)]
+            x0, y0, x1, y1 = kutu
+            donus = int(page.get("/Rotate", 0)) % 360
+            # Döndürülmüş sayfada görünen "yatay" eksen, döndürülmemiş koordinatta dikeydir.
+            yatay = direction == "horizontal"
+            if donus in (90, 270):
+                yatay = not yatay
+            if yatay:
+                m = f"-1 0 0 1 {x0 + x1:.4f} 0 cm"
+            else:
+                m = f"1 0 0 -1 0 {y0 + y1:.4f} cm"
+            on = pikepdf.Stream(pdf, f"q {m}\n".encode())
+            arka = pikepdf.Stream(pdf, b"\nQ")
+            page.contents_add(on, prepend=True)
+            page.contents_add(arka, prepend=False)
+        pdf.save(output_path, compress_streams=True)
+        return {"cevrilen": son - ilk + 1}
+    finally:
+        pdf.close()
+
+
+def alternate_mix_pdfs(
+    input_paths: List[str],
+    output_path: str,
+    reverse_second: bool = False,
+    passwords: Optional[List[Optional[str]]] = None,
+) -> dict:
+    """Birden çok PDF'in sayfalarını sırayla serpiştirir: A1, B1, A2, B2 …
+
+    reverse_second: ikinci (ve sonraki) belge ters sırada okunur. Çift taraflı tarayıcıda
+    önce ön yüzleri sonra arka yüzleri (ters sırada) taradıysanız doğru sıra budur.
+    Belgelerin sayfa sayıları farklıysa uzun olanın kalan sayfaları sona eklenir.
+    """
+    if len(input_paths) < 2:
+        raise Exception("Serpiştirmek için en az 2 PDF gerekli.")
+    if len(input_paths) > 10:
+        raise Exception("En fazla 10 PDF serpiştirilebilir.")
+    passwords = passwords or [None] * len(input_paths)
+    docs = []
+    out = fitz.open()
+    try:
+        for i, yol in enumerate(input_paths):
+            docs.append(_fitz_open(yol, password=(passwords[i] if i < len(passwords) else None)))
+        sirali = []
+        for i, d in enumerate(docs):
+            idx = list(range(d.page_count))
+            if reverse_second and i >= 1:
+                idx.reverse()
+            sirali.append(idx)
+        en_uzun = max(len(x) for x in sirali)
+        for k in range(en_uzun):
+            for d, idx in zip(docs, sirali):
+                if k < len(idx):
+                    out.insert_pdf(d, from_page=idx[k], to_page=idx[k])
+        out.save(output_path, garbage=3, deflate=True, linear=False)
+        return {"sayfa": out.page_count, "belge": len(docs)}
+    finally:
+        out.close()
+        for d in docs:
+            d.close()
+
+
+def _egrilik_acisi(gri, azami: float = 10.0) -> float:
+    """Gri (0-255) bir sayfa görüntüsünün eğriliğini derece cinsinden tahmin eder.
+
+    Yöntem: yazı satırları düz olduğunda yatay izdüşüm profili (satır satır koyu piksel sayısı)
+    en keskin ZIT değişimi gösterir. Görüntü küçük açılarla döndürülür, profilin varyansı en
+    büyük olan açı seçilir (önce kaba 0,5°, sonra ince 0,1° adımlarla). Boş/yazısız sayfada 0 döner.
+    Dönüş: görüntüyü DÜZELTMEK için uygulanması gereken PIL.rotate açısı (saat yönünün tersi pozitif).
+    """
+    import numpy as np
+    from PIL import Image
+
+    im = Image.fromarray(gri)
+    # Hız için ~1000 piksel genişliğe indir.
+    if im.width > 1000:
+        oran = 1000 / im.width
+        im = im.resize((1000, max(1, int(im.height * oran))), Image.BILINEAR)
+    a = np.asarray(im, dtype=np.uint8)
+    esik = a.mean() - 0.5 * a.std()
+    ikili = (a < esik).astype(np.uint8) * 255
+    if ikili.mean() < 1.0:  # neredeyse boş sayfa
+        return 0.0
+    ikili_im = Image.fromarray(ikili)
+
+    def puan(aci: float) -> float:
+        r = np.asarray(ikili_im.rotate(aci, resample=Image.NEAREST, fillcolor=0), dtype=np.float32)
+        profil = r.sum(axis=1)
+        return float(np.var(profil))
+
+    en_iyi_aci, en_iyi = 0.0, puan(0.0)
+    aci = -azami
+    while aci <= azami + 1e-9:
+        v = puan(aci)
+        if v > en_iyi:
+            en_iyi, en_iyi_aci = v, aci
+        aci += 0.5
+    aci = en_iyi_aci - 0.5
+    ince_en_iyi, ince_aci = en_iyi, en_iyi_aci
+    while aci <= en_iyi_aci + 0.5 + 1e-9:
+        v = puan(aci)
+        if v > ince_en_iyi:
+            ince_en_iyi, ince_aci = v, aci
+        aci += 0.1
+    return round(ince_aci, 2)
+
+
+def deskew_pdf(
+    input_path: str,
+    output_path: str,
+    azami_aci: float = 10.0,
+    esik_aci: float = 0.3,
+    dpi: int = 200,
+    password: Optional[str] = None,
+) -> dict:
+    """Taranmış (yalnızca görüntüden oluşan) sayfalardaki eğriliği düzeltir.
+
+    Metin katmanı olan sayfalara DOKUNULMAZ (OCR'lı ya da dijital sayfa zaten düz; yeniden
+    resme çevirmek metni seçilemez yapardı). `esik_aci`'ndan az eğri sayfa da olduğu gibi kalır.
+    Düzeltilen sayfa aynı ölçüde yeni bir sayfa olur; dönen köşeler beyazla dolar.
+    Döner: {"duzeltilen": n, "atlanan_metinli": m, "atlanan_duz": k, "acilar": {sayfa: derece}}.
+    """
+    import io
+
+    import numpy as np
+    from PIL import Image
+
+    azami = max(1.0, min(20.0, float(azami_aci)))
+    src = _fitz_open(input_path, password=password)
+    out = fitz.open()
+    try:
+        n = src.page_count
+        if n > 300:
+            raise Exception("Eğri düzeltme en fazla 300 sayfalık belgelerde çalışır.")
+        duzeltilen = atlanan_metin = atlanan_duz = 0
+        acilar: dict = {}
+        for i in range(n):
+            sayfa = src[i]
+            metin_var = bool(sayfa.get_text().strip())
+            taranmis = (not metin_var) and bool(sayfa.get_images())
+            if not taranmis:
+                out.insert_pdf(src, from_page=i, to_page=i)
+                if metin_var:
+                    atlanan_metin += 1
+                continue
+            pix = sayfa.get_pixmap(dpi=int(dpi), colorspace=fitz.csGRAY)
+            gri = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w)
+            aci = _egrilik_acisi(gri, azami)
+            if abs(aci) < float(esik_aci):
+                out.insert_pdf(src, from_page=i, to_page=i)
+                atlanan_duz += 1
+                continue
+            renkli = sayfa.get_pixmap(dpi=int(dpi), colorspace=fitz.csRGB)
+            im = Image.frombytes("RGB", (renkli.w, renkli.h), renkli.samples)
+            im = im.rotate(aci, resample=Image.BICUBIC, fillcolor=(255, 255, 255))
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=88, optimize=True, dpi=(int(dpi), int(dpi)))
+            yeni = out.new_page(width=sayfa.rect.width, height=sayfa.rect.height)
+            yeni.insert_image(yeni.rect, stream=buf.getvalue())
+            duzeltilen += 1
+            acilar[i + 1] = aci
+        if duzeltilen == 0:
+            if atlanan_metin == n:
+                raise Exception("Bu PDF taranmış görüntü değil (yazı katmanı var); eğri düzeltme gerekmiyor.")
+            raise Exception("Eğri taranmış sayfa bulunamadı; sayfalar zaten düz görünüyor.")
+        out.save(output_path, garbage=3, deflate=True, linear=False)
+        return {
+            "duzeltilen": duzeltilen, "atlanan_metinli": atlanan_metin,
+            "atlanan_duz": atlanan_duz, "acilar": acilar,
+        }
+    finally:
+        out.close()
+        src.close()
+
+
+def _guvenli_ad(metin: str, varsayilan: str = "bolum") -> str:
+    import re
+
+    ad = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', " ", metin or "").strip().strip(".")
+    ad = re.sub(r"\s+", " ", ad)
+    return (ad[:60] or varsayilan)
+
+
+def _aralik_boyutu(src, a: int, b: int) -> int:
+    """src'nin [a, b] (0 tabanlı, dahil) sayfa aralığının gerçek (sıkıştırılmış) dosya boyutu."""
+    d = fitz.open()
+    try:
+        d.insert_pdf(src, from_page=a, to_page=b)
+        return len(d.tobytes(garbage=3, deflate=True))
+    finally:
+        d.close()
+
+
+def split_pdf_advanced(
+    input_path: str,
+    out_dir: str,
+    mode: str,
+    every_n: int = 1,
+    max_mb: float = 5.0,
+    base_name: str = "belge",
+    password: Optional[str] = None,
+) -> dict:
+    """Gelişmiş bölme. Çıktı dosyalarını out_dir'e yazar.
+
+    mode:
+      "every"   → her `every_n` sayfada bir dosya.
+      "size"    → her dosya en fazla `max_mb` MB (gerçek dosya boyutuna göre).
+      "outline" → üst düzey yer imlerinde böl (dosya adı yer imi başlığı).
+    Döner: {"dosyalar": [yollar], "asan": [tek başına limiti aşan sayfa numaraları]}
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    src = _fitz_open(input_path, password=password)
+    try:
+        n = src.page_count
+        aralıklar: list[tuple[int, int, str]] = []  # (ilk, son, ad) 0 tabanlı, dahil
+        asan: list[int] = []
+        if mode == "every":
+            k = max(1, int(every_n))
+            for a in range(0, n, k):
+                b = min(n - 1, a + k - 1)
+                aralıklar.append((a, b, f"{base_name}_{a + 1}-{b + 1}"))
+        elif mode == "size":
+            limit = int(float(max_mb) * 1024 * 1024)
+            if limit < 20 * 1024:
+                raise Exception("En küçük sınır 0,02 MB'tır.")
+            a = 0
+            while a < n:
+                # Üstel büyüt, sonra ikili arama: en büyük sığan aralığı bul.
+                if _aralik_boyutu(src, a, a) > limit:
+                    asan.append(a + 1)
+                    aralıklar.append((a, a, f"{base_name}_{a + 1}"))
+                    a += 1
+                    continue
+                dogru = a
+                adim = 1
+                while dogru + adim < n and _aralik_boyutu(src, a, dogru + adim) <= limit:
+                    dogru += adim
+                    adim *= 2
+                alt, ust = dogru, min(n - 1, dogru + adim)
+                while alt < ust:
+                    orta = (alt + ust + 1) // 2
+                    if _aralik_boyutu(src, a, orta) <= limit:
+                        alt = orta
+                    else:
+                        ust = orta - 1
+                aralıklar.append((a, alt, f"{base_name}_{a + 1}-{alt + 1}"))
+                a = alt + 1
+        elif mode == "outline":
+            toc = [t for t in src.get_toc(simple=True) if t[0] == 1 and 1 <= t[2] <= n]
+            if not toc:
+                raise Exception("Bu PDF'te üst düzey yer imi (bookmark) bulunamadı.")
+            toc.sort(key=lambda t: t[2])
+            baslangiclar = []
+            for _lvl, baslik, sayfa in toc:
+                if baslangiclar and baslangiclar[-1][1] == sayfa - 1:
+                    continue  # aynı sayfada birden çok yer imi → ilki
+                baslangiclar.append((baslik, sayfa - 1))
+            if baslangiclar[0][1] > 0:
+                baslangiclar.insert(0, ("Giriş", 0))
+            for idx, (baslik, a) in enumerate(baslangiclar):
+                b = (baslangiclar[idx + 1][1] - 1) if idx + 1 < len(baslangiclar) else n - 1
+                if b >= a:
+                    aralıklar.append((a, b, f"{idx + 1:02d} {_guvenli_ad(baslik)}"))
+        else:
+            raise Exception("Bölme kipi geçersiz.")
+
+        if len(aralıklar) > 300:
+            raise Exception(f"Bu ayarla {len(aralıklar)} dosya çıkıyor; en fazla 300 olabilir. Ayarı büyütün.")
+        if len(aralıklar) <= 1 and mode != "outline":
+            raise Exception("Bu ayarla belge zaten tek parça; bölünecek bir şey yok.")
+        yollar: list[str] = []
+        kullanilan: set = set()
+        for a, b, ad in aralıklar:
+            temiz = _guvenli_ad(ad, "bolum")
+            ham, sayac = temiz, 2
+            while ham.lower() in kullanilan:
+                ham = f"{temiz} ({sayac})"
+                sayac += 1
+            kullanilan.add(ham.lower())
+            yol = os.path.join(out_dir, f"{ham}.pdf")
+            d = fitz.open()
+            try:
+                d.insert_pdf(src, from_page=a, to_page=b)
+                d.save(yol, garbage=3, deflate=True, linear=False)
+            finally:
+                d.close()
+            yollar.append(yol)
+        return {"dosyalar": yollar, "asan": asan}
+    finally:
+        src.close()
+
+
+_MM = 72.0 / 25.4  # 1 mm = 2,8346 punto
+
+
+def _icerik_kutusu(page) -> "Optional[fitz.Rect]":
+    """Sayfadaki GÖRÜNÜR içeriğin (metin, görsel, çizim) birleşik sınır kutusu; yoksa None.
+
+    Sayfayı tamamen kaplayan arka plan dikdörtgenleri (beyaz zemin vb.) sayılmaz, yoksa
+    otomatik kırpma hiçbir şey kırpamaz.
+    """
+    kutu = None
+    alan = page.rect.width * page.rect.height
+
+    def ekle(r) -> None:
+        nonlocal kutu
+        r = fitz.Rect(r)
+        if r.is_empty or r.is_infinite:
+            return
+        kutu = fitz.Rect(r) if kutu is None else (kutu | r)
+
+    try:
+        for b in page.get_text("blocks"):
+            if len(b) > 6 and b[6] != 0:  # 0 = metin bloğu; 1 = görsel bloğu
+                continue
+            if (b[4] or "").strip():
+                ekle((b[0], b[1], b[2], b[3]))
+    except Exception:
+        pass
+    try:
+        for g in page.get_image_info():
+            r = fitz.Rect(g.get("bbox", (0, 0, 0, 0)))
+            if r.width * r.height < alan * 0.97:
+                ekle(r)
+    except Exception:
+        pass
+    try:
+        for d in page.get_drawings():
+            r = fitz.Rect(d.get("rect", (0, 0, 0, 0)))
+            if r.width * r.height >= alan * 0.97:
+                continue
+            ekle(r)
+    except Exception:
+        pass
+    try:
+        for a in page.annots() or []:
+            ekle(a.rect)
+    except Exception:
+        pass
+    return kutu
+
+
+def crop_pdf(
+    input_path: str,
+    output_path: str,
+    mode: str = "margins",
+    top_mm: float = 0.0,
+    bottom_mm: float = 0.0,
+    left_mm: float = 0.0,
+    right_mm: float = 0.0,
+    pad_mm: float = 5.0,
+    uniform: bool = False,
+    from_page: int = 1,
+    to_page: int = 0,
+    password: Optional[str] = None,
+) -> dict:
+    """Sayfaları kırpar (CropBox ayarlar; görünür alan küçülür).
+
+    mode="margins": her kenardan verilen mm kadar kırpar.
+    mode="auto":    içeriğin etrafındaki boş kenarları kendisi bulur; pad_mm kadar pay bırakır.
+                    uniform=True → seçili tüm sayfalar aynı (en geniş içerik) kutusuyla kırpılır.
+    Döner: {"kirpilan": n, "atlanan": m} (içeriksiz sayfalar auto modda atlanır).
+
+    NOT: CropBox görünürlüğü değiştirir; kırpılan kısım dosyada kalır. Gizlilik için
+    «Hassas veri gizle» kullanılmalıdır (arayüzde bu uyarı yazılıdır).
+    """
+    if mode not in ("margins", "auto"):
+        raise Exception("Kırpma kipi geçersiz.")
+    vals = [float(top_mm), float(bottom_mm), float(left_mm), float(right_mm), float(pad_mm)]
+    if any(v < 0 or v > 500 for v in vals):
+        raise Exception("Kenar boşlukları 0 ile 500 mm arasında olmalıdır.")
+    if mode == "margins" and not any(vals[:4]):
+        raise Exception("En az bir kenardan kırpma değeri girin.")
+
+    doc = _fitz_open(input_path, password=password)
+    try:
+        toplam = doc.page_count
+        ilk = max(1, int(from_page))
+        son = toplam if int(to_page) <= 0 else min(toplam, int(to_page))
+        if ilk > son:
+            raise Exception("Sayfa aralığı geçersiz.")
+        pad = float(pad_mm) * _MM
+        kirpilan = 0
+        atlanan = 0
+
+        ortak = None
+        if mode == "auto" and uniform:
+            for i in range(ilk - 1, son):
+                k = _icerik_kutusu(doc[i])
+                if k is not None:
+                    ortak = k if ortak is None else (ortak | k)
+
+        for i in range(ilk - 1, son):
+            page = doc[i]
+            r = page.rect  # döndürülmüş (görünen) koordinatlar
+            if mode == "margins":
+                yeni = fitz.Rect(
+                    r.x0 + float(left_mm) * _MM, r.y0 + float(top_mm) * _MM,
+                    r.x1 - float(right_mm) * _MM, r.y1 - float(bottom_mm) * _MM,
+                )
+            else:
+                k = ortak if (uniform and ortak is not None) else _icerik_kutusu(page)
+                if k is None:
+                    atlanan += 1
+                    continue
+                yeni = fitz.Rect(k.x0 - pad, k.y0 - pad, k.x1 + pad, k.y1 + pad) & r
+            if yeni.is_empty or yeni.width < 20 or yeni.height < 20:
+                if mode == "margins":
+                    raise Exception(f"Sayfa {i + 1}: kırpma sayfayı yok edecek kadar büyük.")
+                atlanan += 1
+                continue
+            # set_cropbox döndürülmemiş sayfa koordinatı ister.
+            page.set_cropbox(yeni * page.derotation_matrix)
+            kirpilan += 1
+        if kirpilan == 0:
+            raise Exception("Kırpılacak içerik bulunamadı; sayfalar boş görünüyor.")
+        doc.save(output_path, garbage=3, deflate=True, linear=False)
+    finally:
+        doc.close()
+    return {"kirpilan": kirpilan, "atlanan": atlanan}
+
+
+_HF_KONUMLAR = (
+    "header-left", "header-center", "header-right",
+    "footer-left", "footer-center", "footer-right",
+)
+
+
+def add_header_footer(
+    input_path: str,
+    output_path: str,
+    slots: dict,
+    password: Optional[str] = None,
+    font_size: float = 10.0,
+    color: str = "#444444",
+    from_page: int = 1,
+    to_page: int = 0,
+    start_at: int = 1,
+    file_name: str = "",
+    date_text: str = "",
+) -> bool:
+    """Üst/alt bilgi: altı konuma (header|footer × left|center|right) serbest metin yazar.
+
+    Metinde yer tutucular kullanılabilir: {sayfa} (numara), {toplam} (toplam sayfa),
+    {tarih} (bugün), {dosya} (dosya adı, uzantısız). {sayfa:6} gibi bir sayı eklenirse numara
+    sıfırla doldurulur (000147) — Bates numarası: "DAVA-{sayfa:6}". Birden çok dosyayı
+    kesintisiz numaralamak için start_at'a önceki dosyanın son numarası + 1 verilir.
+    Türkçe harfler için gömülü Türkçe destekli yazı tipi kullanılır
+    (yerleşik Helvetica ç, ğ, ş, İ çizemez).
+    """
+    import re
+
+    _pad_re = re.compile(r"\{(sayfa|toplam)(?::(\d{1,2}))?\}")
+    import datetime
+
+    temiz = {
+        k: (v or "").strip()
+        for k, v in (slots or {}).items()
+        if k in _HF_KONUMLAR and (v or "").strip()
+    }
+    if not temiz:
+        raise Exception("Üst/alt bilgi için en az bir metin yazın.")
+    for v in temiz.values():
+        if len(v) > 200:
+            raise Exception("Üst/alt bilgi metni en fazla 200 karakter olabilir.")
+
+    ttf = "Roboto-Regular.ttf"
+    yollar = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "web", "backend", "app", "assets", ttf),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", ttf),
+    ]
+    ttf_yolu = next((y for y in yollar if os.path.isfile(y)), None)
+    bugun = date_text or datetime.date.today().strftime("%d.%m.%Y")
+    dosya_adi = os.path.splitext(os.path.basename(file_name or ""))[0]
+    size = max(6.0, min(48.0, float(font_size)))
+    strip_h = max(24.0, size * 2.0 + 8.0)
+    rgb = _hex_to_rgb(color) if color else (0.27, 0.27, 0.27)
+    margin_x = 36
+
+    doc = _fitz_open(input_path, password=password)
+    try:
+        toplam = doc.page_count
+        ilk = max(1, int(from_page))
+        son = toplam if int(to_page) <= 0 else min(toplam, int(to_page))
+        sayac = int(start_at)
+        for i in range(ilk - 1, son):
+            page = doc[i]
+            r = page.rect
+            for konum, sablon in temiz.items():
+                def _doldur(m, sayac=sayac):
+                    deger = sayac if m.group(1) == "sayfa" else toplam
+                    return str(deger).zfill(int(m.group(2))) if m.group(2) else str(deger)
+
+                metin = _pad_re.sub(_doldur, sablon).replace("{tarih}", bugun).replace("{dosya}", dosya_adi)
+                dikey, _, yatay = konum.partition("-")
+                if dikey == "header":
+                    kutu = fitz.Rect(r.x0 + margin_x, r.y0 + 6, r.x1 - margin_x, r.y0 + strip_h)
+                else:
+                    kutu = fitz.Rect(r.x0 + margin_x, r.y1 - strip_h, r.x1 - margin_x, r.y1 - 6)
+                hiza = {"left": fitz.TEXT_ALIGN_LEFT, "right": fitz.TEXT_ALIGN_RIGHT}.get(
+                    yatay, fitz.TEXT_ALIGN_CENTER
+                )
+                kw = {"fontsize": size, "color": rgb, "align": hiza}
+                if ttf_yolu:
+                    kw.update(fontname="robotohf", fontfile=ttf_yolu)
+                page.insert_textbox(kutu, metin, **kw)
+            sayac += 1
+        try:
+            doc.subset_fonts()
+        except Exception:
+            pass
+        doc.save(output_path, garbage=3, deflate=True, linear=False)
     finally:
         doc.close()
     return True
@@ -303,37 +1156,60 @@ def add_page_numbers(
     position: str = "footer",
     password: Optional[str] = None,
     fmt: str = "plain",
+    font_size: float = 9.0,
+    color: str = "#666666",
+    from_page: int = 1,
+    to_page: int = 0,
 ) -> bool:
     """
-    fmt: "plain"  → "3"
-         "page"   → "Sayfa 3"  / "Page 3"
-         "of"     → "3 / 10"
+    fmt: "plain"    → "3"
+         "page"     → "Sayfa 3"  / "Page 3"
+         "of"       → "3 / 10"
+         "page-of"  → "Sayfa 3 / 10"
+    position: "footer" | "header" (ortada) ya da "footer-left|center|right",
+              "header-left|center|right".
+    from_page / to_page: numaralanacak aralık (1 tabanlı, to_page=0 → son sayfa).
+        Numara, aralığın ilk sayfasında start_at değerinden başlar.
     """
     doc = _fitz_open(input_path, password=password)
     try:
         total = doc.page_count
         num = int(start_at)
         margin_x = 36
-        strip_h = 24
-        for i in range(total):
+        size = max(6.0, min(48.0, float(font_size)))
+        # Kutu, yazıyı sığdıracak kadar yüksek olmalı: sığmazsa insert_textbox yazıyı
+        # SESSİZCE çizmez (negatif döner), numara hiç görünmez.
+        strip_h = max(24.0, size * 2.0 + 8.0)
+        rgb = _hex_to_rgb(color) if color else (0.4, 0.4, 0.4)
+        vert, _, horiz = (position or "footer").partition("-")
+        vert = "header" if vert == "header" else "footer"
+        align = {
+            "left": fitz.TEXT_ALIGN_LEFT,
+            "right": fitz.TEXT_ALIGN_RIGHT,
+        }.get(horiz, fitz.TEXT_ALIGN_CENTER)
+        first = max(1, int(from_page))
+        last = total if int(to_page) <= 0 else min(total, int(to_page))
+        for i in range(first - 1, last):
             page = doc[i]
             r = page.rect
             if fmt == "page":
                 label = f"Sayfa {num}"
             elif fmt == "of":
                 label = f"{num} / {total}"
+            elif fmt == "page-of":
+                label = f"Sayfa {num} / {total}"
             else:
                 label = str(num)
-            # Use a full-width rect so insert_textbox can centre the text.
-            if position == "header":
+            # Use a full-width rect so insert_textbox can align the text.
+            if vert == "header":
                 rect = fitz.Rect(r.x0 + margin_x, r.y0 + 6, r.x1 - margin_x, r.y0 + strip_h)
             else:
                 rect = fitz.Rect(r.x0 + margin_x, r.y1 - strip_h, r.x1 - margin_x, r.y1 - 6)
             page.insert_textbox(
                 rect, label,
-                fontsize=9,
-                color=(0.4, 0.4, 0.4),
-                align=fitz.TEXT_ALIGN_CENTER,
+                fontsize=size,
+                color=rgb,
+                align=align,
             )
             num += 1
         doc.save(output_path, garbage=0, deflate=False, linear=False)
@@ -367,8 +1243,106 @@ def _onarim_kazanci(output_path: str) -> tuple[int, int]:
         doc.close()
 
 
+def _beklenen_sayfa_sayisi(yol: str, ust_sinir_mb: int = 100) -> int:
+    """Ham dosyada görünen /Type /Page nesnesi sayısı (0 = bilinmiyor).
+
+    Yalnızca nesneleri sıkıştırılmamış (düz) bölgelerde çalışır; nesne akışı içine
+    gömülmüş sayfaları göremez, o durumda düşük sayı verir. Bu yüzden yalnızca
+    "en az bu kadar sayfa olmalı" ipucu olarak kullanılır. Büyük dosyalarda atlanır.
+    """
+    import re
+
+    try:
+        if os.path.getsize(yol) > ust_sinir_mb * 1024 * 1024:
+            return 0
+        with open(yol, "rb") as f:
+            veri = f.read()
+        return len(re.findall(rb"/Type\s*/Page(?![a-zA-Z])", veri))
+    except OSError:
+        return 0
+
+
+def _onarim_bozuk_sayfa(output_path: str) -> int:
+    """Çizilirken eksik kaynak (görsel/yazı tipi) hatası veren sayfa sayısı.
+
+    NEDEN: Onarım, "en az bir sayfada yazı/görsel var" diye ilk yöntemde duruyordu;
+    ama o yöntem bazı sayfalardaki görseli düşürebiliyor (sayfa var, içi bozuk).
+    Aynı dosyayı başka yöntem kusursuz kurtarabildiği halde kullanıcıya bozuk sayfa
+    veriliyordu. Hata sayımı, yöntemleri birbiriyle kıyaslamamızı sağlar.
+    """
+    try:
+        doc = fitz.open(output_path)
+    except Exception:
+        return 10**6
+    bozuk = 0
+    try:
+        try:
+            fitz.TOOLS.mupdf_display_errors(False)
+        except Exception:
+            pass
+        for sayfa in doc:
+            try:
+                fitz.TOOLS.reset_mupdf_warnings()
+                sayfa.get_pixmap(dpi=24)
+                uyarilar = (fitz.TOOLS.mupdf_warnings() or "").lower()
+                if "cannot find" in uyarilar or "error" in uyarilar:
+                    bozuk += 1
+            except Exception:
+                bozuk += 1
+    finally:
+        doc.close()
+        try:
+            fitz.TOOLS.mupdf_display_errors(True)
+        except Exception:
+            pass
+    return bozuk
+
+
 def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
-    """Bozuk PDF'i çok aşamalı strateji ile onarır. Tüm yöntemler başarısız olursa açıklayıcı hata verir."""
+    """Bozuk PDF'i çok aşamalı strateji ile onarır. Tüm yöntemler başarısız olursa açıklayıcı hata verir.
+
+    Her yöntem denenir; çıktıda bozuk sayfa varsa sonuç aday olarak saklanır ve diğer
+    yöntemler de denenir. En az bozuk sayfalı (eşitlikte en çok içerikli) aday seçilir.
+    """
+    import shutil
+    # (eksik_sayfa, bozuk_sayfa, -icerikli, dosya): küçük olan daha iyi.
+    adaylar: list[tuple[int, int, int, str]] = []
+    beklenen = _beklenen_sayfa_sayisi(input_path)
+
+    def _aday_degerlendir(yol: str) -> bool:
+        """True → kusursuz (eksik/bozuk sayfa yok), hemen kullan. Aksi halde aday olarak saklanır."""
+        sayfa, icerikli = _onarim_kazanci(yol)
+        if icerikli <= 0:
+            return False
+        # Ham dosyada daha çok sayfa nesnesi görünüyorsa, az sayfalı sonuç "kusursuz" sayılmaz:
+        # bir yöntem sayfa ağacını yarım kurtarıp kalan sayfaları sessizce atabilir.
+        eksik = max(0, beklenen - sayfa) if beklenen else 0
+        bozuk = _onarim_bozuk_sayfa(yol)
+        if bozuk == 0 and eksik == 0:
+            for _e, _b, _i, eski in adaylar:
+                try:
+                    os.remove(eski)
+                except OSError:
+                    pass
+            adaylar.clear()
+            return True
+        kopya = f"{output_path}.aday{len(adaylar)}"
+        shutil.copyfile(yol, kopya)
+        adaylar.append((eksik, bozuk, -icerikli, kopya))
+        return False
+
+    def _en_iyi_adayi_yaz() -> bool:
+        if not adaylar:
+            return False
+        adaylar.sort()
+        shutil.copyfile(adaylar[0][3], output_path)
+        for _e, _b, _i, yol in adaylar:
+            try:
+                os.remove(yol)
+            except OSError:
+                pass
+        return True
+
     try:
         import pikepdf
     except ImportError as e:
@@ -382,10 +1356,10 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
         with pikepdf.open(input_path, password=op, suppress_warnings=True) as pdf:
             pdf.save(output_path, compress_streams=True, recompress_flate=True)
         if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-            _sayfa, _icerikli = _onarim_kazanci(output_path)
-            if _icerikli > 0:
+            if _aday_degerlendir(output_path):
                 return True
-            errors.append("pikepdf: dosya yazıldı ama sayfalar boş çıktı")
+            if not adaylar:
+                errors.append("pikepdf: dosya yazıldı ama sayfalar boş çıktı")
     except pikepdf.PasswordError:
         raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
     except Exception as e1:
@@ -399,10 +1373,10 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
         finally:
             doc.close()
         if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-            _sayfa, _icerikli = _onarim_kazanci(output_path)
-            if _icerikli > 0:
+            if _aday_degerlendir(output_path):
                 return True
-            errors.append("fitz: dosya yazıldı ama sayfalar boş çıktı")
+            if not adaylar:
+                errors.append("fitz: dosya yazıldı ama sayfalar boş çıktı")
     except Exception as e2:
         if "password" in str(e2).lower() or "encrypted" in str(e2).lower():
             raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
@@ -416,12 +1390,16 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
             else:
                 pdf.save(output_path, compress_streams=True)
                 if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-                    _sayfa, _icerikli = _onarim_kazanci(output_path)
-                    if _icerikli > 0:
+                    if _aday_degerlendir(output_path):
                         return True
-                    errors.append("pikepdf-lenient: sayfalar boş çıktı")
+                    if not adaylar:
+                        errors.append("pikepdf-lenient: sayfalar boş çıktı")
     except Exception as e3:
         errors.append(f"pikepdf-lenient: {e3!s:.150}")
+
+    # Kusursuz sonuç yok ama kısmen kurtarılmış (bazı sayfalar bozuk) adaylar varsa en iyisi verilir.
+    if _en_iyi_adayi_yaz():
+        return True
 
     # Buraya gelindiyse ya hiç dosya üretilemedi ya da üretilen dosya BOŞTU.
     # Kullanıcıya boş bir PDF verip "onarıldı" demek en kötü sonuçtur: dosyasını
@@ -511,8 +1489,13 @@ def pdf_to_images_zip(
     dpi: int = PDF_EXPORT_DPI_WEB,
     password: Optional[str] = None,
     progress_callback=None,
+    pages: Optional[List[int]] = None,
 ) -> str:
     """ZIP dosya yolunu döndürür; sayfalar TEK TEK rasterize edilip doğrudan arşive yazılır.
+
+    pages: yalnızca bu sayfalar (1 tabanlı) çevrilir; None → tüm sayfalar. Dosya adındaki
+    numara özgün sayfa numarasıdır (sayfa_0003.jpg = belgenin 3. sayfası).
+    Çıktı dosyalarına DPI bilgisi yazılır (yazdırırken doğru fiziksel boyut için).
 
     Bellek, sayfa sayısından bağımsız olarak tek sayfalık kalır (bkz.
     `_RASTER_PAGE_BATCH`); çözünürlük uzun belgelerde otomatik düşürülür
@@ -521,9 +1504,9 @@ def pdf_to_images_zip(
     from pdf2image import convert_from_path
 
     fmt = (image_format or "jpg").lower()
-    if fmt not in ("jpg", "jpeg", "png"):
-        raise Exception("Görüntü formatı jpg veya png olmalıdır.")
-    ext = "png" if fmt == "png" else "jpg"
+    if fmt not in ("jpg", "jpeg", "png", "tif", "tiff"):
+        raise Exception("Görüntü formatı jpg, png veya tiff olmalıdır.")
+    ext = "png" if fmt == "png" else ("tiff" if fmt in ("tif", "tiff") else "jpg")
     import src.pdf_engine as pe
 
     poppler = getattr(pe, "poppler_bin_path", None) or None
@@ -534,7 +1517,7 @@ def pdf_to_images_zip(
     # Tek sayfa işlendiği için ek iş parçacığı kazanç sağlamaz, yalnızca bellek
     # tüketir: bilerek 1.
     guvenli_dpi = _guvenli_raster_dpi(n, int(dpi))
-    kw_base: dict = {"dpi": guvenli_dpi, "fmt": "png" if ext == "png" else "jpeg", "thread_count": 1}
+    kw_base: dict = {"dpi": guvenli_dpi, "fmt": "png" if ext in ("png", "tiff") else "jpeg", "thread_count": 1}
     if poppler and os.path.isdir(poppler):
         kw_base["poppler_path"] = poppler
     if pwd:
@@ -543,24 +1526,40 @@ def pdf_to_images_zip(
     zip_path = os.path.join(workdir, "sayfalar.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         page_index = 0
-        for start in range(1, n + 1, _RASTER_PAGE_BATCH):
-            end = min(start + _RASTER_PAGE_BATCH - 1, n)
+        if pages:
+            secili = sorted({int(p) for p in pages if 1 <= int(p) <= n})
+            if not secili:
+                raise Exception("Seçilen sayfalar belgede yok.")
+            # Seçili sayfalar tek tek çevrilir (bitişik olmayabilirler).
+            parcalar = [(p, p) for p in secili]
+        else:
+            parcalar = [
+                (st, min(st + _RASTER_PAGE_BATCH - 1, n))
+                for st in range(1, n + 1, _RASTER_PAGE_BATCH)
+            ]
+        toplam_cevrilecek = len(secili) if pages else n
+        for start, end in parcalar:
             kw = {**kw_base, "first_page": start, "last_page": end}
             images = convert_from_path(pdf_path, **kw)
             for im in images:
                 page_index += 1
+                sayfa_no = start if pages else page_index
                 # Sayfa sayfa ilerleme: 150 sayfalık bir belgede işlem dakikayı
                 # aşıyor; kullanıcı kaçıncı sayfada olduğunu görmezse sekmeyi
                 # kapatıyor.
                 if progress_callback:
-                    progress_callback(page_index, max(1, n), f"Sayfa {page_index}/{n} görsele çevriliyor")
+                    progress_callback(page_index, max(1, toplam_cevrilecek), f"Sayfa {page_index}/{toplam_cevrilecek} görsele çevriliyor")
                 buf = io.BytesIO()
+                dpi_etiketi = (guvenli_dpi, guvenli_dpi)
                 if ext == "png":
-                    im.save(buf, format="PNG")
-                    name = f"sayfa_{page_index:04d}.png"
+                    im.save(buf, format="PNG", dpi=dpi_etiketi)
+                    name = f"sayfa_{sayfa_no:04d}.png"
+                elif ext == "tiff":
+                    im.save(buf, format="TIFF", dpi=dpi_etiketi, compression="tiff_lzw")
+                    name = f"sayfa_{sayfa_no:04d}.tiff"
                 else:
-                    im.save(buf, format="JPEG", quality=90)
-                    name = f"sayfa_{page_index:04d}.jpg"
+                    im.save(buf, format="JPEG", quality=90, dpi=dpi_etiketi)
+                    name = f"sayfa_{sayfa_no:04d}.jpg"
                 zf.writestr(name, buf.getvalue())
                 del im
     return zip_path

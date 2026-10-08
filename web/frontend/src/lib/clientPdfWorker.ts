@@ -134,6 +134,20 @@ export function splitPagesToZip(
 ): Promise<Uint8Array> {
   return call("splitPagesToZip", [bytes, pages0, baseName]);
 }
+export function splitEveryNToZip(
+  bytes: ArrayBuffer | Uint8Array,
+  n: number,
+  baseName = "parca",
+): Promise<Uint8Array> {
+  return call("splitEveryNToZip", [bytes, n, baseName]);
+}
+export function splitBySizeToZip(
+  bytes: ArrayBuffer | Uint8Array,
+  maxBytes: number,
+  baseName = "parca",
+): Promise<Uint8Array> {
+  return call("splitBySizeToZip", [bytes, maxBytes, baseName]);
+}
 export function getPdfPageCount(bytes: ArrayBuffer | Uint8Array): Promise<number> {
   return call("getPdfPageCount", [bytes]);
 }

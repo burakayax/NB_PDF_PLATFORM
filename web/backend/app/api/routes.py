@@ -422,9 +422,11 @@ async def split_pdf(
     background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
-    pages_text: str = Form(...),
+    pages_text: str = Form(default=""),
     mode: str = Form(default="single"),
     password: str = Form(default=""),
+    every_n: int = Form(default=1),
+    max_mb: float = Form(default=5.0),
 ):
     """Result-store: compute output + blurred preview; credits on
     ``GET /api/pdf/result/{id}/download``."""
@@ -440,13 +442,31 @@ async def split_pdf(
         sp = str(saved_file)
         if (await run_sandboxed(engine.is_pdf_encrypted, sp)) and not pwd:
             raise HTTPException(status_code=400, detail="Şifreli PDF için kaynak parolası gerekli.")
-        max_pages = await run_sandboxed(engine.get_num_pages, sp, password=pwd)
-        pages = parse_pages_text(pages_text, max_page=max_pages)
         user_id = await saas_current_user_id(token)
         file_base = file.filename or saved_file.name
         m = (mode or "single").strip().lower()
-        if m not in ("single", "separate"):
+        if m not in ("single", "separate", "every", "size", "outline"):
             m = "single"
+        if m in ("every", "size", "outline"):
+            # Sayfa listesi gerekmez: bölme noktaları sayfa sayısından, boyuttan ya da yer imlerinden gelir.
+            def _do_advanced() -> Any:
+                return _split_advanced_to_result_store(
+                    workdir, sp, file_base, m, pwd, user_id,
+                    every_n=max(1, every_n), max_mb=max_mb,
+                    watermark_enabled=bool(decision.get("watermarkEnabled", False)),
+                )
+
+            handle = await run_sandboxed(_do_advanced)
+            return {
+                "result_id": handle.result_id,
+                "filename": handle.filename,
+                "mime": handle.mime,
+                "size_bytes": handle.size_bytes,
+                "has_thumbnail": handle.has_thumbnail,
+                "saasGating": _saas_gating_from_check(decision),
+            }
+        max_pages = await run_sandboxed(engine.get_num_pages, sp, password=pwd)
+        pages = parse_pages_text(pages_text, max_page=max_pages)
 
         def _do_split() -> Any:
             return _split_to_result_store(workdir, sp, pages, file_base, m, pwd, user_id, watermark_enabled=bool(decision.get("watermarkEnabled", False)))
@@ -1052,8 +1072,17 @@ async def batch_process(
     watermark_opacity: str = Form(default="0.5"),
     start_at: str = Form(default="1"),
     position: str = Form(default="bottom-right"),
-    fmt: str = Form(default="numeric"),
+    fmt: str = Form(default="plain"),
     image_format: str = Form(default="png"),
+    # Tek dosyalık uçlarla AYNI alan adları: ayrışırlarsa ayar sessizce yok sayılır.
+    watermark_rotation: str = Form(default="45"),
+    watermark_size: str = Form(default="70"),
+    from_page: str = Form(default="1"),
+    to_page: str = Form(default="0"),
+    font_size: str = Form(default="9"),
+    color: str = Form(default="#666666"),
+    pages: str = Form(default=""),
+    header_footer_json: str = Form(default=""),
 ):
     """Birden fazla dosyayı aynı araçla işle; sonuçları ZIP olarak döndür."""
     tool_type = tool_type.strip().lower()
@@ -1083,9 +1112,29 @@ async def batch_process(
     wm_opacity = watermark_opacity.strip() or "0.5"
 
     page_start = start_at.strip() or "1"
-    page_pos = position.strip() or "bottom-right"
-    page_fmt = fmt.strip() or "numeric"
+    page_pos = position.strip() or "footer"
+    page_fmt = fmt.strip() or "plain"
     img_fmt = image_format.strip() or "png"
+
+    def _sayi(v: str, varsayilan: float) -> float:
+        try:
+            return float(str(v).strip())
+        except (TypeError, ValueError):
+            return varsayilan
+
+    wm_rot = _sayi(watermark_rotation, 45.0)
+    wm_size = _sayi(watermark_size, 70.0)
+    pg_from = int(_sayi(from_page, 1))
+    pg_to = int(_sayi(to_page, 0))
+    pn_size = _sayi(font_size, 9.0)
+    pn_color = color.strip() or "#666666"
+    # PDF→görsel: kullanıcının seçtiği çözünürlük (tek dosyalık uçla aynı tablo).
+    img_dpi = {"ekran": 150, "normal": 300, "baski": 400}.get(quality.strip(), 300)
+    img_pages = None
+    if tool_type == "pdf-to-image" and pages.strip():
+        from app.core.operations import parse_pages_text
+
+        img_pages = parse_pages_text(pages)
 
     workdir = create_workdir()
     try:
@@ -1149,12 +1198,22 @@ async def batch_process(
                 elif tool_type == "page-numbers":
                     out_name = format_derived_filename(orig_name, "Numaralı", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    ptx.add_page_numbers(sp, str(out_path), start_at=int(page_start), position=page_pos, fmt=page_fmt, password=pwd)
+                    from app.api.tool_routes_extra import _hf_slotlari, _uygula_numara_ve_bilgi
+
+                    _uygula_numara_ve_bilgi(
+                        sp, str(out_path), orig_name, _hf_slotlari(header_footer_json),
+                        start_at=int(page_start), position=page_pos, password=pwd, fmt=page_fmt,
+                        font_size=pn_size, color=pn_color, from_page=pg_from, to_page=pg_to,
+                    )
                     return out_path, out_name
                 elif tool_type == "watermark":
                     out_name = format_derived_filename(orig_name, "Filigran", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    ptx.add_watermark_text(sp, str(out_path), wm_text, opacity=float(wm_opacity), password=pwd, font_name=wm_font, font_color=wm_color)
+                    ptx.add_watermark_text(
+                        sp, str(out_path), wm_text, opacity=float(wm_opacity), password=pwd,
+                        font_name=wm_font, font_color=wm_color,
+                        rotation=wm_rot, size_pct=wm_size, from_page=pg_from, to_page=pg_to,
+                    )
                     return out_path, out_name
                 elif tool_type == "image-to-pdf":
                     out_name = format_derived_filename(orig_name, "PDF", "pdf")
@@ -1167,7 +1226,9 @@ async def batch_process(
                     out_name = format_derived_filename(orig_name, "Görüntü", "zip")
                     sub = workdir / f"img_{idx:04d}"
                     sub.mkdir(parents=True, exist_ok=True)
-                    zip_out = ptx.pdf_to_images_zip(sp, str(sub), image_format=img_fmt, password=pwd)
+                    zip_out = ptx.pdf_to_images_zip(
+                        sp, str(sub), image_format=img_fmt, dpi=img_dpi, password=pwd, pages=img_pages,
+                    )
                     # Benzersiz ada taşı — dış zip arcname=basename kullanıyor; sabit "sayfalar.zip"
                     # birden çok girdide çakışırdı.
                     dest = workdir / f"{idx:04d}_{out_name}"
@@ -1215,6 +1276,50 @@ async def batch_process(
     finally:
         if workdir.exists():
             cleanup_path(workdir)
+
+
+def _split_advanced_to_result_store(
+    workdir: Path,
+    sp: str,
+    file_base_name: str,
+    mode: str,
+    password: str | None,
+    user_id: str,
+    *,
+    every_n: int,
+    max_mb: float,
+    watermark_enabled: bool = False,
+) -> Any:
+    """Gelişmiş bölme (her N sayfa / boyuta göre / yer imine göre): parçaları ZIP'e koyar."""
+    from pathlib import Path as P
+
+    base = P(file_base_name).stem or "belge"
+    klasor = workdir / "parcalar"
+    sonuc = ptx.split_pdf_advanced(
+        sp, str(klasor), mode, every_n=every_n, max_mb=max_mb, base_name=base, password=password,
+    )
+    yollar = [P(x) for x in sonuc["dosyalar"]]
+    for y in yollar:
+        _maybe_watermark_pdf(y, watermark_enabled)
+    if sonuc.get("asan"):
+        # Tek başına sınırı aşan sayfalar kendi dosyalarına konur ve kullanıcıya ZIP içinde bildirilir.
+        uyari = klasor / "UYARI - sinir asan sayfalar.txt"
+        uyari.write_text(
+            f"Aşağıdaki sayfalar tek başına {max_mb:g} MB sınırını aştığı için kendi dosyalarına konuldu "
+            "(dosya boyutu sınırdan büyüktür):\n\n"
+            + "\n".join(f"- Sayfa {n}" for n in sonuc["asan"])
+            + "\n\nBu sayfaları küçültmek için PDF Sıkıştır aracını kullanabilirsiniz.\n",
+            encoding="utf-8",
+        )
+        yollar.append(uyari)
+    zip_path = create_zip_archive(workdir / f"{base}_bolunmus.zip", yollar)
+    try:
+        thumb = generate_blurred_pdf_thumbnail_from_path(P(str(sp)))
+    except OSError:
+        thumb = None
+    return save_result_from_file(
+        zip_path, zip_path.name, "application/zip", user_id=user_id, thumbnail_png=thumb, tool="split",
+    )
 
 
 def _split_to_result_store(

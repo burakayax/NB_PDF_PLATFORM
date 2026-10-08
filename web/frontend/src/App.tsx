@@ -245,7 +245,7 @@ import {
   type ToolProgressSuccessState,
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
-import {
+import { DEFAULT_CROP_OPTIONS, DEFAULT_MINI_OPTIONS, type CropOptions, type MiniToolOptions,
   buildToolFormData,
   buildBatchFormData,
 } from "./lib/toolFormData";
@@ -458,6 +458,12 @@ const pdfInspectionFeatures: FeatureId[] = [
   "pdf-to-image",
   "pdf-to-text",
   "flatten-pdf",
+  "crop-pdf",
+  "grayscale-pdf",
+  "resize-pdf",
+  "flip-pdf",
+  "alternate-mix-pdf",
+  "deskew-pdf",
   "pdf-to-pdfa",
   "extract-images",
 ];
@@ -595,11 +601,26 @@ function App() {
   const [watermarkColor, setWatermarkColor] = useState("#8C8C8C");
   const [watermarkFont, setWatermarkFont] = useState("helv");
   const [watermarkOpacity, setWatermarkOpacity] = useState("0.15");
+  const [watermarkRotation, setWatermarkRotation] = useState("45");
+  const [watermarkImage, setWatermarkImage] = useState<File | null>(null);
+  const [watermarkPosition, setWatermarkPosition] = useState("center");
+  const [watermarkSize, setWatermarkSize] = useState("70");
+  const [watermarkFrom, setWatermarkFrom] = useState("1");
+  const [watermarkTo, setWatermarkTo] = useState("");
   const [pageNumStart, setPageNumStart] = useState("1");
-  const [pageNumPos, setPageNumPos] = useState<"footer" | "header">("footer");
-  const [pageNumFmt, setPageNumFmt] = useState<"plain" | "page" | "of">(
-    "plain",
-  );
+  const [pageNumPos, setPageNumPos] = useState<string>("footer");
+  const [pageNumFmt, setPageNumFmt] = useState<
+    "plain" | "page" | "of" | "page-of" | "none"
+  >("plain");
+  const [pageNumSize, setPageNumSize] = useState("9");
+  const [pageNumColor, setPageNumColor] = useState("#666666");
+  const [pageNumFrom, setPageNumFrom] = useState("1");
+  const [pageNumTo, setPageNumTo] = useState("");
+  const [headerFooterTexts, setHeaderFooterTexts] = useState<Record<string, string>>({});
+  const [cropOptions, setCropOptions] = useState<CropOptions>(DEFAULT_CROP_OPTIONS);
+  const [miniOptions, setMiniOptions] = useState<MiniToolOptions>(DEFAULT_MINI_OPTIONS);
+  const [splitEveryN, setSplitEveryN] = useState("2");
+  const [splitMaxMb, setSplitMaxMb] = useState("5");
   const [compressQuality, setCompressQuality] = useState<
     "auto" | "low" | "medium" | "high"
   >("auto");
@@ -610,6 +631,7 @@ function App() {
   const lastRunCompressTargetKbRef = useRef(0);
   const lastRunCompressRasterRef = useRef(false);
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
+  const [pdfToImgPages, setPdfToImgPages] = useState("");
   /** PDF/A uyumluluk düzeyi — 2b çoğu kurumun istediği düzey. */
   const [pdfaVersion, setPdfaVersion] = useState("2b");
   // Görsel kalitesi: uzun belgelerde sunucu çözünürlüğü kendiliğinden düşürüyor;
@@ -2161,6 +2183,12 @@ function App() {
             "html-to-pdf": "HTML → PDF",
             "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
+            "crop-pdf": "PDF Kırp",
+            "grayscale-pdf": "PDF Gri Tonlama",
+            "resize-pdf": "PDF Sayfa Boyutu",
+            "flip-pdf": "PDF Çevir (Ayna)",
+            "alternate-mix-pdf": "PDF Dönüşümlü Birleştir",
+            "deskew-pdf": "PDF Eğri Tarama Düzeltme",
             "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
             "form-doldur": "PDF Form Doldur",
             "ustveri-temizle": "PDF Üstveri Temizle",
@@ -3332,8 +3360,20 @@ function App() {
 
   const W = ws(language);
   const splitModeDescription =
-    splitMode === "single"
+    splitMode === "every"
       ? language === "tr"
+        ? "Belge, her N sayfada bir yeni dosyaya bölünür; hepsi ZIP olarak iner. Sayfa seçmeniz gerekmez."
+        : "The document is cut into a new file every N pages; all come as a ZIP. No page selection needed."
+      : splitMode === "size"
+        ? language === "tr"
+          ? "Her parça verdiğiniz boyutu (MB) aşmayacak şekilde bölünür; gerçek dosya boyutuna göre hesaplanır. Tek sayfası bile sınırı aşıyorsa o sayfa kendi başına bir dosya olur."
+          : "Each part stays under the size (MB) you give, measured on the real file size. A single page that is already over the limit becomes its own file."
+        : splitMode === "outline"
+          ? language === "tr"
+            ? "Belgenin en üst düzey yer imlerinde (bookmark) bölünür; her parça yer imi başlığını dosya adı olarak alır."
+            : "Splits at the document's top-level bookmarks; each part is named after its bookmark title."
+          : splitMode === "single"
+    ? language === "tr"
         ? "Seçtiğiniz sayfalar tek bir PDF dosyası içinde birleştirilecek."
         : "Selected pages are merged into one PDF file."
       : language === "tr"
@@ -3341,6 +3381,11 @@ function App() {
         : "Selected pages are saved as separate PDFs inside a ZIP download.";
 
   const splitPasswordToolIds = [
+    "crop-pdf",
+    "grayscale-pdf",
+    "resize-pdf",
+    "flip-pdf",
+    "deskew-pdf",
     "split",
     "pdf-to-word",
     "pdf-to-excel",
@@ -3355,6 +3400,12 @@ function App() {
     "pdf-to-image",
     "pdf-to-text",
     "flatten-pdf",
+    "crop-pdf",
+    "grayscale-pdf",
+    "resize-pdf",
+    "flip-pdf",
+    "alternate-mix-pdf",
+    "deskew-pdf",
     "pdf-to-pdfa",
     "extract-images",
   ];
@@ -4569,6 +4620,7 @@ function App() {
 
     const check = checkToolSubmission({
       featureId: selectedFeature.id,
+      splitMode,
       uploads: uploads.map((u) => ({
         pageCount: u.pageCount,
         encrypted: u.encrypted,
@@ -4639,6 +4691,8 @@ function App() {
               organizePageOrder,
               pagesText,
               splitMode,
+              splitEveryN,
+              splitMaxMb,
               language,
               fallbackFilename: selectedFeature.fallbackFilename,
               expandPages: expandPagesString,
@@ -4783,10 +4837,26 @@ function App() {
         watermarkColor,
         watermarkFont,
         watermarkOpacity,
+        watermarkRotation,
+        watermarkImage,
+        watermarkPosition,
+        watermarkSize,
+        watermarkFrom,
+        watermarkTo,
         pageNumStart,
         pageNumPos,
         pageNumFmt,
+        pageNumSize,
+        pageNumColor,
+        pageNumFrom,
+        pageNumTo,
+        headerFooterTexts,
+        cropOptions,
+        miniOptions,
+        splitEveryN,
+        splitMaxMb,
         pdfToImgFmt,
+        pdfToImgPages,
         pdfToImgQuality,
         pdfaVersion,
         inputPassword,
@@ -7268,6 +7338,8 @@ function App() {
 
                         {selectedFeature.id === "split" ? (
                           <>
+                            {!["every", "size", "outline"].includes(splitMode) ? (
+                              <>
                             {/* Sağ sütun satır 1: Sayfa numaraları */}
                             <label className="field">
                               <span>{W.pagesLabel}</span>
@@ -7357,6 +7429,9 @@ function App() {
                               </div>
                             ) : null}
 
+                              </>
+                            ) : null}
+
                             {/* Ayırma modu — diğer araçlar gibi doğal grid akışı.
                                 NOT: col-span-2 / col-start KULLANMA — tek sütunlu grid'de
                                 bunlar gizli bir 2. sütun yaratıp tüm formu bozuyordu. */}
@@ -7399,10 +7474,55 @@ function App() {
                                   </svg>
                                   <span className="truncate">{W.splitModeSeparate}</span>
                                 </button>
+                                {(
+                                  [
+                                    ["every", language === "tr" ? "Her N sayfada bir" : "Every N pages"],
+                                    ["size", language === "tr" ? "Boyuta göre (MB)" : "By size (MB)"],
+                                    ["outline", language === "tr" ? "Yer imine göre" : "By bookmarks"],
+                                  ] as const
+                                ).map(([kip, etiket]) => (
+                                  <button
+                                    key={kip}
+                                    type="button"
+                                    onClick={() => setSplitMode(kip)}
+                                    aria-pressed={splitMode === kip}
+                                    className={[
+                                      "flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[13px] font-semibold transition-all duration-150",
+                                      splitMode === kip
+                                        ? "border-nb-primary/70 bg-nb-primary/25 text-white shadow-[0_0_0_1px_rgba(34,211,238,0.32)]"
+                                        : "border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/30 hover:bg-white/[0.09] hover:text-white",
+                                    ].join(" ")}
+                                  >
+                                    <span className="truncate">{etiket}</span>
+                                  </button>
+                                ))}
                               </div>
                               <span className="field-hint">
                                 {splitModeDescription}
                               </span>
+                              {splitMode === "every" ? (
+                                <label className="field">
+                                  <span>{language === "tr" ? "Her kaç sayfada bir dosya" : "Pages per file"}</span>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={splitEveryN}
+                                    onChange={(e) => setSplitEveryN(e.target.value)}
+                                  />
+                                </label>
+                              ) : null}
+                              {splitMode === "size" ? (
+                                <label className="field">
+                                  <span>{language === "tr" ? "En çok kaç MB olsun" : "Maximum size per file (MB)"}</span>
+                                  <input
+                                    type="number"
+                                    min={0.1}
+                                    step={0.1}
+                                    value={splitMaxMb}
+                                    onChange={(e) => setSplitMaxMb(e.target.value)}
+                                  />
+                                </label>
+                              ) : null}
                             </div>
                           </>
                         ) : null}
@@ -7554,6 +7674,61 @@ function App() {
 
                         {selectedFeature.id === "watermark" ? (
                           <>
+                            <div className="field">
+                              <span>
+                                {language === "tr"
+                                  ? "Logo / görsel (isteğe bağlı)"
+                                  : "Logo / image (optional)"}
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0] ?? null;
+                                  setWatermarkImage(
+                                    f && f.size <= 5 * 1024 * 1024 ? f : null,
+                                  );
+                                }}
+                              />
+                              <span className="field-hint">
+                                {language === "tr"
+                                  ? "Bir görsel seçerseniz filigran metin yerine bu görsel olur (PNG, JPG veya WebP, en fazla 5 MB). Saydam PNG'lerin saydamlığı korunur. Açı, boyut, saydamlık ve sayfa aralığı görsel için de geçerlidir."
+                                  : "If you choose an image, it is used as the watermark instead of the text (PNG, JPG or WebP, up to 5 MB). Transparent PNGs keep their transparency. Angle, size, opacity and page range apply to the image too."}
+                              </span>
+                              {watermarkImage ? (
+                                <>
+                                  <select
+                                    value={watermarkPosition}
+                                    onChange={(e) =>
+                                      setWatermarkPosition(e.target.value)
+                                    }
+                                  >
+                                    <option value="center">
+                                      {language === "tr" ? "Ortada" : "Center"}
+                                    </option>
+                                    <option value="top-left">
+                                      {language === "tr" ? "Sol üst" : "Top left"}
+                                    </option>
+                                    <option value="top-right">
+                                      {language === "tr" ? "Sağ üst" : "Top right"}
+                                    </option>
+                                    <option value="bottom-left">
+                                      {language === "tr" ? "Sol alt" : "Bottom left"}
+                                    </option>
+                                    <option value="bottom-right">
+                                      {language === "tr" ? "Sağ alt" : "Bottom right"}
+                                    </option>
+                                  </select>
+                                  <button
+                                    type="button"
+                                    className="secondary-action"
+                                    onClick={() => setWatermarkImage(null)}
+                                  >
+                                    {language === "tr" ? "Görseli kaldır" : "Remove image"}
+                                  </button>
+                                </>
+                              ) : null}
+                            </div>
                             {/* Canlı önizleme */}
                             <div className="field">
                               <span>
@@ -7565,7 +7740,7 @@ function App() {
                                   style={{
                                     color: watermarkColor,
                                     opacity: parseFloat(watermarkOpacity),
-                                    transform: "rotate(-35deg)",
+                                    transform: `rotate(${-(parseFloat(watermarkRotation) || 0)}deg)`,
                                     fontFamily:
                                       watermarkFont === "tiro"
                                         ? "Times New Roman, serif"
@@ -7679,7 +7854,7 @@ function App() {
                               <input
                                 type="range"
                                 min="0.05"
-                                max="0.50"
+                                max="1"
                                 step="0.05"
                                 value={watermarkOpacity}
                                 onChange={(e) =>
@@ -7687,6 +7862,69 @@ function App() {
                                 }
                                 className="w-full accent-cyan-400"
                               />
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Açı" : "Angle"}
+                              </span>
+                              <select
+                                value={watermarkRotation}
+                                onChange={(e) =>
+                                  setWatermarkRotation(e.target.value)
+                                }
+                              >
+                                <option value="45">
+                                  {language === "tr" ? "Çapraz (45°)" : "Diagonal (45°)"}
+                                </option>
+                                <option value="0">
+                                  {language === "tr" ? "Yatay" : "Horizontal"}
+                                </option>
+                                <option value="90">
+                                  {language === "tr" ? "Dikey (90°)" : "Vertical (90°)"}
+                                </option>
+                                <option value="-45">
+                                  {language === "tr" ? "Ters çapraz (-45°)" : "Reverse diagonal (-45°)"}
+                                </option>
+                              </select>
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Boyut" : "Size"}{" "}
+                                <span className="text-white/70">{watermarkSize}%</span>
+                              </span>
+                              <input
+                                type="range"
+                                min="20"
+                                max="100"
+                                step="5"
+                                value={watermarkSize}
+                                onChange={(e) => setWatermarkSize(e.target.value)}
+                                className="w-full accent-cyan-400"
+                              />
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr"
+                                  ? "Hangi sayfalara"
+                                  : "Pages to watermark"}
+                              </span>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={watermarkFrom}
+                                  onChange={(e) => setWatermarkFrom(e.target.value)}
+                                  aria-label={language === "tr" ? "İlk sayfa" : "From page"}
+                                />
+                                <input
+                                  type="number"
+                                  min={1}
+                                  placeholder={language === "tr" ? "son sayfa" : "last"}
+                                  value={watermarkTo}
+                                  onChange={(e) => setWatermarkTo(e.target.value)}
+                                  aria-label={language === "tr" ? "Son sayfa" : "To page"}
+                                />
+                              </div>
                             </label>
                           </>
                         ) : null}
@@ -7714,17 +7952,25 @@ function App() {
                               </span>
                               <select
                                 value={pageNumPos}
-                                onChange={(e) =>
-                                  setPageNumPos(
-                                    e.target.value as "footer" | "header",
-                                  )
-                                }
+                                onChange={(e) => setPageNumPos(e.target.value)}
                               >
                                 <option value="footer">
-                                  {language === "tr" ? "Alt bilgi" : "Footer"}
+                                  {language === "tr" ? "Alt — orta" : "Bottom — center"}
+                                </option>
+                                <option value="footer-right">
+                                  {language === "tr" ? "Alt — sağ" : "Bottom — right"}
+                                </option>
+                                <option value="footer-left">
+                                  {language === "tr" ? "Alt — sol" : "Bottom — left"}
                                 </option>
                                 <option value="header">
-                                  {language === "tr" ? "Üst bilgi" : "Header"}
+                                  {language === "tr" ? "Üst — orta" : "Top — center"}
+                                </option>
+                                <option value="header-right">
+                                  {language === "tr" ? "Üst — sağ" : "Top — right"}
+                                </option>
+                                <option value="header-left">
+                                  {language === "tr" ? "Üst — sol" : "Top — left"}
                                 </option>
                               </select>
                             </label>
@@ -7736,7 +7982,12 @@ function App() {
                                 value={pageNumFmt}
                                 onChange={(e) =>
                                   setPageNumFmt(
-                                    e.target.value as "plain" | "page" | "of",
+                                    e.target.value as
+                                      | "plain"
+                                      | "page"
+                                      | "of"
+                                      | "page-of"
+                                      | "none",
                                   )
                                 }
                               >
@@ -7747,8 +7998,428 @@ function App() {
                                     : "Page 1, Page 2 …"}
                                 </option>
                                 <option value="of">1 / 10, 2 / 10 …</option>
+                                <option value="page-of">
+                                  {language === "tr"
+                                    ? "Sayfa 1 / 10, Sayfa 2 / 10 …"
+                                    : "Page 1 / 10, Page 2 / 10 …"}
+                                </option>
+                                <option value="none">
+                                  {language === "tr"
+                                    ? "Numara ekleme — yalnızca üst/alt bilgi metni"
+                                    : "No numbers — header/footer text only"}
+                                </option>
                               </select>
                             </label>
+                            <div className="field">
+                              <span>
+                                {language === "tr"
+                                  ? "Üst / alt bilgi metni (isteğe bağlı)"
+                                  : "Header / footer text (optional)"}
+                              </span>
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                                  gap: 8,
+                                }}
+                              >
+                                {(
+                                  [
+                                    ["header-left", language === "tr" ? "Üst sol" : "Top left"],
+                                    ["header-center", language === "tr" ? "Üst orta" : "Top center"],
+                                    ["header-right", language === "tr" ? "Üst sağ" : "Top right"],
+                                    ["footer-left", language === "tr" ? "Alt sol" : "Bottom left"],
+                                    ["footer-center", language === "tr" ? "Alt orta" : "Bottom center"],
+                                    ["footer-right", language === "tr" ? "Alt sağ" : "Bottom right"],
+                                  ] as const
+                                ).map(([konum, etiket]) => (
+                                  <input
+                                    key={konum}
+                                    type="text"
+                                    maxLength={200}
+                                    placeholder={etiket}
+                                    aria-label={etiket}
+                                    value={headerFooterTexts[konum] ?? ""}
+                                    onChange={(e) =>
+                                      setHeaderFooterTexts((m) => ({
+                                        ...m,
+                                        [konum]: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                ))}
+                              </div>
+                              <span className="field-hint">
+                                {language === "tr"
+                                  ? "Yer tutucular: {sayfa} numara, {toplam} toplam sayfa, {tarih} bugünün tarihi, {dosya} dosya adı. Örnek: \"{dosya} — Sayfa {sayfa}/{toplam}\". Sıfırla doldurmak için {sayfa:6} yazın (000147): dava/ihale dosyaları için \"DAVA-{sayfa:6}\" (Bates numarası). Birden çok dosyayı kesintisiz numaralamak için ikinci dosyanın «Numaraya başlama» değerine ilk dosyanın son numarasından sonraki sayıyı yazın."
+                                  : "Placeholders: {sayfa} page number, {toplam} total pages, {tarih} today's date, {dosya} file name. Example: \"{dosya} — Sayfa {sayfa}/{toplam}\". Use {sayfa:6} for zero-padding (000147): \"CASE-{sayfa:6}\" gives Bates numbers. To number several files continuously, set the second file's «Start number» to the first file's last number plus one."}
+                              </span>
+                            </div>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Yazı boyutu" : "Font size"}
+                              </span>
+                              <input
+                                type="number"
+                                min={6}
+                                max={48}
+                                value={pageNumSize}
+                                onChange={(e) => setPageNumSize(e.target.value)}
+                              />
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Yazı rengi" : "Text color"}
+                              </span>
+                              <input
+                                type="color"
+                                value={pageNumColor}
+                                onChange={(e) => setPageNumColor(e.target.value)}
+                              />
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr"
+                                  ? "Hangi sayfalardan hangisine kadar"
+                                  : "Page range to number"}
+                              </span>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={pageNumFrom}
+                                  onChange={(e) => setPageNumFrom(e.target.value)}
+                                  aria-label={language === "tr" ? "İlk sayfa" : "From page"}
+                                />
+                                <input
+                                  type="number"
+                                  min={1}
+                                  placeholder={language === "tr" ? "son sayfa" : "last"}
+                                  value={pageNumTo}
+                                  onChange={(e) => setPageNumTo(e.target.value)}
+                                  aria-label={language === "tr" ? "Son sayfa" : "To page"}
+                                />
+                              </div>
+                            </label>
+                          </>
+                        ) : null}
+
+                        {selectedFeature.id === "deskew-pdf" ? (
+                          <div className="field">
+                            <span className="field-hint">
+                              {language === "tr"
+                                ? "Taranmış (yalnızca resimden oluşan) sayfaların eğriliği otomatik bulunup düzeltilir. Yazı katmanı olan sayfalara dokunulmaz; zaten düz olanlar olduğu gibi kalır. Düzeltilen sayfalar resim olarak kalır (yazı seçilemez); sonra «Aranabilir PDF» ile yazı katmanı ekleyebilirsiniz."
+                                : "The skew of scanned (image-only) pages is detected and corrected automatically. Pages with a text layer are left alone, and pages that are already straight stay as they are. Corrected pages remain images (text not selectable); you can add a text layer afterwards with «Searchable PDF»."}
+                            </span>
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "grayscale-pdf" ? (
+                          <div className="field">
+                            <span className="field-hint">
+                              {language === "tr"
+                                ? "Sayfadaki tüm renkler griye çevrilir; yazılar seçilebilir kalır, görseller siyah-beyaz olur. Gri tonlama dosya boyutunu da genellikle küçültür. Desen ve özel renk profilli (ICC) bazı çizimlerde renk kalabilir."
+                                : "All colours on the page turn grey; text stays selectable and images become black-and-white. Grayscale usually shrinks the file too. Some pattern or ICC-profile drawings may keep their colour."}
+                            </span>
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "resize-pdf" ? (
+                          <>
+                            <label className="field">
+                              <span>{language === "tr" ? "Hedef boyut" : "Target size"}</span>
+                              <select
+                                value={miniOptions.resizeSize}
+                                onChange={(e) => setMiniOptions((m) => ({ ...m, resizeSize: e.target.value }))}
+                              >
+                                <option value="a4">A4 (210 × 297 mm)</option>
+                                <option value="a5">A5 (148 × 210 mm)</option>
+                                <option value="a3">A3 (297 × 420 mm)</option>
+                                <option value="a6">A6 (105 × 148 mm)</option>
+                                <option value="letter">Letter (215,9 × 279,4 mm)</option>
+                                <option value="legal">Legal (215,9 × 355,6 mm)</option>
+                                <option value="custom">{language === "tr" ? "Özel ölçü" : "Custom size"}</option>
+                              </select>
+                            </label>
+                            {miniOptions.resizeSize === "custom" ? (
+                              <div className="field">
+                                <span>{language === "tr" ? "Genişlik × yükseklik (mm)" : "Width × height (mm)"}</span>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <input
+                                    type="number"
+                                    min={20}
+                                    max={2000}
+                                    value={miniOptions.resizeW}
+                                    onChange={(e) => setMiniOptions((m) => ({ ...m, resizeW: e.target.value }))}
+                                    aria-label={language === "tr" ? "Genişlik" : "Width"}
+                                  />
+                                  <input
+                                    type="number"
+                                    min={20}
+                                    max={2000}
+                                    value={miniOptions.resizeH}
+                                    onChange={(e) => setMiniOptions((m) => ({ ...m, resizeH: e.target.value }))}
+                                    aria-label={language === "tr" ? "Yükseklik" : "Height"}
+                                  />
+                                </div>
+                              </div>
+                            ) : null}
+                            <label className="field">
+                              <span>{language === "tr" ? "Sayfa yönü" : "Orientation"}</span>
+                              <select
+                                value={miniOptions.resizeOrientation}
+                                onChange={(e) =>
+                                  setMiniOptions((m) => ({
+                                    ...m,
+                                    resizeOrientation: e.target.value as MiniToolOptions["resizeOrientation"],
+                                  }))
+                                }
+                              >
+                                <option value="auto">{language === "tr" ? "Her sayfanın kendi yönü korunsun" : "Keep each page's own orientation"}</option>
+                                <option value="portrait">{language === "tr" ? "Hepsi dikey" : "All portrait"}</option>
+                                <option value="landscape">{language === "tr" ? "Hepsi yatay" : "All landscape"}</option>
+                              </select>
+                            </label>
+                            <label className="field">
+                              <span>{language === "tr" ? "Sığdırma biçimi" : "Fit mode"}</span>
+                              <select
+                                value={miniOptions.resizeFit}
+                                onChange={(e) =>
+                                  setMiniOptions((m) => ({
+                                    ...m,
+                                    resizeFit: e.target.value as MiniToolOptions["resizeFit"],
+                                  }))
+                                }
+                              >
+                                <option value="fit">{language === "tr" ? "Sığdır (oran bozulmaz, kenarda boşluk kalabilir)" : "Fit (keep proportions, margins may remain)"}</option>
+                                <option value="fill">{language === "tr" ? "Doldur (oran bozulmaz, taşan kısım kesilir)" : "Fill (keep proportions, overflow is cut)"}</option>
+                                <option value="stretch">{language === "tr" ? "Esnet (sayfayı tam doldurur, oran bozulur)" : "Stretch (fills the page, distorts proportions)"}</option>
+                              </select>
+                            </label>
+                            <label className="field">
+                              <span>{language === "tr" ? "Kenar boşluğu (mm)" : "Margin (mm)"}</span>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={miniOptions.resizeMargin}
+                                onChange={(e) => setMiniOptions((m) => ({ ...m, resizeMargin: e.target.value }))}
+                              />
+                            </label>
+                          </>
+                        ) : null}
+
+                        {selectedFeature.id === "flip-pdf" ? (
+                          <>
+                            <div className="field">
+                              <span>{language === "tr" ? "Çevirme yönü" : "Flip direction"}</span>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                {(
+                                  [
+                                    ["horizontal", language === "tr" ? "Yatay (soldan sağa)" : "Horizontal (left ↔ right)"],
+                                    ["vertical", language === "tr" ? "Dikey (baş aşağı)" : "Vertical (upside down)"],
+                                  ] as const
+                                ).map(([deger, etiket]) => (
+                                  <button
+                                    key={deger}
+                                    type="button"
+                                    className={miniOptions.flipDirection === deger ? "primary-action" : "secondary-action"}
+                                    onClick={() => setMiniOptions((m) => ({ ...m, flipDirection: deger }))}
+                                  >
+                                    {etiket}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="field">
+                              <span>{language === "tr" ? "Hangi sayfalar (boşsa hepsi)" : "Which pages (empty = all)"}</span>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={miniOptions.flipFrom}
+                                  onChange={(e) => setMiniOptions((m) => ({ ...m, flipFrom: e.target.value }))}
+                                  aria-label={language === "tr" ? "İlk sayfa" : "From page"}
+                                />
+                                <input
+                                  type="number"
+                                  min={1}
+                                  placeholder={language === "tr" ? "son sayfa" : "last"}
+                                  value={miniOptions.flipTo}
+                                  onChange={(e) => setMiniOptions((m) => ({ ...m, flipTo: e.target.value }))}
+                                  aria-label={language === "tr" ? "Son sayfa" : "To page"}
+                                />
+                              </div>
+                              <span className="field-hint">
+                                {language === "tr"
+                                  ? "Not: Forma ait alanlar ve notlar çevrilmez; yalnızca sayfa içeriği çevrilir."
+                                  : "Note: form fields and notes are not flipped; only the page content is."}
+                              </span>
+                            </div>
+                          </>
+                        ) : null}
+
+                        {selectedFeature.id === "alternate-mix-pdf" ? (
+                          <div className="field">
+                            <span className="field-hint">
+                              {language === "tr"
+                                ? "Seçtiğiniz PDF'lerin sayfaları sırayla dizilir: birincinin 1. sayfası, ikincinin 1. sayfası, birincinin 2. sayfası… Sırayı yükleme sırası belirler."
+                                : "Pages of the PDFs you choose are interleaved: first's page 1, second's page 1, first's page 2… The upload order decides the order."}
+                            </span>
+                            <label className="field" style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                              <input
+                                type="checkbox"
+                                checked={miniOptions.mixReverse}
+                                onChange={(e) => setMiniOptions((m) => ({ ...m, mixReverse: e.target.checked }))}
+                              />
+                              <span>
+                                {language === "tr"
+                                  ? "İkinciyi ters sırada oku (çift taraflı tarama: önce ön yüzler, sonra arka yüzler)"
+                                  : "Read the second in reverse (double-sided scan: fronts first, then backs)"}
+                              </span>
+                            </label>
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "crop-pdf" ? (
+                          <>
+                            <div className="field">
+                              <span>
+                                {language === "tr" ? "Kırpma biçimi" : "Crop mode"}
+                              </span>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                {(
+                                  [
+                                    ["auto", language === "tr" ? "Otomatik (içeriğe göre)" : "Automatic (fit to content)"],
+                                    ["margins", language === "tr" ? "Elle (mm)" : "Manual (mm)"],
+                                  ] as const
+                                ).map(([deger, etiket]) => (
+                                  <button
+                                    key={deger}
+                                    type="button"
+                                    className={
+                                      cropOptions.mode === deger
+                                        ? "primary-action"
+                                        : "secondary-action"
+                                    }
+                                    onClick={() =>
+                                      setCropOptions((c) => ({ ...c, mode: deger }))
+                                    }
+                                  >
+                                    {etiket}
+                                  </button>
+                                ))}
+                              </div>
+                              <span className="field-hint">
+                                {cropOptions.mode === "auto"
+                                  ? language === "tr"
+                                    ? "Sayfadaki yazı, görsel ve çizimlerin çevresindeki boş kenarlar otomatik bulunur ve kırpılır."
+                                    : "Empty edges around text, images and drawings are found and trimmed automatically."
+                                  : language === "tr"
+                                    ? "Her kenardan kaç milimetre kırpılacağını yazın."
+                                    : "Enter how many millimetres to trim from each edge."}
+                              </span>
+                            </div>
+                            {cropOptions.mode === "auto" ? (
+                              <>
+                                <label className="field">
+                                  <span>
+                                    {language === "tr"
+                                      ? "İçeriğin çevresinde bırakılacak pay (mm)"
+                                      : "Padding around content (mm)"}
+                                  </span>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    value={cropOptions.pad}
+                                    onChange={(e) =>
+                                      setCropOptions((c) => ({ ...c, pad: e.target.value }))
+                                    }
+                                  />
+                                </label>
+                                <label className="field" style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={cropOptions.uniform}
+                                    onChange={(e) =>
+                                      setCropOptions((c) => ({ ...c, uniform: e.target.checked }))
+                                    }
+                                  />
+                                  <span>
+                                    {language === "tr"
+                                      ? "Tüm sayfaları aynı ölçüye kırp"
+                                      : "Crop all pages to the same size"}
+                                  </span>
+                                </label>
+                              </>
+                            ) : (
+                              <div className="field">
+                                <span>
+                                  {language === "tr" ? "Kırpılacak kenarlar (mm)" : "Margins to trim (mm)"}
+                                </span>
+                                <div
+                                  style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                                    gap: 8,
+                                  }}
+                                >
+                                  {(
+                                    [
+                                      ["top", language === "tr" ? "Üst" : "Top"],
+                                      ["bottom", language === "tr" ? "Alt" : "Bottom"],
+                                      ["left", language === "tr" ? "Sol" : "Left"],
+                                      ["right", language === "tr" ? "Sağ" : "Right"],
+                                    ] as const
+                                  ).map(([alan, etiket]) => (
+                                    <input
+                                      key={alan}
+                                      type="number"
+                                      min={0}
+                                      max={500}
+                                      placeholder={etiket}
+                                      aria-label={etiket}
+                                      value={cropOptions[alan]}
+                                      onChange={(e) =>
+                                        setCropOptions((c) => ({ ...c, [alan]: e.target.value }))
+                                      }
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div className="field">
+                              <span>
+                                {language === "tr" ? "Hangi sayfalar (boşsa hepsi)" : "Which pages (empty = all)"}
+                              </span>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={cropOptions.from}
+                                  onChange={(e) =>
+                                    setCropOptions((c) => ({ ...c, from: e.target.value }))
+                                  }
+                                  aria-label={language === "tr" ? "İlk sayfa" : "From page"}
+                                />
+                                <input
+                                  type="number"
+                                  min={1}
+                                  placeholder={language === "tr" ? "son sayfa" : "last"}
+                                  value={cropOptions.to}
+                                  onChange={(e) =>
+                                    setCropOptions((c) => ({ ...c, to: e.target.value }))
+                                  }
+                                  aria-label={language === "tr" ? "Son sayfa" : "To page"}
+                                />
+                              </div>
+                              <span className="field-hint">
+                                {language === "tr"
+                                  ? "Not: Kırpma görünen alanı küçültür; kırpılan kısım dosyanın içinde durur. Bir bilgiyi kalıcı olarak silmek istiyorsanız «Hassas Veri Gizle» aracını kullanın."
+                                  : "Note: Cropping shrinks the visible area; the trimmed part stays inside the file. To permanently remove information, use the «Redact» tool."}
+                              </span>
+                            </div>
                           </>
                         ) : null}
 
@@ -7800,7 +8471,26 @@ function App() {
                             >
                               <option value="jpg">JPG</option>
                               <option value="png">PNG</option>
+                              <option value="tiff">TIFF</option>
                             </select>
+                          </label>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-image" ? (
+                          <label className="field">
+                            <span>
+                              {language === "tr"
+                                ? "Hangi sayfalar (boşsa hepsi)"
+                                : "Which pages (empty = all)"}
+                            </span>
+                            <input
+                              type="text"
+                              value={pdfToImgPages}
+                              onChange={(e) => setPdfToImgPages(e.target.value)}
+                              placeholder={
+                                language === "tr" ? "örn. 1-3, 5" : "e.g. 1-3, 5"
+                              }
+                            />
                           </label>
                         ) : null}
 

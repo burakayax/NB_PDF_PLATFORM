@@ -19,6 +19,12 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "html-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "crop-pdf",
+  "grayscale-pdf",
+  "resize-pdf",
+  "flip-pdf",
+  "alternate-mix-pdf",
+  "deskew-pdf",
   "form-doldur",
   "ustveri-temizle",
   "pdf-to-pdfa",
@@ -62,7 +68,7 @@ export const TOOL_CATEGORY_LABELS: Record<
 export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   {
     id: "organize",
-    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf", "sayfa-duzeni"],
+    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf", "crop-pdf", "resize-pdf", "flip-pdf", "alternate-mix-pdf", "sayfa-duzeni"],
   },
   {
     id: "convert",
@@ -83,7 +89,7 @@ export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   },
   {
     id: "optimize",
-    tools: ["compress", "flatten-pdf", "repair-pdf"],
+    tools: ["compress", "flatten-pdf", "grayscale-pdf", "deskew-pdf", "repair-pdf"],
   },
   {
     id: "annotate",
@@ -150,6 +156,12 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
   "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
+  "crop-pdf": { tr: "PDF Kırp", en: "Crop PDF" },
+  "grayscale-pdf": { tr: "PDF Gri Tonlama", en: "Grayscale PDF" },
+  "resize-pdf": { tr: "PDF Sayfa Boyutu", en: "Resize PDF Pages" },
+  "flip-pdf": { tr: "PDF Çevir (Ayna)", en: "Flip PDF" },
+  "alternate-mix-pdf": { tr: "PDF Dönüşümlü Birleştir", en: "Alternate & Mix PDF" },
+  "deskew-pdf": { tr: "PDF Eğri Tarama Düzeltme", en: "Deskew PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
   "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
@@ -698,6 +710,48 @@ export function featureCopy(
         ? "Doldurulabilir PDF formlarının alanlarını bulur, doldurur ve isterseniz kilitler."
         : "Detects fillable PDF form fields, fills them in and optionally locks them.",
       button: tr ? "FORM DOLDUR" : "FILL FORM",
+    },
+    "grayscale-pdf": {
+      title: tr ? "PDF GRI TONLAMA" : "GRAYSCALE PDF",
+      description: tr
+        ? "Renkli PDF'i siyah-beyaza çevirir; metin seçilebilir kalır."
+        : "Turns a colour PDF black-and-white; text stays selectable.",
+      button: tr ? "GRİYE ÇEVİR" : "CONVERT",
+    },
+    "resize-pdf": {
+      title: tr ? "PDF SAYFA BOYUTU" : "RESIZE PDF PAGES",
+      description: tr
+        ? "Sayfaları A4, A5, Letter veya özel ölçüye getirir."
+        : "Fits pages to A4, A5, Letter or a custom size.",
+      button: tr ? "BOYUTLANDIR" : "RESIZE",
+    },
+    "flip-pdf": {
+      title: tr ? "PDF ÇEVIR (AYNA)" : "FLIP PDF",
+      description: tr
+        ? "Sayfaları yatay veya dikey ayna gibi çevirir."
+        : "Mirrors pages horizontally or vertically.",
+      button: tr ? "ÇEVİR" : "FLIP",
+    },
+    "alternate-mix-pdf": {
+      title: tr ? "PDF DÖNÜŞÜMLÜ BIRLEŞTIR" : "ALTERNATE & MIX PDF",
+      description: tr
+        ? "İki PDF'in sayfalarını sırayla serpiştirir (çift taraflı tarama)."
+        : "Interleaves the pages of two PDFs (double-sided scans).",
+      button: tr ? "SERPİŞTİR" : "INTERLEAVE",
+    },
+    "deskew-pdf": {
+      title: tr ? "PDF EĞRİ TARAMA DÜZELT" : "DESKEW PDF",
+      description: tr
+        ? "Eğri taranmış sayfaları düzeltir; yazı katmanlı sayfalara dokunmaz."
+        : "Straightens crooked scanned pages; leaves text-layer pages alone.",
+      button: tr ? "EĞRİLİĞİ DÜZELT" : "STRAIGHTEN",
+    },
+    "crop-pdf": {
+      title: tr ? "PDF KIRP" : "CROP PDF",
+      description: tr
+        ? "Sayfaların kenar boşluklarını kırpar. Otomatik kipte içeriğin etrafındaki boş kenarları kendisi bulur."
+        : "Trims page margins. In automatic mode it finds the empty edges around your content.",
+      button: tr ? "KIRP" : "CROP",
     },
     "flatten-pdf": {
       title: tr ? "PDF DÜZLEŞTIR" : "FLATTEN PDF",

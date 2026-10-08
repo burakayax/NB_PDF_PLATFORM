@@ -291,6 +291,78 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Fill fillable PDF forms on your device and optionally lock them.",
     },
   },
+  "grayscale-pdf": {
+    tr: {
+      title: "PDF gri tonlama | PDF Platform",
+      description:
+        "Renkli PDF'i siyah-beyaza (gri tonlamaya) çevirin; metin seçilebilir kalır.",
+    },
+    en: {
+      title: "Grayscale PDF | PDF Platform",
+      description:
+        "Convert a colour PDF to black-and-white (grayscale); text stays selectable.",
+    },
+  },
+  "resize-pdf": {
+    tr: {
+      title: "PDF sayfa boyutu değiştirme | PDF Platform",
+      description:
+        "PDF sayfalarını A4, A5, Letter veya özel ölçüye getirin.",
+    },
+    en: {
+      title: "Resize PDF pages | PDF Platform",
+      description:
+        "Fit PDF pages to A4, A5, Letter or a custom size.",
+    },
+  },
+  "flip-pdf": {
+    tr: {
+      title: "PDF çevirme (ayna) | PDF Platform",
+      description:
+        "PDF sayfalarını yatay veya dikey ayna gibi çevirin.",
+    },
+    en: {
+      title: "Flip PDF | PDF Platform",
+      description:
+        "Mirror PDF pages horizontally or vertically.",
+    },
+  },
+  "alternate-mix-pdf": {
+    tr: {
+      title: "PDF dönüşümlü birleştirme | PDF Platform",
+      description:
+        "İki PDF'in sayfalarını sırayla serpiştirin; çift taraflı taramalar için.",
+    },
+    en: {
+      title: "Alternate & mix PDF | PDF Platform",
+      description:
+        "Interleave the pages of two PDFs; ideal for double-sided scans.",
+    },
+  },
+  "deskew-pdf": {
+    tr: {
+      title: "PDF eğri tarama düzeltme | PDF Platform",
+      description:
+        "Eğri taranmış PDF sayfalarını otomatik düzeltin; yazı katmanlı sayfalara dokunulmaz.",
+    },
+    en: {
+      title: "Deskew PDF | PDF Platform",
+      description:
+        "Automatically straighten crooked scanned PDF pages; pages with a text layer are left alone.",
+    },
+  },
+  "crop-pdf": {
+    tr: {
+      title: "PDF kırp | PDF Platform",
+      description:
+        "PDF sayfalarının kenar boşluklarını kırpın; içeriğe göre boş kenarları otomatik bulun.",
+    },
+    en: {
+      title: "Crop PDF | PDF Platform",
+      description:
+        "Trim PDF page margins, or let the tool find the empty edges around your content automatically.",
+    },
+  },
   "flatten-pdf": {
     tr: {
       title: "PDF düzleştir | PDF Platform",
