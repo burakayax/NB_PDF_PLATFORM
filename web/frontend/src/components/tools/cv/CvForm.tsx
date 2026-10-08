@@ -43,6 +43,7 @@ import {
 } from "./cvModel";
 import { bakePhoto, type CvTemplate } from "./cvTemplates";
 import { useEffect } from "react";
+import { CvPhotoPrep } from "./CvPhotoPrep";
 
 type Props = {
   data: CvData;
@@ -202,6 +203,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr }: Props) {
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
   const fileRef = useRef<HTMLInputElement>(null);
   const [photoErr, setPhotoErr] = useState<string | null>(null);
+  const [prepOpen, setPrepOpen] = useState(false);
   const lang = data.settings.lang;
   const monthType = "month";
 
@@ -229,9 +231,11 @@ export function CvForm({ data, onChange, tpl, disabled, tr }: Props) {
             {data.photo ? <PhotoCropper photo={data.photo} tpl={tpl} disabled={disabled} tr={tr} onChange={(p) => set("photo", p)} /> : null}
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-3.5 py-2.5 text-[13px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25"><ImagePlus className="h-4 w-4" />{data.photo ? (tr ? "Fotoğrafı değiştir" : "Change photo") : (tr ? "Fotoğraf yükle" : "Upload photo")}</button>
+              {data.photo ? <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2.5 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button> : null}
               {data.photo ? <button type="button" onClick={() => set("photo", null)} className="rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Kaldır" : "Remove"}</button> : null}
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
             </div>
+            {prepOpen && data.photo ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { set("photo", { src, zoom: 1, x: 0, y: 0 }); setPrepOpen(false); }} /> : null}
             {photoErr ? <p className="text-[12px] text-red-300">{photoErr}</p> : null}
             <a href="/tools/ai-fotograf-studyosu" className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-fuchsia-300 hover:text-fuchsia-200"><Sparkles className="h-3.5 w-3.5" />{tr ? "Fotoğrafınızı AI ile CV için hazırlayın (arka plan, kadraj)" : "Prepare your photo for your CV with AI (background, framing)"}</a>
             <p className="text-[11px] text-slate-500">{tr ? "Fotoğrafınız yalnızca bu tarayıcıda işlenir; sunucumuza yüklenmez." : "Your photo is processed only in this browser; it is never uploaded."}</p>
