@@ -139,6 +139,8 @@ const rawEnvSchema = z
     ANTHROPIC_API_KEY: z.string().optional().default(""),
     /** AI modeli — varsayılan ucuz/hızlı Haiku. */
     AI_MODEL: z.string().min(1).default("claude-haiku-4-5-20251001"),
+    /** CV Yapay Zekâ Asistanı modeli. Yazım kalitesi/uydurmama için Sonnet (Haiku denemede bağlam uydurdu). */
+    AI_CV_MODEL: z.string().min(1).default("claude-sonnet-5-5"),
     /** Sözleşme Denetçisi modeli — derin analiz için güçlü model (Haiku yetersiz kalır). */
     CONTRACT_REVIEW_MODEL: z.string().min(1).default("claude-opus-5-5"),
     /** Aylık AI işlem kotası (adil kullanım) — plan başına. ADMIN sınırsız.
