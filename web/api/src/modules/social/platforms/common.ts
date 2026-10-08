@@ -22,6 +22,15 @@ export type Publisher = (input: PublishInput) => Promise<PublishResult>;
  */
 export type Verifier = (secrets: Record<string, string>) => Promise<string>;
 
+/**
+ * `media_publish` çağrısı BAŞLADIKTAN sonra oluşan hata.
+ *
+ * Bu noktadan sonra gönderi yayına çıkmış olabilir (istek zaman aşımına uğrasa bile
+ * Instagram işlemi tamamlayabilir). Burada başka biçime düşersek aynı gönderi iki kez
+ * çıkar; bu yüzden bu hata yukarı iletilir, yedek yola GİDİLMEZ.
+ */
+export class PublishStageError extends Error {}
+
 const REQUEST_TIMEOUT_MS = 45_000;
 
 /** Dış API hatalarını okunur tek satıra indirger (anahtar sızdırmadan). */

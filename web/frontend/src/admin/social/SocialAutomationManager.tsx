@@ -754,6 +754,47 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 </span>
               </span>
             </label>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <p className="text-sm font-medium text-slate-200">Instagram Reels yayın şekli</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                Yazının videosu varsa Instagram gönderisi Reels olarak çıkar. Videoyu üretim sırasında
+                sitenin slaytlarından kendimiz hazırlıyoruz; sese ve müziğe ihtiyaç yok.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="Reels yayın şekli">
+                {(
+                  [
+                    { auto: false, label: "Önce onay", hint: "Video panelde bekler, sen izleyip “Şimdi paylaş” dersin." },
+                    { auto: true, label: "Otomatik", hint: "Saati gelince onaysız kendiliğinden yayınlanır." },
+                  ] as const
+                ).map((opt) => {
+                  const active = config.reelsAutoPublish === opt.auto;
+                  return (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => {
+                        if (!active) patchConfig({ reelsAutoPublish: opt.auto });
+                      }}
+                      className={`rounded-xl border px-3 py-2.5 text-left transition ${
+                        active
+                          ? "border-fuchsia-500/60 bg-fuchsia-500/10 text-white"
+                          : "border-slate-700/60 bg-slate-950/30 text-slate-300 hover:border-slate-500"
+                      }`}
+                    >
+                      <span className="block text-sm font-semibold">{opt.label}</span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{opt.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {config.reelsAutoPublish ? (
+                <p className="mt-2 text-[11px] leading-relaxed text-amber-300/90">
+                  Otomatik mod açık: Reels’ler yayınlanmadan önce kontrol edilmez.
+                </p>
+              ) : null}
+            </div>
           </SectionCard>
 
           <SectionCard

@@ -116,6 +116,8 @@ export function PostPreviewCard({
   const editable = post.status === "DRAFT" || post.status === "QUEUED" || post.status === "FAILED" || manual;
   const maxChars = spec?.maxChars ?? 2000;
   const busy = busyId === post.id;
+  // Reels gönderisinde "görsel" adresi aslında videodur (sunucu uzantıdan tanır).
+  const isVideo = /\.mp4(\?|$)/i.test(post.imageUrl ?? "");
 
   return (
     <article
@@ -226,7 +228,7 @@ export function PostPreviewCard({
               // Görsel kendi alan adımızdan geliyor; indirme dosya olarak iner.
             >
               <Download className="h-3.5 w-3.5" />
-              Görseli indir
+              {isVideo ? "Videoyu indir" : "Görseli indir"}
             </a>
           ) : null}
 

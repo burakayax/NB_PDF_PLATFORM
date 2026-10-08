@@ -8,8 +8,10 @@
 
 import { logger } from "../../../lib/file-log.js";
 import { carouselSlidesFor } from "../carousel.service.js";
-import { coverAltText, requestJson, requireSecret } from "./common.js";
+import { isReelUrl } from "../reels.service.js";
+import { PublishStageError, coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
+import { publishInstagramReel } from "./instagram-reels.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 
@@ -41,18 +43,23 @@ export const publishToFacebook: Publisher = async ({ body, imageUrl, item, secre
   return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null };
 };
 
-/**
- * `media_publish` çağrısı BAŞLADIKTAN sonra oluşan hata.
- *
- * Bu noktadan sonra gönderi yayına çıkmış olabilir (istek zaman aşımına uğrasa bile
- * Instagram işlemi tamamlayabilir). Burada tek görsele düşersek aynı gönderi iki kez
- * çıkar; bu yüzden bu hata yukarı iletilir, yedek yola GİDİLMEZ.
- */
-class PublishStageError extends Error {}
-
 export const publishToInstagram: Publisher = async (input) => {
-  // Carousel varsa onu dene; yayın başlamadan bir şey ters giderse tek görsele düş.
   const slides = await carouselSlidesFor(input.item).catch(() => [] as string[]);
+
+  // Kayıtta video adresi varsa Reels olarak yayınlanır. Yayın başlamadan bir şey
+  // ters giderse aşağıdaki carousel/tek görsel yoluna düşülür.
+  if (isReelUrl(input.imageUrl)) {
+    try {
+      return await publishInstagramReel(input, input.imageUrl);
+    } catch (err) {
+      if (err instanceof PublishStageError) throw err;
+      logger.warn("social", `Instagram Reels hazırlanamadı, carousel/tek görsele düşülüyor: ${String(err)}`);
+    }
+    // Video adresi görsel yerine geçmez: yedek yol için kapak slaytı kullanılır.
+    input = { ...input, imageUrl: slides[0] ?? null };
+  }
+
+  // Carousel varsa onu dene; yayın başlamadan bir şey ters giderse tek görsele düş.
   if (slides.length >= 2) {
     try {
       return await publishInstagramCarousel(input, slides);

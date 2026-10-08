@@ -21,6 +21,7 @@ import { logger } from "../../lib/file-log.js";
 import { fetchPairedFeedItems } from "./rss.service.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
+import { reelFor } from "./reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
@@ -62,6 +63,14 @@ export type SocialAutomationConfig = {
   singleLang: "tr" | "en";
   /** Etiketler için internette canlı araştırma yapılsın mı? (Ücretli) */
   researchKeywords: boolean;
+  /**
+   * Reels videoları onay beklemeden yayınlansın mı?
+   *
+   * Kapalıyken (varsayılan) videosu olan yazıların Instagram gönderisi TASLAK olarak
+   * bekler; admin videoyu panelde izleyip onaylayınca yayınlanır. Diğer ağlar bundan
+   * etkilenmez. Açıkken Reels de diğer gönderiler gibi saati gelince kendiliğinden gider.
+   */
+  reelsAutoPublish: boolean;
 };
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
@@ -76,6 +85,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   bilingual: true,
   singleLang: "tr",
   researchKeywords: true,
+  reelsAutoPublish: false,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -97,6 +107,8 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     bilingual: raw.bilingual !== false,
     singleLang: raw.singleLang === "en" ? "en" : "tr",
     researchKeywords: raw.researchKeywords !== false,
+    // Yalnızca açıkça `true` ise otomatik: eksik/bozuk ayar onaylı moda düşer.
+    reelsAutoPublish: raw.reelsAutoPublish === true,
   };
 }
 
@@ -494,7 +506,12 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
       singleLang: config.singleLang,
     });
     for (const platform of platforms) {
-      const imageUrl = pickImage(item, platform);
+      // Instagram'da yazının videosu varsa gönderi Reels olur: kayda görsel yerine video
+      // adresi yazılır (yayıncı bunu uzantısından tanır). Video yoksa eskisi gibi görsel.
+      const reelUrl = platform === "INSTAGRAM" ? await reelFor(item) : null;
+      const imageUrl = reelUrl ?? pickImage(item, platform);
+      // Reels, otomatik mod açık değilse hazırlık turunda bile TASLAK kalır.
+      const holdThis = hold || (reelUrl !== null && !config.reelsAutoPublish);
       try {
         const manual = !accounts.has(platform);
         await prisma.socialPost.create({
@@ -508,7 +525,7 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
             imageUrl,
             scheduledAt,
             dayKey,
-            status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
+            status: manual ? "MANUAL" : holdThis ? "DRAFT" : "QUEUED",
           },
         });
         result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl, manual });

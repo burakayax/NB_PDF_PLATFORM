@@ -99,6 +99,7 @@ const configSchema = z.object({
   bilingual: z.boolean().optional(),
   singleLang: z.enum(["tr", "en"]).optional(),
   researchKeywords: z.boolean().optional(),
+  reelsAutoPublish: z.boolean().optional(),
 });
 
 socialRouter.put(
