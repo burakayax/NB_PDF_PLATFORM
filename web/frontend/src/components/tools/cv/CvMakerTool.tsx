@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, ListChecks } from "lucide-react";
+import { Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
 import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
@@ -7,6 +7,7 @@ import { CvForm } from "./CvForm";
 import { CvDesignPanel } from "./CvDesignPanel";
 import { CvAnalysisPanel } from "./CvAnalysisPanel";
 import { CvPassModal, remainingLabel } from "./CvPassModal";
+import { buildCvDocx, cvToText } from "./cvExport";
 import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv } from "./cvModel";
 import { buildCvPdf, measureFit, paginate } from "./cvPdf";
 import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
@@ -156,6 +157,23 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
       setError(tr ? "PDF oluşturulamadı. Sayfayı yenileyip tekrar deneyin." : "Couldn't build the PDF. Refresh the page and try again.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function makeOther(kind: "docx" | "txt") {
+    setError(null);
+    setDone(null);
+    try {
+      const base = `${slugify(data.name) || "cv"}-cv`;
+      if (kind === "docx") {
+        download(await buildCvDocx(data, templateId), `${base}.docx`);
+        setDone(tr ? "Word dosyası indirildi. Word çıktısı sade ve tek sütunludur (başvuru sistemleri için en güvenli biçim); görsel tasarım için PDF'i kullanın." : "Word file downloaded. The Word output is plain and single-column (the safest format for hiring systems); use the PDF for the visual design.");
+      } else {
+        download(new Blob([cvToText(data)], { type: "text/plain;charset=utf-8" }), `${base}.txt`);
+        setDone(tr ? "Düz metin indirildi: başvuru formlarına yapıştırmak için." : "Plain text downloaded: for pasting into application forms.");
+      }
+    } catch {
+      setError(tr ? "Dosya oluşturulamadı. Sayfayı yenileyip tekrar deneyin." : "Couldn't build the file. Refresh and try again.");
     }
   }
 
@@ -320,6 +338,8 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                   <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[14px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40 sm:col-span-2">
                     {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}
                   </button>
+                  <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileText className="h-4 w-4" />{tr ? "Word (.docx) indir" : "Download Word (.docx)"}</button>
+                  <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileType2 className="h-4 w-4" />{tr ? "Düz metin (.txt) indir" : "Download plain text (.txt)"}</button>
                   <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("blank")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40">
                     {busy === "blank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{tr ? "Boş şablonu indir" : "Download blank template"}
                   </button>
