@@ -6,7 +6,7 @@ import { buildCvPdf } from "./cvPdf";
 import { extractTextItems } from "./cvXray";
 import type { CvTemplate } from "./cvTemplates";
 
-type Props = { data: CvData; tpl: CvTemplate; tr: boolean; disabled: boolean };
+type Props = { data: CvData; tpl: CvTemplate; tr: boolean; disabled: boolean; ad: string; setAd: (s: string) => void };
 
 const icon = (l: Level) =>
   l === "ok" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> : l === "warn" ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" /> : l === "bad" ? <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" /> : <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-300" />;
@@ -46,13 +46,12 @@ function Card({ title, sub, children, open: o = true }: { title: string; sub?: s
   );
 }
 
-export function CvAnalysisPanel({ data, tpl, tr, disabled }: Props) {
+export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
   const checks = useMemo(() => [...consistencyChecks(data), ...qualityChecks(data)], [data]);
   const score = scoreOf(checks);
   const years = totalExperienceYears(data);
 
   // İlan eşleştirici
-  const [ad, setAd] = useState("");
   const match = useMemo(() => (ad.trim().length > 30 ? matchJob(data, ad) : null), [data, ad]);
 
   // ATS röntgeni

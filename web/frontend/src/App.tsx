@@ -5581,7 +5581,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="cv-olustur" wide language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <CvMakerTool language={language} accessToken={accessToken} onLogin={goLogin} onRegister={goRegister} onUpgrade={goRegister} isAdmin={aiIsAdmin} />
+            <CvMakerTool language={language} accessToken={accessToken} onLogin={goLogin} onRegister={goRegister} onUpgrade={goRegister} isAdmin={aiIsAdmin} aiComingSoon={aiComingSoon} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6861,7 +6861,7 @@ function App() {
             {contentPanel === "cv" ? (
               <section className="mx-auto w-full max-w-[1500px] py-2">
                 <Suspense fallback={<PageSkeleton />}>
-                  <CvMakerTool language={language} accessToken={accessToken} onLogin={() => setView("login")} onRegister={() => setView("register")} onUpgrade={() => setUpgradeModalOpen(true)} isAdmin={aiIsAdmin} />
+                  <CvMakerTool language={language} accessToken={accessToken} onLogin={() => setView("login")} onRegister={() => setView("register")} onUpgrade={() => setUpgradeModalOpen(true)} isAdmin={aiIsAdmin} aiComingSoon={aiComingSoon} />
                 </Suspense>
               </section>
             ) : null}
