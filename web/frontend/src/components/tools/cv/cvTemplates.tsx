@@ -39,7 +39,7 @@ const BASE_PX: Record<FontKey, number> = { carlito: 14.6, arial: 12.8, caladea: 
 export type HeadingStyle = "rule" | "bar" | "caps" | "dot" | "boxed";
 export type SkillStyle = "bars" | "tags" | "plain";
 export type PhotoShape = "circle" | "rounded" | "rect";
-export type LayoutId = "single" | "sidebar" | "banner" | "timeline";
+export type LayoutId = "single" | "sidebar" | "banner" | "timeline" | "ledger";
 
 export type CvTheme = {
   font: FontKey;
@@ -216,8 +216,34 @@ const Bullets = ({ items, gap = 2, color }: { items: { t: string; g: boolean }[]
 
 // ── Bölüm içerikleri (yerleşimlerde ortak) ─────────────────────────────────
 
-function ExperienceList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?: boolean }) {
+/** "Tarih sütunlu" satır: tarih solda görünür, içerik sağda. DOM sırası: içerik önce (row-reverse). */
+function LedgerRow({ dates, place, children, mb }: { dates?: Fld; place?: Fld; children: ReactNode; mb: number }) {
+  return (
+    <div data-keep="1" style={{ display: "flex", flexDirection: "row-reverse", gap: 18, marginBottom: mb }}>
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+      <div style={{ width: 112, flex: "none", fontSize: "0.9em", lineHeight: 1.35, color: "inherit" }}>
+        {dates ? <div style={{ fontWeight: 600 }}><F f={dates} /></div> : null}
+        {place ? <div style={{ opacity: 0.7, marginTop: 2 }}><F f={place} /></div> : null}
+      </div>
+    </div>
+  );
+}
+
+function ExperienceList({ m, th, timeline, ledger }: { m: CvModel; th: CvTheme; timeline?: boolean; ledger?: boolean }) {
   const sp = useContext(SpCtx);
+  if (ledger) {
+    return (
+      <>
+        {m.experience.map((e, i) => (
+          <LedgerRow key={i} dates={e.dates} place={e.location} mb={Math.round(12 * sp)}>
+            <div style={{ fontWeight: 700, fontSize: "1.04em" }}><F f={e.role} /></div>
+            {e.company ? <div style={{ color: th.accent, fontWeight: 600, fontSize: "0.96em", marginTop: 1 }}><F f={e.company} /></div> : null}
+            <Bullets items={e.bullets} />
+          </LedgerRow>
+        ))}
+      </>
+    );
+  }
   return (
     <>
       {m.experience.map((e, i) => (
@@ -245,8 +271,21 @@ function ExperienceList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline
   );
 }
 
-function EducationList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?: boolean }) {
+function EducationList({ m, th, timeline, ledger }: { m: CvModel; th: CvTheme; timeline?: boolean; ledger?: boolean }) {
   const sp = useContext(SpCtx);
+  if (ledger) {
+    return (
+      <>
+        {m.education.map((e, i) => (
+          <LedgerRow key={i} dates={e.dates} place={e.location} mb={Math.round(10 * sp)}>
+            <div style={{ fontWeight: 700 }}><F f={e.school} /></div>
+            {e.degree ? <div style={{ color: th.accent, fontWeight: 600, fontSize: "0.96em", marginTop: 1 }}><F f={e.degree} /></div> : null}
+            {e.bullets.length ? <Bullets items={e.bullets} /> : null}
+          </LedgerRow>
+        ))}
+      </>
+    );
+  }
   return (
     <>
       {m.education.map((e, i) => (
@@ -436,10 +475,23 @@ function SummaryBlock({ m, th }: { m: CvModel; th: CvTheme }) {
   );
 }
 
-function CustomList({ m, th, k, timeline }: { m: CvModel; th: CvTheme; k: SectionKey; timeline?: boolean }) {
+function CustomList({ m, th, k, timeline, ledger }: { m: CvModel; th: CvTheme; k: SectionKey; timeline?: boolean; ledger?: boolean }) {
   const sp = useContext(SpCtx);
   const sec = m.custom.find((c) => c.key === k);
   if (!sec) return null;
+  if (ledger) {
+    return (
+      <>
+        {sec.items.map((it, i) => (
+          <LedgerRow key={i} dates={it.date} mb={Math.round(9 * sp)}>
+            {it.title ? <div style={{ fontWeight: 700 }}><F f={it.title} /></div> : null}
+            {it.subtitle ? <div style={{ color: th.accent, fontWeight: 600, fontSize: "0.96em" }}><F f={it.subtitle} /></div> : null}
+            {it.desc ? <div style={{ lineHeight: 1.4, marginTop: 1 }}><F f={it.desc} /></div> : null}
+          </LedgerRow>
+        ))}
+      </>
+    );
+  }
   return (
     <>
       {sec.items.map((it, i) => (
@@ -464,15 +516,15 @@ function CustomList({ m, th, k, timeline }: { m: CvModel; th: CvTheme; k: Sectio
 }
 
 /** Ana sütun bölümü — anahtara göre. Boşsa null. */
-function MainSection({ k, m, th, timeline }: { k: SectionKey; m: CvModel; th: CvTheme; timeline?: boolean }) {
+function MainSection({ k, m, th, timeline, ledger }: { k: SectionKey; m: CvModel; th: CvTheme; timeline?: boolean; ledger?: boolean }) {
   const L = m.labels;
   switch (k) {
     case "summary":
       return <SummaryBlock m={m} th={th} />;
     case "experience":
-      return m.experience.length ? <Section title={L.experience} th={th}><ExperienceList m={m} th={th} timeline={timeline} /></Section> : null;
+      return m.experience.length ? <Section title={L.experience} th={th}><ExperienceList m={m} th={th} timeline={timeline} ledger={ledger} /></Section> : null;
     case "education":
-      return m.education.length ? <Section title={L.education} th={th}><EducationList m={m} th={th} timeline={timeline} /></Section> : null;
+      return m.education.length ? <Section title={L.education} th={th}><EducationList m={m} th={th} timeline={timeline} ledger={ledger} /></Section> : null;
     case "skills":
       return m.skills.length ? <Section title={L.skills} th={th}><SkillBlock m={m} th={th} /></Section> : null;
     case "languages":
@@ -488,7 +540,7 @@ function MainSection({ k, m, th, timeline }: { k: SectionKey; m: CvModel; th: Cv
     default: {
       const sec = m.custom.find((c) => c.key === k);
       if (!sec || !sec.title) return null;
-      return <Section title={sec.title.t} th={th}><CustomList m={m} th={th} k={k} timeline={timeline} /></Section>;
+      return <Section title={sec.title.t} th={th}><CustomList m={m} th={th} k={k} timeline={timeline} ledger={ledger} /></Section>;
     }
   }
 }
@@ -496,11 +548,11 @@ function MainSection({ k, m, th, timeline }: { k: SectionKey; m: CvModel; th: Cv
 const SIDE_KEYS: SectionKey[] = ["skills", "languages", "interests"];
 
 /** Ana gövde bölümleri — kullanıcının sırasına göre. `side` verilirse o anahtarlar burada gösterilmez. */
-function MainSections({ m, th, timeline, skip }: { m: CvModel; th: CvTheme; timeline?: boolean; skip?: SectionKey[] }) {
+function MainSections({ m, th, timeline, ledger, skip }: { m: CvModel; th: CvTheme; timeline?: boolean; ledger?: boolean; skip?: SectionKey[] }) {
   return (
     <>
       {m.order.filter((k) => !skip?.includes(k)).map((k) => (
-        <MainSection key={k} k={k} m={m} th={th} timeline={timeline} />
+        <MainSection key={k} k={k} m={m} th={th} timeline={timeline} ledger={ledger} />
       ))}
     </>
   );
@@ -522,6 +574,24 @@ function SingleLayout({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?:
         {m.photo ? <PhotoBox model={m} th={th} /> : null}
       </div>
       <MainSections m={m} th={th} timeline={timeline} />
+    </div>
+  );
+}
+
+function LedgerLayout({ m, th }: { m: CvModel; th: CvTheme }) {
+  return (
+    <div>
+      <div style={{ height: 12, background: th.accent }} />
+      <div style={{ padding: "30px 48px 34px" }}>
+        <div style={{ display: "flex", gap: 22, alignItems: "center", justifyContent: "space-between", paddingBottom: 14, borderBottom: `1px solid ${th.tint}` }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <NameBlock m={m} th={{ ...th, align: "left" }} />
+            <div style={{ marginTop: 10 }}><ContactLine m={m} th={th} /></div>
+          </div>
+          {m.photo ? <PhotoBox model={m} th={th} /> : null}
+        </div>
+        <MainSections m={m} th={th} ledger />
+      </div>
     </div>
   );
 }
@@ -626,8 +696,58 @@ export function CvLayout({ m, tpl }: { m: CvModel; tpl: CvTemplate }) {
     case "sidebar": return <SidebarLayout m={m} th={th} />;
     case "banner": return <BannerLayout m={m} th={th} />;
     case "timeline": return <SingleLayout m={m} th={th} timeline />;
+    case "ledger": return <LedgerLayout m={m} th={th} />;
     default: return <SingleLayout m={m} th={th} />;
   }
+}
+
+// ── Ön yazı sayfası (CV ile aynı tasarım dili) ─────────────────────────────
+
+/** Ön yazı: seçili CV şablonunun yazı tipi, rengi ve başlık düzeniyle bir mektup sayfası. */
+export function CoverLetterPage({ m, tpl, text, size, accent, company, position, dateText }: { m: CvModel; tpl: CvTemplate; text: string; size: "s" | "m" | "l"; accent: string | null; company?: string; position?: string; dateText: string }) {
+  const th: CvTheme = accent ? recolor(tpl.theme, accent) : tpl.theme;
+  const fs = BASE_PX[th.font] * SIZE_SCALE[size] * 1.04;
+  const paras = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  // Üst bant rengi: bant/koyu kenar çubuğu olan şablonlarda onun rengi, diğerlerinde yalnızca ince vurgu çizgisi
+  const bandBg = th.band?.bg ?? (th.side && !isLight(th.side.bg) ? th.side.bg : null);
+  const bandFg = th.band?.fg ?? th.side?.fg ?? "#ffffff";
+  const bandMuted = th.band?.muted ?? th.side?.muted ?? "#e5e7eb";
+  const to = [company, position].filter(Boolean).join(" — ");
+  return (
+    <SpCtx.Provider value={1}>
+      <div
+        data-cv-root="1"
+        data-cv-mode={m.mode}
+        lang={m.lang}
+        style={{ width: PAGE_W, minHeight: PAGE_H, boxSizing: "border-box", background: "#ffffff", color: th.text, fontFamily: `'${FONT_CSS[th.font]}', sans-serif`, fontSize: fs, lineHeight: 1.3, position: "relative", overflow: "hidden" }}
+      >
+        {bandBg ? (
+          <div style={{ background: bandBg, color: bandFg, padding: "34px 56px 26px" }}>
+            <NameBlock m={m} th={{ ...th, align: "left" }} color={bandFg} sub={bandMuted} />
+            <div style={{ marginTop: 10 }}><ContactLine m={m} th={th} color={bandMuted} /></div>
+          </div>
+        ) : (
+          <>
+            <div style={{ height: 10, background: th.accent }} />
+            <div style={{ padding: "30px 56px 0", textAlign: th.align }}>
+              <NameBlock m={m} th={th} />
+              <div style={{ marginTop: 10 }}><ContactLine m={m} th={th} align={th.align} /></div>
+              <div style={{ marginTop: 16, borderBottom: `1.5px solid ${th.accent}` }} />
+            </div>
+          </>
+        )}
+        <div style={{ padding: "26px 56px 40px" }}>
+          <div data-keep="1" style={{ color: th.muted, fontSize: "0.92em" }}>{dateText}</div>
+          {to ? <div data-keep="1" style={{ marginTop: 14, fontWeight: 700, color: th.accent }}>{to}</div> : null}
+          <div style={{ marginTop: 18 }}>
+            {paras.map((p, i) => (
+              <div key={i} data-keep="1" style={{ marginBottom: 12, lineHeight: 1.55, textAlign: "left", whiteSpace: "pre-line" }}>{p}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </SpCtx.Provider>
+  );
 }
 
 // ── Kök (A4 sayfa) ─────────────────────────────────────────────────────────
@@ -764,6 +884,19 @@ export const CV_TEMPLATES: CvTemplate[] = [
     { font: "carlito", accent: "#0369a1", heading: "dot", skills: "tags", photo: { shape: "circle", w: 124, h: 124 }, side: { pos: "right", bg: "#e0f2fe", fg: "#0c2d48", muted: "#44657f", width: 250 } }),
   T("akademik", "Akademik", "Academic", "Times benzeri yazı tipi, yoğun içerik için sıkı yerleşim; yayın ve proje listeleri için.", "Times-style type and a tight layout for dense content such as publications.", "single", false,
     { font: "times", accent: "#1e3a5f", heading: "rule", skills: "plain", photo: { shape: "rect", w: 88, h: 110 } }),
+  // ── Yeni: tarih sütunlu (Europass tarzı) + ek tasarımlar ──
+  T("europass", "Europass Tarzı", "Europass Style", "Tarihler solda, içerik sağda: Avrupa'da yaygın kullanılan düzen. Yurt dışı ve Erasmus başvuruları için.", "Dates on the left, details on the right — the layout common across Europe, for international and Erasmus applications.", "ledger", false,
+    { font: "carlito", accent: "#0e4194", heading: "rule", skills: "plain", photo: { shape: "rect", w: 92, h: 116 } }),
+  T("tarihli-serif", "Tarih Sütunlu Serif", "Dated Serif", "Tarih sütunlu düzen ve klasik serif yazı tipi; hukuk, akademi ve kamu başvuruları için.", "Date-column layout with a classic serif; for legal, academic and public-sector applications.", "ledger", false,
+    { font: "gelasio", accent: "#7c2d12", heading: "caps", skills: "plain", photo: { shape: "rect", w: 90, h: 112 } }),
+  T("tarihli-petrol", "Tarih Sütunlu Petrol", "Dated Teal", "Petrol vurgulu, ferah tarih sütunlu düzen; sağlık ve mühendislik profilleri için.", "Teal-accented, airy date-column layout; for healthcare and engineering profiles.", "ledger", false,
+    { font: "arial", accent: "#0f766e", heading: "bar", skills: "tags", photo: { shape: "rounded", w: 96, h: 120 } }),
+  T("antrasit-kirmizi", "Antrasit Kırmızı", "Charcoal Red", "Koyu antrasit kenar çubuğu ve kırmızı vurgu; satış ve pazarlama için güçlü bir görünüm.", "Charcoal sidebar with red accents; a strong look for sales and marketing.", "sidebar", false,
+    { font: "carlito", accent: "#b91c1c", heading: "bar", skills: "bars", photo: { shape: "circle", w: 126, h: 126 }, side: { pos: "left", bg: "#27272a", fg: "#ffffff", muted: "#d4d4d8", width: 252 } }),
+  T("lacivert-bant", "Lacivert Bant", "Navy Banner", "Geniş lacivert bant ve açık yan sütun; bankacılık ve finans için ciddi bir görünüm.", "Wide navy band with a light side column; a serious look for banking and finance.", "banner", false,
+    { font: "arial", accent: "#1e3a8a", heading: "caps", skills: "plain", photo: { shape: "rect", w: 100, h: 124 }, band: { bg: "#1e3a8a", fg: "#ffffff", muted: "#c7d4f5" }, side: { pos: "right", bg: "#eef2fb", fg: "#1f2430", muted: "#5d6675", width: 246 } }),
+  T("zaman-yesil", "Yeşil Zaman Çizgisi", "Green Timeline", "Yeşil zaman çizgisi; kariyer yolculuğunu öne çıkarır, sağlık ve eğitim için.", "A green timeline that highlights your career path; for healthcare and education.", "timeline", false,
+    { font: "carlito", accent: "#15803d", heading: "dot", skills: "tags", photo: { shape: "circle", w: 100, h: 100 } }),
 ];
 
 export function getTemplate(id: string): CvTemplate {
