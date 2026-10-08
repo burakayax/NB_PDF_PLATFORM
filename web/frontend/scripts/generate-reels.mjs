@@ -22,7 +22,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-import { BG } from "./generate-covers.mjs";
+// Slaytlar (generate-carousels.mjs, kurumsal beyaz tasarim) beyaz zemindedir; dikey tuval de beyaz olmali.
+const BG = "#ffffff";
 
 const W = 1080;
 const H = 1920;

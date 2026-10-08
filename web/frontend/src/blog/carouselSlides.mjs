@@ -87,6 +87,8 @@ export function extractContentSlides(blocks) {
 /** Slayt metinleri (kapanış slaytı dahil) — dile göre sabit ifadeler. */
 export const CAROUSEL_COPY = {
   tr: {
+    guide: "PDF REHBERİ",
+    kicker: "REHBER",
     swipe: "Kaydırın",
     stepLabel: (n, total) => `ADIM ${n}/${total}`,
     pointLabel: (n, total) => `${n}/${total}`,
@@ -95,6 +97,8 @@ export const CAROUSEL_COPY = {
     ctaTry: "Ücretsiz deneyin",
   },
   en: {
+    guide: "PDF GUIDE",
+    kicker: "GUIDE",
     swipe: "Swipe",
     stepLabel: (n, total) => `STEP ${n}/${total}`,
     pointLabel: (n, total) => `${n}/${total}`,
