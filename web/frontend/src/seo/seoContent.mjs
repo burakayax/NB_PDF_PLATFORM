@@ -2310,6 +2310,9 @@ export const BLOG_RELATED_TOOLS = {
   "osym-sinav-basvurusu-fotograf-boyutu": ["gorsel-boyutlandir", "gorsel-sikistir"],
   "uyap-karari-word-e-aktarma": ["udf-to-pdf", "pdf-to-word", "taranmis-pdf-ocr"],
   "universite-kayit-evraklarini-hazirlama": ["belge-tara", "merge-pdf", "compress", "gorsel-boyutlandir"],
+  "cv-is-ilanina-gore-nasil-uyarlanir": ["cv-olustur", "pdf-duzenle", "compress"],
+  "europass-tarzi-cv-nasil-hazirlanir": ["cv-olustur", "ai-fotograf-studyosu", "compress"],
+  "cv-on-yazi-nasil-yazilir": ["cv-olustur", "pdf-duzenle", "compress"],
 };
 
 /** Araç kısa etiketi — SEO title'ın "—" öncesi (ör. "PDF Birleştir"). */
@@ -2328,6 +2331,3 @@ export function getRelatedToolLinks(slug, language = "tr") {
 export function getGuideSlugsForTool(slug) {
   return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(slug));
 }
-  "cv-is-ilanina-gore-nasil-uyarlanir": ["cv-olustur", "pdf-duzenle", "compress"],
-  "europass-tarzi-cv-nasil-hazirlanir": ["cv-olustur", "ai-fotograf-studyosu", "compress"],
-  "cv-on-yazi-nasil-yazilir": ["cv-olustur", "pdf-duzenle", "compress"],
