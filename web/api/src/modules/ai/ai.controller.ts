@@ -369,6 +369,7 @@ export async function cvAssistController(req: Request, res: Response): Promise<v
       throw new HttpError(404, "Bilinmeyen CV asistanı işlemi.");
   }
 
+  // Belgeden içe aktarma uzun girdi + uzun çıktı üretir (tahmini maliyet ~1,3 hak): 2 hak.
   const run = await runWithQuota(req, res, `cv-${mode}`, async () => {
     try {
       return await work();
@@ -378,7 +379,7 @@ export async function cvAssistController(req: Request, res: Response): Promise<v
       }
       throw e;
     }
-  });
+  }, mode === "parse" ? 2 : 1);
   if (!run.ok) return;
   const u = req.authUser!;
   const quota = await getAiQuota(u.id, u.plan, u.role);

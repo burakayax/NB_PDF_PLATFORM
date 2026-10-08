@@ -115,7 +115,10 @@ export async function suggestSummaries(inp: SummaryInput, lang: Lang): Promise<S
   if (!list.length) throw new Error("AI_CV_PARSE");
   const facts = [inp.title, ...inp.skills, ...inp.roles, ...inp.bullets, inp.years !== null ? String(inp.years) : ""].join(" ");
   // Rakam uydurmuşsa o seçenek atılır; geri kalanlarda yeni kelimeler işaretlenir.
-  const safe = list.filter((t) => !hasNewNumbers(facts, t, "yıl year yıllık years"));
+  // İstemcinin tarihlerden hesapladığı yıl (ör. 10,3) "10" ve "11" olarak yazılabilir: uydurma sayılmaz.
+  const y = inp.years ?? 0;
+  const yearForms = y > 0 ? `${Math.floor(y)} ${Math.round(y)} ${Math.ceil(y)}` : "";
+  const safe = list.filter((t) => !hasNewNumbers(facts, t, yearForms));
   const use = safe.length ? safe : list.slice(0, 1).map((t) => t.replace(/\d+(?:[.,]\d+)?\s*(?:yıl|yıllık|years?)?/gi, "").trim());
   return use.map((text) => ({ text, added: addedTerms(facts, text, lang) }));
 }

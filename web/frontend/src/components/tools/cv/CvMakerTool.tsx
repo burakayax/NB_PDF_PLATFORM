@@ -6,6 +6,7 @@ import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan"
 import { CvForm } from "./CvForm";
 import { CvDesignPanel } from "./CvDesignPanel";
 import { CvAnalysisPanel } from "./CvAnalysisPanel";
+import { CvAiPanel } from "./CvAiPanel";
 import { CvPassModal, remainingLabel } from "./CvPassModal";
 import { buildCvDocx, cvToText } from "./cvExport";
 import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv } from "./cvModel";
@@ -21,6 +22,8 @@ type Props = {
   onRegister: () => void;
   onUpgrade: () => void;
   isAdmin?: boolean;
+  /** AI araçlarıyla aynı "Çok Yakında" kilidi (ödemeler kapalıyken yetkisiz kullanıcıda). */
+  aiComingSoon?: boolean;
 };
 
 function download(blob: Blob, name: string) {
@@ -54,11 +57,11 @@ const TemplateThumb = memo(function TemplateThumb({ tpl, lang }: { tpl: CvTempla
   );
 });
 
-type RightTab = "content" | "design" | "analysis";
+type RightTab = "content" | "design" | "analysis" | "ai";
 
 // ── Ana bileşen ────────────────────────────────────────────────────────────
 
-export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin }: Props) {
+export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin, aiComingSoon }: Props) {
   const tr = language === "tr";
   const signedIn = !!accessToken;
   const store = useCvStore(language, signedIn);
@@ -66,6 +69,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
   const [view, setView] = useState<"draft" | "export">("draft");
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [rightTab, setRightTab] = useState<RightTab>("content");
+  const [ad, setAd] = useState("");
   const [busy, setBusy] = useState<null | "pdf" | "blank">(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -353,8 +357,8 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
               </div>
 
-              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-3 gap-1 rounded-2xl bg-white/[0.05] p-1">
-                {([["content", tr ? "İçerik" : "Content", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch]] as const).map(([k, label, Ico]) => (
+              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1">
+                {([["content", tr ? "İçerik" : "Content", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch], ["ai", tr ? "Yapay Zekâ" : "AI", Sparkles]] as const).map(([k, label, Ico]) => (
                   <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-[13px] font-semibold transition ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="h-4 w-4" />{label}</button>
                 ))}
               </div>
@@ -367,7 +371,8 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                 ) : null}
                 {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} /> : null}
                 {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
-                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} /> : null}
+                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
+                {rightTab === "ai" ? <CvAiPanel data={data} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
               </div>
 
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}

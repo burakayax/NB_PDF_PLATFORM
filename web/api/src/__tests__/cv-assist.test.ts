@@ -145,6 +145,11 @@ describe("uydurma koruması (kodla denetim)", () => {
     const r = await suggestSummaries({ title: "Satış Uzmanı", years: 6, skills: [], roles: [], bullets: [] }, "tr");
     expect(r.map((x) => x.text)).toEqual(["Satış alanında 6 yıllık deneyim"]);
   });
+  it("özet: hesaplanan yılın yuvarlanmış hâli (10,3 → 10) uydurma sayılmaz", async () => {
+    callClaude.mockResolvedValue('{"summaries":["10 yılı aşkın deneyim","25 yıllık uzman"]}');
+    const r = await suggestSummaries({ title: "Satış", years: 10.3, skills: [], roles: [], bullets: [] }, "tr");
+    expect(r.map((s) => s.text)).toEqual(["10 yılı aşkın deneyim"]);
+  });
   it("ön yazı: CV'de olmayan kısaltma ve rakamı bildirir", () => {
     const u = unsupportedClaims("SAP ortamına uyum sağlarım; 15 bayi yönettim; CRM bilirim", "Excel, CRM. 12 bayi", "SAP bilgisi aranıyor");
     expect(u).toEqual(expect.arrayContaining(["SAP", "15"]));
