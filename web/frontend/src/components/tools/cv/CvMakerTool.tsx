@@ -1,12 +1,16 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Download, Eye, FileDown, Loader2, Lock, PencilLine, Sparkles, Trash2, Wand2, FileUser } from "lucide-react";
+import { Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, ListChecks } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
 import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
 import { CvForm } from "./CvForm";
+import { CvDesignPanel } from "./CvDesignPanel";
+import { CvAnalysisPanel } from "./CvAnalysisPanel";
 import { CvPassModal, remainingLabel } from "./CvPassModal";
-import { buildModel, EMPTY_CV, isCvEmpty, sampleCv, type CvData } from "./cvModel";
-import { buildCvPdf, paginate } from "./cvPdf";
+import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv } from "./cvModel";
+import { buildCvPdf, measureFit, paginate } from "./cvPdf";
+import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
+import { MAX_CVS, useCvStore } from "./useCvStore";
 import { CV_TEMPLATES, CvPage, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type CvTemplate } from "./cvTemplates";
 
 type Props = {
@@ -17,28 +21,6 @@ type Props = {
   onUpgrade: () => void;
   isAdmin?: boolean;
 };
-
-const DRAFT_KEY = "nb_cv_draft_v1";
-
-function loadDraft(): { data: CvData; templateId: string } | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    const j = JSON.parse(raw) as { data?: CvData; templateId?: string };
-    if (!j.data || typeof j.data !== "object") return null;
-    return { data: { ...EMPTY_CV, ...j.data, settings: { ...EMPTY_CV.settings, ...(j.data.settings ?? {}) } }, templateId: j.templateId ?? "sade" };
-  } catch {
-    return null;
-  }
-}
-
-function saveDraft(data: CvData, templateId: string): void {
-  try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, templateId }));
-  } catch {
-    /* depolama dolu/engelli olabilir; taslak kaydı bir kolaylıktır */
-  }
-}
 
 function download(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
@@ -71,15 +53,18 @@ const TemplateThumb = memo(function TemplateThumb({ tpl, lang }: { tpl: CvTempla
   );
 });
 
+type RightTab = "content" | "design" | "analysis";
+
 // ── Ana bileşen ────────────────────────────────────────────────────────────
 
 export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin }: Props) {
   const tr = language === "tr";
-  const draft = useMemo(() => loadDraft(), []);
-  const [data, setData] = useState<CvData>(() => draft?.data ?? { ...EMPTY_CV, settings: { ...EMPTY_CV.settings, lang: language } });
-  const [templateId, setTemplateId] = useState(draft?.templateId ?? "sade");
+  const signedIn = !!accessToken;
+  const store = useCvStore(language, signedIn);
+  const { data, templateId, setData, setTemplateId } = store;
   const [view, setView] = useState<"draft" | "export">("draft");
   const [tab, setTab] = useState<"edit" | "preview">("edit");
+  const [rightTab, setRightTab] = useState<RightTab>("content");
   const [busy, setBusy] = useState<null | "pdf" | "blank">(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -99,22 +84,29 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
     return () => window.clearTimeout(id);
   }, [planState.cvPassUntil]);
   const locked = !tpl.free && !paid;
-  const signedIn = !!accessToken;
 
   useEffect(() => {
     ensureCvStyles();
   }, []);
 
-  // Taslağı kaydet (gecikmeli)
-  useEffect(() => {
-    if (!signedIn) return;
-    const id = window.setTimeout(() => saveDraft(data, templateId), 500);
-    return () => window.clearTimeout(id);
-  }, [data, templateId, signedIn]);
-
   // Kilitli şablonda kullanıcının verisi değil, örnek içerik gösterilir
   const shownData = useMemo(() => (locked ? sampleCv(data.settings.lang) : data), [locked, data]);
   const model = useMemo(() => buildModel(shownData, locked ? "export" : view), [shownData, locked, view]);
+
+  // ── "Tek sayfaya sığdır": PDF'in (boş alanlar çıkarılmış) ölçüsü ekran dışında hesaplanır ──
+  const fitOn = data.settings.fitOnePage && !locked;
+  const [fitRes, setFitRes] = useState<{ step: number; pages: number } | null>(null);
+  useEffect(() => {
+    if (!fitOn) { setFitRes(null); return; }
+    let live = true;
+    const id = window.setTimeout(() => {
+      void measureFit(data, tpl.id).then((r) => live && setFitRes(r)).catch(() => undefined);
+    }, 350);
+    return () => { live = false; window.clearTimeout(id); };
+  }, [fitOn, data, tpl.id]);
+  const fitStep = fitOn ? fitRes?.step ?? 0 : 0;
+
+  const styleOpts = useMemo(() => (locked ? undefined : styleFromSettings({ ...shownData.settings, fitOnePage: fitOn }, fitStep)), [locked, shownData.settings, fitOn, fitStep]);
 
   // ── Önizleme ölçeği ve sayfalama ──
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -124,25 +116,28 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
   useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const fit = () => setScale(Math.min(1, Math.max(0.3, (el.clientWidth - 2) / PAGE_W)));
-    fit();
-    const ro = new ResizeObserver(fit);
+    const fitW = () => setScale(Math.min(1, Math.max(0.3, (el.clientWidth - 2) / PAGE_W)));
+    fitW();
+    const ro = new ResizeObserver(fitW);
     ro.observe(el);
     return () => ro.disconnect();
   }, [signedIn, tab]);
 
   const repaginate = useCallback(() => {
     const root = pageRef.current?.firstElementChild as HTMLElement | null;
-    if (root) setPages(paginate(root));
+    if (!root) return;
+    setPages(paginate(root));
   }, []);
   useLayoutEffect(() => {
     repaginate();
-  }, [model, tpl, data.settings.size, data.settings.accent, scale, repaginate, tab]);
+  }, [model, tpl, styleOpts, data.settings.size, data.settings.accent, scale, repaginate, tab, fitStep]);
   useEffect(() => {
     void document.fonts.ready.then(repaginate);
     const t = window.setTimeout(repaginate, 400); // fotoğraf/yazı tipi geç yüklenirse
     return () => window.clearTimeout(t);
   }, [model, tpl, repaginate]);
+
+  const fitFailed = fitOn && !!fitRes && fitRes.pages > 1 && fitRes.step >= MAX_FIT_STEP;
 
   async function makePdf(mode: "export" | "blank") {
     setError(null);
@@ -167,7 +162,26 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
   const emptyCv = isCvEmpty(data);
   const fillSample = () => setData({ ...sampleCv(data.settings.lang), photo: data.photo, showPhoto: data.showPhoto, settings: data.settings });
   const clearAll = () => {
-    if (isCvEmpty(data) || window.confirm(tr ? "Girdiğiniz tüm bilgiler silinsin mi?" : "Delete everything you entered?")) setData({ ...EMPTY_CV, settings: data.settings });
+    if (isCvEmpty(data) || window.confirm(tr ? "Girdiğiniz tüm bilgiler silinsin mi?" : "Delete everything you entered?")) setData(normalizeCv({ ...EMPTY_CV, settings: data.settings }));
+  };
+
+  // ── CV'lerim (çoklu sürüm) + yedek ──
+  const importRef = useRef<HTMLInputElement>(null);
+  const [renaming, setRenaming] = useState(false);
+  const exportBackup = () => {
+    download(new Blob([store.exportJson()], { type: "application/json" }), `cv-yedek-${new Date().toISOString().slice(0, 10)}.json`);
+    setDone(tr ? "Tüm CV'lerinizin yedeği indirildi (fotoğraflar dahil)." : "A backup of all your CVs was downloaded (photos included).");
+  };
+  const importBackup = async (f: File | undefined) => {
+    if (!f) return;
+    setError(null);
+    try {
+      const n = store.importJson(await f.text());
+      setDone(tr ? `${n} CV içe aktarıldı.` : `${n} CV(s) imported.`);
+      if (!n) setError(tr ? `CV sayısı sınırına (${MAX_CVS}) ulaşıldı; önce birini silin.` : `CV limit (${MAX_CVS}) reached; delete one first.`);
+    } catch {
+      setError(tr ? "Bu dosya geçerli bir CV yedeği değil." : "This file isn't a valid CV backup.");
+    }
   };
 
   const pagesH = pages * PAGE_H;
@@ -233,7 +247,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                     <button type="button" role="tab" aria-selected={view === "draft"} onClick={() => setView("draft")} className={`rounded-lg px-3.5 py-1.5 text-[12.5px] font-semibold ${view === "draft" ? "bg-sky-500 text-white" : "text-slate-300"}`}>{tr ? "Taslak görünüm" : "Draft view"}</button>
                     <button type="button" role="tab" aria-selected={view === "export"} onClick={() => setView("export")} className={`rounded-lg px-3.5 py-1.5 text-[12.5px] font-semibold ${view === "export" ? "bg-sky-500 text-white" : "text-slate-300"}`}>{tr ? "PDF görünümü" : "PDF view"}</button>
                   </div>
-                  <span className="text-[12px] text-slate-400">{pages} {tr ? "sayfa" : pages > 1 ? "pages" : "page"}</span>
+                  <span className="text-[12px] text-slate-400">{fitOn && fitRes && view === "draft" ? `${fitRes.pages} ${tr ? "sayfa (PDF)" : "page(s) (PDF)"}` : `${pages} ${tr ? "sayfa" : pages > 1 ? "pages" : "page"}`}</span>
                 </div>
                 {view === "draft" && !locked ? (
                   <p className="mb-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-sky-100">
@@ -242,11 +256,12 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                     {tr ? " Sonucu görmek için “PDF görünümü”ne geçin." : " Switch to “PDF view” to see the result."}
                   </p>
                 ) : null}
+                {fitFailed ? <p className="mb-3 rounded-xl border border-amber-400/25 bg-amber-500/[0.07] px-3.5 py-2.5 text-[12.5px] text-amber-100">{tr ? "İçerik, okunaklılığı bozmadan tek sayfaya sığmadı. Birkaç maddeyi kısaltın ya da bölüm gizleyin." : "The content doesn't fit on one page without hurting legibility. Shorten a few bullets or hide a section."}</p> : null}
 
                 <div ref={wrapRef} className="w-full">
                   <div className="relative mx-auto select-none overflow-hidden rounded-lg bg-white shadow-[0_24px_70px_-24px_rgba(0,0,0,0.85)] ring-1 ring-white/15" style={{ width: PAGE_W * scale, height: pagesH * scale }} onContextMenu={locked ? (e) => e.preventDefault() : undefined}>
                     <div ref={pageRef} style={{ width: PAGE_W, transform: `scale(${scale})`, transformOrigin: "top left", opacity: locked ? 0.55 : 1 }}>
-                      <CvPage m={model} tpl={tpl} size={shownData.settings.size} accent={locked ? null : shownData.settings.accent} />
+                      <CvPage m={model} tpl={tpl} size={shownData.settings.size} accent={locked ? null : shownData.settings.accent} style={styleOpts} />
                     </div>
                     {/* Sayfa sınırları */}
                     {Array.from({ length: pages - 1 }, (_, i) => (
@@ -274,8 +289,32 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
               </div>
             </div>
 
-            {/* SAĞ: form */}
+            {/* SAĞ: CV'lerim + eylemler + sekmeler */}
             <div className={`${tab === "edit" ? "block" : "hidden"} min-w-0 space-y-4 lg:block`}>
+              {/* CV'lerim */}
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="sr-only" htmlFor="cv-switch">{tr ? "CV seç" : "Choose CV"}</label>
+                  {renaming ? (
+                    <input autoFocus defaultValue={store.current.name} onBlur={(e) => { store.rename(e.target.value.trim() || store.current.name); setRenaming(false); }} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} className="min-w-0 flex-1 rounded-xl border border-sky-400/50 bg-slate-900/70 px-3 py-2 text-[13px] font-semibold text-white focus:outline-none" />
+                  ) : (
+                    <select id="cv-switch" value={store.current.id} onChange={(e) => store.switchTo(e.target.value)} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-[13px] font-semibold text-white">
+                      {store.cvs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  )}
+                  <button type="button" onClick={() => setRenaming(true)} aria-label={tr ? "Adını değiştir" : "Rename"} title={tr ? "Adını değiştir" : "Rename"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10"><Pencil className="h-4 w-4" /></button>
+                  <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => store.add()} aria-label={tr ? "Yeni CV" : "New CV"} title={tr ? "Yeni boş CV" : "New blank CV"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10 disabled:opacity-40"><FilePlus2 className="h-4 w-4" /></button>
+                  <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => store.duplicate()} aria-label={tr ? "Kopyala" : "Duplicate"} title={tr ? "Bu CV'yi kopyala (ilana göre uyarlamak için)" : "Duplicate (to tailor for a job)"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10 disabled:opacity-40"><Copy className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => { if (window.confirm(tr ? `“${store.current.name}” silinsin mi?` : `Delete “${store.current.name}”?`)) store.remove(); }} aria-label={tr ? "Sil" : "Delete"} title={tr ? "Bu CV'yi sil" : "Delete this CV"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-red-300 hover:bg-red-500/10"><Trash2 className="h-4 w-4" /></button>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-slate-400">
+                  <span>{tr ? `${store.cvs.length} CV · her ilan için ayrı sürüm tutabilirsiniz` : `${store.cvs.length} CV(s) · keep a version per job`}</span>
+                  <button type="button" onClick={exportBackup} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileDown className="h-3.5 w-3.5" />{tr ? "Yedek indir" : "Back up"}</button>
+                  <button type="button" onClick={() => importRef.current?.click()} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileUp className="h-3.5 w-3.5" />{tr ? "Yedekten yükle" : "Restore"}</button>
+                  <input ref={importRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { void importBackup(e.target.files?.[0]); e.target.value = ""; }} />
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[14px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40 sm:col-span-2">
@@ -294,17 +333,25 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
               </div>
 
+              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-3 gap-1 rounded-2xl bg-white/[0.05] p-1">
+                {([["content", tr ? "İçerik" : "Content", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch]] as const).map(([k, label, Ico]) => (
+                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-[13px] font-semibold transition ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="h-4 w-4" />{label}</button>
+                ))}
+              </div>
+
               <div className="relative">
                 {locked ? (
                   <div className="absolute inset-0 z-10 flex items-start justify-center rounded-2xl bg-slate-950/55 p-6 backdrop-blur-[1px]">
                     <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Pro şablon — alanlar kilitli" : "Pro template — fields locked"}</p>
                   </div>
                 ) : null}
-                <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} />
+                {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} /> : null}
+                {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
+                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} /> : null}
               </div>
 
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}
-              <p className="flex items-start gap-2 text-[11.5px] leading-relaxed text-slate-500"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "İpucu: Başvuru sistemleri (ATS) düz metni sever. Bu araçla ürettiğiniz PDF'te yazılar seçilebilir metin olarak gömülüdür." : "Tip: hiring systems (ATS) love plain text. In the PDF made here, all text is embedded as selectable text."}</p>
+              <p className="flex items-start gap-2 text-[11.5px] leading-relaxed text-slate-500"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "İpucu: Başvuru sistemleri (ATS) düz metni sever. Bu araçla ürettiğiniz PDF'te yazılar seçilebilir metin olarak gömülüdür; “Analiz” sekmesindeki ATS röntgeniyle makinenin gördüğünü kendiniz kontrol edebilirsiniz." : "Tip: hiring systems (ATS) love plain text. In the PDF made here all text is selectable; use the ATS X-ray under “Analysis” to check what a machine sees."}</p>
             </div>
           </div>
         </>

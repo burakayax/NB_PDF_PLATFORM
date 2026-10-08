@@ -12,6 +12,17 @@
 
 export type CvLang = "tr" | "en";
 export type CvSize = "s" | "m" | "l";
+export type CvFont = "carlito" | "arial" | "caladea" | "gelasio" | "times";
+export type CvDensity = "compact" | "normal" | "airy";
+export type CvDateFormat = "mon" | "num" | "year";
+export type CvHeadingStyle = "rule" | "bar" | "caps" | "dot" | "boxed";
+export type CvPhotoShape = "circle" | "rounded" | "rect";
+
+/** Bölüm anahtarları. Özel bölümler `custom:<id>` biçimindedir. */
+export type SectionKey =
+  | "summary" | "experience" | "education" | "skills" | "languages" | "certs" | "projects" | "interests" | "references"
+  | `custom:${string}`;
+export const BASE_SECTIONS: SectionKey[] = ["summary", "experience", "education", "skills", "languages", "certs", "projects", "interests", "references"];
 
 export type CvPhoto = { src: string; zoom: number; x: number; y: number };
 
@@ -22,6 +33,32 @@ export type CvLanguageItem = { id: string; name: string; level: string };
 export type CvCert = { id: string; name: string; issuer: string; date: string };
 export type CvProject = { id: string; name: string; link: string; desc: string };
 export type CvReference = { id: string; name: string; role: string; contact: string };
+export type CvCustomItem = { id: string; title: string; subtitle: string; date: string; desc: string };
+export type CvCustomSection = { id: string; title: string; items: CvCustomItem[] };
+
+export type CvSettings = {
+  lang: CvLang;
+  accent: string | null;
+  size: CvSize;
+  /** null = şablonun kendi yazı tipi */
+  font: CvFont | null;
+  density: CvDensity;
+  /** null = şablonun kendi başlık biçimi */
+  headingStyle: CvHeadingStyle | null;
+  /** null = şablonun kendi fotoğraf biçimi */
+  photoShape: CvPhotoShape | null;
+  dateFormat: CvDateFormat;
+  /** null = varsayılan sıra */
+  order: SectionKey[] | null;
+  hidden: SectionKey[];
+  /** Taşan içeriği tek sayfaya sığdırmak için yazı/boşluk kademeli küçülür. */
+  fitOnePage: boolean;
+};
+
+export const DEFAULT_SETTINGS: CvSettings = {
+  lang: "tr", accent: null, size: "m", font: null, density: "normal", headingStyle: null, photoShape: null,
+  dateFormat: "mon", order: null, hidden: [], fitOnePage: false,
+};
 
 export type CvData = {
   name: string;
@@ -44,7 +81,8 @@ export type CvData = {
   projects: CvProject[];
   references: CvReference[];
   interests: string;
-  settings: { lang: CvLang; accent: string | null; size: CvSize };
+  customSections: CvCustomSection[];
+  settings: CvSettings;
 };
 
 let seq = 0;
@@ -54,8 +92,36 @@ export const EMPTY_CV: CvData = {
   name: "", title: "", email: "", phone: "", city: "", website: "", linkedin: "", birth: "", license: "", summary: "",
   photo: null, showPhoto: true,
   experience: [], education: [], skills: [], languages: [], certs: [], projects: [], references: [], interests: "",
-  settings: { lang: "tr", accent: null, size: "m" },
+  customSections: [],
+  settings: { ...DEFAULT_SETTINGS },
 };
+
+/** Eski/eksik taslakları güncel şemaya tamamlar (yeni alanlar eklendikçe kayıtlı taslaklar bozulmasın). */
+export function normalizeCv(raw: Partial<CvData> | null | undefined): CvData {
+  const r = (raw ?? {}) as Partial<CvData>;
+  const base = EMPTY_CV;
+  return {
+    ...base,
+    ...r,
+    experience: r.experience ?? [],
+    education: r.education ?? [],
+    skills: r.skills ?? [],
+    languages: r.languages ?? [],
+    certs: r.certs ?? [],
+    projects: r.projects ?? [],
+    references: r.references ?? [],
+    customSections: r.customSections ?? [],
+    settings: { ...DEFAULT_SETTINGS, ...(r.settings ?? {}), hidden: r.settings?.hidden ?? [] },
+  };
+}
+
+/** Görünür bölümlerin sıralı listesi (varsayılan sıra + kullanıcının sırası + özel bölümler). */
+export function resolveOrder(d: Pick<CvData, "customSections" | "settings">): SectionKey[] {
+  const all: SectionKey[] = [...BASE_SECTIONS, ...d.customSections.map((c) => `custom:${c.id}` as SectionKey)];
+  const wanted = d.settings.order ?? [];
+  const ordered = [...wanted.filter((k) => all.includes(k)), ...all.filter((k) => !wanted.includes(k))];
+  return ordered;
+}
 
 /** Şablon vitrininde ve "örnekle doldur" düğmesinde kullanılan örnek içerik. */
 export function sampleCv(lang: CvLang): CvData {
@@ -112,7 +178,8 @@ export function sampleCv(lang: CvLang): CvData {
     projects: [],
     references: [],
     interests: tr ? "Fotoğrafçılık, Yürüyüş, Satranç" : "Photography, Hiking, Chess",
-    settings: { lang, accent: null, size: "m" },
+    customSections: [],
+    settings: { ...DEFAULT_SETTINGS, lang },
   };
 }
 
@@ -151,6 +218,7 @@ const PH: Record<CvLang, Record<string, string>> = {
     school: "Okul / Üniversite", degree: "Bölüm, Derece", skill: "Beceri", language: "Dil", langLevel: "Seviye",
     cert: "Sertifika adı", issuer: "Veren kurum", project: "Proje adı", projectDesc: "Projeyi kısaca anlatın", refName: "Referans kişi", refRole: "Unvan, Kurum", refContact: "Telefon / e-posta",
     interest: "İlgi alanlarınız",
+    customTitle: "Bölüm başlığı", customItem: "Başlık", customDesc: "Kısa açıklama",
   },
   en: {
     name: "Your Full Name", title: "Job title / Target role", email: "email@example.com", phone: "+1 555 000 0000", city: "City, Country",
@@ -160,6 +228,7 @@ const PH: Record<CvLang, Record<string, string>> = {
     school: "School / University", degree: "Major, Degree", skill: "Skill", language: "Language", langLevel: "Level",
     cert: "Certificate name", issuer: "Issuer", project: "Project name", projectDesc: "Describe the project briefly", refName: "Reference name", refRole: "Title, Company", refContact: "Phone / email",
     interest: "Your interests",
+    customTitle: "Section title", customItem: "Title", customDesc: "Short description",
   },
 };
 
@@ -173,15 +242,19 @@ const MONTHS: Record<CvLang, string[]> = {
 };
 
 /** "2020-03" → "Mar 2020"; "2020" → "2020"; serbest metin olduğu gibi. */
-export function fmtMonth(v: string, lang: CvLang): string {
+export function fmtMonth(v: string, lang: CvLang, fmt: CvDateFormat = "mon"): string {
   const m = /^(\d{4})-(\d{2})$/.exec(v.trim());
-  if (m) return `${MONTHS[lang][Number(m[2]) - 1] ?? ""} ${m[1]}`.trim();
+  if (m) {
+    if (fmt === "year") return m[1];
+    if (fmt === "num") return `${m[2]}.${m[1]}`;
+    return `${MONTHS[lang][Number(m[2]) - 1] ?? ""} ${m[1]}`.trim();
+  }
   return v.trim();
 }
 
-function dateRange(start: string, end: string, current: boolean, L: Labels, lang: CvLang): string {
-  const s = fmtMonth(start, lang);
-  const e = current ? L.present : fmtMonth(end, lang);
+function dateRange(start: string, end: string, current: boolean, L: Labels, lang: CvLang, fmt: CvDateFormat = "mon"): string {
+  const s = fmtMonth(start, lang, fmt);
+  const e = current ? L.present : fmtMonth(end, lang, fmt);
   if (s && e) return `${s} – ${e}`;
   return s || e || "";
 }
@@ -210,6 +283,10 @@ export type CvModel = {
   projects: { name: Fld; link: Fld; desc: Fld }[];
   references: { name: Fld; role: Fld; contact: Fld }[];
   interests: { t: string; g: boolean }[];
+  /** Özel bölümler (anahtar: `custom:<id>`). */
+  custom: { key: SectionKey; title: Fld; items: { title: Fld; subtitle: Fld; date: Fld; desc: Fld }[] }[];
+  /** Görünür bölümlerin sırası (gizlenenler çıkarılmış). */
+  order: SectionKey[];
   has: { contact: boolean; skills: boolean; languages: boolean; interests: boolean };
 };
 
@@ -238,7 +315,7 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
 
   const experience: MExperience[] = exp.map((e) => ({
     company: f(e.company, "company"), role: f(e.role, "role"), location: f(e.location, "location"),
-    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
+    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang, d.settings.dateFormat); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
     bullets: bullets(e.desc), ghost: false,
   }));
   if (!experience.length && showGhost) {
@@ -250,7 +327,7 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
 
   const education: MEducation[] = edu.map((e) => ({
     school: f(e.school, "school"), degree: f(e.degree, "degree"), location: f(e.location, "location"),
-    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
+    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang, d.settings.dateFormat); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
     bullets: e.desc.trim() ? bullets(e.desc) : [], ghost: false,
   }));
   if (!education.length && showGhost) {
@@ -269,7 +346,7 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
   const certs = certRaw.map((c) => ({
     name: { t: c.name.trim(), g: false } as Fld,
     issuer: c.issuer.trim() ? ({ t: c.issuer.trim(), g: false } as Fld) : null,
-    date: c.date.trim() ? ({ t: fmtMonth(c.date, lang), g: false } as Fld) : null,
+    date: c.date.trim() ? ({ t: fmtMonth(c.date, lang, d.settings.dateFormat), g: false } as Fld) : null,
   }));
   if (!certs.length && showGhost) certs.push({ name: { t: ph("cert"), g: true }, issuer: { t: ph("issuer"), g: true }, date: null });
 
@@ -292,6 +369,20 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
   const intRaw = allGhost ? [] : d.interests.split(/[,\n;]/).map((s) => s.trim()).filter(Boolean);
   const interests = intRaw.length ? intRaw.map((t) => ({ t, g: false })) : showGhost ? [{ t: ph("interest"), g: true }] : [];
 
+  // Özel bölümler: başlığı olan her bölüm gösterilir; maddesi yoksa taslakta/boş şablonda tek yer tutucu.
+  const custom: CvModel["custom"] = (allGhost ? [] : d.customSections).map((c) => {
+    const items = c.items
+      .filter((i) => i.title.trim() || i.desc.trim() || i.subtitle.trim())
+      .map((i) => ({
+        title: i.title.trim() ? ({ t: i.title.trim(), g: false } as Fld) : null,
+        subtitle: i.subtitle.trim() ? ({ t: i.subtitle.trim(), g: false } as Fld) : null,
+        date: i.date.trim() ? ({ t: fmtMonth(i.date, lang, d.settings.dateFormat), g: false } as Fld) : null,
+        desc: i.desc.trim() ? ({ t: i.desc.trim(), g: false } as Fld) : null,
+      }));
+    if (!items.length && showGhost) items.push({ title: { t: ph("customItem"), g: true }, subtitle: null, date: null, desc: { t: ph("customDesc"), g: true } });
+    return { key: `custom:${c.id}` as SectionKey, title: c.title.trim() ? ({ t: c.title.trim(), g: false } as Fld) : showGhost ? ({ t: ph("customTitle"), g: true } as Fld) : null, items };
+  });
+
   const photo: CvModel["photo"] = !d.showPhoto ? null : d.photo && !allGhost ? { data: d.photo, ghost: false } : showGhost ? { data: null, ghost: true } : null;
 
   const m: CvModel = {
@@ -302,6 +393,8 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
     birth: f(d.birth, "birth"), license: f(d.license, "license"),
     summary: f(d.summary, "summary"),
     photo, experience, education, skills, languages, certs, projects, references, interests,
+    custom,
+    order: resolveOrder(d).filter((k) => !d.settings.hidden.includes(k)),
     has: { contact: false, skills: false, languages: false, interests: false },
   };
   m.has = {
@@ -313,5 +406,5 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
 
 /** Kullanıcı gerçekten bir şey girdi mi? (taslak koruma / "örnekle doldur" uyarısı için) */
 export function isCvEmpty(d: CvData): boolean {
-  return !d.name && !d.title && !d.summary && !d.email && !d.phone && !d.experience.length && !d.education.length && !d.skills.length && !d.photo;
+  return d.customSections.length === 0 && !d.name && !d.title && !d.summary && !d.email && !d.phone && !d.experience.length && !d.education.length && !d.skills.length && !d.photo;
 }
