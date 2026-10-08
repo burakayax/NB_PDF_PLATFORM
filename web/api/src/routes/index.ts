@@ -27,6 +27,7 @@ import { toolRatingAdminRouter } from "../modules/tool-rating/tool-rating.admin.
 import { emailComplianceAdminRouter } from "../modules/email/email-compliance.admin.routes.js";
 import { toolRatingRouter } from "../modules/tool-rating/tool-rating.routes.js";
 import { socialRouter } from "../modules/social/social.routes.js";
+import { guestCompressAdminRouter } from "../modules/guest-compress/guest-compress.admin.routes.js";
 import { prisma } from "../lib/prisma.js";
 import {
   abuseBlockMiddleware,
@@ -80,6 +81,7 @@ apiRouter.use("/access", accessRouter);
 apiRouter.use("/admin/tool-ratings", toolRatingAdminRouter);
 apiRouter.use("/admin/email-compliance", emailComplianceAdminRouter);
 apiRouter.use("/admin/social", socialRouter);
+apiRouter.use("/admin/guest-compress", guestCompressAdminRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/auth", authRouter);

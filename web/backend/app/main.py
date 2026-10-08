@@ -46,6 +46,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.auth_routes import router as auth_router
 from app.api.routes import router
+from app.api.guest_compress_routes import router as guest_compress_router
 from app.api.tool_routes_extra import router as tool_routes_extra
 from app.api.internal_billing import router as internal_billing_router
 from app.core.result_store import start_ttl_sweeper
@@ -212,6 +213,7 @@ async def log_incoming_pdf_requests(request: Request, call_next):
 
 app.include_router(router)
 app.include_router(tool_routes_extra)
+app.include_router(guest_compress_router)
 app.include_router(auth_router, prefix="/api")
 app.include_router(internal_billing_router, prefix="/api/internal")
 # app.include_router(example_router, prefix="/api")

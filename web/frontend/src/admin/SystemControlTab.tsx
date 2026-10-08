@@ -12,6 +12,7 @@ import {
   type AdminRevisionRow,
 } from "../api/admin";
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
+import { GuestCompressSettings } from "./GuestCompressSettings";
 import { AdminField, AdminImpactCard, AdminMutedBox, AdminSection, ConfirmModal, adminInputClass } from "./mosaic/adminPrimitives";
 
 const REVISION_SCOPE_OPTIONS = [
@@ -389,6 +390,9 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
           </AdminField>
         </div>
       </AdminSection>
+
+      {/* Misafir PDF Sıkıştır hakkı + acil kapatma (ayar veritabanında; PDF servisi ~30 sn içinde alır). */}
+      <GuestCompressSettings accessToken={accessToken} />
 
       <AdminSection
         title="Sosyal medya hesapları"

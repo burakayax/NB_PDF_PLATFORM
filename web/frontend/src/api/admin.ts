@@ -1259,3 +1259,44 @@ export async function downloadAdminFinancialExport(accessToken: string, year: nu
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+// ─── Misafir PDF Sıkıştır hakkı (yönetim paneli) ────────────────────────────────────────────────
+// Ayar veritabanında tutulur; PDF servisi ~30 sn içinde alır (Render'da ortam değişkeni gerekmez).
+
+export type GuestCompressSettings = {
+  /** Ana anahtar: kapalıysa misafir sıkıştıramaz (acil kapatma). */
+  enabled: boolean;
+  /** Kişi başı günlük hak. */
+  dailyLimit: number;
+  /** Tüm misafirlerin toplam günlük üst sınırı. */
+  globalDailyLimit: number;
+  /** Misafir için en büyük PDF (MB). */
+  maxMB: number;
+};
+
+export type GuestCompressAdminState = {
+  config: GuestCompressSettings;
+  defaults: GuestCompressSettings;
+  bounds: Record<"dailyLimit" | "globalDailyLimit" | "maxMB", { min: number; max: number }>;
+  /** Kapı fiilen kapalı mı (ana anahtar kapalı ya da bir sınır 0). */
+  closed: boolean;
+  today: { operations: number; visitors: number };
+  /** Ücretsiz üyenin günlük hakkı — misafir hakkı bundan küçük kalmalı. */
+  memberDailyLimit: number | null;
+  bridge: { secretConfigured: boolean; lastContactAt: string | null };
+};
+
+export async function fetchGuestCompressSettings(accessToken: string): Promise<GuestCompressAdminState> {
+  const r = await adminFetch(accessToken, "/guest-compress");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<GuestCompressAdminState>;
+}
+
+export async function saveGuestCompressSettings(
+  accessToken: string,
+  patch: Partial<GuestCompressSettings>,
+): Promise<GuestCompressAdminState> {
+  const r = await adminFetch(accessToken, "/guest-compress", { method: "PUT", body: JSON.stringify(patch) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<GuestCompressAdminState>;
+}

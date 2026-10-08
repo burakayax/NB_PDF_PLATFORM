@@ -204,3 +204,16 @@ teşvik için **indirmede düşen günlük bir limit** eklendi (önizleme/hazır
   hem Node hem Python bu env'leri okur; ikisinde de aynı olsun. Kaldırmak için çok
   yükseğe çek (ör. 99999). Sayaç Europe/Istanbul gün sınırında sıfırlanır.
 - SQLite fallback kalıcı olsun istersen `EDITOR_LIMIT_DB`'yi kalıcı disk yoluna al.
+
+---
+
+## 🎁 PDF Sıkıştır — misafir hakkı (ücretsiz-mod kısıtlaması)
+
+Üye olmayan ziyaretçiye **günde 1**, ücretsiz üyeye **günde 3** PDF sıkıştırma hakkı veriyoruz; paket alanlar planlarının
+hakkını kullanır. Sunucu maliyeti olan bir araç olduğu için kapı dar tutuldu.
+
+- **Kısıtlamayı kaldırmak / gevşetmek:** Yönetim paneli → **Sistem kontrol → Misafir PDF Sıkıştır hakkı** (Render'a girmeden). **Acil kapat**
+  düğmesi misafir kullanımını anında durdurur; `0` = kapalı, sınırsız yapan bir ayar yoktur. Sayaç veritabanında tutulur
+  (`INTERNAL_SERVICE_SECRET` iki serviste aynı olmalı; panel durumu gösterir).
+- **Tam geri alma ve ayrıntılar:** `docs/rehber/11-SIKISTIRMA-MISAFIR-HAKKI.md`.
+
