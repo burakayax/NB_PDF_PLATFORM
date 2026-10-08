@@ -15,6 +15,14 @@ import {
   MAX_TRANSLATE_CHARS,
   type ChatTurn,
 } from "./ai.service.js";
+import {
+  CV_LIMITS,
+  improveBullets,
+  parseCvText,
+  suggestSummaries,
+  tailorToJob,
+  writeCoverLetter,
+} from "./cv-assist.service.js";
 import { isContractReviewOpen } from "./contract-review.controller.js";
 import { closedAiTools, closedAiToolNotes } from "./ai-tool-switch.js";
 import { getAiQuota, reserveAiQuota, refundAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
@@ -298,4 +306,81 @@ export async function chatController(req: Request, res: Response): Promise<void>
   const u = req.authUser!;
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ answer: run.value, quota });
+}
+
+// ── CV Yapay Zekâ Asistanı ─────────────────────────────────────────────────
+
+const asStr = (v: unknown, max: number): string => (typeof v === "string" ? v.slice(0, max) : "");
+const asStrList = (v: unknown, n: number, max: number): string[] => (Array.isArray(v) ? v.map((x) => asStr(x, max).trim()).filter(Boolean).slice(0, n) : []);
+
+/**
+ * POST /api/ai/cv/:mode — summary | bullets | tailor | coverLetter | parse
+ * Her çağrı 1 hak sayar. İstemci kişisel iletişim bilgilerini (e-posta/telefon/adres) GÖNDERMEZ;
+ * yalnızca `parse` kullanıcının yüklediği belgenin metnini alır.
+ */
+export async function cvAssistController(req: Request, res: Response): Promise<void> {
+  const mode = String(req.params.mode ?? "");
+  const lang = getLang(req);
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  let work: () => Promise<unknown>;
+
+  switch (mode) {
+    case "summary": {
+      const title = asStr(b.title, 160);
+      const skills = asStrList(b.skills, 30, 80);
+      const roles = asStrList(b.roles, 8, 160);
+      const bullets = asStrList(b.bullets, 14, 400);
+      if (!title && !roles.length && !bullets.length) throw new HttpError(400, "Özet için unvan ya da deneyim bilgisi gerekli.");
+      const years = typeof b.years === "number" && Number.isFinite(b.years) ? Math.max(0, Math.min(60, b.years)) : null;
+      const ad = asStr(b.ad, CV_LIMITS.adText) || undefined;
+      work = () => suggestSummaries({ title, years, skills, roles, bullets, ad }, lang);
+      break;
+    }
+    case "bullets": {
+      const bullets = asStrList(b.bullets, 10, 500);
+      if (!bullets.length) throw new HttpError(400, "Güçlendirilecek madde yok.");
+      const ad = asStr(b.ad, CV_LIMITS.adText) || undefined;
+      work = () => improveBullets(asStr(b.role, 160), asStr(b.company, 160), bullets, ad, lang);
+      break;
+    }
+    case "tailor": {
+      const cvText = asStr(b.cvText, CV_LIMITS.cvText);
+      const ad = asStr(b.ad, CV_LIMITS.adText);
+      if (cvText.trim().length < 80) throw new HttpError(400, "CV içeriği çok kısa; önce deneyim ve becerilerinizi girin.");
+      if (ad.trim().length < 80) throw new HttpError(400, "İlan metni çok kısa; ilanın tamamını yapıştırın.");
+      const years = typeof b.years === "number" && Number.isFinite(b.years) ? Math.max(0, Math.min(60, b.years)) : null;
+      work = () => tailorToJob({ cvText, ad, years }, lang);
+      break;
+    }
+    case "coverLetter": {
+      const cvText = asStr(b.cvText, CV_LIMITS.cvText);
+      if (cvText.trim().length < 80) throw new HttpError(400, "CV içeriği çok kısa; önce deneyim ve becerilerinizi girin.");
+      const tone = b.tone === "warm" || b.tone === "direct" ? b.tone : "formal";
+      work = () => writeCoverLetter({ cvText, ad: asStr(b.ad, CV_LIMITS.adText) || undefined, tone, company: asStr(b.company, 120), position: asStr(b.position, 120), name: asStr(b.name, 120) }, lang);
+      break;
+    }
+    case "parse": {
+      const text = asStr(b.text, CV_LIMITS.parseText);
+      if (text.trim().length < 80) throw new HttpError(400, "Belgeden yeterli metin okunamadı. Taranmış bir belgeyse önce OCR ile metne çevirin.");
+      work = () => parseCvText(text, lang);
+      break;
+    }
+    default:
+      throw new HttpError(404, "Bilinmeyen CV asistanı işlemi.");
+  }
+
+  const run = await runWithQuota(req, res, `cv-${mode}`, async () => {
+    try {
+      return await work();
+    } catch (e) {
+      if (e instanceof Error && (e.message === "AI_CV_PARSE" || e.message === "AI_CV_EMPTY")) {
+        throw new HttpError(422, "Yapay zekâ yanıtı işlenemedi. Lütfen tekrar deneyin.");
+      }
+      throw e;
+    }
+  });
+  if (!run.ok) return;
+  const u = req.authUser!;
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ result: run.value, quota });
 }

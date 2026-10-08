@@ -64,10 +64,18 @@ export async function isAiEnabledByFlag(): Promise<boolean> {
 }
 
 /** Claude'a tek atımlık istek. Sosyal medya otomasyonu da bu yolu kullanır. */
+export type CallOpts = {
+  /** Varsayılan: env.AI_MODEL */
+  model?: string;
+  /** Yalnızca düşünme destekleyen modellerde (Sonnet 5.5/Opus 5.5…) gönderilir. */
+  effort?: "low" | "medium" | "high";
+};
+
 export async function callClaude(
   system: string,
   messages: ChatTurn[],
   maxTokens: number,
+  opts?: CallOpts,
 ): Promise<string> {
   if (!env.ANTHROPIC_API_KEY) {
     throw new Error("AI not configured");
@@ -84,10 +92,11 @@ export async function callClaude(
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: env.AI_MODEL,
+        model: opts?.model ?? env.AI_MODEL,
         max_tokens: maxTokens,
         system,
         messages,
+        ...(opts?.effort ? { output_config: { effort: opts.effort } } : {}),
       }),
       signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
     });
@@ -101,8 +110,13 @@ export async function callClaude(
     const detail = await res.text().catch(() => "");
     throw new Error(`Claude API ${res.status}: ${detail.slice(0, 300)}`);
   }
-  const data = (await res.json()) as { content?: Array<{ text?: string }> };
-  return data.content?.[0]?.text?.trim() ?? "";
+  // Düşünen modellerde ilk blok `thinking` olabilir: yalnızca METİN bloklarını birleştir.
+  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
+  return (data.content ?? [])
+    .filter((b) => (b.type ?? "text") === "text" && typeof b.text === "string")
+    .map((b) => b.text as string)
+    .join("")
+    .trim();
 }
 
 /** PDF metnini profesyonel, zengin ve yapılandırılmış biçimde özetler. */
