@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CV_PHOTO_POSTS } from "./blogContentCv.mjs";
+import { CV_TOOL_POSTS } from "./blogContentCv2.mjs";
 
 export const BLOG_BASE = "/blog";
 
@@ -14,6 +15,7 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 
 export const BLOG_POSTS = [
   ...CV_PHOTO_POSTS,
+  ...CV_TOOL_POSTS,
   post(
     {
       slug: "sozlesme-imzalamadan-once-kontrol-listesi",

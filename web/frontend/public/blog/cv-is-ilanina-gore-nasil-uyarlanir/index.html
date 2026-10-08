@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi</title>
+    <meta name="description" content="Aynı CV&#39;yi her ilana göndermek yerine ilana göre uyarlamanın yolu: ilandaki kelimeleri bulma, CV&#39;ye dürüstçe yedirme, eksikleri görme ve kopya CV tutma." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/tailor-cv-to-job-ad" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi" />
+    <meta property="og:description" content="Aynı CV&#39;yi her ilana göndermek yerine ilana göre uyarlamanın yolu: ilandaki kelimeleri bulma, CV&#39;ye dürüstçe yedirme, eksikleri görme ve kopya CV tutma." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/cv-is-ilanina-gore-nasil-uyarlanir.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi" />
+    <meta name="twitter:description" content="Aynı CV&#39;yi her ilana göndermek yerine ilana göre uyarlamanın yolu: ilandaki kelimeleri bulma, CV&#39;ye dürüstçe yedirme, eksikleri görme ve kopya CV tutma." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/cv-is-ilanina-gore-nasil-uyarlanir.png" />
+    <meta name="twitter:image:alt" content="CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi","item":"https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi","description":"Aynı CV'yi her ilana göndermek yerine ilana göre uyarlamanın yolu: ilandaki kelimeleri bulma, CV'ye dürüstçe yedirme, eksikleri görme ve kopya CV tutma.","datePublished":"2026-10-08","dateModified":"2026-10-08","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/cv-is-ilanina-gore-nasil-uyarlanir.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi","description":"Aynı CV'yi her ilana göndermek yerine ilana göre uyarlamanın yolu: ilandaki kelimeleri bulma, CV'ye dürüstçe yedirme, eksikleri görme ve kopya CV tutma.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"Tutarlılık","text":"Analiz sekmesi tarih çakışması gibi kesin hataları gösterir."},{"@type":"HowToStep","position":2,"name":"ATS röntgeni","text":"PDF'inizin başvuru sistemlerince nasıl okunduğunu görün: adınız ilk satırda mı, e-posta ve telefon tanınıyor mu, başlıklar anlaşılıyor mu?"},{"@type":"HowToStep","position":3,"name":"Sayfa sayısı","text":"İki sayfaya taşan bir CV'yi \"Tek sayfaya sığdır\" ile tek sayfaya indirebilirsiniz."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"CV'yi her başvuru için değiştirmek şart mı?","acceptedAnswer":{"@type":"Answer","text":"Şart değil ama önerilir. Özellikle özet bölümü ve en üstteki deneyim maddelerini ilana göre ayarlamak çoğu zaman yeterli olur."}},{"@type":"Question","name":"İlandaki her kelimeyi CV'ye eklemeli miyim?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Yalnızca gerçekten sahip olduğunuz beceri ve deneyimleri ilanın kelimeleriyle yazın; sahip olmadıklarınızı eklemeyin."}},{"@type":"Question","name":"İlan eşleştirici ücretsiz mi?","acceptedAnswer":{"@type":"Answer","text":"Evet, analiz araçları cihazınızda çalışır. Yapay zekâ ile uyarlama ise Pro üyelere özeldir."}},{"@type":"Question","name":"İlan metnim sunucuya gönderiliyor mu?","acceptedAnswer":{"@type":"Answer","text":"İlan eşleştirici yalnızca tarayıcınızda çalışır. Yapay zekâ ile uyarlamada ilan metni ve CV'nizin deneyim–beceri metni yapay zekâ hizmetine gönderilir; kişisel iletişim bilgileriniz gönderilmez."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi</h1><p class="seo-intro">İlanın kullandığı kelimeler çoğu zaman CV&#39;nizde de geçmelidir. Hangi kelimelerin eksik olduğunu nasıl bulur, uydurmadan nasıl eklersiniz?</p><figure class="seo-cover"><img src="/covers/cv-is-ilanina-gore-nasil-uyarlanir.png" width="1200" height="630" loading="lazy" decoding="async" alt="CV İş İlanına Göre Nasıl Uyarlanır? Anahtar Kelime Rehberi" /></figure><article class="seo-article"><p class="seo-lead">Aynı CV&#39;yi her ilana göndermek kolaydır ama çoğu zaman en az etkili yoldur. İlan, işverenin aradığı becerileri kendi kelimeleriyle yazar; CV&#39;niz aynı şeyi başka kelimelerle anlatıyorsa hem insan okuyucu hem başvuru sistemi bunu gözden kaçırabilir.</p><h2>1. İlanı bir kez dikkatle okuyun</h2><p>İlandaki zorunlu nitelikleri (&quot;en az 3 yıl&quot;, &quot;Excel&quot;, &quot;B sınıfı ehliyet&quot;) ve tercih sebeplerini ayrı ayrı not edin. Sık tekrar eden kelimeler işverenin önceliğini gösterir. Şirket tanıtım cümlelerini değil, aranan nitelikleri ve görevleri okuyun.</p><h2>2. CV&#39;nizde olanı ilanın diliyle eşleştirin</h2><p>Bir deneyiminiz ilandaki bir gereksinimi karşılıyorsa, aynı kavramı ilanın kullandığı kelimeyle yazın. İlan &quot;paydaş yönetimi&quot; diyorsa ve siz &quot;ilgili birimlerle iletişim&quot; yazdıysanız, gerçekten yaptığınız iş aynıysa bunu ilanın diliyle ifade edebilirsiniz.</p><p>Kural basit: CV&#39;nizde olmayan bir beceriyi ya da deneyimi yalnızca ilanda geçtiği için eklemeyin. Mülakatta sorulduğunda anlatamayacağınız hiçbir cümle CV&#39;de durmamalı.</p><h2>3. Eksikleri görün</h2><p>İlan metnini CV Oluştur&#39;un Analiz sekmesindeki ilan eşleştiriciye yapıştırdığınızda araç ilandaki anahtar kelimeleri çıkarır ve hangilerinin CV&#39;nizde geçtiğini, hangilerinin geçmediğini gösterir. Türkçe ekler (&quot;yönetimi&quot;, &quot;yönettim&quot;) kelime gövdesine göre eşleştirilir. Bu işlem tamamen cihazınızda yapılır; ilan ya da CV&#39;niz sunucuya gönderilmez.</p><ul><li>Eksik çıkan kelimelerden gerçekten sahip olduklarınızı CV&#39;ye ekleyin.</li><li>Sahip olmadıklarınızı eklemeyin; gerekirse ön yazıda öğrenmeye istekli olduğunuzu dürüstçe belirtin.</li><li>Aynı kelimeyi arka arkaya tekrarlamak yerine ilgili deneyim maddesinde bir kez, bağlamıyla kullanın.</li></ul><h2>4. Yapay zekâ ile uyarlama (Pro)</h2><p>CV Oluştur&#39;un Yapay Zekâ sekmesindeki &quot;İlana göre uyarla&quot; özelliği, ilanı ve CV&#39;nizin deneyim–beceri metnini birlikte değerlendirir; özet ve madde önerileri üretir. Sonuçlar özgün CV&#39;nizin üzerine yazılmaz: seçtiğiniz öneriler CV&#39;nizin ayrı bir kopyasına uygulanır.</p><p>Uydurmayı önlemek için iki koruma vardır: CV&#39;nizde bulunmayan yeni bir rakam öneride çıkarsa o öneri reddedilir; CV&#39;nizde geçmeyen bir araç ya da kavram eklenirse size ayrıca uyarı olarak gösterilir. Yapay zekâ bir bilgiyi bulamazsa uydurmak yerine size soru sorar.</p><p>Yapay zekâya adınız, e-postanız, telefonunuz, adresiniz ve fotoğrafınız gönderilmez; yalnızca deneyim, eğitim ve beceri metni gider. Neyin gittiğini arayüzde kendiniz görebilirsiniz.</p><p><a href="/tools/cv-olustur"><strong>CV Oluştur</strong> — İlan metnini yapıştırın, eksik anahtar kelimeleri görün ve CV&#39;nizin kopyasını ilana göre düzenleyin.</a></p><h2>5. Her ilana ayrı kopya tutun</h2><p>CV Oluştur aynı cihazda 12 CV&#39;ye kadar saklar. Ana CV&#39;nizi koruyup her başvuru için bir kopya oluşturabilir, kopyaya şirket ya da pozisyon adını verebilirsiniz. Böylece hangi ilana hangi sürümü gönderdiğinizi sonradan bulabilirsiniz.</p><h2>6. Göndermeden önce son kontrol</h2><ol><li><strong>Tutarlılık:</strong> Analiz sekmesi tarih çakışması gibi kesin hataları gösterir.</li><li><strong>ATS röntgeni:</strong> PDF&#39;inizin başvuru sistemlerince nasıl okunduğunu görün: adınız ilk satırda mı, e-posta ve telefon tanınıyor mu, başlıklar anlaşılıyor mu?</li><li><strong>Sayfa sayısı:</strong> İki sayfaya taşan bir CV&#39;yi &quot;Tek sayfaya sığdır&quot; ile tek sayfaya indirebilirsiniz.</li></ol></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/cv-olustur">CV Oluştur</a></li><li><a href="/tools/pdf-duzenle">PDF Düzenle</a></li><li><a href="/tools/compress">PDF Sıkıştırma</a></li></ul></nav><nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul><li><a href="/blog/ats-uyumlu-cv-nasil-yazilir">ATS Uyumlu CV Nasıl Yazılır? 9 Pratik Kural</a></li><li><a href="/blog/cv-on-yazi-nasil-yazilir">Ön Yazı (Cover Letter) Nasıl Yazılır? Örnek Yapı ve İpuçları</a></li><li><a href="/blog/europass-tarzi-cv-nasil-hazirlanir">Europass Tarzı CV Nedir, Ne Zaman Kullanılır?</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>CV&#39;yi her başvuru için değiştirmek şart mı?</h3><p>Şart değil ama önerilir. Özellikle özet bölümü ve en üstteki deneyim maddelerini ilana göre ayarlamak çoğu zaman yeterli olur.</p></div><div class="seo-faq-item"><h3>İlandaki her kelimeyi CV&#39;ye eklemeli miyim?</h3><p>Hayır. Yalnızca gerçekten sahip olduğunuz beceri ve deneyimleri ilanın kelimeleriyle yazın; sahip olmadıklarınızı eklemeyin.</p></div><div class="seo-faq-item"><h3>İlan eşleştirici ücretsiz mi?</h3><p>Evet, analiz araçları cihazınızda çalışır. Yapay zekâ ile uyarlama ise Pro üyelere özeldir.</p></div><div class="seo-faq-item"><h3>İlan metnim sunucuya gönderiliyor mu?</h3><p>İlan eşleştirici yalnızca tarayıcınızda çalışır. Yapay zekâ ile uyarlamada ilan metni ve CV&#39;nizin deneyim–beceri metni yapay zekâ hizmetine gönderilir; kişisel iletişim bilgileriniz gönderilmez.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
