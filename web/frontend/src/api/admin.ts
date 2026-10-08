@@ -1010,6 +1010,8 @@ export type SocialConfig = {
   singleLang: "tr" | "en";
   /** Etiketler için canlı internet araştırması (ücretli). */
   researchKeywords: boolean;
+  /** Reels videoları onaysız, saati gelince kendiliğinden yayınlansın (varsayılan: onaylı). */
+  reelsAutoPublish: boolean;
 };
 
 export type SocialAccountRow = {
