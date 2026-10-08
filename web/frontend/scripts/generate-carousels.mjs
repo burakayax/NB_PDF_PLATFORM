@@ -27,19 +27,29 @@ import sharp from "sharp";
 import { getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { CAROUSEL_COPY, extractContentSlides } from "../src/blog/carouselSlides.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
-import { BG, FOOTER_COLOR, TITLE_COLOR, accentPair, loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
+import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
 
 const W = 1080;
 const H = 1350;
 const M = 84; // kenar boşluğu
-const DESIGN_VERSION = 2;
+const DESIGN_VERSION = 3;
 /**
  * Hangi dillerde carousel üretilir? Otomasyon yalnızca besleme dilinde
  * (PRIMARY_FEED_LANG = "tr") paylaşıyor; İngilizce slaytlar kullanılmayacak, boşuna
  * build süresi harcatırdı. Besleme dili değişirse buraya da eklenmeli.
  */
 const LANGS = (process.env.NB_CAROUSEL_LANGS ?? "tr").split(",").map((l) => l.trim()).filter(Boolean);
-const BODY_COLOR = "#cbd5e1";
+/**
+ * KURUMSAL TASARIM (v3): beyaz zemin, lacivert + marka mavisi, düz çizgiler.
+ * Gradyan / parıltı / emoji yok — "yapay zekâ üretimi" izlenimi vermesin.
+ * Reels (generate-reels.mjs) bu slaytları beyaz tuvale yerleştirir; BG_WHITE ortak.
+ */
+export const SLIDE_BG = "#ffffff";
+const NAVY = "#0B2A57";
+const BLUE = "#1060B0";
+const SLATE = "#475569";
+const MUTED = "#64748b";
+const LINE = "#D9E2EC";
 
 /** Kutuya sığana kadar punto düşürür; sığmazsa son satırı kısaltır. */
 function fitBlock(font, text, maxWidth, maxLines, sizeMax, sizeMin) {
@@ -59,112 +69,96 @@ function linesToPath(font, lines, size, x, firstBaseline, lineHeight) {
     .join(" ");
 }
 
-/** İlerleme noktaları — mevcut slayt dolu. Sağ altta. */
-function dots(count, active, c1) {
-  const r = 9;
-  const gap = 30;
-  const total = (count - 1) * gap;
-  let out = "";
-  for (let i = 0; i < count; i++) {
-    const cx = W - M - total + i * gap;
-    out += `<circle cx="${cx}" cy="${H - M - 6}" r="${r}" fill="${i === active ? c1 : "#334155"}"/>`;
+/** Harf aralıklı büyük harf etiketi (yola çevrilmiş). */
+function spaced(font, text, size, x, y, gap) {
+  let pen = x;
+  const parts = [];
+  for (const ch of text) {
+    parts.push(textPath(font, ch, size, pen, y));
+    pen += measure(font, ch, size) + gap;
   }
-  return out;
+  return { d: parts.join(" "), width: pen - x - gap };
 }
 
-function defs(c1, c2) {
-  return `<defs>
-    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient>
-    <radialGradient id="glow" cx="0.85" cy="0.08" r="0.8"><stop offset="0%" stop-color="${c1}" stop-opacity="0.34"/><stop offset="55%" stop-color="${c2}" stop-opacity="0.12"/><stop offset="100%" stop-color="${c2}" stop-opacity="0"/></radialGradient>
-    <radialGradient id="glow2" cx="0.05" cy="0.98" r="0.6"><stop offset="0%" stop-color="${c2}" stop-opacity="0.22"/><stop offset="100%" stop-color="${c2}" stop-opacity="0"/></radialGradient>
-  </defs>
-  <rect width="${W}" height="${H}" fill="${BG}"/>
-  <rect width="${W}" height="${H}" fill="url(#glow)"/>
-  <rect width="${W}" height="${H}" fill="url(#glow2)"/>
-  <rect width="${W}" height="9" fill="url(#bar)"/>`;
+const two = (n) => String(n).padStart(2, "0");
+
+/** Ortak çerçeve: üst mavi şerit, sağda rehber etiketi, ince çizgiler, alt bilgi + sayfa no. */
+function frame({ bold, regular, host, index, total, copy }) {
+  const lab = spaced(bold, copy.guide, 22, 0, 0, 4);
+  const labX = W - M - lab.width;
+  const pg = `${two(index + 1)} / ${two(total)}`;
+  const pgW = measure(bold, pg, 26);
+  return `<rect width="${W}" height="${H}" fill="${SLIDE_BG}"/>
+  <rect width="${W}" height="10" fill="${BLUE}"/>
+  <path d="${spaced(bold, copy.guide, 22, labX, 98, 4).d}" fill="${MUTED}"/>
+  <rect x="${M}" y="132" width="${W - M * 2}" height="2" fill="${LINE}"/>
+  <rect x="${M}" y="1232" width="${W - M * 2}" height="2" fill="${LINE}"/>
+  <path d="${textPath(regular, host, 26, M, 1290)}" fill="${MUTED}"/>
+  <path d="${textPath(bold, pg, 26, W - M - pgW, 1290)}" fill="${NAVY}"/>`;
 }
 
-function footer(regular, host, c1) {
-  return `<circle cx="${M - 22}" cy="${H - M - 6}" r="6" fill="${c1}"/>
-  <path d="${textPath(regular, host, 28, M, H - M + 4)}" fill="${FOOTER_COLOR}"/>`;
-}
+const open = () => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
 
-/** Sağa ok (kaydır ipucu) — yazı tipine bağlı olmasın diye çizilir. */
-function arrow(x, y, color) {
-  return `<path d="M${x} ${y} h40 m-16 -16 l16 16 l-16 16" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;
-}
-
-function coverSvg({ title, accent, bold, regular, host, total, copy }) {
-  const [c1, c2] = accentPair(accent);
-  const { size, lines } = fitBlock(bold, title, W - M * 2, 8, 96, 54);
-  const lh = size * 1.22;
-  const block = lines.length * lh;
-  const first = H * 0.42 - block / 2 + size * 0.82;
-  const label = copy.swipe;
-  const labelSize = 34;
-  const labelW = measure(bold, label, labelSize);
-  const pillY = H - M - 150;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  ${defs(c1, c2)}
-  <path d="${linesToPath(bold, lines, size, M, first, lh)}" fill="${TITLE_COLOR}"/>
-  <rect x="${M}" y="${pillY}" width="${labelW + 40 + 56 + 36}" height="76" rx="38" fill="url(#bar)"/>
-  <path d="${textPath(bold, label, labelSize, M + 34, pillY + 50)}" fill="#ffffff"/>
-  ${arrow(M + 34 + labelW + 20, pillY + 38, "#ffffff")}
-  ${footer(regular, host, c1)}
-  ${dots(total, 0, c1)}
+function coverSvg({ title, bold, regular, host, total, copy }) {
+  const { size, lines } = fitBlock(bold, title, W - M * 2, 7, 88, 54);
+  const lh = size * 1.14;
+  const first = 400 + size * 0.85;
+  const kicker = spaced(bold, copy.kicker, 24, M, 290, 4);
+  const swipe = copy.swipe;
+  const swW = measure(bold, swipe, 30);
+  const y = 1110;
+  return `${open()}
+  ${frame({ bold, regular, host, index: 0, total, copy })}
+  <rect x="${M}" y="236" width="64" height="7" fill="${BLUE}"/>
+  <path d="${kicker.d}" fill="${BLUE}"/>
+  <path d="${linesToPath(bold, lines, size, M, first, lh)}" fill="${NAVY}"/>
+  <rect x="${M}" y="${y - 20}" width="${W - M * 2}" height="2" fill="${LINE}"/>
+  <path d="${textPath(bold, swipe, 30, M, y + 54)}" fill="${NAVY}"/>
+  <path d="M${M + swW + 22} ${y + 40} h44 m-16 -16 l16 16 l-16 16" fill="none" stroke="${BLUE}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 }
 
-function stepSvg({ slide, index, count, accent, bold, regular, host, total, copy, kind }) {
-  const [c1, c2] = accentPair(accent);
-  const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(index, count);
-  const labelSize = 30;
-  const labelW = measure(bold, label, labelSize);
-  const t = fitBlock(bold, slide.title, W - M * 2, 3, 78, 50);
-  const tlh = t.size * 1.22;
-  const body = fitBlock(regular, slide.text, W - M * 2, 9, 46, 34);
+function stepSvg({ slide, index, count, bold, regular, host, total, copy, kind }) {
+  const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(index, count).toUpperCase();
+  const t = fitBlock(bold, slide.title, W - M * 2, 3, 70, 46);
+  const tlh = t.size * 1.16;
+  const body = fitBlock(regular, slide.text, W - M * 2, 9, 44, 32);
   const blh = body.size * 1.42;
-  // Rozet + başlık + gövde tek blok: logo ile alt şerit arasında dikeyde ortalanır
-  // (kısa metinde alt yarı bomboş kalmasın).
-  const blockH = 62 + 70 + t.lines.length * tlh + 64 + body.lines.length * blh;
-  const chipY = Math.max(190, Math.round((H - blockH) / 2 - 40));
-  const titleFirst = chipY + 62 + 70 + t.size * 0.82;
-  const bodyFirst = titleFirst + (t.lines.length - 1) * tlh + 64 + body.size * 0.82;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  ${defs(c1, c2)}
-  <rect x="${M}" y="${chipY}" width="${labelW + 56}" height="62" rx="31" fill="url(#bar)"/>
-  <path d="${textPath(bold, label, labelSize, M + 28, chipY + 42)}" fill="#ffffff"/>
-  <path d="${linesToPath(bold, t.lines, t.size, M, titleFirst, tlh)}" fill="${TITLE_COLOR}"/>
-  <path d="${linesToPath(regular, body.lines, body.size, M, bodyFirst, blh)}" fill="${BODY_COLOR}"/>
-  ${footer(regular, host, c1)}
-  ${dots(total, index, c1)}
+  const blockH = 60 + 40 + t.lines.length * tlh + 50 + body.lines.length * blh;
+  const top = Math.max(190, Math.round(133 + (1232 - 133 - blockH) / 2 - 30));
+  const lab = spaced(bold, label, 24, M, top + 54, 4);
+  const titleFirst = top + 54 + 40 + t.size * 0.85;
+  const bodyFirst = titleFirst + (t.lines.length - 1) * tlh + 50 + body.size * 0.85;
+  return `${open()}
+  ${frame({ bold, regular, host, index, total, copy })}
+  <rect x="${M}" y="${top}" width="64" height="7" fill="${BLUE}"/>
+  <path d="${lab.d}" fill="${BLUE}"/>
+  <path d="${linesToPath(bold, t.lines, t.size, M, titleFirst, tlh)}" fill="${NAVY}"/>
+  <path d="${linesToPath(regular, body.lines, body.size, M, bodyFirst, blh)}" fill="${SLATE}"/>
 </svg>`;
 }
 
-function ctaSvg({ accent, bold, regular, host, total, copy }) {
-  const [c1, c2] = accentPair(accent);
-  const t = fitBlock(bold, copy.ctaTitle, W - M * 2, 3, 92, 56);
-  const tlh = t.size * 1.2;
-  const titleFirst = 360 + t.size * 0.82;
-  const body = fitBlock(regular, copy.ctaBody, W - M * 2, 5, 44, 34);
+function ctaSvg({ bold, regular, host, total, copy }) {
+  const t = fitBlock(bold, copy.ctaTitle, W - M * 2, 3, 84, 56);
+  const tlh = t.size * 1.14;
+  const titleFirst = 440 + t.size * 0.85;
+  const body = fitBlock(regular, copy.ctaBody, W - M * 2 - 40, 4, 38, 30);
   const blh = body.size * 1.42;
-  const bodyFirst = titleFirst + (t.lines.length - 1) * tlh + 60 + body.size * 0.82;
-  const boxY = bodyFirst + (body.lines.length - 1) * blh + 90;
-  const tryLabel = copy.ctaTry;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  ${defs(c1, c2)}
-  <path d="${linesToPath(bold, t.lines, t.size, M, titleFirst, tlh)}" fill="${TITLE_COLOR}"/>
-  <path d="${linesToPath(regular, body.lines, body.size, M, bodyFirst, blh)}" fill="${BODY_COLOR}"/>
-  <rect x="${M}" y="${boxY}" width="${W - M * 2}" height="190" rx="28" fill="#0f172a" stroke="url(#bar)" stroke-width="3"/>
-  <path d="${textPath(regular, tryLabel, 32, M + 40, boxY + 66)}" fill="${FOOTER_COLOR}"/>
-  <path d="${textPath(bold, host, 62, M + 40, boxY + 140)}" fill="${TITLE_COLOR}"/>
-  ${footer(regular, host, c1)}
-  ${dots(total, total - 1, c1)}
+  const bodyFirst = titleFirst + (t.lines.length - 1) * tlh + 60 + body.size * 0.85;
+  const boxY = Math.round(bodyFirst + (body.lines.length - 1) * blh + 70);
+  return `${open()}
+  ${frame({ bold, regular, host, index: total - 1, total, copy })}
+  <rect x="${M}" y="346" width="64" height="7" fill="${BLUE}"/>
+  <path d="${linesToPath(bold, t.lines, t.size, M, titleFirst + 20, tlh)}" fill="${NAVY}"/>
+  <path d="${linesToPath(regular, body.lines, body.size, M, bodyFirst + 20, blh)}" fill="${SLATE}"/>
+  <rect x="${M}" y="${boxY + 20}" width="${W - M * 2}" height="210" rx="14" fill="#EEF4FB" stroke="${BLUE}" stroke-width="2.5"/>
+  <path d="${textPath(regular, copy.ctaTry, 30, M + 44, boxY + 94)}" fill="${MUTED}"/>
+  <path d="${textPath(bold, host, 68, M + 44, boxY + 176)}" fill="${NAVY}"/>
 </svg>`;
 }
 
 /** Bir yazının slayt SVG listesi (kapak, içerik..., kapanış). Slayt çıkmıyorsa []. */
-export function buildCarouselSvgs({ copyBlocks, title, accent, lang, host, bold, regular }) {
+export function buildCarouselSvgs({ copyBlocks, title, lang, host, bold, regular }) {
   const content = extractContentSlides(copyBlocks);
   if (content.length === 0) return { svgs: [], kind: "steps" };
   const copy = CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr;
@@ -172,11 +166,11 @@ export function buildCarouselSvgs({ copyBlocks, title, accent, lang, host, bold,
     ? "steps"
     : "points";
   const total = content.length + 2;
-  const svgs = [coverSvg({ title, accent, bold, regular, host, total, copy })];
+  const svgs = [coverSvg({ title, bold, regular, host, total, copy })];
   content.forEach((slide, i) => {
-    svgs.push(stepSvg({ slide, index: i + 1, count: content.length, accent, bold, regular, host, total, copy, kind }));
+    svgs.push(stepSvg({ slide, index: i + 1, count: content.length, bold, regular, host, total, copy, kind }));
   });
-  svgs.push(ctaSvg({ accent, bold, regular, host, total, copy }));
+  svgs.push(ctaSvg({ bold, regular, host, total, copy }));
   return { svgs, kind };
 }
 
@@ -199,7 +193,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
   }
 
   const logoPath = join(publicDir, "logo.png");
-  const logo = existsSync(logoPath) ? await sharp(logoPath).resize({ width: 200 }).png().toBuffer() : null;
+  const logo = existsSync(logoPath) ? await sharp(logoPath).resize({ width: 170 }).png().toBuffer() : null;
 
   const manifest = {};
   let written = 0;
@@ -239,7 +233,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       mkdirSync(dir, { recursive: true });
       for (let i = 0; i < svgs.length; i++) {
         let img = sharp(Buffer.from(svgs[i]));
-        if (logo) img = img.composite([{ input: logo, top: 44, left: M }]);
+        if (logo) img = img.composite([{ input: logo, top: 34, left: M }]);
         await img.jpeg({ quality: 88 }).toFile(join(dir, `${i + 1}.jpg`));
         written++;
       }
