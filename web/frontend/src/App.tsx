@@ -3633,10 +3633,17 @@ function App() {
    * liste daha yararlıdır. Sayfa sayısı koşul DEĞİLDİR — o bilgi sunucudaki ön
    * kontrolden gelir ve gecikebilir ya da hiç gelmeyebilir; ızgara sayfaları
    * tarayıcıda kendisi sayar.
+   *
+   * PDF Sıkıştır HARİÇ: orada işlem tüm sayfalara uygulanır ve sayfa seçimi yoktur;
+   * kullanıcıya sayfaları göstermek bir şey katmıyor, üstelik sade dosya kartında
+   * "Beklenen küçülme" bilgisi görünüyor (önizleme kartında görünmüyordu).
    */
   const previewItem = uploads.length === 1 ? uploads[0] : undefined;
   const showToolFilePreview =
-    !!previewItem && previewItem.file.type === "application/pdf" && !previewItem.inspecting;
+    !!previewItem &&
+    previewItem.file.type === "application/pdf" &&
+    !previewItem.inspecting &&
+    selectedFeature.id !== "compress";
 
   function openLegalPage(target: LegalView) {
     if (
