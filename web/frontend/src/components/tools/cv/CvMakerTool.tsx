@@ -369,7 +369,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                     <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Pro şablon — alanlar kilitli" : "Pro template — fields locked"}</p>
                   </div>
                 ) : null}
-                {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} /> : null}
+                {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} /> : null}
                 {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
                 {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
                 {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
