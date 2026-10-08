@@ -29,6 +29,8 @@ const TOOL_NAMES: Record<string, string> = {
   metadata_clean_success: "Meta Veri Temizle",
   form_fill_success: "PDF Form Doldur",
   resize_success: "Görsel Boyutlandır",
+  // Misafir PDF Sıkıştır (günde 1 hak): sonuç ekranındaki üyelik davetinin kaynağı.
+  compress_success: "PDF Sıkıştır",
 };
 
 export function toolLabel(toolId: string | null | undefined): string {

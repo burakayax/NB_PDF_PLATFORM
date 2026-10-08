@@ -372,6 +372,9 @@ const ImageResizeTool = lazyWithRetry(() =>
 const ImageCompressTool = lazyWithRetry(() =>
   import("./components/tools/ImageCompressTool").then((m) => ({ default: m.ImageCompressTool })),
 );
+const GuestCompressTool = lazyWithRetry(() =>
+  import("./components/tools/GuestCompressTool").then((m) => ({ default: m.GuestCompressTool })),
+);
 const UdfToPdfTool = lazyWithRetry(() =>
   import("./components/tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
 );
@@ -5394,6 +5397,17 @@ function App() {
         <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <SearchablePdfTool language={language} isSignedIn={isAuthenticated} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    // PDF Sıkıştır — ÜYE OLMAYAN ziyaretçiye günde 1 ücretsiz hak (üye 3, paket planı dahilinde).
+    // Giriş yapmış kullanıcı bu bloğa GİRMEZ (aşağıda workspace açılır).
+    if (seoSlug === "compress" && !isAuthenticated) {
+      return (
+        <GuestSeoToolPage slug="compress" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <GuestCompressTool language={language} onRegister={goRegister} onLogin={goLogin} />
           </Suspense>
         </GuestSeoToolPage>
       );

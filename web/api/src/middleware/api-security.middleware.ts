@@ -297,6 +297,9 @@ export function isPublicApiPath(method: string, path: string): boolean {
   // yetkilenir (kullanıcı JWT'si yok, misafir de sayılır). Controller secret'ı doğrular.
   if (p === "/entitlement/internal/editor-download" && method === "POST") return true;
   if (p === "/entitlement/internal/output-record" && method === "POST") return true;
+  // Misafir PDF Sıkıştır köprüsü (FastAPI → Node): kendi X-Internal-Secret kontrolü controller'da.
+  if (p === "/entitlement/internal/guest-compress/config" && method === "GET") return true;
+  if (p === "/entitlement/internal/guest-compress/usage" && method === "POST") return true;
   if (p.startsWith("/auth/")) {
     if (p === "/auth/register" && method === "POST") return true;
     if (p === "/auth/login" && method === "POST") return true;

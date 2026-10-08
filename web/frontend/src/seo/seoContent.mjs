@@ -373,6 +373,7 @@ export const TOOL_SEO = {
       ["pdf sıkıştırma", "pdf boyut küçültme", "pdf küçültme", "pdf boyutunu mb'a düşürme", "pdf boyutunu kb'a düşürme", "compress pdf"],
       [
         { q: "PDF dosyasını boyutunu küçültmek için nasıl sıkıştırırım?", a: "PDF'inizi yükleyin, sıkıştırma düzeyini seçin ve optimize edilmiş dosyayı indirin. Metin ve görseller okunaklı kalır." },
+        { q: "PDF sıkıştırma ücretsiz mi? Üye olmadan kullanabilir miyim?", a: "Evet. Üye olmadan günde 1 PDF sıkıştırma hakkın var; ücretsiz üyelikle günde 3 işlem (kart gerekmez). Paket satın alırsan planının günlük hakkı geçerli olur. Dosyan şifreli aktarılır, sunucuda işlenir ve işlem sonrası silinir." },
         { q: "Sıkıştırma kaliteyi bozar mı?", a: "Dengeli düzeyde belirgin bir kalite kaybı olmaz; daha yüksek sıkıştırmada boyut daha çok düşer." },
         { q: "PDF'i e-postaya sığdıracak kadar küçültebilir miyim?", a: "Evet. Sıkıştırma düzeyini yükselterek büyük PDF'leri e-posta ve portal yükleme sınırlarının altına indirebilirsiniz." },
         { q: "Sıkıştırılmış PDF'in metni seçilebilir kalır mı?", a: "Evet. Metin katmanı korunur; sıkıştırılan PDF'te de metni seçebilir, arayabilir ve kopyalayabilirsiniz." },
@@ -388,6 +389,7 @@ export const TOOL_SEO = {
       ["compress pdf", "reduce pdf size", "shrink pdf", "compress pdf online"],
       [
         { q: "How do I compress a PDF to reduce its file size?", a: "Upload your PDF, choose a compression level, and download the optimized file. Text and images stay sharp." },
+        { q: "Is PDF compression free? Can I use it without an account?", a: "Yes. Without an account you get 1 PDF compression per day; a free account gives you 3 operations a day (no card needed). With a paid plan, your plan's daily allowance applies. Your file is sent encrypted, processed on our server and deleted afterwards." },
         { q: "Does compression hurt quality?", a: "At a balanced level there is no noticeable loss; higher compression reduces size further." },
         { q: "Can I shrink a PDF small enough to email?", a: "Yes. Increase the compression level to bring large PDFs under email and portal upload limits." },
         { q: "Does the compressed PDF keep selectable text?", a: "Yes. The text layer is preserved, so you can still select, search, and copy text in the compressed PDF." },

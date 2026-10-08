@@ -22,6 +22,11 @@ export const SITE_SETTING_KEYS = {
   /** Sosyal medya otomasyonu: JSON { enabled, hour, minute, timeZone, lang, platforms[] } */
   SOCIAL_AUTOMATION: "social.automation",
   /**
+   * Misafir (üye olmayan) PDF Sıkıştır hakkı — yönetim panelinden ayarlanır: JSON
+   * { enabled, dailyLimit, globalDailyLimit, maxMB }. PDF servisi bunu dahili uçtan okur.
+   */
+  GUEST_COMPRESS: "guest.compress",
+  /**
    * Ticari e-postalarda görünen gönderen kimliği: JSON
    * { legalName, entityType, mersisNo, tckn, phone, contactEmail, postalAddress }
    * Ticari İletişim Yönetmeliği md.7 gereği zorunlu; eksikse gönderim durur.

@@ -2,6 +2,10 @@ import { Router } from "express";
 
 import { asyncHandler } from "../../lib/async-handler.js";
 import {
+  guestCompressConfigController,
+  guestCompressUsageController,
+} from "../guest-compress/guest-compress.internal.js";
+import {
   downloadLogAckController,
   downloadLogCreateController,
   editorDownloadConsumeController,
@@ -30,3 +34,6 @@ entitlementRouter.post("/download-log/:id/ack", asyncHandler(downloadLogAckContr
 entitlementRouter.post("/internal/editor-download", asyncHandler(editorDownloadConsumeController));
 // Çıktı dosyası parmak izi kaydı (FastAPI → Node; X-Internal-Secret ile yetkilenir).
 entitlementRouter.post("/internal/output-record", asyncHandler(outputRecordController));
+// Misafir PDF Sıkıştır: panelden ayarlanan değerler + hak sayacı (FastAPI → Node; X-Internal-Secret).
+entitlementRouter.get("/internal/guest-compress/config", asyncHandler(guestCompressConfigController));
+entitlementRouter.post("/internal/guest-compress/usage", asyncHandler(guestCompressUsageController));

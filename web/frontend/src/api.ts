@@ -1902,3 +1902,102 @@ export async function downloadResult(
   });
   return { status: "ok", download };
 }
+
+// ─── Misafir PDF Sıkıştır (üye olmayan: günde 1 hak) ──────────────────────────────
+// Üyelerin akışı (`/api/compress/start`) oturum jetonu ister; misafirin oturumu yok. Sunucu
+// işlemi maliyetli olduğundan hak BAŞLANGIÇTA düşer, işlem hata verirse iade edilir.
+// Sonuç, hazırlayana özel `dl` jetonuyla saklanır (PDF Düzenle'nin misafir modeliyle aynı).
+
+export type GuestCompressAllowance = {
+  used: number;
+  limit: number;
+  remaining: number;
+  resetAt: string;
+  maxMB: number;
+};
+
+/** Misafirin günlük hakkı doldu (`daily_limit`) ya da bugünkü toplam misafir kapasitesi doldu (`capacity`). */
+export class GuestCompressLimitError extends Error {
+  readonly reason: "daily_limit" | "capacity";
+  readonly allowance: GuestCompressAllowance | null;
+  constructor(reason: "daily_limit" | "capacity", allowance: GuestCompressAllowance | null, message: string) {
+    super(message);
+    this.name = "GuestCompressLimitError";
+    this.reason = reason;
+    this.allowance = allowance;
+  }
+}
+
+export type GuestCompressJob = {
+  status: string;
+  message: string;
+  percent: number;
+  ready: boolean;
+  error: string | null;
+  result_id: string | null;
+  filename: string | null;
+  size_bytes: number | null;
+};
+
+export async function getGuestCompressAllowance(): Promise<GuestCompressAllowance | null> {
+  try {
+    const response = await fetch(`${API_BASE}/api/guest-compress/allowance`);
+    if (!response.ok) return null;
+    return (await response.json()) as GuestCompressAllowance;
+  } catch {
+    return null;
+  }
+}
+
+export async function startGuestCompress(
+  file: File,
+  opts: { quality: "auto" | "low" | "medium"; targetKb: number; allowRasterize: boolean },
+): Promise<{ jobId: string; dl: string; allowance: GuestCompressAllowance }> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("quality", opts.quality);
+  if (opts.targetKb > 0) {
+    form.append("target_kb", String(opts.targetKb));
+    if (opts.allowRasterize) form.append("allow_rasterize", "1");
+  }
+  const response = await pdfFetch(`${API_BASE}/api/guest-compress/start`, { method: "POST", body: form });
+  if (response.status === 429) {
+    let body: Record<string, unknown> = {};
+    try {
+      body = await response.json();
+    } catch {
+      /* ignore */
+    }
+    const reason = body.error === "capacity" ? "capacity" : "daily_limit";
+    const allowance = typeof body.limit === "number" ? (body as unknown as GuestCompressAllowance) : null;
+    throw new GuestCompressLimitError(reason, allowance, String(body.detail ?? "Günlük hak doldu."));
+  }
+  if (!response.ok) {
+    let msg = "Sıkıştırma başlatılamadı.";
+    try {
+      const j = await response.json();
+      if (j?.detail) msg = String(j.detail);
+    } catch {
+      /* varsayılan */
+    }
+    throw new Error(msg);
+  }
+  const j = (await response.json()) as { job_id: string; dl: string; allowance: GuestCompressAllowance };
+  return { jobId: j.job_id, dl: j.dl, allowance: j.allowance };
+}
+
+export async function getGuestCompressJob(jobId: string, dl: string): Promise<GuestCompressJob> {
+  const response = await pdfFetch(
+    `${API_BASE}/api/guest-compress/jobs/${encodeURIComponent(jobId)}?dl=${encodeURIComponent(dl)}`,
+  );
+  if (!response.ok) throw new Error("İşlem durumu okunamadı.");
+  return (await response.json()) as GuestCompressJob;
+}
+
+export async function downloadGuestCompress(resultId: string, dl: string): Promise<Blob> {
+  const response = await pdfFetch(
+    `${API_BASE}/api/guest-compress/result/${encodeURIComponent(resultId)}/download?dl=${encodeURIComponent(dl)}`,
+  );
+  if (!response.ok) throw new Error("Sonuç indirilemedi.");
+  return response.blob();
+}
