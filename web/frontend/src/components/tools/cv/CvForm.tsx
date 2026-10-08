@@ -10,7 +10,6 @@ import {
   Heart,
   ImagePlus,
   Languages,
-  Palette,
   Plus,
   Sparkles,
   Trash2,
@@ -19,15 +18,23 @@ import {
   Wrench,
   FileText,
   Camera,
+  Layers,
+  ListOrdered,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   LANG_LEVELS,
+  LABELS,
+  resolveOrder,
   uid,
+  type SectionKey,
+  type CvCustomItem,
+  type CvCustomSection,
   type CvCert,
   type CvData,
   type CvEducation,
   type CvExperience,
-  type CvLang,
   type CvLanguageItem,
   type CvPhoto,
   type CvProject,
@@ -45,10 +52,10 @@ type Props = {
   tr: boolean;
 };
 
-const inputCls =
+export const inputCls =
   "w-full rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-[14px] text-white placeholder:text-slate-500 focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-400/20 disabled:opacity-50";
 
-function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
+export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[12px] font-semibold text-slate-300">{label}</span>
@@ -58,7 +65,7 @@ function Field({ label, children, hint }: { label: string; children: ReactNode; 
   );
 }
 
-function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string }) {
+export function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string }) {
   return (
     <Field label={label} hint={hint}>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} autoComplete={autoComplete} className={inputCls} />
@@ -66,7 +73,7 @@ function Text({ label, value, onChange, placeholder, type = "text", disabled, hi
   );
 }
 
-function Area({ label, value, onChange, placeholder, rows = 4, disabled, hint }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number; disabled?: boolean; hint?: string }) {
+export function Area({ label, value, onChange, placeholder, rows = 4, disabled, hint }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number; disabled?: boolean; hint?: string }) {
   return (
     <Field label={label} hint={hint}>
       <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={rows} disabled={disabled} className={`${inputCls} resize-y leading-relaxed`} />
@@ -74,7 +81,7 @@ function Area({ label, value, onChange, placeholder, rows = 4, disabled, hint }:
   );
 }
 
-function Accordion({ title, icon, defaultOpen, count, children }: { title: string; icon: ReactNode; defaultOpen?: boolean; count?: number; children: ReactNode }) {
+export function Accordion({ title, icon, defaultOpen, count, children }: { title: string; icon: ReactNode; defaultOpen?: boolean; count?: number; children: ReactNode }) {
   const [open, setOpen] = useState(!!defaultOpen);
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
@@ -89,7 +96,7 @@ function Accordion({ title, icon, defaultOpen, count, children }: { title: strin
   );
 }
 
-function ItemCard({ children, onUp, onDown, onRemove, tr, first, last }: { children: ReactNode; onUp: () => void; onDown: () => void; onRemove: () => void; tr: boolean; first: boolean; last: boolean }) {
+export function ItemCard({ children, onUp, onDown, onRemove, tr, first, last }: { children: ReactNode; onUp: () => void; onDown: () => void; onRemove: () => void; tr: boolean; first: boolean; last: boolean }) {
   return (
     <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
       <div className="space-y-3">{children}</div>
@@ -102,7 +109,7 @@ function ItemCard({ children, onUp, onDown, onRemove, tr, first, last }: { child
   );
 }
 
-function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
+export function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-sky-400/40 bg-sky-500/[0.05] px-3 py-2.5 text-[13px] font-semibold text-sky-200 hover:bg-sky-500/10">
       <Plus className="h-4 w-4" />
@@ -111,7 +118,7 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-function move<T>(arr: T[], i: number, d: -1 | 1): T[] {
+export function move<T>(arr: T[], i: number, d: -1 | 1): T[] {
   const j = i + d;
   if (j < 0 || j >= arr.length) return arr;
   const out = arr.slice();
@@ -119,7 +126,7 @@ function move<T>(arr: T[], i: number, d: -1 | 1): T[] {
   return out;
 }
 
-function patch<T extends { id: string }>(arr: T[], id: string, p: Partial<T>): T[] {
+export function patch<T extends { id: string }>(arr: T[], id: string, p: Partial<T>): T[] {
   return arr.map((x) => (x.id === id ? { ...x, ...p } : x));
 }
 
@@ -359,32 +366,55 @@ export function CvForm({ data, onChange, tpl, disabled, tr }: Props) {
         <p className="text-[11px] text-slate-500">{tr ? "İsterseniz “Referanslar istek üzerine sunulur” yazmak yerine bu bölümü boş bırakın; PDF'e eklenmez." : "Leave this empty if you'd rather not list references; it won't appear in the PDF."}</p>
       </Accordion>
 
-      <Accordion title={tr ? "Görünüm ve dil" : "Look & language"} icon={<Palette className="h-4 w-4" />}>
-        <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "CV dili (başlıklar ve tarihler)" : "CV language (headings and dates)"}</span>
-          <div className="inline-flex rounded-xl bg-white/[0.06] p-1">
-            {(["tr", "en"] as CvLang[]).map((l) => (
-              <button key={l} type="button" onClick={() => onChange({ ...data, settings: { ...data.settings, lang: l } })} className={`rounded-lg px-4 py-1.5 text-[13px] font-semibold ${data.settings.lang === l ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}>{l === "tr" ? "Türkçe" : "English"}</button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "Vurgu rengi" : "Accent colour"}</span>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" aria-label={tr ? "Şablonun kendi rengi" : "Template colour"} onClick={() => onChange({ ...data, settings: { ...data.settings, accent: null } })} className={`flex h-8 items-center rounded-full px-3 text-[11px] font-semibold ${data.settings.accent === null ? "bg-sky-500 text-white" : "bg-white/[0.08] text-slate-300"}`}>{tr ? "Şablonun rengi" : "Default"}</button>
-            {ACCENTS.map((c) => (
-              <button key={c} type="button" aria-label={c} onClick={() => onChange({ ...data, settings: { ...data.settings, accent: c } })} className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ${data.settings.accent === c ? "ring-sky-300" : "ring-transparent"}`} style={{ background: c }} />
-            ))}
-          </div>
-        </div>
-        <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "Yazı boyutu" : "Text size"}</span>
-          <div className="inline-flex rounded-xl bg-white/[0.06] p-1">
-            {([["s", tr ? "Küçük" : "Small"], ["m", tr ? "Normal" : "Normal"], ["l", tr ? "Büyük" : "Large"]] as const).map(([k, label]) => (
-              <button key={k} type="button" onClick={() => onChange({ ...data, settings: { ...data.settings, size: k } })} className={`rounded-lg px-4 py-1.5 text-[13px] font-semibold ${data.settings.size === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}>{label}</button>
-            ))}
-          </div>
-        </div>
+      {data.customSections.map((c: CvCustomSection) => (
+        <Accordion key={c.id} title={c.title.trim() || (tr ? "Özel bölüm" : "Custom section")} icon={<Layers className="h-4 w-4" />} count={c.items.length} defaultOpen>
+          <Text label={tr ? "Bölüm başlığı" : "Section title"} value={c.title} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, title: v } : x)))} placeholder={tr ? "Ör. Gönüllülük, Yayınlar, Ödüller" : "E.g. Volunteering, Publications, Awards"} />
+          {c.items.map((it: CvCustomItem, i) => (
+            <ItemCard key={it.id} tr={tr} first={i === 0} last={i === c.items.length - 1}
+              onUp={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: move(x.items, i, -1) } : x)))}
+              onDown={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: move(x.items, i, 1) } : x)))}
+              onRemove={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: x.items.filter((y) => y.id !== it.id) } : x)))}>
+              <Text label={tr ? "Başlık" : "Title"} value={it.title} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { title: v }) } : x)))} />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Text label={tr ? "Alt başlık (isteğe bağlı)" : "Subtitle (optional)"} value={it.subtitle} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { subtitle: v }) } : x)))} />
+                <Text label={tr ? "Tarih (isteğe bağlı)" : "Date (optional)"} type="month" value={it.date} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { date: v }) } : x)))} />
+              </div>
+              <Area label={tr ? "Açıklama" : "Description"} rows={2} value={it.desc} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { desc: v }) } : x)))} />
+            </ItemCard>
+          ))}
+          <AddButton label={tr ? "Madde ekle" : "Add item"} onClick={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: [...x.items, { id: uid(), title: "", subtitle: "", date: "", desc: "" }] } : x)))} />
+          <button type="button" onClick={() => onChange({ ...data, customSections: data.customSections.filter((x) => x.id !== c.id), settings: { ...data.settings, order: data.settings.order?.filter((k) => k !== `custom:${c.id}`) ?? null, hidden: data.settings.hidden.filter((k) => k !== `custom:${c.id}`) } })} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-300 hover:text-red-200"><Trash2 className="h-3.5 w-3.5" />{tr ? "Bu bölümü sil" : "Delete this section"}</button>
+        </Accordion>
+      ))}
+      <AddButton label={tr ? "Özel bölüm ekle (Gönüllülük, Yayınlar, Ödüller…)" : "Add custom section (Volunteering, Publications, Awards…)"} onClick={() => set("customSections", [...data.customSections, { id: uid(), title: "", items: [{ id: uid(), title: "", subtitle: "", date: "", desc: "" }] }])} />
+
+      <Accordion title={tr ? "Bölüm sırası ve görünürlük" : "Section order & visibility"} icon={<ListOrdered className="h-4 w-4" />}>
+        <p className="text-[11.5px] leading-relaxed text-slate-400">{tr ? "Bölümleri yukarı/aşağı taşıyın ya da gizleyin. Kenar çubuklu şablonlarda Beceriler, Diller ve İlgi alanları yan sütunda kalır; sıra kendi içinde uygulanır." : "Move sections up/down or hide them. In sidebar templates Skills, Languages and Interests stay in the side column; order applies within each column."}</p>
+        {(() => {
+          const order = resolveOrder(data);
+          const L = LABELS[data.settings.lang];
+          const nameOf = (k: SectionKey): string => {
+            if (k.startsWith("custom:")) return data.customSections.find((c) => `custom:${c.id}` === k)?.title.trim() || (tr ? "Özel bölüm" : "Custom section");
+            return ({ summary: L.profile, experience: L.experience, education: L.education, skills: L.skills, languages: L.languages, certs: L.certs, projects: L.projects, interests: L.interests, references: L.references } as Record<string, string>)[k] ?? k;
+          };
+          const moveKey = (i: number, d: -1 | 1) => onChange({ ...data, settings: { ...data.settings, order: move(order, i, d) } });
+          const toggle = (k: SectionKey) => onChange({ ...data, settings: { ...data.settings, hidden: data.settings.hidden.includes(k) ? data.settings.hidden.filter((x) => x !== k) : [...data.settings.hidden, k] } });
+          return (
+            <ul className="space-y-1.5">
+              {order.map((k, i) => {
+                const hidden = data.settings.hidden.includes(k);
+                return (
+                  <li key={k} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${hidden ? "border-white/5 bg-white/[0.01] opacity-60" : "border-white/10 bg-white/[0.03]"}`}>
+                    <span className="flex-1 truncate text-[13px] font-semibold text-slate-100">{nameOf(k)}</span>
+                    <button type="button" disabled={i === 0} onClick={() => moveKey(i, -1)} aria-label={tr ? "Yukarı" : "Up"} className="rounded-md p-1.5 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+                    <button type="button" disabled={i === order.length - 1} onClick={() => moveKey(i, 1)} aria-label={tr ? "Aşağı" : "Down"} className="rounded-md p-1.5 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => toggle(k)} aria-label={hidden ? (tr ? "Göster" : "Show") : (tr ? "Gizle" : "Hide")} aria-pressed={!hidden} className="rounded-md p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">{hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        })()}
       </Accordion>
     </fieldset>
   );

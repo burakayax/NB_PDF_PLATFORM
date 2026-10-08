@@ -11,10 +11,11 @@
  */
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { PDFDocument, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
+import { PDFDocument, popGraphicsState, pushGraphicsState, rgb, setCharacterSpacing, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { PDF_SAVE_OPTIONS } from "../../../lib/pdfSaveOptions";
 import { buildModel, type CvData, type BuildMode } from "./cvModel";
+import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
 import { CvPage, FONT_CSS, FONT_FILE, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type FontKey } from "./cvTemplates";
 
 const PAD_TOP = 42;
@@ -166,7 +167,7 @@ class Painter {
     mctx.font = `${bold ? 700 : 400} ${sizeCss}px ${cs.fontFamily}`;
     const ascCss = mctx.measureText("Hx").fontBoundingBoxAscent;
 
-    const draw = (text: string, rect: DOMRect, x?: number) => {
+    const draw = (text: string, rect: DOMRect, x?: number, tc = 0) => {
       const topCss = rect.top - oy;
       const { page, offset } = this.pageAt(topCss + rect.height / 2);
       const yTop = page.getHeight() - (topCss - offset) * PT;
@@ -177,7 +178,9 @@ class Painter {
         page.setFont(font);
         this.lastFont.set(page, font);
       }
+      if (tc !== 0) page.pushOperators(pushGraphicsState(), setCharacterSpacing(tc));
       page.drawText(t, { x: (x ?? rect.left - ox) * PT, y: baseline, size: sizePt, color: col(color), opacity: color.a * opacity });
+      if (tc !== 0) page.pushOperators(popGraphicsState());
     };
 
     // Kelimeleri satırlara grupla
@@ -210,43 +213,16 @@ class Painter {
       i = j;
       const text = line.map((w) => w.text).join(" ");
       const space = font.widthOfTextAtSize(" ", sizePt) / PT;
-      let regular = ls === 0;
-      if (regular) {
-        for (let k = 1; k < line.length; k++) {
-          const gap = line[k].rect.left - line[k - 1].rect.right;
-          if (Math.abs(gap - space) > 1.6) { regular = false; break; }
-        }
+      // Harf aralığı (letter-spacing) PDF'te harf-harf DEĞİL, "karakter aralığı" (Tc) ile yazılır:
+      // metin tek dize kalır → başvuru sistemleri "PROFİL"i "P R O F İ L" diye okumaz.
+      // Beklenen kelime boşluğu = boşluk genişliği + harf aralığı (CSS boşluğa da ekler).
+      let regular = true;
+      for (let k = 1; k < line.length; k++) {
+        const gap = line[k].rect.left - line[k - 1].rect.right;
+        if (Math.abs(gap - (space + ls)) > 1.6) { regular = false; break; }
       }
-      if (regular) draw(text, line[0].rect);
-      else if (ls !== 0) {
-        // Harf aralıklı başlık: her harfi kendi konumunda çiz
-        await this.perChar(node, line, draw, range);
-      } else {
-        for (const w of line) draw(w.text, w.rect);
-      }
-    }
-  }
-
-  async perChar(node: Text, line: { text: string; rect: DOMRect }[], draw: (t: string, r: DOMRect, x?: number) => void, range: Range): Promise<void> {
-    const data = node.data;
-    for (const w of line) {
-      // Kelimenin başlangıç indeksini, rect'ine göre yeniden bul
-      let from = -1;
-      let pos = 0;
-      while ((pos = data.indexOf(w.text, pos)) !== -1) {
-        range.setStart(node, pos);
-        range.setEnd(node, pos + w.text.length);
-        const r = range.getClientRects()[0];
-        if (r && Math.abs(r.left - w.rect.left) < 0.5 && Math.abs(r.top - w.rect.top) < 0.5) { from = pos; break; }
-        pos += 1;
-      }
-      if (from < 0) { draw(w.text, w.rect); continue; }
-      for (let c = 0; c < w.text.length; c++) {
-        range.setStart(node, from + c);
-        range.setEnd(node, from + c + 1);
-        const r = range.getClientRects()[0];
-        if (r && r.width > 0) draw(w.text[c], r);
-      }
+      if (regular) draw(text, line[0].rect, undefined, ls * PT);
+      else for (const w of line) draw(w.text, w.rect, undefined, ls * PT);
     }
   }
 }
@@ -320,7 +296,10 @@ async function waitFor(cond: () => boolean, ms: number): Promise<void> {
   while (!cond() && performance.now() - t0 < ms) await new Promise((r) => setTimeout(r, 40));
 }
 
-export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMode): Promise<{ bytes: Uint8Array; pages: number }> {
+type Offscreen = { root: HTMLElement; render: (step: number) => void };
+
+/** Ekran dışında CV'yi çizer (yazı tipleri/fotoğraf hazır olana dek bekler) ve `fn`'e verir. */
+async function withOffscreen<T>(data: CvData, templateId: string, mode: BuildMode, fn: (o: Offscreen) => Promise<T>): Promise<T> {
   ensureCvStyles();
   const tpl = getTemplate(templateId);
   const host = document.createElement("div");
@@ -329,7 +308,9 @@ export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMo
   const rootEl = createRoot(host);
   try {
     const model = buildModel(data, mode);
-    flushSync(() => rootEl.render(<CvPage m={model} tpl={tpl} size={data.settings.size} accent={data.settings.accent} />));
+    const render = (step: number) =>
+      flushSync(() => rootEl.render(<CvPage m={model} tpl={tpl} size={data.settings.size} accent={data.settings.accent} style={styleFromSettings(data.settings, step)} />));
+    render(0);
     await Promise.all(
       (Object.keys(FONT_CSS) as FontKey[]).flatMap((k) => [`400 16px '${FONT_CSS[k]}'`, `700 16px '${FONT_CSS[k]}'`]).map((f) => document.fonts.load(f).catch(() => undefined)),
     );
@@ -339,11 +320,38 @@ export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMo
       await waitFor(() => !!root.querySelector("img") && !root.querySelector("[data-cv-photo-ghost]"), 4000);
     }
     await Promise.all(Array.from(root.querySelectorAll("img")).map((i) => i.decode().catch(() => undefined)));
-    const pages = paginate(root);
-    const bytes = await domToPdf(root, pages, { title: `${data.name.trim() || "CV"} — ${data.settings.lang === "tr" ? "Özgeçmiş" : "Resume"}` });
-    return { bytes, pages };
+    return await fn({ root, render });
   } finally {
     rootEl.unmount();
     host.remove();
   }
+}
+
+/** "Tek sayfaya sığdır": önizlemeyle AYNI kademe tablosu (bkz. cvStyle.FIT_STEPS). */
+function fitLoop(o: Offscreen, fitOn: boolean): { pages: number; step: number } {
+  let pages = paginate(o.root);
+  let step = 0;
+  while (fitOn && pages > 1 && step < MAX_FIT_STEP) {
+    step += 1;
+    o.render(step);
+    pages = paginate(o.root);
+  }
+  return { pages, step };
+}
+
+/**
+ * Önizleme için: İNDİRİLECEK PDF'in (boş alanlar çıkarılmış hâlinin) hangi sığdırma kademesinde
+ * kaç sayfa olacağını ekran dışında ölçer. Taslak görünümde yer tutucular da yer kapladığından
+ * taslağı ölçmek PDF'e göre fazla küçültürdü.
+ */
+export async function measureFit(data: CvData, templateId: string): Promise<{ pages: number; step: number }> {
+  return withOffscreen(data, templateId, "export", async (o) => fitLoop(o, data.settings.fitOnePage));
+}
+
+export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMode): Promise<{ bytes: Uint8Array; pages: number; fitStep: number }> {
+  return withOffscreen(data, templateId, mode, async (o) => {
+    const { pages, step } = fitLoop(o, data.settings.fitOnePage);
+    const bytes = await domToPdf(o.root, pages, { title: `${data.name.trim() || "CV"} — ${data.settings.lang === "tr" ? "Özgeçmiş" : "Resume"}` });
+    return { bytes, pages, fitStep: step };
+  });
 }

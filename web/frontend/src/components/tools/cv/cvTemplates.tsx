@@ -9,8 +9,11 @@
  * A4 = 794×1123 CSS pikseli (96 dpi). Tüm boyutlar `em` olduğundan "yazı boyutu"
  * ayarı kökün font-size'ını değiştirerek her şeyi orantılı büyütür.
  */
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { CvModel, CvPhoto, Fld } from "./cvModel";
+import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import type { CvModel, CvPhoto, CvSettings, Fld, SectionKey } from "./cvModel";
+
+/** Boşluk çarpanı (yoğunluk ayarı × "tek sayfaya sığdır" kademesi). 1 = şablonun kendi boşluğu. */
+const SpCtx = createContext(1);
 
 export const PAGE_W = 794;
 export const PAGE_H = 1123;
@@ -158,8 +161,9 @@ export function PhotoBox({ model, th, size, ring }: { model: CvModel; th: CvThem
 // ── Başlık / bölüm ─────────────────────────────────────────────────────────
 
 function Heading({ title, th, onDark, dim, boxBg }: { title: string; th: CvTheme; onDark?: { fg: string; line: string }; dim?: boolean; boxBg?: string }) {
+  const sp = useContext(SpCtx);
   const col = onDark?.fg ?? th.accent;
-  const base: CSSProperties = { fontSize: "0.86em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.13em", margin: dim ? "16px 0 7px" : "20px 0 9px", color: col };
+  const base: CSSProperties = { fontSize: "0.86em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: `${Math.round((dim ? 16 : 20) * sp)}px 0 ${Math.round((dim ? 7 : 9) * sp)}px`, color: col };
   let style: CSSProperties = base;
   let lead: ReactNode = null;
   switch (th.heading) {
@@ -196,27 +200,31 @@ function Section({ title, th, children, onDark, dim, boxBg }: { title: string; t
   );
 }
 
-const Bullets = ({ items, gap = 2, color }: { items: { t: string; g: boolean }[]; gap?: number; color?: string }) => (
-  <div style={{ marginTop: 3 }}>
+const Bullets = ({ items, gap = 2, color }: { items: { t: string; g: boolean }[]; gap?: number; color?: string }) => {
+  const sp = useContext(SpCtx);
+  return (
+  <div style={{ marginTop: Math.round(3 * sp) }}>
     {items.map((b, i) => (
-      <div key={i} data-keep="1" style={{ display: "flex", gap: 7, marginTop: gap, lineHeight: 1.38, color }}>
+      <div key={i} data-keep="1" style={{ display: "flex", gap: 7, marginTop: Math.round(gap * sp * 10) / 10, lineHeight: 1.38, color }}>
         <span style={{ flex: "none", width: 7 }}>•</span>
         <span data-ghost={b.g ? "1" : undefined} style={{ flex: 1 }}>{b.t}</span>
       </div>
     ))}
   </div>
-);
+  );
+};
 
 // ── Bölüm içerikleri (yerleşimlerde ortak) ─────────────────────────────────
 
 function ExperienceList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?: boolean }) {
+  const sp = useContext(SpCtx);
   return (
     <>
       {m.experience.map((e, i) => (
         <div
           key={i}
           data-keep="1"
-          style={timeline ? { position: "relative", borderLeft: `2px solid ${th.tint}`, paddingLeft: 16, paddingBottom: 12, marginLeft: 4 } : { marginBottom: 11 }}
+          style={timeline ? { position: "relative", borderLeft: `2px solid ${th.tint}`, paddingLeft: 16, paddingBottom: Math.round(12 * sp), marginLeft: 4 } : { marginBottom: Math.round(11 * sp) }}
         >
           {timeline ? <span style={{ position: "absolute", left: -6, top: 4, width: 10, height: 10, borderRadius: "50%", background: th.accent }} /> : null}
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
@@ -238,13 +246,14 @@ function ExperienceList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline
 }
 
 function EducationList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?: boolean }) {
+  const sp = useContext(SpCtx);
   return (
     <>
       {m.education.map((e, i) => (
         <div
           key={i}
           data-keep="1"
-          style={timeline ? { position: "relative", borderLeft: `2px solid ${th.tint}`, paddingLeft: 16, paddingBottom: 10, marginLeft: 4 } : { marginBottom: 9 }}
+          style={timeline ? { position: "relative", borderLeft: `2px solid ${th.tint}`, paddingLeft: 16, paddingBottom: Math.round(10 * sp), marginLeft: 4 } : { marginBottom: Math.round(9 * sp) }}
         >
           {timeline ? <span style={{ position: "absolute", left: -6, top: 4, width: 10, height: 10, borderRadius: "50%", background: th.accent }} /> : null}
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
@@ -266,10 +275,11 @@ function EducationList({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?
 }
 
 function CertList({ m, th }: { m: CvModel; th: CvTheme }) {
+  const sp = useContext(SpCtx);
   return (
     <>
       {m.certs.map((c, i) => (
-        <div key={i} data-keep="1" style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
+        <div key={i} data-keep="1" style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: Math.round(4 * sp) }}>
           <div>
             <span style={{ fontWeight: 600 }}><F f={c.name} /></span>
             {c.issuer ? <span style={{ color: th.muted }}>{" — "}<F f={c.issuer} /></span> : null}
@@ -282,10 +292,11 @@ function CertList({ m, th }: { m: CvModel; th: CvTheme }) {
 }
 
 function ProjectList({ m, th }: { m: CvModel; th: CvTheme }) {
+  const sp = useContext(SpCtx);
   return (
     <>
       {m.projects.map((p, i) => (
-        <div key={i} data-keep="1" style={{ marginBottom: 8 }}>
+        <div key={i} data-keep="1" style={{ marginBottom: Math.round(8 * sp) }}>
           <div style={{ fontWeight: 700 }}>
             <F f={p.name} />
             {p.link ? <span style={{ color: th.accent, fontWeight: 400, fontSize: "0.9em" }}>{"  "}<F f={p.link} /></span> : null}
@@ -372,7 +383,7 @@ function ContactStack({ m, fg, muted }: { m: CvModel; fg: string; muted: string 
     <div>
       {contactRows(m).map((r, i) => (
         <div key={i} data-keep="1" style={{ marginBottom: 7 }}>
-          <div style={{ fontSize: "0.72em", textTransform: "uppercase", letterSpacing: "0.12em", color: muted, fontWeight: 700 }}>{r.label}</div>
+          <div style={{ fontSize: "0.72em", textTransform: "uppercase", letterSpacing: "0.05em", color: muted, fontWeight: 700 }}>{r.label}</div>
           <div style={{ color: fg, wordBreak: "break-word", lineHeight: 1.3 }}><F f={r.f} /></div>
         </div>
       ))}
@@ -425,20 +436,72 @@ function SummaryBlock({ m, th }: { m: CvModel; th: CvTheme }) {
   );
 }
 
-/** Ana gövde bölümleri — yerleşimler hangilerini ana sütuna koyacağını seçer. */
-function MainSections({ m, th, timeline, include }: { m: CvModel; th: CvTheme; timeline?: boolean; include: { skills?: boolean; languages?: boolean; interests?: boolean; contact?: boolean } }) {
-  const L = m.labels;
+function CustomList({ m, th, k, timeline }: { m: CvModel; th: CvTheme; k: SectionKey; timeline?: boolean }) {
+  const sp = useContext(SpCtx);
+  const sec = m.custom.find((c) => c.key === k);
+  if (!sec) return null;
   return (
     <>
-      <SummaryBlock m={m} th={th} />
-      {m.experience.length ? <Section title={L.experience} th={th}><ExperienceList m={m} th={th} timeline={timeline} /></Section> : null}
-      {m.education.length ? <Section title={L.education} th={th}><EducationList m={m} th={th} timeline={timeline} /></Section> : null}
-      {include.skills && m.skills.length ? <Section title={L.skills} th={th}><SkillBlock m={m} th={th} /></Section> : null}
-      {include.languages && m.languages.length ? <Section title={L.languages} th={th}><LanguageBlock m={m} th={th} /></Section> : null}
-      {m.certs.length ? <Section title={L.certs} th={th}><CertList m={m} th={th} /></Section> : null}
-      {m.projects.length ? <Section title={L.projects} th={th}><ProjectList m={m} th={th} /></Section> : null}
-      {include.interests && m.interests.length ? <Section title={L.interests} th={th}><InterestsBlock m={m} th={th} /></Section> : null}
-      {m.references.length ? <Section title={L.references} th={th}><ReferenceList m={m} th={th} /></Section> : null}
+      {sec.items.map((it, i) => (
+        <div
+          key={i}
+          data-keep="1"
+          style={timeline ? { position: "relative", borderLeft: `2px solid ${th.tint}`, paddingLeft: 16, paddingBottom: Math.round(10 * sp), marginLeft: 4 } : { marginBottom: Math.round(9 * sp) }}
+        >
+          {timeline ? <span style={{ position: "absolute", left: -6, top: 4, width: 10, height: 10, borderRadius: "50%", background: th.accent }} /> : null}
+          {it.title || it.date ? (
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <div style={{ fontWeight: 700 }}><F f={it.title} /></div>
+              {it.date ? <div style={{ color: th.muted, fontSize: "0.9em", flex: "none", whiteSpace: "nowrap" }}><F f={it.date} /></div> : null}
+            </div>
+          ) : null}
+          {it.subtitle ? <div style={{ color: th.accent, fontWeight: 600, fontSize: "0.96em" }}><F f={it.subtitle} /></div> : null}
+          {it.desc ? <div style={{ lineHeight: 1.4, marginTop: 1 }}><F f={it.desc} /></div> : null}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** Ana sütun bölümü — anahtara göre. Boşsa null. */
+function MainSection({ k, m, th, timeline }: { k: SectionKey; m: CvModel; th: CvTheme; timeline?: boolean }) {
+  const L = m.labels;
+  switch (k) {
+    case "summary":
+      return <SummaryBlock m={m} th={th} />;
+    case "experience":
+      return m.experience.length ? <Section title={L.experience} th={th}><ExperienceList m={m} th={th} timeline={timeline} /></Section> : null;
+    case "education":
+      return m.education.length ? <Section title={L.education} th={th}><EducationList m={m} th={th} timeline={timeline} /></Section> : null;
+    case "skills":
+      return m.skills.length ? <Section title={L.skills} th={th}><SkillBlock m={m} th={th} /></Section> : null;
+    case "languages":
+      return m.languages.length ? <Section title={L.languages} th={th}><LanguageBlock m={m} th={th} /></Section> : null;
+    case "certs":
+      return m.certs.length ? <Section title={L.certs} th={th}><CertList m={m} th={th} /></Section> : null;
+    case "projects":
+      return m.projects.length ? <Section title={L.projects} th={th}><ProjectList m={m} th={th} /></Section> : null;
+    case "interests":
+      return m.interests.length ? <Section title={L.interests} th={th}><InterestsBlock m={m} th={th} /></Section> : null;
+    case "references":
+      return m.references.length ? <Section title={L.references} th={th}><ReferenceList m={m} th={th} /></Section> : null;
+    default: {
+      const sec = m.custom.find((c) => c.key === k);
+      if (!sec || !sec.title) return null;
+      return <Section title={sec.title.t} th={th}><CustomList m={m} th={th} k={k} timeline={timeline} /></Section>;
+    }
+  }
+}
+
+const SIDE_KEYS: SectionKey[] = ["skills", "languages", "interests"];
+
+/** Ana gövde bölümleri — kullanıcının sırasına göre. `side` verilirse o anahtarlar burada gösterilmez. */
+function MainSections({ m, th, timeline, skip }: { m: CvModel; th: CvTheme; timeline?: boolean; skip?: SectionKey[] }) {
+  return (
+    <>
+      {m.order.filter((k) => !skip?.includes(k)).map((k) => (
+        <MainSection key={k} k={k} m={m} th={th} timeline={timeline} />
+      ))}
     </>
   );
 }
@@ -458,7 +521,7 @@ function SingleLayout({ m, th, timeline }: { m: CvModel; th: CvTheme; timeline?:
         </div>
         {m.photo ? <PhotoBox model={m} th={th} /> : null}
       </div>
-      <MainSections m={m} th={th} timeline={timeline} include={{ skills: true, languages: true, interests: true }} />
+      <MainSections m={m} th={th} timeline={timeline} />
     </div>
   );
 }
@@ -482,28 +545,34 @@ function SidebarLayout({ m, th }: { m: CvModel; th: CvTheme }) {
           <ContactStack m={m} fg={s.fg} muted={s.muted} />
         </Section>
       ) : null}
-      {m.skills.length ? (
-        <Section title={L.skills} th={th} onDark={dark} dim boxBg={boxBg}>
-          <SkillBlock m={m} th={th} onDark={barDark} />
-        </Section>
-      ) : null}
-      {m.languages.length ? (
-        <Section title={L.languages} th={th} onDark={dark} dim boxBg={boxBg}>
-          <LanguageBlock m={m} th={th} fg={s.fg} muted={s.muted} />
-        </Section>
-      ) : null}
-      {m.interests.length ? (
-        <Section title={L.interests} th={th} onDark={dark} dim boxBg={boxBg}>
-          <InterestsBlock m={m} th={th} color={s.fg} />
-        </Section>
-      ) : null}
+      {m.order.filter((k) => SIDE_KEYS.includes(k)).map((k) => {
+        if (k === "skills" && m.skills.length)
+          return (
+            <Section key={k} title={L.skills} th={th} onDark={dark} dim boxBg={boxBg}>
+              <SkillBlock m={m} th={th} onDark={barDark} />
+            </Section>
+          );
+        if (k === "languages" && m.languages.length)
+          return (
+            <Section key={k} title={L.languages} th={th} onDark={dark} dim boxBg={boxBg}>
+              <LanguageBlock m={m} th={th} fg={s.fg} muted={s.muted} />
+            </Section>
+          );
+        if (k === "interests" && m.interests.length)
+          return (
+            <Section key={k} title={L.interests} th={th} onDark={dark} dim boxBg={boxBg}>
+              <InterestsBlock m={m} th={th} color={s.fg} />
+            </Section>
+          );
+        return null;
+      })}
     </aside>
   );
   const mainEl = (
     <main style={{ flex: 1, minWidth: 0, padding: "42px 36px 36px", boxSizing: "border-box" }}>
       <NameBlock m={m} th={th} />
       <div style={{ height: 4, width: 56, background: th.accent, margin: "14px 0 2px" }} />
-      <MainSections m={m} th={th} include={{}} />
+      <MainSections m={m} th={th} skip={SIDE_KEYS} />
     </main>
   );
   // DOM sırası = PDF metin sırası = başvuru sistemlerinin (ATS) okuma sırası. Ad, unvan ve
@@ -531,7 +600,7 @@ function BannerLayout({ m, th }: { m: CvModel; th: CvTheme }) {
       </div>
       <div style={{ display: "flex", flex: 1, alignItems: "stretch" }}>
         <main style={{ flex: 1, minWidth: 0, padding: "10px 32px 36px 44px", boxSizing: "border-box" }}>
-          <MainSections m={m} th={th} include={{}} />
+          <MainSections m={m} th={th} skip={SIDE_KEYS} />
         </main>
         <aside style={{ width: s.width, flex: "none", background: s.bg, color: s.fg, padding: "26px 24px 30px", boxSizing: "border-box" }}>
           {m.has.contact ? (
@@ -539,9 +608,12 @@ function BannerLayout({ m, th }: { m: CvModel; th: CvTheme }) {
               <ContactStack m={m} fg={s.fg} muted={s.muted} />
             </Section>
           ) : null}
-          {m.skills.length ? <Section title={L.skills} th={th} dim boxBg="#ffffff"><SkillBlock m={m} th={th} /></Section> : null}
-          {m.languages.length ? <Section title={L.languages} th={th} dim boxBg="#ffffff"><LanguageBlock m={m} th={th} fg={s.fg} muted={s.muted} /></Section> : null}
-          {m.interests.length ? <Section title={L.interests} th={th} dim boxBg="#ffffff"><InterestsBlock m={m} th={th} color={s.fg} /></Section> : null}
+          {m.order.filter((k) => SIDE_KEYS.includes(k)).map((k) => {
+            if (k === "skills" && m.skills.length) return <Section key={k} title={L.skills} th={th} dim boxBg="#ffffff"><SkillBlock m={m} th={th} /></Section>;
+            if (k === "languages" && m.languages.length) return <Section key={k} title={L.languages} th={th} dim boxBg="#ffffff"><LanguageBlock m={m} th={th} fg={s.fg} muted={s.muted} /></Section>;
+            if (k === "interests" && m.interests.length) return <Section key={k} title={L.interests} th={th} dim boxBg="#ffffff"><InterestsBlock m={m} th={th} color={s.fg} /></Section>;
+            return null;
+          })}
         </aside>
       </div>
     </div>
@@ -562,29 +634,48 @@ export function CvLayout({ m, tpl }: { m: CvModel; tpl: CvTemplate }) {
 
 const SIZE_SCALE = { s: 0.93, m: 1, l: 1.07 } as const;
 
-export function CvPage({ m, tpl, size, accent }: { m: CvModel; tpl: CvTemplate; size: "s" | "m" | "l"; accent: string | null }) {
-  const th: CvTheme = accent ? recolor(tpl.theme, accent) : tpl.theme;
+/** Şablonun üstüne kullanıcının yaptığı kişiselleştirmeler. */
+export type CvStyleOpts = {
+  font?: FontKey | null;
+  density?: CvSettings["density"];
+  headingStyle?: HeadingStyle | null;
+  photoShape?: PhotoShape | null;
+  /** "Tek sayfaya sığdır" kademesi: yazı ve boşluk çarpanı. */
+  fit?: { scale: number; spacing: number };
+};
+
+const DENSITY_SP = { compact: 0.78, normal: 1, airy: 1.28 } as const;
+
+export function CvPage({ m, tpl, size, accent, style }: { m: CvModel; tpl: CvTemplate; size: "s" | "m" | "l"; accent: string | null; style?: CvStyleOpts }) {
+  let th: CvTheme = accent ? recolor(tpl.theme, accent) : tpl.theme;
+  if (style?.font) th = { ...th, font: style.font };
+  if (style?.headingStyle) th = { ...th, heading: style.headingStyle };
+  if (style?.photoShape) th = { ...th, photo: { ...th.photo, shape: style.photoShape } };
   const t = { ...tpl, theme: th };
+  const sp = DENSITY_SP[style?.density ?? "normal"] * (style?.fit?.spacing ?? 1);
+  const fs = BASE_PX[th.font] * SIZE_SCALE[size] * (style?.fit?.scale ?? 1);
   return (
-    <div
-      data-cv-root="1"
-      data-cv-mode={m.mode}
-      lang={m.lang}
-      style={{
-        width: PAGE_W,
-        minHeight: PAGE_H,
-        boxSizing: "border-box",
-        background: "#ffffff",
-        color: th.text,
-        fontFamily: `'${FONT_CSS[th.font]}', sans-serif`,
-        fontSize: BASE_PX[th.font] * SIZE_SCALE[size],
-        lineHeight: 1.3,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <CvLayout m={m} tpl={t} />
-    </div>
+    <SpCtx.Provider value={sp}>
+      <div
+        data-cv-root="1"
+        data-cv-mode={m.mode}
+        lang={m.lang}
+        style={{
+          width: PAGE_W,
+          minHeight: PAGE_H,
+          boxSizing: "border-box",
+          background: "#ffffff",
+          color: th.text,
+          fontFamily: `'${FONT_CSS[th.font]}', sans-serif`,
+          fontSize: fs,
+          lineHeight: 1.3,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <CvLayout m={m} tpl={t} />
+      </div>
+    </SpCtx.Provider>
   );
 }
 
