@@ -31,6 +31,8 @@ export type ToolSubmissionInput = {
   featureId: FeatureKey;
   uploads: CheckedUpload[];
   pagesText: string;
+  /** Böl aracının kipi (single/separate/every/size/outline). */
+  splitMode?: string;
   deletePagesText: string;
   /** Kaynak belgenin açma parolası. */
   password: string;
@@ -106,6 +108,19 @@ export function checkToolSubmission(
         },
       };
     }
+    if (featureId === "alternate-mix-pdf" && uploads.length < 2) {
+      return {
+        ok: false,
+        toast: {
+          title: tr(language, "En az iki PDF gerekli", "At least two PDFs needed"),
+          detail: tr(
+            language,
+            "Serpiştirmek için iki (ya da daha fazla) PDF seçin.",
+            "Select two (or more) PDFs to interleave.",
+          ),
+        },
+      };
+    }
     if (featureId !== "merge" && uploads.length === 0) {
       return {
         ok: false,
@@ -122,7 +137,7 @@ export function checkToolSubmission(
   }
 
   // 2) Sayfa numaraları — ayırma.
-  if (featureId === "split") {
+  if (featureId === "split" && !["every", "size", "outline"].includes(input.splitMode ?? "")) {
     const pagesError = validatePageSelection(
       pagesText,
       first,

@@ -11,6 +11,8 @@ import {
   reorderPages,
   getPdfPageCount,
   splitPagesToZip,
+  splitEveryNToZip,
+  splitBySizeToZip,
   cropPdf,
   pdfBytesToBlob,
   zipBytesToBlob,
@@ -210,5 +212,79 @@ describe("PdfEncryptedError", () => {
     const e = new PdfEncryptedError();
     expect(e).toBeInstanceOf(Error);
     expect(e.name).toBe("PdfEncryptedError");
+  });
+});
+
+
+// ─── Her N sayfada bir / boyuta göre bölme (cihazda) ──────────────────────────
+describe("splitEveryNToZip", () => {
+  it("her N sayfada bir dosya üretir, kalan sayfalar son dosyaya girer", async () => {
+    const files = unzipSync(await splitEveryNToZip(await makePdf(7), 3, "r"));
+    expect(Object.keys(files).sort()).toEqual(["r_1-3.pdf", "r_4-6.pdf", "r_7-7.pdf"]);
+    expect(await pageCount(files["r_1-3.pdf"])).toBe(3);
+    expect(await pageCount(files["r_7-7.pdf"])).toBe(1);
+  });
+  it("belge zaten tek parçaysa hata verir", async () => {
+    await expect(splitEveryNToZip(await makePdf(3), 10)).rejects.toThrow("single-part");
+  });
+  it("çok fazla parça çıkacaksa hata verir", async () => {
+    await expect(splitEveryNToZip(await makePdf(301), 1)).rejects.toThrow("too-many");
+  });
+});
+
+describe("splitBySizeToZip", () => {
+  // Her satırı rastgele (sıkışmayan) metinle dolu sayfalar; `satirlar` sayfa başına satır sayısı.
+  async function agirPdf(satirlar: number[]): Promise<Uint8Array> {
+    const doc = await PDFDocument.create();
+    for (let i = 0; i < satirlar.length; i++) {
+      const page = doc.addPage([400, 2000]);
+      for (let k = 0; k < satirlar[i]; k++) {
+        page.drawText(`Satir ${i}-${k} ${Math.random().toString(36).slice(2)} ${Math.random().toString(36).slice(2)}`, {
+          x: 20,
+          y: 1980 - k * 3,
+          size: 2,
+        });
+      }
+    }
+    return doc.save();
+  }
+
+  it("küçük sınırla bölünür; her parça sınırı geçmez; toplam sayfa korunur", async () => {
+    const kaynak = await agirPdf(Array(12).fill(120));
+    const limit = 20 * 1024;
+    const files = unzipSync(await splitBySizeToZip(kaynak, limit));
+    const pdfler = Object.entries(files).filter(([n]) => n.endsWith(".pdf"));
+    expect(pdfler.length).toBeGreaterThan(1);
+    let toplamSayfa = 0;
+    for (const [, b] of pdfler) {
+      expect(b.length).toBeLessThanOrEqual(limit);
+      toplamSayfa += await pageCount(b);
+    }
+    expect(toplamSayfa).toBe(12);
+    expect(Object.keys(files).some((n) => n.startsWith("UYARI"))).toBe(false);
+  });
+  it("tek başına sınırı aşan sayfa kendi dosyasına konur ve uyarı notu eklenir", async () => {
+    // 1. sayfa çok ağır, diğerleri hafif.
+    const kaynak = await agirPdf([900, 5, 5, 5]);
+    const limit = 20 * 1024;
+    const files = unzipSync(await splitBySizeToZip(kaynak, limit));
+    const uyari = Object.keys(files).find((n) => n.startsWith("UYARI"));
+    expect(uyari).toBeTruthy();
+    expect(new TextDecoder().decode(files[uyari as string])).toContain("Sayfa 1");
+    expect(files["parca_1.pdf"].length).toBeGreaterThan(limit);
+    // Geri kalan sayfalar sınır altında ve eksiksiz.
+    const diger = Object.entries(files).filter(([n]) => n.endsWith(".pdf") && n !== "parca_1.pdf");
+    let sayfa = 0;
+    for (const [, b] of diger) {
+      expect(b.length).toBeLessThanOrEqual(limit);
+      sayfa += await pageCount(b);
+    }
+    expect(sayfa).toBe(3);
+  });
+  it("çok küçük sınır reddedilir", async () => {
+    await expect(splitBySizeToZip(await makePdf(2), 100)).rejects.toThrow("limit-small");
+  });
+  it("belge sınırın altındaysa 'tek parça' hatası verir", async () => {
+    await expect(splitBySizeToZip(await makePdf(3), 5 * 1024 * 1024)).rejects.toThrow("single-part");
   });
 });

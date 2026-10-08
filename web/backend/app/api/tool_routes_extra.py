@@ -6,6 +6,7 @@ import ipaddress
 import json
 import logging
 import os as _os
+import re
 import socket
 import urllib.parse
 from pathlib import Path
@@ -1579,13 +1580,34 @@ async def tool_watermark(
     request: Request,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
-    watermark_text: str = Form(...),
+    watermark_text: str = Form(""),
+    watermark_image: UploadFile | None = File(None),
+    watermark_position: str = Form("center"),
     watermark_color: str = Form("#8C8C8C"),
     watermark_font: str = Form("helv"),
     watermark_opacity: float = Form(0.15),
     password: str = Form(""),
+    watermark_rotation: float = Form(45.0),
+    watermark_size: float = Form(70.0),
+    from_page: int = Form(1),
+    to_page: int = Form(0),
 ):
-    opacity = max(0.05, min(0.50, float(watermark_opacity)))
+    opacity = max(0.05, min(1.0, float(watermark_opacity)))
+    watermark_rotation = max(-360.0, min(360.0, watermark_rotation))
+    watermark_size = max(10.0, min(100.0, watermark_size))
+    from_page = max(1, from_page)
+    to_page = max(0, to_page)
+    if watermark_position not in ("center", "top-left", "top-right", "bottom-left", "bottom-right"):
+        watermark_position = "center"
+    gorsel_bayt: bytes | None = None
+    if watermark_image is not None and (watermark_image.filename or ""):
+        gorsel_bayt = await watermark_image.read(5 * 1024 * 1024 + 1)
+        if len(gorsel_bayt) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Filigran görseli en fazla 5 MB olabilir.")
+        if not gorsel_bayt:
+            gorsel_bayt = None
+    if gorsel_bayt is None and not (watermark_text or "").strip():
+        raise HTTPException(status_code=400, detail="Filigran metni yazın ya da bir görsel seçin.")
     decision = await entitlement_check(token, "watermark")
     workdir = create_workdir()
     try:
@@ -1598,10 +1620,21 @@ async def tool_watermark(
         out_p = workdir / out_n
 
         def _run():
+            if gorsel_bayt is not None:
+                ptx.add_watermark_image(
+                    sp, str(out_p), gorsel_bayt,
+                    opacity=opacity, password=pwd,
+                    rotation=watermark_rotation, size_pct=watermark_size,
+                    from_page=from_page, to_page=to_page,
+                    position=watermark_position,
+                )
+                return _pack_pdf_result_file(out_p, out_n, user_id, "watermark")
             ptx.add_watermark_text(
                 sp, str(out_p), watermark_text,
                 opacity=opacity, password=pwd,
                 font_name=watermark_font, font_color=watermark_color,
+                rotation=watermark_rotation, size_pct=watermark_size,
+                from_page=from_page, to_page=to_page,
             )
             return _pack_pdf_result_file(out_p, out_n, user_id, "watermark")
 
@@ -1618,6 +1651,57 @@ async def tool_watermark(
             cleanup_path(workdir)
 
 
+def _hf_slotlari(ham: str) -> dict:
+    """Arayüzden gelen {"header-left": "...", ...} JSON'unu doğrular; boşsa {}."""
+    if not (ham or "").strip():
+        return {}
+    try:
+        veri = json.loads(ham)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Üst/alt bilgi verisi okunamadı.")
+    if not isinstance(veri, dict):
+        raise HTTPException(status_code=400, detail="Üst/alt bilgi verisi geçersiz.")
+    izinli = ("header-left", "header-center", "header-right", "footer-left", "footer-center", "footer-right")
+    sonuc = {}
+    for k, v in veri.items():
+        if k in izinli and isinstance(v, str) and v.strip():
+            if len(v) > 200:
+                raise HTTPException(status_code=400, detail="Üst/alt bilgi metni en fazla 200 karakter olabilir.")
+            sonuc[k] = v
+    return sonuc
+
+
+def _uygula_numara_ve_bilgi(
+    kaynak: str, cikti: str, dosya_adi: str, hf_slots: dict, *, start_at: int, position: str,
+    password, fmt: str, font_size: float, color: str, from_page: int, to_page: int,
+) -> None:
+    """Önce (varsa) serbest üst/alt bilgi metinleri, sonra (fmt != none ise) sayfa numaraları."""
+    adim = kaynak
+    gecici = None
+    try:
+        if hf_slots:
+            hedef = cikti if fmt == "none" else cikti + ".hf.pdf"
+            ptx.add_header_footer(
+                adim, hedef, hf_slots, password=password, font_size=font_size, color=color,
+                from_page=from_page, to_page=to_page, start_at=start_at, file_name=dosya_adi,
+            )
+            if fmt == "none":
+                return
+            adim = hedef
+            gecici = hedef
+            password = None  # ara dosya şifresizdir
+        ptx.add_page_numbers(
+            adim, cikti, start_at=start_at, position=position, password=password, fmt=fmt,
+            font_size=font_size, color=color, from_page=from_page, to_page=to_page,
+        )
+    finally:
+        if gecici and _os.path.exists(gecici):
+            try:
+                _os.remove(gecici)
+            except OSError:
+                pass
+
+
 @router.post("/page-numbers")
 @limiter.limit("20/minute")
 async def tool_page_numbers(
@@ -1628,11 +1712,27 @@ async def tool_page_numbers(
     position: str = Form("footer"),
     fmt: str = Form("plain"),
     password: str = Form(""),
+    font_size: float = Form(9.0),
+    color: str = Form("#666666"),
+    from_page: int = Form(1),
+    to_page: int = Form(0),
+    header_footer_json: str = Form(""),
 ):
-    if position not in ("footer", "header"):
+    hf_slots = _hf_slotlari(header_footer_json)
+    _gecerli_konumlar = {"footer", "header"} | {
+        f"{v}-{h}" for v in ("footer", "header") for h in ("left", "center", "right")
+    }
+    if position not in _gecerli_konumlar:
         position = "footer"
-    if fmt not in ("plain", "page", "of"):
+    if fmt not in ("plain", "page", "of", "page-of", "none"):
         fmt = "plain"
+    if fmt == "none" and not hf_slots:
+        raise HTTPException(status_code=400, detail="Numara eklemiyorsanız en az bir üst/alt bilgi metni yazın.")
+    font_size = max(6.0, min(48.0, font_size))
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", color or ""):
+        color = "#666666"
+    from_page = max(1, from_page)
+    to_page = max(0, to_page)
     decision = await entitlement_check(token, "page-numbers")
     workdir = create_workdir()
     try:
@@ -1645,7 +1745,11 @@ async def tool_page_numbers(
         out_p = workdir / out_n
 
         def _run():
-            ptx.add_page_numbers(sp, str(out_p), start_at=int(start_at), position=position, password=pwd, fmt=fmt)
+            _uygula_numara_ve_bilgi(
+                sp, str(out_p), file.filename or saved.name, hf_slots, start_at=int(start_at),
+                position=position, password=pwd, fmt=fmt, font_size=font_size, color=color,
+                from_page=from_page, to_page=to_page,
+            )
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return _pack_pdf_result_file(out_p, out_n, user_id, "page-numbers")
 
@@ -1816,6 +1920,7 @@ async def tool_pdf_to_image(
     image_format: str = Form("jpg"),
     password: str = Form(""),
     quality: str = Form("normal"),
+    pages: str = Form(""),
 ):
     decision = await entitlement_check(token, "pdf-to-image")
     workdir = create_workdir()
@@ -1833,6 +1938,7 @@ async def tool_pdf_to_image(
                 image_format=image_format,
                 dpi=_gorsel_dpi(quality),
                 password=pwd,
+                pages=_secili_sayfalar(pages),
             )
             return save_result_from_file(
                 Path(zpath),
@@ -1862,6 +1968,15 @@ async def tool_pdf_to_image(
             cleanup_path(workdir)
 
 
+def _secili_sayfalar(metin: str):
+    """"1-3,5" gibi metni sayfa listesine çevirir; boşsa None (tüm sayfalar)."""
+    from app.core.operations import parse_pages_text
+
+    if not (metin or "").strip():
+        return None
+    return parse_pages_text(metin)
+
+
 def _gorsel_dpi(kalite: str) -> int:
     """Kullanıcının seçtiği kaliteyi çözünürlüğe çevirir.
 
@@ -1884,6 +1999,7 @@ async def tool_pdf_to_image_start(
     password: str = Form(""),
     # "ekran" (150 DPI, hızlı ve küçük) / "normal" (300) / "baski" (400).
     quality: str = Form("normal"),
+    pages: str = Form(""),
 ):
     """PDF → Görsel dönüşümünü ARKA PLANDA başlatır.
 
@@ -1909,6 +2025,7 @@ async def tool_pdf_to_image_start(
                 dpi=_gorsel_dpi(quality),
                 password=pwd,
                 progress_callback=progress_cb,
+                pages=_secili_sayfalar(pages),
             )
             return Path(zpath)
 
@@ -2211,6 +2328,261 @@ async def tool_pdf_to_pdfa(
         raise
     except Exception as e:
         cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-to-pdfa")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/deskew-pdf")
+@limiter.limit("10/minute")
+async def tool_deskew_pdf(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "deskew-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        out_p = workdir / "duz-tarama.pdf"
+        pwd = (password or "").strip() or None
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "düzeltilmiş", ".pdf")
+
+        def _run():
+            ptx.deskew_pdf(str(sp), str(out_p), password=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "deskew-pdf")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="deskew-pdf")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/grayscale-pdf")
+@limiter.limit("20/minute")
+async def tool_grayscale_pdf(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "grayscale-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        out_p = workdir / "gri.pdf"
+        pwd = (password or "").strip() or None
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "gri tonlamalı", ".pdf")
+
+        def _run():
+            ptx.grayscale_pdf(str(sp), str(out_p), password=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "grayscale-pdf")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="grayscale-pdf")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/resize-pdf")
+@limiter.limit("20/minute")
+async def tool_resize_pdf(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+    page_size: str = Form("a4"),
+    custom_w_mm: float = Form(0.0),
+    custom_h_mm: float = Form(0.0),
+    orientation: str = Form("auto"),
+    fit: str = Form("fit"),
+    margin_mm: float = Form(0.0),
+):
+    decision = await entitlement_check(token, "resize-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        out_p = workdir / "boyut.pdf"
+        pwd = (password or "").strip() or None
+        out_n = format_derived_filename(file.filename or "dosya.pdf", f"{page_size}", ".pdf")
+
+        def _run():
+            ptx.resize_pdf_pages(
+                str(sp), str(out_p), size=page_size, custom_w_mm=custom_w_mm, custom_h_mm=custom_h_mm,
+                orientation=orientation, fit=fit, margin_mm=margin_mm, password=pwd,
+            )
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "resize-pdf")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="resize-pdf")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/flip-pdf")
+@limiter.limit("20/minute")
+async def tool_flip_pdf(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+    direction: str = Form("horizontal"),
+    from_page: int = Form(1),
+    to_page: int = Form(0),
+):
+    decision = await entitlement_check(token, "flip-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        out_p = workdir / "ayna.pdf"
+        pwd = (password or "").strip() or None
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "çevrilmiş", ".pdf")
+
+        def _run():
+            ptx.flip_pdf(
+                str(sp), str(out_p), direction=direction, from_page=max(1, from_page),
+                to_page=max(0, to_page), password=pwd,
+            )
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "flip-pdf")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="flip-pdf")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/alternate-mix-pdf")
+@limiter.limit("10/minute")
+async def tool_alternate_mix_pdf(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    files: list[UploadFile] = File(...),
+    reverse_second: str = Form(""),
+):
+    if len(files) < 2:
+        raise HTTPException(status_code=400, detail="Serpiştirmek için en az iki PDF seçin.")
+    if len(files) > 10:
+        raise HTTPException(status_code=400, detail="En fazla 10 PDF serpiştirilebilir.")
+    decision = await entitlement_check(token, "alternate-mix-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        yollar = []
+        for idx, up in enumerate(files):
+            ad = Path(up.filename or f"dosya{idx}.pdf").name
+            kayit = await save_upload(up, workdir, filename=f"{idx:02d}__{ad}", max_bytes=max_bytes_from_decision(decision))
+            _after_save_validate(kayit, request, decision, ad)
+            yollar.append(str(kayit))
+        out_p = workdir / "serpistirilmis.pdf"
+        out_n = "serpiştirilmiş.pdf"
+        ters = reverse_second.strip().lower() in ("1", "true", "on", "yes")
+
+        def _run():
+            ptx.alternate_mix_pdfs(yollar, str(out_p), reverse_second=ters)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "alternate-mix-pdf")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename="<çoklu>", client_ip=_client_ip(request), operation="alternate-mix-pdf")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/crop-pdf")
+@limiter.limit("20/minute")
+async def tool_crop_pdf(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+    crop_mode: str = Form("margins"),
+    top_mm: float = Form(0.0),
+    bottom_mm: float = Form(0.0),
+    left_mm: float = Form(0.0),
+    right_mm: float = Form(0.0),
+    pad_mm: float = Form(5.0),
+    uniform: str = Form(""),
+    from_page: int = Form(1),
+    to_page: int = Form(0),
+):
+    if crop_mode not in ("margins", "auto"):
+        crop_mode = "margins"
+    decision = await entitlement_check(token, "crop-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        out_p = workdir / "kirp.pdf"
+        pwd = (password or "").strip() or None
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "kırpılmış", ".pdf")
+
+        def _run():
+            ptx.crop_pdf(
+                str(sp), str(out_p), mode=crop_mode, top_mm=top_mm, bottom_mm=bottom_mm,
+                left_mm=left_mm, right_mm=right_mm, pad_mm=pad_mm,
+                uniform=uniform.strip().lower() in ("1", "true", "on", "yes"),
+                from_page=max(1, from_page), to_page=max(0, to_page), password=pwd,
+            )
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "crop-pdf")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="crop-pdf")
     finally:
         if workdir.exists():
             cleanup_path(workdir)

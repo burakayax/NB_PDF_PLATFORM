@@ -22,6 +22,8 @@ import {
   deletePages,
   reorderPages,
   splitPagesToZip,
+  splitEveryNToZip,
+  splitBySizeToZip,
   getPdfPageCount,
   pdfBytesToBlob,
   zipBytesToBlob,
@@ -75,7 +77,11 @@ export function GuestPageToolCore({
   const [pageRotations, setPageRotations] = useState<Record<number, number>>({});
   const [pageOrder, setPageOrder] = useState<number[]>([]);
   // AYIR modu: "single" = seçili sayfalar tek PDF; "separate" = her sayfa ayrı, ZIP.
-  const [splitMode, setSplitMode] = useState<"single" | "separate">("single");
+  const [splitMode, setSplitMode] = useState<"single" | "separate" | "every" | "size">("single");
+  // «Her N sayfada bir» ve «Boyuta göre» kipleri sayfa seçimi gerektirmez.
+  const [everyN, setEveryN] = useState("2");
+  const [maxMb, setMaxMb] = useState("5");
+  const splitSecimsiz = mode === "split" && (splitMode === "every" || splitMode === "size");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Bilgilendirici (hata değil) bildirim — ör. "PDF zaten tek sayfa".
@@ -92,7 +98,9 @@ export function GuestPageToolCore({
         : mode === "split"
           ? splitMode === "separate"
             ? "sayfalar.zip"
-            : "secili-sayfalar.pdf"
+            : splitSecimsiz
+              ? "bolunmus.zip"
+              : "secili-sayfalar.pdf"
           : "duzenlenmis.pdf";
   const resultIsZip = result?.filename.endsWith(".zip") ?? false;
 
@@ -203,6 +211,16 @@ export function GuestPageToolCore({
         return;
       }
       del0 = pages1.map((p) => p - 1);
+    } else if (mode === "split" && splitSecimsiz) {
+      // Sayfa seçimi gerekmez; sayı alanı doğrulanır.
+      if (splitMode === "every" && !(Math.floor(Number(everyN)) >= 1)) {
+        setError(tr ? "Kaç sayfada bir bölüneceğini yazın (en az 1)." : "Enter how many pages per file (at least 1).");
+        return;
+      }
+      if (splitMode === "size" && !(Number(maxMb.replace(",", ".")) >= 0.02)) {
+        setError(tr ? "En çok kaç MB olacağını yazın (en az 0,02)." : "Enter the maximum size in MB (at least 0.02).");
+        return;
+      }
     } else if (mode === "split") {
       const pages1 = expandPagesString(pagesText, pageCount, language) ?? [];
       if (pages1.length === 0) {
@@ -220,6 +238,12 @@ export function GuestPageToolCore({
       let blob: Blob;
       if (mode === "rotate") blob = pdfBytesToBlob(await rotatePdf(src, rot0));
       else if (mode === "delete") blob = pdfBytesToBlob(await deletePages(src, del0));
+      else if (mode === "split" && splitMode === "every")
+        blob = zipBytesToBlob(await splitEveryNToZip(src, Math.floor(Number(everyN)), "parca"));
+      else if (mode === "split" && splitMode === "size")
+        blob = zipBytesToBlob(
+          await splitBySizeToZip(src, Math.round(Number(maxMb.replace(",", ".")) * 1024 * 1024), "parca"),
+        );
       else if (mode === "split")
         blob =
           splitMode === "separate"
@@ -228,14 +252,27 @@ export function GuestPageToolCore({
       else blob = pdfBytesToBlob(await reorderPages(src, order0));
       setResult({ blob, filename: outName });
     } catch (e) {
+      const kod = e instanceof Error ? e.message : "";
       setError(
         e instanceof PdfEncryptedError
           ? tr
             ? "Bu PDF şifre korumalı."
             : "This PDF is password-protected."
-          : tr
-            ? "İşlem sırasında bir hata oluştu."
-            : "Something went wrong.",
+          : kod === "single-part"
+            ? tr
+              ? "Bu ayarla belge zaten tek parça; bölünecek bir şey yok. Sayıyı küçültün."
+              : "With this setting the document is already one piece; nothing to split. Use a smaller value."
+            : kod === "too-many"
+              ? tr
+                ? "Bu ayarla en fazla 300 dosya çıkabilir; değeri büyütün."
+                : "This setting would produce more than 300 files; use a larger value."
+              : kod === "limit-small"
+                ? tr
+                  ? "En küçük sınır 0,02 MB'tır."
+                  : "The smallest limit is 0.02 MB."
+                : tr
+                  ? "İşlem sırasında bir hata oluştu."
+                  : "Something went wrong.",
       );
     } finally {
       setBusy(false);
@@ -271,7 +308,9 @@ export function GuestPageToolCore({
   const hasSelection =
     mode === "rotate"
       ? Object.values(pageRotations).some((d) => d % 360 !== 0)
-      : mode === "delete" || mode === "split"
+      : mode === "split" && splitSecimsiz
+        ? pageCount > 0
+        : mode === "delete" || mode === "split"
         ? (expandPagesString(pagesText, pageCount, language) ?? []).length > 0
         : pageOrder.length === pageCount && pageOrder.some((p, i) => p !== i + 1);
   // Bu buton, görsel seçim ekranını TEKRAR açıp önceki seçimi düzenlemeye yarar.
@@ -383,7 +422,58 @@ export function GuestPageToolCore({
                 {tr ? "Her sayfa kendi PDF'i olur, hepsi bir ZIP içinde iner." : "Each page becomes its own PDF, all delivered inside one ZIP."}
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => setSplitMode("every")}
+              className={`rounded-xl px-3.5 py-3 text-left transition ${
+                splitMode === "every"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 ring-1 ring-white/20"
+                  : "bg-white/[0.02] hover:bg-white/[0.06]"
+              }`}
+            >
+              <span className={`block text-[13.5px] font-semibold ${splitMode === "every" ? "text-white" : "text-slate-200"}`}>
+                {tr ? "Her N sayfada bir" : "Every N pages"}
+              </span>
+              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "every" ? "text-white/85" : "text-slate-400"}`}>
+                {tr ? "Belge eşit sayfalı dosyalara bölünür (ör. 10'ar sayfa), ZIP olarak iner." : "The document is cut into equal-length files (e.g. 10 pages each), delivered as a ZIP."}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSplitMode("size")}
+              className={`rounded-xl px-3.5 py-3 text-left transition ${
+                splitMode === "size"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 ring-1 ring-white/20"
+                  : "bg-white/[0.02] hover:bg-white/[0.06]"
+              }`}
+            >
+              <span className={`block text-[13.5px] font-semibold ${splitMode === "size" ? "text-white" : "text-slate-200"}`}>
+                {tr ? "Boyuta göre (MB)" : "By size (MB)"}
+              </span>
+              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "size" ? "text-white/85" : "text-slate-400"}`}>
+                {tr ? "Her parça verdiğiniz MB sınırını aşmaz; yükleme limitlerine uymak için." : "Each part stays under the MB limit you give; handy for upload limits."}
+              </span>
+            </button>
           </div>
+          {splitSecimsiz && (
+            <div className="mt-2 flex items-center gap-3 px-2 pb-1.5">
+              <label className="flex items-center gap-2 text-[13px] text-slate-200">
+                <span>
+                  {splitMode === "every"
+                    ? tr ? "Her kaç sayfada bir dosya:" : "Pages per file:"
+                    : tr ? "En çok kaç MB:" : "Maximum MB:"}
+                </span>
+                <input
+                  type="number"
+                  min={splitMode === "every" ? 1 : 0.02}
+                  step={splitMode === "every" ? 1 : 0.1}
+                  value={splitMode === "every" ? everyN : maxMb}
+                  onChange={(e) => (splitMode === "every" ? setEveryN(e.target.value) : setMaxMb(e.target.value))}
+                  className="w-24 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1.5 text-[13px] text-white"
+                />
+              </label>
+            </div>
+          )}
         </div>
       )}
 
@@ -392,7 +482,7 @@ export function GuestPageToolCore({
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          disabled={!file}
+          disabled={!file || splitSecimsiz}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-4 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-40"
         >
           <Sliders className="h-4 w-4" />

@@ -20,6 +20,8 @@ import {
   deletePages,
   reorderPages,
   splitPagesToZip,
+  splitEveryNToZip,
+  splitBySizeToZip,
   getPdfPageCount,
   pdfBytesToBlob,
   zipBytesToBlob,
@@ -40,6 +42,10 @@ export type ClientToolInput = {
   organizePageOrder: number[];
   pagesText: string;
   splitMode: string;
+  /** «Her N sayfada bir» kipi: N. */
+  splitEveryN?: string;
+  /** «Boyuta göre» kipi: en çok MB. */
+  splitMaxMb?: string;
   language: Language;
   fallbackFilename: string;
   /** "1-3,5" gibi bir metni sayfa numaralarına çevirir. */
@@ -64,6 +70,8 @@ export async function runClientPdfTool(
     organizePageOrder,
     pagesText,
     splitMode,
+    splitEveryN,
+    splitMaxMb,
     language,
     fallbackFilename,
     expandPages,
@@ -133,6 +141,27 @@ export async function runClientPdfTool(
       ),
       filename: fallbackFilename,
     };
+  }
+
+  // Her N sayfada bir ve boyuta göre bölme cihazda yapılır; yer imine göre bölme yalnızca sunucuda.
+  if (toolId === "split" && splitMode === "every" && pageCount > 0) {
+    const n = Math.floor(Number((splitEveryN ?? "").trim() || "1"));
+    if (!(n >= 1)) return null;
+    return {
+      blob: zipBytesToBlob(await splitEveryNToZip(src, n, "parca")),
+      filename: "bolunmus.zip",
+    };
+  }
+  if (toolId === "split" && splitMode === "size" && pageCount > 0) {
+    const mb = Number((splitMaxMb ?? "").trim().replace(",", ".") || "5");
+    if (!(mb > 0)) return null;
+    return {
+      blob: zipBytesToBlob(await splitBySizeToZip(src, Math.round(mb * 1024 * 1024), "parca")),
+      filename: "bolunmus.zip",
+    };
+  }
+  if (toolId === "split" && splitMode !== "single" && splitMode !== "separate") {
+    return null;
   }
 
   if (toolId === "split" && pageCount > 0) {

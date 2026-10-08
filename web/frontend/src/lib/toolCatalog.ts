@@ -13,6 +13,12 @@
  * `bg-${x}-500` gibi birleştirmeler üretimde renksiz kalır.
  */
 import {
+  ScanLine,
+  Contrast,
+  Shuffle,
+  Scaling,
+  FlipHorizontal2,
+  Crop,
   ArrowRightLeft,
   Camera,
   Combine,
@@ -237,6 +243,36 @@ export const TOOLS: Tool[] = [
     en: { name: "Fill PDF Form", desc: "Detects fillable fields and fills them on your device." },
   },
   {
+    id: "crop-pdf", cat: "edit", Icon: Crop,
+    tr: { name: "PDF Kırp", desc: "Sayfaların kenar boşluklarını kırpın; boş kenarları otomatik bulur." },
+    en: { name: "Crop PDF", desc: "Trim page margins; finds the empty edges for you." },
+  },
+  {
+    id: "grayscale-pdf", cat: "edit", Icon: Contrast,
+    tr: { name: "PDF Gri Tonlama", desc: "Renkli PDF'i siyah-beyaza çevirir; metin seçilebilir kalır." },
+    en: { name: "Grayscale PDF", desc: "Turns a colour PDF black-and-white; text stays selectable." },
+  },
+  {
+    id: "resize-pdf", cat: "edit", Icon: Scaling,
+    tr: { name: "PDF Sayfa Boyutu", desc: "Sayfaları A4, A5, Letter veya özel ölçüye getirir." },
+    en: { name: "Resize PDF Pages", desc: "Fits pages to A4, A5, Letter or a custom size." },
+  },
+  {
+    id: "flip-pdf", cat: "edit", Icon: FlipHorizontal2,
+    tr: { name: "PDF Çevir (Ayna)", desc: "Sayfaları yatay veya dikey ayna gibi çevirir." },
+    en: { name: "Flip PDF", desc: "Mirrors pages horizontally or vertically." },
+  },
+  {
+    id: "alternate-mix-pdf", cat: "edit", Icon: Shuffle,
+    tr: { name: "PDF Dönüşümlü Birleştir", desc: "İki PDF'in sayfalarını sırayla serpiştirir (çift taraflı tarama)." },
+    en: { name: "Alternate & Mix PDF", desc: "Interleaves the pages of two PDFs (double-sided scans)." },
+  },
+  {
+    id: "deskew-pdf", cat: "edit", Icon: ScanLine,
+    tr: { name: "PDF Eğri Tarama Düzeltme", desc: "Eğri taranmış sayfaları düzeltir; yazı katmanlı sayfalara dokunmaz." },
+    en: { name: "Deskew PDF", desc: "Straightens crooked scanned pages; leaves text-layer pages alone." },
+  },
+  {
     id: "flatten-pdf", cat: "edit", Icon: Layers,
     tr: { name: "PDF Düzleştir", desc: "Form ve katmanları sabitleyip değiştirilemez yapın." },
     en: { name: "Flatten PDF", desc: "Lock forms and layers so nothing can shift." },
@@ -439,6 +475,12 @@ export const TOOL_HUE: Record<string, HueId> = {
   "page-numbers": "blue",
   watermark: "sky",
   "flatten-pdf": "indigo",
+  "crop-pdf": "teal",
+  "grayscale-pdf": "sky",
+  "resize-pdf": "orange",
+  "flip-pdf": "fuchsia",
+  "alternate-mix-pdf": "violet",
+  "deskew-pdf": "cyan",
   "form-doldur": "emerald",
   "ustveri-temizle": "rose",
   "pdf-to-pdfa": "amber",

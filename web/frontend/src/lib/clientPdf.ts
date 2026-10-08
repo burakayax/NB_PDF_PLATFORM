@@ -10,7 +10,7 @@
  */
 import { PDFDocument, degrees, rgb, LineCapStyle } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import { zipSync } from "fflate";
+import { zipSync, strToU8 } from "fflate";
 import { PdfEncryptedError } from "./clientPdfCore";
 import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 import type { SearchablePage, SignatureItem, AnnotationItem } from "./clientPdfCore";
@@ -461,6 +461,105 @@ export async function splitPagesToZip(
     copied.forEach((p) => out.addPage(p));
     markaKunyesi(out);
     files[`${baseName}_${i + 1}.pdf`] = await out.save(PDF_SAVE_OPTIONS);
+  }
+  return zipSync(files);
+}
+
+/** Kaynaktaki [ilk, son] (0 tabanlı, dahil) sayfa aralığını yeni bir PDF olarak kaydeder. */
+async function aralikKaydet(src: PDFDocument, ilk: number, son: number): Promise<Uint8Array> {
+  const out = await PDFDocument.create();
+  const idx = Array.from({ length: son - ilk + 1 }, (_, k) => ilk + k);
+  const copied = await out.copyPages(src, idx);
+  copied.forEach((p) => out.addPage(p));
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
+}
+
+/** En çok bu kadar dosya üretilir (kötüye kullanım ve bellek sınırı). */
+const MAKS_PARCA = 300;
+
+/**
+ * Her `n` sayfada bir dosya (ZIP). Belge zaten tek parçaysa "single-part" hatası fırlatır.
+ * Kalan sayfalar son dosyaya girer.
+ */
+export async function splitEveryNToZip(
+  bytes: ArrayBuffer | Uint8Array,
+  n: number,
+  baseName = "parca",
+): Promise<Uint8Array> {
+  const src = await loadPdf(bytes);
+  const toplam = src.getPageCount();
+  const k = Math.max(1, Math.floor(n));
+  if (Math.ceil(toplam / k) <= 1) throw new Error("single-part");
+  if (Math.ceil(toplam / k) > MAKS_PARCA) throw new Error("too-many");
+  const files: Record<string, Uint8Array> = {};
+  for (let a = 0; a < toplam; a += k) {
+    const b = Math.min(toplam - 1, a + k - 1);
+    files[`${baseName}_${a + 1}-${b + 1}.pdf`] = await aralikKaydet(src, a, b);
+  }
+  return zipSync(files);
+}
+
+/**
+ * Boyuta göre bölme (ZIP): her parça `maxBytes`'ı aşmaz; boyut, kaydedilen gerçek dosyadan ölçülür.
+ * Tek başına sınırı aşan sayfa kendi dosyasına konur ve ZIP'e bir uyarı notu eklenir.
+ */
+export async function splitBySizeToZip(
+  bytes: ArrayBuffer | Uint8Array,
+  maxBytes: number,
+  baseName = "parca",
+): Promise<Uint8Array> {
+  if (!(maxBytes >= 20 * 1024)) throw new Error("limit-small");
+  const src = await loadPdf(bytes);
+  const toplam = src.getPageCount();
+  const files: Record<string, Uint8Array> = {};
+  const asan: number[] = [];
+  let parcaSayisi = 0;
+  let a = 0;
+  while (a < toplam) {
+    const ilk = await aralikKaydet(src, a, a);
+    if (ilk.byteLength > maxBytes) {
+      asan.push(a + 1);
+      files[`${baseName}_${a + 1}.pdf`] = ilk;
+      a += 1;
+    } else {
+      // Üstel büyüt, sonra ikili arama: sınırı aşmayan en uzun aralık.
+      let iyi = a;
+      let iyiBayt = ilk;
+      let adim = 1;
+      while (iyi + adim < toplam) {
+        const dene = await aralikKaydet(src, a, iyi + adim);
+        if (dene.byteLength <= maxBytes) {
+          iyi += adim;
+          iyiBayt = dene;
+          adim *= 2;
+        } else break;
+      }
+      let alt = iyi;
+      let ust = Math.min(toplam - 1, iyi + adim);
+      while (alt < ust) {
+        const orta = Math.ceil((alt + ust + 1) / 2);
+        const dene = await aralikKaydet(src, a, orta);
+        if (dene.byteLength <= maxBytes) {
+          alt = orta;
+          iyiBayt = dene;
+        } else {
+          ust = orta - 1;
+        }
+      }
+      files[`${baseName}_${a + 1}-${alt + 1}.pdf`] = iyiBayt;
+      a = alt + 1;
+    }
+    parcaSayisi += 1;
+    if (parcaSayisi > MAKS_PARCA) throw new Error("too-many");
+  }
+  if (Object.keys(files).length <= 1 && asan.length === 0) throw new Error("single-part");
+  if (asan.length > 0) {
+    files["UYARI - sinir asan sayfalar.txt"] = strToU8(
+      `Aşağıdaki sayfalar tek başına ${(maxBytes / (1024 * 1024)).toFixed(2)} MB sınırını aştığı için kendi dosyalarına konuldu ` +
+        `(dosya boyutu sınırdan büyüktür):\n\n${asan.map((n) => `- Sayfa ${n}`).join("\n")}\n\n` +
+        "Bu sayfaları küçültmek için PDF Sıkıştır aracını kullanabilirsiniz.\n",
+    );
   }
   return zipSync(files);
 }

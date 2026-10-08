@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 import {
+  ScanLine,
+  FlipHorizontal2,
+  Scaling,
+  Contrast,
+  Shuffle,
   Braces,
   Combine,
   Crop,
@@ -86,6 +91,12 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
       { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
       { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
+      { id: "crop-pdf", icon: <Crop className="h-5 w-5" />, tr: "Sayfa Kırp", en: "Crop pages" },
+      { id: "grayscale-pdf", icon: <Contrast className="h-5 w-5" />, tr: "Gri Tonlama", en: "Grayscale" },
+      { id: "resize-pdf", icon: <Scaling className="h-5 w-5" />, tr: "Sayfa Boyutu", en: "Page size" },
+      { id: "flip-pdf", icon: <FlipHorizontal2 className="h-5 w-5" />, tr: "Ayna", en: "Flip" },
+      { id: "alternate-mix-pdf", icon: <Shuffle className="h-5 w-5" />, tr: "Dönüşümlü", en: "Alternate" },
+      { id: "deskew-pdf", icon: <ScanLine className="h-5 w-5" />, tr: "Eğri Düzelt", en: "Deskew" },
       { id: "flatten-pdf", icon: <Combine className="h-5 w-5" />, tr: "Düzleştir", en: "Flatten" },
       { id: "form-doldur", icon: <FileText className="h-5 w-5" />, tr: "Form Doldur", en: "Fill form" },
       { id: "ustveri-temizle", icon: <Eraser className="h-5 w-5" />, tr: "Üstveri Temizle", en: "Remove metadata" },

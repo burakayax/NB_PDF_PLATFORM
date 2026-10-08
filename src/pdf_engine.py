@@ -3184,7 +3184,10 @@ def _fast_image_compress_pipeline(
 
     cfg = {
         "low":    {"max_px": 900,  "jpeg_q": 40},
-        "auto":   {"max_px": 1400, "jpeg_q": 52},
+        # Otomatik (varsayılan): rakip karşılaştırmasında (iLovePDF/Sejda, 7 Ekim 2026) eski değer
+        # (1400px/52) en küçük ama en düşük kaliteliydi (30,8 dB). 1600px/62 kaliteyi rakip
+        # düzeyine (~33 dB) çıkarırken boyutu rakiplerin altında tutar.
+        "auto":   {"max_px": 1600, "jpeg_q": 62},
         "medium": {"max_px": 1600, "jpeg_q": 65},
         "high":   {"max_px": 2200, "jpeg_q": 78},
         # Yalnızca hedef boyut modunun son metin-koruyan basamağı (menüde görünmez).

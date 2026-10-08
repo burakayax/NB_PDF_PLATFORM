@@ -92,6 +92,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
       { k: "free", id: "gorsel-sikistir" },
       { k: "page", slug: "gorsel-boyutlandir", Icon: Maximize2, tr: "Görsel Boyutlandır", en: "Resize Image" },
       { k: "member", slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
+      { k: "member", slug: "crop-pdf", Icon: Crop, tr: "Sayfa Kırp", en: "Crop pages" },
     ],
   },
 ];
