@@ -2605,15 +2605,6 @@ function App() {
         url.hash,
     );
 
-    if (payment === "success") {
-      // Huni son adım: gerçek iyzico ödemesi başarıyla tamamlandı.
-      trackFunnelEvent("purchase", { plan: plan ?? undefined });
-      const seats = url.searchParams.get("seats");
-      url.searchParams.delete("seats");
-      window.history.replaceState(
-        {},
-        "",
-        url.pathname +
     if (payment === "success" && url.searchParams.get("cvpass")) {
       // CV Geçişi: plan değişmedi → "Pro'ya geçtiniz" penceresi değil, kısa bir bildirim.
       const hours = Number(url.searchParams.get("cvpass")) || 0;
@@ -2632,6 +2623,15 @@ function App() {
       return;
     }
 
+    if (payment === "success") {
+      // Huni son adım: gerçek iyzico ödemesi başarıyla tamamlandı.
+      trackFunnelEvent("purchase", { plan: plan ?? undefined });
+      const seats = url.searchParams.get("seats");
+      url.searchParams.delete("seats");
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname +
           (url.search ? `?${url.searchParams.toString()}` : "") +
           url.hash,
       );
@@ -3079,12 +3079,12 @@ function App() {
         p === "/tools/pdf-karsilastir" ||
         p === "/tools/hassas-veri-gizle" ||
         p === "/tools/sozlesme-denetci" ||
+        p === "/tools/ai-fotograf-studyosu" ||
+        p === "/tools/cv-olustur" ||
         p === "/tools/belge-tara" ||
         p === "/tools/aranabilir-pdf" ||
         p === "/tools/udf-to-pdf" ||
         p === "/pdf-api" ||
-        p === "/tools/ai-fotograf-studyosu" ||
-        p === "/tools/cv-olustur" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
         p.startsWith("/blog/")
@@ -5630,14 +5630,6 @@ function App() {
         </GuestSeoToolPage>
       );
     }
-    if (seoSlug === "hassas-veri-gizle") {
-      return (
-        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
-          <Suspense fallback={<PageSkeleton />}>
-            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} initialFile={pendingToolFile} />
-          </Suspense>
-        </GuestSeoToolPage>
-      );
     if (seoSlug === "ai-fotograf-studyosu") {
       return (
         <GuestSeoToolPage slug="ai-fotograf-studyosu" wide language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -5656,6 +5648,14 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "hassas-veri-gizle") {
+      return (
+        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
     }
     // Taranmış PDF → Metin (OCR): SEO içeriği "cihazda OCR ile aranabilir/düzenlenebilir
     // metin" vaat ediyor → AI özet yerine gerçek OCR aracı (SearchablePdfTool).
@@ -6710,6 +6710,7 @@ function App() {
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
+          onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6718,7 +6719,6 @@ function App() {
           onOverlayOpenChange={setToolsPanelOpen}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
-          onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
         <div
           className={`w-full flex-1 bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-60"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
@@ -6800,14 +6800,6 @@ function App() {
                       onUpgrade={() => setUpgradeModalOpen(true)}
                       comingSoon={aiComingSoon}
                     />
-                  ) : aiModal === "redact" ? (
-                    <AiRedactTool
-                      language={language}
-                      accessToken={accessToken}
-                      onLogin={() => setView("login")}
-                      onUpgrade={() => setUpgradeModalOpen(true)}
-                      comingSoon={aiComingSoon}
-                      initialFile={pendingToolFile}
                   ) : aiModal === "photo" ? (
                     <PhotoStudioTool
                       language={language}
@@ -6817,6 +6809,14 @@ function App() {
                       comingSoon={aiComingSoon}
                       isAdmin={aiIsAdmin}
                     />
+                  ) : aiModal === "redact" ? (
+                    <AiRedactTool
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                      comingSoon={aiComingSoon}
+                      initialFile={pendingToolFile}
                     />
                   ) : (
                     <AiPdfTool
@@ -6919,14 +6919,6 @@ function App() {
               </WorkspaceToolShell>
             ) : null}
 
-            {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
-            {contentPanel === "udf" ? (
-              <WorkspaceToolShell id="udf-to-pdf" language={language}>
-                <Suspense fallback={<PageSkeleton />}>
-                  <UdfToPdfTool language={language} />
-                </Suspense>
-              </WorkspaceToolShell>
-            ) : null}
             {/* CV Oluştur — canlı önizlemeli CV hazırlayıcı (üyelik ister, cihazda çalışır). */}
             {contentPanel === "cv" ? (
               <section className="mx-auto w-full max-w-[1500px] py-2">
@@ -6936,6 +6928,14 @@ function App() {
               </section>
             ) : null}
 
+            {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {contentPanel === "udf" ? (
+              <WorkspaceToolShell id="udf-to-pdf" language={language}>
+                <Suspense fallback={<PageSkeleton />}>
+                  <UdfToPdfTool language={language} />
+                </Suspense>
+              </WorkspaceToolShell>
+            ) : null}
 
             {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
             {contentPanel === "searchable" ? (
