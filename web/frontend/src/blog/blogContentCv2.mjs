@@ -47,9 +47,9 @@ export const CV_TOOL_POSTS = [
         { t: "p", x: "CV Oluştur aynı cihazda 12 CV'ye kadar saklar. Ana CV'nizi koruyup her başvuru için bir kopya oluşturabilir, kopyaya şirket ya da pozisyon adını verebilirsiniz. Böylece hangi ilana hangi sürümü gönderdiğinizi sonradan bulabilirsiniz." },
         { t: "h2", x: "6. Göndermeden önce son kontrol" },
         { t: "steps", items: [
-          { title: "Tutarlılık", x: "Analiz sekmesi tarih çakışması gibi kesin hataları gösterir." },
-          { title: "ATS röntgeni", x: "PDF'inizin başvuru sistemlerince nasıl okunduğunu görün: adınız ilk satırda mı, e-posta ve telefon tanınıyor mu, başlıklar anlaşılıyor mu?" },
-          { title: "Sayfa sayısı", x: "İki sayfaya taşan bir CV'yi \"Tek sayfaya sığdır\" ile tek sayfaya indirebilirsiniz." },
+          { title: "Tarihleri kontrol edin", x: "CV Oluştur'daki Analiz bölümü, iş tarihlerinizin çakışıp çakışmadığını ve aralarında boşluk olup olmadığını sizin yerinize hesaplar." },
+          { title: "CV tarama yazılımı sizi okuyabiliyor mu?", x: "Şirketler CV'leri önce tarama yazılımıyla (ATS) okur; ATS röntgeni, PDF'inizin o yazılıma nasıl göründüğünü gösterir." },
+          { title: "CV'yi tek sayfaya indirin", x: "İki sayfaya taşan bir CV'yi \"Tek sayfaya sığdır\" ile tek sayfaya indirebilirsiniz." },
         ] },
       ],
       faq: [
@@ -88,8 +88,8 @@ export const CV_TOOL_POSTS = [
         { t: "p", x: "CV Maker stores up to 12 CVs on your device. Keep your master CV intact and create a copy for each application, named after the company or role, so you can find which version went where." },
         { t: "h2", x: "6. Final checks before sending" },
         { t: "steps", items: [
-          { title: "Consistency", x: "The Analysis tab flags clear errors such as overlapping dates." },
-          { title: "ATS X-ray", x: "See how hiring systems read your PDF: is your name the first line, are your email and phone recognised, are the headings understood?" },
+          { title: "Check your dates", x: "The Analysis section in CV Maker works out whether your job dates overlap or leave gaps, so you don't have to." },
+          { title: "Can screening software read your CV?", x: "Employers often run CVs through screening software (an ATS) first; the ATS X-ray shows how your PDF looks to it." },
           { title: "Page count", x: "If the CV spills onto a second page, \"Fit to one page\" can bring it back to one." },
         ] },
       ],
