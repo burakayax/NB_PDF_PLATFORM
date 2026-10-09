@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAROUSEL_COPY, MAX_CONTENT_SLIDES, extractContentSlides, firstSentence } from "../blog/carouselSlides.mjs";
+import { CAROUSEL_COPY, MAX_CONTENT_SLIDES, extractCarousel, extractContentSlides, firstSentence } from "../blog/carouselSlides.mjs";
 import { getBlogPostsSorted } from "../blog/blogContent.mjs";
 
 describe("carousel slaytları — içerik yazının kendisinden gelir", () => {
@@ -82,5 +82,27 @@ describe("carousel slaytları — içerik yazının kendisinden gelir", () => {
       expect(CAROUSEL_COPY[lang].ctaTitle.length).toBeGreaterThan(5);
       expect(CAROUSEL_COPY[lang].stepLabel(2, 4)).toMatch(/2\/4/);
     }
+  });
+
+  it("numaralı bölümler varsa sondaki küçük adım kutusuna değil onlara öncelik verir", () => {
+    const r = extractCarousel([
+      { t: "h2", x: "1. İlanı okuyun" },
+      { t: "p", x: "Aranan nitelikleri not edin. Başka cümle." },
+      { t: "h2", x: "2. Kelimeleri eşleştirin" },
+      { t: "p", x: "Aynı kavramı ilanın kelimesiyle yazın." },
+      { t: "h2", x: "3. Eksikleri görün" },
+      { t: "p", x: "Araç eksik kelimeleri gösterir." },
+      { t: "h2", x: "4. Son kontrol" },
+      { t: "steps", items: [{ title: "A", x: "Bir." }, { title: "B", x: "İki." }] },
+    ]);
+    expect(r.kind).toBe("points");
+    expect(r.slides.map((s) => s.title)).toEqual(["İlanı okuyun", "Kelimeleri eşleştirin", "Eksikleri görün"]);
+    expect(r.slides[0]?.text).toBe("Aranan nitelikleri not edin.");
+  });
+
+  it("numaralı bölüm yoksa adım listesini kullanır ve 'steps' etiketi verir", () => {
+    const r = extractCarousel([{ t: "steps", items: [{ title: "A", x: "Bir." }, { title: "B", x: "İki." }] }]);
+    expect(r.kind).toBe("steps");
+    expect(r.slides.length).toBe(2);
   });
 });

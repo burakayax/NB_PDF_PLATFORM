@@ -25,14 +25,14 @@ import { dirname, join } from "node:path";
 import sharp from "sharp";
 
 import { getBlogPostsSorted } from "../src/blog/blogContent.mjs";
-import { CAROUSEL_COPY, extractContentSlides } from "../src/blog/carouselSlides.mjs";
+import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
 
 const W = 1080;
 const H = 1350;
 const M = 84; // kenar boşluğu
-const DESIGN_VERSION = 3;
+const DESIGN_VERSION = 4;
 /**
  * Hangi dillerde carousel üretilir? Otomasyon yalnızca besleme dilinde
  * (PRIMARY_FEED_LANG = "tr") paylaşıyor; İngilizce slaytlar kullanılmayacak, boşuna
@@ -159,12 +159,9 @@ function ctaSvg({ bold, regular, host, total, copy }) {
 
 /** Bir yazının slayt SVG listesi (kapak, içerik..., kapanış). Slayt çıkmıyorsa []. */
 export function buildCarouselSvgs({ copyBlocks, title, lang, host, bold, regular }) {
-  const content = extractContentSlides(copyBlocks);
+  const { slides: content, kind } = extractCarousel(copyBlocks);
   if (content.length === 0) return { svgs: [], kind: "steps" };
   const copy = CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr;
-  const kind = copyBlocks.some((b) => b?.t === "steps" && Array.isArray(b.items) && b.items.length >= content.length)
-    ? "steps"
-    : "points";
   const total = content.length + 2;
   const svgs = [coverSvg({ title, bold, regular, host, total, copy })];
   content.forEach((slide, i) => {

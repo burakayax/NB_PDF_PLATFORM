@@ -58,30 +58,62 @@ const SKIP_HEADINGS = /sık sorulan|sorulan sorular|faq|frequently asked|sonuç|
  * @returns {Array<{ title: string, text: string }>} İçerik slaytları (kapak/kapanış hariç)
  */
 export function extractContentSlides(blocks) {
-  if (!Array.isArray(blocks)) return [];
+  return extractCarousel(blocks).slides;
+}
 
-  // 1) Yazının adım listesi — carousel'in en doğal içeriği.
+/** "1. Başlık" → "Başlık". */
+const stripNumber = (t) => String(t ?? "").replace(/^\s*\d+[.)]\s*/, "");
+
+/** Başlığın altındaki ilk paragrafın ilk cümlesi; araya başka blok girerse (liste, adım) null. */
+function textUnderHeading(blocks, i) {
+  const next = blocks.slice(i + 1).find((n) => n?.t === "p" || n?.t === "h2" || n?.t === "steps" || n?.t === "ul");
+  return next?.t === "p" ? firstSentence(next.x, 210) : "";
+}
+
+/**
+ * Slayt içeriği + etiket türü.
+ *  kind "steps"  → "ADIM n/m" (gerçek adım listesi)
+ *  kind "points" → "n/m"      (yazının numaralı bölümleri / ana başlıkları)
+ *
+ * ÖNCELİK: yazının numaralı bölümleri ("1. …", "2. …") yazının ANA fikridir; sondaki
+ * küçük "adımlar" kutusu (ör. göndermeden önce son kontrol) çoğu zaman yalnızca bir
+ * ekidir. Bu yüzden numaralı bölümler varsa onlar kullanılır.
+ */
+export function extractCarousel(blocks) {
+  if (!Array.isArray(blocks)) return { slides: [], kind: "steps" };
+
+  // 1) Numaralı bölümler: en az 3 tane "N. Başlık" h2.
+  const numbered = blocks
+    .map((b, i) => ({ b, i }))
+    .filter(({ b }) => b?.t === "h2" && /^\s*\d+[.)]\s/.test(b.x ?? "") && !SKIP_HEADINGS.test(b.x ?? ""));
+  if (numbered.length >= 3) {
+    const slides = numbered
+      .map(({ b, i }) => ({ title: cleanTitle(stripNumber(b.x)), text: textUnderHeading(blocks, i) }))
+      .filter((s) => s.title && s.text)
+      .slice(0, MAX_CONTENT_SLIDES);
+    if (slides.length >= MIN_CONTENT_SLIDES) return { slides, kind: "points" };
+  }
+
+  // 2) Yazının adım listesi.
   const steps = blocks.find((b) => b?.t === "steps" && Array.isArray(b.items) && b.items.length >= MIN_CONTENT_SLIDES);
   if (steps) {
     const slides = steps.items
       .map((it) => ({ title: cleanTitle(it?.title), text: firstSentence(it?.x) }))
       .filter((s) => s.title && s.text)
       .slice(0, MAX_CONTENT_SLIDES);
-    if (slides.length >= MIN_CONTENT_SLIDES) return slides;
+    if (slides.length >= MIN_CONTENT_SLIDES) return { slides, kind: "steps" };
   }
 
-  // 2) Başlık + hemen altındaki ilk paragrafın ilk cümlesi.
+  // 3) Başlık + hemen altındaki ilk paragrafın ilk cümlesi.
   const slides = [];
   for (let i = 0; i < blocks.length && slides.length < MAX_CONTENT_SLIDES; i++) {
     const b = blocks[i];
     if (b?.t !== "h2" || SKIP_HEADINGS.test(b.x ?? "")) continue;
-    const next = blocks.slice(i + 1).find((n) => n?.t === "p" || n?.t === "h2" || n?.t === "steps" || n?.t === "ul");
-    if (next?.t !== "p") continue;
-    const text = firstSentence(next.x);
+    const text = textUnderHeading(blocks, i);
     const title = cleanTitle(b.x);
     if (title && text) slides.push({ title, text });
   }
-  return slides.length >= MIN_CONTENT_SLIDES ? slides : [];
+  return slides.length >= MIN_CONTENT_SLIDES ? { slides, kind: "points" } : { slides: [], kind: "points" };
 }
 
 /** Slayt metinleri (kapanış slaytı dahil) — dile göre sabit ifadeler. */
