@@ -6721,7 +6721,7 @@ function App() {
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
-          className={`w-full flex-1 bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-60"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
+          className={`w-full flex-1 bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-72"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
           {/* Dar pencerede (768–1279px) araç gezgini overlay sidebar'a devredilir —
               iki menü birden görünmesin. */}
@@ -6765,6 +6765,7 @@ function App() {
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
             contentPanel !== "tool" &&
+          onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
             contentPanel !== "ai" &&
             !isTeamMember ? (
               <DashboardLifecycleNudge

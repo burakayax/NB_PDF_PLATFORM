@@ -140,6 +140,24 @@ const SCAN_FAV_ID = "scan-doc";
 /** AI araçları favorilerde `ai:<mode>` id'siyle tutulur — FeatureKey değil. */
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
+/** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf";
+const CUSTOM_TOOLS: {
+  key: CustomToolKey;
+  favId: string;
+  group: ToolCategoryId;
+  tr: string;
+  en: string;
+  Icon: typeof Scissors;
+  iconClass: string;
+}[] = [
+  { key: "snip", favId: "snip-pdf", group: "convert", tr: "PDF'ten Kesit Al", en: "Snip PDF to Image", Icon: Scissors, iconClass: "text-cyan-300" },
+  { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF → PDF", en: "UDF → PDF", Icon: Scale, iconClass: "text-cyan-300" },
+  { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
+  { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
+  { key: "cv", favId: "cv-maker", group: "organize", tr: "CV Oluştur", en: "CV Maker", Icon: FileUser, iconClass: "text-sky-300" },
+];
+
 export type SidebarToolId = FeatureKey | "subscription";
 
 type DashboardSidebarProps = {
@@ -254,18 +272,26 @@ export function DashboardSidebar({
   const annotateFavorited = !!onOpenAnnotate && isFavorite(ANNOTATE_FAV_ID);
   const scanFavorited = !!onOpenScan && isFavorite(SCAN_FAV_ID);
   const favAiTools = onOpenAi ? AI_TOOLS.filter((t) => isFavorite(aiFavId(t.mode))) : [];
+  const customHandlers: Record<CustomToolKey, (() => void) | undefined> = {
+    snip: onOpenSnip,
+    "compress-image": onOpenCompressImage,
+    "resize-image": onOpenResizeImage,
+    cv: onOpenCv,
+    udf: onOpenUdf,
+  };
+  const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const sidebarGroups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    // Favoriler bölümü: en az bir araç VEYA özel araç (editör/imza/yorum/tara/AI) favorilenmişse görünür.
-    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited || scanFavorited || favAiTools.length > 0
+    // Favoriler bölümü: en az bir araç VEYA özel araç (editör/imza/yorum/tara/AI/panel araçları) favorilenmişse görünür.
+    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited || scanFavorited || favAiTools.length > 0 || favCustomTools.length > 0
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited, scanFavorited, favAiTools.length]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited, scanFavorited, favAiTools.length, favCustomTools.length]);
   // Accordion: varsayılan olarak TÜM kategoriler kapalı; yalnızca kullanıcının
   // favorisi varsa "Favoriler" açık gelir. Diğerleri başlığa tıklayınca açılır.
   const [openCats, setOpenCats] = useState<Set<string>>(
@@ -312,7 +338,7 @@ export function DashboardSidebar({
           )}
         </span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate">{label}</span>
+          <span className="truncate" title={label}>{label}</span>
           <span className="flex shrink-0 items-center gap-1.5">
             {locked ? (
               <span
@@ -342,7 +368,7 @@ export function DashboardSidebar({
       >
         <span className="text-base text-cyan-400" aria-hidden>✏️</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate">{label}</span>
+          <span className="truncate" title={label}>{label}</span>
           <FavoriteStar
             alwaysVisible
             active={isFavorite(EDITOR_FAV_ID)}
@@ -367,7 +393,7 @@ export function DashboardSidebar({
       >
         <span className="text-base text-amber-300" aria-hidden>✍️</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate">{label}</span>
+          <span className="truncate" title={label}>{label}</span>
           <FavoriteStar
             alwaysVisible
             active={isFavorite(SIGN_FAV_ID)}
@@ -392,7 +418,7 @@ export function DashboardSidebar({
       >
         <span className="text-base" aria-hidden>📸</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate">{label}</span>
+          <span className="truncate" title={label}>{label}</span>
           <FavoriteStar alwaysVisible active={isFavorite(SCAN_FAV_ID)} label={label} onToggle={() => toggleFavorite(SCAN_FAV_ID)} />
         </span>
       </button>
@@ -412,7 +438,7 @@ export function DashboardSidebar({
       >
         <span className="text-base text-fuchsia-300" aria-hidden>✨</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate">{label}</span>
+          <span className="truncate" title={label}>{label}</span>
           <span className="flex shrink-0 items-center gap-1.5">
             <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
             <FavoriteStar alwaysVisible active={isFavorite(aiFavId(t.mode))} label={label} onToggle={() => toggleFavorite(aiFavId(t.mode))} />
@@ -435,7 +461,7 @@ export function DashboardSidebar({
       >
         <span className="text-base text-orange-300" aria-hidden>🖍️</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate">{label}</span>
+          <span className="truncate" title={label}>{label}</span>
           <FavoriteStar
             alwaysVisible
             active={isFavorite(ANNOTATE_FAV_ID)}
@@ -447,83 +473,24 @@ export function DashboardSidebar({
     );
   };
 
-  // PDF Kırp satırı — cihazda görsel kırpma; yapısal grup (Düzenle/Organize) içinde.
-  const renderSnipRow = (keyPrefix = "") => {
-    if (!onOpenSnip) return null;
-    const label = tr ? "PDF'ten Kesit Al" : "Snip PDF to Image";
+  // Kendi paneliyle açılan araçlar (Kesit Al / Görsel Sıkıştır / Görsel Boyutlandır / CV / UDF) —
+  // favori yıldızlı; kategorisinde ve Favoriler'de kullanılır.
+  const renderCustomRow = (t: (typeof CUSTOM_TOOLS)[number], keyPrefix = "") => {
+    const onClick = customHandlers[t.key];
+    if (!onClick) return null;
+    const label = tr ? t.tr : t.en;
     return (
       <button
-        key={`${keyPrefix}snip`}
+        key={`${keyPrefix}${t.key}`}
         type="button"
-        onClick={onOpenSnip}
-        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "snip")}`}
+        onClick={onClick}
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === t.key)}`}
       >
-        <Scissors className="h-5 w-5 text-cyan-300" aria-hidden />
-        <span className="truncate">{label}</span>
-      </button>
-    );
-  };
-
-  const renderCompressImageRow = (keyPrefix = "") => {
-    if (!onOpenCompressImage) return null;
-    const label = tr ? "Görsel Sıkıştır" : "Compress Image";
-    return (
-      <button
-        key={`${keyPrefix}compress-image`}
-        type="button"
-        onClick={onOpenCompressImage}
-        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "compress-image")}`}
-      >
-        <ImageDown className="h-5 w-5 text-cyan-300" aria-hidden />
-        <span className="truncate">{label}</span>
-      </button>
-    );
-  };
-
-  const renderResizeImageRow = (keyPrefix = "") => {
-    if (!onOpenResizeImage) return null;
-    const label = tr ? "Görsel Boyutlandır" : "Resize Image";
-    return (
-      <button
-        key={`${keyPrefix}resize-image`}
-        type="button"
-        onClick={onOpenResizeImage}
-        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "resize-image")}`}
-      >
-        <Scaling className="h-5 w-5 text-cyan-300" aria-hidden />
-        <span className="truncate">{label}</span>
-      </button>
-    );
-  };
-
-  const renderCvRow = (keyPrefix = "") => {
-    if (!onOpenCv) return null;
-    const label = tr ? "CV Oluştur" : "CV Maker";
-    return (
-      <button
-        key={`${keyPrefix}cv`}
-        type="button"
-        onClick={onOpenCv}
-        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "cv")}`}
-      >
-        <FileUser className="h-5 w-5 text-sky-300" aria-hidden />
-        <span className="truncate">{label}</span>
-      </button>
-    );
-  };
-
-  const renderUdfRow = (keyPrefix = "") => {
-    if (!onOpenUdf) return null;
-    const label = tr ? "UDF → PDF" : "UDF → PDF";
-    return (
-      <button
-        key={`${keyPrefix}udf`}
-        type="button"
-        onClick={onOpenUdf}
-        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "udf")}`}
-      >
-        <Scale className="h-5 w-5 text-cyan-300" aria-hidden />
-        <span className="truncate">{label}</span>
+        <t.Icon className={`h-5 w-5 ${t.iconClass}`} aria-hidden />
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate" title={label}>{label}</span>
+          <FavoriteStar alwaysVisible active={isFavorite(t.favId)} label={label} onToggle={() => toggleFavorite(t.favId)} />
+        </span>
       </button>
     );
   };
@@ -548,7 +515,7 @@ export function DashboardSidebar({
   }, [overlay, overlayOpen, onOverlayOpenChange]);
 
   const asideVisuals =
-    "w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150";
+    "w-72 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150";
 
   return (
     <>
@@ -665,16 +632,8 @@ export function DashboardSidebar({
                   {group.id === "organize" ? renderScanRow("organize-") : null}
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
-                  {/* PDF'ten Kesit Al — sayfadan alan seçip görsel çıkarma */}
-                  {group.id === "organize" ? renderSnipRow("organize-") : null}
-                  {/* Görsel Sıkıştır — İyileştir grubu (PDF Sıkıştır'ın görsel karşılığı) */}
-                  {group.id === "optimize" ? renderCompressImageRow("optimize-") : null}
-                  {/* Görsel Boyutlandır — İyileştir grubu (sosyal medya ölçüleri) */}
-                  {group.id === "optimize" ? renderResizeImageRow("optimize-") : null}
-                  {/* CV Oluştur — Düzenle grubu (canlı önizlemeli CV hazırlayıcı) */}
-                  {group.id === "organize" ? renderCvRow("organize-") : null}
-                  {/* UDF'yi PDF Yap — Dönüştür grubu (UYAP belgesi, cihazda çevrilir) */}
-                  {group.id === "convert" ? renderUdfRow("convert-") : null}
+                  {/* Panel araçları (Kesit Al, Görsel Sıkıştır/Boyutlandır, CV, UDF) — kendi kategorisinde */}
+                  {CUSTOM_TOOLS.filter((t) => t.group === group.id).map((t) => renderCustomRow(t, `${group.id}-`))}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}
@@ -683,6 +642,7 @@ export function DashboardSidebar({
                   {group.id === "favorites" && annotateFavorited ? renderAnnotateRow("fav-") : null}
                   {group.id === "favorites" && scanFavorited ? renderScanRow("fav-") : null}
                   {group.id === "favorites" ? favAiTools.map((t) => renderAiRow(t, "fav-")) : null}
+                  {group.id === "favorites" ? favCustomTools.map((t) => renderCustomRow(t, "fav-")) : null}
                   {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
@@ -784,6 +744,11 @@ export function DashboardSidebarMobileLauncher({
   onOpenAnnotate,
   onOpenScan,
   onScansClick,
+  onOpenSnip,
+  onOpenCompressImage,
+  onOpenResizeImage,
+  onOpenUdf,
+  onOpenCv,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -833,18 +798,26 @@ export function DashboardSidebarMobileLauncher({
   const annotateFavorited = !!onOpenAnnotate && isFavorite(ANNOTATE_FAV_ID);
   const scanFavorited = !!onOpenScan && isFavorite(SCAN_FAV_ID);
   const favAiTools = onOpenAi ? AI_TOOLS.filter((t) => isFavorite(aiFavId(t.mode))) : [];
+  const customHandlers: Record<CustomToolKey, (() => void) | undefined> = {
+    snip: onOpenSnip,
+    "compress-image": onOpenCompressImage,
+    "resize-image": onOpenResizeImage,
+    cv: onOpenCv,
+    udf: onOpenUdf,
+  };
+  const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const groups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited || scanFavorited || favAiTools.length > 0
+    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited || scanFavorited || favAiTools.length > 0 || favCustomTools.length > 0
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // favorites listesi değişince yeniden grupla
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited, scanFavorited, favAiTools.length]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited, scanFavorited, favAiTools.length, favCustomTools.length]);
 
   // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
   const filteredGroups = useMemo(() => {
@@ -1265,6 +1238,40 @@ export function DashboardSidebarMobileLauncher({
                                   </span>
                                 </button>
                               ))
+                            : null}
+                          {/* Panel araçları (Kesit Al, Görsel Sıkıştır/Boyutlandır, CV, UDF) — kategorisinde + Favoriler'de */}
+                          {!query.trim()
+                            ? CUSTOM_TOOLS.filter(
+                                (t) =>
+                                  customHandlers[t.key] &&
+                                  (t.group === group.id || (group.id === "favorites" && isFavorite(t.favId))),
+                              ).map((t) => {
+                                const label = tr ? t.tr : t.en;
+                                return (
+                                  <button
+                                    key={`${group.id}-custom-${t.key}`}
+                                    type="button"
+                                    onClick={() => {
+                                      customHandlers[t.key]?.();
+                                      setOpen(false);
+                                    }}
+                                    className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-cyan-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
+                                  >
+                                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04]" aria-hidden>
+                                      <t.Icon className={`h-5 w-5 ${t.iconClass}`} />
+                                    </span>
+                                    <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">{label}</span>
+                                    <span className="absolute left-1 top-1">
+                                      <FavoriteStar
+                                        alwaysVisible
+                                        active={isFavorite(t.favId)}
+                                        label={label}
+                                        onToggle={() => toggleFavorite(t.favId)}
+                                      />
+                                    </span>
+                                  </button>
+                                );
+                              })
                             : null}
                           {group.tools.map((id) => {
                             const isActive = active === id && !panelLabel;

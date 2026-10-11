@@ -14,7 +14,18 @@ import { GoogleSignupPage } from "./components/auth/GoogleSignupPage";
 import { TOOL_SLUGS } from "./seo/seoContent.mjs";
 import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/usePreferredLanguage";
+import { getSaasApiBase } from "./api/saasBase";
 import "./styles/app.css";
+
+// Eski e-postalardaki doğrulama bağlantısı SPA'nın kendi alanına (/api/auth/verify-email) düşüyordu
+// ve ana sayfaya atıyordu. API adresi biliniyorsa isteği API'ye ilet; API doğrular ve
+// kullanıcıyı giriş ekranına "e-posta doğrulandı" bildirimiyle döndürür.
+if (window.location.pathname === "/api/auth/verify-email") {
+  const apiBase = getSaasApiBase();
+  if (apiBase && !apiBase.startsWith(window.location.origin)) {
+    window.location.replace(`${apiBase}/api/auth/verify-email${window.location.search}`);
+  }
+}
 
 // Belge dilini kullanıcı konumu ve tercihine göre ayarlar.
 // Geolokasyon paylaşılan, önbellekli `getCountryCode` ile yapılır (CheckoutCurrency ile tek istek paylaşılır).

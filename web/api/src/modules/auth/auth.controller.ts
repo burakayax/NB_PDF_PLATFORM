@@ -274,42 +274,6 @@ function rawBodyEmail(request: Request) {
   return tryNormalizeEmailForStorage(trimmed) ?? trimmed.toLowerCase();
 }
 
-function renderVerificationHtml(
-  status: "success" | "error",
-  title: string,
-  detail: string,
-) {
-  const accent = status === "success" ? "#38bdf8" : "#f87171";
-  const accentText = status === "success" ? "#082f49" : "#450a0a";
-
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title}</title>
-  </head>
-  <body style="margin:0;min-height:100vh;background:#0f172a;font-family:Arial,Helvetica,sans-serif;color:#e2e8f0;display:flex;align-items:center;justify-content:center;padding:24px;">
-    <div style="width:min(560px,100%);background:#111827;border:1px solid #1f2937;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;">
-      <div style="padding:28px 28px 16px;border-bottom:1px solid #1f2937;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:.18em;color:#7dd3fc;text-transform:uppercase;">PDF PLATFORM</div>
-        <h1 style="margin:16px 0 0;font-size:28px;line-height:1.2;color:#f8fafc;">${title}</h1>
-      </div>
-      <div style="padding:28px;">
-        <div style="display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 14px;border-radius:999px;background:${accent};color:${accentText};font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">
-          ${status === "success" ? "Verified" : "Verification error"}
-        </div>
-        <p style="margin:18px 0 0;font-size:15px;line-height:1.8;color:#cbd5e1;">${detail}</p>
-        <p style="margin:18px 0 0;font-size:14px;line-height:1.8;color:#94a3b8;">You can now return to the application and continue with your account flow.</p>
-        <a href="${env.FRONTEND_ORIGIN}/?view=login&email_verified=1" style="display:inline-block;margin-top:24px;padding:12px 18px;border-radius:14px;background:#1e293b;color:#f8fafc;text-decoration:none;font-weight:700;">
-          Open PDF PLATFORM
-        </a>
-      </div>
-    </div>
-  </body>
-</html>`;
-}
-
 export async function registerController(request: Request, response: Response) {
   const meta = clientRequestMeta(request);
   authLog.info("POST /api/auth/register: body keys", {
@@ -1039,37 +1003,32 @@ export async function verifyEmailController(
   const token =
     typeof request.query.token === "string" ? request.query.token.trim() : "";
   authLog.info("GET /verify-email", { hasToken: Boolean(token) });
+  const loginUrl = (params: Record<string, string>) => {
+    const url = new URL("/login", env.FRONTEND_ORIGIN.replace(/\/$/, ""));
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+    return url.toString();
+  };
+  // Kullanıcıyı her durumda giriş ekranına döndür: başarıda "e-posta doğrulandı" bildirimi,
+  // hatada (geçersiz/süresi dolmuş bağlantı) hata metni gösterilir.
   if (!token) {
-    response
-      .status(400)
-      .send(
-        renderVerificationHtml(
-          "error",
-          "Verification link is invalid",
-          "The verification token is missing or malformed.",
-        ),
-      );
+    response.redirect(
+      302,
+      loginUrl({ oauth_error: "Doğrulama bağlantısı geçersiz. / Verification link is invalid." }),
+    );
     return;
   }
 
   try {
-    const result = await verifyEmailToken(token);
-    response
-      .status(200)
-      .send(
-        renderVerificationHtml(
-          "success",
-          "Email verified",
-          `${result.email} is now verified. You can sign in with your email and password.`,
-        ),
-      );
+    await verifyEmailToken(token);
+    response.redirect(302, loginUrl({ email_verified: "1" }));
   } catch (error) {
     if (error instanceof HttpError) {
-      response
-        .status(error.statusCode)
-        .send(
-          renderVerificationHtml("error", "Verification failed", error.message),
-        );
+      // Zaten doğrulanmış hesap: kullanıcı için sonuç aynı — giriş yapabilir.
+      if (/already verified/i.test(error.message)) {
+        response.redirect(302, loginUrl({ email_verified: "1" }));
+        return;
+      }
+      response.redirect(302, loginUrl({ oauth_error: error.message }));
       return;
     }
     throw error;

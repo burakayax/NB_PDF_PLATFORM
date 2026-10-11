@@ -207,7 +207,7 @@ export function DashboardLayout({
         />
       </aside>
 
-      {/* Desktop sidebar — w-60 (240px), matches lg:pl-60 on main, hidden md:hidden lg:flex */}
+      {/* Desktop sidebar — w-72 (288px), matches lg:pl-72 on main, hidden md:hidden lg:flex */}
       <div className="hidden lg:flex">
         <DashboardSidebar
           active={selectedTool}
@@ -225,8 +225,8 @@ export function DashboardLayout({
         />
       </div>
 
-      {/* Main content — pt-14 for top nav, lg:pl-60 matches sidebar w-60, pb-20 on mobile for fixed button */}
-      <main className="flex min-h-screen w-full flex-col overflow-x-hidden pt-14 pb-20 sm:pb-0 lg:pl-60">
+      {/* Main content — pt-14 for top nav, lg:pl-72 matches sidebar w-72, pb-20 on mobile for fixed button */}
+      <main className="flex min-h-screen w-full flex-col overflow-x-hidden pt-14 pb-20 sm:pb-0 lg:pl-72">
         {/* Mobile & Tablet hamburger bar - 56px height minimum */}
         <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] bg-nb-bg/95 px-3 backdrop-blur-md lg:hidden">
           <button
