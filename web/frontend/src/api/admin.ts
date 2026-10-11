@@ -1012,6 +1012,8 @@ export type SocialConfig = {
   researchKeywords: boolean;
   /** Reels videoları onaysız, saati gelince kendiliğinden yayınlansın (varsayılan: onaylı). */
   reelsAutoPublish: boolean;
+  /** Araç tanıtım videosu kaç günde bir sıraya katılsın (0 = kapalı). */
+  toolReelEveryDays: number;
 };
 
 export type SocialAccountRow = {
@@ -1181,6 +1183,29 @@ export type SocialQueueResult = {
 
 export async function queueSocialPosts(accessToken: string): Promise<SocialQueueResult> {
   const r = await adminFetch(accessToken, "/social/queue", { method: "POST", body: JSON.stringify({}) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<SocialQueueResult>;
+}
+
+export type SocialToolReel = {
+  id: string;
+  guid: string;
+  /** Hazır video; yoksa null (paylaşım zamanı yaklaşınca kendiliğinden üretilir, paylaşılınca silinir). */
+  video: { id: string; url: string; seconds: number; createdAt: string } | null;
+  tr: { title: string; summary: string; link: string };
+  en: { title: string; summary: string; link: string };
+  /** Bu videonun gönderiye çevrildiği kayıtlar (en yeni önce). */
+  posts: { platform: SocialPlatformId; status: string; createdAt: string }[];
+};
+
+export async function fetchSocialToolReels(accessToken: string): Promise<{ reels: SocialToolReel[] }> {
+  const r = await adminFetch(accessToken, "/social/tool-reels");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ reels: SocialToolReel[] }>;
+}
+
+export async function queueSocialToolReel(accessToken: string, id: string): Promise<SocialQueueResult> {
+  const r = await adminFetch(accessToken, `/social/tool-reels/${encodeURIComponent(id)}/queue`, { method: "POST" });
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<SocialQueueResult>;
 }

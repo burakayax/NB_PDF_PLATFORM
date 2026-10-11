@@ -27,6 +27,7 @@ import { toolRatingAdminRouter } from "../modules/tool-rating/tool-rating.admin.
 import { emailComplianceAdminRouter } from "../modules/email/email-compliance.admin.routes.js";
 import { toolRatingRouter } from "../modules/tool-rating/tool-rating.routes.js";
 import { socialRouter } from "../modules/social/social.routes.js";
+import { toolReelFactoryRouter, toolReelMediaRouter } from "../modules/social/tool-reel-factory.routes.js";
 import { guestCompressAdminRouter } from "../modules/guest-compress/guest-compress.admin.routes.js";
 import { prisma } from "../lib/prisma.js";
 import {
@@ -74,6 +75,9 @@ apiRouter.get("/health/db", async (_request, response) => {
   }
 });
 
+// Araç videosu: herkese açık adres (Instagram/Facebook indirir) ve üretim iş akışının uçları.
+apiRouter.use("/public/tool-reels", toolReelMediaRouter);
+apiRouter.use("/tool-reel-factory", toolReelFactoryRouter);
 apiRouter.use("/public", publicRouter);
 apiRouter.use("/access", accessRouter);
 // Sosyal medya otomasyonu admin yolunun ALTINDA duruyor: hem Vite vekili

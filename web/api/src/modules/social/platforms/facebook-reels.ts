@@ -1,0 +1,98 @@
+/**
+ * Facebook Sayfası Reels yayını (Meta Graph API, `/{page-id}/video_reels`).
+ *
+ * Üç adımlı akış: (1) yükleme oturumu aç, (2) videoyu ADRESİYLE ver (Facebook dosyayı
+ * kendisi indirir), (3) yayınla. Video sitemizin kendi adresinden çekildiği için
+ * sunucuda dosya tutmak ya da yüklemek gerekmez; Instagram Reels ile aynı mimari.
+ *
+ * ÇİFT PAYLAŞIM KORUMASI: Yayınlama (3. adım) BAŞLADIKTAN sonraki hata `PublishStageError`
+ * olarak fırlatılır; çağıran bu durumda yedek yola DÜŞMEZ. Ondan önceki her hata düz
+ * `Error`dır ve güvenle yedek yola düşülebilir.
+ */
+
+import { logger } from "../../../lib/file-log.js";
+import { PublishStageError, requestJson, requireSecret } from "./common.js";
+import type { PublishInput } from "./common.js";
+
+const GRAPH = "https://graph.facebook.com/v21.0";
+const POLL_DELAY_MS = 6000;
+/** ~6 dakika: kısa bir videonun işlenmesi için bol bol yeter. */
+const POLL_MAX_TRIES = 60;
+
+const form = (fields: Record<string, string>) => {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(fields)) params.set(k, v);
+  return {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+  } satisfies RequestInit;
+};
+
+/** Video Facebook tarafında işlenip yayına hazır olana kadar bekler. */
+async function waitForReel(videoId: string, token: string): Promise<void> {
+  for (let attempt = 0; attempt < POLL_MAX_TRIES; attempt++) {
+    const res = await requestJson(
+      "Facebook",
+      `${GRAPH}/${videoId}?fields=status&access_token=${encodeURIComponent(token)}`,
+      { method: "GET" },
+    );
+    const status = (res.status ?? {}) as { video_status?: string; uploading_phase?: { status?: string } };
+    const code = status.video_status;
+    if (code === "ready" || code === "published") return;
+    if (code === "error" || code === "expired") {
+      throw new Error(`Facebook videoyu işleyemedi (${code})`);
+    }
+    if (status.uploading_phase?.status === "error") {
+      throw new Error("Facebook videoyu indiremedi (adres erişilebilir mi?)");
+    }
+    await new Promise((r) => setTimeout(r, POLL_DELAY_MS));
+  }
+  throw new Error("Facebook videoyu zamanında işlemedi");
+}
+
+export async function publishFacebookReel(
+  { body, item, secrets }: Pick<PublishInput, "body" | "item" | "secrets">,
+  videoUrl: string,
+) {
+  const pageId = requireSecret(secrets, "pageId", "Facebook Sayfa ID");
+  const token = requireSecret(secrets, "pageAccessToken", "Facebook Sayfa Erişim Anahtarı");
+
+  // 1) Yükleme oturumu.
+  const started = await requestJson(
+    "Facebook",
+    `${GRAPH}/${pageId}/video_reels`,
+    form({ access_token: token, upload_phase: "start" }),
+  );
+  const videoId = started.video_id as string | undefined;
+  const uploadUrl = started.upload_url as string | undefined;
+  if (!videoId || !uploadUrl) throw new Error("Facebook Reels yükleme oturumu açılamadı");
+
+  // 2) Videoyu adresiyle ver: Facebook dosyayı kendisi indirir.
+  await requestJson("Facebook", uploadUrl, {
+    method: "POST",
+    headers: { Authorization: `OAuth ${token}`, file_url: videoUrl },
+  });
+
+  // 3) Yükleme/işleme bitene kadar bekle.
+  await waitForReel(videoId, token);
+
+  // 4) Yayınla — bundan sonrası geri dönüşsüz kabul edilir.
+  try {
+    await requestJson(
+      "Facebook",
+      `${GRAPH}/${pageId}/video_reels`,
+      form({
+        access_token: token,
+        upload_phase: "finish",
+        video_id: videoId,
+        video_state: "PUBLISHED",
+        description: body,
+      }),
+    );
+    logger.info("social", `Facebook Reels yayınlandı: ${item.title}`);
+    return { externalId: videoId, externalUrl: `https://www.facebook.com/reel/${videoId}` };
+  } catch (err) {
+    throw new PublishStageError(err instanceof Error ? err.message : String(err));
+  }
+}

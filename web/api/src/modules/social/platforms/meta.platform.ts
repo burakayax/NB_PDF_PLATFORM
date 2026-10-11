@@ -11,13 +11,28 @@ import { carouselSlidesFor } from "../carousel.service.js";
 import { isReelUrl } from "../reels.service.js";
 import { PublishStageError, coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
+import { publishFacebookReel } from "./facebook-reels.js";
 import { publishInstagramReel } from "./instagram-reels.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 
-export const publishToFacebook: Publisher = async ({ body, imageUrl, item, secrets }) => {
+export const publishToFacebook: Publisher = async (input) => {
+  const { body, item, secrets } = input;
+  let { imageUrl } = input;
   const pageId = requireSecret(secrets, "pageId", "Facebook Sayfa ID");
   const token = requireSecret(secrets, "pageAccessToken", "Facebook Sayfa Erişim Anahtarı");
+
+  // Kayıtta video adresi varsa Reels olarak yayınlanır. Yayın başlamadan bir şey ters
+  // giderse video adresi görsel yerine geçmez: metin gönderisine (bağlantılı) düşülür.
+  if (isReelUrl(imageUrl)) {
+    try {
+      return await publishFacebookReel(input, imageUrl);
+    } catch (err) {
+      if (err instanceof PublishStageError) throw err;
+      logger.warn("social", `Facebook Reels hazırlanamadı, metin gönderisine düşülüyor: ${String(err)}`);
+    }
+    imageUrl = null;
+  }
 
   // Görsel varsa /photos ucu kullanılır: gönderi tek parça olur (metin + görsel).
   const endpoint = imageUrl ? `${GRAPH}/${pageId}/photos` : `${GRAPH}/${pageId}/feed`;
