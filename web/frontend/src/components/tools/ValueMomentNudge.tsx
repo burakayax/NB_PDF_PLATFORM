@@ -102,6 +102,18 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
     };
   }, [gosterilir]);
 
+  // Kapatma: Esc efektinden ÖNCE tanımlı olmalı (lint: tanımdan önce kullanılamaz).
+  const dismiss = () => {
+    trackFunnelEvent("sign_up_cta_dismissed", { source });
+    try {
+      localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
+    } catch {
+      /* private mode */
+    }
+    setHidden(true);
+    setVisible(false);
+  };
+
   // Esc ile kapatma (modal olduğu için beklenen davranış).
   useEffect(() => {
     if (!visible) return;
@@ -131,17 +143,6 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   }, [visible, source]);
 
   if (!gosterilir || !visible) return null;
-
-  const dismiss = () => {
-    trackFunnelEvent("sign_up_cta_dismissed", { source });
-    try {
-      localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
-    } catch {
-      /* private mode */
-    }
-    setHidden(true);
-    setVisible(false);
-  };
 
   return (
     <div

@@ -176,7 +176,9 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
     setErr(null); setImp(null); setImpNote(null);
     setBusy("import");
     try {
-      let { text, scanned } = await readCvFile(f);
+      const read = await readCvFile(f);
+      const scanned = read.scanned;
+      let text = read.text;
       if (scanned && f.name.toLowerCase().endsWith(".pdf")) {
         setImpNote(tr ? "Taranmış belge algılandı; metin cihazınızda OCR ile okunuyor (biraz sürebilir)…" : "Scanned document detected; reading text with on-device OCR (this can take a moment)…");
         text = await ocrPdfToText(f);
