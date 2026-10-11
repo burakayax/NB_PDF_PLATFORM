@@ -2536,58 +2536,6 @@ async def tool_alternate_mix_pdf(
             cleanup_path(workdir)
 
 
-@router.post("/crop-pdf")
-@limiter.limit("20/minute")
-async def tool_crop_pdf(
-    request: Request,
-    token: Annotated[str, Depends(extract_pdf_access_token)],
-    file: UploadFile = File(...),
-    password: str = Form(""),
-    crop_mode: str = Form("margins"),
-    top_mm: float = Form(0.0),
-    bottom_mm: float = Form(0.0),
-    left_mm: float = Form(0.0),
-    right_mm: float = Form(0.0),
-    pad_mm: float = Form(5.0),
-    uniform: str = Form(""),
-    from_page: int = Form(1),
-    to_page: int = Form(0),
-):
-    if crop_mode not in ("margins", "auto"):
-        crop_mode = "margins"
-    decision = await entitlement_check(token, "crop-pdf")
-    workdir = create_workdir()
-    try:
-        user_id = await saas_current_user_id(token)
-        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
-        _after_save_validate(sp, request, decision, file.filename)
-        out_p = workdir / "kirp.pdf"
-        pwd = (password or "").strip() or None
-        out_n = format_derived_filename(file.filename or "dosya.pdf", "kırpılmış", ".pdf")
-
-        def _run():
-            ptx.crop_pdf(
-                str(sp), str(out_p), mode=crop_mode, top_mm=top_mm, bottom_mm=bottom_mm,
-                left_mm=left_mm, right_mm=right_mm, pad_mm=pad_mm,
-                uniform=uniform.strip().lower() in ("1", "true", "on", "yes"),
-                from_page=max(1, from_page), to_page=max(0, to_page), password=pwd,
-            )
-            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return _pack_pdf_result_file(out_p, out_n, user_id, "crop-pdf")
-
-        body = await run_sandboxed(_run)
-        body["saasGating"] = _g_check(decision)
-        return body
-    except CpuCapacityTimeout:
-        cleanup_path(workdir)
-        raise
-    except Exception as e:
-        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="crop-pdf")
-    finally:
-        if workdir.exists():
-            cleanup_path(workdir)
-
-
 @router.post("/flatten-pdf")
 @limiter.limit("20/minute")
 async def tool_flatten_pdf(

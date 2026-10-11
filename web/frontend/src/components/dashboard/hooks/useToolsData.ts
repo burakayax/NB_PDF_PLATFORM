@@ -19,7 +19,6 @@ const PRO_TOOLS: Set<FeatureKey> = new Set([
   "ppt-to-pdf",
   "html-to-pdf",
   "flatten-pdf",
-  "crop-pdf",
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",

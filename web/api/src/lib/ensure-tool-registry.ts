@@ -34,7 +34,6 @@ const DEFAULT_TOOL_REGISTRY: readonly { id: string; strategy: string }[] = [
   { id: "html-to-pdf", strategy: "per_run" },
   { id: "pdf-to-text", strategy: "per_run" },
   { id: "flatten-pdf", strategy: "per_run" },
-  { id: "crop-pdf", strategy: "per_run" },
   { id: "grayscale-pdf", strategy: "per_run" },
   { id: "resize-pdf", strategy: "per_run" },
   { id: "flip-pdf", strategy: "per_run" },

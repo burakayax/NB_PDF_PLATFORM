@@ -56,7 +56,7 @@ Kendi araç listemizle iki sitenin araç listelerini yan yana koydum. **Not:** "
 **Kapatılanlar (bu turda)**
 | Araç | Nasıl |
 |---|---|
-| Sayfa Kırp (Sejda "Crop", iLovePDF "Crop") | Yeni araç: elle mm veya **otomatik içeriğe göre kırpma** (rakiplerde yok), sayfa aralığı, "hepsini aynı ölçüye", döndürülmüş sayfalarda doğru kenar |
+| Sayfa Kırp (Sejda "Crop", iLovePDF "Crop") | **Kesit Al ile karşılanıyor** (alan seçip PDF/görsel olarak kaydetme). Ekim 2026'da ayrı bir PDF Kırp aracı eklenmişti; Kesit Al ile aynı işi gördüğü için KALDIRILDI. `/tools/crop-pdf` adresi Kesit Al'a yönlenir. |
 | Üst / Alt Bilgi (Sejda "Header & Footer") | Sayfa Numarası aracına eklendi: 6 konuma serbest metin, `{sayfa} {toplam} {tarih} {dosya}` yer tutucuları, Türkçe karakter |
 | Boyuta / her N sayfaya / yer imine göre bölme (Sejda) | Böl aracına 3 yeni kip eklendi. Boyuta göre bölme gerçek dosya boyutuyla ölçülüyor; tek sayfası sınırı aşan sayfa kendi dosyasına konup ZIP içine uyarı notu yazılıyor. **Not:** bu üç kip üye girişi ile sunucuda çalışıyor (misafir sayfası yalnızca tarayıcıdaki iki kipi bilir) |
 | Gri Tonlama (Sejda) | Yeni araç: görseller griye, renk komutları gri komutlara çevriliyor; metin seçilebilir kalıyor (test: renk farkı 255 → 0) |
@@ -91,7 +91,7 @@ Bizde olup rakipte (ücretsizde) olmayanlar: cihazda kesit alma, üstveri temizl
 2. Filigranı gerçek sayfa üzerinde sürükleyip konumlandırma ve şablon kaydetme (Sejda'da var).
 3. Onarım: bir sayfa gerçekten kurtarılamadığında kullanıcıyı uyarmıyoruz (en iyi sonuç sessizce teslim ediliyor).
 4. Sıkıştırmada en yüksek kalite seviyesi ücretsiz planda kapalı.
-5. Sayfa Kırp, kırpılan kısmı dosyadan silmez (rakipler de silmez); arayüzde bu açıkça yazıyor.
+5. (Kaldırıldı) Ayrı PDF Kırp aracı Kesit Al'a entegre olduğu için kaldırıldı; kırpılan kısmın dosyada kalması konusu Kesit Al'da geçerli değil (kesit görüntü olarak çizilir).
 
 ## Bu oturumda yapılan değişiklikler
 
@@ -103,7 +103,7 @@ Bizde olup rakipte (ücretsizde) olmayanlar: cihazda kesit alma, üstveri temizl
 - PDF→görsel: sayfa seçimi, TIFF, DPI etiketi; toplu işlemde çözünürlük seçimi artık dikkate alınıyor (eskiden yok sayılıyordu).
 - Onarım: en sağlam yöntemi seçme, eksik sayfa kontrolü.
 - Sayfa numarası kutusu küçük kalınca numaranın sessizce çizilmemesi hatası düzeltildi.
-- **Yeni araç: PDF Kırp** (elle / otomatik, aralık, aynı ölçü; sunucu ucu, kota ve kayıt tabloları, katalog, kenar çubuğu, arayüz, TR+EN SEO sayfası, sitemap).
+- ~~Yeni araç: PDF Kırp~~ — sonradan kaldırıldı (Kesit Al ile aynı iş; yönlendirme geri konuldu).
 - **Yeni araçlar (8 Ekim, 2. tur):** Gri Tonlama, Sayfa Boyutu, Çevir (Ayna), Dönüşümlü Birleştir — her biri sunucu ucu, kota/kayıt tabloları, katalog, kenar çubuğu, arayüz, TR+EN SEO sayfası ve testlerle.
 - **Böl aracına 3 yeni kip:** her N sayfada bir, boyuta göre (MB), yer imine göre (arayüz + sunucu + testler + SEO).
 - **9 Ekim:** Bates (sıfırla doldurma), misafir için tarayıcıda bölme kipleri, üstveri düzenleme, yeni araç Eğri Tarama Düzeltme.

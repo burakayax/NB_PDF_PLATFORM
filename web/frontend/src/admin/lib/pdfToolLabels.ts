@@ -21,7 +21,6 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "html-to-pdf": "HTML → PDF",
   "pdf-to-text": "PDF → Metin",
   "flatten-pdf": "PDF Düzleştir",
-  "crop-pdf": "PDF Kırp",
   "grayscale-pdf": "PDF Gri Tonlama",
   "resize-pdf": "PDF Sayfa Boyutu",
   "flip-pdf": "PDF Çevir (Ayna)",

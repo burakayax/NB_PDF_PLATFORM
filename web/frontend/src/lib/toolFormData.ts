@@ -12,19 +12,6 @@
  */
 import type { FeatureKey } from "../api/subscription";
 
-/** PDF Kırp ayarları (hepsi metin: arayüz alanlarından gelir). */
-export type CropOptions = {
-  mode: "margins" | "auto";
-  top: string;
-  bottom: string;
-  left: string;
-  right: string;
-  pad: string;
-  uniform: boolean;
-  from: string;
-  to: string;
-};
-
 /** Küçük araçların (sayfa boyutu, ayna, serpiştirme) ayarları. */
 export type MiniToolOptions = {
   resizeSize: string;
@@ -50,18 +37,6 @@ export const DEFAULT_MINI_OPTIONS: MiniToolOptions = {
   flipFrom: "1",
   flipTo: "",
   mixReverse: false,
-};
-
-export const DEFAULT_CROP_OPTIONS: CropOptions = {
-  mode: "auto",
-  top: "0",
-  bottom: "0",
-  left: "0",
-  right: "0",
-  pad: "5",
-  uniform: false,
-  from: "1",
-  to: "",
 };
 
 /** Boş olmayan üst/alt bilgi metinlerini JSON'a çevirir; hiç yoksa "". */
@@ -113,7 +88,6 @@ export type ToolFormState = {
   pageNumTo: string;
   /** Serbest üst/alt bilgi metinleri: {"header-left": "...", ...}. Boşsa gönderilmez. */
   headerFooterTexts?: Record<string, string>;
-  cropOptions?: CropOptions;
   miniOptions?: MiniToolOptions;
   /** Gelişmiş bölme: her N sayfa / en çok MB. */
   splitEveryN?: string;
@@ -287,20 +261,6 @@ export function buildToolFormData(
         formData.append("direction", m.flipDirection);
         formData.append("from_page", m.flipFrom.trim() || "1");
         formData.append("to_page", m.flipTo.trim() || "0");
-        if (s.password.trim()) formData.append("password", s.password.trim());
-        break;
-      }
-      case "crop-pdf": {
-        const c = s.cropOptions ?? DEFAULT_CROP_OPTIONS;
-        formData.append("crop_mode", c.mode);
-        formData.append("top_mm", c.top.trim() || "0");
-        formData.append("bottom_mm", c.bottom.trim() || "0");
-        formData.append("left_mm", c.left.trim() || "0");
-        formData.append("right_mm", c.right.trim() || "0");
-        formData.append("pad_mm", c.pad.trim() || "5");
-        if (c.uniform) formData.append("uniform", "1");
-        formData.append("from_page", c.from.trim() || "1");
-        formData.append("to_page", c.to.trim() || "0");
         if (s.password.trim()) formData.append("password", s.password.trim());
         break;
       }

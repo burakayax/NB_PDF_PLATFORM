@@ -18,7 +18,6 @@ import {
   Shuffle,
   Scaling,
   FlipHorizontal2,
-  Crop,
   ArrowRightLeft,
   Camera,
   Combine,
@@ -241,11 +240,6 @@ export const TOOLS: Tool[] = [
     id: "form-doldur", cat: "edit", Icon: FileText, account: true,
     tr: { name: "PDF Form Doldur", desc: "Doldurulabilir form alanlarını bulur ve cihazınızda doldurur." },
     en: { name: "Fill PDF Form", desc: "Detects fillable fields and fills them on your device." },
-  },
-  {
-    id: "crop-pdf", cat: "edit", Icon: Crop,
-    tr: { name: "PDF Kırp", desc: "Sayfaların kenar boşluklarını kırpın; boş kenarları otomatik bulur." },
-    en: { name: "Crop PDF", desc: "Trim page margins; finds the empty edges for you." },
   },
   {
     id: "grayscale-pdf", cat: "edit", Icon: Contrast,
@@ -475,7 +469,6 @@ export const TOOL_HUE: Record<string, HueId> = {
   "page-numbers": "blue",
   watermark: "sky",
   "flatten-pdf": "indigo",
-  "crop-pdf": "teal",
   "grayscale-pdf": "sky",
   "resize-pdf": "orange",
   "flip-pdf": "fuchsia",

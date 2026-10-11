@@ -235,69 +235,6 @@ class TestUstAltBilgi:
         assert out.stat().st_size <= os.path.getsize(agir_pdf) + 40 * 1024
 
 
-class TestSayfaKirp:
-    def _icerikli(self, tmp_path: Path) -> Path:
-        d = fitz.open()
-        for i in range(3):
-            pg = d.new_page()  # A4: 595 x 842
-            pg.insert_text((200, 300), f"Orta metin {i + 1}", fontsize=18)
-        yol = tmp_path / "ic.pdf"
-        d.save(str(yol))
-        return yol
-
-    def test_elle_mm(self, tmp_path: Path):
-        out = tmp_path / "k.pdf"
-        ptx.crop_pdf(str(self._icerikli(tmp_path)), str(out), mode="margins",
-                     top_mm=20, bottom_mm=30, left_mm=10, right_mm=10)
-        r = fitz.open(str(out))[0].rect
-        assert round(r.width) == round(595 - 20 * 72 / 25.4)
-        assert round(r.height) == round(842 - 50 * 72 / 25.4)
-
-    def test_otomatik_icerige_gore(self, tmp_path: Path):
-        out = tmp_path / "k.pdf"
-        sonuc = ptx.crop_pdf(str(self._icerikli(tmp_path)), str(out), mode="auto", pad_mm=5)
-        assert sonuc["kirpilan"] == 3
-        r = fitz.open(str(out))[0].rect
-        assert r.width < 250 and r.height < 100  # tüm sayfa değil, yalnızca metnin çevresi
-        assert "Orta metin 1" in fitz.open(str(out))[0].get_text()  # içerik kesilmedi
-
-    def test_ayni_olcu_ve_aralik(self, tmp_path: Path):
-        out = tmp_path / "k.pdf"
-        ptx.crop_pdf(str(self._icerikli(tmp_path)), str(out), mode="auto", uniform=True, from_page=1, to_page=2)
-        d = fitz.open(str(out))
-        assert d[0].rect == d[1].rect
-        assert round(d[2].rect.width) == 595  # aralık dışı sayfa kırpılmadı
-
-    def test_donmus_sayfada_gorunen_kenarlar(self, tmp_path: Path):
-        d = fitz.open(str(self._icerikli(tmp_path)))
-        d[0].set_rotation(90)  # görünen boyut 842 x 595
-        kaynak = tmp_path / "rot.pdf"
-        d.save(str(kaynak))
-        out = tmp_path / "k.pdf"
-        ptx.crop_pdf(str(kaynak), str(out), mode="margins", top_mm=30, left_mm=10, from_page=1, to_page=1)
-        r = fitz.open(str(out))[0].rect
-        assert round(r.width) == round(842 - 10 * 72 / 25.4)
-        assert round(r.height) == round(595 - 30 * 72 / 25.4)
-
-    def test_gecersiz_girdiler(self, tmp_path: Path):
-        k = self._icerikli(tmp_path)
-        with pytest.raises(Exception, match="En az bir kenar"):
-            ptx.crop_pdf(str(k), str(tmp_path / "x.pdf"), mode="margins")
-        with pytest.raises(Exception, match="yok edecek"):
-            ptx.crop_pdf(str(k), str(tmp_path / "x.pdf"), mode="margins", left_mm=150, right_mm=150)
-        with pytest.raises(Exception, match="500 mm"):
-            ptx.crop_pdf(str(k), str(tmp_path / "x.pdf"), mode="margins", top_mm=900)
-
-    def test_bos_sayfa_otomatik_atlanir(self, tmp_path: Path):
-        d = fitz.open()
-        d.new_page()
-        d.new_page().insert_text((100, 100), "var")
-        kaynak = tmp_path / "bos.pdf"
-        d.save(str(kaynak))
-        sonuc = ptx.crop_pdf(str(kaynak), str(tmp_path / "k.pdf"), mode="auto")
-        assert sonuc == {"kirpilan": 1, "atlanan": 1}
-
-
 def _renkli_pdf(tmp_path: Path) -> Path:
     d = fitz.open()
     pg = d.new_page()

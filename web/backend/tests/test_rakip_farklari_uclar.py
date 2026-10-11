@@ -169,35 +169,6 @@ def test_numarasiz_ve_metinsiz_hata(yakala):
     assert r.status_code == 400
 
 
-def test_kirp_ucu_otomatik_ve_elle(yakala):
-    r = client.post(
-        "/api/crop-pdf", headers=_AUTH,
-        files={"file": ("a.pdf", _pdf_bayt(2), "application/pdf")},
-        data={"crop_mode": "auto", "pad_mm": "5", "uniform": "1"},
-    )
-    assert r.status_code == 200, r.text
-    assert fitz.open(str(yakala))[0].rect.height < 100
-
-    r = client.post(
-        "/api/crop-pdf", headers=_AUTH,
-        files={"file": ("a.pdf", _pdf_bayt(2), "application/pdf")},
-        data={"crop_mode": "margins", "top_mm": "20", "from_page": "2", "to_page": "2"},
-    )
-    assert r.status_code == 200, r.text
-    d = fitz.open(str(yakala))
-    assert round(d[0].rect.height) == 842 and round(d[1].rect.height) < 842
-
-
-def test_kirp_ucu_degersiz_istek_anlasilir_hata(yakala):
-    r = client.post(
-        "/api/crop-pdf", headers=_AUTH,
-        files={"file": ("a.pdf", _pdf_bayt(2), "application/pdf")},
-        data={"crop_mode": "margins"},
-    )
-    assert r.status_code >= 400
-    assert "kenar" in r.text
-
-
 def _renkli_bayt() -> bytes:
     d = fitz.open()
     pg = d.new_page()

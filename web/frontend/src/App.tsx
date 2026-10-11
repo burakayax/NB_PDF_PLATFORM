@@ -245,7 +245,7 @@ import {
   type ToolProgressSuccessState,
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
-import { DEFAULT_CROP_OPTIONS, DEFAULT_MINI_OPTIONS, type CropOptions, type MiniToolOptions,
+import { DEFAULT_MINI_OPTIONS, type MiniToolOptions,
   buildToolFormData,
   buildBatchFormData,
 } from "./lib/toolFormData";
@@ -462,7 +462,6 @@ const pdfInspectionFeatures: FeatureId[] = [
   "pdf-to-image",
   "pdf-to-text",
   "flatten-pdf",
-  "crop-pdf",
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",
@@ -621,7 +620,6 @@ function App() {
   const [pageNumFrom, setPageNumFrom] = useState("1");
   const [pageNumTo, setPageNumTo] = useState("");
   const [headerFooterTexts, setHeaderFooterTexts] = useState<Record<string, string>>({});
-  const [cropOptions, setCropOptions] = useState<CropOptions>(DEFAULT_CROP_OPTIONS);
   const [miniOptions, setMiniOptions] = useState<MiniToolOptions>(DEFAULT_MINI_OPTIONS);
   const [splitEveryN, setSplitEveryN] = useState("2");
   const [splitMaxMb, setSplitMaxMb] = useState("5");
@@ -2187,7 +2185,6 @@ function App() {
             "html-to-pdf": "HTML → PDF",
             "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
-            "crop-pdf": "PDF Kırp",
             "grayscale-pdf": "PDF Gri Tonlama",
             "resize-pdf": "PDF Sayfa Boyutu",
             "flip-pdf": "PDF Çevir (Ayna)",
@@ -3385,7 +3382,6 @@ function App() {
         : "Selected pages are saved as separate PDFs inside a ZIP download.";
 
   const splitPasswordToolIds = [
-    "crop-pdf",
     "grayscale-pdf",
     "resize-pdf",
     "flip-pdf",
@@ -3404,7 +3400,6 @@ function App() {
     "pdf-to-image",
     "pdf-to-text",
     "flatten-pdf",
-    "crop-pdf",
     "grayscale-pdf",
     "resize-pdf",
     "flip-pdf",
@@ -4858,7 +4853,6 @@ function App() {
         pageNumFrom,
         pageNumTo,
         headerFooterTexts,
-        cropOptions,
         miniOptions,
         splitEveryN,
         splitMaxMb,
@@ -8286,148 +8280,6 @@ function App() {
                               </span>
                             </label>
                           </div>
-                        ) : null}
-
-                        {selectedFeature.id === "crop-pdf" ? (
-                          <>
-                            <div className="field">
-                              <span>
-                                {language === "tr" ? "Kırpma biçimi" : "Crop mode"}
-                              </span>
-                              <div style={{ display: "flex", gap: 8 }}>
-                                {(
-                                  [
-                                    ["auto", language === "tr" ? "Otomatik (içeriğe göre)" : "Automatic (fit to content)"],
-                                    ["margins", language === "tr" ? "Elle (mm)" : "Manual (mm)"],
-                                  ] as const
-                                ).map(([deger, etiket]) => (
-                                  <button
-                                    key={deger}
-                                    type="button"
-                                    className={
-                                      cropOptions.mode === deger
-                                        ? "primary-action"
-                                        : "secondary-action"
-                                    }
-                                    onClick={() =>
-                                      setCropOptions((c) => ({ ...c, mode: deger }))
-                                    }
-                                  >
-                                    {etiket}
-                                  </button>
-                                ))}
-                              </div>
-                              <span className="field-hint">
-                                {cropOptions.mode === "auto"
-                                  ? language === "tr"
-                                    ? "Sayfadaki yazı, görsel ve çizimlerin çevresindeki boş kenarlar otomatik bulunur ve kırpılır."
-                                    : "Empty edges around text, images and drawings are found and trimmed automatically."
-                                  : language === "tr"
-                                    ? "Her kenardan kaç milimetre kırpılacağını yazın."
-                                    : "Enter how many millimetres to trim from each edge."}
-                              </span>
-                            </div>
-                            {cropOptions.mode === "auto" ? (
-                              <>
-                                <label className="field">
-                                  <span>
-                                    {language === "tr"
-                                      ? "İçeriğin çevresinde bırakılacak pay (mm)"
-                                      : "Padding around content (mm)"}
-                                  </span>
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    value={cropOptions.pad}
-                                    onChange={(e) =>
-                                      setCropOptions((c) => ({ ...c, pad: e.target.value }))
-                                    }
-                                  />
-                                </label>
-                                <label className="field" style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={cropOptions.uniform}
-                                    onChange={(e) =>
-                                      setCropOptions((c) => ({ ...c, uniform: e.target.checked }))
-                                    }
-                                  />
-                                  <span>
-                                    {language === "tr"
-                                      ? "Tüm sayfaları aynı ölçüye kırp"
-                                      : "Crop all pages to the same size"}
-                                  </span>
-                                </label>
-                              </>
-                            ) : (
-                              <div className="field">
-                                <span>
-                                  {language === "tr" ? "Kırpılacak kenarlar (mm)" : "Margins to trim (mm)"}
-                                </span>
-                                <div
-                                  style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                                    gap: 8,
-                                  }}
-                                >
-                                  {(
-                                    [
-                                      ["top", language === "tr" ? "Üst" : "Top"],
-                                      ["bottom", language === "tr" ? "Alt" : "Bottom"],
-                                      ["left", language === "tr" ? "Sol" : "Left"],
-                                      ["right", language === "tr" ? "Sağ" : "Right"],
-                                    ] as const
-                                  ).map(([alan, etiket]) => (
-                                    <input
-                                      key={alan}
-                                      type="number"
-                                      min={0}
-                                      max={500}
-                                      placeholder={etiket}
-                                      aria-label={etiket}
-                                      value={cropOptions[alan]}
-                                      onChange={(e) =>
-                                        setCropOptions((c) => ({ ...c, [alan]: e.target.value }))
-                                      }
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            <div className="field">
-                              <span>
-                                {language === "tr" ? "Hangi sayfalar (boşsa hepsi)" : "Which pages (empty = all)"}
-                              </span>
-                              <div style={{ display: "flex", gap: 8 }}>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={cropOptions.from}
-                                  onChange={(e) =>
-                                    setCropOptions((c) => ({ ...c, from: e.target.value }))
-                                  }
-                                  aria-label={language === "tr" ? "İlk sayfa" : "From page"}
-                                />
-                                <input
-                                  type="number"
-                                  min={1}
-                                  placeholder={language === "tr" ? "son sayfa" : "last"}
-                                  value={cropOptions.to}
-                                  onChange={(e) =>
-                                    setCropOptions((c) => ({ ...c, to: e.target.value }))
-                                  }
-                                  aria-label={language === "tr" ? "Son sayfa" : "To page"}
-                                />
-                              </div>
-                              <span className="field-hint">
-                                {language === "tr"
-                                  ? "Not: Kırpma görünen alanı küçültür; kırpılan kısım dosyanın içinde durur. Bir bilgiyi kalıcı olarak silmek istiyorsanız «Hassas Veri Gizle» aracını kullanın."
-                                  : "Note: Cropping shrinks the visible area; the trimmed part stays inside the file. To permanently remove information, use the «Redact» tool."}
-                              </span>
-                            </div>
-                          </>
                         ) : null}
 
                         {selectedFeature.id === "pdf-to-pdfa" ? (
