@@ -50,7 +50,7 @@ function guard(lang: Lang): string {
 /** Modelin döndürdüğü metinden ilk JSON nesnesini/dizisini güvenle çıkarır. */
 export function extractJson(raw: string): unknown {
   const cleaned = raw.replace(/```(?:json)?/gi, "").trim();
-  const start = cleaned.search(/[\[{]/);
+  const start = cleaned.search(/[[{]/);
   if (start < 0) throw new Error("AI_CV_PARSE");
   const open = cleaned[start];
   const close = open === "{" ? "}" : "]";
