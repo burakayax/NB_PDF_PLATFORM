@@ -774,10 +774,10 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             </label>
 
             <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
-              <p className="text-sm font-medium text-slate-200">Instagram Reels yayın şekli</p>
+              <p className="text-sm font-medium text-slate-200">Reels yayın şekli (araç videoları)</p>
               <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
-                Yazının videosu varsa Instagram gönderisi Reels olarak çıkar. Videoyu üretim sırasında
-                sitenin slaytlarından kendimiz hazırlıyoruz; sese ve müziğe ihtiyaç yok.
+                Yalnızca araç tanıtım videoları Reels olur; blog yazıları carousel ile gider. Video, paylaşım
+                zamanı yaklaşınca aracın gerçek kullanımı kaydedilerek üretilir ve paylaşıldıktan sonra silinir.
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="Reels yayın şekli">
                 {(

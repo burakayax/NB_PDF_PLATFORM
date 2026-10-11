@@ -931,6 +931,21 @@ model SocialPost {
   @@map("social_posts")
 }
 
+/// Araç tanıtım videosu (Reels). YALNIZ üretim ile paylaşım arasında tutulur:
+/// bekleyen gönderisi kalmayınca silinir (bkz. tool-reels.service.ts).
+model SocialToolVideo {
+  /// "<araç>-<üretim anı ms>": gönderinin video adresinde geçer, her üretim ayrı kimlik alır.
+  id        String   @id
+  toolId    String   @map("tool_id")
+  data      Bytes
+  sizeBytes Int      @map("size_bytes")
+  seconds   Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([toolId, createdAt])
+  @@map("social_tool_videos")
+}
+
 /// Bir yazı için bulunmuş anahtar kelimeler — yazı başına BİR kez araştırılır.
 /// NEDEN ÖNBELLEK: Eski yazılar tekrar gündeme geldiğinde aynı araştırmayı
 /// yeniden yapmak hem para hem de gereksiz gecikme demek. Terimler `ttlDays`

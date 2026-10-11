@@ -1,5 +1,5 @@
 /**
- * Araç tanıtım videoları: manifest okuma + Facebook Reels yayını.
+ * Facebook Sayfası Reels yayını (araç tanıtım videoları).
  *
  * Ağ çağrıları sahte `fetch` ile yakalanır — gerçek Facebook'a istek gitmez.
  */
@@ -9,28 +9,6 @@ import type { FeedItem } from "../modules/social/social.types.js";
 
 const ORIGIN = "https://example.test";
 const VIDEO = `${ORIGIN}/arac-videolari/pdf-sikistirma.mp4`;
-
-const MANIFEST = {
-  compress: {
-    video: "/arac-videolari/pdf-sikistirma.mp4",
-    seconds: 27,
-    tr: { title: "PDF Sıkıştır", summary: "Özet", link: "https://example.test/tools/compress" },
-    en: { title: "Compress PDF", summary: "Summary", link: "https://example.test/en/tools/compress" },
-    keywords: { tr: ["pdf sıkıştırma"], en: ["compress pdf"], tagsTr: ["pdf sıkıştır"], tagsEn: ["compress pdf"] },
-  },
-  // Eksik özet → atlanır (yarım gönderi çıkmasın).
-  broken: {
-    video: "/arac-videolari/x.mp4",
-    tr: { title: "x", link: "https://example.test/x" },
-    en: { title: "x", summary: "x", link: "https://example.test/en/x" },
-  },
-  // mp4 değil → atlanır.
-  notvideo: {
-    video: "/arac-videolari/x.png",
-    tr: { title: "x", summary: "x", link: "https://example.test/x" },
-    en: { title: "x", summary: "x", link: "https://example.test/en/x" },
-  },
-};
 
 type Call = { method: string; url: string; body: URLSearchParams | null; headers: Record<string, string> };
 
@@ -45,7 +23,6 @@ function installFetch(opts: { failOn?: (c: Call) => boolean; videoStatus?: strin
       const call: Call = { method, url, body, headers: (init?.headers ?? {}) as Record<string, string> };
       calls.push(call);
 
-      if (url.endsWith("/arac-videolari/manifest.json")) return new Response(JSON.stringify(MANIFEST), { status: 200 });
       if (opts.failOn?.(call)) return new Response(JSON.stringify({ error: { message: "boom" } }), { status: 400 });
       if (url.endsWith("/PAGE1/video_reels") && body?.get("upload_phase") === "start") {
         return new Response(JSON.stringify({ video_id: "VID1", upload_url: "https://rupload.test/VID1" }), { status: 200 });
@@ -82,31 +59,6 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
-});
-
-describe("araç videosu manifesti", () => {
-  it("geçerli satırları mutlak adresle listeler, bozuk satırı atlar", async () => {
-    const { parseToolReels } = await import("../modules/social/tool-reels.service.js");
-    const reels = parseToolReels(MANIFEST, ORIGIN);
-    expect(reels.map((r) => r.id)).toEqual(["compress"]);
-    expect(reels[0]?.videoUrl).toBe(VIDEO);
-    expect(reels[0]?.guid).toBe("tool-reel:compress");
-  });
-
-  it("video blog yazısı biçimine çevrilir: TR esas, EN karşılık", async () => {
-    const { parseToolReels, toolReelFeedItem } = await import("../modules/social/tool-reels.service.js");
-    const item = toolReelFeedItem(parseToolReels(MANIFEST, ORIGIN)[0]!);
-    expect(item.lang).toBe("tr");
-    expect(item.alt?.lang).toBe("en");
-    expect(item.alt?.link).toBe("https://example.test/en/tools/compress");
-  });
-
-  it("reelFor: araç videosunun guid'i için video adresi, bilinmeyen guid için null", async () => {
-    installFetch();
-    const { reelFor } = await import("../modules/social/reels.service.js");
-    expect(await reelFor({ guid: "tool-reel:compress", link: "" })).toBe(VIDEO);
-    expect(await reelFor({ guid: "tool-reel:yok", link: "" })).toBeNull();
-  });
 });
 
 describe("Facebook Reels yayını", () => {

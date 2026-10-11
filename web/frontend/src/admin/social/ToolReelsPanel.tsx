@@ -9,10 +9,11 @@ import {
 import { PlatformBadge } from "./platformBrand";
 
 /**
- * Araç tanıtım videoları: izle, Instagram + Facebook Reels taslağı hazırla.
+ * Araç tanıtım videoları (Reels).
  *
- * Taslak hazırlanınca video "Gönderi akışı"na düşer; orada metni düzeltip
- * "Şimdi paylaş" denmeden hiçbir yere gitmez.
+ * Videolar önceden hazır beklemez: paylaşım zamanı yaklaşınca otomatik üretilir, paylaşıldıktan
+ * sonra silinir. Burada o an hazır olan video izlenir; “Reels taslağı hazırla” gönderiyi hazırlar,
+ * “Gönderi akışı”nda onaylamadan hiçbir yere gitmez.
  */
 
 const STATUS_LABEL: Record<string, string> = {
@@ -29,15 +30,6 @@ const ghostButton =
   "inline-flex h-9 items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/50 px-3.5 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-40";
 const primaryButton =
   "inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-xs font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:bg-cyan-500 disabled:opacity-40";
-
-/** Video adresini bu sitenin kendi yoluna indirger: panel hangi adreste açıksa orada oynar. */
-function playablePath(url: string): string {
-  try {
-    return new URL(url).pathname;
-  } catch {
-    return url;
-  }
-}
 
 export function ToolReelsPanel({
   accessToken,
@@ -82,8 +74,9 @@ export function ToolReelsPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-xs leading-relaxed text-slate-400">
-          Araçların tanıtım videoları. Birini seçip “Reels taslağı hazırla” dediğinde Instagram ve Facebook için
-          metin yazılır; “Gönderi akışı”nda okuyup onaylamadan hiçbir yere gitmez.
+          Araç videoları önceden hazır tutulmaz: paylaşım zamanı yaklaşınca aracın gerçek kullanımı kaydedilerek
+          üretilir, paylaşıldıktan sonra silinir. Video hazırsa burada izleyip taslağını hazırlayabilirsin; “Gönderi
+          akışı”nda onaylamadan hiçbir yere gitmez.
         </p>
         <button type="button" className={ghostButton} onClick={() => void load()}>
           <RefreshCw className="h-3.5 w-3.5" />
@@ -99,32 +92,41 @@ export function ToolReelsPanel({
         </p>
       ) : null}
 
-      {reels !== null && reels.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-700/60 p-8 text-center">
-          <Film className="mx-auto h-6 w-6 text-slate-500" />
-          <p className="mt-2 text-sm font-medium text-slate-300">Henüz araç videosu yok</p>
-          <p className="mt-1 text-xs text-slate-500">Videolar sitenin “arac-videolari” klasörüne eklenir.</p>
-        </div>
-      ) : null}
-
       <div className="grid gap-4 md:grid-cols-2">
         {(reels ?? []).map((reel) => (
           <article key={reel.id} className="overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/40">
             <div className="flex justify-center bg-black/60 p-3">
-              <video
-                className="max-h-[420px] rounded-lg"
-                style={{ aspectRatio: "9 / 16" }}
-                src={playablePath(reel.videoUrl)}
-                controls
-                preload="metadata"
-                playsInline
-              />
+              {reel.video ? (
+                <video
+                  className="max-h-[420px] rounded-lg"
+                  style={{ aspectRatio: "9 / 16" }}
+                  src={reel.video.url}
+                  controls
+                  preload="metadata"
+                  playsInline
+                />
+              ) : (
+                <div
+                  className="flex max-h-[420px] w-[236px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-700/60 p-4 text-center"
+                  style={{ aspectRatio: "9 / 16" }}
+                >
+                  <Film className="h-6 w-6 text-slate-500" />
+                  <p className="text-xs font-medium text-slate-300">Video şu an hazır değil</p>
+                  <p className="text-[11px] leading-snug text-slate-500">
+                    Paylaşım zamanı yaklaşınca kendiliğinden üretilir.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="space-y-3 p-4">
               <div>
                 <h3 className="text-sm font-semibold text-white">{reel.tr.title}</h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-400">{reel.tr.summary}</p>
-                {reel.seconds > 0 ? <p className="mt-1 text-[11px] text-slate-500">{reel.seconds} saniye</p> : null}
+                {reel.video && reel.video.seconds > 0 ? (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {reel.video.seconds} saniye · {new Date(reel.video.createdAt).toLocaleString("tr-TR")} tarihinde üretildi
+                  </p>
+                ) : null}
               </div>
 
               {reel.posts.length > 0 ? (
@@ -144,7 +146,7 @@ export function ToolReelsPanel({
               <button
                 type="button"
                 className={primaryButton}
-                disabled={busyId !== null}
+                disabled={busyId !== null || !reel.video}
                 onClick={() => void queue(reel)}
               >
                 {busyId === reel.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}

@@ -1,15 +1,14 @@
 /**
- * Reels için "önce onay / otomatik" kararı: kuyruğa alınırken kaydın durumu.
+ * Blog gönderileri Reels OLMAZ: yalnız araç tanıtım videoları Reels olur (kullanıcı kararı).
  *
- * Veritabanı, besleme ve yapay zekâ metni sahte; yalnızca `queueDailyPosts`in
- * Instagram kaydına hangi durumu ve hangi medya adresini yazdığı sınanır.
+ * Veritabanı, besleme ve yapay zekâ metni sahte; yalnızca `queueDailyPosts`in Instagram
+ * kaydına hangi durumu ve hangi medya adresini yazdığı sınanır.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FeedItem } from "../modules/social/social.types.js";
 
 const POST_URL = "https://example.test/blog/yazi";
-const VIDEO = "https://example.test/social/reels/tr/yazi/reel.mp4";
 const COVER = "https://example.test/covers/square/yazi.png";
 
 const ITEM: FeedItem = {
@@ -25,13 +24,11 @@ const ITEM: FeedItem = {
 
 const created: { platform: string; status: string; imageUrl: string | null }[] = [];
 let reelsAutoPublish = false;
-let reel: string | null = VIDEO;
 
 vi.mock("../lib/prisma.js", () => ({
   prisma: {
-    socialAccount: {
-      findMany: vi.fn(async () => []),
-    },
+    socialAccount: { findMany: vi.fn(async () => []) },
+    socialToolVideo: { findMany: vi.fn(async () => []), delete: vi.fn() },
     socialPost: {
       findMany: vi.fn(async () => []),
       create: vi.fn(async ({ data }: { data: { platform: string; status: string; imageUrl: string | null } }) => {
@@ -54,15 +51,9 @@ vi.mock("../modules/social/copy.service.js", () => ({
     Object.fromEntries(platforms.map((p) => [p, `metin ${p}`])),
   ),
 }));
-vi.mock("../modules/social/reels.service.js", () => ({
-  reelFor: vi.fn(async () => reel),
-  isReelUrl: (u: string | null) => typeof u === "string" && u.endsWith(".mp4"),
-}));
 vi.mock("../modules/social/platforms/index.js", () => ({ PUBLISHERS: {}, VERIFIERS: {} }));
 vi.mock("../lib/encryption.js", () => ({ decryptField: vi.fn(), encryptField: vi.fn() }));
 
-// Hesap bağlı olmayan ağlar MANUAL olur; bu testte Instagram'ı "bağlı" göstermek için
-// hesap listesini sahte bir bağlı hesapla doldururuz.
 async function connectInstagram() {
   const { prisma } = await import("../lib/prisma.js");
   const { decryptField } = await import("../lib/encryption.js");
@@ -77,21 +68,20 @@ const instagramRow = () => created.find((c) => c.platform === "INSTAGRAM");
 beforeEach(() => {
   created.length = 0;
   reelsAutoPublish = false;
-  reel = VIDEO;
 });
 
-describe("Reels kuyruk kararı", () => {
-  it("onaylı mod (varsayılan): otomatik turda bile Reels TASLAK kalır, medya video adresidir", async () => {
+describe("blog gönderisi Reels olmaz", () => {
+  it("onaylı mod: görselle, onay beklemeden KUYRUĞA girer; medya video değil kapaktır", async () => {
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
     await queueDailyPosts(new Date(), false);
 
-    expect(instagramRow()?.status).toBe("DRAFT");
-    expect(instagramRow()?.imageUrl).toBe(VIDEO);
+    expect(instagramRow()?.status).toBe("QUEUED");
+    expect(instagramRow()?.imageUrl).toBe(COVER);
   });
 
-  it("otomatik mod: Reels onaysız KUYRUĞA girer", async () => {
+  it("Reels otomatik modu açık olsa da blog gönderisi görsel kalır", async () => {
     reelsAutoPublish = true;
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
@@ -99,27 +89,16 @@ describe("Reels kuyruk kararı", () => {
     await queueDailyPosts(new Date(), false);
 
     expect(instagramRow()?.status).toBe("QUEUED");
-    expect(instagramRow()?.imageUrl).toBe(VIDEO);
+    expect(instagramRow()?.imageUrl).toBe(COVER);
   });
 
-  it("otomatik mod açıkken bile elle 'taslak hazırla' (hold) taslak bırakır", async () => {
-    reelsAutoPublish = true;
+  it("elle 'taslak hazırla' (hold): taslak bırakır", async () => {
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
     await queueDailyPosts(new Date(), true);
 
     expect(instagramRow()?.status).toBe("DRAFT");
-  });
-
-  it("videosu olmayan yazı: eskisi gibi görselle kuyruğa girer, onay beklemez", async () => {
-    reel = null;
-    await connectInstagram();
-    const { queueDailyPosts } = await import("../modules/social/social.service.js");
-
-    await queueDailyPosts(new Date(), false);
-
-    expect(instagramRow()?.status).toBe("QUEUED");
     expect(instagramRow()?.imageUrl).toBe(COVER);
   });
 });
