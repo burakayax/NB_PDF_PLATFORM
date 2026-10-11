@@ -21,7 +21,15 @@ export default {
     await hl(pg.locator("form.tool-form [class*=cursor-pointer]").first(), 6).catch(() => {});
     await wait(644);
     await hlOff();
-    const [chooser] = await Promise.all([pg.waitForEvent("filechooser"), pg.mouse.click(dp.x, dp.y + 20)]);
+    // Yavaş CI makinesinde sayfa hâlâ yükleniyor olabilir: tıklama boşa giderse yeniden denenir.
+    let chooser = null;
+    for (let i = 0; i < 5 && !chooser; i++) {
+      [chooser] = await Promise.all([
+        pg.waitForEvent("filechooser", { timeout: 10000 }).catch(() => null),
+        pg.mouse.click(dp.x, dp.y + 20),
+      ]);
+    }
+    if (!chooser) throw new Error("Dosya seçme penceresi açılmadı");
     await wait(322);
     await chooser.setFiles(fixtures("Faaliyet-Raporu-2025.pdf"));
     await pg.getByText("Faaliyet-Raporu-2025.pdf").first().waitFor({ timeout: 30000 });
