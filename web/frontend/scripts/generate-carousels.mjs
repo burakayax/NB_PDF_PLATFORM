@@ -25,6 +25,7 @@ import { dirname, join } from "node:path";
 import sharp from "sharp";
 
 import { getBlogPostsSorted } from "../src/blog/blogContent.mjs";
+import { curatedCarousel } from "../src/blog/carouselCopy.mjs";
 import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
@@ -32,7 +33,7 @@ import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
 const W = 1080;
 const H = 1350;
 const M = 84; // kenar boşluğu
-const DESIGN_VERSION = 4;
+const DESIGN_VERSION = 5;
 /**
  * Hangi dillerde carousel üretilir? Otomasyon yalnızca besleme dilinde
  * (PRIMARY_FEED_LANG = "tr") paylaşıyor; İngilizce slaytlar kullanılmayacak, boşuna
@@ -138,7 +139,7 @@ function stepSvg({ slide, index, count, bold, regular, host, total, copy, kind }
 </svg>`;
 }
 
-function ctaSvg({ bold, regular, host, total, copy }) {
+function ctaSvg({ bold, regular, host, total, copy, link }) {
   const t = fitBlock(bold, copy.ctaTitle, W - M * 2, 3, 84, 56);
   const tlh = t.size * 1.14;
   const titleFirst = 440 + t.size * 0.85;
@@ -146,6 +147,10 @@ function ctaSvg({ bold, regular, host, total, copy }) {
   const blh = body.size * 1.42;
   const bodyFirst = titleFirst + (t.lines.length - 1) * tlh + 60 + body.size * 0.85;
   const boxY = Math.round(bodyFirst + (body.lines.length - 1) * blh + 70);
+  // Araca doğrudan giden adres (varsa) yazılır; sığmazsa punto küçülür.
+  const target = link || host;
+  let linkSize = 68;
+  while (linkSize > 34 && measure(bold, target, linkSize) > W - M * 2 - 88) linkSize -= 2;
   return `${open()}
   ${frame({ bold, regular, host, index: total - 1, total, copy })}
   <rect x="${M}" y="346" width="64" height="7" fill="${BLUE}"/>
@@ -153,21 +158,29 @@ function ctaSvg({ bold, regular, host, total, copy }) {
   <path d="${linesToPath(regular, body.lines, body.size, M, bodyFirst + 20, blh)}" fill="${SLATE}"/>
   <rect x="${M}" y="${boxY + 20}" width="${W - M * 2}" height="210" rx="14" fill="#EEF4FB" stroke="${BLUE}" stroke-width="2.5"/>
   <path d="${textPath(regular, copy.ctaTry, 30, M + 44, boxY + 94)}" fill="${MUTED}"/>
-  <path d="${textPath(bold, host, 68, M + 44, boxY + 176)}" fill="${NAVY}"/>
+  <path d="${textPath(bold, target, linkSize, M + 44, boxY + 176)}" fill="${NAVY}"/>
 </svg>`;
 }
 
-/** Bir yazının slayt SVG listesi (kapak, içerik..., kapanış). Slayt çıkmıyorsa []. */
-export function buildCarouselSvgs({ copyBlocks, title, lang, host, bold, regular }) {
-  const { slides: content, kind } = extractCarousel(copyBlocks);
+/**
+ * Bir yazının slayt SVG listesi (kapak, içerik..., kapanış). Slayt çıkmıyorsa [].
+ * `slug` verilirse ve yazı için elle yazılmış metin varsa o kullanılır (carouselCopy.mjs);
+ * yoksa yazının kendi bloklarından otomatik çıkarılır.
+ */
+export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, bold, regular }) {
+  const curated = lang === "tr" && slug ? curatedCarousel(slug) : null;
+  const auto = curated ? null : extractCarousel(copyBlocks);
+  const content = curated ? curated.slides : auto.slides;
+  const kind = curated ? "points" : auto.kind;
   if (content.length === 0) return { svgs: [], kind: "steps" };
   const copy = CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr;
   const total = content.length + 2;
-  const svgs = [coverSvg({ title, bold, regular, host, total, copy })];
+  const link = tool ? `${host}${tool}` : null;
+  const svgs = [coverSvg({ title: curated ? curated.hook : title, bold, regular, host, total, copy })];
   content.forEach((slide, i) => {
     svgs.push(stepSvg({ slide, index: i + 1, count: content.length, bold, regular, host, total, copy, kind }));
   });
-  svgs.push(ctaSvg({ bold, regular, host, total, copy }));
+  svgs.push(ctaSvg({ bold, regular, host, total, copy, link }));
   return { svgs, kind };
 }
 
@@ -206,6 +219,8 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       const { svgs } = buildCarouselSvgs({
         copyBlocks: copy.blocks,
         title: copy.title,
+        slug: post.slug,
+        tool: (copy.blocks.find((b) => b?.t === "cta" && typeof b.tool === "string") ?? {}).tool ?? null,
         accent: post.accent,
         lang,
         host,

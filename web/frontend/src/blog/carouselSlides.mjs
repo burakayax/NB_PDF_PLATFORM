@@ -125,7 +125,7 @@ export const CAROUSEL_COPY = {
     stepLabel: (n, total) => `ADIM ${n}/${total}`,
     pointLabel: (n, total) => `${n}/${total}`,
     ctaTitle: "İşinize yaradıysa kaydedin",
-    ctaBody: "Lazım olduğunda kolayca ulaşın; aynı işi yapan meslektaşlarınıza da iletin.",
+    ctaBody: "Lazım olduğunda kolayca bulun; işine yarayacak birine de iletin.",
     ctaTry: "Ücretsiz deneyin",
   },
   en: {
