@@ -256,7 +256,11 @@ import {
 } from "./lib/compressTarget";
 import { runClientPdfTool } from "./lib/clientToolRun";
 import { reportTeamActivity } from "./lib/teamActivity";
-import { checkToolSubmission } from "./lib/toolSubmissionCheck";
+import {
+  checkToolSubmission,
+  splitNeedsPages,
+  watermarkMissingContent,
+} from "./lib/toolSubmissionCheck";
 import { readAccessToken } from "./lib/accessTokenStore";
 import { WorkspaceToolShell } from "./components/common/WorkspaceToolShell";
 
@@ -3679,12 +3683,15 @@ function App() {
     submitting ||
     (toolNeedsUpload && uploads.length === 0) ||
     !selectedFeatureAllowed ||
-    (selectedFeature.id === "split" && (!!pagesError || !pagesText.trim())) ||
+    (selectedFeature.id === "split" &&
+      splitNeedsPages(splitMode) &&
+      (!!pagesError || !pagesText.trim())) ||
     (selectedFeature.id === "delete-pages" &&
       (!!deletePagesError || !deletePagesText.trim())) ||
     (selectedFeature.id === "organize-pdf" && organizePageOrder.length === 0) ||
     (showUnlockPasswordField && !unlockOpenPassword.trim()) ||
-    (selectedFeature.id === "watermark" && !watermarkPhrase.trim()) ||
+    (selectedFeature.id === "watermark" &&
+      watermarkMissingContent(watermarkPhrase, watermarkImage !== null)) ||
     (selectedFeature.id === "html-to-pdf" &&
       htmlToPdfMode === "url" &&
       !htmlToPdfUrl.trim()) ||

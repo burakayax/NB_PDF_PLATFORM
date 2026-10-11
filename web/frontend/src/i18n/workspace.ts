@@ -712,7 +712,7 @@ export function featureCopy(
       button: tr ? "FORM DOLDUR" : "FILL FORM",
     },
     "grayscale-pdf": {
-      title: tr ? "PDF GRI TONLAMA" : "GRAYSCALE PDF",
+      title: tr ? "PDF GRİ TONLAMA" : "GRAYSCALE PDF",
       description: tr
         ? "Renkli PDF'i siyah-beyaza çevirir; metin seçilebilir kalır."
         : "Turns a colour PDF black-and-white; text stays selectable.",
@@ -726,14 +726,14 @@ export function featureCopy(
       button: tr ? "BOYUTLANDIR" : "RESIZE",
     },
     "flip-pdf": {
-      title: tr ? "PDF ÇEVIR (AYNA)" : "FLIP PDF",
+      title: tr ? "PDF ÇEVİR (AYNA)" : "FLIP PDF",
       description: tr
         ? "Sayfaları yatay veya dikey ayna gibi çevirir."
         : "Mirrors pages horizontally or vertically.",
       button: tr ? "ÇEVİR" : "FLIP",
     },
     "alternate-mix-pdf": {
-      title: tr ? "PDF DÖNÜŞÜMLÜ BIRLEŞTIR" : "ALTERNATE & MIX PDF",
+      title: tr ? "PDF DÖNÜŞÜMLÜ BİRLEŞTİR" : "ALTERNATE & MIX PDF",
       description: tr
         ? "İki PDF'in sayfalarını sırayla serpiştirir (çift taraflı tarama)."
         : "Interleaves the pages of two PDFs (double-sided scans).",

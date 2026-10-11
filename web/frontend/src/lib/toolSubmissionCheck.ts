@@ -27,6 +27,23 @@ type CheckedUpload = {
   encrypted: boolean;
 };
 
+/**
+ * Böl aracında "Sayfaları ayır" düğmesinin pasif olup olmadığı için: sayfa numarası yalnızca
+ * "tek PDF" ve "ayrı ayrı" kiplerinde gerekir. "Her N sayfada bir", "Boyuta göre" ve
+ * "Yer imine göre" kiplerinde sayfa seçilmez.
+ *
+ * NEDEN AYRI İŞLEV: Düğme koşulu bu ayrımı bilmiyordu; yeni kipler canlıda seçilebiliyor ama
+ * düğme sonsuza dek pasif kalıyordu (canlı kontrolde yakalandı).
+ */
+export function splitNeedsPages(splitMode: string): boolean {
+  return !["every", "size", "outline"].includes(splitMode);
+}
+
+/** Filigran için düğmenin pasif olup olmadığı: metin YA DA logo/görsel yeterli. */
+export function watermarkMissingContent(text: string, hasImage: boolean): boolean {
+  return !text.trim() && !hasImage;
+}
+
 export type ToolSubmissionInput = {
   featureId: FeatureKey;
   uploads: CheckedUpload[];
@@ -137,7 +154,7 @@ export function checkToolSubmission(
   }
 
   // 2) Sayfa numaraları — ayırma.
-  if (featureId === "split" && !["every", "size", "outline"].includes(input.splitMode ?? "")) {
+  if (featureId === "split" && splitNeedsPages(input.splitMode ?? "")) {
     const pagesError = validatePageSelection(
       pagesText,
       first,
