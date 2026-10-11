@@ -34,6 +34,14 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   };
   pg.on("download", (d) => d.cancel().catch(() => {}));
   pg.on("pageerror", (e) => console.log("PAGEERR", e.message));
+  // Tanı: başarısız/hatalı istekler ve tarayıcı hataları kayda geçer (CI'da takılmaların nedeni buradan okunur).
+  pg.on("requestfailed", (r) => console.log("REQFAIL", r.method(), r.url().slice(0, 140), r.failure()?.errorText ?? ""));
+  pg.on("response", (r) => {
+    if (r.status() >= 400) console.log("HTTP", r.status(), r.request().method(), r.url().slice(0, 140));
+  });
+  pg.on("console", (m) => {
+    if (m.type() === "error") console.log("CONSOLE", m.text().slice(0, 200));
+  });
 
   // Paylaş düğmesi telefon/Chrome'da görünür; headless tarayıcıda yoktur, canlıdaki gibi
   // görünsün diye Web Share tanımlanır.
