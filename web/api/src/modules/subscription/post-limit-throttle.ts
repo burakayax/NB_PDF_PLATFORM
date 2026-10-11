@@ -58,7 +58,6 @@ export const DEFAULT_POST_LIMIT_THROTTLE_RUNTIME: PostLimitThrottleRuntime = {
     "html-to-pdf": 1.2,
     "pdf-to-text": 0.75,
     "flatten-pdf": 0.85,
-    "crop-pdf": 0.85,
     "grayscale-pdf": 1.0,
     "resize-pdf": 0.9,
     "flip-pdf": 0.85,

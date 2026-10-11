@@ -56,7 +56,6 @@ export const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
   "repair-pdf": ["compress", "organize-pdf", "merge", "page-numbers", "watermark"],
   "unlock-pdf": ["compress", "watermark", "page-numbers", "merge", "organize-pdf", "encrypt"],
   "flatten-pdf": ["compress", "page-numbers", "watermark", "merge", "encrypt"],
-  "crop-pdf": ["compress", "page-numbers", "watermark", "merge", "organize-pdf"],
   "grayscale-pdf": ["compress", "page-numbers", "watermark", "merge", "encrypt"],
   "resize-pdf": ["compress", "page-numbers", "watermark", "merge", "encrypt"],
   "flip-pdf": ["compress", "rotate-pdf", "merge", "page-numbers", "encrypt"],
@@ -117,7 +116,6 @@ export const CHAIN_RESULT_NOUN: Partial<Record<FeatureId, { tr: string; en: stri
   "repair-pdf": { tr: "Onardığınız PDF", en: "repaired PDF" },
   "unlock-pdf": { tr: "Şifresini çözdüğünüz PDF", en: "unlocked PDF" },
   "flatten-pdf": { tr: "Düzleştirdiğiniz PDF", en: "flattened PDF" },
-  "crop-pdf": { tr: "Kırptığınız PDF", en: "cropped PDF" },
   "grayscale-pdf": { tr: "Gri tonlamaya çevirdiğiniz PDF", en: "grayscale PDF" },
   "resize-pdf": { tr: "Yeniden boyutlandırdığınız PDF", en: "resized PDF" },
   "flip-pdf": { tr: "Çevirdiğiniz PDF", en: "flipped PDF" },
@@ -150,6 +148,5 @@ export const CHAIN_FALLBACK: FeatureId[] = [
   "encrypt",
   "unlock-pdf",
   "flatten-pdf",
-  "crop-pdf",
   "repair-pdf",
 ];

@@ -32,7 +32,6 @@ const GATED_TOOL_LABELS: Record<string, { tr: string; en: string }> = {
   encrypt: { tr: "PDF Şifrele", en: "Encrypt PDF" },
   "pdf-to-text": { tr: "PDF'i Metne Çevir", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
-  "crop-pdf": { tr: "PDF Kırp", en: "Crop PDF" },
   "grayscale-pdf": { tr: "PDF Gri Tonlama", en: "Grayscale PDF" },
   "resize-pdf": { tr: "PDF Sayfa Boyutu", en: "Resize PDF Pages" },
   "flip-pdf": { tr: "PDF Çevir (Ayna)", en: "Flip PDF" },

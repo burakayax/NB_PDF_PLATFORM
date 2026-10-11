@@ -61,7 +61,6 @@ export type FeatureKey =
   | "html-to-pdf"
   | "pdf-to-text"
   | "flatten-pdf"
-  | "crop-pdf"
   | "grayscale-pdf"
   | "resize-pdf"
   | "flip-pdf"

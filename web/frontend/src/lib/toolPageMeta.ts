@@ -351,18 +351,6 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Automatically straighten crooked scanned PDF pages; pages with a text layer are left alone.",
     },
   },
-  "crop-pdf": {
-    tr: {
-      title: "PDF kırp | PDF Platform",
-      description:
-        "PDF sayfalarının kenar boşluklarını kırpın; içeriğe göre boş kenarları otomatik bulun.",
-    },
-    en: {
-      title: "Crop PDF | PDF Platform",
-      description:
-        "Trim PDF page margins, or let the tool find the empty edges around your content automatically.",
-    },
-  },
   "flatten-pdf": {
     tr: {
       title: "PDF düzleştir | PDF Platform",

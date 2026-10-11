@@ -182,14 +182,6 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     fallbackFilename: "metin.txt",
   },
   {
-    id: "crop-pdf",
-    icon: "✂️",
-    endpoint: "crop-pdf",
-    accept: ".pdf,application/pdf",
-    multiple: false,
-    fallbackFilename: "kirpilmis.pdf",
-  },
-  {
     id: "grayscale-pdf",
     icon: "◐",
     endpoint: "grayscale-pdf",
@@ -281,7 +273,6 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "ppt-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
-  "crop-pdf",
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",

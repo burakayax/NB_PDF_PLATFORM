@@ -91,7 +91,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
       { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
       { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
-      { id: "crop-pdf", icon: <Crop className="h-5 w-5" />, tr: "Sayfa Kırp", en: "Crop pages" },
       { id: "grayscale-pdf", icon: <Contrast className="h-5 w-5" />, tr: "Gri Tonlama", en: "Grayscale" },
       { id: "resize-pdf", icon: <Scaling className="h-5 w-5" />, tr: "Sayfa Boyutu", en: "Page size" },
       { id: "flip-pdf", icon: <FlipHorizontal2 className="h-5 w-5" />, tr: "Ayna", en: "Flip" },

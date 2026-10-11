@@ -428,20 +428,6 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
-  "crop-pdf": S(
-    [
-      PICK_TR(),
-      { title: "Kırpma biçimini seç", detail: "«Otomatik» içeriğin etrafındaki boş kenarları kendisi bulur; «Elle» her kenardan kaç milimetre kırpılacağını sen yazarsın." },
-      { title: "«Kırp» düğmesine bas", detail: "Seçtiğin sayfaların görünen alanı küçülür; istersen yalnızca belirli sayfaları kırp." },
-      TR_DOWNLOAD,
-    ],
-    [
-      PICK_EN(),
-      { title: "Choose how to crop", detail: "«Automatic» finds the empty edges around your content; «Manual» lets you type how many millimetres to trim from each side." },
-      { title: "Click «Crop»", detail: "The visible area of the chosen pages shrinks; you can crop only specific pages if you like." },
-      EN_DOWNLOAD,
-    ],
-  ),
   "flatten-pdf": S(
     [
       PICK_TR(),
