@@ -311,9 +311,10 @@ async function main() {
   // Kalıcı yönlendirme (301) hem ziyaretçiyi halef araca götürür hem de
   // sıralamayı ona aktarır. Kural sayfa kurallarından ÖNCE gelir.
   const emekliAraclar = [
-    // BOŞ. Eskiden /tools/crop-pdf → /tools/pdf-kesit-al (PDF Kırp kaldırılmıştı).
-    // PDF Kırp 2026-10'da yeni araç olarak GERİ GELDİ; eski yönlendirme yeni sayfayı
-    // engelliyordu, bu yüzden kaldırıldı. Başka araç emekli edilirse buraya eklenir.
+    // PDF Kırp kaldırıldı; işini PDF'ten Kesit Al görüyor (alan seçip PDF ya da
+    // görsel olarak kaydetme). 2026-09-23.
+    { type: "redirect", source: "/tools/crop-pdf", destination: "/tools/pdf-kesit-al" },
+    { type: "redirect", source: "/en/tools/crop-pdf", destination: "/en/tools/crop-pdf-to-image" },
   ];
 
   // 3) Blog joker kuralları (sayfa kurallarından SONRA, /*'tan ÖNCE).
