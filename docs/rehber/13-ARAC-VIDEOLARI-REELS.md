@@ -10,8 +10,9 @@ Blog yazıları için video yapılmaz (onlar görselle gider).
    Sunucu, normal gönderilerle AYNI paylaşım saatine bakar ve yalnızca gönderilerin hazırlanmasından
    yaklaşık 2,5 saat önce "evet" der (araç videosu sıklığı açıksa ve sıra bu araçtaysa). Paylaşım
    saatini panelden değiştirdiğinde başka bir şey yapman gerekmez.
-2. Gerekliyse iş, siteyi kendi makinesinde geçici olarak çalıştırır, aracı kullanıp ekranı kaydeder,
-   videoyu kurgular ve sunucuya yükler. Makine işten sonra silinir; hiçbir şey saklanmaz.
+2. Gerekliyse iş, geçici bir makinede tarayıcı açar, CANLI siteye özel deneme hesabıyla girer, aracı
+   gerçekten kullanıp ekranı kaydeder, videoyu kurgular ve sunucuya yükler. Makine işten sonra silinir;
+   hiçbir şey saklanmaz. Yapay zekâ kullanan araçlar bu işe eklenmez (kredi keser).
 3. Günlük paylaşım turu videoyu Instagram + Facebook Reels gönderisine çevirir. "Önce onay"
    modundaysa taslak olarak bekler; sen izleyip onaylarsın.
 4. Gönderiler yayınlanınca (ya da elle "paylaştım" işaretlenince) video sunucudan **otomatik silinir**.
@@ -28,6 +29,12 @@ Aynı gizli anahtarı iki yere gireceksin.
 3. **GitHub → depo → Settings → Secrets and variables → Actions → New repository secret** ile iki anahtar ekle:
    - `TOOL_REEL_FACTORY_KEY` = aynı parola
    - `TOOL_REEL_API_BASE` = kimlik API'nin adresi (Render'daki `APP_BASE_URL` ile aynı, ör. `https://api.pdfplatform.app`)
+4. **Deneme hesabı:** canlı sitede özel bir hesap aç (gerçek bir kullanıcı gibi, e-posta doğrulaması dahil),
+   admin panelinden planını **PRO** yap. Aynı GitHub bölümüne üç anahtar daha ekle:
+   - `REELS_SITE_URL` = canlı site (ör. `https://pdfplatform.app`, sonunda `/` olmadan)
+   - `REELS_DEMO_EMAIL` = deneme hesabının e-postası
+   - `REELS_DEMO_PASSWORD` = şifresi
+   Bu hesapla yapay zekâ özelliği kullanılmaz; araç videolarında da yapay zekâ araçları yoktur.
 4. **Panel → Sosyal medya → Zamanlama → Araç videoları** sıklığını seç (ör. 3 günde bir).
    Başlangıçta Reels ayarını **"Önce onay"** bırak.
 

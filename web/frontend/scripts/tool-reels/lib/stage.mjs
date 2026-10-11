@@ -22,6 +22,8 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     deviceScaleFactor: 1,
     recordVideo: { dir: `${workDir}/rec`, size: viewport },
   });
+  // Canlı siteye girildiği için deneme trafiği analitiğe ve hata izlemeye karışmasın.
+  await ctx.route(/googletagmanager\.com|google-analytics\.com|ingest(\.[a-z]+)?\.sentry\.io/, (r) => r.abort());
   const pg = await ctx.newPage();
   const t0 = Date.now();
   const now = () => +((Date.now() - t0) / 1000).toFixed(2);

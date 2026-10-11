@@ -3,10 +3,10 @@
  *
  *   node scripts/tool-reels/run.mjs --tool compress --out video.mp4
  *
- * Çalışan bir site gerekir (`--base`, varsayılan http://localhost:5180) ve içinde giriş
- * yapabilen bir deneme hesabı (REELS_DEMO_EMAIL / REELS_DEMO_PASSWORD). Üretimde bunu
- * GitHub iş akışı kurar (.github/workflows/tool-reels.yml); videoyu paylaşım zamanı
- * yaklaşınca üretir, API'ye yükler, paylaşıldıktan sonra silinir.
+ * Giriş yapılabilen bir site gerekir (`--base`; üretimde CANLI site) ve PRO yetkili bir deneme
+ * hesabı (REELS_DEMO_EMAIL / REELS_DEMO_PASSWORD). Üretimde bunu GitHub iş akışı çalıştırır
+ * (.github/workflows/tool-reels.yml); videoyu paylaşım zamanı yaklaşınca üretir, API'ye yükler,
+ * paylaşıldıktan sonra silinir. Yapay zekâ kullanan araçlar eklenmez (senaryoda usesAi: true).
  *
  * Yeni araç eklemek: scenarios/<id>.mjs yaz, aşağıdaki SCENARIOS listesine ekle ve
  * API tarafındaki araç kataloğuna (tool-reel-catalog.ts) metnini ekle.
@@ -36,6 +36,11 @@ const toolId = arg("tool");
 const scenario = SCENARIOS[toolId];
 if (!scenario) {
   console.error(`Bilinmeyen araç: ${toolId}. Tanımlılar: ${Object.keys(SCENARIOS).join(", ")}`);
+  process.exit(2);
+}
+// Yapay zekâ araçları (kredi/ücret keser) video üretiminde kullanılmaz.
+if (scenario.usesAi) {
+  console.error(`${toolId} yapay zekâ kullanıyor; araç videosu üretiminde kullanılmaz.`);
   process.exit(2);
 }
 const out = resolve(arg("out", `${toolId}-reel.mp4`));
