@@ -21,7 +21,18 @@ import { logger } from "../../lib/file-log.js";
 import { fetchPairedFeedItems } from "./rss.service.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
-import { reelFor } from "./reels.service.js";
+import {
+  MANUAL_MAX_AGE_MS,
+  cleanupToolVideos,
+  findCatalogEntry,
+  latestVideoFor,
+  loadToolReels,
+  pickDueToolReel,
+  toolReelFeedItem,
+  toolReelGuid,
+  unusedFreshVideoFor,
+} from "./tool-reels.service.js";
+import type { ToolReel, ToolReelVideoInfo } from "./tool-reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
@@ -71,6 +82,14 @@ export type SocialAutomationConfig = {
    * etkilenmez. Açıkken Reels de diğer gönderiler gibi saati gelince kendiliğinden gider.
    */
   reelsAutoPublish: boolean;
+  /**
+   * Araç tanıtım videosu kaç günde bir sıraya katılsın? (0 = kapalı)
+   *
+   * Açıkken günlük blog gönderilerine ek olarak, her N günde bir sıradaki araç videosu
+   * Instagram + Facebook Reels olarak hazırlanır. Taslak mı yoksa kendiliğinden mi gideceği
+   * `reelsAutoPublish` ayarına bağlıdır.
+   */
+  toolReelEveryDays: number;
 };
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
@@ -86,6 +105,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   singleLang: "tr",
   researchKeywords: true,
   reelsAutoPublish: false,
+  toolReelEveryDays: 0,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -109,6 +129,7 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     researchKeywords: raw.researchKeywords !== false,
     // Yalnızca açıkça `true` ise otomatik: eksik/bozuk ayar onaylı moda düşer.
     reelsAutoPublish: raw.reelsAutoPublish === true,
+    toolReelEveryDays: clampInt(raw.toolReelEveryDays, 0, 30, DEFAULT_CONFIG.toolReelEveryDays),
   };
 }
 
@@ -451,7 +472,7 @@ export type QueueResult = {
  * @param hold `true` ise kayıtlar TASLAK olarak kalır: admin panelde okuyup
  *   onaylamadan hiçbir şey yayınlanmaz. Otomatik tur bunu `false` ile çağırır.
  */
-export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
+async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
   const config = await readSocialConfig();
   const dayKey = calendarDayKey(scheduledAt, config.timeZone);
   const accounts = await readyAccounts();
@@ -506,12 +527,9 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
       singleLang: config.singleLang,
     });
     for (const platform of platforms) {
-      // Instagram'da yazının videosu varsa gönderi Reels olur: kayda görsel yerine video
-      // adresi yazılır (yayıncı bunu uzantısından tanır). Video yoksa eskisi gibi görsel.
-      const reelUrl = platform === "INSTAGRAM" ? await reelFor(item) : null;
-      const imageUrl = reelUrl ?? pickImage(item, platform);
-      // Reels, otomatik mod açık değilse hazırlık turunda bile TASLAK kalır.
-      const holdThis = hold || (reelUrl !== null && !config.reelsAutoPublish);
+      // Blog gönderileri Reels olmaz (yalnız araç videoları Reels olur): carousel/tek görsel.
+      const imageUrl = pickImage(item, platform);
+      const holdThis = hold;
       try {
         const manual = !accounts.has(platform);
         await prisma.socialPost.create({
@@ -540,6 +558,141 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
     }
   }
 
+  return result;
+}
+
+// ─── Araç tanıtım videoları ───────────────────────────────────────────────────
+
+/** Araç videolarının gideceği ağlar (ikisi de Reels). */
+const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK"];
+
+/**
+ * Bir araç videosunu Instagram + Facebook Reels gönderisi olarak kuyruğa alır.
+ *
+ * Metin blog gönderileriyle aynı hattan yazılır (yapay zekâ varsa o, yoksa şablon);
+ * arama terimleri manifestten gelir. Bağlı olmayan ağın gönderisi MANUAL kaydedilir.
+ * `hold` doğruysa TASLAK kalır: admin videoyu izleyip onaylamadan hiçbir şey yayınlanmaz.
+ */
+export async function queueToolReel(
+  toolId: string,
+  scheduledAt: Date,
+  hold: boolean,
+  /** Verilirse yalnız bu video kullanılır (otomatik tur: henüz kullanılmamış taze video). */
+  video?: ToolReelVideoInfo,
+): Promise<QueueResult> {
+  const result: QueueResult = { queued: [], skipped: [] };
+  const entry = findCatalogEntry(toolId);
+  if (!entry) {
+    result.skipped.push({ platform: null, reason: "Bu araç için video tanımlı değil" });
+    return result;
+  }
+  const usable = video ?? (await latestVideoFor(toolId, MANUAL_MAX_AGE_MS, scheduledAt));
+  if (!usable) {
+    result.skipped.push({
+      platform: null,
+      reason: "Bu araç için henüz video üretilmedi (paylaşım zamanı yaklaşınca kendiliğinden üretilir)",
+    });
+    return result;
+  }
+  const config = await readSocialConfig();
+  const dayKey = calendarDayKey(scheduledAt, config.timeZone);
+  const accounts = await readyAccounts();
+  const item = toolReelFeedItem(entry);
+  const bodies = await writePostBodies({
+    item,
+    platforms: TOOL_REEL_PLATFORMS,
+    keywords: entry.keywords,
+    bilingual: config.bilingual,
+    singleLang: config.singleLang,
+    templateOnly: true,
+  });
+  for (const platform of TOOL_REEL_PLATFORMS) {
+    try {
+      const manual = !accounts.has(platform);
+      await prisma.socialPost.create({
+        data: {
+          platform,
+          guid: toolReelGuid(entry.id),
+          lang: item.lang,
+          title: item.title,
+          linkUrl: item.link,
+          body: bodies[platform],
+          imageUrl: usable.url,
+          scheduledAt,
+          dayKey,
+          status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
+        },
+      });
+      result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: usable.url, manual });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        result.skipped.push({ platform, reason: "Bu video bugün bu hesapta zaten kuyruğa alınmış" });
+        continue;
+      }
+      throw err;
+    }
+  }
+  return result;
+}
+
+/** Panel için: her araç, varsa hazır videosu ve hangi ağlarda gönderiye çevrildiği. */
+export async function listToolReelsWithStatus(): Promise<
+  (ToolReel & { posts: { platform: SocialPlatform; status: string; createdAt: string }[] })[]
+> {
+  const reels = await loadToolReels();
+  const rows = await prisma.socialPost.findMany({
+    where: { guid: { in: reels.map((r) => r.guid) } },
+    select: { guid: true, platform: true, status: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return reels.map((r) => ({
+    ...r,
+    posts: rows
+      .filter((p) => p.guid === r.guid)
+      .map((p) => ({ platform: p.platform, status: p.status, createdAt: p.createdAt.toISOString() })),
+  }));
+}
+
+/**
+ * Otomatik tur: ayarlanan günde bir, sıradaki araç videosunu kuyruğa katar.
+ * Video paylaşım zamanından ÖNCE üretilmiş olmalı (iş akışı); hazır değilse o gün atlanır.
+ */
+async function maybeQueueToolReel(scheduledAt: Date, hold: boolean, result: QueueResult): Promise<void> {
+  const config = await readSocialConfig();
+  if (config.toolReelEveryDays <= 0) return;
+  const due = await pickDueToolReel(scheduledAt, config.toolReelEveryDays);
+  if (!due) return;
+
+  const video = await unusedFreshVideoFor(due.id, scheduledAt);
+  if (!video) {
+    result.skipped.push({ platform: null, reason: `Araç videosu (${due.id}) henüz hazır değil; bugün atlandı` });
+    return;
+  }
+  const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video);
+  result.queued.push(...queued.queued);
+  result.skipped.push(...queued.skipped);
+}
+
+/** Paylaşılmış videoları siler; hata otomasyonu durdurmaz. */
+async function cleanupToolVideosSafely(): Promise<void> {
+  try {
+    const removed = await cleanupToolVideos();
+    if (removed > 0) logger.info("social", `${removed} araç videosu silindi (paylaşıldı ya da süresi doldu)`);
+  } catch (err) {
+    logger.warn("social", `Araç videoları temizlenemedi: ${String(err)}`);
+  }
+}
+
+/** Günün gönderilerini hazırlar: blog yazıları + (açıksa) sıradaki araç videosu. */
+export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
+  const result = await queueBlogPosts(scheduledAt, hold);
+  try {
+    await maybeQueueToolReel(scheduledAt, hold, result);
+  } catch (err) {
+    // Araç videosu ek bir akış: hatası blog gönderilerini geri almamalı.
+    logger.warn("social", `Araç videosu kuyruğa alınamadı: ${String(err)}`);
+  }
+  await cleanupToolVideosSafely();
   return result;
 }
 
@@ -662,6 +815,8 @@ export async function publishDuePosts(): Promise<{ published: number; failed: nu
     if (await publishOne(row.id, secrets)) published++;
     else failed++;
   }
+  // Paylaşılan araç videolarının dosyası artık gereksiz: silinir.
+  if (published > 0) await cleanupToolVideosSafely();
   return { published, failed };
 }
 
@@ -683,7 +838,10 @@ export async function publishNow(postId: string): Promise<{ ok: boolean; error: 
   }
 
   const ok = await publishOne(post.id, secrets);
-  if (ok) return { ok: true, error: null };
+  if (ok) {
+    await cleanupToolVideosSafely();
+    return { ok: true, error: null };
+  }
   const after = await prisma.socialPost.findUnique({ where: { id: postId }, select: { lastError: true } });
   return { ok: false, error: after?.lastError ?? "Yayınlanamadı" };
 }
@@ -701,6 +859,7 @@ export async function markPostShared(postId: string): Promise<void> {
     where: { id: postId, status: "MANUAL" },
     data: { status: "PUBLISHED", publishedAt: new Date(), lastError: null },
   });
+  await cleanupToolVideosSafely();
 }
 
 export async function deletePost(postId: string): Promise<void> {
@@ -714,6 +873,7 @@ export async function deletePost(postId: string): Promise<void> {
   await prisma.socialPost.deleteMany({
     where: { id: postId, status: { notIn: ["PUBLISHED", "SKIPPED", "PUBLISHING"] } },
   });
+  await cleanupToolVideosSafely();
 }
 
 export async function updatePostBody(postId: string, body: string): Promise<void> {

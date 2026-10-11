@@ -150,16 +150,9 @@ describe("Reels adres yardımcıları", () => {
     expect(isReelUrl(null)).toBe(false);
   });
 
-  it("manifestte varsa yazının videosunu, yoksa null döner", async () => {
-    installFetch({ reels: true });
-    const { reelFor } = await import("../modules/social/reels.service.js");
-    expect(await reelFor(ITEM)).toBe(VIDEO);
-    expect(await reelFor({ guid: "yok", link: "https://example.test/yok" })).toBeNull();
-  });
-
-  it("manifest okunamazsa null döner (otomasyon durmaz)", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("x", { status: 500 })));
+  it("blog yazıları Reels olmaz: reelFor yalnız araç videosu için adres verir", async () => {
     const { reelFor } = await import("../modules/social/reels.service.js");
     expect(await reelFor(ITEM)).toBeNull();
+    expect(await reelFor({ guid: "yok", link: "https://example.test/yok" })).toBeNull();
   });
 });

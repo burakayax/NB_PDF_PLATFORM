@@ -278,6 +278,8 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/health" || p === "/health/db") return true;
   if (p === "/subscription/plans" && method === "GET") return true;
   if (p.startsWith("/public/") && method === "GET") return true;
+  // Araç videosu üretim iş akışı: oturum yok, TOOL_REEL_FACTORY_KEY ile kendi yetkisini denetler.
+  if (p.startsWith("/tool-reel-factory/")) return true;
   if (p === "/analytics/page-view" && method === "POST") return true;
   // Kullanıcı yolculuğu olayları (üye-ol daveti, kota duvarı, ödeme adımları) —
   // misafirin JWT'si yoktur; page-view ile aynı istisna gerekir, yoksa her

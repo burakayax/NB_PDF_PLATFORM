@@ -1,0 +1,162 @@
+name: Arac videosu uretimi
+
+# Araç tanıtım videosu (Reels) PAYLAŞIMDAN ÖNCE üretilir ve paylaşıldıktan sonra silinir.
+#
+# Akış: API'ye "üretim gerekli mi?" diye sorulur → gerekliyse siteyi geçici olarak ayağa kaldırıp
+# aracı gerçekten kullanarak ekranı kaydeder → MP4 API'ye yüklenir. Günlük paylaşım turu videoyu
+# Instagram + Facebook Reels'e çevirir; paylaşılınca API videoyu siler (bu iş hiçbir şey saklamaz).
+#
+# GEREKLİ GİZLİ ANAHTARLAR (GitHub → Settings → Secrets and variables → Actions):
+#   TOOL_REEL_API_BASE     Kimlik API'nin dışarıdan erişilen kökü, ör. https://auth-api.pdfplatform.app
+#   TOOL_REEL_FACTORY_KEY  Rastgele uzun bir parola; API'de AYNI değer TOOL_REEL_FACTORY_KEY olarak tanımlı olmalı
+# İkisi de yoksa iş sessizce atlanır (hata vermez).
+#
+# SAAT: Her 30 dakikada bir API'ye sorulur; API yalnızca normal gönderilerle AYNI paylaşım
+# saatine göre (hazırlık anından ~2,5 saat önce) "üret" der. Paylaşım saatini panelden
+# değiştirsen bu dosyada bir şey değiştirmen gerekmez.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: "Elle üret: araç kimliği (compress, merge). Boş bırakılırsa yalnızca sıradaki araç için, gerekiyorsa üretilir."
+        required: false
+        default: ""
+
+concurrency:
+  group: tool-reels
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    name: Video uret ve yukle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      API_BASE: ${{ secrets.TOOL_REEL_API_BASE }}
+      FACTORY_KEY: ${{ secrets.TOOL_REEL_FACTORY_KEY }}
+      TOOL_INPUT: ${{ inputs.tool }}
+      REELS_DEMO_EMAIL: reels.demo@example.test
+      REELS_DEMO_PASSWORD: Demo-Reels-2026!xK
+    steps:
+      - name: Uretim gerekli mi?
+        id: need
+        run: |
+          set -euo pipefail
+          if [ -z "${API_BASE:-}" ] || [ -z "${FACTORY_KEY:-}" ]; then
+            echo "Gizli anahtarlar tanimli degil; atlandi."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          QS=""
+          if [ -n "${TOOL_INPUT:-}" ]; then QS="?tool=${TOOL_INPUT}"; fi
+          RESP="$(curl -fsS --max-time 60 -H "x-factory-key: ${FACTORY_KEY}" "${API_BASE%/}/api/tool-reel-factory/needed${QS}")"
+          echo "Yanit: $RESP"
+          echo "needed=$(echo "$RESP" | jq -r '.needed')" >> "$GITHUB_OUTPUT"
+          echo "tool=$(echo "$RESP" | jq -r '.tool // ""')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.need.outputs.needed == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.need.outputs.needed == 'true'
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        if: steps.need.outputs.needed == 'true'
+        with:
+          node-version: "24"
+
+      - name: Bagimliliklari kur
+        if: steps.need.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config poppler-utils ghostscript
+          python -m pip install --upgrade pip
+          pip install -r web/backend/requirements.txt
+          (cd web/api && npm ci)
+          (cd web/frontend && npm ci && npx playwright install --with-deps chromium)
+
+      - name: Siteyi gecici olarak ayaga kaldir
+        if: steps.need.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          cat > web/api/.env <<'EOF'
+          DATABASE_URL=file:./dev.db
+          NODE_ENV=development
+          JWT_ACCESS_SECRET=ci-reels-access-secret-must-be-32chars!!
+          JWT_REFRESH_SECRET=ci-reels-refresh-secret-must-be-32chars!
+          BILLING_ENCRYPTION_KEY=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          FRONTEND_ORIGIN=http://127.0.0.1:5173
+          APP_BASE_URL=http://127.0.0.1:4000
+          ADMIN_EMAIL=admin@example.test
+          ROLE_ADMIN_EMAIL=admin@example.test
+          EMAIL_USER=noreply@example.test
+          EMAIL_PASS=ci-placeholder
+          EOF
+          cp web/frontend/.env.example web/frontend/.env
+          # Taze, tek kullanımlık SQLite: şema doğrudan uygulanır (SQLite migration geçmişi eksik sütunlar içeriyor).
+          (cd web/api && npx prisma db push --skip-generate --accept-data-loss && npx prisma generate)
+
+          # Süreçlerin çıktısı dosyaya gider: adımın çıkışını açık tutup işi sonsuza bekletmesin.
+          (cd web/api && nohup npx tsx src/server.ts > "$RUNNER_TEMP/api.log" 2>&1 &)
+          PDF_API_NO_RELOAD=1 nohup node scripts/run-pdf-api.mjs > "$RUNNER_TEMP/pdf.log" 2>&1 &
+          (cd web/frontend && nohup npx vite --host 127.0.0.1 --port 5173 --strictPort > "$RUNNER_TEMP/ui.log" 2>&1 &)
+
+          for i in $(seq 1 90); do
+            ok=0
+            curl -fsS http://127.0.0.1:4000/api/health >/dev/null 2>&1 && \
+            curl -fsS http://127.0.0.1:8000/api/health >/dev/null 2>&1 && \
+            curl -fsS http://127.0.0.1:5173/ >/dev/null 2>&1 && ok=1
+            if [ "$ok" = "1" ]; then echo "Hazir ($i s)"; break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:4000/api/health >/dev/null
+          curl -fsS http://127.0.0.1:8000/api/health >/dev/null
+          curl -fsS http://127.0.0.1:5173/ >/dev/null
+
+      - name: Deneme hesabini ac
+        if: steps.need.outputs.needed == 'true'
+        working-directory: web/frontend
+        run: node scripts/tool-reels/seed-demo.mjs http://127.0.0.1:4000
+
+      - name: Videoyu uret
+        if: steps.need.outputs.needed == 'true'
+        working-directory: web/frontend
+        run: |
+          set -euo pipefail
+          node scripts/tool-reels/run.mjs \
+            --tool "${{ steps.need.outputs.tool }}" \
+            --base http://127.0.0.1:5173 \
+            --out "$RUNNER_TEMP/reel.mp4" \
+            --work "$RUNNER_TEMP/reel-work" | tee "$RUNNER_TEMP/reel.log"
+          tail -n 1 "$RUNNER_TEMP/reel.log" | jq -r '.seconds' > "$RUNNER_TEMP/reel.seconds"
+
+      - name: Videoyu API'ye yukle
+        if: steps.need.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 300 -X PUT \
+            -H "x-factory-key: ${FACTORY_KEY}" \
+            -H "content-type: video/mp4" \
+            -H "x-video-seconds: $(cat "$RUNNER_TEMP/reel.seconds")" \
+            --data-binary "@$RUNNER_TEMP/reel.mp4" \
+            "${API_BASE%/}/api/tool-reel-factory/${{ steps.need.outputs.tool }}/video"
+
+      - name: Hata ayiklama kayitlari
+        if: failure() && steps.need.outputs.needed == 'true'
+        run: |
+          for f in api pdf ui; do echo "=== $f ==="; tail -n 60 "$RUNNER_TEMP/$f.log" || true; done
+
+      - name: Hata ekran goruntusu
+        if: failure() && steps.need.outputs.needed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arac-videosu-hata
+          path: ${{ runner.temp }}/reel-work/hata.png
+          if-no-files-found: ignore
+          retention-days: 3

@@ -21,10 +21,12 @@ import {
   disconnectAccount,
   listAccounts,
   markPostShared,
+  listToolReelsWithStatus,
   nextRunAt,
   postStats,
   publishNow,
   queueDailyPosts,
+  queueToolReel,
   saveAccount,
   testAccount,
   readSocialConfig,
@@ -100,6 +102,7 @@ const configSchema = z.object({
   singleLang: z.enum(["tr", "en"]).optional(),
   researchKeywords: z.boolean().optional(),
   reelsAutoPublish: z.boolean().optional(),
+  toolReelEveryDays: z.number().int().min(0).max(30).optional(),
 });
 
 socialRouter.put(
@@ -235,6 +238,30 @@ socialRouter.post(
       "social.queue",
       null,
       `${result.queued.length} gönderi ${publishImmediately ? "yayına alındı" : "taslak olarak hazırlandı"}`,
+    );
+    response.json(result);
+  }),
+);
+
+/** Araç tanıtım videoları: izlenebilir liste + hangi ağlarda gönderiye çevrildiği. */
+socialRouter.get(
+  "/tool-reels",
+  asyncHandler(async (_request, response) => {
+    response.json({ reels: await listToolReelsWithStatus() });
+  }),
+);
+
+/** Bir araç videosunu Instagram + Facebook Reels TASLAĞI olarak hazırlar (onay beklenir). */
+socialRouter.post(
+  "/tool-reels/:id/queue",
+  asyncHandler(async (request, response) => {
+    const toolId = String(request.params.id);
+    const result = await queueToolReel(toolId, new Date(), true);
+    await logAdminAudit(
+      actorOf(request),
+      "social.tool-reel",
+      toolId,
+      `Araç videosu (${toolId}): ${result.queued.length} taslak hazırlandı`,
     );
     response.json(result);
   }),

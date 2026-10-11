@@ -172,6 +172,8 @@ services:
         sync: false
       - key: ROLE_ADMIN_EMAIL
         sync: false
+      - key: TOOL_REEL_FACTORY_KEY
+        sync: false   # Araç videosu üretim iş akışı (GitHub) ile paylaşılan parola; docs/rehber/13
       - key: FRONTEND_ORIGIN
         sync: false   # Örn. https://pdfplatform.app
       - key: APP_BASE_URL
