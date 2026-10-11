@@ -6765,7 +6765,6 @@ function App() {
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
             contentPanel !== "tool" &&
-          onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
             contentPanel !== "ai" &&
             !isTeamMember ? (
               <DashboardLifecycleNudge
