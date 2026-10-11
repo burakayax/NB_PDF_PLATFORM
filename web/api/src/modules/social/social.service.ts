@@ -22,6 +22,8 @@ import { fetchPairedFeedItems } from "./rss.service.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
 import { reelFor } from "./reels.service.js";
+import { TOOL_REEL_PREFIX, loadToolReels, toolReelFeedItem } from "./tool-reels.service.js";
+import type { ToolReel } from "./tool-reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
@@ -71,6 +73,14 @@ export type SocialAutomationConfig = {
    * etkilenmez. Açıkken Reels de diğer gönderiler gibi saati gelince kendiliğinden gider.
    */
   reelsAutoPublish: boolean;
+  /**
+   * Araç tanıtım videosu kaç günde bir sıraya katılsın? (0 = kapalı)
+   *
+   * Açıkken günlük blog gönderilerine ek olarak, her N günde bir sıradaki araç videosu
+   * Instagram + Facebook Reels olarak hazırlanır. Taslak mı yoksa kendiliğinden mi gideceği
+   * `reelsAutoPublish` ayarına bağlıdır.
+   */
+  toolReelEveryDays: number;
 };
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
@@ -86,6 +96,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   singleLang: "tr",
   researchKeywords: true,
   reelsAutoPublish: false,
+  toolReelEveryDays: 0,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -109,6 +120,7 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     researchKeywords: raw.researchKeywords !== false,
     // Yalnızca açıkça `true` ise otomatik: eksik/bozuk ayar onaylı moda düşer.
     reelsAutoPublish: raw.reelsAutoPublish === true,
+    toolReelEveryDays: clampInt(raw.toolReelEveryDays, 0, 30, DEFAULT_CONFIG.toolReelEveryDays),
   };
 }
 
@@ -451,7 +463,7 @@ export type QueueResult = {
  * @param hold `true` ise kayıtlar TASLAK olarak kalır: admin panelde okuyup
  *   onaylamadan hiçbir şey yayınlanmaz. Otomatik tur bunu `false` ile çağırır.
  */
-export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
+async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
   const config = await readSocialConfig();
   const dayKey = calendarDayKey(scheduledAt, config.timeZone);
   const accounts = await readyAccounts();
@@ -540,6 +552,125 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
     }
   }
 
+  return result;
+}
+
+// ─── Araç tanıtım videoları ───────────────────────────────────────────────────
+
+/** Araç videolarının gideceği ağlar (ikisi de Reels). */
+const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK"];
+
+/**
+ * Bir araç videosunu Instagram + Facebook Reels gönderisi olarak kuyruğa alır.
+ *
+ * Metin blog gönderileriyle aynı hattan yazılır (yapay zekâ varsa o, yoksa şablon);
+ * arama terimleri manifestten gelir. Bağlı olmayan ağın gönderisi MANUAL kaydedilir.
+ * `hold` doğruysa TASLAK kalır: admin videoyu izleyip onaylamadan hiçbir şey yayınlanmaz.
+ */
+export async function queueToolReel(toolId: string, scheduledAt: Date, hold: boolean): Promise<QueueResult> {
+  const result: QueueResult = { queued: [], skipped: [] };
+  const reel = (await loadToolReels()).find((r) => r.id === toolId);
+  if (!reel) {
+    result.skipped.push({ platform: null, reason: "Bu araç için video bulunamadı" });
+    return result;
+  }
+  const config = await readSocialConfig();
+  const dayKey = calendarDayKey(scheduledAt, config.timeZone);
+  const accounts = await readyAccounts();
+  const item = toolReelFeedItem(reel);
+  const bodies = await writePostBodies({
+    item,
+    platforms: TOOL_REEL_PLATFORMS,
+    keywords: reel.keywords,
+    bilingual: config.bilingual,
+    singleLang: config.singleLang,
+    templateOnly: true,
+  });
+  for (const platform of TOOL_REEL_PLATFORMS) {
+    try {
+      const manual = !accounts.has(platform);
+      await prisma.socialPost.create({
+        data: {
+          platform,
+          guid: reel.guid,
+          lang: item.lang,
+          title: item.title,
+          linkUrl: item.link,
+          body: bodies[platform],
+          imageUrl: reel.videoUrl,
+          scheduledAt,
+          dayKey,
+          status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
+        },
+      });
+      result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: reel.videoUrl, manual });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        result.skipped.push({ platform, reason: "Bu video bugün bu hesapta zaten kuyruğa alınmış" });
+        continue;
+      }
+      throw err;
+    }
+  }
+  return result;
+}
+
+/** Panel için: her araç videosu ve hangi ağlarda kaç kez gönderiye çevrildiği. */
+export async function listToolReelsWithStatus(): Promise<
+  (ToolReel & { posts: { platform: SocialPlatform; status: string; createdAt: string }[] })[]
+> {
+  const reels = await loadToolReels();
+  if (reels.length === 0) return [];
+  const rows = await prisma.socialPost.findMany({
+    where: { guid: { in: reels.map((r) => r.guid) } },
+    select: { guid: true, platform: true, status: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return reels.map((r) => ({
+    ...r,
+    posts: rows
+      .filter((p) => p.guid === r.guid)
+      .map((p) => ({ platform: p.platform, status: p.status, createdAt: p.createdAt.toISOString() })),
+  }));
+}
+
+/**
+ * Otomatik tur: ayarlanan günde bir, sıradaki araç videosunu kuyruğa katar.
+ * Sıra: hiç paylaşılmamış video önce; hepsi paylaşıldıysa en eski paylaşılan.
+ */
+async function maybeQueueToolReel(scheduledAt: Date, hold: boolean, result: QueueResult): Promise<void> {
+  const config = await readSocialConfig();
+  if (config.toolReelEveryDays <= 0) return;
+  const reels = await loadToolReels();
+  if (reels.length === 0) return;
+
+  const rows = await prisma.socialPost.findMany({
+    where: { guid: { startsWith: TOOL_REEL_PREFIX } },
+    select: { guid: true, createdAt: true },
+  });
+  const lastAt = rows.reduce((m, r) => Math.max(m, r.createdAt.getTime()), 0);
+  // 6 saat pay: tur her gün aynı saatte çalışır, milisaniye farkı bir günü kaçırmasın.
+  if (lastAt && scheduledAt.getTime() - lastAt < config.toolReelEveryDays * 24 * 3600_000 - 6 * 3600_000) return;
+
+  const lastByGuid = new Map<string, number>();
+  for (const r of rows) lastByGuid.set(r.guid, Math.max(lastByGuid.get(r.guid) ?? 0, r.createdAt.getTime()));
+  const next = reels.slice().sort((a, b) => (lastByGuid.get(a.guid) ?? 0) - (lastByGuid.get(b.guid) ?? 0))[0];
+  if (!next) return;
+
+  const queued = await queueToolReel(next.id, scheduledAt, hold || !config.reelsAutoPublish);
+  result.queued.push(...queued.queued);
+  result.skipped.push(...queued.skipped);
+}
+
+/** Günün gönderilerini hazırlar: blog yazıları + (açıksa) sıradaki araç videosu. */
+export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
+  const result = await queueBlogPosts(scheduledAt, hold);
+  try {
+    await maybeQueueToolReel(scheduledAt, hold, result);
+  } catch (err) {
+    // Araç videosu ek bir akış: hatası blog gönderilerini geri almamalı.
+    logger.warn("social", `Araç videosu kuyruğa alınamadı: ${String(err)}`);
+  }
   return result;
 }
 
