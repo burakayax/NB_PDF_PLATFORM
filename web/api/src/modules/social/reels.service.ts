@@ -11,6 +11,7 @@
 
 import { env } from "../../config/env.js";
 import { logger } from "../../lib/file-log.js";
+import { toolReelUrlFor } from "./tool-reels.service.js";
 import type { FeedItem } from "./social.types.js";
 
 type Manifest = Record<string, { url?: string; seconds?: number }>;
@@ -43,6 +44,9 @@ export function resetReelsCache(): void {
 
 /** Bu yazının Reels video adresi; yoksa `null`. */
 export async function reelFor(item: Pick<FeedItem, "guid" | "link">): Promise<string | null> {
+  // Araç tanıtım videoları ayrı manifestten gelir (blog slayt videolarından bağımsız).
+  const toolVideo = await toolReelUrlFor(item.guid);
+  if (toolVideo) return toolVideo;
   const manifest = await loadManifest();
   const url = (manifest[item.guid] ?? manifest[item.link])?.url;
   return typeof url === "string" && isReelUrl(url) ? url : null;

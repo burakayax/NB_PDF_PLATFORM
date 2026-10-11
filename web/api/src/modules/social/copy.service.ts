@@ -311,6 +311,12 @@ export type CopyRequest = {
   bilingual: boolean;
   /** Tek dilli platformların (X) dili. */
   singleLang: "tr" | "en";
+  /**
+   * Yapay zekâ kullanılmasın, yalnızca şablon metin yazılsın.
+   * Elle yazılmış özetli içerikte (araç videoları) model, özette olmayan iddialar
+   * ("kalite kaybı olmaz", "kayıt gerekmez") ekleyebildiği için kapatılır.
+   */
+  templateOnly?: boolean;
 };
 
 /** Bir gönderide hangi dil(ler) yer alacak? */
@@ -413,7 +419,7 @@ export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPl
   const result = {} as Record<SocialPlatform, string>;
   for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p);
 
-  if (!isAiConfigured() || req.platforms.length === 0) return result;
+  if (req.templateOnly || !isAiConfigured() || req.platforms.length === 0) return result;
 
   const wanted = req.platforms;
   const longRoom = Math.min(

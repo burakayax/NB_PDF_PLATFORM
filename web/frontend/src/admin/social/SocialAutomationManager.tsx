@@ -36,6 +36,7 @@ import {
 import { AccountConnectCard } from "./AccountConnectCard";
 import { PostPreviewCard } from "./PostPreviewCard";
 import { RecentPostsPanel } from "./RecentPostsPanel";
+import { ToolReelsPanel } from "./ToolReelsPanel";
 import { PlatformBadge } from "./platformBrand";
 
 /**
@@ -47,7 +48,7 @@ import { PlatformBadge } from "./platformBrand";
  *   3. Nasıl ayarlanır?      → hesaplar ve zamanlama sekmeleri
  */
 
-type TabId = "flow" | "accounts" | "schedule";
+type TabId = "flow" | "tools" | "accounts" | "schedule";
 
 /** Hazırlık süresi seçenekleri — dakika cinsinden saklanır. */
 const LEAD_OPTIONS = [
@@ -63,6 +64,7 @@ const LEAD_OPTIONS = [
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "flow", label: "Gönderi akışı" },
+  { id: "tools", label: "Araç videoları" },
   { id: "accounts", label: "Hesaplar" },
   { id: "schedule", label: "Zamanlama" },
 ];
@@ -449,6 +451,22 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
         </div>
       </div>
 
+      {/* ── Araç videoları ────────────────────────────────────────────────── */}
+      {tab === "tools" ? (
+        <ToolReelsPanel
+          accessToken={accessToken}
+          onQueued={async (r, title) => {
+            await refresh();
+            setTab("flow");
+            setNote(
+              r.queued.length > 0
+                ? `“${title}” için ${r.queued.length} Reels gönderisi hazırlandı. Okuyup onaylayana kadar hiçbir yere gitmez.`
+                : `Gönderi hazırlanmadı — ${r.skipped[0]?.reason ?? "uygun içerik bulunamadı"}.`,
+            );
+          }}
+        />
+      ) : null}
+
       {/* ── Gönderi akışı ─────────────────────────────────────────────────── */}
       {tab === "flow" ? (
         <div className="space-y-5">
@@ -794,6 +812,29 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   Otomatik mod açık: Reels’ler yayınlanmadan önce kontrol edilmez.
                 </p>
               ) : null}
+            </div>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <p className="text-sm font-medium text-slate-200">Araç videoları (Instagram + Facebook Reels)</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                Açıkken günlük blog gönderilerine ek olarak, seçtiğin sıklıkta sıradaki araç videosu da hazırlanır.
+                Önce onay / Otomatik seçimi yukarıdaki Reels ayarına göre işler. Videoları “Araç videoları”
+                sekmesinden izleyip tek tek de hazırlayabilirsin.
+              </p>
+              <label className="mt-3 block">
+                <span className="text-xs font-medium text-slate-300">Sıklık</span>
+                <select
+                  className={`${selectClass} mt-1.5`}
+                  value={config.toolReelEveryDays}
+                  onChange={(e) => patchConfig({ toolReelEveryDays: Number(e.target.value) })}
+                >
+                  <option value={0}>Kapalı (yalnızca elle hazırlanır)</option>
+                  <option value={2}>2 günde bir</option>
+                  <option value={3}>3 günde bir</option>
+                  <option value={7}>Haftada bir</option>
+                  <option value={14}>2 haftada bir</option>
+                </select>
+              </label>
             </div>
           </SectionCard>
 
