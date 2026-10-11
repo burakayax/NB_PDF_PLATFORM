@@ -290,14 +290,15 @@ function logGoogleOAuthSessionIssued(
   });
 }
 
-/** E-postadaki tıklanabilir bağlantı: {FRONTEND_ORIGIN}/api/auth/verify-email?token=...
- *  FRONTEND_ORIGIN kullanılır — production'da kullanıcı bu domain'e erişir,
- *  /api/auth/* reverse-proxy veya Vite proxy üzerinden API'ye iletilir.
+/** E-postadaki tıklanabilir bağlantı: {APP_BASE_URL}/api/auth/verify-email?token=...
+ *  APP_BASE_URL (API'nin kendi adresi) kullanılır. Üretimde SPA statik siteden sunulur ve
+ *  /api/* orada YOKTUR; FRONTEND_ORIGIN kullanılırsa bağlantı SPA'nın ana sayfasına düşer ve
+ *  doğrulama hiç yapılmaz. API doğruladıktan sonra kullanıcıyı giriş ekranına yönlendirir.
  */
 export function buildEmailVerificationLink(rawToken: string) {
   const verifyUrl = new URL(
     "/api/auth/verify-email",
-    env.FRONTEND_ORIGIN.replace(/\/$/, ""),
+    env.APP_BASE_URL.replace(/\/$/, ""),
   );
   verifyUrl.searchParams.set("token", rawToken);
   return verifyUrl.toString();
