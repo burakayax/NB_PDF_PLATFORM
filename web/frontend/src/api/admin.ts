@@ -1190,8 +1190,8 @@ export async function queueSocialPosts(accessToken: string): Promise<SocialQueue
 export type SocialToolReel = {
   id: string;
   guid: string;
-  videoUrl: string;
-  seconds: number;
+  /** Hazır video; yoksa null (paylaşım zamanı yaklaşınca kendiliğinden üretilir, paylaşılınca silinir). */
+  video: { id: string; url: string; seconds: number; createdAt: string } | null;
   tr: { title: string; summary: string; link: string };
   en: { title: string; summary: string; link: string };
   /** Bu videonun gönderiye çevrildiği kayıtlar (en yeni önce). */

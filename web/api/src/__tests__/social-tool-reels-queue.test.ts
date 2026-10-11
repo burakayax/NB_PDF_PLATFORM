@@ -1,14 +1,14 @@
 /**
- * Araç videosunun otomatik sıraya katılması: sıklık, sıra ve onay kararı.
+ * Araç videosunun otomatik sıraya katılması: sıklık, hazır video şartı ve onay kararı.
  *
- * Veritabanı, besleme ve manifest sahte; yalnızca `queueDailyPosts`in araç videosu için
- * hangi kaydı ne durumda yazdığı sınanır.
+ * Veritabanı, besleme ve yapay zekâ sahte; sıra/video seçimi `tool-reels.service`in kendi
+ * testinde sınanır. Burada yalnızca `queueDailyPosts`in araç videosu için ne yazdığına bakılır.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FeedItem } from "../modules/social/social.types.js";
 
-const DAY = 24 * 3600_000;
+const VIDEO_URL = "https://api.example.test/api/public/tool-reels/compress-1791728774504.mp4";
 
 const ITEM: FeedItem = {
   guid: "https://example.test/blog/yazi",
@@ -21,27 +21,17 @@ const ITEM: FeedItem = {
   images: { wide: "https://example.test/c.png", square: "https://example.test/c.png", tall: "https://example.test/c.png" },
 };
 
-const reel = (id: string) => ({
-  id,
-  guid: `tool-reel:${id}`,
-  videoUrl: `https://example.test/arac-videolari/${id}.mp4`,
-  seconds: 20,
-  tr: { title: `T ${id}`, summary: "s", link: `https://example.test/tools/${id}` },
-  en: { title: `E ${id}`, summary: "s", link: `https://example.test/en/tools/${id}` },
-  keywords: { tr: [], en: [], tagsTr: [], tagsEn: [] },
-});
-
 const created: { platform: string; guid: string; status: string; imageUrl: string | null }[] = [];
 let config: Record<string, unknown> = {};
-let toolRows: { guid: string; createdAt: Date }[] = [];
+let due: { id: string } | null = null;
+let fresh: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
+const cleanup = vi.fn(async () => 0);
 
 vi.mock("../lib/prisma.js", () => ({
   prisma: {
     socialAccount: { findMany: vi.fn(async () => []) },
     socialPost: {
-      findMany: vi.fn(async ({ where }: { where?: { guid?: { startsWith?: string } } }) =>
-        where?.guid?.startsWith ? toolRows : [],
-      ),
+      findMany: vi.fn(async () => []),
       create: vi.fn(
         async ({ data }: { data: { platform: string; guid: string; status: string; imageUrl: string | null } }) => {
           created.push({ platform: data.platform, guid: data.guid, status: data.status, imageUrl: data.imageUrl });
@@ -62,21 +52,16 @@ vi.mock("../modules/social/copy.service.js", () => ({
     Object.fromEntries(platforms.map((p) => [p, `metin ${p}`])),
   ),
 }));
-vi.mock("../modules/social/reels.service.js", () => ({ reelFor: vi.fn(async () => null) }));
-vi.mock("../modules/social/tool-reels.service.js", () => ({
-  TOOL_REEL_PREFIX: "tool-reel:",
-  loadToolReels: vi.fn(async () => [reel("compress"), reel("merge")]),
-  toolReelFeedItem: (r: ReturnType<typeof reel>) => ({
-    guid: r.guid,
-    lang: "tr",
-    title: r.tr.title,
-    summary: r.tr.summary,
-    link: r.tr.link,
-    publishedAt: 0,
-    categories: [],
-    images: {},
-  }),
-}));
+vi.mock("../modules/social/tool-reels.service.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../modules/social/tool-reels.service.js")>();
+  return {
+    ...actual,
+    pickDueToolReel: vi.fn(async () => due),
+    unusedFreshVideoFor: vi.fn(async () => fresh),
+    latestVideoFor: vi.fn(async () => fresh),
+    cleanupToolVideos: cleanup,
+  };
+});
 vi.mock("../modules/social/platforms/index.js", () => ({ PUBLISHERS: {}, VERIFIERS: {} }));
 vi.mock("../lib/encryption.js", () => ({ decryptField: vi.fn(), encryptField: vi.fn() }));
 
@@ -93,8 +78,10 @@ const toolPosts = () => created.filter((c) => c.guid.startsWith("tool-reel:"));
 
 beforeEach(() => {
   created.length = 0;
-  toolRows = [];
+  cleanup.mockClear();
   config = { reelsAutoPublish: false, researchKeywords: false, toolReelEveryDays: 3 };
+  due = { id: "compress" };
+  fresh = { id: "compress-1791728774504", url: VIDEO_URL, seconds: 27, createdAt: new Date() };
 });
 
 describe("araç videosu otomatik sırası", () => {
@@ -107,7 +94,27 @@ describe("araç videosu otomatik sırası", () => {
     expect(toolPosts()).toHaveLength(0);
   });
 
-  it("açık ve daha önce hiç yok: ilk video Instagram + Facebook için hazırlanır, onaylı modda TASLAK", async () => {
+  it("bugün araç videosu günü değilse: eklenmez", async () => {
+    due = null;
+    const { queueDailyPosts } = await import("../modules/social/social.service.js");
+
+    await queueDailyPosts(new Date(), false);
+
+    expect(toolPosts()).toHaveLength(0);
+  });
+
+  it("video henüz hazır değilse: o gün atlanır, sebep sonuçta yazar, blog gönderileri etkilenmez", async () => {
+    fresh = null;
+    const { queueDailyPosts } = await import("../modules/social/social.service.js");
+
+    const result = await queueDailyPosts(new Date(), false);
+
+    expect(toolPosts()).toHaveLength(0);
+    expect(result.skipped.some((s) => /henüz hazır değil/.test(s.reason))).toBe(true);
+    expect(created.some((c) => c.guid === ITEM.guid)).toBe(true);
+  });
+
+  it("video hazırsa: Instagram + Facebook için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
@@ -119,30 +126,9 @@ describe("araç videosu otomatik sırası", () => {
     ]);
     const ig = toolPosts().find((p) => p.platform === "INSTAGRAM");
     expect(ig?.status).toBe("DRAFT");
-    expect(ig?.imageUrl).toBe("https://example.test/arac-videolari/compress.mp4");
+    expect(ig?.imageUrl).toBe(VIDEO_URL);
     // Facebook hesabı bağlı değil → elle paylaşılacak.
     expect(toolPosts().find((p) => p.platform === "FACEBOOK")?.status).toBe("MANUAL");
-  });
-
-  it("son araç videosu sıklıktan yakınsa: bugün eklenmez", async () => {
-    toolRows = [{ guid: "tool-reel:compress", createdAt: new Date(Date.now() - 1 * DAY) }];
-    const { queueDailyPosts } = await import("../modules/social/social.service.js");
-
-    await queueDailyPosts(new Date(), false);
-
-    expect(toolPosts()).toHaveLength(0);
-  });
-
-  it("süre dolduysa: en uzun süredir paylaşılmayan video seçilir", async () => {
-    toolRows = [
-      { guid: "tool-reel:compress", createdAt: new Date(Date.now() - 10 * DAY) },
-      { guid: "tool-reel:merge", createdAt: new Date(Date.now() - 4 * DAY) },
-    ];
-    const { queueDailyPosts } = await import("../modules/social/social.service.js");
-
-    await queueDailyPosts(new Date(), false);
-
-    expect(new Set(toolPosts().map((p) => p.guid))).toEqual(new Set(["tool-reel:compress"]));
   });
 
   it("Reels otomatik mod açıksa: onaysız KUYRUĞA girer; elle hazırlıkta (hold) yine taslak", async () => {
@@ -156,5 +142,13 @@ describe("araç videosu otomatik sırası", () => {
     created.length = 0;
     await queueDailyPosts(new Date(), true);
     expect(toolPosts().find((p) => p.platform === "INSTAGRAM")?.status).toBe("DRAFT");
+  });
+
+  it("her günlük turun sonunda paylaşılmış videolar temizlenir", async () => {
+    const { queueDailyPosts } = await import("../modules/social/social.service.js");
+
+    await queueDailyPosts(new Date(), false);
+
+    expect(cleanup).toHaveBeenCalled();
   });
 });

@@ -5,8 +5,12 @@ import type { SocialToolReel } from "../api/admin";
 const REEL: SocialToolReel = {
   id: "compress",
   guid: "tool-reel:compress",
-  videoUrl: "https://www.pdfplatform.app/arac-videolari/pdf-sikistirma.mp4",
-  seconds: 27,
+  video: {
+    id: "compress-1791728774504",
+    url: "https://api.pdfplatform.app/api/public/tool-reels/compress-1791728774504.mp4",
+    seconds: 27,
+    createdAt: "2026-10-11T05:40:00.000Z",
+  },
   tr: { title: "PDF Sıkıştır", summary: "Özet metni", link: "https://www.pdfplatform.app/tools/compress" },
   en: { title: "Compress PDF", summary: "Summary", link: "https://www.pdfplatform.app/en/tools/compress" },
   posts: [{ platform: "INSTAGRAM", status: "DRAFT", createdAt: "2026-10-11T10:00:00.000Z" }],
@@ -27,13 +31,22 @@ afterEach(() => {
 });
 
 describe("ToolReelsPanel", () => {
-  it("videoyu bu sitenin kendi yolundan oynatır ve mevcut gönderi durumunu gösterir", async () => {
+  it("hazır videoyu oynatır ve mevcut gönderi durumunu gösterir", async () => {
     fetchReels.mockResolvedValue({ reels: [REEL] });
     const { container } = render(<ToolReelsPanel accessToken="t" onQueued={vi.fn()} />);
 
     expect(await screen.findByText("PDF Sıkıştır")).toBeTruthy();
-    expect(container.querySelector("video")?.getAttribute("src")).toBe("/arac-videolari/pdf-sikistirma.mp4");
+    expect(container.querySelector("video")?.getAttribute("src")).toBe(REEL.video?.url);
     expect(screen.getByText("Taslak")).toBeTruthy();
+  });
+
+  it("video hazır değilse oynatıcı yerine açıklama gösterir ve taslak düğmesi pasiftir", async () => {
+    fetchReels.mockResolvedValue({ reels: [{ ...REEL, video: null, posts: [] }] });
+    const { container } = render(<ToolReelsPanel accessToken="t" onQueued={vi.fn()} />);
+
+    expect(await screen.findByText("Video şu an hazır değil")).toBeTruthy();
+    expect(container.querySelector("video")).toBeNull();
+    expect((screen.getByRole("button", { name: /Reels taslağı hazırla/ }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("“Reels taslağı hazırla” videonun kimliğiyle çağrılır ve sonuç üst panele iletilir", async () => {
@@ -47,11 +60,5 @@ describe("ToolReelsPanel", () => {
 
     await waitFor(() => expect(onQueued).toHaveBeenCalledWith(result, "PDF Sıkıştır"));
     expect(queueReel).toHaveBeenCalledWith("t", "compress");
-  });
-
-  it("video yoksa boş durum gösterir", async () => {
-    fetchReels.mockResolvedValue({ reels: [] });
-    render(<ToolReelsPanel accessToken="t" onQueued={vi.fn()} />);
-    expect(await screen.findByText("Henüz araç videosu yok")).toBeTruthy();
   });
 });

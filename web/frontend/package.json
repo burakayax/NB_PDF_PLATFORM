@@ -7,7 +7,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "prebuild": "node scripts/fetch-tool-ratings.mjs && node scripts/generate-seo-files.mjs && node scripts/generate-reels.mjs && node scripts/setup-tesseract.mjs && node scripts/setup-scanic-ml.mjs && node scripts/setup-photo-ai.mjs",
+    "prebuild": "node scripts/fetch-tool-ratings.mjs && node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs && node scripts/setup-scanic-ml.mjs && node scripts/setup-photo-ai.mjs",
     "predev": "node scripts/fetch-tool-ratings.mjs && node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs && node scripts/setup-scanic-ml.mjs && node scripts/setup-photo-ai.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
