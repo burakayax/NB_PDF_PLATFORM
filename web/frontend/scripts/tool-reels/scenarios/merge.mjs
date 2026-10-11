@@ -28,7 +28,13 @@ export default {
     await chooser.setFiles(FILES.map((f) => fixtures(f)));
     await pg.getByText("Ekler.pdf").first().waitFor({ timeout: 30000 });
     // Önkontrol bitmeden birleştirme kapalı: tüm satırlar "Hazır" olsun.
-    await pg.getByText("Hazır", { exact: true }).nth(2).waitFor({ timeout: 20000 });
+    // Yavaş CI makinesinde önkontrol uzun sürebilir; takılırsa listenin ne dediği kayda geçsin.
+    try {
+      await pg.getByText("Hazır", { exact: true }).nth(2).waitFor({ timeout: 90000 });
+    } catch (err) {
+      console.log("ONKONTROL TAKILDI:", (await pg.locator("form.tool-form").innerText().catch(() => "?")).slice(0, 800));
+      throw err;
+    }
     await wait(300);
 
     // Sıra: üçüncü dosyayı bir yukarı al.
