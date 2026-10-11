@@ -104,7 +104,7 @@ jobs:
 
           # Süreçlerin çıktısı dosyaya gider: adımın çıkışını açık tutup işi sonsuza bekletmesin.
           (cd web/api && nohup npx tsx src/server.ts > "$RUNNER_TEMP/api.log" 2>&1 &)
-          PDF_API_NO_RELOAD=1 nohup node scripts/run-pdf-api.mjs > "$RUNNER_TEMP/pdf.log" 2>&1 &
+          PDF_SANDBOX_ENABLED=false PDF_API_NO_RELOAD=1 nohup node scripts/run-pdf-api.mjs > "$RUNNER_TEMP/pdf.log" 2>&1 &
           (cd web/frontend && nohup npx vite --host 127.0.0.1 --port 5173 --strictPort > "$RUNNER_TEMP/ui.log" 2>&1 &)
 
           for i in $(seq 1 90); do
