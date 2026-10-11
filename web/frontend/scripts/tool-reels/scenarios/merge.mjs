@@ -24,7 +24,15 @@ export default {
     await hl(dz, 6);
     await wait(1500);
     await hlOff();
-    const [chooser] = await Promise.all([pg.waitForEvent("filechooser"), pg.mouse.click(dp.x, dp.y)]);
+    // Yavaş CI makinesinde sayfa hâlâ yükleniyor olabilir: tıklama boşa giderse yeniden denenir.
+    let chooser = null;
+    for (let i = 0; i < 5 && !chooser; i++) {
+      [chooser] = await Promise.all([
+        pg.waitForEvent("filechooser", { timeout: 10000 }).catch(() => null),
+        pg.mouse.click(dp.x, dp.y),
+      ]);
+    }
+    if (!chooser) throw new Error("Dosya seçme penceresi açılmadı");
     await chooser.setFiles(FILES.map((f) => fixtures(f)));
     await pg.getByText("Ekler.pdf").first().waitFor({ timeout: 30000 });
     // Önkontrol bitmeden birleştirme kapalı: tüm satırlar "Hazır" olsun.

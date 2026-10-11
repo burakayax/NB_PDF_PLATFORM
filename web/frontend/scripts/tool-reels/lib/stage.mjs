@@ -191,6 +191,8 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
         /* yeniden dene */
       }
     }
+    // Vite ilk açılışta bağımlılıkları yeniden yükleyebilir; sayfa sakinleşmeden devam edilmez.
+    await pg.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
     await wait(1500);
     await pg.getByRole("button", { name: "Turu atla" }).click().catch(() => {});
     await wait(1300);
