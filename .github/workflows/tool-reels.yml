@@ -11,12 +11,13 @@ name: Arac videosu uretimi
 #   TOOL_REEL_FACTORY_KEY  Rastgele uzun bir parola; API'de AYNI değer TOOL_REEL_FACTORY_KEY olarak tanımlı olmalı
 # İkisi de yoksa iş sessizce atlanır (hata vermez).
 #
-# SAAT: 02:30 UTC = 05:30 İstanbul. Paylaşım turu paylaşımdan "hazırlık süresi" kadar önce
-# (varsayılan 2 saat) çalışır; paylaşım saatini 07:30'dan önceye alırsan bu saati de öne çek.
+# SAAT: Her 30 dakikada bir API'ye sorulur; API yalnızca normal gönderilerle AYNI paylaşım
+# saatine göre (hazırlık anından ~2,5 saat önce) "üret" der. Paylaşım saatini panelden
+# değiştirsen bu dosyada bir şey değiştirmen gerekmez.
 
 on:
   schedule:
-    - cron: "30 2 * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       tool:

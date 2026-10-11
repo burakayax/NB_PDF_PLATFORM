@@ -10,14 +10,22 @@ import express from "express";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const KEY = "test-factory-key-0123456789";
-let config: { toolReelEveryDays: number } = { toolReelEveryDays: 3 };
+type Cfg = { toolReelEveryDays: number; enabled: boolean; cadence: string; prepareLeadMinutes: number; timeZone: string };
+const baseCfg: Cfg = { toolReelEveryDays: 3, enabled: true, cadence: "daily", prepareLeadMinutes: 120, timeZone: "Europe/Istanbul" };
+let config: Cfg = { ...baseCfg };
+/** Sıradaki paylaşım anına kalan süre (dk); varsayılan: üretim penceresinin içinde. */
+let minutesToRun = 200;
 let due: { id: string } | null = { id: "compress" };
 let fresh: unknown = null;
 const stored = new Map<string, Buffer>();
 
 vi.mock("../modules/social/social.service.js", () => ({
   readSocialConfig: vi.fn(async () => config),
+  calendarDayKey: vi.fn(() => "2026-10-12"),
+  isPostingDay: vi.fn(() => true),
+  runInstantOn: vi.fn(() => new Date(Date.now() + minutesToRun * 60_000)),
 }));
+vi.mock("../lib/prisma.js", () => ({ prisma: { socialPost: { count: vi.fn(async () => 0) } } }));
 vi.mock("../modules/social/tool-reels.service.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../modules/social/tool-reels.service.js")>();
   return {
@@ -52,7 +60,8 @@ afterAll(() => {
   server.close();
 });
 beforeEach(() => {
-  config = { toolReelEveryDays: 3 };
+  config = { ...baseCfg };
+  minutesToRun = 200;
   due = { id: "compress" };
   fresh = null;
   stored.clear();
@@ -100,10 +109,22 @@ describe("üretim gerekli mi", () => {
   });
 
   it("ayar kapalıysa ya da bugün araç günü değilse gerekli değil", async () => {
-    config = { toolReelEveryDays: 0 };
+    config = { ...baseCfg, toolReelEveryDays: 0 };
     expect((await (await factory("/needed")).json()).needed).toBe(false);
-    config = { toolReelEveryDays: 3 };
+    config = { ...baseCfg };
     due = null;
+    expect((await (await factory("/needed")).json()).needed).toBe(false);
+  });
+
+  it("paylaşım saatine göre: pencereden önce gerekli değil, pencerede gerekli", async () => {
+    minutesToRun = 120 + 150 + 30; // hazırlık (120) + üretim payı (150) + 30 dk erken
+    expect(await (await factory("/needed")).json()).toMatchObject({ needed: false });
+    minutesToRun = 120 + 150 - 5;
+    expect(await (await factory("/needed")).json()).toMatchObject({ needed: true, tool: "compress" });
+  });
+
+  it("otomasyon kapalıysa gerekli değil", async () => {
+    config = { ...baseCfg, enabled: false };
     expect((await (await factory("/needed")).json()).needed).toBe(false);
   });
 

@@ -15,7 +15,8 @@ import type { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { HttpError } from "../../lib/http-error.js";
 import { logger } from "../../lib/file-log.js";
-import { readSocialConfig } from "./social.service.js";
+import { prisma } from "../../lib/prisma.js";
+import { calendarDayKey, isPostingDay, readSocialConfig, runInstantOn } from "./social.service.js";
 import {
   findCatalogEntry,
   pickDueToolReel,
@@ -23,6 +24,13 @@ import {
   saveToolVideo,
   unusedFreshVideoFor,
 } from "./tool-reels.service.js";
+
+/**
+ * Üretim, gönderilerin hazırlandığı andan bu kadar ÖNCE başlar: kayıt + yükleme ~10 dk sürer,
+ * GitHub zamanlayıcısı da gecikebilir. Video, hazırlık turundan önce yüklenmiş olmalı; yoksa
+ * o günün araç videosu atlanır.
+ */
+const PRODUCE_LEAD_MS = 150 * 60_000;
 
 /** Yüklenebilecek en büyük video (üretilen videolar ~5 MB). */
 const MAX_VIDEO_BYTES = 40 * 1024 * 1024;
@@ -59,12 +67,35 @@ toolReelFactoryRouter.get(
       response.json({ needed: false, reason: "araç videosu ayarı kapalı" });
       return;
     }
-    const due = await pickDueToolReel(new Date(), config.toolReelEveryDays);
-    if (!due) {
-      response.json({ needed: false, reason: "bugün araç videosu günü değil" });
+    // Normal gönderilerle AYNI saat: sıradaki paylaşım gününü bul (gönderi turuyla aynı kurallar).
+    const now = new Date();
+    let runAt: Date | null = null;
+    if (config.enabled) {
+      for (const offset of [0, 1, 2]) {
+        const dayKey = calendarDayKey(new Date(now.getTime() + offset * 86_400_000), config.timeZone);
+        if (!isPostingDay(dayKey, config.cadence)) continue;
+        const at = runInstantOn(dayKey, config);
+        if (at.getTime() <= now.getTime()) continue;
+        if ((await prisma.socialPost.count({ where: { dayKey } })) > 0) continue;
+        runAt = at;
+        break;
+      }
+    }
+    if (!runAt) {
+      response.json({ needed: false, reason: "yaklaşan paylaşım günü yok (otomasyon kapalı olabilir)" });
       return;
     }
-    if (await unusedFreshVideoFor(due.id)) {
+    const startAt = runAt.getTime() - config.prepareLeadMinutes * 60_000 - PRODUCE_LEAD_MS;
+    if (now.getTime() < startAt) {
+      response.json({ needed: false, reason: `henüz erken; ${new Date(startAt).toISOString()} sonrası üretilir` });
+      return;
+    }
+    const due = await pickDueToolReel(runAt, config.toolReelEveryDays);
+    if (!due) {
+      response.json({ needed: false, reason: "bu paylaşım gününde araç videosu sırası değil" });
+      return;
+    }
+    if (await unusedFreshVideoFor(due.id, runAt)) {
       response.json({ needed: false, tool: due.id, reason: "video zaten hazır" });
       return;
     }
