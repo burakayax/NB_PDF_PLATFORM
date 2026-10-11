@@ -6,8 +6,10 @@ Blog yazıları için video yapılmaz (onlar görselle gider).
 
 ## Nasıl çalışıyor
 
-1. **Her gün sabah 05:30'da** (İstanbul) GitHub'daki "Araç videosu üretimi" işi sunucuya sorar:
-   "Bugün video gerekli mi?" Yalnızca Zamanlama sekmesinde sıklık açıksa ve sıra bu araçtaysa gerekir.
+1. **Yarım saatte bir** GitHub'daki "Araç videosu üretimi" işi sunucuya sorar: "Şimdi video gerekli mi?"
+   Sunucu, normal gönderilerle AYNI paylaşım saatine bakar ve yalnızca gönderilerin hazırlanmasından
+   yaklaşık 2,5 saat önce "evet" der (araç videosu sıklığı açıksa ve sıra bu araçtaysa). Paylaşım
+   saatini panelden değiştirdiğinde başka bir şey yapman gerekmez.
 2. Gerekliyse iş, siteyi kendi makinesinde geçici olarak çalıştırır, aracı kullanıp ekranı kaydeder,
    videoyu kurgular ve sunucuya yükler. Makine işten sonra silinir; hiçbir şey saklanmaz.
 3. Günlük paylaşım turu videoyu Instagram + Facebook Reels gönderisine çevirir. "Önce onay"
@@ -35,8 +37,7 @@ Anahtarlar yoksa iş sessizce atlanır, hata vermez.
 
 GitHub → **Actions → Araç videosu üretimi → Run workflow** → "tool" alanına `merge` yaz → çalıştır.
 Birkaç dakika sonra panelde **Araç videoları** sekmesinde video görünür; "Reels taslağı hazırla" ile
-taslağı oluşturup Gönderi akışı'nda izleyebilirsin. (İşin saati sabah 05:30 UTC+3'tür; paylaşım saatini
-07:30'dan önceye alırsan iş saatini de öne çek: `.github/workflows/tool-reels.yml` içindeki `cron`.)
+taslağı oluşturup Gönderi akışı'nda izleyebilirsin.
 
 ## Yeni araç videosu eklemek
 
