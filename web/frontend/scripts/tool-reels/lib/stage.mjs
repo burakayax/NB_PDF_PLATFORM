@@ -16,6 +16,9 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   const browser = await chromium.launch();
   const ctx = await browser.newContext({
     viewport,
+    // Site dilini tarayıcı dilinden seçer; CI makinesi İngilizce olduğundan Türkçe sabitlenir.
+    locale: "tr-TR",
+    timezoneId: "Europe/Istanbul",
     deviceScaleFactor: 1,
     recordVideo: { dir: `${workDir}/rec`, size: viewport },
   });
