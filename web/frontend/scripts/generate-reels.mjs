@@ -132,10 +132,24 @@ export async function writeReels({ publicDir, baseUrl }) {
     /* ilk üretim */
   }
 
+  /**
+   * YAYIN SÜRESİ SINIRI. Render her yayında dosyaları SIFIRDAN üretir (üretilen klasör
+   * depoda yok, önbellek de yok): 80 videonun hepsini yeniden kodlamak yavaş derleme
+   * makinesinde yayını 40 dakikaya çıkarıyordu ve araya giren her yeni commit derlemeyi
+   * iptal edip başa döndürüyordu. Bu yüzden en yeni N yazı için video üretilir (liste
+   * en yeniden eskiye sıralı); diğer yazılar carousel ile paylaşılmaya devam eder.
+   * Sınırı kaldırmak için REELS_MAX_POSTS=0.
+   */
+  const rawMax = Number(process.env.REELS_MAX_POSTS ?? 24);
+  const maxPosts = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : Infinity;
+  let handled = 0;
+
   const manifest = {};
   for (const [postUrl, entry] of Object.entries(carousels)) {
     const urls = Array.isArray(entry?.urls) ? entry.urls : [];
     if (urls.length < 3 || !entry.signature) continue;
+    if (handled >= maxPosts) break;
+    handled++;
 
     // Slayt adresi → yerel dosya: /social/carousel/tr/<slug>/N.jpg
     const rel = urls.map((u) => new URL(u).pathname.replace(/^\/social\/carousel\//, ""));
