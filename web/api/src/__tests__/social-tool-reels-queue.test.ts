@@ -221,3 +221,14 @@ describe("geç gelen araç videosu (aynı gün)", () => {
     expect(toolPosts()).toHaveLength(0);
   });
 });
+
+describe("elle hazırlıkta platform seçimi ve tekrar", () => {
+  it("yalnızca seçilen ağ için taslak açılır", async () => {
+    dayPostCount = 0; // bekleyen gönderi yok (sahte sayaç tüm sayımlarda bunu döner)
+    const { queueToolReel } = await import("../modules/social/social.service.js");
+
+    await queueToolReel("compress", new Date(), true, fresh ?? undefined, { platforms: ["FACEBOOK"], repeat: true });
+
+    expect(toolPosts().map((p) => p.platform)).toEqual(["FACEBOOK"]);
+  });
+});

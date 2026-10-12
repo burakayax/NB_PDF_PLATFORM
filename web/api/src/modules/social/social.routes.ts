@@ -256,7 +256,13 @@ socialRouter.post(
   "/tool-reels/:id/queue",
   asyncHandler(async (request, response) => {
     const toolId = String(request.params.id);
-    const result = await queueToolReel(toolId, new Date(), true);
+    // İsteğe bağlı: { platforms: ["FACEBOOK"] } yalnız o ağ için hazırlar. Elle istendiğinde aynı gün
+    // ikinci kez de hazırlanabilir (ilk gönderi hatalıysa yeniden yayınlamak için).
+    const parsed = z
+      .object({ platforms: z.array(z.enum(["INSTAGRAM", "FACEBOOK"])).max(2).optional() })
+      .safeParse(request.body ?? {});
+    const platforms = parsed.success ? parsed.data.platforms : undefined;
+    const result = await queueToolReel(toolId, new Date(), true, undefined, { platforms, repeat: true });
     await logAdminAudit(
       actorOf(request),
       "social.tool-reel",
