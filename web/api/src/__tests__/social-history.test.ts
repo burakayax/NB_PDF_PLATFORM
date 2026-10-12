@@ -73,20 +73,19 @@ describe("Temizle", () => {
 });
 
 describe("Her ağ için son 5 paylaşım", () => {
-  it("her platform için ayrı, 5 ile sınırlı, temizlenmişler hariç sorgular", async () => {
+  it("tek sorguyla çeker (N+1 yok), ağa göre 5 ile sınırlar, temizlenmişler hariç", async () => {
     const { recentPublishedByPlatform } = await import("../modules/social/social.history.js");
     const { ALL_PLATFORMS } = await import("../modules/social/social.types.js");
+    findMany.mockResolvedValueOnce(
+      Array.from({ length: 8 }, (_, i) => ({ ...base, id: `i${i}`, platform: "INSTAGRAM" })),
+    );
     const out = await recentPublishedByPlatform();
 
-    expect(findMany).toHaveBeenCalledTimes(ALL_PLATFORMS.length);
-    for (const call of findMany.mock.calls) {
-      const q = call[0];
-      expect(q.take).toBe(5);
-      expect(q.where.status).toBe("PUBLISHED");
-      expect(q.where.clearedAt).toBeNull();
-    }
-    const platforms = findMany.mock.calls.map((c) => c[0].where.platform).sort();
-    expect(platforms).toEqual([...ALL_PLATFORMS].sort());
+    expect(findMany).toHaveBeenCalledTimes(1);
+    const q = findMany.mock.calls[0]![0];
+    expect(q.where.status).toBe("PUBLISHED");
+    expect(q.where.clearedAt).toBeNull();
+    expect(out.INSTAGRAM).toHaveLength(5);
     expect(Object.keys(out).sort()).toEqual([...ALL_PLATFORMS].sort());
   });
 });
