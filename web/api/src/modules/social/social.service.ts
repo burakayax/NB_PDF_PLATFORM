@@ -23,6 +23,7 @@ import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
 import {
   MANUAL_MAX_AGE_MS,
+  TOOL_REEL_PREFIX,
   cleanupToolVideos,
   findCatalogEntry,
   latestVideoFor,
@@ -671,6 +672,45 @@ async function maybeQueueToolReel(scheduledAt: Date, hold: boolean, result: Queu
   const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video);
   result.queued.push(...queued.queued);
   result.skipped.push(...queued.skipped);
+}
+
+/**
+ * Geç gelen araç videosu: günün gönderileri hazırlanırken video yoktuysa (üretim gecikti), video
+ * AYNI GÜN içinde gelince gönderi yine de oluşturulur.
+ *
+ * Yayın saati henüz geçmediyse normal saatinde gider; geçtiyse yarım saat sonraya konur (onay modunda
+ * zaten taslaktır). Gece yarısını aşacaksa o gün vazgeçilir. Aynı güne ikinci bir araç videosu
+ * eklenmez; sıklık kuralı (`pickDueToolReel`) zaten yeni oluşan gönderiden sayar.
+ */
+export async function catchUpToolReel(now: Date = new Date()): Promise<QueueResult> {
+  const result: QueueResult = { queued: [], skipped: [] };
+  const config = await readSocialConfig();
+  if (!config.enabled || config.toolReelEveryDays <= 0) return result;
+
+  const dayKey = calendarDayKey(now, config.timeZone);
+  if (!isPostingDay(dayKey, config.cadence)) return result;
+  // Günün turu henüz çalışmadıysa araç videosunu o tur zaten ekler.
+  if ((await prisma.socialPost.count({ where: { dayKey } })) === 0) return result;
+  if ((await prisma.socialPost.count({ where: { dayKey, guid: { startsWith: TOOL_REEL_PREFIX } } })) > 0) {
+    return result;
+  }
+
+  const runAt = runInstantOn(dayKey, config);
+  const scheduledAt = runAt.getTime() > now.getTime() ? runAt : new Date(now.getTime() + 30 * 60_000);
+  if (calendarDayKey(scheduledAt, config.timeZone) !== dayKey) return result;
+
+  const due = await pickDueToolReel(runAt, config.toolReelEveryDays);
+  if (!due) return result;
+  const video = await unusedFreshVideoFor(due.id, scheduledAt);
+  if (!video) return result;
+
+  const queued = await queueToolReel(due.id, scheduledAt, !config.reelsAutoPublish, video);
+  result.queued.push(...queued.queued);
+  result.skipped.push(...queued.skipped);
+  if (queued.queued.length > 0) {
+    logger.info("social", `${dayKey}: geç gelen araç videosu (${due.id}) için ${queued.queued.length} gönderi hazırlandı`);
+  }
+  return result;
 }
 
 /** Paylaşılmış videoları siler; hata otomasyonu durdurmaz. */

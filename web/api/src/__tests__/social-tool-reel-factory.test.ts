@@ -25,7 +25,13 @@ vi.mock("../modules/social/social.service.js", () => ({
   isPostingDay: vi.fn(() => true),
   runInstantOn: vi.fn(() => new Date(Date.now() + minutesToRun * 60_000)),
 }));
-vi.mock("../lib/prisma.js", () => ({ prisma: { socialPost: { count: vi.fn(async () => 0) } } }));
+let dayPosts = 0;
+let reelPosts = 0;
+vi.mock("../lib/prisma.js", () => ({
+  prisma: {
+    socialPost: { count: vi.fn(async ({ where }: { where: { guid?: unknown } }) => (where.guid ? reelPosts : dayPosts)) },
+  },
+}));
 vi.mock("../modules/social/tool-reels.service.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../modules/social/tool-reels.service.js")>();
   return {
@@ -62,6 +68,8 @@ afterAll(() => {
 beforeEach(() => {
   config = { ...baseCfg };
   minutesToRun = 200;
+  dayPosts = 0;
+  reelPosts = 0;
   due = { id: "compress" };
   fresh = null;
   stored.clear();
@@ -121,6 +129,17 @@ describe("üretim gerekli mi", () => {
     expect(await (await factory("/needed")).json()).toMatchObject({ needed: false });
     minutesToRun = 120 + 150 - 5;
     expect(await (await factory("/needed")).json()).toMatchObject({ needed: true, tool: "compress" });
+  });
+
+  it("bugünün gönderileri videosuz hazırlandıysa video yine de istenir (geç gelen video)", async () => {
+    // Bugünün turu çalıştı (gönderi var), araç videosu yok; yayın saati geçmiş (-30 dk): yine de üret.
+    dayPosts = 4;
+    reelPosts = 0;
+    minutesToRun = -30;
+    expect(await (await factory("/needed")).json()).toMatchObject({ needed: true, tool: "compress" });
+    // Araç videosu bugün zaten eklenmişse tekrar istenmez.
+    reelPosts = 2;
+    expect((await (await factory("/needed")).json()).needed).toBe(false);
   });
 
   it("otomasyon kapalıysa gerekli değil", async () => {

@@ -14,6 +14,7 @@ import { logger } from "../lib/file-log.js";
 import { prisma } from "../lib/prisma.js";
 import {
   calendarDayKey,
+  catchUpToolReel,
   publishDuePosts,
   queueDailyPosts,
   isPostingDay,
@@ -48,6 +49,14 @@ async function tick(): Promise<void> {
   }
 
   if (!config.enabled) return;
+
+  // Günün turu videosuz çalıştıysa ve video sonradan geldiyse araç videosu yine eklenir.
+  try {
+    const late = await catchUpToolReel();
+    if (late.queued.length > 0) await publishDuePosts();
+  } catch (err) {
+    logger.warn("social", `Geç gelen araç videosu işlenemedi: ${String(err)}`);
+  }
 
   // ── Hazırlık turu ───────────────────────────────────────────────────────
   //
