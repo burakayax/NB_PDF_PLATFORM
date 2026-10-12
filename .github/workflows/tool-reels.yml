@@ -80,6 +80,10 @@ jobs:
         run: |
           set -euo pipefail
           # Site kurulmaz: kayit CANLI siteye girilerek yapilir. Yalnizca ornek belge (python) + tarayici + ffmpeg gerekir.
+          # ffmpeg-static Linux derlemesinde yazi filtresi (drawtext) yok; sistemin ffmpeg'i yazi destekler.
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+          ffmpeg -hide_banner -filters | grep -q drawtext
           python -m pip install --upgrade pip
           pip install pymupdf pillow
           (cd web/frontend && npm ci && npx playwright install --with-deps chromium)
@@ -87,6 +91,8 @@ jobs:
       - name: Videoyu uret
         if: steps.need.outputs.needed == 'true'
         working-directory: web/frontend
+        env:
+          FFMPEG_PATH: /usr/bin/ffmpeg
         run: |
           set -euo pipefail
           node scripts/tool-reels/run.mjs \
