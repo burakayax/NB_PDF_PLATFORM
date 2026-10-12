@@ -168,6 +168,9 @@ describe("video yükleme ve indirme", () => {
     const dl = await fetch(`${base}/api/public/tool-reels/${id}.mp4`);
     expect(dl.status).toBe(200);
     expect(dl.headers.get("content-type")).toBe("video/mp4");
+    // Panel başka alt alan adından <video> ile oynatır: tarayıcı bu başlıkla engellemesin.
+    expect(dl.headers.get("cross-origin-resource-policy")).toBe("cross-origin");
+    expect(dl.headers.get("content-security-policy")).toBeNull();
     expect(Buffer.from(await dl.arrayBuffer()).equals(mp4)).toBe(true);
   });
 

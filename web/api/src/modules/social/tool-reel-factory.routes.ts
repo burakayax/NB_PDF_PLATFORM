@@ -145,6 +145,10 @@ toolReelMediaRouter.get(
     if (!data) throw new HttpError(404, "Video bulunamadı ya da paylaşıldıktan sonra silindi.");
 
     response.setHeader("Content-Type", "video/mp4");
+    // Yönetim paneli (başka alt alan adı) videoyu <video> ile oynatır: genel API başlıkları (helmet)
+    // bunu engeller. Yanıt yalnızca video/mp4 + nosniff olduğundan gevşetmek güvenlidir.
+    response.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    response.removeHeader("Content-Security-Policy");
     response.setHeader("Accept-Ranges", "bytes");
     response.setHeader("Cache-Control", "public, max-age=3600");
     const range = /^bytes=(\d*)-(\d*)$/.exec(String(request.headers.range ?? ""));
