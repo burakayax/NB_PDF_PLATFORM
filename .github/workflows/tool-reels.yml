@@ -112,6 +112,14 @@ jobs:
           echo "Sure: ${DUR}"
           # Bozuk/bos video sunucuya yuklenmesin.
           awk -v d="$DUR" 'BEGIN { exit !(d+0 >= 10) }'
+          # Meta Reels şartları (9:16, 1080x1920, 24-60 fps, 3-90 sn, AAC 48 kHz stereo).
+          W="$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
+          H="$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
+          FPS="$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
+          AR="$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
+          AC="$(ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
+          echo "Meta sartlari: ${W}x${H} ${FPS} fps, ses ${AR} Hz ${AC} kanal"
+          [ "$W" = "1080" ] && [ "$H" = "1920" ] && [ "$FPS" = "30/1" ] && [ "$AR" = "48000" ] && [ "$AC" = "2" ]
 
       - name: Videoyu inceleme icin sakla
         if: always() && steps.need.outputs.needed == 'true'
