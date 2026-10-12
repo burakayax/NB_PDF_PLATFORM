@@ -81,18 +81,26 @@ describe("Facebook Reels yayını", () => {
     expect(res.externalId).toBe("VID1");
   });
 
-  it("oturum açılamazsa: metin gönderisine düşer, video adresi görsel diye gönderilmez", async () => {
+  it("oturum açılamazsa: hata fırlar, metin gönderisine DÜŞMEZ (Reels sessizce kaybolmasın)", async () => {
     const calls = installFetch({
       failOn: (c) => c.url.endsWith("/PAGE1/video_reels") && c.body?.get("upload_phase") === "start",
     });
     const { publishToFacebook } = await import("../modules/social/platforms/meta.platform.js");
 
-    await publishToFacebook(input());
+    await expect(publishToFacebook(input())).rejects.toThrow();
 
     expect(calls.some((c) => c.url.endsWith("/PAGE1/photos"))).toBe(false);
-    const feed = calls.find((c) => c.url.endsWith("/PAGE1/feed"));
-    expect(feed?.body?.get("message")).toBe("metin");
+    expect(calls.some((c) => c.url.endsWith("/PAGE1/feed"))).toBe(false);
     expect(calls.some((c) => c.body?.get("url") === VIDEO)).toBe(false);
+  });
+
+  it("yükleme tamamlanınca (işleme beklenmeden) yayın isteği gider", async () => {
+    const calls = installFetch({ videoStatus: "upload_complete" });
+    const { publishToFacebook } = await import("../modules/social/platforms/meta.platform.js");
+
+    await publishToFacebook(input());
+
+    expect(reelCalls(calls).map((c) => c.body?.get("upload_phase"))).toEqual(["start", "finish"]);
   });
 
   it("yayın adımı başladıktan sonra hata olursa: yedek yola DÜŞMEZ (çift paylaşım olmasın)", async () => {

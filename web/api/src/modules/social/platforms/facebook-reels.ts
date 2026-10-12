@@ -29,7 +29,11 @@ const form = (fields: Record<string, string>) => {
   } satisfies RequestInit;
 };
 
-/** Video Facebook tarafında işlenip yayına hazır olana kadar bekler. */
+/**
+ * Videonun Facebook'a YÜKLENMESİNİ bekler (Meta belgesi: yayınlamadan önce yükleme tamamlanmış olmalı,
+ * `uploading_phase.status = complete`). İşleme ("ready") yayın isteğinden SONRA gerçekleşir; ona
+ * burada beklenirse yayın hiç başlamaz ve zaman aşımına düşülür.
+ */
 async function waitForReel(videoId: string, token: string): Promise<void> {
   for (let attempt = 0; attempt < POLL_MAX_TRIES; attempt++) {
     const res = await requestJson(
@@ -39,7 +43,8 @@ async function waitForReel(videoId: string, token: string): Promise<void> {
     );
     const status = (res.status ?? {}) as { video_status?: string; uploading_phase?: { status?: string } };
     const code = status.video_status;
-    if (code === "ready" || code === "published") return;
+    if (status.uploading_phase?.status === "complete") return;
+    if (code === "upload_complete" || code === "processing" || code === "ready" || code === "published") return;
     if (code === "error" || code === "expired") {
       throw new Error(`Facebook videoyu işleyemedi (${code})`);
     }
