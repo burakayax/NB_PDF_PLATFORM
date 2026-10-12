@@ -1204,8 +1204,15 @@ export async function fetchSocialToolReels(accessToken: string): Promise<{ reels
   return r.json() as Promise<{ reels: SocialToolReel[] }>;
 }
 
-export async function queueSocialToolReel(accessToken: string, id: string): Promise<SocialQueueResult> {
-  const r = await adminFetch(accessToken, `/social/tool-reels/${encodeURIComponent(id)}/queue`, { method: "POST" });
+export async function queueSocialToolReel(
+  accessToken: string,
+  id: string,
+  platforms?: SocialPlatformId[],
+): Promise<SocialQueueResult> {
+  const r = await adminFetch(accessToken, `/social/tool-reels/${encodeURIComponent(id)}/queue`, {
+    method: "POST",
+    ...(platforms?.length ? { body: JSON.stringify({ platforms }) } : {}),
+  });
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<SocialQueueResult>;
 }

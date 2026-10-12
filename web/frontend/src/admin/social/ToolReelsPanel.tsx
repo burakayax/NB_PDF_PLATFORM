@@ -3,6 +3,7 @@ import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import {
   fetchSocialToolReels,
   queueSocialToolReel,
+  type SocialPlatformId,
   type SocialQueueResult,
   type SocialToolReel,
 } from "../../api/admin";
@@ -58,11 +59,13 @@ export function ToolReelsPanel({
 
   const readyReels = (reels ?? []).filter((r) => r.video !== null);
 
-  async function queue(reel: SocialToolReel) {
+  async function queue(reel: SocialToolReel, platforms?: SocialPlatformId[]) {
     setBusyId(reel.id);
     setErr(null);
     try {
-      const result = await queueSocialToolReel(accessToken, reel.id);
+      const result = platforms
+        ? await queueSocialToolReel(accessToken, reel.id, platforms)
+        : await queueSocialToolReel(accessToken, reel.id);
       await load();
       await onQueued(result, reel.tr.title);
     } catch (e) {
@@ -142,15 +145,37 @@ export function ToolReelsPanel({
                 <p className="text-xs text-slate-500">Henüz paylaşım için hazırlanmadı.</p>
               )}
 
-              <button
-                type="button"
-                className={primaryButton}
-                disabled={busyId !== null || !reel.video}
-                onClick={() => void queue(reel)}
-              >
-                {busyId === reel.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-                Reels taslağı hazırla
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={primaryButton}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void queue(reel)}
+                >
+                  {busyId === reel.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                  Reels taslağı hazırla
+                </button>
+                <button
+                  type="button"
+                  className={ghostButton}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void queue(reel, ["FACEBOOK"])}
+                >
+                  Yalnızca Facebook
+                </button>
+                <button
+                  type="button"
+                  className={ghostButton}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void queue(reel, ["INSTAGRAM"])}
+                >
+                  Yalnızca Instagram
+                </button>
+              </div>
+              <p className="text-[11px] leading-snug text-slate-500">
+                Daha önce paylaşılmış bir gönderiyi yeniden yayınlamak için de bunları kullanabilirsin; aynı gün ikinci
+                taslak açılır (ilk gönderiyi ağın kendisinden silmen gerekebilir).
+              </p>
             </div>
           </article>
         ))}

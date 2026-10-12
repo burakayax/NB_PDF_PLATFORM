@@ -59,6 +59,16 @@ describe("ToolReelsPanel", () => {
     expect(screen.queryByText("PDF Birleştir")).toBeNull();
   });
 
+  it("“Yalnızca Facebook” yalnız Facebook için taslak ister", async () => {
+    fetchReels.mockResolvedValue({ reels: [REEL] });
+    queueReel.mockResolvedValue({ queued: [], skipped: [] });
+    render(<ToolReelsPanel accessToken="t" onQueued={vi.fn()} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Yalnızca Facebook" }));
+
+    await waitFor(() => expect(queueReel).toHaveBeenCalledWith("t", "compress", ["FACEBOOK"]));
+  });
+
   it("“Reels taslağı hazırla” videonun kimliğiyle çağrılır ve sonuç üst panele iletilir", async () => {
     fetchReels.mockResolvedValue({ reels: [REEL] });
     const result = { queued: [{ platform: "INSTAGRAM", title: "x", manual: false }], skipped: [] };

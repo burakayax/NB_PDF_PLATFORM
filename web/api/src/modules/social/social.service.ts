@@ -580,6 +580,11 @@ export async function queueToolReel(
   hold: boolean,
   /** Verilirse yalnız bu video kullanılır (otomatik tur: henüz kullanılmamış taze video). */
   video?: ToolReelVideoInfo,
+  /**
+   * Elle hazırlıkta: `platforms` ile yalnız seçilen ağlar; `repeat` ile aynı gün aynı ağa ikinci kez
+   * hazırlanabilir (örn. ilk gönderi hatalı çıktı, yeniden yayınlanacak). Otomatik tur bunları KULLANMAZ.
+   */
+  options?: { platforms?: SocialPlatform[]; repeat?: boolean },
 ): Promise<QueueResult> {
   const result: QueueResult = { queued: [], skipped: [] };
   const entry = findCatalogEntry(toolId);
@@ -607,30 +612,49 @@ export async function queueToolReel(
     singleLang: config.singleLang,
     templateOnly: true,
   });
-  for (const platform of TOOL_REEL_PLATFORMS) {
-    try {
-      const manual = !accounts.has(platform);
-      await prisma.socialPost.create({
-        data: {
-          platform,
-          guid: toolReelGuid(entry.id),
-          lang: item.lang,
-          title: item.title,
-          linkUrl: item.link,
-          body: bodies[platform],
-          imageUrl: usable.url,
-          scheduledAt,
-          dayKey,
-          status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
-        },
+  const targets = options?.platforms?.length
+    ? TOOL_REEL_PLATFORMS.filter((p) => options.platforms?.includes(p))
+    : TOOL_REEL_PLATFORMS;
+  for (const platform of targets) {
+    const manual = !accounts.has(platform);
+    const status = manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED";
+    // Tekrar hazırlıkta: bu video için bu ağda zaten bekleyen bir gönderi varsa ikincisi açılmaz.
+    if (options?.repeat) {
+      const waiting = await prisma.socialPost.count({
+        where: { platform, imageUrl: usable.url, status: { in: ["DRAFT", "QUEUED", "PUBLISHING", "MANUAL"] } },
       });
-      result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: usable.url, manual });
-    } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-        result.skipped.push({ platform, reason: "Bu video bugün bu hesapta zaten kuyruğa alınmış" });
+      if (waiting > 0) {
+        result.skipped.push({ platform, reason: "Bu video için bu hesapta zaten bekleyen bir gönderi var" });
         continue;
       }
-      throw err;
+    }
+    // Benzersizlik (ağ + içerik + gün): tekrarda gün anahtarına sıra eki konur ("2026-10-12~2").
+    for (let attempt = 1; attempt <= (options?.repeat ? 20 : 1); attempt++) {
+      try {
+        await prisma.socialPost.create({
+          data: {
+            platform,
+            guid: toolReelGuid(entry.id),
+            lang: item.lang,
+            title: item.title,
+            linkUrl: item.link,
+            body: bodies[platform],
+            imageUrl: usable.url,
+            scheduledAt,
+            dayKey: attempt === 1 ? dayKey : `${dayKey}~${attempt}`,
+            status,
+          },
+        });
+        result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: usable.url, manual });
+        break;
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+          if (options?.repeat && attempt < 20) continue;
+          result.skipped.push({ platform, reason: "Bu video bugün bu hesapta zaten kuyruğa alınmış" });
+          break;
+        }
+        throw err;
+      }
     }
   }
   return result;
