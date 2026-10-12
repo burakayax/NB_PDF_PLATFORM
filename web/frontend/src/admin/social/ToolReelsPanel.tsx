@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Film, Loader2, RefreshCw, Wand2 } from "lucide-react";
+import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import {
   fetchSocialToolReels,
   queueSocialToolReel,
@@ -56,6 +56,8 @@ export function ToolReelsPanel({
     void load();
   }, [load]);
 
+  const readyReels = (reels ?? []).filter((r) => r.video !== null);
+
   async function queue(reel: SocialToolReel) {
     setBusyId(reel.id);
     setErr(null);
@@ -92,8 +94,16 @@ export function ToolReelsPanel({
         </p>
       ) : null}
 
+      {/* Yalnızca videosu hazır olan araçlar listelenir; hazır olmayanlar gösterilmez. */}
+      {reels !== null && readyReels.length === 0 && !err ? (
+        <p className="rounded-xl border border-dashed border-slate-700/60 px-4 py-6 text-center text-xs text-slate-400">
+          Şu an hazır araç videosu yok. Paylaşım zamanı yaklaşınca sıradaki araç için video kendiliğinden
+          üretilir ve burada görünür.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
-        {(reels ?? []).map((reel) => (
+        {readyReels.map((reel) => (
           <article key={reel.id} className="overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/40">
             <div className="flex justify-center bg-black/60 p-3">
               {reel.video ? (
@@ -105,18 +115,7 @@ export function ToolReelsPanel({
                   preload="metadata"
                   playsInline
                 />
-              ) : (
-                <div
-                  className="flex max-h-[420px] w-[236px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-700/60 p-4 text-center"
-                  style={{ aspectRatio: "9 / 16" }}
-                >
-                  <Film className="h-6 w-6 text-slate-500" />
-                  <p className="text-xs font-medium text-slate-300">Video şu an hazır değil</p>
-                  <p className="text-[11px] leading-snug text-slate-500">
-                    Paylaşım zamanı yaklaşınca kendiliğinden üretilir.
-                  </p>
-                </div>
-              )}
+              ) : null}
             </div>
             <div className="space-y-3 p-4">
               <div>
