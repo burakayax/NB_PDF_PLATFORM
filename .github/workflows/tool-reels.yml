@@ -102,6 +102,26 @@ jobs:
             --work "$RUNNER_TEMP/reel-work" | tee "$RUNNER_TEMP/reel.log"
           tail -n 1 "$RUNNER_TEMP/reel.log" | jq -r '.seconds' > "$RUNNER_TEMP/reel.seconds"
 
+      - name: Videoyu denetle
+        if: steps.need.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          ls -l "$RUNNER_TEMP/reel.mp4"
+          ffprobe -v error -show_entries format=duration,size:stream=index,codec_type,codec_name,width,height,duration -of default=nw=1 "$RUNNER_TEMP/reel.mp4"
+          DUR="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
+          echo "Sure: ${DUR}"
+          # Bozuk/bos video sunucuya yuklenmesin.
+          awk -v d="$DUR" 'BEGIN { exit !(d+0 >= 10) }'
+
+      - name: Videoyu inceleme icin sakla
+        if: always() && steps.need.outputs.needed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arac-videosu-cikti
+          path: ${{ runner.temp }}/reel.mp4
+          if-no-files-found: ignore
+          retention-days: 2
+
       - name: Videoyu API'ye yukle
         if: steps.need.outputs.needed == 'true'
         run: |
