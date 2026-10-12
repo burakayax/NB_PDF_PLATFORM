@@ -40,13 +40,23 @@ describe("ToolReelsPanel", () => {
     expect(screen.getByText("Taslak")).toBeTruthy();
   });
 
-  it("video hazır değilse oynatıcı yerine açıklama gösterir ve taslak düğmesi pasiftir", async () => {
+  it("videosu hazır olmayan araç listelenmez; hiç video yoksa açıklama gösterilir", async () => {
     fetchReels.mockResolvedValue({ reels: [{ ...REEL, video: null, posts: [] }] });
     const { container } = render(<ToolReelsPanel accessToken="t" onQueued={vi.fn()} />);
 
-    expect(await screen.findByText("Video şu an hazır değil")).toBeTruthy();
+    expect(await screen.findByText(/Şu an hazır araç videosu yok/)).toBeTruthy();
+    expect(screen.queryByText("PDF Sıkıştır")).toBeNull();
     expect(container.querySelector("video")).toBeNull();
-    expect((screen.getByRole("button", { name: /Reels taslağı hazırla/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: /Reels taslağı hazırla/ })).toBeNull();
+  });
+
+  it("karışık listede yalnızca videosu hazır olan araç görünür", async () => {
+    const merge: SocialToolReel = { ...REEL, id: "merge", guid: "tool-reel:merge", video: null, tr: { ...REEL.tr, title: "PDF Birleştir" }, posts: [] };
+    fetchReels.mockResolvedValue({ reels: [REEL, merge] });
+    render(<ToolReelsPanel accessToken="t" onQueued={vi.fn()} />);
+
+    expect(await screen.findByText("PDF Sıkıştır")).toBeTruthy();
+    expect(screen.queryByText("PDF Birleştir")).toBeNull();
   });
 
   it("“Reels taslağı hazırla” videonun kimliğiyle çağrılır ve sonuç üst panele iletilir", async () => {
