@@ -18,7 +18,7 @@ Blog yazıları için video yapılmaz (onlar görselle gider).
 4. Gönderiler yayınlanınca (ya da elle "paylaştım" işaretlenince) video sunucudan **otomatik silinir**.
    Hiç kullanılmayan video 36 saat, unutulmuş taslağın videosu 14 gün sonra silinir.
 
-Video hazır değilse (üretim aksadıysa) o gün araç videosu paylaşılmaz; blog gönderileri etkilenmez.
+Video günün gönderileri hazırlanırken hazır değilse, AYNI GÜN içinde gelirse gönderi yine oluşturulur (yayın saati geçtiyse yarım saat sonraya konur; gece yarısını aşacaksa o gün atlanır). Blog gönderileri hiçbir durumda etkilenmez.
 
 ## Bir kerelik kurulum (sende)
 

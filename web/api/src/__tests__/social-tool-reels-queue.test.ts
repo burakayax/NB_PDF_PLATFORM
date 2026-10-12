@@ -24,6 +24,8 @@ const ITEM: FeedItem = {
 const created: { platform: string; guid: string; status: string; imageUrl: string | null }[] = [];
 let config: Record<string, unknown> = {};
 let due: { id: string } | null = null;
+let dayPostCount = 1;
+let reelPostCount = 0;
 let fresh: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
 const cleanup = vi.fn(async () => 0);
 
@@ -32,6 +34,7 @@ vi.mock("../lib/prisma.js", () => ({
     socialAccount: { findMany: vi.fn(async () => []) },
     socialPost: {
       findMany: vi.fn(async () => []),
+      count: vi.fn(async ({ where }: { where: { guid?: unknown } }) => (where.guid ? reelPostCount : dayPostCount)),
       create: vi.fn(
         async ({ data }: { data: { platform: string; guid: string; status: string; imageUrl: string | null } }) => {
           created.push({ platform: data.platform, guid: data.guid, status: data.status, imageUrl: data.imageUrl });
@@ -78,6 +81,8 @@ const toolPosts = () => created.filter((c) => c.guid.startsWith("tool-reel:"));
 
 beforeEach(() => {
   created.length = 0;
+  dayPostCount = 1;
+  reelPostCount = 0;
   cleanup.mockClear();
   config = { reelsAutoPublish: false, researchKeywords: false, toolReelEveryDays: 3 };
   due = { id: "compress" };
@@ -150,5 +155,69 @@ describe("araç videosu otomatik sırası", () => {
     await queueDailyPosts(new Date(), false);
 
     expect(cleanup).toHaveBeenCalled();
+  });
+});
+
+describe("geç gelen araç videosu (aynı gün)", () => {
+  // Paylaşım saati 12:00 İstanbul (09:00 UTC); "şimdi" 08:00 UTC = yayından önce, 11:00 UTC = yayından sonra.
+  const withHour = () => ({ ...config, enabled: true, hour: 12, minute: 0, timeZone: "Europe/Istanbul", cadence: "daily" });
+
+  it("günün turu çalışmış, araç videosu eklenmemiş, video sonradan gelmiş: gönderi oluşturulur", async () => {
+    config = withHour();
+    const { catchUpToolReel } = await import("../modules/social/social.service.js");
+
+    const result = await catchUpToolReel(new Date("2026-10-12T08:00:00Z"));
+
+    expect(result.queued.length).toBeGreaterThan(0);
+    expect(toolPosts().length).toBeGreaterThan(0);
+    expect(toolPosts()[0]?.imageUrl).toBe(VIDEO_URL);
+  });
+
+  it("yayın saati geçmişse yarım saat sonraya konur (hata vermez)", async () => {
+    config = withHour();
+    const { catchUpToolReel } = await import("../modules/social/social.service.js");
+
+    const result = await catchUpToolReel(new Date("2026-10-12T11:00:00Z"));
+
+    expect(result.queued.length).toBeGreaterThan(0);
+  });
+
+  it("günün turu henüz çalışmadıysa dokunmaz (tur zaten ekler)", async () => {
+    config = withHour();
+    dayPostCount = 0;
+    const { catchUpToolReel } = await import("../modules/social/social.service.js");
+
+    await catchUpToolReel(new Date("2026-10-12T08:00:00Z"));
+
+    expect(toolPosts()).toHaveLength(0);
+  });
+
+  it("o gün araç videosu zaten varsa ikincisi eklenmez", async () => {
+    config = withHour();
+    reelPostCount = 2;
+    const { catchUpToolReel } = await import("../modules/social/social.service.js");
+
+    await catchUpToolReel(new Date("2026-10-12T08:00:00Z"));
+
+    expect(toolPosts()).toHaveLength(0);
+  });
+
+  it("video hâlâ yoksa, sıklık kapalıysa ya da gece yarısını aşacaksa eklenmez", async () => {
+    config = withHour();
+    const { catchUpToolReel } = await import("../modules/social/social.service.js");
+
+    fresh = null;
+    await catchUpToolReel(new Date("2026-10-12T08:00:00Z"));
+    expect(toolPosts()).toHaveLength(0);
+
+    fresh = { id: "compress-1791728774504", url: VIDEO_URL, seconds: 27, createdAt: new Date() };
+    config = { ...withHour(), toolReelEveryDays: 0 };
+    await catchUpToolReel(new Date("2026-10-12T08:00:00Z"));
+    expect(toolPosts()).toHaveLength(0);
+
+    // 23:45 İstanbul + 30 dk gece yarısını aşar.
+    config = withHour();
+    await catchUpToolReel(new Date("2026-10-12T20:45:00Z"));
+    expect(toolPosts()).toHaveLength(0);
   });
 });

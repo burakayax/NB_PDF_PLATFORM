@@ -70,7 +70,20 @@ toolReelFactoryRouter.get(
     // Normal gönderilerle AYNI saat: sıradaki paylaşım gününü bul (gönderi turuyla aynı kurallar).
     const now = new Date();
     let runAt: Date | null = null;
+    // Geç kalan gün: bugünün gönderileri araç videosuz hazırlandıysa video yine de üretilir;
+    // gönderi, video gelince eklenir (bkz. catchUpToolReel). Gece yarısına 1 saatten az kaldıysa vazgeçilir.
     if (config.enabled) {
+      const todayKey = calendarDayKey(now, config.timeZone);
+      if (
+        isPostingDay(todayKey, config.cadence) &&
+        calendarDayKey(new Date(now.getTime() + 60 * 60_000), config.timeZone) === todayKey &&
+        (await prisma.socialPost.count({ where: { dayKey: todayKey } })) > 0 &&
+        (await prisma.socialPost.count({ where: { dayKey: todayKey, guid: { startsWith: "tool-reel:" } } })) === 0
+      ) {
+        runAt = runInstantOn(todayKey, config);
+      }
+    }
+    if (config.enabled && !runAt) {
       for (const offset of [0, 1, 2]) {
         const dayKey = calendarDayKey(new Date(now.getTime() + offset * 86_400_000), config.timeZone);
         if (!isPostingDay(dayKey, config.cadence)) continue;
@@ -95,7 +108,7 @@ toolReelFactoryRouter.get(
       response.json({ needed: false, reason: "bu paylaşım gününde araç videosu sırası değil" });
       return;
     }
-    if (await unusedFreshVideoFor(due.id, runAt)) {
+    if (await unusedFreshVideoFor(due.id, runAt.getTime() > now.getTime() ? runAt : now)) {
       response.json({ needed: false, tool: due.id, reason: "video zaten hazır" });
       return;
     }
