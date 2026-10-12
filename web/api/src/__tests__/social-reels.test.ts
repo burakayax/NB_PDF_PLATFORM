@@ -90,31 +90,16 @@ describe("Instagram Reels yayını", () => {
     expect(res.externalId).toBe("PUB1");
   });
 
-  it("Reels kabı yayın öncesi reddedilirse: carousel'e düşer, video adresi görsel diye gönderilmez", async () => {
+  it("Reels kabı yayın öncesi reddedilirse: hata fırlar, carousel/kapak görseline DÜŞMEZ (Reels sessizce kaybolmasın)", async () => {
     const calls = installFetch({
       carousel: true,
       failOn: (c) => c.method === "POST" && c.url.endsWith("/IG1/media") && c.body?.get("media_type") === "REELS",
     });
     const { publishToInstagram } = await import("../modules/social/platforms/meta.platform.js");
 
-    await publishToInstagram(reelInput());
+    await expect(publishToInstagram(reelInput())).rejects.toThrow();
 
-    const images = mediaPosts(calls)
-      .map((c) => c.body?.get("image_url"))
-      .filter(Boolean);
-    expect(images).toEqual(SLIDES);
-    expect(images).not.toContain(VIDEO);
-    expect(publishes(calls)).toHaveLength(1);
-  });
-
-  it("carousel de yoksa: kapak slaytı olmadığı için net hata verir, video adresini görsel diye yollamaz", async () => {
-    const calls = installFetch({
-      failOn: (c) => c.method === "POST" && c.url.endsWith("/IG1/media") && c.body?.get("media_type") === "REELS",
-    });
-    const { publishToInstagram } = await import("../modules/social/platforms/meta.platform.js");
-
-    await expect(publishToInstagram(reelInput())).rejects.toThrow(/görselsiz/);
-    expect(mediaPosts(calls).some((c) => c.body?.get("image_url") === VIDEO)).toBe(false);
+    expect(mediaPosts(calls).map((c) => c.body?.get("image_url")).filter(Boolean)).toEqual([]);
     expect(publishes(calls)).toHaveLength(0);
   });
 

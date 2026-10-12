@@ -22,16 +22,11 @@ export const publishToFacebook: Publisher = async (input) => {
   const pageId = requireSecret(secrets, "pageId", "Facebook Sayfa ID");
   const token = requireSecret(secrets, "pageAccessToken", "Facebook Sayfa Erişim Anahtarı");
 
-  // Kayıtta video adresi varsa Reels olarak yayınlanır. Yayın başlamadan bir şey ters
-  // giderse video adresi görsel yerine geçmez: metin gönderisine (bağlantılı) düşülür.
+  // Kayıtta video adresi varsa Reels olarak yayınlanır. Hata olursa YEDEK YOL YOK: metin gönderisine
+  // düşmek Reels'i sessizce kaybettirir (gönderi "paylaşıldı" sayılır, video silinir). Hata fırlar;
+  // gönderi yeniden denenir, bitmezse "Hata" olarak görünür ve video silinmeden kalır.
   if (isReelUrl(imageUrl)) {
-    try {
-      return await publishFacebookReel(input, imageUrl);
-    } catch (err) {
-      if (err instanceof PublishStageError) throw err;
-      logger.warn("social", `Facebook Reels hazırlanamadı, metin gönderisine düşülüyor: ${String(err)}`);
-    }
-    imageUrl = null;
+    return await publishFacebookReel(input, imageUrl);
   }
 
   // Görsel varsa /photos ucu kullanılır: gönderi tek parça olur (metin + görsel).
@@ -61,17 +56,10 @@ export const publishToFacebook: Publisher = async (input) => {
 export const publishToInstagram: Publisher = async (input) => {
   const slides = await carouselSlidesFor(input.item).catch(() => [] as string[]);
 
-  // Kayıtta video adresi varsa Reels olarak yayınlanır. Yayın başlamadan bir şey
-  // ters giderse aşağıdaki carousel/tek görsel yoluna düşülür.
+  // Kayıtta video adresi varsa Reels olarak yayınlanır. Hata olursa YEDEK YOL YOK (kapak görseliyle
+  // paylaşmak Reels'i sessizce kaybettirir); gönderi yeniden denenir, bitmezse "Hata" olarak kalır.
   if (isReelUrl(input.imageUrl)) {
-    try {
-      return await publishInstagramReel(input, input.imageUrl);
-    } catch (err) {
-      if (err instanceof PublishStageError) throw err;
-      logger.warn("social", `Instagram Reels hazırlanamadı, carousel/tek görsele düşülüyor: ${String(err)}`);
-    }
-    // Video adresi görsel yerine geçmez: yedek yol için kapak slaytı kullanılır.
-    input = { ...input, imageUrl: slides[0] ?? null };
+    return await publishInstagramReel(input, input.imageUrl);
   }
 
   // Carousel varsa onu dene; yayın başlamadan bir şey ters giderse tek görsele düş.
