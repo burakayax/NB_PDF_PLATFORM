@@ -72,15 +72,35 @@ export async function listPanelPosts(limit = 50): Promise<PanelPost[]> {
 export async function recentPublishedByPlatform(
   perPlatform = RECENT_PER_PLATFORM,
 ): Promise<Record<SocialPlatform, PanelPost[]>> {
+  // Tek sorgu (ağ başına ayrı sorgu Sentry'de N+1 olarak işaretleniyordu); ağlara bellekte bölünür.
+  const batchSize = perPlatform * ALL_PLATFORMS.length * 4;
+  const batch = await prisma.socialPost.findMany({
+    where: { status: "PUBLISHED", clearedAt: null },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    take: batchSize,
+  });
+  const grouped = {} as Record<SocialPlatform, SocialPost[]>;
+  for (const platform of ALL_PLATFORMS) grouped[platform] = [];
+  for (const row of batch) {
+    const list = grouped[row.platform as SocialPlatform];
+    if (list && list.length < perPlatform) list.push(row);
+  }
+  // Parti doluysa, eksik kalan (uzun süredir paylaşım yapmayan) ağlar için tamamlayıcı sorgu.
+  if (batch.length >= batchSize) {
+    await Promise.all(
+      ALL_PLATFORMS.filter((p) => grouped[p].length < perPlatform).map(async (platform) => {
+        grouped[platform] = await prisma.socialPost.findMany({
+          where: { platform, status: "PUBLISHED", clearedAt: null },
+          orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+          take: perPlatform,
+        });
+      }),
+    );
+  }
   const out = {} as Record<SocialPlatform, PanelPost[]>;
   await Promise.all(
     ALL_PLATFORMS.map(async (platform) => {
-      const rows = await prisma.socialPost.findMany({
-        where: { platform, status: "PUBLISHED", clearedAt: null },
-        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-        take: perPlatform,
-      });
-      out[platform] = await withSlides(rows);
+      out[platform] = await withSlides(grouped[platform]);
     }),
   );
   return out;
