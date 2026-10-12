@@ -154,14 +154,17 @@ export function compose({ workDir: S, out: OUT, intro, publicDir }) {
     "-y", "-hide_banner", "-loglevel", "error",
     "-f", "lavfi", "-i", `color=c=0x080d1a:s=1080x1920:r=30:d=${TOTAL}`,
     "-i", `rec/${webm}`,
-    "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+    "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-filter_complex", filter,
     "-map", "[o]", "-map", "2:a", "-t", String(TOTAL),
+    // Meta Reels şartları: sabit 30 fps, kapalı GOP (2 sn'de bir anahtar kare), 4:2:0,
+    // AAC-LC 48 kHz stereo >=128 kbps.
     "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
-    "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", OUT,
+    "-r", "30", "-g", "60", "-keyint_min", "60", "-sc_threshold", "0", "-x264-params", "open-gop=0",
+    "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2", "-movflags", "+faststart", OUT,
   ];
   const run = spawnSync(ffmpeg, args, { cwd: S, encoding: "utf8", maxBuffer: 1 << 27 });
   if (run.status !== 0) throw new Error(run.stderr.slice(0, 3000));
