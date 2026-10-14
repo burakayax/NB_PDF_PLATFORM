@@ -69,6 +69,13 @@ export type CallOpts = {
   model?: string;
   /** Yalnızca düşünme destekleyen modellerde (Sonnet 5.5/Opus 5.5…) gönderilir. */
   effort?: "low" | "medium" | "high";
+  /**
+   * Haiku 5.x: false → düşünme kapalı (saf dönüştürme işleri: çeviri). Varsayılan AÇIK: kalite öncelikli;
+   * hesap/koşul/çelişki gerektiren sorularda ve özetlerde düşünme doğruluğu artırır. Ölçüm (2026-10-14,
+   * sözleşme sorusu): 3 mod da 10/10 aldı, düşünme +%75 çıktı jetonu ve çağrı başı ~3 sn ekledi; Haiku 5.5
+   * düşünmeyle bile Haiku 4.5'ten ~5 kat ucuz.
+   */
+  thinking?: boolean;
 };
 
 export async function callClaude(
@@ -85,11 +92,16 @@ export async function callClaude(
   // ölçümde 1500 jetonluk sınırın TAMAMI düşünmeye gitti, metin hiç dönmedi. Özet/veri çıkarma
   // gibi işlerde düşünme gerekmez → kapalı + düşük efor (hem ucuz hem metin garantili).
   const isHaiku5 = /^claude-haiku-5/.test(model);
+  const thinkOn = isHaiku5 && opts?.thinking !== false;
   const modelExtras = isHaiku5
-    ? { thinking: { type: "disabled" }, output_config: { effort: opts?.effort ?? "low" } }
+    ? thinkOn
+      ? { output_config: { effort: opts?.effort ?? "medium" } } // düşünme varsayılan açık (adaptif)
+      : { thinking: { type: "disabled" }, output_config: { effort: opts?.effort ?? "low" } }
     : opts?.effort
       ? { output_config: { effort: opts.effort } }
       : {};
+  // Düşünme jetonları max_tokens'a SAYILIR; pay bırakılmazsa yanıt metni kesilir (ölçümde yaşandı).
+  const effectiveMaxTokens = thinkOn ? Math.min(32000, maxTokens + 6000) : maxTokens;
   // Zaman aşımı ŞART: karşı taraf yanıt vermezse istek süresiz asılı kalır ve
   // sunucu işçisini bloklar. 90 sn sonra istek iptal edilir.
   let res: Response;
@@ -103,7 +115,7 @@ export async function callClaude(
       },
       body: JSON.stringify({
         model,
-        max_tokens: maxTokens,
+        max_tokens: effectiveMaxTokens,
         system,
         messages,
         ...modelExtras,
@@ -404,7 +416,7 @@ export async function translateDocument(text: string, targetCode: string): Promi
   const target = TRANSLATE_LANGS[targetCode] ?? "English";
   const system = `You are a professional translator. Translate the document below into ${target}.
 Preserve the meaning, tone, structure and layout: keep headings, paragraphs, lists and tables (use markdown for structure). Translate names/terms naturally; keep numbers, dates, codes and proper nouns intact. Do NOT add any commentary, notes or explanations. Output ONLY the translated document.`;
-  return callClaude(system, [{ role: "user", content: doc }], 8000);
+  return callClaude(system, [{ role: "user", content: doc }], 8000, { thinking: false });
 }
 
 function extractJsonArray(s: string): string {
@@ -452,7 +464,7 @@ Rules:
     if (indices.length === 0) return;
     const obj: Record<string, string> = {};
     for (const i of indices) obj[String(i)] = texts[i];
-    const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(obj) }], 8000);
+    const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(obj) }], 8000, { thinking: false });
     let parsed: unknown;
     try {
       parsed = JSON.parse(extractJsonObject(raw));

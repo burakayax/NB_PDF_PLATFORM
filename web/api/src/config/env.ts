@@ -141,7 +141,7 @@ const rawEnvSchema = z
     AI_MODEL: z.string().min(1).default("claude-haiku-5-5"),
     /** Yeni (doğrulanmış) üyeye hoş geldin hediyesi: ücretsiz yapay zekâ işlemi sayısı (tek seferlik). 0 = kapalı.
      * Basit araçlarda geçer (özet/veri çıkar/sohbet…); ağır araçlar (çok kredi isteyen) bir krediyle çalışmaz. */
-    AI_TRIAL_CREDITS: z.coerce.number().int().min(0).max(10).default(1),
+    AI_TRIAL_CREDITS: z.coerce.number().int().min(0).max(10).default(3),
     /** CV Yapay Zekâ Asistanı modeli. Yazım kalitesi/uydurmama için Sonnet (Haiku denemede bağlam uydurdu). */
     AI_CV_MODEL: z.string().min(1).default("claude-sonnet-5-5"),
     /** Sözleşme Denetçisi modeli — derin analiz için güçlü model (Haiku yetersiz kalır). */
