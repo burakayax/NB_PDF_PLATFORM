@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import type { CvData, CvDateFormat, CvDensity, CvFont, CvHeadingStyle, CvLang, CvPhotoShape, CvSettings, CvSize } from "./cvModel";
 import { FONT_CSS, type CvTemplate } from "./cvTemplates";
-import { ACCENTS } from "./CvForm";
+import { ACCENTS, GRADUATE_ORDER } from "./CvForm";
+import { CvSectionManager } from "./CvSectionManager";
 
 type Props = { data: CvData; onChange: (d: CvData) => void; disabled: boolean; tr: boolean; tpl: CvTemplate };
 
@@ -89,6 +90,10 @@ export function CvDesignPanel({ data, onChange, disabled, tr, tpl }: Props) {
       <Group title={tr ? "Fotoğraf biçimi" : "Photo shape"}>
         <Seg<CvPhotoShape> label={tr ? "Fotoğraf biçimi" : "Photo shape"} value={st.photoShape ?? th.photo.shape} onPick={(v) => pick("photoShape", v, th.photo.shape)}
           options={[{ v: "circle", label: tr ? "Yuvarlak" : "Round" }, { v: "rounded", label: tr ? "Yumuşak köşe" : "Rounded" }, { v: "rect", label: tr ? "Dikdörtgen" : "Rectangle" }]} />
+      </Group>
+
+      <Group title={tr ? "Bölümler" : "Sections"} hint={tr ? "CV'de hangi bölümler görünsün ve hangi sırada olsun? Sürükleyin ya da anahtarla gizleyin." : "Which sections appear on your CV, and in what order? Drag, or hide with a switch."}>
+        <CvSectionManager data={data} onChange={onChange} tr={tr} graduateOrder={GRADUATE_ORDER} />
       </Group>
 
       <Group title={tr ? "Dil ve tarih" : "Language & dates"}>

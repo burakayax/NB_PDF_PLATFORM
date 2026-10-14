@@ -27,8 +27,10 @@ type Props = {
   onOpenDesign: () => void;
 };
 
-const STEPS = ["start", "you", "work", "edu", "skills", "summary", "done"] as const;
-type Step = (typeof STEPS)[number];
+const BASE_STEPS = ["start", "you", "work", "edu", "skills", "summary", "done"] as const;
+/** Yeni mezun/deneyimsiz: eğitimden sonra "projeler" adımı da gelir (deneyim yerine öne çıkar). */
+const GRAD_STEPS = ["start", "you", "work", "edu", "projects", "skills", "summary", "done"] as const;
+type Step = (typeof GRAD_STEPS)[number];
 
 export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFullForm, onDownload, onOpenLinkedin, onOpenDesign }: Props) {
   const lang = data.settings.lang;
@@ -36,13 +38,14 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
   const [profId, setProfId] = useState<string>("");
   const [graduate, setGraduate] = useState(false);
   const [ownRole, setOwnRole] = useState("");
+  const STEPS: readonly Step[] = graduate ? GRAD_STEPS : BASE_STEPS;
   const step: Step = STEPS[i];
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
   const prof: Profession | null = (profId && professionById(profId)) || matchProfession(`${data.title} ${data.experience[0]?.role ?? ""}`);
 
   const labels: Record<Step, string> = {
     start: tr ? "Başlangıç" : "Start", you: tr ? "Siz" : "You", work: tr ? "Deneyim" : "Work", edu: tr ? "Eğitim" : "Education",
-    skills: tr ? "Beceriler" : "Skills", summary: tr ? "Özet" : "Summary", done: tr ? "Bitti" : "Done",
+    projects: tr ? "Projeler" : "Projects", skills: tr ? "Beceriler" : "Skills", summary: tr ? "Özet" : "Summary", done: tr ? "Bitti" : "Done",
   };
 
   // Adım kuralları: ilerlemeyi engellemez, yalnız nazikçe yönlendirir
@@ -175,6 +178,21 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
               </div>
             ))}
             <AddButton label={data.education.length ? (tr ? "Bir okul daha ekle" : "Add another school") : (tr ? "Okul ekle" : "Add a school")} onClick={() => set("education", [...data.education, { id: uid(), school: "", degree: "", location: "", start: "", end: "", current: false, desc: "" }])} />
+          </>
+        ) : null}
+
+        {step === "projects" ? (
+          <>
+            <Head title={tr ? "Hangi projelerde yer aldınız?" : "Which projects have you worked on?"} sub={tr ? "Deneyiminiz azsa projeler CV'nizi güçlendirir: okul ve ders projeleri, staj, gönüllülük, bitirme tezi, kişisel çalışmalar. Yoksa “Atla”ya basın." : "With little experience, projects strengthen your CV: school and course projects, internships, volunteering, thesis, personal work. Press “Skip” if none."} />
+            {data.projects.map((pr) => (
+              <div key={pr.id} className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3.5">
+                <Text label={tr ? "Proje adı" : "Project name"} value={pr.name} onChange={(v) => set("projects", patch(data.projects, pr.id, { name: v }))} placeholder={tr ? "Ör. Bitirme projesi: Akıllı sera sistemi" : "E.g. Capstone: Smart greenhouse"} />
+                <Text label={tr ? "Bağlantı (isteğe bağlı)" : "Link (optional)"} value={pr.link} onChange={(v) => set("projects", patch(data.projects, pr.id, { link: v }))} />
+                <Area label={tr ? "Ne yaptınız?" : "What did you do?"} rows={3} value={pr.desc} onChange={(v) => set("projects", patch(data.projects, pr.id, { desc: v }))} hint={tr ? "Rolünüzü, kullandığınız araçları ve sonucu 1-2 cümleyle yazın." : "Your role, tools used and the outcome in 1–2 sentences."} />
+                <button type="button" onClick={() => set("projects", data.projects.filter((x) => x.id !== pr.id))} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-300 hover:text-red-200"><Trash2 className="h-3.5 w-3.5" />{tr ? "Bu projeyi sil" : "Delete this project"}</button>
+              </div>
+            ))}
+            <AddButton label={data.projects.length ? (tr ? "Bir proje daha ekle" : "Add another project") : (tr ? "Proje ekle" : "Add a project")} onClick={() => set("projects", [...data.projects, { id: uid(), name: "", link: "", desc: "" }])} />
           </>
         ) : null}
 
