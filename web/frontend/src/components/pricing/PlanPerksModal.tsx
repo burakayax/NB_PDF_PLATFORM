@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Language } from "../../i18n/landing";
 import { PLANS, type PlanId } from "../../lib/planConfig";
 import { langAsset } from "../../lib/langAsset";
@@ -260,7 +261,9 @@ export function PlanPerksModal({
   const planName = tr ? plan.nameTr : plan.nameEn;
   const categories = getPerks(planId, language);
 
-  return (
+  // Portal: üst öğede backdrop-blur (PlanUpgradeModal) varken `fixed` o öğeye göre konumlanıp
+  // ekran dışında kalıyordu; body'ye taşıyınca her zaman görünür pencerede açılır.
+  return createPortal(
     <div
       className="fixed inset-0 z-[600] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
       role="dialog"
@@ -362,6 +365,7 @@ export function PlanPerksModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
