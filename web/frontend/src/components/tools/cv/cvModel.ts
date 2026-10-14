@@ -34,7 +34,9 @@ export type CvCert = { id: string; name: string; issuer: string; date: string };
 export type CvProject = { id: string; name: string; link: string; desc: string };
 export type CvReference = { id: string; name: string; role: string; contact: string };
 export type CvCustomItem = { id: string; title: string; subtitle: string; date: string; desc: string };
-export type CvCustomSection = { id: string; title: string; items: CvCustomItem[] };
+/** Özel bölümün CV'deki görünümü: ayrıntılı kayıtlar, madde listesi, etiketler ya da kartlar. */
+export type CvCustomStyle = "detailed" | "list" | "tags" | "cards";
+export type CvCustomSection = { id: string; title: string; items: CvCustomItem[]; style?: CvCustomStyle };
 
 export type CvSettings = {
   lang: CvLang;
@@ -284,7 +286,7 @@ export type CvModel = {
   references: { name: Fld; role: Fld; contact: Fld }[];
   interests: { t: string; g: boolean }[];
   /** Özel bölümler (anahtar: `custom:<id>`). */
-  custom: { key: SectionKey; title: Fld; items: { title: Fld; subtitle: Fld; date: Fld; desc: Fld }[] }[];
+  custom: { key: SectionKey; title: Fld; style: CvCustomStyle; items: { title: Fld; subtitle: Fld; date: Fld; desc: Fld }[] }[];
   /** Görünür bölümlerin sırası (gizlenenler çıkarılmış). */
   order: SectionKey[];
   has: { contact: boolean; skills: boolean; languages: boolean; interests: boolean };
@@ -380,7 +382,7 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
         desc: i.desc.trim() ? ({ t: i.desc.trim(), g: false } as Fld) : null,
       }));
     if (!items.length && showGhost) items.push({ title: { t: ph("customItem"), g: true }, subtitle: null, date: null, desc: { t: ph("customDesc"), g: true } });
-    return { key: `custom:${c.id}` as SectionKey, title: c.title.trim() ? ({ t: c.title.trim(), g: false } as Fld) : showGhost ? ({ t: ph("customTitle"), g: true } as Fld) : null, items };
+    return { key: `custom:${c.id}` as SectionKey, style: c.style ?? "detailed", title: c.title.trim() ? ({ t: c.title.trim(), g: false } as Fld) : showGhost ? ({ t: ph("customTitle"), g: true } as Fld) : null, items };
   });
 
   const photo: CvModel["photo"] = !d.showPhoto ? null : d.photo && !allGhost ? { data: d.photo, ghost: false } : showGhost ? { data: null, ghost: true } : null;

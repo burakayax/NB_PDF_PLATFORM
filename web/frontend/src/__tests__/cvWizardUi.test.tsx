@@ -106,3 +106,33 @@ describe("tasarım paneli: etkin seçenek görünür", () => {
     expect(spy.mock.calls[0][0].settings.font).toBeNull();
   });
 });
+
+import { CvSectionManager } from "../components/tools/cv/CvSectionManager";
+import { GRADUATE_ORDER } from "../components/tools/cv/CvForm";
+import { CvPage } from "../components/tools/cv/cvTemplates";
+import { buildModel } from "../components/tools/cv/cvModel";
+
+describe("bölüm yöneticisi", () => {
+  it("anahtar bölümü gizler/gösterir, klavye ile sıra değişir", () => {
+    const spy = vi.fn();
+    const d = normalizeCv(EMPTY_CV);
+    render(<CvSectionManager data={d} onChange={spy} tr graduateOrder={GRADUATE_ORDER} />);
+    fireEvent.click(screen.getByRole("switch", { name: /Profil: gizle/ }));
+    expect(spy.mock.calls[0][0].settings.hidden).toContain("summary");
+    const handle = screen.getByRole("button", { name: /Profil sırasını değiştir/ });
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    expect(spy.mock.calls[1][0].settings.order[0]).toBe("experience");
+    expect(spy.mock.calls[1][0].settings.order[1]).toBe("summary");
+  });
+});
+
+describe("özel bölüm görünümleri", () => {
+  it("dört görünüm de hatasız çizilir ve metni içerir", () => {
+    for (const style of ["detailed", "list", "tags", "cards"] as const) {
+      const d = normalizeCv({ ...sampleCv("tr"), customSections: [{ id: "c1", title: "Ödüller", style, items: [{ id: "i1", title: "Yılın Çalışanı", subtitle: "Anadolu A.Ş.", date: "2022-05", desc: "Satışta birincilik" }] }] });
+      const { container, unmount } = render(<CvPage m={buildModel(d, "export")} tpl={getTemplate("net")} size="m" accent={null} />);
+      expect(container.textContent, style).toContain("Yılın Çalışanı");
+      unmount();
+    }
+  });
+});

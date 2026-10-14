@@ -20,18 +20,19 @@ import {
   Camera,
   Layers,
   ListOrdered,
-  Eye,
-  EyeOff,
   AlertCircle,
+  AlignLeft,
+  List,
+  Tags,
+  LayoutGrid,
 } from "lucide-react";
 import {
   LANG_LEVELS,
-  LABELS,
-  resolveOrder,
   uid,
   type SectionKey,
   type CvCustomItem,
   type CvCustomSection,
+  type CvCustomStyle,
   type CvCert,
   type CvData,
   type CvEducation,
@@ -47,6 +48,9 @@ import { useEffect } from "react";
 import { CvPhotoPrep } from "./CvPhotoPrep";
 import { BulletPicker, SkillPicker, SummaryPicker } from "./CvPhrasePicker";
 import { dateOrderIssue, emailIssue, linkIssue, phoneIssue } from "./cvValidate";
+import { SuggestInput } from "./CvSuggestInput";
+import { CvSectionManager } from "./CvSectionManager";
+import { suggestLanguages, suggestSkills, suggestTitles } from "./cvVocabulary";
 
 type Props = {
   data: CvData;
@@ -71,10 +75,14 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
-export function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete, error }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string; error?: string | null }) {
+export function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete, error, suggest, tr }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string; error?: string | null; suggest?: (q: string) => string[]; tr?: boolean }) {
   return (
     <Field label={label} hint={error ? undefined : hint}>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} autoComplete={autoComplete} aria-invalid={error ? true : undefined} className={`${inputCls} ${error ? "!border-amber-400/60 !ring-2 !ring-amber-400/20" : ""}`} />
+      {suggest ? (
+        <SuggestInput value={value} onChange={onChange} suggest={suggest} placeholder={placeholder} disabled={disabled} tr={tr ?? true} className={inputCls} />
+      ) : (
+        <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} autoComplete={autoComplete} aria-invalid={error ? true : undefined} className={`${inputCls} ${error ? "!border-amber-400/60 !ring-2 !ring-amber-400/20" : ""}`} />
+      )}
       {error ? <span className="mt-1 flex items-start gap-1 text-[11.5px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
     </Field>
   );
@@ -255,6 +263,20 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon }: 
   );
 }
 
+/** "Kendi bölümünüzü ekleyin" hızlı başlıkları: her biri uygun görünümle gelir. */
+const CUSTOM_PRESETS: { id: string; tr: string; en: string; style: CvCustomStyle }[] = [
+  { id: "volunteer", tr: "Gönüllülük", en: "Volunteering", style: "detailed" },
+  { id: "awards", tr: "Ödüller ve başarılar", en: "Awards & achievements", style: "list" },
+  { id: "pubs", tr: "Yayınlar", en: "Publications", style: "list" },
+  { id: "courses", tr: "Kurslar ve eğitimler", en: "Courses & training", style: "list" },
+  { id: "conf", tr: "Konferans ve etkinlikler", en: "Conferences & events", style: "cards" },
+  { id: "tools", tr: "Kullandığım araçlar", en: "Tools I use", style: "tags" },
+  { id: "hobbies", tr: "Hobiler", en: "Hobbies", style: "tags" },
+  { id: "military", tr: "Askerlik durumu", en: "Military service", style: "list" },
+  { id: "memberships", tr: "Üyelikler", en: "Memberships", style: "list" },
+  { id: "social", tr: "Sosyal sorumluluk projeleri", en: "Community projects", style: "cards" },
+];
+
 /** Yeni mezun / stajyer: eğitim, projeler ve beceriler deneyimden önce. */
 export const GRADUATE_ORDER: SectionKey[] = ["summary", "education", "projects", "skills", "experience", "certs", "languages", "interests", "references"];
 
@@ -273,7 +295,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
         <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} />
 
         <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
-        <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant"} />
+        <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant"} suggest={(q) => suggestTitles(q, lang)} tr={tr} />
         <div className="grid gap-3 sm:grid-cols-2">
           <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" error={iss(emailIssue(data.email))} />
           <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" error={iss(phoneIssue(data.phone))} />
@@ -341,8 +363,8 @@ ${line}` : line }))} />
 
       <Accordion title={tr ? "Beceriler" : "Skills"} icon={<Wrench className="h-4 w-4" />} count={data.skills.length}>
         {data.skills.map((s: CvSkill) => (
-          <div key={s.id} className="flex items-center gap-2">
-            <input value={s.name} onChange={(e) => set("skills", patch(data.skills, s.id, { name: e.target.value }))} placeholder={tr ? "Beceri" : "Skill"} className={inputCls} />
+          <div key={s.id} className="flex items-start gap-2">
+            <div className="min-w-0 flex-1"><SuggestInput value={s.name} onChange={(v) => set("skills", patch(data.skills, s.id, { name: v }))} suggest={(q) => suggestSkills(q, lang, data.skills.map((x) => x.name))} placeholder={tr ? "Beceri yazın, öneriler çıkar" : "Type a skill, suggestions appear"} ariaLabel={tr ? "Beceri" : "Skill"} tr={tr} className={inputCls} /></div>
             <select value={s.level} onChange={(e) => set("skills", patch(data.skills, s.id, { level: Number(e.target.value) }))} className="w-28 shrink-0 rounded-xl border border-white/10 bg-slate-900/60 px-2 py-2.5 text-[13px] text-white" aria-label={tr ? "Seviye" : "Level"}>
               <option value={0}>{tr ? "Seviyesiz" : "No level"}</option>
               {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{"★".repeat(n)}</option>)}
@@ -357,8 +379,8 @@ ${line}` : line }))} />
 
       <Accordion title={tr ? "Yabancı diller" : "Languages"} icon={<Languages className="h-4 w-4" />} count={data.languages.length}>
         {data.languages.map((l: CvLanguageItem) => (
-          <div key={l.id} className="flex items-center gap-2">
-            <input value={l.name} onChange={(e) => set("languages", patch(data.languages, l.id, { name: e.target.value }))} placeholder={tr ? "Dil" : "Language"} className={inputCls} />
+          <div key={l.id} className="flex items-start gap-2">
+            <div className="min-w-0 flex-1"><SuggestInput value={l.name} onChange={(v) => set("languages", patch(data.languages, l.id, { name: v }))} suggest={(q) => suggestLanguages(q, lang, data.languages.map((x) => x.name))} placeholder={tr ? "Dil yazın (ör. Alm…)" : "Type a language"} ariaLabel={tr ? "Dil" : "Language"} tr={tr} className={inputCls} /></div>
             <select value={LANG_LEVELS[lang].includes(l.level) ? l.level : ""} onChange={(e) => set("languages", patch(data.languages, l.id, { level: e.target.value }))} className="w-44 shrink-0 rounded-xl border border-white/10 bg-slate-900/60 px-2 py-2.5 text-[13px] text-white" aria-label={tr ? "Seviye" : "Level"}>
               <option value="">{tr ? "Seviye seçin" : "Level"}</option>
               {LANG_LEVELS[lang].map((lv) => <option key={lv} value={lv}>{lv}</option>)}
@@ -411,59 +433,64 @@ ${line}` : line }))} />
         <p className="text-[11px] text-slate-500">{tr ? "İsterseniz “Referanslar istek üzerine sunulur” yazmak yerine bu bölümü boş bırakın; PDF'e eklenmez." : "Leave this empty if you'd rather not list references; it won't appear in the PDF."}</p>
       </Accordion>
 
-      {data.customSections.map((c: CvCustomSection) => (
-        <Accordion key={c.id} title={c.title.trim() || (tr ? "Özel bölüm" : "Custom section")} icon={<Layers className="h-4 w-4" />} count={c.items.length} defaultOpen>
-          <Text label={tr ? "Bölüm başlığı" : "Section title"} value={c.title} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, title: v } : x)))} placeholder={tr ? "Ör. Gönüllülük, Yayınlar, Ödüller" : "E.g. Volunteering, Publications, Awards"} />
-          {c.items.map((it: CvCustomItem, i) => (
-            <ItemCard key={it.id} tr={tr} first={i === 0} last={i === c.items.length - 1}
-              onUp={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: move(x.items, i, -1) } : x)))}
-              onDown={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: move(x.items, i, 1) } : x)))}
-              onRemove={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: x.items.filter((y) => y.id !== it.id) } : x)))}>
-              <Text label={tr ? "Başlık" : "Title"} value={it.title} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { title: v }) } : x)))} />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Text label={tr ? "Alt başlık (isteğe bağlı)" : "Subtitle (optional)"} value={it.subtitle} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { subtitle: v }) } : x)))} />
-                <Text label={tr ? "Tarih (isteğe bağlı)" : "Date (optional)"} type="month" value={it.date} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { date: v }) } : x)))} />
+      {data.customSections.map((c: CvCustomSection) => {
+        const style: CvCustomStyle = c.style ?? "detailed";
+        const upd = (p: Partial<CvCustomSection>) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, ...p } : x)));
+        const updItems = (fn: (items: CvCustomItem[]) => CvCustomItem[]) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: fn(x.items) } : x)));
+        const styles: { v: CvCustomStyle; label: string; hint: string; icon: ReactNode }[] = [
+          { v: "detailed", label: tr ? "Ayrıntılı" : "Detailed", hint: tr ? "Başlık, alt başlık, tarih, açıklama" : "Title, subtitle, date, text", icon: <AlignLeft className="h-4 w-4" /> },
+          { v: "list", label: tr ? "Liste" : "List", hint: tr ? "Tek satırlık maddeler" : "One-line items", icon: <List className="h-4 w-4" /> },
+          { v: "cards", label: tr ? "Kartlar" : "Cards", hint: tr ? "İki sütunlu kutular" : "Two-column boxes", icon: <LayoutGrid className="h-4 w-4" /> },
+          { v: "tags", label: tr ? "Etiketler" : "Tags", hint: tr ? "Kısa kelimeler" : "Short words", icon: <Tags className="h-4 w-4" /> },
+        ];
+        return (
+          <Accordion key={c.id} title={c.title.trim() || (tr ? "Özel bölüm" : "Custom section")} icon={<Layers className="h-4 w-4" />} count={c.items.length} defaultOpen>
+            <Text label={tr ? "Bölüm başlığı" : "Section title"} value={c.title} onChange={(v) => upd({ title: v })} placeholder={tr ? "Ör. Gönüllülük, Yayınlar, Ödüller" : "E.g. Volunteering, Publications, Awards"} />
+            <div>
+              <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "CV'de nasıl görünsün?" : "How should it look on the CV?"}</span>
+              <div role="radiogroup" aria-label={tr ? "Bölüm görünümü" : "Section look"} className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                {styles.map((o) => (
+                  <button key={o.v} type="button" role="radio" aria-checked={style === o.v} onClick={() => upd({ style: o.v })} title={o.hint} className={`flex flex-col items-start gap-1 rounded-xl border px-2.5 py-2 text-left transition ${style === o.v ? "border-sky-400 bg-sky-500/15 text-white ring-1 ring-sky-400/40" : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/25 hover:bg-white/[0.06]"}`}>
+                    <span className={style === o.v ? "text-sky-300" : "text-slate-400"}>{o.icon}</span>
+                    <span className="text-[12.5px] font-bold">{o.label}</span>
+                    <span className="text-[10.5px] leading-tight text-slate-400">{o.hint}</span>
+                  </button>
+                ))}
               </div>
-              <Area label={tr ? "Açıklama" : "Description"} rows={2} value={it.desc} onChange={(v) => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: patch(x.items, it.id, { desc: v }) } : x)))} />
-            </ItemCard>
+            </div>
+            {c.items.map((it: CvCustomItem, i) => (
+              <ItemCard key={it.id} tr={tr} first={i === 0} last={i === c.items.length - 1}
+                onUp={() => updItems((items) => move(items, i, -1))}
+                onDown={() => updItems((items) => move(items, i, 1))}
+                onRemove={() => updItems((items) => items.filter((y) => y.id !== it.id))}>
+                <Text label={style === "tags" ? (tr ? "Etiket" : "Tag") : (tr ? "Başlık" : "Title")} value={it.title} onChange={(v) => updItems((items) => patch(items, it.id, { title: v }))} />
+                {style !== "tags" ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Text label={tr ? "Alt başlık (isteğe bağlı)" : "Subtitle (optional)"} value={it.subtitle} onChange={(v) => updItems((items) => patch(items, it.id, { subtitle: v }))} />
+                    <Text label={tr ? "Tarih (isteğe bağlı)" : "Date (optional)"} type="month" value={it.date} onChange={(v) => updItems((items) => patch(items, it.id, { date: v }))} />
+                  </div>
+                ) : null}
+                {style === "detailed" || style === "cards" ? <Area label={tr ? "Açıklama" : "Description"} rows={2} value={it.desc} onChange={(v) => updItems((items) => patch(items, it.id, { desc: v }))} /> : null}
+              </ItemCard>
+            ))}
+            <AddButton label={style === "tags" ? (tr ? "Etiket ekle" : "Add tag") : (tr ? "Madde ekle" : "Add item")} onClick={() => updItems((items) => [...items, { id: uid(), title: "", subtitle: "", date: "", desc: "" }])} />
+            <button type="button" onClick={() => onChange({ ...data, customSections: data.customSections.filter((x) => x.id !== c.id), settings: { ...data.settings, order: data.settings.order?.filter((k) => k !== `custom:${c.id}`) ?? null, hidden: data.settings.hidden.filter((k) => k !== `custom:${c.id}`) } })} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-300 hover:text-red-200"><Trash2 className="h-3.5 w-3.5" />{tr ? "Bu bölümü sil" : "Delete this section"}</button>
+          </Accordion>
+        );
+      })}
+      <div className="rounded-2xl border border-dashed border-sky-400/35 bg-sky-500/[0.04] p-3.5">
+        <p className="text-[13px] font-bold text-white">{tr ? "Kendi bölümünüzü ekleyin" : "Add your own section"}</p>
+        <p className="mb-2.5 text-[11.5px] text-slate-400">{tr ? "Bir başlık seçin; uygun görünümle hazır gelir, istediğinizi sonradan değiştirebilirsiniz." : "Pick a title; it comes ready with a fitting look, which you can change later."}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {CUSTOM_PRESETS.map((p) => (
+            <button key={p.id} type="button" onClick={() => set("customSections", [...data.customSections, { id: uid(), title: tr ? p.tr : p.en, style: p.style, items: [{ id: uid(), title: "", subtitle: "", date: "", desc: "" }] }])} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1.5 text-[12.5px] font-medium text-slate-100 hover:border-sky-400/50 hover:bg-sky-500/10"><Plus className="h-3.5 w-3.5 text-sky-300" />{tr ? p.tr : p.en}</button>
           ))}
-          <AddButton label={tr ? "Madde ekle" : "Add item"} onClick={() => set("customSections", data.customSections.map((x) => (x.id === c.id ? { ...x, items: [...x.items, { id: uid(), title: "", subtitle: "", date: "", desc: "" }] } : x)))} />
-          <button type="button" onClick={() => onChange({ ...data, customSections: data.customSections.filter((x) => x.id !== c.id), settings: { ...data.settings, order: data.settings.order?.filter((k) => k !== `custom:${c.id}`) ?? null, hidden: data.settings.hidden.filter((k) => k !== `custom:${c.id}`) } })} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-300 hover:text-red-200"><Trash2 className="h-3.5 w-3.5" />{tr ? "Bu bölümü sil" : "Delete this section"}</button>
-        </Accordion>
-      ))}
-      <AddButton label={tr ? "Özel bölüm ekle (Gönüllülük, Yayınlar, Ödüller…)" : "Add custom section (Volunteering, Publications, Awards…)"} onClick={() => set("customSections", [...data.customSections, { id: uid(), title: "", items: [{ id: uid(), title: "", subtitle: "", date: "", desc: "" }] }])} />
-
-      <Accordion title={tr ? "Bölüm sırası ve gizleme (gelişmiş)" : "Section order & hiding (advanced)"} icon={<ListOrdered className="h-4 w-4" />}>
-        <p className="text-[11.5px] leading-relaxed text-slate-400">{tr ? "Bölümleri yukarı/aşağı taşıyın ya da gizleyin. Kenar çubuklu şablonlarda Beceriler, Diller ve İlgi alanları yan sütunda kalır; sıra kendi içinde uygulanır." : "Move sections up/down or hide them. In sidebar templates Skills, Languages and Interests stay in the side column; order applies within each column."}</p>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => onChange({ ...data, settings: { ...data.settings, order: null } })} className="rounded-xl bg-white/[0.06] px-3 py-2 text-[12.5px] font-semibold text-slate-100 hover:bg-white/10">{tr ? "Deneyimli düzeni" : "Experienced layout"}</button>
-          <button type="button" onClick={() => onChange({ ...data, settings: { ...data.settings, order: GRADUATE_ORDER } })} className="rounded-xl bg-sky-500/15 px-3 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25">{tr ? "Yeni mezun düzeni (eğitim ve projeler önde)" : "Graduate layout (education & projects first)"}</button>
+          <button type="button" onClick={() => set("customSections", [...data.customSections, { id: uid(), title: "", style: "detailed", items: [{ id: uid(), title: "", subtitle: "", date: "", desc: "" }] }])} className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/40 bg-sky-500/15 px-3 py-1.5 text-[12.5px] font-bold text-sky-100 hover:bg-sky-500/25"><Plus className="h-3.5 w-3.5" />{tr ? "Boş bölüm" : "Blank section"}</button>
         </div>
-        {(() => {
-          const order = resolveOrder(data);
-          const L = LABELS[data.settings.lang];
-          const nameOf = (k: SectionKey): string => {
-            if (k.startsWith("custom:")) return data.customSections.find((c) => `custom:${c.id}` === k)?.title.trim() || (tr ? "Özel bölüm" : "Custom section");
-            return ({ summary: L.profile, experience: L.experience, education: L.education, skills: L.skills, languages: L.languages, certs: L.certs, projects: L.projects, interests: L.interests, references: L.references } as Record<string, string>)[k] ?? k;
-          };
-          const moveKey = (i: number, d: -1 | 1) => onChange({ ...data, settings: { ...data.settings, order: move(order, i, d) } });
-          const toggle = (k: SectionKey) => onChange({ ...data, settings: { ...data.settings, hidden: data.settings.hidden.includes(k) ? data.settings.hidden.filter((x) => x !== k) : [...data.settings.hidden, k] } });
-          return (
-            <ul className="space-y-1.5">
-              {order.map((k, i) => {
-                const hidden = data.settings.hidden.includes(k);
-                return (
-                  <li key={k} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${hidden ? "border-white/5 bg-white/[0.01] opacity-60" : "border-white/10 bg-white/[0.03]"}`}>
-                    <span className="flex-1 truncate text-[13px] font-semibold text-slate-100">{nameOf(k)}</span>
-                    <button type="button" disabled={i === 0} onClick={() => moveKey(i, -1)} aria-label={tr ? "Yukarı" : "Up"} className="rounded-md p-1.5 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
-                    <button type="button" disabled={i === order.length - 1} onClick={() => moveKey(i, 1)} aria-label={tr ? "Aşağı" : "Down"} className="rounded-md p-1.5 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => toggle(k)} aria-label={hidden ? (tr ? "Göster" : "Show") : (tr ? "Gizle" : "Hide")} aria-pressed={!hidden} className="rounded-md p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">{hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
-                  </li>
-                );
-              })}
-            </ul>
-          );
-        })()}
+      </div>
+
+      <Accordion title={tr ? "Bölümler: sıra ve aç/kapa" : "Sections: order & show/hide"} icon={<ListOrdered className="h-4 w-4" />}>
+        <CvSectionManager data={data} onChange={onChange} tr={tr} graduateOrder={GRADUATE_ORDER} />
       </Accordion>
     </fieldset>
   );
