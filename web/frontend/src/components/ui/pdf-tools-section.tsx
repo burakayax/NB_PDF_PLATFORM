@@ -132,6 +132,9 @@ export default function PdfToolsSection({
   const hesapAracSayisi = useMemo(() => TOOLS.filter((t) => t.account).length, []);
   const [filter, setFilter] = useState<CategoryId | "all">("all");
   const [query, setQuery] = useState("");
+  /** Mobilde kategori başına ilk 6 araç görünür; "Tümünü göster" ile açılan kategoriler. */
+  const [expanded, setExpanded] = useState<Set<CategoryId>>(new Set());
+  const MOBILE_PREVIEW = 6;
 
   const visible = useMemo(() => {
     const q = norm(query);
@@ -160,7 +163,7 @@ export default function PdfToolsSection({
   }
 
   return (
-    <section id="tools" className="relative overflow-hidden py-24 sm:py-28">
+    <section id="tools" className="relative overflow-hidden py-14 sm:py-28">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.10)_0%,transparent_60%)]" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
@@ -190,7 +193,7 @@ export default function PdfToolsSection({
         </motion.div>
 
         {/* Arama + kategori süzgeci */}
-        <div className="mt-10 flex flex-col items-center gap-4">
+        <div className="mt-8 flex flex-col items-center gap-4 sm:mt-10">
           <div className="relative w-full max-w-md">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -203,7 +206,7 @@ export default function PdfToolsSection({
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="-mx-5 flex w-[calc(100%+2.5rem)] flex-nowrap items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
             {(["all", ...CATEGORY_ORDER] as const).map((c) => {
               const active = filter === c;
               const label =
@@ -217,7 +220,7 @@ export default function PdfToolsSection({
                   key={c}
                   type="button"
                   onClick={() => setFilter(c)}
-                  className={`rounded-full border px-4 py-2 text-[13px] font-semibold transition ${
+                  className={`min-h-[44px] shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition sm:min-h-0 ${
                     active
                       ? "border-violet-400/40 bg-violet-500/15 text-white"
                       : "border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/20 hover:text-slate-200"
@@ -270,9 +273,11 @@ export default function PdfToolsSection({
         )}
 
         {/* Kategoriler + kartlar */}
-        <div className="mt-12 space-y-12">
+        <div className="mt-8 space-y-8 sm:mt-12 sm:space-y-12">
           {grouped.map(({ cat, items }) => {
             const meta = CATEGORY_META[cat];
+            const collapsible = filter === "all" && !query.trim() && items.length > MOBILE_PREVIEW;
+            const isOpen = expanded.has(cat);
             return (
               <div key={cat}>
                 <div className="mb-5 flex items-center gap-3">
@@ -296,7 +301,7 @@ export default function PdfToolsSection({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.2 }}
                         transition={{ duration: 0.35, delay: Math.min(i * 0.03, 0.2) }}
-                        className={`group relative flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.055] ${hue.ring} ${hue.glow}`}
+                        className={`${collapsible && !isOpen && i >= MOBILE_PREVIEW ? "hidden sm:flex" : "flex"} group relative h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.055] ${hue.ring} ${hue.glow}`}
                       >
                         <div className="flex items-start gap-3">
                           <span
@@ -332,13 +337,32 @@ export default function PdfToolsSection({
                             )}
                           </div>
                         </div>
-                        <p className="mt-3 text-[12.5px] leading-relaxed text-slate-400 transition group-hover:text-slate-300">
+                        <p className="mt-2 line-clamp-2 text-[12.5px] leading-relaxed text-slate-400 transition group-hover:text-slate-300 sm:mt-3 sm:line-clamp-none">
                           {copy.desc}
                         </p>
                       </motion.button>
                     );
                   })}
                 </div>
+                {collapsible && (
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() =>
+                      setExpanded((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(cat)) next.delete(cat);
+                        else next.add(cat);
+                        return next;
+                      })
+                    }
+                    className={`mt-3 min-h-[44px] w-full rounded-xl border border-white/10 bg-white/[0.03] text-[13px] font-semibold ${meta.text} sm:hidden`}
+                  >
+                    {isOpen
+                      ? tr ? "Daha az göster" : "Show less"
+                      : tr ? `Tümünü göster (${items.length})` : `Show all (${items.length})`}
+                  </button>
+                )}
               </div>
             );
           })}
