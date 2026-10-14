@@ -80,6 +80,16 @@ export async function callClaude(
   if (!env.ANTHROPIC_API_KEY) {
     throw new Error("AI not configured");
   }
+  const model = opts?.model ?? env.AI_MODEL;
+  // Haiku 5.x varsayılan olarak "düşünür" ve düşünme jetonları çıktı olarak faturalanır;
+  // ölçümde 1500 jetonluk sınırın TAMAMI düşünmeye gitti, metin hiç dönmedi. Özet/veri çıkarma
+  // gibi işlerde düşünme gerekmez → kapalı + düşük efor (hem ucuz hem metin garantili).
+  const isHaiku5 = /^claude-haiku-5/.test(model);
+  const modelExtras = isHaiku5
+    ? { thinking: { type: "disabled" }, output_config: { effort: opts?.effort ?? "low" } }
+    : opts?.effort
+      ? { output_config: { effort: opts.effort } }
+      : {};
   // Zaman aşımı ŞART: karşı taraf yanıt vermezse istek süresiz asılı kalır ve
   // sunucu işçisini bloklar. 90 sn sonra istek iptal edilir.
   let res: Response;
@@ -92,11 +102,11 @@ export async function callClaude(
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: opts?.model ?? env.AI_MODEL,
+        model,
         max_tokens: maxTokens,
         system,
         messages,
-        ...(opts?.effort ? { output_config: { effort: opts.effort } } : {}),
+        ...modelExtras,
       }),
       signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
     });
