@@ -1860,7 +1860,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               <button
                 type="button"
                 title={effectiveLang === "tr" ? "Sola döndür" : "Rotate left"}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-cyan-400/45 hover:bg-slate-900/90 hover:text-cyan-200"
+                className="flex h-9 w-9 items-center sm:h-7 sm:w-7 justify-center rounded-md border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-cyan-400/45 hover:bg-slate-900/90 hover:text-cyan-200"
                 onClick={(e) => { e.stopPropagation(); handleRotatePage(page1, -90); }}
               >
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden strokeWidth={2.2} />
@@ -1868,7 +1868,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               <button
                 type="button"
                 title={effectiveLang === "tr" ? "Sağa döndür" : "Rotate right"}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-cyan-400/45 hover:bg-slate-900/90 hover:text-cyan-200"
+                className="flex h-9 w-9 items-center sm:h-7 sm:w-7 justify-center rounded-md border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-cyan-400/45 hover:bg-slate-900/90 hover:text-cyan-200"
                 onClick={(e) => { e.stopPropagation(); handleRotatePage(page1, 90); }}
               >
                 <RotateCw className="h-3.5 w-3.5" aria-hidden strokeWidth={2.2} />
@@ -2082,7 +2082,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                                 <button
                                   type="button"
                                   disabled={flat === 0}
-                                  className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-slate-950/80 text-slate-300 shadow-sm transition-colors hover:bg-blue-600/80 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                                  className="flex h-8 w-8 items-center sm:h-5 sm:w-5 justify-center rounded border border-white/10 bg-slate-950/80 text-slate-300 shadow-sm transition-colors hover:bg-blue-600/80 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
                                   onMouseDown={(e) => e.stopPropagation()}
                                   onClick={(e) => { e.stopPropagation(); applyOrganizeDrop(flat, flat - 1); }}
                                   title={language === "tr" ? "Sola taşı" : "Move left"}
@@ -2092,7 +2092,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                                 <button
                                   type="button"
                                   disabled={flat === totalCards - 1}
-                                  className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-slate-950/80 text-slate-300 shadow-sm transition-colors hover:bg-blue-600/80 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                                  className="flex h-8 w-8 items-center sm:h-5 sm:w-5 justify-center rounded border border-white/10 bg-slate-950/80 text-slate-300 shadow-sm transition-colors hover:bg-blue-600/80 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
                                   onMouseDown={(e) => e.stopPropagation()}
                                   onClick={(e) => { e.stopPropagation(); applyOrganizeDrop(flat, flat + 1); }}
                                   title={language === "tr" ? "Sağa taşı" : "Move right"}

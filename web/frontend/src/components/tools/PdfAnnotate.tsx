@@ -309,7 +309,9 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
         const page = await doc.getPage(current + 1);
         const base = page.getViewport({ scale: 1 });
         const container = overlayRef.current?.parentElement?.parentElement;
-        const availW = Math.min((container?.clientWidth ?? 700) - 24, 900);
+        const cs = container ? getComputedStyle(container) : null;
+        const padX = cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 0;
+        const availW = Math.min((container?.clientWidth ?? 700) - padX - 4, 900);
         const fit = Math.max(0.4, availW / base.width);
         const s = fit * zoom;
         const vp = page.getViewport({ scale: s });
@@ -823,7 +825,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                   type="button"
                   disabled={busy || annos.length === 0}
                   onClick={() => void apply()}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                   {tr ? "Uygula ve İndir" : "Apply & download"}
@@ -837,9 +839,9 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
             {error && <div className="border-b border-red-500/20 bg-red-500/[0.08] px-4 py-2 text-[13px] text-red-300">{error}</div>}
 
             {showHelp && (
-              <div className="flex items-start gap-3 border-b border-white/[0.06] bg-cyan-500/[0.06] px-4 py-2 text-[12px] leading-relaxed text-slate-300">
-                <span className="shrink-0 pt-0.5 font-bold text-cyan-200">{tr ? "Nasıl kullanılır?" : "How to use?"}</span>
-                <span className="min-w-0 flex-1">
+              <div className="flex items-start gap-2 border-b border-white/[0.06] bg-cyan-500/[0.06] px-3 py-1.5 text-[12px] leading-relaxed text-slate-300 sm:gap-3 sm:px-4 sm:py-2">
+                <span className="hidden shrink-0 pt-0.5 font-bold text-cyan-200 sm:inline">{tr ? "Nasıl kullanılır?" : "How to use?"}</span>
+                <span className="line-clamp-2 min-w-0 flex-1 sm:line-clamp-none">
                   {tr
                     ? "Bir araç seç → sayfada sürükleyerek çiz. Fosforlu/Kalem'de «Düz/Serbest» ve kalınlık seçebilirsin. «Seç» aracıyla bir nesneye tıkla: sürükleyip taşı, köşeden boyutlandır, renk/kalınlığını değiştir. Kısayollar: Ctrl+Z geri, Ctrl+Y ileri, Ctrl+C/V kopyala-yapıştır, Del sil."
                     : "Pick a tool → drag on the page to draw. Marker/Pen offer «Straight/Free» and thickness. With «Select», click an item: drag to move, resize from the corner, change color/thickness. Shortcuts: Ctrl+Z undo, Ctrl+Y redo, Ctrl+C/V copy-paste, Del delete."}
@@ -852,7 +854,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
 
             <div className="flex min-h-0 flex-1">
               {/* Sol: thumbnail'ler */}
-              <div className="w-24 shrink-0 overflow-y-auto border-r border-white/[0.08] bg-black/20 p-2 sm:w-28">
+              <div className="w-16 shrink-0 overflow-y-auto border-r border-white/[0.08] bg-black/20 p-1 sm:w-28 sm:p-2">
                 {Array.from({ length: pageCount }).map((_, i) => {
                   const has = annos.some((a) => a.page === i);
                   return (
@@ -874,7 +876,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
               </div>
 
               {/* Sağ: yorumlama alanı */}
-              <div className="min-w-0 flex-1 overflow-auto p-4 sm:p-6">
+              <div className="min-w-0 flex-1 overflow-auto p-2 sm:p-6">
                 <div className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
                   <canvas ref={canvasRef} className="block rounded-lg" />
                   {rendering && (
