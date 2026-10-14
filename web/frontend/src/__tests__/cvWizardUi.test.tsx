@@ -136,3 +136,22 @@ describe("özel bölüm görünümleri", () => {
     }
   });
 });
+
+describe("yeni mezun akışı", () => {
+  it("yeni mezun seçilince eğitimden sonra 'Projeler' adımı gelir", () => {
+    render(<Harness initial={normalizeCv(EMPTY_CV)} />);
+    expect(screen.getByText(/Adım 1 \/ 7/)).toBeTruthy();
+    fireEvent.click(screen.getByLabelText(/Yeni mezunum/));
+    expect(screen.getByText(/Adım 1 \/ 8/)).toBeTruthy();
+    fireEvent.click(screen.getByText("Satış / Satış Danışmanı"));
+    const next = () => fireEvent.click(screen.getByText("Devam"));
+    next();
+    fireEvent.change(screen.getByLabelText("Ad soyad"), { target: { value: "Test Kişi" } });
+    next(); // work
+    next(); // edu
+    next(); // projects
+    expect(screen.getByText("Hangi projelerde yer aldınız?")).toBeTruthy();
+    fireEvent.click(screen.getByText("Proje ekle"));
+    expect(screen.getByLabelText("Proje adı")).toBeTruthy();
+  });
+});
