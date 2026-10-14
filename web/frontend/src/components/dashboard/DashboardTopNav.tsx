@@ -10,6 +10,7 @@ import { ws } from "../../i18n/workspace";
 import { Coins, ChevronDown, Download, Sparkles, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { UserMenu } from "./UserMenu";
+import { DailyPoolChip, type DailyPool } from "./DailyPoolChip";
 import { TopUpModal } from "../tools/TopUpModal";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 import rawFlags from "react-phone-number-input/flags";
@@ -158,6 +159,8 @@ type DashboardTopNavProps = {
   /** Remaining ops / credit balance for the chip. */
   creditBalance?: number | null;
   creditBalanceLoading?: boolean;
+  /** Günlük hak havuzu (sunucuda işlenen araçların ortak sayacı) — limit yoksa rozet çizilmez. */
+  dailyPool?: DailyPool | null;
   hasActiveSubscription?: boolean;
   /** Limitsiz Pro (active PRO subscription) — infinity UI, hide upgrade, special copy. */
   limitsizProActive?: boolean;
@@ -182,6 +185,7 @@ export function DashboardTopNav({
   accessToken,
   creditBalance,
   creditBalanceLoading,
+  dailyPool,
   hasActiveSubscription,
   limitsizProActive,
   onLogoClick,
@@ -436,6 +440,10 @@ export function DashboardTopNav({
               </button>
             ) : null}
           </>
+        ) : null}
+
+        {!isTeamMember && user.role !== "ADMIN" ? (
+          <DailyPoolChip language={language} daily={dailyPool} onUpgrade={upgradeVisible ? onUpgradeClick : undefined} />
         ) : null}
 
         <HeaderInstallButton tr={tr} />
