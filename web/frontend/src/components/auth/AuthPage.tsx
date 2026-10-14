@@ -406,12 +406,12 @@ export function AuthPage({
   const generalDisplayError = serverGeneralErr || urlAuthError;
 
   return (
-    <div className="relative isolate min-h-screen font-sans text-nb-text antialiased">
+    <div className="relative isolate min-h-dvh font-sans text-nb-text antialiased">
       {/* Karşılama ekranıyla aynı arka plan — pazarlama sayfasından ürüne geçerken
           görsel dil kopmasın. */}
       <HeroBackground className="absolute inset-0" />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-12 sm:px-8">
+      <main className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-5 py-12 sm:px-8">
         <div className="mx-auto grid w-full max-w-[980px] items-center gap-12 lg:grid-cols-[minmax(0,440px)_minmax(0,460px)] lg:items-start lg:justify-center lg:gap-16">
           {/* SOL — marka ve kazanım paneli (yalnızca geniş ekran).
               Form uzun olduğunda yanında kayıp gitmesin diye yapışkan ve

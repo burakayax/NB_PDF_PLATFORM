@@ -232,7 +232,7 @@ export function ToolScore({
             onFocus={() => setHover(n)}
             onBlur={() => setHover(0)}
             onClick={() => void vote(n)}
-            className="rounded p-0.5 transition disabled:opacity-50"
+            className="-mx-0.5 rounded p-2.5 transition disabled:opacity-50 sm:mx-0 sm:p-0.5"
           >
             <Star
               className={`h-4 w-4 transition ${

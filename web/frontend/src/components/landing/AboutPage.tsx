@@ -59,7 +59,7 @@ export function AboutPage({ language, onClose }: { language: Language; onClose: 
   const t = tr ? copy.tr : copy.en;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-dvh bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Header */}
       <div className="relative overflow-hidden border-b border-white/5 bg-gradient-to-b from-white/10 to-transparent">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />

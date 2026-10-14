@@ -165,7 +165,7 @@ export function DashboardLayout({
   }, [mobileOpen]);
 
   return (
-    <div className="flex min-h-screen bg-nb-bg overflow-x-hidden">
+    <div className="flex min-h-dvh bg-nb-bg overflow-x-hidden">
       {/* Mobile & Tablet overlay - dark background behind drawer */}
       {mobileOpen && (
         <div
@@ -226,7 +226,7 @@ export function DashboardLayout({
       </div>
 
       {/* Main content — pt-14 for top nav, lg:pl-72 matches sidebar w-72, pb-20 on mobile for fixed button */}
-      <main className="flex min-h-screen w-full flex-col overflow-x-hidden pt-14 pb-20 sm:pb-0 lg:pl-72">
+      <main className="flex min-h-dvh w-full flex-col overflow-x-hidden pt-14 pb-20 sm:pb-0 lg:pl-72">
         {/* Mobile & Tablet hamburger bar - 56px height minimum */}
         <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] bg-nb-bg/95 px-3 backdrop-blur-md lg:hidden">
           <button

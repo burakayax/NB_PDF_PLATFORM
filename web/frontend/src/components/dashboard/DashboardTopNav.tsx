@@ -99,7 +99,7 @@ function LanguageDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="nb-transition inline-flex items-center gap-1 sm:gap-1.5 rounded-xl border border-white/[0.1] bg-nb-bg-soft/90 px-1.5 py-0.5 sm:px-2.5 sm:py-1.5 text-[9px] sm:text-xs font-semibold text-nb-text shadow-sm hover:border-white/[0.16] hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/40"
+        className="nb-transition inline-flex items-center gap-1 sm:gap-1.5 rounded-xl border border-white/[0.1] bg-nb-bg-soft/90 min-h-[40px] px-2.5 py-0.5 sm:min-h-0 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-nb-text shadow-sm hover:border-white/[0.16] hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/40"
       >
         <FlagGlyph country={current.country} title={current.label} />
         <span className="font-bold tracking-wide">
@@ -426,7 +426,7 @@ export function DashboardTopNav({
                 type="button"
                 data-tour="plan"
                 onClick={onUpgradeClick}
-                className="nb-transition inline-flex shrink-0 items-center gap-1 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 px-2 py-0.5 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[8px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
+                className="nb-transition inline-flex shrink-0 items-center gap-1 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 min-h-[40px] px-3 py-0.5 sm:min-h-0 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[11px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
               >
                 <Sparkles
                   className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5"

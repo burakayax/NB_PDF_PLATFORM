@@ -194,7 +194,7 @@ export function TeamInviteAcceptPage() {
 
   if (state === "loading_token" || state === "loading_preview") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#05080f]">
+      <div className="flex min-h-dvh items-center justify-center bg-[#05080f]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
       </div>
     );
@@ -322,7 +322,7 @@ function InvitePageWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#05080f] px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-[#05080f] px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-500/70">

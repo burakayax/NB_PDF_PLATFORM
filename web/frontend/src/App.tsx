@@ -6310,7 +6310,7 @@ function App() {
           language={language}
           selectedFeatureId={selectedFeatureId}
         />
-        <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
+        <div className="min-h-dvh bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
               PDF Platform
@@ -6338,7 +6338,7 @@ function App() {
   if (!user) {
     return (
       <>
-        <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
+        <div className="min-h-dvh bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-xl backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
               PDF Platform
@@ -6367,7 +6367,7 @@ function App() {
         setView("admin_login");
       }
       return (
-        <div className="flex min-h-screen items-center justify-center bg-nb-bg">
+        <div className="flex min-h-dvh items-center justify-center bg-nb-bg">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-nb-primary border-t-transparent" />
         </div>
       );
