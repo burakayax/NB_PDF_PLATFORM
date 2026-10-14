@@ -1019,9 +1019,10 @@ export async function signInWithGoogle(params: {
     lastName: derived.lastName,
   });
 
-  const existing = await prisma.user.findUnique({
-    where: { email },
-  });
+  // E-posta ile bulunamazsa googleId ile de ara: Google e-postası değişmiş olabilir.
+  const existing =
+    (await prisma.user.findUnique({ where: { email } })) ??
+    (await prisma.user.findUnique({ where: { googleId } }));
 
   if (existing) {
     if (existing.authProvider !== "google") {
@@ -1100,7 +1101,9 @@ export async function signInWithGoogle(params: {
     throw new GoogleTermsRequiredError();
   }
 
-  let persistedGoogleUser: User = await prisma.user.create({
+  let persistedGoogleUser: User;
+  try {
+    persistedGoogleUser = await prisma.user.create({
     data: {
       email,
       googleId,
@@ -1120,7 +1123,17 @@ export async function signInWithGoogle(params: {
       lastLoginAt: new Date(),
       legalAcceptances: { create: legalAcceptanceRows("google", params.consentContext) },
     },
-  });
+    });
+  } catch (error) {
+    // Çift tıklama / eşzamanlı istek: hesap az önce başka istek tarafından açıldı → giriş akışına dön.
+    if ((error as { code?: string })?.code === "P2002") {
+      const raced =
+        (await prisma.user.findUnique({ where: { email } })) ??
+        (await prisma.user.findUnique({ where: { googleId } }));
+      if (raced) return signInWithGoogle(params);
+    }
+    throw error;
+  }
 
   logger.info("auth",`${GOOGLE_OAUTH_LOG} user record created (new Google user)`, {
     userId: persistedGoogleUser.id,
