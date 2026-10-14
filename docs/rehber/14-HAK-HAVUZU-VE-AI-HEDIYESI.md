@@ -1,4 +1,4 @@
-# 12 — Günlük hak havuzu, yapay zekâ hediyesi ve model
+# 14 — Günlük hak havuzu, yapay zekâ hediyesi ve model
 
 Son güncelleme: 2026-10-14
 
