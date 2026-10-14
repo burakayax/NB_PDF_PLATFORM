@@ -463,7 +463,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                     </div>
                   )
                 ) : null}
-                {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
+                {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} tpl={tpl} /> : null}
                 {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
                 {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
               </div>

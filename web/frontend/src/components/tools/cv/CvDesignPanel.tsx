@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import type { CvData, CvDateFormat, CvDensity, CvFont, CvHeadingStyle, CvLang, CvPhotoShape, CvSettings, CvSize } from "./cvModel";
-import { FONT_CSS } from "./cvTemplates";
+import { FONT_CSS, type CvTemplate } from "./cvTemplates";
 import { ACCENTS } from "./CvForm";
 
-type Props = { data: CvData; onChange: (d: CvData) => void; disabled: boolean; tr: boolean };
+type Props = { data: CvData; onChange: (d: CvData) => void; disabled: boolean; tr: boolean; tpl: CvTemplate };
 
 function Group({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
@@ -27,21 +27,26 @@ function Seg<T extends string>({ value, options, onPick, label }: { value: T; op
   );
 }
 
-export function CvDesignPanel({ data, onChange, disabled, tr }: Props) {
+export function CvDesignPanel({ data, onChange, disabled, tr, tpl }: Props) {
   const st = data.settings;
   const set = <K extends keyof CvSettings>(k: K, v: CvSettings[K]) => onChange({ ...data, settings: { ...st, [k]: v } });
-  const fontOpts: { v: CvFont | "tpl"; label: string; family?: string }[] = [
-    { v: "tpl", label: tr ? "Şablonun yazı tipi" : "Template font" },
+  const th = tpl.theme;
+  /** Seçili değer: kullanıcı seçmediyse şablonun kendi değeri. Şablonun kendi değerine dönmek "varsayılan"a döner (şablon değişince uyum sürer). */
+  const pick = <K extends "font" | "headingStyle" | "photoShape">(k: K, v: NonNullable<CvSettings[K]>, own: unknown) => set(k, (v === own ? null : v) as CvSettings[K]);
+  const fontOpts: { v: CvFont; label: string; family: string }[] = [
     { v: "carlito", label: "Carlito", family: FONT_CSS.carlito },
     { v: "arial", label: "Arial", family: FONT_CSS.arial },
     { v: "caladea", label: "Cambria", family: FONT_CSS.caladea },
     { v: "gelasio", label: "Georgia", family: FONT_CSS.gelasio },
     { v: "times", label: "Times", family: FONT_CSS.times },
   ];
+  const tplAccent = th.accent;
+  const swatches = ACCENTS.some((c) => c.toLowerCase() === tplAccent.toLowerCase()) ? ACCENTS : [tplAccent, ...ACCENTS];
+  const activeAccent = (st.accent ?? tplAccent).toLowerCase();
   return (
     <fieldset disabled={disabled} className="min-w-0 space-y-3 border-0 p-0">
       <Group title={tr ? "Yazı tipi" : "Typeface"} hint={tr ? "Seçtiğiniz yazı tipi PDF'e gömülür; Türkçe karakterlerin hepsi desteklenir." : "The chosen typeface is embedded in the PDF with full Turkish character support."}>
-        <Seg label={tr ? "Yazı tipi" : "Typeface"} value={(st.font ?? "tpl") as CvFont | "tpl"} onPick={(v) => set("font", v === "tpl" ? null : v)} options={fontOpts.map((o) => ({ v: o.v, label: o.label, style: o.family ? { fontFamily: `'${o.family}'` } : undefined }))} />
+        <Seg<CvFont> label={tr ? "Yazı tipi" : "Typeface"} value={st.font ?? th.font} onPick={(v) => pick("font", v, th.font)} options={fontOpts.map((o) => ({ v: o.v, label: o.label, style: { fontFamily: `'${o.family}'` } }))} />
       </Group>
 
       <Group title={tr ? "Boyut ve yoğunluk" : "Size & density"}>
@@ -66,25 +71,24 @@ export function CvDesignPanel({ data, onChange, disabled, tr }: Props) {
 
       <Group title={tr ? "Renk" : "Colour"}>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" aria-label={tr ? "Şablonun kendi rengi" : "Template colour"} onClick={() => set("accent", null)} className={`flex h-8 items-center rounded-full px-3 text-[11px] font-semibold ${st.accent === null ? "bg-sky-500 text-white" : "bg-white/[0.08] text-slate-300"}`}>{tr ? "Şablonun rengi" : "Default"}</button>
-          {ACCENTS.map((c) => (
-            <button key={c} type="button" aria-label={c} onClick={() => set("accent", c)} className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ${st.accent === c ? "ring-sky-300" : "ring-transparent"}`} style={{ background: c }} />
+          {swatches.map((c) => (
+            <button key={c} type="button" aria-label={c} aria-pressed={activeAccent === c.toLowerCase()} onClick={() => set("accent", c.toLowerCase() === tplAccent.toLowerCase() ? null : c)} className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ${activeAccent === c.toLowerCase() ? "ring-sky-300" : "ring-transparent"}`} style={{ background: c }} />
           ))}
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/[0.08] px-3 py-1 text-[11px] font-semibold text-slate-300">
             {tr ? "Özel" : "Custom"}
-            <input type="color" value={st.accent ?? "#1d4ed8"} onChange={(e) => set("accent", e.target.value)} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0" />
+            <input type="color" value={st.accent ?? tplAccent} onChange={(e) => set("accent", e.target.value)} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0" />
           </label>
         </div>
       </Group>
 
       <Group title={tr ? "Başlık biçimi" : "Heading style"}>
-        <Seg<CvHeadingStyle | "tpl"> label={tr ? "Başlık biçimi" : "Heading style"} value={st.headingStyle ?? "tpl"} onPick={(v) => set("headingStyle", v === "tpl" ? null : v)}
-          options={[{ v: "tpl", label: tr ? "Şablonun" : "Template" }, { v: "rule", label: tr ? "Alt çizgi" : "Underline" }, { v: "bar", label: tr ? "Sol çizgi" : "Side bar" }, { v: "caps", label: tr ? "İnce çizgi" : "Fine rule" }, { v: "dot", label: tr ? "Kare işaret" : "Marker" }, { v: "boxed", label: tr ? "Kutulu" : "Boxed" }]} />
+        <Seg<CvHeadingStyle> label={tr ? "Başlık biçimi" : "Heading style"} value={st.headingStyle ?? th.heading} onPick={(v) => pick("headingStyle", v, th.heading)}
+          options={[{ v: "rule", label: tr ? "Alt çizgi" : "Underline" }, { v: "bar", label: tr ? "Sol çizgi" : "Side bar" }, { v: "caps", label: tr ? "İnce çizgi" : "Fine rule" }, { v: "dot", label: tr ? "Kare işaret" : "Marker" }, { v: "boxed", label: tr ? "Kutulu" : "Boxed" }, { v: "plain", label: tr ? "Yalın" : "Plain" }, { v: "spaced", label: tr ? "Çizgili yalın" : "Light rule" }]} />
       </Group>
 
       <Group title={tr ? "Fotoğraf biçimi" : "Photo shape"}>
-        <Seg<CvPhotoShape | "tpl"> label={tr ? "Fotoğraf biçimi" : "Photo shape"} value={st.photoShape ?? "tpl"} onPick={(v) => set("photoShape", v === "tpl" ? null : v)}
-          options={[{ v: "tpl", label: tr ? "Şablonun" : "Template" }, { v: "circle", label: tr ? "Yuvarlak" : "Round" }, { v: "rounded", label: tr ? "Yumuşak köşe" : "Rounded" }, { v: "rect", label: tr ? "Dikdörtgen" : "Rectangle" }]} />
+        <Seg<CvPhotoShape> label={tr ? "Fotoğraf biçimi" : "Photo shape"} value={st.photoShape ?? th.photo.shape} onPick={(v) => pick("photoShape", v, th.photo.shape)}
+          options={[{ v: "circle", label: tr ? "Yuvarlak" : "Round" }, { v: "rounded", label: tr ? "Yumuşak köşe" : "Rounded" }, { v: "rect", label: tr ? "Dikdörtgen" : "Rectangle" }]} />
       </Group>
 
       <Group title={tr ? "Dil ve tarih" : "Language & dates"}>
