@@ -1,15 +1,21 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, LayoutTemplate, Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
+import { ChevronDown, ClipboardList, LayoutTemplate, Link2, Linkedin, ListRestart, Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
 import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
 import { CvForm } from "./CvForm";
+import { CvWizard } from "./CvWizard";
+import { CvLiveScore } from "./CvLiveScore";
+import { CvImportModal } from "./CvImportModal";
+import { CvFormCopy } from "./CvFormCopy";
+import { decodeCvLink, encodeCvLink, hasCvLink } from "./cvShare";
+import { isSingleColumnLayout } from "./cvAnalysis";
 import { CvDesignPanel } from "./CvDesignPanel";
 import { CvAnalysisPanel } from "./CvAnalysisPanel";
 import { CvAiPanel } from "./CvAiPanel";
 import { CvPassModal, remainingLabel } from "./CvPassModal";
 import { buildCvDocx, cvToText } from "./cvExport";
-import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv } from "./cvModel";
+import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv, type CvData } from "./cvModel";
 import { buildCvPdf, measureFit, paginate } from "./cvPdf";
 import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
 import { MAX_CVS, useCvStore } from "./useCvStore";
@@ -72,6 +78,19 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
   const [tplOpen, setTplOpen] = useState(false);
   const [cvMenuOpen, setCvMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [tplFilter, setTplFilter] = useState<"all" | "free" | "ats" | "side" | "classic">("all");
+  const [importOpen, setImportOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [incoming, setIncoming] = useState<CvData | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [formMode, setFormMode] = useState<"wizard" | "full">(() => {
+    try { const v = localStorage.getItem("cv-form-mode"); if (v === "wizard" || v === "full") return v; } catch { /* kapalı */ }
+    return isCvEmpty(data) ? "wizard" : "full";
+  });
+  const pickFormMode = (m: "wizard" | "full") => {
+    setFormMode(m);
+    try { localStorage.setItem("cv-form-mode", m); } catch { /* kapalı */ }
+  };
   const [ad, setAd] = useState("");
   const [busy, setBusy] = useState<null | "pdf" | "blank">(null);
   const [error, setError] = useState<string | null>(null);
@@ -184,6 +203,25 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
     }
   }
 
+  // Bağlantıyla paylaşılan CV geldiyse (adresin # kısmı) kullanıcıya sor
+  useEffect(() => {
+    if (!signedIn || !hasCvLink(window.location.hash)) return;
+    void decodeCvLink(window.location.hash).then((d) => d && setIncoming(d));
+  }, [signedIn]);
+  const clearHash = () => window.history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  async function shareLink() {
+    setError(null); setDone(null);
+    try {
+      const { url, length } = await encodeCvLink(data, window.location.origin, window.location.pathname);
+      if (length > 7500) { setError(tr ? "CV'niz bağlantıya sığmayacak kadar uzun. Birkaç maddeyi kısaltın ya da PDF olarak paylaşın." : "Your CV is too long to fit in a link. Shorten a few bullets or share the PDF instead."); return; }
+      try { await navigator.clipboard.writeText(url); } catch { window.prompt(tr ? "Bağlantıyı kopyalayın:" : "Copy the link:", url); }
+      setDone(tr ? "Bağlantı kopyalandı. Bilgiler adresin içinde taşınır, sunucumuza gitmez; bağlantıyı alan kişi CV'nin kendi kopyasını açar. Fotoğraf bağlantıya eklenmez." : "Link copied. Your details travel inside the address and never reach our server; whoever opens it gets their own copy of the CV. The photo isn't included.");
+    } catch {
+      setError(tr ? "Bağlantı oluşturulamadı." : "Couldn't create the link.");
+    }
+  }
+
   const emptyCv = isCvEmpty(data);
   const fillSample = () => setData({ ...sampleCv(data.settings.lang), photo: data.photo, showPhoto: data.showPhoto, settings: data.settings });
   const clearAll = () => {
@@ -235,15 +273,28 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
           {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="hidden rounded-full bg-sky-500/15 px-3 py-1 text-[12px] font-semibold text-sky-200 sm:inline">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : null}
           <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-[12.5px] font-semibold text-white">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonu değiştir" : "Change template")}<ChevronDown className={`h-4 w-4 transition ${tplOpen ? "rotate-180" : ""}`} /></span>
         </button>
+        {locked ? (
+          <div className="flex flex-wrap items-center gap-2.5 border-t border-amber-300/20 bg-gradient-to-r from-amber-400/[0.12] to-transparent px-4 py-3">
+            <Lock className="h-4 w-4 shrink-0 text-amber-300" />
+            <p className="min-w-0 flex-1 text-[12.5px] text-amber-50"><b>{tr ? "Bu şablon Pro üyelere özel." : "This template is for Pro members."}</b> {tr ? "Önizleme örnek içerikle gösteriliyor." : "The preview shows sample content."}</p>
+            <button type="button" onClick={onUpgrade} className="rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 py-2 text-[12.5px] font-bold text-slate-900 hover:brightness-105">{tr ? "Pro üye ol" : "Go Pro"}</button>
+            <button type="button" onClick={() => setPassOpen(true)} className="rounded-lg bg-sky-500/20 px-3.5 py-2 text-[12.5px] font-bold text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30">{tr ? "CV Geçişi" : "CV pass"}</button>
+          </div>
+        ) : null}
         {tplOpen ? (
           <div className="border-t border-white/10 px-4 pb-4 pt-3">
-            {!paid ? <p className="mb-3 text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</p> : null}
+            {!paid ? <p className="mb-2 text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</p> : null}
+            <div role="group" aria-label={tr ? "Şablon filtresi" : "Template filter"} className="mb-3 flex flex-wrap gap-1.5">
+              {([["all", tr ? "Tümü" : "All"], ["free", tr ? "Ücretsiz" : "Free"], ["ats", tr ? "ATS dostu (tek sütun)" : "ATS-friendly (single column)"], ["side", tr ? "Yan sütunlu" : "Sidebar"], ["classic", tr ? "Klasik (serif)" : "Classic (serif)"]] as const).map(([k, label]) => (
+                <button key={k} type="button" aria-pressed={tplFilter === k} onClick={() => setTplFilter(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${tplFilter === k ? "bg-sky-500 text-white" : "bg-white/[0.06] text-slate-300 hover:bg-white/10 hover:text-white"}`}>{label}</button>
+              ))}
+            </div>
             <div role="radiogroup" aria-label={tr ? "CV şablonu" : "CV template"} className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]">
-              {CV_TEMPLATES.map((t) => {
+              {CV_TEMPLATES.filter((t) => tplFilter === "all" || (tplFilter === "free" && t.free) || (tplFilter === "ats" && isSingleColumnLayout(t.layout)) || (tplFilter === "side" && t.layout === "sidebar") || (tplFilter === "classic" && ["caladea", "gelasio", "times"].includes(t.theme.font))).map((t) => {
                 const on = t.id === templateId;
                 const lockedT = !t.free && !paid;
                 return (
-                  <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); setTplOpen(false); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
+                  <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); setTplOpen(false); window.setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
                     <div className={`overflow-hidden rounded-lg ${lockedT ? "opacity-60" : ""}`}><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
                     {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />PRO</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">PRO</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
                     <div className="mt-1.5 truncate px-0.5 text-[12px] font-semibold text-white">{tr ? t.tr : t.en}</div>
@@ -266,6 +317,14 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
         </div>
       ) : (
         <>
+          {incoming ? (
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-sky-400/30 bg-gradient-to-r from-sky-500/[0.12] to-indigo-500/[0.06] p-4">
+              <Link2 className="h-5 w-5 shrink-0 text-sky-300" />
+              <p className="min-w-0 flex-1 text-[13px] text-sky-50"><b>{incoming.name || (tr ? "Paylaşılan bir CV" : "A shared CV")}</b> {tr ? "bağlantıyla paylaşıldı. Kendi kopyanız olarak açılsın mı?" : "was shared by link. Open it as your own copy?"}</p>
+              <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => { store.add({ data: incoming, name: incoming.name || (tr ? "Paylaşılan CV" : "Shared CV") }); setIncoming(null); clearHash(); }} className="rounded-xl bg-sky-500 px-4 py-2 text-[13px] font-bold text-white hover:bg-sky-400 disabled:opacity-40">{tr ? "Kopya olarak aç" : "Open as copy"}</button>
+              <button type="button" onClick={() => { setIncoming(null); clearHash(); }} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Vazgeç" : "Dismiss"}</button>
+            </div>
+          ) : null}
           {/* Mobil sekmeler */}
           <div className="mb-3 flex gap-2 lg:hidden" role="tablist">
             {([["edit", tr ? "Bilgilerim" : "My details", PencilLine], ["preview", tr ? "Önizleme" : "Preview", Eye]] as const).map(([k, label, Ico]) => (
@@ -275,7 +334,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] xl:grid-cols-[minmax(0,1fr)_520px]">
             {/* SOL: canlı önizleme */}
-            <div className={`${tab === "preview" ? "block" : "hidden"} min-w-0 lg:block`}>
+            <div ref={previewRef} className={`${tab === "preview" ? "block" : "hidden"} min-w-0 scroll-mt-3 lg:block`}>
               <div className="lg:sticky lg:top-3">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="inline-flex rounded-xl bg-white/[0.06] p-1" role="tablist" aria-label={tr ? "Önizleme türü" : "Preview type"}>
@@ -332,12 +391,15 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                   {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}
                 </button>
                 <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 text-[12.5px] font-semibold text-slate-300 hover:text-white">
-                  {tr ? "Diğer seçenekler (Word, düz metin, örnek, temizle)" : "More options (Word, text, sample, clear)"}<ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />
+                  {tr ? "Diğer seçenekler (Word, paylaş, aktar, forma kopyala…)" : "More options (Word, share, import, copy to form…)"}<ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />
                 </button>
                 {moreOpen ? (
                   <div className="mt-2 grid gap-2 sm:grid-cols-2">
                     <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileText className="h-4 w-4" />{tr ? "Word (.docx)" : "Word (.docx)"}</button>
                     <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileType2 className="h-4 w-4" />{tr ? "Düz metin (.txt)" : "Plain text (.txt)"}</button>
+                    <button type="button" disabled={locked} onClick={() => setCopyOpen(true)} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><ClipboardList className="h-4 w-4" />{tr ? "Başvuru formuna kopyala" : "Copy to application form"}</button>
+                    <button type="button" disabled={locked} onClick={() => void shareLink()} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Link2 className="h-4 w-4" />{tr ? "Bağlantıyla paylaş" : "Share by link"}</button>
+                    <button type="button" disabled={locked} onClick={() => setImportOpen(true)} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Linkedin className="h-4 w-4" />{tr ? "LinkedIn / eski CV'den aktar" : "Import LinkedIn / old CV"}</button>
                     <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("blank")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40">
                       {busy === "blank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{tr ? "Boş şablon (PDF)" : "Blank template (PDF)"}
                     </button>
@@ -352,6 +414,8 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
               </div>
 
+              <CvLiveScore data={shownData} tr={tr} onDetails={() => setRightTab("analysis")} />
+
               <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1">
                 {([["content", tr ? "Bilgilerim" : "My details", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch], ["ai", tr ? "Yapay Zekâ" : "AI", Sparkles]] as const).map(([k, label, Ico]) => (
                   <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-1 py-2.5 text-[12.5px] font-semibold transition ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="hidden h-4 w-4 sm:block" />{label}</button>
@@ -364,7 +428,16 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                     <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Pro şablon — alanlar kilitli" : "Pro template — fields locked"}</p>
                   </div>
                 ) : null}
-                {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} /> : null}
+                {rightTab === "content" ? (
+                  formMode === "wizard" ? (
+                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => setImportOpen(true)} onOpenDesign={() => setRightTab("design")} />
+                  ) : (
+                    <div className="space-y-3">
+                      <button type="button" onClick={() => pickFormMode("wizard")} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500/20 to-indigo-500/20 px-3.5 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:from-sky-500/30"><ListRestart className="h-4 w-4" />{tr ? "Adım adım sihirbaza dön" : "Back to the step-by-step guide"}</button>
+                      <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} />
+                    </div>
+                  )
+                ) : null}
                 {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
                 {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
                 {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
@@ -406,6 +479,8 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
           </div>
         </>
       )}
+      {importOpen ? <CvImportModal tr={tr} base={data} canAdd={store.cvs.length < MAX_CVS} onNew={(d, name) => store.add({ data: d, name })} onReplace={(d) => setData(d)} onClose={() => setImportOpen(false)} /> : null}
+      {copyOpen ? <CvFormCopy data={data} tr={tr} onClose={() => setCopyOpen(false)} /> : null}
       {passOpen ? <CvPassModal language={language} accessToken={accessToken} onClose={() => setPassOpen(false)} onUpgrade={onUpgrade} /> : null}
     </div>
   );
