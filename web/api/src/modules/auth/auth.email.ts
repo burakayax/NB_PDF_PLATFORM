@@ -1,6 +1,5 @@
-import { renderCorporateEmail, ctaButton, detailTable } from "../../lib/email-layout.js";
+import { renderCorporateEmail, ctaButton, detailTable, calloutBox, para, sectionTitle, EMAIL_COLORS } from "../../lib/email-layout.js";
 import { escapeHtml } from "../../lib/email-html.js";
-import { renderBrandedVerificationEmailHtml } from "./verification-email-branded.js";
 import { emailT, type Locale } from "../../lib/email-i18n.js";
 
 type VerificationEmailTemplateInput = {
@@ -14,6 +13,18 @@ type AdminNotificationEmailTemplateInput = {
   userEmail: string;
   registeredAt: string;
   productName: string;
+  fullName?: string | null;
+  authProvider?: string | null;
+  verified?: boolean;
+  country?: string | null;
+  city?: string | null;
+  phone?: string | null;
+  language?: string | null;
+  marketingConsent?: boolean;
+  totalUsers?: number;
+  todayUsers?: number;
+  /** Verilirse "Yönetim panelinde aç" düğmesi eklenir. */
+  adminUrl?: string;
 };
 
 export function createVerificationEmailTemplate({
@@ -24,7 +35,33 @@ export function createVerificationEmailTemplate({
 }: VerificationEmailTemplateInput) {
   const t = emailT[locale];
   const safeProduct = escapeHtml(productName);
-  const html = renderBrandedVerificationEmailHtml(verificationUrl, locale);
+  const href = escapeHtml(verificationUrl);
+  const tr = locale === "tr";
+  const c = EMAIL_COLORS;
+
+  const html = renderCorporateEmail({
+    eyebrow: tr ? "Hesap güvenliği" : "Account security",
+    title: t.verify_title,
+    intro: t.verify_body,
+    bodyHtml: `
+      ${ctaButton(href, t.verify_cta)}
+      ${para(
+        tr
+          ? `Bu bağlantı güvenlik nedeniyle <strong>${expiresInHours} saat</strong> boyunca geçerlidir.`
+          : `For security reasons this link is valid for <strong>${expiresInHours} hours</strong>.`,
+      )}
+      ${sectionTitle(t.verify_fallback)}
+      <div style="padding:12px 14px;border:1px solid ${c.line};border-radius:8px;background:${c.soft};font-size:12px;line-height:1.6;color:${c.muted};word-break:break-all;">
+        <a href="${href}" style="color:${c.brand};text-decoration:none;">${href}</a>
+      </div>
+      <p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:${c.faint};">${t.verify_footer_note}</p>
+    `,
+    footerText: tr
+      ? "Bu e-postayı PDF PLATFORM hesabı oluşturulurken bu adres girildiği için aldınız."
+      : "You received this email because this address was used to create a PDF PLATFORM account.",
+    productName: safeProduct,
+    preheader: tr ? "Hesabınızı etkinleştirmek için e-posta adresinizi doğrulayın." : "Verify your email address to activate your account.",
+  });
 
   const text = [
     t.verify_subject,
@@ -35,44 +72,109 @@ export function createVerificationEmailTemplate({
     "",
     verificationUrl,
     "",
-    locale === "tr"
-      ? `Bu bağlantı ${expiresInHours} saat içinde sona erer.`
-      : `This link expires in ${expiresInHours} hours.`,
+    tr ? `Bu bağlantı ${expiresInHours} saat içinde sona erer.` : `This link expires in ${expiresInHours} hours.`,
     "",
     t.verify_footer_note,
-    `${safeProduct} © 2026`,
+    `${productName} © ${new Date().getFullYear()}`,
   ].join("\n");
 
   return { subject: t.verify_subject, html, text };
+}
+
+/** Yönetici bildiriminde gösterilecek tarih: Türkiye saatiyle okunur biçimde. */
+function formatIstanbul(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function createAdminNotificationEmailTemplate({
   userEmail,
   registeredAt,
   productName,
+  fullName,
+  authProvider,
+  verified,
+  country,
+  city,
+  phone,
+  language,
+  marketingConsent,
+  totalUsers,
+  todayUsers,
+  adminUrl,
 }: AdminNotificationEmailTemplateInput) {
-  const subject = `🎉 Yeni kayıt — ${productName}`;
   const safeEmail = escapeHtml(userEmail);
-  const safeDate = escapeHtml(registeredAt);
   const safeProduct = escapeHtml(productName);
+  const displayName = (fullName ?? "").trim();
+  const subject = displayName
+    ? `Yeni üye: ${displayName} (${userEmail})`
+    : `Yeni üye kaydı — ${userEmail}`;
+  const via = authProvider === "google" ? "Google hesabı" : "E-posta ve şifre";
+  const place = [city, country].map((x) => (x ?? "").trim()).filter(Boolean).join(", ");
+  const c = EMAIL_COLORS;
+
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "Ad Soyad", value: displayName ? escapeHtml(displayName) : "—" },
+    { label: "E-posta", value: safeEmail },
+    { label: "Kayıt yöntemi", value: via },
+    {
+      label: "Durum",
+      value: verified
+        ? `<span style="color:${c.ok};font-weight:700;">E-posta doğrulandı</span>`
+        : `<span style="color:#b45309;font-weight:700;">E-posta doğrulaması bekleniyor</span>`,
+    },
+    { label: "Kayıt zamanı", value: escapeHtml(formatIstanbul(registeredAt)) },
+  ];
+  if (place) rows.push({ label: "Konum", value: escapeHtml(place) });
+  if (phone && phone.trim()) rows.push({ label: "Telefon", value: escapeHtml(phone.trim()) });
+  if (language) rows.push({ label: "Dil", value: language === "tr" ? "Türkçe" : "İngilizce" });
+  rows.push({ label: "Pazarlama izni", value: marketingConsent ? "Verdi" : "Vermedi" });
+
+  const stats =
+    typeof totalUsers === "number"
+      ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 18px;border-collapse:separate;">
+           <tr>
+             <td style="width:50%;padding:14px 16px;border:1px solid ${c.line};border-radius:10px 0 0 10px;background:#ffffff;">
+               <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${c.muted};">Toplam üye</div>
+               <div style="margin-top:4px;font-size:26px;font-weight:700;color:${c.ink};">${totalUsers}</div>
+             </td>
+             <td style="width:50%;padding:14px 16px;border:1px solid ${c.line};border-left:0;border-radius:0 10px 10px 0;background:#ffffff;">
+               <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${c.muted};">Bugünkü kayıt</div>
+               <div style="margin-top:4px;font-size:26px;font-weight:700;color:${c.ink};">${typeof todayUsers === "number" ? todayUsers : "—"}</div>
+             </td>
+           </tr>
+         </table>`
+      : "";
 
   const html = renderCorporateEmail({
-    eyebrow: "Yönetici Bildirimi",
-    title: "🎉 Yeni bir kullanıcı kaydoldu",
-    intro: `${safeProduct}'a yeni bir hesap oluşturuldu. Kullanıcı giriş yapabilmek için e-posta adresini doğrulamalı.`,
-    bodyHtml: detailTable([
-      { label: "E-posta", value: safeEmail },
-      { label: "Kayıt zamanı", value: safeDate },
-    ]),
-    footerText: `Bu bildirim ${safeProduct} yöneticisine gönderildi.`,
+    eyebrow: "Yönetici bildirimi",
+    title: displayName ? `Yeni üye: ${escapeHtml(displayName)}` : "Yeni bir üye kaydoldu",
+    intro: `${safeProduct}'a ${via === "Google hesabı" ? "Google hesabıyla" : "e-posta ve şifreyle"} yeni bir hesap açıldı.`,
+    bodyHtml: `
+      ${stats}
+      ${detailTable(rows)}
+      ${adminUrl ? ctaButton(escapeHtml(adminUrl), "Yönetim panelinde aç") : ""}
+      <p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:${c.faint};">Bu e-postayı yanıtlarsanız yanıt doğrudan üyeye gider.</p>
+    `,
+    footerText: `Bu bildirim ${safeProduct} yöneticisine otomatik olarak gönderildi.`,
     productName: safeProduct,
+    preheader: `${userEmail} kaydoldu${typeof totalUsers === "number" ? ` — toplam ${totalUsers} üye` : ""}.`,
   });
 
   const text = [
-    `Yeni bir kullanıcı kaydoldu — ${productName}`,
+    subject,
     "",
-    `E-posta: ${userEmail}`,
-    `Kayıt zamanı: ${registeredAt}`,
+    ...rows.map((r) => `${r.label}: ${r.value.replace(/<[^>]+>/g, "")}`),
+    ...(typeof totalUsers === "number" ? ["", `Toplam üye: ${totalUsers}`, `Bugünkü kayıt: ${todayUsers ?? "-"}`] : []),
+    ...(adminUrl ? ["", `Yönetim paneli: ${adminUrl}`] : []),
   ].join("\n");
 
   return { subject, html, text };

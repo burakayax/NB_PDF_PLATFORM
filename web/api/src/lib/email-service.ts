@@ -1,6 +1,7 @@
 import { env } from "../config/env.js";
 import { escapeHtml } from "./email-html.js";
-import { renderCorporateEmail, ctaButton, commercialSubject } from "./email-layout.js";
+import { renderCorporateEmail, ctaButton, commercialSubject, calloutBox, checkList, sectionTitle, para } from "./email-layout.js";
+import { planDefinitions } from "../modules/subscription/subscription.config.js";
 import { assertCommercialConsent } from "./commercial-email-gate.js";
 import { sendMail } from "./mailer.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
@@ -20,20 +21,32 @@ function stripForText(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-export async function sendWelcomeEmailToUser(
-  toEmail: string,
-  vars: { name: string; userId: string; locale?: Locale },
-): Promise<void> {
+/**
+ * Hoş geldin e-postası içeriği (gönderimden ayrı → önizleme ve test edilebilir).
+ *
+ * HUKUK NOTU: Bu e-posta işlem/hizmet iletisidir (onay kapısı yok). Bu yüzden yalnızca hesabın GERÇEKTE
+ * içerdiklerini (hediye AI işlemi, günlük hak, çalışma alanı) anlatır; ücretli plana çağrı (Pro/indirim)
+ * içermez. Ücretli yönlendirme yalnız onaylı (marketingConsent) yaşam döngüsü e-postalarındadır.
+ */
+export function buildWelcomeEmail(vars: {
+  name: string;
+  locale?: Locale;
+  giftCredits?: number;
+  dailyLimit?: number;
+}): { subject: string; html: string; text: string; ctaUrl: string } {
   const locale: Locale = vars.locale ?? "tr";
   const t = emailT[locale];
   const name = escapeHtml(vars.name);
-  const shopUrl = `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
+  const gift = Math.max(0, vars.giftCredits ?? 0);
+  const dailyLimit = vars.dailyLimit ?? (planDefinitions.FREE.dailyLimit ?? 3);
+  const ctaUrl = `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
 
   const bodyHtml = `
-    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${t.welcome_body()}</p>
-    <p style="margin:0;font-size:14px;line-height:1.75;color:#64748b;">${t.welcome_footer}</p>
-    ${ctaButton(shopUrl, t.welcome_cta)}
+    ${para(t.greeting(name))}
+    ${gift > 0 ? calloutBox(t.welcome_gift_title(gift), t.welcome_gift_body) : ""}
+    ${sectionTitle(t.welcome_section)}
+    ${checkList(t.welcome_points(dailyLimit))}
+    ${ctaButton(ctaUrl, t.welcome_cta)}
   `;
 
   const html = renderCorporateEmail({
@@ -43,10 +56,29 @@ export async function sendWelcomeEmailToUser(
     bodyHtml,
     footerText: t.welcome_footer,
     productName: product(),
+    preheader: t.welcome_preheader(gift),
   });
 
-  const subject = t.welcome_subject(product());
-  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${shopUrl}`) });
+  const text = [
+    t.welcome_title,
+    "",
+    ...(gift > 0 ? [t.welcome_gift_title(gift), stripForText(t.welcome_gift_body), ""] : []),
+    t.welcome_section,
+    ...t.welcome_points(dailyLimit).map((p) => `- ${stripForText(p)}`),
+    "",
+    `${t.welcome_cta}: ${ctaUrl}`,
+  ].join("\n");
+
+  return { subject: t.welcome_subject(product(), gift), html, text, ctaUrl };
+}
+
+export async function sendWelcomeEmailToUser(
+  toEmail: string,
+  vars: { name: string; userId: string; locale?: Locale },
+): Promise<void> {
+  const locale: Locale = vars.locale ?? "tr";
+  const mail = buildWelcomeEmail({ name: vars.name, locale, giftCredits: env.AI_TRIAL_CREDITS });
+  await sendMail({ to: toEmail, subject: mail.subject, html: mail.html, text: mail.text });
   await logAutomationEmailAudit("email.welcome", vars.userId, `Welcome email → ${toEmail}`, { template: "welcome", to: toEmail, locale });
 }
 
@@ -88,20 +120,16 @@ export async function sendLifecycleEmail(
   // Win-back: kupon varsa indirim bloğu ekle, yoksa değer-odaklı kalır.
   const couponBlock =
     stage === "winback" && vars.couponCode
-      ? `<div style="margin:18px 0 4px;padding:16px 18px;border:1px solid rgba(16,185,129,0.35);border-radius:14px;background:rgba(16,185,129,0.08);">
-           <p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:0.04em;color:#047857;text-transform:uppercase;">${lc.couponLabel}</p>
-           <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:0.12em;color:#065f46;">${escapeHtml(vars.couponCode)}</p>
-         </div>`
+      ? calloutBox(lc.couponLabel ?? "", `<span style="font-size:22px;font-weight:700;letter-spacing:0.12em;color:#312e81;">${escapeHtml(vars.couponCode)}</span>`)
       : "";
 
   const bodyHtml = `
-    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${lc.body}</p>
-    ${lc.bullets ? `<ul style="margin:0 0 8px;padding:0 0 0 18px;color:#334155;font-size:14px;line-height:1.9;">${lc.bullets.map((b) => `<li>${b}</li>`).join("")}</ul>` : ""}
+    ${para(t.greeting(name))}
+    ${para(lc.body)}
+    ${lc.bullets ? checkList(lc.bullets) : ""}
     ${couponBlock}
     ${ctaButton(ctaUrl, lc.cta)}
   `;
-
   // Pazarlama e-postası → hukuki olarak abonelikten çıkış yolu ZORUNLU
   // (GDPR/CASL/CAN-SPAM/6563). Token'lı gerçek https endpoint (tek-tık uyumlu).
   const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
@@ -164,9 +192,9 @@ export async function sendCheckoutRecoveryEmail(
 
   const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
   const bodyHtml = `
-    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${p1}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${p2}</p>
+    ${para(t.greeting(name))}
+    ${para(p1)}
+    ${para(p2)}
     ${ctaButton(vars.ctaUrl, cta)}
   `;
   const html = renderCorporateEmail({
@@ -219,8 +247,8 @@ export async function sendLimitReachedEmail(
 
   const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
   const bodyHtml = `
-    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${p1}</p>
+    ${para(t.greeting(name))}
+    ${para(p1)}
     ${ctaButton(vars.ctaUrl, cta)}
   `;
   const html = renderCorporateEmail({
