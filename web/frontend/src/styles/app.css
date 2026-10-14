@@ -2706,7 +2706,7 @@ textarea {
 
 /* Telefonda ana işlem düğmesi ekranın altında sabit kalır: uzun formlarda kaydırmadan basılabilsin. */
 @media (max-width: 767px) {
-  .primary-action {
+  .primary-action[data-tour="process"] {
     position: sticky;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     z-index: 25;

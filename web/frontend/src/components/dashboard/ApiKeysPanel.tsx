@@ -101,13 +101,13 @@ export function ApiKeysPanel({
       )}
 
       {/* Oluştur — Pro değilse buton AKTİF kalır ve yükseltmeye yönlendirir. */}
-      <div className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
+      <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3 sm:flex-row sm:flex-wrap sm:items-center">
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr ? "Anahtar adı (ör. Muhasebe entegrasyonu)" : "Key name (e.g. Accounting integration)"}
           onKeyDown={(e) => { if (e.key === "Enter") void create(); }}
           disabled={!hasApiAccess}
-          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-400 disabled:opacity-60" />
+          className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-400 disabled:opacity-60" />
         <button type="button" onClick={() => void create()} disabled={hasApiAccess && (creating || !name.trim())}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
+          className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : hasApiAccess ? <Plus className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}{tr ? "Anahtar oluştur" : "Create key"}
         </button>
       </div>
