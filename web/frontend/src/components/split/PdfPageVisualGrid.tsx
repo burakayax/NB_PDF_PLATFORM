@@ -1932,7 +1932,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     return (
       <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="flex-1 min-w-0 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
+          <div className="hidden min-w-0 flex-1 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-[11px] leading-relaxed text-slate-300 sm:block">
             <span className="font-bold text-cyan-400">
               {effectiveLang === "tr" ? "Nasıl kullanılır: " : "How to use: "}
             </span>

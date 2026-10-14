@@ -2704,6 +2704,17 @@ textarea {
   box-shadow: none;
 }
 
+/* Telefonda ana işlem düğmesi ekranın altında sabit kalır: uzun formlarda kaydırmadan basılabilsin. */
+@media (max-width: 767px) {
+  .primary-action {
+    position: sticky;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    z-index: 25;
+    min-height: 48px;
+    box-shadow: 0 14px 28px -10px rgba(5, 8, 15, 0.95), 0 0 0 6px rgba(7, 11, 20, 0.85);
+  }
+}
+
 .notes-card h3 {
   margin-top: 0;
 }

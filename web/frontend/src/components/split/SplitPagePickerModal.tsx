@@ -92,7 +92,7 @@ export function SplitPagePickerModal({
   /** Rubber-band sürüklerken tüm diyalogda metin seçimini kapatır. */
   const [rubberBandActive, setRubberBandActive] = useState(false);
   /** Başlangıç: Standart (25) — çok sütunlu galeri; %100 büyük detay. */
-  const [zoomPercent, setZoomPercent] = useState<number>(25);
+  const [zoomPercent, setZoomPercent] = useState<number>(typeof window !== "undefined" && window.innerWidth < 640 ? 50 : 25);
   const [gitInput, setGitInput] = useState("");
   const [stats, setStats] = useState<VisualPickerStats>({
     selectedCount: 0,
