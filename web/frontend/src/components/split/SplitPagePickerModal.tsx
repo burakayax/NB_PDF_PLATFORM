@@ -170,7 +170,7 @@ export function SplitPagePickerModal({
                 </span>
                 <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
                   {ZOOM_LEVELS.map((z) => {
-                    const label = `%${z}`;
+                    const label = effectiveModalLang === "tr" ? `%${z}` : `${z}%`;
                     return (
                       <button
                         key={z}

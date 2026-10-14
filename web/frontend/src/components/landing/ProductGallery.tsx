@@ -23,8 +23,10 @@ type Shot = {
   Icon: LucideIcon;
   /** Renk (r,g,b) — sekme vurgusu ve çerçeve ışıması */
   accent: string;
-  /** Dil → görsel yolu; yoksa o dilde gösterilmez */
+  /** Dil → masaüstü görsel yolu; yoksa o dilde gösterilmez */
   img: Partial<Record<Language, string>>;
+  /** Dil → telefon görseli (dar ekranda telefon çerçevesinde gösterilir) */
+  mimg: Record<Language, string>;
   tr: Copy;
   en: Copy;
 };
@@ -35,6 +37,7 @@ const SHOTS: Shot[] = [
     Icon: FileUser,
     accent: "99,102,241",
     img: { tr: "/screenshots/tour-cv.webp", en: "/screenshots/tour-cv-en.webp" },
+    mimg: { tr: "/screenshots/tour-m-cv.webp", en: "/screenshots/tour-m-cv-en.webp" },
     tr: {
       label: "CV'nizi canlı oluşturun",
       desc: "30 şablondan birini seçin, bilgilerinizi yazın; CV'niz yanda anında şekillensin. Hazır olunca tek tıkla PDF.",
@@ -54,7 +57,8 @@ const SHOTS: Shot[] = [
     id: "pages",
     Icon: SquareSplitHorizontal,
     accent: "59,130,246",
-    img: { tr: "/screenshots/tour-pages.webp" },
+    img: { tr: "/screenshots/tour-pages.webp", en: "/screenshots/tour-pages-en.webp" },
+    mimg: { tr: "/screenshots/tour-m-pages.webp", en: "/screenshots/tour-m-pages-en.webp" },
     tr: {
       label: "Sayfaları görerek seçin",
       desc: "Sayfa numarası tahmin etmek yok. Küçük görsellere tıklayın, hangi sayfaları aldığınızı gözünüzle görün.",
@@ -75,6 +79,7 @@ const SHOTS: Shot[] = [
     Icon: MoveHorizontal,
     accent: "16,185,129",
     img: { tr: "/screenshots/tour-order.webp", en: "/screenshots/tour-order-en.webp" },
+    mimg: { tr: "/screenshots/tour-m-order.webp", en: "/screenshots/tour-m-order-en.webp" },
     tr: {
       label: "Sırayı değiştirin",
       desc: "Sayfaları ok düğmeleriyle ya da hedef numarayı yazarak taşıyın; sonucu indirmeden önce görün.",
@@ -94,6 +99,21 @@ const SHOTS: Shot[] = [
 
 const AUTO_MS = 7000;
 
+/** Dar ekran (telefon) mı? Yalnızca bir görsel yüklensin diye CSS yerine durum olarak izlenir. */
+function usePhone(): boolean {
+  const q = "(max-width: 639px)";
+  const [phone, setPhone] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.(q).matches);
+  useEffect(() => {
+    const m = window.matchMedia?.(q);
+    if (!m) return;
+    const on = () => setPhone(m.matches);
+    on();
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return phone;
+}
+
 export function ProductGallery({
   language,
   onUseWebApp,
@@ -106,6 +126,7 @@ export function ProductGallery({
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const phone = usePhone();
 
   const reduceMotion =
     typeof window !== "undefined" &&
@@ -239,51 +260,78 @@ export function ProductGallery({
             })}
           </div>
 
-          {/* Tarayıcı çerçevesi */}
+          {/* Çerçeve: telefonda telefon, diğerlerinde tarayıcı */}
           <div className="relative">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -inset-x-8 -bottom-10 top-8 -z-10 blur-[80px] transition-colors duration-500"
               style={{ background: `rgba(${shot.accent},0.22)` }}
             />
-            <div className="overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0b1220] shadow-[0_50px_110px_-40px_rgba(0,0,0,0.95)] ring-1 ring-black/40">
-              {/* Üst çubuk */}
-              <div className="flex items-center gap-3 border-b border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-white/[0.02] px-4 py-2.5">
-                <span className="flex gap-1.5" aria-hidden="true">
-                  {[0, 1, 2].map((n) => (
-                    <span key={n} className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                  ))}
-                </span>
-                <span className="mx-auto flex max-w-[340px] flex-1 items-center justify-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-3 py-1 text-[11px] text-slate-400">
-                  <Lock className="h-3 w-3 text-emerald-400/80" aria-hidden="true" />
-                  <span className="truncate">{copy.path}</span>
-                </span>
-                <span className="w-[42px]" aria-hidden="true" />
+            {phone ? (
+              <div className="mx-auto w-[min(100%,270px)] rounded-[2.4rem] border border-white/[0.14] bg-[#05080f] p-2 shadow-[0_40px_90px_-35px_rgba(0,0,0,0.95)] ring-1 ring-black/40">
+                <div className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-[#070d19]">
+                  <span aria-hidden="true" className="absolute left-1/2 top-2 z-10 h-[18px] w-[72px] -translate-x-1/2 rounded-full bg-black/80" />
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={`${shot.id}-${language}-m`}
+                      id={`shot-${shot.id}`}
+                      role="tabpanel"
+                      aria-labelledby={`tab-${shot.id}`}
+                      src={shot.mimg[language]}
+                      alt={copy.alt}
+                      width={780}
+                      height={1688}
+                      decoding="async"
+                      draggable={false}
+                      className="absolute inset-0 h-full w-full object-cover object-top"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </AnimatePresence>
+                </div>
               </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0b1220] shadow-[0_50px_110px_-40px_rgba(0,0,0,0.95)] ring-1 ring-black/40">
+                {/* Üst çubuk */}
+                <div className="flex items-center gap-3 border-b border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-white/[0.02] px-4 py-2.5">
+                  <span className="flex gap-1.5" aria-hidden="true">
+                    {[0, 1, 2].map((n) => (
+                      <span key={n} className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                    ))}
+                  </span>
+                  <span className="mx-auto flex max-w-[340px] flex-1 items-center justify-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-3 py-1 text-[11px] text-slate-400">
+                    <Lock className="h-3 w-3 text-emerald-400/80" aria-hidden="true" />
+                    <span className="truncate">{copy.path}</span>
+                  </span>
+                  <span className="w-[42px]" aria-hidden="true" />
+                </div>
 
-              {/* Görsel */}
-              <div className="relative aspect-[16/10] bg-[#070d19]">
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={`${shot.id}-${language}`}
-                    id={`shot-${shot.id}`}
-                    role="tabpanel"
-                    aria-labelledby={`tab-${shot.id}`}
-                    src={src}
-                    alt={copy.alt}
-                    width={1920}
-                    height={1200}
-                    decoding="async"
-                    draggable={false}
-                    className="absolute inset-0 h-full w-full object-cover object-top"
-                    initial={{ opacity: 0, scale: 1.012 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                </AnimatePresence>
+                {/* Görsel */}
+                <div className="relative aspect-[16/10] bg-[#070d19]">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={`${shot.id}-${language}`}
+                      id={`shot-${shot.id}`}
+                      role="tabpanel"
+                      aria-labelledby={`tab-${shot.id}`}
+                      src={src}
+                      alt={copy.alt}
+                      width={1920}
+                      height={1200}
+                      decoding="async"
+                      draggable={false}
+                      className="absolute inset-0 h-full w-full object-cover object-top"
+                      initial={{ opacity: 0, scale: 1.012 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Dar ekranda açıklama çerçevenin altında */}
             <div className="mt-4 text-center lg:hidden">
