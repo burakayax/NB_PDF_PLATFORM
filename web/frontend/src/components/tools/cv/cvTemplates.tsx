@@ -390,13 +390,28 @@ function SkillBlock({ m, th, onDark }: { m: CvModel; th: CvTheme; onDark?: { fg:
   );
 }
 
+/** Dil seviyesi metninden 1–6 kademe (A1…C2, ana dil=6). Tanınmazsa 0 → çubuk çizilmez. */
+export function cefrSteps(level: string): number {
+  const t = level.toLocaleLowerCase("tr");
+  if (/ana dil|anadil|native|bilingual/.test(t)) return 6;
+  const m = [...t.matchAll(/(?<![a-zçğıöşü0-9])([abc])\s?([12])(?![a-z0-9])/g)].map((x) => (x[1].charCodeAt(0) - 97) * 2 + Number(x[2]));
+  return m.length ? Math.max(...m) : 0;
+}
+
 function LanguageBlock({ m, th, fg, muted }: { m: CvModel; th: CvTheme; fg?: string; muted?: string }) {
   return (
     <div>
       {m.languages.map((l, i) => (
-        <div key={i} data-keep="1" style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 3, color: fg }}>
-          <span style={{ fontWeight: 600 }}><F f={l.name} /></span>
-          {l.level ? <span style={{ color: muted ?? th.muted, fontSize: "0.92em", textAlign: "right" }}><F f={l.level} /></span> : null}
+        <div key={i} data-keep="1" style={{ marginBottom: 5, color: fg }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+            <span style={{ fontWeight: 600 }}><F f={l.name} /></span>
+            {l.level ? <span style={{ color: muted ?? th.muted, fontSize: "0.92em", textAlign: "right" }}><F f={l.level} /></span> : null}
+          </div>
+          {!l.name?.g && cefrSteps(l.level?.t ?? "") > 0 ? (
+            <div style={{ display: "flex", gap: 2, marginTop: 2 }} aria-hidden>
+              {[1, 2, 3, 4, 5, 6].map((n) => <div key={n} style={{ flex: 1, height: 3, borderRadius: 2, background: n <= cefrSteps(l.level?.t ?? "") ? th.accent : "currentColor", opacity: n <= cefrSteps(l.level?.t ?? "") ? 1 : 0.18 }} />)}
+            </div>
+          ) : null}
         </div>
       ))}
     </div>

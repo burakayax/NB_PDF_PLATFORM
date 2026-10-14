@@ -22,6 +22,7 @@ import {
   ListOrdered,
   Eye,
   EyeOff,
+  AlertCircle,
 } from "lucide-react";
 import {
   LANG_LEVELS,
@@ -44,6 +45,8 @@ import {
 import { bakePhoto, type CvTemplate } from "./cvTemplates";
 import { useEffect } from "react";
 import { CvPhotoPrep } from "./CvPhotoPrep";
+import { BulletPicker, SkillPicker, SummaryPicker } from "./CvPhrasePicker";
+import { dateOrderIssue, emailIssue, linkIssue, phoneIssue } from "./cvValidate";
 
 type Props = {
   data: CvData;
@@ -68,10 +71,11 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
-export function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string }) {
+export function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete, error }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string; error?: string | null }) {
   return (
-    <Field label={label} hint={hint}>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} autoComplete={autoComplete} className={inputCls} />
+    <Field label={label} hint={error ? undefined : hint}>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} autoComplete={autoComplete} aria-invalid={error ? true : undefined} className={`${inputCls} ${error ? "!border-amber-400/60 !ring-2 !ring-amber-400/20" : ""}`} />
+      {error ? <span className="mt-1 flex items-start gap-1 text-[11.5px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
     </Field>
   );
 }
@@ -193,16 +197,14 @@ function PhotoCropper({ photo, tpl, onChange, disabled, tr }: { photo: CvPhoto; 
   );
 }
 
-export const ACCENTS = ["#1d4ed8", "#0f766e", "#166534", "#6d28d9", "#be185d", "#c2410c", "#a16207", "#0f2a4a", "#374151"];
 
-export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Props) {
-  const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
+/** Fotoğraf alanı: büyük "Fotoğraf ekle" düğmesi → yüklenince kadraj ayarı. Sihirbaz da bunu kullanır. */
+export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon }: { data: CvData; onChange: (d: CvData) => void; tpl: CvTemplate; disabled: boolean; tr: boolean; aiComingSoon?: boolean }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const camRef = useRef<HTMLInputElement>(null);
   const [photoErr, setPhotoErr] = useState<string | null>(null);
   const [prepOpen, setPrepOpen] = useState(false);
-  const [moreOpen, setMoreInfo] = useState(() => !!(data.website || data.linkedin || data.birth || data.license));
-  const lang = data.settings.lang;
-  const monthType = "month";
+  const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
 
   async function pickPhoto(f: File | undefined) {
     if (!f) return;
@@ -215,38 +217,66 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
       setPhotoErr(tr ? "Bu fotoğraf açılamadı. JPG veya PNG deneyin." : "This photo couldn't be opened. Try a JPG or PNG.");
     }
   }
-
+  const inputs = (
+    <>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+      <input ref={camRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+    </>
+  );
+  const camBtn = "hidden items-center gap-2 rounded-xl bg-white/[0.06] px-3.5 py-2 text-[13px] font-semibold text-slate-100 ring-1 ring-white/15 hover:bg-white/10 [@media(pointer:coarse)]:inline-flex";
   return (
-    <fieldset disabled={disabled} className="min-w-0 space-y-3 border-0 p-0">
-      <Accordion title={tr ? "Kişisel bilgiler" : "Personal details"} icon={<UserRound className="h-4 w-4" />} defaultOpen>
-        {/* Fotoğraf: tek büyük düğme; yüklenince önizleme ve ayarlar */}
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
-        {data.photo && data.showPhoto ? (
-          <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <PhotoCropper photo={data.photo} tpl={tpl} disabled={disabled} tr={tr} onChange={(p) => set("photo", p)} />
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-3.5 py-2 text-[13px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25"><ImagePlus className="h-4 w-4" />{tr ? "Değiştir" : "Change"}</button>
-              {!aiComingSoon ? <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button> : null}
-              <button type="button" onClick={() => onChange({ ...data, photo: null })} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Kaldır" : "Remove"}</button>
-            </div>
+    <div className="space-y-2">
+      {inputs}
+      {data.photo && data.showPhoto ? (
+        <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/40 p-3">
+          <PhotoCropper photo={data.photo} tpl={tpl} disabled={disabled} tr={tr} onChange={(p) => set("photo", p)} />
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-3.5 py-2 text-[13px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25"><ImagePlus className="h-4 w-4" />{tr ? "Değiştir" : "Change"}</button>
+            <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>
+            {!aiComingSoon ? <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button> : null}
+            <button type="button" onClick={() => onChange({ ...data, photo: null })} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Kaldır" : "Remove"}</button>
           </div>
-        ) : (
-          <button type="button" onClick={() => fileRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl border border-dashed border-sky-400/40 bg-sky-500/[0.05] px-4 py-3.5 text-left hover:bg-sky-500/10">
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => fileRef.current?.click()} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-dashed border-sky-400/40 bg-sky-500/[0.05] px-4 py-3.5 text-left hover:bg-sky-500/10">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-200"><Camera className="h-5 w-5" /></span>
             <span className="min-w-0">
               <span className="block text-[14px] font-bold text-white">{tr ? "Fotoğraf ekle" : "Add a photo"} <span className="font-normal text-slate-400">{tr ? "(isteğe bağlı)" : "(optional)"}</span></span>
               <span className="block text-[11.5px] text-slate-400">{tr ? "Tıklayın, cihazınızdan seçin. Fotoğraf sunucuya yüklenmez." : "Click and pick one from your device. It is never uploaded."}</span>
             </span>
           </button>
-        )}
-        {photoErr ? <p className="text-[12px] text-red-300">{photoErr}</p> : null}
-        {prepOpen && data.photo && !aiComingSoon ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { onChange({ ...data, photo: { src, zoom: 1, x: 0, y: 0 }, showPhoto: true }); setPrepOpen(false); }} /> : null}
+          <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>
+        </div>
+      )}
+      {photoErr ? <p className="text-[12px] text-red-300">{photoErr}</p> : null}
+      {prepOpen && data.photo && !aiComingSoon ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { onChange({ ...data, photo: { src, zoom: 1, x: 0, y: 0 }, showPhoto: true }); setPrepOpen(false); }} /> : null}
+    </div>
+  );
+}
+
+/** Yeni mezun / stajyer: eğitim, projeler ve beceriler deneyimden önce. */
+export const GRADUATE_ORDER: SectionKey[] = ["summary", "education", "projects", "skills", "experience", "certs", "languages", "interests", "references"];
+
+export const ACCENTS = ["#1d4ed8", "#0f766e", "#166534", "#6d28d9", "#be185d", "#c2410c", "#a16207", "#0f2a4a", "#374151"];
+
+export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Props) {
+  const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
+  const [moreOpen, setMoreInfo] = useState(() => !!(data.website || data.linkedin || data.birth || data.license));
+  const iss = (i: { tr: string; en: string } | null) => (i ? (tr ? i.tr : i.en) : null);
+  const lang = data.settings.lang;
+  const monthType = "month";
+
+  return (
+    <fieldset disabled={disabled} className="min-w-0 space-y-3 border-0 p-0">
+      <Accordion title={tr ? "Kişisel bilgiler" : "Personal details"} icon={<UserRound className="h-4 w-4" />} defaultOpen>
+        <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} />
 
         <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
         <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant"} />
         <div className="grid gap-3 sm:grid-cols-2">
-          <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" />
-          <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" />
+          <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" error={iss(emailIssue(data.email))} />
+          <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" error={iss(phoneIssue(data.phone))} />
         </div>
         <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} />
         <button type="button" onClick={() => setMoreInfo((o) => !o)} aria-expanded={moreOpen} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-sky-300 hover:text-sky-200">
@@ -256,7 +286,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
           <>
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "Web sitesi" : "Website"} value={data.website} onChange={(v) => set("website", v)} />
-              <Text label="LinkedIn" value={data.linkedin} onChange={(v) => set("linkedin", v)} />
+              <Text label="LinkedIn" value={data.linkedin} onChange={(v) => set("linkedin", v)} error={iss(linkIssue(data.linkedin))} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "Doğum tarihi" : "Date of birth"} value={data.birth} onChange={(v) => set("birth", v)} />
@@ -268,6 +298,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
 
       <Accordion title={tr ? "Profil özeti" : "Profile summary"} icon={<FileText className="h-4 w-4" />}>
         <Area label={tr ? "Kendinizi tanıtın" : "Introduce yourself"} rows={5} value={data.summary} onChange={(v) => set("summary", v)} hint={tr ? "2-4 cümle yeterli; deneyiminiz, güçlü yönleriniz ve hedefiniz." : "Two to four sentences: experience, strengths and goal."} />
+        <SummaryPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} onPick={(t) => set("summary", t)} />
       </Accordion>
 
       <Accordion title={tr ? "İş deneyimi" : "Work experience"} icon={<Briefcase className="h-4 w-4" />} count={data.experience.length} defaultOpen={false}>
@@ -280,10 +311,12 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
             <Text label={tr ? "Şehir" : "Location"} value={e.location} onChange={(v) => set("experience", patch(data.experience, e.id, { location: v }))} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "Başlangıç" : "Start"} type={monthType} value={e.start} onChange={(v) => set("experience", patch(data.experience, e.id, { start: v }))} />
-              <Text label={tr ? "Bitiş" : "End"} type={monthType} value={e.end} disabled={e.current} onChange={(v) => set("experience", patch(data.experience, e.id, { end: v }))} />
+              <Text label={tr ? "Bitiş" : "End"} type={monthType} value={e.end} disabled={e.current} error={iss(dateOrderIssue(e.start, e.end, e.current))} onChange={(v) => set("experience", patch(data.experience, e.id, { end: v }))} />
             </div>
             <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => set("experience", patch(data.experience, e.id, { current: ev.target.checked }))} />{tr ? "Hâlâ çalışıyorum" : "I currently work here"}</label>
             <Area label={tr ? "Sorumluluklar ve başarılar" : "Responsibilities & achievements"} rows={4} value={e.desc} onChange={(v) => set("experience", patch(data.experience, e.id, { desc: v }))} hint={tr ? "Her satır ayrı bir madde olur. Rakamla anlatın: “satışları %20 artırdı”." : "Each line becomes a bullet. Use numbers: “grew sales by 20%”."} />
+            <BulletPicker tr={tr} lang={lang} hint={`${e.role} ${data.title}`} current={e.desc} onAdd={(line) => set("experience", patch(data.experience, e.id, { desc: e.desc.trim() ? `${e.desc.replace(/\s+$/, "")}
+${line}` : line }))} />
           </ItemCard>
         ))}
         <AddButton label={tr ? "Deneyim ekle" : "Add experience"} onClick={() => set("experience", [...data.experience, { id: uid(), company: "", role: "", location: "", start: "", end: "", current: false, desc: "" }])} />
@@ -297,7 +330,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
             <Text label={tr ? "Şehir" : "Location"} value={e.location} onChange={(v) => set("education", patch(data.education, e.id, { location: v }))} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "Başlangıç" : "Start"} type={monthType} value={e.start} onChange={(v) => set("education", patch(data.education, e.id, { start: v }))} />
-              <Text label={tr ? "Bitiş" : "End"} type={monthType} value={e.end} disabled={e.current} onChange={(v) => set("education", patch(data.education, e.id, { end: v }))} />
+              <Text label={tr ? "Bitiş" : "End"} type={monthType} value={e.end} disabled={e.current} error={iss(dateOrderIssue(e.start, e.end, e.current))} onChange={(v) => set("education", patch(data.education, e.id, { end: v }))} />
             </div>
             <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => set("education", patch(data.education, e.id, { current: ev.target.checked }))} />{tr ? "Devam ediyorum" : "Currently studying"}</label>
             <Area label={tr ? "Ek bilgi (isteğe bağlı)" : "Details (optional)"} rows={2} value={e.desc} onChange={(v) => set("education", patch(data.education, e.id, { desc: v }))} />
@@ -317,6 +350,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
             <button type="button" onClick={() => set("skills", data.skills.filter((x) => x.id !== s.id))} aria-label={tr ? "Sil" : "Delete"} className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
           </div>
         ))}
+        <SkillPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} have={data.skills.map((x) => x.name)} onAdd={(name) => set("skills", [...data.skills.filter((x) => x.name.trim()), { id: uid(), name, level: 0 }])} />
         <AddButton label={tr ? "Beceri ekle" : "Add skill"} onClick={() => set("skills", [...data.skills, { id: uid(), name: "", level: 0 }])} />
         <p className="text-[11px] text-slate-500">{tr ? "Seviye yalnızca çubuklu şablonlarda görünür." : "Levels show only in templates with skill bars."}</p>
       </Accordion>
@@ -401,6 +435,10 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
 
       <Accordion title={tr ? "Bölüm sırası ve gizleme (gelişmiş)" : "Section order & hiding (advanced)"} icon={<ListOrdered className="h-4 w-4" />}>
         <p className="text-[11.5px] leading-relaxed text-slate-400">{tr ? "Bölümleri yukarı/aşağı taşıyın ya da gizleyin. Kenar çubuklu şablonlarda Beceriler, Diller ve İlgi alanları yan sütunda kalır; sıra kendi içinde uygulanır." : "Move sections up/down or hide them. In sidebar templates Skills, Languages and Interests stay in the side column; order applies within each column."}</p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => onChange({ ...data, settings: { ...data.settings, order: null } })} className="rounded-xl bg-white/[0.06] px-3 py-2 text-[12.5px] font-semibold text-slate-100 hover:bg-white/10">{tr ? "Deneyimli düzeni" : "Experienced layout"}</button>
+          <button type="button" onClick={() => onChange({ ...data, settings: { ...data.settings, order: GRADUATE_ORDER } })} className="rounded-xl bg-sky-500/15 px-3 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25">{tr ? "Yeni mezun düzeni (eğitim ve projeler önde)" : "Graduate layout (education & projects first)"}</button>
+        </div>
         {(() => {
           const order = resolveOrder(data);
           const L = LABELS[data.settings.lang];

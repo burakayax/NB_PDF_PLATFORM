@@ -1,0 +1,86 @@
+import { useState } from "react";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { CvWizard } from "../components/tools/cv/CvWizard";
+import { CvForm } from "../components/tools/cv/CvForm";
+import { CvLiveScore } from "../components/tools/cv/CvLiveScore";
+import { CvFormCopy } from "../components/tools/cv/CvFormCopy";
+import { EMPTY_CV, normalizeCv, sampleCv, type CvData } from "../components/tools/cv/cvModel";
+import { getTemplate } from "../components/tools/cv/cvTemplates";
+import { cefrSteps } from "../components/tools/cv/cvTemplates";
+
+const tpl = getTemplate("sade");
+
+function Harness({ initial, form }: { initial: CvData; form?: boolean }) {
+  const [d, setD] = useState(initial);
+  return form ? <CvForm data={d} onChange={setD} tpl={tpl} disabled={false} tr /> : (
+    <>
+      <CvWizard data={d} onChange={setD} tpl={tpl} tr disabled={false} onFullForm={() => {}} onDownload={() => {}} onOpenLinkedin={() => {}} onOpenDesign={() => {}} />
+      <output data-testid="json">{JSON.stringify({ title: d.title, skills: d.skills.map((s) => s.name), summary: d.summary, exp: d.experience.map((e) => e.desc) })}</output>
+    </>
+  );
+}
+
+describe("sihirbaz", () => {
+  it("meslek seç → ileri → tüm adımlar hatasız açılır", () => {
+    render(<Harness initial={normalizeCv(EMPTY_CV)} />);
+    fireEvent.click(screen.getByText("Satış / Satış Danışmanı"));
+    expect(JSON.parse(screen.getByTestId("json").textContent!).title).toBe("Satış Danışmanı");
+    const next = () => fireEvent.click(screen.getByText("Devam"));
+    next(); // you
+    expect(screen.getByText("Sizi tanıyalım")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Ad soyad"), { target: { value: "Test Kişi" } });
+    next(); // work
+    fireEvent.click(screen.getByText("İş deneyimi ekle"));
+    fireEvent.click(screen.getByText("Hazır cümleler"));
+    fireEvent.click(screen.getByText("Aylık satış hedefini ortalama %[X] oranında aştı"));
+    expect(JSON.parse(screen.getByTestId("json").textContent!).exp[0]).toContain("Aylık satış hedefini");
+    next(); // edu
+    next(); // skills
+    fireEvent.click(screen.getByText("Beceri önerileri"));
+    fireEvent.click(screen.getByText("Satış Raporlama"));
+    expect(JSON.parse(screen.getByTestId("json").textContent!).skills).toContain("Satış Raporlama");
+    next(); // summary
+    fireEvent.click(screen.getByText("Özet taslakları"));
+    fireEvent.click(screen.getByText(/Müşteri ihtiyaçlarını doğru analiz eden/));
+    expect(JSON.parse(screen.getByTestId("json").textContent!).summary).toContain("satış profesyoneli");
+    next(); // done
+    expect(screen.getByText("CV'niz hazır!")).toBeTruthy();
+  });
+
+  it("örnek CV'yi açar ve bitiş adımına geçer", () => {
+    render(<Harness initial={normalizeCv(EMPTY_CV)} />);
+    fireEvent.click(screen.getByText("Muhasebe / Finans"));
+    fireEvent.click(screen.getByText("Bu mesleğin örnek CV'sini aç"));
+    expect(screen.getByText("CV'niz hazır!")).toBeTruthy();
+  });
+});
+
+describe("tam form", () => {
+  it("e-posta uyarısı ve fotoğraf alanı görünür", () => {
+    const d = { ...normalizeCv(EMPTY_CV), email: "abc" };
+    render(<Harness initial={d} form />);
+    expect(screen.getByText(/E-posta adresi eksik/)).toBeTruthy();
+    expect(screen.getByText("Fotoğraf ekle")).toBeTruthy();
+  });
+});
+
+describe("canlı puan ve kopyalama", () => {
+  it("boş CV'de teşvik, dolu CV'de puan", () => {
+    const { rerender } = render(<CvLiveScore data={normalizeCv(EMPTY_CV)} tr onDetails={() => {}} />);
+    expect(screen.getByText(/canlı olarak yükselir/)).toBeTruthy();
+    rerender(<CvLiveScore data={sampleCv("tr")} tr onDetails={() => {}} />);
+    expect(screen.getByRole("img", { name: /CV gücü yüzde/ })).toBeTruthy();
+  });
+  it("forma kopyala modalı alanları listeler", () => {
+    render(<CvFormCopy data={sampleCv("tr")} tr onClose={vi.fn()} />);
+    expect(screen.getByText("Elif Yılmaz")).toBeTruthy();
+  });
+  it("dil seviyesi kademeleri", () => {
+    expect(cefrSteps("İleri (C1–C2)")).toBe(6);
+    expect(cefrSteps("Orta-üstü (B2)")).toBe(4);
+    expect(cefrSteps("Ana dil")).toBe(6);
+    expect(cefrSteps("Başlangıç (A1–A2)")).toBe(2);
+    expect(cefrSteps("iyi")).toBe(0);
+  });
+});
