@@ -3,6 +3,7 @@ import { Gauge, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { AI_MONTHLY_CREDITS_BY_PLAN } from "../../lib/aiCredits";
 import { PLANS } from "../../lib/planConfig";
+import { OPERATION_WEIGHTS } from "../../lib/operationWeights";
 
 export type DailyPool = { used: number; limit: number | null; resetAt?: string };
 
@@ -105,8 +106,8 @@ export function DailyPoolChip({
           <ul className="mt-3 space-y-1.5 text-[12px] leading-snug text-slate-300">
             <li>
               {tr
-                ? "Sunucuda yapılan işlemler (sıkıştır, Word/Excel dönüşümü…) 1 hak harcar. PDF→PowerPoint ve PDF→Excel 2 hak sayılır."
-                : "Server-side operations (compress, Word/Excel conversion…) use 1. PDF→PowerPoint and PDF→Excel count as 2."}
+                ? `Sunucuda yapılan işlemler (sıkıştır, Word/Excel dönüşümü…) 1 hak harcar. Uzun süren işlemler daha çok sayar: PDF→JPG ${OPERATION_WEIGHTS["pdf-to-image"]}, PDF→PowerPoint ${OPERATION_WEIGHTS["pdf-to-ppt"]} hak.`
+                : `Server-side operations (compress, Word/Excel conversion…) use 1. Longer ones count more: PDF→JPG ${OPERATION_WEIGHTS["pdf-to-image"]}, PDF→PowerPoint ${OPERATION_WEIGHTS["pdf-to-ppt"]}.`}
             </li>
             <li className="text-emerald-300/90">
               {tr

@@ -20,17 +20,17 @@ export interface QuotaCheckResult {
  * sayılır, sunucuyu uzun süre meşgul eden ağır dönüşümler 2 hak sayılır.
  *
  * Ağırlık canlıda ölçülen sürelere dayanır (2026-10-14, 30 sayfalık örnek PDF; sunucu tek işçiyle
- * çalışır, bir işlem bitmeden sıradaki başlamaz): Office→PDF 5-7 sn, sıkıştır 4 sn, PDF→Word 10 sn,
- * PDF→JPG 41 sn, PDF→PowerPoint ~100 sn, PDF→Excel 55 sn'den uzun. Süre kararı için bkz.
- * docs/rehber (kota/havuz). Burada olmayan araç = 1 hak.
+ * çalışır, bir işlem bitmeden sıradaki başlamaz): Office→PDF 5-7 sn, sıkıştır 4 sn, PDF→Metin 2 sn,
+ * PDF→Word 10 sn, PDF→Excel 6 sn, PDF→JPG 41 sn, PDF→PowerPoint ~100 sn. Burada olmayan araç = 1 hak.
+ * Ön yüzdeki kopya: web/frontend/src/lib/operationWeights.ts (test ayrışmayı yakalar).
  *
  * KURAL: havuzda en az 1 hak kaldıysa işlem başlar (ağır işlem 1 hak kalmışken de çalışır);
  * düşüm ağırlık kadardır, yani sayaç limiti en fazla (ağırlık-1) aşabilir. Kullanıcıyı "2 hakkın
  * yok" diye geri çevirmekten daha az sürtünmelidir.
  */
 export const OPERATION_WEIGHTS: Readonly<Record<string, number>> = {
-  "pdf-to-excel": 2,
-  "pdf-to-ppt": 2,
+  "pdf-to-image": 2,
+  "pdf-to-ppt": 3,
 };
 
 export function operationWeight(toolType: string): number {
