@@ -84,3 +84,25 @@ describe("canlı puan ve kopyalama", () => {
     expect(cefrSteps("iyi")).toBe(0);
   });
 });
+
+import { CvDesignPanel } from "../components/tools/cv/CvDesignPanel";
+
+describe("tasarım paneli: etkin seçenek görünür", () => {
+  it("varsayılan yazı tipi, başlık biçimi ve fotoğraf biçimi işaretli gelir; 'Şablonun…' seçeneği yok", () => {
+    const sade = getTemplate("sade"); // arial, rule, rect
+    const { container } = render(<CvDesignPanel data={normalizeCv(EMPTY_CV)} onChange={() => {}} disabled={false} tr tpl={sade} />);
+    expect(screen.getByRole("radio", { name: "Arial" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "Carlito" }).getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByRole("radio", { name: "Alt çizgi" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "Dikdörtgen" }).getAttribute("aria-checked")).toBe("true");
+    expect(container.textContent).not.toMatch(/Şablonun yazı tipi|Şablonun rengi|Şablonun\b/);
+    expect(container.querySelector('[aria-pressed="true"]')).toBeTruthy(); // etkin renk
+  });
+  it("şablonun kendi yazı tipini seçmek varsayılana döner (null)", () => {
+    const sade = getTemplate("sade");
+    const spy = vi.fn();
+    render(<CvDesignPanel data={{ ...normalizeCv(EMPTY_CV), settings: { ...normalizeCv(EMPTY_CV).settings, font: "times" } }} onChange={spy} disabled={false} tr tpl={sade} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Arial" }));
+    expect(spy.mock.calls[0][0].settings.font).toBeNull();
+  });
+});

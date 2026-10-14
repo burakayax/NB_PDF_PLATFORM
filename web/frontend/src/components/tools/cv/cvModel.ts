@@ -15,7 +15,7 @@ export type CvSize = "s" | "m" | "l";
 export type CvFont = "carlito" | "arial" | "caladea" | "gelasio" | "times";
 export type CvDensity = "compact" | "normal" | "airy";
 export type CvDateFormat = "mon" | "num" | "year";
-export type CvHeadingStyle = "rule" | "bar" | "caps" | "dot" | "boxed";
+export type CvHeadingStyle = "rule" | "bar" | "caps" | "dot" | "boxed" | "plain" | "spaced";
 export type CvPhotoShape = "circle" | "rounded" | "rect";
 
 /** Bölüm anahtarları. Özel bölümler `custom:<id>` biçimindedir. */
