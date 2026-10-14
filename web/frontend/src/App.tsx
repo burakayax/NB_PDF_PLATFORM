@@ -3099,8 +3099,14 @@ function App() {
         return;
       }
       // Deep-link edilen aracı (ör. PWA kısayolu /tools/x) sakla; giriş sonrası ona dönülür.
+      // Çıplak /workspace (e-postadaki "Çalışma alanını aç" bağlantısı) bir araç sayfası DEĞİL:
+      // parseWorkspaceToolPath bunu "split"e çevirir ve tanıtım içeriği var diye misafir giriş
+      // yerine sonsuz "Oturum bilgileri yükleniyor…" ekranında kalıyordu → giriş ekranına git.
+      const isBareWorkspace =
+        typeof window !== "undefined" &&
+        stripLangPrefix(window.location.pathname.replace(/\/+$/, "")) === "/workspace";
       const toolFromUrl =
-        typeof window !== "undefined"
+        typeof window !== "undefined" && !isBareWorkspace
           ? parseWorkspaceToolPath(window.location.pathname)
           : null;
       // Madde 1: araç deep-link'i + tanıtım içeriği varsa LOGIN'e atma — public
