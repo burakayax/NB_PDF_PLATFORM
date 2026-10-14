@@ -225,25 +225,25 @@ function LayoutModal(p: ModalProps) {
         aria-label={t.modalTitle}
         className="relative z-10 flex h-[min(94vh,100dvh)] w-[min(96vw,100vw)] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/[0.98] via-slate-950/[0.99] to-[#070b12] shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)]"
       >
-        <div className="flex shrink-0 items-center gap-3 border-b border-cyan-500/15 bg-slate-950/50 px-3 py-2.5">
+        <div className="flex shrink-0 items-center gap-3 border-b border-cyan-500/15 bg-slate-950/50 px-3 py-2 sm:py-2.5">
           <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-50 sm:text-base">
             {t.modalTitle} <span className="font-normal text-slate-400">· {p.fileName}</span>
           </h2>
           <button
             type="button"
             onClick={p.onClose}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-white/[0.12]"
+            className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-white/[0.12] sm:min-h-0 sm:px-2.5"
           >
             <X className="h-3.5 w-3.5" aria-hidden />
             {t.close}
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           {/* Ayarlar */}
-          <div className="max-h-[46%] shrink-0 space-y-4 overflow-y-auto border-b border-white/[0.08] p-3 sm:p-4 lg:max-h-none lg:w-[21rem] lg:border-b-0 lg:border-r">
+          <div className="shrink-0 space-y-3 overflow-y-auto border-b border-white/[0.08] p-3 sm:max-h-[46%] sm:space-y-4 sm:p-4 md:max-h-none md:w-[21rem] md:border-b-0 md:border-r">
             <div>
-              <p className="mb-2 text-xs font-semibold text-slate-300">{t.step1}</p>
+              <p className="mb-1.5 text-xs font-semibold text-slate-300 sm:mb-2">{t.step1}</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: "nup" as Kip, ad: t.modeNup, not: t.nupNote, Icon: Grid2x2 },
@@ -254,7 +254,7 @@ function LayoutModal(p: ModalProps) {
                     type="button"
                     onClick={() => p.onKip(m.id)}
                     aria-pressed={kip === m.id}
-                    className={`rounded-xl border px-3 py-2.5 text-left transition ${
+                    className={`min-h-[48px] rounded-xl border px-3 py-2 text-left transition sm:py-2.5 ${
                       kip === m.id
                         ? "border-cyan-400/50 bg-cyan-500/10"
                         : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05]"
@@ -264,7 +264,7 @@ function LayoutModal(p: ModalProps) {
                       <m.Icon className="h-4 w-4 shrink-0 text-cyan-300" />
                       {m.ad}
                     </span>
-                    <span className="mt-1 block text-[11px] leading-snug text-slate-400">{m.not}</span>
+                    <span className="mt-1 hidden text-[11px] leading-snug text-slate-400 sm:block">{m.not}</span>
                   </button>
                 ))}
               </div>
@@ -272,15 +272,15 @@ function LayoutModal(p: ModalProps) {
 
             {kip === "nup" ? (
               <div>
-                <p className="mb-2 text-xs font-semibold text-slate-300">{t.step2}</p>
-                <div className="grid grid-cols-3 gap-2">
+                <p className="mb-1.5 text-xs font-semibold text-slate-300 sm:mb-2">{t.step2}</p>
+                <div className="grid grid-cols-3 gap-2 max-[420px]:grid-cols-3">
                   {ADETLER.map((n) => (
                     <button
                       key={n}
                       type="button"
                       onClick={() => p.onAdet(n)}
                       aria-pressed={adet === n}
-                      className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 transition ${
+                      className={`flex min-h-[48px] items-center gap-2 rounded-xl border px-2.5 py-2 transition ${
                         adet === n
                           ? "border-cyan-400/50 bg-cyan-500/10"
                           : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05]"
@@ -291,7 +291,8 @@ function LayoutModal(p: ModalProps) {
                     </button>
                   ))}
                 </div>
-                <label className="mt-3 flex items-center gap-2.5">
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-0 sm:block">
+                <label className="flex min-h-[44px] items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 sm:mt-3 sm:min-h-0 sm:border-0 sm:bg-transparent sm:px-0">
                   <input
                     type="checkbox"
                     checked={cerceve}
@@ -300,7 +301,7 @@ function LayoutModal(p: ModalProps) {
                   />
                   <span className="text-[13px] text-slate-200">{t.frame}</span>
                 </label>
-                <label className="mt-3 flex items-start gap-2.5">
+                <label className="flex min-h-[44px] items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 sm:mt-3 sm:min-h-0 sm:items-start sm:border-0 sm:bg-transparent sm:px-0">
                   <input
                     type="checkbox"
                     checked={gizle}
@@ -309,9 +310,10 @@ function LayoutModal(p: ModalProps) {
                   />
                   <span>
                     <span className="block text-[13px] text-slate-200">{t.hideNums}</span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{t.hideNumsNote}</span>
+                    <span className="mt-0.5 hidden text-[11px] leading-snug text-slate-400 sm:block">{t.hideNumsNote}</span>
                   </span>
                 </label>
+                </div>
               </div>
             ) : (
               <p className="rounded-xl border border-cyan-400/25 bg-cyan-500/[0.08] px-3 py-2.5 text-[12px] leading-relaxed text-cyan-100">
@@ -321,7 +323,7 @@ function LayoutModal(p: ModalProps) {
           </div>
 
           {/* Çıktı önizlemesi */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2 sm:p-3">
+          <div className="flex min-h-[240px] min-w-0 flex-1 flex-col p-2 sm:min-h-0 sm:p-3">
             <p className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold text-slate-300">
               {t.previewTitle}
               {hazirlaniyor ? (
@@ -338,7 +340,7 @@ function LayoutModal(p: ModalProps) {
                       type="button"
                       onClick={() => setZoom(z)}
                       aria-pressed={zoom === z}
-                      className={`rounded px-1.5 py-1 text-[10px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
+                      className={`min-h-[36px] rounded px-2 py-1 text-[11px] font-semibold tabular-nums transition sm:min-h-0 sm:px-2 sm:text-xs ${
                         zoom === z
                           ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50"
                           : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
