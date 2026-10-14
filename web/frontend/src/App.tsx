@@ -6656,6 +6656,7 @@ function App() {
               : undefined
           }
           creditBalanceLoading={balanceLoading && user?.role !== "ADMIN"}
+          dailyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.daily ?? null) : null}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
           limitsizProActive={limitsizProActive}
           onLogoClick={handleDashboardLogoClick}
