@@ -1217,7 +1217,7 @@ function Features({ language }: { language: Language }) {
   const copy = landingTranslations[language];
 
   return (
-    <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+    <section className="relative py-14 sm:py-32 px-5 sm:px-8 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_bottom,rgba(99,102,241,0.09)_0%,transparent_60%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_top,rgba(6,182,212,0.06)_0%,transparent_55%)]" />
       <div className="relative z-10 max-w-6xl mx-auto">
@@ -1226,7 +1226,7 @@ function Features({ language }: { language: Language }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.55 }}
-          className="text-center mb-16"
+          className="text-center mb-8 sm:mb-16"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-medium mb-6">
             ✦ {copy.features.kicker}
@@ -1239,7 +1239,7 @@ function Features({ language }: { language: Language }) {
           </h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {copy.features.items.map((item, i) => {
             const col = FEAT_COLORS[item.icon] ?? FEAT_COLORS.merge;
             const isSession = item.icon === "session";
@@ -1255,7 +1255,7 @@ function Features({ language }: { language: Language }) {
                 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07, duration: 0.45 }}
-                className="group relative flex flex-col gap-4 p-6 lg:p-7 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.04] to-transparent cursor-default overflow-hidden"
+                className="group relative flex flex-row items-start gap-3 p-4 sm:flex-col sm:gap-4 sm:p-6 lg:p-7 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.04] to-transparent cursor-default overflow-hidden"
               >
                 {/* Top accent line on hover */}
                 <div
@@ -1361,7 +1361,7 @@ function HowItWorks({ language }: { language: Language }) {
       ];
 
   return (
-    <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+    <section className="relative py-14 sm:py-32 px-5 sm:px-8 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.05)_0%,transparent_65%)]" />
       <div className="max-w-5xl mx-auto">
         <motion.div
@@ -1526,7 +1526,7 @@ function Testimonials({ language }: { language: Language }) {
   const testimonials = TESTIMONIALS(tr);
 
   return (
-    <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+    <section className="relative py-14 sm:py-32 px-5 sm:px-8 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.06)_0%,transparent_55%)]" />
       <div className="relative z-10 max-w-6xl mx-auto">
         <motion.div
@@ -1668,7 +1668,7 @@ function Faq({ language }: { language: Language }) {
         ];
 
   return (
-    <section id="faq" className="relative py-24 px-5 sm:px-8">
+    <section id="faq" className="relative py-14 sm:py-24 px-5 sm:px-8">
       <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1765,7 +1765,7 @@ function FinalCta({
   const copy = landingTranslations[language];
 
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section className="relative py-14 sm:py-24 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-950/50 via-indigo-950/50 to-violet-950/50 border-y border-white/[0.06]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.12)_0%,transparent_65%)]" />
       <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center">

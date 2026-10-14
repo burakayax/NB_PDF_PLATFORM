@@ -139,7 +139,7 @@ export function ProductGallery({
   const copy = shot[language];
 
   return (
-    <section id="showcase" className="relative overflow-hidden px-5 py-24 sm:px-8 sm:py-32">
+    <section id="showcase" className="relative overflow-hidden px-5 py-14 sm:px-8 sm:py-32">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.06)_0%,transparent_65%)]" />
 
       <div className="relative z-10 mx-auto max-w-6xl">

@@ -869,7 +869,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   const [free, starter, plus, pro, business] = plansAdjusted;
 
   return (
-    <section id="pricing" className="relative py-20 md:py-28 overflow-hidden">
+    <section id="pricing" className="relative py-14 md:py-28 overflow-hidden">
       {/* Glow background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.07)_0%,transparent_70%)]" />
 
@@ -920,7 +920,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         </motion.div>
 
         {/* 5-column grid — responsive */}
-        <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 items-stretch">
+        <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:w-[84%] [&>*]:shrink-0 [&>*]:snap-center sm:mx-0 sm:grid sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 sm:[&>*]:w-auto sm:[&>*]:shrink sm:[&>*]:snap-align-none lg:grid-cols-3 xl:grid-cols-5">
           <FreeCard
             plan={free}
             lang={language}

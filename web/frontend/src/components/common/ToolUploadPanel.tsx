@@ -230,19 +230,19 @@ export function ToolUploadPanel({
       </div>
 
       {showBenefits && !compact && (!describesTool || showBenefitsAnyway) && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
           {benefits.map((b) => {
             const BIcon = b.icon;
             return (
               <div
                 key={b.en}
-                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 transition hover:border-white/15 hover:bg-white/[0.03]"
+                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-2.5 transition sm:p-4 hover:border-white/15 hover:bg-white/[0.03]"
               >
                 <span className={`flex h-9 w-9 items-center justify-center rounded-xl ring-1 ${tile} ${icon}`}>
                   <BIcon className="h-4 w-4" />
                 </span>
-                <p className="mt-2.5 text-[13px] font-bold text-white">{tr ? b.tr : b.en}</p>
-                <p className="mt-1 text-[12px] leading-relaxed text-slate-400">{tr ? b.trDesc : b.enDesc}</p>
+                <p className="mt-2 text-[12px] font-bold leading-tight text-white sm:mt-2.5 sm:text-[13px]">{tr ? b.tr : b.en}</p>
+                <p className="mt-1 hidden text-[12px] leading-relaxed text-slate-400 sm:block">{tr ? b.trDesc : b.enDesc}</p>
               </div>
             );
           })}

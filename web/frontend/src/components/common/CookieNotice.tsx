@@ -172,7 +172,7 @@ export function CookieNotice({
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 rounded-[20px] border border-white/[0.08] bg-nb-bg/95 p-4 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:max-w-4xl sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:rounded-[24px] sm:p-6">
         <div className="flex-1 flex flex-col">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-nb-accent sm:text-sm">{copy.title}</p>
-          <div id="cookie-notice-description" className="mt-2 max-h-[180px] overflow-y-auto sm:max-h-none sm:overflow-y-visible">
+          <div id="cookie-notice-description" className="mt-2 max-h-[84px] overflow-y-auto sm:max-h-none sm:overflow-y-visible">
             <p className="text-xs leading-relaxed text-nb-muted sm:text-sm sm:leading-7">{copy.description}</p>
           </div>
         </div>
