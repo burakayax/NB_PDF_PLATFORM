@@ -1151,8 +1151,10 @@ export async function googleSignupCompleteController(request: Request, response:
     throw new HttpError(400, "The sign-up link has expired. Please try Google sign-in again.");
   }
   const ctx = { ip: request.ip ?? null, userAgent: request.get("user-agent") ?? null };
-  const session = await signInWithGoogle({ ...profile, termsAccepted: true, consentContext: ctx });
-  if (parsed.data.marketingConsent === true) {
+  const wantsMarketing = parsed.data.marketingConsent === true;
+  const session = await signInWithGoogle({ ...profile, termsAccepted: true, marketingConsent: wantsMarketing, consentContext: ctx });
+  if (wantsMarketing) {
+    // İzin bayrağı hesap açılırken yazıldı; burada yalnız ispat defteri kaydı tutulur.
     await prisma.user.update({ where: { id: session.user.id }, data: { marketingConsent: true, marketingConsentAt: new Date() } });
     await recordMarketingConsent({
       userId: session.user.id,

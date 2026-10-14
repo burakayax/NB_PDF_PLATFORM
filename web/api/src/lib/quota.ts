@@ -1,6 +1,8 @@
 import type { Organization, User } from "@prisma/client";
 import { prisma } from "./prisma.js";
 import { createOrganizationForUser, revertExpiredOverride } from "../modules/organization/organization.service.js";
+import { getPlanDefinitionsResolved } from "../modules/subscription/plan-runtime.js";
+import { isFeatureKey } from "../modules/subscription/subscription.config.js";
 
 export interface QuotaCheckResult {
   allowed: boolean;
@@ -187,17 +189,17 @@ export async function checkQuota(
 
   // Check allowed tools
   if (currentOrg.plan !== "BUSINESS" && currentOrg.plan !== "PLUS" && currentOrg.plan !== "PRO") {
-    const planConfig = await prisma.planConfig.findUnique({
-      where: { plan: currentOrg.plan },
-    });
-    if (planConfig && planConfig.allowedTools !== "all") {
-      const allowed = planConfig.allowedTools.split(",").map((t) => t.trim());
-      if (!allowed.includes(toolType)) {
-        return {
-          allowed: false,
-          reason: "tool_not_allowed_on_plan",
-        };
-      }
+    // Araç izni TEK kaynaktan okunur: plan tanımı + yönetim panelindeki "Paket & fiyat" ayarı.
+    // Eskiden PlanConfig.allowedTools (seed'den kalma "merge,split,compress") okunuyordu; kod ve panel
+    // ücretsiz üyeye Word→PDF / PDF→Word / PDF→JPG'yi açsa bile bu eski sütun indirmede 402 verip
+    // "ücretli plana geç" penceresi çıkarıyordu.
+    const planDefs = await getPlanDefinitionsResolved();
+    const planDef = planDefs[currentOrg.plan];
+    if (planDef && isFeatureKey(toolType) && !planDef.allowedFeatures.includes(toolType)) {
+      return {
+        allowed: false,
+        reason: "tool_not_allowed_on_plan",
+      };
     }
   }
 

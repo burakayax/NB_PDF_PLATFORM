@@ -1028,6 +1028,8 @@ export async function signInWithGoogle(params: {
   preferredLanguage: Language;
   /** Yeni hesap açılacaksa kullanıcının kayıt ekranında şartları kabul ettiği (OAuth başlangıcında alınır). */
   termsAccepted?: boolean;
+  /** Onay ekranındaki pazarlama izni kutusu; hesap OLUŞTURULURKEN yazılır (yönetici bildirimi doğru görünsün). */
+  marketingConsent?: boolean;
   consentContext?: { ip?: string | null; userAgent?: string | null };
 }): Promise<AuthSessionResult> {
   const email = normalizeEmailForStorage(params.email);
@@ -1150,6 +1152,7 @@ export async function signInWithGoogle(params: {
       termsVersion: TERMS_VERSION,
       lastLoginAt: new Date(),
       legalAcceptances: { create: legalAcceptanceRows("google", params.consentContext) },
+      ...(params.marketingConsent ? { marketingConsent: true, marketingConsentAt: new Date() } : {}),
     },
     });
   } catch (error) {
