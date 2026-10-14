@@ -9,7 +9,7 @@ import { BulletPicker, SkillPicker, SummaryPicker } from "./CvPhrasePicker";
 import { LANG_LEVELS, uid, type CvData } from "./cvModel";
 import { PROFESSIONS, matchProfession, professionById, professionSample, type Profession } from "./cvPhrases";
 import { dateOrderIssue, emailIssue, phoneIssue } from "./cvValidate";
-import { consistencyChecks, qualityChecks, scoreOf } from "./cvAnalysis";
+import { cvStrength } from "./cvScore";
 import type { CvTemplate } from "./cvTemplates";
 
 type Props = {
@@ -64,7 +64,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
     onChange({ ...data, settings: { ...data.settings, order: v ? GRADUATE_ORDER : null } });
   }
 
-  const score = useMemo(() => scoreOf([...consistencyChecks(data), ...qualityChecks(data)]), [data]);
+  const score = useMemo(() => cvStrength(data), [data]);
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_30px_80px_-40px_rgba(56,189,248,0.35)]">

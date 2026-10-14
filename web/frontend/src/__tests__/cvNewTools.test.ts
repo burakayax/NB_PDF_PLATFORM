@@ -106,3 +106,19 @@ describe("meslek kütüphanesi", () => {
     }
   });
 });
+
+import { cvStrength } from "../components/tools/cv/cvScore";
+import { EMPTY_CV, normalizeCv } from "../components/tools/cv/cvModel";
+
+describe("CV gücü", () => {
+  it("yalnızca ad soyad yazılınca güçlü DEĞİL", () => {
+    const d = normalizeCv({ ...EMPTY_CV, name: "Burak Ayaz" });
+    const s = cvStrength(d);
+    expect(s.value).toBeLessThan(20);
+    expect(s.label.tr).toBe("Yeni başladı");
+    expect(s.missing.length).toBeGreaterThan(5);
+  });
+  it("dolu örnek CV yüksek puan alır", () => {
+    expect(cvStrength(sampleCv("tr")).value).toBeGreaterThanOrEqual(75);
+  });
+});

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
-import { consistencyChecks, qualityChecks, scoreOf, type Check } from "./cvAnalysis";
+import { consistencyChecks, qualityChecks, type Check } from "./cvAnalysis";
+import { cvStrength } from "./cvScore";
 import { isCvEmpty, type CvData } from "./cvModel";
 import { collectFieldIssues } from "./cvValidate";
 import { hasPlaceholders } from "./cvPhrases";
@@ -11,15 +12,16 @@ type Row = { key: string; text: string; bad: boolean };
 export function CvLiveScore({ data, tr, onDetails }: { data: CvData; tr: boolean; onDetails: () => void }) {
   const { score, rows, empty } = useMemo(() => {
     const checks: Check[] = [...consistencyChecks(data), ...qualityChecks(data)];
-    const sc = scoreOf(checks);
+    const sc = cvStrength(data);
     const list: Row[] = [];
     for (const f of collectFieldIssues(data)) list.push({ key: f.id, text: tr ? f.tr : f.en, bad: true });
     if (hasPlaceholders(data)) list.push({ key: "ph", text: tr ? "Hazır cümlelerdeki [X] yerlerine kendi rakamlarınızı yazın." : "Replace the [X] placeholders with your own numbers.", bad: true });
+    for (const m of sc.missing.slice(0, 3)) list.push({ key: `m-${m.id}`, text: tr ? m.tr : m.en, bad: false });
     const order = (c: Check) => (c.level === "bad" ? 0 : c.level === "warn" ? 1 : 2);
     for (const c of checks.filter((x) => x.level === "bad" || x.level === "warn").sort((a, b) => order(a) - order(b))) {
       list.push({ key: c.id, text: (tr ? c.fixTr : c.fixEn) || (tr ? c.tr : c.en), bad: c.level === "bad" });
     }
-    return { score: sc, rows: list.slice(0, 3), empty: isCvEmpty(data) };
+    return { score: sc, rows: list.slice(0, 4), empty: isCvEmpty(data) };
   }, [data, tr]);
 
   const v = empty ? 0 : score.value;
