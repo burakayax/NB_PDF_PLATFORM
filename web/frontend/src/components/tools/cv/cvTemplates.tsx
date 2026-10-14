@@ -533,6 +533,52 @@ function CustomList({ m, th, k, timeline, ledger }: { m: CvModel; th: CvTheme; k
   const sp = useContext(SpCtx);
   const sec = m.custom.find((c) => c.key === k);
   if (!sec) return null;
+  if (sec.style === "tags") {
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+        {sec.items.map((it, i) => (
+          <span key={i} data-keep="1" style={{ border: `1px solid ${th.accent}`, color: th.accent, borderRadius: 11, padding: "1px 9px", fontSize: "0.9em", lineHeight: 1.5 }}>
+            <F f={it.title} />
+          </span>
+        ))}
+      </div>
+    );
+  }
+  if (sec.style === "list") {
+    return (
+      <>
+        {sec.items.map((it, i) => (
+          <div key={i} data-keep="1" style={{ marginBottom: Math.round(5 * sp), lineHeight: 1.4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <div style={{ display: "flex", gap: 7, minWidth: 0, flex: 1 }}>
+                <span style={{ flex: "none", width: 7, color: th.accent }}>•</span>
+                <span>
+                  <span style={{ fontWeight: 700 }}><F f={it.title} /></span>
+                  {it.subtitle ? <span style={{ color: th.muted }}>{" — "}<F f={it.subtitle} /></span> : null}
+                </span>
+              </div>
+              {it.date ? <div style={{ color: th.muted, fontSize: "0.9em", flex: "none", whiteSpace: "nowrap" }}><F f={it.date} /></div> : null}
+            </div>
+            {it.desc ? <div style={{ marginLeft: 14, color: th.muted, fontSize: "0.94em" }}><F f={it.desc} /></div> : null}
+          </div>
+        ))}
+      </>
+    );
+  }
+  if (sec.style === "cards") {
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {sec.items.map((it, i) => (
+          <div key={i} data-keep="1" style={{ width: "calc(50% - 4px)", boxSizing: "border-box", background: th.tint, borderLeft: `3px solid ${th.accent}`, borderRadius: 3, padding: "7px 10px" }}>
+            <div style={{ fontWeight: 700, lineHeight: 1.3 }}><F f={it.title} /></div>
+            {it.subtitle ? <div style={{ color: th.muted, fontSize: "0.94em" }}><F f={it.subtitle} /></div> : null}
+            {it.date ? <div style={{ color: th.accent, fontSize: "0.88em", fontWeight: 600, marginTop: 1 }}><F f={it.date} /></div> : null}
+            {it.desc ? <div style={{ fontSize: "0.92em", lineHeight: 1.35, marginTop: 3 }}><F f={it.desc} /></div> : null}
+          </div>
+        ))}
+      </div>
+    );
+  }
   if (ledger) {
     return (
       <>

@@ -9,6 +9,8 @@ import { BulletPicker, SkillPicker, SummaryPicker } from "./CvPhrasePicker";
 import { LANG_LEVELS, uid, type CvData } from "./cvModel";
 import { PROFESSIONS, matchProfession, professionById, professionSample, type Profession } from "./cvPhrases";
 import { dateOrderIssue, emailIssue, phoneIssue } from "./cvValidate";
+import { SuggestInput } from "./CvSuggestInput";
+import { suggestLanguages, suggestSkills, suggestTitles } from "./cvVocabulary";
 import { cvStrength } from "./cvScore";
 import type { CvTemplate } from "./cvTemplates";
 
@@ -33,6 +35,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
   const [i, setI] = useState(0);
   const [profId, setProfId] = useState<string>("");
   const [graduate, setGraduate] = useState(false);
+  const [ownRole, setOwnRole] = useState("");
   const step: Step = STEPS[i];
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
   const prof: Profession | null = (profId && professionById(profId)) || matchProfession(`${data.title} ${data.experience[0]?.role ?? ""}`);
@@ -52,6 +55,14 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
   function chooseProfession(p: Profession) {
     setProfId(p.id);
     onChange({ ...data, title: data.title.trim() || p.title[lang], settings: { ...data.settings, order: graduate ? GRADUATE_ORDER : data.settings.order } });
+  }
+  function useOwnRole() {
+    const t = ownRole.trim();
+    if (!t) return;
+    const found = matchProfession(t);
+    setProfId(found ? found.id : "general");
+    onChange({ ...data, title: t, settings: { ...data.settings, order: graduate ? GRADUATE_ORDER : data.settings.order } });
+    setI((x) => Math.min(STEPS.length - 1, x + 1));
   }
   function loadSample() {
     if (!prof) return;
@@ -85,6 +96,13 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
         {step === "start" ? (
           <>
             <Head title={tr ? "Hangi alanda çalışıyorsunuz?" : "What field do you work in?"} sub={tr ? "Seçin; size uygun cümle ve beceri önerilerini hazırlayalım. Bulamazsanız “Diğer”i seçin." : "Pick one and we'll prepare matching phrase and skill suggestions. Choose “Other” if yours isn't listed."} />
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
+              <p className="mb-2 text-[13px] font-bold text-white">{tr ? "Mesleğinizi yazın" : "Type your role"}</p>
+              <SuggestInput value={ownRole} onChange={setOwnRole} suggest={(q) => suggestTitles(q, lang)} placeholder={tr ? "Ör. Pilot, Veteriner, Mobilyacı…" : "E.g. Pilot, Veterinarian, Carpenter…"} ariaLabel={tr ? "Meslek" : "Role"} tr={tr} className={inputCls} />
+              <button type="button" disabled={!ownRole.trim()} onClick={useOwnRole} className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-sky-500/20 px-4 py-2.5 text-[13px] font-bold text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30 disabled:opacity-40">{tr ? "Bu mesleği kullan" : "Use this role"}<ArrowRight className="h-4 w-4" /></button>
+              <p className="mt-1.5 text-[11.5px] text-slate-500">{tr ? "Listeden de seçebilirsiniz. Yakın bir meslek bulursak oradan öneriler getiririz; bulamazsak genel öneriler gelir. Unvanınız yazdığınız gibi kalır." : "You can also pick from the list below. If we find a close match we'll bring its suggestions; otherwise you get general ones. Your title stays exactly as typed."}</p>
+            </div>
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-500">{tr ? "ya da listeden seçin" : "or pick from the list"}</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {PROFESSIONS.map((p) => (
                 <button key={p.id} type="button" onClick={() => chooseProfession(p)} aria-pressed={profId === p.id} className={`flex items-center justify-between gap-2 rounded-xl border px-3.5 py-3 text-left text-[13.5px] font-semibold transition ${profId === p.id ? "border-sky-400 bg-sky-500/15 text-white ring-2 ring-sky-400/40" : "border-white/10 bg-white/[0.04] text-slate-200 hover:border-white/25 hover:bg-white/[0.08]"}`}>
@@ -108,7 +126,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
             <Head title={tr ? "Sizi tanıyalım" : "Let's get to know you"} sub={tr ? "İşverenin sizinle iletişime geçeceği bilgiler." : "How an employer can reach you."} />
             <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} />
             <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
-            <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={prof?.title[lang] || (tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant")} />
+            <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={prof?.title[lang] || (tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant")} suggest={(q) => suggestTitles(q, lang)} tr={tr} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" error={emailBad ? (tr ? emailBad.tr : emailBad.en) : null} />
               <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" error={phoneBad ? (tr ? phoneBad.tr : phoneBad.en) : null} />
@@ -165,8 +183,8 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
             <Head title={tr ? "Nelerde iyisiniz?" : "What are you good at?"} sub={tr ? "Önerilere tıklayın ya da kendiniz yazın. Yabancı dilleri de ekleyin." : "Tap suggestions or type your own. Add your languages too."} />
             <SkillPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} have={data.skills.map((x) => x.name)} onAdd={(name) => set("skills", [...data.skills.filter((x) => x.name.trim()), { id: uid(), name, level: 0 }])} />
             {data.skills.map((s) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <input value={s.name} onChange={(e) => set("skills", patch(data.skills, s.id, { name: e.target.value }))} placeholder={tr ? "Beceri" : "Skill"} className={inputCls} />
+              <div key={s.id} className="flex items-start gap-2">
+                <div className="min-w-0 flex-1"><SuggestInput value={s.name} onChange={(v) => set("skills", patch(data.skills, s.id, { name: v }))} suggest={(q) => suggestSkills(q, lang, data.skills.map((x) => x.name))} placeholder={tr ? "Beceri yazın, öneriler çıkar" : "Type a skill, suggestions appear"} ariaLabel={tr ? "Beceri" : "Skill"} tr={tr} className={inputCls} /></div>
                 <button type="button" onClick={() => set("skills", data.skills.filter((x) => x.id !== s.id))} aria-label={tr ? "Sil" : "Delete"} className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
@@ -175,8 +193,8 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
               <p className="mb-2 text-[13px] font-bold text-white">{tr ? "Yabancı diller" : "Languages"}</p>
               <div className="space-y-2">
                 {data.languages.map((l) => (
-                  <div key={l.id} className="flex items-center gap-2">
-                    <input value={l.name} onChange={(e) => set("languages", patch(data.languages, l.id, { name: e.target.value }))} placeholder={tr ? "Dil" : "Language"} className={inputCls} />
+                  <div key={l.id} className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1"><SuggestInput value={l.name} onChange={(v) => set("languages", patch(data.languages, l.id, { name: v }))} suggest={(q) => suggestLanguages(q, lang, data.languages.map((x) => x.name))} placeholder={tr ? "Dil yazın (ör. Alm…)" : "Type a language"} ariaLabel={tr ? "Dil" : "Language"} tr={tr} className={inputCls} /></div>
                     <select value={LANG_LEVELS[lang].includes(l.level) ? l.level : ""} onChange={(e) => set("languages", patch(data.languages, l.id, { level: e.target.value }))} className="w-44 shrink-0 rounded-xl border border-white/10 bg-slate-900/60 px-2 py-2.5 text-[13px] text-white" aria-label={tr ? "Seviye" : "Level"}>
                       <option value="">{tr ? "Seviye seçin" : "Level"}</option>
                       {LANG_LEVELS[lang].map((lv) => <option key={lv} value={lv}>{lv}</option>)}

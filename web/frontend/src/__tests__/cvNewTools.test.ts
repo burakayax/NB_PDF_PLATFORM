@@ -170,3 +170,29 @@ Aranan Nitelikler:
     expect(matchJob(d, AD).score).toBeLessThan(25);
   });
 });
+
+import { suggestLanguages, suggestSkills, suggestTitles, SKILL_COUNT, TITLE_COUNT } from "../components/tools/cv/cvVocabulary";
+
+describe("tamamlama sözlüğü", () => {
+  it("geniş sözlük", () => {
+    expect(SKILL_COUNT).toBeGreaterThan(800);
+    expect(TITLE_COUNT).toBeGreaterThan(150);
+  });
+  it("Türkçe aksan duyarsız ve baştan eşleşme önce gelir", () => {
+    expect(suggestSkills("muhas", "tr")[0]).toBe("Muhasebe yazılımları");
+    expect(suggestSkills("ozel", "tr").join("|")).toContain("Özel eğitim");
+    expect(suggestSkills("exc", "en")).toContain("Excel");
+    expect(suggestSkills("py", "en")).toContain("Python");
+  });
+  it("CV'de zaten olan beceri önerilmez; iki dilde de aranır", () => {
+    expect(suggestSkills("excel", "tr", ["Excel"])).not.toContain("Excel");
+    expect(suggestSkills("project man", "tr")).toContain("Proje yönetimi");
+  });
+  it("diller ve unvanlar", () => {
+    expect(suggestLanguages("alm", "tr")).toContain("Almanca");
+    expect(suggestLanguages("ger", "en")).toContain("German");
+    expect(suggestLanguages("", "tr", ["Türkçe"]).length).toBeGreaterThan(5);
+    expect(suggestTitles("muhas", "tr")).toContain("Muhasebe Uzmanı");
+    expect(suggestTitles("x", "tr")).toEqual([]);
+  });
+});
