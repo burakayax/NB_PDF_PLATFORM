@@ -339,10 +339,35 @@ async function sendVerificationEmail(user: User, rawToken: string) {
 }
 
 async function sendAdminNotificationEmail(user: User) {
+  // Yönetici e-postasında toplam/bugünkü üye sayısı da görünsün (büyümeyi bir bakışta izlemek için).
+  // Sayım hatası bildirimi engellemesin.
+  let totalUsers: number | undefined;
+  let todayUsers: number | undefined;
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    [totalUsers, todayUsers] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { createdAt: { gte: startOfDay } } }),
+    ]);
+  } catch {
+    /* sayım yoksa e-posta yine gider */
+  }
   const notificationTemplate = createAdminNotificationEmailTemplate({
     userEmail: user.email,
     registeredAt: user.createdAt.toISOString(),
     productName: "PDF PLATFORM",
+    fullName: user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
+    authProvider: user.authProvider,
+    verified: user.isVerified,
+    country: user.country,
+    city: user.city,
+    phone: user.phone,
+    language: user.preferredLanguage,
+    marketingConsent: user.marketingConsent,
+    totalUsers,
+    todayUsers,
+    adminUrl: `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/admin`,
   });
 
   await sendMail({

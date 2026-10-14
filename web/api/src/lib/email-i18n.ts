@@ -1,3 +1,5 @@
+import { AI_MONTHLY_CREDITS } from "./plan-catalogue.js";
+
 /** Email şablonları için TR/EN çeviri haritası. */
 
 export type Locale = "tr" | "en";
@@ -12,12 +14,22 @@ export const emailT = {
     // Hoş geldiniz
     welcome_eyebrow: "Hoş Geldiniz",
     welcome_title: "Hesabınız hazır",
-    welcome_intro: "PDF PLATFORM ailesine katıldığınız için teşekkürler.",
-    welcome_body: () =>
-      `Hesabınız aktif. Birleştirme, dönüştürme, sıkıştırma ve düzenleme dahil tüm temel PDF araçları <strong>ücretsiz ve sınırsız</strong> kullanımınızda — birçoğu tarayıcınızda çalışır, dosyalarınız cihazınızdan çıkmaz. Yapay zekâ destekli özetleme, veri çıkarma ve çeviri ise Pro ile geliyor.`,
+    welcome_intro: "PDF PLATFORM'a katıldığınız için teşekkür ederiz. Hesabınız şu andan itibaren kullanıma açık.",
+    welcome_gift_title: (n: number) => `${n} ücretsiz yapay zekâ işlemi hesabınıza tanımlandı`,
+    welcome_gift_body:
+      "Belgelerinizi özetlemek, faturalardan veri çıkarmak ya da belgenizle sohbet etmek için kullanabilirsiniz. Süre sınırı yoktur; çalışma alanında bir yapay zekâ aracını açmanız yeterlidir.",
+    welcome_section: "Hesabınızla neler yapabilirsiniz",
+    welcome_points: (dailyLimit: number): string[] => [
+      "<strong>Cihazınızda sınırsız:</strong> birleştirme, bölme, döndürme, sayfa silme ve sıralama, görselden PDF. Dosyalarınız cihazınızdan çıkmaz.",
+      `<strong>Günde ${dailyLimit} sunucu işlemi:</strong> sıkıştırma, Word ↔ PDF ve PDF → JPG dönüşümleri.`,
+      "<strong>Size özel çalışma alanı:</strong> favori araçlarınızı yıldızlayın, son işlemlerinizi görün, taradığınız belgeleri saklayın.",
+    ],
     welcome_cta: "Çalışma alanını aç",
-    welcome_footer: "Araçlarınızı istediğiniz zaman çalışma alanından yönetebilirsiniz.",
-    welcome_subject: (product: string) => `${product}'a hoş geldiniz`,
+    welcome_footer: "Bu e-postayı PDF PLATFORM hesabı oluşturduğunuz için aldınız.",
+    welcome_subject: (product: string, giftCredits = 0) =>
+      giftCredits > 0 ? `Hesabınız hazır — ${giftCredits} ücretsiz yapay zekâ işleminiz tanımlandı` : `${product}'a hoş geldiniz`,
+    welcome_preheader: (giftCredits: number) =>
+      giftCredits > 0 ? `${giftCredits} ücretsiz yapay zekâ işlemi ve günlük işlem hakkınız hesabınızda hazır.` : "Hesabınız kullanıma hazır.",
 
     // Yaşam-döngüsü (lifecycle) drip serisi — dönüşmeyen FREE kullanıcılar
     lifecycle: {
@@ -25,11 +37,11 @@ export const emailT = {
         eyebrow: "İpuçları",
         title: "PDF işlerinizi hızlandırın",
         intro: "Hesabınızdan en iyi şekilde yararlanmanız için birkaç ipucu.",
-        body: "Çoğu kullanıcı ilk haftada şu araçlarla zaman kazanıyor. Kurulum yok — birleştirme gibi araçlar tamamen tarayıcınızda çalışır (dosyanız yüklenmez); sunucu gerektiren işlemlerde ise dosyalar 1 saat içinde kalıcı olarak silinir:",
+        body: "Çoğu kullanıcı ilk haftada şu araçlarla zaman kazanıyor. Kurulum yok — birleştirme gibi araçlar tamamen tarayıcınızda çalışır (dosyanız yüklenmez); sunucuda işlenen araçlarda dosyalar işlemden sonra kalıcı olarak silinir:",
         bullets: [
-          "<strong>Birleştir & Böl</strong> — sayfaları saniyeler içinde düzenleyin",
-          "<strong>Sıkıştır</strong> — e-postaya sığması için dosya boyutunu küçültün",
-          "<strong>PDF → Word / Görsel</strong> — düzenlenebilir formata dönüştürün",
+          "<strong>Birleştir & Böl</strong> — cihazınızda sınırsız; sayfaları saniyeler içinde düzenleyin",
+          "<strong>Sıkıştır</strong> — e-postaya sığması için dosya boyutunu küçültün (günlük hakkınızdan düşer)",
+          "<strong>Word ↔ PDF, PDF → JPG</strong> — dönüştürün (günlük hakkınızdan düşer)",
         ],
         cta: "Bir aracı dene",
         footer: "İhtiyacınız olan aracı çalışma alanından bulabilirsiniz.",
@@ -38,13 +50,13 @@ export const emailT = {
       value: {
         eyebrow: "Yükseltme",
         title: "Belgelerinizi yapay zekâyla konuşturun",
-        intro: "Temel PDF araçları ücretsiz ve sınırsız — asıl zaman kazancı ise yapay zekâda.",
-        body: "Pro'ya geçen kullanıcılar şu yapay zekâ araçlarını açıyor:",
+        intro: "Cihazınızdaki araçlar sınırsız — asıl zaman kazancı yapay zekâda.",
+        body: "Hesabınıza tanımlanan ücretsiz yapay zekâ işlemleriniz bittiyse, Pro ile devam edebilirsiniz:",
         bullets: [
-          "<strong>PDF Özetle</strong> — uzun sözleşme ve raporları saniyeler içinde özetleyin",
+          `<strong>Ayda ${AI_MONTHLY_CREDITS.PRO} yapay zekâ işlemi</strong> — uzun sözleşme ve raporları saniyeler içinde özetleyin`,
           "<strong>Veri Çıkar</strong> — fatura ve tablolardan Excel'e hazır veri",
           "<strong>Çeviri & Karşılaştırma</strong> — belgeleri çevirin, iki sürümün farkını bulun",
-          "<strong>Toplu işlem, daha büyük dosyalar ve API erişimi</strong>",
+          "<strong>Günlük işlem sınırı yok</strong>, toplu işlem, daha büyük dosyalar ve API erişimi",
         ],
         cta: "Planları gör",
         footer: "İstediğiniz zaman iptal edebilirsiniz.",
@@ -113,24 +125,34 @@ export const emailT = {
     footer_auto: "This email was generated automatically. Please do not reply.",
 
     welcome_eyebrow: "Welcome",
-    welcome_title: "You're in",
-    welcome_intro: "Thanks for creating your account.",
-    welcome_body: () =>
-      `Your account is active. Every core PDF tool — merge, convert, compress and edit — is <strong>free and unlimited</strong>; many run right in your browser, so your files never leave your device. AI-powered summarization, data extraction and translation come with Pro.`,
+    welcome_title: "Your account is ready",
+    welcome_intro: "Thank you for joining PDF PLATFORM. Your account is ready to use.",
+    welcome_gift_title: (n: number) => `${n} free AI operations have been added to your account`,
+    welcome_gift_body:
+      "Use them to summarize documents, extract data from invoices or chat with your document. They never expire — just open an AI tool in your workspace.",
+    welcome_section: "What you can do with your account",
+    welcome_points: (dailyLimit: number): string[] => [
+      "<strong>Unlimited on your device:</strong> merge, split, rotate, delete and reorder pages, image to PDF. Your files never leave your device.",
+      `<strong>${dailyLimit} server operations a day:</strong> compress, Word ↔ PDF and PDF → JPG conversions.`,
+      "<strong>A workspace of your own:</strong> star your favorite tools, see your recent operations and keep your scanned documents.",
+    ],
     welcome_cta: "Open workspace",
-    welcome_footer: "You can manage your tools anytime from the workspace.",
-    welcome_subject: (product: string) => `Welcome to ${product}`,
+    welcome_footer: "You received this email because you created a PDF PLATFORM account.",
+    welcome_subject: (product: string, giftCredits = 0) =>
+      giftCredits > 0 ? `Your account is ready — ${giftCredits} free AI operations added` : `Welcome to ${product}`,
+    welcome_preheader: (giftCredits: number) =>
+      giftCredits > 0 ? `${giftCredits} free AI operations and your daily allowance are ready.` : "Your account is ready to use.",
 
     lifecycle: {
       tips: {
         eyebrow: "Tips",
         title: "Speed up your PDF work",
         intro: "A few tips to get the most out of your account.",
-        body: "Most users save time in their first week with these tools. No install — tools like merge run entirely in your browser (nothing is uploaded); for server-side operations, files are permanently deleted within 1 hour:",
+        body: "Most users save time in their first week with these tools. No install — tools like merge run entirely in your browser (nothing is uploaded); for server-side operations, files are permanently deleted after processing:",
         bullets: [
-          "<strong>Merge & Split</strong> — reorganize pages in seconds",
-          "<strong>Compress</strong> — shrink files to fit email limits",
-          "<strong>PDF → Word / Image</strong> — convert to editable formats",
+          "<strong>Merge & Split</strong> — unlimited on your device; reorganize pages in seconds",
+          "<strong>Compress</strong> — shrink files to fit email limits (uses your daily allowance)",
+          "<strong>Word ↔ PDF, PDF → JPG</strong> — convert (uses your daily allowance)",
         ],
         cta: "Try a tool",
         footer: "Find the tool you need anytime in your workspace.",
@@ -139,13 +161,13 @@ export const emailT = {
       value: {
         eyebrow: "Upgrade",
         title: "Put AI to work on your documents",
-        intro: "The core PDF tools are free and unlimited — the real time-saver is AI.",
-        body: "Users who upgrade to Pro unlock these AI tools:",
+        intro: "The tools on your device are unlimited — the real time-saver is AI.",
+        body: "If you have used the free AI operations on your account, you can continue with Pro:",
         bullets: [
-          "<strong>Summarize PDF</strong> — long contracts and reports in seconds",
+          `<strong>${AI_MONTHLY_CREDITS.PRO} AI operations a month</strong> — long contracts and reports summarized in seconds`,
           "<strong>Extract Data</strong> — invoices and tables straight into Excel",
           "<strong>Translate & Compare</strong> — translate docs, diff two versions",
-          "<strong>Batch processing, larger files and API access</strong>",
+          "<strong>No daily limit</strong>, batch processing, larger files and API access",
         ],
         cta: "View plans",
         footer: "Cancel anytime.",
