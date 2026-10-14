@@ -1,3 +1,4 @@
+import { CV_PROFESSION_EN_SLUGS } from "../blog/blogContentCv3.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 //  İNGİLİZCE URL SLUG'LARI — TEK GERÇEK KAYNAK
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,6 +44,7 @@ export const EN_TOOL_SLUGS = {
 
 /** TR blog slug'ı → EN blog slug'ı. */
 export const EN_BLOG_SLUGS = {
+  ...CV_PROFESSION_EN_SLUGS,
   "cv-nasil-hazirlanir": "how-to-write-a-cv",
   "ats-uyumlu-cv-nasil-yazilir": "ats-friendly-cv",
   "cv-is-ilanina-gore-nasil-uyarlanir": "tailor-cv-to-job-ad",
