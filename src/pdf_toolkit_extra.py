@@ -1967,7 +1967,116 @@ def pdf_to_pptx(
     return True
 
 
+def _fix_slide_xml_for_libreoffice(xml: str) -> str:
+    """Slayt XML'inde PowerPoint'in hoşgördüğü ama LibreOffice'in yanlış çizdiği
+    üç kalıbı düzeltir (PowerPoint'teki görünüm değişmez):
+
+    1. Metin içinde ham satır sonu (`<a:t>…\\n…</a:t>`): PowerPoint satır
+       kırar, LibreOffice hizayı bozar → gerçek `<a:br/>` yapılır.
+    2. `wrap="none"` + otomatik sığdırma: LibreOffice dar kutuda metni
+       kendiliğinden ikiye böler → kutu %35 genişletilip `wrap="square"` yapılır
+       (hiza korunur: ortalı/sağa dayalı kutu merkezden/sağdan büyür).
+    3. Boş efekt listesi (`<a:effectLst/>`) "gölge yok" demektir; LibreOffice
+       bunu yok sayıp tema gölgesini çizer → şeklin tema efekt başvurusu sıfırlanır.
+    """
+    import re
+
+    def _split_lf_run(m: "re.Match[str]") -> str:
+        rpr, text = m.group(1) or "", m.group(2)
+        parts = re.split(r"\r\n|\r|\n", text)
+        out = []
+        for i, part in enumerate(parts):
+            if i:
+                out.append("<a:br/>")
+            if part:
+                out.append(f"<a:r>{rpr}<a:t>{part}</a:t></a:r>")
+        return "".join(out)
+
+    xml = re.sub(
+        r"<a:r>(<a:rPr\b[^>]*?(?:/>|>.*?</a:rPr>))?<a:t>([^<]*[\r\n][^<]*)</a:t></a:r>",
+        _split_lf_run,
+        xml,
+        flags=re.S,
+    )
+
+    def _fix_shape(m: "re.Match[str]") -> str:
+        sp = m.group(0)
+        if "<a:effectLst/>" in sp:
+            sp = re.sub(r'(<a:effectRef idx=")\d+(")', r"\g<1>0\2", sp)
+        if 'wrap="none"' in sp:
+            xf = re.search(r'<a:off x="(-?\d+)" y="(-?\d+)"/><a:ext cx="(\d+)" cy="(\d+)"/>', sp)
+            if xf:
+                x, y, cx, cy = (int(v) for v in xf.groups())
+                extra = int(cx * 0.35)
+                algn = re.search(r'<a:pPr[^>]*\balgn="(\w+)"', sp)
+                algn = algn.group(1) if algn else "l"
+                if algn == "ctr":
+                    x -= extra // 2
+                elif algn == "r":
+                    x -= extra
+                sp = sp.replace(
+                    xf.group(0),
+                    f'<a:off x="{x}" y="{y}"/><a:ext cx="{cx + extra}" cy="{cy}"/>',
+                    1,
+                )
+                sp = sp.replace('wrap="none"', 'wrap="square"')
+        return sp
+
+    return re.sub(r"<p:sp>.*?</p:sp>", _fix_shape, xml, flags=re.S)
+
+
+def _normalize_ooxml_package(src_path: str) -> Optional[str]:
+    """Sunumu LibreOffice'in doğru işleyeceği biçime getirir.
+
+    * Bazı araçlar (ör. Python ElementTree ile yazanlar) [Content_Types].xml'i
+      `ns0:` gibi öneklerle kaydeder. PowerPoint bunu okur ama LibreOffice dosyayı
+      HİÇ yükleyemez ("çıktı dosyası oluşmadı").
+    * Slayt XML'indeki LibreOffice'e özgü çizim sapmaları düzeltilir
+      (bkz. _fix_slide_xml_for_libreoffice).
+    Değişiklik gerekirse düzeltilmiş geçici kopya yolunu döndürür; gerekmiyorsa
+    None (orijinal dosya kullanılır)."""
+    import re
+
+    try:
+        with zipfile.ZipFile(src_path) as zin:
+            replacements: dict[str, bytes] = {}
+            raw = zin.read("[Content_Types].xml").decode("utf-8")
+            m = re.search(r"xmlns:([A-Za-z_][\w.-]*)=\"http://schemas\.openxmlformats\.org/package/2006/content-types\"", raw)
+            if m:
+                prefix = m.group(1)
+                fixed = raw.replace(f"xmlns:{prefix}=", "xmlns=").replace(f"<{prefix}:", "<").replace(f"</{prefix}:", "</")
+                replacements["[Content_Types].xml"] = fixed.encode("utf-8")
+            for name in zin.namelist():
+                if re.fullmatch(r"ppt/slides/slide\d+\.xml", name):
+                    orig = zin.read(name).decode("utf-8")
+                    new = _fix_slide_xml_for_libreoffice(orig)
+                    if new != orig:
+                        replacements[name] = new.encode("utf-8")
+            if not replacements:
+                return None
+            fd, tmp = tempfile.mkstemp(prefix="ooxml_fix_", suffix=os.path.splitext(src_path)[1] or ".pptx")
+            os.close(fd)
+            with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+                for item in zin.infolist():
+                    zout.writestr(item, replacements.get(item.filename, zin.read(item.filename)))
+            return tmp
+    except Exception:
+        return None
+
+
 def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
+    fixed = _normalize_ooxml_package(pptx_path)
+    try:
+        return _pptx_to_pdf_impl(fixed or pptx_path, pdf_path)
+    finally:
+        if fixed:
+            try:
+                os.remove(fixed)
+            except OSError:
+                pass
+
+
+def _pptx_to_pdf_impl(pptx_path: str, pdf_path: str) -> bool:
     import shutil
     import subprocess
 
