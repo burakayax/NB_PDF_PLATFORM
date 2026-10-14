@@ -126,6 +126,14 @@ export function ToolResultPanel({
    * işlemin nerede yapıldığı.
    */
   const bildirildiRef = useRef(false);
+  // Sonuç belirince (özellikle telefonda) "İndir" düğmesi ekranda görünsün: panel merkeze kaydırılır.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    const t = window.setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 150);
+    return () => window.clearTimeout(t);
+  }, []);
   useEffect(() => {
     if (bildirildiRef.current) return;
     bildirildiRef.current = true;
@@ -244,7 +252,7 @@ export function ToolResultPanel({
     "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]";
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
+    <div ref={panelRef} className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-5 text-center sm:p-8">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
         <Check className="h-8 w-8" />
       </div>
