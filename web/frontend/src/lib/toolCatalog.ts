@@ -143,8 +143,8 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "cv-olustur", cat: "edit", Icon: FileUser, account: true,
-    tr: { name: "CV Oluştur", desc: "22 hazır şablondan seçin, bilgilerinizi girin; CV'niz canlı oluşsun, ATS röntgeniyle kontrol edin, PDF veya Word indirin." },
-    en: { name: "CV Maker", desc: "Pick from 22 templates, fill in your details, watch your CV build live, check it with the ATS X-ray and download PDF or Word." },
+    tr: { name: "CV Oluştur", desc: "30 hazır şablondan seçin, bilgilerinizi girin; CV'niz canlı oluşsun, ATS röntgeniyle kontrol edin, PDF veya Word indirin." },
+    en: { name: "CV Maker", desc: "Pick from 30 templates, fill in your details, watch your CV build live, check it with the ATS X-ray and download PDF or Word." },
   },
   {
     id: "pdf-imzala", cat: "edit", Icon: PenTool, free: true,

@@ -96,7 +96,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
   const [tplOpen, setTplOpen] = useState(false);
   const [cvMenuOpen, setCvMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [tplFilter, setTplFilter] = useState<"all" | "free" | "ats" | "side" | "classic">("all");
+  const [tplFilter, setTplFilter] = useState<"all" | "new" | "free" | "ats" | "side" | "classic">("all");
   const [importOpen, setImportOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [incoming, setIncoming] = useState<CvData | null>(null);
@@ -281,15 +281,22 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
       </div>
 
       {/* Şablon seçici */}
-      <section aria-label={tr ? "Şablonlar" : "Templates"} className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03]">
-        <button type="button" onClick={() => setTplOpen((o) => !o)} aria-expanded={tplOpen} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300"><LayoutTemplate className="h-4.5 w-4.5" /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[11.5px] text-slate-400">{tr ? "Seçili şablon" : "Selected template"}</span>
-            <span className="block truncate text-[14px] font-bold text-white">{tr ? tpl.tr : tpl.en}</span>
+      <section aria-label={tr ? "Şablonlar" : "Templates"} className="mb-5 rounded-2xl border border-sky-400/30 bg-gradient-to-r from-sky-500/[0.09] to-indigo-500/[0.05] shadow-[0_18px_50px_-30px_rgba(56,189,248,0.6)]">
+        <button type="button" onClick={() => setTplOpen((o) => !o)} aria-expanded={tplOpen} className="group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition hover:bg-white/[0.03]">
+          <span className="relative shrink-0 overflow-hidden rounded-lg bg-white shadow-[0_8px_24px_-10px_rgba(0,0,0,0.8)] ring-1 ring-white/20" style={{ width: 52, height: 68 }} aria-hidden>
+            <span className="pointer-events-none absolute left-0 top-0 block origin-top-left" style={{ width: PAGE_W, transform: `scale(${52 / PAGE_W})` }}><CvPage m={buildModel({ ...SAMPLE[data.settings.lang], photo: null }, "export")} tpl={tpl} size="m" accent={null} /></span>
           </span>
-          {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="hidden rounded-full bg-sky-500/15 px-3 py-1 text-[12px] font-semibold text-sky-200 sm:inline">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : null}
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-[12.5px] font-semibold text-white">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonu değiştir" : "Change template")}<ChevronDown className={`h-4 w-4 transition ${tplOpen ? "rotate-180" : ""}`} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-300">{tr ? `${CV_TEMPLATES.length} şablon arasından seçin` : `Choose from ${CV_TEMPLATES.length} templates`}</span>
+            <span className="mt-0.5 block truncate text-[15px] font-bold text-white">{tr ? tpl.tr : tpl.en}</span>
+            {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="mt-0.5 block text-[11.5px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : <span className="mt-0.5 block truncate text-[12px] text-slate-400">{tr ? tpl.descTr : tpl.descEn}</span>}
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-[13.5px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(59,130,246,0.85)] transition group-hover:brightness-110">
+            <LayoutTemplate className="h-4 w-4" />
+            <span className="hidden sm:inline">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonu değiştir" : "Change template")}</span>
+            <span className="sm:hidden">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonlar" : "Templates")}</span>
+            <ChevronDown className={`h-4 w-4 transition ${tplOpen ? "rotate-180" : ""}`} />
+          </span>
         </button>
         {locked ? (
           <div className="flex flex-wrap items-center gap-2.5 border-t border-amber-300/20 bg-gradient-to-r from-amber-400/[0.12] to-transparent px-4 py-3">
@@ -303,19 +310,19 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
           <div className="border-t border-white/10 px-4 pb-4 pt-3">
             {!paid ? <p className="mb-2 text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</p> : null}
             <div role="group" aria-label={tr ? "Şablon filtresi" : "Template filter"} className="mb-3 flex flex-wrap gap-1.5">
-              {([["all", tr ? "Tümü" : "All"], ["free", tr ? "Ücretsiz" : "Free"], ["ats", tr ? "ATS dostu (tek sütun)" : "ATS-friendly (single column)"], ["side", tr ? "Yan sütunlu" : "Sidebar"], ["classic", tr ? "Klasik (serif)" : "Classic (serif)"]] as const).map(([k, label]) => (
+              {([["all", tr ? "Tümü" : "All"], ["new", tr ? "Yeni" : "New"], ["free", tr ? "Ücretsiz" : "Free"], ["ats", tr ? "ATS dostu (tek sütun)" : "ATS-friendly (single column)"], ["side", tr ? "Yan sütunlu" : "Sidebar"], ["classic", tr ? "Klasik (serif)" : "Classic (serif)"]] as const).map(([k, label]) => (
                 <button key={k} type="button" aria-pressed={tplFilter === k} onClick={() => setTplFilter(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${tplFilter === k ? "bg-sky-500 text-white" : "bg-white/[0.06] text-slate-300 hover:bg-white/10 hover:text-white"}`}>{label}</button>
               ))}
             </div>
             <div role="radiogroup" aria-label={tr ? "CV şablonu" : "CV template"} className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]">
-              {CV_TEMPLATES.filter((t) => tplFilter === "all" || (tplFilter === "free" && t.free) || (tplFilter === "ats" && isSingleColumnLayout(t.layout)) || (tplFilter === "side" && t.layout === "sidebar") || (tplFilter === "classic" && ["caladea", "gelasio", "times"].includes(t.theme.font))).map((t) => {
+              {[...CV_TEMPLATES].sort((x, y) => (x.free ? 0 : x.isNew ? 1 : 2) - (y.free ? 0 : y.isNew ? 1 : 2)).filter((t) => tplFilter === "all" || (tplFilter === "new" && !!t.isNew) || (tplFilter === "free" && t.free) || (tplFilter === "ats" && isSingleColumnLayout(t.layout)) || (tplFilter === "side" && t.layout === "sidebar") || (tplFilter === "classic" && ["caladea", "gelasio", "times"].includes(t.theme.font))).map((t) => {
                 const on = t.id === templateId;
                 const lockedT = !t.free && !paid;
                 return (
                   <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); setTplOpen(false); window.setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
-                    <div className={`overflow-hidden rounded-lg ${lockedT ? "opacity-60" : ""}`}><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
+                    <div className="overflow-hidden rounded-lg"><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
                     {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />PRO</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">PRO</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
-                    <div className="mt-1.5 truncate px-0.5 text-[12px] font-semibold text-white">{tr ? t.tr : t.en}</div>
+                    <div className="mt-1.5 flex items-center gap-1.5 truncate px-0.5 text-[12px] font-semibold text-white"><span className="truncate">{tr ? t.tr : t.en}</span>{t.isNew ? <span className="shrink-0 rounded bg-fuchsia-500/90 px-1 py-px text-[9px] font-bold text-white">{tr ? "YENİ" : "NEW"}</span> : null}</div>
                   </button>
                 );
               })}

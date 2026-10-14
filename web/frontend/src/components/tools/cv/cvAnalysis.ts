@@ -556,4 +556,4 @@ export function atsXray(items: TextItem[], d: CvData, pages: number): XrayResult
 }
 
 /** Şablonun tek sütunlu (ATS açısından en güvenli) olup olmadığı — şablon rozeti için. */
-export const isSingleColumnLayout = (layout: string): boolean => layout === "single" || layout === "timeline";
+export const isSingleColumnLayout = (layout: string): boolean => layout === "single" || layout === "timeline" || layout === "editorial" || layout === "split";

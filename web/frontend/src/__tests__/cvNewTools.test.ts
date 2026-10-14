@@ -122,3 +122,24 @@ describe("CV gücü", () => {
     expect(cvStrength(sampleCv("tr")).value).toBeGreaterThanOrEqual(75);
   });
 });
+
+import { CV_TEMPLATES } from "../components/tools/cv/cvTemplates";
+import { isSingleColumnLayout } from "../components/tools/cv/cvAnalysis";
+
+describe("yeni Pro şablon serisi", () => {
+  const yeni = CV_TEMPLATES.filter((t) => t.isNew);
+  it("sekiz yeni Pro şablon, hepsi ücretli ve kimlikleri benzersiz", () => {
+    expect(yeni.length).toBe(8);
+    expect(yeni.every((t) => !t.free)).toBe(true);
+    expect(new Set(CV_TEMPLATES.map((t) => t.id)).size).toBe(CV_TEMPLATES.length);
+  });
+  it("ücretsiz şablon sayısı değişmedi (4)", () => {
+    expect(CV_TEMPLATES.filter((t) => t.free).length).toBe(4);
+  });
+  it("tek akışlı yeni düzenler ATS dostu sayılır, çok sütunlular sayılmaz", () => {
+    expect(isSingleColumnLayout("editorial")).toBe(true);
+    expect(isSingleColumnLayout("split")).toBe(true);
+    expect(isSingleColumnLayout("grid")).toBe(false);
+    expect(isSingleColumnLayout("studio")).toBe(false);
+  });
+});

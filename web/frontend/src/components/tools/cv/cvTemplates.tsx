@@ -36,13 +36,15 @@ export const FONT_FILE: Record<FontKey, string> = {
 };
 const BASE_PX: Record<FontKey, number> = { carlito: 14.6, arial: 12.8, caladea: 14.2, gelasio: 13.4, times: 14.6 };
 
-export type HeadingStyle = "rule" | "bar" | "caps" | "dot" | "boxed";
-export type SkillStyle = "bars" | "tags" | "plain";
+export type HeadingStyle = "rule" | "bar" | "caps" | "dot" | "boxed" | "plain" | "spaced";
+export type SkillStyle = "bars" | "tags" | "plain" | "inline";
 export type PhotoShape = "circle" | "rounded" | "rect";
-export type LayoutId = "single" | "sidebar" | "banner" | "timeline" | "ledger";
+export type LayoutId = "single" | "sidebar" | "banner" | "timeline" | "ledger" | "editorial" | "split" | "grid" | "studio";
 
 export type CvTheme = {
   font: FontKey;
+  /** Ad, özet alıntısı gibi vitrin metinleri için ikinci yazı tipi (yeni Pro düzenler). */
+  display?: FontKey;
   accent: string;
   text: string;
   muted: string;
@@ -65,6 +67,8 @@ export type CvTemplate = {
   descEn: string;
   layout: LayoutId;
   free: boolean;
+  /** Şablon seçicide "YENİ" rozeti. */
+  isNew?: boolean;
   theme: CvTheme;
 };
 
@@ -160,7 +164,7 @@ export function PhotoBox({ model, th, size, ring }: { model: CvModel; th: CvThem
 
 // ── Başlık / bölüm ─────────────────────────────────────────────────────────
 
-function Heading({ title, th, onDark, dim, boxBg }: { title: string; th: CvTheme; onDark?: { fg: string; line: string }; dim?: boolean; boxBg?: string }) {
+function Heading({ title, th, onDark, dim, boxBg, flat }: { title: string; th: CvTheme; onDark?: { fg: string; line: string }; dim?: boolean; boxBg?: string; flat?: boolean }) {
   const sp = useContext(SpCtx);
   const col = onDark?.fg ?? th.accent;
   const base: CSSProperties = { fontSize: "0.86em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: `${Math.round((dim ? 16 : 20) * sp)}px 0 ${Math.round((dim ? 7 : 9) * sp)}px`, color: col };
@@ -182,7 +186,15 @@ function Heading({ title, th, onDark, dim, boxBg }: { title: string; th: CvTheme
     case "boxed":
       style = { ...base, background: onDark ? "rgba(255,255,255,0.12)" : boxBg ?? th.tint, padding: "4px 9px", borderRadius: 3 };
       break;
+    case "plain":
+      style = { ...base, fontSize: "0.78em", letterSpacing: "0.06em" };
+      break;
+    case "spaced":
+      style = { ...base, fontSize: "0.78em", letterSpacing: "0.06em", paddingBottom: 5, borderBottom: "1px solid #e1e5ea" };
+      lead = null;
+      break;
   }
+  if (flat) style = { ...style, margin: 0, paddingTop: 2 };
   return (
     <div data-keep="head" style={style}>
       {lead}
@@ -191,7 +203,22 @@ function Heading({ title, th, onDark, dim, boxBg }: { title: string; th: CvTheme
   );
 }
 
+/** "Atlas" düzeni: bölüm başlığı solda dar bir sütunda, içerik sağda. */
+const SplitCtx = createContext(false);
+
 function Section({ title, th, children, onDark, dim, boxBg }: { title: string; th: CvTheme; children: ReactNode; onDark?: { fg: string; line: string }; dim?: boolean; boxBg?: string }) {
+  const split = useContext(SplitCtx);
+  const sp = useContext(SpCtx);
+  if (split) {
+    return (
+      <div style={{ display: "flex", gap: 22, marginTop: Math.round(17 * sp) }}>
+        <div style={{ width: 118, flex: "none" }}>
+          <Heading title={title} th={th} flat />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+      </div>
+    );
+  }
   return (
     <div>
       <Heading title={title} th={th} onDark={onDark} dim={dim} boxBg={boxBg} />
@@ -363,6 +390,18 @@ function ReferenceList({ m, th }: { m: CvModel; th: CvTheme }) {
 
 function SkillBlock({ m, th, onDark }: { m: CvModel; th: CvTheme; onDark?: { fg: string; track: string; fill: string } }) {
   const style = th.skills;
+  if (style === "inline") {
+    return (
+      <div style={{ lineHeight: 1.6 }}>
+        {m.skills.map((s, i) => (
+          <span key={i} data-keep="1">
+            {i > 0 ? <span style={{ color: th.accent }}>{"  •  "}</span> : null}
+            <F f={s.name} />
+          </span>
+        ))}
+      </div>
+    );
+  }
   if (style === "tags") {
     return (
       <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
@@ -408,7 +447,7 @@ function LanguageBlock({ m, th, fg, muted }: { m: CvModel; th: CvTheme; fg?: str
             {l.level ? <span style={{ color: muted ?? th.muted, fontSize: "0.92em", textAlign: "right" }}><F f={l.level} /></span> : null}
           </div>
           {!l.name?.g && cefrSteps(l.level?.t ?? "") > 0 ? (
-            <div style={{ display: "flex", gap: 2, marginTop: 2 }} aria-hidden>
+            <div style={{ display: "flex", gap: 2, marginTop: 2, maxWidth: 150 }} aria-hidden>
               {[1, 2, 3, 4, 5, 6].map((n) => <div key={n} style={{ flex: 1, height: 3, borderRadius: 2, background: n <= cefrSteps(l.level?.t ?? "") ? th.accent : "currentColor", opacity: n <= cefrSteps(l.level?.t ?? "") ? 1 : 0.18 }} />)}
             </div>
           ) : null}
@@ -705,6 +744,171 @@ function BannerLayout({ m, th }: { m: CvModel; th: CvTheme }) {
   );
 }
 
+const RULE = "#e1e5ea";
+const famOf = (th: CvTheme) => `'${FONT_CSS[th.display ?? th.font]}', sans-serif`;
+
+/** İletişim satırı: noktalarla ayrılmış (düz metin; başvuru sistemleri için sorunsuz). */
+function ContactDots({ m, th, align }: { m: CvModel; th: CvTheme; align?: "left" | "center" }) {
+  const rows = contactRows(m).filter((r) => r.label !== m.labels.birth && r.label !== m.labels.license);
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: align === "center" ? "center" : "flex-start", color: th.muted, fontSize: "0.94em", lineHeight: 1.6 }}>
+      {rows.map((r, i) => (
+        <span key={i} style={{ whiteSpace: "nowrap" }}>
+          {i > 0 ? <span style={{ margin: "0 9px", color: th.accent }}>{"•"}</span> : null}
+          <F f={r.f} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function PickSections({ m, th, keys }: { m: CvModel; th: CvTheme; keys: SectionKey[] }) {
+  return (
+    <>
+      {m.order.filter((k) => keys.includes(k)).map((k) => (
+        <MainSection key={k} k={k} m={m} th={th} />
+      ))}
+    </>
+  );
+}
+
+/** Editoryal: büyük serif ad, alıntı çizgili özet, ince ayraçlar. Tek akış. */
+function EditorialLayout({ m, th }: { m: CvModel; th: CvTheme }) {
+  return (
+    <div style={{ padding: "46px 54px 38px" }}>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: famOf(th), fontSize: "3.05em", lineHeight: 1.04, fontWeight: 700, color: th.text, letterSpacing: "-0.015em" }}><F f={m.name} /></div>
+          {m.title ? <div style={{ marginTop: 11, fontSize: "0.92em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: th.accent }}><F f={m.title} /></div> : null}
+        </div>
+        {m.photo ? <PhotoBox model={m} th={th} /> : null}
+      </div>
+      <div style={{ marginTop: 18, padding: "9px 0", borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}` }}>
+        <ContactDots m={m} th={th} />
+      </div>
+      {m.summary ? (
+        <div data-keep="1" style={{ marginTop: 20, borderLeft: `3px solid ${th.accent}`, paddingLeft: 16, fontFamily: famOf(th), fontSize: "1.1em", lineHeight: 1.55, color: th.text }}>
+          <F f={m.summary} />
+        </div>
+      ) : null}
+      <MainSections m={m} th={th} skip={["summary"]} />
+    </div>
+  );
+}
+
+/** Atlas: başlıklar solda dar sütunda, içerik sağda; yine tek akış (okuma sırası bozulmaz). */
+function SplitLayout({ m, th }: { m: CvModel; th: CvTheme }) {
+  const rows = contactRows(m).filter((r) => r.label !== m.labels.birth && r.label !== m.labels.license);
+  return (
+    <SplitCtx.Provider value>
+      <div>
+        <div style={{ height: 8, background: th.accent }} />
+        <div style={{ padding: "34px 48px 36px" }}>
+          <div style={{ display: "flex", gap: 22, alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: `1.5px solid ${RULE}` }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "2.45em", fontWeight: 800, lineHeight: 1.06, color: th.text, letterSpacing: "-0.012em" }}><F f={m.name} /></div>
+              {m.title ? <div style={{ fontSize: "1.18em", color: th.accent, fontWeight: 600, marginTop: 6 }}><F f={m.title} /></div> : null}
+            </div>
+            {m.photo ? <PhotoBox model={m} th={th} /> : null}
+            <div style={{ flex: "none", maxWidth: 210, textAlign: "right", color: th.muted, fontSize: "0.92em", lineHeight: 1.5 }}>
+              {rows.map((r, i) => <div key={i} style={{ wordBreak: "break-word" }}><F f={r.f} /></div>)}
+            </div>
+          </div>
+          <MainSections m={m} th={th} />
+        </div>
+      </div>
+    </SplitCtx.Provider>
+  );
+}
+
+function EducationCompact({ m, th }: { m: CvModel; th: CvTheme }) {
+  return (
+    <div>
+      {m.education.map((e, i) => (
+        <div key={i} data-keep="1" style={{ marginBottom: 8 }}>
+          <div style={{ fontWeight: 700 }}><F f={e.school} /></div>
+          {e.degree ? <div style={{ color: th.muted }}><F f={e.degree} /></div> : null}
+          {e.dates ? <div style={{ color: th.muted, fontSize: "0.88em" }}><F f={e.dates} /></div> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Kompakt: deneyim üstte geniş; eğitim–beceri–dil altta üç sütunlu açık zeminde. */
+function GridLayout({ m, th }: { m: CvModel; th: CvTheme }) {
+  const L = m.labels;
+  const rows = contactRows(m).filter((r) => r.label !== m.labels.birth && r.label !== m.labels.license);
+  const BOTTOM: SectionKey[] = ["education", "skills", "languages", "interests"];
+  const cols: { key: string; node: ReactNode }[] = [];
+  if (m.education.length) cols.push({ key: "edu", node: <Section title={L.education} th={th} dim><EducationCompact m={m} th={th} /></Section> });
+  if (m.skills.length) cols.push({ key: "sk", node: <Section title={L.skills} th={th} dim><SkillBlock m={m} th={th} /></Section> });
+  if (m.languages.length || m.interests.length)
+    cols.push({
+      key: "lg",
+      node: (
+        <div>
+          {m.languages.length ? <Section title={L.languages} th={th} dim><LanguageBlock m={m} th={th} /></Section> : null}
+          {m.interests.length ? <Section title={L.interests} th={th} dim><InterestsBlock m={m} th={th} /></Section> : null}
+        </div>
+      ),
+    });
+  return (
+    <div style={{ minHeight: PAGE_H, display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "40px 48px 8px" }}>
+        <div style={{ display: "flex", gap: 22, alignItems: "center", justifyContent: "space-between" }}>
+          {m.photo ? <PhotoBox model={m} th={th} /> : null}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "2.3em", fontWeight: 800, lineHeight: 1.06, color: th.text, letterSpacing: "-0.012em" }}><F f={m.name} /></div>
+            {m.title ? <div style={{ fontSize: "1.15em", color: th.accent, fontWeight: 600, marginTop: 5 }}><F f={m.title} /></div> : null}
+          </div>
+          <div style={{ flex: "none", maxWidth: 220, borderLeft: `3px solid ${th.accent}`, paddingLeft: 12, color: th.muted, fontSize: "0.92em", lineHeight: 1.5 }}>
+            {rows.map((r, i) => <div key={i} style={{ wordBreak: "break-word" }}><F f={r.f} /></div>)}
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, padding: "0 48px 18px" }}>
+        <MainSections m={m} th={th} skip={BOTTOM} />
+      </div>
+      {cols.length ? (
+        <div style={{ background: th.tint, padding: "6px 48px 24px", display: "flex", gap: 26, alignItems: "flex-start" }}>
+          {cols.map((c) => <div key={c.key} style={{ flex: 1, minWidth: 0 }}>{c.node}</div>)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Stüdyo: ortalanmış, harf aralıklı ad; ince çizgiler; iki sütunlu gövde. */
+function StudioLayout({ m, th }: { m: CvModel; th: CvTheme }) {
+  const RIGHT: SectionKey[] = ["education", "skills", "languages", "interests"];
+  return (
+    <div>
+      <div style={{ padding: "40px 48px 20px", textAlign: "center" }}>
+        {m.photo ? <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><PhotoBox model={m} th={th} /></div> : null}
+        <div style={{ fontFamily: famOf(th), fontSize: "2.3em", lineHeight: 1.12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: th.text }}><F f={m.name} /></div>
+        {m.title ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 12 }}>
+            <div style={{ width: 54, height: 1, background: th.accent }} />
+            <div style={{ fontSize: "0.9em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: th.accent }}><F f={m.title} /></div>
+            <div style={{ width: 54, height: 1, background: th.accent }} />
+          </div>
+        ) : null}
+        <div style={{ marginTop: 13 }}><ContactDots m={m} th={th} align="center" /></div>
+      </div>
+      <div style={{ borderTop: `1px solid ${RULE}`, display: "flex", alignItems: "stretch" }}>
+        <main style={{ flex: 1, minWidth: 0, padding: "4px 30px 36px 48px", boxSizing: "border-box" }}>
+          <MainSections m={m} th={th} skip={RIGHT} />
+        </main>
+        <aside style={{ width: 252, flex: "none", borderLeft: `1px solid ${RULE}`, padding: "4px 40px 36px 26px", boxSizing: "border-box" }}>
+          {m.education.length ? <Section title={m.labels.education} th={th}><EducationCompact m={m} th={th} /></Section> : null}
+          <PickSections m={m} th={th} keys={["skills", "languages", "interests"]} />
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 export function CvLayout({ m, tpl }: { m: CvModel; tpl: CvTemplate }) {
   const th = tpl.theme;
   switch (tpl.layout) {
@@ -712,6 +916,10 @@ export function CvLayout({ m, tpl }: { m: CvModel; tpl: CvTemplate }) {
     case "banner": return <BannerLayout m={m} th={th} />;
     case "timeline": return <SingleLayout m={m} th={th} timeline />;
     case "ledger": return <LedgerLayout m={m} th={th} />;
+    case "editorial": return <EditorialLayout m={m} th={th} />;
+    case "split": return <SplitLayout m={m} th={th} />;
+    case "grid": return <GridLayout m={m} th={th} />;
+    case "studio": return <StudioLayout m={m} th={th} />;
     default: return <SingleLayout m={m} th={th} />;
   }
 }
@@ -851,12 +1059,12 @@ const tint = (c: string) => mix(c, "#ffffff", 0.88);
 
 function T(
   id: string, tr: string, en: string, descTr: string, descEn: string, layout: LayoutId, free: boolean,
-  o: { font: FontKey; accent: string; heading: HeadingStyle; align?: "left" | "center"; skills?: SkillStyle; photo?: CvTheme["photo"]; side?: CvTheme["side"]; band?: CvTheme["band"]; text?: string; muted?: string },
+  o: { font: FontKey; display?: FontKey; isNew?: boolean; accent: string; heading: HeadingStyle; align?: "left" | "center"; skills?: SkillStyle; photo?: CvTheme["photo"]; side?: CvTheme["side"]; band?: CvTheme["band"]; text?: string; muted?: string },
 ): CvTemplate {
   return {
-    id, tr, en, descTr, descEn, layout, free,
+    id, tr, en, descTr, descEn, layout, free, isNew: o.isNew,
     theme: {
-      font: o.font, accent: o.accent, text: o.text ?? "#1f2430", muted: o.muted ?? "#5d6675", tint: tint(o.accent),
+      font: o.font, display: o.display, accent: o.accent, text: o.text ?? "#1f2430", muted: o.muted ?? "#5d6675", tint: tint(o.accent),
       heading: o.heading, align: o.align ?? "left", skills: o.skills ?? "tags",
       photo: o.photo ?? { shape: "rounded", w: 96, h: 120 },
       side: o.side, band: o.band,
@@ -912,6 +1120,23 @@ export const CV_TEMPLATES: CvTemplate[] = [
     { font: "arial", accent: "#1e3a8a", heading: "caps", skills: "plain", photo: { shape: "rect", w: 100, h: 124 }, band: { bg: "#1e3a8a", fg: "#ffffff", muted: "#c7d4f5" }, side: { pos: "right", bg: "#eef2fb", fg: "#1f2430", muted: "#5d6675", width: 246 } }),
   T("zaman-yesil", "Yeşil Zaman Çizgisi", "Green Timeline", "Yeşil zaman çizgisi; kariyer yolculuğunu öne çıkarır, sağlık ve eğitim için.", "A green timeline that highlights your career path; for healthcare and education.", "timeline", false,
     { font: "carlito", accent: "#15803d", heading: "dot", skills: "tags", photo: { shape: "circle", w: 100, h: 100 } }),
+  // ── Yeni Pro seri: dört özgün yerleşim × iki renk ──
+  T("editoryal-murekkep", "Editoryal Mürekkep", "Editorial Ink", "Büyük serif ad, alıntı çizgili özet ve ince ayraçlar: dergi sayfası gibi şık ama tek sütun, başvuru sistemleri rahat okur.", "A large serif name, a rule-quoted summary and fine dividers: magazine-grade yet single column, easy for hiring systems.", "editorial", false,
+    { font: "carlito", display: "gelasio", accent: "#1e293b", heading: "spaced", skills: "inline", photo: { shape: "rounded", w: 96, h: 120 }, isNew: true }),
+  T("editoryal-bordo", "Editoryal Bordo", "Editorial Burgundy", "Editoryal düzenin bordo vurgulu sürümü; yönetici, danışmanlık ve yaratıcı roller için.", "The editorial layout in burgundy; for executive, consulting and creative roles.", "editorial", false,
+    { font: "carlito", display: "gelasio", accent: "#9f1239", heading: "spaced", skills: "inline", photo: { shape: "circle", w: 104, h: 104 }, isNew: true }),
+  T("atlas-petrol", "Atlas Petrol", "Atlas Teal", "Bölüm başlıkları solda, içerik sağda: taranması çok kolay, tek akışlı modern düzen.", "Section titles on the left, content on the right: a single-flow modern layout that scans in seconds.", "split", false,
+    { font: "carlito", accent: "#0f766e", heading: "plain", skills: "inline", photo: { shape: "rounded", w: 92, h: 112 }, isNew: true }),
+  T("atlas-indigo", "Atlas İndigo", "Atlas Indigo", "Atlas düzeninin indigo sürümü; teknoloji, ürün ve pazarlama profilleri için.", "The Atlas layout in indigo; for tech, product and marketing profiles.", "split", false,
+    { font: "arial", accent: "#3730a3", heading: "plain", skills: "inline", photo: { shape: "circle", w: 100, h: 100 }, isNew: true }),
+  T("kompakt-grafit", "Kompakt Grafit", "Compact Graphite", "Deneyim üstte geniş, eğitim–beceri–dil altta üç sütunda: çok içeriği tek sayfaya yerleştirmek için.", "Wide experience on top with education, skills and languages in three columns below: fits a lot onto one page.", "grid", false,
+    { font: "carlito", accent: "#334155", heading: "spaced", skills: "plain", photo: { shape: "rounded", w: 88, h: 108 }, isNew: true }),
+  T("kompakt-zumrut", "Kompakt Zümrüt", "Compact Emerald", "Kompakt düzenin zümrüt yeşili sürümü; sağlık, eğitim ve operasyon rolleri için.", "The compact layout in emerald; for healthcare, education and operations roles.", "grid", false,
+    { font: "carlito", accent: "#047857", heading: "spaced", skills: "plain", photo: { shape: "circle", w: 96, h: 96 }, isNew: true }),
+  T("studyo-altin", "Stüdyo Altın", "Studio Gold", "Ortalanmış harf aralıklı ad, ince çizgiler ve iki sütunlu gövde: prestijli, sakin bir görünüm.", "A centred, letter-spaced name, fine rules and a two-column body: a calm, prestigious look.", "studio", false,
+    { font: "carlito", display: "gelasio", accent: "#a16207", heading: "spaced", skills: "plain", photo: { shape: "circle", w: 96, h: 96 }, isNew: true }),
+  T("studyo-gece", "Stüdyo Gece", "Studio Midnight", "Stüdyo düzeninin gece mavisi sürümü; finans, hukuk ve kurumsal başvurular için.", "The Studio layout in midnight blue; for finance, legal and corporate applications.", "studio", false,
+    { font: "carlito", display: "gelasio", accent: "#1e3a8a", heading: "spaced", skills: "plain", photo: { shape: "rounded", w: 92, h: 112 }, isNew: true }),
 ];
 
 export function getTemplate(id: string): CvTemplate {
