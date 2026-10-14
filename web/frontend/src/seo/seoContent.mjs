@@ -1,3 +1,4 @@
+import { CV_PROFESSION_SLUGS } from "../blog/blogContentCv3.mjs";
 /**
  * ─────────────────────────────────────────────────────────────────────────────
  *  TEK GERÇEK KAYNAK — Tüm sayfa SEO içeriği (TR birincil, EN ikincil)
@@ -2203,6 +2204,7 @@ export const RELATED_TOOLS = {
 
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
 export const BLOG_RELATED_TOOLS = {
+  ...Object.fromEntries(Object.values(CV_PROFESSION_SLUGS).map(([slug]) => [slug, ["cv-olustur", "ai-fotograf-studyosu", "pdf-duzenle"]])),
   "cv-nasil-hazirlanir": ["cv-olustur", "ai-fotograf-studyosu", "compress"],
   "ats-uyumlu-cv-nasil-yazilir": ["cv-olustur", "pdf-duzenle", "compress"],
   "cv-fotografi-nasil-olmali": ["ai-fotograf-studyosu", "cv-olustur", "gorsel-boyutlandir"],

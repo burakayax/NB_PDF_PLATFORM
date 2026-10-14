@@ -24,6 +24,7 @@ import { COPY_5 } from "./carouselCopy5.mjs";
 import { COPY_6 } from "./carouselCopy6.mjs";
 import { COPY_7 } from "./carouselCopy7.mjs";
 import { COPY_8 } from "./carouselCopy8.mjs";
+import { CV_PROFESSION_CAROUSELS } from "./blogContentCv3.mjs";
 
 export const CURATED_CAROUSELS = {
   ...COPY_1,
@@ -34,6 +35,7 @@ export const CURATED_CAROUSELS = {
   ...COPY_6,
   ...COPY_7,
   ...COPY_8,
+  ...CV_PROFESSION_CAROUSELS,
 };
 
 /** @returns {{ hook: string, slides: Array<{title:string,text:string}> } | null} */
