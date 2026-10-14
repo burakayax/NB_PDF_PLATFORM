@@ -50,11 +50,21 @@ export type PlanDefinition = {
   multiUser: boolean;
 };
 
-/** Temel araçlar — ücretli plan gerektirmez */
+/**
+ * Temel araçlar — ücretli plan gerektirmez.
+ *
+ * 2026-10-14: Word→PDF, PDF→Word ve PDF→JPG ücretsiz üyeye AÇILDI. Gerekçe: en çok aranan dönüşümler;
+ * rakipler (Smallpdf vb.) ilk dokunuşta bir-iki bedava dönüşüm veriyor, biz kapıda "ücretli" diyorduk.
+ * Süreler canlıda ölçüldü (Word→PDF ~7 sn, PDF→Word ~10 sn, PDF→JPG ~41 sn/30 sayfa) → ortak günlük hak
+ * havuzundan düşer (PDF→JPG 2 hak). PDF→PowerPoint (~100 sn), Excel/PPT/HTML dönüşümleri ücretli kaldı.
+ */
 const FREE_TOOLS: FeatureKey[] = [
   "split",
   "merge",
   "compress",
+  "word-to-pdf",
+  "pdf-to-word",
+  "pdf-to-image",
   "delete-pages",
   "rotate-pdf",
   "organize-pdf",
@@ -77,7 +87,6 @@ const FREE_TOOLS: FeatureKey[] = [
 const STARTER_TOOLS: FeatureKey[] = [
   ...FREE_TOOLS,
   "encrypt",
-  "pdf-to-image",
   "page-numbers",
   "watermark",
   "extract-images",
