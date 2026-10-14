@@ -250,6 +250,72 @@ function applyTone(c: HTMLCanvasElement, t: Tone): void {
   ctx.putImageData(img, 0, 0);
 }
 
+// ── Kenar temizliği ────────────────────────────────────────────────────────
+
+/**
+ * Kesilen kişinin kenarını temizler:
+ *  1) Silik (düşük opaklıklı) artıkları siler → arka plan "hayalet" gibi kalmaz.
+ *  2) Kenar piksellerinin rengini içerideki gerçek renge yaklaştırır → eski arka planın rengi (hale) kenara bulaşmaz.
+ */
+function cleanEdges(layer: HTMLCanvasElement, tighten: number): void {
+  const w = layer.width, h = layer.height;
+  const ctx = layer.getContext("2d", { willReadFrequently: true })!;
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const lo = 0.06 + 0.22 * Math.min(1, Math.max(0, tighten));
+  const hi = 0.97;
+  const lut = new Uint8ClampedArray(256);
+  for (let i = 0; i < 256; i++) {
+    const t = Math.min(1, Math.max(0, (i / 255 - lo) / (hi - lo)));
+    lut[i] = Math.round(t * t * (3 - 2 * t) * 255);
+  }
+
+  // İç renk alanı: yalnızca tam opak pikseller, küçültüp büyüterek bulanıklaştırılır
+  const solid = document.createElement("canvas");
+  solid.width = w;
+  solid.height = h;
+  const sctx = solid.getContext("2d", { willReadFrequently: true })!;
+  const sImg = sctx.createImageData(w, h);
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] >= 245) {
+      sImg.data[i] = d[i];
+      sImg.data[i + 1] = d[i + 1];
+      sImg.data[i + 2] = d[i + 2];
+      sImg.data[i + 3] = 255;
+    }
+  }
+  sctx.putImageData(sImg, 0, 0);
+  const sw = Math.max(8, Math.round(w / 10)), sh = Math.max(8, Math.round(h / 10));
+  const small = document.createElement("canvas");
+  small.width = sw;
+  small.height = sh;
+  const smctx = small.getContext("2d", { willReadFrequently: true })!;
+  smctx.imageSmoothingQuality = "high";
+  smctx.drawImage(solid, 0, 0, sw, sh);
+  const back = document.createElement("canvas");
+  back.width = w;
+  back.height = h;
+  const bctx = back.getContext("2d", { willReadFrequently: true })!;
+  bctx.imageSmoothingEnabled = true;
+  bctx.imageSmoothingQuality = "high";
+  bctx.drawImage(small, 0, 0, w, h);
+  const inner = bctx.getImageData(0, 0, w, h).data;
+
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3];
+    if (a === 0) continue;
+    const na = lut[a];
+    if (a < 250 && inner[i + 3] > 8) {
+      const k = 0.85 * (1 - a / 255);
+      d[i] = d[i] + (inner[i] - d[i]) * k;
+      d[i + 1] = d[i + 1] + (inner[i + 1] - d[i + 1]) * k;
+      d[i + 2] = d[i + 2] + (inner[i + 2] - d[i + 2]) * k;
+    }
+    d[i + 3] = na;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
 // ── Birleştirme ────────────────────────────────────────────────────────────
 
 export type ComposeOptions = {
@@ -267,6 +333,8 @@ export type ComposeOptions = {
   circle: boolean;
   enhance: boolean;
   brightness: number;
+  /** Kenar sıkılığı 0–1 (varsayılan 0,5): arka plandan kalan silik artıkları siler. */
+  edge?: number;
 };
 
 export type Guides = {
@@ -294,6 +362,42 @@ function paintBackground(ctx: CanvasRenderingContext2D, w: number, h: number, o:
     g.addColorStop(0, "#f3f4f6");
     g.addColorStop(1, "#aeb4be");
     ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  } else if (o.bg === "corp" || o.bg === "warm" || o.bg === "sky") {
+    const stops: Record<string, [string, string]> = { corp: ["#3f74bd", "#13305a"], warm: ["#f7e9d6", "#d9bb95"], sky: ["#bcdaf5", "#f0f7fd"] };
+    const [c0, c1] = stops[o.bg];
+    const g = o.bg === "sky" ? ctx.createLinearGradient(0, 0, 0, h) : ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, c0);
+    g.addColorStop(1, c1);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  } else if (o.bg === "graphite" || o.bg === "sage") {
+    const [c0, c1] = o.bg === "graphite" ? ["#59616f", "#0f1623"] : ["#e6eee6", "#9db4a3"];
+    const g = ctx.createRadialGradient(w / 2, h * 0.38, Math.min(w, h) * 0.08, w / 2, h * 0.5, Math.max(w, h) * 0.8);
+    g.addColorStop(0, c0);
+    g.addColorStop(1, c1);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  } else if (o.bg === "office") {
+    // Ofis havası: yumuşak gri-mavi zemin + dağınık ışık lekeleri (pencere/lamba bulanıklığı)
+    const base = ctx.createLinearGradient(0, 0, w, h);
+    base.addColorStop(0, "#e4e9ef");
+    base.addColorStop(1, "#b7c2d0");
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+    const blobs: [number, number, number, number][] = [[0.12, 0.2, 0.28, 0.55], [0.85, 0.15, 0.22, 0.45], [0.9, 0.62, 0.3, 0.35], [0.08, 0.7, 0.24, 0.3], [0.62, 0.08, 0.16, 0.4], [0.3, 0.9, 0.2, 0.25]];
+    for (const [bx, by, br, ba] of blobs) {
+      const r = Math.min(w, h) * br;
+      const g = ctx.createRadialGradient(bx * w, by * h, 0, bx * w, by * h, r);
+      g.addColorStop(0, `rgba(255,255,255,${ba})`);
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+    const shade = ctx.createLinearGradient(0, h * 0.55, 0, h);
+    shade.addColorStop(0, "rgba(60,75,95,0)");
+    shade.addColorStop(1, "rgba(60,75,95,0.22)");
+    ctx.fillStyle = shade;
     ctx.fillRect(0, 0, w, h);
   } else if (o.bg === "blur" || o.bg === "original") {
     // Kaynağı kadraja göre çiz. Kadraj görüntü dışına taşarsa altta yumuşak bir dolgu olsun.
@@ -356,6 +460,7 @@ export function compose(L: Leveled, o: ComposeOptions): { canvas: HTMLCanvasElem
     lctx.imageSmoothingEnabled = true;
     lctx.imageSmoothingQuality = "high";
     lctx.drawImage(L.fg, x, y, cropW, cropH, 0, 0, w, h);
+    cleanEdges(layer, o.edge ?? 0.5);
     applyTone(layer, autoTone(L.faceLuma, o.enhance, o.brightness));
     ctx.drawImage(layer, 0, 0);
   } else if (o.enhance || o.brightness !== 0) {

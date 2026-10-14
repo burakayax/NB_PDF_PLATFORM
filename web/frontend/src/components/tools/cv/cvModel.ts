@@ -27,11 +27,22 @@ export const BASE_SECTIONS: SectionKey[] = ["summary", "experience", "education"
 export type CvPhoto = { src: string; zoom: number; x: number; y: number };
 
 export type CvExperience = { id: string; company: string; role: string; location: string; start: string; end: string; current: boolean; desc: string };
-export type CvEducation = { id: string; school: string; degree: string; location: string; start: string; end: string; current: boolean; desc: string };
+export type CvEducation = {
+  id: string; school: string; degree: string; location: string; start: string; end: string; current: boolean; desc: string;
+  /** Eğitim düzeyi (EDU_LEVELS kimliği): seçilirse "Bölüm, Lisans" gibi derece metnine eklenir. */
+  level?: string;
+  /** Diploma / not ortalaması (serbest metin) ve üzerinden olduğu ölçek ("4", "100", "5", "10"). */
+  gpa?: string; gpaScale?: string;
+  /** Başarılar: her satır bir madde (bölüm birinciliği, onur öğrencisi…). */
+  honors?: string;
+};
 export type CvSkill = { id: string; name: string; level: number };
 export type CvLanguageItem = { id: string; name: string; level: string };
 export type CvCert = { id: string; name: string; issuer: string; date: string };
 export type CvProject = { id: string; name: string; link: string; desc: string };
+/** Diğer sosyal medya / portfolyo hesapları (GitHub, Instagram, Behance...). */
+export type CvSocial = { id: string; kind: string; value: string };
+export const SOCIAL_KINDS: string[] = ["GitHub", "Instagram", "X (Twitter)", "Behance", "Dribbble", "YouTube", "Medium", "Facebook", "TikTok", "Diğer"];
 export type CvReference = { id: string; name: string; role: string; contact: string };
 export type CvCustomItem = { id: string; title: string; subtitle: string; date: string; desc: string };
 /** Özel bölümün CV'deki görünümü: ayrıntılı kayıtlar, madde listesi, etiketler ya da kartlar. */
@@ -55,11 +66,15 @@ export type CvSettings = {
   hidden: SectionKey[];
   /** Taşan içeriği tek sayfaya sığdırmak için yazı/boşluk kademeli küçülür. */
   fitOnePage: boolean;
+  /** Tarih aralığının yanında "(2 yıl 3 ay)" süresini göster. */
+  showDuration: boolean;
+  /** İş Deneyimi başlığının altında toplam deneyim süresini göster. */
+  showTotalExp: boolean;
 };
 
 export const DEFAULT_SETTINGS: CvSettings = {
   lang: "tr", accent: null, size: "m", font: null, density: "normal", headingStyle: null, photoShape: null,
-  dateFormat: "mon", order: null, hidden: [], fitOnePage: false,
+  dateFormat: "mon", order: null, hidden: [], fitOnePage: false, showDuration: true, showTotalExp: true,
 };
 
 export type CvData = {
@@ -70,6 +85,8 @@ export type CvData = {
   city: string;
   website: string;
   linkedin: string;
+  /** LinkedIn dışındaki hesaplar. */
+  socials: CvSocial[];
   birth: string;
   license: string;
   summary: string;
@@ -91,7 +108,7 @@ let seq = 0;
 export const uid = (): string => `${Date.now().toString(36)}${(seq++).toString(36)}`;
 
 export const EMPTY_CV: CvData = {
-  name: "", title: "", email: "", phone: "", city: "", website: "", linkedin: "", birth: "", license: "", summary: "",
+  name: "", title: "", email: "", phone: "", city: "", website: "", linkedin: "", socials: [], birth: "", license: "", summary: "",
   photo: null, showPhoto: true,
   experience: [], education: [], skills: [], languages: [], certs: [], projects: [], references: [], interests: "",
   customSections: [],
@@ -112,6 +129,7 @@ export function normalizeCv(raw: Partial<CvData> | null | undefined): CvData {
     certs: r.certs ?? [],
     projects: r.projects ?? [],
     references: r.references ?? [],
+    socials: r.socials ?? [],
     customSections: r.customSections ?? [],
     settings: { ...DEFAULT_SETTINGS, ...(r.settings ?? {}), hidden: r.settings?.hidden ?? [] },
   };
@@ -136,6 +154,7 @@ export function sampleCv(lang: CvLang): CvData {
     city: tr ? "İstanbul, Türkiye" : "London, UK",
     website: tr ? "elifyilmaz.com" : "emmacarter.com",
     linkedin: tr ? "linkedin.com/in/elifyilmaz" : "linkedin.com/in/emmacarter",
+    socials: [],
     birth: "",
     license: tr ? "B sınıfı" : "",
     summary: tr
@@ -254,11 +273,116 @@ export function fmtMonth(v: string, lang: CvLang, fmt: CvDateFormat = "mon"): st
   return v.trim();
 }
 
-function dateRange(start: string, end: string, current: boolean, L: Labels, lang: CvLang, fmt: CvDateFormat = "mon"): string {
+// ── Süre hesabı ────────────────────────────────────────────────────────────
+
+const YM = /^(\d{4})-(\d{2})$/;
+const toIdx = (v: string): number | null => {
+  const m = YM.exec(v.trim());
+  if (!m) return null;
+  const mo = Number(m[2]);
+  return mo >= 1 && mo <= 12 ? Number(m[1]) * 12 + (mo - 1) : null;
+};
+const nowIdx = (): number => {
+  const n = new Date();
+  return n.getFullYear() * 12 + n.getMonth();
+};
+
+/** Başlangıç ve bitiş AYLARI DAHİL kaç ay (Mart 2020 – Mart 2021 = 13 ay, LinkedIn gibi). Geçersizse null. */
+export function monthsSpan(start: string, end: string, current: boolean): number | null {
+  const a = toIdx(start);
+  const b = current ? nowIdx() : toIdx(end);
+  if (a == null || b == null || b < a) return null;
+  return b - a + 1;
+}
+
+/** 67 -> "5 yıl 7 ay" / "5 yrs 7 mos". */
+export function fmtDuration(months: number, lang: CvLang): string {
+  const y = Math.floor(months / 12), mo = months % 12;
+  if (lang === "tr") return [y ? `${y} yıl` : "", mo ? `${mo} ay` : ""].filter(Boolean).join(" ");
+  return [y ? `${y} ${y === 1 ? "yr" : "yrs"}` : "", mo ? `${mo} ${mo === 1 ? "mo" : "mos"}` : ""].filter(Boolean).join(" ");
+}
+
+/** Birden çok işin TOPLAM süresi: üst üste binen aylar iki kez sayılmaz. Hiç geçerli aralık yoksa null. */
+export function totalMonths(items: { start: string; end: string; current: boolean }[]): number | null {
+  const spans: [number, number][] = [];
+  for (const it of items) {
+    const a = toIdx(it.start);
+    const b = it.current ? nowIdx() : toIdx(it.end);
+    if (a != null && b != null && b >= a) spans.push([a, b]);
+  }
+  if (!spans.length) return null;
+  spans.sort((x, y) => x[0] - y[0]);
+  let total = 0;
+  let [cs, ce] = spans[0];
+  for (const [st, en] of spans.slice(1)) {
+    if (st <= ce + 1) ce = Math.max(ce, en);
+    else {
+      total += ce - cs + 1;
+      [cs, ce] = [st, en];
+    }
+  }
+  return total + (ce - cs + 1);
+}
+
+function dateRange(start: string, end: string, current: boolean, L: Labels, lang: CvLang, fmt: CvDateFormat = "mon", duration = false): string {
   const s = fmtMonth(start, lang, fmt);
   const e = current ? L.present : fmtMonth(end, lang, fmt);
-  if (s && e) return `${s} – ${e}`;
-  return s || e || "";
+  const base = s && e ? `${s} – ${e}` : s || e || "";
+  if (!base || !duration) return base;
+  const n = s && e ? monthsSpan(start, end, current) : null;
+  return n ? `${base} (${fmtDuration(n, lang)})` : base;
+}
+
+// ── Eğitim düzeyi ve diploma notu ─────────────────────────────────────────
+
+export type EduLevel = { id: string; tr: string; en: string };
+export const EDU_LEVELS: EduLevel[] = [
+  { id: "highschool", tr: "Lise", en: "High school" },
+  { id: "vocational", tr: "Meslek lisesi", en: "Vocational high school" },
+  { id: "associate", tr: "Ön lisans", en: "Associate degree" },
+  { id: "bachelor", tr: "Lisans", en: "Bachelor's degree" },
+  { id: "master", tr: "Yüksek lisans", en: "Master's degree" },
+  { id: "doctorate", tr: "Doktora", en: "Doctorate (PhD)" },
+  { id: "course", tr: "Kurs / sertifika programı", en: "Course / certificate program" },
+];
+
+export const GPA_SCALES: { v: string; label: string }[] = [
+  { v: "4", label: "/ 4,00" },
+  { v: "100", label: "/ 100" },
+  { v: "5", label: "/ 5,00" },
+  { v: "10", label: "/ 10" },
+];
+
+/** Hazır başarı satırları (tek tıkla eklenir). */
+export const EDU_HONORS: { tr: string; en: string }[] = [
+  { tr: "Bölüm birincisi olarak mezun oldu", en: "Graduated first in the department" },
+  { tr: "Sınıf birinciliği", en: "Ranked first in the class" },
+  { tr: "Fakülte üçüncülüğü", en: "Ranked third in the faculty" },
+  { tr: "Onur öğrencisi", en: "Honor student" },
+  { tr: "Yüksek onur öğrencisi", en: "High honor student" },
+  { tr: "Tam burslu", en: "Full scholarship" },
+  { tr: "Kısmi burslu", en: "Partial scholarship" },
+  { tr: "Çift anadal programı", en: "Double major program" },
+  { tr: "Yandal programı", en: "Minor program" },
+  { tr: "Erasmus değişim programı", en: "Erasmus exchange program" },
+];
+
+function eduDegree(e: CvEducation, lang: CvLang): string {
+  const lv = EDU_LEVELS.find((l) => l.id === e.level);
+  const dept = e.degree.trim();
+  if (!lv) return dept;
+  const name = lang === "tr" ? lv.tr : lv.en;
+  if (!dept) return name;
+  return dept.toLocaleLowerCase(lang).includes(name.toLocaleLowerCase(lang)) ? dept : `${dept}, ${name}`;
+}
+
+function gpaLine(e: CvEducation, lang: CvLang): string | null {
+  const g = (e.gpa ?? "").trim();
+  if (!g) return null;
+  const scale = e.gpaScale || "4";
+  const sc = scale === "100" ? "100" : scale === "10" ? "10" : `${scale}${lang === "tr" ? ",00" : ".00"}`;
+  const label = lang === "tr" ? (e.current ? "Not ortalaması" : "Diploma notu") : e.current ? "GPA" : "Final grade";
+  return `${label}: ${g} / ${sc}`;
 }
 
 // ── Görünüm modeli ─────────────────────────────────────────────────────────
@@ -275,9 +399,13 @@ export type CvModel = {
   labels: Labels;
   mode: BuildMode;
   name: Fld; title: Fld; email: Fld; phone: Fld; city: Fld; website: Fld; linkedin: Fld; birth: Fld; license: Fld;
+  /** Dolu sosyal hesaplar (etiket + adres). Boşsa taslakta bile yer tutucu üretilmez. */
+  socials: { label: string; f: Fld }[];
   summary: Fld;
   photo: { data: CvPhoto | null; ghost: boolean } | null;
   experience: MExperience[];
+  /** Toplam iş deneyimi süresi ("7 yıl 3 ay"); gösterilmeyecekse ya da hesaplanamıyorsa null. */
+  totalExp: string | null;
   education: MEducation[];
   skills: { name: Fld; level: number }[];
   languages: { name: Fld; level: Fld }[];
@@ -317,7 +445,7 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
 
   const experience: MExperience[] = exp.map((e) => ({
     company: f(e.company, "company"), role: f(e.role, "role"), location: f(e.location, "location"),
-    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang, d.settings.dateFormat); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
+    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang, d.settings.dateFormat, d.settings.showDuration); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
     bullets: bullets(e.desc), ghost: false,
   }));
   if (!experience.length && showGhost) {
@@ -327,11 +455,15 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
     });
   }
 
-  const education: MEducation[] = edu.map((e) => ({
-    school: f(e.school, "school"), degree: f(e.degree, "degree"), location: f(e.location, "location"),
-    dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang, d.settings.dateFormat); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
-    bullets: e.desc.trim() ? bullets(e.desc) : [], ghost: false,
-  }));
+  const clean = (x: string): string => x.replace(/^[\s•\-–*]+/, "").trim();
+  const education: MEducation[] = edu.map((e) => {
+    const extra = [gpaLine(e, lang), ...(e.honors ?? "").split(/\r?\n/).map(clean), ...e.desc.split(/\r?\n/).map(clean)].filter((x): x is string => !!x);
+    return {
+      school: f(e.school, "school"), degree: f(eduDegree(e, lang), "degree"), location: f(e.location, "location"),
+      dates: (() => { const s = dateRange(e.start, e.end, e.current, L, lang, d.settings.dateFormat, d.settings.showDuration); return s ? { t: s, g: false } : showGhost ? { t: ph("dates"), g: true } : null; })(),
+      bullets: extra.map((t) => ({ t, g: false })), ghost: false,
+    };
+  });
   if (!education.length && showGhost) {
     education.push({ school: { t: ph("school"), g: true }, degree: { t: ph("degree"), g: true }, location: null, dates: { t: ph("dates"), g: true }, bullets: [], ghost: true });
   }
@@ -387,20 +519,24 @@ export function buildModel(d: CvData, mode: BuildMode): CvModel {
 
   const photo: CvModel["photo"] = !d.showPhoto ? null : d.photo && !allGhost ? { data: d.photo, ghost: false } : showGhost ? { data: null, ghost: true } : null;
 
+  const totalSpan = allGhost || !d.settings.showTotalExp ? null : totalMonths(exp);
+  const totalExp = totalSpan && totalSpan >= 1 ? fmtDuration(totalSpan, lang) : null;
+
   const m: CvModel = {
-    lang, labels: L, mode,
+    lang, labels: L, mode, totalExp,
     name: f(d.name, "name"), title: f(d.title, "title"), email: f(d.email, "email"), phone: f(d.phone, "phone"), city: f(d.city, "city"),
     website: f(d.website, "website"), linkedin: f(d.linkedin, "linkedin"),
     // Doğum tarihi ve ehliyet: yalnız doluysa (ya da taslak/boş şablonda ipucu olarak) görünür
     birth: f(d.birth, "birth"), license: f(d.license, "license"),
     summary: f(d.summary, "summary"),
+    socials: (allGhost ? [] : d.socials).filter((x) => x.value.trim()).map((x) => ({ label: x.kind === "Diğer" ? (lang === "tr" ? "Hesap" : "Profile") : x.kind, f: { t: x.value.trim(), g: false } as Fld })),
     photo, experience, education, skills, languages, certs, projects, references, interests,
     custom,
     order: resolveOrder(d).filter((k) => !d.settings.hidden.includes(k)),
     has: { contact: false, skills: false, languages: false, interests: false },
   };
   m.has = {
-    contact: !!(m.email || m.phone || m.city || m.website || m.linkedin || m.birth || m.license),
+    contact: !!(m.email || m.phone || m.city || m.website || m.linkedin || m.birth || m.license || m.socials.length),
     skills: skills.length > 0, languages: languages.length > 0, interests: interests.length > 0,
   };
   return m;

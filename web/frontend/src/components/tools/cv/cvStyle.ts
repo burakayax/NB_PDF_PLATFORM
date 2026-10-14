@@ -1,4 +1,4 @@
-import type { CvSettings } from "./cvModel";
+import type { CvData, CvSettings } from "./cvModel";
 import type { CvStyleOpts } from "./cvTemplates";
 
 /**
@@ -28,3 +28,30 @@ export function styleFromSettings(st: CvSettings, fitStep = 0): CvStyleOpts {
 }
 
 export const MAX_FIT_STEP = FIT_STEPS.length - 1;
+
+/**
+ * Yazı küçültmek yetmezse son çare: "Tek sayfaya sığdır" yalnızca PDF'teki gösterimi kısaltır; kullanıcının yazdığı metin silinmez.
+ * En yeni `recent` iş tam kalır (keepRecent satıra kadar), daha eski işlerin yalnızca ilk keepOld satırı gösterilir.
+ */
+export const TRIM_LEVELS: { recent: number; keepRecent: number; keepOld: number }[] = [
+  { recent: 2, keepRecent: 99, keepOld: 99 },
+  { recent: 2, keepRecent: 6, keepOld: 4 },
+  { recent: 2, keepRecent: 5, keepOld: 3 },
+  { recent: 2, keepRecent: 4, keepOld: 2 },
+  { recent: 1, keepRecent: 3, keepOld: 1 },
+];
+export const MAX_TRIM = TRIM_LEVELS.length - 1;
+
+/** İş deneyimi satırlarını kademeye göre kısaltılmış bir kopya ve gizlenen satır sayısını verir. */
+export function trimForFit(d: CvData, level: number): { data: CvData; hidden: number } {
+  const t = TRIM_LEVELS[Math.min(Math.max(level, 0), MAX_TRIM)];
+  let hidden = 0;
+  const experience = d.experience.map((e, i) => {
+    const lines = e.desc.split(/\r?\n/).filter((x) => x.trim());
+    const keep = i < t.recent ? t.keepRecent : t.keepOld;
+    if (lines.length <= keep) return e;
+    hidden += lines.length - keep;
+    return { ...e, desc: lines.slice(0, keep).join("\n") };
+  });
+  return { data: hidden ? { ...d, experience } : d, hidden };
+}

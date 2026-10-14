@@ -1,5 +1,6 @@
 /** Form alanı uyarıları (kayıt anında, yazarken): e-posta, telefon, tarih sırası. Saf fonksiyonlar. */
 import type { CvData } from "./cvModel";
+import { phoneLooksIncomplete } from "./cvPhone";
 
 export type FieldIssue = { tr: string; en: string };
 
@@ -13,6 +14,8 @@ export function phoneIssue(v: string): FieldIssue | null {
   const s = v.trim();
   if (!s) return null;
   const digits = s.replace(/\D/g, "");
+  // Ülke kodlu (alan tarafından biçimlenen) numaralarda ülkenin kendi uzunluğuna bakılır
+  if (s.startsWith("+") && !/[a-zA-Z]/.test(s)) return phoneLooksIncomplete(s) ? { tr: "Telefon numarası eksik görünüyor; ülkenizin numara uzunluğunu kontrol edin.", en: "The phone number looks incomplete; check the length for your country." } : null;
   if (/[a-zA-Z]/.test(s) || digits.length < 10 || digits.length > 15) return { tr: "Telefon numarası eksik görünüyor; alan kodunu da yazın.", en: "The phone number looks incomplete; include the area code." };
   return null;
 }

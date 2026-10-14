@@ -33,13 +33,17 @@ describe("sihirbaz", () => {
     next(); // work
     fireEvent.click(screen.getByText("İş deneyimi ekle"));
     fireEvent.click(screen.getByText("Hazır cümleler"));
-    fireEvent.click(screen.getByText("Aylık satış hedefini ortalama %[X] oranında aştı"));
+    fireEvent.click(screen.getByText("Aylık satış hedefini ortalama %[X] oranında aştım"));
     expect(JSON.parse(screen.getByTestId("json").textContent!).exp[0]).toContain("Aylık satış hedefini");
     next(); // edu
+    next(); // projects
     next(); // skills
     fireEvent.click(screen.getByText("Beceri önerileri"));
     fireEvent.click(screen.getByText("Satış Raporlama"));
     expect(JSON.parse(screen.getByTestId("json").textContent!).skills).toContain("Satış Raporlama");
+    next(); // certs
+    next(); // more
+    next(); // refs
     next(); // summary
     fireEvent.click(screen.getByText("Özet taslakları"));
     fireEvent.click(screen.getByText(/Müşteri ihtiyaçlarını doğru analiz eden/));
@@ -138,11 +142,11 @@ describe("özel bölüm görünümleri", () => {
 });
 
 describe("yeni mezun akışı", () => {
-  it("yeni mezun seçilince eğitimden sonra 'Projeler' adımı gelir", () => {
+  it("projeler adımı herkes için eğitimden sonra gelir; yeni mezun seçimi adım sayısını değiştirmez", () => {
     render(<Harness initial={normalizeCv(EMPTY_CV)} />);
-    expect(screen.getByText(/Adım 1 \/ 7/)).toBeTruthy();
+    expect(screen.getByText(/Adım 1 \/ 11/)).toBeTruthy();
     fireEvent.click(screen.getByLabelText(/Yeni mezunum/));
-    expect(screen.getByText(/Adım 1 \/ 8/)).toBeTruthy();
+    expect(screen.getByText(/Adım 1 \/ 11/)).toBeTruthy();
     fireEvent.click(screen.getByText("Satış / Satış Danışmanı"));
     const next = () => fireEvent.click(screen.getByText("Devam"));
     next();
@@ -150,7 +154,7 @@ describe("yeni mezun akışı", () => {
     next(); // work
     next(); // edu
     next(); // projects
-    expect(screen.getByText("Hangi projelerde yer aldınız?")).toBeTruthy();
+    expect(screen.getByText("Öne çıkan projeleriniz var mı?")).toBeTruthy();
     fireEvent.click(screen.getByText("Proje ekle"));
     expect(screen.getByLabelText("Proje adı")).toBeTruthy();
   });

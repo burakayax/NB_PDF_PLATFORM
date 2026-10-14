@@ -15,7 +15,7 @@ import { PDFDocument, popGraphicsState, pushGraphicsState, rgb, setCharacterSpac
 import fontkit from "@pdf-lib/fontkit";
 import { PDF_SAVE_OPTIONS } from "../../../lib/pdfSaveOptions";
 import { buildModel, type CvData, type BuildMode } from "./cvModel";
-import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
+import { MAX_FIT_STEP, MAX_TRIM, styleFromSettings, trimForFit } from "./cvStyle";
 import { CoverLetterPage, CvPage, FONT_CSS, FONT_FILE, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type FontKey } from "./cvTemplates";
 
 const PAD_TOP = 42;
@@ -296,7 +296,7 @@ async function waitFor(cond: () => boolean, ms: number): Promise<void> {
   while (!cond() && performance.now() - t0 < ms) await new Promise((r) => setTimeout(r, 40));
 }
 
-type Offscreen = { root: HTMLElement; render: (step: number) => void };
+type Offscreen = { root: HTMLElement; render: (step: number, trim?: number) => void; data: CvData };
 
 /** Ekran dışında CV'yi çizer (yazı tipleri/fotoğraf hazır olana dek bekler) ve `fn`'e verir. */
 async function withOffscreen<T>(data: CvData, templateId: string, mode: BuildMode, fn: (o: Offscreen) => Promise<T>): Promise<T> {
@@ -308,8 +308,8 @@ async function withOffscreen<T>(data: CvData, templateId: string, mode: BuildMod
   const rootEl = createRoot(host);
   try {
     const model = buildModel(data, mode);
-    const render = (step: number) =>
-      flushSync(() => rootEl.render(<CvPage m={model} tpl={tpl} size={data.settings.size} accent={data.settings.accent} style={styleFromSettings(data.settings, step)} />));
+    const render = (step: number, trim = 0) =>
+      flushSync(() => rootEl.render(<CvPage m={trim ? buildModel(trimForFit(data, trim).data, mode) : model} tpl={tpl} size={data.settings.size} accent={data.settings.accent} style={styleFromSettings(data.settings, step)} />));
     render(0);
     await Promise.all(
       (Object.keys(FONT_CSS) as FontKey[]).flatMap((k) => [`400 16px '${FONT_CSS[k]}'`, `700 16px '${FONT_CSS[k]}'`]).map((f) => document.fonts.load(f).catch(() => undefined)),
@@ -320,7 +320,7 @@ async function withOffscreen<T>(data: CvData, templateId: string, mode: BuildMod
       await waitFor(() => !!root.querySelector("img") && !root.querySelector("[data-cv-photo-ghost]"), 4000);
     }
     await Promise.all(Array.from(root.querySelectorAll("img")).map((i) => i.decode().catch(() => undefined)));
-    return await fn({ root, render });
+    return await fn({ root, render, data });
   } finally {
     rootEl.unmount();
     host.remove();
@@ -352,7 +352,7 @@ export async function buildCoverLetterPdf(data: CvData, templateId: string, text
 }
 
 /** "Tek sayfaya sığdır": önizlemeyle AYNI kademe tablosu (bkz. cvStyle.FIT_STEPS). */
-function fitLoop(o: Offscreen, fitOn: boolean): { pages: number; step: number } {
+function fitLoop(o: Offscreen, fitOn: boolean): { pages: number; step: number; trim: number; hidden: number } {
   let pages = paginate(o.root);
   let step = 0;
   while (fitOn && pages > 1 && step < MAX_FIT_STEP) {
@@ -360,7 +360,23 @@ function fitLoop(o: Offscreen, fitOn: boolean): { pages: number; step: number } 
     o.render(step);
     pages = paginate(o.root);
   }
-  return { pages, step };
+  if (!fitOn || pages <= 1) return { pages, step, trim: 0, hidden: 0 };
+  // Yazı küçültme yetmedi: iş deneyimi satırlarını (yalnızca gösterimde) kademeli kısalt, her kademede yazıyı yeniden dene
+  let lastHidden = 0;
+  for (let trim = 1; trim <= MAX_TRIM; trim++) {
+    const hidden = trimForFit(o.data, trim).hidden;
+    if (hidden === lastHidden) continue;
+    lastHidden = hidden;
+    for (let st = 0; st <= MAX_FIT_STEP; st++) {
+      o.render(st, trim);
+      const n = paginate(o.root);
+      if (n <= 1) return { pages: n, step: st, trim, hidden };
+      pages = n;
+      step = st;
+    }
+  }
+  const last = trimForFit(o.data, MAX_TRIM);
+  return { pages, step, trim: last.hidden ? MAX_TRIM : 0, hidden: last.hidden };
 }
 
 /**
@@ -368,14 +384,14 @@ function fitLoop(o: Offscreen, fitOn: boolean): { pages: number; step: number } 
  * kaç sayfa olacağını ekran dışında ölçer. Taslak görünümde yer tutucular da yer kapladığından
  * taslağı ölçmek PDF'e göre fazla küçültürdü.
  */
-export async function measureFit(data: CvData, templateId: string): Promise<{ pages: number; step: number }> {
+export async function measureFit(data: CvData, templateId: string): Promise<{ pages: number; step: number; trim: number; hidden: number }> {
   return withOffscreen(data, templateId, "export", async (o) => fitLoop(o, data.settings.fitOnePage));
 }
 
-export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMode): Promise<{ bytes: Uint8Array; pages: number; fitStep: number }> {
+export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMode): Promise<{ bytes: Uint8Array; pages: number; fitStep: number; trim: number; hidden: number }> {
   return withOffscreen(data, templateId, mode, async (o) => {
-    const { pages, step } = fitLoop(o, data.settings.fitOnePage);
+    const { pages, step, trim, hidden } = fitLoop(o, data.settings.fitOnePage);
     const bytes = await domToPdf(o.root, pages, { title: `${data.name.trim() || "CV"} — ${data.settings.lang === "tr" ? "Özgeçmiş" : "Resume"}` });
-    return { bytes, pages, fitStep: step };
+    return { bytes, pages, fitStep: step, trim, hidden };
   });
 }

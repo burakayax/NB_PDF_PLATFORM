@@ -60,11 +60,19 @@ export function CvDesignPanel({ data, onChange, disabled, tr, tpl }: Props) {
             <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "Boşluklar" : "Spacing"}</span>
             <Seg<CvDensity> label={tr ? "Boşluklar" : "Spacing"} value={st.density} onPick={(v) => set("density", v)} options={[{ v: "compact", label: tr ? "Sıkı" : "Tight" }, { v: "normal", label: tr ? "Normal" : "Normal" }, { v: "airy", label: tr ? "Ferah" : "Airy" }]} />
           </div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+            <input type="checkbox" checked={st.showDuration} onChange={(e) => set("showDuration", e.target.checked)} className="mt-0.5 h-4 w-4 accent-sky-400" />
+            <span className="text-[13px] text-slate-100">{tr ? "Tarihin yanında süreyi göster" : "Show the duration next to dates"}<span className="block text-[11.5px] text-slate-400">{tr ? "Örn. Mar 2020 – Şub 2023 (3 yıl)" : "E.g. Mar 2020 – Feb 2023 (3 yrs)"}</span></span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+            <input type="checkbox" checked={st.showTotalExp} onChange={(e) => set("showTotalExp", e.target.checked)} className="mt-0.5 h-4 w-4 accent-sky-400" />
+            <span className="text-[13px] text-slate-100">{tr ? "Toplam deneyim süresini göster" : "Show total experience"}<span className="block text-[11.5px] text-slate-400">{tr ? "İş Deneyimi başlığının altına, tüm işlerinizin toplamı yazılır." : "Shown under the Work Experience heading, summing all your jobs."}</span></span>
+          </label>
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.05] px-3 py-3">
             <input type="checkbox" checked={st.fitOnePage} onChange={(e) => set("fitOnePage", e.target.checked)} className="mt-0.5 h-4 w-4 accent-sky-400" />
             <span className="text-[13px] text-slate-100">
               {tr ? "Tek sayfaya sığdır" : "Fit on one page"}
-              <span className="block text-[11.5px] text-slate-400">{tr ? "İçerik taşarsa yazı ve boşluklar, okunaklılığı bozmayacak sınıra kadar kademeli küçülür. Hâlâ sığmıyorsa içeriği kısaltmanız önerilir." : "If the content overflows, type and spacing shrink step by step down to a readable limit. If it still doesn't fit, shorten the content."}</span>
+              <span className="block text-[11.5px] text-slate-400">{tr ? "İçerik taşarsa yazı ve boşluklar, okunaklılığı bozmayacak sınıra kadar kademeli küçülür. Hâlâ sığmıyorsa eski işlerinizin son satırları yalnızca PDF'te gösterilmez (yazdığınız metin silinmez)." : "If the content overflows, type and spacing shrink step by step down to a readable limit. If it still doesn't fit, the last lines of your oldest jobs are left out of the PDF only (your text is never deleted)."}</span>
             </span>
           </label>
         </div>

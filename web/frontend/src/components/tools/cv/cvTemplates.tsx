@@ -463,10 +463,11 @@ function contactRows(m: CvModel): ContactRow[] {
   return [
     { label: tr ? "E-posta" : "Email", f: m.email },
     { label: tr ? "Telefon" : "Phone", f: m.phone },
-    { label: tr ? "Adres" : "Location", f: m.city },
+    { label: tr ? "Şehir" : "City", f: m.city },
     { label: "Web", f: m.website },
     { label: "LinkedIn", f: m.linkedin },
     { label: m.labels.birth, f: m.birth },
+    ...m.socials,
     { label: m.labels.license, f: m.license },
   ].filter((r) => r.f);
 }
@@ -622,7 +623,7 @@ function MainSection({ k, m, th, timeline, ledger }: { k: SectionKey; m: CvModel
     case "summary":
       return <SummaryBlock m={m} th={th} />;
     case "experience":
-      return m.experience.length ? <Section title={L.experience} th={th}><ExperienceList m={m} th={th} timeline={timeline} ledger={ledger} /></Section> : null;
+      return m.experience.length ? <Section title={L.experience} th={th}>{m.totalExp ? <div style={{ color: th.muted, fontSize: "0.88em", marginBottom: 6 }}>{m.lang === "tr" ? "Toplam deneyim" : "Total experience"}: <b style={{ fontWeight: 700 }}>{m.totalExp}</b></div> : null}<ExperienceList m={m} th={th} timeline={timeline} ledger={ledger} /></Section> : null;
     case "education":
       return m.education.length ? <Section title={L.education} th={th}><EducationList m={m} th={th} timeline={timeline} ledger={ledger} /></Section> : null;
     case "skills":
