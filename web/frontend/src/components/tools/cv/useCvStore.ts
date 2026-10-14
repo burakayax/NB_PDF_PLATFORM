@@ -8,8 +8,12 @@ import { EMPTY_CV, normalizeCv, uid, type CvData } from "./cvModel";
  *
  * Eski tek-taslak anahtarı (nb_cv_draft_v1) ilk açılışta otomatik içe alınır.
  */
-const STORE_KEY = "nb_cv_store_v2";
-const LEGACY_KEY = "nb_cv_draft_v1";
+/**
+ * KULLANICIYA ÖZEL: taslak anahtarı hesap kimliğini içerir. Aynı tarayıcıda oturum kapatıp başka biri girince
+ * önceki kişinin CV'si görünmesin. (Eski, hesapsız `nb_cv_store_v2` / `nb_cv_draft_v1` kayıtları artık
+ * KİMSEYE yüklenmez: sahibi bilinmediği için başkasının eline geçme riski var.)
+ */
+const storeKey = (userKey: string) => `nb_cv_store_v2:${userKey}`;
 export const MAX_CVS = 12;
 
 export type CvEntry = { id: string; name: string; data: CvData; templateId: string; updatedAt: number };
@@ -25,9 +29,9 @@ function fresh(lang: "tr" | "en", name?: string): CvEntry {
   };
 }
 
-function load(lang: "tr" | "en"): Stored {
+function load(lang: "tr" | "en", userKey: string): Stored {
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = localStorage.getItem(storeKey(userKey));
     if (raw) {
       const j = JSON.parse(raw) as Stored;
       if (j && j.v === 2 && Array.isArray(j.cvs) && j.cvs.length) {
@@ -35,31 +39,23 @@ function load(lang: "tr" | "en"): Stored {
         return { v: 2, cvs, currentId: cvs.some((c) => c.id === j.currentId) ? j.currentId : cvs[0].id };
       }
     }
-    const legacy = localStorage.getItem(LEGACY_KEY);
-    if (legacy) {
-      const j = JSON.parse(legacy) as { data?: Partial<CvData>; templateId?: string };
-      if (j?.data && typeof j.data === "object") {
-        const e: CvEntry = { id: uid(), name: "CV 1", data: normalizeCv(j.data), templateId: j.templateId ?? "sade", updatedAt: Date.now() };
-        return { v: 2, cvs: [e], currentId: e.id };
-      }
-    }
-  } catch {
+    } catch {
     /* bozuk kayıt → temiz başla */
   }
   const e = fresh(lang);
   return { v: 2, cvs: [e], currentId: e.id };
 }
 
-function save(s: Stored): void {
+function save(s: Stored, userKey: string): void {
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+    localStorage.setItem(storeKey(userKey), JSON.stringify(s));
   } catch {
     /* depolama dolu/engelli olabilir; taslak kaydı bir kolaylıktır */
   }
 }
 
-export function useCvStore(lang: "tr" | "en", persist: boolean) {
-  const [store, setStore] = useState<Stored>(() => load(lang));
+export function useCvStore(lang: "tr" | "en", persist: boolean, userKey: string) {
+  const [store, setStore] = useState<Stored>(() => load(lang, userKey));
   const first = useRef(true);
   const storeRef = useRef(store);
   storeRef.current = store;
@@ -70,9 +66,9 @@ export function useCvStore(lang: "tr" | "en", persist: boolean) {
       return;
     }
     if (!persist) return;
-    const id = window.setTimeout(() => save(store), 500);
+    const id = window.setTimeout(() => save(store, userKey), 500);
     return () => window.clearTimeout(id);
-  }, [store, persist]);
+  }, [store, persist, userKey]);
 
   const current = useMemo(() => store.cvs.find((c) => c.id === store.currentId) ?? store.cvs[0], [store]);
 
