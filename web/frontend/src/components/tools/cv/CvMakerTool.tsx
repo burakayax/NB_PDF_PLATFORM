@@ -67,10 +67,28 @@ type RightTab = "content" | "design" | "analysis" | "ai";
 
 // ── Ana bileşen ────────────────────────────────────────────────────────────
 
-export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin, aiComingSoon }: Props) {
+/** Erişim jetonundan hesap kimliğini (sub) okur; jeton yenilense de değişmez. */
+function userKeyFromToken(token: string | null): string {
+  if (!token) return "guest";
+  try {
+    const part = token.split(".")[1];
+    const json = JSON.parse(decodeURIComponent(escape(atob(part.replace(/-/g, "+").replace(/_/g, "/")))));
+    return typeof json.sub === "string" && json.sub ? json.sub : "guest";
+  } catch {
+    return "guest";
+  }
+}
+
+/** Hesap değişince tüm durum sıfırlansın (key) — önceki kişinin CV'si bellekte de kalmaz. */
+export function CvMakerTool(props: Props) {
+  const userKey = userKeyFromToken(props.accessToken);
+  return <CvMakerInner key={userKey} {...props} userKey={userKey} />;
+}
+
+function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin, aiComingSoon, userKey }: Props & { userKey: string }) {
   const tr = language === "tr";
   const signedIn = !!accessToken;
-  const store = useCvStore(language, signedIn);
+  const store = useCvStore(language, signedIn, userKey);
   const { data, templateId, setData, setTemplateId } = store;
   const [view, setView] = useState<"draft" | "export">("draft");
   const [tab, setTab] = useState<"edit" | "preview">("edit");
