@@ -563,7 +563,7 @@ function Hero({
   );
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
+    <section className="relative min-h-dvh flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto">
         {/* Badge */}
         <motion.div
@@ -2163,7 +2163,7 @@ export function LandingPage({
   }, []);
 
   return (
-    <div className="relative isolate min-h-screen text-white antialiased">
+    <div className="relative isolate min-h-dvh text-white antialiased">
       {/* Aurora katmani sayfanin ust kismina tutturulur; isolate sayesinde -z-10
           icerigin altinda kalir, govdenin arka planiyla oynamak gerekmez. */}
       <HeroBackground />

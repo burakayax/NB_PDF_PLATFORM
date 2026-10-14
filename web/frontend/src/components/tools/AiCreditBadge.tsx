@@ -72,7 +72,7 @@ export function AiCreditHelp({
         onClick={() => setOpen((v) => !v)}
         aria-label={topic === "monthly" ? (tr ? "Aylık hak nedir?" : "What is the monthly allowance?") : topic === "credit" ? (tr ? "Kredi nedir?" : "What are credits?") : tr ? "Aylık hak ve kredi nedir?" : "What are monthly allowance and credits?"}
         aria-expanded={open}
-        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-slate-300 transition hover:bg-white/[0.1] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-slate-300 sm:h-5 sm:w-5 transition hover:bg-white/[0.1] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50"
       >
         <HelpCircle className="h-3.5 w-3.5" aria-hidden />
       </button>

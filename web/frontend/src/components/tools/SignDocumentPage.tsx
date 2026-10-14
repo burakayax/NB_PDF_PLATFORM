@@ -177,7 +177,7 @@ export function SignDocumentPage({ token }: { token: string }) {
 
   if (yukleniyor) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070b14] text-slate-300">
+      <div className="flex min-h-dvh items-center justify-center bg-[#070b14] text-slate-300">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -185,7 +185,7 @@ export function SignDocumentPage({ token }: { token: string }) {
 
   if (hata && !sayfa) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070b14] px-5">
+      <div className="flex min-h-dvh items-center justify-center bg-[#070b14] px-5">
         <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 text-center">
           <p className="text-sm text-rose-300">{hata}</p>
           <a href="/" className="mt-4 inline-block text-[13px] font-semibold text-cyan-300">
@@ -201,7 +201,7 @@ export function SignDocumentPage({ token }: { token: string }) {
   const belgeUrl = `data:application/pdf;base64,${sayfa.belgeBase64}`;
 
   return (
-    <div className="min-h-screen bg-[#070b14] px-4 py-6 text-slate-200">
+    <div className="min-h-dvh bg-[#070b14] px-4 py-6 text-slate-200">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-300">

@@ -110,13 +110,13 @@ export function ToolUploadPanel({
   return (
     <div className={`w-full ${className ?? ""}`}>
       {showHeader && copy && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 sm:mb-4 sm:gap-3 sm:px-4 sm:py-3">
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${tile} ${icon}`}>
             <Icon className="h-5 w-5" strokeWidth={2} />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-bold leading-tight text-white">{copy.name}</p>
-            <p className="mt-0.5 text-[12.5px] leading-snug text-slate-400">{copy.desc}</p>
+            <p className="mt-0.5 hidden text-[12.5px] leading-snug text-slate-400 sm:block">{copy.desc}</p>
           </div>
           <span
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-bold ${
@@ -160,7 +160,7 @@ export function ToolUploadPanel({
           }
         }}
         className={`group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed text-center transition ${
-          compact ? "p-5" : "p-10 sm:p-12"
+          compact ? "p-5" : "px-5 py-8 sm:p-12"
         } ${
           dragOver
             ? "border-white/60 bg-white/[0.06]"
@@ -197,10 +197,10 @@ export function ToolUploadPanel({
           </div>
         ) : (
           <>
-            <div className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl ring-1 transition group-hover:scale-105 ${tile} ${icon}`}>
+            <div className={`relative mx-auto flex h-16 w-16 items-center justify-center rounded-3xl sm:h-20 sm:w-20 ring-1 transition group-hover:scale-105 ${tile} ${icon}`}>
               {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-9 w-9" strokeWidth={1.75} />}
             </div>
-            <p className="relative mt-5 text-lg font-bold text-white">
+            <p className="relative mt-4 text-base font-bold text-white sm:mt-5 sm:text-lg">
               {busy
                 ? tr ? "İşleniyor…" : "Processing…"
                 : (title ??
@@ -211,7 +211,7 @@ export function ToolUploadPanel({
             <p className="relative mt-1.5 text-[13px] text-slate-400">
               {hint ?? (tr ? "ya da tıklayıp seç" : "or click to choose")}
             </p>
-            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-slate-400">
+            <div className="relative mt-6 hidden flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-slate-400 sm:flex">
               {chips.map((c) => {
                 const ChipIcon = c.Icon;
                 return (

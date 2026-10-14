@@ -1,7 +1,7 @@
 /** Tam ekran sayfa yüklenirken gösterilen iskelet (LandingPage, AuthPage, AdminPanel vb.) */
 export function PageSkeleton() {
   return (
-    <div className="min-h-screen animate-pulse bg-[#05080f]">
+    <div className="min-h-dvh animate-pulse bg-[#05080f]">
       {/* Nav bar */}
       <div className="border-b border-white/[0.06] bg-nb-panel/40 px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">

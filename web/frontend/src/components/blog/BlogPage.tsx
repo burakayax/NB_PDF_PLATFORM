@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock, Lightbulb, Newspaper, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getBlogPost, getBlogPostsSorted } from "../../blog/blogContent.mjs";
@@ -48,21 +48,21 @@ function Header({
       <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
         <a href={tr ? "/" : "/en"} className="flex items-center gap-2">
           <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
-          <span className="text-sm font-bold tracking-tight text-white">PDF Platform</span>
+          <span className="hidden whitespace-nowrap text-sm font-bold tracking-tight text-white min-[430px]:inline">PDF Platform</span>
         </a>
         <div className="flex items-center gap-1.5 sm:gap-2">
           <a href={tr ? "/blog" : "/en/blog"} className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white sm:inline-block">Blog</a>
           {/* Dil değiştirici — doğrudan girişte (Google'dan gelen) kullanıcı dili değiştirebilsin */}
           <div className="flex items-center rounded-lg border border-white/10 p-0.5 text-xs font-bold">
-            <button type="button" onClick={() => onSwitchLanguage("tr")} aria-pressed={tr} className={`rounded-md px-2 py-1 transition ${tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>TR</button>
-            <button type="button" onClick={() => onSwitchLanguage("en")} aria-pressed={!tr} className={`rounded-md px-2 py-1 transition ${!tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>EN</button>
+            <button type="button" onClick={() => onSwitchLanguage("tr")} aria-pressed={tr} className={`min-h-[36px] rounded-md px-2.5 py-1 transition ${tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>TR</button>
+            <button type="button" onClick={() => onSwitchLanguage("en")} aria-pressed={!tr} className={`min-h-[36px] rounded-md px-2.5 py-1 transition ${!tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>EN</button>
           </div>
           {isAuthenticated ? (
-            <button type="button" onClick={onOpenApp} className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Uygulamaya git" : "Open app"}</button>
+            <button type="button" onClick={onOpenApp} className="min-h-[40px] whitespace-nowrap rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Uygulamaya git" : "Open app"}</button>
           ) : (
             <>
-              <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
-              <button type="button" onClick={onRegister} className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Üye Ol" : "Sign up"}</button>
+              <button type="button" onClick={onLogin} className="min-h-[40px] whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
+              <button type="button" onClick={onRegister} className="min-h-[40px] whitespace-nowrap rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Üye Ol" : "Sign up"}</button>
             </>
           )}
         </div>
@@ -133,6 +133,9 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
 export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, onOpenApp, onSwitchLanguage }: { language: Language; onLogin: () => void; onRegister: () => void; isAuthenticated: boolean; onOpenApp: () => void; onSwitchLanguage: (lang: "tr" | "en") => void }) {
   const tr = language === "tr";
   const posts = getBlogPostsSorted() as BlogPost[];
+  // Mobilde ilk 12 yazı görünür; kalanlar "Daha fazla göster" ile açılır (SEO için hepsi DOM'da kalır).
+  const [showAll, setShowAll] = useState(false);
+  const MOBILE_FIRST = 12;
   useEffect(() => { document.title = tr ? "Blog — Rehberler & İpuçları | PDF Platform" : "Blog — Guides & Tips | PDF Platform"; }, [tr]);
   return (
     <Shell>
@@ -144,14 +147,14 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-slate-400">{tr ? "PDF işlerini hızlandıran pratik rehberler: birleştirme, veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştırın." : "Practical guides to speed up your PDF work: merging, data extraction, translation and AI tools to simplify your workflow."}</p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2">
-          {posts.map((p) => {
+        <div className="mt-8 grid gap-3 sm:mt-12 sm:gap-5 sm:grid-cols-2">
+          {posts.map((p, idx) => {
             const c = p[tr ? "tr" : "en"] as BlogPostCopy;
             const a = accentOf(p.accent);
             const tags = p.tags[tr ? "tr" : "en"];
             return (
-              <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
-                <div className={`relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br ${a.soft}`}>
+              <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className={`group ${!showAll && idx >= MOBILE_FIRST ? "hidden sm:flex" : "flex"} flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]`}>
+                <div className={`relative hidden h-36 items-center sm:flex justify-center overflow-hidden bg-gradient-to-br ${a.soft}`}>
                   <div className={`pointer-events-none absolute -top-10 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-gradient-to-b ${a.grad} opacity-30 blur-3xl`} />
                   <Newspaper className={`h-12 w-12 ${a.text} opacity-80`} />
                 </div>
@@ -170,6 +173,11 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
             );
           })}
         </div>
+        {!showAll && posts.length > MOBILE_FIRST && (
+          <button type="button" onClick={() => setShowAll(true)} className="mt-6 min-h-[48px] w-full rounded-2xl border border-white/[0.1] bg-white/[0.03] text-[14px] font-semibold text-fuchsia-300 sm:hidden">
+            {tr ? `Daha fazla göster (${posts.length - MOBILE_FIRST})` : `Show more (${posts.length - MOBILE_FIRST})`}
+          </button>
+        )}
       </main>
       <SiteFooter language={language} />
     </Shell>

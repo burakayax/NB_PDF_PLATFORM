@@ -41,7 +41,7 @@ export function UserMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="nb-transition flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-nb-panel/75 p-2 sm:px-3 sm:py-1.5 text-left shadow-sm hover:border-nb-primary/35 hover:bg-nb-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
+        className="nb-transition flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-nb-panel/75 p-2 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5 text-left shadow-sm hover:border-nb-primary/35 hover:bg-nb-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={tr ? "Hesap menüsü" : "Account menu"}

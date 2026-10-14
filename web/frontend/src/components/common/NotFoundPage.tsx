@@ -19,7 +19,7 @@ export function NotFoundPage({
 }) {
   const tr = language === "tr";
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-slate-950 px-6 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-800/60 text-slate-300 ring-1 ring-white/10">
         <FileQuestion className="h-9 w-9" />
       </div>

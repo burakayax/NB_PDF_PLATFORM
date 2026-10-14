@@ -104,11 +104,11 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
     step === "email" ? copy.stepEmailHint : step === "code" ? copy.stepCodeHint : copy.stepNewHint;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-nb-bg font-sans text-nb-text antialiased">
+    <div className="relative min-h-dvh overflow-hidden bg-nb-bg font-sans text-nb-text antialiased">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-18%,rgba(34,211,238,0.2),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40vh] bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(129,140,232,0.09),transparent_65%)]" />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center px-5 py-14 sm:px-8">
+      <main className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[480px] flex-col justify-center px-5 py-14 sm:px-8">
         <button
           type="button"
           onClick={onBackToLogin}

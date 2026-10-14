@@ -144,7 +144,7 @@ export function SplitPagePickerModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="split-picker-title"
-            className={`relative z-10 flex h-[min(94vh,100dvh)] w-[min(96vw,100vw)] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/[0.98] via-slate-950/[0.99] to-[#070b12] shadow-[0_0_0_1px_rgba(34,211,238,0.12),0_25px_80px_-20px_rgba(0,0,0,0.85)] ${rubberBandActive ? "select-none" : ""}`}
+            className={`relative z-10 flex h-[min(94dvh,100dvh)] w-[min(96vw,100vw)] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/[0.98] via-slate-950/[0.99] to-[#070b12] shadow-[0_0_0_1px_rgba(34,211,238,0.12),0_25px_80px_-20px_rgba(0,0,0,0.85)] ${rubberBandActive ? "select-none" : ""}`}
             style={
               rubberBandActive
                 ? { WebkitUserSelect: "none", userSelect: "none" }
@@ -189,7 +189,7 @@ export function SplitPagePickerModal({
                                 : `Medium size (${z}%)`
                         }
                         onClick={() => setZoomPercent(z)}
-                        className={`rounded px-1.5 py-1 text-[10px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
+                        className={`min-h-[36px] rounded px-2 py-1 text-[11px] font-semibold tabular-nums transition sm:min-h-0 sm:px-2 sm:text-xs ${
                           zoomPercent === z
                             ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50 shadow-[0_0_12px_-6px_rgba(34,211,238,0.55)]"
                             : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
@@ -227,7 +227,7 @@ export function SplitPagePickerModal({
                 <button
                   type="button"
                   onClick={applyGit}
-                  className="rounded border border-cyan-400/45 bg-cyan-500/15 px-2 py-0.5 text-[11px] font-bold text-cyan-100 hover:bg-cyan-500/25 sm:text-[12px]"
+                  className="min-h-[36px] rounded border border-cyan-400/45 bg-cyan-500/15 px-3 py-0.5 text-[12px] font-bold sm:min-h-0 sm:px-2 text-cyan-100 hover:bg-cyan-500/25 sm:text-[12px]"
                 >
                   OK
                 </button>
@@ -247,7 +247,7 @@ export function SplitPagePickerModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md border border-cyan-400/40 bg-cyan-500/15 px-2 py-1 text-[11px] font-semibold text-cyan-50 shadow-[0_0_20px_-6px_rgba(34,211,238,0.45)] transition hover:border-cyan-300/60 hover:bg-cyan-400/20 sm:px-3 sm:text-xs"
+                  className="min-h-[36px] rounded-md border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 text-[12px] font-semibold sm:min-h-0 text-cyan-50 shadow-[0_0_20px_-6px_rgba(34,211,238,0.45)] transition hover:border-cyan-300/60 hover:bg-cyan-400/20 sm:px-3 sm:text-xs"
                 >
                   {done}
                 </button>

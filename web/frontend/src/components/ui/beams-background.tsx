@@ -167,7 +167,7 @@ export function BeamsBackground({
     return (
         <div
             className={cn(
-                "relative min-h-screen w-full overflow-hidden bg-neutral-950",
+                "relative min-h-dvh w-full overflow-hidden bg-neutral-950",
                 className
             )}
         >

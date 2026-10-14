@@ -91,7 +91,7 @@ export function LoginSuccessPage({
   }, [clearSession, completeOAuthLogin, onNavigateToDashboard]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-nb-bg px-6 py-16 text-nb-text">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nb-bg px-6 py-16 text-nb-text">
       <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-nb-panel/80 p-8 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
         {phase === "loading" || phase === "redirecting" ? (
           <>
