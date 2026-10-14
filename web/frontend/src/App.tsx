@@ -736,6 +736,8 @@ function App() {
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
   const [upgradeReasonTool, setUpgradeReasonTool] = useState<string | null>(null);
+  // 402'nin sebebi: günlük/aylık hak dolduysa modal "araç ücretli" demesin, hakkın bittiğini söylesin.
+  const [upgradeReasonKind, setUpgradeReasonKind] = useState<"daily" | "monthly" | null>(null);
   // E-posta indirim kuponu (?coupon=…) — ödeme özetinde otomatik uygulanır. sessionStorage
   // ile login'den sağ çıkar (girişsiz kullanıcı önce giriş yapar).
   const [pendingCoupon, setPendingCoupon] = useState<string | null>(() => {
@@ -2143,6 +2145,10 @@ function App() {
         );
         if (outcome.status === "payment_required") {
           setUpgradeReasonTool(toolId);
+          const gateReason = String(outcome.saasGating?.reason ?? "");
+          setUpgradeReasonKind(
+            gateReason === "daily_limit_reached" ? "daily" : gateReason === "monthly_limit_reached" ? "monthly" : null,
+          );
           setUpgradeModalOpen(true);
           return;
         }
@@ -6450,7 +6456,7 @@ function App() {
           <Suspense fallback={<ModalSkeleton />}>
             <PlanUpgradeModal
               open={upgradeModalOpen}
-              onClose={() => { setUpgradeModalOpen(false); setUpgradeReasonTool(null); }}
+              onClose={() => { setUpgradeModalOpen(false); setUpgradeReasonTool(null); setUpgradeReasonKind(null); }}
               language={language}
               accessToken={accessToken ?? undefined}
               user={user}
@@ -6460,6 +6466,7 @@ function App() {
               onOpenKvkk={() => openLegalPage("kvkk")}
               onBeforeExternalCheckout={persistNbResumeSnapshot}
               reasonToolId={upgradeReasonTool}
+              reasonKind={upgradeReasonKind}
               initialCoupon={pendingCoupon}
             />
           </Suspense>
