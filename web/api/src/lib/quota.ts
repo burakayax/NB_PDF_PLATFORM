@@ -15,6 +15,29 @@ export interface QuotaCheckResult {
   batchLimit?: number;
 }
 
+/**
+ * HAK AĞIRLIĞI ("havuz" sistemi). Günlük/aylık sayaç tek bir ortak havuzdur; çoğu işlem 1 hak
+ * sayılır, sunucuyu uzun süre meşgul eden ağır dönüşümler 2 hak sayılır.
+ *
+ * Ağırlık canlıda ölçülen sürelere dayanır (2026-10-14, 30 sayfalık örnek PDF; sunucu tek işçiyle
+ * çalışır, bir işlem bitmeden sıradaki başlamaz): Office→PDF 5-7 sn, sıkıştır 4 sn, PDF→Word 10 sn,
+ * PDF→JPG 41 sn, PDF→PowerPoint ~100 sn, PDF→Excel 55 sn'den uzun. Süre kararı için bkz.
+ * docs/rehber (kota/havuz). Burada olmayan araç = 1 hak.
+ *
+ * KURAL: havuzda en az 1 hak kaldıysa işlem başlar (ağır işlem 1 hak kalmışken de çalışır);
+ * düşüm ağırlık kadardır, yani sayaç limiti en fazla (ağırlık-1) aşabilir. Kullanıcıyı "2 hakkın
+ * yok" diye geri çevirmekten daha az sürtünmelidir.
+ */
+export const OPERATION_WEIGHTS: Readonly<Record<string, number>> = {
+  "pdf-to-excel": 2,
+  "pdf-to-ppt": 2,
+};
+
+export function operationWeight(toolType: string): number {
+  const w = OPERATION_WEIGHTS[toolType];
+  return Number.isInteger(w) && w >= 1 ? w : 1;
+}
+
 function getNextMidnightInTimezone(timezone: string): Date {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -260,8 +283,8 @@ export async function incrementQuota(
     prisma.organization.update({
       where: { id: user.organization.id },
       data: {
-        currentDayOperations: { increment: 1 },
-        currentMonthOperations: { increment: 1 },
+        currentDayOperations: { increment: operationWeight(toolType) },
+        currentMonthOperations: { increment: operationWeight(toolType) },
       },
     }),
     prisma.user.update({
@@ -363,7 +386,7 @@ export async function checkAndIncrementQuota(
     // Kota uygun — aynı transaction içinde atomik artır
     await tx.organization.update({
       where: { id: org.id },
-      data: { currentDayOperations: { increment: 1 }, currentMonthOperations: { increment: 1 } },
+      data: { currentDayOperations: { increment: operationWeight(toolType) }, currentMonthOperations: { increment: operationWeight(toolType) } },
     });
     await tx.user.update({ where: { id: userId }, data: { totalOperationsCount: { increment: 1 } } });
     await tx.operationLog.create({
@@ -372,9 +395,9 @@ export async function checkAndIncrementQuota(
 
     return {
       allowed: true,
-      dailyUsed: org.currentDayOperations + 1,
+      dailyUsed: org.currentDayOperations + operationWeight(toolType),
       dailyLimit: effDailyLimit,
-      monthlyUsed: org.currentMonthOperations + 1,
+      monthlyUsed: org.currentMonthOperations + operationWeight(toolType),
       monthlyLimit: org.monthlyOperationLimit,
       watermarkEnabled: false, // Politika: filigran tamamen kaldırıldı (tüm planlar)
       fileSizeLimitMB: org.fileSizeLimitMB,
