@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  Check,
   Briefcase,
   ChevronDown,
   Award,
@@ -19,6 +20,7 @@ import {
   FileText,
   Camera,
   Layers,
+  Lock,
   ListOrdered,
   AlertCircle,
   AlignLeft,
@@ -42,6 +44,11 @@ import {
   type CvProject,
   type CvReference,
   type CvSkill,
+  type CvSocial,
+  EDU_HONORS,
+  EDU_LEVELS,
+  GPA_SCALES,
+  SOCIAL_KINDS,
 } from "./cvModel";
 import { bakePhoto, type CvTemplate } from "./cvTemplates";
 import { useEffect } from "react";
@@ -51,19 +58,22 @@ import { dateOrderIssue, emailIssue, linkIssue, phoneIssue } from "./cvValidate"
 import { SuggestInput } from "./CvSuggestInput";
 import { CvSectionManager } from "./CvSectionManager";
 import { suggestLanguages, suggestSkills, suggestTitles } from "./cvVocabulary";
+import { MonthField, PhoneField, inputCls } from "./CvFields";
+
+export { inputCls };
 
 type Props = {
   data: CvData;
   /** AI araçlarıyla aynı "Çok Yakında" kilidi: fotoğrafı AI ile hazırla düğmesini kapatır. */
   aiComingSoon?: boolean;
+  /** Fotoğraf yapay zekâsı yalnızca ücretli üyelere açık; true ise düğme kilitli görünür. */
+  aiLocked?: boolean;
+  onAiLocked?: () => void;
   onChange: (next: CvData) => void;
   tpl: CvTemplate;
   disabled: boolean;
   tr: boolean;
 };
-
-export const inputCls =
-  "w-full rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-[14px] text-white placeholder:text-slate-500 focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-400/20 disabled:opacity-50";
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
@@ -76,6 +86,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export function Text({ label, value, onChange, placeholder, type = "text", disabled, hint, autoComplete, error, suggest, tr }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; hint?: string; autoComplete?: string; error?: string | null; suggest?: (q: string) => string[]; tr?: boolean }) {
+  if (type === "month") return <MonthField label={label} value={value} onChange={onChange} tr={tr ?? true} disabled={disabled} error={error} hint={hint} />;
   return (
     <Field label={label} hint={error ? undefined : hint}>
       {suggest ? (
@@ -207,7 +218,7 @@ function PhotoCropper({ photo, tpl, onChange, disabled, tr }: { photo: CvPhoto; 
 
 
 /** Fotoğraf alanı: büyük "Fotoğraf ekle" düğmesi → yüklenince kadraj ayarı. Sihirbaz da bunu kullanır. */
-export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon }: { data: CvData; onChange: (d: CvData) => void; tpl: CvTemplate; disabled: boolean; tr: boolean; aiComingSoon?: boolean }) {
+export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon, aiLocked, onAiLocked }: { data: CvData; onChange: (d: CvData) => void; tpl: CvTemplate; disabled: boolean; tr: boolean; aiComingSoon?: boolean; aiLocked?: boolean; onAiLocked?: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const camRef = useRef<HTMLInputElement>(null);
   const [photoErr, setPhotoErr] = useState<string | null>(null);
@@ -241,7 +252,13 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon }: 
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-3.5 py-2 text-[13px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25"><ImagePlus className="h-4 w-4" />{tr ? "Değiştir" : "Change"}</button>
             <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>
-            {!aiComingSoon ? <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button> : null}
+            {aiLocked || !aiComingSoon ? (
+              aiLocked ? (
+                <button type="button" onClick={onAiLocked} title={tr ? "Pro üyelere özel" : "Pro members only"} className="inline-flex items-center gap-2 rounded-xl bg-amber-400/10 px-3.5 py-2 text-[13px] font-semibold text-amber-100 ring-1 ring-amber-300/30 hover:bg-amber-400/20"><Lock className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}<span className="rounded-full bg-amber-300/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">PRO</span></button>
+              ) : (
+                <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button>
+              )
+            ) : null}
             <button type="button" onClick={() => onChange({ ...data, photo: null })} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Kaldır" : "Remove"}</button>
           </div>
         </div>
@@ -258,7 +275,7 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon }: 
         </div>
       )}
       {photoErr ? <p className="text-[12px] text-red-300">{photoErr}</p> : null}
-      {prepOpen && data.photo && !aiComingSoon ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { onChange({ ...data, photo: { src, zoom: 1, x: 0, y: 0 }, showPhoto: true }); setPrepOpen(false); }} /> : null}
+      {prepOpen && data.photo && !aiComingSoon && !aiLocked ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { onChange({ ...data, photo: { src, zoom: 1, x: 0, y: 0 }, showPhoto: true }); setPrepOpen(false); }} /> : null}
     </div>
   );
 }
@@ -282,9 +299,145 @@ export const GRADUATE_ORDER: SectionKey[] = ["summary", "education", "projects",
 
 export const ACCENTS = ["#1d4ed8", "#0f766e", "#166534", "#6d28d9", "#be185d", "#c2410c", "#a16207", "#0f2a4a", "#374151"];
 
-export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Props) {
+/** Eğitim kaydı düzenleyicisi: düzey seçimi, bölüm, tarih, diploma notu ve başarılar. Form ve sihirbaz paylaşır. */
+export function EducationEditor({ e, data, set, tr }: { e: CvEducation; data: CvData; set: <K extends keyof CvData>(k: K, v: CvData[K]) => void; tr: boolean }) {
+  const upd = (p: Partial<CvEducation>) => set("education", patch(data.education, e.id, p));
+  const school = e.level === "highschool" || e.level === "vocational";
+  const honors = (e.honors ?? "").split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+  const toggleHonor = (t: string) => upd({ honors: (honors.includes(t) ? honors.filter((x) => x !== t) : [...honors, t]).join("\n") });
+  const deptPh: Record<string, [string, string]> = {
+    highschool: ["Ör. Sayısal, Fen Lisesi", "E.g. Science track"],
+    vocational: ["Ör. Bilişim Teknolojileri alanı", "E.g. Information Technology track"],
+    associate: ["Ör. Bilgisayar Programcılığı", "E.g. Computer Programming"],
+    bachelor: ["Ör. Bilgisayar Mühendisliği", "E.g. Computer Engineering"],
+    master: ["Ör. İşletme (MBA)", "E.g. Business Administration (MBA)"],
+    doctorate: ["Ör. Malzeme Bilimi", "E.g. Materials Science"],
+    course: ["Ör. Veri Analizi Programı", "E.g. Data Analytics Program"],
+  };
+  return (
+    <>
+      <div>
+        <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "Eğitim düzeyi" : "Level of education"}</span>
+        <div role="radiogroup" aria-label={tr ? "Eğitim düzeyi" : "Level of education"} className="flex flex-wrap gap-1.5">
+          {EDU_LEVELS.map((l) => (
+            <button key={l.id} type="button" role="radio" aria-checked={e.level === l.id} onClick={() => upd({ level: e.level === l.id ? "" : l.id })} className={`rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition ${e.level === l.id ? "border-sky-400 bg-sky-500/20 text-white ring-1 ring-sky-400/40" : "border-white/15 bg-white/[0.04] text-slate-200 hover:border-white/30 hover:bg-white/[0.08]"}`}>{tr ? l.tr : l.en}</button>
+          ))}
+        </div>
+      </div>
+      <Text label={school ? (tr ? "Okul adı" : "School name") : (tr ? "Okul / üniversite" : "School / university")} value={e.school} onChange={(v) => upd({ school: v })} />
+      <Text label={school ? (tr ? "Alan (isteğe bağlı)" : "Track (optional)") : (tr ? "Bölüm / program" : "Major / program")} value={e.degree} onChange={(v) => upd({ degree: v })} placeholder={(deptPh[e.level ?? ""] ?? ["Ör. Bilgisayar Mühendisliği", "E.g. Computer Engineering"])[tr ? 0 : 1]} hint={e.level ? (tr ? "Düzey CV'de bölümün yanına otomatik yazılır." : "The level is added next to the major automatically.") : (tr ? "Dilerseniz yukarıdan düzey seçin; “Lisans” gibi ekleri kendimiz yazarız." : "Pick a level above and we'll add words like “Bachelor's” for you.")} />
+      <Text label={tr ? "Şehir" : "Location"} value={e.location} onChange={(v) => upd({ location: v })} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Text label={tr ? "Başlangıç" : "Start"} type="month" tr={tr} value={e.start} onChange={(v) => upd({ start: v })} />
+        <Text label={e.current ? (tr ? "Bitiş (devam ediyor)" : "End (ongoing)") : (tr ? "Bitiş / mezuniyet" : "End / graduation")} type="month" tr={tr} value={e.end} disabled={e.current} error={(() => { const x = dateOrderIssue(e.start, e.end, e.current); return x ? (tr ? x.tr : x.en) : null; })()} onChange={(v) => upd({ end: v })} />
+      </div>
+      <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => upd({ current: ev.target.checked })} />{tr ? "Devam ediyorum" : "Currently studying"}</label>
+      <div>
+        <span className="mb-1 block text-[12px] font-semibold text-slate-300">{e.current ? (tr ? "Not ortalaması (isteğe bağlı)" : "GPA (optional)") : (tr ? "Diploma notu (isteğe bağlı)" : "Final grade (optional)")}</span>
+        <div className="flex gap-2">
+          <input value={e.gpa ?? ""} inputMode="decimal" onChange={(ev) => upd({ gpa: ev.target.value.replace(/[^0-9.,]/g, "").slice(0, 6) })} placeholder={tr ? "Ör. 3,45" : "E.g. 3.45"} aria-label={tr ? "Diploma notu" : "Final grade"} className={`${inputCls} min-w-0 flex-1`} />
+          <select value={e.gpaScale || "4"} onChange={(ev) => upd({ gpaScale: ev.target.value })} aria-label={tr ? "Not ölçeği" : "Grade scale"} className="w-28 shrink-0 rounded-xl border border-white/10 bg-slate-900/60 px-2 py-2.5 text-[13px] text-white">
+            {GPA_SCALES.map((g) => <option key={g.v} value={g.v}>{g.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div>
+        <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "Başarılar (isteğe bağlı)" : "Achievements (optional)"}</span>
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {EDU_HONORS.map((h) => {
+            const t = tr ? h.tr : h.en;
+            const on = honors.includes(t);
+            return (
+              <button key={h.en} type="button" aria-pressed={on} onClick={() => toggleHonor(t)} className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-medium transition ${on ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100" : "border-white/15 bg-white/[0.04] text-slate-200 hover:border-amber-300/40 hover:bg-amber-300/10"}`}>
+                {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3 text-amber-200" />}{t}
+              </button>
+            );
+          })}
+        </div>
+        <textarea value={e.honors ?? ""} onChange={(ev) => upd({ honors: ev.target.value })} rows={2} placeholder={tr ? "Kendi başarınızı da yazabilirsiniz; her satır ayrı madde olur." : "Add your own too; each line becomes a bullet."} className={`${inputCls} resize-y leading-relaxed`} />
+        <span className="mt-1 block text-[11px] text-slate-500">{tr ? "Yalnızca gerçekten aldığınız dereceleri işaretleyin." : "Only tick what you actually earned."}</span>
+      </div>
+      <Area label={tr ? "Ek bilgi (isteğe bağlı)" : "Details (optional)"} rows={2} value={e.desc} onChange={(v) => upd({ desc: v })} hint={tr ? "Bitirme projesi, önemli dersler, kulüp çalışmaları…" : "Thesis, key courses, clubs…"} />
+    </>
+  );
+}
+
+/** Web sitesi ve sosyal medya hesapları. */
+export function SocialsEditor({ data, set, tr }: { data: CvData; set: <K extends keyof CvData>(k: K, v: CvData[K]) => void; tr: boolean }) {
+  const iss = (i: { tr: string; en: string } | null) => (i ? (tr ? i.tr : i.en) : null);
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Text label={tr ? "Web sitesi / portfolyo" : "Website / portfolio"} value={data.website} onChange={(v) => set("website", v)} placeholder="ornek.com" />
+        <Text label="LinkedIn" value={data.linkedin} onChange={(v) => set("linkedin", v)} placeholder="linkedin.com/in/adiniz" error={iss(linkIssue(data.linkedin))} />
+      </div>
+      {data.socials.map((s: CvSocial) => (
+        <div key={s.id} className="flex items-start gap-2">
+          <select value={s.kind} onChange={(e) => set("socials", patch(data.socials, s.id, { kind: e.target.value }))} aria-label={tr ? "Hesap türü" : "Account type"} className="w-32 shrink-0 rounded-xl border border-white/10 bg-slate-900/60 px-2 py-2.5 text-[13px] text-white">
+            {SOCIAL_KINDS.map((k) => <option key={k} value={k}>{k === "Diğer" && !tr ? "Other" : k}</option>)}
+          </select>
+          <input value={s.value} onChange={(e) => set("socials", patch(data.socials, s.id, { value: e.target.value }))} placeholder={tr ? "Hesap adresi ya da kullanıcı adı" : "Profile link or username"} aria-label={tr ? "Hesap adresi" : "Profile link"} className={`${inputCls} min-w-0 flex-1`} />
+          <button type="button" onClick={() => set("socials", data.socials.filter((x) => x.id !== s.id))} aria-label={tr ? "Sil" : "Delete"} className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
+        </div>
+      ))}
+      <AddButton label={tr ? "Başka bir hesap ekle (GitHub, Instagram, Behance…)" : "Add another account (GitHub, Instagram, Behance…)"} onClick={() => set("socials", [...data.socials, { id: uid(), kind: SOCIAL_KINDS[0], value: "" }])} />
+    </div>
+  );
+}
+
+/** Sertifika kayıtları. */
+export function CertsEditor({ data, set, tr }: { data: CvData; set: <K extends keyof CvData>(k: K, v: CvData[K]) => void; tr: boolean }) {
+  return (
+    <>
+      {data.certs.map((c: CvCert, i) => (
+        <ItemCard key={c.id} tr={tr} first={i === 0} last={i === data.certs.length - 1} onUp={() => set("certs", move(data.certs, i, -1))} onDown={() => set("certs", move(data.certs, i, 1))} onRemove={() => set("certs", data.certs.filter((x) => x.id !== c.id))}>
+          <Text label={tr ? "Sertifika adı" : "Certificate"} value={c.name} onChange={(v) => set("certs", patch(data.certs, c.id, { name: v }))} placeholder={tr ? "Ör. Forklift Operatörlük Belgesi" : "E.g. Forklift Operator Licence"} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Text label={tr ? "Veren kurum" : "Issuer"} value={c.issuer} onChange={(v) => set("certs", patch(data.certs, c.id, { issuer: v }))} />
+            <Text label={tr ? "Tarih" : "Date"} type="month" tr={tr} value={c.date} onChange={(v) => set("certs", patch(data.certs, c.id, { date: v }))} />
+          </div>
+        </ItemCard>
+      ))}
+      <AddButton label={data.certs.length ? (tr ? "Bir sertifika daha ekle" : "Add another certificate") : (tr ? "Sertifika ekle" : "Add a certificate")} onClick={() => set("certs", [...data.certs, { id: uid(), name: "", issuer: "", date: "" }])} />
+    </>
+  );
+}
+
+/** Referans kayıtları. */
+export function ReferencesEditor({ data, set, tr }: { data: CvData; set: <K extends keyof CvData>(k: K, v: CvData[K]) => void; tr: boolean }) {
+  return (
+    <>
+      {data.references.map((r: CvReference, i) => (
+        <ItemCard key={r.id} tr={tr} first={i === 0} last={i === data.references.length - 1} onUp={() => set("references", move(data.references, i, -1))} onDown={() => set("references", move(data.references, i, 1))} onRemove={() => set("references", data.references.filter((x) => x.id !== r.id))}>
+          <Text label={tr ? "Ad soyad" : "Name"} value={r.name} onChange={(v) => set("references", patch(data.references, r.id, { name: v }))} />
+          <Text label={tr ? "Unvan, kurum" : "Title, company"} value={r.role} onChange={(v) => set("references", patch(data.references, r.id, { role: v }))} />
+          <Text label={tr ? "Telefon / e-posta" : "Phone / email"} value={r.contact} onChange={(v) => set("references", patch(data.references, r.id, { contact: v }))} />
+        </ItemCard>
+      ))}
+      <AddButton label={data.references.length ? (tr ? "Bir referans daha ekle" : "Add another reference") : (tr ? "Referans ekle" : "Add a reference")} onClick={() => set("references", [...data.references, { id: uid(), name: "", role: "", contact: "" }])} />
+    </>
+  );
+}
+
+/** Proje kayıtları. */
+export function ProjectsEditor({ data, set, tr }: { data: CvData; set: <K extends keyof CvData>(k: K, v: CvData[K]) => void; tr: boolean }) {
+  return (
+    <>
+      {data.projects.map((p: CvProject, i) => (
+        <ItemCard key={p.id} tr={tr} first={i === 0} last={i === data.projects.length - 1} onUp={() => set("projects", move(data.projects, i, -1))} onDown={() => set("projects", move(data.projects, i, 1))} onRemove={() => set("projects", data.projects.filter((x) => x.id !== p.id))}>
+          <Text label={tr ? "Proje adı" : "Project name"} value={p.name} onChange={(v) => set("projects", patch(data.projects, p.id, { name: v }))} />
+          <Text label={tr ? "Bağlantı (isteğe bağlı)" : "Link (optional)"} value={p.link} onChange={(v) => set("projects", patch(data.projects, p.id, { link: v }))} />
+          <Area label={tr ? "Ne yaptınız?" : "What did you do?"} rows={3} value={p.desc} onChange={(v) => set("projects", patch(data.projects, p.id, { desc: v }))} hint={tr ? "Rolünüzü, kullandığınız araçları ve sonucu yazın." : "Your role, tools used and the outcome."} />
+        </ItemCard>
+      ))}
+      <AddButton label={data.projects.length ? (tr ? "Bir proje daha ekle" : "Add another project") : (tr ? "Proje ekle" : "Add a project")} onClick={() => set("projects", [...data.projects, { id: uid(), name: "", link: "", desc: "" }])} />
+    </>
+  );
+}
+
+export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon, aiLocked, onAiLocked }: Props) {
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
-  const [moreOpen, setMoreInfo] = useState(() => !!(data.website || data.linkedin || data.birth || data.license));
+  const [moreOpen, setMoreInfo] = useState(() => !!(data.website || data.linkedin || data.socials.length || data.birth || data.license));
   const iss = (i: { tr: string; en: string } | null) => (i ? (tr ? i.tr : i.en) : null);
   const lang = data.settings.lang;
   const monthType = "month";
@@ -292,24 +445,21 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
   return (
     <fieldset disabled={disabled} className="min-w-0 space-y-3 border-0 p-0">
       <Accordion title={tr ? "Kişisel bilgiler" : "Personal details"} icon={<UserRound className="h-4 w-4" />} defaultOpen>
-        <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} />
+        <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} aiLocked={aiLocked} onAiLocked={onAiLocked} />
 
         <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
         <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant"} suggest={(q) => suggestTitles(q, lang)} tr={tr} />
         <div className="grid gap-3 sm:grid-cols-2">
           <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" error={iss(emailIssue(data.email))} />
-          <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" error={iss(phoneIssue(data.phone))} />
+          <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} placeholder={tr ? "Ör. İstanbul" : "E.g. London"} autoComplete="address-level2" hint={tr ? "CV'de iletişim bilgileri arasında “Şehir” olarak görünür." : "Shown as “City” among your contact details."} />
         </div>
-        <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} />
+        <PhoneField label={tr ? "Telefon" : "Phone"} value={data.phone} onChange={(v) => set("phone", v)} city={data.city} tr={tr} disabled={disabled} error={iss(phoneIssue(data.phone))} />
         <button type="button" onClick={() => setMoreInfo((o) => !o)} aria-expanded={moreOpen} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-sky-300 hover:text-sky-200">
-          <ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />{tr ? "Daha fazla bilgi (web sitesi, LinkedIn, doğum tarihi…)" : "More details (website, LinkedIn, birth date…)"}
+          <ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />{tr ? "Daha fazla bilgi (web sitesi, LinkedIn, sosyal hesaplar, doğum tarihi, ehliyet…)" : "More details (website, LinkedIn, birth date…)"}
         </button>
         {moreOpen ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Text label={tr ? "Web sitesi" : "Website"} value={data.website} onChange={(v) => set("website", v)} />
-              <Text label="LinkedIn" value={data.linkedin} onChange={(v) => set("linkedin", v)} error={iss(linkIssue(data.linkedin))} />
-            </div>
+            <SocialsEditor data={data} set={set} tr={tr} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "Doğum tarihi" : "Date of birth"} value={data.birth} onChange={(v) => set("birth", v)} />
               <Text label={tr ? "Ehliyet" : "Driving licence"} value={data.license} onChange={(v) => set("license", v)} />
@@ -319,7 +469,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
       </Accordion>
 
       <Accordion title={tr ? "Profil özeti" : "Profile summary"} icon={<FileText className="h-4 w-4" />}>
-        <Area label={tr ? "Kendinizi tanıtın" : "Introduce yourself"} rows={5} value={data.summary} onChange={(v) => set("summary", v)} hint={tr ? "2-4 cümle yeterli; deneyiminiz, güçlü yönleriniz ve hedefiniz." : "Two to four sentences: experience, strengths and goal."} />
+        <Area label={tr ? "Kendinizi anlatın" : "Tell us about yourself"} rows={6} value={data.summary} onChange={(v) => set("summary", v)} hint={tr ? "İstediğiniz kadar yazabilirsiniz. Deneyiminizi, güçlü yönlerinizi ve hedefinizi anlatın." : "Write as much as you like: your experience, strengths and goal."} />
         <SummaryPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} onPick={(t) => set("summary", t)} />
       </Accordion>
 
@@ -332,8 +482,8 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
             </div>
             <Text label={tr ? "Şehir" : "Location"} value={e.location} onChange={(v) => set("experience", patch(data.experience, e.id, { location: v }))} />
             <div className="grid gap-3 sm:grid-cols-2">
-              <Text label={tr ? "Başlangıç" : "Start"} type={monthType} value={e.start} onChange={(v) => set("experience", patch(data.experience, e.id, { start: v }))} />
-              <Text label={tr ? "Bitiş" : "End"} type={monthType} value={e.end} disabled={e.current} error={iss(dateOrderIssue(e.start, e.end, e.current))} onChange={(v) => set("experience", patch(data.experience, e.id, { end: v }))} />
+              <Text label={tr ? "Başlangıç" : "Start"} type="month" tr={tr} value={e.start} onChange={(v) => set("experience", patch(data.experience, e.id, { start: v }))} />
+              <Text label={tr ? "Bitiş" : "End"} type="month" tr={tr} value={e.end} disabled={e.current} error={iss(dateOrderIssue(e.start, e.end, e.current))} onChange={(v) => set("experience", patch(data.experience, e.id, { end: v }))} />
             </div>
             <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => set("experience", patch(data.experience, e.id, { current: ev.target.checked }))} />{tr ? "Hâlâ çalışıyorum" : "I currently work here"}</label>
             <Area label={tr ? "Sorumluluklar ve başarılar" : "Responsibilities & achievements"} rows={4} value={e.desc} onChange={(v) => set("experience", patch(data.experience, e.id, { desc: v }))} hint={tr ? "Her satır ayrı bir madde olur. Rakamla anlatın: “satışları %20 artırdı”." : "Each line becomes a bullet. Use numbers: “grew sales by 20%”."} />
@@ -347,18 +497,10 @@ ${line}` : line }))} />
       <Accordion title={tr ? "Eğitim" : "Education"} icon={<GraduationCap className="h-4 w-4" />} count={data.education.length}>
         {data.education.map((e: CvEducation, i) => (
           <ItemCard key={e.id} tr={tr} first={i === 0} last={i === data.education.length - 1} onUp={() => set("education", move(data.education, i, -1))} onDown={() => set("education", move(data.education, i, 1))} onRemove={() => set("education", data.education.filter((x) => x.id !== e.id))}>
-            <Text label={tr ? "Okul / üniversite" : "School / university"} value={e.school} onChange={(v) => set("education", patch(data.education, e.id, { school: v }))} />
-            <Text label={tr ? "Bölüm ve derece" : "Major and degree"} value={e.degree} onChange={(v) => set("education", patch(data.education, e.id, { degree: v }))} />
-            <Text label={tr ? "Şehir" : "Location"} value={e.location} onChange={(v) => set("education", patch(data.education, e.id, { location: v }))} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Text label={tr ? "Başlangıç" : "Start"} type={monthType} value={e.start} onChange={(v) => set("education", patch(data.education, e.id, { start: v }))} />
-              <Text label={tr ? "Bitiş" : "End"} type={monthType} value={e.end} disabled={e.current} error={iss(dateOrderIssue(e.start, e.end, e.current))} onChange={(v) => set("education", patch(data.education, e.id, { end: v }))} />
-            </div>
-            <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => set("education", patch(data.education, e.id, { current: ev.target.checked }))} />{tr ? "Devam ediyorum" : "Currently studying"}</label>
-            <Area label={tr ? "Ek bilgi (isteğe bağlı)" : "Details (optional)"} rows={2} value={e.desc} onChange={(v) => set("education", patch(data.education, e.id, { desc: v }))} />
+            <EducationEditor e={e} data={data} set={set} tr={tr} />
           </ItemCard>
         ))}
-        <AddButton label={tr ? "Eğitim ekle" : "Add education"} onClick={() => set("education", [...data.education, { id: uid(), school: "", degree: "", location: "", start: "", end: "", current: false, desc: "" }])} />
+        <AddButton label={tr ? "Eğitim ekle" : "Add education"} onClick={() => set("education", [...data.education, { id: uid(), school: "", degree: "", location: "", start: "", end: "", current: false, desc: "", level: "", gpa: "", gpaScale: "4", honors: "" }])} />
       </Accordion>
 
       <Accordion title={tr ? "Beceriler" : "Skills"} icon={<Wrench className="h-4 w-4" />} count={data.skills.length}>
@@ -394,27 +536,11 @@ ${line}` : line }))} />
       <p className="px-1 pt-2 text-[11.5px] font-bold uppercase tracking-wide text-slate-500">{tr ? "Ek bölümler (isteğe bağlı)" : "Extra sections (optional)"}</p>
 
       <Accordion title={tr ? "Sertifikalar" : "Certifications"} icon={<Award className="h-4 w-4" />} count={data.certs.length}>
-        {data.certs.map((c: CvCert, i) => (
-          <ItemCard key={c.id} tr={tr} first={i === 0} last={i === data.certs.length - 1} onUp={() => set("certs", move(data.certs, i, -1))} onDown={() => set("certs", move(data.certs, i, 1))} onRemove={() => set("certs", data.certs.filter((x) => x.id !== c.id))}>
-            <Text label={tr ? "Sertifika adı" : "Certificate"} value={c.name} onChange={(v) => set("certs", patch(data.certs, c.id, { name: v }))} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Text label={tr ? "Veren kurum" : "Issuer"} value={c.issuer} onChange={(v) => set("certs", patch(data.certs, c.id, { issuer: v }))} />
-              <Text label={tr ? "Tarih" : "Date"} type={monthType} value={c.date} onChange={(v) => set("certs", patch(data.certs, c.id, { date: v }))} />
-            </div>
-          </ItemCard>
-        ))}
-        <AddButton label={tr ? "Sertifika ekle" : "Add certification"} onClick={() => set("certs", [...data.certs, { id: uid(), name: "", issuer: "", date: "" }])} />
+        <CertsEditor data={data} set={set} tr={tr} />
       </Accordion>
 
       <Accordion title={tr ? "Projeler" : "Projects"} icon={<FolderGit2 className="h-4 w-4" />} count={data.projects.length}>
-        {data.projects.map((p: CvProject, i) => (
-          <ItemCard key={p.id} tr={tr} first={i === 0} last={i === data.projects.length - 1} onUp={() => set("projects", move(data.projects, i, -1))} onDown={() => set("projects", move(data.projects, i, 1))} onRemove={() => set("projects", data.projects.filter((x) => x.id !== p.id))}>
-            <Text label={tr ? "Proje adı" : "Project name"} value={p.name} onChange={(v) => set("projects", patch(data.projects, p.id, { name: v }))} />
-            <Text label={tr ? "Bağlantı (isteğe bağlı)" : "Link (optional)"} value={p.link} onChange={(v) => set("projects", patch(data.projects, p.id, { link: v }))} />
-            <Area label={tr ? "Kısa açıklama" : "Short description"} rows={2} value={p.desc} onChange={(v) => set("projects", patch(data.projects, p.id, { desc: v }))} />
-          </ItemCard>
-        ))}
-        <AddButton label={tr ? "Proje ekle" : "Add project"} onClick={() => set("projects", [...data.projects, { id: uid(), name: "", link: "", desc: "" }])} />
+        <ProjectsEditor data={data} set={set} tr={tr} />
       </Accordion>
 
       <Accordion title={tr ? "İlgi alanları" : "Interests"} icon={<Heart className="h-4 w-4" />}>
@@ -422,14 +548,7 @@ ${line}` : line }))} />
       </Accordion>
 
       <Accordion title={tr ? "Referanslar" : "References"} icon={<Users className="h-4 w-4" />} count={data.references.length}>
-        {data.references.map((r: CvReference, i) => (
-          <ItemCard key={r.id} tr={tr} first={i === 0} last={i === data.references.length - 1} onUp={() => set("references", move(data.references, i, -1))} onDown={() => set("references", move(data.references, i, 1))} onRemove={() => set("references", data.references.filter((x) => x.id !== r.id))}>
-            <Text label={tr ? "Ad soyad" : "Name"} value={r.name} onChange={(v) => set("references", patch(data.references, r.id, { name: v }))} />
-            <Text label={tr ? "Unvan, kurum" : "Title, company"} value={r.role} onChange={(v) => set("references", patch(data.references, r.id, { role: v }))} />
-            <Text label={tr ? "Telefon / e-posta" : "Phone / email"} value={r.contact} onChange={(v) => set("references", patch(data.references, r.id, { contact: v }))} />
-          </ItemCard>
-        ))}
-        <AddButton label={tr ? "Referans ekle" : "Add reference"} onClick={() => set("references", [...data.references, { id: uid(), name: "", role: "", contact: "" }])} />
+        <ReferencesEditor data={data} set={set} tr={tr} />
         <p className="text-[11px] text-slate-500">{tr ? "İsterseniz “Referanslar istek üzerine sunulur” yazmak yerine bu bölümü boş bırakın; PDF'e eklenmez." : "Leave this empty if you'd rather not list references; it won't appear in the PDF."}</p>
       </Accordion>
 
@@ -467,7 +586,7 @@ ${line}` : line }))} />
                 {style !== "tags" ? (
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Text label={tr ? "Alt başlık (isteğe bağlı)" : "Subtitle (optional)"} value={it.subtitle} onChange={(v) => updItems((items) => patch(items, it.id, { subtitle: v }))} />
-                    <Text label={tr ? "Tarih (isteğe bağlı)" : "Date (optional)"} type="month" value={it.date} onChange={(v) => updItems((items) => patch(items, it.id, { date: v }))} />
+                    <Text label={tr ? "Tarih (isteğe bağlı)" : "Date (optional)"} type="month" tr={tr} value={it.date} onChange={(v) => updItems((items) => patch(items, it.id, { date: v }))} />
                   </div>
                 ) : null}
                 {style === "detailed" || style === "cards" ? <Area label={tr ? "Açıklama" : "Description"} rows={2} value={it.desc} onChange={(v) => updItems((items) => patch(items, it.id, { desc: v }))} /> : null}

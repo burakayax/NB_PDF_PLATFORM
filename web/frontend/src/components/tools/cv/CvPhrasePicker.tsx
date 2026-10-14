@@ -46,7 +46,7 @@ export function BulletPicker({ tr, lang, hint, current, onAdd }: Common & { curr
   const { prof, auto, pick, setPick } = useProfession(hint);
   const have = new Set(current.split("\n").map((l) => l.trim()));
   return (
-    <Shell tr={tr} title={tr ? "Hazır cümleler" : "Ready-made phrases"} sub={tr ? "Tıklayın, maddeye eklensin; köşeli [X] yerine kendi rakamınızı yazın" : "Tap to add; replace [X] with your own number"}>
+    <Shell tr={tr} title={tr ? "Hazır cümleler" : "Ready-made phrases"} sub={tr ? "Tıklayın, satıra eklensin; [X] gördüğünüz yere kendi sayınızı yazın" : "Tap to add; type your own number where you see [X]"}>
       <ProfSelect tr={tr} value={pick} auto={auto} onChange={setPick} />
       <ul className="space-y-1.5">
         {prof.bullets[lang].map((b) => {
@@ -61,7 +61,7 @@ export function BulletPicker({ tr, lang, hint, current, onAdd }: Common & { curr
           );
         })}
       </ul>
-      <p className="text-[11px] text-amber-100/60">{tr ? "Yalnızca gerçekten yaptığınız işleri ekleyin; rakamları kendi deneyiminize göre düzenleyin." : "Only add what you actually did; edit the numbers to match your experience."}</p>
+      <p className="text-[11px] text-amber-100/60">{tr ? "Yalnızca gerçekten yaptığınız işleri ekleyin. [X] yerine kendi sayınızı yazın (ör. 50); bilmiyorsanız o kısmı silin. Hâlâ çalıştığınız bir işse cümleleri şimdiki zamana çevirin (“hazırladım” yerine “hazırlıyorum”)." : "Only add what you actually did. Replace [X] with your own number (e.g. 50), or delete that part if you don't know it. For a current job, switch the verbs to present tense."}</p>
     </Shell>
   );
 }

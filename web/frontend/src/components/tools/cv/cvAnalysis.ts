@@ -36,7 +36,7 @@ export function cvPlainText(d: CvData): string {
   const m = buildModel(d, "export");
   const out: string[] = [];
   const f = (x: { t: string } | null | undefined) => (x ? x.t : "");
-  out.push(f(m.name), f(m.title), f(m.email), f(m.phone), f(m.city), f(m.website), f(m.linkedin));
+  out.push(f(m.name), f(m.title), f(m.email), f(m.phone), f(m.city), f(m.website), f(m.linkedin), ...m.socials.map((x) => f(x.f)));
   for (const k of m.order) {
     if (k === "summary") out.push(f(m.summary));
     if (k === "experience") for (const e of m.experience) out.push(f(e.role), f(e.company), f(e.location), ...e.bullets.map((b) => b.t));
@@ -217,30 +217,31 @@ export function qualityChecks(d: CvData): Check[] {
   const bullets = bulletLines(d);
 
   if (!d.experience.length) {
-    out.push(chk("q-noexp", "info", "exact", "Deneyim bölümü boş; madde kalitesi ölçülemedi.", "No experience entered; bullet quality can't be measured."));
+    out.push(chk("q-noexp", "info", "exact", "Deneyim bölümü boş; cümle kalitesi ölçülemedi.", "No experience entered; bullet quality can't be measured."));
     return out;
   }
-  if (!bullets.length) out.push(chk("q-nobullets", "warn", "exact", "Deneyimlerinizde açıklama maddesi yok.", "Your jobs have no bullet points.", "Her iş için 2–4 madde yazın: ne yaptınız ve sonucu ne oldu?", "Write 2–4 bullets per job: what you did and what came of it."));
+  if (!bullets.length) out.push(chk("q-nobullets", "warn", "exact", "Deneyimlerinizde “ne yaptınız” satırı yok.", "Your jobs have no bullet points.", "Her iş için 2–4 kısa satır yazın: ne yaptınız ve sonucu ne oldu?", "Write 2–4 bullets per job: what you did and what came of it."));
 
   d.experience.forEach((e) => {
     const n = e.desc.split(/\r?\n/).map((x) => x.trim()).filter(Boolean).length;
     const label = [e.role, e.company].filter(Boolean).join(" · ") || "—";
-    if (n > 8) out.push(chk(`q-many-${e.id}`, "warn", "exact", `“${label}”: ${n} madde var; çok uzun olabilir.`, `“${label}”: ${n} bullets — likely too long.`, "En etkili 3–6 maddeyi bırakın.", "Keep the strongest 3–6."));
+    if (n > 8) out.push(chk(`q-many-${e.id}`, "warn", "exact", `“${label}” işinde ${n} satır yazmışsınız; okuyan sıkılabilir.`, `“${label}”: ${n} bullets — likely too long.`, "En etkili 3–6 satırı bırakın, gerisini silin.", "Keep the strongest 3–6."));
   });
 
   if (bullets.length) {
     const withNum = bullets.filter((b) => /\d/.test(b.text));
     const ratio = withNum.length / bullets.length;
     const pct = Math.round(ratio * 100);
+    const noNum = bullets.find((b) => !/\d/.test(b.text));
     out.push(
       ratio >= 0.4
-        ? chk("q-numbers", "ok", "heuristic", `Maddelerin %${pct}'i rakam içeriyor — somut anlatım.`, `${pct}% of bullets contain numbers — concrete.`)
-        : chk("q-numbers", ratio >= 0.2 ? "warn" : "bad", "heuristic", `Maddelerin yalnızca %${pct}'i rakam içeriyor.`, `Only ${pct}% of bullets contain numbers.`, "Mümkün olan yerde ölçü ekleyin: kaç kişi, yüzde kaç, ne kadar sürede, ne kadar bütçe. Kesin sayı yoksa yaklaşık/aralık yazın; uydurmayın.", "Add measures where you can: how many, what percent, how fast, what budget. Use approximations if exact figures aren't known — never invent."),
+        ? chk("q-numbers", "ok", "heuristic", `İş deneyimi satırlarınızın %${pct}'inde sayı var — somut anlatım.`, `${pct}% of bullets contain numbers — concrete.`)
+        : chk("q-numbers", ratio >= 0.2 ? "warn" : "bad", "heuristic", `İş deneyimi satırlarınızın yalnızca %${pct}'inde sayı var.`, `Only ${pct}% of bullets contain numbers.`, `Sayı eklemek anlattığınız işi inandırıcı yapar. Örneğin kaç kişiyle çalıştığınızı, satışı yüzde kaç artırdığınızı, işi ne kadar sürede bitirdiğinizi ya da bütçenin ne kadar olduğunu yazın. Tam sayıyı hatırlamıyorsanız “yaklaşık 50” ya da “30-40 arası” yazabilirsiniz; ama olmayan bir sayı uydurmayın.${noNum ? ` Sayı eklenebilecek bir satır: “${noNum.text.slice(0, 80)}${noNum.text.length > 80 ? "…" : ""}” (${noNum.where}).` : ""}`, "Add measures where you can: how many, what percent, how fast, what budget. Use approximations if exact figures aren't known — never invent."),
     );
 
     const weakList = lang === "tr" ? WEAK_TR : WEAK_EN;
     const weak = bullets.filter((b) => weakList.some((w) => lc(b.text).includes(w)));
-    if (weak.length) out.push(chk("q-weak", "warn", "heuristic", `${weak.length} maddede zayıf/pasif ifade var: “${weak[0].text.slice(0, 70)}${weak[0].text.length > 70 ? "…" : ""}”`, `${weak.length} bullet(s) use weak/passive phrasing: “${weak[0].text.slice(0, 70)}${weak[0].text.length > 70 ? "…" : ""}”`, "“Sorumluydum/çalıştım” yerine sonucu anlatan eylem fiili kullanın: “… yönettim, … %20 artırdım”.", "Replace “responsible for/worked on” with an action verb and an outcome: “Led …, grew … 20%”."));
+    if (weak.length) out.push(chk("q-weak", "warn", "heuristic", `${weak.length} satırda etkisiz bir anlatım var: “${weak[0].text.slice(0, 70)}${weak[0].text.length > 70 ? "…" : ""}”`, `${weak.length} bullet(s) use weak/passive phrasing: “${weak[0].text.slice(0, 70)}${weak[0].text.length > 70 ? "…" : ""}”`, "“Sorumluydum/çalıştım” yerine sonucu anlatan eylem fiili kullanın: “… yönettim, … %20 artırdım”.", "Replace “responsible for/worked on” with an action verb and an outcome: “Led …, grew … 20%”."));
     else out.push(chk("q-weak", "ok", "heuristic", "Zayıf ifade kalıbı bulunmadı.", "No weak phrasing patterns found."));
 
     const action = bullets.filter((b) => startsOrEndsWithAction(b.text, lang));
@@ -253,11 +254,11 @@ export function qualityChecks(d: CvData): Check[] {
 
     const long = bullets.filter((b) => b.text.length > 240);
     const short = bullets.filter((b) => b.text.length < 25);
-    if (long.length) out.push(chk("q-long", "warn", "exact", `${long.length} madde 240 karakterden uzun (2+ satır).`, `${long.length} bullet(s) exceed 240 characters (2+ lines).`, "Her maddeyi tek fikre indirin; uzun cümleler okunmadan geçilir.", "Cut each bullet to one idea; long sentences get skipped."));
-    if (short.length) out.push(chk("q-short", "info", "exact", `${short.length} madde çok kısa (<25 karakter).`, `${short.length} bullet(s) are very short (<25 characters).`));
+    if (long.length) out.push(chk("q-long", "warn", "exact", `${long.length} satır çok uzun (iki satırı geçiyor).`, `${long.length} bullet(s) exceed 240 characters (2+ lines).`, "Her satırda tek bir şey anlatın; uzun cümleler okunmadan geçilir.", "Cut each bullet to one idea; long sentences get skipped."));
+    if (short.length) out.push(chk("q-short", "info", "exact", `“${short[0].where}” işindeki “${short[0].text}” satırı çok kısa${short.length > 1 ? ` (ve ${short.length - 1} satır daha)` : ""}.`, `“${short[0].text}” under “${short[0].where}” is very short${short.length > 1 ? ` (and ${short.length - 1} more)` : ""}.`, "Ne yaptığınızı ve sonucunu tek bir cümleyle anlatın.", "Say what you did and what came of it in one sentence."));
 
     const first = bullets.filter((b) => (lang === "tr" ? /^(ben|benim)\b/i : /^i\b/i).test(b.text.trim()));
-    if (first.length) out.push(chk("q-first", "warn", "heuristic", `${first.length} madde “${lang === "tr" ? "ben" : "I"}” ile başlıyor.`, `${first.length} bullet(s) start with “${lang === "tr" ? "ben" : "I"}”.`, "CV'de birinci tekil şahıs zamiri gerekmez.", "First-person pronouns aren't needed in a CV."));
+    if (first.length) out.push(chk("q-first", "warn", "heuristic", `${first.length} satır “${lang === "tr" ? "ben" : "I"}” ile başlıyor.`, `${first.length} bullet(s) start with “${lang === "tr" ? "ben" : "I"}”.`, "CV'de birinci tekil şahıs zamiri gerekmez.", "First-person pronouns aren't needed in a CV."));
   }
   return out;
 }

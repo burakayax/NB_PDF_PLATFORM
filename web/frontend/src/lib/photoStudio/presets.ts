@@ -133,6 +133,12 @@ export type BgId =
   | "beige"
   | "studio"
   | "navy"
+  | "corp"
+  | "graphite"
+  | "warm"
+  | "sage"
+  | "sky"
+  | "office"
   | "blur"
   | "custom";
 
@@ -153,6 +159,12 @@ export const BACKGROUNDS: BgOption[] = [
   { id: "beige", tr: "Krem", en: "Cream", swatch: "#f3ece1" },
   { id: "studio", tr: "Stüdyo gri", en: "Studio grey", swatch: "radial-gradient(circle at 50% 35%,#f1f2f4,#b9bec6)" },
   { id: "navy", tr: "Lacivert", en: "Navy", swatch: "#1d2b4a" },
+  { id: "corp", tr: "Kurumsal mavi", en: "Corporate blue", swatch: "linear-gradient(135deg,#3b6fb6,#14315c)" },
+  { id: "graphite", tr: "Antrasit", en: "Graphite", swatch: "radial-gradient(circle at 50% 35%,#4b5563,#111827)" },
+  { id: "warm", tr: "Sıcak stüdyo", en: "Warm studio", swatch: "linear-gradient(135deg,#f6e7d3,#dcbf9c)" },
+  { id: "sage", tr: "Adaçayı", en: "Sage", swatch: "radial-gradient(circle at 50% 35%,#e3ebe3,#a3b9a8)" },
+  { id: "sky", tr: "Gökyüzü", en: "Sky", swatch: "linear-gradient(180deg,#bfdcf6,#eef6fd)" },
+  { id: "office", tr: "Ofis (bulanık)", en: "Office (soft)", swatch: "radial-gradient(circle at 25% 30%,#fff8,#0000 40%),radial-gradient(circle at 75% 60%,#fff6,#0000 35%),linear-gradient(135deg,#dfe5ec,#b9c3d0)" },
   { id: "blur", tr: "Bulanık arka plan", en: "Blurred background", swatch: "linear-gradient(135deg,#cbd5e1,#64748b)" },
   { id: "custom", tr: "Özel renk", en: "Custom colour", swatch: "conic-gradient(red,yellow,lime,aqua,blue,magenta,red)" },
 ];

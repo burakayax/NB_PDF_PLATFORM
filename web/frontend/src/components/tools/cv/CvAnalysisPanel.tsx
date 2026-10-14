@@ -52,7 +52,9 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
   const years = totalExperienceYears(data);
 
   // İlan eşleştirici
-  const match = useMemo(() => (ad.trim().length > 30 ? matchJob(data, ad) : null), [data, ad]);
+  // Bağlantı yapıştırıldıysa eşleştirme yapılmaz: ilan sayfasını açıp okumuyoruz (gizlilik: hiçbir şey sunucuya gitmez), yalnızca yapıştırılan metne bakarız.
+  const isLink = useMemo(() => /^(https?:\/\/|www\.)\S+$/i.test(ad.trim()) || (/^\S+$/.test(ad.trim()) && /\.[a-z]{2,}(\/|$)/i.test(ad.trim())), [ad]);
+  const match = useMemo(() => (!isLink && ad.trim().length > 30 ? matchJob(data, ad) : null), [data, ad, isLink]);
 
   // ATS röntgeni
   const [xray, setXray] = useState<XrayResult | null>(null);
@@ -92,10 +94,11 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
         <p className="mt-3 text-[11px] leading-relaxed text-slate-500">{tr ? "“rehber” etiketli maddeler kural/sezgi tabanlıdır; diğerleri hesapla kesin bulunur." : "Items tagged “guide” are rule/heuristic based; the others are computed exactly."}</p>
       </Card>
 
-      <Card title={tr ? "İlana göre eşleştir" : "Match to a job ad"} sub={tr ? "İlan metnini yapıştırın; CV'nizde neyin eksik olduğunu görün" : "Paste the ad; see what's missing from your CV"}>
-        <textarea value={ad} onChange={(e) => setAd(e.target.value)} rows={6} placeholder={tr ? "İş ilanının metnini buraya yapıştırın…" : "Paste the job ad text here…"} className="w-full resize-y rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-[13px] leading-relaxed text-white placeholder:text-slate-500 focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-400/20" />
+      <Card title={tr ? "İlana göre eşleştir" : "Match to a job ad"} sub={tr ? "İlanın yazısını yapıştırın; CV'nizde neyin eksik olduğunu görün" : "Paste the ad; see what's missing from your CV"}>
+        <textarea value={ad} onChange={(e) => setAd(e.target.value)} rows={6} placeholder={tr ? "İlan sayfasındaki yazıyı kopyalayıp buraya yapıştırın (bağlantıyı değil, ilanın metnini)…" : "Copy the ad text from the page and paste it here (the text, not the link)…"} className="w-full resize-y rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-[13px] leading-relaxed text-white placeholder:text-slate-500 focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-400/20" />
         <p className="mt-1.5 text-[11px] text-slate-500">{tr ? "İlan metni bu cihazda işlenir; hiçbir yere gönderilmez." : "The ad is processed on this device and sent nowhere."}</p>
-        {!match && ad.trim().length > 0 ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] text-amber-100 ring-1 ring-amber-400/20">{tr ? "İlan metni çok kısa. İlanın tamamını, özellikle “Aranan nitelikler” bölümünü yapıştırın." : "The ad is too short. Paste the whole ad, especially the “Requirements” section."}</p> : null}
+        {isLink ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] leading-relaxed text-amber-100 ring-1 ring-amber-400/20">{tr ? "Bu bir internet adresi. Adresi açıp ilanı okumuyoruz; yalnızca buraya yapıştırdığınız yazıya bakarız. İlan sayfasını açın, ilanın metnini (özellikle “Aranan nitelikler” bölümünü) kopyalayıp buraya yapıştırın." : "This is a web address. We don't open the page to read the ad; we only look at the text you paste here. Open the ad, copy its text (especially the “Requirements” section) and paste it here."}</p> : null}
+        {!isLink && !match && ad.trim().length > 0 ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] text-amber-100 ring-1 ring-amber-400/20">{tr ? "İlan metni çok kısa. İlanın tamamını, özellikle “Aranan nitelikler” bölümünü yapıştırın." : "The ad is too short. Paste the whole ad, especially the “Requirements” section."}</p> : null}
         {match && match.keywords.length === 0 ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] text-amber-100 ring-1 ring-amber-400/20">{tr ? "Bu metinden anahtar kelime çıkarılamadı. İlanın görev ve aranan nitelikler bölümlerini de yapıştırmayı deneyin." : "No keywords could be extracted from this text. Try pasting the duties and requirements sections too."}</p> : null}
         {match && match.keywords.length > 0 ? (
           <div className="mt-3 space-y-3">

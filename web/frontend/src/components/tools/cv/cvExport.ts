@@ -18,7 +18,7 @@ export function cvLines(d: CvData): { model: CvModel; lines: Line[] } {
   const L = m.labels;
   const lines: Line[] = [];
   lines.push({ kind: "title", text: t(m.name), sub: t(m.title) });
-  const contact = [m.email, m.phone, m.city, m.website, m.linkedin, m.birth, m.license].map(t).filter(Boolean);
+  const contact = [m.email, m.phone, m.city, m.website, m.linkedin, ...m.socials.map((x) => x.f), m.birth, m.license].map(t).filter(Boolean);
   if (contact.length) lines.push({ kind: "p", text: contact.join("  |  ") });
 
   const secTitle = (k: SectionKey): string => {

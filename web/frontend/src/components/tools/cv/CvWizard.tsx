@@ -4,7 +4,8 @@
  */
 import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Download, FileUp, GraduationCap, Linkedin, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
-import { Area, AddButton, PhotoField, GRADUATE_ORDER, Text, inputCls, patch } from "./CvForm";
+import { Area, AddButton, CertsEditor, EducationEditor, PhotoField, ProjectsEditor, ReferencesEditor, SocialsEditor, GRADUATE_ORDER, Text, inputCls, patch } from "./CvForm";
+import { PhoneField } from "./CvFields";
 import { BulletPicker, SkillPicker, SummaryPicker } from "./CvPhrasePicker";
 import { LANG_LEVELS, uid, type CvData } from "./cvModel";
 import { PROFESSIONS, matchProfession, professionById, professionSample, type Profession } from "./cvPhrases";
@@ -20,6 +21,8 @@ type Props = {
   tpl: CvTemplate;
   tr: boolean;
   aiComingSoon?: boolean;
+  aiLocked?: boolean;
+  onAiLocked?: () => void;
   disabled: boolean;
   onFullForm: () => void;
   onDownload: () => void;
@@ -27,25 +30,23 @@ type Props = {
   onOpenDesign: () => void;
 };
 
-const BASE_STEPS = ["start", "you", "work", "edu", "skills", "summary", "done"] as const;
-/** Yeni mezun/deneyimsiz: eğitimden sonra "projeler" adımı da gelir (deneyim yerine öne çıkar). */
-const GRAD_STEPS = ["start", "you", "work", "edu", "projects", "skills", "summary", "done"] as const;
-type Step = (typeof GRAD_STEPS)[number];
+/** Herkes için aynı adımlar: projeler, sertifikalar, ek bilgiler ve referanslar da burada sorulur (hepsi isteğe bağlı). */
+const STEPS = ["start", "you", "work", "edu", "projects", "skills", "certs", "more", "refs", "summary", "done"] as const;
+type Step = (typeof STEPS)[number];
 
-export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFullForm, onDownload, onOpenLinkedin, onOpenDesign }: Props) {
+export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAiLocked, disabled, onFullForm, onDownload, onOpenLinkedin, onOpenDesign }: Props) {
   const lang = data.settings.lang;
   const [i, setI] = useState(0);
   const [profId, setProfId] = useState<string>("");
   const [graduate, setGraduate] = useState(false);
   const [ownRole, setOwnRole] = useState("");
-  const STEPS: readonly Step[] = graduate ? GRAD_STEPS : BASE_STEPS;
   const step: Step = STEPS[i];
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
   const prof: Profession | null = (profId && professionById(profId)) || matchProfession(`${data.title} ${data.experience[0]?.role ?? ""}`);
 
   const labels: Record<Step, string> = {
     start: tr ? "Başlangıç" : "Start", you: tr ? "Siz" : "You", work: tr ? "Deneyim" : "Work", edu: tr ? "Eğitim" : "Education",
-    projects: tr ? "Projeler" : "Projects", skills: tr ? "Beceriler" : "Skills", summary: tr ? "Özet" : "Summary", done: tr ? "Bitti" : "Done",
+    projects: tr ? "Projeler" : "Projects", skills: tr ? "Beceriler" : "Skills", certs: tr ? "Sertifikalar" : "Certificates", more: tr ? "Ek bilgiler" : "More details", refs: tr ? "Referanslar" : "References", summary: tr ? "Özet" : "Summary", done: tr ? "Bitti" : "Done",
   };
 
   // Adım kuralları: ilerlemeyi engellemez, yalnız nazikçe yönlendirir
@@ -93,6 +94,9 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
             <button key={s} type="button" onClick={() => setI(n)} aria-label={labels[s]} className={`h-1.5 flex-1 rounded-full transition ${n < i ? "bg-sky-400" : n === i ? "bg-gradient-to-r from-sky-400 to-indigo-400" : "bg-white/10 hover:bg-white/20"}`} />
           ))}
         </div>
+        {step !== "start" && step !== "done" ? (
+          <p className="mt-3 text-[11.5px] leading-relaxed text-slate-400">{tr ? "CV önizlemesinde soluk görünen alanlar henüz doldurmadıklarınızdır. Boş bıraktığınız her şey indirdiğiniz PDF'ten otomatik silinir." : "Faded areas in the CV preview are ones you haven't filled in yet. Anything you leave empty is removed from the PDF you download."}</p>
+        ) : null}
       </div>
 
       <fieldset disabled={disabled} className="min-w-0 space-y-4 border-0 px-5 py-5">
@@ -127,14 +131,14 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
         {step === "you" ? (
           <>
             <Head title={tr ? "Sizi tanıyalım" : "Let's get to know you"} sub={tr ? "İşverenin sizinle iletişime geçeceği bilgiler." : "How an employer can reach you."} />
-            <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} />
+            <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} aiLocked={aiLocked} onAiLocked={onAiLocked} />
             <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
             <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={prof?.title[lang] || (tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant")} suggest={(q) => suggestTitles(q, lang)} tr={tr} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" error={emailBad ? (tr ? emailBad.tr : emailBad.en) : null} />
-              <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" error={phoneBad ? (tr ? phoneBad.tr : phoneBad.en) : null} />
+              <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} placeholder={tr ? "Ör. İstanbul" : "E.g. London"} autoComplete="address-level2" />
             </div>
-            <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} />
+            <PhoneField label={tr ? "Telefon" : "Phone"} value={data.phone} onChange={(v) => set("phone", v)} city={data.city} tr={tr} error={phoneBad ? (tr ? phoneBad.tr : phoneBad.en) : null} />
             {!data.name.trim() ? <p className="text-[12px] text-amber-300/90">{tr ? "Devam etmek için adınızı yazın." : "Enter your name to continue."}</p> : null}
           </>
         ) : null}
@@ -149,8 +153,8 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
                   <Text label={tr ? "Şirket" : "Company"} value={e.company} onChange={(v) => set("experience", patch(data.experience, e.id, { company: v }))} />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Text label={tr ? "Başlangıç" : "Start"} type="month" value={e.start} onChange={(v) => set("experience", patch(data.experience, e.id, { start: v }))} />
-                  <Text label={tr ? "Bitiş" : "End"} type="month" value={e.end} disabled={e.current} error={(() => { const x = dateOrderIssue(e.start, e.end, e.current); return x ? (tr ? x.tr : x.en) : null; })()} onChange={(v) => set("experience", patch(data.experience, e.id, { end: v }))} />
+                  <Text label={tr ? "Başlangıç" : "Start"} type="month" tr={tr} value={e.start} onChange={(v) => set("experience", patch(data.experience, e.id, { start: v }))} />
+                  <Text label={tr ? "Bitiş" : "End"} type="month" tr={tr} value={e.end} disabled={e.current} error={(() => { const x = dateOrderIssue(e.start, e.end, e.current); return x ? (tr ? x.tr : x.en) : null; })()} onChange={(v) => set("experience", patch(data.experience, e.id, { end: v }))} />
                 </div>
                 <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => set("experience", patch(data.experience, e.id, { current: ev.target.checked }))} />{tr ? "Hâlâ çalışıyorum" : "I currently work here"}</label>
                 <Area label={tr ? "Ne yaptınız?" : "What did you do?"} rows={4} value={e.desc} onChange={(v) => set("experience", patch(data.experience, e.id, { desc: v }))} hint={tr ? "Her satır bir madde olur." : "Each line becomes a bullet."} />
@@ -164,35 +168,21 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
 
         {step === "edu" ? (
           <>
-            <Head title={tr ? "Nerede okudunuz?" : "Where did you study?"} sub={tr ? "En son bitirdiğiniz okuldan başlayın." : "Start with your most recent school."} />
+            <Head title={tr ? "Nerede okudunuz?" : "Where did you study?"} sub={tr ? "Önce eğitim düzeyini seçin (Lise, Lisans…), sonra okulunuzu yazın. Diploma notu ve başarılar isteğe bağlıdır." : "Pick the level first (High school, Bachelor…), then enter your school. Grade and achievements are optional."} />
             {data.education.map((e) => (
               <div key={e.id} className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3.5">
-                <Text label={tr ? "Okul / üniversite" : "School / university"} value={e.school} onChange={(v) => set("education", patch(data.education, e.id, { school: v }))} />
-                <Text label={tr ? "Bölüm ve derece" : "Major and degree"} value={e.degree} onChange={(v) => set("education", patch(data.education, e.id, { degree: v }))} placeholder={tr ? "Ör. Bilgisayar Mühendisliği, Lisans" : "E.g. Computer Engineering, BSc"} />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Text label={tr ? "Başlangıç" : "Start"} type="month" value={e.start} onChange={(v) => set("education", patch(data.education, e.id, { start: v }))} />
-                  <Text label={tr ? "Bitiş" : "End"} type="month" value={e.end} disabled={e.current} error={(() => { const x = dateOrderIssue(e.start, e.end, e.current); return x ? (tr ? x.tr : x.en) : null; })()} onChange={(v) => set("education", patch(data.education, e.id, { end: v }))} />
-                </div>
-                <label className="flex items-center gap-2 text-[12.5px] text-slate-300"><input type="checkbox" className="h-4 w-4 accent-sky-400" checked={e.current} onChange={(ev) => set("education", patch(data.education, e.id, { current: ev.target.checked }))} />{tr ? "Devam ediyorum" : "Currently studying"}</label>
+                <EducationEditor e={e} data={data} set={set} tr={tr} />
                 <button type="button" onClick={() => set("education", data.education.filter((x) => x.id !== e.id))} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-300 hover:text-red-200"><Trash2 className="h-3.5 w-3.5" />{tr ? "Bu okulu sil" : "Delete this school"}</button>
               </div>
             ))}
-            <AddButton label={data.education.length ? (tr ? "Bir okul daha ekle" : "Add another school") : (tr ? "Okul ekle" : "Add a school")} onClick={() => set("education", [...data.education, { id: uid(), school: "", degree: "", location: "", start: "", end: "", current: false, desc: "" }])} />
+            <AddButton label={data.education.length ? (tr ? "Bir okul daha ekle" : "Add another school") : (tr ? "Okul ekle" : "Add a school")} onClick={() => set("education", [...data.education, { id: uid(), school: "", degree: "", location: "", start: "", end: "", current: false, desc: "", level: data.education.length ? "" : "bachelor", gpa: "", gpaScale: "4", honors: "" }])} />
           </>
         ) : null}
 
         {step === "projects" ? (
           <>
-            <Head title={tr ? "Hangi projelerde yer aldınız?" : "Which projects have you worked on?"} sub={tr ? "Deneyiminiz azsa projeler CV'nizi güçlendirir: okul ve ders projeleri, staj, gönüllülük, bitirme tezi, kişisel çalışmalar. Yoksa “Atla”ya basın." : "With little experience, projects strengthen your CV: school and course projects, internships, volunteering, thesis, personal work. Press “Skip” if none."} />
-            {data.projects.map((pr) => (
-              <div key={pr.id} className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3.5">
-                <Text label={tr ? "Proje adı" : "Project name"} value={pr.name} onChange={(v) => set("projects", patch(data.projects, pr.id, { name: v }))} placeholder={tr ? "Ör. Bitirme projesi: Akıllı sera sistemi" : "E.g. Capstone: Smart greenhouse"} />
-                <Text label={tr ? "Bağlantı (isteğe bağlı)" : "Link (optional)"} value={pr.link} onChange={(v) => set("projects", patch(data.projects, pr.id, { link: v }))} />
-                <Area label={tr ? "Ne yaptınız?" : "What did you do?"} rows={3} value={pr.desc} onChange={(v) => set("projects", patch(data.projects, pr.id, { desc: v }))} hint={tr ? "Rolünüzü, kullandığınız araçları ve sonucu 1-2 cümleyle yazın." : "Your role, tools used and the outcome in 1–2 sentences."} />
-                <button type="button" onClick={() => set("projects", data.projects.filter((x) => x.id !== pr.id))} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-300 hover:text-red-200"><Trash2 className="h-3.5 w-3.5" />{tr ? "Bu projeyi sil" : "Delete this project"}</button>
-              </div>
-            ))}
-            <AddButton label={data.projects.length ? (tr ? "Bir proje daha ekle" : "Add another project") : (tr ? "Proje ekle" : "Add a project")} onClick={() => set("projects", [...data.projects, { id: uid(), name: "", link: "", desc: "" }])} />
+            <Head title={tr ? "Öne çıkan projeleriniz var mı?" : "Any standout projects?"} sub={tr ? "İş, okul, gönüllülük ya da kişisel çalışmalarınızdan gurur duyduklarınızı ekleyin. Yoksa “Atla”ya basın." : "Add work, school, volunteering or personal projects you are proud of. Press “Skip” if none."} />
+            <ProjectsEditor data={data} set={set} tr={tr} />
           </>
         ) : null}
 
@@ -206,7 +196,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
                 <button type="button" onClick={() => set("skills", data.skills.filter((x) => x.id !== s.id))} aria-label={tr ? "Sil" : "Delete"} className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
-            <AddButton label={tr ? "Beceri yaz" : "Type a skill"} onClick={() => set("skills", [...data.skills, { id: uid(), name: "", level: 0 }])} />
+            <AddButton label={tr ? "Beceri ekle" : "Add a skill"} onClick={() => set("skills", [...data.skills, { id: uid(), name: "", level: 0 }])} />
             <div className="border-t border-white/10 pt-4">
               <p className="mb-2 text-[13px] font-bold text-white">{tr ? "Yabancı diller" : "Languages"}</p>
               <div className="space-y-2">
@@ -226,11 +216,37 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
           </>
         ) : null}
 
+        {step === "certs" ? (
+          <>
+            <Head title={tr ? "Sertifika ya da belgeniz var mı?" : "Any certificates or licences?"} sub={tr ? "Mesleki belgeler, kurs sertifikaları, ehliyet dışı yeterlilikler (ör. forklift belgesi, dil sınavı, yazılım kursu). Yoksa “Atla”ya basın." : "Professional licences, course certificates, qualifications (e.g. forklift licence, language exam, coding course). Press “Skip” if none."} />
+            <CertsEditor data={data} set={set} tr={tr} />
+          </>
+        ) : null}
+
+        {step === "more" ? (
+          <>
+            <Head title={tr ? "Ek bilgiler" : "More details"} sub={tr ? "Hepsi isteğe bağlı: yalnızca CV'de görünmesini istediklerinizi doldurun." : "All optional: fill in only what you want on your CV."} />
+            <SocialsEditor data={data} set={set} tr={tr} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Text label={tr ? "Doğum tarihi" : "Date of birth"} value={data.birth} onChange={(v) => set("birth", v)} placeholder={tr ? "GG.AA.YYYY" : "DD.MM.YYYY"} />
+              <Text label={tr ? "Ehliyet" : "Driving licence"} value={data.license} onChange={(v) => set("license", v)} placeholder={tr ? "Ör. B sınıfı" : "E.g. Class B"} />
+            </div>
+            <Area label={tr ? "İlgi alanları" : "Interests"} rows={2} value={data.interests} onChange={(v) => set("interests", v)} placeholder={tr ? "Fotoğrafçılık, yürüyüş, satranç" : "Photography, hiking, chess"} hint={tr ? "Virgülle ayırın." : "Separate with commas."} />
+          </>
+        ) : null}
+
+        {step === "refs" ? (
+          <>
+            <Head title={tr ? "Referans vermek ister misiniz?" : "Would you like to add references?"} sub={tr ? "Sizi tanıyan eski bir yönetici ya da hocanın bilgilerini ekleyebilirsiniz. İzinlerini almayı unutmayın. İstemezseniz “Atla”ya basın; bölüm CV'de görünmez." : "Add a former manager or teacher who knows your work. Ask for their permission first. Press “Skip” otherwise; the section won't appear."} />
+            <ReferencesEditor data={data} set={set} tr={tr} />
+          </>
+        ) : null}
+
         {step === "summary" ? (
           <>
-            <Head title={tr ? "Kendinizi iki cümleyle anlatın" : "Describe yourself in two sentences"} sub={tr ? "CV'nin en üstünde okunan kısım. Taslaklardan birini seçip düzenleyebilirsiniz." : "The first thing people read. Pick a draft and edit it."} />
+            <Head title={tr ? "Kendinizi anlatın" : "Tell us about yourself"} sub={tr ? "CV'nin en üstünde okunan kısım. İstediğiniz uzunlukta yazabilir ya da bir taslağı seçip kendinize göre düzenleyebilirsiniz." : "The first thing people read. Write as much as you like, or pick a draft and make it yours."} />
             <SummaryPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} onPick={(t) => set("summary", t)} />
-            <Area label={tr ? "Profil özeti" : "Profile summary"} rows={5} value={data.summary} onChange={(v) => set("summary", v)} hint={tr ? "Köşeli [X] yerine kendi rakamınızı yazın." : "Replace [X] with your own number."} />
+            <Area label={tr ? "Profil özeti" : "Profile summary"} rows={5} value={data.summary} onChange={(v) => set("summary", v)} hint={tr ? "Köşeli [X] yerine kendi bilginizi yazın." : "Replace [X] with your own details."} />
           </>
         ) : null}
 
@@ -244,7 +260,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, disabled, onFu
             <div className="grid gap-2 sm:grid-cols-2">
               <button type="button" onClick={onDownload} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[14px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 sm:col-span-2"><Download className="h-4 w-4" />{tr ? "PDF olarak indir" : "Download as PDF"}</button>
               <button type="button" onClick={onOpenDesign} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Sparkles className="h-4 w-4" />{tr ? "Renk ve yazı tipini ayarla" : "Adjust colour & font"}</button>
-              <button type="button" onClick={onFullForm} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Plus className="h-4 w-4" />{tr ? "Sertifika, proje ekle (tüm form)" : "Add certificates, projects (full form)"}</button>
+              <button type="button" onClick={onFullForm} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Plus className="h-4 w-4" />{tr ? "Her şeyi tek formda düzenle" : "Edit everything in one form"}</button>
             </div>
             <p className="text-[12px] text-slate-400"><FileUp className="mr-1 inline h-3.5 w-3.5" />{tr ? "Boş bıraktığınız alanlar PDF'e eklenmez." : "Anything left empty is left out of the PDF."}</p>
           </div>

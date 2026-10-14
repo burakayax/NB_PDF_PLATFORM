@@ -17,7 +17,7 @@ import { CvPassModal, remainingLabel } from "./CvPassModal";
 import { buildCvDocx, cvToText } from "./cvExport";
 import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv, type CvData } from "./cvModel";
 import { buildCvPdf, measureFit, paginate } from "./cvPdf";
-import { MAX_FIT_STEP, styleFromSettings } from "./cvStyle";
+import { MAX_FIT_STEP, MAX_TRIM, styleFromSettings, trimForFit } from "./cvStyle";
 import { MAX_CVS, useCvStore } from "./useCvStore";
 import { CV_TEMPLATES, CvPage, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type CvTemplate } from "./cvTemplates";
 
@@ -136,11 +136,10 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
 
   // Kilitli şablonda kullanıcının verisi değil, örnek içerik gösterilir
   const shownData = useMemo(() => (locked ? sampleCv(data.settings.lang) : data), [locked, data]);
-  const model = useMemo(() => buildModel(shownData, locked ? "export" : view), [shownData, locked, view]);
 
   // ── "Tek sayfaya sığdır": PDF'in (boş alanlar çıkarılmış) ölçüsü ekran dışında hesaplanır ──
   const fitOn = data.settings.fitOnePage && !locked;
-  const [fitRes, setFitRes] = useState<{ step: number; pages: number } | null>(null);
+  const [fitRes, setFitRes] = useState<{ step: number; pages: number; trim: number; hidden: number } | null>(null);
   useEffect(() => {
     if (!fitOn) { setFitRes(null); return; }
     let live = true;
@@ -150,6 +149,9 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
     return () => { live = false; window.clearTimeout(id); };
   }, [fitOn, data, tpl.id]);
   const fitStep = fitOn ? fitRes?.step ?? 0 : 0;
+  const fitTrim = fitOn ? fitRes?.trim ?? 0 : 0;
+  const modelData = useMemo(() => (fitTrim ? trimForFit(shownData, fitTrim).data : shownData), [shownData, fitTrim]);
+  const model = useMemo(() => buildModel(modelData, locked ? "export" : view), [modelData, locked, view]);
 
   const styleOpts = useMemo(() => (locked ? undefined : styleFromSettings({ ...shownData.settings, fitOnePage: fitOn }, fitStep)), [locked, shownData.settings, fitOn, fitStep]);
 
@@ -182,7 +184,8 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
     return () => window.clearTimeout(t);
   }, [model, tpl, repaginate]);
 
-  const fitFailed = fitOn && !!fitRes && fitRes.pages > 1 && fitRes.step >= MAX_FIT_STEP;
+  const fitFailed = fitOn && !!fitRes && fitRes.pages > 1 && fitRes.step >= MAX_FIT_STEP && (fitRes.trim >= MAX_TRIM || fitRes.hidden === 0);
+  const fitTrimmed = fitOn && !!fitRes && fitRes.trim > 0 && fitRes.hidden > 0;
 
   async function makePdf(mode: "export" | "blank") {
     setError(null);
@@ -375,7 +378,13 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                     {tr ? " Sonucu görmek için “PDF görünümü”ne geçin." : " Switch to “PDF view” to see the result."}
                   </p>
                 ) : null}
-                {fitFailed ? <p className="mb-3 rounded-xl border border-amber-400/25 bg-amber-500/[0.07] px-3.5 py-2.5 text-[12.5px] text-amber-100">{tr ? "İçerik, okunaklılığı bozmadan tek sayfaya sığmadı. Birkaç maddeyi kısaltın ya da bölüm gizleyin." : "The content doesn't fit on one page without hurting legibility. Shorten a few bullets or hide a section."}</p> : null}
+                {fitTrimmed && !fitFailed ? (
+                  <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-sky-400/25 bg-sky-500/[0.07] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-sky-100">
+                    <p className="min-w-0 flex-1">{tr ? `Tek sayfaya sığması için PDF'te ${fitRes!.hidden} satır gösterilmiyor (en eski işlerin son satırları). Yazdığınız metin silinmedi.` : `To fit one page, ${fitRes!.hidden} line(s) are left out of the PDF (the last lines of your oldest jobs). Your text is not deleted.`}</p>
+                    <button type="button" onClick={() => setData({ ...data, settings: { ...data.settings, fitOnePage: false } })} className="shrink-0 rounded-lg bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-white/20">{tr ? "Hepsini göster (2 sayfa olsun)" : "Show everything (allow 2 pages)"}</button>
+                  </div>
+                ) : null}
+                {fitFailed ? <p className="mb-3 rounded-xl border border-amber-400/25 bg-amber-500/[0.07] px-3.5 py-2.5 text-[12.5px] text-amber-100">{tr ? "İçerik, okunaklılığı bozmadan tek sayfaya sığmadı. Eski işlerinizin satırlarını azaltın, eğitim ya da beceri bölümünü kısaltın ya da bir bölümü gizleyin." : "The content doesn't fit on one page without hurting legibility. Trim the lines of your older jobs, shorten education or skills, or hide a section."}</p> : null}
 
                 <div ref={wrapRef} className="w-full">
                   <div className="relative mx-auto select-none overflow-hidden rounded-lg bg-white shadow-[0_24px_70px_-24px_rgba(0,0,0,0.85)] ring-1 ring-white/15" style={{ width: PAGE_W * scale, height: pagesH * scale }} onContextMenu={locked ? (e) => e.preventDefault() : undefined}>
@@ -455,11 +464,11 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 ) : null}
                 {rightTab === "content" ? (
                   formMode === "wizard" ? (
-                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => setImportOpen(true)} onOpenDesign={() => setRightTab("design")} />
+                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} aiLocked={!paid} onAiLocked={onUpgrade} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => setImportOpen(true)} onOpenDesign={() => setRightTab("design")} />
                   ) : (
                     <div className="space-y-3">
                       <button type="button" onClick={() => pickFormMode("wizard")} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500/20 to-indigo-500/20 px-3.5 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:from-sky-500/30"><ListRestart className="h-4 w-4" />{tr ? "Adım adım sihirbaza dön" : "Back to the step-by-step guide"}</button>
-                      <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} />
+                      <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} aiLocked={!paid} onAiLocked={onUpgrade} />
                     </div>
                   )
                 ) : null}
