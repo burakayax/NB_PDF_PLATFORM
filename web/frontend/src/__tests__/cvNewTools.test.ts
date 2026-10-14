@@ -143,3 +143,30 @@ describe("yeni Pro şablon serisi", () => {
     expect(isSingleColumnLayout("studio")).toBe(false);
   });
 });
+
+import { matchJob } from "../components/tools/cv/cvAnalysis";
+
+describe("ilana göre eşleştir: gerçekçi ilan", () => {
+  const AD = `Proje Yöneticisi
+Aranan Nitelikler:
+- En az 5 yıl proje yönetimi deneyimi
+- Jira ve Confluence araçlarını etkin kullanabilen
+- Bütçe yönetimi ve risk analizi konusunda deneyimli
+- Paydaş yönetimi ve raporlama becerisi yüksek
+- PMP sertifikası tercih sebebidir
+- SAP bilgisi artı değer sağlar`;
+  it("CV'de olanı bulur, olmayanı eksik gösterir", () => {
+    const r = matchJob(sampleCv("tr"), AD);
+    const has = (t: string) => r.matched.some((k) => k.term === t);
+    for (const t of ["proje yönetimi", "jira", "pmp", "risk analizi", "paydaş yönetimi", "bütçe yönetimi"]) expect(has(t), t).toBe(true);
+    expect(r.missing.map((k) => k.term)).toEqual(expect.arrayContaining(["sap", "confluence"]));
+    expect(r.yearsAsked).toBe(5);
+    expect(r.titleHit).toBe(true);
+    expect(r.score).toBeGreaterThan(60);
+  });
+  it("alakasız CV düşük puan alır", () => {
+    const d = sampleCv("tr");
+    d.skills = []; d.summary = ""; d.certs = []; d.experience = []; d.title = "Aşçı"; d.education = [];
+    expect(matchJob(d, AD).score).toBeLessThan(25);
+  });
+});

@@ -290,9 +290,12 @@ export function stem(w: string, lang: CvLang): string {
 /** Sık kullanılan beceri/araç ifadeleri: ilanda geçiyorsa daha ağır sayılır. */
 const LEXICON = [
   "excel", "word", "powerpoint", "outlook", "sap", "oracle", "python", "java", "javascript", "typescript", "react", "angular", "vue", "node.js", "c#", "c++", ".net", "php", "sql", "mysql", "postgresql", "mongodb", "aws", "azure", "docker", "kubernetes", "git", "linux", "power bi", "tableau", "looker", "scrum", "agile", "kanban", "jira", "confluence", "crm", "erp", "salesforce", "hubspot", "autocad", "solidworks", "photoshop", "illustrator", "figma", "indesign", "seo", "sem", "google ads", "google analytics", "meta ads", "sosyal medya", "e-ticaret", "muhasebe", "mali analiz", "bütçe", "bütçeleme", "finansal raporlama", "vergi", "tfrs", "logo", "mikro", "netsis", "tedarik zinciri", "lojistik", "ihracat", "ithalat", "satın alma", "stok yönetimi", "kalite yönetimi", "iso 9001", "iso 27001", "six sigma", "lean", "proje yönetimi", "pmp", "iş geliştirme", "müşteri ilişkileri", "satış", "pazarlama", "insan kaynakları", "işe alım", "bordro", "eğitim", "iş sağlığı ve güvenliği", "isg", "analiz", "raporlama", "sunum", "müzakere", "liderlik", "takım yönetimi", "ingilizce", "almanca", "project management", "business development", "customer success", "account management", "data analysis", "machine learning", "supply chain", "financial reporting", "stakeholder", "budgeting", "forecasting", "negotiation", "leadership", "recruiting", "payroll", "quality assurance", "ci/cd", "rest api", "graphql", "ux", "ui",
+  // Ortak iş becerileri ve alan terimleri (ilanlarda tek kez geçse de anahtar sayılır)
+  "risk analizi", "risk yönetimi", "paydaş yönetimi", "iletişim becerisi", "problem çözme", "takım çalışması", "ekip çalışması", "analitik düşünme", "zaman yönetimi", "müşteri memnuniyeti", "müşteri hizmetleri", "ikna", "planlama", "koordinasyon", "sözleşme yönetimi", "denetim", "mevzuat", "performans yönetimi", "süreç iyileştirme", "strateji", "bütçe yönetimi", "maliyet analizi", "tahsilat", "fatura", "mutabakat", "beyanname", "kdv", "hasta bakımı", "acil müdahale", "ders planı", "sınıf yönetimi", "ölçme ve değerlendirme", "mülakat", "işe alım süreçleri", "çalışan bağlılığı", "iş hukuku", "içerik üretimi", "içerik planlama", "e-posta pazarlama", "dijital pazarlama", "reklam yönetimi", "marka yönetimi", "kurumsal kimlik", "tipografi", "yazılım geliştirme", "test otomasyonu", "veri analizi", "veri tabanı", "api", "wms", "forklift", "sevkiyat", "depo yönetimi", "envanter", "hizmet kalitesi", "çağrı merkezi", "ofis programları", "ms office", "toplantı yönetimi", "sekreterlik", "veri girişi", "iş güvenliği", "teknik çizim", "bakım onarım", "üretim planlama", "kalite kontrol", "saha satışı", "bayi yönetimi", "teklif hazırlama", "fiyatlandırma", "hedef yönetimi", "raporlama", "sunum becerisi", "yabancı dil", "excel",
+  "communication", "teamwork", "problem solving", "time management", "stakeholder management", "risk management", "risk analysis", "customer service", "customer satisfaction", "performance management", "process improvement", "strategic planning", "cost analysis", "reporting", "presentation", "coordination", "planning", "sales", "marketing", "content creation", "email marketing", "digital marketing", "software development", "test automation", "data analytics", "database", "inventory", "logistics", "call center", "microsoft office", "ms office", "data entry", "occupational safety", "technical drawing", "quality control", "pricing", "proposal", "account management", "talent acquisition", "employee engagement", "labour law", "patient care", "classroom management", "lesson planning", "brand management", "typography", "ux design", "ui design", "mobile development", "cloud", "cybersecurity", "devops",
 ];
 
-const REQ_HEAD = /(aranan|nitelik|gereklilik|beklenti|requirements?|qualifications?|what you|skills|yetkinlik|olmazsa)/i;
+const REQ_HEAD = /(aranan|aradığımız|beklediğimiz|nitelik|özellik|gereklilik|beklenti|sorumluluk|görevler|requirements?|qualifications?|what you|you have|must have|responsibilities|duties|looking for|skills|yetkinlik|olmazsa)/i;
 
 export type Keyword = { term: string; weight: number; present: boolean; hard: boolean };
 export type MatchResult = {
@@ -338,7 +341,7 @@ export function matchJob(d: CvData, adText: string, now = new Date()): MatchResu
   });
 
   const adLower = lc(ad);
-  for (const term of LEXICON) {
+  for (const term of new Set(LEXICON)) {
     const re = new RegExp(`(^|[^a-zçğıöşü0-9])${term.replace(/[.+#/\-]/g, "\\$&")}([^a-zçğıöşü0-9]|$)`, "g");
     const hits = adLower.match(re);
     if (hits) bump(term, hits.length * 2, true);
@@ -368,6 +371,8 @@ export function matchJob(d: CvData, adText: string, now = new Date()): MatchResu
   // Sözlük ifadelerinin parçaları çift sayılmasın
   const hardTerms = list.filter((c) => c.hard).map((c) => c.term);
   list = list.filter((c) => c.hard || !hardTerms.some((h) => h.includes(c.term) && c.term !== h));
+  // Sözlük ifadesi başka bir sözlük ifadesinin parçasıysa (ör. "planning" ⊂ "strategic planning") yalnızca uzun olanı tut
+  list = list.filter((c) => !c.hard || !hardTerms.some((h) => h !== c.term && h.includes(c.term)));
   list.sort((a, b) => b.weight - a.weight);
   list = list.slice(0, 30);
 
