@@ -301,7 +301,7 @@ export default function PdfToolsSection({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.2 }}
                         transition={{ duration: 0.35, delay: Math.min(i * 0.03, 0.2) }}
-                        className={`${collapsible && !isOpen && i >= MOBILE_PREVIEW ? "hidden sm:flex" : "flex"} group relative h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.055] ${hue.ring} ${hue.glow}`}
+                        className={`${collapsible && !isOpen && i >= MOBILE_PREVIEW ? "hidden lg:flex" : "flex"} group relative h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.055] ${hue.ring} ${hue.glow}`}
                       >
                         <div className="flex items-start gap-3">
                           <span
@@ -356,7 +356,7 @@ export default function PdfToolsSection({
                         return next;
                       })
                     }
-                    className={`mt-3 min-h-[44px] w-full rounded-xl border border-white/10 bg-white/[0.03] text-[13px] font-semibold ${meta.text} sm:hidden`}
+                    className={`mt-3 min-h-[44px] w-full rounded-xl border border-white/10 bg-white/[0.03] text-[13px] font-semibold ${meta.text} lg:hidden`}
                   >
                     {isOpen
                       ? tr ? "Daha az göster" : "Show less"

@@ -920,7 +920,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         </motion.div>
 
         {/* 5-column grid — responsive */}
-        <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:w-[84%] [&>*]:shrink-0 [&>*]:snap-center sm:mx-0 sm:grid sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 sm:[&>*]:w-auto sm:[&>*]:shrink sm:[&>*]:snap-align-none lg:grid-cols-3 xl:grid-cols-5">
+        <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-4 pt-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:w-[84%] [&>*]:shrink-0 [&>*]:snap-center sm:-mx-6 sm:px-6 sm:gap-4 sm:[&>*]:w-[46%] lg:mx-0 lg:grid lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-0 lg:grid-cols-3 lg:[&>*]:w-auto lg:[&>*]:shrink lg:[&>*]:snap-align-none xl:grid-cols-5">
           <FreeCard
             plan={free}
             lang={language}
