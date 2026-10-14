@@ -41,7 +41,8 @@ import {
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 import { ToolRating } from "../common/ToolRating";
-import { AiCreditBadge } from "./AiCreditBadge";
+import { AiCreditBadge, creditBalance, monthlyLeft } from "./AiCreditBadge";
+import { AI_MONTHLY_CREDITS_BY_PLAN } from "../../lib/aiCredits";
 import { TopUpModal } from "./TopUpModal";
 import { AiResultNotice } from "./AiResultNotice";
 
@@ -700,6 +701,22 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         </div>
       </div>
 
+      {/* ── Hoş geldin hediyesi: ücretsiz üyenin kredisi varken göster; Pro reklamı ── */}
+      {!comingSoon && !isAdmin && quota && !quota.unlimited && monthlyLeft(quota) === 0 && creditBalance(quota) > 0 && (
+        <div className="mb-5 rounded-2xl border border-emerald-400/25 bg-gradient-to-r from-emerald-500/[0.10] to-cyan-500/[0.05] px-4 py-3 text-[13px] leading-relaxed text-emerald-100">
+          <p className="font-semibold">
+            {tr
+              ? `🎁 Hoş geldin hediyesi: ${creditBalance(quota)} ücretsiz yapay zekâ işleminin var.`
+              : `🎁 Welcome gift: you have ${creditBalance(quota)} free AI operation${creditBalance(quota) > 1 ? "s" : ""}.`}
+          </p>
+          <p className="mt-0.5 text-emerald-100/80">
+            {tr
+              ? `Daha fazlası için Pro'ya geç: ayda ${AI_MONTHLY_CREDITS_BY_PLAN.PRO} yapay zekâ işlemi (Business: ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS}).`
+              : `Want more? Go Pro: ${AI_MONTHLY_CREDITS_BY_PLAN.PRO} AI operations a month (Business: ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS}).`}
+          </p>
+        </div>
+      )}
+
       {/* ── Yakında (ödemeler kapalıyken): yükleme yerine şık bekleme durumu ── */}
       {comingSoon ? (
         <div className="overflow-hidden rounded-3xl border-2 border-dashed border-fuchsia-400/30 bg-gradient-to-b from-fuchsia-500/[0.06] to-transparent p-8 text-center sm:p-12">
@@ -1073,6 +1090,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               ? tr ? "Devam etmek için giriş yap" : "Log in to continue"
               : tr ? "Bu bir Pro / Business özelliğidir" : "This is a Pro / Business feature"}
           </p>
+          {gate === "upgrade" && (
+            <p className="-mt-1 text-[12.5px] text-amber-100/80">
+              {tr
+                ? `Pro ile ayda ${AI_MONTHLY_CREDITS_BY_PLAN.PRO}, Business ile ayda ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS} yapay zekâ işlemi.`
+                : `Pro gives ${AI_MONTHLY_CREDITS_BY_PLAN.PRO} AI operations a month, Business ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS}.`}
+            </p>
+          )}
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button type="button" onClick={gate === "login" ? onLogin : onUpgrade}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110">

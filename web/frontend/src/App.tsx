@@ -5264,7 +5264,10 @@ function App() {
   const aiAllowed =
     user?.role === "ADMIN" ||
     userBalance?.isAdmin === true ||
-    ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(userBalance?.plan ?? "");
+    ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(userBalance?.plan ?? "") ||
+    // Hoş geldin hediyesi (ya da satın alınmış kredi) olan ücretsiz üye AI araçlarını açık görür;
+    // kredi bitince yine kapanır. Gerçek yetki/düşüm sunucuda (requireAiAccess + reserveAiQuota).
+    (userBalance?.aiBonusCredits ?? 0) > 0;
   const aiComingSoon =
     flags?.featureFlags?.paymentsDisabled !== false && !aiAllowed;
   const aiIsAdmin = user?.role === "ADMIN" || userBalance?.isAdmin === true;

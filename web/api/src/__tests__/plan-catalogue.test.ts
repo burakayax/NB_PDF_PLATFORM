@@ -222,6 +222,16 @@ describe("ek kredi paketleri ve sözleşme denetimi", () => {
     expect(num("minCredits")).toBe(CONTRACT_AUDIT.minCredits);
     expect(num("maxCredits")).toBe(CONTRACT_AUDIT.maxCredits);
   });
+
+  it("reklam metinlerindeki plan başına aylık AI hakkı katalogla aynıdır", () => {
+    const src = readFileSync(join(here, "..", "..", "..", "frontend", "src", "lib", "aiCredits.ts"), "utf8");
+    const block = /AI_MONTHLY_CREDITS_BY_PLAN\s*=\s*\{([^}]*)\}/.exec(src)?.[1] ?? "";
+    const num = (k: string) => Number(new RegExp(`${k}:\\s*(\\d+)`).exec(block)?.[1]);
+    expect(num("STARTER")).toBe(AI_MONTHLY_CREDITS.STARTER);
+    expect(num("PLUS")).toBe(AI_MONTHLY_CREDITS.PLUS);
+    expect(num("PRO")).toBe(AI_MONTHLY_CREDITS.PRO);
+    expect(num("BUSINESS")).toBe(AI_MONTHLY_CREDITS.BUSINESS);
+  });
 });
 
 
