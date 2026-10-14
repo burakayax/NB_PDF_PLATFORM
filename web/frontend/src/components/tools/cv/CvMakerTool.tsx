@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
+import { ChevronDown, LayoutTemplate, Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
 import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
@@ -69,6 +69,9 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
   const [view, setView] = useState<"draft" | "export">("draft");
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [rightTab, setRightTab] = useState<RightTab>("content");
+  const [tplOpen, setTplOpen] = useState(false);
+  const [cvMenuOpen, setCvMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [ad, setAd] = useState("");
   const [busy, setBusy] = useState<null | "pdf" | "blank">(null);
   const [error, setError] = useState<string | null>(null);
@@ -222,24 +225,34 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
       </div>
 
       {/* Şablon seçici */}
-      <section aria-label={tr ? "Şablonlar" : "Templates"} className="mb-5">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-[13px] font-bold uppercase tracking-wide text-slate-300">{tr ? `Şablonlar (${CV_TEMPLATES.length})` : `Templates (${CV_TEMPLATES.length})`}</h2>
-          {!paid ? <span className="text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</span> : passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 px-3 py-1 text-[12px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : null}
-        </div>
-        <div role="radiogroup" aria-label={tr ? "CV şablonu" : "CV template"} className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]">
-          {CV_TEMPLATES.map((t) => {
-            const on = t.id === templateId;
-            const lockedT = !t.free && !paid;
-            return (
-              <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
-                <div className={`overflow-hidden rounded-lg ${lockedT ? "opacity-60" : ""}`}><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
-                {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />PRO</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">PRO</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
-                <div className="mt-1.5 truncate px-0.5 text-[12px] font-semibold text-white">{tr ? t.tr : t.en}</div>
-              </button>
-            );
-          })}
-        </div>
+      <section aria-label={tr ? "Şablonlar" : "Templates"} className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03]">
+        <button type="button" onClick={() => setTplOpen((o) => !o)} aria-expanded={tplOpen} className="flex w-full items-center gap-3 px-4 py-3 text-left">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300"><LayoutTemplate className="h-4.5 w-4.5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11.5px] text-slate-400">{tr ? "Seçili şablon" : "Selected template"}</span>
+            <span className="block truncate text-[14px] font-bold text-white">{tr ? tpl.tr : tpl.en}</span>
+          </span>
+          {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="hidden rounded-full bg-sky-500/15 px-3 py-1 text-[12px] font-semibold text-sky-200 sm:inline">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : null}
+          <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-[12.5px] font-semibold text-white">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonu değiştir" : "Change template")}<ChevronDown className={`h-4 w-4 transition ${tplOpen ? "rotate-180" : ""}`} /></span>
+        </button>
+        {tplOpen ? (
+          <div className="border-t border-white/10 px-4 pb-4 pt-3">
+            {!paid ? <p className="mb-3 text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</p> : null}
+            <div role="radiogroup" aria-label={tr ? "CV şablonu" : "CV template"} className="flex gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]">
+              {CV_TEMPLATES.map((t) => {
+                const on = t.id === templateId;
+                const lockedT = !t.free && !paid;
+                return (
+                  <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); setTplOpen(false); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
+                    <div className={`overflow-hidden rounded-lg ${lockedT ? "opacity-60" : ""}`}><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
+                    {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />PRO</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">PRO</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
+                    <div className="mt-1.5 truncate px-0.5 text-[12px] font-semibold text-white">{tr ? t.tr : t.en}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {!signedIn ? (
@@ -313,8 +326,57 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
 
             {/* SAĞ: CV'lerim + eylemler + sekmeler */}
             <div className={`${tab === "edit" ? "block" : "hidden"} min-w-0 space-y-4 lg:block`}>
-              {/* CV'lerim */}
+              {/* İndirme: tek büyük düğme; diğer seçenekler açılır */}
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40">
+                  {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}
+                </button>
+                <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 text-[12.5px] font-semibold text-slate-300 hover:text-white">
+                  {tr ? "Diğer seçenekler (Word, düz metin, örnek, temizle)" : "More options (Word, text, sample, clear)"}<ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />
+                </button>
+                {moreOpen ? (
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileText className="h-4 w-4" />{tr ? "Word (.docx)" : "Word (.docx)"}</button>
+                    <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileType2 className="h-4 w-4" />{tr ? "Düz metin (.txt)" : "Plain text (.txt)"}</button>
+                    <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("blank")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40">
+                      {busy === "blank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{tr ? "Boş şablon (PDF)" : "Blank template (PDF)"}
+                    </button>
+                    <div className="flex gap-2">
+                      <button type="button" disabled={locked} onClick={fillSample} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.05] px-2 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Wand2 className="h-3.5 w-3.5" />{tr ? "Örnekle doldur" : "Fill sample"}</button>
+                      <button type="button" disabled={locked || emptyCv} onClick={clearAll} aria-label={tr ? "Tümünü temizle" : "Clear all"} className="rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-red-300 hover:bg-red-500/10 disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                ) : null}
+                {emptyCv && !locked ? <p className="mt-2 text-[11.5px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; solda canlı olarak oluşur." : "Your CV is still empty. Fill in the fields below; it builds live on the left."}</p> : null}
+                {error ? <p className="mt-2 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3 py-2 text-[12.5px] text-red-300">{error}</p> : null}
+                {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
+              </div>
+
+              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1">
+                {([["content", tr ? "Bilgilerim" : "My details", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch], ["ai", tr ? "Yapay Zekâ" : "AI", Sparkles]] as const).map(([k, label, Ico]) => (
+                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-1 py-2.5 text-[12.5px] font-semibold transition ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="hidden h-4 w-4 sm:block" />{label}</button>
+                ))}
+              </div>
+
+              <div className="relative">
+                {locked ? (
+                  <div className="absolute inset-0 z-10 flex items-start justify-center rounded-2xl bg-slate-950/55 p-6 backdrop-blur-[1px]">
+                    <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Pro şablon — alanlar kilitli" : "Pro template — fields locked"}</p>
+                  </div>
+                ) : null}
+                {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} /> : null}
+                {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
+                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
+                {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
+              </div>
+
+              {/* CV'lerim (çoklu sürüm) + yedek: kapalı gelir */}
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03]">
+                <button type="button" onClick={() => setCvMenuOpen((o) => !o)} aria-expanded={cvMenuOpen} className="flex w-full items-center gap-2 px-4 py-3 text-left">
+                  <span className="flex-1 text-[13px] font-bold text-white">{tr ? "CV'lerim ve yedek" : "My CVs & backup"} <span className="font-normal text-slate-400">· {store.current.name}</span></span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition ${cvMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+                {cvMenuOpen ? <div className="border-t border-white/10 p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="sr-only" htmlFor="cv-switch">{tr ? "CV seç" : "Choose CV"}</label>
                   {renaming ? (
@@ -335,44 +397,7 @@ export function CvMakerTool({ language, accessToken, onLogin, onRegister, onUpgr
                   <button type="button" onClick={() => importRef.current?.click()} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileUp className="h-3.5 w-3.5" />{tr ? "Yedekten yükle" : "Restore"}</button>
                   <input ref={importRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { void importBackup(e.target.files?.[0]); e.target.value = ""; }} />
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[14px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40 sm:col-span-2">
-                    {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}
-                  </button>
-                  <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileText className="h-4 w-4" />{tr ? "Word (.docx) indir" : "Download Word (.docx)"}</button>
-                  <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileType2 className="h-4 w-4" />{tr ? "Düz metin (.txt) indir" : "Download plain text (.txt)"}</button>
-                  <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("blank")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40">
-                    {busy === "blank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{tr ? "Boş şablonu indir" : "Download blank template"}
-                  </button>
-                  <div className="flex gap-2">
-                    <button type="button" disabled={locked} onClick={fillSample} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.05] px-2 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Wand2 className="h-3.5 w-3.5" />{tr ? "Örnekle doldur" : "Fill sample"}</button>
-                    <button type="button" disabled={locked || emptyCv} onClick={clearAll} aria-label={tr ? "Tümünü temizle" : "Clear all"} className="rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-red-300 hover:bg-red-500/10 disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                </div>
-                {emptyCv && !locked ? <p className="mt-2 text-[11.5px] text-amber-300/90">{tr ? "CV'niz henüz boş. Bilgilerinizi girin ya da “Örnekle doldur” ile nasıl görüneceğine bakın." : "Your CV is still empty. Enter your details or try “Fill sample” to see how it looks."}</p> : null}
-                {error ? <p className="mt-2 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3 py-2 text-[12.5px] text-red-300">{error}</p> : null}
-                {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
-              </div>
-
-              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1">
-                {([["content", tr ? "İçerik" : "Content", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch], ["ai", tr ? "Yapay Zekâ" : "AI", Sparkles]] as const).map(([k, label, Ico]) => (
-                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-[13px] font-semibold transition ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="h-4 w-4" />{label}</button>
-                ))}
-              </div>
-
-              <div className="relative">
-                {locked ? (
-                  <div className="absolute inset-0 z-10 flex items-start justify-center rounded-2xl bg-slate-950/55 p-6 backdrop-blur-[1px]">
-                    <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Pro şablon — alanlar kilitli" : "Pro template — fields locked"}</p>
-                  </div>
-                ) : null}
-                {rightTab === "content" ? <CvForm data={data} onChange={setData} tpl={tpl} disabled={locked} tr={tr} aiComingSoon={aiComingSoon} /> : null}
-                {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} /> : null}
-                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
-                {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
+                </div> : null}
               </div>
 
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}

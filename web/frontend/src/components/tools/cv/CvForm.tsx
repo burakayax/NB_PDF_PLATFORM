@@ -188,12 +188,6 @@ function PhotoCropper({ photo, tpl, onChange, disabled, tr }: { photo: CvPhoto; 
         <label className="block text-[12px] text-slate-300">{tr ? "Yakınlaştır" : "Zoom"}
           <input type="range" min={1} max={3} step={0.02} value={photo.zoom} disabled={disabled} onChange={(e) => onChange({ ...photo, zoom: Number(e.target.value) })} className="mt-1 w-full accent-sky-400" />
         </label>
-        <label className="block text-[12px] text-slate-300">{tr ? "Yatay konum" : "Horizontal"}
-          <input type="range" min={-1} max={1} step={0.02} value={photo.x} disabled={disabled} onChange={(e) => onChange({ ...photo, x: Number(e.target.value) })} className="mt-1 w-full accent-sky-400" />
-        </label>
-        <label className="block text-[12px] text-slate-300">{tr ? "Dikey konum" : "Vertical"}
-          <input type="range" min={-1} max={1} step={0.02} value={photo.y} disabled={disabled} onChange={(e) => onChange({ ...photo, y: Number(e.target.value) })} className="mt-1 w-full accent-sky-400" />
-        </label>
       </div>
     </div>
   );
@@ -206,6 +200,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
   const fileRef = useRef<HTMLInputElement>(null);
   const [photoErr, setPhotoErr] = useState<string | null>(null);
   const [prepOpen, setPrepOpen] = useState(false);
+  const [moreOpen, setMoreInfo] = useState(() => !!(data.website || data.linkedin || data.birth || data.license));
   const lang = data.settings.lang;
   const monthType = "month";
 
@@ -214,8 +209,8 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
     setPhotoErr(null);
     try {
       const src = await readPhoto(f);
-      set("photo", { src, zoom: 1, x: 0, y: 0 });
-      set("showPhoto", true);
+      // Tek seferde yaz: iki ayrı set() eski "data" üzerinden çalışıp fotoğrafı geri siliyordu
+      onChange({ ...data, photo: { src, zoom: 1, x: 0, y: 0 }, showPhoto: true });
     } catch {
       setPhotoErr(tr ? "Bu fotoğraf açılamadı. JPG veya PNG deneyin." : "This photo couldn't be opened. Try a JPG or PNG.");
     }
@@ -223,44 +218,52 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
 
   return (
     <fieldset disabled={disabled} className="min-w-0 space-y-3 border-0 p-0">
-      <Accordion title={tr ? "Fotoğraf" : "Photo"} icon={<Camera className="h-4 w-4" />} defaultOpen>
-        <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-slate-200">
-          <input type="checkbox" checked={data.showPhoto} onChange={(e) => set("showPhoto", e.target.checked)} className="h-4 w-4 accent-sky-400" />
-          {tr ? "CV'de fotoğraf kullan" : "Show a photo on the CV"}
-        </label>
-        {data.showPhoto ? (
-          <>
-            {data.photo ? <PhotoCropper photo={data.photo} tpl={tpl} disabled={disabled} tr={tr} onChange={(p) => set("photo", p)} /> : null}
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-3.5 py-2.5 text-[13px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25"><ImagePlus className="h-4 w-4" />{data.photo ? (tr ? "Fotoğrafı değiştir" : "Change photo") : (tr ? "Fotoğraf yükle" : "Upload photo")}</button>
-              {data.photo ? <button type="button" disabled={aiComingSoon} onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2.5 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-fuchsia-500/15"><Sparkles className="h-4 w-4" />{aiComingSoon ? (tr ? "AI ile hazırla · Çok Yakında" : "Prepare with AI · Coming soon") : (tr ? "AI ile hazırla" : "Prepare with AI")}</button> : null}
-              {data.photo ? <button type="button" onClick={() => set("photo", null)} className="rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Kaldır" : "Remove"}</button> : null}
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
-            </div>
-            {prepOpen && data.photo && !aiComingSoon ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { set("photo", { src, zoom: 1, x: 0, y: 0 }); setPrepOpen(false); }} /> : null}
-            {photoErr ? <p className="text-[12px] text-red-300">{photoErr}</p> : null}
-            <a href="/tools/ai-fotograf-studyosu" className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-fuchsia-300 hover:text-fuchsia-200"><Sparkles className="h-3.5 w-3.5" />{tr ? "Fotoğrafınızı AI ile CV için hazırlayın (arka plan, kadraj)" : "Prepare your photo for your CV with AI (background, framing)"}</a>
-            <p className="text-[11px] text-slate-500">{tr ? "Fotoğrafınız yalnızca bu tarayıcıda işlenir; sunucumuza yüklenmez." : "Your photo is processed only in this browser; it is never uploaded."}</p>
-          </>
-        ) : null}
-      </Accordion>
-
       <Accordion title={tr ? "Kişisel bilgiler" : "Personal details"} icon={<UserRound className="h-4 w-4" />} defaultOpen>
+        {/* Fotoğraf: tek büyük düğme; yüklenince önizleme ve ayarlar */}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+        {data.photo && data.showPhoto ? (
+          <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <PhotoCropper photo={data.photo} tpl={tpl} disabled={disabled} tr={tr} onChange={(p) => set("photo", p)} />
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-3.5 py-2 text-[13px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25"><ImagePlus className="h-4 w-4" />{tr ? "Değiştir" : "Change"}</button>
+              {!aiComingSoon ? <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button> : null}
+              <button type="button" onClick={() => onChange({ ...data, photo: null })} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Kaldır" : "Remove"}</button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={() => fileRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl border border-dashed border-sky-400/40 bg-sky-500/[0.05] px-4 py-3.5 text-left hover:bg-sky-500/10">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-200"><Camera className="h-5 w-5" /></span>
+            <span className="min-w-0">
+              <span className="block text-[14px] font-bold text-white">{tr ? "Fotoğraf ekle" : "Add a photo"} <span className="font-normal text-slate-400">{tr ? "(isteğe bağlı)" : "(optional)"}</span></span>
+              <span className="block text-[11.5px] text-slate-400">{tr ? "Tıklayın, cihazınızdan seçin. Fotoğraf sunucuya yüklenmez." : "Click and pick one from your device. It is never uploaded."}</span>
+            </span>
+          </button>
+        )}
+        {photoErr ? <p className="text-[12px] text-red-300">{photoErr}</p> : null}
+        {prepOpen && data.photo && !aiComingSoon ? <CvPhotoPrep photo={data.photo} tpl={tpl} tr={tr} onClose={() => setPrepOpen(false)} onApply={(src) => { onChange({ ...data, photo: { src, zoom: 1, x: 0, y: 0 }, showPhoto: true }); setPrepOpen(false); }} /> : null}
+
         <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
-        <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} />
+        <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant"} />
         <div className="grid gap-3 sm:grid-cols-2">
           <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" />
           <Text label={tr ? "Telefon" : "Phone"} type="tel" value={data.phone} onChange={(v) => set("phone", v)} autoComplete="tel" />
         </div>
-        <Text label={tr ? "Şehir / adres" : "City / address"} value={data.city} onChange={(v) => set("city", v)} />
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Text label={tr ? "Web sitesi" : "Website"} value={data.website} onChange={(v) => set("website", v)} />
-          <Text label="LinkedIn" value={data.linkedin} onChange={(v) => set("linkedin", v)} />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Text label={tr ? "Doğum tarihi (isteğe bağlı)" : "Date of birth (optional)"} value={data.birth} onChange={(v) => set("birth", v)} />
-          <Text label={tr ? "Ehliyet (isteğe bağlı)" : "Driving licence (optional)"} value={data.license} onChange={(v) => set("license", v)} />
-        </div>
+        <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} />
+        <button type="button" onClick={() => setMoreInfo((o) => !o)} aria-expanded={moreOpen} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-sky-300 hover:text-sky-200">
+          <ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />{tr ? "Daha fazla bilgi (web sitesi, LinkedIn, doğum tarihi…)" : "More details (website, LinkedIn, birth date…)"}
+        </button>
+        {moreOpen ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Text label={tr ? "Web sitesi" : "Website"} value={data.website} onChange={(v) => set("website", v)} />
+              <Text label="LinkedIn" value={data.linkedin} onChange={(v) => set("linkedin", v)} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Text label={tr ? "Doğum tarihi" : "Date of birth"} value={data.birth} onChange={(v) => set("birth", v)} />
+              <Text label={tr ? "Ehliyet" : "Driving licence"} value={data.license} onChange={(v) => set("license", v)} />
+            </div>
+          </>
+        ) : null}
       </Accordion>
 
       <Accordion title={tr ? "Profil özeti" : "Profile summary"} icon={<FileText className="h-4 w-4" />}>
@@ -332,6 +335,8 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
         <AddButton label={tr ? "Dil ekle" : "Add language"} onClick={() => set("languages", [...data.languages, { id: uid(), name: "", level: "" }])} />
       </Accordion>
 
+      <p className="px-1 pt-2 text-[11.5px] font-bold uppercase tracking-wide text-slate-500">{tr ? "Ek bölümler (isteğe bağlı)" : "Extra sections (optional)"}</p>
+
       <Accordion title={tr ? "Sertifikalar" : "Certifications"} icon={<Award className="h-4 w-4" />} count={data.certs.length}>
         {data.certs.map((c: CvCert, i) => (
           <ItemCard key={c.id} tr={tr} first={i === 0} last={i === data.certs.length - 1} onUp={() => set("certs", move(data.certs, i, -1))} onDown={() => set("certs", move(data.certs, i, 1))} onRemove={() => set("certs", data.certs.filter((x) => x.id !== c.id))}>
@@ -394,7 +399,7 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon }: Prop
       ))}
       <AddButton label={tr ? "Özel bölüm ekle (Gönüllülük, Yayınlar, Ödüller…)" : "Add custom section (Volunteering, Publications, Awards…)"} onClick={() => set("customSections", [...data.customSections, { id: uid(), title: "", items: [{ id: uid(), title: "", subtitle: "", date: "", desc: "" }] }])} />
 
-      <Accordion title={tr ? "Bölüm sırası ve görünürlük" : "Section order & visibility"} icon={<ListOrdered className="h-4 w-4" />}>
+      <Accordion title={tr ? "Bölüm sırası ve gizleme (gelişmiş)" : "Section order & hiding (advanced)"} icon={<ListOrdered className="h-4 w-4" />}>
         <p className="text-[11.5px] leading-relaxed text-slate-400">{tr ? "Bölümleri yukarı/aşağı taşıyın ya da gizleyin. Kenar çubuklu şablonlarda Beceriler, Diller ve İlgi alanları yan sütunda kalır; sıra kendi içinde uygulanır." : "Move sections up/down or hide them. In sidebar templates Skills, Languages and Interests stay in the side column; order applies within each column."}</p>
         {(() => {
           const order = resolveOrder(data);
