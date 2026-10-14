@@ -24,6 +24,8 @@ export type EntitlementBalanceWire = {
   subscriptionStartedAt?: string | null;
   overrideExpiresAt?: string | null;
   basePlan?: PlanName | null;
+  /** Hoş geldin hediyesi / satın alınmış AI kredisi (>0 ise ücretsiz üye AI araçlarını kullanabilir). */
+  aiBonusCredits?: number;
 };
 
 export type UserBalance = {
@@ -47,6 +49,8 @@ export type UserBalance = {
   overrideExpiresAt: string | null;
   /** Geçici plan bitince dönülecek plan — yoksa null. */
   basePlan: PlanName | null;
+  /** AI kredisi bakiyesi (hoş geldin hediyesi dahil). Eski sunucuda yok → 0. */
+  aiBonusCredits?: number;
 };
 
 export function normalizeUserBalance(
@@ -75,6 +79,7 @@ export function normalizeUserBalance(
     subscriptionStartedAt: wire.subscriptionStartedAt ?? null,
     overrideExpiresAt: wire.overrideExpiresAt ?? null,
     basePlan: wire.basePlan ?? null,
+    aiBonusCredits: Math.max(0, wire.aiBonusCredits ?? 0),
   };
 }
 

@@ -132,6 +132,9 @@ export async function entitlementBalanceController(
     throw new HttpError(404, "User or organization not found.");
   }
 
+  // Hoş geldin hediyesi / satın alınmış AI kredisi (ücretsiz üyede AI araçlarını açar).
+  const aiRow = await prisma.user.findUnique({ where: { id: userId }, select: { bonusAiCredits: true } });
+
   // Ücretli planlar için abonelik başlangıç ve bitiş tarihleri
   let subscriptionExpiry: string | null = null;
   let subscriptionStartedAt: string | null = null;
@@ -171,6 +174,7 @@ export async function entitlementBalanceController(
     // Süreli (geçici) plan: bitiş tarihi + bitince dönülecek plan (yoksa null).
     overrideExpiresAt: summary.overrideExpiresAt,
     basePlan: summary.basePlan,
+    aiBonusCredits: Math.max(0, aiRow?.bonusAiCredits ?? 0),
   });
 }
 

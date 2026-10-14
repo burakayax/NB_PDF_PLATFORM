@@ -492,6 +492,8 @@ export async function registerUser(
       passwordHash,
       authProvider: "local",
       role: resolvedRole,
+      // Hoş geldin hediyesi: tek seferlik ücretsiz AI işlemi (kayıt sırasında bir kez yazılır → tekrar verilmez).
+      ...(env.AI_TRIAL_CREDITS > 0 ? { bonusAiCredits: env.AI_TRIAL_CREDITS } : {}),
       isVerified: options?.skipEmailVerification === true,
       preferredLanguage: input.preferredLanguage ?? "en",
       plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
@@ -1114,6 +1116,7 @@ export async function signInWithGoogle(params: {
       passwordHash: null,
       authProvider: "google",
       role: resolveRoleFromEmail(email),
+      ...(env.AI_TRIAL_CREDITS > 0 ? { bonusAiCredits: env.AI_TRIAL_CREDITS } : {}),
       isVerified: true,
       verifiedAt: new Date(),
       preferredLanguage: params.preferredLanguage,

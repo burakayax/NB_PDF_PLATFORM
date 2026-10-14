@@ -11,6 +11,10 @@
  * Formüller sunucudaki `lib/plan-catalogue.ts` ile AYNI olmak zorundadır
  * (`plan-catalogue.test.ts` ayrışmayı yakalar). Asıl düşüm her zaman sunucuda yapılır.
  */
+/** Plana göre aylık AI işlem hakkı (reklam metinleri için) — sunucudaki `AI_MONTHLY_CREDITS` ile AYNI olmalı
+ * (`plan-catalogue.test.ts` ayrışmayı yakalar). */
+export const AI_MONTHLY_CREDITS_BY_PLAN = { STARTER: 5, PLUS: 15, PRO: 40, BUSINESS: 100 } as const;
+
 export const CONTRACT_AUDIT_CREDITS = {
   baseCredits: 85,
   charsPerCredit: 6_500,
