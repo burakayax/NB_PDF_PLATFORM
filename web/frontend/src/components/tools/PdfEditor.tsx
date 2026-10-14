@@ -426,7 +426,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         const page = await doc.getPage(current + 1);
         const base = page.getViewport({ scale: 1 });
         const container = overlayRef.current?.parentElement?.parentElement;
-        const availW = Math.min((container?.clientWidth ?? 700) - 24, 820);
+        const cs = container ? getComputedStyle(container) : null;
+        const padX = cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 0;
+        const availW = Math.min((container?.clientWidth ?? 700) - padX - 4, 820);
         // Sayfayı genişliğe sığdır (fit) × kullanıcı zoom faktörü.
         const fit = Math.max(0.4, availW / base.width);
         const s = fit * zoom;
@@ -1194,7 +1196,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             {/* Biçimlendirme araçları HER ZAMAN görünür; metin seçili değilken PASİF (soluk). */}
             <span className="mx-1 h-5 w-px bg-white/10" />
             <div
-              className="flex flex-wrap items-center gap-2 transition-opacity"
+              className="flex w-full flex-nowrap items-center gap-2 overflow-x-auto transition-opacity sm:w-auto sm:flex-wrap sm:overflow-visible"
               style={{ opacity: selInfo?.kind === "text" ? 1 : 0.4, pointerEvents: selInfo?.kind === "text" ? "auto" : "none" }}
               aria-disabled={selInfo?.kind !== "text"}
               title={selInfo?.kind === "text" ? undefined : (tr ? "Bir yazıya tıklayın" : "Click a text")}
@@ -1257,9 +1259,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             <div className="ml-auto flex items-center gap-3">
               {/* Yakınlaştırma — görsel seçicideki gibi */}
               <div data-tour="editor-zoom" className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
-                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-9 w-9 items-center sm:h-7 sm:w-7 justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-4 w-4" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-24 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
-                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-9 w-9 items-center sm:h-7 sm:w-7 justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-4 w-4" /></button>
                 <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
               <span className="hidden text-[12px] font-semibold text-slate-300 md:inline">{tr ? "Öğeye tıkla → düzenle. Görsel/amblem seçip Delete → sil" : "Click to edit. Select image + Delete key → remove"} · <span className="text-cyan-300">{editCount} {tr ? "değişiklik" : "edits"}</span></span>
@@ -1271,7 +1273,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
           <div className="flex min-h-0 flex-1">
             {/* Sol: sayfa thumbnail'leri */}
-            <div className="w-28 shrink-0 overflow-y-auto border-r border-white/[0.08] bg-black/20 p-2 sm:w-32">
+            <div className="w-16 shrink-0 overflow-y-auto border-r border-white/[0.08] bg-black/20 p-1 sm:w-32 sm:p-2">
               {Array.from({ length: pageCount }).map((_, i) => (
                 <button key={i} type="button" onClick={() => { setCurrent(i); setSelected(null); }}
                   className={`mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-cyan-400" : "border-transparent hover:border-white/20"}`}>
@@ -1282,7 +1284,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             </div>
 
             {/* Sağ: büyük düzenleme alanı */}
-            <div className="min-w-0 flex-1 overflow-auto p-4 sm:p-6">
+            <div className="min-w-0 flex-1 overflow-auto p-2 sm:p-6">
               <div data-tour="editor-canvas" className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
                 <canvas ref={canvasRef} className="block rounded-lg" />
                 {rendering && <div className="absolute inset-0 flex items-center justify-center bg-black/10"><Loader2 className="h-6 w-6 animate-spin text-cyan-600" /></div>}
