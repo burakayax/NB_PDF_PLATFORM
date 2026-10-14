@@ -274,12 +274,12 @@ export const TOOLS: Tool[] = [
 
   // ── Dönüştür ──────────────────────────────────────────────────────────────
   {
-    id: "pdf-to-word", cat: "convert", Icon: FileText,
+    id: "pdf-to-word", cat: "convert", Icon: FileText, account: true,
     tr: { name: "PDF → Word", desc: "Düzenlenebilir Word belgesine çevirin." },
     en: { name: "PDF → Word", desc: "Convert into an editable Word document." },
   },
   {
-    id: "word-to-pdf", cat: "convert", Icon: FileOutput,
+    id: "word-to-pdf", cat: "convert", Icon: FileOutput, account: true,
     tr: { name: "Word → PDF", desc: "Word dosyasını herkesin açabildiği PDF yapın." },
     en: { name: "Word → PDF", desc: "Turn a Word file into a PDF anyone can open." },
   },
@@ -304,7 +304,7 @@ export const TOOLS: Tool[] = [
     en: { name: "PowerPoint → PDF", desc: "Make a deck that looks the same on every device." },
   },
   {
-    id: "pdf-to-image", cat: "convert", Icon: Files,
+    id: "pdf-to-image", cat: "convert", Icon: Files, account: true,
     tr: { name: "PDF → Görsel", desc: "Her sayfayı ayrı bir fotoğraf olarak kaydedin." },
     en: { name: "PDF → Image", desc: "Save each page as its own picture." },
   },

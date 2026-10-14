@@ -53,7 +53,8 @@ describe("kayıt daveti vaadi", () => {
 
   it("ücretli araçlar ücretsiz diye vaat edilmiyor", () => {
     // Bunlar ücretli planlara aittir; davette geçerlerse test düşer.
-    const ucretliler = ["pdf-to-word", "pdf-to-excel", "pdf-to-ppt", "watermark", "encrypt"];
+    // (2026-10-14: PDF→Word, Word→PDF ve PDF→JPG ücretsiz üyeye açıldı → artık bu listede DEĞİL.)
+    const ucretliler = ["pdf-to-excel", "pdf-to-ppt", "ppt-to-pdf", "excel-to-pdf", "html-to-pdf", "watermark", "encrypt"];
     const sizmis = FREE_ACCOUNT_UNLOCKS.map((u) => u.feature).filter((f) =>
       ucretliler.includes(f),
     );

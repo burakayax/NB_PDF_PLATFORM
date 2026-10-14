@@ -64,11 +64,19 @@ export const FREE_ACCOUNT_UNLOCKS: Array<{
   tr: string;
   en: string;
 }> = [
+  { feature: "word-to-pdf", icon: FileOutput, tr: "Word'ü PDF'e çevir", en: "Convert Word to PDF" },
+  { feature: "pdf-to-word", icon: FileOutput, tr: "PDF'i Word'e çevir", en: "Convert PDF to Word" },
+  { feature: "pdf-to-image", icon: FileOutput, tr: "PDF'i JPG'ye çevir", en: "Convert PDF to JPG" },
   { feature: "compress", icon: Minimize2, tr: "PDF'i sıkıştır", en: "Compress your PDF" },
   { feature: "aranabilir-pdf", icon: ScanSearch, tr: "OCR — aranabilir PDF", en: "OCR — searchable PDF" },
   { feature: "unlock-pdf", icon: Unlock, tr: "Şifreli PDF'in kilidini aç", en: "Unlock a password-protected PDF" },
-  { feature: "pdf-to-text", icon: FileOutput, tr: "PDF'i düzenlenebilir metne çevir", en: "Turn a PDF into editable text" },
 ];
+
+/**
+ * Yeni üyeye tanımlanan hoş geldin yapay zekâ işlemi sayısı (GÖSTERİM). Sunucudaki gerçek değer
+ * `AI_TRIAL_CREDITS` ortam değişkenidir (varsayılan 3); değiştirirsen burayı da güncelle.
+ */
+export const AI_WELCOME_CREDITS_DISPLAY = 3;
 
 /** Cihazda çalışan, ücretsiz plan listesinde aranmayacak araçlar (yalnız giriş ister). */
 export const SIGNIN_ONLY_UNLOCKS = new Set<string>(["aranabilir-pdf"]);
@@ -181,7 +189,16 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
           </div>
         </div>
 
-        <div className="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-3 py-2.5">
+          <Sparkles className="h-4 w-4 shrink-0 text-emerald-300" />
+          <span className="text-[12.5px] font-semibold leading-snug text-emerald-100">
+            {tr
+              ? `Hesap açınca ${AI_WELCOME_CREDITS_DISPLAY} ücretsiz yapay zekâ işlemi hediye: özetle, veri çıkar, belgeyle sohbet.`
+              : `Sign up and get ${AI_WELCOME_CREDITS_DISPLAY} free AI operations: summarize, extract data, chat with your document.`}
+          </span>
+        </div>
+
+        <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {FREE_ACCOUNT_UNLOCKS.map((u) => {
             const Icon = u.icon;
             return (
@@ -200,8 +217,8 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
             hangi planın açtığı yazılı. Kayıt olan kullanıcı bulamadığına kızmasın. */}
         <p className="mt-3 text-center text-[11.5px] leading-snug text-slate-400">
           {tr
-            ? "Word · Excel · PPT'ye çevirme ve yapay zekâ araçları ücretli planlarda."
-            : "Word · Excel · PPT conversion and the AI tools are on the paid plans."}
+            ? "Excel · PowerPoint dönüşümleri ve ek yapay zekâ hakkı ücretli planlarda."
+            : "Excel · PowerPoint conversions and extra AI allowance are on the paid plans."}
         </p>
 
         <a
