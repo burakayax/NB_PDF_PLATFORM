@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { applySignatures, pdfBytesToBlob, type SignatureItem } from "../../lib/clientPdfWorker";
+import { deleteSavedSignature, loadSavedSignatures, saveSignature, userKeyFromToken, type SavedSignature } from "../../lib/savedSignatures";
 import { saveBlobToUser } from "../../api";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -103,8 +104,14 @@ function todayStr(): string {
 const SIGN_COLORS = ["#0b2447", "#111827", "#2563eb", "#dc2626"];
 const TEXT_COLORS = ["#0b2447", "#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"];
 
-export function PdfSign({ language, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
+export function PdfSign({ language, accessToken, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
   const tr = language === "tr";
+  // Kayıtlı imzalar: üyeye özel (misafirde kaydetme yok → hesap açma sebebi). Yalnız bu cihazda saklanır.
+  const userKey = userKeyFromToken(accessToken);
+  const [savedSigs, setSavedSigs] = useState<SavedSignature[]>(() => loadSavedSignatures(userKey));
+  useEffect(() => {
+    setSavedSigs(loadSavedSignatures(userKey));
+  }, [userKey]);
   // Araç zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun kendi
   // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
   const { describesTool } = useToolPageContext();
@@ -482,6 +489,34 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                 <PenLine className="h-4 w-4" />
                 {tr ? "İmza Ekle" : "Add signature"}
               </button>
+              {savedSigs.length > 0 && (
+                <span className="flex items-center gap-1.5" aria-label={tr ? "Kayıtlı imzalarım" : "My saved signatures"}>
+                  {savedSigs.map((sg) => (
+                    <span key={sg.id} className="group relative">
+                      <button
+                        type="button"
+                        title={tr ? "Kayıtlı imzayı ekle" : "Add saved signature"}
+                        onClick={() => {
+                          const sig = { dataUrl: sg.dataUrl, bytes: dataUrlToBytes(sg.dataUrl), aspect: sg.aspect };
+                          setActiveSig(sig);
+                          placeSignature(sig);
+                        }}
+                        className="flex h-9 w-16 items-center justify-center rounded-lg border border-white/15 bg-white p-1 transition hover:border-cyan-400/60"
+                      >
+                        <img src={sg.dataUrl} alt={tr ? "Kayıtlı imza" : "Saved signature"} className="max-h-full max-w-full object-contain" draggable={false} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={tr ? "Kayıtlı imzayı sil" : "Delete saved signature"}
+                        onClick={() => setSavedSigs(deleteSavedSignature(userKey, sg.id))}
+                        className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-slate-200 ring-1 ring-white/20 group-hover:flex"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </span>
+              )}
 
               <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
               <button
@@ -807,12 +842,14 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
               createPortal(
                 <SignatureModal
                   tr={tr}
+                  canSave={!!userKey}
                   onClose={() => setSigModalOpen(false)}
                   onDoneText={(text, color, fontKey) => {
                     addTextField(text, color, { fontKey, italic: !!FONTS.find((f) => f.key === fontKey)?.italic }, 0.28);
                     setSigModalOpen(false);
                   }}
-                  onDone={(dataUrl, aspect) => {
+                  onDone={(dataUrl, aspect, save) => {
+                    if (save && userKey) setSavedSigs(saveSignature(userKey, { dataUrl, aspect }));
                     const sig = { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect };
                     setActiveSig(sig);
                     placeSignature(sig); // tıklama bekleme — direkt ortaya yerleştir
@@ -829,8 +866,9 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
 }
 
 // ── İmza oluşturma penceresi: Çiz / Yaz / Yükle ─────────────────────────────
-function SignatureModal({ tr, onClose, onDone, onDoneText }: { tr: boolean; onClose: () => void; onDone: (dataUrl: string, aspect: number) => void; onDoneText: (text: string, color: string, fontKey: string) => void }) {
+export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { tr: boolean; canSave: boolean; onClose: () => void; onDone: (dataUrl: string, aspect: number, save: boolean) => void; onDoneText: (text: string, color: string, fontKey: string) => void }) {
   const [tab, setTab] = useState<"draw" | "type" | "upload">("draw");
+  const [saveIt, setSaveIt] = useState(true);
   const [typed, setTyped] = useState("");
   const drawRef = useRef<HTMLCanvasElement>(null);
   const hasInk = useRef(false);
@@ -947,7 +985,7 @@ function SignatureModal({ tr, onClose, onDone, onDoneText }: { tr: boolean; onCl
     const c = drawRef.current;
     if (!c || !hasInk.current) return;
     const t = trimmedDataUrl(c);
-    if (t) onDone(t.url, t.aspect);
+    if (t) onDone(t.url, t.aspect, saveIt);
   }
 
   // Yazılan imza düzenlenebilir bir metin öğesi olarak eklenir (renk/yazı tipi/boyut/çift tık).
@@ -964,7 +1002,7 @@ function SignatureModal({ tr, onClose, onDone, onDoneText }: { tr: boolean; onCl
     rd.onload = () => {
       const url = String(rd.result);
       const img = new Image();
-      img.onload = () => onDone(url, img.width / img.height);
+      img.onload = () => onDone(url, img.width / img.height, saveIt);
       img.src = url;
     };
     rd.readAsDataURL(f);
@@ -1046,6 +1084,20 @@ function SignatureModal({ tr, onClose, onDone, onDoneText }: { tr: boolean; onCl
                 <button type="button" onClick={useTyped} disabled={!typed.trim()} className="rounded-lg bg-cyan-600 px-4 py-1.5 text-[13px] font-bold text-white hover:brightness-110 disabled:opacity-50">{tr ? "Kullan" : "Use"}</button>
               </div>
             </>
+          )}
+
+          {tab !== "type" && (
+            canSave ? (
+              <label className="mt-3 flex cursor-pointer items-center gap-2 text-[12.5px] text-slate-300">
+                <input type="checkbox" checked={saveIt} onChange={(e) => setSaveIt(e.target.checked)} className="h-4 w-4 accent-cyan-500" />
+                {tr ? "Bu imzayı kaydet — sonraki belgelerde tek tıkla kullan (yalnız bu cihazda saklanır)" : "Save this signature for one-click use next time (stored on this device only)"}
+              </label>
+            ) : (
+              <p className="mt-3 rounded-lg border border-cyan-400/20 bg-cyan-500/[0.06] px-3 py-2 text-[12.5px] leading-snug text-cyan-100">
+                {tr ? "İmzanı kaydedip her belgede tek tıkla kullanmak için " : "To save your signature for one-click use, "}
+                <a href="/register" className="font-bold underline underline-offset-2">{tr ? "ücretsiz hesap aç" : "create a free account"}</a>.
+              </p>
+            )
           )}
 
           {tab === "upload" && (

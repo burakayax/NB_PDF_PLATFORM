@@ -22,7 +22,7 @@ export const emailT = {
     welcome_points: (dailyLimit: number): string[] => [
       "<strong>Cihazınızda sınırsız:</strong> birleştirme, bölme, döndürme, sayfa silme ve sıralama, görselden PDF. Dosyalarınız cihazınızdan çıkmaz.",
       `<strong>Günde ${dailyLimit} sunucu işlemi:</strong> sıkıştırma, Word ↔ PDF ve PDF → JPG dönüşümleri.`,
-      "<strong>Size özel çalışma alanı:</strong> favori araçlarınızı yıldızlayın, son işlemlerinizi görün, taradığınız belgeleri saklayın.",
+      "<strong>Size özel çalışma alanı:</strong> favori araçlarınızı yıldızlayın, imzanızı kaydedip tek tıkla kullanın, son işlemlerinizi görün, taradığınız belgeleri saklayın.",
     ],
     welcome_cta: "Çalışma alanını aç",
     welcome_footer: "Bu e-postayı PDF PLATFORM hesabı oluşturduğunuz için aldınız.",
@@ -134,7 +134,7 @@ export const emailT = {
     welcome_points: (dailyLimit: number): string[] => [
       "<strong>Unlimited on your device:</strong> merge, split, rotate, delete and reorder pages, image to PDF. Your files never leave your device.",
       `<strong>${dailyLimit} server operations a day:</strong> compress, Word ↔ PDF and PDF → JPG conversions.`,
-      "<strong>A workspace of your own:</strong> star your favorite tools, see your recent operations and keep your scanned documents.",
+      "<strong>A workspace of your own:</strong> star your favorite tools, save your signature for one-click use, see your recent operations and keep your scanned documents.",
     ],
     welcome_cta: "Open workspace",
     welcome_footer: "You received this email because you created a PDF PLATFORM account.",
