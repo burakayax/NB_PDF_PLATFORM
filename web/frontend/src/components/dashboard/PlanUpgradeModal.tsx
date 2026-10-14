@@ -58,6 +58,8 @@ interface PlanUpgradeModalProps {
   /** Modalı açan araç (payment_required ile duvara toslanan). Bilinirse fiyat tablosunun
    *  üstünde o araca özgü bağlam banner'ı gösterilir. */
   reasonToolId?: string | null;
+  /** Sebep: günlük/aylık hak doldu (araç kilitli değil). Boşsa araç ücretli plana özel. */
+  reasonKind?: "daily" | "monthly" | null;
   /** E-posta CTA'sından gelen kupon (?coupon=…) — ödeme özetinde otomatik uygulanır. */
   initialCoupon?: string | null;
 }
@@ -71,10 +73,12 @@ export function PlanUpgradeModal({
   showToast,
   onBeforeExternalCheckout,
   reasonToolId,
+  reasonKind,
   initialCoupon,
 }: PlanUpgradeModalProps) {
   const tr = language === "tr";
   const reasonLabel = reasonToolId ? GATED_TOOL_LABELS[reasonToolId] : undefined;
+  const isFreePlan = !user?.plan || user.plan === "FREE";
   const [selectedPlanId, setSelectedPlanId] = useState<PlanId | null>(null);
   const [billingInfoOpen, setBillingInfoOpen] = useState(false);
   const [billingInfoPlanId, setBillingInfoPlanId] = useState<PlanId | null>(null);
@@ -145,7 +149,33 @@ export function PlanUpgradeModal({
             <X className="h-4 w-4" />
           </button>
 
-          {reasonLabel && (
+          {reasonKind && (
+            <div className="mx-auto mt-16 mb-2 w-full max-w-2xl px-4 sm:mt-20">
+              <div className="overflow-hidden rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/[0.14] via-violet-500/[0.08] to-fuchsia-500/[0.12] p-5 text-center">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-400/30">
+                  <Zap className="h-5 w-5" />
+                </span>
+                <h3 className="mt-3 text-lg font-bold text-white sm:text-xl">
+                  {reasonKind === "monthly"
+                    ? tr ? "Bu ayki işlem hakkın doldu" : "You've used this month's operations"
+                    : tr
+                      ? isFreePlan ? "Bugünkü ücretsiz hakkın doldu" : "Bugünkü işlem hakkın doldu"
+                      : isFreePlan ? "You've used today's free operations" : "You've used today's operations"}
+                </h3>
+                <p className="mx-auto mt-1.5 max-w-md text-[13.5px] leading-snug text-slate-300">
+                  {reasonKind === "monthly"
+                    ? tr
+                      ? "Hakkın ay başında yenilenir ya da daha yüksek bir plana geçebilirsin."
+                      : "Your allowance renews at the start of the month, or you can move to a higher plan."
+                    : tr
+                      ? "Hakkın gece yarısı yenilenir ya da Pro'ya geçerek sınırsız kullanabilirsin."
+                      : "Your allowance renews at midnight, or upgrade to Pro to use it without a daily limit."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!reasonKind && reasonLabel && (
             <div className="mx-auto mt-16 mb-2 w-full max-w-2xl px-4 sm:mt-20">
               <div className="overflow-hidden rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/[0.14] via-violet-500/[0.08] to-fuchsia-500/[0.12] p-5 text-center">
                 <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-400/30">
