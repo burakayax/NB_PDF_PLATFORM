@@ -15,7 +15,21 @@ GENERIC_TOOL_FAILURE_TR = (
     "İşlem başarısız: PDF okunamadı veya dosya desteklenmiyor. "
     "Dosyayı yeniden kaydedip deneyin; sorun sürerse günlükteki ayrıntıya bakın."
 )
-GENERIC_PASSWORD_OR_CORRUPT_TR = "İşlem başarısız: Parola hatalı veya dosya bozuk."
+GENERIC_RETRY_TR = "Bir sorun oluştu. Lütfen tekrar deneyin; sorun sürerse bizimle iletişime geçin."
+_INTERNAL_ENGINE_KEYWORDS = (
+    "libreoffice",
+    "soffice",
+    "gotenberg",
+    "ghostscript",
+    "tesseract",
+    "ocrmypdf",
+    "wkhtmltopdf",
+    "powerpoint.application",
+    "pythoncom",
+    "win32com",
+    "subprocess",
+)
+GENERIC_PASSWORD_OR_CORRUPT_TR ="İşlem başarısız: Parola hatalı veya dosya bozuk."
 WRONG_PASSWORD_TR = (
     "Parola hatalı. Belgeyi açan parolayı kontrol edip yeniden deneyin."
 )
@@ -99,6 +113,11 @@ def public_message_for_exception(exc: BaseException, *, log_full: bool = False) 
 
     if "gerekli" in low and ("pip install" in low or "kurulum" in low):
         return INFRA_MISSING_TR
+
+    # Arka plandaki dönüştürme motorlarının adı (LibreOffice, Gotenberg…) kullanıcıya
+    # asla gösterilmez; sebep ne olursa olsun sade bir "tekrar deneyin" iletisi verilir.
+    if any(k in low for k in _INTERNAL_ENGINE_KEYWORDS):
+        return GENERIC_RETRY_TR
 
     if _looks_like_path_or_internal(text):
         return GENERIC_TOOL_FAILURE_TR
