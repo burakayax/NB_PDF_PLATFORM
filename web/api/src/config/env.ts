@@ -277,7 +277,13 @@ if (!DATABASE_URL) {
   throw new Error("DATABASE_URL is missing");
 }
 
-process.env.DATABASE_URL = DATABASE_URL;
+// Göreli SQLite yolu (file:./dev.db) Prisma çalışma zamanında, üretilen istemcinin klasörüne göre
+// çözülebilir ve oradaki BOŞ bir dosyaya bağlanıp "table does not exist" hatası verir.
+// Prisma CLI ise şema klasörüne göre çözer. İkisini aynı dosyaya sabitlemek için mutlak yola çeviriyoruz.
+const relSqlite = /^file:(\.{1,2}[\\/].*|[^/\\:][^:]*)$/.exec(DATABASE_URL);
+process.env.DATABASE_URL = relSqlite
+  ? `file:${path.resolve(packageRoot, "prisma", relSqlite[1].split("?")[0]).replace(/\\/g, "/")}${DATABASE_URL.includes("?") ? DATABASE_URL.slice(DATABASE_URL.indexOf("?")) : ""}`
+  : DATABASE_URL;
 
 const welcomeCreditsMin = Math.min(
   raw.WELCOME_CREDITS_MIN,
