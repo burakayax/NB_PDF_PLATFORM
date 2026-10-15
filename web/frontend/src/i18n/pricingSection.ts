@@ -10,7 +10,7 @@ export function pricingSectionCopy(lang: Language) {
     /** @param amount e.g. "2.63 TRY" or "2.63 ₺" */
     onlyPerDay: (amount: string) =>
       tr ? `Günde yalnızca ~${amount}` : `Only ~${amount}/day`,
-    trustCancel: tr ? "İstediğiniz zaman iptal" : "Cancel anytime",
+    trustCancel: tr ? "Otomatik yenileme yok" : "No auto-renewal",
     trustSecure: tr ? "Güvenli ödeme" : "Secure payment",
     trustRefund: tr ? "7 gün para iade garantisi" : "7-day money-back guarantee",
     refundBadge: tr ? "💰 7 Gün İade Garantisi" : "💰 7-Day Money-Back Guarantee",

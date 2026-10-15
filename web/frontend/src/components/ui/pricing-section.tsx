@@ -670,8 +670,8 @@ function CycleAwareCard({
 function GuvenSatiri({ language }: { language: Language }) {
   const tr = language === "tr";
   const maddeler = tr
-    ? ["7 gün iade garantisi", "İstediğin an iptal", "Güvenli ödeme (iyzico)"]
-    : ["7-day money-back", "Cancel anytime", "Secure payment (iyzico)"];
+    ? ["7 gün iade garantisi", "Otomatik yenileme yok", "Güvenli ödeme (iyzico)"]
+    : ["7-day money-back", "No auto-renewal", "Secure payment (iyzico)"];
   return (
     <ul className="mt-3 space-y-1">
       {maddeler.map((m) => (
@@ -697,8 +697,8 @@ function PricingFaq({ language }: { language: Language }) {
           a: "İlk ödemenizden itibaren 7 gün içinde, herhangi bir neden göstermeksizin tam iade talep edebilirsiniz. İade talebinizi destek ekibimize iletmeniz yeterli — işlem 3–5 iş günü içinde tamamlanır.",
         },
         {
-          q: "Aboneliği iptal ettiğimde ne olur?",
-          a: "İptal ettiğinizde mevcut fatura döneminiz sonuna kadar tüm özellikler aktif kalır. Dönem bitiminde hesabınız otomatik olarak Ücretsiz plana geçer, verileriniz silinmez.",
+          q: "Aboneliğim kendiliğinden yenilenir mi?",
+          a: "Hayır. Aboneliğiniz satın aldığınız dönemle sınırlıdır ve kendiliğinden yenilenmez; kartınızdan izniniz olmadan çekim yapılmaz. Bitmeden size e-posta ile hatırlatırız. Devam etmek isterseniz yenilemeyi hesabınızdan onaylarsınız; istemezseniz hiçbir şey yapmanız gerekmez, hesabınız Ücretsiz plana geçer ve verileriniz silinmez. Dönem içinde iptal ederseniz ilk 7 gün tam iade, sonrasında dönem sonuna kadar kullanım devam eder.",
         },
         {
           q: "Ücretsiz planda kredi kartı gerekli mi?",
@@ -727,8 +727,8 @@ function PricingFaq({ language }: { language: Language }) {
           a: "Within 7 days of your first payment, you can request a full refund for any reason. Just contact our support team — refunds are processed within 3–5 business days.",
         },
         {
-          q: "What happens when I cancel my subscription?",
-          a: "When you cancel, all features remain active until the end of your current billing period. After that, your account automatically reverts to the Free plan — your data is never deleted.",
+          q: "Does my subscription renew automatically?",
+          a: "No. Your subscription is limited to the period you bought and never renews on its own; your card is not charged without your confirmation. We email you a reminder before it ends. If you want to continue, you confirm the renewal from your account; if not, do nothing — your account returns to the Free plan and your data is never deleted. If you cancel during the period, you get a full refund in the first 7 days, and keep access until the period ends after that.",
         },
         {
           q: "Do I need a credit card for the free plan?",
@@ -901,8 +901,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
           </h2>
           <p className="text-gray-400 text-base sm:text-lg max-w-xl mx-auto mb-6">
             {tr
-              ? "Ücretsiz başla, büyüdükçe yükselt. İstediğin zaman iptal et."
-              : "Start free, upgrade as you grow. Cancel anytime."}
+              ? "Ücretsiz başla, büyüdükçe yükselt. Otomatik yenileme yok, gizli ücret yok."
+              : "Start free, upgrade as you grow. No auto-renewal, no hidden charges."}
           </p>
 
           {/* 7-Day Money-Back Guarantee Banner */}
@@ -983,8 +983,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         {/* Trust line */}
         <p className="text-center text-gray-600 text-sm mt-4">
           {tr
-            ? "SSL şifreli · İstediğiniz zaman iptal · 7 gün para iade garantisi"
-            : "SSL encryption · Cancel anytime · 7-day money-back guarantee"}
+            ? "SSL şifreli · Otomatik yenileme yok · 7 gün para iade garantisi"
+            : "SSL encryption · No auto-renewal · 7-day money-back guarantee"}
           <span className="block mt-2 font-semibold">
             🔒 {tr ? "iyzico ile güvenli ödeme" : "Secure payments via iyzico"}
           </span>
@@ -1013,12 +1013,12 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             ? [
                 { b: `${ARAC_SAYISI} araç`, a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
                 { b: "Dosyan sende kalır", a: "Birleştirme, imzalama, kırpma gibi araçlar tarayıcında çalışır; dosya sunucuya gitmez." },
-                { b: "Tek tıkla iptal", a: "Hesabından kendin iptal edersin; arama yapmana, e-posta yazmana gerek yok." },
+                { b: "Otomatik yenileme yok", a: "Dönem bitince hesabın Ücretsiz plana döner; kartından senin onayın olmadan çekim yapılmaz." },
               ]
             : [
                 { b: `${ARAC_SAYISI} tools`, a: "All included in one subscription — no separate products to buy." },
                 { b: "Your file stays with you", a: "Merging, signing and cropping run in your browser; the file is never uploaded." },
-                { b: "Cancel in one click", a: "Cancel yourself from your account — no calls, no emails." },
+                { b: "No auto-renewal", a: "When the period ends your account returns to Free; your card is never charged without your confirmation." },
               ]
           ).map((x) => (
             <div
