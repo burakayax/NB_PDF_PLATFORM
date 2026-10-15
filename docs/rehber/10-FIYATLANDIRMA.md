@@ -20,15 +20,22 @@ tüketiciye gösterilen fiyatın vergi dahil olması yasal zorunluluktur.
 | Plan | Aylık (TL) | Yıllık (TL) | Aylık (USD) | Yıllık (USD) | Yapay zekâ / ay |
 |---|---|---|---|---|---|
 | Ücretsiz | — | — | — | — | 0 |
-| Başlangıç | 99 ₺ | — | $3.99 | — | 5 |
-| Plus | 179 ₺ | — | $6.99 | — | 15 |
-| Pro | 299 ₺ | 2.990 ₺ | $11.99 | $119.99 | 40 |
-| Business | 799 ₺ | 7.990 ₺ | $39.99 | $399.99 | 100 |
-| Ek koltuk | 159 ₺ | — | $7.99 | — | — |
+| Başlangıç | 129 ₺ | — | $3.99 | — | 5 |
+| Plus | 229 ₺ | 2.290 ₺ | $6.99 | $49.99 | 15 |
+| Pro | 399 ₺ | 3.990 ₺ | $11.99 | $89.99 | 40 |
+| Business | 1.099 ₺ | 10.990 ₺ | $39.99 | $399.99 | 100 |
+| Ek koltuk | 219 ₺ | — | $7.99 | — | — |
 
-**Yıllık ödeme yalnızca Pro ve Business'ta vardır** (10 ay fiyatına 12 ay, iki
-ay bedava). Başlangıç ve Plus yalnızca aylıktır; ekranda yıllık seçeneği hiç
-gösterilmez ve ödeme tarafı da yıllık isteği reddeder.
+**Yıllık ödeme Plus, Pro ve Business'ta vardır.** TL'de 10 ay fiyatına 12 ay (iki
+ay bedava); dolarda Plus ve Pro yıllığı rakip yıllık fiyatlara göre daha
+cömert (Plus ayda ~$4,2, Pro ayda ~$7,5). Başlangıç yalnızca aylıktır; ekranda
+yıllık seçeneği hiç gösterilmez ve ödeme tarafı yıllık isteği reddeder.
+
+**Fiyat revizyonu (2026-10-15):** TL fiyatlar dolar fiyatının yaklaşık %65-70'ine
+çekildi (eskiden ~%50: 99/179/299/799). Pro 399 ₺ kullanıcı kararıdır; sonradan
+zam kötü algılanacağı için ödemeler açılmadan önce yapıldı. Ek koltuk ekranda
+199 ₺/$5,99 gösterilirken sunucu 159 ₺/$7,99 tahsil ediyordu; artık ikisi de
+kataloğa bağlı (219 ₺/$7,99).
 
 Dolar fiyatları yurt dışı müşteriler içindir ve **KDV'siz**dir (ihracat
 istisnası): gösterilen tutar ödenen tutardır.
@@ -167,6 +174,8 @@ Kullanım Şartları'na "doğrulama kaydı taşımayan/değiştirilmiş dosyalar
 
 ## Fiyat değiştirmek istediğinde
 
+0. Yönetim paneli → Paketler sekmesinde Pro/Business TL fiyatı daha önce girildiyse
+   katalogun YERİNE geçer; yeni fiyatların görünmesi için panelde kontrol et.
 1. `web/api/src/lib/plan-catalogue.ts` içindeki tutarı değiştir.
 2. `web/frontend/src/lib/planConfig.ts` içindeki aynı tutarı güncelle
    (sunucuya ulaşılamadığında kullanılan yedek).

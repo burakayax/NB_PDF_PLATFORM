@@ -619,9 +619,9 @@ function groupFeatureKeysByCategory(
 
 function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
   const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
-  const [proPrice, setProPrice] = useState("299.00");
-  const [businessPrice, setBusinessPrice] = useState("799.00");
-  const [proAnnualPrice, setProAnnualPrice] = useState("2990.00");
+  const [proPrice, setProPrice] = useState("399.00");
+  const [businessPrice, setBusinessPrice] = useState("1099.00");
+  const [proAnnualPrice, setProAnnualPrice] = useState("3990.00");
   const [pricingBusy, setPricingBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);

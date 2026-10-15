@@ -113,6 +113,16 @@ describe("zarar koruması", () => {
     expect(usdProfit / usd).toBeGreaterThanOrEqual(MIN_MARGIN);
   });
 
+  it.each([...YEARLY_BILLING_PLANS])("%s yıllık ödemede de aylık eşdeğeri marj tabanını korur", (plan) => {
+    // Yıllık indirim (özellikle USD'de ~%37) hak sayısı değişmeden marjı daraltır.
+    const aiCost = AI_MONTHLY_CREDITS[plan] * AI_COST_PER_CREDIT_USD;
+    const usdPerMonth = Number.parseFloat(PLAN_PRICES[plan].usdYearly) / 12;
+    expect((usdPerMonth - aiCost - usdPerMonth * PSP_FEE_RATE) / usdPerMonth).toBeGreaterThanOrEqual(MIN_MARGIN);
+    const netTryPerMonth = Number.parseFloat(netFromGrossTry(PLAN_PRICES[plan].tryGrossYearly)) / 12 * USD_PER_TRY;
+    const feeUsd = (Number.parseFloat(PLAN_PRICES[plan].tryGrossYearly) / 12) * PSP_FEE_RATE * USD_PER_TRY;
+    expect((netTryPerMonth - aiCost - feeUsd) / netTryPerMonth).toBeGreaterThanOrEqual(MIN_MARGIN);
+  });
+
   it("ücretsiz plan yapay zekâ hakkı vermez", () => {
     // Ücretsiz planda yapay zekâ = sınırsız gider. Hak sayısı sıfır kalmalı.
     expect(AI_MONTHLY_CREDITS.FREE).toBe(0);
@@ -138,9 +148,9 @@ describe("fiyat merdiveni", () => {
   });
 
   it("yıllık faturalandırma yalnızca ekranda sunulan planlarda açıktır", () => {
-    // Başlangıç ve Plus ekranda aylık-tek karttır (MonthlyOnlyCard). Ödeme
-    // tarafı da bunu reddetmeli, yoksa satılmayan bir döngü tahsil edilir.
-    expect([...YEARLY_BILLING_PLANS].sort()).toEqual(["BUSINESS", "PRO"]);
+    // Başlangıç ekranda aylık-tek karttır (MonthlyOnlyCard). Ödeme tarafı da
+    // bunu reddetmeli, yoksa satılmayan bir döngü tahsil edilir.
+    expect([...YEARLY_BILLING_PLANS].sort()).toEqual(["BUSINESS", "PLUS", "PRO"]);
   });
 
   it("yıllık tutar aylığın tam 10 katıdır (iki ay bedava)", () => {

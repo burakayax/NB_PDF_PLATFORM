@@ -398,8 +398,8 @@ function MonthlyOnlyCard({
 }
 
 /** Pro and Business each manage their own billing cycle toggle internally. */
-const EXTRA_SEAT_PRICE_TRY = 19900; // kuruş (₺199/ay)
-const EXTRA_SEAT_PRICE_USD = 599;   // kuruş ($5.99/ay)
+const EXTRA_SEAT_PRICE_TRY = 21900; // kuruş (₺219/ay, KDV dahil)
+const EXTRA_SEAT_PRICE_USD = 799;   // kuruş ($7.99/ay)
 
 function CycleAwareCard({
   plan,
@@ -433,15 +433,17 @@ function CycleAwareCard({
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
   const isPro = plan.id === "PRO";
+  const isPlus = plan.id === "PLUS";
+  const isBusiness = plan.id === "BUSINESS";
   const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
 
   const baseMonthlyPrice = monthlyEquivPrice(plan, currency, cycle);
   const extraSeatUnitPrice = faceValue(currency === "TRY" ? EXTRA_SEAT_PRICE_TRY : EXTRA_SEAT_PRICE_USD);
-  const extraSeatTotal = !isPro ? extraSeats * extraSeatUnitPrice : 0;
+  const extraSeatTotal = isBusiness ? extraSeats * extraSeatUnitPrice : 0;
   const displayPrice = baseMonthlyPrice + extraSeatTotal;
   const isYearly = cycle === "YEARLY";
   const baseYearlyTotal = faceValue(plan.pricing.yearly[currency]);
-  const yearlyTotal = !isPro ? baseYearlyTotal + extraSeats * extraSeatUnitPrice * 12 : baseYearlyTotal;
+  const yearlyTotal = isBusiness ? baseYearlyTotal + extraSeats * extraSeatUnitPrice * 12 : baseYearlyTotal;
   const savePct = yearlySavingsPct(plan, currency);
 
   return (
@@ -451,14 +453,20 @@ function CycleAwareCard({
       viewport={{ once: true }}
       transition={{ duration: 0.45, delay }}
       className={`relative rounded-2xl p-5 lg:p-7 flex flex-col h-full transition-all duration-300 ${
-        isPro
+        isPlus
+          ? "border border-blue-500/50 bg-gradient-to-b from-blue-950/60 to-slate-950/60 shadow-2xl shadow-blue-500/15 ring-1 ring-blue-500/20"
+          : isPro
           ? "border border-amber-500/25 bg-white/[0.03] hover:border-amber-500/40 hover:bg-white/[0.05]"
           : "border border-violet-500/25 bg-white/[0.03] hover:border-violet-500/40 hover:bg-white/[0.05]"
       }`}
     >
       {/* Badge */}
       <div className="absolute -top-3.5 inset-x-0 flex justify-center">
-        {isPro ? (
+        {isPlus ? (
+          <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30">
+            ⭐ {tr ? "En Popüler" : "Most Popular"}
+          </span>
+        ) : isPro ? (
           <span className="relative overflow-hidden bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold px-4 py-1.5 rounded-full">
             <span
               className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
@@ -473,10 +481,10 @@ function CycleAwareCard({
         )}
       </div>
 
-      <div className="text-2xl mb-3 mt-2">{isPro ? "💎" : "🏢"}</div>
+      <div className="text-2xl mb-3 mt-2">{isPlus ? "🚀" : isPro ? "💎" : "🏢"}</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
       <p className="text-gray-500 text-sm mb-3">
-        {(tr ? plan.taglineTr : plan.taglineEn) || (isPro
+        {(tr ? plan.taglineTr : plan.taglineEn) || (isPlus || isPro
           ? (tr ? "Düzenli kullananlar için en iyi seçim." : "For power users who stay.")
           : (tr ? "Kurumsal ekipler ve organizasyonlar için." : "Built for enterprise teams and organizations."))}
       </p>
@@ -493,7 +501,7 @@ function CycleAwareCard({
       )}
 
       {/* Extra seats stepper — Business only */}
-      {!isPro && (
+      {isBusiness && (
         <div className="mb-4 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2.5">
           <div className="flex items-center justify-between">
             <div>
@@ -502,8 +510,8 @@ function CycleAwareCard({
               </p>
               <p className="text-[10px] text-slate-400">
                 {tr
-                  ? `5 kişi dahil · +${currency === "TRY" ? "₺199" : "$5.99"}/kişi/ay`
-                  : `5 seats included · +${currency === "TRY" ? "₺199" : "$5.99"}/seat/mo`}
+                  ? `5 kişi dahil · +${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
+                  : `5 seats included · +${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -600,24 +608,28 @@ function CycleAwareCard({
       </ul>
 
       <p className="text-gray-600 text-xs mb-3 text-center">
-        {isPro
+        {isPlus || isPro
           ? (tr ? "Yıllık taahhüt en iyi fiyat-değer dengesini sunar" : "Yearly commitment offers the best value")
           : (tr ? "Kurumsal lisanslama · organizasyonunuzla ölçeklenir" : "Enterprise licensing built to scale with your organization")}
       </p>
 
       <button
-        onClick={comingSoon ? undefined : () => onCta(cycle, isPro ? 0 : extraSeats)}
+        onClick={comingSoon ? undefined : () => onCta(cycle, isBusiness ? extraSeats : 0)}
         disabled={comingSoon}
         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
           comingSoon
             ? "border border-white/15 text-gray-400 cursor-not-allowed"
-            : isPro
+            : isPlus
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500"
+              : isPro
               ? "border border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
               : "border border-violet-500/40 text-violet-300 hover:bg-violet-500/10"
         }`}
       >
         {comingSoon
           ? (tr ? "Yakında" : "Coming soon")
+          : isPlus
+          ? (tr ? "Plus'ı Başlat" : "Start Plus")
           : isPro
           ? (tr ? "Pro'ya Geç" : "Go Pro")
           : (tr
@@ -630,7 +642,7 @@ function CycleAwareCard({
           type="button"
           onClick={onShowPerks}
           className={`relative z-10 mt-2 w-full cursor-pointer touch-manipulation rounded-lg py-2 text-center text-[13px] font-semibold underline underline-offset-2 transition hover:bg-white/[0.04] ${
-            isPro ? "text-amber-300/90 hover:text-amber-200" : "text-violet-300/90 hover:text-violet-200"
+            isPlus ? "text-blue-300/90 hover:text-blue-200" : isPro ? "text-amber-300/90 hover:text-amber-200" : "text-violet-300/90 hover:text-violet-200"
           }`}
         >
           {tr ? "Tüm ayrıcalıkları gör →" : "See all perks →"}
@@ -686,8 +698,8 @@ function PricingFaq({ language }: { language: Language }) {
           a: "Hayır. Ücretsiz plan için herhangi bir ödeme bilgisi istenmez. Hesap oluşturarak hemen başlayabilirsiniz.",
         },
         {
-          q: "Starter ve Plus planları yıllık seçenek sunuyor mu?",
-          a: "Hayır. Starter ve Plus planları yalnızca aylık olarak faturlandırılır; istediğiniz ay iptal edebilirsiniz. Pro ve Business için aylık/yıllık seçeneği mevcuttur.",
+          q: "Starter planı yıllık seçenek sunuyor mu?",
+          a: "Hayır. Starter planı yalnızca aylık olarak faturalandırılır; istediğiniz ay iptal edebilirsiniz. Plus, Pro ve Business için aylık/yıllık seçeneği mevcuttur.",
         },
         {
           q: "Pro ve Business arasındaki fark nedir?",
@@ -716,8 +728,8 @@ function PricingFaq({ language }: { language: Language }) {
           a: "No. No payment information is required for the Free plan. Simply create an account and start immediately.",
         },
         {
-          q: "Do Starter and Plus plans offer a yearly option?",
-          a: "No. Starter and Plus are billed monthly only and can be cancelled any month. Pro and Business offer both monthly and yearly billing.",
+          q: "Does the Starter plan offer a yearly option?",
+          a: "No. Starter is billed monthly only and can be cancelled any month. Plus, Pro and Business offer both monthly and yearly billing.",
         },
         {
           q: "What's the difference between Pro and Business?",
@@ -939,7 +951,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             onShowPerks={() => setPerksPlan("STARTER")}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
-          <MonthlyOnlyCard
+          <CycleAwareCard
             plan={plus}
             currency={currency}
             lang={language}
@@ -947,7 +959,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
             onShowPerks={() => setPerksPlan("PLUS")}
-            onCta={onSelectPlan ? () => onSelectPlan("PLUS", "MONTHLY") : onUseWebApp}
+            onCta={onSelectPlan ? (cycle) => onSelectPlan("PLUS", cycle, 0) : () => onUseWebApp()}
           />
           <CycleAwareCard
             plan={pro}
