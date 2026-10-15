@@ -77,7 +77,8 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
     }
   }
 
-  const price = (p: TopupPack) => (tr ? `${p.priceTRY.toLocaleString("tr-TR")} ₺` : `$${p.priceUSD}`);
+  // Para birimi: sunucunun gerçekte tahsil edeceği (fatura ülkesine göre). Gelmezse dile göre.
+  const price = (p: TopupPack) => ((p.chargeCurrency ?? (tr ? "TRY" : "USD")) === "TRY" ? `${p.priceTRY.toLocaleString("tr-TR")} ₺` : `$${p.priceUSD}`);
 
   return createPortal(
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>

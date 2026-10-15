@@ -92,6 +92,22 @@ export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
   },
 };
 
+/**
+ * Aylık KDV dahil TL tutarından yıllık KDV dahil tutarı türetir: ~10 ay fiyatı,
+ * 12'nin tam katı (ekrandaki "ayda X" × 12 = yıllık tutar olsun diye).
+ * Ön yüzdeki `yearlyGrossFromMonthly` (frontend/src/lib/checkoutQuote.ts) ile
+ * AYNI kural; yönetim panelinden Business aylık fiyatı değişince yıllık bununla
+ * türetilir. Katalogdaki Plus/Pro/Business yıllık tutarları bu kuralın çıktısıdır
+ * (`plan-catalogue.test.ts` doğrular).
+ */
+export function yearlyGrossFromMonthly(monthlyGross: string): string {
+  const m = Number.parseFloat(monthlyGross.replace(",", "."));
+  if (!Number.isFinite(m) || m <= 0) {
+    throw new Error(`Geçersiz aylık tutar: ${monthlyGross}`);
+  }
+  return (Math.round((m * 10) / 12) * 12).toFixed(2);
+}
+
 /** Business planına eklenen her ek koltuğun fiyatı (Business'ın koltuk başı fiyatıyla aynı hizada). */
 export const EXTRA_SEAT_PRICE = {
   tryGrossMonthly: "219.00",
@@ -129,6 +145,17 @@ export function netFromGrossTry(gross: string): string {
     throw new Error(`Geçersiz KDV dahil tutar: ${gross}`);
   }
   return (Math.round((g / (1 + KDV_RATE)) * 100) / 100).toFixed(2);
+}
+
+/**
+ * Kredi paketi / CV Geçişi hangi para biriminde TAHSİL EDİLİR: fatura ülkesi belli
+ * ve TR değilse USD, aksi halde (TR ya da boş) TL. Satın alma denetleyicileri ve
+ * ekranda gösterilen fiyat (listeleme uçları) AYNI kuralı kullanır; ekranda
+ * gördüğünüz para birimi ile kartınızdan çekilen para birimi farklı olmasın.
+ */
+export function chargeCurrencyForCountry(billingCountryCode: string | null | undefined): "TRY" | "USD" {
+  const country = (billingCountryCode ?? "").toUpperCase().trim();
+  return country !== "" && country !== "TR" ? "USD" : "TRY";
 }
 
 /**

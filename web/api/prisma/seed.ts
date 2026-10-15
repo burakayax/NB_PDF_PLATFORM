@@ -7,9 +7,9 @@ const PLAN_CONFIGS = [
     plan: "FREE" as const,
     dailyOperationLimit: 3,
     monthlyOperationLimit: 30,
-    fileSizeLimitMB: 25,
+    fileSizeLimitMB: 80,
     batchLimit: 0,
-    watermarkEnabled: true,
+    watermarkEnabled: false,
     queuePriority: "LOW" as const,
     allowedTools: "merge,split,compress",
     maxSeats: 1,
@@ -26,16 +26,16 @@ const PLAN_CONFIGS = [
     monthlyOperationLimit: 250,
     fileSizeLimitMB: 100,
     batchLimit: 2,
-    watermarkEnabled: true,
+    watermarkEnabled: false,
     queuePriority: "LOW" as const,
     allowedTools: "all",
     maxSeats: 1,
-    monthlyPriceTry: 4900,
-    monthlyPriceUsd: 1599,
-    monthlyPriceEur: 1471,   // ~0.92 × 1599
-    yearlyPriceTry: 49000,
-    yearlyPriceUsd: 15900,
-    yearlyPriceEur: 14628,   // ~0.92 × 15900
+    monthlyPriceTry: 12900,
+    monthlyPriceUsd: 399,
+    monthlyPriceEur: 367,    // ~0.92 × 399
+    yearlyPriceTry: 129000,
+    yearlyPriceUsd: 3999,
+    yearlyPriceEur: 3679,    // ~0.92 × 3999
   },
   {
     plan: "PLUS" as const,
@@ -47,12 +47,12 @@ const PLAN_CONFIGS = [
     queuePriority: "MEDIUM" as const,
     allowedTools: "all",
     maxSeats: 1,
-    monthlyPriceTry: 14900,
-    monthlyPriceUsd: 4799,
-    monthlyPriceEur: 4415,   // ~0.92 × 4799
-    yearlyPriceTry: 149000,
-    yearlyPriceUsd: 47990,
-    yearlyPriceEur: 44151,   // ~0.92 × 47990
+    monthlyPriceTry: 22900,
+    monthlyPriceUsd: 699,
+    monthlyPriceEur: 643,    // ~0.92 × 699
+    yearlyPriceTry: 229200,
+    yearlyPriceUsd: 5004,
+    yearlyPriceEur: 4604,    // ~0.92 × 5004
   },
   {
     plan: "PRO" as const,

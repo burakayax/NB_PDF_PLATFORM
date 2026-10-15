@@ -6,7 +6,7 @@ import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentBodySchema } from "./payment.schema.js";
 import { prisma } from "../../lib/prisma.js";
 import { topupPackById, topupInvoiceLabel } from "../ai/ai.quota.js";
-import { topupCheckoutAmount, CV_PASSES, cvPassById, cvPassCheckoutAmount, cvPassInvoiceLabel } from "../../lib/plan-catalogue.js";
+import { topupCheckoutAmount, CV_PASSES, cvPassById, cvPassCheckoutAmount, cvPassInvoiceLabel, chargeCurrencyForCountry } from "../../lib/plan-catalogue.js";
 import {
   createPaymentCheckoutSession,
   paymentWorkspaceRedirectUrl,
@@ -86,8 +86,14 @@ export async function createTopupCheckoutController(request: Request, response: 
 }
 
 /** GET /api/payment/cv-passes — CV Geçişi seçenekleri (fiyatın tek kaynağı sunucudur). */
-export function listCvPassesController(_request: Request, response: Response) {
-  response.status(200).json({ passes: CV_PASSES });
+export async function listCvPassesController(request: Request, response: Response) {
+  // Her geçişe, bu kullanıcıdan HANGİ para biriminde tahsil edileceği eklenir (ekran buna göre gösterir).
+  const userId = request.authUser?.id;
+  const user = userId
+    ? await prisma.user.findUnique({ where: { id: userId }, select: { billingCountryCode: true } })
+    : null;
+  const chargeCurrency = chargeCurrencyForCountry(user?.billingCountryCode);
+  response.status(200).json({ passes: CV_PASSES.map((p) => ({ ...p, chargeCurrency })) });
 }
 
 /**

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { Language } from "../../i18n/landing";
 import { PLANS, type PlanId } from "../../lib/planConfig";
+import { AI_MONTHLY_CREDITS_BY_PLAN } from "../../lib/aiCredits";
 import { langAsset } from "../../lib/langAsset";
 
 type Perk = { label: string; detail: string };
@@ -50,8 +51,8 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
         {
           label: monthly,
           detail: tr
-            ? "Her PDF dönüştürme, birleştirme veya sıkıştırma 1 işlem sayılır."
-            : "Each PDF convert, merge or compress counts as 1 operation.",
+            ? "Sunucuda çalışan her dönüştürme veya sıkıştırma 1 işlem sayılır (bazı ağır dönüşümler daha çok). Cihazında çalışan birleştir, böl, döndür gibi araçlar bu sayıma girmez."
+            : "Each server-side conversion or compression counts as 1 operation (a few heavy ones count more). Tools that run on your device, like merge, split and rotate, are not counted.",
         },
         {
           label: tr ? "Sınırsız günlük kullanım" : "Unlimited daily usage",
@@ -86,11 +87,11 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
           label:
             planId === "BUSINESS"
               ? tr
-                ? "Tüm araçlar + kurumsal özel araçlar"
-                : "All tools + enterprise-only tools"
+                ? "Tüm araçlar, ekibinizle birlikte"
+                : "All tools, shared with your team"
               : tr
-                ? "20+ PDF aracının tamamı"
-                : "All 20+ PDF tools",
+                ? "Tüm PDF araçları"
+                : "All PDF tools",
           detail: tr
             ? "Birleştir, böl, dönüştür, sıkıştır, şifrele, filigran ve daha fazlası."
             : "Merge, split, convert, compress, encrypt, watermark and more.",
@@ -103,38 +104,29 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
         },
       ],
     },
-    {
-      icon: "⚡",
-      title: tr ? "Hız & Öncelik" : "Speed & Priority",
-      perks: [
-        {
-          label:
-            planId === "PLUS"
-              ? tr
-                ? "Öncelikli işlem sırası"
-                : "Priority processing queue"
-              : tr
-                ? "Maksimum öncelikli işlem"
-                : "Maximum priority processing",
-          detail: tr
-            ? "İşlemlerin yoğun saatlerde bile hızlı, ayrı bir öncelikli hatta çalışır."
-            : "Your jobs run on a faster priority lane, even at peak hours.",
-        },
-      ],
-    },
   ];
 
-  // Pro & Business: Yapay Zekâ araçları (asıl satış kancası)
-  if (planId === "PRO" || planId === "BUSINESS") {
+  // Yapay zekâ araçları: tüm ücretli planlar kullanır, fark aylık hak sayısındadır.
+  // Geliştirici API erişimi yalnız Pro ve Business'ta.
+  if (planId === "PLUS" || planId === "PRO" || planId === "BUSINESS") {
+    const aiMonthly = AI_MONTHLY_CREDITS_BY_PLAN[planId];
     categories.push({
       icon: "✨",
       title: tr ? "Yapay Zekâ Araçları" : "AI Tools",
       perks: [
+        {
+          label: tr ? `Ayda ${aiMonthly} yapay zekâ işlemi` : `${aiMonthly} AI operations a month`,
+          detail: tr
+            ? "Her ay yenilenir. Bitince ek kredi paketiyle devam edersiniz; detaylı Sözleşme Denetçisi yalnız ek krediyle çalışır."
+            : "Renews every month. When it runs out, continue with an extra credit pack; the detailed Contract Auditor works only with extra credits.",
+        },
         { label: tr ? "PDF Özetle" : "Summarize PDF", detail: tr ? "Uzun sözleşme ve raporları saniyeler içinde özetler." : "Summarizes long contracts and reports in seconds." },
         { label: tr ? "Veri Çıkar (fatura → Excel)" : "Extract Data (invoice → Excel)", detail: tr ? "Fatura ve tablolardan Excel'e hazır yapılandırılmış veri." : "Structured data from invoices and tables, ready for Excel." },
         { label: tr ? "Çeviri & Karşılaştırma" : "Translate & Compare", detail: tr ? "Belgeleri çevir; iki sürüm arasındaki farkı bul." : "Translate documents; diff two versions." },
         { label: tr ? "Hassas Veri Gizle + AI Toplu İşlem" : "Redact + AI Batch", detail: tr ? "Kişisel verileri otomatik gizle; onlarca belgeyi toplu işle." : "Auto-redact personal data; process dozens of documents in bulk." },
-        { label: tr ? "Geliştirici API erişimi" : "Developer API access", detail: tr ? "AI araçlarını kendi yazılımından çağır." : "Call the AI tools from your own software." },
+        ...(planId === "PLUS"
+          ? []
+          : [{ label: tr ? "Geliştirici API erişimi" : "Developer API access", detail: tr ? "AI araçlarını kendi yazılımından çağır." : "Call the AI tools from your own software." }]),
       ],
     });
   }

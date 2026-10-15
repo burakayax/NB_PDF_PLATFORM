@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js";
+import { chargeCurrencyForCountry } from "../../lib/plan-catalogue.js";
 import { HttpError } from "../../lib/http-error.js";
 import {
   summarizeDocument,
@@ -125,8 +126,14 @@ async function closeAiLedger(id: string | null, status: "DONE" | "FAILED", refun
 }
 
 /** GET /api/ai/topup/packs → { packs } — ek AI kredisi paketleri. */
-export async function topupPacksController(_req: Request, res: Response): Promise<void> {
-  res.json({ packs: TOPUP_PACKS });
+export async function topupPacksController(req: Request, res: Response): Promise<void> {
+  // Her pakete, bu kullanıcıdan HANGİ para biriminde tahsil edileceği eklenir (ekran buna göre gösterir).
+  const userId = req.authUser?.id;
+  const user = userId
+    ? await prisma.user.findUnique({ where: { id: userId }, select: { billingCountryCode: true } })
+    : null;
+  const chargeCurrency = chargeCurrencyForCountry(user?.billingCountryCode);
+  res.json({ packs: TOPUP_PACKS.map((p) => ({ ...p, chargeCurrency })) });
 }
 
 /** POST /api/ai/topup/grant → { userId?, packId } — ADMIN: kredi ver (manuel/test).

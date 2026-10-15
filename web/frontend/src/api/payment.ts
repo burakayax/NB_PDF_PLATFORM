@@ -47,7 +47,8 @@ export async function createPaymentCheckout(
   return response.json() as Promise<CreatePaymentResponse>;
 }
 
-export type CvPass = { id: string; hours: number; priceUSD: number; priceTRY: number; popular?: boolean };
+/** `chargeCurrency`: sunucunun bu kullanıcıdan HANGİ para biriminde tahsil edeceği (fatura ülkesine göre); ekran bunu göstermeli. */
+export type CvPass = { id: string; hours: number; priceUSD: number; priceTRY: number; popular?: boolean; chargeCurrency?: "TRY" | "USD" };
 
 /** CV Geçişi seçenekleri (fiyatın tek kaynağı sunucudur; /api/payment altı oturum ister). Hata olursa boş liste. */
 export async function fetchCvPasses(accessToken: string | null): Promise<CvPass[]> {

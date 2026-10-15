@@ -174,6 +174,36 @@ sunucu tarafında kesindir. İçerik saklanmadığı için, gömülü kaydı olm
 Kullanım Şartları'na "doğrulama kaydı taşımayan/değiştirilmiş dosyalar bizim çıktımız sayılmaz" ve iade koşulları yazılmalıdır
 (Türk tüketici mevzuatı açısından bir avukata teyit ettirin).
 
+## Ekrandaki tutar = kartından çekilen tutar (2026-10-15 denetimi)
+
+- **Ödeme özeti penceresi** TL fiyatı KDV'siz sanıp üstüne %20 ekliyordu (Pro 399 ₺ için 478,80 ₺ gösterip
+  399 ₺ çekecekti). Artık sunucunun hesabıyla birebir aynı: `web/frontend/src/lib/checkoutQuote.ts`
+  (net = fiyat/1,20; iskonto netten düşer; KDV indirimli net üzerine eklenir; Business'ta ek koltuk ve
+  yıllık koltuk indirimi dahil; dolar tarafında iskonto artık gerçekten hesaplanıp gösteriliyor).
+- **Yönetim paneli fiyatı:** Ana sayfa kartı panelden girilen TL fiyatı gösteriyordu ama ödeme katalogdaki
+  fiyatı çekiyordu. Artık ödeme de panel fiyatını kullanır (Pro aylık/yıllık, Business aylık; Business
+  yıllığı aylıktan türetilir: ~10 ay, 12'nin tam katı).
+- **Kredi paketi ve CV Geçişi:** Ekran para birimini dile göre seçiyordu, sunucu ise fatura ülkesine göre
+  tahsil ediyor. Artık sunucu her pakete `chargeCurrency` ekler, ekran onu gösterir.
+- Testler: `plan-catalogue.test.ts` (net + KDV = gösterilen tutar), `checkoutQuote.test.ts`.
+
+## Paket sınırları — ekran metni nerede, gerçek kural nerede?
+
+| Ne | Ekran (kart/pencere) | Gerçek kural |
+|---|---|---|
+| Günlük/aylık işlem, dosya boyutu, toplu işlem | `web/frontend/src/lib/planConfig.ts` | `web/api/src/modules/organization/organization.service.ts` ve `payment.service.ts` içindeki plan varsayılanları + veritabanındaki PlanConfig satırı (panelden değişir) |
+| Aylık yapay zekâ hakkı | `lib/aiCredits.ts` | `plan-catalogue.ts` → `AI_MONTHLY_CREDITS` |
+| Plana göre kilitli araçlar | `planConfig.ts` → `STARTER_TOOL_IDS` | `subscription.config.ts` → `FREE_TOOLS` / `STARTER_TOOLS` |
+
+Kartlardan **kaldırılanlar:** "Hızlı işlem sırası" ve "Öncelikli sıra" — kuyruk önceliği veritabanında saklanıyor
+ama işlemleri sıralayan hiçbir kod yok, yani vaat doğru değildi. Eklenenler: Ücretsiz ve Başlangıç'ta aylık
+tavan (30 / 250), Pro'da aylık 1.000 işlem, Business'ta işlem sınırı yok. Pro rozeti "+%25 işlem" yerine
+"Ayda 1.000 işlem" (Plus 600 → Pro 1.000 zaten +%67'ydi).
+
+**Canlıda kontrol:** Yönetim → Paket & fiyat'ta kayıtlı plan sınırları kod varsayılanını EZER. Ücretsiz plan dosya
+sınırı 80 MB, Başlangıç 100, Plus 250, Pro 500 olmalı. (Eski tohum betiği Ücretsiz için 25 MB ve filigran AÇIK
+yazıyordu; düzeltildi ama canlı veritabanı o betikle kurulduysa panelden elle düzeltilmeli.)
+
 ## Fiyat değiştirmek istediğinde
 
 0. Yönetim paneli → Paketler sekmesinde Pro/Business TL fiyatı daha önce girildiyse

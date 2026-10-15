@@ -22,13 +22,23 @@ export const STARTER_TOOL_IDS: FeatureKey[] = [
   "encrypt",
   "pdf-to-image",
   "image-to-pdf",
+  "word-to-pdf",
+  "pdf-to-word",
+  "sayfa-duzeni",
+  "form-doldur",
+  "ustveri-temizle",
   "page-numbers",
   "watermark",
   "extract-images",
 ];
 
-/** Tüm araç kataloğundaki toplam araç sayısı (Plus ve üzeri tüm araçları içerir). */
-export const TOTAL_TOOL_COUNT = 23;
+/**
+ * Plana göre kilitlenen araçların toplamı (Plus ve üzeri hepsini içerir) — sunucudaki
+ * `featureCatalog` (subscription.config.ts) uzunluğuyla AYNI (33). Sitenin toplam araç
+ * sayısı (cihazda çalışanlar ve yapay zekâ araçları dahil) bundan ayrıdır ve sayfa
+ * metinlerinde otomatik sayaçtan gelir.
+ */
+export const TOTAL_TOOL_COUNT = 33;
 
 export interface PlanDefinition {
   id: PlanId;
@@ -67,14 +77,14 @@ export const PLANS: PlanDefinition[] = [
     monthlyOnlyBilling: true,
     featuresTr: [
       "Cihazında sınırsız: birleştir, böl, döndür, sil, sırala, görsel→PDF (dosya yüklenmez)",
-      "Günde 3 sunucu işlemi: sıkıştır, Word ↔ PDF, PDF→JPG…",
+      "Günde 3, ayda en fazla 30 sunucu işlemi: sıkıştır, Word ↔ PDF, PDF→JPG…",
       "✨ Hoş geldin hediyesi: 3 ücretsiz yapay zekâ işlemi",
       "Filigransız, reklamsız temiz çıktı — her planda",
       "Dosya boyutu ≤ 80 MB",
     ],
     featuresEn: [
       "Unlimited on your device: merge, split, rotate, delete, reorder, image→PDF (no upload)",
-      "3 server operations a day: compress, Word ↔ PDF, PDF→JPG…",
+      "3 server operations a day (30 a month): compress, Word ↔ PDF, PDF→JPG…",
       "✨ Welcome gift: 3 free AI operations",
       "Clean output — no watermark, no ads (every plan)",
       "Files up to 80 MB",
@@ -105,18 +115,18 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "Ücretsiz'deki her şey",
       "✨ Aylık 5 yapay zekâ işlemi (özetle, veri çıkar…); Sözleşme Denetçisi ek krediyle",
-      "Günde 25 sunucu işlemi (dönüştür/sıkıştır)",
+      "Günde 25, ayda en fazla 250 sunucu işlemi (dönüştür/sıkıştır)",
       "Dosya boyutu ≤ 100 MB",
       "Toplu işlem — 2 dosya",
-      "Hızlı işlem sırası + e-posta destek",
+      "E-posta destek",
     ],
     featuresEn: [
       "Everything in Free",
       "✨ 5 AI operations/month (summarize, extract…); Contract Auditor with extra credits",
-      "25 server operations/day (convert/compress)",
+      "25 server operations a day (250 a month): convert/compress",
       "Files up to 100 MB",
       "Batch — 2 files",
-      "Fast queue + email support",
+      "Email support",
     ],
     dailyOpsLimit: 25,
     monthlyOpsLimit: 250,
@@ -147,7 +157,7 @@ export const PLANS: PlanDefinition[] = [
       "Günlük limit yok — ayda 600 sunucu işlemi",
       "Dosya boyutu ≤ 250 MB",
       "Toplu işlem — 5 dosya",
-      "Öncelikli sıra + e-posta destek",
+      "E-posta destek",
     ],
     featuresEn: [
       "Everything in Free",
@@ -155,7 +165,7 @@ export const PLANS: PlanDefinition[] = [
       "No daily cap — 600 server operations a month",
       "Files up to 250 MB",
       "Batch — 5 files",
-      "Priority queue + email support",
+      "Email support",
     ],
     dailyOpsLimit: null,
     monthlyOpsLimit: 600,
@@ -171,8 +181,8 @@ export const PLANS: PlanDefinition[] = [
     taglineTr: "Yapay zekâ ve API isteyenler için.",
     taglineEn: "For AI tools and API access.",
     badge: {
-      textTr: "+25% İşlem",
-      textEn: "+25% More Ops",
+      textTr: "Ayda 1.000 işlem",
+      textEn: "1,000 ops / month",
       color: "amber",
     },
     pricing: {
@@ -183,6 +193,7 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "Plus'taki her şey",
       "✨ Aylık 40 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
+      "Günlük limit yok — ayda 1.000 sunucu işlemi",
       "✨ Tüm AI araçları: Özetle, Veri Çıkar, Çeviri, Karşılaştır, Gizle, Toplu",
       "Geliştirici API erişimi (AI uçları)",
       "Dosya boyutu ≤ 500 MB",
@@ -192,6 +203,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "Everything in Plus",
       "✨ 40 AI operations/month; Contract Auditor with extra credits",
+      "No daily cap — 1,000 server operations a month",
       "✨ All AI tools: Summarize, Extract, Translate, Compare, Redact, Batch",
       "Developer API access (AI endpoints)",
       "Files up to 500 MB",
@@ -222,6 +234,7 @@ export const PLANS: PlanDefinition[] = [
     },
     featuresTr: [
       "Pro'daki her şey — aylık 100 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
+      "Sunucu işlem sınırı yok",
       "Ekip yönetimi — 5+ kişi",
       "Merkezi faturalama & yönetim paneli",
       "Sınırsız dosya boyutu",
@@ -231,6 +244,7 @@ export const PLANS: PlanDefinition[] = [
     ],
     featuresEn: [
       "Everything in Pro — 100 AI operations/month; Contract Auditor with extra credits",
+      "No server operation limit",
       "Team management — 5+ seats",
       "Central billing & admin panel",
       "Unlimited file size",

@@ -18,7 +18,8 @@ export type AiQuota = {
   closedNotes?: Record<string, string>;
 };
 
-export type TopupPack = { id: string; credits: number; priceUSD: number; priceTRY: number; popular?: boolean };
+/** `chargeCurrency`: sunucunun bu kullanıcıdan HANGİ para biriminde tahsil edeceği (fatura ülkesine göre); ekran bunu göstermeli. */
+export type TopupPack = { id: string; credits: number; priceUSD: number; priceTRY: number; popular?: boolean; chargeCurrency?: "TRY" | "USD" };
 
 /** Ek AI kredisi paketleri. */
 export async function fetchTopupPacks(token: string | null): Promise<TopupPack[]> {
