@@ -684,7 +684,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                       : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
                   }`}
                 >
-                  %{z}
+                  {tr ? `%${z}` : `${z}%`}
                 </button>
               ))}
             </span>
