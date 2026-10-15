@@ -54,9 +54,11 @@ export type PlanPrice = {
  *  Pro'muz 11,99 $: iLovePDF'in üstünde (bizde yapay zekâ var), yapay zekâ
  *  odaklı rakiplerin belirgin altında.
  *
- *  Yıllık TL = 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim). Yıllık USD
- *  rakip yıllık fiyatlarına (iLovePDF ~4 $/ay, Smallpdf ~9 $/ay) göre kurulur:
- *  Plus 49,99 $ (ayda ~4,2), Pro 89,99 $ (ayda ~7,5).
+ *  Yıllık TL ≈ 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim). Yıllık
+ *  tutarlar 12'ye TAM bölünür: ekranda "ayda X" yazıp X×12 ≠ yıllık tutar olmasın
+ *  (ör. 2.290/12 = 190,83 → "191" görünüyor, 191×12 = 2.292). Yıllık USD rakip
+ *  yıllık fiyatlarına (iLovePDF ~4 $/ay, Smallpdf ~9 $/ay) göre kurulur:
+ *  Plus 50,04 $ (ayda 4,17), Pro 90,00 $ (ayda 7,50), Business 399,96 $ (ayda 33,33).
  *
  *  FİYAT REVİZYONU (2026-10-15): TL fiyatları dolar fiyatının ~%65-70'ine çekildi
  *  (Başlangıç 129, Plus 229, Pro 399, Business 1.099); eskiden ~%50'ydi. Pro 399 ₺
@@ -72,21 +74,21 @@ export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
   },
   PLUS: {
     tryGrossMonthly: "229.00",
-    tryGrossYearly: "2290.00",
+    tryGrossYearly: "2292.00",
     usdMonthly: "6.99",
-    usdYearly: "49.99",
+    usdYearly: "50.04",
   },
   PRO: {
     tryGrossMonthly: "399.00",
-    tryGrossYearly: "3990.00",
+    tryGrossYearly: "3996.00",
     usdMonthly: "11.99",
-    usdYearly: "89.99",
+    usdYearly: "90.00",
   },
   BUSINESS: {
     tryGrossMonthly: "1099.00",
-    tryGrossYearly: "10990.00",
+    tryGrossYearly: "10992.00",
     usdMonthly: "39.99",
-    usdYearly: "399.99",
+    usdYearly: "399.96",
   },
 };
 
