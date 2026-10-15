@@ -21,12 +21,12 @@ export const KDV_RATE = 0.2;
 export type PaidPlanId = "STARTER" | "PLUS" | "PRO" | "BUSINESS";
 
 /**
- * Yıllık faturalandırma YALNIZCA bu planlarda sunulur. Başlangıç ve Plus
- * aylıktır; ekranda da yıllık seçeneği gösterilmez (`MonthlyOnlyCard`).
- * Diğer planların yıllık tutarları yine tanımlıdır ki elle üretilmiş bir
- * istek fiyatsız kalmasın, ama satın alma yolu kapalıdır.
+ * Yıllık faturalandırma YALNIZCA bu planlarda sunulur. Başlangıç aylıktır;
+ * ekranda yıllık seçeneği gösterilmez (`MonthlyOnlyCard`). Başlangıç'ın yıllık
+ * tutarı yine tanımlıdır ki elle üretilmiş bir istek fiyatsız kalmasın, ama
+ * satın alma yolu kapalıdır.
  */
-export const YEARLY_BILLING_PLANS: readonly PaidPlanId[] = ["PRO", "BUSINESS"];
+export const YEARLY_BILLING_PLANS: readonly PaidPlanId[] = ["PLUS", "PRO", "BUSINESS"];
 export type CataloguePlanId = "FREE" | PaidPlanId;
 
 export type PlanPrice = {
@@ -54,30 +54,37 @@ export type PlanPrice = {
  *  Pro'muz 11,99 $: iLovePDF'in üstünde (bizde yapay zekâ var), yapay zekâ
  *  odaklı rakiplerin belirgin altında.
  *
- *  Yıllık = 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim).
+ *  Yıllık TL = 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim). Yıllık USD
+ *  rakip yıllık fiyatlarına (iLovePDF ~4 $/ay, Smallpdf ~9 $/ay) göre kurulur:
+ *  Plus 49,99 $ (ayda ~4,2), Pro 89,99 $ (ayda ~7,5).
+ *
+ *  FİYAT REVİZYONU (2026-10-15): TL fiyatları dolar fiyatının ~%65-70'ine çekildi
+ *  (Başlangıç 129, Plus 229, Pro 399, Business 1.099); eskiden ~%50'ydi. Pro 399 ₺
+ *  kullanıcı kararıdır — sonradan zam kötü algılanacağı için ödemeler açılmadan
+ *  önce yapıldı. Kur 60 ₺/$'ı aşarsa TL fiyatlar yeniden gözden geçirilmeli.
  */
 export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
   STARTER: {
-    tryGrossMonthly: "99.00",
-    tryGrossYearly: "990.00",
+    tryGrossMonthly: "129.00",
+    tryGrossYearly: "1290.00",
     usdMonthly: "3.99",
     usdYearly: "39.99",
   },
   PLUS: {
-    tryGrossMonthly: "179.00",
-    tryGrossYearly: "1790.00",
+    tryGrossMonthly: "229.00",
+    tryGrossYearly: "2290.00",
     usdMonthly: "6.99",
-    usdYearly: "69.99",
+    usdYearly: "49.99",
   },
   PRO: {
-    tryGrossMonthly: "299.00",
-    tryGrossYearly: "2990.00",
+    tryGrossMonthly: "399.00",
+    tryGrossYearly: "3990.00",
     usdMonthly: "11.99",
-    usdYearly: "119.99",
+    usdYearly: "89.99",
   },
   BUSINESS: {
-    tryGrossMonthly: "799.00",
-    tryGrossYearly: "7990.00",
+    tryGrossMonthly: "1099.00",
+    tryGrossYearly: "10990.00",
     usdMonthly: "39.99",
     usdYearly: "399.99",
   },
@@ -85,7 +92,7 @@ export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
 
 /** Business planına eklenen her ek koltuğun fiyatı (Business'ın koltuk başı fiyatıyla aynı hizada). */
 export const EXTRA_SEAT_PRICE = {
-  tryGrossMonthly: "159.00",
+  tryGrossMonthly: "219.00",
   usdMonthly: "7.99",
 } as const;
 

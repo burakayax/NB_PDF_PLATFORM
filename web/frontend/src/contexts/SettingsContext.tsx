@@ -26,8 +26,8 @@ const defaultPricing: PublicPricingPayload = {
   checkoutCurrency: "TRY",
   // Katalogla aynı (web/api/src/lib/plan-catalogue.ts) — sunucuya ulaşılamazsa
   // ekranda hiçbir yerde olmayan eski bir rakam görünmesin.
-  tryPrices: { businessMonthly: "799.00", proMonthly: "299.00", proAnnual: "2990.00" },
-  usdDisplay: { basicMonthly: "39.99", proMonthly: "11.99", proAnnual: "119.99" },
+  tryPrices: { businessMonthly: "1099.00", proMonthly: "399.00", proAnnual: "3990.00" },
+  usdDisplay: { basicMonthly: "39.99", proMonthly: "11.99", proAnnual: "89.99" },
   annualSavePercent: 50,
   internationalCheckoutNote: {
     en: "Checkout is processed in Turkish Lira (TRY) via our payment partner; your bank may show an equivalent in your currency.",

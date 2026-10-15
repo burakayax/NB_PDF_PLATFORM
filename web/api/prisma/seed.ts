@@ -64,12 +64,12 @@ const PLAN_CONFIGS = [
     queuePriority: "HIGH" as const,
     allowedTools: "all",
     maxSeats: 1,
-    monthlyPriceTry: 29900,
-    monthlyPriceUsd: 9799,
-    monthlyPriceEur: 9015,   // ~0.92 × 9799
-    yearlyPriceTry: 299000,
-    yearlyPriceUsd: 97990,
-    yearlyPriceEur: 90151,   // ~0.92 × 97990
+    monthlyPriceTry: 39900,
+    monthlyPriceUsd: 1199,
+    monthlyPriceEur: 1103,   // ~0.92 × 1199
+    yearlyPriceTry: 399000,
+    yearlyPriceUsd: 8999,
+    yearlyPriceEur: 8279,    // ~0.92 × 8999
   },
   {
     plan: "BUSINESS" as const,
@@ -81,12 +81,12 @@ const PLAN_CONFIGS = [
     queuePriority: "HIGHEST" as const,
     allowedTools: "all",
     maxSeats: 999,
-    monthlyPriceTry: 79900,
-    monthlyPriceUsd: 25000,
-    monthlyPriceEur: 23000,  // ~0.92 × 25000
-    yearlyPriceTry: 799000,
-    yearlyPriceUsd: 250000,
-    yearlyPriceEur: 230000,  // ~0.92 × 250000
+    monthlyPriceTry: 109900,
+    monthlyPriceUsd: 3999,
+    monthlyPriceEur: 3679,   // ~0.92 × 3999
+    yearlyPriceTry: 1099000,
+    yearlyPriceUsd: 39999,
+    yearlyPriceEur: 36799,   // ~0.92 × 39999
   },
 ];
 

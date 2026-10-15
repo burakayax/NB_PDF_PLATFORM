@@ -2,8 +2,8 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 
-const SEAT_PRICE_TRY = 199;  // ₺/kişi/ay (net, KDV hariç)
-const SEAT_PRICE_USD = 5.99; // $/kişi/ay
+const SEAT_PRICE_TRY = 219;  // ₺/kişi/ay (KDV dahil)
+const SEAT_PRICE_USD = 7.99; // $/kişi/ay
 const YEARLY_DISCOUNT = 0.83; // %17 tasarruf
 
 type Props = {
@@ -60,7 +60,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-white">Eklenecek Koltuk</p>
-              <p className="text-xs text-slate-400">her koltuk {fmt(unitPrice)}/ay (KDV hariç)</p>
+              <p className="text-xs text-slate-400">her koltuk {fmt(unitPrice)}/ay (KDV dahil)</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -102,7 +102,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-center">
             <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Aylık</p>
             <p className="text-2xl font-black text-white">{fmt(monthlyTotal)}</p>
-            <p className="text-xs text-slate-400 mt-0.5">/ay (KDV hariç)</p>
+            <p className="text-xs text-slate-400 mt-0.5">/ay (KDV dahil)</p>
           </div>
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-center">
             <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Yıllık</p>

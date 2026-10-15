@@ -150,7 +150,7 @@ export async function initializePaymentsController(request: Request, response: R
   }
 
   const isYearly = billingCycle === "YEARLY";
-  // Satılmayan bir döngü için ödeme başlatılmaz: Başlangıç ve Plus yalnızca
+  // Satılmayan bir döngü için ödeme başlatılmaz: Başlangıç yalnızca
   // aylıktır ve ekranda yıllık seçeneği hiç gösterilmez.
   if (isYearly && !YEARLY_BILLING_PLANS.includes(planId)) {
     throw new HttpError(400, "Bu pakette yıllık ödeme seçeneği bulunmuyor. Lütfen aylık seçeneğiyle devam edin.");

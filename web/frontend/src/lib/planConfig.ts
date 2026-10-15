@@ -98,8 +98,8 @@ export const PLANS: PlanDefinition[] = [
       color: "green",
     },
     pricing: {
-      monthly: { TRY: 9900, USD: 399 },
-      yearly: { TRY: 99000, USD: 3999 },
+      monthly: { TRY: 12900, USD: 399 },
+      yearly: { TRY: 129000, USD: 3999 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -137,14 +137,14 @@ export const PLANS: PlanDefinition[] = [
       color: "blue",
     },
     pricing: {
-      monthly: { TRY: 17900, USD: 699 },
-      yearly: { TRY: 179000, USD: 6999 },
+      monthly: { TRY: 22900, USD: 699 },
+      yearly: { TRY: 229000, USD: 4999 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
       "Ücretsiz'deki her şey",
       "✨ Aylık 15 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
-      "Sınırsız sunucu dönüştürme (günlük limit yok)",
+      "Günlük limit yok — ayda 600 sunucu işlemi",
       "Dosya boyutu ≤ 250 MB",
       "Toplu işlem — 5 dosya",
       "Öncelikli sıra + e-posta destek",
@@ -152,7 +152,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "Everything in Free",
       "✨ 15 AI operations/month; Contract Auditor with extra credits",
-      "Unlimited server conversions (no daily cap)",
+      "No daily cap — 600 server operations a month",
       "Files up to 250 MB",
       "Batch — 5 files",
       "Priority queue + email support",
@@ -176,8 +176,8 @@ export const PLANS: PlanDefinition[] = [
       color: "amber",
     },
     pricing: {
-      monthly: { TRY: 29900, USD: 1199 },
-      yearly: { TRY: 299000, USD: 11999 },
+      monthly: { TRY: 39900, USD: 1199 },
+      yearly: { TRY: 399000, USD: 8999 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -217,8 +217,8 @@ export const PLANS: PlanDefinition[] = [
       color: "violet",
     },
     pricing: {
-      monthly: { TRY: 79900, USD: 3999 },
-      yearly: { TRY: 799000, USD: 39999 },
+      monthly: { TRY: 109900, USD: 3999 },
+      yearly: { TRY: 1099000, USD: 39999 },
     },
     monthlyOnlyBilling: true,
     featuresTr: [
