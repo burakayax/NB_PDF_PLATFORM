@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CircleCheck, FileUser, Lock, MoveHorizontal, SquareSplitHorizontal, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  CircleCheck,
+  FileUser,
+  Lock,
+  Maximize2,
+  MoveHorizontal,
+  SquareSplitHorizontal,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import type { Language } from "../../i18n/landing";
 
 /**
@@ -17,7 +27,16 @@ import type { Language } from "../../i18n/landing";
  * fareyle üstüne gelince, odaklanınca ve "hareketi azalt" ayarında durur.
  */
 
-type Copy = { label: string; desc: string; badge: string; path: string; alt: string };
+type Copy = {
+  label: string;
+  desc: string;
+  badge: string;
+  path: string;
+  alt: string;
+  points: string[];
+};
+/** Görselin kendi piksel koordinatında numaralı işaret noktası */
+type Pin = { x: number; y: number };
 type Shot = {
   id: string;
   Icon: LucideIcon;
@@ -25,6 +44,11 @@ type Shot = {
   accent: string;
   /** Dil → masaüstü görsel yolu; yoksa o dilde gösterilmez */
   img: Partial<Record<Language, string>>;
+  /** Masaüstü görselin piksel boyutu (işaretlerin yüzdeye çevrilmesi ve çerçeve oranı için) */
+  w: number;
+  h: number;
+  /** Numaralı işaretler; `points` açıklamalarıyla aynı sırada */
+  pins: Pin[];
   /** Dil → telefon görseli (dar ekranda telefon çerçevesinde gösterilir) */
   mimg: Record<Language, string>;
   tr: Copy;
@@ -36,14 +60,34 @@ const SHOTS: Shot[] = [
     id: "cv",
     Icon: FileUser,
     accent: "99,102,241",
-    img: { tr: "/screenshots/tour-cv.webp", en: "/screenshots/tour-cv-en.webp" },
-    mimg: { tr: "/screenshots/tour-m-cv.webp", en: "/screenshots/tour-m-cv-en.webp" },
+    img: {
+      tr: "/screenshots/tour-cv-c.webp",
+      en: "/screenshots/tour-cv-en-c.webp",
+    },
+    w: 1535,
+    h: 1200,
+    pins: [
+      { x: 1200, y: 388 },
+      { x: 62, y: 580 },
+      { x: 1255, y: 700 },
+      { x: 1458, y: 531 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-cv.webp",
+      en: "/screenshots/tour-m-cv-en.webp",
+    },
     tr: {
       label: "CV'nizi canlı oluşturun",
       desc: "30 şablondan birini seçin, bilgilerinizi yazın; CV'niz yanda anında şekillensin. Hazır olunca tek tıkla PDF.",
       badge: "Bilgileriniz cihazınızda kalır",
       path: "pdfplatform.app/tools/cv-olustur",
       alt: "CV Oluştur: şablon seçimi, canlı PDF önizlemesi, CV gücü puanı ve tasarım ayarları",
+      points: [
+        "30 şablondan birini seçin; değiştirdiğinizde CV anında yenilenir.",
+        'Bilgilerinizi yazdıkça CV yanda canlı şekillenir. "PDF görünümü" indireceğiniz sayfayı gösterir.',
+        "CV gücü puanı eksik ve zayıf yerleri size söyler.",
+        "Tek tıkla PDF; Word ve diğer seçenekler hemen altındaki menüde.",
+      ],
     },
     en: {
       label: "Build your CV live",
@@ -51,20 +95,46 @@ const SHOTS: Shot[] = [
       badge: "Your details stay on your device",
       path: "pdfplatform.app/en/tools/cv-maker",
       alt: "CV Maker: template picker, live PDF preview, CV strength score and design settings",
+      points: [
+        "Pick one of 30 templates; the CV refreshes the moment you switch.",
+        "As you type, the CV takes shape beside the form. PDF view shows the page you will download.",
+        "The CV strength score points out what is missing or weak.",
+        "One click to PDF; Word and other options are in the menu right below.",
+      ],
     },
   },
   {
     id: "pages",
     Icon: SquareSplitHorizontal,
     accent: "59,130,246",
-    img: { tr: "/screenshots/tour-pages.webp", en: "/screenshots/tour-pages-en.webp" },
-    mimg: { tr: "/screenshots/tour-m-pages.webp", en: "/screenshots/tour-m-pages-en.webp" },
+    img: {
+      tr: "/screenshots/tour-pages.webp",
+      en: "/screenshots/tour-pages-en.webp",
+    },
+    w: 1920,
+    h: 1200,
+    pins: [
+      { x: 960, y: 330 },
+      { x: 1050, y: 75 },
+      { x: 46, y: 141 },
+      { x: 1868, y: 122 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-pages.webp",
+      en: "/screenshots/tour-m-pages-en.webp",
+    },
     tr: {
       label: "Sayfaları görerek seçin",
       desc: "Sayfa numarası tahmin etmek yok. Küçük görsellere tıklayın, hangi sayfaları aldığınızı gözünüzle görün.",
       badge: "Ücretsiz · üyeliksiz",
       path: "pdfplatform.app/tools/split-pdf",
       alt: "PDF Ayır: sayfa küçük görselleri, seçili sayfalar işaretli",
+      points: [
+        "Seçtiğiniz sayfalar parlak çerçeveyle işaretlenir; tıklayın ya da boş alanda sürükleyin.",
+        "Kaç sayfa seçtiğinizi üstte canlı görürsünüz.",
+        "Kısa kullanım notu hep ekranın üstünde: Ctrl+A tümünü seçer, Ctrl+D temizler.",
+        "Vazgeçerseniz seçimi tek tıkla temizleyin.",
+      ],
     },
     en: {
       label: "Pick pages by eye",
@@ -72,20 +142,46 @@ const SHOTS: Shot[] = [
       badge: "Free · no sign-up",
       path: "pdfplatform.app/en/tools/split-pdf",
       alt: "Split PDF: page thumbnails with the chosen pages highlighted",
+      points: [
+        "Pages you pick get a bright outline; click them or drag across empty space.",
+        "A live counter at the top shows how many pages are selected.",
+        "A short how-to stays at the top: Ctrl+A selects all, Ctrl+D clears.",
+        "Changed your mind? Clear the selection in one click.",
+      ],
     },
   },
   {
     id: "order",
     Icon: MoveHorizontal,
     accent: "16,185,129",
-    img: { tr: "/screenshots/tour-order.webp", en: "/screenshots/tour-order-en.webp" },
-    mimg: { tr: "/screenshots/tour-m-order.webp", en: "/screenshots/tour-m-order-en.webp" },
+    img: {
+      tr: "/screenshots/tour-order.webp",
+      en: "/screenshots/tour-order-en.webp",
+    },
+    w: 1920,
+    h: 1180,
+    pins: [
+      { x: 779, y: 215 },
+      { x: 1042, y: 615 },
+      { x: 46, y: 141 },
+      { x: 620, y: 73 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-order.webp",
+      en: "/screenshots/tour-m-order-en.webp",
+    },
     tr: {
       label: "Sırayı değiştirin",
       desc: "Sayfaları ok düğmeleriyle ya da hedef numarayı yazarak taşıyın; sonucu indirmeden önce görün.",
       badge: "Ücretsiz · üyeliksiz",
       path: "pdfplatform.app/tools/organize-pdf",
       alt: "PDF Sayfa Düzenleme: sayfa kartları ve sıra değiştirme düğmeleri",
+      points: [
+        "Her kartın üstündeki ok düğmeleri sayfayı bir adım sola ya da sağa taşır.",
+        "Alttaki numara kutusuna hedef sırayı yazarak sayfayı doğrudan o yere gönderin.",
+        "Nasıl kullanılacağı ekranın üstünde kısaca yazar.",
+        "Yakınlaştırma düğmeleriyle kartları %25 ile %100 arasında küçültüp büyütün.",
+      ],
     },
     en: {
       label: "Reorder with a click",
@@ -93,6 +189,12 @@ const SHOTS: Shot[] = [
       badge: "Free · no sign-up",
       path: "pdfplatform.app/en/tools/organize-pdf",
       alt: "Organize PDF: page cards with reorder buttons",
+      points: [
+        "The arrow buttons on each card move that page one step left or right.",
+        "Type a target number in the box at the bottom to send a page straight to that position.",
+        "A short how-to sits at the top of the screen.",
+        "Zoom buttons shrink or enlarge the cards from 25% to 100%.",
+      ],
     },
   },
 ];
@@ -102,7 +204,9 @@ const AUTO_MS = 7000;
 /** Dar ekran (telefon) mı? Yalnızca bir görsel yüklensin diye CSS yerine durum olarak izlenir. */
 function usePhone(): boolean {
   const q = "(max-width: 639px)";
-  const [phone, setPhone] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.(q).matches);
+  const [phone, setPhone] = useState(
+    () => typeof window !== "undefined" && !!window.matchMedia?.(q).matches,
+  );
   useEffect(() => {
     const m = window.matchMedia?.(q);
     if (!m) return;
@@ -125,6 +229,8 @@ export function ProductGallery({
   const shots = SHOTS.filter((s) => s.img[language]);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [hoverPin, setHoverPin] = useState<number | null>(null);
+  const [zoomed, setZoomed] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
   const phone = usePhone();
 
@@ -132,20 +238,43 @@ export function ProductGallery({
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+  // Büyütülmüş görünümde Esc ile kapat; açıkken sayfa kaymasın.
+  useEffect(() => {
+    if (!zoomed) return;
+    const onEsc = (e: KeyboardEvent) => e.key === "Escape" && setZoomed(false);
+    window.addEventListener("keydown", onEsc);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onEsc);
+      document.body.style.overflow = prev;
+    };
+  }, [zoomed]);
+
   // Otomatik ilerleme — durdurulabilir, hareketi azalt ayarına saygılı.
   useEffect(() => {
-    if (paused || reduceMotion) return;
-    const t = window.setTimeout(() => setActive((i) => (i + 1) % shots.length), AUTO_MS);
+    if (paused || reduceMotion || zoomed) return;
+    const t = window.setTimeout(
+      () => setActive((i) => (i + 1) % shots.length),
+      AUTO_MS,
+    );
     return () => window.clearTimeout(t);
-  }, [active, paused, reduceMotion, shots.length]);
+  }, [active, paused, reduceMotion, zoomed, shots.length]);
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       e.preventDefault();
-      setActive((i) => (e.key === "ArrowRight" ? (i + 1) % shots.length : (i - 1 + shots.length) % shots.length));
-      const next = tabsRef.current?.querySelectorAll<HTMLButtonElement>("[role=tab]");
-      next?.forEach((b) => b.getAttribute("aria-selected") === "true" && b.focus());
+      setActive((i) =>
+        e.key === "ArrowRight"
+          ? (i + 1) % shots.length
+          : (i - 1 + shots.length) % shots.length,
+      );
+      const next =
+        tabsRef.current?.querySelectorAll<HTMLButtonElement>("[role=tab]");
+      next?.forEach(
+        (b) => b.getAttribute("aria-selected") === "true" && b.focus(),
+      );
     },
     [shots.length],
   );
@@ -155,10 +284,13 @@ export function ProductGallery({
   const src = shot.img[language] as string;
 
   return (
-    <section id="showcase" className="relative overflow-hidden px-5 py-14 sm:px-8 sm:py-28">
+    <section
+      id="showcase"
+      className="relative overflow-hidden px-5 py-14 sm:px-8 sm:py-28"
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.09)_0%,transparent_60%)]" />
 
-      <div className="relative z-10 mx-auto max-w-6xl">
+      <div className="relative z-10 mx-auto max-w-7xl">
         {/* Başlık */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
@@ -179,14 +311,14 @@ export function ProductGallery({
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-slate-400">
             {tr
-              ? "Bu görüntüler uygulamanın kendisinden alındı; yalnızca örnek belge ve örnek CV bilgileri kullanıldı."
-              : "These are screenshots of the app itself, using only a sample document and a sample CV."}
+              ? "Gerçek uygulamadan alınmış ekranlar; numaralı noktalar her alanın ne işe yaradığını gösterir. Yalnızca örnek belge ve örnek CV bilgileri kullanıldı."
+              : "Screens taken from the real app. The numbered dots show what each area does. Only a sample document and a sample CV are used."}
           </p>
         </motion.div>
 
         {/* Sekmeler + çerçeve */}
         <div
-          className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,330px)_minmax(0,1fr)] lg:items-center lg:gap-12"
+          className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,290px)_minmax(0,1fr)] lg:items-start lg:gap-10"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocusCapture={() => setPaused(true)}
@@ -218,7 +350,11 @@ export function ProductGallery({
                       ? "border-white/20 bg-white/[0.07]"
                       : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.045]"
                   }`}
-                  style={on ? { boxShadow: `0 18px 40px -24px rgba(${s.accent},0.8)` } : undefined}
+                  style={
+                    on
+                      ? { boxShadow: `0 18px 40px -24px rgba(${s.accent},0.8)` }
+                      : undefined
+                  }
                 >
                   <span className="flex items-center gap-3">
                     <span
@@ -230,15 +366,23 @@ export function ProductGallery({
                     >
                       <TabIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                     </span>
-                    <span className={`whitespace-nowrap text-[14px] font-bold lg:whitespace-normal ${on ? "text-white" : "text-slate-300"}`}>
+                    <span
+                      className={`whitespace-nowrap text-[14px] font-bold lg:whitespace-normal ${on ? "text-white" : "text-slate-300"}`}
+                    >
                       {c.label}
                     </span>
                   </span>
 
                   {/* Açıklama + güven etiketi yalnız geniş ekranda; dar ekranda sekme çip gibi durur */}
-                  <span className="mt-2.5 hidden text-[13px] leading-relaxed text-slate-400 lg:block">{c.desc}</span>
+                  <span className="mt-2.5 hidden text-[13px] leading-relaxed text-slate-400 lg:block">
+                    {c.desc}
+                  </span>
                   <span className="mt-3 hidden items-center gap-1.5 text-[11.5px] font-semibold text-slate-300 lg:inline-flex">
-                    <CircleCheck className="h-3.5 w-3.5" style={{ color: `rgb(${s.accent})` }} aria-hidden="true" />
+                    <CircleCheck
+                      className="h-3.5 w-3.5"
+                      style={{ color: `rgb(${s.accent})` }}
+                      aria-hidden="true"
+                    />
                     {c.badge}
                   </span>
 
@@ -251,7 +395,10 @@ export function ProductGallery({
                         style={{ background: `rgb(${s.accent})` }}
                         initial={{ width: "0%" }}
                         animate={{ width: paused ? "0%" : "100%" }}
-                        transition={{ duration: paused ? 0 : AUTO_MS / 1000, ease: "linear" }}
+                        transition={{
+                          duration: paused ? 0 : AUTO_MS / 1000,
+                          ease: "linear",
+                        }}
                       />
                     </span>
                   )}
@@ -270,7 +417,10 @@ export function ProductGallery({
             {phone ? (
               <div className="mx-auto w-[min(100%,270px)] rounded-[2.4rem] border border-white/[0.14] bg-[#05080f] p-2 shadow-[0_40px_90px_-35px_rgba(0,0,0,0.95)] ring-1 ring-black/40">
                 <div className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-[#070d19]">
-                  <span aria-hidden="true" className="absolute left-1/2 top-2 z-10 h-[18px] w-[72px] -translate-x-1/2 rounded-full bg-black/80" />
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-1/2 top-2 z-10 h-[18px] w-[72px] -translate-x-1/2 rounded-full bg-black/80"
+                  />
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={`${shot.id}-${language}-m`}
@@ -298,18 +448,27 @@ export function ProductGallery({
                 <div className="flex items-center gap-3 border-b border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-white/[0.02] px-4 py-2.5">
                   <span className="flex gap-1.5" aria-hidden="true">
                     {[0, 1, 2].map((n) => (
-                      <span key={n} className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                      <span
+                        key={n}
+                        className="h-2.5 w-2.5 rounded-full bg-white/15"
+                      />
                     ))}
                   </span>
                   <span className="mx-auto flex max-w-[340px] flex-1 items-center justify-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-3 py-1 text-[11px] text-slate-400">
-                    <Lock className="h-3 w-3 text-emerald-400/80" aria-hidden="true" />
+                    <Lock
+                      className="h-3 w-3 text-emerald-400/80"
+                      aria-hidden="true"
+                    />
                     <span className="truncate">{copy.path}</span>
                   </span>
                   <span className="w-[42px]" aria-hidden="true" />
                 </div>
 
-                {/* Görsel */}
-                <div className="relative aspect-[16/10] bg-[#070d19]">
+                {/* Görsel + numaralı işaretler */}
+                <div
+                  className="relative bg-[#070d19]"
+                  style={{ aspectRatio: `${shot.w} / ${shot.h}` }}
+                >
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={`${shot.id}-${language}`}
@@ -318,8 +477,8 @@ export function ProductGallery({
                       aria-labelledby={`tab-${shot.id}`}
                       src={src}
                       alt={copy.alt}
-                      width={1920}
-                      height={1200}
+                      width={shot.w}
+                      height={shot.h}
                       decoding="async"
                       draggable={false}
                       className="absolute inset-0 h-full w-full object-cover object-top"
@@ -329,18 +488,96 @@ export function ProductGallery({
                       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                     />
                   </AnimatePresence>
+
+                  {shot.pins.map((pin, i) => {
+                    const hot = hoverPin === i;
+                    return (
+                      <span
+                        key={`${shot.id}-pin-${i}`}
+                        aria-hidden="true"
+                        className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2"
+                        style={{
+                          left: `${(pin.x / shot.w) * 100}%`,
+                          top: `${(pin.y / shot.h) * 100}%`,
+                        }}
+                      >
+                        {!reduceMotion && (
+                          <span
+                            className={`absolute inset-0 rounded-full ${hot ? "animate-ping" : ""}`}
+                            style={{ background: `rgba(${shot.accent},0.55)` }}
+                          />
+                        )}
+                        <span
+                          className={`relative flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-extrabold text-white ring-2 transition-transform duration-200 ${
+                            hot ? "scale-125 ring-white" : "ring-white/80"
+                          }`}
+                          style={{
+                            background: `linear-gradient(140deg, rgb(${shot.accent}), rgba(${shot.accent},0.72))`,
+                            boxShadow: `0 6px 18px -4px rgba(${shot.accent},0.9), 0 0 0 4px rgba(${shot.accent},0.22)`,
+                          }}
+                        >
+                          {i + 1}
+                        </span>
+                      </span>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setZoomed(true)}
+                    className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/60 px-2.5 py-1.5 text-[11.5px] font-semibold text-white opacity-90 backdrop-blur transition hover:bg-black/80 hover:opacity-100"
+                  >
+                    <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    {tr ? "Büyüt" : "Enlarge"}
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Dar ekranda açıklama çerçevenin altında */}
+            {/* Dar ekranda kısa açıklama */}
             <div className="mt-4 text-center lg:hidden">
-              <p className="text-[13px] leading-relaxed text-slate-400">{copy.desc}</p>
+              <p className="text-[13px] leading-relaxed text-slate-400">
+                {copy.desc}
+              </p>
               <p className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-300">
-                <CircleCheck className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                <CircleCheck
+                  className="h-3.5 w-3.5 text-slate-400"
+                  aria-hidden="true"
+                />
                 {copy.badge}
               </p>
             </div>
+
+            {/* Ekranda neler var: numaralı açıklamalar (noktalarla eşleşir) */}
+            {!phone && (
+              <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                  {tr ? "Bu ekranda neler var" : "What you are looking at"}
+                </p>
+                <ol className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                  {copy.points.map((text, i) => (
+                    <li
+                      key={`${shot.id}-pt-${i}`}
+                      onMouseEnter={() => setHoverPin(i)}
+                      onMouseLeave={() => setHoverPin(null)}
+                      className="flex items-start gap-3"
+                    >
+                      <span
+                        className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold text-white"
+                        style={{
+                          background: `linear-gradient(140deg, rgb(${shot.accent}), rgba(${shot.accent},0.72))`,
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      <span className="text-[13.5px] leading-relaxed text-slate-300">
+                        {text}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </div>
         </div>
 
@@ -354,6 +591,38 @@ export function ProductGallery({
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {zoomed && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={copy.alt}
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm sm:p-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setZoomed(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setZoomed(false)}
+              className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition hover:bg-black/80"
+              aria-label={tr ? "Kapat" : "Close"}
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <img
+              src={phone ? shot.mimg[language] : src}
+              alt={copy.alt}
+              draggable={false}
+              className="max-h-full max-w-full rounded-xl border border-white/15 object-contain shadow-[0_40px_120px_-30px_rgba(0,0,0,1)]"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
