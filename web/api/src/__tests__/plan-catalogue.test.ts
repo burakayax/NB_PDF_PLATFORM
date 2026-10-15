@@ -153,12 +153,23 @@ describe("fiyat merdiveni", () => {
     expect([...YEARLY_BILLING_PLANS].sort()).toEqual(["BUSINESS", "PLUS", "PRO"]);
   });
 
-  it("yıllık tutar aylığın tam 10 katıdır (iki ay bedava)", () => {
+  it("TL yıllık tutar aylığın ~10 katıdır (iki ay bedava) ve 12'ye tam bölünür", () => {
     // Ekranda Business yıllığı bir dönem 12 katla hesaplanıyordu; ödeme ise 10
-    // katı çekiyordu. Kural her iki planda da aynı kalmalı.
+    // katı çekiyordu. Ayrıca ekranda "ayda X" yazıp X×12 yıllık tutardan farklı
+    // çıkmasın diye yıllık tutar 12'nin tam katıdır (10 katından en fazla 6 ₺ sapar).
     for (const plan of YEARLY_BILLING_PLANS) {
       const p = PLAN_PRICES[plan];
-      expect(minor(p.tryGrossYearly)).toBe(minor(p.tryGrossMonthly) * 10);
+      const yearly = Number.parseFloat(p.tryGrossYearly);
+      expect(yearly % 12, `${plan} TL yıllık 12'ye bölünmeli`).toBe(0);
+      expect(Math.abs(yearly - Number.parseFloat(p.tryGrossMonthly) * 10)).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it("USD yıllık tutar, ekranda gösterilen aylık eşdeğerin (2 hane) 12 katıdır", () => {
+    for (const plan of YEARLY_BILLING_PLANS) {
+      const yearly = minor(PLAN_PRICES[plan].usdYearly);
+      const monthlyEq = Math.round(yearly / 12);
+      expect(monthlyEq * 12, `${plan} USD yıllık`).toBe(yearly);
     }
   });
 

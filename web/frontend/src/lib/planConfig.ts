@@ -138,7 +138,7 @@ export const PLANS: PlanDefinition[] = [
     },
     pricing: {
       monthly: { TRY: 22900, USD: 699 },
-      yearly: { TRY: 229000, USD: 4999 },
+      yearly: { TRY: 229200, USD: 5004 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -177,7 +177,7 @@ export const PLANS: PlanDefinition[] = [
     },
     pricing: {
       monthly: { TRY: 39900, USD: 1199 },
-      yearly: { TRY: 399000, USD: 8999 },
+      yearly: { TRY: 399600, USD: 9000 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -218,9 +218,8 @@ export const PLANS: PlanDefinition[] = [
     },
     pricing: {
       monthly: { TRY: 109900, USD: 3999 },
-      yearly: { TRY: 1099000, USD: 39999 },
+      yearly: { TRY: 1099200, USD: 39996 },
     },
-    monthlyOnlyBilling: true,
     featuresTr: [
       "Pro'daki her şey — aylık 100 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
       "Ekip yönetimi — 5+ kişi",

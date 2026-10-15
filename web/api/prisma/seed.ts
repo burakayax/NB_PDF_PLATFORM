@@ -67,9 +67,9 @@ const PLAN_CONFIGS = [
     monthlyPriceTry: 39900,
     monthlyPriceUsd: 1199,
     monthlyPriceEur: 1103,   // ~0.92 × 1199
-    yearlyPriceTry: 399000,
-    yearlyPriceUsd: 8999,
-    yearlyPriceEur: 8279,    // ~0.92 × 8999
+    yearlyPriceTry: 399600,
+    yearlyPriceUsd: 9000,
+    yearlyPriceEur: 8280,    // ~0.92 × 9000
   },
   {
     plan: "BUSINESS" as const,
@@ -84,9 +84,9 @@ const PLAN_CONFIGS = [
     monthlyPriceTry: 109900,
     monthlyPriceUsd: 3999,
     monthlyPriceEur: 3679,   // ~0.92 × 3999
-    yearlyPriceTry: 1099000,
-    yearlyPriceUsd: 39999,
-    yearlyPriceEur: 36799,   // ~0.92 × 39999
+    yearlyPriceTry: 1099200,
+    yearlyPriceUsd: 39996,
+    yearlyPriceEur: 36796,   // ~0.92 × 39996
   },
 ];
 

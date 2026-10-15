@@ -21,14 +21,16 @@ tüketiciye gösterilen fiyatın vergi dahil olması yasal zorunluluktur.
 |---|---|---|---|---|---|
 | Ücretsiz | — | — | — | — | 0 |
 | Başlangıç | 129 ₺ | — | $3.99 | — | 5 |
-| Plus | 229 ₺ | 2.290 ₺ | $6.99 | $49.99 | 15 |
-| Pro | 399 ₺ | 3.990 ₺ | $11.99 | $89.99 | 40 |
-| Business | 1.099 ₺ | 10.990 ₺ | $39.99 | $399.99 | 100 |
+| Plus | 229 ₺ | 2.292 ₺ | $6.99 | $50.04 | 15 |
+| Pro | 399 ₺ | 3.996 ₺ | $11.99 | $90.00 | 40 |
+| Business | 1.099 ₺ | 10.992 ₺ | $39.99 | $399.96 | 100 |
 | Ek koltuk | 219 ₺ | — | $7.99 | — | — |
 
-**Yıllık ödeme Plus, Pro ve Business'ta vardır.** TL'de 10 ay fiyatına 12 ay (iki
-ay bedava); dolarda Plus ve Pro yıllığı rakip yıllık fiyatlara göre daha
-cömert (Plus ayda ~$4,2, Pro ayda ~$7,5). Başlangıç yalnızca aylıktır; ekranda
+**Yıllık ödeme Plus, Pro ve Business'ta vardır.** TL'de yaklaşık 10 ay fiyatına 12
+ay (iki ay bedava); yıllık tutarlar 12'ye tam bölünür ki ekrandaki "ayda X" × 12
+yıllık tutara eşit çıksın (Plus 191 ×12 = 2.292, Pro 333 ×12 = 3.996, Business
+916 ×12 = 10.992). Dolarda Plus ve Pro yıllığı rakip yıllık fiyatlara göre daha
+cömert (Plus ayda $4,17, Pro ayda $7,50, Business ayda $33,33). Başlangıç yalnızca aylıktır; ekranda
 yıllık seçeneği hiç gösterilmez ve ödeme tarafı yıllık isteği reddeder.
 
 **Fiyat revizyonu (2026-10-15):** TL fiyatlar dolar fiyatının yaklaşık %65-70'ine

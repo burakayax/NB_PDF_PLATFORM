@@ -400,6 +400,8 @@ function MonthlyOnlyCard({
 /** Pro and Business each manage their own billing cycle toggle internally. */
 const EXTRA_SEAT_PRICE_TRY = 21900; // kuruş (₺219/ay, KDV dahil)
 const EXTRA_SEAT_PRICE_USD = 799;   // kuruş ($7.99/ay)
+/** Yıllık ödemede koltuklara da indirim uygulanır — sunucudaki (payments.controller) katsayıyla AYNI olmalı. */
+const YEARLY_SEAT_DISCOUNT = 0.83;
 
 function CycleAwareCard({
   plan,
@@ -439,11 +441,15 @@ function CycleAwareCard({
 
   const baseMonthlyPrice = monthlyEquivPrice(plan, currency, cycle);
   const extraSeatUnitPrice = faceValue(currency === "TRY" ? EXTRA_SEAT_PRICE_TRY : EXTRA_SEAT_PRICE_USD);
-  const extraSeatTotal = isBusiness ? extraSeats * extraSeatUnitPrice : 0;
+  const extraSeatTotal = isBusiness
+    ? extraSeats * extraSeatUnitPrice * (cycle === "YEARLY" ? YEARLY_SEAT_DISCOUNT : 1)
+    : 0;
   const displayPrice = baseMonthlyPrice + extraSeatTotal;
   const isYearly = cycle === "YEARLY";
   const baseYearlyTotal = faceValue(plan.pricing.yearly[currency]);
-  const yearlyTotal = isBusiness ? baseYearlyTotal + extraSeats * extraSeatUnitPrice * 12 : baseYearlyTotal;
+  const yearlyTotal = isBusiness
+    ? baseYearlyTotal + extraSeats * extraSeatUnitPrice * 12 * YEARLY_SEAT_DISCOUNT
+    : baseYearlyTotal;
   const savePct = yearlySavingsPct(plan, currency);
 
   return (
