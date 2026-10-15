@@ -365,9 +365,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
     pricing: {
       kicker: "Pricing",
-      title: "Credit packs or unlimited subscription — pay for what you need.",
+      title: "Start free, pay for what you need.",
       description:
-        "Starter and Gold are one-time credit packs. Unlimited Pro is a monthly subscription with unlimited PDF operations. Checkout in TRY via our secure payment partner.",
+        "Tools that run on your device are free and unlimited. Choose a monthly plan for regular use, or an AI credit pack for a one-off job. Checkout runs through our secure payment partner: TRY in Turkey (VAT included), USD elsewhere.",
       plans: [],
     },
 
@@ -726,9 +726,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
     pricing: {
       kicker: "Fiyatlandırma",
-      title: "Kredi paketi veya sınırsız abonelik — ihtiyacınız kadar ödeyin.",
+      title: "Ücretsiz başlayın, ihtiyacınız kadar ödeyin.",
       description:
-        "Bronz ve Altın tek seferlik kredi paketleridir. Limitsiz Pro, sınırsız PDF işlemi sunan aylık aboneliktir. Ödeme güvenli iş ortağımız üzerinden TRY ile yapılır.",
+        "Cihazınızda çalışan araçlar ücretsiz ve sınırsızdır. Düzenli kullanım için aylık plan, tek seferlik iş için yapay zekâ kredi paketi var. Ödeme güvenli iş ortağımız üzerinden yapılır: Türkiye'de TL (KDV dahil), yurt dışında USD.",
       plans: [],
     },
 

@@ -32,6 +32,7 @@ import {
   YEARLY_BILLING_PLANS,
   KDV_RATE,
   netFromGrossTry,
+  yearlyGrossFromMonthly,
   type PaidPlanId,
 } from "../lib/plan-catalogue.js";
 
@@ -162,6 +163,25 @@ describe("fiyat merdiveni", () => {
       const yearly = Number.parseFloat(p.tryGrossYearly);
       expect(yearly % 12, `${plan} TL yıllık 12'ye bölünmeli`).toBe(0);
       expect(Math.abs(yearly - Number.parseFloat(p.tryGrossMonthly) * 10)).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it("katalogdaki TL yıllık tutarlar, aylıktan türetme kuralının çıktısıdır", () => {
+    // Yönetim panelinde Business aylık fiyatı değişince yıllık bu kuralla türetilir;
+    // katalog da aynı kuralla üretilmiş olmalı ki panel değişmeyince fark çıkmasın.
+    for (const plan of YEARLY_BILLING_PLANS) {
+      const p = PLAN_PRICES[plan];
+      expect(yearlyGrossFromMonthly(p.tryGrossMonthly), plan).toBe(p.tryGrossYearly);
+    }
+  });
+
+  it.each(PAID)("%s: net + KDV, müşterinin gördüğü KDV dahil tutara tam eşittir (aylık ve yıllık)", (plan) => {
+    // Sunucu net'i bulup KDV'yi üstüne ekler (lib/vat.ts). Yuvarlama yüzünden
+    // gösterilen tutardan 1 kuruş bile sapmamalı.
+    for (const gross of [PLAN_PRICES[plan].tryGrossMonthly, PLAN_PRICES[plan].tryGrossYearly]) {
+      const net = Number.parseFloat(netFromGrossTry(gross));
+      const kdv = Math.round(net * KDV_RATE * 100) / 100;
+      expect((Math.round((net + kdv) * 100) / 100).toFixed(2), `${plan} ${gross}`).toBe(Number.parseFloat(gross).toFixed(2));
     }
   });
 

@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { Language } from "../../i18n/landing";
 import type { PlanId } from "../../lib/planConfig";
-import { PLANS, formatPrice } from "../../lib/planConfig";
+import { PLANS } from "../../lib/planConfig";
+import { applyTryPriceOverrides, buildCheckoutQuote, EXTRA_SEAT_UNIT } from "../../lib/checkoutQuote";
+import { useSettings } from "../../contexts/SettingsContext";
 import { confirmFakeCheckout, resolveFakePaymentRedirect } from "../../api/fakePayment";
 import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
@@ -155,54 +157,48 @@ export function PaymentSummaryModal({
   const tr = language === "tr";
   const { currency: checkoutCurrency } = useCheckoutCurrency();
 
-  const plan = PLANS.find((p) => p.id === planId);
+  // Ana sayfa kartıyla AYNI fiyat: yönetim panelinde girilen TL tutarları uygulanır.
+  const { pricing } = useSettings();
+  const plan = useMemo(() => {
+    const base = PLANS.find((p) => p.id === planId);
+    return base ? applyTryPriceOverrides([base], pricing?.tryPrices)[0] : undefined;
+  }, [planId, pricing]);
   const isTry = checkoutCurrency === "TRY";
 
-  // seatsOnly modunda ad ve fiyat override
-  const YEARLY_SEAT_DISCOUNT = 0.83;
-  const seatUnitTRY = 199;
-  const seatUnitUSD = 5.99;
-  const seatUnit = isTry ? seatUnitTRY : seatUnitUSD;
+  const seatUnit = isTry ? EXTRA_SEAT_UNIT.TRY : EXTRA_SEAT_UNIT.USD;
   const seatSym = isTry ? "₺" : "$";
-  const seatsMonthly = extraSeats * seatUnit;
-  const seatsYearly = Math.round(seatsMonthly * 12 * YEARLY_SEAT_DISCOUNT * 100) / 100;
-  const seatsPrice = billingCycle === "YEARLY" ? seatsYearly : seatsMonthly;
 
   const planName = seatsOnly
     ? (tr ? `${extraSeats} Ekstra Koltuk` : `${extraSeats} Extra Seat${extraSeats !== 1 ? "s" : ""}`)
     : (plan ? (tr ? plan.nameTr : plan.nameEn) : planId);
-  const planPrice = seatsOnly
-    ? `${seatSym}${isTry ? Math.round(seatsPrice).toLocaleString("tr-TR") : seatsPrice.toFixed(2)}`
-    : (plan ? formatPrice(plan, isTry ? "TRY" : "USD", billingCycle) : "");
 
-  // KDV dökümü — yalnızca TRY ödemelerinde (%20 KDV)
-  // planConfig fiyatları kuruş cinsindendir (14900 = 149 ₺); önce 100'e böl.
-  // Katalog fiyatı KDV-HARİÇ (net). KDV = net × 0.20, toplam = net × 1.20
-  const vatBreakdown = (() => {
-    if (!isTry) return null;
-    let rawKurus: number;
-    if (seatsOnly) {
-      rawKurus = Math.round(seatsPrice * 100); // TL → kuruş
-    } else {
-      if (!plan) return null;
-      rawKurus = billingCycle === "YEARLY" ? plan.pricing.yearly.TRY : plan.pricing.monthly.TRY;
-      if (!rawKurus) return null;
-    }
-    // KDV Kanunu Madde 25: iskonto matrahtan düşülür → KDV indirimli net üzerinden hesaplanır.
-    // Genel KDV oranı: %20 (10 Temmuz 2023'ten itibaren).
-    const VAT_RATE = 0.20;
-    const net = rawKurus / 100;                              // kuruş → TL, KDV hariç katalog fiyatı
-    const discountAmount = promoApplied
-      ? Math.round(net * (promoApplied.discountPercent / 100) * 100) / 100
-      : 0;
-    const discountedNet = Math.round((net - discountAmount) * 100) / 100; // matrah (KDV hariç, iskonto sonrası)
-    const discountedVat = Math.round(discountedNet * VAT_RATE * 100) / 100; // KDV matrah üzerinden
-    const discountedGross = Math.round((discountedNet + discountedVat) * 100) / 100;
-    const originalVat = Math.round(net * VAT_RATE * 100) / 100;
-    const gross = Math.round((net + originalVat) * 100) / 100;
-    const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return { gross, net, originalVat, discountAmount, discountedNet, discountedVat, discountedGross, fmt };
-  })();
+  // ÖDENECEK TUTAR — sunucudaki hesabın birebir aynısı (lib/checkoutQuote.ts). TL fiyatlar
+  // KDV DAHİLDİR: net = fiyat / 1,20; iskonto netten düşer; KDV indirimli net üzerine eklenir.
+  // Ek koltuklar (Business) ve yıllık koltuk indirimi de dahildir.
+  const quote = buildCheckoutQuote({
+    plan,
+    planId,
+    cycle: billingCycle,
+    currency: isTry ? "TRY" : "USD",
+    extraSeats,
+    seatsOnly,
+    discountPercent: promoApplied?.discountPercent ?? null,
+  });
+  const fmtMoney = (n: number) =>
+    n.toLocaleString(isTry ? "tr-TR" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const vatBreakdown =
+    quote && isTry
+      ? {
+          net: quote.listNet,
+          discountAmount: quote.discountAmount,
+          discountedNet: quote.net,
+          discountedVat: quote.vat,
+          discountedGross: quote.total,
+          fmt: fmtMoney,
+        }
+      : null;
+  const planPrice = quote ? `${seatSym}${fmtMoney(quote.total)}` : "";
+  const planListPrice = quote ? `${seatSym}${fmtMoney(quote.listTotal)}` : "";
 
   useEffect(() => {
     if (!open) {
@@ -512,7 +508,7 @@ export function PaymentSummaryModal({
                       </p>
                       <p className="mt-2 text-[3rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[3.4rem]">
                         {promoApplied ? (
-                          <><span className="mr-2 text-[2rem] line-through text-slate-400">{planPrice}</span>
+                          <><span className="mr-2 text-[2rem] line-through text-slate-400">{planListPrice}</span>
                           <span>{planPrice} <span className="text-emerald-400 text-xl">−{promoApplied.discountPercent}%</span></span></>
                         ) : planPrice}
                       </p>

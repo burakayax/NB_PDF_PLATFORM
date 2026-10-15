@@ -11,6 +11,7 @@ import { sidebarToolLabel } from "../../i18n/workspace";
 import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { useSettings } from "../../contexts/SettingsContext";
+import { applyTryPriceOverrides } from "../../lib/checkoutQuote";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -478,7 +479,7 @@ function CycleAwareCard({
               className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
               style={{ animation: "shimmer 2.5s ease-in-out infinite" }}
             />
-            <span className="relative">⚡ {tr ? "+%20 Daha Fazla İşlem" : "+20% More Operations"}</span>
+            <span className="relative">⚡ {tr ? (plan.badge?.textTr ?? "Ayda 1.000 işlem") : (plan.badge?.textEn ?? "1,000 ops / month")}</span>
           </span>
         ) : (
           <span className="bg-violet-600 text-white text-xs font-bold px-4 py-1.5 rounded-full">
@@ -847,15 +848,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   // admin paneline girilen ödeme (checkout) tutarıyla AYNI olsun. Aksi halde müşteri
   // bir fiyat görüp başka ödenir. USD/EUR statik kalır (admin yalnız TRY yönetir).
   const plansAdjusted = useMemo<PlanDefinition[]>(() => {
-    const tp = pricing?.tryPrices;
     const pc = cards?.planCards;
-    const toCents = (s: string) => {
-      const n = Math.round(parseFloat(s) * 100);
-      return Number.isFinite(n) && n > 0 ? n : null;
-    };
-    const proM = tp ? toCents(tp.proMonthly) : null;
-    const proY = tp ? toCents(tp.proAnnual) : null;
-    const bizM = tp ? toCents(tp.businessMonthly) : null;
     // Admin plan kartı metni varsa varsayılanın üzerine yaz (boş alan = varsayılan).
     const withCard = (p: PlanDefinition): PlanDefinition => {
       const c = pc?.[p.id];
@@ -870,19 +863,10 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         featuresEn: c.featuresEn?.length ? c.featuresEn : p.featuresEn,
       };
     };
-    return PLANS.map((p0) => {
-      const p = withCard(p0);
-      if (p.id === "PRO" && proM) {
-        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: proM }, yearly: { ...p.pricing.yearly, TRY: proY ?? p.pricing.yearly.TRY } } };
-      }
-      if (p.id === "BUSINESS" && bizM) {
-        // Yıllık = 10 ay fiyatına (iki ay bedava) — Pro ile AYNI kural ve
-        // fiyat kataloğuyla aynı. Burada 12 ile çarpılırsa ekranda indirimsiz
-        // tutar görünür ama ödemede indirimli tutar çekilir.
-        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 10 } } };
-      }
-      return p;
-    });
+    // Fiyat bağlama ödeme özetiyle ve sunucuyla AYNI kuraldır (lib/checkoutQuote.ts):
+    // Business yıllığı aylıktan türetilir (~10 ay, 12'nin tam katı); 12 ile çarpılırsa
+    // ekranda indirimsiz tutar görünür ama ödemede indirimli tutar çekilir.
+    return applyTryPriceOverrides(PLANS.map(withCard), pricing?.tryPrices);
   }, [pricing, cards]);
   const [free, starter, plus, pro, business] = plansAdjusted;
 

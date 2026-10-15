@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { PLAN_PRICES, EXTRA_SEAT_PRICE, YEARLY_BILLING_PLANS, netFromGrossTry, type PaidPlanId } from "../../lib/plan-catalogue.js";
+import { PLAN_PRICES, EXTRA_SEAT_PRICE, YEARLY_BILLING_PLANS, netFromGrossTry, yearlyGrossFromMonthly, type PaidPlanId } from "../../lib/plan-catalogue.js";
+import { getPaymentPricesTry } from "./payment-pricing.js";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentCheckoutSession } from "./payment.service.js";
@@ -155,7 +156,25 @@ export async function initializePaymentsController(request: Request, response: R
   if (isYearly && !YEARLY_BILLING_PLANS.includes(planId)) {
     throw new HttpError(400, "Bu pakette yıllık ödeme seçeneği bulunmuyor. Lütfen aylık seçeneğiyle devam edin.");
   }
-  const priceObj = checkoutCurrency === "USD" ? PLAN_PRICES_USD[planId] : PLAN_PRICES_TRY[planId];
+  // TL: ana sayfada GÖRÜLEN fiyat yönetim panelindeki (Paketler) tutardır; ödeme de
+  // AYNI tutarı çekmeli. Panel yalnız Pro aylık/yıllık ve Business aylık için
+  // tutar girilmesine izin verir; Business yıllığı bundan türetilir (ön yüzle aynı kural). Panelde
+  // elle girilmemişse bu değerler katalogla birebir aynıdır.
+  let priceObj: { monthly: string; yearly: string };
+  if (checkoutCurrency === "USD") {
+    priceObj = PLAN_PRICES_USD[planId];
+  } else {
+    const admin = await getPaymentPricesTry();
+    const grossMonthly =
+      planId === "PRO" ? admin.PRO : planId === "BUSINESS" ? admin.BUSINESS : PLAN_PRICES[planId].tryGrossMonthly;
+    const grossYearly =
+      planId === "PRO"
+        ? admin.PRO_ANNUAL
+        : planId === "BUSINESS"
+          ? yearlyGrossFromMonthly(admin.BUSINESS)
+          : PLAN_PRICES[planId].tryGrossYearly;
+    priceObj = { monthly: netFromGrossTry(grossMonthly), yearly: netFromGrossTry(grossYearly) };
+  }
   const seatUnitPrice = checkoutCurrency === "USD" ? EXTRA_SEAT_PRICE_USD : EXTRA_SEAT_PRICE_TRY;
   const seatMonthlyTotal = (extraSeats ?? 0) * seatUnitPrice;
   // Yıllık koltuklarda %17 indirim (10 ay fiyatına 12 ay = aylık * 12 * 0.83)
