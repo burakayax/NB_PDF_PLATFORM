@@ -3,10 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   CircleCheck,
+  ClipboardPenLine,
+  Combine,
+  Crop,
   FileUser,
+  Highlighter,
   Lock,
   Maximize2,
   MoveHorizontal,
+  PenLine,
   SquareSplitHorizontal,
   X,
   type LucideIcon,
@@ -49,6 +54,8 @@ type Shot = {
   h: number;
   /** Numaralı işaretler; `points` açıklamalarıyla aynı sırada */
   pins: Pin[];
+  /** İngilizce arayüzde düğme genişlikleri farklıysa kullanılacak noktalar (yoksa `pins`) */
+  pinsEn?: Pin[];
   /** Dil → telefon görseli (dar ekranda telefon çerçevesinde gösterilir) */
   mimg: Record<Language, string>;
   tr: Copy;
@@ -100,6 +107,253 @@ const SHOTS: Shot[] = [
         "As you type, the CV takes shape beside the form. PDF view shows the page you will download.",
         "The CV strength score points out what is missing or weak.",
         "One click to PDF; Word and other options are in the menu right below.",
+      ],
+    },
+  },
+  {
+    id: "sign",
+    Icon: PenLine,
+    accent: "244,114,182",
+    img: {
+      tr: "/screenshots/tour-sign.webp",
+      en: "/screenshots/tour-sign-en.webp",
+    },
+    w: 1920,
+    h: 1200,
+    pins: [
+      { x: 172, y: 36 },
+      { x: 570, y: 612 },
+      { x: 322, y: 40 },
+      { x: 1622, y: 108 },
+    ],
+    pinsEn: [
+      { x: 222, y: 36 },
+      { x: 570, y: 612 },
+      { x: 352, y: 40 },
+      { x: 1592, y: 108 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-sign.webp",
+      en: "/screenshots/tour-m-sign-en.webp",
+    },
+    tr: {
+      label: "PDF'e imza atın",
+      desc: "İmzanızı çizin, yazın ya da yükleyin; belgede istediğiniz yere yerleştirin.",
+      badge: "Cihazınızda · üyeliksiz",
+      path: "pdfplatform.app/tools/pdf-imzala",
+      alt: "PDF İmzala: sözleşmede müşteri satırına yerleştirilmiş el yazısı imza",
+      points: [
+        "«İmza Ekle» ile imzanızı fareyle çizin, adınızı yazın ya da imza görselinizi yükleyin.",
+        "İmza belgeye gelir; sürükleyerek yerine koyun, köşesinden boyutlandırın.",
+        "Metin ve Tarih ekleyerek belgeyi tamamlayın; renk ve saydamlığı üstten seçin.",
+        "Hazır olunca «Uygula ve İndir» deyin; dosyanız cihazınızdan çıkmaz.",
+      ],
+    },
+    en: {
+      label: "Sign a PDF",
+      desc: "Draw, type or upload your signature, then place it anywhere on the page.",
+      badge: "On your device · no sign-up",
+      path: "pdfplatform.app/en/tools/sign-pdf",
+      alt: "Sign PDF: a handwritten signature placed on the client line of an agreement",
+      points: [
+        "With Add signature, draw your signature with the mouse, type your name or upload an image of it.",
+        "The signature lands on the page; drag it into place and resize it from the corner.",
+        "Add Text and Date to finish the document, and pick colour and opacity at the top.",
+        "When you are ready, choose Apply & download; your file never leaves your device.",
+      ],
+    },
+  },
+  {
+    id: "annot",
+    Icon: Highlighter,
+    accent: "250,204,21",
+    img: {
+      tr: "/screenshots/tour-annot.webp",
+      en: "/screenshots/tour-annot-en.webp",
+    },
+    w: 1920,
+    h: 1200,
+    pins: [
+      { x: 1560, y: 650 },
+      { x: 1090, y: 798 },
+      { x: 1392, y: 922 },
+      { x: 1612, y: 40 },
+    ],
+    pinsEn: [
+      { x: 1560, y: 657 },
+      { x: 1278, y: 796 },
+      { x: 1500, y: 928 },
+      { x: 1592, y: 40 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-annot.webp",
+      en: "/screenshots/tour-m-annot-en.webp",
+    },
+    tr: {
+      label: "Belgeyi işaretleyin",
+      desc: "Önemli yerleri vurgulayın, çerçeveleyin, okla gösterin.",
+      badge: "Cihazınızda · üyeliksiz",
+      path: "pdfplatform.app/tools/pdf-yorumla",
+      alt: "PDF İşaretle: sözleşmede sarı vurgu, kırmızı kutu ve ok",
+      points: [
+        "Vurgu ile önemli cümleyi sarıyla işaretleyin; Fosforlu ve Kalem serbest çizim içindir.",
+        "Kutu ile bir rakamı ya da ifadeyi çerçeveleyin.",
+        "Ok ile dikkat çekin; Metin aracıyla not da yazabilirsiniz.",
+        "Bitince «Uygula ve İndir» deyin; işlem cihazınızda yapılır.",
+      ],
+    },
+    en: {
+      label: "Mark up a document",
+      desc: "Highlight what matters, box it and point an arrow at it.",
+      badge: "On your device · no sign-up",
+      path: "pdfplatform.app/en/tools/annotate-pdf",
+      alt: "Annotate PDF: yellow highlight, red box and arrow on an agreement",
+      points: [
+        "Highlight marks a key sentence in yellow; Marker and Pen are for freehand drawing.",
+        "Box frames a figure or a phrase.",
+        "Arrow draws attention to it; the Text tool lets you add a note.",
+        "When you are done, choose Apply & download; it all happens on your device.",
+      ],
+    },
+  },
+  {
+    id: "form",
+    Icon: ClipboardPenLine,
+    accent: "52,211,153",
+    img: {
+      tr: "/screenshots/tour-form.webp",
+      en: "/screenshots/tour-form-en.webp",
+    },
+    w: 1920,
+    h: 1200,
+    pins: [
+      { x: 872, y: 106 },
+      { x: 505, y: 528 },
+      { x: 790, y: 961 },
+      { x: 545, y: 1059 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-form.webp",
+      en: "/screenshots/tour-m-form-en.webp",
+    },
+    tr: {
+      label: "Formları bilgisayarda doldurun",
+      desc: "Formdaki alanlar otomatik bulunur; yazın, isterseniz kilitleyin.",
+      badge: "Dosyanız cihazınızdan çıkmaz",
+      path: "pdfplatform.app/tools/form-doldur",
+      alt: "PDF Form Doldurma: başvuru formunun alanları doldurulmuş",
+      points: [
+        "Dosyayı seçtiğiniz anda formdaki doldurulabilir alanlar otomatik bulunur.",
+        "Alanları doğrudan yazarak doldurun; Türkçe karakterler bozulmadan yazılır.",
+        "«Doldurduktan sonra kilitle» ile alanlar kalıcı içeriğe dönüşür; karşı taraf değiştiremez.",
+        "Hazır olunca «Formu doldur» deyin; araç ücretsiz, ücretsiz üye girişi yeterli.",
+      ],
+    },
+    en: {
+      label: "Fill forms on screen",
+      desc: "Form fields are found automatically; type in them and lock if you like.",
+      badge: "Your file never leaves your device",
+      path: "pdfplatform.app/en/tools/fill-pdf-form",
+      alt: "Fill PDF Form: an application form with its fields filled in",
+      points: [
+        "The moment you pick the file, its fillable fields are found automatically.",
+        "Type straight into the fields; special characters are written without being lost.",
+        "Lock after filling turns the fields into permanent content that the recipient cannot change.",
+        "When you are ready, choose Fill form; the tool is free and a free sign-in is enough.",
+      ],
+    },
+  },
+  {
+    id: "crop",
+    Icon: Crop,
+    accent: "56,189,248",
+    img: {
+      tr: "/screenshots/tour-crop.webp",
+      en: "/screenshots/tour-crop-en.webp",
+    },
+    w: 1920,
+    h: 1200,
+    pins: [
+      { x: 440, y: 498 },
+      { x: 1465, y: 420 },
+      { x: 1462, y: 562 },
+      { x: 1462, y: 816 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-crop.webp",
+      en: "/screenshots/tour-m-crop-en.webp",
+    },
+    tr: {
+      label: "Belgeden kesit alın",
+      desc: "Tabloyu ya da grafiği seçin; PDF, PNG veya JPEG olarak kaydedin.",
+      badge: "Cihazınızda · üyeliksiz",
+      path: "pdfplatform.app/tools/pdf-kesit-al",
+      alt: "Kesit Al: faturadan seçilen tablo ve kesit listesi",
+      points: [
+        "Sayfada sürükleyerek alan seçin; kutuyu taşıyın, köşelerden boyutlandırın.",
+        "«Kesiti Ekle» ile alan listeye girer; aynı belgeden istediğiniz kadar kesit ekleyin.",
+        "Kesitler listelenir; sıralarını değiştirin, tek tek indirin ya da silin.",
+        "PDF, PNG veya JPEG olarak kaydedin; çözünürlüğü baskı için seçebilirsiniz.",
+      ],
+    },
+    en: {
+      label: "Snip part of a page",
+      desc: "Select a table or a chart and save it as PDF, PNG or JPEG.",
+      badge: "On your device · no sign-up",
+      path: "pdfplatform.app/en/tools/crop-pdf-to-image",
+      alt: "Snip: a table selected from an invoice and the list of snips",
+      points: [
+        "Drag on the page to select an area; move the box and resize it from the corners.",
+        "Add snip puts the area in a list; add as many snips from the same document as you need.",
+        "Snips are listed; reorder them, download them one by one or delete them.",
+        "Save as PDF, PNG or JPEG; you can choose a print resolution.",
+      ],
+    },
+  },
+  {
+    id: "merge",
+    Icon: Combine,
+    accent: "129,140,248",
+    img: {
+      tr: "/screenshots/tour-merge.webp",
+      en: "/screenshots/tour-merge-en.webp",
+    },
+    w: 1920,
+    h: 1200,
+    pins: [
+      { x: 1230, y: 200 },
+      { x: 840, y: 308 },
+      { x: 1300, y: 436 },
+      { x: 560, y: 716 },
+    ],
+    mimg: {
+      tr: "/screenshots/tour-m-merge.webp",
+      en: "/screenshots/tour-m-merge-en.webp",
+    },
+    tr: {
+      label: "PDF'leri birleştirin",
+      desc: "Birkaç PDF'i sıraya dizin, tek belgede toplayın.",
+      badge: "Ücretsiz · üyeliksiz",
+      path: "pdfplatform.app/tools/merge-pdf",
+      alt: "PDF Birleştirme: sıralanmış üç dosya ve Birleştir düğmesi",
+      points: [
+        "PDF'leri sürükleyip bırakın ya da «Dosya ekle» ile seçin; birkaçını birden ekleyebilirsiniz.",
+        "Üstte kaç dosya, kaç sayfa ve toplam boyutu görürsünüz; hepsi cihazınızda işlenir.",
+        "Sıralamak için satırı sürükleyin ya da ok düğmelerini kullanın.",
+        "«Birleştir» deyin; sonuç saniyeler içinde hazır olur. Üyelik gerekmez.",
+      ],
+    },
+    en: {
+      label: "Merge PDFs",
+      desc: "Put several PDFs in order and combine them into one file.",
+      badge: "Free · no sign-up",
+      path: "pdfplatform.app/en/tools/merge-pdf",
+      alt: "Merge PDF: three files in order and the Merge button",
+      points: [
+        "Drag and drop PDFs or choose them with Add file; you can add several at once.",
+        "At the top you see how many files, pages and the total size; it is all processed on your device.",
+        "To reorder, drag a row or use the arrow buttons.",
+        "Choose Merge; the result is ready in seconds. No account needed.",
       ],
     },
   },
@@ -374,10 +628,14 @@ export function ProductGallery({
                   </span>
 
                   {/* Açıklama + güven etiketi yalnız geniş ekranda; dar ekranda sekme çip gibi durur */}
-                  <span className="mt-2.5 hidden text-[13px] leading-relaxed text-slate-400 lg:block">
+                  <span
+                    className={`mt-2.5 text-[13px] leading-relaxed text-slate-400 ${on ? "hidden lg:block" : "hidden"}`}
+                  >
                     {c.desc}
                   </span>
-                  <span className="mt-3 hidden items-center gap-1.5 text-[11.5px] font-semibold text-slate-300 lg:inline-flex">
+                  <span
+                    className={`mt-3 items-center gap-1.5 text-[11.5px] font-semibold text-slate-300 ${on ? "hidden lg:inline-flex" : "hidden"}`}
+                  >
                     <CircleCheck
                       className="h-3.5 w-3.5"
                       style={{ color: `rgb(${s.accent})` }}
@@ -489,7 +747,10 @@ export function ProductGallery({
                     />
                   </AnimatePresence>
 
-                  {shot.pins.map((pin, i) => {
+                  {(language === "en" && shot.pinsEn
+                    ? shot.pinsEn
+                    : shot.pins
+                  ).map((pin, i) => {
                     const hot = hoverPin === i;
                     return (
                       <span
