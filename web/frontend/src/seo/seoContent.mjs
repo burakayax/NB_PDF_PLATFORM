@@ -1901,10 +1901,10 @@ export const PRICING_SEO = {
   tr: {
     title: markaEkle(`PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi`),
     description:
-      "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün içinde gerekçesiz iade garantisi. Ücretsiz başlayın.",
+      "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün içinde gerekçesiz iade garantisi, otomatik yenileme yok. Ücretsiz başlayın.",
     h1: "PDF Araçları Fiyatlandırma — Planlar ve Kredi Paketleri",
     intro:
-      "Ücretsiz plan dahil aylık abonelik ve kredi paketi seçeneklerini karşılaştırın. Tüm planlarda ilk ödemeden itibaren 7 gün içinde gerekçesiz iade; istediğiniz zaman iptal edebilirsiniz.",
+      "Ücretsiz plan dahil aylık abonelik ve kredi paketi seçeneklerini karşılaştırın. Tüm planlarda ilk ödemeden itibaren 7 gün içinde gerekçesiz iade; abonelikler kendiliğinden yenilenmez, kartınızdan izniniz olmadan çekim yapılmaz.",
     // SSS: fiyatlandırma sayfası önceden üretilen HTML'de yalnızca başlık + giriş
     // cümlesi içeriyordu (50 kelime). Satın alma niyetli aramaların indiği sayfa
     // olduğu için gerçek içerik eklendi; aynı metin FAQPage şemasını da besler.
@@ -1915,11 +1915,11 @@ export const PRICING_SEO = {
       },
       {
         q: "Abonelik ile kredi paketi arasındaki fark nedir?",
-        a: "Abonelik aylık yenilenir ve her ay kontenjanınızı tazeler; düzenli kullanım için uygundur. Kredi paketi tek seferlik satın alınır ve abonelik başlatmadan yoğun bir işi bitirmek isteyenler içindir.",
+        a: "Abonelik satın aldığınız dönem boyunca (aylık ya da yıllık) kontenjanınızı sağlar; düzenli kullanım için uygundur. Dönem bitince kendiliğinden yenilenmez, devam etmek isterseniz yenilemeyi siz onaylarsınız. Kredi paketi tek seferlik satın alınır ve abonelik başlatmadan yoğun bir işi bitirmek isteyenler içindir.",
       },
       {
-        q: "İstediğim zaman iptal edebilir miyim?",
-        a: "Evet. Aboneliği hesabınızdan tek adımda iptal edebilirsiniz. İptal ettiğinizde mevcut dönemin sonuna kadar planınızı kullanmaya devam edersiniz; yeni bir ücret alınmaz.",
+        q: "Aboneliğim kendiliğinden yenilenir mi?",
+        a: "Hayır. Aboneliğiniz satın aldığınız dönemle (bir ay ya da bir yıl) sınırlıdır ve kendiliğinden yenilenmez; kartınızdan izniniz olmadan çekim yapılmaz. Dönem bitmeden size e-posta ile hatırlatırız; devam etmek isterseniz hesabınızdan yenilemeyi onaylarsınız, istemezseniz hiçbir şey yapmanız gerekmez ve hesabınız Ücretsiz plana döner. Dilerseniz dönem içinde de hesabınızdan iptal edebilirsiniz: ilk 7 gün içinde tam iade, sonrasında dönem sonuna kadar kullanım.",
       },
       {
         q: "İade garantisi nasıl işliyor?",
@@ -1942,10 +1942,10 @@ export const PRICING_SEO = {
   en: {
     title: markaEkle(`PDF Tools Pricing — 7-Day Money-Back Guarantee`),
     description:
-      "Explore plans for PDF merge, convert, and compress tools. 7-day money-back guarantee, cancel anytime. Start free today.",
+      "Explore plans for PDF merge, convert, and compress tools. 7-day money-back guarantee, no automatic renewal. Start free today.",
     h1: "PDF Tools Pricing — Plans and Credit Packs",
     intro:
-      "Compare monthly subscriptions and credit packs, including a free plan. Every plan comes with a 7-day no-questions-asked money-back guarantee, and you can cancel anytime.",
+      "Compare monthly subscriptions and credit packs, including a free plan. Every plan comes with a 7-day no-questions-asked money-back guarantee, and subscriptions never renew automatically: your card is not charged without your confirmation.",
     faq: [
       {
         q: "Is the free plan really free?",
@@ -1953,11 +1953,11 @@ export const PRICING_SEO = {
       },
       {
         q: "What is the difference between a subscription and a credit pack?",
-        a: "A subscription renews monthly and refreshes your allowance every month, which suits regular use. A credit pack is a one-off purchase for finishing a heavy job without starting a subscription.",
+        a: "A subscription gives you the allowance for the period you bought (monthly or yearly), which suits regular use. It does not renew automatically; if you want to continue, you confirm the renewal yourself. A credit pack is a one-off purchase for finishing a heavy job without starting a subscription.",
       },
       {
-        q: "Can I cancel anytime?",
-        a: "Yes. You can cancel from your account in one step. You keep your plan until the end of the current period and no further charge is made.",
+        q: "Does my subscription renew automatically?",
+        a: "No. Your subscription is limited to the period you bought (one month or one year) and never renews on its own; your card is not charged without your confirmation. We email you a reminder before it ends. If you want to continue, you confirm the renewal from your account; if not, you do nothing and your account returns to the Free plan. You can also cancel during the period from your account: a full refund within the first 7 days, and access until the period ends after that.",
       },
       {
         q: "How does the money-back guarantee work?",

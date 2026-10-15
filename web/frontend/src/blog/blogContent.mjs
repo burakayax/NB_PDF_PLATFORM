@@ -642,7 +642,7 @@ export const BLOG_POSTS = [
         { t: "h2", x: "Maliyet karşılaştırması" },
         { t: "ul", items: [
           "DocuSign Personal: aylık 11 dolar, ayda 5 belge.",
-          "PDF Platform Plus: aylık 6,99 dolar, aylık 600 işlem hakkı ve 34 aracın tamamı. İmza isteme Plus ve üzeri planlarda bulunur.",
+          "PDF Platform Plus: aylık 6,99 dolar, aylık 600 işlem hakkı ve tüm araçlar. İmza isteme Plus ve üzeri planlarda bulunur.",
         ] },
         { t: "p", x: "Rakamları karşılaştırırken elmayla elmayı karşılaştırdığınızdan emin olun: DocuSign'ın paketi imza etrafında kurulmuş bir iş akışı ürünü; buradaki paket, içinde imza isteme de bulunan bir belge araç takımı. İhtiyacınız yalnızca imzaysa ikincisi daha ucuza geliyor; ihtiyacınız kurumsal bir imza altyapısıysa ilki daha fazlasını veriyor." },
 
@@ -712,7 +712,7 @@ export const BLOG_POSTS = [
         { t: "h2", x: "Cost side by side" },
         { t: "ul", items: [
           "DocuSign Personal: $11 per month for 5 documents a month.",
-          "PDF Platform Plus: $6.99 per month with 600 operations a month and all 34 tools. Signature requests are included from Plus upwards.",
+          "PDF Platform Plus: $6.99 per month with 600 operations a month and all tools. Signature requests are included from Plus upwards.",
         ] },
         { t: "p", x: "The two are not the same kind of product. DocuSign is a signing workflow; this is a document toolkit that includes signature requests. If signing is all you need, the second costs less. If you need signing infrastructure, the first gives you more." },
         { t: "cta", title: "Request a Signature", x: "Upload the document and enter an email address. They sign without an account and the audit certificate is attached.", btn: "Open the tool", tool: "/tools/imza-iste" },
