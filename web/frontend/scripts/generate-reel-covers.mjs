@@ -292,33 +292,47 @@ function coverSvg({ id, title, sub }) {
 </svg>`;
 }
 
-/** Senaryo mu? (`id` + `intro.title` taşıyan nesne) */
-const isScenario = (x) => Boolean(x && typeof x === "object" && typeof x.id === "string" && x.intro?.title);
-
 /**
- * Senaryo dosyaları iki biçimde olabilir: tek senaryo (`export default`) ya da çok senaryolu harita
- * (`export const SIMPLE = { "pdf-to-word": {...}, ... }`). İkisi de taranır.
+ * Senaryo dosyalarını KAYNAK METİN olarak tarar (modül olarak çalıştırmaz): senaryolar Playwright gibi
+ * yalnızca video üretim ortamında kurulu paketleri içe aktarır; derleme ortamında bunlar yoktur ve
+ * içe aktarma derlemeyi çökertirdi. Tek senaryolu dosya da çok senaryolu harita da aynı kalıpla yakalanır:
+ *   id: "x", ... intro: { title: "…", sub: "…" }
  */
-async function loadScenarios() {
-  const files = readdirSync(SCENARIOS_DIR).filter((f) => f.endsWith(".mjs"));
+const SCENARIO_RE =
+  /\bid:\s*"([^"]+)"[\s\S]*?\bintro:\s*\{\s*title:\s*"((?:[^"\\]|\\.)*)"(?:\s*,\s*sub:\s*"((?:[^"\\]|\\.)*)")?/g;
+
+function loadScenarios() {
   const found = new Map();
-  for (const f of files) {
-    const mod = await import(pathToFileURL(join(SCENARIOS_DIR, f)).href);
-    for (const exported of Object.values(mod)) {
-      const candidates = isScenario(exported) ? [exported] : exported && typeof exported === "object" ? Object.values(exported) : [];
-      for (const c of candidates) {
-        if (isScenario(c)) found.set(c.id, { id: c.id, title: c.intro.title, sub: c.intro.sub ?? "" });
-      }
+  for (const f of readdirSync(SCENARIOS_DIR).filter((n) => n.endsWith(".mjs"))) {
+    const source = readFileSync(join(SCENARIOS_DIR, f), "utf8");
+    for (const m of source.matchAll(SCENARIO_RE)) {
+      const unescape = (v) => (v ? JSON.parse(`"${v}"`) : "");
+      found.set(m[1], { id: m[1], title: unescape(m[2]), sub: unescape(m[3]) });
     }
   }
   return [...found.values()];
+}
+
+/** Katalogda (API) metni olmayan araçlar yayınlanamaz; derlemede uyarı olarak görünür. */
+function warnMissingCatalog(ids) {
+  try {
+    const catalog = readFileSync(join(ROOT, "..", "api", "src", "modules", "social", "tool-reel-catalog.ts"), "utf8");
+    const missing = ids.filter((id) => !catalog.includes(`id: "${id}"`));
+    if (missing.length > 0) {
+      console.warn(`UYARI: tool-reel-catalog.ts'te metni olmayan araç videoları (paylaşılmaz): ${missing.join(", ")}`);
+    }
+  } catch {
+    /* katalog okunamazsa (farklı yerleşim) uyarı atlanır */
+  }
 }
 
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
   const logo = await sharp(join(ROOT, "public", "logo.png")).resize({ width: 380 }).png().toBuffer();
 
-  for (const scenario of await loadScenarios()) {
+  const scenarios = loadScenarios();
+  warnMissingCatalog(scenarios.map((x) => x.id));
+  for (const scenario of scenarios) {
     const base = await sharp(Buffer.from(coverSvg(scenario))).png().toBuffer();
     const jpg = await sharp(base)
       .composite([{ input: logo, left: Math.round((W - 380) / 2), top: 300 }])
@@ -329,7 +343,7 @@ async function main() {
   }
 }
 
+// Kapak üretimi yardımcı bir adımdır: hata olursa derleme DURMAZ (video kapaksız çıkar, paylaşım engellenmez).
 main().catch((err) => {
-  console.error(err);
-  process.exit(1);
+  console.warn(`UYARI: reel kapakları üretilemedi: ${String(err)}`);
 });
