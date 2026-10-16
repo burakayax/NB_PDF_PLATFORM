@@ -69,7 +69,18 @@ function toTags(guid: string): string[] {
   const toolId = toolIdFromGuid(guid);
   const entry = toolId ? findCatalogEntry(toolId) : undefined;
   const raw = entry
-    ? [...entry.keywords.tr, ...entry.keywords.tagsTr, ...entry.keywords.en, ...entry.keywords.tagsEn]
+    ? [
+        ...entry.keywords.tr,
+        ...entry.keywords.tagsTr,
+        ...entry.keywords.en,
+        ...entry.keywords.tagsEn,
+        // Marka ve genel arama kalıpları (aracın kendi terimlerinden sonra gelir).
+        "pdf platform",
+        "pdfplatform.app",
+        "pdf araçları",
+        "online pdf araçları",
+        "pdf tools",
+      ]
     : [];
   const out: string[] = [];
   let total = 0;
@@ -77,7 +88,7 @@ function toTags(guid: string): string[] {
     if (!tag || out.includes(tag)) continue;
     // Boşluklu etiket tırnaklanarak sayılır (+2).
     const cost = tag.length + (tag.includes(" ") ? 2 : 0) + 1;
-    if (total + cost > 400) break;
+    if (total + cost > 470) continue;
     out.push(tag);
     total += cost;
   }
@@ -119,6 +130,58 @@ function toTitle(raw: string): string {
   return base.length <= MAX_TITLE ? base : `${base.slice(0, MAX_TITLE - 1).trimEnd()}…`;
 }
 
+/** Etiket metni (#...) üretir: boşluk ve noktalama atılır, Türkçe harfler korunur. */
+function toHashtag(term: string): string | null {
+  const clean = term.replace(/[^\p{L}\p{N}]+/gu, "");
+  return clean.length >= 2 && clean.length <= 30 ? `#${clean}` : null;
+}
+
+/**
+ * YouTube'a özel zengin açıklama (sınır 5.000 karakter; yaklaşık 1.500 kullanılır).
+ *
+ * İÇERİK YALNIZ DOĞRULANMIŞ KAYNAKTAN: araç kataloğundaki elle yazılmış başlık/özet ve arama
+ * terimleri. Yapay zekâ ya da yeni iddia yoktur. Düzen: Türkçe (asıl kitle) → İngilizce → konu
+ * satırı → etiketler. YouTube, açıklamadaki ilk 3 etiketi başlığın üstünde gösterir ve 15'ten
+ * fazla etiket varsa HEPSİNİ yok sayar; bu yüzden en fazla 10 etiket konur.
+ * Araç kataloğunda olmayan gönderi (olmamalı) için ortak metne düşülür.
+ */
+function buildDescription(guid: string, fallbackBody: string): string {
+  const toolId = toolIdFromGuid(guid);
+  const entry = toolId ? findCatalogEntry(toolId) : undefined;
+  if (!entry) return toDescription(fallbackBody);
+
+  const topicsTr = [...new Set([...entry.keywords.tr, ...entry.keywords.tagsTr])];
+  const topicsEn = [...new Set([...entry.keywords.en, ...entry.keywords.tagsEn])];
+  const tags = ["Shorts"]
+    .map((t) => `#${t}`)
+    .concat(
+      [...entry.keywords.tagsTr, ...entry.keywords.tagsEn, "PDF Platform", "PDF"]
+        .map(toHashtag)
+        .filter((t): t is string => t !== null),
+    );
+  const uniqueTags = [...new Set(tags.map((t) => t.toLowerCase()))]
+    .slice(0, 10)
+    .map((lower) => tags.find((t) => t.toLowerCase() === lower) as string);
+
+  const text = [
+    entry.tr.title,
+    entry.tr.summary,
+    `▶ Aracı dene: ${entry.tr.link}`,
+    "—",
+    entry.en.title,
+    entry.en.summary,
+    `▶ Try it: ${entry.en.link}`,
+    "—",
+    `Konular: ${topicsTr.join(", ")}`,
+    `Topics: ${topicsEn.join(", ")}`,
+    "PDF Platform — https://www.pdfplatform.app",
+    uniqueTags.join(" "),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  return toDescription(text);
+}
+
 /** Açıklama: `<`/`>` yasak; Shorts sınıflaması için #Shorts eklenir. */
 function toDescription(raw: string): string {
   const clean = raw.replace(/[<>]/g, "").trim();
@@ -151,7 +214,7 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
     body: JSON.stringify({
       snippet: {
         title: toTitle(item.title),
-        description: toDescription(body),
+        description: buildDescription(item.guid, body),
         categoryId: CATEGORY_ID,
         tags: toTags(item.guid),
         // Başlık/açıklama dili: gönderi Türkçe başta, İngilizce altta.
