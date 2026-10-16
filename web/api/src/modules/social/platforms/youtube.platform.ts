@@ -16,6 +16,7 @@ import { logger } from "../../../lib/file-log.js";
 import { PlatformError, PublishStageError, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 import { isReelUrl } from "../reels.service.js";
+import { toolVideoKeywords } from "../keywords.service.js";
 import { findCatalogEntry } from "../tool-reels.service.js";
 import { availableReelCover, toolIdFromGuid } from "./reel-cover.js";
 
@@ -60,31 +61,40 @@ async function accessTokenFor(secrets: Record<string, string>): Promise<string> 
   return token;
 }
 
-/**
- * Arama etiketleri: aracın doğrulanmış arama terimleri (katalog). YouTube toplam 500 karaktere
- * izin verir; güvenli pay bırakılır. Etiketler yalnızca yanlış yazılarak aranan içerikte işe yarar,
- * bu yüzden kısa tutulur.
- */
-function toTags(guid: string): string[] {
+type Terms = { tr: string[]; en: string[] };
+
+/** Aracın ölçüme dayalı terimleri; hata olursa katalogdaki terimlerle devam edilir. */
+async function termsFor(guid: string): Promise<Terms | null> {
   const toolId = toolIdFromGuid(guid);
   const entry = toolId ? findCatalogEntry(toolId) : undefined;
-  const raw = entry
-    ? [
-        ...entry.keywords.tr,
-        ...entry.keywords.tagsTr,
-        ...entry.keywords.en,
-        ...entry.keywords.tagsEn,
-        // Marka ve genel arama kalıpları (aracın kendi terimlerinden sonra gelir).
-        "pdf platform",
-        "pdfplatform.app",
-        "pdf araçları",
-        "online pdf araçları",
-        "pdf tools",
-      ]
-    : [];
+  if (!entry) return null;
+  try {
+    const found = await toolVideoKeywords(entry);
+    if (found.tr.length + found.en.length > 0) return found;
+  } catch (err) {
+    logger.warn("social", `YouTube anahtar kelimeleri hazırlanamadı, katalog terimleri kullanılacak: ${String(err)}`);
+  }
+  return { tr: entry.keywords.tr, en: entry.keywords.en };
+}
+
+/**
+ * Arama etiketleri (gizli alan, 500 karakter sınırı; 470'e kadar kullanılır).
+ *
+ * Sıra: Türkçe ve İngilizce terimler 2:1 karışık (asıl kitle Türkiye), en güçlü kaynaktan zayıfa
+ * (bkz. `toolVideoKeywords`); marka etiketleri sona. Sığmayan etiket atlanır, kalanlar denenir.
+ */
+function toTags(terms: Terms | null): string[] {
+  if (!terms) return [];
+  const mixed: string[] = [];
+  for (let i = 0; i < Math.max(terms.tr.length, terms.en.length); i++) {
+    if (terms.tr[i * 2]) mixed.push(terms.tr[i * 2]);
+    if (terms.tr[i * 2 + 1]) mixed.push(terms.tr[i * 2 + 1]);
+    if (terms.en[i]) mixed.push(terms.en[i]);
+  }
+  const raw = [...mixed, "pdf platform", "pdfplatform.app", "pdf araçları", "online pdf araçları", "pdf tools"];
   const out: string[] = [];
   let total = 0;
-  for (const tag of raw.map((t) => t.replace(/[<>]/g, "").trim().toLowerCase())) {
+  for (const tag of raw.map((t) => t.replace(/[<>"]/g, "").trim().toLowerCase())) {
     if (!tag || out.includes(tag)) continue;
     // Boşluklu etiket tırnaklanarak sayılır (+2).
     const cost = tag.length + (tag.includes(" ") ? 2 : 0) + 1;
@@ -137,31 +147,35 @@ function toHashtag(term: string): string | null {
 }
 
 /**
- * YouTube'a özel zengin açıklama (sınır 5.000 karakter; yaklaşık 1.500 kullanılır).
+ * YouTube'a özel zengin açıklama (sınır 5.000 karakter; yaklaşık 1.500-2.000 kullanılır).
  *
- * İÇERİK YALNIZ DOĞRULANMIŞ KAYNAKTAN: araç kataloğundaki elle yazılmış başlık/özet ve arama
- * terimleri. Yapay zekâ ya da yeni iddia yoktur. Düzen: Türkçe (asıl kitle) → İngilizce → konu
- * satırı → etiketler. YouTube, açıklamadaki ilk 3 etiketi başlığın üstünde gösterir ve 15'ten
+ * İÇERİK YALNIZ DOĞRULANMIŞ KAYNAKTAN: araç kataloğundaki elle yazılmış başlık/özet ve ölçüme dayalı
+ * arama terimleri (Search Console, Google otomatik tamamlama, SEO bankası; bkz. `toolVideoKeywords`).
+ * Yapay zekâ ya da yeni iddia yoktur. Düzen: Türkçe (asıl kitle) → İngilizce → konu satırları →
+ * etiketler. Konu satırları sınırlı tutulur (15 TR / 10 EN): YouTube aşırı anahtar kelime
+ * yığmayı spam sayar. YouTube, açıklamadaki ilk 3 etiketi başlığın üstünde gösterir ve 15'ten
  * fazla etiket varsa HEPSİNİ yok sayar; bu yüzden en fazla 10 etiket konur.
  * Araç kataloğunda olmayan gönderi (olmamalı) için ortak metne düşülür.
  */
-function buildDescription(guid: string, fallbackBody: string): string {
+function buildDescription(guid: string, fallbackBody: string, terms: Terms | null): string {
   const toolId = toolIdFromGuid(guid);
   const entry = toolId ? findCatalogEntry(toolId) : undefined;
   if (!entry) return toDescription(fallbackBody);
 
-  const topicsTr = [...new Set([...entry.keywords.tr, ...entry.keywords.tagsTr])];
-  const topicsEn = [...new Set([...entry.keywords.en, ...entry.keywords.tagsEn])];
-  const tags = ["Shorts"]
-    .map((t) => `#${t}`)
-    .concat(
-      [...entry.keywords.tagsTr, ...entry.keywords.tagsEn, "PDF Platform", "PDF"]
-        .map(toHashtag)
-        .filter((t): t is string => t !== null),
-    );
-  const uniqueTags = [...new Set(tags.map((t) => t.toLowerCase()))]
-    .slice(0, 10)
-    .map((lower) => tags.find((t) => t.toLowerCase() === lower) as string);
+  const topicsTr = (terms?.tr.length ? terms.tr : entry.keywords.tr).slice(0, 15);
+  const topicsEn = (terms?.en.length ? terms.en : entry.keywords.en).slice(0, 10);
+
+  // Etiketler: kısa (en çok 2 kelime) terimler; marka etiketleri sonda.
+  const shortTerms = [...topicsTr, ...topicsEn].filter((t) => t.trim().split(/\s+/).length <= 2);
+  const candidates = ["Shorts", ...shortTerms, "PDF Platform", "PDF"].map((t) => (t === "Shorts" ? "#Shorts" : toHashtag(t)));
+  const seen = new Set<string>();
+  const hashtags: string[] = [];
+  for (const tag of candidates) {
+    if (!tag || seen.has(tag.toLowerCase())) continue;
+    seen.add(tag.toLowerCase());
+    hashtags.push(tag);
+    if (hashtags.length >= 10) break;
+  }
 
   const text = [
     entry.tr.title,
@@ -175,7 +189,7 @@ function buildDescription(guid: string, fallbackBody: string): string {
     `Konular: ${topicsTr.join(", ")}`,
     `Topics: ${topicsEn.join(", ")}`,
     "PDF Platform — https://www.pdfplatform.app",
-    uniqueTags.join(" "),
+    hashtags.join(" "),
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -201,6 +215,7 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
 
   const accessToken = await accessTokenFor(secrets);
   const video = await downloadVideo(imageUrl);
+  const terms = await termsFor(item.guid);
 
   // 1) Yükleme oturumu: video bilgisi burada verilir. Bu adım güvenle yinelenebilir.
   const startRes = await fetch(`${UPLOAD_URL}?uploadType=resumable&part=snippet,status,recordingDetails`, {
@@ -214,9 +229,9 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
     body: JSON.stringify({
       snippet: {
         title: toTitle(item.title),
-        description: buildDescription(item.guid, body),
+        description: buildDescription(item.guid, body, terms),
         categoryId: CATEGORY_ID,
-        tags: toTags(item.guid),
+        tags: toTags(terms),
         // Başlık/açıklama dili: gönderi Türkçe başta, İngilizce altta.
         defaultLanguage: "tr",
       },

@@ -17,11 +17,17 @@ export type ToolReelCatalogEntry = {
   tr: ToolReelSide;
   en: ToolReelSide;
   keywords: { tr: string[]; en: string[]; tagsTr: string[]; tagsEn: string[] };
+  /**
+   * "ücretsiz / free" içeren arama ifadeleri etiketlenebilir mi? Yalnızca sitenin kendi sayfası aracın
+   * ücretsiz kullanılabildiğini söylüyorsa true (misafir/ücretsiz üyelik hakkı). Emin değilsen ekleme.
+   */
+  freeClaim?: boolean;
 };
 
 export const TOOL_REEL_CATALOG: ToolReelCatalogEntry[] = [
   {
     id: "compress",
+    freeClaim: true,
     tr: {
       title: "PDF Sıkıştır: büyük dosyayı saniyeler içinde küçült",
       summary:
@@ -43,6 +49,7 @@ export const TOOL_REEL_CATALOG: ToolReelCatalogEntry[] = [
   },
   {
     id: "merge",
+    freeClaim: true,
     tr: {
       title: "PDF Birleştir: birden çok PDF'i tek dosyada topla",
       summary:
@@ -64,6 +71,7 @@ export const TOOL_REEL_CATALOG: ToolReelCatalogEntry[] = [
   },
   {
     id: "cv-olustur",
+    freeClaim: true,
     tr: {
       title: "CV Oluştur: hazır şablonla dakikalar içinde CV'ni hazırla",
       summary:

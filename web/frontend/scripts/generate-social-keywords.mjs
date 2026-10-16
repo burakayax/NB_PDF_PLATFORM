@@ -70,6 +70,17 @@ export function writeSocialKeywords({ publicDir, baseUrl }) {
     }
   }
 
+  // Araç sayfaları: araç tanıtım videoları (Reels/Shorts) bu terimlerle etiketlenir. Anahtar = aracın
+  // tam adresi; TR ve EN sayfa aynı iki dilli terim kümesini taşır.
+  for (const [slug, seo] of Object.entries(TOOL_SEO)) {
+    const tr = dedupe(seo.tr?.keywords ?? [], MAX_PER_LANG);
+    const en = dedupe(seo.en?.keywords ?? [], MAX_PER_LANG);
+    if (tr.length === 0 && en.length === 0) continue;
+    for (const lang of ["tr", "en"]) {
+      bank[`${baseUrl}${localizedPath(`/tools/${slug}`, lang)}`] = { tr, en, tool: `/tools/${slug}` };
+    }
+  }
+
   const outPath = join(publicDir, "social-keywords.json");
   writeFileSync(outPath, `${JSON.stringify(bank, null, 2)}\n`, "utf8");
   return { path: "/social-keywords.json", count: Object.keys(bank).length };
