@@ -20,8 +20,9 @@ import { compose } from "./lib/compose.mjs";
 import { createStage } from "./lib/stage.mjs";
 import compress from "./scenarios/compress.mjs";
 import merge from "./scenarios/merge.mjs";
+import cvOlustur from "./scenarios/cv-olustur.mjs";
 
-const SCENARIOS = { compress, merge };
+const SCENARIOS = { compress, merge, "cv-olustur": cvOlustur };
 
 const here = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = resolve(here, "../..");
@@ -76,7 +77,7 @@ const fixtures = (name) => `${workDir}/fixtures/${name}`;
 const stage = await createStage({ baseUrl, workDir });
 let extra;
 try {
-  await stage.loginAndOpenTool({ email, password, toolPath: scenario.toolPath });
+  await stage.loginAndOpenTool({ email, password, toolPath: scenario.toolPath, readySelector: scenario.readySelector });
   extra = await scenario.run(stage, { fixtures, processing });
 } catch (err) {
   await stage.pg.screenshot({ path: `${workDir}/hata.png` }).catch(() => {});
