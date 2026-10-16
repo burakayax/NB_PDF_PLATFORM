@@ -23,13 +23,21 @@ Bu belge yalnızca kaynaklara dayanan bilgileri içerir; doğrulanamayan yerler 
 
 ## Sizin yapacağınız adımlar
 
-### YouTube
+### YouTube (KOD HAZIR — panelde "YouTube (Shorts)" kartı var)
+Resmi başlangıç sayfası: https://developers.google.com/youtube/data/getting-started?hl=tr
+
 1. Paylaşım yapılacak YouTube kanalını aç (marka hesabı önerilir).
-2. console.cloud.google.com → yeni proje → "YouTube Data API v3" etkinleştir.
-3. OAuth onay ekranı: uygulama adı, destek e-postası, gizlilik politikası (https://www.pdfplatform.app/privacy) ve hizmet şartları bağlantısı. Kapsam: `youtube.upload`.
-4. OAuth istemcisi (Web uygulaması) oluştur; yönlendirme adresini bana ver.
-5. Client ID ve Client Secret'ı yönetim paneline gireceğiz (sohbete yazma).
-6. Yayına almak için "YouTube API Services audit and quota extension" formunu doldur (kullanım amacı: kendi kanalına otomatik Short paylaşımı; yetkilendirme ekranı kaydı ekle).
+2. console.cloud.google.com → yeni proje → "API'ler ve Hizmetler" → "Kitaplık" → **YouTube Data API v3** → Etkinleştir.
+3. "OAuth izin ekranı": Kullanıcı türü **Harici**; uygulama adı, destek e-postası, gizlilik politikası (https://www.pdfplatform.app/privacy). İzinler (scope): `youtube.upload` ve `youtube.readonly`.
+4. **ÖNEMLİ:** İzin ekranında yayın durumunu **"Üretimde" (In production)** yap. "Test" durumunda kalırsa yenileme anahtarı 7 günde ölür ve paylaşım durur.
+5. "Kimlik bilgileri" → "Kimlik bilgisi oluştur" → "OAuth istemci kimliği" → Uygulama türü **Web uygulaması**. Yetkili yönlendirme URI'si: `https://developers.google.com/oauthplayground`. Oluşunca **Client ID** ve **Client Secret** görünür.
+6. https://developers.google.com/oauthplayground aç → sağ üst dişli → "Use your own OAuth credentials" işaretle → Client ID ve Secret'ı yapıştır.
+7. Sol "Step 1": kutuya şu iki izni yaz: `https://www.googleapis.com/auth/youtube.upload` ve `https://www.googleapis.com/auth/youtube.readonly` → "Authorize APIs". Kanalın sahibi Google hesabıyla giriş yap (marka kanalıysa o kanalı seç). "Google bu uygulamayı doğrulamadı" uyarısı çıkarsa "Gelişmiş" → "Devam et".
+8. "Step 2": "Exchange authorization code for tokens" → çıkan **Refresh token** değerini kopyala.
+9. Yönetim paneli → Sosyal hesaplar → **YouTube (Shorts)** → Client ID, Client Secret, Refresh Token alanlarını doldur → Kaydet → **Bağlantıyı sına** (kanal adı görünmeli). Anahtarları sohbete yazma.
+10. Videolar önce **özel (private)** kilitli yüklenirse: API projesi denetimden geçmemiştir. "YouTube API Services audit and quota extension" formunu doldur (kullanım amacı: kendi kanalına otomatik Short paylaşımı). Denetim bitene kadar videolar kanalda özel görünür; YouTube Studio'dan elle herkese açılabilir.
+
+Çalışma şekli: yalnız ARAÇ videoları YouTube'a gider (blog yazıları gitmez). Zamanlama, "Reels otomatik/onaylı" ayarı ve saat Instagram/Facebook ile aynıdır; saati gelince kendiliğinden Short olarak yüklenir. Açıklamaya `#Shorts` otomatik eklenir. Anahtar süresi dolarsa sınama "invalid_grant" der: 4. maddeyi kontrol edip anahtarı yeniden al.
 
 ### TikTok
 1. TikTok hesabı (işletme hesabı önerilir) aç.
@@ -40,7 +48,7 @@ Bu belge yalnızca kaynaklara dayanan bilgileri içerir; doğrulanamayan yerler 
 
 ## Bizim yapacaklarımız (denetim öncesi)
 - Gizlilik politikasına YouTube API Hizmetleri ve Google gizlilik politikası bağlantısı, TikTok veri kullanımı ifadesi.
-- YouTube/TikTok bağdaştırıcıları (`platforms/` altında yeni dosya), veri tabanında yeni ağ değerleri, panelde bağlantı ekranı.
+- TikTok bağdaştırıcısı (`platforms/` altında yeni dosya), veri tabanında yeni ağ değeri, panelde bağlantı ekranı. (YouTube bunların hepsiyle TAMAMLANDI: `platforms/youtube.platform.ts`.)
 - TikTok için paylaşım öncesi onay ekranı (yazı, gizlilik, etkileşim ayarı) — denetim şartı.
 
 ## Not

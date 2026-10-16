@@ -346,7 +346,7 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
  * Dönen kayıtta HER platform için bir metin bulunur (model başarısızsa şablon).
  */
 /** Uzun metni kullanan ağlar — üçünde de AYNI metin görünür. */
-const LONG_FORM: SocialPlatform[] = ["FACEBOOK", "INSTAGRAM", "LINKEDIN"];
+const LONG_FORM: SocialPlatform[] = ["FACEBOOK", "INSTAGRAM", "LINKEDIN", "YOUTUBE"];
 
 /** Bir ağ hangi metni kullanır? */
 type BodyKind = "long" | "short" | "pin";

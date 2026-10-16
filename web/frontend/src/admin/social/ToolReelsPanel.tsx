@@ -171,6 +171,14 @@ export function ToolReelsPanel({
                 >
                   Yalnızca Instagram
                 </button>
+                <button
+                  type="button"
+                  className={ghostButton}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void queue(reel, ["YOUTUBE"])}
+                >
+                  Yalnızca YouTube
+                </button>
               </div>
               <p className="text-[11px] leading-snug text-slate-500">
                 Daha önce paylaşılmış bir gönderiyi yeniden yayınlamak için de bunları kullanabilirsin; aynı gün ikinci

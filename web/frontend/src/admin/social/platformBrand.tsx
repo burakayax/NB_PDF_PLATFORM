@@ -64,6 +64,14 @@ export const BRANDS: Record<SocialPlatformId, BrandInfo> = {
     label: "Pinterest",
     where: "developers.pinterest.com",
   },
+  YOUTUBE: {
+    background: "linear-gradient(145deg,#ff0000,#b80000)",
+    foreground: "#ffffff",
+    accent: "rgba(255,0,0,0.45)",
+    ratio: "9 / 16",
+    label: "YouTube",
+    where: "console.cloud.google.com → YouTube Data API v3",
+  },
 };
 
 function Glyph({ platform, color }: { platform: SocialPlatformId; color: string }) {
@@ -115,6 +123,15 @@ function Glyph({ platform, color }: { platform: SocialPlatformId; color: string 
           <path
             {...common}
             d="M12 2a10 10 0 0 0-3.65 19.31c-.09-.78-.17-1.98.04-2.83.19-.77 1.2-4.9 1.2-4.9s-.3-.62-.3-1.53c0-1.43.83-2.5 1.87-2.5.88 0 1.3.66 1.3 1.45 0 .89-.56 2.21-.85 3.44-.24 1.03.52 1.87 1.53 1.87 1.84 0 3.25-1.94 3.25-4.73 0-2.47-1.78-4.2-4.31-4.2-2.94 0-4.66 2.2-4.66 4.47 0 .89.34 1.84.77 2.35.08.1.1.19.07.3l-.28 1.16c-.05.19-.15.23-.35.14-1.29-.6-2.1-2.48-2.1-4 0-3.25 2.36-6.24 6.81-6.24 3.57 0 6.35 2.55 6.35 5.95 0 3.55-2.24 6.41-5.34 6.41-1.05 0-2.03-.55-2.37-1.19l-.64 2.45c-.23.9-.86 2.02-1.28 2.7A10 10 0 1 0 12 2Z"
+          />
+        </svg>
+      );
+    case "YOUTUBE":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden className="h-[62%] w-[62%]">
+          <path
+            {...common}
+            d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.27 5 12 5 12 5s-6.27 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2C2 8.78 2 12 2 12s0 3.22.4 4.8a2.5 2.5 0 0 0 1.76 1.77C5.73 19 12 19 12 19s6.27 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77C22 15.22 22 12 22 12s0-3.22-.4-4.8ZM10 15V9l5.2 3L10 15Z"
           />
         </svg>
       );

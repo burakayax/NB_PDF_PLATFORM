@@ -992,7 +992,7 @@ export async function adminResetUserRateLimit(
 
 // ─── Sosyal medya otomasyonu ─────────────────────────────────────────────────
 
-export type SocialPlatformId = "X" | "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "PINTEREST";
+export type SocialPlatformId = "X" | "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "PINTEREST" | "YOUTUBE";
 
 export type SocialConfig = {
   enabled: boolean;
