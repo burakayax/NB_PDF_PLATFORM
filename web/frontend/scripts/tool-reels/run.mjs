@@ -21,8 +21,10 @@ import { createStage } from "./lib/stage.mjs";
 import compress from "./scenarios/compress.mjs";
 import merge from "./scenarios/merge.mjs";
 import cvOlustur from "./scenarios/cv-olustur.mjs";
+import { SIMPLE } from "./scenarios/simple-tools.mjs";
+import { CUSTOM } from "./scenarios/custom-tools.mjs";
 
-const SCENARIOS = { compress, merge, "cv-olustur": cvOlustur };
+const SCENARIOS = { compress, merge, "cv-olustur": cvOlustur, ...SIMPLE, ...CUSTOM };
 
 const here = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = resolve(here, "../..");
@@ -74,10 +76,31 @@ if (!scenario.files.every((f) => existsSync(`${workDir}/fixtures/${f}`))) {
 }
 const fixtures = (name) => `${workDir}/fixtures/${name}`;
 
+// PDF sunucusu uzun süre kullanılmazsa uyur; ilk istek ~50 sn sürüp videoda ölü bekleme olur. Çekimden ÖNCE uyandırılır
+// (kayıtta görünmez). Adres REELS_PDF_API ile değiştirilebilir.
+async function warmUpPdfServer() {
+  const base = (process.env.REELS_PDF_API || "https://nb-pdf-api.onrender.com").replace(/\/$/, "");
+  const t0 = Date.now();
+  while (Date.now() - t0 < 120000) {
+    try {
+      const r = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(25000) });
+      if (r.ok) {
+        console.log(`PDF sunucusu hazır (${Math.round((Date.now() - t0) / 1000)} sn)`);
+        return;
+      }
+    } catch {
+      /* uyanıyor */
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  console.log("PDF sunucusu ısınma süresi doldu; devam ediliyor");
+}
+
 const stage = await createStage({ baseUrl, workDir });
 let extra;
 try {
   await stage.loginAndOpenTool({ email, password, toolPath: scenario.toolPath, readySelector: scenario.readySelector });
+  await warmUpPdfServer();
   extra = await scenario.run(stage, { fixtures, processing });
 } catch (err) {
   await stage.pg.screenshot({ path: `${workDir}/hata.png` }).catch(() => {});

@@ -216,3 +216,144 @@ for name, title, pages in [("Sozlesme", "Hizmet Sözleşmesi", 3), ("Fatura", "F
             pg.insert_text((60, 210 + k * 24), "Örnek satır metni %d - demo belge" % (k + 1), fontsize=11, fontname="helv")
     d.save("%s/%s.pdf" % (S, name))
 print("birleştirme belgeleri hazır")
+
+
+# ══ Diğer araçlar için örnek belgeler (hepsi uydurma) ═════════════════════════
+import zipfile, os
+
+# 1) Hafif rapor: Faaliyet raporunun küçültülmüş hâli (sayfa/dönüştürme araçları hızlı çalışsın).
+light = fitz.open(S + "/Faaliyet-Raporu-2025.pdf")
+try:
+    light.rewrite_images(dpi_threshold=110, dpi_target=80, quality=55)
+except Exception as e:  # eski PyMuPDF: görselleri küçültemeden kaydet
+    print("rewrite_images yok:", e)
+light.save(S + "/Rapor-Hafif.pdf", garbage=4, deflate=True)
+light.close()
+
+# 2) Görseller (JPG): yüksek çözünürlüklü, sıkıştır/boyutlandır için.
+jpg_names = [("Manzara.jpg", mountains), ("Sehir.jpg", skyline), ("Soyut.jpg", lambda: abstract((20, 80, 200), (140, 60, 220), (250, 170, 60)))]
+for fname, fn in jpg_names:
+    im = fn().resize((3200, 2000), Image.LANCZOS)
+    with open(S + "/" + fname, "wb") as f:
+        f.write(jpg(noise(im, 0.03), 96))
+
+# 3) Taranmış belge: yalnız görselden oluşan, hafif eğik 2 sayfa (OCR / aranabilir PDF / eğri tarama).
+def scan_page(idx, angle):
+    im = Image.new("RGB", (1240, 1754), (246, 244, 238))
+    d = ImageDraw.Draw(im)
+    d.text((110, 140), "KİRA SÖZLEŞMESİ" if idx == 0 else "SÖZLEŞME EKLERİ", font=font(RB, 64), fill=(25, 25, 30))
+    lines = [
+        "Madde 1 - Taraflar: Kiraya veren ile kiracı aşağıdaki",
+        "şartlarda anlaşmışlardır. Bu belge örnek amaçlıdır.",
+        "Madde 2 - Kira bedeli aylık 18.500 TL olup her ayın",
+        "beşinci gününe kadar ödenir.",
+        "Madde 3 - Kira süresi bir yıldır; süre sonunda taraflar",
+        "yazılı bildirimle sözleşmeyi yenileyebilir.",
+        "Madde 4 - Depozito bedeli iki aylık kira tutarındadır.",
+        "Madde 5 - Taşınmaz yalnızca konut olarak kullanılır.",
+    ]
+    for i, s in enumerate(lines):
+        d.text((110, 300 + i * 78), s, font=font(RR, 46), fill=(30, 30, 40))
+    im = noise(im, 0.07).filter(ImageFilter.GaussianBlur(0.8))
+    return im.rotate(angle, resample=Image.BICUBIC, expand=False, fillcolor=(246, 244, 238))
+
+sc = fitz.open()
+for idx, ang in enumerate((1.8, -1.4)):
+    pg = sc.new_page(width=595, height=842)
+    pg.insert_image(pg.rect, stream=jpg(scan_page(idx, ang), 88))
+sc.save(S + "/Taranmis-Belge.pdf", deflate=True)
+sc.close()
+
+# 4) Doldurulabilir form (AcroForm).
+fm = fitz.open()
+fp = fm.new_page(width=595, height=842)
+fp.insert_text((60, 90), "Başvuru Formu", fontsize=26, fontname="helv")
+fields = [("Ad Soyad", "ad"), ("E-posta", "eposta"), ("Telefon", "telefon"), ("Şehir", "sehir")]
+for i, (lab, nm) in enumerate(fields):
+    y = 150 + i * 70
+    fp.insert_text((60, y), lab, fontsize=12, fontname="helv")
+    w = fitz.Widget()
+    w.field_type = fitz.PDF_WIDGET_TYPE_TEXT
+    w.field_name = nm
+    w.rect = fitz.Rect(60, y + 8, 400, y + 34)
+    w.text_fontsize = 12
+    fp.add_widget(w)
+fp.insert_text((60, 450), "Bilgilendirme metnini okudum", fontsize=12, fontname="helv")
+cb = fitz.Widget()
+cb.field_type = fitz.PDF_WIDGET_TYPE_CHECKBOX
+cb.field_name = "onay"
+cb.rect = fitz.Rect(300, 438, 316, 454)
+fp.add_widget(cb)
+fm.save(S + "/Basvuru-Formu.pdf")
+fm.close()
+
+# 5) Şifreli PDF (parola: demo123) ve 6) bozuk PDF.
+base = fitz.open(S + "/Sozlesme.pdf")
+base.save(S + "/Sifreli-Sozlesme.pdf", encryption=fitz.PDF_ENCRYPT_AES_256, user_pw="demo123", owner_pw="demo123-owner")
+base.close()
+raw = open(S + "/Rapor-Hafif.pdf", "rb").read()
+open(S + "/Bozuk-Rapor.pdf", "wb").write(raw[: int(len(raw) * 0.82)])  # sonu kesik: açılmaz
+
+# 7) Ön yüz / arka yüz (dönüşümlü birleştirme): tek sayfalar.
+for name, nums in (("Tarama-Ön-Yuzler", (1, 3, 5)), ("Tarama-Arka-Yuzler", (6, 4, 2))):
+    d = fitz.open()
+    for n_ in nums:
+        pg = d.new_page(width=595, height=842)
+        pg.insert_text((60, 100), "Sayfa %d" % n_, fontsize=48, fontname="helv")
+        pg.insert_text((60, 160), "Çift taraflı tarama örneği", fontsize=16, fontname="helv")
+    d.save("%s/%s.pdf" % (S, name.replace("ö", "o").replace("Ö", "O")))
+
+# 8) Tablolu PDF (Excel'e aktar).
+tb = fitz.open()
+tp = tb.new_page(width=595, height=842)
+tp.insert_text((60, 90), "Satış Özeti - 2026", fontsize=22, fontname="helv")
+rows = [("Ürün", "Adet", "Birim fiyat", "Tutar"), ("Klavye", "40", "750", "30.000"), ("Fare", "85", "320", "27.200"), ("Monitör", "22", "6.400", "140.800"), ("Kulaklık", "60", "980", "58.800"), ("Dock", "18", "2.150", "38.700")]
+for r, row in enumerate(rows):
+    for c, cell in enumerate(row):
+        x = 60 + c * 125
+        y = 140 + r * 34
+        tp.draw_rect(fitz.Rect(x, y, x + 125, y + 34), color=(0.55, 0.6, 0.7), fill=(0.9, 0.94, 1) if r == 0 else None, width=0.8)
+        tp.insert_text((x + 8, y + 22), cell, fontsize=12, fontname="helv")
+tb.save(S + "/Satis-Tablosu.pdf")
+tb.close()
+
+# 9) Office belgeleri.
+from docx import Document
+dx = Document()
+dx.add_heading("Hizmet Teklifi", 0)
+dx.add_paragraph("Sayın yetkili, talep ettiğiniz web sitesi yenileme çalışması için teklifimiz aşağıdadır.")
+t_ = dx.add_table(rows=3, cols=3)
+for r, row in enumerate((("Kalem", "Süre", "Tutar"), ("Tasarım", "2 hafta", "45.000 TL"), ("Geliştirme", "4 hafta", "90.000 TL"))):
+    for c, v in enumerate(row):
+        t_.cell(r, c).text = v
+dx.add_paragraph("Teklif 30 gün geçerlidir.")
+dx.save(S + "/Teklif.docx")
+
+from openpyxl import Workbook
+wb = Workbook()
+ws = wb.active
+ws.title = "Satışlar"
+for row in (("Ay", "Gelir", "Gider"), ("Ocak", 120000, 80000), ("Şubat", 135000, 82000), ("Mart", 150000, 91000), ("Nisan", 142000, 88000)):
+    ws.append(row)
+wb.save(S + "/Satis-Tablosu.xlsx")
+
+from pptx import Presentation
+pr = Presentation()
+s1 = pr.slides.add_slide(pr.slide_layouts[0])
+s1.shapes.title.text = "2026 Planı"
+s1.placeholders[1].text = "Yıllık hedefler ve takvim"
+s2 = pr.slides.add_slide(pr.slide_layouts[1])
+s2.shapes.title.text = "Öncelikler"
+s2.placeholders[1].text = "Müşteri memnuniyeti\nYeni pazarlar\nMaliyet kontrolü"
+pr.save(S + "/Sunum.pptx")
+
+# 10) UYAP UDF (örnek dilekçe).
+text = "Sayın Hâkimliğe,Müvekkilim adına iş bu dilekçeyi sunarım."
+xml = ('<?xml version="1.0" encoding="UTF-8" ?>\n<template format_id="1.8">\n<content><![CDATA[%s]]></content>\n'
+       '<properties><pageFormat leftMargin="42.5" rightMargin="28.3" topMargin="14.1" bottomMargin="14.1" paperOrientation="1" /></properties>\n'
+       '<elements resolver="hvl-default">\n<paragraph Alignment="1" LeftIndent="0.0" RightIndent="0.0"><content startOffset="0" length="16" family="Times New Roman" size="12" bold="true" /></paragraph>\n'
+       '<paragraph Alignment="3" LeftIndent="0.0" RightIndent="0.0"><content startOffset="16" length="41" family="Times New Roman" size="12" /></paragraph>\n</elements>\n'
+       '<styles><style name="hvl-default" family="Times New Roman" size="12" description="Gövde" /></styles>\n</template>') % text
+with zipfile.ZipFile(S + "/Dilekce.udf", "w") as z:
+    z.writestr("content.xml", xml)
+print("diğer araç belgeleri hazır")

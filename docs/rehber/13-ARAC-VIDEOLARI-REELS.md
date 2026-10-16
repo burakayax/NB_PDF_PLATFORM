@@ -54,7 +54,15 @@ Her aracın bir **çekim senaryosu** olması gerekir (aracın hangi adımların�
 2. `web/api/src/modules/social/tool-reel-catalog.ts` içine başlık/özet/arama terimlerini ekle
    (metin elle yazılır ve doğrulanmış olmalı; yapay zekâ kullanılmaz).
 
-Şu an hazır senaryolar: **PDF Sıkıştır (`compress`)**, **PDF Birleştir (`merge`)**, **CV Oluştur (`cv-olustur`)**.
+Şu an hazır senaryolar (31 araç): PDF Sıkıştır, PDF Birleştir, CV Oluştur, Gri Tonlama, Düzleştir, Word/Excel/PowerPoint ↔ PDF,
+PDF → Metin/Görsel/PDF-A, Eğri Tarama Düzeltme, PDF Onarma, Görsel Çıkar, Sayfa Boyutu, Ayna Çevirme, Şifreleme, Şifre Kaldırma,
+Görsel → PDF, Dönüşümlü Birleştirme, HTML → PDF, UDF → PDF, Görsel Sıkıştır/Boyutlandır, Üstveri Temizle, Form Doldur, OCR, Aranabilir PDF.
+**Senaryosu olmayanlar** (yapay zekâ araçları kredi keser; ayrıca): Sayfa Numarası ve Filigran (form çok uzun, tek pencereye sığmıyor),
+Böl / Sayfa Sil / Döndür / Sayfaları Düzenle / Sayfa Düzeni (tam ekran sayfa seçici açılıyor), Kesit Al, İmzala, İşaretle, PDF Düzenle
+(tam ekran editör), İmza İste (karşı tarafa e-posta gönderir), Belge Tara (kamera). Bunlar için kurgu motoruna üçüncü bir pencere
+desteği gerekir.
+Kodun ortak iskeleti `lib/kit.mjs` (`simpleTool`); araç ekranı düz formsa yeni senaryo ~15 satırdır (`scenarios/simple-tools.mjs`).
+Çekimden önce PDF sunucusu uyandırılır (sunucu uykudayken ilk istek ~50 sn sürüp videoya ölü bekleme koyuyordu).
 Araç tek formlu değilse (CV Oluştur gibi adım adım bir sihirbazsa) senaryo iki sabit pencere kullanır; örnek için `scenarios/cv-olustur.mjs`.
 Videoların arka plan müziği hazır bir parça DEĞİLDİR: ffmpeg ile sıfırdan üretilir (`lib/music.mjs`), bu yüzden telif hakkı sorunu yoktur.
 Sıra: hiç paylaşılmayan araç önce, sonra en eski paylaşılan.

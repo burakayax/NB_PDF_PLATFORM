@@ -36,8 +36,10 @@ export function compose({ workDir: S, out: OUT, intro, publicDir }) {
   const ch2 = even(640);
   const swap = +(T.swapAt - 0.05).toFixed(2);
 
-  const VW1 = 960, VH1 = even((ch * VW1) / cw), VX1 = even((1080 - VW1) / 2), VY1 = 310;
-  const VW2 = 1000, VH2 = even((ch2 * VW2) / cw), VX2 = even((1080 - VW2) / 2), VY2 = 310;
+  // Kesit çok uzunsa (görsel ızgaralı araçlar) videonun genişliği küçülür: altındaki yazı paneliyle çakışmasın.
+  const MAXH = 910;
+  const VW1 = Math.min(960, even((MAXH * cw) / ch)), VH1 = even((ch * VW1) / cw), VX1 = even((1080 - VW1) / 2), VY1 = 310;
+  const VW2 = Math.min(1000, even((MAXH * cw) / ch2)), VH2 = even((ch2 * VW2) / cw), VX2 = even((1080 - VW2) / 2), VY2 = 310;
 
   const ACC = "0x38bdf8", GREEN = "0x34d399", SOFT = "0xcbd5e1";
   const fontfile = "fontfile=Roboto-Bold.ttf:expansion=none";
