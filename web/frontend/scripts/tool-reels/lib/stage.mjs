@@ -172,7 +172,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   };
   const closeMenu = async () => { await pg.evaluate(() => window.__menuOff()); await hlOff(); };
   /** Giriş (videoya GİRMEZ) ve aracın sayfasına geçiş. */
-  async function loginAndOpenTool({ email, password, toolPath }) {
+  async function loginAndOpenTool({ email, password, toolPath, readySelector = "form.tool-form" }) {
     await pg.goto(`${baseUrl}/login`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     await pg.getByRole("button", { name: "Yalnızca Zorunlu" }).click().catch(() => {});
@@ -187,7 +187,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
         dispatchEvent(new PopStateEvent("popstate"));
       }, toolPath);
       try {
-        await pg.locator("form.tool-form").waitFor({ timeout: 12000 });
+        await pg.locator(readySelector).first().waitFor({ timeout: 12000 });
         break;
       } catch {
         /* yeniden dene */

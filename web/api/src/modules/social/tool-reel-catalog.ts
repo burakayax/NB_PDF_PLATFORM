@@ -62,4 +62,25 @@ export const TOOL_REEL_CATALOG: ToolReelCatalogEntry[] = [
       tagsEn: ["merge pdf", "combine pdf"],
     },
   },
+  {
+    id: "cv-olustur",
+    tr: {
+      title: "CV Oluştur: hazır şablonla dakikalar içinde CV'ni hazırla",
+      summary:
+        "30 hazır şablondan seç, bilgilerini gir; CV'n canlı oluşsun. ATS röntgeniyle kontrol et, PDF olarak indir. Bilgilerin yalnızca tarayıcında kalır, sunucuya gönderilmez.",
+      link: "https://www.pdfplatform.app/tools/cv-olustur",
+    },
+    en: {
+      title: "CV Maker: build your CV in minutes with a ready template",
+      summary:
+        "Pick from 30 templates, fill in your details and watch your CV build live. Check it with the ATS X-ray and download it as a PDF. Your details stay in your browser and are never uploaded.",
+      link: "https://www.pdfplatform.app/en/tools/cv-maker",
+    },
+    keywords: {
+      tr: ["cv hazırlama", "cv oluşturma", "cv şablonu"],
+      en: ["cv maker", "resume builder", "cv template"],
+      tagsTr: ["cv hazırla", "cv şablonu"],
+      tagsEn: ["cv maker", "resume builder"],
+    },
+  },
 ];

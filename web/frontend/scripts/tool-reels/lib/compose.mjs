@@ -8,6 +8,7 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { makeMusic } from "./music.mjs";
 
 const require = createRequire(import.meta.url);
 
@@ -150,11 +151,12 @@ export function compose({ workDir: S, out: OUT, intro, publicDir }) {
     `[b5]${filters.join(",")}[o]`,
   ].join(";");
 
+  const music = makeMusic(ffmpeg, S, TOTAL);
   const args = [
     "-y", "-hide_banner", "-loglevel", "error",
     "-f", "lavfi", "-i", `color=c=0x080d1a:s=1080x1920:r=30:d=${TOTAL}`,
     "-i", `rec/${webm}`,
-    "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
+    "-i", music,
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",

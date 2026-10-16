@@ -54,7 +54,9 @@ Her aracın bir **çekim senaryosu** olması gerekir (aracın hangi adımların�
 2. `web/api/src/modules/social/tool-reel-catalog.ts` içine başlık/özet/arama terimlerini ekle
    (metin elle yazılır ve doğrulanmış olmalı; yapay zekâ kullanılmaz).
 
-Şu an hazır senaryolar: **PDF Sıkıştır (`compress`)**, **PDF Birleştir (`merge`)**.
+Şu an hazır senaryolar: **PDF Sıkıştır (`compress`)**, **PDF Birleştir (`merge`)**, **CV Oluştur (`cv-olustur`)**.
+Araç tek formlu değilse (CV Oluştur gibi adım adım bir sihirbazsa) senaryo iki sabit pencere kullanır; örnek için `scenarios/cv-olustur.mjs`.
+Videoların arka plan müziği hazır bir parça DEĞİLDİR: ffmpeg ile sıfırdan üretilir (`lib/music.mjs`), bu yüzden telif hakkı sorunu yoktur.
 Sıra: hiç paylaşılmayan araç önce, sonra en eski paylaşılan.
 
 ## Güvenlik ve dayanıklılık notları

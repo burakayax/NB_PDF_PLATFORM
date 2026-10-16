@@ -146,7 +146,11 @@ describe("sıradaki araç", () => {
   });
 
   it("süre dolduysa en uzun süredir paylaşılmayan araç seçilir", async () => {
-    posts = [post(null, "PUBLISHED", 10 * DAY, "tool-reel:compress"), post(null, "PUBLISHED", 4 * DAY, "tool-reel:merge")];
+    posts = [
+      post(null, "PUBLISHED", 10 * DAY, "tool-reel:compress"),
+      post(null, "PUBLISHED", 4 * DAY, "tool-reel:merge"),
+      post(null, "PUBLISHED", 6 * DAY, "tool-reel:cv-olustur"),
+    ];
     const { pickDueToolReel } = await import("../modules/social/tool-reels.service.js");
     expect((await pickDueToolReel(NOW, 3))?.id).toBe("compress");
   });
