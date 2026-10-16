@@ -33,6 +33,15 @@ describe("YouTube Shorts yayıncısı", () => {
     const meta = JSON.parse(String(start?.init?.body));
     expect(meta.snippet.title).toBe("PDF Sıkıştır");
     expect(meta.snippet.description).toContain("#Shorts");
+    // Zengin açıklama: iki dilde araç bağlantısı, konu satırları, en fazla 10 etiket, 5.000 sınırının altında.
+    const desc: string = meta.snippet.description;
+    expect(desc).toContain("https://www.pdfplatform.app/tools/compress");
+    expect(desc).toContain("https://www.pdfplatform.app/en/tools/compress");
+    expect(desc).toContain("Konular: pdf sıkıştırma");
+    expect(desc).toContain("Topics: compress pdf");
+    expect(desc.length).toBeLessThan(5000);
+    expect((desc.match(/#\p{L}[\p{L}\p{N}]*/gu) ?? []).length).toBeLessThanOrEqual(10);
+    expect(desc).not.toMatch(/[<>]/);
     expect(meta.status).toMatchObject({ privacyStatus: "public", selfDeclaredMadeForKids: false });
     expect((start?.init?.headers as Record<string, string>).authorization).toBe("Bearer AT");
   });
