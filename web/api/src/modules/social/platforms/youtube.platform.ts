@@ -16,6 +16,8 @@ import { logger } from "../../../lib/file-log.js";
 import { PlatformError, PublishStageError, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 import { isReelUrl } from "../reels.service.js";
+import { findCatalogEntry } from "../tool-reels.service.js";
+import { availableReelCover, toolIdFromGuid } from "./reel-cover.js";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/videos";
@@ -58,6 +60,58 @@ async function accessTokenFor(secrets: Record<string, string>): Promise<string> 
   return token;
 }
 
+/**
+ * Arama etiketleri: aracın doğrulanmış arama terimleri (katalog). YouTube toplam 500 karaktere
+ * izin verir; güvenli pay bırakılır. Etiketler yalnızca yanlış yazılarak aranan içerikte işe yarar,
+ * bu yüzden kısa tutulur.
+ */
+function toTags(guid: string): string[] {
+  const toolId = toolIdFromGuid(guid);
+  const entry = toolId ? findCatalogEntry(toolId) : undefined;
+  const raw = entry
+    ? [...entry.keywords.tr, ...entry.keywords.tagsTr, ...entry.keywords.en, ...entry.keywords.tagsEn]
+    : [];
+  const out: string[] = [];
+  let total = 0;
+  for (const tag of raw.map((t) => t.replace(/[<>]/g, "").trim().toLowerCase())) {
+    if (!tag || out.includes(tag)) continue;
+    // Boşluklu etiket tırnaklanarak sayılır (+2).
+    const cost = tag.length + (tag.includes(" ") ? 2 : 0) + 1;
+    if (total + cost > 400) break;
+    out.push(tag);
+    total += cost;
+  }
+  return out;
+}
+
+/**
+ * Markalı küçük resmi yükler. EN İYİ ÇABA: video bu noktada zaten yayında; küçük resim yüklenemezse
+ * (kanal telefonla doğrulanmamış olabilir, görsel kabul edilmemiş olabilir) paylaşım başarısız sayılmaz.
+ */
+async function setThumbnail(accessToken: string, videoId: string, guid: string): Promise<void> {
+  try {
+    const coverUrl = await availableReelCover(guid);
+    if (!coverUrl) return;
+    const img = await fetch(coverUrl, { signal: AbortSignal.timeout(30_000) });
+    if (!img.ok) return;
+    const bytes = Buffer.from(await img.arrayBuffer());
+    const res = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}`, "content-type": "image/jpeg" },
+      body: new Uint8Array(bytes),
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) {
+      logger.warn(
+        "social",
+        `YouTube küçük resmi yüklenemedi (HTTP ${res.status}): ${(await res.text()).slice(0, 200)} — özel küçük resim için kanalın telefonla doğrulanmış olması gerekir.`,
+      );
+    }
+  } catch (err) {
+    logger.warn("social", `YouTube küçük resmi yüklenemedi: ${String(err)}`);
+  }
+}
+
 /** Başlık: satır sonu/kapatma işaretlerinden arındırılmış, 100 karakteri aşmayan tek satır. */
 function toTitle(raw: string): string {
   const clean = raw.replace(/[<>]/g, "").replace(/\s+/g, " ").trim();
@@ -86,7 +140,7 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
   const video = await downloadVideo(imageUrl);
 
   // 1) Yükleme oturumu: video bilgisi burada verilir. Bu adım güvenle yinelenebilir.
-  const startRes = await fetch(`${UPLOAD_URL}?uploadType=resumable&part=snippet,status`, {
+  const startRes = await fetch(`${UPLOAD_URL}?uploadType=resumable&part=snippet,status,recordingDetails`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -95,9 +149,24 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
       "x-upload-content-length": String(video.byteLength),
     },
     body: JSON.stringify({
-      snippet: { title: toTitle(item.title), description: toDescription(body), categoryId: CATEGORY_ID },
-      // `selfDeclaredMadeForKids` açıkça verilmezse YouTube yüklemeyi çocuk içeriği sorusu için bekletebilir.
-      status: { privacyStatus: "public", selfDeclaredMadeForKids: false, embeddable: true },
+      snippet: {
+        title: toTitle(item.title),
+        description: toDescription(body),
+        categoryId: CATEGORY_ID,
+        tags: toTags(item.guid),
+        // Başlık/açıklama dili: gönderi Türkçe başta, İngilizce altta.
+        defaultLanguage: "tr",
+      },
+      status: {
+        privacyStatus: "public",
+        // Açıkça verilmezse YouTube yüklemeyi çocuk içeriği sorusu için bekletebilir.
+        selfDeclaredMadeForKids: false,
+        embeddable: true,
+        // "Yapay zekâ kullanımı": videolar gerçek ürün ekran kaydıdır; gerçekçi sahte medya değildir.
+        containsSyntheticMedia: false,
+      },
+      // "Kayıt tarihi": videonun üretildiği/yüklendiği gün.
+      recordingDetails: { recordingDate: new Date().toISOString() },
     }),
     signal: AbortSignal.timeout(45_000),
   });
@@ -127,6 +196,7 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
       );
     }
     logger.info("social", `YouTube Shorts yüklendi: ${item.title}`);
+    await setThumbnail(accessToken, json.id, item.guid);
     return { externalId: json.id, externalUrl: `https://www.youtube.com/shorts/${json.id}` };
   } catch (err) {
     throw new PublishStageError(err instanceof Error ? err.message : String(err));

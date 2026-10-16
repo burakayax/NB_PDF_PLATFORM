@@ -12,6 +12,7 @@
 import { logger } from "../../../lib/file-log.js";
 import { PublishStageError, requestJson, requireSecret } from "./common.js";
 import type { PublishInput } from "./common.js";
+import { availableReelCover } from "./reel-cover.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 const POLL_DELAY_MS = 6000;
@@ -52,6 +53,10 @@ export async function publishInstagramReel(
   const igUserId = requireSecret(secrets, "igUserId", "Instagram İşletme Hesabı ID");
   const token = requireSecret(secrets, "pageAccessToken", "Instagram Sayfa Erişim Anahtarı");
 
+  // Markalı kapak (varsa). Erişilemiyorsa kapaksız yayınlanır: Instagram kapak adresini
+  // indiremezse tüm gönderiyi reddeder.
+  const coverUrl = await availableReelCover(item.guid);
+
   // 1) Reels kabı. `share_to_feed`: aynı video profil akışında da görünsün.
   const created = await requestJson(
     "Instagram",
@@ -62,6 +67,7 @@ export async function publishInstagramReel(
       video_url: videoUrl,
       caption: body,
       share_to_feed: "true",
+      ...(coverUrl ? { cover_url: coverUrl } : {}),
     }),
   );
   const creationId = created.id as string | undefined;

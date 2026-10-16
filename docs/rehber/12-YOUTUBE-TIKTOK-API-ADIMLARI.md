@@ -39,6 +39,16 @@ Resmi başlangıç sayfası: https://developers.google.com/youtube/data/getting-
 
 Çalışma şekli: yalnız ARAÇ videoları YouTube'a gider (blog yazıları gitmez). Zamanlama, "Reels otomatik/onaylı" ayarı ve saat Instagram/Facebook ile aynıdır; saati gelince kendiliğinden Short olarak yüklenir. Açıklamaya `#Shorts` otomatik eklenir. Anahtar süresi dolarsa sınama "invalid_grant" der: 4. maddeyi kontrol edip anahtarı yeniden al.
 
+#### YouTube: yükleme ayarları ve kapaklar (2026-10-16)
+Kodun her yüklemede kendiliğinden yaptıkları: kategori Bilim ve Teknoloji; dil Türkçe; etiketler aracın doğrulanmış arama terimlerinden; "Yapay zekâ kullanımı" = Hayır (videolar gerçek ürün ekran kaydı); kayıt tarihi = yükleme günü; çocuklara özel değil; yorumlar açık.
+- **Ücretli tanıtım:** API'de bu alan yüklemede ayarlanamıyor; varsayılan zaten "Hayır, ücretli tanıtım içermiyor". Elle bir şey yapmaya gerek yok.
+- **Yorum denetimi "Katı":** API ile video başına ayarlanamıyor. YouTube Studio → Ayarlar → Topluluk → Otomatik filtreler → **Katı** (kanal geneli) + Ayarlar → Yükleme varsayılanları → Gelişmiş ayarlar. Bir kez elle yapılır.
+- **Altyazı sertifikası, kayıt yeri:** API'de yok / gerekmiyor (TV'de yayınlanmadı); kayıt yeri boş bırakıldı.
+- **Küçük resim:** `thumbnails.set` ile `public/reel-covers/<araç>.jpg` yüklenir. En iyi çaba: yüklenemezse (kanal telefonla doğrulanmamış olabilir) video yine yayında kalır, günlükte uyarı yazar. Shorts akışında küçük resim görünmez; kanal sayfası ve aramada görünür (doğrulanmadı).
+
+#### Markalı kapaklar (Instagram Reels + YouTube)
+`web/frontend/scripts/generate-reel-covers.mjs` her araç senaryosu için 1080×1920 kapak üretir (`public/reel-covers/`). **Yeni araç videosu eklenince** betiği çalıştırıp çıkan dosyayı commitle; yoksa video kapaksız çıkar (paylaşım engellenmez). Aracın simgesi/rengi betikteki `ICONS` ve `ACCENT_BY_TOOL` tablosunda; yoksa genel belge simgesi kullanılır. Kapak sitede yayında değilse (dağıtım gecikmesi) Instagram'a gönderilmez, çünkü Instagram erişemediği kapakta gönderiyi reddeder.
+
 ### TikTok
 1. TikTok hesabı (işletme hesabı önerilir) aç.
 2. developers.tiktok.com → uygulama kaydı → "Content Posting API" ürünü + "Direct Post" ayarı.
