@@ -119,7 +119,7 @@ describe("araç videosu otomatik sırası", () => {
     expect(created.some((c) => c.guid === ITEM.guid)).toBe(true);
   });
 
-  it("video hazırsa: Instagram + Facebook için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
+  it("video hazırsa: Instagram + Facebook + YouTube için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
@@ -128,7 +128,10 @@ describe("araç videosu otomatik sırası", () => {
     expect(toolPosts().map((p) => `${p.platform}:${p.guid}`).sort()).toEqual([
       "FACEBOOK:tool-reel:compress",
       "INSTAGRAM:tool-reel:compress",
+      "YOUTUBE:tool-reel:compress",
     ]);
+    // YouTube yalnız video kabul eder: blog (görsel) gönderisi hiçbir zaman YouTube'a hazırlanmaz.
+    expect(created.some((c) => c.platform === "YOUTUBE" && !c.guid.startsWith("tool-reel:"))).toBe(false);
     const ig = toolPosts().find((p) => p.platform === "INSTAGRAM");
     expect(ig?.status).toBe("DRAFT");
     expect(ig?.imageUrl).toBe(VIDEO_URL);

@@ -494,6 +494,8 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
   // görseli indirilerek elle paylaşılır.
   const targets: { platform: SocialPlatform; item: FeedItem }[] = [];
   for (const platform of ALL_PLATFORMS) {
+    // Yalnız video kabul eden ağ (YouTube) blog görseliyle beslenmez; araç videoları ayrı akışta gider.
+    if (PLATFORM_SPECS[platform].videoOnly) continue;
     const item = await pickNextItem(items, platform, config.recycleOldPosts);
     if (!item) {
       result.skipped.push({ platform, reason: "Paylaşılacak yeni yazı yok" });
@@ -564,11 +566,11 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
 
 // ─── Araç tanıtım videoları ───────────────────────────────────────────────────
 
-/** Araç videolarının gideceği ağlar (ikisi de Reels). */
-const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK"];
+/** Araç videolarının gideceği ağlar (Instagram/Facebook Reels + YouTube Shorts). */
+const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK", "YOUTUBE"];
 
 /**
- * Bir araç videosunu Instagram + Facebook Reels gönderisi olarak kuyruğa alır.
+ * Bir araç videosunu Instagram + Facebook Reels ve YouTube Shorts gönderisi olarak kuyruğa alır.
  *
  * Metin blog gönderileriyle aynı hattan yazılır (yapay zekâ varsa o, yoksa şablon);
  * arama terimleri manifestten gelir. Bağlı olmayan ağın gönderisi MANUAL kaydedilir.

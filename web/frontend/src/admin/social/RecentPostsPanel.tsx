@@ -12,7 +12,7 @@ import { isVideoUrl, slidesOf } from "./PostMediaPreview";
  * Her satırdan gönderinin tam önizlemesi açılır (kaydırmalı gönderide tüm slaytlar).
  */
 
-const PLATFORM_ORDER: SocialPlatformId[] = ["INSTAGRAM", "FACEBOOK", "LINKEDIN", "X", "PINTEREST"];
+const PLATFORM_ORDER: SocialPlatformId[] = ["INSTAGRAM", "FACEBOOK", "YOUTUBE", "LINKEDIN", "X", "PINTEREST"];
 
 function formatWhen(value: string | null): string {
   if (!value) return "";

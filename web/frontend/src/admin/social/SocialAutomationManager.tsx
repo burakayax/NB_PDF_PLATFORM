@@ -815,7 +815,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             </div>
 
             <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
-              <p className="text-sm font-medium text-slate-200">Araç videoları (Instagram + Facebook Reels)</p>
+              <p className="text-sm font-medium text-slate-200">Araç videoları (Instagram + Facebook Reels, YouTube Shorts)</p>
               <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
                 Açıkken günlük blog gönderilerine ek olarak, seçtiğin sıklıkta sıradaki araç videosu da hazırlanır.
                 Önce onay / Otomatik seçimi yukarıdaki Reels ayarına göre işler. Videoları “Araç videoları”

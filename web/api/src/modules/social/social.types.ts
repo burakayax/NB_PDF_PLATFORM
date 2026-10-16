@@ -96,6 +96,11 @@ export type PlatformSpec = {
    * X kapalı: 280 karakterde iki dil okunur bir gönderi çıkarmıyor.
    */
   bilingual: boolean;
+  /**
+   * Yalnız video kabul eden ağ (YouTube). Blog gönderileri (görsel) bu ağa hazırlanmaz;
+   * yalnızca araç videoları (Reels) gider.
+   */
+  videoOnly?: boolean;
   /** Bu platformda saklanması gereken gizli alanlar. */
   secretFields: { key: string; label: string; help: string }[];
 };
@@ -178,6 +183,24 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     secretFields: [
       { key: "accessToken", label: "Access Token", help: "pins:write yetkili erişim anahtarı" },
       { key: "boardId", label: "Pano ID", help: "Pinlerin ekleneceği panonun kimliği" },
+    ],
+  },
+  YOUTUBE: {
+    platform: "YOUTUBE",
+    label: "YouTube (Shorts)",
+    // Açıklama alanı 5.000 karakter; metin Instagram/Facebook ile ORTAK olduğu için dar sınır geçerli.
+    maxChars: 2200,
+    imageRequired: false,
+    imageFormat: "tall",
+    hashtagCount: 3,
+    // Açıklamadaki bağlantılar tıklanabilir.
+    linkStyle: "url",
+    bilingual: true,
+    videoOnly: true,
+    secretFields: [
+      { key: "clientId", label: "Client ID", help: "Google Cloud → OAuth istemcisi (Web uygulaması) Client ID değeri" },
+      { key: "clientSecret", label: "Client Secret", help: "Aynı OAuth istemcisinin gizli anahtarı" },
+      { key: "refreshToken", label: "Refresh Token", help: "youtube.upload + youtube.readonly izniyle alınan yenileme anahtarı (OAuth Playground)" },
     ],
   },
 };
