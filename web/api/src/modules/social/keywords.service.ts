@@ -146,6 +146,8 @@ const COMPETITOR_WORDS = [
   "pdfescape",
   "docfly",
   "lightpdf",
+  "11zon",
+  " love",
 ];
 
 /** Terim kendi gönderimizde kullanılabilir mi? */
@@ -478,4 +480,127 @@ export async function keywordsFor(item: FeedItem, research: boolean): Promise<Ke
     tagsTr: dedupe([...found.tagsTr, ...seo.tagsTr], MAX_TAGS),
     tagsEn: dedupe([...found.tagsEn, ...seo.tagsEn], MAX_TAGS),
   };
+}
+
+// ─── Araç videoları (YouTube) ─────────────────────────────────────────────────
+
+const TOOL_KEYWORD_TTL_MS = 12 * 60 * 60 * 1000;
+const toolKeywordCache = new Map<string, { at: number; data: { tr: string[]; en: string[] } }>();
+
+const wordsOf = (term: string): string[] =>
+  term.toLocaleLowerCase("tr").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
+/** Terimin içerdiği "çapa" kelimeler: aracın kendi terimlerindeki 4+ harfli kelimelerin kökleri. */
+function anchorsOf(terms: string[]): string[] {
+  const out = new Set<string>();
+  for (const term of terms) {
+    for (const word of wordsOf(term)) {
+      if (word.length >= 4) out.add(word.slice(0, Math.max(4, word.length - 3)));
+    }
+  }
+  return [...out];
+}
+
+/**
+ * Otomatik tamamlamanın aracın kendi terimlerine EKLEYEBİLECEĞİ sıradan söz dizisi kelimeleri.
+ * Fiyat/özellik iddiası taşıyan sözcükler (ücretsiz, program, indir…) burada YOK: onlar ancak
+ * sitenin kendi terimlerinde geçiyorsa (sözcük dağarcığı) kabul edilir.
+ */
+const GENERIC_WORDS = new Set([
+  "online", "çevrimiçi", "nasıl", "yapılır", "yapabilirim", "dosya", "dosyası", "dosyaları", "dosyalarını",
+  "file", "files", "size", "how", "to", "into", "one", "together", "pdfs",
+]);
+
+/**
+ * Otomatik tamamlama ifadesi güvenle kullanılabilir mi?
+ * Her kelimesi ya aracın kendi terimlerinden (o dilde) gelmeli ya da sıradan bir söz dizisi
+ * kelimesi olmalı; aynı kelime iki kez geçmemeli. Böylece "…reddit", "…login", "…latex", "…iphone",
+ * rakip kısaltmaları ve başka bir aracın ifadeleri (örn. "birleştirme ve küçültme") elenir.
+ */
+function fitsVocabulary(term: string, vocabulary: Set<string>): boolean {
+  const words = wordsOf(term);
+  if (words.length === 0 || words.length > 6) return false;
+  if (new Set(words).size !== words.length) return false;
+  return words.every((w) => vocabulary.has(w) || GENERIC_WORDS.has(w));
+}
+
+/** Fiyat sözcükleri: yalnız aracın ücretsiz kullanımı sitede doğrulanmışsa (`freeClaim`) serbest. */
+const FREE_WORDS = ["ücretsiz", "free"];
+
+/**
+ * Bir araç videosunun (YouTube) anahtar kelimeleri — ÖLÇÜME DAYALI, uydurma yok.
+ *
+ * KAYNAK SIRASI (güçlüden zayıfa): Search Console'daki sayfanın gerçek sorguları (kuruluysa) →
+ * Google otomatik tamamlama (insanların yazdığı ifadeler, popülerlik sırasında) → sitenin SEO'da hedeflediği
+ * terimler (SEO bankası) → katalogdaki elle yazılmış terimler. Yapay zekâ YOK.
+ *
+ * İKİ SÜZGEÇ: (1) rakip ürün adı geçenler elenir (rakibe bedava tanıtım ve YouTube'un yanıltıcı
+ * etiket kuralı); (2) terim, aracın kendi terimlerinden en az bir kelime kökünü içermelidir —
+ * konu dışı terimle etiketlemek YouTube'da "yanıltıcı meta veri" sayılır.
+ *
+ * HATA YUTULUR: dış kaynaklar susarsa katalog + SEO bankasıyla devam edilir.
+ * Sonuç 12 saat bellekte tutulur (her yüklemede Google'a gidilmez).
+ */
+export async function toolVideoKeywords(entry: {
+  id: string;
+  freeClaim?: boolean;
+  tr: { title: string; summary: string; link: string };
+  en: { title: string; summary: string; link: string };
+  keywords: KeywordSet;
+}): Promise<{ tr: string[]; en: string[] }> {
+  const hit = toolKeywordCache.get(entry.id);
+  if (hit && Date.now() - hit.at < TOOL_KEYWORD_TTL_MS) return hit.data;
+
+  const item = {
+    guid: entry.tr.link,
+    lang: "tr",
+    title: entry.tr.title,
+    summary: entry.tr.summary,
+    link: entry.tr.link,
+    publishedAt: 0,
+    categories: [],
+    images: {},
+    alt: { lang: "en", title: entry.en.title, summary: entry.en.summary, link: entry.en.link },
+  } satisfies FeedItem;
+  const bank = await seoKeywordsFor(item).catch(() => EMPTY);
+
+  const seedsTr = dedupe([...entry.keywords.tr, ...bank.tr], 4);
+  const seedsEn = dedupe([...entry.keywords.en, ...bank.en], 4);
+  const [gscTr, gscEn, sugTr, sugEn] = await Promise.all([
+    searchEvidence(entry.tr.link, seedsTr).catch(() => [] as QueryRow[]),
+    searchEvidence(entry.en.link, seedsEn).catch(() => [] as QueryRow[]),
+    suggestTerms(seedsTr, "tr").catch(() => [] as string[]),
+    suggestTerms(seedsEn, "en").catch(() => [] as string[]),
+  ]);
+
+  const build = (gsc: QueryRow[], suggest: string[], seo: string[], own: string[]): string[] => {
+    const known = [...own, ...seo];
+    const anchors = anchorsOf(known);
+    const vocabulary = new Set(known.flatMap(wordsOf));
+    if (entry.freeClaim) for (const w of FREE_WORDS) vocabulary.add(w);
+    const onTopic = (t: string) => {
+      const lower = t.toLocaleLowerCase("tr");
+      return isOwnTerm(t) && anchors.some((a) => lower.includes(a));
+    };
+    // Search Console sorguları sayfamıza gelen GERÇEK aramalardır, otomatik tamamlama herkesin aramasıdır;
+    // ikisine de konu + rakip + sözcük dağarcığı süzgeci uygulanır (sayfa başka şeylerle de bulunabilir:
+    // "combine pdf to word" gibi sorgu bu videonun konusu değildir).
+    const byValue = [...gsc].sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions).map((r) => r.query);
+    return dedupe(
+      [
+        ...byValue.filter((t) => onTopic(t) && fitsVocabulary(t, vocabulary)),
+        ...suggest.filter((t) => onTopic(t) && fitsVocabulary(t, vocabulary)),
+        ...seo.filter(onTopic),
+        ...own,
+      ],
+      60,
+    ).slice(0, 30);
+  };
+
+  const data = {
+    tr: build(gscTr, sugTr, bank.tr, entry.keywords.tr),
+    en: build(gscEn, sugEn, bank.en, entry.keywords.en),
+  };
+  toolKeywordCache.set(entry.id, { at: Date.now(), data });
+  return data;
 }
