@@ -57,6 +57,17 @@ const ICONS = {
     "M7.5 21c.4-2 2.1-3.5 4.5-3.5s4.1 1.5 4.5 3.5",
   ],
 };
+ICONS.watermark = ["M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7Z"];
+ICONS.encrypt = ["M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z", "M7 11V7a5 5 0 0 1 10 0v4"];
+ICONS["unlock-pdf"] = ["M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z", "M7 11V7a5 5 0 0 1 9.9-1"];
+ICONS["repair-pdf"] = ["M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"];
+ICONS["page-numbers"] = ["M4 9h16", "M4 15h16", "M10 3 8 21", "M16 3l-2 18"];
+ICONS["flip-pdf"] = ["M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3", "M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3", "M12 20v2", "M12 14v2", "M12 8v2", "M12 2v2"];
+ICONS["resize-pdf"] = ["M15 3h6v6", "M9 21H3v-6", "M21 3l-7 7", "M3 21l7-7"];
+ICONS["extract-images"] = ["M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z", "M9 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z", "m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"];
+ICONS["deskew-pdf"] = ["M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", "M3 3v5h5"];
+ICONS["flatten-pdf"] = ["M12 2 2 7l10 5 10-5-10-5Z", "m2 17 10 5 10-5"];
+ICONS["grayscale-pdf"] = ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z", "M12 18a6 6 0 0 0 0-12v12Z"];
 const FALLBACK_ICON = [
   "M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z",
   "M14 2v6h6",
@@ -103,6 +114,36 @@ function wrap(text, size, maxWidth) {
   return lines;
 }
 
+/**
+ * "A → B" başlığı: Roboto'da ok işareti yok (kutucuk çıkar), bu yüzden ok vektör olarak çizilir.
+ * Tek satıra sığmazsa null döner; çağıran normal kırılmış metne düşer (ok " - " olur).
+ */
+function arrowTitle(text, { maxWidth, sizeMax, sizeMin, topY }) {
+  const [left, right] = text.split("→").map((t) => t.trim());
+  if (!left || !right) return null;
+  for (let size = sizeMax; size >= sizeMin; size -= 4) {
+    const arrowW = size * 0.95;
+    const gap = size * 0.28;
+    const total = measure(left, size) + gap + arrowW + gap + measure(right, size);
+    if (total > maxWidth) continue;
+    const baseline = topY + size;
+    let x = (W - total) / 2;
+    const parts = [textPath(left, size, x, baseline)];
+    x += measure(left, size) + gap;
+    const cy = baseline - size * 0.36;
+    const t = size * 0.1;
+    const head = size * 0.34;
+    const hh = size * 0.24;
+    // Gövde (dikdörtgen) + uç (üçgen).
+    parts.push(`M${x} ${cy - t / 2}H${x + arrowW - head + 2}V${cy + t / 2}H${x}Z`);
+    parts.push(`M${x + arrowW} ${cy}L${x + arrowW - head} ${cy - hh}V${cy + hh}Z`);
+    x += arrowW + gap;
+    parts.push(textPath(right, size, x, baseline));
+    return { d: parts.join(" "), height: size * 1.14, size };
+  }
+  return null;
+}
+
 /** Ortalanmış çok satırlı metin; en büyük punto en fazla `maxLines` satıra sığacak şekilde seçilir. */
 function centeredBlock(text, { maxWidth, sizeMax, sizeMin, maxLines, lineRatio, topY }) {
   let size = sizeMax;
@@ -118,6 +159,13 @@ function centeredBlock(text, { maxWidth, sizeMax, sizeMin, maxLines, lineRatio, 
   return { d, height: lines.length * lineH, size };
 }
 
+/** `x-to-y` kimlikli dönüştürme araçları: simge yerine iki biçim rozeti ve ok gösterilir. */
+const FORMAT_LABELS = { pdf: "PDF", word: "WORD", excel: "EXCEL", ppt: "PPT", text: "TXT", pdfa: "PDF/A" };
+function conversionOf(id) {
+  const m = /^(pdf|word|excel|ppt)-to-(pdf|word|excel|ppt|text|pdfa)$/.exec(id);
+  return m ? [FORMAT_LABELS[m[1]], FORMAT_LABELS[m[2]]] : null;
+}
+
 function accentFor(id) {
   const key = ACCENT_BY_TOOL[id];
   if (key) return ACCENTS[key];
@@ -127,15 +175,40 @@ function accentFor(id) {
   return ACCENTS[names[h % names.length]];
 }
 
+/** İki biçim rozeti (üst: kaynak, alt: hedef) ve aralarında aşağı ok. */
+function conversionGlyph([from, to], tileX, tileY, tile) {
+  const chipW = 250;
+  const chipH = 96;
+  const cx = tileX + tile / 2;
+  const chip = (label, y) => {
+    const size = 50;
+    const x = cx - chipW / 2;
+    return `<rect x="${x}" y="${y}" width="${chipW}" height="${chipH}" rx="28" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.55" stroke-width="3"/>
+  <path d="${textPath(label, size, cx - measure(label, size) / 2, y + chipH / 2 + size * 0.35)}" fill="#ffffff"/>`;
+  };
+  const top = tileY + 62;
+  const bottom = tileY + tile - 62 - chipH;
+  const mid = (top + chipH + bottom) / 2;
+  return `${chip(from, top)}
+  <g stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M${cx} ${mid - 26}V${mid + 22}"/><path d="M${cx - 20} ${mid + 4}L${cx} ${mid + 26}L${cx + 20} ${mid + 4}"/>
+  </g>
+  ${chip(to, bottom)}`;
+}
+
 function coverSvg({ id, title, sub }) {
   const [a1, a2] = accentFor(id);
   const icon = ICONS[id] ?? FALLBACK_ICON;
+  const conversion = conversionOf(id);
 
   // Yerleşim (güvenli alan y=300..1620).
   const tile = 400;
   const tileX = (W - tile) / 2;
   const tileY = 500;
-  const titleBlock = centeredBlock(title, {
+  const titleBlock =
+    (title.includes("→") &&
+      arrowTitle(title, { maxWidth: 900, sizeMax: 118, sizeMin: 70, topY: tileY + tile + 90 })) ||
+    centeredBlock(title.replace(/\s*→\s*/g, " - "), {
     maxWidth: 900,
     sizeMax: 118,
     sizeMin: 70,
@@ -202,9 +275,13 @@ function coverSvg({ id, title, sub }) {
   <ellipse cx="${W / 2}" cy="${tileY + tile / 2}" rx="400" ry="400" fill="url(#halo)" opacity="0.55"/>
   <rect x="${tileX}" y="${tileY}" width="${tile}" height="${tile}" rx="96" fill="url(#glass)"/>
   <rect x="${tileX + 1.5}" y="${tileY + 1.5}" width="${tile - 3}" height="${tile - 3}" rx="94.5" fill="none" stroke="url(#rim)" stroke-width="3"/>
-  <g transform="translate(${iconOff} ${iconOffY}) scale(${iconScale})" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  ${
+    conversion
+      ? conversionGlyph(conversion, tileX, tileY, tile)
+      : `<g transform="translate(${iconOff} ${iconOffY}) scale(${iconScale})" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
     ${icon.map((d) => `<path d="${d}"/>`).join("")}
-  </g>
+  </g>`
+  }
 
   <path d="${titleBlock.d}" fill="#ffffff"/>
   <rect x="${(W - 150) / 2}" y="${barY}" width="150" height="10" rx="5" fill="url(#accent)"/>
@@ -215,15 +292,26 @@ function coverSvg({ id, title, sub }) {
 </svg>`;
 }
 
+/** Senaryo mu? (`id` + `intro.title` taşıyan nesne) */
+const isScenario = (x) => Boolean(x && typeof x === "object" && typeof x.id === "string" && x.intro?.title);
+
+/**
+ * Senaryo dosyaları iki biçimde olabilir: tek senaryo (`export default`) ya da çok senaryolu harita
+ * (`export const SIMPLE = { "pdf-to-word": {...}, ... }`). İkisi de taranır.
+ */
 async function loadScenarios() {
   const files = readdirSync(SCENARIOS_DIR).filter((f) => f.endsWith(".mjs"));
-  const out = [];
+  const found = new Map();
   for (const f of files) {
     const mod = await import(pathToFileURL(join(SCENARIOS_DIR, f)).href);
-    const s = mod.default;
-    if (s?.id && s.intro?.title) out.push({ id: s.id, title: s.intro.title, sub: s.intro.sub ?? "" });
+    for (const exported of Object.values(mod)) {
+      const candidates = isScenario(exported) ? [exported] : exported && typeof exported === "object" ? Object.values(exported) : [];
+      for (const c of candidates) {
+        if (isScenario(c)) found.set(c.id, { id: c.id, title: c.intro.title, sub: c.intro.sub ?? "" });
+      }
+    }
   }
-  return out;
+  return [...found.values()];
 }
 
 async function main() {
