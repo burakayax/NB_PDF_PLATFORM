@@ -407,48 +407,6 @@ export const TOOL_REEL_CATALOG: ToolReelCatalogEntry[] = [
     },
   },
   {
-    id: "page-numbers",
-    tr: {
-      title: "Sayfa Numarası: Belgeye düzgün sayfa numaraları ekleyin",
-      summary:
-        "Belgeye düzgün sayfa numaraları ekleyin.",
-      link: "https://www.pdfplatform.app/tools/page-numbers",
-    },
-    en: {
-      title: "Page Numbers: Add clean page numbers to the document",
-      summary:
-        "Add clean page numbers to the document.",
-      link: "https://www.pdfplatform.app/en/tools/page-numbers",
-    },
-    keywords: {
-      tr: ["sayfa numarası"],
-      en: ["page numbers"],
-      tagsTr: ["sayfa numarası"],
-      tagsEn: ["page numbers"],
-    },
-  },
-  {
-    id: "watermark",
-    tr: {
-      title: "Filigran Ekle: Sayfalara kendi damganızı veya yazınızı basın",
-      summary:
-        "Sayfalara kendi damganızı veya yazınızı basın.",
-      link: "https://www.pdfplatform.app/tools/watermark",
-    },
-    en: {
-      title: "Add Watermark: Stamp your own mark or text onto the pages",
-      summary:
-        "Stamp your own mark or text onto the pages.",
-      link: "https://www.pdfplatform.app/en/tools/watermark",
-    },
-    keywords: {
-      tr: ["filigran ekle"],
-      en: ["add watermark"],
-      tagsTr: ["filigran ekle"],
-      tagsEn: ["add watermark"],
-    },
-  },
-  {
     id: "encrypt",
     tr: {
       title: "PDF Şifrele: Belgeyi parolayla koruyup izinleri belirleyin",

@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       tool:
-        description: "Elle üret: araç kimliği (compress, merge). Boş bırakılırsa yalnızca sıradaki araç için, gerekiyorsa üretilir."
+        description: "Elle üret: araç kimliği (ör. compress, merge, cv-olustur, pdf-to-word…). Boş bırakılırsa yalnızca sıradaki araç için, gerekiyorsa üretilir."
         required: false
         default: ""
 
@@ -85,7 +85,8 @@ jobs:
           sudo apt-get install -y ffmpeg fonts-dejavu-core
           ffmpeg -hide_banner -filters | grep -q drawtext
           python -m pip install --upgrade pip
-          pip install pymupdf pillow
+          # Örnek belgeler: PDF/görsel (pymupdf, pillow) + Word/Excel/PowerPoint dosyaları (python-docx, openpyxl, python-pptx)
+          pip install pymupdf pillow python-docx openpyxl python-pptx
           (cd web/frontend && npm ci && npx playwright install --with-deps chromium)
 
       - name: Videoyu uret

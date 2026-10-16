@@ -6,12 +6,14 @@
  * zaman çizelgesinden kurgu aşamasında (compose.mjs) üretilir.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 export async function createStage({ baseUrl, workDir, viewport = { width: 860, height: 1700 } }) {
   const VW = viewport.width;
   const VH = viewport.height;
+  // Önceki (yarım kalmış) bir çekimden artan kayıt dosyası kurguya karışmasın.
+  rmSync(`${workDir}/rec`, { recursive: true, force: true });
   mkdirSync(`${workDir}/rec`, { recursive: true });
   const browser = await chromium.launch();
   const ctx = await browser.newContext({
@@ -221,9 +223,18 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     await wait(214);
   }
 
-  /** Sonuç ekranının üst konumu (kurgu, geçişte bu noktadan keser). */
-  async function resultTop() {
-    const rb = await pg.getByText(/^PDF hazır/).first().boundingBox();
+  /** Sonuç ekranının üst konumu (kurgu, geçişte bu noktadan keser). Gerekirse sayfa görünür alana kaydırılır. */
+  async function resultTop(re = /^(PDF hazır|Dosyan hazır)/) {
+    const loc = pg.getByText(re).first();
+    let rb = await loc.boundingBox();
+    if (rb.y > 900 || rb.y < 120) {
+      await pg.evaluate((d) => {
+        const sc = document.querySelector(".app-shell__scroll");
+        if (sc) { sc.style.scrollBehavior = "auto"; sc.scrollTop += d; }
+      }, rb.y - 420);
+      await wait(400);
+      rb = await loc.boundingBox();
+    }
     return { x: rb.x, y: rb.y };
   }
 
