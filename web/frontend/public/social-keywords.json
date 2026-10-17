@@ -1,4 +1,1408 @@
 {
+  "https://www.pdfplatform.app/blog/ofis-asistani-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Ofis Asistanı / Sekreter",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Office Administrator",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/office-administrator-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Ofis Asistanı / Sekreter",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Office Administrator",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/grafik-tasarimci-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Grafik Tasarımcı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Graphic Designer",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/graphic-designer-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Grafik Tasarımcı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Graphic Designer",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/yonetici-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Yönetici",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Manager",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/manager-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Yönetici",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Manager",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/depo-lojistik-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Depo ve Lojistik Çalışanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Warehouse & Logistics Associate",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/warehouse-logistics-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Depo ve Lojistik Çalışanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Warehouse & Logistics Associate",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/garson-otel-restoran-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Garson / Otel / Restoran Çalışanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Hospitality & Restaurant Worker",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/hospitality-server-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Garson / Otel / Restoran Çalışanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Hospitality & Restaurant Worker",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/muhendis-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Mühendis",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Engineer",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/engineer-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Mühendis",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Engineer",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/dijital-pazarlama-uzmani-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Dijital Pazarlama Uzmanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Digital Marketing Specialist",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/digital-marketing-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Dijital Pazarlama Uzmanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Digital Marketing Specialist",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/insan-kaynaklari-uzmani-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "İnsan Kaynakları Uzmanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "HR Specialist",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/hr-specialist-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "İnsan Kaynakları Uzmanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "HR Specialist",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/musteri-temsilcisi-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Müşteri Temsilcisi",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Customer Service Representative",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/customer-service-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Müşteri Temsilcisi",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Customer Service Representative",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/hemsire-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Hemşire",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Nurse",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/nurse-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Hemşire",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Nurse",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/ogretmen-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Öğretmen",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Teacher",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/teacher-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Öğretmen",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Teacher",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/yazilim-gelistirici-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Yazılım Geliştirici",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Software Developer",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/software-developer-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Yazılım Geliştirici",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Software Developer",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/muhasebeci-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Muhasebeci",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Accountant",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/accountant-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Muhasebeci",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Accountant",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/satis-danismani-cv-ornegi": {
+    "tr": [
+      "CV Örneği",
+      "Satış Danışmanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Sales Representative",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/sales-representative-cv-example": {
+    "tr": [
+      "CV Örneği",
+      "Satış Danışmanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV Example",
+      "Sales Representative",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/cv-on-yazi-nasil-yazilir": {
+    "tr": [
+      "Ön Yazı",
+      "CV",
+      "İş Başvurusu",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "Cover Letter",
+      "CV",
+      "Job Application",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/how-to-write-a-cover-letter": {
+    "tr": [
+      "Ön Yazı",
+      "CV",
+      "İş Başvurusu",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "Cover Letter",
+      "CV",
+      "Job Application",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/europass-tarzi-cv-nasil-hazirlanir": {
+    "tr": [
+      "CV",
+      "Europass",
+      "Yurt Dışı Başvuru",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV",
+      "Europass",
+      "International",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/europass-style-cv": {
+    "tr": [
+      "CV",
+      "Europass",
+      "Yurt Dışı Başvuru",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV",
+      "Europass",
+      "International",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir": {
+    "tr": [
+      "CV",
+      "İş İlanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV",
+      "Job Ad",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/tailor-cv-to-job-ad": {
+    "tr": [
+      "CV",
+      "İş İlanı",
+      "ATS",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV",
+      "Job Ad",
+      "ATS",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/linkedin-profil-fotografi-ipuclari": {
+    "tr": [
+      "LinkedIn",
+      "Profil Fotoğrafı",
+      "Kariyer",
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "LinkedIn",
+      "Profile Photo",
+      "Career",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/en/blog/linkedin-profile-photo-tips": {
+    "tr": [
+      "LinkedIn",
+      "Profil Fotoğrafı",
+      "Kariyer",
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "LinkedIn",
+      "Profile Photo",
+      "Career",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir": {
+    "tr": [
+      "Vesikalık",
+      "Fotoğraf",
+      "Telefon",
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "ID Photo",
+      "Photography",
+      "Phone",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/en/blog/take-id-photo-at-home": {
+    "tr": [
+      "Vesikalık",
+      "Fotoğraf",
+      "Telefon",
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "ID Photo",
+      "Photography",
+      "Phone",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/blog/biyometrik-fotograf-olculeri-ve-kurallari": {
+    "tr": [
+      "Biyometrik Fotoğraf",
+      "Pasaport",
+      "Vize",
+      "vesikalık fotoğraf hazırlama",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "Biometric Photo",
+      "Passport",
+      "Visa",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/en/blog/biometric-photo-sizes-and-rules": {
+    "tr": [
+      "Biyometrik Fotoğraf",
+      "Pasaport",
+      "Vize",
+      "vesikalık fotoğraf hazırlama",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "Biometric Photo",
+      "Passport",
+      "Visa",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/blog/cv-fotografi-nasil-olmali": {
+    "tr": [
+      "CV Fotoğrafı",
+      "Profesyonel Fotoğraf",
+      "İş Başvurusu",
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "CV Photo",
+      "Professional Photo",
+      "Job Application",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/en/blog/cv-photo-guide": {
+    "tr": [
+      "CV Fotoğrafı",
+      "Profesyonel Fotoğraf",
+      "İş Başvurusu",
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "CV Photo",
+      "Professional Photo",
+      "Job Application",
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir": {
+    "tr": [
+      "ATS",
+      "CV",
+      "İşe Alım",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "ATS",
+      "CV",
+      "Hiring",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/ats-friendly-cv": {
+    "tr": [
+      "ATS",
+      "CV",
+      "İşe Alım",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "ATS",
+      "CV",
+      "Hiring",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/blog/cv-nasil-hazirlanir": {
+    "tr": [
+      "CV",
+      "Özgeçmiş",
+      "İş Başvurusu",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV",
+      "Resume",
+      "Job Application",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/blog/how-to-write-a-cv": {
+    "tr": [
+      "CV",
+      "Özgeçmiş",
+      "İş Başvurusu",
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv"
+    ],
+    "en": [
+      "CV",
+      "Resume",
+      "Job Application",
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
   "https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir": {
     "tr": [
       "Yapay Zekâ",
@@ -444,7 +1848,10 @@
       "pdf bölme",
       "pdf sayfa ayırma",
       "pdf split",
-      "pdf'ten sayfa çıkarma"
+      "pdf'ten sayfa çıkarma",
+      "pdf boyuta göre bölme",
+      "pdf her n sayfada böl",
+      "pdf yer imine göre bölme"
     ],
     "en": [
       "HR",
@@ -453,7 +1860,10 @@
       "split pdf",
       "extract pdf pages",
       "separate pdf pages",
-      "split pdf online"
+      "split pdf online",
+      "split pdf by size",
+      "split pdf every n pages",
+      "split pdf by bookmarks"
     ],
     "tool": "/tools/split-pdf"
   },
@@ -466,7 +1876,10 @@
       "pdf bölme",
       "pdf sayfa ayırma",
       "pdf split",
-      "pdf'ten sayfa çıkarma"
+      "pdf'ten sayfa çıkarma",
+      "pdf boyuta göre bölme",
+      "pdf her n sayfada böl",
+      "pdf yer imine göre bölme"
     ],
     "en": [
       "HR",
@@ -475,7 +1888,10 @@
       "split pdf",
       "extract pdf pages",
       "separate pdf pages",
-      "split pdf online"
+      "split pdf online",
+      "split pdf by size",
+      "split pdf every n pages",
+      "split pdf by bookmarks"
     ],
     "tool": "/tools/split-pdf"
   },
@@ -1896,7 +3312,11 @@
       "Sayfa Numarası",
       "pdf sayfa numarası ekleme",
       "pdf numaralandırma",
-      "pdf page numbers"
+      "pdf page numbers",
+      "pdf üst bilgi alt bilgi ekleme",
+      "pdf header footer ekleme",
+      "pdf bates numarası",
+      "pdf sıfırlı sayfa numarası"
     ],
     "en": [
       "Editing",
@@ -1904,7 +3324,9 @@
       "Page Numbers",
       "add page numbers to pdf",
       "number pdf pages",
-      "pdf pagination"
+      "pdf pagination",
+      "add header and footer to pdf",
+      "pdf bates numbering"
     ],
     "tool": "/tools/page-numbers"
   },
@@ -1915,7 +3337,11 @@
       "Sayfa Numarası",
       "pdf sayfa numarası ekleme",
       "pdf numaralandırma",
-      "pdf page numbers"
+      "pdf page numbers",
+      "pdf üst bilgi alt bilgi ekleme",
+      "pdf header footer ekleme",
+      "pdf bates numarası",
+      "pdf sıfırlı sayfa numarası"
     ],
     "en": [
       "Editing",
@@ -1923,7 +3349,9 @@
       "Page Numbers",
       "add page numbers to pdf",
       "number pdf pages",
-      "pdf pagination"
+      "pdf pagination",
+      "add header and footer to pdf",
+      "pdf bates numbering"
     ],
     "tool": "/tools/page-numbers"
   },
@@ -2526,7 +3954,10 @@
       "pdf bölme",
       "pdf sayfa ayırma",
       "pdf split",
-      "pdf'ten sayfa çıkarma"
+      "pdf'ten sayfa çıkarma",
+      "pdf boyuta göre bölme",
+      "pdf her n sayfada böl",
+      "pdf yer imine göre bölme"
     ],
     "en": [
       "Edit PDF",
@@ -2535,7 +3966,10 @@
       "split pdf",
       "extract pdf pages",
       "separate pdf pages",
-      "split pdf online"
+      "split pdf online",
+      "split pdf by size",
+      "split pdf every n pages",
+      "split pdf by bookmarks"
     ],
     "tool": "/tools/split-pdf"
   },
@@ -2548,7 +3982,10 @@
       "pdf bölme",
       "pdf sayfa ayırma",
       "pdf split",
-      "pdf'ten sayfa çıkarma"
+      "pdf'ten sayfa çıkarma",
+      "pdf boyuta göre bölme",
+      "pdf her n sayfada böl",
+      "pdf yer imine göre bölme"
     ],
     "en": [
       "Edit PDF",
@@ -2557,7 +3994,10 @@
       "split pdf",
       "extract pdf pages",
       "separate pdf pages",
-      "split pdf online"
+      "split pdf online",
+      "split pdf by size",
+      "split pdf every n pages",
+      "split pdf by bookmarks"
     ],
     "tool": "/tools/split-pdf"
   },
@@ -3346,5 +4786,1937 @@
       "document data extraction"
     ],
     "tool": "/tools/pdf-veri-cikar"
+  },
+  "https://www.pdfplatform.app/tools/gorsel-sikistir": {
+    "tr": [
+      "fotoğraf boyutu küçültme",
+      "resim boyutu küçültme kb",
+      "resim kb düşürme",
+      "fotoğraf kb düşürme",
+      "100 kb resim yapma",
+      "50 kb fotoğraf",
+      "resim mb düşürme",
+      "görsel sıkıştırma",
+      "jpg sıkıştırma",
+      "online resim sıkıştırıcı"
+    ],
+    "en": [
+      "reduce image size in kb",
+      "compress image to 100kb",
+      "reduce photo size kb",
+      "image compressor",
+      "compress image to target size",
+      "reduce image size",
+      "compress jpg",
+      "online image compressor"
+    ],
+    "tool": "/tools/gorsel-sikistir"
+  },
+  "https://www.pdfplatform.app/en/tools/compress-image": {
+    "tr": [
+      "fotoğraf boyutu küçültme",
+      "resim boyutu küçültme kb",
+      "resim kb düşürme",
+      "fotoğraf kb düşürme",
+      "100 kb resim yapma",
+      "50 kb fotoğraf",
+      "resim mb düşürme",
+      "görsel sıkıştırma",
+      "jpg sıkıştırma",
+      "online resim sıkıştırıcı"
+    ],
+    "en": [
+      "reduce image size in kb",
+      "compress image to 100kb",
+      "reduce photo size kb",
+      "image compressor",
+      "compress image to target size",
+      "reduce image size",
+      "compress jpg",
+      "online image compressor"
+    ],
+    "tool": "/tools/gorsel-sikistir"
+  },
+  "https://www.pdfplatform.app/tools/gorsel-boyutlandir": {
+    "tr": [
+      "görsel boyutlandırma",
+      "resim boyutlandırma",
+      "fotoğraf boyutu değiştirme",
+      "instagram görsel boyutu",
+      "sosyal medya görsel ölçüleri",
+      "resim yeniden boyutlandırma",
+      "online resize"
+    ],
+    "en": [
+      "resize image",
+      "image resizer",
+      "change image size",
+      "instagram image size",
+      "social media image sizes",
+      "resize photo online",
+      "image dimensions"
+    ],
+    "tool": "/tools/gorsel-boyutlandir"
+  },
+  "https://www.pdfplatform.app/en/tools/resize-image": {
+    "tr": [
+      "görsel boyutlandırma",
+      "resim boyutlandırma",
+      "fotoğraf boyutu değiştirme",
+      "instagram görsel boyutu",
+      "sosyal medya görsel ölçüleri",
+      "resim yeniden boyutlandırma",
+      "online resize"
+    ],
+    "en": [
+      "resize image",
+      "image resizer",
+      "change image size",
+      "instagram image size",
+      "social media image sizes",
+      "resize photo online",
+      "image dimensions"
+    ],
+    "tool": "/tools/gorsel-boyutlandir"
+  },
+  "https://www.pdfplatform.app/tools/pdf-kesit-al": {
+    "tr": [
+      "pdf kesit alma",
+      "pdf'ten görsel kırpma",
+      "pdf'ten resim kesme",
+      "pdf tablo görsel kaydetme",
+      "pdf ekran görüntüsü",
+      "pdf'ten soru kırpma",
+      "pdf alan seçip kaydetme"
+    ],
+    "en": [
+      "snip pdf",
+      "crop image from pdf",
+      "extract part of pdf as image",
+      "save pdf table as image",
+      "pdf screenshot tool",
+      "crop pdf region",
+      "pdf to png region"
+    ],
+    "tool": "/tools/pdf-kesit-al"
+  },
+  "https://www.pdfplatform.app/en/tools/crop-pdf-to-image": {
+    "tr": [
+      "pdf kesit alma",
+      "pdf'ten görsel kırpma",
+      "pdf'ten resim kesme",
+      "pdf tablo görsel kaydetme",
+      "pdf ekran görüntüsü",
+      "pdf'ten soru kırpma",
+      "pdf alan seçip kaydetme"
+    ],
+    "en": [
+      "snip pdf",
+      "crop image from pdf",
+      "extract part of pdf as image",
+      "save pdf table as image",
+      "pdf screenshot tool",
+      "crop pdf region",
+      "pdf to png region"
+    ],
+    "tool": "/tools/pdf-kesit-al"
+  },
+  "https://www.pdfplatform.app/tools/merge-pdf": {
+    "tr": [
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/merge-pdf": {
+    "tr": [
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/tools/split-pdf": {
+    "tr": [
+      "pdf ayırma",
+      "pdf bölme",
+      "pdf sayfa ayırma",
+      "pdf split",
+      "pdf'ten sayfa çıkarma",
+      "pdf boyuta göre bölme",
+      "pdf her n sayfada böl",
+      "pdf yer imine göre bölme"
+    ],
+    "en": [
+      "split pdf",
+      "extract pdf pages",
+      "separate pdf pages",
+      "split pdf online",
+      "split pdf by size",
+      "split pdf every n pages",
+      "split pdf by bookmarks"
+    ],
+    "tool": "/tools/split-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/split-pdf": {
+    "tr": [
+      "pdf ayırma",
+      "pdf bölme",
+      "pdf sayfa ayırma",
+      "pdf split",
+      "pdf'ten sayfa çıkarma",
+      "pdf boyuta göre bölme",
+      "pdf her n sayfada böl",
+      "pdf yer imine göre bölme"
+    ],
+    "en": [
+      "split pdf",
+      "extract pdf pages",
+      "separate pdf pages",
+      "split pdf online",
+      "split pdf by size",
+      "split pdf every n pages",
+      "split pdf by bookmarks"
+    ],
+    "tool": "/tools/split-pdf"
+  },
+  "https://www.pdfplatform.app/tools/delete-pages": {
+    "tr": [
+      "pdf sayfa silme",
+      "pdf'ten sayfa silme",
+      "pdf sayfa kaldırma",
+      "delete pdf pages"
+    ],
+    "en": [
+      "delete pdf pages",
+      "remove pdf pages",
+      "erase pdf page"
+    ],
+    "tool": "/tools/delete-pages"
+  },
+  "https://www.pdfplatform.app/en/tools/delete-pages": {
+    "tr": [
+      "pdf sayfa silme",
+      "pdf'ten sayfa silme",
+      "pdf sayfa kaldırma",
+      "delete pdf pages"
+    ],
+    "en": [
+      "delete pdf pages",
+      "remove pdf pages",
+      "erase pdf page"
+    ],
+    "tool": "/tools/delete-pages"
+  },
+  "https://www.pdfplatform.app/tools/rotate-pdf": {
+    "tr": [
+      "pdf döndürme",
+      "pdf sayfa çevirme",
+      "pdf çevirme",
+      "rotate pdf"
+    ],
+    "en": [
+      "rotate pdf",
+      "turn pdf page",
+      "rotate pdf online"
+    ],
+    "tool": "/tools/rotate-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/rotate-pdf": {
+    "tr": [
+      "pdf döndürme",
+      "pdf sayfa çevirme",
+      "pdf çevirme",
+      "rotate pdf"
+    ],
+    "en": [
+      "rotate pdf",
+      "turn pdf page",
+      "rotate pdf online"
+    ],
+    "tool": "/tools/rotate-pdf"
+  },
+  "https://www.pdfplatform.app/tools/organize-pdf": {
+    "tr": [
+      "pdf sayfa düzenleme",
+      "pdf sayfa sıralama",
+      "pdf sayfaları taşıma",
+      "organize pdf"
+    ],
+    "en": [
+      "organize pdf",
+      "reorder pdf pages",
+      "rearrange pdf"
+    ],
+    "tool": "/tools/organize-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/organize-pdf": {
+    "tr": [
+      "pdf sayfa düzenleme",
+      "pdf sayfa sıralama",
+      "pdf sayfaları taşıma",
+      "organize pdf"
+    ],
+    "en": [
+      "organize pdf",
+      "reorder pdf pages",
+      "rearrange pdf"
+    ],
+    "tool": "/tools/organize-pdf"
+  },
+  "https://www.pdfplatform.app/tools/compress": {
+    "tr": [
+      "pdf sıkıştırma",
+      "pdf boyut küçültme",
+      "pdf küçültme",
+      "pdf boyutunu mb'a düşürme",
+      "pdf boyutunu kb'a düşürme",
+      "compress pdf"
+    ],
+    "en": [
+      "compress pdf",
+      "reduce pdf size",
+      "shrink pdf",
+      "compress pdf online"
+    ],
+    "tool": "/tools/compress"
+  },
+  "https://www.pdfplatform.app/en/tools/compress": {
+    "tr": [
+      "pdf sıkıştırma",
+      "pdf boyut küçültme",
+      "pdf küçültme",
+      "pdf boyutunu mb'a düşürme",
+      "pdf boyutunu kb'a düşürme",
+      "compress pdf"
+    ],
+    "en": [
+      "compress pdf",
+      "reduce pdf size",
+      "shrink pdf",
+      "compress pdf online"
+    ],
+    "tool": "/tools/compress"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-word": {
+    "tr": [
+      "pdf'den word'e",
+      "pdf word dönüştürme",
+      "pdf to word",
+      "pdf'i word yapma",
+      "pdf docx dönüştürme"
+    ],
+    "en": [
+      "pdf to word",
+      "pdf to docx",
+      "convert pdf to word"
+    ],
+    "tool": "/tools/pdf-to-word"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-word": {
+    "tr": [
+      "pdf'den word'e",
+      "pdf word dönüştürme",
+      "pdf to word",
+      "pdf'i word yapma",
+      "pdf docx dönüştürme"
+    ],
+    "en": [
+      "pdf to word",
+      "pdf to docx",
+      "convert pdf to word"
+    ],
+    "tool": "/tools/pdf-to-word"
+  },
+  "https://www.pdfplatform.app/tools/word-to-pdf": {
+    "tr": [
+      "word'den pdf'e",
+      "word pdf dönüştürme",
+      "word to pdf",
+      "docx pdf yapma"
+    ],
+    "en": [
+      "word to pdf",
+      "docx to pdf",
+      "convert word to pdf"
+    ],
+    "tool": "/tools/word-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/word-to-pdf": {
+    "tr": [
+      "word'den pdf'e",
+      "word pdf dönüştürme",
+      "word to pdf",
+      "docx pdf yapma"
+    ],
+    "en": [
+      "word to pdf",
+      "docx to pdf",
+      "convert word to pdf"
+    ],
+    "tool": "/tools/word-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/excel-to-pdf": {
+    "tr": [
+      "excel'den pdf'e",
+      "excel pdf dönüştürme",
+      "excel to pdf",
+      "xlsx pdf yapma"
+    ],
+    "en": [
+      "excel to pdf",
+      "xlsx to pdf",
+      "spreadsheet to pdf"
+    ],
+    "tool": "/tools/excel-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/excel-to-pdf": {
+    "tr": [
+      "excel'den pdf'e",
+      "excel pdf dönüştürme",
+      "excel to pdf",
+      "xlsx pdf yapma"
+    ],
+    "en": [
+      "excel to pdf",
+      "xlsx to pdf",
+      "spreadsheet to pdf"
+    ],
+    "tool": "/tools/excel-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-excel": {
+    "tr": [
+      "pdf'den excel'e",
+      "pdf excel dönüştürme",
+      "pdf to excel",
+      "pdf tablo çıkarma"
+    ],
+    "en": [
+      "pdf to excel",
+      "pdf to xlsx",
+      "extract pdf tables"
+    ],
+    "tool": "/tools/pdf-to-excel"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-excel": {
+    "tr": [
+      "pdf'den excel'e",
+      "pdf excel dönüştürme",
+      "pdf to excel",
+      "pdf tablo çıkarma"
+    ],
+    "en": [
+      "pdf to excel",
+      "pdf to xlsx",
+      "extract pdf tables"
+    ],
+    "tool": "/tools/pdf-to-excel"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-ppt": {
+    "tr": [
+      "pdf'den powerpoint'e",
+      "pdf ppt dönüştürme",
+      "pdf to ppt",
+      "pdf to powerpoint"
+    ],
+    "en": [
+      "pdf to ppt",
+      "pdf to powerpoint",
+      "pdf to pptx"
+    ],
+    "tool": "/tools/pdf-to-ppt"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-ppt": {
+    "tr": [
+      "pdf'den powerpoint'e",
+      "pdf ppt dönüştürme",
+      "pdf to ppt",
+      "pdf to powerpoint"
+    ],
+    "en": [
+      "pdf to ppt",
+      "pdf to powerpoint",
+      "pdf to pptx"
+    ],
+    "tool": "/tools/pdf-to-ppt"
+  },
+  "https://www.pdfplatform.app/tools/ppt-to-pdf": {
+    "tr": [
+      "powerpoint'ten pdf'e",
+      "ppt pdf dönüştürme",
+      "ppt to pdf",
+      "sunum pdf yapma"
+    ],
+    "en": [
+      "ppt to pdf",
+      "pptx to pdf",
+      "presentation to pdf"
+    ],
+    "tool": "/tools/ppt-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/ppt-to-pdf": {
+    "tr": [
+      "powerpoint'ten pdf'e",
+      "ppt pdf dönüştürme",
+      "ppt to pdf",
+      "sunum pdf yapma"
+    ],
+    "en": [
+      "ppt to pdf",
+      "pptx to pdf",
+      "presentation to pdf"
+    ],
+    "tool": "/tools/ppt-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-image": {
+    "tr": [
+      "pdf'den jpg'ye",
+      "pdf'den görüntüye",
+      "pdf to jpg",
+      "pdf to image",
+      "pdf png dönüştürme"
+    ],
+    "en": [
+      "pdf to jpg",
+      "pdf to image",
+      "pdf to png",
+      "convert pdf to image"
+    ],
+    "tool": "/tools/pdf-to-image"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-image": {
+    "tr": [
+      "pdf'den jpg'ye",
+      "pdf'den görüntüye",
+      "pdf to jpg",
+      "pdf to image",
+      "pdf png dönüştürme"
+    ],
+    "en": [
+      "pdf to jpg",
+      "pdf to image",
+      "pdf to png",
+      "convert pdf to image"
+    ],
+    "tool": "/tools/pdf-to-image"
+  },
+  "https://www.pdfplatform.app/tools/image-to-pdf": {
+    "tr": [
+      "jpg'den pdf'e",
+      "görüntüden pdf'e",
+      "image to pdf",
+      "kayıt olmadan jpg pdf",
+      "fotoğraf pdf yapma"
+    ],
+    "en": [
+      "jpg to pdf",
+      "image to pdf",
+      "png to pdf",
+      "photos to pdf"
+    ],
+    "tool": "/tools/image-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/image-to-pdf": {
+    "tr": [
+      "jpg'den pdf'e",
+      "görüntüden pdf'e",
+      "image to pdf",
+      "kayıt olmadan jpg pdf",
+      "fotoğraf pdf yapma"
+    ],
+    "en": [
+      "jpg to pdf",
+      "image to pdf",
+      "png to pdf",
+      "photos to pdf"
+    ],
+    "tool": "/tools/image-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/belge-tara": {
+    "tr": [
+      "belge tarama",
+      "pdf tara",
+      "telefonla belge tarama",
+      "belge tarayıcı",
+      "pdf tarayıcı",
+      "belge tarama ücretsiz",
+      "online belge tarama",
+      "fotoğraftan belge tarama",
+      "belge tarama uygulaması",
+      "kamera ile pdf",
+      "camscanner alternatif"
+    ],
+    "en": [
+      "document scanner",
+      "scan to pdf",
+      "scan document with phone",
+      "pdf scanner",
+      "free document scanner",
+      "camera to pdf",
+      "camscanner alternative"
+    ],
+    "tool": "/tools/belge-tara"
+  },
+  "https://www.pdfplatform.app/en/tools/scan-document": {
+    "tr": [
+      "belge tarama",
+      "pdf tara",
+      "telefonla belge tarama",
+      "belge tarayıcı",
+      "pdf tarayıcı",
+      "belge tarama ücretsiz",
+      "online belge tarama",
+      "fotoğraftan belge tarama",
+      "belge tarama uygulaması",
+      "kamera ile pdf",
+      "camscanner alternatif"
+    ],
+    "en": [
+      "document scanner",
+      "scan to pdf",
+      "scan document with phone",
+      "pdf scanner",
+      "free document scanner",
+      "camera to pdf",
+      "camscanner alternative"
+    ],
+    "tool": "/tools/belge-tara"
+  },
+  "https://www.pdfplatform.app/tools/aranabilir-pdf": {
+    "tr": [
+      "aranabilir pdf",
+      "ocr pdf",
+      "pdf ocr",
+      "taranan pdf aranabilir",
+      "pdf metin tanıma",
+      "searchable pdf",
+      "pdf aranabilir yapma",
+      "taranmış pdf arama"
+    ],
+    "en": [
+      "searchable pdf",
+      "ocr pdf",
+      "make pdf searchable",
+      "pdf ocr online",
+      "scanned pdf to searchable",
+      "pdf text recognition",
+      "convert scan to searchable pdf"
+    ],
+    "tool": "/tools/aranabilir-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/searchable-pdf": {
+    "tr": [
+      "aranabilir pdf",
+      "ocr pdf",
+      "pdf ocr",
+      "taranan pdf aranabilir",
+      "pdf metin tanıma",
+      "searchable pdf",
+      "pdf aranabilir yapma",
+      "taranmış pdf arama"
+    ],
+    "en": [
+      "searchable pdf",
+      "ocr pdf",
+      "make pdf searchable",
+      "pdf ocr online",
+      "scanned pdf to searchable",
+      "pdf text recognition",
+      "convert scan to searchable pdf"
+    ],
+    "tool": "/tools/aranabilir-pdf"
+  },
+  "https://www.pdfplatform.app/tools/html-to-pdf": {
+    "tr": [
+      "html'den pdf'e",
+      "url'den pdf'e",
+      "html to pdf",
+      "web sayfası pdf yapma"
+    ],
+    "en": [
+      "html to pdf",
+      "url to pdf",
+      "web page to pdf"
+    ],
+    "tool": "/tools/html-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/html-to-pdf": {
+    "tr": [
+      "html'den pdf'e",
+      "url'den pdf'e",
+      "html to pdf",
+      "web sayfası pdf yapma"
+    ],
+    "en": [
+      "html to pdf",
+      "url to pdf",
+      "web page to pdf"
+    ],
+    "tool": "/tools/html-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/unlock-pdf": {
+    "tr": [
+      "pdf şifre kaldırma",
+      "pdf parola kaldırma",
+      "pdf kilit açma",
+      "unlock pdf"
+    ],
+    "en": [
+      "unlock pdf",
+      "remove pdf password",
+      "decrypt pdf"
+    ],
+    "tool": "/tools/unlock-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/unlock-pdf": {
+    "tr": [
+      "pdf şifre kaldırma",
+      "pdf parola kaldırma",
+      "pdf kilit açma",
+      "unlock pdf"
+    ],
+    "en": [
+      "unlock pdf",
+      "remove pdf password",
+      "decrypt pdf"
+    ],
+    "tool": "/tools/unlock-pdf"
+  },
+  "https://www.pdfplatform.app/tools/watermark": {
+    "tr": [
+      "pdf filigran ekleme",
+      "pdf watermark",
+      "pdf damgalama",
+      "pdf'e logo ekleme"
+    ],
+    "en": [
+      "add watermark to pdf",
+      "pdf watermark",
+      "stamp pdf",
+      "logo on pdf"
+    ],
+    "tool": "/tools/watermark"
+  },
+  "https://www.pdfplatform.app/en/tools/watermark": {
+    "tr": [
+      "pdf filigran ekleme",
+      "pdf watermark",
+      "pdf damgalama",
+      "pdf'e logo ekleme"
+    ],
+    "en": [
+      "add watermark to pdf",
+      "pdf watermark",
+      "stamp pdf",
+      "logo on pdf"
+    ],
+    "tool": "/tools/watermark"
+  },
+  "https://www.pdfplatform.app/tools/page-numbers": {
+    "tr": [
+      "pdf sayfa numarası ekleme",
+      "pdf numaralandırma",
+      "pdf page numbers",
+      "pdf üst bilgi alt bilgi ekleme",
+      "pdf header footer ekleme",
+      "pdf bates numarası",
+      "pdf sıfırlı sayfa numarası"
+    ],
+    "en": [
+      "add page numbers to pdf",
+      "number pdf pages",
+      "pdf pagination",
+      "add header and footer to pdf",
+      "pdf bates numbering"
+    ],
+    "tool": "/tools/page-numbers"
+  },
+  "https://www.pdfplatform.app/en/tools/page-numbers": {
+    "tr": [
+      "pdf sayfa numarası ekleme",
+      "pdf numaralandırma",
+      "pdf page numbers",
+      "pdf üst bilgi alt bilgi ekleme",
+      "pdf header footer ekleme",
+      "pdf bates numarası",
+      "pdf sıfırlı sayfa numarası"
+    ],
+    "en": [
+      "add page numbers to pdf",
+      "number pdf pages",
+      "pdf pagination",
+      "add header and footer to pdf",
+      "pdf bates numbering"
+    ],
+    "tool": "/tools/page-numbers"
+  },
+  "https://www.pdfplatform.app/tools/repair-pdf": {
+    "tr": [
+      "pdf onarma",
+      "bozuk pdf düzeltme",
+      "pdf kurtarma",
+      "repair pdf"
+    ],
+    "en": [
+      "repair pdf",
+      "fix corrupted pdf",
+      "recover pdf"
+    ],
+    "tool": "/tools/repair-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/repair-pdf": {
+    "tr": [
+      "pdf onarma",
+      "bozuk pdf düzeltme",
+      "pdf kurtarma",
+      "repair pdf"
+    ],
+    "en": [
+      "repair pdf",
+      "fix corrupted pdf",
+      "recover pdf"
+    ],
+    "tool": "/tools/repair-pdf"
+  },
+  "https://www.pdfplatform.app/tools/encrypt": {
+    "tr": [
+      "pdf şifreleme",
+      "pdf parola koruma",
+      "pdf'e şifre ekleme",
+      "encrypt pdf"
+    ],
+    "en": [
+      "encrypt pdf",
+      "password protect pdf",
+      "add password to pdf"
+    ],
+    "tool": "/tools/encrypt"
+  },
+  "https://www.pdfplatform.app/en/tools/encrypt": {
+    "tr": [
+      "pdf şifreleme",
+      "pdf parola koruma",
+      "pdf'e şifre ekleme",
+      "encrypt pdf"
+    ],
+    "en": [
+      "encrypt pdf",
+      "password protect pdf",
+      "add password to pdf"
+    ],
+    "tool": "/tools/encrypt"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-text": {
+    "tr": [
+      "pdf metin çıkarma",
+      "pdf'ten metin alma",
+      "pdf to text",
+      "pdf txt dönüştürme"
+    ],
+    "en": [
+      "pdf to text",
+      "extract text from pdf",
+      "pdf to txt"
+    ],
+    "tool": "/tools/pdf-to-text"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-text": {
+    "tr": [
+      "pdf metin çıkarma",
+      "pdf'ten metin alma",
+      "pdf to text",
+      "pdf txt dönüştürme"
+    ],
+    "en": [
+      "pdf to text",
+      "extract text from pdf",
+      "pdf to txt"
+    ],
+    "tool": "/tools/pdf-to-text"
+  },
+  "https://www.pdfplatform.app/tools/grayscale-pdf": {
+    "tr": [
+      "pdf gri tonlama",
+      "pdf siyah beyaz yapma",
+      "pdf grayscale",
+      "renkli pdf siyah beyaz",
+      "pdf renk kaldırma"
+    ],
+    "en": [
+      "grayscale pdf",
+      "pdf to black and white",
+      "convert pdf to grayscale",
+      "remove color from pdf"
+    ],
+    "tool": "/tools/grayscale-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/grayscale-pdf": {
+    "tr": [
+      "pdf gri tonlama",
+      "pdf siyah beyaz yapma",
+      "pdf grayscale",
+      "renkli pdf siyah beyaz",
+      "pdf renk kaldırma"
+    ],
+    "en": [
+      "grayscale pdf",
+      "pdf to black and white",
+      "convert pdf to grayscale",
+      "remove color from pdf"
+    ],
+    "tool": "/tools/grayscale-pdf"
+  },
+  "https://www.pdfplatform.app/tools/resize-pdf": {
+    "tr": [
+      "pdf sayfa boyutu değiştirme",
+      "pdf a4 yapma",
+      "pdf boyutlandırma",
+      "resize pdf",
+      "letter a4 dönüştürme"
+    ],
+    "en": [
+      "resize pdf pages",
+      "convert pdf to a4",
+      "change pdf page size",
+      "letter to a4 pdf"
+    ],
+    "tool": "/tools/resize-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/resize-pdf": {
+    "tr": [
+      "pdf sayfa boyutu değiştirme",
+      "pdf a4 yapma",
+      "pdf boyutlandırma",
+      "resize pdf",
+      "letter a4 dönüştürme"
+    ],
+    "en": [
+      "resize pdf pages",
+      "convert pdf to a4",
+      "change pdf page size",
+      "letter to a4 pdf"
+    ],
+    "tool": "/tools/resize-pdf"
+  },
+  "https://www.pdfplatform.app/tools/flip-pdf": {
+    "tr": [
+      "pdf çevirme",
+      "pdf ayna",
+      "pdf flip",
+      "pdf sayfa çevir",
+      "pdf yatay çevirme"
+    ],
+    "en": [
+      "flip pdf",
+      "mirror pdf",
+      "flip pdf pages",
+      "reverse pdf horizontally"
+    ],
+    "tool": "/tools/flip-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/flip-pdf": {
+    "tr": [
+      "pdf çevirme",
+      "pdf ayna",
+      "pdf flip",
+      "pdf sayfa çevir",
+      "pdf yatay çevirme"
+    ],
+    "en": [
+      "flip pdf",
+      "mirror pdf",
+      "flip pdf pages",
+      "reverse pdf horizontally"
+    ],
+    "tool": "/tools/flip-pdf"
+  },
+  "https://www.pdfplatform.app/tools/alternate-mix-pdf": {
+    "tr": [
+      "pdf dönüşümlü birleştirme",
+      "pdf sayfa serpiştirme",
+      "alternate mix pdf",
+      "çift taraflı tarama birleştirme",
+      "pdf ön arka yüz birleştirme"
+    ],
+    "en": [
+      "alternate and mix pdf",
+      "interleave pdf pages",
+      "merge double sided scan",
+      "combine front and back pdf"
+    ],
+    "tool": "/tools/alternate-mix-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/alternate-mix-pdf": {
+    "tr": [
+      "pdf dönüşümlü birleştirme",
+      "pdf sayfa serpiştirme",
+      "alternate mix pdf",
+      "çift taraflı tarama birleştirme",
+      "pdf ön arka yüz birleştirme"
+    ],
+    "en": [
+      "alternate and mix pdf",
+      "interleave pdf pages",
+      "merge double sided scan",
+      "combine front and back pdf"
+    ],
+    "tool": "/tools/alternate-mix-pdf"
+  },
+  "https://www.pdfplatform.app/tools/deskew-pdf": {
+    "tr": [
+      "pdf eğri tarama düzeltme",
+      "pdf deskew",
+      "eğri taranmış belge düzeltme",
+      "taranmış pdf düzleştirme",
+      "pdf sayfa eğriliği"
+    ],
+    "en": [
+      "deskew pdf",
+      "straighten scanned pdf",
+      "fix crooked scan",
+      "pdf skew correction"
+    ],
+    "tool": "/tools/deskew-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/deskew-pdf": {
+    "tr": [
+      "pdf eğri tarama düzeltme",
+      "pdf deskew",
+      "eğri taranmış belge düzeltme",
+      "taranmış pdf düzleştirme",
+      "pdf sayfa eğriliği"
+    ],
+    "en": [
+      "deskew pdf",
+      "straighten scanned pdf",
+      "fix crooked scan",
+      "pdf skew correction"
+    ],
+    "tool": "/tools/deskew-pdf"
+  },
+  "https://www.pdfplatform.app/tools/flatten-pdf": {
+    "tr": [
+      "pdf düzleştirme",
+      "pdf flatten",
+      "pdf form sabitleme",
+      "pdf formları gömme"
+    ],
+    "en": [
+      "flatten pdf",
+      "lock pdf form",
+      "embed pdf annotations"
+    ],
+    "tool": "/tools/flatten-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/flatten-pdf": {
+    "tr": [
+      "pdf düzleştirme",
+      "pdf flatten",
+      "pdf form sabitleme",
+      "pdf formları gömme"
+    ],
+    "en": [
+      "flatten pdf",
+      "lock pdf form",
+      "embed pdf annotations"
+    ],
+    "tool": "/tools/flatten-pdf"
+  },
+  "https://www.pdfplatform.app/tools/extract-images": {
+    "tr": [
+      "pdf resim çıkarma",
+      "pdf görsel çıkarma",
+      "pdf içinden fotoğraf çıkarma",
+      "pdf resimleri kaydetme",
+      "pdf logo çıkarma"
+    ],
+    "en": [
+      "extract images from pdf",
+      "pdf image extractor",
+      "save pictures from pdf",
+      "get images out of pdf",
+      "pdf photo extract"
+    ],
+    "tool": "/tools/extract-images"
+  },
+  "https://www.pdfplatform.app/en/tools/extract-images": {
+    "tr": [
+      "pdf resim çıkarma",
+      "pdf görsel çıkarma",
+      "pdf içinden fotoğraf çıkarma",
+      "pdf resimleri kaydetme",
+      "pdf logo çıkarma"
+    ],
+    "en": [
+      "extract images from pdf",
+      "pdf image extractor",
+      "save pictures from pdf",
+      "get images out of pdf",
+      "pdf photo extract"
+    ],
+    "tool": "/tools/extract-images"
+  },
+  "https://www.pdfplatform.app/tools/pdf-ozetle": {
+    "tr": [
+      "pdf özetle",
+      "pdf özetleme",
+      "yapay zeka pdf özet",
+      "ai ile pdf özeti",
+      "belge özetleme",
+      "sözleşme özetleme",
+      "ihale özetleme"
+    ],
+    "en": [
+      "summarize pdf",
+      "ai pdf summary",
+      "pdf summarizer",
+      "summarize contract",
+      "document summary ai"
+    ],
+    "tool": "/tools/pdf-ozetle"
+  },
+  "https://www.pdfplatform.app/en/tools/summarize-pdf": {
+    "tr": [
+      "pdf özetle",
+      "pdf özetleme",
+      "yapay zeka pdf özet",
+      "ai ile pdf özeti",
+      "belge özetleme",
+      "sözleşme özetleme",
+      "ihale özetleme"
+    ],
+    "en": [
+      "summarize pdf",
+      "ai pdf summary",
+      "pdf summarizer",
+      "summarize contract",
+      "document summary ai"
+    ],
+    "tool": "/tools/pdf-ozetle"
+  },
+  "https://www.pdfplatform.app/tools/pdf-sohbet": {
+    "tr": [
+      "pdf ile sohbet",
+      "pdf chat",
+      "belgeye soru sor",
+      "pdf soru cevap",
+      "yapay zeka pdf sohbet"
+    ],
+    "en": [
+      "chat with pdf",
+      "ask pdf questions",
+      "pdf chat ai",
+      "pdf q&a",
+      "talk to pdf"
+    ],
+    "tool": "/tools/pdf-sohbet"
+  },
+  "https://www.pdfplatform.app/en/tools/chat-with-pdf": {
+    "tr": [
+      "pdf ile sohbet",
+      "pdf chat",
+      "belgeye soru sor",
+      "pdf soru cevap",
+      "yapay zeka pdf sohbet"
+    ],
+    "en": [
+      "chat with pdf",
+      "ask pdf questions",
+      "pdf chat ai",
+      "pdf q&a",
+      "talk to pdf"
+    ],
+    "tool": "/tools/pdf-sohbet"
+  },
+  "https://www.pdfplatform.app/tools/pdf-duzenle": {
+    "tr": [
+      "pdf düzenle",
+      "pdf metni değiştir",
+      "pdf yazı sil",
+      "pdf metin düzenleme",
+      "pdf'te metni değiştir",
+      "online pdf editör",
+      "pdf üzerinde yazı değiştirme"
+    ],
+    "en": [
+      "edit pdf",
+      "change pdf text",
+      "delete text from pdf",
+      "edit pdf text",
+      "replace text in pdf",
+      "online pdf editor"
+    ],
+    "tool": "/tools/pdf-duzenle"
+  },
+  "https://www.pdfplatform.app/en/tools/edit-pdf": {
+    "tr": [
+      "pdf düzenle",
+      "pdf metni değiştir",
+      "pdf yazı sil",
+      "pdf metin düzenleme",
+      "pdf'te metni değiştir",
+      "online pdf editör",
+      "pdf üzerinde yazı değiştirme"
+    ],
+    "en": [
+      "edit pdf",
+      "change pdf text",
+      "delete text from pdf",
+      "edit pdf text",
+      "replace text in pdf",
+      "online pdf editor"
+    ],
+    "tool": "/tools/pdf-duzenle"
+  },
+  "https://www.pdfplatform.app/tools/pdf-imzala": {
+    "tr": [
+      "pdf imzala",
+      "pdf imza ekle",
+      "online pdf imzalama",
+      "elektronik imza pdf",
+      "pdf'e imza",
+      "belge imzalama",
+      "ücretsiz pdf imza",
+      "e-imza pdf"
+    ],
+    "en": [
+      "sign pdf",
+      "add signature to pdf",
+      "online pdf signing",
+      "electronic signature pdf",
+      "esign pdf",
+      "sign document online",
+      "free pdf signature"
+    ],
+    "tool": "/tools/pdf-imzala"
+  },
+  "https://www.pdfplatform.app/en/tools/sign-pdf": {
+    "tr": [
+      "pdf imzala",
+      "pdf imza ekle",
+      "online pdf imzalama",
+      "elektronik imza pdf",
+      "pdf'e imza",
+      "belge imzalama",
+      "ücretsiz pdf imza",
+      "e-imza pdf"
+    ],
+    "en": [
+      "sign pdf",
+      "add signature to pdf",
+      "online pdf signing",
+      "electronic signature pdf",
+      "esign pdf",
+      "sign document online",
+      "free pdf signature"
+    ],
+    "tool": "/tools/pdf-imzala"
+  },
+  "https://www.pdfplatform.app/tools/imza-iste": {
+    "tr": [
+      "imza iste",
+      "pdf imzaya gönderme",
+      "online sözleşme imzalatma",
+      "uzaktan imza",
+      "e-imza isteme",
+      "belge imzalatma",
+      "dijital imza talebi"
+    ],
+    "en": [
+      "request signature",
+      "send pdf for signature",
+      "sign contract online",
+      "remote signing",
+      "e-signature request",
+      "get document signed",
+      "digital signature request"
+    ],
+    "tool": "/tools/imza-iste"
+  },
+  "https://www.pdfplatform.app/en/tools/request-signature": {
+    "tr": [
+      "imza iste",
+      "pdf imzaya gönderme",
+      "online sözleşme imzalatma",
+      "uzaktan imza",
+      "e-imza isteme",
+      "belge imzalatma",
+      "dijital imza talebi"
+    ],
+    "en": [
+      "request signature",
+      "send pdf for signature",
+      "sign contract online",
+      "remote signing",
+      "e-signature request",
+      "get document signed",
+      "digital signature request"
+    ],
+    "tool": "/tools/imza-iste"
+  },
+  "https://www.pdfplatform.app/tools/sayfa-duzeni": {
+    "tr": [
+      "pdf tek kağıda sığdırma",
+      "pdf 4 sayfa bir yaprağa",
+      "pdf kitapçık yapma",
+      "pdf 2 sayfa yan yana yazdırma",
+      "pdf sayfa düzeni",
+      "kağıt tasarrufu yazdırma",
+      "pdf broşür dizgi"
+    ],
+    "en": [
+      "pdf pages per sheet",
+      "4 pages on one page pdf",
+      "pdf booklet maker",
+      "pdf 2 up printing",
+      "pdf imposition",
+      "save paper printing pdf",
+      "pdf brochure layout"
+    ],
+    "tool": "/tools/sayfa-duzeni"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-page-layout": {
+    "tr": [
+      "pdf tek kağıda sığdırma",
+      "pdf 4 sayfa bir yaprağa",
+      "pdf kitapçık yapma",
+      "pdf 2 sayfa yan yana yazdırma",
+      "pdf sayfa düzeni",
+      "kağıt tasarrufu yazdırma",
+      "pdf broşür dizgi"
+    ],
+    "en": [
+      "pdf pages per sheet",
+      "4 pages on one page pdf",
+      "pdf booklet maker",
+      "pdf 2 up printing",
+      "pdf imposition",
+      "save paper printing pdf",
+      "pdf brochure layout"
+    ],
+    "tool": "/tools/sayfa-duzeni"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-pdfa": {
+    "tr": [
+      "pdf/a dönüştürme",
+      "pdfa çevirme",
+      "pdf arşiv formatı",
+      "pdf/a-1b",
+      "pdf/a-2b",
+      "ihale pdf formatı",
+      "tez pdf/a",
+      "e-arşiv pdf"
+    ],
+    "en": [
+      "convert pdf to pdfa",
+      "pdf/a converter",
+      "pdf archival format",
+      "pdf/a-1b",
+      "pdf/a-2b",
+      "tender pdf format",
+      "thesis pdf/a",
+      "long term pdf archive"
+    ],
+    "tool": "/tools/pdf-to-pdfa"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-pdfa": {
+    "tr": [
+      "pdf/a dönüştürme",
+      "pdfa çevirme",
+      "pdf arşiv formatı",
+      "pdf/a-1b",
+      "pdf/a-2b",
+      "ihale pdf formatı",
+      "tez pdf/a",
+      "e-arşiv pdf"
+    ],
+    "en": [
+      "convert pdf to pdfa",
+      "pdf/a converter",
+      "pdf archival format",
+      "pdf/a-1b",
+      "pdf/a-2b",
+      "tender pdf format",
+      "thesis pdf/a",
+      "long term pdf archive"
+    ],
+    "tool": "/tools/pdf-to-pdfa"
+  },
+  "https://www.pdfplatform.app/tools/ustveri-temizle": {
+    "tr": [
+      "pdf üstveri temizleme",
+      "pdf metadata silme",
+      "pdf yazar bilgisi kaldırma",
+      "pdf exif temizleme",
+      "pdf gizli bilgi silme",
+      "pdf anonimleştirme",
+      "pdf gps konum silme"
+    ],
+    "en": [
+      "remove pdf metadata",
+      "strip pdf metadata",
+      "pdf metadata remover",
+      "remove author from pdf",
+      "pdf exif removal",
+      "anonymize pdf",
+      "remove gps from pdf"
+    ],
+    "tool": "/tools/ustveri-temizle"
+  },
+  "https://www.pdfplatform.app/en/tools/remove-pdf-metadata": {
+    "tr": [
+      "pdf üstveri temizleme",
+      "pdf metadata silme",
+      "pdf yazar bilgisi kaldırma",
+      "pdf exif temizleme",
+      "pdf gizli bilgi silme",
+      "pdf anonimleştirme",
+      "pdf gps konum silme"
+    ],
+    "en": [
+      "remove pdf metadata",
+      "strip pdf metadata",
+      "pdf metadata remover",
+      "remove author from pdf",
+      "pdf exif removal",
+      "anonymize pdf",
+      "remove gps from pdf"
+    ],
+    "tool": "/tools/ustveri-temizle"
+  },
+  "https://www.pdfplatform.app/tools/form-doldur": {
+    "tr": [
+      "pdf form doldurma",
+      "pdf form doldur",
+      "doldurulabilir pdf",
+      "online form doldurma",
+      "pdf form doldurma ücretsiz",
+      "pdf başvuru formu doldurma",
+      "acroform doldurma"
+    ],
+    "en": [
+      "fill pdf form",
+      "pdf form filler",
+      "fillable pdf",
+      "fill out pdf online",
+      "free pdf form filler",
+      "acroform fill",
+      "complete pdf form"
+    ],
+    "tool": "/tools/form-doldur"
+  },
+  "https://www.pdfplatform.app/en/tools/fill-pdf-form": {
+    "tr": [
+      "pdf form doldurma",
+      "pdf form doldur",
+      "doldurulabilir pdf",
+      "online form doldurma",
+      "pdf form doldurma ücretsiz",
+      "pdf başvuru formu doldurma",
+      "acroform doldurma"
+    ],
+    "en": [
+      "fill pdf form",
+      "pdf form filler",
+      "fillable pdf",
+      "fill out pdf online",
+      "free pdf form filler",
+      "acroform fill",
+      "complete pdf form"
+    ],
+    "tool": "/tools/form-doldur"
+  },
+  "https://www.pdfplatform.app/tools/pdf-yorumla": {
+    "tr": [
+      "pdf yorumla",
+      "pdf vurgu",
+      "pdf işaretleme",
+      "pdf fosforlu kalem",
+      "pdf üzerine yazma",
+      "pdf not ekleme",
+      "pdf çizim",
+      "pdf highlight türkçe"
+    ],
+    "en": [
+      "annotate pdf",
+      "highlight pdf",
+      "pdf marker",
+      "draw on pdf",
+      "pdf comments",
+      "pdf notes",
+      "mark up pdf",
+      "pdf highlighter"
+    ],
+    "tool": "/tools/pdf-yorumla"
+  },
+  "https://www.pdfplatform.app/en/tools/annotate-pdf": {
+    "tr": [
+      "pdf yorumla",
+      "pdf vurgu",
+      "pdf işaretleme",
+      "pdf fosforlu kalem",
+      "pdf üzerine yazma",
+      "pdf not ekleme",
+      "pdf çizim",
+      "pdf highlight türkçe"
+    ],
+    "en": [
+      "annotate pdf",
+      "highlight pdf",
+      "pdf marker",
+      "draw on pdf",
+      "pdf comments",
+      "pdf notes",
+      "mark up pdf",
+      "pdf highlighter"
+    ],
+    "tool": "/tools/pdf-yorumla"
+  },
+  "https://www.pdfplatform.app/tools/taranmis-pdf-ocr": {
+    "tr": [
+      "taranmış pdf metne çevir",
+      "ocr pdf",
+      "pdf ocr türkçe",
+      "resimden metin",
+      "taranmış belge okuma"
+    ],
+    "en": [
+      "scanned pdf to text",
+      "ocr pdf",
+      "pdf ocr",
+      "image to text pdf",
+      "read scanned document"
+    ],
+    "tool": "/tools/taranmis-pdf-ocr"
+  },
+  "https://www.pdfplatform.app/en/tools/ocr-pdf": {
+    "tr": [
+      "taranmış pdf metne çevir",
+      "ocr pdf",
+      "pdf ocr türkçe",
+      "resimden metin",
+      "taranmış belge okuma"
+    ],
+    "en": [
+      "scanned pdf to text",
+      "ocr pdf",
+      "pdf ocr",
+      "image to text pdf",
+      "read scanned document"
+    ],
+    "tool": "/tools/taranmis-pdf-ocr"
+  },
+  "https://www.pdfplatform.app/tools/pdf-veri-cikar": {
+    "tr": [
+      "pdf veri çıkarma",
+      "faturadan veri çıkarma",
+      "pdf tablo çıkarma",
+      "pdf'ten excel",
+      "fatura okuma yapay zeka",
+      "pdf veri ayıklama",
+      "belgeden veri çıkarma"
+    ],
+    "en": [
+      "pdf data extraction",
+      "extract data from invoice",
+      "pdf table extraction",
+      "pdf to excel data",
+      "invoice parsing ai",
+      "document data extraction"
+    ],
+    "tool": "/tools/pdf-veri-cikar"
+  },
+  "https://www.pdfplatform.app/en/tools/extract-data-from-pdf": {
+    "tr": [
+      "pdf veri çıkarma",
+      "faturadan veri çıkarma",
+      "pdf tablo çıkarma",
+      "pdf'ten excel",
+      "fatura okuma yapay zeka",
+      "pdf veri ayıklama",
+      "belgeden veri çıkarma"
+    ],
+    "en": [
+      "pdf data extraction",
+      "extract data from invoice",
+      "pdf table extraction",
+      "pdf to excel data",
+      "invoice parsing ai",
+      "document data extraction"
+    ],
+    "tool": "/tools/pdf-veri-cikar"
+  },
+  "https://www.pdfplatform.app/tools/pdf-ceviri": {
+    "tr": [
+      "pdf çeviri",
+      "pdf çevir",
+      "pdf tercüme",
+      "belge çevirisi",
+      "yapay zeka pdf çeviri",
+      "ingilizce pdf çevir",
+      "pdf dil çevirme"
+    ],
+    "en": [
+      "translate pdf",
+      "pdf translator",
+      "translate pdf online",
+      "document translation ai",
+      "translate pdf to english",
+      "ai pdf translation"
+    ],
+    "tool": "/tools/pdf-ceviri"
+  },
+  "https://www.pdfplatform.app/en/tools/translate-pdf": {
+    "tr": [
+      "pdf çeviri",
+      "pdf çevir",
+      "pdf tercüme",
+      "belge çevirisi",
+      "yapay zeka pdf çeviri",
+      "ingilizce pdf çevir",
+      "pdf dil çevirme"
+    ],
+    "en": [
+      "translate pdf",
+      "pdf translator",
+      "translate pdf online",
+      "document translation ai",
+      "translate pdf to english",
+      "ai pdf translation"
+    ],
+    "tool": "/tools/pdf-ceviri"
+  },
+  "https://www.pdfplatform.app/tools/hassas-veri-gizle": {
+    "tr": [
+      "pdf hassas veri gizleme",
+      "pdf redaction",
+      "kvkk pdf",
+      "pdf'te tc gizleme",
+      "pdf kişisel veri kaldırma",
+      "pdf karartma",
+      "belgeden bilgi silme"
+    ],
+    "en": [
+      "pdf redaction",
+      "redact pdf",
+      "remove sensitive data pdf",
+      "gdpr pdf",
+      "hide personal data pdf",
+      "black out pdf text"
+    ],
+    "tool": "/tools/hassas-veri-gizle"
+  },
+  "https://www.pdfplatform.app/en/tools/redact-pdf": {
+    "tr": [
+      "pdf hassas veri gizleme",
+      "pdf redaction",
+      "kvkk pdf",
+      "pdf'te tc gizleme",
+      "pdf kişisel veri kaldırma",
+      "pdf karartma",
+      "belgeden bilgi silme"
+    ],
+    "en": [
+      "pdf redaction",
+      "redact pdf",
+      "remove sensitive data pdf",
+      "gdpr pdf",
+      "hide personal data pdf",
+      "black out pdf text"
+    ],
+    "tool": "/tools/hassas-veri-gizle"
+  },
+  "https://www.pdfplatform.app/tools/pdf-karsilastir": {
+    "tr": [
+      "pdf karşılaştırma",
+      "iki pdf karşılaştır",
+      "belge karşılaştırma",
+      "sözleşme karşılaştırma",
+      "pdf fark bulma",
+      "pdf diff"
+    ],
+    "en": [
+      "compare pdf",
+      "pdf comparison",
+      "compare two pdfs",
+      "document comparison",
+      "contract comparison",
+      "pdf diff"
+    ],
+    "tool": "/tools/pdf-karsilastir"
+  },
+  "https://www.pdfplatform.app/en/tools/compare-pdf": {
+    "tr": [
+      "pdf karşılaştırma",
+      "iki pdf karşılaştır",
+      "belge karşılaştırma",
+      "sözleşme karşılaştırma",
+      "pdf fark bulma",
+      "pdf diff"
+    ],
+    "en": [
+      "compare pdf",
+      "pdf comparison",
+      "compare two pdfs",
+      "document comparison",
+      "contract comparison",
+      "pdf diff"
+    ],
+    "tool": "/tools/pdf-karsilastir"
+  },
+  "https://www.pdfplatform.app/tools/sozlesme-denetci": {
+    "tr": [
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/en/tools/contract-review-ai": {
+    "tr": [
+      "sözleşme analizi",
+      "sözleşme inceleme yapay zeka",
+      "riskli madde bulma",
+      "ihale şartname analizi",
+      "sözleşme risk analizi",
+      "tedarik sözleşmesi inceleme",
+      "cezai şart kontrolü",
+      "sözleşme kontrol"
+    ],
+    "en": [
+      "contract review ai",
+      "contract risk analysis",
+      "tender specification analysis",
+      "supply contract review",
+      "penalty clause check",
+      "contract checker"
+    ],
+    "tool": "/tools/sozlesme-denetci"
+  },
+  "https://www.pdfplatform.app/tools/ai-fotograf-studyosu": {
+    "tr": [
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/en/tools/ai-photo-studio": {
+    "tr": [
+      "vesikalık fotoğraf hazırlama",
+      "biyometrik fotoğraf",
+      "fotoğraf arka planı silme",
+      "cv fotoğrafı",
+      "pasaport fotoğrafı ölçüleri",
+      "linkedin profil fotoğrafı",
+      "vize fotoğrafı",
+      "fotoğraf boyutlandırma"
+    ],
+    "en": [
+      "passport photo maker",
+      "id photo online",
+      "remove photo background",
+      "cv photo",
+      "biometric photo size",
+      "linkedin headshot",
+      "visa photo size",
+      "resize photo for application"
+    ],
+    "tool": "/tools/ai-fotograf-studyosu"
+  },
+  "https://www.pdfplatform.app/tools/cv-olustur": {
+    "tr": [
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv",
+      "ön yazı hazırlama",
+      "cv word indir",
+      "cv ats kontrolü"
+    ],
+    "en": [
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv",
+      "job ad keyword check",
+      "private resume builder",
+      "resume maker no upload"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/en/tools/cv-maker": {
+    "tr": [
+      "cv oluşturma",
+      "online cv hazırlama",
+      "ücretsiz cv şablonu",
+      "cv örnekleri",
+      "ats uyumlu cv",
+      "cv şablonu indir",
+      "özgeçmiş hazırlama",
+      "cv maker türkçe",
+      "europass cv",
+      "ön yazı hazırlama",
+      "cv word indir",
+      "cv ats kontrolü"
+    ],
+    "en": [
+      "resume builder",
+      "cv builder online",
+      "ats resume checker",
+      "free resume templates",
+      "resume keyword matcher",
+      "one page resume",
+      "resume pdf download",
+      "resume to word",
+      "europass style cv",
+      "job ad keyword check",
+      "private resume builder",
+      "resume maker no upload"
+    ],
+    "tool": "/tools/cv-olustur"
+  },
+  "https://www.pdfplatform.app/tools/ai-toplu-islem": {
+    "tr": [
+      "toplu pdf işleme",
+      "çoklu pdf özet",
+      "toplu fatura okuma",
+      "çoklu pdf çeviri",
+      "pdf toplu veri çıkarma",
+      "birden fazla pdf işleme"
+    ],
+    "en": [
+      "batch pdf processing",
+      "bulk pdf summary",
+      "batch invoice extraction",
+      "multiple pdf translation",
+      "bulk pdf data extraction",
+      "process multiple pdfs"
+    ],
+    "tool": "/tools/ai-toplu-islem"
+  },
+  "https://www.pdfplatform.app/en/tools/batch-process-pdf": {
+    "tr": [
+      "toplu pdf işleme",
+      "çoklu pdf özet",
+      "toplu fatura okuma",
+      "çoklu pdf çeviri",
+      "pdf toplu veri çıkarma",
+      "birden fazla pdf işleme"
+    ],
+    "en": [
+      "batch pdf processing",
+      "bulk pdf summary",
+      "batch invoice extraction",
+      "multiple pdf translation",
+      "bulk pdf data extraction",
+      "process multiple pdfs"
+    ],
+    "tool": "/tools/ai-toplu-islem"
+  },
+  "https://www.pdfplatform.app/tools/udf-to-pdf": {
+    "tr": [
+      "udf to pdf",
+      "udf dosyası nasıl açılır",
+      "udf pdf çevirme",
+      "udf açma",
+      "uyap udf",
+      "udf dönüştürücü",
+      "udf okuyucu",
+      "udf pdf yapma"
+    ],
+    "en": [
+      "udf to pdf",
+      "open udf file",
+      "convert udf",
+      "uyap document format",
+      "udf converter",
+      "udf reader",
+      "udf file opener"
+    ],
+    "tool": "/tools/udf-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/udf-to-pdf": {
+    "tr": [
+      "udf to pdf",
+      "udf dosyası nasıl açılır",
+      "udf pdf çevirme",
+      "udf açma",
+      "uyap udf",
+      "udf dönüştürücü",
+      "udf okuyucu",
+      "udf pdf yapma"
+    ],
+    "en": [
+      "udf to pdf",
+      "open udf file",
+      "convert udf",
+      "uyap document format",
+      "udf converter",
+      "udf reader",
+      "udf file opener"
+    ],
+    "tool": "/tools/udf-to-pdf"
   }
 }

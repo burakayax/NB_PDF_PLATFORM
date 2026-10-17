@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Teacher CV Example</title>
+    <meta name="description" content="How to write a Teacher CV: profile summary, number-driven bullets and key skills, with examples you can adapt." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/teacher-cv-example" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ogretmen-cv-ornegi" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/teacher-cv-example" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/ogretmen-cv-ornegi" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Teacher CV Example" />
+    <meta property="og:description" content="How to write a Teacher CV: profile summary, number-driven bullets and key skills, with examples you can adapt." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/teacher-cv-example.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Teacher CV Example" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/teacher-cv-example" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Teacher CV Example" />
+    <meta name="twitter:description" content="How to write a Teacher CV: profile summary, number-driven bullets and key skills, with examples you can adapt." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/teacher-cv-example.png" />
+    <meta name="twitter:image:alt" content="Teacher CV Example" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 53 tools in total. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"Teacher CV Example","item":"https://www.pdfplatform.app/en/blog/teacher-cv-example"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Teacher CV Example","description":"How to write a Teacher CV: profile summary, number-driven bullets and key skills, with examples you can adapt.","datePublished":"2026-10-14","dateModified":"2026-10-14","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/teacher-cv-example","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/teacher-cv-example.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Teacher CV Example","description":"How to write a Teacher CV: profile summary, number-driven bullets and key skills, with examples you can adapt.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Fill in the numbers","text":"No [X] placeholder should remain anywhere."},{"@type":"HowToStep","position":2,"name":"Check the dates","text":"No overlaps or unexplained gaps; the Analysis tab in CV Maker calculates this for you."},{"@type":"HowToStep","position":3,"name":"Tailor to the ad","text":"Where true, use the ad's keywords; the job-ad matcher shows which are missing."},{"@type":"HowToStep","position":4,"name":"Export a PDF","text":"Send a PDF with selectable text; add a photo only if the ad or local custom expects one."}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Teacher CV Example</h1><p class="seo-intro">In a teacher CV, write results rather than a duty list. Summary, bullet and skills examples inside.</p><figure class="seo-cover"><img src="/en/covers/teacher-cv-example.png" width="1200" height="630" loading="lazy" decoding="async" alt="Teacher CV Example" /></figure><article class="seo-article"><p class="seo-lead">The most common mistake in a teacher CV is listing duties instead of results. Employers want to see how well you did the job, not just that you were assigned it. This guide shows how to write the profile summary, work-experience bullets and skills section for a teacher role, with examples you can copy and adapt.</p><h2>Order and length</h2><p>Put your name, title and contact details at the top, a short profile summary beneath, then work experience, education and skills. With little experience (recent graduate, internship) move education and projects ahead of work history. One page is enough for most applications; a second page is acceptable beyond roughly ten years of experience.</p><p>Applicant tracking systems (ATS) read plain, single-column CVs with standard headings (Summary, Experience, Education, Skills) best. Pick a more designed template for the version you hand to a recruiter.</p><h2>Profile summary examples for a teacher</h2><p>Keep it to two to four sentences: years of experience, strengths and goal. Take one draft below and replace each [X] with your own information:</p><ul><li>Patient, creative teacher who brings out each student&#39;s potential and plans lessons for different learning styles.</li><li>I have [X] years of classroom experience and I am strong in assessment and parent communication.</li><li>I believe every student learns at a different pace, so I work to create a safe, participatory and enjoyable learning environment.</li><li>An educator who integrates digital tools into lessons and keeps developing; I care about my students&#39; personal growth as much as their grades.</li><li>A well-planned, fair and motivating teacher who works in harmony with students, parents and school management.</li></ul><h2>Work-experience bullets for a teacher</h2><p>Start each bullet with an action and, where you can, include a number: how many people, items, what percentage, how fast. Wherever you see [X] below, insert your own real figure; if you don&#39;t know it, leave that bullet out.</p><ul><li>Delivered the annual plan and curriculum for a class of [X] students</li><li>Raised the average exam score by [X]%</li><li>Built interactive lesson content with digital tools</li><li>Held parent meetings and reported student progress</li><li>Coordinated school events and projects</li><li>Ran catch-up programmes for students needing extra support</li><li>Prepared individual study plans for students with learning difficulties</li><li>Raised class participation with project-based learning activities</li><li>Analysed assessment results and updated lesson plans accordingly</li><li>Organised school trips, celebrations and club activities</li><li>Set classroom behaviour rules and built a positive class environment</li><li>Developed and shared joint teaching materials with colleagues</li><li>Ran extra study and mock-exam programmes for exam preparation</li></ul><p>Only write what you actually did. If you couldn&#39;t explain a bullet in an interview, it shouldn&#39;t be on your CV.</p><p><a href="/en/tools/cv-maker"><strong>Build your CV with ready-made phrases</strong> — Pick your field in CV Maker and the phrases, summary drafts and skill suggestions from this guide are added with one tap. Free with an account.</a></p><h2>Skills section for a teacher</h2><p>Mirror the job ad&#39;s wording: if it says &quot;Excel&quot;, write &quot;Excel&quot; rather than &quot;office software&quot;. These are commonly requested for this role; select only what you genuinely know:</p><ul><li>Lesson Planning</li><li>Classroom Management</li><li>Assessment</li><li>Educational Technology</li><li>Parent Communication</li><li>Mentoring</li></ul><h2>Checklist before you send it</h2><ol><li><strong>Fill in the numbers:</strong> No [X] placeholder should remain anywhere.</li><li><strong>Check the dates:</strong> No overlaps or unexplained gaps; the Analysis tab in CV Maker calculates this for you.</li><li><strong>Tailor to the ad:</strong> Where true, use the ad&#39;s keywords; the job-ad matcher shows which are missing.</li><li><strong>Export a PDF:</strong> Send a PDF with selectable text; add a photo only if the ad or local custom expects one.</li></ol></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/cv-maker">Resume Builder with ATS Check</a></li><li><a href="/en/tools/ai-photo-studio">ID, Passport &amp; CV Photo Maker with AI</a></li><li><a href="/en/tools/edit-pdf">Edit PDF</a></li></ul></nav><nav aria-label="Related guides" class="seo-related-guides"><h2>Related Guides</h2><ul><li><a href="/en/blog/sales-representative-cv-example">Sales Representative CV Example</a></li><li><a href="/en/blog/accountant-cv-example">Accountant CV Example</a></li><li><a href="/en/blog/software-developer-cv-example">Software Developer CV Example</a></li></ul></nav><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
