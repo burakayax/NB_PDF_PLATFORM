@@ -1,4 +1,6 @@
 import { CV_PROFESSION_SLUGS } from "../blog/blogContentCv3.mjs";
+import { TOOL_GUIDE, getToolGuide as _getToolGuide } from "./toolGuides.mjs";
+export const getToolGuide = _getToolGuide;
 /**
  * ─────────────────────────────────────────────────────────────────────────────
  *  TEK GERÇEK KAYNAK — Tüm sayfa SEO içeriği (TR birincil, EN ikincil)
@@ -1846,6 +1848,16 @@ export const TOOL_SEO = {
     ),
   },
 };
+
+// Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
+// hem görünür SSS hem FAQPage şeması tek listeden beslenir.
+for (const [slug, langs] of Object.entries(TOOL_GUIDE)) {
+  for (const lang of Object.keys(langs)) {
+    const hedef = TOOL_SEO[slug]?.[lang];
+    const ek = langs[lang].faq;
+    if (hedef && ek && ek.length) hedef.faq = [...hedef.faq, ...ek];
+  }
+}
 
 // ─── Landing / ana sayfa ──────────────────────────────────────────────────────
 export const LANDING_SEO = {
