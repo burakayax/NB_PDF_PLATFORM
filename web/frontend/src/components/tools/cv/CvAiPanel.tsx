@@ -107,7 +107,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
     } catch (e) {
       const ae = e as AiError;
       if (ae.status === 401) setErr({ msg: tr ? "Devam etmek için giriş yapın." : "Please log in to continue.", gate: "login" });
-      else if (ae.status === 403) setErr({ msg: tr ? "Yapay zekâ özellikleri Pro / Business üyelere açıktır." : "AI features are for Pro / Business members.", gate: "upgrade" });
+      else if (ae.status === 403) setErr({ msg: tr ? "Yapay zekâ için Başlangıç ve üzeri plan ya da kredi gerekir." : "AI needs a Starter-or-higher plan or credits.", gate: "upgrade" });
       else if (ae.status === 429) setErr({ msg: tr ? "Aylık yapay zekâ hakkınız ve krediniz bitti." : "You've used your monthly AI allowance and credits.", gate: "quota" });
       else setErr({ msg: ae.message || (tr ? "İşlem başarısız. Hakkınız düşülmedi, tekrar deneyin." : "Failed. You weren't charged; try again.") });
     } finally {
@@ -193,7 +193,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
       const ae = e as AiError;
       setImpNote(null);
       if (ae.status === 401) setErr({ msg: tr ? "Devam etmek için giriş yapın." : "Please log in to continue.", gate: "login" });
-      else if (ae.status === 403) setErr({ msg: tr ? "Yapay zekâ özellikleri Pro / Business üyelere açıktır." : "AI features are for Pro / Business members.", gate: "upgrade" });
+      else if (ae.status === 403) setErr({ msg: tr ? "Yapay zekâ için Başlangıç ve üzeri plan ya da kredi gerekir." : "AI needs a Starter-or-higher plan or credits.", gate: "upgrade" });
       else if (ae.status === 429) setErr({ msg: tr ? "Aylık yapay zekâ hakkınız ve krediniz bitti." : "You've used your monthly AI allowance and credits.", gate: "quota" });
       else if (ae.status) setErr({ msg: ae.message });
       else setErr({ msg: (e as Error).message === "type" ? (tr ? "Yalnızca PDF, Word (.docx) ya da metin (.txt) dosyası yükleyin." : "Upload a PDF, Word (.docx) or text (.txt) file.") : (tr ? "Belgeden yeterli metin okunamadı." : "Couldn't read enough text from the file.") });

@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma.js";
  * PDF Düzenle aracı — günlük indirme sayacı (Postgres, instance'lar arası paylaşılır).
  *
  * Kimlik (idKey) Python (FastAPI) tarafında GÜVENİLİR biçimde türetilir:
- *   - "u:<userId>"  → oturum açmış FREE kullanıcı
+ *   - "u:<userId>"  → oturum açmış FREE ya da STARTER kullanıcı
  *   - "g:<ipHash>"  → misafir (gerçek istemci IP'sinin hash'i)
  * PRO/PLUS/BUSINESS/ADMIN hiç çağrılmaz (Python sınırsız kabul edip atlar).
  *
