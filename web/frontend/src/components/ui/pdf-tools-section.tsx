@@ -10,7 +10,7 @@ import {
 } from "../../lib/toolCatalog";
 import type { Language } from "../../i18n/landing";
 import { localizedPath } from "../../seo/enSlugs.mjs";
-import { FREE_PLAN_TOOL_IDS, STARTER_TOOL_IDS } from "../../lib/planConfig";
+import { accountToneCount, toolAccessBadge, type AccessTone } from "../../lib/toolAccess";
 import type { FeatureKey } from "../../api/subscription";
 
 /**
@@ -102,27 +102,14 @@ const CATEGORY_META: Record<
   },
 };
 
-/**
- * Kartın erişim rozeti — GERÇEK erişim kuralından (katalog + plan listeleri) türetilir.
- * Üyeliksiz → Ücretsiz üyelik → Başlangıç → Plus. Yapay zekâ kategorisinin altında
- * "Yapay zekâ" etiketi tekrarlanmaz (başlık zaten söylüyor); yalnızca başka bir
- * kategorideki yapay zekâ aracında (ör. Hassas Veri Gizle) gösterilir.
- */
-function erisimRozeti(t: Tool, tr: boolean): { label: string; text: string; dot: string } | null {
-  if (t.free) return { label: tr ? "Üyeliksiz" : "No sign-up", text: "text-emerald-300/90", dot: "bg-emerald-400" };
-  if (t.ai) {
-    return t.cat === "ai"
-      ? null
-      : { label: tr ? "Yapay zekâ" : "AI", text: "text-fuchsia-300/90", dot: "bg-fuchsia-400" };
-  }
-  if (t.account || (FREE_PLAN_TOOL_IDS as string[]).includes(t.id)) {
-    return { label: tr ? "Ücretsiz üyelik" : "Free account", text: "text-sky-300/90", dot: "bg-sky-400" };
-  }
-  if ((STARTER_TOOL_IDS as string[]).includes(t.id)) {
-    return { label: tr ? "Başlangıç" : "Starter", text: "text-amber-300/90", dot: "bg-amber-400" };
-  }
-  return { label: "Plus", text: "text-violet-300/90", dot: "bg-violet-400" };
-}
+/** Rozet renkleri — etiketin kendisi `lib/toolAccess.ts` içinde, gerçek erişim kuralından üretilir. */
+const ROZET_RENK: Record<AccessTone, { text: string; dot: string }> = {
+  guest: { text: "text-emerald-300/90", dot: "bg-emerald-400" },
+  account: { text: "text-sky-300/90", dot: "bg-sky-400" },
+  starter: { text: "text-amber-300/90", dot: "bg-amber-400" },
+  plus: { text: "text-violet-300/90", dot: "bg-violet-400" },
+  ai: { text: "text-fuchsia-300/90", dot: "bg-fuchsia-400" },
+};
 
 /** Katalog kimliği ile araç sayfası adresi ayrışan araçlar (adres = /tools/<slug>). */
 const TOOL_URL_SLUG: Record<string, string> = { merge: "merge-pdf", split: "split-pdf" };
@@ -156,7 +143,7 @@ export default function PdfToolsSection({
 }: PdfToolsSectionProps) {
   const tr = language === "tr";
   /** Ücretsiz üyelikle açılan araç sayısı — listeden hesaplanır. */
-  const hesapAracSayisi = useMemo(() => TOOLS.filter((t) => t.account).length, []);
+  const hesapAracSayisi = useMemo(() => accountToneCount(TOOLS), []);
   const [filter, setFilter] = useState<CategoryId | "all">("all");
   const [query, setQuery] = useState("");
   /** Mobilde kategori başına ilk 6 araç görünür; "Tümünü göster" ile açılan kategoriler. */
@@ -346,13 +333,14 @@ export default function PdfToolsSection({
                               {copy.name}
                             </span>
                             {(() => {
-                              const rozet = erisimRozeti(t, tr);
-                              if (!rozet) return null;
+                              const rozet = toolAccessBadge(t, tr);
+                              const renk = ROZET_RENK[rozet.tone];
                               return (
                                 <span
-                                  className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${rozet.text}`}
+                                  title={rozet.detail}
+                                  className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${renk.text}`}
                                 >
-                                  <span className={`h-1 w-1 rounded-full ${rozet.dot}`} />
+                                  <span className={`h-1 w-1 rounded-full ${renk.dot}`} />
                                   {rozet.label}
                                 </span>
                               );

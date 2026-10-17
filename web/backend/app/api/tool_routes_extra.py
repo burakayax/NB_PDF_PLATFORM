@@ -505,7 +505,9 @@ async def tool_edit_text(
         if not _tok:
             raise HTTPException(status_code=401, detail="Bu işlem için oturum açın.")
         _ident = await saas_user_identity(_tok)
-        if not (_ident["role"] == "ADMIN" or _ident["plan"] in ("STARTER", "PLUS", "PRO", "BUSINESS")):
+        # Tek kural (indirme yoluyla aynı): yalnız Plus/Pro/Business ve yönetici sınırsız; Başlangıç ve
+        # ücretsiz üye günlük hakka tabidir.
+        if not (_ident["role"] == "ADMIN" or _ident["plan"] in ("PLUS", "PRO", "BUSINESS")):
             _key = _edl.user_key(_ident["user_id"])
             _dec = await consume_editor_download(_key)
             if _dec is None:
@@ -937,7 +939,7 @@ async def edit_text_download(
 ):
     """PDF Düzenle sonucunun indirilmesi — günlük limit BURADA düşer ("indirmede say").
 
-    Misafir: 1/gün (IP hash), oturum açmış FREE: 2/gün (user_id); PRO/PLUS/BUSINESS/ADMIN
+    Misafir: 1/gün (IP hash), oturum açmış FREE ve STARTER: 2/gün (user_id); PRO/PLUS/BUSINESS/ADMIN
     sınırsız. `dl` = hazırlamada dönen indirme jetonu (yalnız hazırlayan indirebilir)."""
     if not dl:
         raise HTTPException(status_code=400, detail="Geçersiz indirme jetonu.")

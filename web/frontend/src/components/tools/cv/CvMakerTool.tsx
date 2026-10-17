@@ -304,14 +304,14 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
         {locked ? (
           <div className="flex flex-wrap items-center gap-2.5 border-t border-amber-300/20 bg-gradient-to-r from-amber-400/[0.12] to-transparent px-4 py-3">
             <Lock className="h-4 w-4 shrink-0 text-amber-300" />
-            <p className="min-w-0 flex-1 text-[12.5px] text-amber-50"><b>{tr ? "Bu şablon Pro üyelere özel." : "This template is for Pro members."}</b> {tr ? "Önizleme örnek içerikle gösteriliyor." : "The preview shows sample content."}</p>
+            <p className="min-w-0 flex-1 text-[12.5px] text-amber-50"><b>{tr ? "Bu şablon ücretli planlara özel." : "This template is for paid plans."}</b> {tr ? "Önizleme örnek içerikle gösteriliyor." : "The preview shows sample content."}</p>
             <button type="button" onClick={onUpgrade} className="rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 py-2 text-[12.5px] font-bold text-slate-900 hover:brightness-105">{tr ? "Pro üye ol" : "Go Pro"}</button>
             <button type="button" onClick={() => setPassOpen(true)} className="rounded-lg bg-sky-500/20 px-3.5 py-2 text-[12.5px] font-bold text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30">{tr ? "CV Geçişi" : "CV pass"}</button>
           </div>
         ) : null}
         {tplOpen ? (
           <div className="border-t border-white/10 px-4 pb-4 pt-3">
-            {!paid ? <p className="mb-2 text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri Pro üyelere ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with Pro or a CV pass"}</p> : null}
+            {!paid ? <p className="mb-2 text-[12px] text-slate-400">{tr ? "4 şablon ücretsiz · diğerleri herhangi bir ücretli planla (Başlangıç ve üzeri) ya da CV Geçişi ile açılır" : "4 templates free · the rest unlock with any paid plan (Starter or higher) or a CV pass"}</p> : null}
             <div role="group" aria-label={tr ? "Şablon filtresi" : "Template filter"} className="mb-3 flex flex-wrap gap-1.5">
               {([["all", tr ? "Tümü" : "All"], ["new", tr ? "Yeni" : "New"], ["free", tr ? "Ücretsiz" : "Free"], ["ats", tr ? "ATS dostu (tek sütun)" : "ATS-friendly (single column)"], ["side", tr ? "Yan sütunlu" : "Sidebar"], ["classic", tr ? "Klasik (serif)" : "Classic (serif)"]] as const).map(([k, label]) => (
                 <button key={k} type="button" aria-pressed={tplFilter === k} onClick={() => setTplFilter(k)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${tplFilter === k ? "bg-sky-500 text-white" : "bg-white/[0.06] text-slate-300 hover:bg-white/10 hover:text-white"}`}>{label}</button>
@@ -324,7 +324,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 return (
                   <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); setTplOpen(false); window.setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
                     <div className="overflow-hidden rounded-lg"><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
-                    {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />PRO</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">PRO</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
+                    {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />{tr ? "ÜCRETLİ" : "PAID"}</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">{tr ? "ÜCRETLİ" : "PAID"}</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
                     <div className="mt-1.5 flex items-center gap-1.5 truncate px-0.5 text-[12px] font-semibold text-white"><span className="truncate">{tr ? t.tr : t.en}</span>{t.isNew ? <span className="shrink-0 rounded bg-fuchsia-500/90 px-1 py-px text-[9px] font-bold text-white">{tr ? "YENİ" : "NEW"}</span> : null}</div>
                   </button>
                 );
@@ -398,11 +398,11 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                       </div>
                     ))}
                     {locked ? (
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(255,255,255,0.28)", backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='170'><text x='20' y='110' transform='rotate(-24 130 85)' font-family='Arial' font-weight='700' font-size='26' fill='%23475569' fill-opacity='0.22'>PDF PLATFORM · PRO</text></svg>\")" }}>
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(255,255,255,0.28)", backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='170'><text x='20' y='110' transform='rotate(-24 130 85)' font-family='Arial' font-weight='700' font-size='26' fill='%23475569' fill-opacity='0.22'>PDF PLATFORM · ÜCRETLİ</text></svg>\")" }}>
                         <div className="mx-4 max-w-sm rounded-2xl bg-slate-900/92 p-5 text-center shadow-2xl ring-1 ring-white/15">
                           <Lock className="mx-auto h-7 w-7 text-amber-300" />
-                          <p className="mt-2 text-[15px] font-bold text-white">{tr ? "Bu şablon Pro üyelere özel" : "This template is for Pro members"}</p>
-                          <p className="mt-1 text-[12.5px] leading-relaxed text-slate-300">{tr ? "Önizleme örnek içerikle gösteriliyor. Pro ile tüm şablonları kullanın ya da ücretsiz şablonlardan birini seçin." : "The preview shows sample content. Go Pro to use every template, or pick one of the free ones."}</p>
+                          <p className="mt-2 text-[15px] font-bold text-white">{tr ? "Bu şablon ücretli planlara özel" : "This template is for paid plans"}</p>
+                          <p className="mt-1 text-[12.5px] leading-relaxed text-slate-300">{tr ? "Önizleme örnek içerikle gösteriliyor. Ücretli bir planla (Başlangıç ve üzeri) tüm şablonları kullanın ya da ücretsiz şablonlardan birini seçin." : "The preview shows sample content. A paid plan (Starter or higher) unlocks every template — or pick one of the free ones."}</p>
                           <div className="mt-4 flex flex-col gap-2">
                             <button type="button" onClick={onUpgrade} className="rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-[13px] font-bold text-slate-900 hover:brightness-105">{tr ? "Pro'ya geç (süresiz)" : "Go Pro (permanent)"}</button>
                             <button type="button" onClick={() => setPassOpen(true)} className="rounded-xl bg-sky-500/20 px-4 py-2.5 text-[13px] font-bold text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30">{tr ? "CV Geçişi al (tek seferlik)" : "Get a CV pass (one-off)"}</button>
@@ -459,7 +459,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
               <div className="relative">
                 {locked ? (
                   <div className="absolute inset-0 z-10 flex items-start justify-center rounded-2xl bg-slate-950/55 p-6 backdrop-blur-[1px]">
-                    <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Pro şablon — alanlar kilitli" : "Pro template — fields locked"}</p>
+                    <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-[12.5px] font-semibold text-amber-200 ring-1 ring-amber-300/30"><Lock className="h-3.5 w-3.5" />{tr ? "Ücretli şablon — alanlar kilitli" : "Paid template — fields locked"}</p>
                   </div>
                 ) : null}
                 {rightTab === "content" ? (
