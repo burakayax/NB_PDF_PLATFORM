@@ -18,7 +18,7 @@ const GRAPH = "https://graph.facebook.com/v21.0";
 
 export const publishToFacebook: Publisher = async (input) => {
   const { body, item, secrets } = input;
-  let { imageUrl } = input;
+  const { imageUrl } = input;
   const pageId = requireSecret(secrets, "pageId", "Facebook Sayfa ID");
   const token = requireSecret(secrets, "pageAccessToken", "Facebook Sayfa Erişim Anahtarı");
 
