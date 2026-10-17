@@ -9,6 +9,8 @@ import {
   type CategoryId,
 } from "../../lib/toolCatalog";
 import type { Language } from "../../i18n/landing";
+import { localizedPath } from "../../seo/enSlugs.mjs";
+import { FREE_PLAN_TOOL_IDS, STARTER_TOOL_IDS } from "../../lib/planConfig";
 import type { FeatureKey } from "../../api/subscription";
 
 /**
@@ -100,6 +102,31 @@ const CATEGORY_META: Record<
   },
 };
 
+/**
+ * Kartın erişim rozeti — GERÇEK erişim kuralından (katalog + plan listeleri) türetilir.
+ * Üyeliksiz → Ücretsiz üyelik → Başlangıç → Plus. Yapay zekâ kategorisinin altında
+ * "Yapay zekâ" etiketi tekrarlanmaz (başlık zaten söylüyor); yalnızca başka bir
+ * kategorideki yapay zekâ aracında (ör. Hassas Veri Gizle) gösterilir.
+ */
+function erisimRozeti(t: Tool, tr: boolean): { label: string; text: string; dot: string } | null {
+  if (t.free) return { label: tr ? "Üyeliksiz" : "No sign-up", text: "text-emerald-300/90", dot: "bg-emerald-400" };
+  if (t.ai) {
+    return t.cat === "ai"
+      ? null
+      : { label: tr ? "Yapay zekâ" : "AI", text: "text-fuchsia-300/90", dot: "bg-fuchsia-400" };
+  }
+  if (t.account || (FREE_PLAN_TOOL_IDS as string[]).includes(t.id)) {
+    return { label: tr ? "Ücretsiz üyelik" : "Free account", text: "text-sky-300/90", dot: "bg-sky-400" };
+  }
+  if ((STARTER_TOOL_IDS as string[]).includes(t.id)) {
+    return { label: tr ? "Başlangıç" : "Starter", text: "text-amber-300/90", dot: "bg-amber-400" };
+  }
+  return { label: "Plus", text: "text-violet-300/90", dot: "bg-violet-400" };
+}
+
+/** Katalog kimliği ile araç sayfası adresi ayrışan araçlar (adres = /tools/<slug>). */
+const TOOL_URL_SLUG: Record<string, string> = { merge: "merge-pdf", split: "split-pdf" };
+
 const CATEGORY_ORDER: CategoryId[] = ["ai", "edit", "scan", "convert", "security"];
 
 /** Arama için: Türkçe karakterleri sadeleştirip küçük harfe indirger. */
@@ -163,7 +190,7 @@ export default function PdfToolsSection({
   }
 
   return (
-    <section id="tools" className="relative overflow-hidden py-14 sm:py-28">
+    <section id="tools" className="relative overflow-hidden py-12 sm:py-20">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.10)_0%,transparent_60%)]" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
@@ -293,10 +320,15 @@ export default function PdfToolsSection({
                     const copy = t[language];
                     const hue = HUES[TOOL_HUE[t.id] ?? "violet"];
                     return (
-                      <motion.button
+                      <motion.a
                         key={t.id}
-                        type="button"
-                        onClick={() => openTool(t)}
+                        href={localizedPath(`/tools/${TOOL_URL_SLUG[t.id] ?? t.id}`, language)}
+                        onClick={(e) => {
+                          // Gerçek bağlantı (arama motoru görsün); tıklamada uygulama içi açılış.
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                          e.preventDefault();
+                          openTool(t);
+                        }}
                         initial={{ opacity: 0, y: 12 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.2 }}
@@ -313,34 +345,24 @@ export default function PdfToolsSection({
                             <span className="block truncate text-[14.5px] font-semibold text-white/90 transition group-hover:text-white">
                               {copy.name}
                             </span>
-                            {(t.free || t.account || t.ai) && (
-                              <span
-                                className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${
-                                  t.free
-                                    ? "text-emerald-300/90"
-                                    : t.account
-                                      ? "text-sky-300/90"
-                                      : "text-fuchsia-300/90"
-                                }`}
-                              >
+                            {(() => {
+                              const rozet = erisimRozeti(t, tr);
+                              if (!rozet) return null;
+                              return (
                                 <span
-                                  className={`h-1 w-1 rounded-full ${
-                                    t.free ? "bg-emerald-400" : t.account ? "bg-sky-400" : "bg-fuchsia-400"
-                                  }`}
-                                />
-                                {t.free
-                                  ? tr ? "Üyeliksiz" : "No sign-up"
-                                  : t.account
-                                    ? tr ? "Ücretsiz üyelik" : "Free account"
-                                    : tr ? "Yapay zekâ" : "AI"}
-                              </span>
-                            )}
+                                  className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${rozet.text}`}
+                                >
+                                  <span className={`h-1 w-1 rounded-full ${rozet.dot}`} />
+                                  {rozet.label}
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
                         <p className="mt-2 line-clamp-2 text-[12.5px] leading-relaxed text-slate-400 transition group-hover:text-slate-300 sm:mt-3 sm:line-clamp-none">
                           {copy.desc}
                         </p>
-                      </motion.button>
+                      </motion.a>
                     );
                   })}
                 </div>

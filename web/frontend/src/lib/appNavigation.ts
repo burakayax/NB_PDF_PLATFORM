@@ -86,6 +86,8 @@ export function getTrackedPath(view: AppView) {
       return "/register";
     case "forgot_password":
       return "/forgot-password";
+    case "about":
+      return "/about";
     case "terms":
       return "/terms";
     case "privacy":
@@ -168,6 +170,8 @@ export function getInitialViewFromLocation(): AppView {
       return "register";
     case "/forgot-password":
       return "forgot_password";
+    case "/about":
+      return "about";
     case "/terms":
       return "terms";
     case "/privacy":

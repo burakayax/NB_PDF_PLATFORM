@@ -5,6 +5,29 @@ export type Currency = "TRY" | "USD";
 export type BillingCycle = "MONTHLY" | "YEARLY";
 
 /**
+ * Ücretsiz planda (üye girişiyle) açık olan araçlar. Backend kaynağı:
+ * `web/api/src/modules/subscription/subscription.config.ts` → FREE_TOOLS.
+ * Araç kartlarındaki "Ücretsiz üyelik" rozeti buradan türetilir.
+ */
+export const FREE_PLAN_TOOL_IDS: FeatureKey[] = [
+  "split",
+  "merge",
+  "compress",
+  "word-to-pdf",
+  "pdf-to-word",
+  "pdf-to-image",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "pdf-to-text",
+  "image-to-pdf",
+  "sayfa-duzeni",
+  "form-doldur",
+  "ustveri-temizle",
+];
+
+/**
  * Starter planında erişilebilen araçlar. Backend kaynağı:
  * `web/api/src/modules/subscription/subscription.config.ts` → STARTER_TOOLS.
  * Pazarlama kartındaki araç sayısı ve "araçları gör" modalı bu listeden türetilir;
@@ -102,11 +125,6 @@ export const PLANS: PlanDefinition[] = [
     nameEn: "Starter",
     taglineTr: "Ara sıra dönüştürme yapanlar için.",
     taglineEn: "For occasional converters.",
-    badge: {
-      textTr: "En İyi Başlangıç",
-      textEn: "Best for Getting Started",
-      color: "green",
-    },
     pricing: {
       monthly: { TRY: 12900, USD: 399 },
       yearly: { TRY: 129000, USD: 3999 },
