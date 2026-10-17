@@ -55,3 +55,13 @@ export function getRelatedToolLinks(
   language?: SeoLang,
 ): Array<{ slug: string; label: string }>;
 export function getGuideSlugsForTool(slug: string): string[];
+
+/** Rehber içeriği (nasıl yapılır adımları + kullanım senaryoları) — yoksa null. */
+export function getToolGuide(
+  slug: string,
+  lang: string,
+): {
+  steps: Array<{ title: string; x: string }>;
+  useCases: Array<{ title: string; x: string }>;
+  faq: Array<{ q: string; a: string }>;
+} | null;
