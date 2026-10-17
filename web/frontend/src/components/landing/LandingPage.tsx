@@ -4,8 +4,8 @@
   sonuna "-en" alır ve dile göre otomatik seçilir (bkz. lib/langAsset.ts).
   Galeri bileşeni: components/landing/ProductGallery.tsx
 */
-import { useCallback, useEffect, useRef, useState, Suspense } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState, Suspense, Fragment } from "react";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
 import type { FeatureKey } from "../../api/subscription";
@@ -30,6 +30,7 @@ import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolVisual } from "../common/ToolUploadPanel";
 import { TOOLS } from "../../lib/toolCatalog";
+import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
 import { ToolPageContext } from "../common/toolPageContext";
 import {
   ArrowRightLeft,
@@ -127,7 +128,6 @@ const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
 import { HERO_CATS, catOfFreeTool, firstRunnable, type HeroCatId } from "./heroToolCatalog";
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
-import { ThreeStepDemo } from "./ThreeStepDemo";
 import { HeroBackground } from "./HeroBackground";
 import { ProductGallery } from "./ProductGallery";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
@@ -278,7 +278,7 @@ function useInViewOnce(ref: React.RefObject<Element | null>) {
           obs.disconnect();
         }
       },
-      { threshold: 0.2 },
+      { threshold: 0, rootMargin: "0px 0px 240px 0px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -313,6 +313,43 @@ function Navbar({
   const copy = landingTranslations[language];
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const navLinks: [string, string][] = [
+    ["#showcase", tr ? "Önizleme" : "Preview"],
+    ["#tools", tr ? "Araçlar" : "Tools"],
+    ["#pricing", tr ? "Fiyat" : "Pricing"],
+    // İngilizce sayfada İngilizce adrese bağlanır; aksi hâlde site
+    // kendi İngilizce sürümüne hiç bağlanmamış oluyor ve arama motoru
+    // Türkçe sürümü asıl kabul edip diğerini kopya sayıyor (ölçüldü).
+    [localizedPath("/blog", language), "Blog"],
+    ["#faq", tr ? "SSS" : "FAQ"],
+  ];
+
+  // Mobil menü: ESC ile ve menü dışına tıklayınca kapanır.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+    function onDown(e: MouseEvent | TouchEvent) {
+      const t = e.target as Node;
+      if (menuRef.current?.contains(t) || menuButtonRef.current?.contains(t)) return;
+      setMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -341,18 +378,19 @@ function Navbar({
           aria-label={copy.navbar.productLabel}
           className="flex items-center group shrink-0"
         >
-          {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
           <img
             src="/emblem.png"
-            alt="PDF Platform"
-            className="h-10 w-10 object-contain lg:hidden"
+            alt=""
+            aria-hidden="true"
+            className="h-10 w-10 object-contain"
           />
-          {/* Masaüstü: tam uzun logo */}
-          <img
-            src="/navbar-logo.png"
-            alt="PDF Platform"
-            className="hidden h-14 w-auto object-contain transition-opacity group-hover:opacity-90 lg:block"
-          />
+          {/* Mobilde yalnızca amblem; sm ve üstünde marka adı yanında yazılı. */}
+          <span
+            className="ml-2.5 hidden text-lg font-extrabold tracking-tight text-white transition-opacity group-hover:opacity-90 sm:inline"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            PDF Platform
+          </span>
         </button>
 
         {/* Nav links */}
@@ -360,16 +398,7 @@ function Navbar({
           className="hidden md:flex items-center gap-1"
           aria-label="Ana navigasyon"
         >
-          {[
-            ["#showcase", tr ? "Önizleme" : "Preview"],
-            ["#tools", tr ? "Araçlar" : "Tools"],
-            ["#pricing", tr ? "Fiyat" : "Pricing"],
-            // İngilizce sayfada İngilizce adrese bağlanır; aksi hâlde site
-            // kendi İngilizce sürümüne hiç bağlanmamış oluyor ve arama motoru
-            // Türkçe sürümü asıl kabul edip diğerini kopya sayıyor (ölçüldü).
-            [localizedPath("/blog", language), "Blog"],
-            ["#faq", "FAQ"],
-          ].map(([href, label]) => (
+          {navLinks.map(([href, label]) => (
             <CrawlableLink
               key={href}
               href={href}
@@ -382,8 +411,25 @@ function Navbar({
 
         {/* Right */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? (tr ? "Menüyü kapat" : "Close menu") : (tr ? "Menüyü aç" : "Open menu")}
+            aria-expanded={menuOpen}
+            aria-controls="mobil-menu"
+            className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-200 hover:bg-white/10 transition-colors"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              {menuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
+          </button>
           {/* Language */}
-          <div className="relative" ref={langRef}>
+          <div className="relative hidden md:block" ref={langRef}>
             <button
               onClick={() => setLangOpen((o) => !o)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 bg-white/5 text-xs font-semibold text-gray-300 hover:bg-white/10 transition-all"
@@ -391,7 +437,7 @@ function Navbar({
             >
               <span className="text-cyan-400 uppercase">{language}</span>
               <svg
-                className={`w-3 h-3 text-gray-500 transition-transform ${langOpen ? "rotate-180" : ""}`}
+                className={`w-3 h-3 text-gray-400 transition-transform ${langOpen ? "rotate-180" : ""}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -464,6 +510,82 @@ function Navbar({
           )}
         </div>
       </div>
+
+      {menuOpen && (
+        <div
+          id="mobil-menu"
+          ref={menuRef}
+          className="md:hidden border-t border-white/[0.07] bg-[#0a0f1e]/95 backdrop-blur-xl px-5 pb-5 pt-3"
+        >
+          <nav aria-label={tr ? "Mobil menü" : "Mobile menu"} className="flex flex-col">
+            {navLinks.map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-lg px-3 py-3 text-base text-gray-200 hover:bg-white/[0.06] hover:text-white transition-colors"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-3 flex items-center gap-2 border-t border-white/[0.07] pt-4">
+            {(["tr", "en"] as Language[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => {
+                  onLanguageChange(l);
+                  setMenuOpen(false);
+                }}
+                aria-pressed={language === l}
+                className={`h-9 flex-1 rounded-lg border text-sm font-semibold transition-colors ${
+                  language === l
+                    ? "border-cyan-400/40 bg-white/10 text-white"
+                    : "border-white/10 text-gray-300 hover:bg-white/[0.06]"
+                }`}
+              >
+                {l === "tr" ? "🇹🇷 Türkçe" : "🇬🇧 English"}
+              </button>
+            ))}
+          </div>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onUseWebApp();
+              }}
+              className="mt-3 h-11 w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-semibold text-white"
+            >
+              {copy.navbar.openWorkspace}
+            </button>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLogin();
+                }}
+                className="h-11 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-medium text-gray-200"
+              >
+                {copy.navbar.login}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onRegister();
+                }}
+                className="h-11 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-semibold text-white"
+              >
+                {copy.navbar.register}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
@@ -1141,7 +1263,7 @@ function StatsBar({ language }: { language: Language }) {
 
   const stats = [
     // Sayı araç kataloğundan gelir; elle yazılan "20+" araç eklendikçe eskiyordu.
-    { value: 45, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
+    { value: ARAC_SAYISI, suffix: "", label: tr ? "PDF Aracı" : "PDF Tools" },
     {
       value: 80,
       suffix: " MB",
@@ -1189,7 +1311,7 @@ function StatsBar({ language }: { language: Language }) {
                 {s.suffix}
               </span>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{s.label}</p>
+            <p className="mt-1 text-sm text-gray-400">{s.label}</p>
           </motion.div>
         ))}
       </div>
@@ -1217,16 +1339,16 @@ function Features({ language }: { language: Language }) {
   const copy = landingTranslations[language];
 
   return (
-    <section className="relative py-14 sm:py-32 px-5 sm:px-8 overflow-hidden">
+    <section className="relative py-12 sm:py-20 px-5 sm:px-8 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_bottom,rgba(99,102,241,0.09)_0%,transparent_60%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_top,rgba(6,182,212,0.06)_0%,transparent_55%)]" />
       <div className="relative z-10 max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           transition={{ duration: 0.55 }}
-          className="text-center mb-8 sm:mb-16"
+          className="text-center mb-8 sm:mb-12"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-medium mb-6">
             ✦ {copy.features.kicker}
@@ -1253,7 +1375,7 @@ function Features({ language }: { language: Language }) {
                   boxShadow: `0 20px 50px rgba(${col.r},0.16), 0 0 0 1px rgba(${col.r},0.22)`,
                   transition: { duration: 0.22, ease: "easeOut" },
                 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "0px 0px 240px 0px" }}
                 transition={{ delay: i * 0.07, duration: 0.45 }}
                 className="group relative flex flex-row items-start gap-3 p-4 sm:flex-col sm:gap-4 sm:p-6 lg:p-7 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.04] to-transparent cursor-default overflow-hidden"
               >
@@ -1322,7 +1444,7 @@ function HowItWorks({ language }: { language: Language }) {
     ? [
         {
           icon: "⚙️", title: "Aracı Seç",
-          desc: "20+ profesyonel araç arasından seç. İşlem saniyeler içinde tamamlanır.",
+          desc: `${ARAC_SAYISI} profesyonel araç arasından seç. İşlem saniyeler içinde tamamlanır.`,
           r: "59,130,246", badge: "from-blue-600 to-indigo-600",
           iconGrad: "from-blue-500/20 to-indigo-600/20",
         },
@@ -1348,7 +1470,7 @@ function HowItWorks({ language }: { language: Language }) {
         },
         {
           icon: "⚙️", title: "Choose Your Tool",
-          desc: "Select from 20+ professional tools. Processing completes in seconds.",
+          desc: `Select from ${ARAC_SAYISI} professional tools. Processing completes in seconds.`,
           r: "139,92,246", badge: "from-violet-600 to-purple-600",
           iconGrad: "from-violet-500/20 to-purple-600/20",
         },
@@ -1361,15 +1483,15 @@ function HowItWorks({ language }: { language: Language }) {
       ];
 
   return (
-    <section className="relative py-14 sm:py-32 px-5 sm:px-8 overflow-hidden">
+    <section className="relative py-12 sm:py-20 px-5 sm:px-8 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.05)_0%,transparent_65%)]" />
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           transition={{ duration: 0.55 }}
-          className="text-center mb-16"
+          className="text-center mb-10 sm:mb-12"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium mb-6">
             ✦ {tr ? "Nasıl Çalışır?" : "How It Works"}
@@ -1381,9 +1503,6 @@ function HowItWorks({ language }: { language: Language }) {
             {tr ? "3 Adımda Tamamla" : "As Simple as 1-2-3"}
           </h2>
         </motion.div>
-
-        {/* Gerçek ekran görüntüleriyle canlı, vurgulu demo */}
-        <ThreeStepDemo language={language} />
 
         <div className="grid md:grid-cols-3 gap-6 relative">
           {/* Glowing gradient connector */}
@@ -1402,7 +1521,7 @@ function HowItWorks({ language }: { language: Language }) {
                 boxShadow: `0 24px 60px rgba(${step.r},0.2), 0 0 0 1px rgba(${step.r},0.2)`,
                 transition: { duration: 0.22, ease: "easeOut" },
               }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "0px 0px 240px 0px" }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
               className="group relative flex flex-col items-center text-center p-7 pt-16 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-sm cursor-default overflow-visible"
             >
@@ -1526,13 +1645,13 @@ function Testimonials({ language }: { language: Language }) {
   const testimonials = TESTIMONIALS(tr);
 
   return (
-    <section className="relative py-14 sm:py-32 px-5 sm:px-8 overflow-hidden">
+    <section className="relative py-12 sm:py-20 px-5 sm:px-8 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.06)_0%,transparent_55%)]" />
       <div className="relative z-10 max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           className="text-center mb-14"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-6">
@@ -1554,7 +1673,7 @@ function Testimonials({ language }: { language: Language }) {
               key={t.name}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "0px 0px 240px 0px" }}
               transition={{ delay: i * 0.07, duration: 0.45 }}
               className={`flex flex-col p-6 rounded-2xl border transition-all ${
                 t.highlight
@@ -1581,7 +1700,7 @@ function Testimonials({ language }: { language: Language }) {
                 </div>
                 <div>
                   <p className="text-white text-sm font-semibold">{t.name}</p>
-                  <p className="text-gray-500 text-xs">{t.role}</p>
+                  <p className="text-gray-400 text-xs">{t.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -1668,12 +1787,12 @@ function Faq({ language }: { language: Language }) {
         ];
 
   return (
-    <section id="faq" className="relative py-14 sm:py-24 px-5 sm:px-8">
+    <section id="faq" className="relative py-12 sm:py-16 px-5 sm:px-8">
       <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           className="text-center mb-12"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-sm font-medium mb-6">
@@ -1689,11 +1808,17 @@ function Faq({ language }: { language: Language }) {
 
         <div className="divide-y divide-white/[0.06]">
           {items.map((item, i) => (
+            <Fragment key={i}>
+            {(item as { group?: string }).group === "pricing" &&
+              (items[i - 1] as { group?: string } | undefined)?.group !== "pricing" && (
+                <h3 className="pt-10 pb-2 text-sm font-semibold uppercase tracking-wider text-gray-400">
+                  {tr ? "Ödeme ve planlar" : "Billing & plans"}
+                </h3>
+              )}
             <motion.div
-              key={i}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "0px 0px 240px 0px" }}
               transition={{ delay: i * 0.05 }}
             >
               <button
@@ -1707,7 +1832,7 @@ function Faq({ language }: { language: Language }) {
                   {item.question}
                 </span>
                 <span
-                  className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-sm transition-all ${open === i ? "border-blue-500/40 text-blue-400 rotate-45" : "border-white/15 text-gray-500 group-hover:border-white/25"}`}
+                  className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-sm transition-all ${open === i ? "border-blue-500/40 text-blue-400 rotate-45" : "border-white/15 text-gray-400 group-hover:border-white/25"}`}
                   aria-hidden="true"
                 >
                   +
@@ -1739,6 +1864,7 @@ function Faq({ language }: { language: Language }) {
                 )}
               </AnimatePresence>
             </motion.div>
+            </Fragment>
           ))}
         </div>
       </div>
@@ -1765,14 +1891,14 @@ function FinalCta({
   const copy = landingTranslations[language];
 
   return (
-    <section className="relative py-14 sm:py-24 overflow-hidden">
+    <section className="relative py-12 sm:py-16 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-950/50 via-indigo-950/50 to-violet-950/50 border-y border-white/[0.06]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.12)_0%,transparent_65%)]" />
       <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           transition={{ duration: 0.55 }}
         >
           <h2
@@ -1962,31 +2088,47 @@ function Footer({
   const { site } = useSettings();
   const socialLinks = site.socialLinks ?? [];
 
-  const cols = [
+  const yol = (p: string) => localizedPath(p, language);
+  // Her öğe gerçek bir <a href>: arama motorları bağlantıyı görür. Tıklamada
+  // sayfa yenilemeden uygulama içi yönlendirme (action) çalışır.
+  type FooterLink = { label: string; href: string; action?: () => void };
+  const populerAraclar = [
+    "merge", "split", "compress", "pdf-to-word", "word-to-pdf", "pdf-to-image",
+    "image-to-pdf", "pdf-duzenle", "pdf-imzala", "taranmis-pdf-ocr", "pdf-ozetle", "unlock-pdf",
+  ]
+    .map((id) => TOOLS.find((t) => t.id === id))
+    .filter((t): t is (typeof TOOLS)[number] => Boolean(t))
+    .map((t) => ({
+      label: tr ? t.tr.name : t.en.name,
+      href: yol(`/tools/${t.id === "merge" ? "merge-pdf" : t.id === "split" ? "split-pdf" : t.id}`),
+    }));
+  const cols: { heading: string; links: FooterLink[] }[] = [
     {
       heading: tr ? "Ürün" : "Product",
       links: [
-        { label: tr ? "Araçlar" : "Tools", action: onUseWebApp },
-        { label: "Merge PDF", action: onUseWebApp },
-        { label: "Split PDF", action: onUseWebApp },
-        { label: tr ? "Sıkıştır" : "Compress PDF", action: onUseWebApp },
+        { label: tr ? "Tüm araçlar" : "All tools", href: yol("/#tools"), action: onUseWebApp },
+        { label: tr ? "Fiyatlandırma" : "Pricing", href: yol("/pricing") },
+        { label: "Blog", href: yol("/blog") },
+        { label: tr ? "Geliştirici API" : "Developer API", href: yol("/pdf-api") },
       ],
+    },
+    {
+      heading: tr ? "Popüler araçlar" : "Popular tools",
+      links: populerAraclar,
     },
     {
       heading: tr ? "Şirket" : "Company",
       links: [
-        { label: tr ? "Hakkımızda" : "About", action: onOpenAbout },
-        { label: tr ? "İletişim" : "Contact", action: onContactClick },
-        { label: "Blog", href: localizedPath("/blog", language) },
-        { label: tr ? "Geliştirici API" : "Developer API", href: localizedPath("/pdf-api", language) },
+        { label: tr ? "Hakkımızda" : "About", href: yol("/about"), action: onOpenAbout },
+        { label: tr ? "İletişim" : "Contact", href: yol("/contact"), action: onContactClick },
       ],
     },
     {
       heading: tr ? "Yasal" : "Legal",
       links: [
-        { label: copy.footer.termsLabel, action: onOpenTerms },
-        { label: copy.footer.privacyLabel, action: onOpenPrivacy },
-        ...(tr ? [{ label: "KVKK", action: onOpenKvkk }] : []),
+        { label: copy.footer.termsLabel, href: yol("/terms"), action: onOpenTerms },
+        { label: copy.footer.privacyLabel, href: yol("/privacy"), action: onOpenPrivacy },
+        ...(tr ? [{ label: "KVKK", href: yol("/kvkk"), action: onOpenKvkk }] : []),
       ],
     },
   ];
@@ -2002,13 +2144,15 @@ function Footer({
               aria-label={copy.navbar.productLabel}
               className="group flex items-center"
             >
-              <img
-                src="/navbar-logo.png"
-                alt="PDF Platform"
-                className="h-11 w-auto object-contain transition-opacity group-hover:opacity-90 sm:h-12"
-              />
+              <img src="/emblem.png" alt="" aria-hidden="true" className="h-10 w-10 object-contain" />
+              <span
+                className="ml-2.5 text-lg font-extrabold tracking-tight text-white transition-opacity group-hover:opacity-90"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                PDF Platform
+              </span>
             </button>
-            <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-gray-500">
+            <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-gray-400">
               {copy.footer.description}
             </p>
             {socialLinks.length > 0 ? (
@@ -2041,27 +2185,26 @@ function Footer({
           <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 md:flex md:gap-x-16">
             {cols.map((col) => (
               <div key={col.heading} className="min-w-[7rem]">
-                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-400">
                   {col.heading}
                 </p>
                 <ul className="space-y-2.5">
                   {col.links.map((link) => (
                     <li key={link.label}>
-                      {"action" in link ? (
-                        <button
-                          onClick={link.action}
-                          className="text-left text-[13.5px] text-gray-400 transition-colors hover:text-white"
-                        >
-                          {link.label}
-                        </button>
-                      ) : (
-                        <CrawlableLink
-                          href={link.href ?? "#"}
-                          className="text-[13.5px] text-gray-400 transition-colors hover:text-white"
-                        >
-                          {link.label}
-                        </CrawlableLink>
-                      )}
+                      <a
+                        href={link.href}
+                        onClick={
+                          link.action
+                            ? (e) => {
+                                e.preventDefault();
+                                link.action!();
+                              }
+                            : undefined
+                        }
+                        className="text-[13.5px] text-gray-400 transition-colors hover:text-white"
+                      >
+                        {link.label}
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -2074,11 +2217,13 @@ function Footer({
       {/* Bottom bar */}
       <div className="border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 py-6 text-center sm:flex-row sm:justify-between sm:gap-3 sm:px-8 sm:text-left">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} NB Global Studio.{" "}
             {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
           </p>
-          <p className="text-xs text-gray-600">Made with ❤️ for productivity</p>
+          <p className="text-xs text-gray-400">
+            {tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}
+          </p>
         </div>
       </div>
     </footer>
@@ -2163,6 +2308,7 @@ export function LandingPage({
   }, []);
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="relative isolate min-h-dvh text-white antialiased">
       {/* Aurora katmani sayfanin ust kismina tutturulur; isolate sayesinde -z-10
           icerigin altinda kalir, govdenin arka planiyla oynamak gerekmez. */}
@@ -2208,6 +2354,7 @@ export function LandingPage({
           language={language}
           onUseWebApp={onUseWebApp}
           onSelectPlan={onSelectPlan}
+          onNotify={onContactClick}
         />
         {/* Testimonials: GERÇEK kullanıcı yorumu olmadığı için gösterilmiyor —
             uydurma referans dürüstlük + yasal (sahte endorsement) + Google E-E-A-T
@@ -2232,5 +2379,6 @@ export function LandingPage({
         onContactClick={onContactClick}
       />
     </div>
+    </MotionConfig>
   );
 }

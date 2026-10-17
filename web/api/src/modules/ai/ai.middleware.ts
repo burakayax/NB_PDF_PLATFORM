@@ -34,7 +34,7 @@ export async function requireAiAccess(
   if (!allowed) {
     res.status(403).json({
       error: "pro_required",
-      message: "Yapay zekâ özellikleri için Pro/Business aboneliği ya da işlem kredisi gerekir.",
+      message: "Yapay zekâ özellikleri için Başlangıç ve üzeri bir plan ya da işlem kredisi gerekir.",
     });
     return;
   }

@@ -254,7 +254,7 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon, ai
             <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>
             {aiLocked || !aiComingSoon ? (
               aiLocked ? (
-                <button type="button" onClick={onAiLocked} title={tr ? "Pro üyelere özel" : "Pro members only"} className="inline-flex items-center gap-2 rounded-xl bg-amber-400/10 px-3.5 py-2 text-[13px] font-semibold text-amber-100 ring-1 ring-amber-300/30 hover:bg-amber-400/20"><Lock className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}<span className="rounded-full bg-amber-300/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">PRO</span></button>
+                <button type="button" onClick={onAiLocked} title={tr ? "Ücretli plan gerekir (Başlangıç ve üzeri)" : "Needs a paid plan (Starter or higher)"} className="inline-flex items-center gap-2 rounded-xl bg-amber-400/10 px-3.5 py-2 text-[13px] font-semibold text-amber-100 ring-1 ring-amber-300/30 hover:bg-amber-400/20"><Lock className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}<span className="rounded-full bg-amber-300/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">PRO</span></button>
               ) : (
                 <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button>
               )

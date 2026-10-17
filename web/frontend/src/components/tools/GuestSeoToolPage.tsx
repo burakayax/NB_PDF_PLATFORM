@@ -6,6 +6,7 @@ import {
   getToolSeo,
   getRelatedToolLinks,
   getGuideSlugsForTool,
+  getToolGuide,
 } from "../../seo/seoContent.mjs";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolScore } from "../common/ToolScore";
@@ -44,6 +45,10 @@ export { ON_DEVICE_SEO_TOOLS };
 export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, wide, isAuthenticated, onOpenApp, userName, overlay }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
+  const guide = getToolGuide(slug, language) as {
+    steps: Array<{ title: string; x: string }>;
+    useCases: Array<{ title: string; x: string }>;
+  } | null;
   const onDevice = ON_DEVICE_SEO_TOOLS.has(slug);
   const relatedTools = getRelatedToolLinks(slug, language) as Array<{ slug: string; label: string }>;
 
@@ -160,6 +165,42 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
             </div>
           ))}
         </div>
+
+        {guide && (
+          <>
+            <section className="mt-16">
+              <h2 className="mb-4 text-center text-lg font-bold text-slate-200">
+                {tr ? `${seo?.h1 ?? ""} nasıl yapılır?` : `How to use: ${seo?.h1 ?? ""}`}
+              </h2>
+              <ol className="space-y-3">
+                {guide.steps.map((st, i) => (
+                  <li key={i} className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3.5">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[12px] font-bold text-cyan-200">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-200">{st.title}</p>
+                      <p className="mt-1 text-[13px] leading-relaxed text-slate-400">{st.x}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+            <section className="mt-14">
+              <h2 className="mb-4 text-center text-lg font-bold text-slate-200">
+                {tr ? "Ne zaman işe yarar?" : "When is it useful?"}
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {guide.useCases.map((u, i) => (
+                  <div key={i} className="rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3.5">
+                    <p className="text-sm font-semibold text-slate-200">{u.title}</p>
+                    <p className="mt-1 text-[13px] leading-relaxed text-slate-400">{u.x}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
 
         {seo?.faq && seo.faq.length > 0 && (
           <section className="mt-16">
