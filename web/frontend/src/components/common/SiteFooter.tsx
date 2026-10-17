@@ -70,13 +70,15 @@ export function SiteFooter({ language }: { language: Language }) {
           {/* Brand */}
           <div className="max-w-sm">
             <CrawlableLink href={yol("/")} className="group inline-flex items-center">
-              <img
-                src="/navbar-logo.png"
-                alt="PDF Platform"
-                className="h-11 w-auto object-contain transition-opacity group-hover:opacity-90 sm:h-12"
-              />
+              <img src="/emblem.png" alt="" aria-hidden="true" className="h-10 w-10 object-contain" />
+              <span
+                className="ml-2.5 text-lg font-extrabold tracking-tight text-white transition-opacity group-hover:opacity-90"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                PDF Platform
+              </span>
             </CrawlableLink>
-            <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-gray-500">
+            <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-gray-400">
               {tr
                 ? "Birleştir, dönüştür, sıkıştır, düzenle — üyeliksiz ve hızlı. Yapısal araçlar cihazınızda, dosyalarınız gizli kalır."
                 : "Merge, convert, compress, edit — no signup, fast. Structural tools run on your device; your files stay private."}
@@ -111,7 +113,7 @@ export function SiteFooter({ language }: { language: Language }) {
           <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 md:flex md:gap-x-16">
             {cols.map((col) => (
               <div key={col.heading} className="min-w-[7rem]">
-                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-400">
                   {col.heading}
                 </p>
                 <ul className="space-y-2.5">
@@ -131,7 +133,7 @@ export function SiteFooter({ language }: { language: Language }) {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/[0.05] pt-6 text-[12px] text-gray-600">
+        <div className="mt-10 border-t border-white/[0.05] pt-6 text-[12px] text-gray-400">
           © {new Date().getFullYear()} PDF Platform. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
         </div>
       </div>

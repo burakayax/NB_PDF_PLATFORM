@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ const PILL_VARIANTS: Variants = {
 const WEB_FEATURES = [
   "Real-time preview",
   "Cloud sync",
-  "20+ PDF tools",
+  `${ARAC_SAYISI} PDF tools`,
   "Browser-based",
 ];
 const DESK_FEATURES = [

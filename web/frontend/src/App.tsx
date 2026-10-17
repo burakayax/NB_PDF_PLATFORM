@@ -724,7 +724,10 @@ function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const [contactModalOpen, setContactModalOpen] = useState(false);
+  // /contact adresiyle gelen ziyaretçide iletişim penceresi doğrudan açılır.
+  const [contactModalOpen, setContactModalOpen] = useState(
+    () => typeof window !== "undefined" && /^(\/en)?\/contact\/?$/.test(window.location.pathname),
+  );
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   // Plan bilgisini uygulama geneline duyur — sonuç ekranındaki üyelik daveti

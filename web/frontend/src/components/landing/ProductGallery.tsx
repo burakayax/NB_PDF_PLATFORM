@@ -540,7 +540,7 @@ export function ProductGallery({
   return (
     <section
       id="showcase"
-      className="relative overflow-hidden px-5 py-14 sm:px-8 sm:py-28"
+      className="relative overflow-hidden px-5 py-12 sm:px-8 sm:py-20"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.09)_0%,transparent_60%)]" />
 
