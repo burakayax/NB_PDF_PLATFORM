@@ -813,7 +813,7 @@ function Hero({
               ) : (
                 <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-400 sm:inline-flex">
                   <Lock className="h-3.5 w-3.5" />
-                  {tr ? "Üyelik gerekmez" : "No account needed"}
+                  {tr ? "14 araç üyeliksiz" : "14 tools need no account"}
                 </span>
               )}
             </div>
@@ -1189,7 +1189,7 @@ function Hero({
           {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] font-medium text-slate-400">
             {[
-              { Icon: Lock, tr: "Üyelik gerekmez", en: "No account needed" },
+              { Icon: Lock, tr: "14 araç üyeliksiz", en: "14 tools need no account" },
               { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı", en: "No watermark, no ads" },
               { Icon: Zap, tr: "Kurulum yok — tarayıcıda çalışır", en: "No install — runs in your browser" },
             ].map((item) => {

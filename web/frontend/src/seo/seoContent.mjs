@@ -1885,7 +1885,7 @@ export const LANDING_SEO = {
       { q: "PDF dosyaları nasıl ücretsiz birleştirilir?", a: "Dosyalarınızı sürükleyip bırakın, sırayı ayarlayın ve birleştir deyin. Birleştirilmiş PDF saniyeler içinde, cihazınızda hazırlanır ve otomatik indirilir — üyelik yok, kurulum yok, dosyanız sunucuya gitmez." },
       { q: "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?", a: "PDF Platform'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir." },
       { q: "PDF dosyasının boyutu nasıl küçültülür?", a: "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. PDF Platform, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür." },
-      { q: "PDF Platform yazılım yüklemeden çalışır mı?", a: "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Birleştirme gibi araçlar dosyanızı cihazınızda işler; çevrimdışı kullanım için Windows masaüstü uygulaması çok yakında geliyor." },
+      { q: "PDF Platform yazılım yüklemeden çalışır mı?", a: "Evet. Web sürümü doğrudan tarayıcınızdan açılır — kurulum veya eklenti gerekmez. Birleştirme gibi araçlar dosyanızı cihazınızda işler; çevrimdışı kullanım için Windows masaüstü uygulaması çok yakında geliyor." },
     ],
   },
   en: {
@@ -1903,7 +1903,7 @@ export const LANDING_SEO = {
       { q: "How do I merge PDF files online for free?", a: "Drag and drop your files, set the order, and click merge. The combined PDF is prepared on your device in seconds and downloads automatically — no sign-up, no installation, your file never goes to a server." },
       { q: "Can I convert PDF to Word without losing formatting?", a: "Yes. The PDF converter in PDF Platform preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing." },
       { q: "How do I compress a PDF to reduce its file size?", a: "Upload your PDF, choose a compression level, and download the optimized file. PDF Platform reduces file size while keeping text and images sharp for email attachments and portal uploads." },
-      { q: "Does PDF Platform work without installing software?", a: "Yes. The web version runs entirely in your browser — no installation, no plugins. Tools like merge process your file on your device; a Windows desktop app for offline use is coming soon." },
+      { q: "Does PDF Platform work without installing software?", a: "Yes. The web version opens right in your browser — no installation, no plugins. Tools like merge process your file on your device; a Windows desktop app for offline use is coming soon." },
     ],
   },
 };

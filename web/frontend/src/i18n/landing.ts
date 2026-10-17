@@ -184,7 +184,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // On-screen subheading. (The meta description does NOT come from here —
       // it lives in seo/seoContent.mjs → LANDING_SEO.)
       description:
-        `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total, all in one place. No install, no account — everything runs in your browser.`,
+        `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total, all in one place. No install. 20 tools run right in your browser, 14 of them without an account.`,
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -341,7 +341,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       kicker: "The right PDF workflow for your team",
       title: "Start right in your browser.",
       description:
-        "No installation, no account required. Open the workspace and handle your first document in seconds.",
+        "No installation. 14 tools work without an account. Open the workspace and handle your first document in seconds.",
       primaryCta: "Open the Workspace",
       secondaryCta: "Create a Free Account",
     },
@@ -442,7 +442,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Does PDF Platform work without installing software?",
         answer:
-          "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app for offline use and higher-volume operations is coming soon.",
+          "Yes. The web version opens right in your browser — no installation, no plugins. Tools like merge process your file on your device; heavier jobs such as conversion run on our server. A Windows desktop app for offline use and higher-volume operations is coming soon.",
       },
       ...PRICING_FAQ_EN.map((f) => ({ ...f, group: "pricing" as const })),
     ],
@@ -500,7 +500,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // kullanılıyor (arama verisinde ikisi de üst sıralarda), o yüzden biri
       // başlıkta biri burada geçiyor.
       description:
-        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Kurulum ve üyelik gerekmez — tarayıcınızda çalışır.`,
+        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Kurulum gerekmez. 20 araç doğrudan tarayıcınızda çalışır, 14'ü üyeliksiz.`,
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",
@@ -668,7 +668,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       kicker: "Ekibiniz için doğru PDF iş akışı",
       title: "Hemen tarayıcıdan başlayın.",
       description:
-        "Kurulum yok, üyelik zorunlu değil. Çalışma alanını açın ve ilk belgenizi saniyeler içinde işleyin.",
+        "Kurulum yok. 14 araç üyelik istemez. Çalışma alanını açın ve ilk belgenizi saniyeler içinde işleyin.",
       primaryCta: "Çalışma Alanını Aç",
       secondaryCta: "Ücretsiz Üye Ol",
     },
@@ -769,7 +769,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "PDF Platform yazılım yüklemeden çalışır mı?",
         answer:
-          "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor.",
+          "Evet. Web sürümü doğrudan tarayıcınızdan açılır — kurulum veya eklenti gerekmez. Birleştirme gibi araçlar dosyanızı cihazınızda işler; dönüştürme gibi ağır işlemler sunucuda yapılır. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor.",
       },
       ...PRICING_FAQ_TR.map((f) => ({ ...f, group: "pricing" as const })),
     ],
