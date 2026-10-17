@@ -32,6 +32,7 @@ import {
   SOFTWARE_FEATURE_LIST,
   RELATED_TOOLS as TOOL_RELATED_TOOLS,
   BLOG_RELATED_TOOLS,
+  getToolGuide,
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
@@ -557,6 +558,26 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
     }
   }
 
+  // HowTo — rehber içeriği olan araç sayfaları için adım adım şema.
+  if (meta.kind === "tool" && meta.slug) {
+    const guide = getToolGuide(meta.slug, lang);
+    if (guide && guide.steps.length) {
+      nodes.push({
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: lang === "tr" ? `${meta.h1} nasıl yapılır?` : `How to use: ${meta.h1}`,
+        description: meta.description,
+        inLanguage: lang,
+        step: guide.steps.map((st, i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: st.title,
+          text: st.x,
+        })),
+      });
+    }
+  }
+
   if (meta.includeFaq && Array.isArray(meta.faq) && meta.faq.length > 0) {
     nodes.push({
       "@context": "https://schema.org",
@@ -705,6 +726,25 @@ function renderVisibleBody(baseUrl, meta, lang) {
           `<nav aria-label="${t.ariaRelatedGuides}" class="seo-related-guides"><h2>${t.relatedGuides}</h2><ul>${gl}</ul></nav>`,
         );
       }
+    }
+  }
+
+  // Araç sayfası — adım adım anlatım + kullanım senaryoları (en çok aranan araçlar)
+  if (meta.kind === "tool" && meta.slug) {
+    const guide = getToolGuide(meta.slug, lang);
+    if (guide) {
+      const adimBaslik = lang === "tr" ? `${meta.h1} nasıl yapılır?` : `How to use: ${meta.h1}`;
+      const senaryoBaslik = lang === "tr" ? "Ne zaman işe yarar?" : "When is it useful?";
+      parts.push(
+        `<section class="seo-howto"><h2>${escapeHtml(adimBaslik)}</h2><ol>${guide.steps
+          .map((st) => `<li><strong>${escapeHtml(st.title)}:</strong> ${escapeHtml(st.x)}</li>`)
+          .join("")}</ol></section>`,
+      );
+      parts.push(
+        `<section class="seo-usecases"><h2>${senaryoBaslik}</h2><ul>${guide.useCases
+          .map((u) => `<li><strong>${escapeHtml(u.title)}:</strong> ${escapeHtml(u.x)}</li>`)
+          .join("")}</ul></section>`,
+      );
     }
   }
 

@@ -9,6 +9,8 @@ import {
   type CategoryId,
 } from "../../lib/toolCatalog";
 import type { Language } from "../../i18n/landing";
+import { localizedPath } from "../../seo/enSlugs.mjs";
+import { accountToneCount, toolAccessBadge, type AccessTone } from "../../lib/toolAccess";
 import type { FeatureKey } from "../../api/subscription";
 
 /**
@@ -100,6 +102,18 @@ const CATEGORY_META: Record<
   },
 };
 
+/** Rozet renkleri — etiketin kendisi `lib/toolAccess.ts` içinde, gerçek erişim kuralından üretilir. */
+const ROZET_RENK: Record<AccessTone, { text: string; dot: string }> = {
+  guest: { text: "text-emerald-300/90", dot: "bg-emerald-400" },
+  account: { text: "text-sky-300/90", dot: "bg-sky-400" },
+  starter: { text: "text-amber-300/90", dot: "bg-amber-400" },
+  plus: { text: "text-violet-300/90", dot: "bg-violet-400" },
+  ai: { text: "text-fuchsia-300/90", dot: "bg-fuchsia-400" },
+};
+
+/** Katalog kimliği ile araç sayfası adresi ayrışan araçlar (adres = /tools/<slug>). */
+const TOOL_URL_SLUG: Record<string, string> = { merge: "merge-pdf", split: "split-pdf" };
+
 const CATEGORY_ORDER: CategoryId[] = ["ai", "edit", "scan", "convert", "security"];
 
 /** Arama için: Türkçe karakterleri sadeleştirip küçük harfe indirger. */
@@ -129,7 +143,7 @@ export default function PdfToolsSection({
 }: PdfToolsSectionProps) {
   const tr = language === "tr";
   /** Ücretsiz üyelikle açılan araç sayısı — listeden hesaplanır. */
-  const hesapAracSayisi = useMemo(() => TOOLS.filter((t) => t.account).length, []);
+  const hesapAracSayisi = useMemo(() => accountToneCount(TOOLS), []);
   const [filter, setFilter] = useState<CategoryId | "all">("all");
   const [query, setQuery] = useState("");
   /** Mobilde kategori başına ilk 6 araç görünür; "Tümünü göster" ile açılan kategoriler. */
@@ -163,7 +177,7 @@ export default function PdfToolsSection({
   }
 
   return (
-    <section id="tools" className="relative overflow-hidden py-14 sm:py-28">
+    <section id="tools" className="relative overflow-hidden py-12 sm:py-20">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.10)_0%,transparent_60%)]" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
@@ -293,10 +307,15 @@ export default function PdfToolsSection({
                     const copy = t[language];
                     const hue = HUES[TOOL_HUE[t.id] ?? "violet"];
                     return (
-                      <motion.button
+                      <motion.a
                         key={t.id}
-                        type="button"
-                        onClick={() => openTool(t)}
+                        href={localizedPath(`/tools/${TOOL_URL_SLUG[t.id] ?? t.id}`, language)}
+                        onClick={(e) => {
+                          // Gerçek bağlantı (arama motoru görsün); tıklamada uygulama içi açılış.
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                          e.preventDefault();
+                          openTool(t);
+                        }}
                         initial={{ opacity: 0, y: 12 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.2 }}
@@ -313,34 +332,25 @@ export default function PdfToolsSection({
                             <span className="block truncate text-[14.5px] font-semibold text-white/90 transition group-hover:text-white">
                               {copy.name}
                             </span>
-                            {(t.free || t.account || t.ai) && (
-                              <span
-                                className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${
-                                  t.free
-                                    ? "text-emerald-300/90"
-                                    : t.account
-                                      ? "text-sky-300/90"
-                                      : "text-fuchsia-300/90"
-                                }`}
-                              >
+                            {(() => {
+                              const rozet = toolAccessBadge(t, tr);
+                              const renk = ROZET_RENK[rozet.tone];
+                              return (
                                 <span
-                                  className={`h-1 w-1 rounded-full ${
-                                    t.free ? "bg-emerald-400" : t.account ? "bg-sky-400" : "bg-fuchsia-400"
-                                  }`}
-                                />
-                                {t.free
-                                  ? tr ? "Üyeliksiz" : "No sign-up"
-                                  : t.account
-                                    ? tr ? "Ücretsiz üyelik" : "Free account"
-                                    : tr ? "Yapay zekâ" : "AI"}
-                              </span>
-                            )}
+                                  title={rozet.detail}
+                                  className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${renk.text}`}
+                                >
+                                  <span className={`h-1 w-1 rounded-full ${renk.dot}`} />
+                                  {rozet.label}
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
                         <p className="mt-2 line-clamp-2 text-[12.5px] leading-relaxed text-slate-400 transition group-hover:text-slate-300 sm:mt-3 sm:line-clamp-none">
                           {copy.desc}
                         </p>
-                      </motion.button>
+                      </motion.a>
                     );
                   })}
                 </div>

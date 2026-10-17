@@ -1088,13 +1088,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           <p className="text-sm font-semibold text-amber-100">
             {gate === "login"
               ? tr ? "Devam etmek için giriş yap" : "Log in to continue"
-              : tr ? "Bu bir Pro / Business özelliğidir" : "This is a Pro / Business feature"}
+              : tr ? "Yapay zekâ için Başlangıç ve üzeri plan ya da kredi gerekir" : "AI needs a Starter-or-higher plan or credits"}
           </p>
           {gate === "upgrade" && (
             <p className="-mt-1 text-[12.5px] text-amber-100/80">
               {tr
-                ? `Pro ile ayda ${AI_MONTHLY_CREDITS_BY_PLAN.PRO}, Business ile ayda ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS} yapay zekâ işlemi.`
-                : `Pro gives ${AI_MONTHLY_CREDITS_BY_PLAN.PRO} AI operations a month, Business ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS}.`}
+                ? `Aylık yapay zekâ işlemi: Başlangıç ${AI_MONTHLY_CREDITS_BY_PLAN.STARTER}, Plus ${AI_MONTHLY_CREDITS_BY_PLAN.PLUS}, Pro ${AI_MONTHLY_CREDITS_BY_PLAN.PRO}, Business ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS}.`
+                : `AI operations a month: Starter ${AI_MONTHLY_CREDITS_BY_PLAN.STARTER}, Plus ${AI_MONTHLY_CREDITS_BY_PLAN.PLUS}, Pro ${AI_MONTHLY_CREDITS_BY_PLAN.PRO}, Business ${AI_MONTHLY_CREDITS_BY_PLAN.BUSINESS}.`}
             </p>
           )}
           <div className="flex flex-wrap items-center justify-center gap-2">

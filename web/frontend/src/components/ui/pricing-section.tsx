@@ -60,7 +60,7 @@ function CardBillingToggle({
           type="button"
           onClick={() => onChange(c)}
           className={`relative flex-1 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-            cycle === c ? "text-white" : "text-gray-500 hover:text-gray-300"
+            cycle === c ? "text-white" : "text-gray-400 hover:text-gray-300"
           }`}
         >
           {cycle === c && (
@@ -102,7 +102,7 @@ function Feature({
           highlight ? "bg-blue-500/25" : "bg-white/8"
         }`}
       >
-        <span className={`text-[9px] font-bold ${highlight ? "text-blue-300" : "text-gray-500"}`}>
+        <span className={`text-[9px] font-bold ${highlight ? "text-blue-300" : "text-gray-400"}`}>
           ✓
         </span>
       </div>
@@ -161,7 +161,7 @@ function StarterToolsModal({
             {tr ? "Başlangıç planındaki araçlar" : "Tools in the Starter plan"}
           </h3>
         </div>
-        <p className="mb-5 text-sm text-gray-500">
+        <p className="mb-5 text-sm text-gray-400">
           {tr
             ? `Başlangıç planı şu ${tools.length} araca erişim sağlar:`
             : `The Starter plan gives access to these ${tools.length} tools:`}
@@ -218,16 +218,16 @@ function FreeCard({
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: "0px 0px 240px 0px" }}
       transition={{ duration: 0.45, delay: 0 }}
       className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:p-7 flex flex-col h-full hover:border-white/20 hover:bg-white/[0.05] transition-all duration-300"
     >
       <div className="text-2xl mb-3">🆓</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
-      <p className="text-gray-500 text-sm mb-5">{tr ? "Başla, kart gerekmez." : "Get started, no card required."}</p>
+      <p className="text-gray-400 text-sm mb-5">{tr ? "Başla, kart gerekmez." : "Get started, no card required."}</p>
       <div className="mb-6 flex items-baseline gap-1.5">
         <span className="text-4xl lg:text-5xl font-black text-white">{freeLabel}</span>
-        <span className="text-gray-500 text-sm">{tr ? "/ ay" : "/ mo"}</span>
+        <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>
       </div>
       <ul className="space-y-2.5 flex-1 mb-7">
         {features.map((f) => <Feature key={f} text={f} highlight={false} />)}
@@ -253,6 +253,7 @@ function MonthlyOnlyCard({
   displaySymbol,
   onCta,
   comingSoon = false,
+  onNotify,
   onShowPerks,
   starterTools = [],
 }: {
@@ -263,6 +264,8 @@ function MonthlyOnlyCard({
   displaySymbol?: string;
   onCta: () => void;
   comingSoon?: boolean;
+  /** Ödemeler kapalıyken "Haber ver" düğmesi — plan açılınca bilgi istemek için. */
+  onNotify?: () => void;
   onShowPerks?: () => void;
   starterTools?: FeatureKey[];
 }) {
@@ -278,7 +281,7 @@ function MonthlyOnlyCard({
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: "0px 0px 240px 0px" }}
       transition={{ duration: 0.45, delay }}
       style={isPlus ? { scale: 1.02 } : undefined}
       className={`relative rounded-2xl p-5 lg:p-7 flex flex-col h-full transition-all duration-300 ${
@@ -305,17 +308,16 @@ function MonthlyOnlyCard({
           </div>
         </>
       )}
-      {!isPlus && plan.badge && (
-        <div className="absolute -top-3.5 inset-x-0 flex justify-center">
-          <span className="bg-gradient-to-r from-green-600 to-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">
-            {tr ? plan.badge.textTr : plan.badge.textEn}
-          </span>
-        </div>
+      {/* Tek öne çıkan plan: yalnızca Plus "En Popüler" rozeti taşır (Başlangıç rozeti kaldırıldı). */}
+      {comingSoon && (
+        <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-200">
+          {tr ? "Çok yakında" : "Coming very soon"}
+        </span>
       )}
 
       <div className="text-2xl mb-3 mt-2">{isPlus ? "🚀" : "⚡"}</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
-      <p className={`text-sm mb-5 ${isPlus ? "text-blue-300/70" : "text-gray-500"}`}>
+      <p className={`text-sm mb-5 ${isPlus ? "text-blue-300/70" : "text-gray-400"}`}>
         {(tr ? plan.taglineTr : plan.taglineEn) || (isPlus
           ? (tr ? "Bireyler için akıllı seçim." : "The smart choice for individuals.")
           : (tr ? "PDF işine yeni başlayanlar için." : "Perfect for getting started."))}
@@ -371,18 +373,18 @@ function MonthlyOnlyCard({
       </AnimatePresence>
 
       <button
-        onClick={comingSoon ? undefined : onCta}
-        disabled={comingSoon}
+        onClick={comingSoon ? onNotify : onCta}
+        disabled={comingSoon && !onNotify}
         className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
           comingSoon
-            ? "border border-white/15 text-gray-400 cursor-not-allowed"
+            ? "border border-white/25 text-gray-100 hover:bg-white/10"
             : isPlus
               ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/30 py-3.5"
               : "border border-white/20 text-white hover:bg-white/8"
         }`}
       >
         {comingSoon
-          ? (tr ? "Yakında" : "Coming soon")
+          ? (tr ? "Haber ver" : "Notify me")
           : isPlus ? (tr ? "Plus'ı Başlat" : "Start Plus") : (tr ? "Başlangıç'ı Başlat" : "Start Starter")}
       </button>
       {onShowPerks && (
@@ -412,6 +414,7 @@ function CycleAwareCard({
   displaySymbol,
   onCta,
   comingSoon = false,
+  onNotify,
   onShowPerks,
 }: {
   plan: PlanDefinition;
@@ -421,6 +424,7 @@ function CycleAwareCard({
   displaySymbol?: string;
   onCta: (cycle: BillingCycle, extraSeats: number) => void;
   comingSoon?: boolean;
+  onNotify?: () => void;
   onShowPerks?: () => void;
 }) {
   /**
@@ -457,7 +461,7 @@ function CycleAwareCard({
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: "0px 0px 240px 0px" }}
       transition={{ duration: 0.45, delay }}
       className={`relative rounded-2xl p-5 lg:p-7 flex flex-col h-full transition-all duration-300 ${
         isPlus
@@ -467,6 +471,11 @@ function CycleAwareCard({
           : "border border-violet-500/25 bg-white/[0.03] hover:border-violet-500/40 hover:bg-white/[0.05]"
       }`}
     >
+      {comingSoon && (
+        <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-200">
+          {tr ? "Çok yakında" : "Coming very soon"}
+        </span>
+      )}
       {/* Badge */}
       <div className="absolute -top-3.5 inset-x-0 flex justify-center">
         {isPlus ? (
@@ -490,7 +499,7 @@ function CycleAwareCard({
 
       <div className="text-2xl mb-3 mt-2">{isPlus ? "🚀" : isPro ? "💎" : "🏢"}</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
-      <p className="text-gray-500 text-sm mb-3">
+      <p className="text-gray-400 text-sm mb-3">
         {(tr ? plan.taglineTr : plan.taglineEn) || (isPlus || isPro
           ? (tr ? "Düzenli kullananlar için en iyi seçim." : "For power users who stay.")
           : (tr ? "Kurumsal ekipler ve organizasyonlar için." : "Built for enterprise teams and organizations."))}
@@ -589,7 +598,7 @@ function CycleAwareCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.2 }}
-              className="text-gray-500 text-xs"
+              className="text-gray-400 text-xs"
             >
               {tr
                 ? `${fmt(yearlyTotal, currency)} yıllık faturalandırılır`
@@ -602,7 +611,7 @@ function CycleAwareCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.2 }}
-              className="text-gray-500 text-xs"
+              className="text-gray-400 text-xs"
             >
               {tr ? "Aylık faturalandırılır" : "Billed monthly"}
             </motion.p>
@@ -614,18 +623,18 @@ function CycleAwareCard({
         {features.map((f) => <Feature key={f} text={f} highlight={false} />)}
       </ul>
 
-      <p className="text-gray-600 text-xs mb-3 text-center">
+      <p className="text-gray-400 text-xs mb-3 text-center">
         {isPlus || isPro
           ? (tr ? "Yıllık taahhüt en iyi fiyat-değer dengesini sunar" : "Yearly commitment offers the best value")
           : (tr ? "Kurumsal lisanslama · organizasyonunuzla ölçeklenir" : "Enterprise licensing built to scale with your organization")}
       </p>
 
       <button
-        onClick={comingSoon ? undefined : () => onCta(cycle, isBusiness ? extraSeats : 0)}
-        disabled={comingSoon}
+        onClick={comingSoon ? onNotify : () => onCta(cycle, isBusiness ? extraSeats : 0)}
+        disabled={comingSoon && !onNotify}
         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
           comingSoon
-            ? "border border-white/15 text-gray-400 cursor-not-allowed"
+            ? "border border-white/25 text-gray-100 hover:bg-white/10"
             : isPlus
               ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500"
               : isPro
@@ -634,7 +643,7 @@ function CycleAwareCard({
         }`}
       >
         {comingSoon
-          ? (tr ? "Yakında" : "Coming soon")
+          ? (tr ? "Haber ver" : "Notify me")
           : isPlus
           ? (tr ? "Plus'ı Başlat" : "Start Plus")
           : isPro
@@ -684,148 +693,17 @@ function GuvenSatiri({ language }: { language: Language }) {
   );
 }
 
-// ─── Premium FAQ ──────────────────────────────────────────────────────────────
-
-function PricingFaq({ language }: { language: Language }) {
-  const [open, setOpen] = useState<number | null>(null);
-  const tr = language === "tr";
-
-  const items = tr
-    ? [
-        {
-          q: "7 günlük para iade garantisi nasıl çalışır?",
-          a: "İlk ödemenizden itibaren 7 gün içinde, herhangi bir neden göstermeksizin tam iade talep edebilirsiniz. İade talebinizi destek ekibimize iletmeniz yeterli — işlem 3–5 iş günü içinde tamamlanır.",
-        },
-        {
-          q: "Aboneliğim kendiliğinden yenilenir mi?",
-          a: "Hayır. Aboneliğiniz satın aldığınız dönemle sınırlıdır ve kendiliğinden yenilenmez; kartınızdan izniniz olmadan çekim yapılmaz. Bitmeden size e-posta ile hatırlatırız. Devam etmek isterseniz yenilemeyi hesabınızdan onaylarsınız; istemezseniz hiçbir şey yapmanız gerekmez, hesabınız Ücretsiz plana geçer ve verileriniz silinmez. Dönem içinde iptal ederseniz ilk 7 gün tam iade, sonrasında dönem sonuna kadar kullanım devam eder.",
-        },
-        {
-          q: "Ücretsiz planda kredi kartı gerekli mi?",
-          a: "Hayır. Ücretsiz plan için herhangi bir ödeme bilgisi istenmez. Hesap oluşturarak hemen başlayabilirsiniz.",
-        },
-        {
-          q: "Starter planı yıllık seçenek sunuyor mu?",
-          a: "Hayır. Starter planı yalnızca aylık olarak faturalandırılır; istediğiniz ay iptal edebilirsiniz. Plus, Pro ve Business için aylık/yıllık seçeneği mevcuttur.",
-        },
-        {
-          q: "Pro ve Business arasındaki fark nedir?",
-          a: "Pro bireysel güç kullanıcıları için optimize edilmiştir. Business ise çok kullanıcılı ekipler, kurumsal onay akışları ve organizasyon genelinde PDF yönetimi için tasarlanmıştır.",
-        },
-        {
-          q: "Yıllık plana geçince hemen mi uygulanır?",
-          a: "Evet. Yıllık plana geçiş anında aktif olur ve yıllık toplam ücret tek seferinde tahsil edilir. Kalan aylık ücret orantılı olarak hesaplanır.",
-        },
-        {
-          q: "İşlenen dosyalarım ne kadar süre saklanıyor?",
-          a: "Web uygulamasında işlenen dosyalar 1 saat sonra kalıcı olarak silinir. Yakında çıkacak Windows masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek — tüm işlem cihazınızda gerçekleşecek.",
-        },
-      ]
-    : [
-        {
-          q: "How does the 7-day money-back guarantee work?",
-          a: "Within 7 days of your first payment, you can request a full refund for any reason. Just contact our support team — refunds are processed within 3–5 business days.",
-        },
-        {
-          q: "Does my subscription renew automatically?",
-          a: "No. Your subscription is limited to the period you bought and never renews on its own; your card is not charged without your confirmation. We email you a reminder before it ends. If you want to continue, you confirm the renewal from your account; if not, do nothing — your account returns to the Free plan and your data is never deleted. If you cancel during the period, you get a full refund in the first 7 days, and keep access until the period ends after that.",
-        },
-        {
-          q: "Do I need a credit card for the free plan?",
-          a: "No. No payment information is required for the Free plan. Simply create an account and start immediately.",
-        },
-        {
-          q: "Does the Starter plan offer a yearly option?",
-          a: "No. Starter is billed monthly only and can be cancelled any month. Plus, Pro and Business offer both monthly and yearly billing.",
-        },
-        {
-          q: "What's the difference between Pro and Business?",
-          a: "Pro is optimized for individual power users. Business is designed for multi-user teams, enterprise approval workflows, and organization-wide PDF management.",
-        },
-        {
-          q: "Does switching to yearly take effect immediately?",
-          a: "Yes. Switching to yearly is instant and the annual total is charged in one payment. Any remaining monthly balance is calculated on a pro-rated basis.",
-        },
-        {
-          q: "How long are my processed files stored?",
-          a: "Files processed via the web app are permanently deleted after 1 hour. With the upcoming Windows desktop app, files will never leave your device — all processing happens locally.",
-        },
-      ];
-
-  return (
-    <div className="mt-14 max-w-3xl mx-auto">
-      <div className="text-center mb-8">
-        <p className="text-gray-400 text-base font-semibold">
-          {tr ? "Sık Sorulan Sorular" : "Frequently Asked Questions"}
-        </p>
-      </div>
-      <div className="space-y-3">
-        {items.map(({ q, a }, i) => {
-          const isOpen = open === i;
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.04, duration: 0.35 }}
-              className={`rounded-xl border transition-all duration-300 overflow-hidden ${
-                isOpen
-                  ? "border-blue-500/40 bg-blue-500/[0.06] shadow-[0_0_20px_rgba(59,130,246,0.08)]"
-                  : "border-white/8 bg-white/[0.025] hover:border-white/15 hover:bg-white/[0.04]"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setOpen(isOpen ? null : i)}
-                className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left group"
-                aria-expanded={isOpen}
-              >
-                <span className={`text-sm font-semibold transition-colors ${isOpen ? "text-white" : "text-gray-300 group-hover:text-white"}`}>
-                  {q}
-                </span>
-                <motion.span
-                  animate={{ rotate: isOpen ? 45 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-xs transition-colors ${
-                    isOpen ? "border-blue-500/50 text-blue-400" : "border-white/15 text-gray-500"
-                  }`}
-                  aria-hidden="true"
-                >
-                  +
-                </motion.span>
-              </button>
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const } }}
-                    exit={{ height: 0, opacity: 0, transition: { duration: 0.22 } }}
-                    className="overflow-hidden"
-                  >
-                    <p className="px-5 pb-4 text-sm text-gray-400 leading-relaxed">
-                      {a}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface PricingSectionProps {
   language: Language;
   onUseWebApp: () => void;
+  /** Ödemeler kapalıyken kartlardaki "Haber ver" düğmesi (iletişim penceresini açar). */
+  onNotify?: () => void;
   onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: BillingCycle, extraSeats?: number) => void;
 }
 
-export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
+export default function PricingSection({ language, onUseWebApp, onSelectPlan, onNotify }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { cards, flags, pricing } = useSettings();
@@ -871,7 +749,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   const [free, starter, plus, pro, business] = plansAdjusted;
 
   return (
-    <section id="pricing" className="relative py-14 md:py-28 overflow-hidden">
+    <section id="pricing" className="relative py-12 md:py-20 overflow-hidden">
       {/* Glow background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.07)_0%,transparent_70%)]" />
 
@@ -887,7 +765,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           className="text-center mb-10"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
@@ -909,7 +787,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "0px 0px 240px 0px" }}
             transition={{ duration: 0.4, delay: 0.15 }}
             className="inline-flex items-center gap-3 px-4 sm:px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 mb-8"
           >
@@ -921,8 +799,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
           </motion.div>
         </motion.div>
 
-        {/* 5-column grid — responsive */}
-        <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-4 pt-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:w-[84%] [&>*]:shrink-0 [&>*]:snap-center sm:-mx-6 sm:px-6 sm:gap-4 sm:[&>*]:w-[46%] lg:mx-0 lg:grid lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-0 lg:grid-cols-3 lg:[&>*]:w-auto lg:[&>*]:shrink lg:[&>*]:snap-align-none xl:grid-cols-5">
+        {/* Fiyat kartları: mobilde alt alta, tablette 2'li, masaüstünde 3/5'li ızgara (yatay kaydırma yok) */}
+        <div className="grid grid-cols-1 items-stretch gap-4 pt-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5 xl:grid-cols-5">
           <FreeCard
             plan={free}
             lang={language}
@@ -938,6 +816,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             displaySymbol={currencySymbol}
             starterTools={starterTools}
             comingSoon={comingSoon}
+            onNotify={onNotify}
             onShowPerks={() => setPerksPlan("STARTER")}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
@@ -948,6 +827,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.08}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            onNotify={onNotify}
             onShowPerks={() => setPerksPlan("PLUS")}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PLUS", cycle, 0) : () => onUseWebApp()}
           />
@@ -958,6 +838,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.12}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            onNotify={onNotify}
             onShowPerks={() => setPerksPlan("PRO")}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle, 0) : () => onUseWebApp()}
           />
@@ -968,23 +849,24 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.16}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            onNotify={onNotify}
             onShowPerks={() => setPerksPlan("BUSINESS")}
             onCta={onSelectPlan ? (cycle, extraSeats) => onSelectPlan("BUSINESS", cycle, extraSeats) : () => onUseWebApp()}
           />
         </div>
 
         {/* VAT info note */}
-        <p className="text-center text-gray-600 text-xs mt-8">
+        <p className="text-center text-gray-400 text-xs mt-4">
           {tr
             ? "Türkiye'deki kullanıcılar için %20 KDV uygulanmaktadır. Yurt dışı kullanıcılar KDV'den muaftır."
             : "20% VAT applies for users in Turkey. International users are VAT exempt."}
         </p>
 
         {/* Trust line */}
-        <p className="text-center text-gray-600 text-sm mt-4">
+        <p className="text-center text-gray-400 text-sm mt-3">
           {tr
-            ? "SSL şifreli · Otomatik yenileme yok · 7 gün para iade garantisi"
-            : "SSL encryption · No auto-renewal · 7-day money-back guarantee"}
+            ? "SSL şifreli · Otomatik yenileme yok"
+            : "SSL encryption · No auto-renewal"}
           <span className="block mt-2 font-semibold">
             🔒 {tr ? "iyzico ile güvenli ödeme" : "Secure payments via iyzico"}
           </span>
@@ -1031,15 +913,6 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
           ))}
         </div>
 
-        {/* Refund detail block */}
-        <div className="mt-10 max-w-2xl mx-auto rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-5 sm:p-6 text-center">
-          <p className="text-emerald-300 font-bold text-base mb-2">{copy.refundBadge}</p>
-          <p className="text-gray-300 text-sm leading-relaxed mb-3">{copy.refundBody}</p>
-          <p className="text-gray-500 text-xs leading-relaxed">{copy.refundAfterBody}</p>
-        </div>
-
-        {/* Premium FAQ */}
-        <PricingFaq language={language} />
       </div>
 
       <PlanPerksModal

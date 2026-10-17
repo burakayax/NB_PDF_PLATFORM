@@ -1,4 +1,5 @@
 import { ARAC_SAYISI } from "../seo/seoContent.mjs";
+import { PRICING_FAQ_TR, PRICING_FAQ_EN } from "./pricingFaq";
 
 export type Language = "tr" | "en";
 
@@ -30,7 +31,7 @@ type TrustPoint = {
 };
 
 // ─── FAQ type — consumed by SeoRouteManager → jsonLd → FAQPage schema ────────
-export type FaqItem = { question: string; answer: string };
+export type FaqItem = { question: string; answer: string; group?: "pricing" };
 
 export type LandingTranslation = {
   navbar: {
@@ -183,7 +184,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // On-screen subheading. (The meta description does NOT come from here —
       // it lives in seo/seoContent.mjs → LANDING_SEO.)
       description:
-        "PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools in one place. No install, no account — everything runs in your browser.",
+        `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total, all in one place. No install, no account — everything runs in your browser.`,
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -248,20 +249,6 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
             "Merge, split, rotate, delete, crop, sign and OCR run in your browser — those files are never uploaded. Private, instant and unlimited.",
         },
         {
-          icon: "merge",
-          // H3 — target: "merge PDF files"
-          title: "Merge PDF files in seconds",
-          benefit:
-            "Combine reports, attachments, and document sets into one polished file without manual rework.",
-        },
-        {
-          icon: "split",
-          // H3 — target: "split PDF"
-          title: "Split large PDF documents instantly",
-          benefit:
-            "Extract only the pages you need for procurement packs, internal reviews, and approvals.",
-        },
-        {
           icon: "convert",
           // H3 — target: "PDF converter" / "convert PDF to Word"
           title: "PDF converter — no formatting loss",
@@ -269,32 +256,11 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
             "Convert PDF to Word, Excel, and back with a workflow built for business-ready output.",
         },
         {
-          icon: "secure",
-          // H3 — target: "PDF password protect" / "encrypt PDF"
-          title: "Password-protect and encrypt PDFs",
-          benefit:
-            "Secure confidential files with encryption and tighter access control for daily operations.",
-        },
-        {
           icon: "compress",
           // H3 — target: "compress PDF" / "reduce PDF file size"
           title: "Compress PDF — reduce file size fast",
           benefit:
             "Optimize heavy PDFs before emailing or uploading to client portals and submission platforms.",
-        },
-        {
-          icon: "excel",
-          // H3 — target: "PDF to Excel"
-          title: "Convert PDF tables to Excel spreadsheets",
-          benefit:
-            "Extract tabular data from PDFs into editable Excel files for faster reporting and verification.",
-        },
-        {
-          icon: "session",
-          // H3 — enterprise differentiator: zero-loss workflow resilience
-          title: "Work never lost — session memory built in",
-          benefit:
-            "Page selections, split ranges, and tool settings persist across navigation, disconnections, and tab switches — pick up exactly where you left off, every time.",
         },
       ],
     },
@@ -478,6 +444,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         answer:
           "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app for offline use and higher-volume operations is coming soon.",
       },
+      ...PRICING_FAQ_EN.map((f) => ({ ...f, group: "pricing" as const })),
     ],
   },
 
@@ -533,7 +500,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // kullanılıyor (arama verisinde ikisi de üst sıralarda), o yüzden biri
       // başlıkta biri burada geçiyor.
       description:
-        "PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve 40+ araç daha. Kurulum ve üyelik gerekmez — tarayıcınızda çalışır.",
+        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Kurulum ve üyelik gerekmez — tarayıcınızda çalışır.`,
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",
@@ -607,20 +574,6 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
             "Birleştir, böl, döndür, sil, kırp, imzala ve OCR işlemleri tarayıcınızda yapılır — bu araçlarda dosya sunucuya yüklenmez. Gizli, anında ve sınırsız.",
         },
         {
-          icon: "merge",
-          // H3 — hedef: "PDF birleştirme", "PDF birleştir"
-          title: "PDF dosyalarını saniyeler içinde birleştirin",
-          benefit:
-            "Raporları, ekleri ve belge setlerini manuel düzenleme yapmadan tek bir PDF dosyasında toplayın.",
-        },
-        {
-          icon: "split",
-          // H3 — hedef: "PDF ayırma", "PDF böl"
-          title: "Büyük PDF dosyalarını anında ayırın",
-          benefit:
-            "İhale paketleri, iç incelemeler ve onay süreçleri için yalnızca gerekli sayfaları çıkarın.",
-        },
-        {
           icon: "convert",
           // H3 — hedef: "PDF dönüştürme", "PDF'i Word'e çevir"
           title: "PDF dönüştürücü — biçimlendirme bozulmadan",
@@ -628,32 +581,11 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
             "PDF'i Word, Excel'e veya Word'ü PDF'e dönüştürün; iş kullanımına uygun çıktı kalitesiyle.",
         },
         {
-          icon: "secure",
-          // H3 — hedef: "PDF şifreleme", "PDF parola koruması"
-          title: "PDF dosyalarını şifreleyin ve koruyun",
-          benefit:
-            "Gizli belgeleri şifreleme ve erişim kontrolüyle günlük iş operasyonlarında güvende tutun.",
-        },
-        {
           icon: "compress",
           // H3 — hedef: "PDF sıkıştırma", "PDF boyutu küçültme"
           title: "PDF sıkıştırma — dosya boyutunu hızla küçültün",
           benefit:
             "Ağır PDF dosyalarını müşterilere, ekiplere veya başvuru platformlarına göndermeden önce optimize edin.",
-        },
-        {
-          icon: "excel",
-          // H3 — hedef: "PDF'i Excel'e çevir", "PDF tablo dönüştürme"
-          title: "PDF tabloları Excel'e dönüştürün",
-          benefit:
-            "PDF içindeki tablo verilerini düzenleme, raporlama ve doğrulama için Excel dosyasına aktarın.",
-        },
-        {
-          icon: "session",
-          // H3 — kurumsal farklılaştırıcı: sıfır kayıplı iş akışı
-          title: "Çalışmanız hiç kaybolmaz — yerleşik oturum hafızası",
-          benefit:
-            "Sayfa seçimleri, bölme aralıkları ve araç ayarları; sayfa değişimlerinde, internet kopukluklarında ve sekme geçişlerinde korunur. İndirme onaylanana kadar yaptığınız her seçim güvende kalır — tam kaldığınız yerden devam edin.",
         },
       ],
     },
@@ -839,6 +771,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         answer:
           "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor.",
       },
+      ...PRICING_FAQ_TR.map((f) => ({ ...f, group: "pricing" as const })),
     ],
   },
 };

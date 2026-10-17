@@ -1040,12 +1040,12 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       : ` It renews in ${h ? `${h} h ` : ""}${m ? `${m} min ` : ""}(at ${clock}).`;
     if (tr) {
       return e.guest
-        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 2, Pro ile sınırsız indirebilirsiniz.${when}`
-        : `Bugünkü indirme limitiniz doldu (${e.limit}/gün). Pro'ya geçerek sınırsız indirin.${when}`;
+        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 2, Plus ve üzeri planlarla sınırsız indirebilirsiniz.${when}`
+        : `Bugünkü indirme limitiniz doldu (${e.limit}/gün). Plus ve üzeri planlara geçerek sınırsız indirin.${when}`;
     }
     return e.guest
-      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 2/day, or Pro for unlimited.${when}`
-      : `Daily download limit reached (${e.limit}/day). Upgrade to Pro for unlimited.${when}`;
+      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 2/day, or Plus and above for unlimited.${when}`
+      : `Daily download limit reached (${e.limit}/day). Upgrade to Plus or above for unlimited.${when}`;
   }
 
 
@@ -1112,8 +1112,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-amber-400/25 bg-amber-500/[0.07] px-4 py-3 text-[13px] text-amber-200">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
         <p>{tr
-          ? <>Gerçek düzenleme için dosyanız güvenli sunucumuzda işlenir ve işlem biter bitmez silinir. Ücretsiz kayıt hakkı: misafir günde 1, üye günde 2 — <b>Pro'da sınırsız</b>.</>
-          : <>For real editing, your file is processed on our secure server and deleted right after. Free saves: 1/day as a guest, 2/day with an account — <b>unlimited with Pro</b>.</>}</p>
+          ? <>Gerçek düzenleme için dosyanız güvenli sunucumuzda işlenir ve işlem biter bitmez silinir. Ücretsiz kayıt hakkı: misafir günde 1, üye ve Başlangıç günde 2 — <b>Plus ve üzerinde sınırsız</b>.</>
+          : <>For real editing, your file is processed on our secure server and deleted right after. Free saves: 1/day as a guest, 2/day with an account or Starter — <b>unlimited on Plus and above</b>.</>}</p>
       </div>
 
       {scanned && (

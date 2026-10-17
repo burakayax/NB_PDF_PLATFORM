@@ -1,4 +1,6 @@
 import { CV_PROFESSION_SLUGS } from "../blog/blogContentCv3.mjs";
+import { TOOL_GUIDE, getToolGuide as _getToolGuide } from "./toolGuides.mjs";
+export const getToolGuide = _getToolGuide;
 /**
  * ─────────────────────────────────────────────────────────────────────────────
  *  TEK GERÇEK KAYNAK — Tüm sayfa SEO içeriği (TR birincil, EN ikincil)
@@ -1847,6 +1849,16 @@ export const TOOL_SEO = {
   },
 };
 
+// Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
+// hem görünür SSS hem FAQPage şeması tek listeden beslenir.
+for (const [slug, langs] of Object.entries(TOOL_GUIDE)) {
+  for (const lang of Object.keys(langs)) {
+    const hedef = TOOL_SEO[slug]?.[lang];
+    const ek = langs[lang].faq;
+    if (hedef && ek && ek.length) hedef.faq = [...hedef.faq, ...ek];
+  }
+}
+
 // ─── Landing / ana sayfa ──────────────────────────────────────────────────────
 export const LANDING_SEO = {
   tr: {
@@ -1863,7 +1875,7 @@ export const LANDING_SEO = {
      */
     title: markaEkle(`PDF Birleştirme, Word'e Çevirme ve Küçültme — ${ARAC_SAYISI} Araç`),
     description:
-      "PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.",
+      `PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.`,
     h1: `PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — ${ARAC_SAYISI} PDF Aracı Tek Platformda`,
     intro:
       `PDF Platform ${ARAC_SAYISI} araç sunar: PDF birleştirme, ayırma, küçültme (sıkıştırma), Word/Excel/PowerPoint ve JPG dönüştürme, düzenleme, imzalama, form doldurma, tarama, filigran ve şifreleme. Birleştirme ve görselden PDF gibi araçlar üyelik gerektirmeden, tamamen tarayıcınızda çalışır — dosyalarınız cihazınızdan hiç çıkmaz, anında ve 80 MB'a kadar ücretsizdir. Kurulum gerekmez.`,
@@ -1881,7 +1893,7 @@ export const LANDING_SEO = {
     // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
     title: markaEkle(`PDF to Word, Merge & Compress — ${ARAC_SAYISI} PDF Tools`),
     description:
-      "PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.",
+      `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total. Free, no sign-up; merge runs in your browser and your files never leave your device.`,
     h1: "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
     intro:
       "PDF Platform brings PDF merge, split, compress, Word/Excel/PowerPoint conversion, watermarking and encryption into one platform. Tools like merge and image-to-PDF need no account and run entirely in your browser — your files never leave your device, processing is instant and free up to 80 MB. No installation required.",

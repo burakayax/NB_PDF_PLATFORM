@@ -7,7 +7,7 @@ misafir → IP hash) küçük bir SQLite sayaç tutulur. Gelir kotasına dokunma
 
 Politika (bkz. ürün kararı):
   - Misafir           → 1 / gün (sunucu yükü → ücretsiz deneme, Pro sınırsız)
-  - Oturum açmış FREE → 2 / gün
+  - Oturum açmış FREE ve STARTER → 2 / gün
   - PRO/PLUS/BUSINESS/ADMIN → sınırsız (limiter hiç çağrılmaz)
 
 Gün sınırı, uygulamanın geri kalanıyla tutarlı olması için Europe/Istanbul'a göre.
