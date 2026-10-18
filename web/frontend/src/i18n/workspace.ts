@@ -528,235 +528,235 @@ export function featureCopy(
     { title: string; description: string; button: string }
   > = {
     split: {
-      title: tr ? "PDF BÖL" : "SPLIT PDF",
+      title: tr ? "PDF Böl" : "Split PDF",
       description: tr
         ? "Seçilen PDF içinden istediğiniz sayfaları düzenli ve güvenli biçimde ayırır."
         : "Extract selected pages from your PDF safely.",
-      button: tr ? "SAYFALARI AYIR" : "SPLIT PAGES",
+      button: tr ? "Sayfaları Ayır" : "Split Pages",
     },
     merge: {
-      title: tr ? "PDF BİRLEŞTİR" : "MERGE PDF",
+      title: tr ? "PDF Birleştir" : "Merge PDF",
       description: tr
         ? "Birden fazla PDF dosyasını istediğiniz sıraya göre tek dosyada birleştirir."
         : "Combine multiple PDFs in your chosen order.",
-      button: tr ? "PDF'LERİ BİRLEŞTİR" : "MERGE PDFS",
+      button: tr ? "PDF'leri Birleştir" : "Merge PDFs",
     },
     "pdf-to-word": {
-      title: tr ? "PDF → WORD" : "PDF → WORD",
+      title: tr ? "PDF → Word" : "PDF → Word",
       description: tr
         ? "PDF dosyasını düzenlenebilir Word belgesine dönüştürür (metin tabanlı PDF'ler)."
         : "Convert PDF to an editable Word document (text-based PDFs).",
-      button: tr ? "WORD İNDİR" : "DOWNLOAD WORD",
+      button: tr ? "Word İndir" : "Download Word",
     },
     "word-to-pdf": {
-      title: tr ? "WORD → PDF" : "WORD → PDF",
+      title: tr ? "Word → PDF" : "Word → PDF",
       description: tr
         ? "Word belgesini PDF biçiminde dışa aktarır."
         : "Export a Word document to PDF.",
-      button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
+      button: tr ? "PDF İndir" : "Download PDF",
     },
     "excel-to-pdf": {
-      title: tr ? "EXCEL → PDF" : "EXCEL → PDF",
+      title: tr ? "Excel → PDF" : "Excel → PDF",
       description: tr
         ? "Excel tablolarını PDF biçimine dönüştürür."
         : "Convert Excel spreadsheets to PDF.",
-      button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
+      button: tr ? "PDF İndir" : "Download PDF",
     },
     "pdf-to-excel": {
-      title: tr ? "PDF → EXCEL" : "PDF → EXCEL",
+      title: tr ? "PDF → Excel" : "PDF → Excel",
       description: tr
         ? "PDF tablo yapısını korumaya odaklanarak Excel çıktısı oluşturur."
         : "Build an Excel file while preserving table structure where possible.",
-      button: tr ? "EXCEL İNDİR" : "DOWNLOAD EXCEL",
+      button: tr ? "Excel İndir" : "Download Excel",
     },
     compress: {
-      title: tr ? "PDF SIKIŞTIR" : "COMPRESS PDF",
+      title: tr ? "PDF Sıkıştır" : "Compress PDF",
       description: tr
         ? "PDF akışını optimize ederek dosya boyutunu küçültmeye çalışır."
         : "Optimize the PDF stream to reduce file size.",
-      button: tr ? "SIKIŞTIRILMIŞ PDF İNDİR" : "DOWNLOAD COMPRESSED PDF",
+      button: tr ? "Sıkıştırılmış PDF İndir" : "Download Compressed PDF",
     },
     encrypt: {
-      title: tr ? "PDF ŞİFRELE" : "ENCRYPT PDF",
+      title: tr ? "PDF Şifrele" : "Encrypt PDF",
       description: tr
         ? "PDF dosyasına güvenli bir açılış parolası uygular."
         : "Apply an open password to protect the PDF.",
-      button: tr ? "ŞİFRELİ PDF İNDİR" : "DOWNLOAD ENCRYPTED PDF",
+      button: tr ? "Şifreli PDF İndir" : "Download Encrypted PDF",
     },
     "delete-pages": {
-      title: tr ? "SAYFA SİL" : "DELETE PAGES",
+      title: tr ? "Sayfa Sil" : "Delete Pages",
       description: tr
         ? "Belirttiğiniz sayfaları PDF’den kaldırır, geri kalanı yeni dosya olarak verir."
         : "Remove the pages you specify and output the rest as a new file.",
-      button: tr ? "SAYFALARI SİL" : "DELETE PAGES",
+      button: tr ? "Sayfaları Sil" : "Delete Pages",
     },
     "rotate-pdf": {
-      title: tr ? "PDF DÖNDÜR" : "ROTATE PDF",
+      title: tr ? "PDF Döndür" : "Rotate PDF",
       description: tr
         ? "Seçili veya tüm sayfalarda 90° / 180° / 270° dönüş uygular."
         : "Rotate selected or all pages by 90°, 180°, or 270°.",
-      button: tr ? "DÖNDÜRÜLMÜŞ PDF AL" : "GET ROTATED PDF",
+      button: tr ? "Döndürülmüş PDF Al" : "Get Rotated PDF",
     },
     "organize-pdf": {
-      title: tr ? "SAYFA SIRALA" : "REORDER PAGES",
+      title: tr ? "Sayfa Sırala" : "Reorder Pages",
       description: tr
         ? "Sayfa sırasını virgülle (ör. 3,1,2,4) belirterek yeniden düzenler."
         : "Reorder pages by listing the new 1-based order (e.g. 3,1,2,4).",
-      button: tr ? "SIRALANMIŞ PDF AL" : "GET REORDERED PDF",
+      button: tr ? "Sıralanmış PDF Al" : "Get Reordered PDF",
     },
     "unlock-pdf": {
-      title: tr ? "ŞİFRE KALDIR" : "UNLOCK PDF",
+      title: tr ? "Şifre Kaldır" : "Unlock PDF",
       description: tr
         ? "Bilinen açılış parolası ile korumayı kaldırır; yalnızca yetkili belgeler için."
         : "Remove open-password protection if you supply the correct password.",
-      button: tr ? "AÇIK PDF AL" : "GET UNLOCKED PDF",
+      button: tr ? "Açık PDF Al" : "Get Unlocked PDF",
     },
     watermark: {
-      title: tr ? "FİLİGRAN EKLE" : "ADD WATERMARK",
+      title: tr ? "Filigran Ekle" : "Add Watermark",
       description: tr
         ? "Tüm sayfalara metin filigranı ekler."
         : "Add a text watermark on every page.",
-      button: tr ? "FİLİGRANLI PDF AL" : "GET WATERMARKED PDF",
+      button: tr ? "Filigranlı PDF Al" : "Get Watermarked PDF",
     },
     "page-numbers": {
-      title: tr ? "SAYFA NUMARASI" : "PAGE NUMBERS",
+      title: tr ? "Sayfa Numarası" : "Page Numbers",
       description: tr
         ? "Alt veya üst bilgiye otomatik sayfa numarası basar."
         : "Add automatic page numbers in the header or footer.",
-      button: tr ? "NUMARALI PDF AL" : "GET NUMBERED PDF",
+      button: tr ? "Numaralı PDF Al" : "Get Numbered PDF",
     },
     "repair-pdf": {
-      title: tr ? "PDF ONAR" : "REPAIR PDF",
+      title: tr ? "PDF Onar" : "Repair PDF",
       description: tr
         ? "Bozuk veya açılması zor dosyalarda temel kurtarma dener."
         : "Basic recovery for damaged or hard-to-open PDFs.",
-      button: tr ? "ONARILMIŞ PDF AL" : "GET REPAIRED PDF",
+      button: tr ? "Onarılmış PDF Al" : "Get Repaired PDF",
     },
     "pdf-to-ppt": {
-      title: tr ? "PDF → POWERPOINT" : "PDF → POWERPOINT",
+      title: tr ? "PDF → PowerPoint" : "PDF → PowerPoint",
       description: tr
         ? "Sayfaları slayt görsellerine dönüştürerek PPTX üretir."
         : "Render pages as slide images and build a PPTX.",
-      button: tr ? "PPTX İNDİR" : "DOWNLOAD PPTX",
+      button: tr ? "PPTX İndir" : "Download PPTX",
     },
     "ppt-to-pdf": {
-      title: tr ? "POWERPOINT → PDF" : "POWERPOINT → PDF",
+      title: tr ? "PowerPoint → PDF" : "PowerPoint → PDF",
       description: tr
         ? "Sunumu PDF’e aktarır (Windows + PowerPoint ortamında en iyi sonuç)."
         : "Convert a presentation to PDF (best on Windows with PowerPoint).",
-      button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
+      button: tr ? "PDF İndir" : "Download PDF",
     },
     "pdf-to-image": {
-      title: tr ? "PDF → GÖRSEL" : "PDF → IMAGE",
+      title: tr ? "PDF → Görsel" : "PDF → Image",
       description: tr
         ? "Her sayfayı JPG veya PNG olarak ZIP içinde dışa aktarır."
         : "Export each page as JPG/PNG in a ZIP file.",
-      button: tr ? "ZIP İNDİR" : "DOWNLOAD ZIP",
+      button: tr ? "ZIP İndir" : "Download ZIP",
     },
     "image-to-pdf": {
-      title: tr ? "GÖRSEL → PDF" : "IMAGE → PDF",
+      title: tr ? "Görsel → PDF" : "Image → PDF",
       description: tr
         ? "Birden çok görüntüyü tek PDF’e birleştirir."
         : "Combine multiple images into one PDF.",
-      button: tr ? "PDF AL" : "GET PDF",
+      button: tr ? "PDF Al" : "Get PDF",
     },
     "html-to-pdf": {
       title: tr ? "HTML → PDF" : "HTML → PDF",
       description: tr
         ? "Bir web adresini veya HTML parçasını PDF’e çevirir."
         : "Turn a web URL or HTML snippet into a PDF.",
-      button: tr ? "PDF OLUŞTUR" : "CREATE PDF",
+      button: tr ? "PDF Oluştur" : "Create PDF",
     },
     "pdf-to-text": {
-      title: tr ? "PDF → METİN" : "PDF → TEXT",
+      title: tr ? "PDF → Metin" : "PDF → Text",
       description: tr
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
-      button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+      button: tr ? "Metin Çıkar" : "Extract Text",
     },
     "imza-iste": {
-      title: tr ? "İMZA İSTE" : "REQUEST SIGNATURE",
+      title: tr ? "İmza İste" : "Request Signature",
       description: tr
         ? "Belgeyi karşı tarafa imzalatır; imzalı kopya denetim sertifikasıyla gelir."
         : "Sends a document out for signature; the signed copy arrives with an audit certificate.",
-      button: tr ? "İMZA İSTE" : "REQUEST",
+      button: tr ? "İmza İste" : "Request",
     },
     "sayfa-duzeni": {
-      title: tr ? "PDF SAYFA DÜZENİ" : "PDF PAGE LAYOUT",
+      title: tr ? "PDF Sayfa Düzeni" : "PDF Page Layout",
       description: tr
         ? "Birden çok sayfayı tek kâğıda sığdırır ya da katlanınca okunan kitapçık dizer."
         : "Fits several pages on one sheet, or imposes a foldable booklet.",
-      button: tr ? "DÜZENLE" : "APPLY",
+      button: tr ? "Düzenle" : "Apply",
     },
     "pdf-to-pdfa": {
-      title: tr ? "PDF → PDF/A (ARŞİV)" : "PDF TO PDF/A (ARCHIVE)",
+      title: tr ? "PDF → PDF/A (Arşiv)" : "PDF to PDF/A (Archive)",
       description: tr
         ? "Belgeyi arşiv biçimine çevirir: yazı tipleri gömülür, yıllar sonra da aynı görünür."
         : "Converts to the archival format: fonts are embedded so it looks the same years later.",
-      button: tr ? "ARŞİVE ÇEVİR" : "CONVERT",
+      button: tr ? "Arşive Çevir" : "Convert",
     },
     "ustveri-temizle": {
-      title: tr ? "PDF ÜSTVERİ TEMİZLE" : "REMOVE PDF METADATA",
+      title: tr ? "PDF Üstveri Temizle" : "Remove PDF Metadata",
       description: tr
         ? "Yazar adı, program bilgisi, tarihler, XMP bloğu ve fotoğraf EXIF/GPS izlerini siler."
         : "Removes author name, software info, dates, the XMP block and photo EXIF/GPS traces.",
-      button: tr ? "TEMİZLE" : "CLEAN",
+      button: tr ? "Temizle" : "Clean",
     },
     "form-doldur": {
-      title: tr ? "PDF FORM DOLDUR" : "FILL PDF FORM",
+      title: tr ? "PDF Form Doldur" : "Fill PDF Form",
       description: tr
         ? "Doldurulabilir PDF formlarının alanlarını bulur, doldurur ve isterseniz kilitler."
         : "Detects fillable PDF form fields, fills them in and optionally locks them.",
-      button: tr ? "FORM DOLDUR" : "FILL FORM",
+      button: tr ? "Form Doldur" : "Fill Form",
     },
     "grayscale-pdf": {
-      title: tr ? "PDF GRİ TONLAMA" : "GRAYSCALE PDF",
+      title: tr ? "PDF Gri Tonlama" : "Grayscale PDF",
       description: tr
         ? "Renkli PDF'i siyah-beyaza çevirir; metin seçilebilir kalır."
         : "Turns a colour PDF black-and-white; text stays selectable.",
-      button: tr ? "GRİYE ÇEVİR" : "CONVERT",
+      button: tr ? "Griye Çevir" : "Convert",
     },
     "resize-pdf": {
-      title: tr ? "PDF SAYFA BOYUTU" : "RESIZE PDF PAGES",
+      title: tr ? "PDF Sayfa Boyutu" : "Resize PDF Pages",
       description: tr
         ? "Sayfaları A4, A5, Letter veya özel ölçüye getirir."
         : "Fits pages to A4, A5, Letter or a custom size.",
-      button: tr ? "BOYUTLANDIR" : "RESIZE",
+      button: tr ? "Boyutlandır" : "Resize",
     },
     "flip-pdf": {
-      title: tr ? "PDF ÇEVİR (AYNA)" : "FLIP PDF",
+      title: tr ? "PDF Çevir (Ayna)" : "Flip PDF",
       description: tr
         ? "Sayfaları yatay veya dikey ayna gibi çevirir."
         : "Mirrors pages horizontally or vertically.",
-      button: tr ? "ÇEVİR" : "FLIP",
+      button: tr ? "Çevir" : "Flip",
     },
     "alternate-mix-pdf": {
-      title: tr ? "PDF DÖNÜŞÜMLÜ BİRLEŞTİR" : "ALTERNATE & MIX PDF",
+      title: tr ? "PDF Dönüşümlü Birleştir" : "Alternate & Mix PDF",
       description: tr
         ? "İki PDF'in sayfalarını sırayla serpiştirir (çift taraflı tarama)."
         : "Interleaves the pages of two PDFs (double-sided scans).",
-      button: tr ? "SERPİŞTİR" : "INTERLEAVE",
+      button: tr ? "Serpiştir" : "Interleave",
     },
     "deskew-pdf": {
-      title: tr ? "PDF EĞRİ TARAMA DÜZELTME" : "DESKEW PDF",
+      title: tr ? "PDF Eğri Tarama Düzeltme" : "Deskew PDF",
       description: tr
         ? "Eğri taranmış sayfaları düzeltir; yazı katmanlı sayfalara dokunmaz."
         : "Straightens crooked scanned pages; leaves text-layer pages alone.",
-      button: tr ? "EĞRİLİĞİ DÜZELT" : "STRAIGHTEN",
+      button: tr ? "Eğriliği Düzelt" : "Straighten",
     },
     "flatten-pdf": {
-      title: tr ? "PDF DÜZLEŞTİR" : "FLATTEN PDF",
+      title: tr ? "PDF Düzleştir" : "Flatten PDF",
       description: tr
         ? "Etkileşimli form alanlarını ve açıklamaları sayfaya gömer, düzenlenemez hale getirir."
         : "Embed interactive form fields and annotations into the page permanently.",
-      button: tr ? "DÜZLEŞTİR" : "FLATTEN",
+      button: tr ? "Düzleştir" : "Flatten",
     },
     "extract-images": {
-      title: tr ? "GÖRSELLERİ ÇIKAR" : "EXTRACT IMAGES",
+      title: tr ? "Görselleri Çıkar" : "Extract Images",
       description: tr
         ? "PDF içindeki gömülü fotoğraf ve logoları özgün formatında çıkarır, ZIP olarak indirir."
         : "Pull embedded photos and logos out of the PDF in their original format as a ZIP.",
-      button: tr ? "GÖRSELLERİ ÇIKAR" : "EXTRACT IMAGES",
+      button: tr ? "Görselleri Çıkar" : "Extract Images",
     },
   };
   return map[id];
