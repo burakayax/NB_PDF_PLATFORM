@@ -1298,12 +1298,18 @@ function StatsBar({ language }: { language: Language }) {
       suffix: " MB",
       label: tr ? "Ücretsiz Dosya" : "Free File Size",
     },
+    // "%100 tarayıcıda" yanlıştı: birçok araç sunucuda çalışır. Filigran ise hiçbir planda eklenmiyor.
     {
-      value: 100,
-      suffix: "%",
-      label: tr ? "Tarayıcı Tabanlı" : "Browser-Based",
+      value: 0,
+      suffix: "",
+      label: tr ? "Çıktıda Filigran" : "Watermark on Output",
     },
-    { value: 0, suffix: "₺", label: tr ? "Ücretsiz Araçlar" : "Free Tools" },
+    // Üyeliksiz araç sayısı katalogdan gelir (elle yazılan "0₺" yanlış anlaşılıyordu).
+    {
+      value: TOOLS.filter((t) => t.free).length,
+      suffix: "",
+      label: tr ? "Üyeliksiz Araç" : "No-Signup Tools",
+    },
   ];
 
   return (
