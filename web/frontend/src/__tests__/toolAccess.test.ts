@@ -93,14 +93,14 @@ describe("CV rozeti şablon sayılarıyla uyumlu", () => {
 });
 
 describe("ana sayfadaki sayı iddiaları katalogla uyumlu", () => {
-  it("hero ve kapanış metinleri cihazda/üyeliksiz araç sayısını doğru söylüyor", async () => {
-    const { ON_DEVICE_TOOLS } = await import("../lib/onDeviceTools");
+  it("hero ve kapanış metinleri üyeliksiz araç sayısını doğru söylüyor", async () => {
     const { landingTranslations } = await import("../i18n/landing");
-    const cihazda = ON_DEVICE_TOOLS.size;
     const uyeliksiz = TOOLS.filter((t) => t.free).length;
     const metin = JSON.stringify(landingTranslations);
-    expect(metin).toContain(`${cihazda} tools run right in your browser, ${uyeliksiz} of them without an account`);
-    expect(metin).toContain(`${cihazda} araç doğrudan tarayıcınızda çalışır, ${uyeliksiz}'ü üyeliksiz`);
+    expect(metin).toContain(`${uyeliksiz} tools work without an account`);
+    expect(metin).toContain(`${uyeliksiz} araç üyeliksiz çalışır`);
     expect(metin).not.toContain("everything runs in your browser");
+    // Pro'da aylık işlem sınırı var: "sınırsız işlem" sözü verilmez (yalnız "günlük sınır yok").
+    expect(metin).not.toContain("Sınırsız kullanım");
   });
 });

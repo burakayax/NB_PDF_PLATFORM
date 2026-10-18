@@ -1397,7 +1397,7 @@ type AdminTOOLSApiPayload = {
 /** `buildUpgradeCta` (web/api conversion-upgrade.ts) ile birebir aynı varsayılan — admin alanı boş bırakırsa gerçekte gösterilecek metin budur. */
 const DEFAULT_UPGRADE_CTA_LABEL = "Continue without waiting";
 const DEFAULT_UPGRADE_CTA_SUBTITLE =
-  "Upgrade to Pro for instant processing, full quality, and unlimited daily use.";
+  "Upgrade to Pro for instant processing, full quality, and no daily limit.";
 type UsagePeriod = "today" | "week" | "allTime";
 
 function readConversion(obj: Record<string, unknown>): Record<string, unknown> {
@@ -2289,7 +2289,7 @@ function ContentTab({
           <AdminField label="Kısa metin" description="Aboneliğe yönlendiren bir iki cümle.">
             <textarea
               className={`${cmsInputClass} min-h-[64px]`}
-              placeholder="Örn. Sınırsız işlem ve masaüstü erişimi için Pro'yu deneyin."
+              placeholder="Örn. Günlük sınır olmadan çalışmak için Pro'yu deneyin."
               value={cmsGetStr(cms, ["modals", "upgradeTeaser"])}
               onChange={(e) => patch((p) => cmsSetStr(p, ["modals", "upgradeTeaser"], e.target.value))}
             />
