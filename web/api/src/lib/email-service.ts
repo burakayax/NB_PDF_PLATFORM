@@ -7,6 +7,7 @@ import { sendMail } from "./mailer.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
 import { emailT, type Locale } from "./email-i18n.js";
 import { unsubscribeUrlFor } from "../modules/email/email-unsubscribe.service.js";
+import { emailUtm, withUtm } from "./utm.js";
 
 const product = () => env.SMTP_FROM_NAME;
 
@@ -39,7 +40,7 @@ export function buildWelcomeEmail(vars: {
   const name = escapeHtml(vars.name);
   const gift = Math.max(0, vars.giftCredits ?? 0);
   const dailyLimit = vars.dailyLimit ?? (planDefinitions.FREE.dailyLimit ?? 3);
-  const ctaUrl = `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
+  const ctaUrl = withUtm(`${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`, emailUtm("hosgeldin"));
 
   const bodyHtml = `
     ${para(t.greeting(name))}
@@ -103,7 +104,10 @@ export async function sendLifecycleEmail(
   const locale: Locale = vars.locale ?? "tr";
   const t = emailT[locale];
   const name = escapeHtml(vars.name);
-  const ctaUrl = vars.ctaUrl || `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
+  const ctaUrl = withUtm(
+    vars.ctaUrl || `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`,
+    emailUtm(`yasam-dongusu-${vars.stage}`),
+  );
   const stage = vars.stage;
   const lc = t.lifecycle[stage] as {
     eyebrow: string;

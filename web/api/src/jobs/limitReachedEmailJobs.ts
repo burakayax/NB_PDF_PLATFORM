@@ -10,6 +10,7 @@ import {
   refreshSenderIdentity,
 } from "../modules/email/sender-identity.service.js";
 import type { Locale } from "../lib/email-i18n.js";
+import { emailUtm, withUtm } from "../lib/utm.js";
 
 /**
  * "Aylık limitine ulaştın" davranış-tetikli yükseltme e-postası.
@@ -87,7 +88,7 @@ async function runLimitReachedEmail(): Promise<void> {
 
       const locale: Locale = u.preferredLanguage === "tr" ? "tr" : "en";
       const name = (u.firstName || u.name || (locale === "tr" ? "Merhaba" : "there")).trim();
-      const ctaUrl = `${origin}/workspace?upgrade=1`;
+      const ctaUrl = withUtm(`${origin}/workspace?upgrade=1`, emailUtm("limit-doldu"));
       try {
         await sendLimitReachedEmail(u.email, { name, userId: u.id, periodKey, ctaUrl, locale });
         sent += 1;

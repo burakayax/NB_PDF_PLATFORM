@@ -19,6 +19,7 @@ import { isReelUrl } from "../reels.service.js";
 import { toolVideoKeywords } from "../keywords.service.js";
 import { findCatalogEntry } from "../tool-reels.service.js";
 import { availableReelCover, toolIdFromGuid } from "./reel-cover.js";
+import { socialUtm, withUtm } from "../../../lib/utm.js";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/videos";
@@ -180,11 +181,11 @@ function buildDescription(guid: string, fallbackBody: string, terms: Terms | nul
   const text = [
     entry.tr.title,
     entry.tr.summary,
-    `▶ Aracı dene: ${entry.tr.link}`,
+    `▶ Aracı dene: ${withUtm(entry.tr.link, socialUtm("YOUTUBE", "arac-videosu"))}`,
     "—",
     entry.en.title,
     entry.en.summary,
-    `▶ Try it: ${entry.en.link}`,
+    `▶ Try it: ${withUtm(entry.en.link, socialUtm("YOUTUBE", "arac-videosu"))}`,
     "—",
     `Konular: ${topicsTr.join(", ")}`,
     `Topics: ${topicsEn.join(", ")}`,
