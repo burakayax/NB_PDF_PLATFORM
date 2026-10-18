@@ -111,10 +111,11 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
     const badge = which === "a" ? (tr ? "A · Eski / İlk" : "A · Old / First") : (tr ? "B · Yeni / İkinci" : "B · New / Second");
     return (
       <div
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); void pick(which, e.dataTransfer.files[0]); }}
+        onDragOver={(e) => { e.preventDefault(); e.currentTarget.dataset.over = "true"; }}
+        onDragLeave={(e) => { delete e.currentTarget.dataset.over; }}
+        onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset.over; void pick(which, e.dataTransfer.files[0]); }}
         onClick={() => ref.current?.click()}
-        className={`cursor-pointer rounded-2xl border-2 border-dashed p-5 text-center transition ${slot.status === "ready" ? "border-fuchsia-400/40 bg-fuchsia-500/[0.05]" : "border-white/15 bg-white/[0.02] hover:border-fuchsia-400/40"}`}>
+        className="nb-dropzone cursor-pointer rounded-2xl p-5 text-center">
         <input ref={ref} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pick(which, e.target.files?.[0]); e.target.value = ""; }} />
         <span className="inline-block rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-0.5 text-[11px] font-bold text-fuchsia-200">{badge}</span>
         <div className="mx-auto mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200">
@@ -123,9 +124,9 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
         {slot.status === "ready" ? (
           <p className="mt-2 truncate text-[13px] font-semibold text-white">{slot.name}</p>
         ) : slot.status === "reading" ? (
-          <p className="mt-2 text-[12px] text-slate-400">{tr ? "okunuyor…" : "reading…"}</p>
+          <p className="nb-dropzone__hint mt-2 text-[13px]">{tr ? "okunuyor…" : "reading…"}</p>
         ) : (
-          <p className="mt-2 text-[12px] text-slate-400">{tr ? "PDF sürükle ya da seç" : "Drag or choose a PDF"}</p>
+          <p className="nb-dropzone__title mt-2 text-[14px]">{tr ? "PDF sürükle ya da seç" : "Drag or choose a PDF"}</p>
         )}
       </div>
     );

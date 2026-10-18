@@ -770,11 +770,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); void pickFile(e.dataTransfer.files[0]); }}
           onClick={() => !busy && inputRef.current?.click()}
-          className={`group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed p-12 text-center transition ${
-            dragOver
-              ? "border-fuchsia-400/70 bg-fuchsia-400/[0.07]"
-              : "border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent hover:border-fuchsia-400/40 hover:bg-white/[0.04]"
-          }`}
+          data-over={dragOver}
+          className="nb-dropzone group relative cursor-pointer overflow-hidden rounded-3xl p-12 text-center"
         >
           <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl" />
           <input ref={inputRef} type="file" accept="application/pdf" className="hidden"
@@ -782,12 +779,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
             {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <UploadCloud className="h-9 w-9" />}
           </div>
-          <p className="relative mt-5 text-lg font-bold text-white">
+          <p className="nb-dropzone__title relative mt-5 text-xl">
             {busy
               ? tr ? "Belge okunuyor…" : "Reading document…"
               : tr ? "PDF'i buraya sürükle veya seç" : "Drag your PDF here or browse"}
           </p>
-          <p className="relative mt-1.5 text-[13px] text-slate-400">
+          <p className="nb-dropzone__hint relative mt-1.5 text-sm">
             {tr ? "Metin cihazında çıkarılır — dosyan sunucuya yüklenmez." : "Text is extracted on your device — the file is never uploaded."}
           </p>
           <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-400">

@@ -159,12 +159,9 @@ export function ToolUploadPanel({
             pick();
           }
         }}
-        className={`group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed text-center transition ${
+        data-over={dragOver}
+        className={`nb-dropzone group relative cursor-pointer overflow-hidden rounded-3xl text-center ${
           compact ? "p-5" : "px-5 py-8 sm:p-12"
-        } ${
-          dragOver
-            ? "border-white/60 bg-white/[0.06]"
-            : "border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent hover:border-white/30 hover:bg-white/[0.04]"
         } ${disabled ? "pointer-events-none opacity-50" : ""}`}
       >
         <div className={`pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full opacity-40 blur-3xl ${tile}`} />
@@ -197,10 +194,10 @@ export function ToolUploadPanel({
           </div>
         ) : (
           <>
-            <div className={`relative mx-auto flex h-16 w-16 items-center justify-center rounded-3xl sm:h-20 sm:w-20 ring-1 transition group-hover:scale-105 ${tile} ${icon}`}>
-              {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-9 w-9" strokeWidth={1.75} />}
+            <div className={`nb-dropzone__icon relative mx-auto flex h-16 w-16 items-center justify-center rounded-3xl sm:h-20 sm:w-20 ring-1 transition group-hover:scale-105 ${tile} ${icon}`}>
+              {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-10 w-10" strokeWidth={2.25} />}
             </div>
-            <p className="relative mt-4 text-base font-bold text-white sm:mt-5 sm:text-lg">
+            <p className="nb-dropzone__title relative mt-4 text-lg sm:mt-5 sm:text-xl">
               {busy
                 ? tr ? "İşleniyor…" : "Processing…"
                 : (title ??
@@ -208,10 +205,10 @@ export function ToolUploadPanel({
                     ? tr ? "Dosyaları buraya sürükle" : "Drag your files here"
                     : tr ? "Dosyayı buraya sürükle" : "Drag your file here"))}
             </p>
-            <p className="relative mt-1.5 text-[13px] text-slate-400">
+            <p className="nb-dropzone__hint relative mt-1.5 text-sm">
               {hint ?? (tr ? "ya da tıklayıp seç" : "or click to choose")}
             </p>
-            <div className="relative mt-6 hidden flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-slate-400 sm:flex">
+            <div className="relative mt-6 hidden flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-slate-300 sm:flex">
               {chips.map((c) => {
                 const ChipIcon = c.Icon;
                 return (

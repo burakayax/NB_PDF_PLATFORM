@@ -1101,9 +1101,9 @@ export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { t
           )}
 
           {tab === "upload" && (
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/15 bg-white/[0.02] p-8 text-center hover:border-cyan-400/40">
-              <Upload className="h-8 w-8 text-cyan-300" />
-              <span className="text-[13px] font-semibold text-white">{tr ? "İmza görseli seç (PNG şeffaf önerilir)" : "Choose signature image (transparent PNG best)"}</span>
+            <label className="nb-dropzone flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl p-8 text-center">
+              <Upload className="h-8 w-8 text-cyan-200" strokeWidth={2.25} />
+              <span className="nb-dropzone__title text-sm">{tr ? "İmza görseli seç (PNG şeffaf önerilir)" : "Choose signature image (transparent PNG best)"}</span>
               <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onUpload} />
             </label>
           )}
