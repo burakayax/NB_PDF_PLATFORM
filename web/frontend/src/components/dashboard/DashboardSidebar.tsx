@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Crop, FileSearch, FileUser, ImageDown, Scale, Scaling, Scissors } from "lucide-react";
+import { Crop, FileSearch, FileUser, ImageDown, Scale, Scaling, Scissors, Search, X } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -14,6 +14,8 @@ import {
 } from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
 import { useFavoriteTools } from "../../hooks/useFavoriteTools";
+import { matchesSearch } from "../../lib/toolSearch";
+import { TOOLS as TOOL_CATALOG } from "../../lib/toolCatalog";
 
 /** Araç satırının sağındaki favori (yıldız) düğmesi. Buton-içinde-buton olmaması için span. */
 export function FavoriteStar({
@@ -312,6 +314,50 @@ export function DashboardSidebar({
   const showVipStrip =
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
 
+  // Arama: büyük/küçük harf ve aksan duyarsız; arama varken kategoriler açık gelir,
+  // yalnızca eşleşen satırlar (ya da adı eşleşen kategorinin tüm araçları) görünür.
+  const [query, setQuery] = useState("");
+  const searching = query.trim().length > 0;
+  const catalogNames = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const t of TOOL_CATALOG) m.set(t.id, [t.tr.name, t.en.name]);
+    return m;
+  }, []);
+  const toolMatches = (id: FeatureKey) =>
+    matchesSearch(query, labelForTool(id), ...(catalogNames.get(id) ?? []));
+  const rowShown = (catMatch: boolean, ...labels: string[]) =>
+    !searching || catMatch || matchesSearch(query, ...labels);
+  const aiMatches = (t: (typeof AI_TOOLS)[number]) => matchesSearch(query, t.tr, t.en);
+  const customMatches = (t: (typeof CUSTOM_TOOLS)[number]) => matchesSearch(query, t.tr, t.en);
+  const groupLabelOf = (id: string) =>
+    id === "favorites"
+      ? ""
+      : id === "other"
+        ? tr ? "Diğer" : "Other"
+        : toolCategoryLabel(id as ToolCategoryId, language);
+  const groupHasMatch = (g: { id: string; tools: FeatureKey[] }) => {
+    if (!searching) return true;
+    if (g.id === "favorites") return false;
+    if (matchesSearch(query, groupLabelOf(g.id))) return true;
+    if (g.tools.some(toolMatches)) return true;
+    if (CUSTOM_TOOLS.some((t) => t.group === g.id && customHandlers[t.key] && customMatches(t))) return true;
+    if (
+      g.id === "organize" &&
+      ((onOpenScan && matchesSearch(query, "Belge Tara", "Scan document")) ||
+        (onOpenEditor && matchesSearch(query, "PDF Düzenle", "Edit PDF")))
+    ) return true;
+    if (
+      g.id === "annotate" &&
+      ((onOpenSign && matchesSearch(query, "PDF İmzala", "Sign PDF")) ||
+        (onOpenAnnotate && matchesSearch(query, "PDF İşaretle", "Markup PDF")))
+    ) return true;
+    return false;
+  };
+  const aiVisibleTools = onOpenAi
+    ? AI_TOOLS.filter((t) => !searching || matchesSearch(query, tr ? "Yapay Zekâ" : "AI") || aiMatches(t))
+    : [];
+  const anyResult = !searching || aiVisibleTools.length > 0 || sidebarGroups.some(groupHasMatch);
+
   const renderTool = (id: FeatureKey, keyPrefix = "") => {
     const isActive = active === id && !panelId;
     const locked = lockedFeatures.has(id);
@@ -560,17 +606,56 @@ export function DashboardSidebar({
           : `fixed bottom-0 left-0 top-14 z-40 hidden ${asideVisuals} lg:flex`
       }
     >
+      {/* Araç arama — en üstte sabit; büyük/küçük harf ve aksan fark etmez ("donu" → Dönüştür) */}
+      <div className="px-3 pt-4" data-nb-keep-sidebar>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nb-muted/80" aria-hidden />
+          <input
+            type="text"
+            inputMode="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && query) {
+                e.stopPropagation();
+                setQuery("");
+              }
+            }}
+            placeholder={tr ? "Araç ara…" : "Search tools…"}
+            aria-label={tr ? "Araç ara" : "Search tools"}
+            autoComplete="off"
+            spellCheck={false}
+            className="nb-transition w-full rounded-2xl border border-white/[0.1] bg-white/[0.04] py-2.5 pl-9 pr-9 text-sm text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] placeholder:text-nb-muted/70 hover:bg-white/[0.06] focus:border-nb-primary/50 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-nb-primary/25"
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label={tr ? "Aramayı temizle" : "Clear search"}
+              data-nb-keep-sidebar
+              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg text-nb-muted hover:bg-white/[0.08] hover:text-nb-text"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          ) : null}
+        </div>
+      </div>
       <nav
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
+        {!anyResult ? (
+          <p className="px-2 py-6 text-center text-[13px] text-nb-muted">
+            {tr ? `“${query.trim()}” için araç bulunamadı.` : `No tools found for “${query.trim()}”.`}
+          </p>
+        ) : null}
         {/* ── Ayrı AI kategorisi (Özetle + Sohbet) — kendi modal'ını açar ── */}
-        {onOpenAi ? (
+        {onOpenAi && aiVisibleTools.length > 0 ? (
           <section>
             <button
               type="button"
               onClick={() => toggleCat("ai")}
-              aria-expanded={openCats.has("ai")}
+              aria-expanded={searching || openCats.has("ai")}
               data-nb-keep-sidebar
               className="mb-1.5 flex w-full items-center gap-2 px-2"
             >
@@ -583,23 +668,25 @@ export function DashboardSidebar({
               </h3>
               <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
               <svg
-                className={`h-3.5 w-3.5 shrink-0 text-nb-muted/70 transition-transform ${openCats.has("ai") ? "rotate-180" : ""}`}
+                className={`h-3.5 w-3.5 shrink-0 text-nb-muted/70 transition-transform ${searching || openCats.has("ai") ? "rotate-180" : ""}`}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            {openCats.has("ai") ? (
+            {searching || openCats.has("ai") ? (
               <div className="flex flex-col gap-1">
-                {AI_TOOLS.map((t) => renderAiRow(t, "ai-"))}
+                {aiVisibleTools.map((t) => renderAiRow(t, "ai-"))}
               </div>
             ) : null}
           </section>
         ) : null}
 
         {sidebarGroups.map((group) => {
+          if (!groupHasMatch(group)) return null;
           const accent = CATEGORY_ACCENT[group.id];
-          const open = openCats.has(group.id);
+          const open = searching || openCats.has(group.id);
+          const catMatch = searching && matchesSearch(query, groupLabelOf(group.id));
           const heading =
             group.id === "favorites"
               ? tr ? "★ Favoriler" : "★ Favorites"
@@ -634,21 +721,21 @@ export function DashboardSidebar({
               {open ? (
                 <div className="flex flex-col gap-1">
                   {/* Belge Tara — kamerayla tarama, Düzenle grubunun başında */}
-                  {group.id === "organize" ? renderScanRow("organize-") : null}
+                  {group.id === "organize" && rowShown(catMatch, "Belge Tara", "Scan document") ? renderScanRow("organize-") : null}
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
-                  {group.id === "organize" ? renderEditorRow("organize-") : null}
+                  {group.id === "organize" && rowShown(catMatch, "PDF Düzenle", "Edit PDF") ? renderEditorRow("organize-") : null}
                   {/* Panel araçları (Kesit Al, Görsel Sıkıştır/Boyutlandır, CV, UDF) — kendi kategorisinde */}
-                  {CUSTOM_TOOLS.filter((t) => t.group === group.id).map((t) => renderCustomRow(t, `${group.id}-`))}
+                  {CUSTOM_TOOLS.filter((t) => t.group === group.id && rowShown(catMatch, t.tr, t.en)).map((t) => renderCustomRow(t, `${group.id}-`))}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
-                  {group.id === "annotate" ? renderSignRow("annotate-") : null}
-                  {group.id === "annotate" ? renderAnnotateRow("annotate-") : null}
+                  {group.id === "annotate" && rowShown(catMatch, "PDF İmzala", "Sign PDF") ? renderSignRow("annotate-") : null}
+                  {group.id === "annotate" && rowShown(catMatch, "PDF İşaretle", "Markup PDF") ? renderAnnotateRow("annotate-") : null}
                   {group.id === "favorites" && signFavorited ? renderSignRow("fav-") : null}
                   {group.id === "favorites" && annotateFavorited ? renderAnnotateRow("fav-") : null}
                   {group.id === "favorites" && scanFavorited ? renderScanRow("fav-") : null}
                   {group.id === "favorites" ? favAiTools.map((t) => renderAiRow(t, "fav-")) : null}
                   {group.id === "favorites" ? favCustomTools.map((t) => renderCustomRow(t, "fav-")) : null}
-                  {group.tools.map((id) => renderTool(id, `${group.id}-`))}
+                  {group.tools.filter((id) => !searching || catMatch || toolMatches(id)).map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
             </section>
