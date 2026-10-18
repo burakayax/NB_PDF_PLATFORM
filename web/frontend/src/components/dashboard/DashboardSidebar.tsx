@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Crop, FileSearch, FileUser, ImageDown, Scale, Scaling, Scissors, Search, X } from "lucide-react";
+import { ChevronRight, Crop, FileSearch, FileUser, Highlighter, ImageDown, Pencil, PenLine, Scale, Scaling, ScanLine, Scissors, Search, Sparkles, X } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -14,7 +15,7 @@ import {
 } from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
 import { useFavoriteTools } from "../../hooks/useFavoriteTools";
-import { matchesSearch } from "../../lib/toolSearch";
+import { matchesSearch, normalizeSearch } from "../../lib/toolSearch";
 import { TOOLS as TOOL_CATALOG } from "../../lib/toolCatalog";
 
 /** Araç satırının sağındaki favori (yıldız) düğmesi. Buton-içinde-buton olmaması için span. */
@@ -314,8 +315,10 @@ export function DashboardSidebar({
   const showVipStrip =
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
 
-  // Arama: büyük/küçük harf ve aksan duyarsız; arama varken kategoriler açık gelir,
-  // yalnızca eşleşen satırlar (ya da adı eşleşen kategorinin tüm araçları) görünür.
+  // ── Arama ────────────────────────────────────────────────────────────────
+  // Büyük/küçük harf ve aksan duyarsız. Arama varken kategori başlıkları
+  // gösterilmez: yalnızca eşleşen araçlar, ikonlu düz bir liste olarak çıkar.
+  // Önce adı eşleşenler, sonra adı eşleşen kategorinin diğer araçları gelir.
   const [query, setQuery] = useState("");
   const searching = query.trim().length > 0;
   const catalogNames = useMemo(() => {
@@ -323,40 +326,106 @@ export function DashboardSidebar({
     for (const t of TOOL_CATALOG) m.set(t.id, [t.tr.name, t.en.name]);
     return m;
   }, []);
-  const toolMatches = (id: FeatureKey) =>
-    matchesSearch(query, labelForTool(id), ...(catalogNames.get(id) ?? []));
-  const rowShown = (catMatch: boolean, ...labels: string[]) =>
-    !searching || catMatch || matchesSearch(query, ...labels);
-  const aiMatches = (t: (typeof AI_TOOLS)[number]) => matchesSearch(query, t.tr, t.en);
-  const customMatches = (t: (typeof CUSTOM_TOOLS)[number]) => matchesSearch(query, t.tr, t.en);
   const groupLabelOf = (id: string) =>
-    id === "favorites"
-      ? ""
-      : id === "other"
-        ? tr ? "Diğer" : "Other"
-        : toolCategoryLabel(id as ToolCategoryId, language);
-  const groupHasMatch = (g: { id: string; tools: FeatureKey[] }) => {
-    if (!searching) return true;
-    if (g.id === "favorites") return false;
-    if (matchesSearch(query, groupLabelOf(g.id))) return true;
-    if (g.tools.some(toolMatches)) return true;
-    if (CUSTOM_TOOLS.some((t) => t.group === g.id && customHandlers[t.key] && customMatches(t))) return true;
-    if (
-      g.id === "organize" &&
-      ((onOpenScan && matchesSearch(query, "Belge Tara", "Scan document")) ||
-        (onOpenEditor && matchesSearch(query, "PDF Düzenle", "Edit PDF")))
-    ) return true;
-    if (
-      g.id === "annotate" &&
-      ((onOpenSign && matchesSearch(query, "PDF İmzala", "Sign PDF")) ||
-        (onOpenAnnotate && matchesSearch(query, "PDF İşaretle", "Markup PDF")))
-    ) return true;
-    return false;
+    id === "other" ? (tr ? "Diğer" : "Other") : toolCategoryLabel(id as ToolCategoryId, language);
+
+  type SearchHit = {
+    key: string;
+    label: string;
+    icon: ReactNode;
+    onClick: () => void;
+    active: boolean;
+    locked?: boolean;
+    pro?: boolean;
+    rank: number;
   };
-  const aiVisibleTools = onOpenAi
-    ? AI_TOOLS.filter((t) => !searching || matchesSearch(query, tr ? "Yapay Zekâ" : "AI") || aiMatches(t))
-    : [];
-  const anyResult = !searching || aiVisibleTools.length > 0 || sidebarGroups.some(groupHasMatch);
+  const buildSearchHits = (): SearchHit[] => {
+    const q = normalizeSearch(query);
+    const hits: SearchHit[] = [];
+    const rankOf = (labels: string[], catMatch: boolean): number | null => {
+      const norm = labels.map(normalizeSearch);
+      if (norm.some((l) => l.startsWith(q))) return 0;
+      if (norm.some((l) => l.includes(q))) return 1;
+      return catMatch ? 2 : null;
+    };
+    const catMatchOf = (gid: string) => matchesSearch(query, groupLabelOf(gid));
+    for (const g of groupToolsByCategory(toolOrder) as Array<{ id: string; tools: FeatureKey[] }>) {
+      const cat = catMatchOf(g.id);
+      for (const id of g.tools) {
+        const label = labelForTool(id);
+        const rank = rankOf([label, ...(catalogNames.get(id) ?? [])], cat);
+        if (rank === null) continue;
+        const isActive = active === id && !panelId;
+        hits.push({
+          key: `f-${id}`,
+          label,
+          rank,
+          active: isActive,
+          locked: lockedFeatures.has(id),
+          onClick: () => onSelect(id),
+          icon: <SidebarToolGlyph id={id} className="h-5 w-5" active={isActive} />,
+        });
+      }
+    }
+    const special: Array<{ key: string; gid: string; tr: string; en: string; panel: string; fn?: () => void; icon: ReactNode }> = [
+      { key: "scan", gid: "organize", tr: "Belge Tara", en: "Scan document", panel: "scan", fn: onOpenScan, icon: <ScanLine className="h-5 w-5 text-emerald-300" aria-hidden /> },
+      { key: "editor", gid: "organize", tr: "PDF Düzenle", en: "Edit PDF", panel: "editor", fn: onOpenEditor, icon: <Pencil className="h-5 w-5 text-cyan-300" aria-hidden /> },
+      { key: "sign", gid: "annotate", tr: "PDF İmzala", en: "Sign PDF", panel: "sign", fn: onOpenSign, icon: <PenLine className="h-5 w-5 text-amber-300" aria-hidden /> },
+      { key: "annotate", gid: "annotate", tr: "PDF İşaretle", en: "Markup PDF", panel: "annotate", fn: onOpenAnnotate, icon: <Highlighter className="h-5 w-5 text-orange-300" aria-hidden /> },
+    ];
+    for (const sp of special) {
+      if (!sp.fn) continue;
+      const rank = rankOf([sp.tr, sp.en], catMatchOf(sp.gid));
+      if (rank === null) continue;
+      hits.push({ key: `s-${sp.key}`, label: tr ? sp.tr : sp.en, rank, active: panelId === sp.panel, onClick: sp.fn, icon: sp.icon });
+    }
+    for (const t of CUSTOM_TOOLS) {
+      const fn = customHandlers[t.key];
+      if (!fn) continue;
+      const rank = rankOf([t.tr, t.en], catMatchOf(t.group));
+      if (rank === null) continue;
+      hits.push({
+        key: `c-${t.key}`,
+        label: tr ? t.tr : t.en,
+        rank,
+        active: panelId === t.key,
+        onClick: fn,
+        icon: <t.Icon className={`h-5 w-5 ${t.iconClass}`} aria-hidden />,
+      });
+    }
+    if (onOpenAi) {
+      for (const t of AI_TOOLS) {
+        const rank = rankOf([t.tr, t.en], false);
+        if (rank === null) continue;
+        hits.push({
+          key: `ai-${t.mode}`,
+          label: tr ? t.tr : t.en,
+          rank,
+          active: false,
+          pro: true,
+          onClick: () => onOpenAi(t.mode),
+          icon: <Sparkles className="h-5 w-5 text-fuchsia-300" aria-hidden />,
+        });
+      }
+    }
+    return hits.sort((a, b) => a.rank - b.rank);
+  };
+  /** Eşleşen kısmı vurgular (aksan/harf farkını yok sayarak). */
+  const highlight = (label: string): ReactNode => {
+    const q = normalizeSearch(query);
+    const n = normalizeSearch(label);
+    if (n.length !== label.length) return label;
+    const i = n.indexOf(q);
+    if (i < 0 || !q) return label;
+    return (
+      <>
+        {label.slice(0, i)}
+        <mark className="rounded bg-nb-primary/25 px-0.5 text-nb-text">{label.slice(i, i + q.length)}</mark>
+        {label.slice(i + q.length)}
+      </>
+    );
+  };
+  const searchHits = searching ? buildSearchHits() : [];
 
   const renderTool = (id: FeatureKey, keyPrefix = "") => {
     const isActive = active === id && !panelId;
@@ -644,18 +713,50 @@ export function DashboardSidebar({
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
-        {!anyResult ? (
-          <p className="px-2 py-6 text-center text-[13px] text-nb-muted">
-            {tr ? `“${query.trim()}” için araç bulunamadı.` : `No tools found for “${query.trim()}”.`}
-          </p>
+        {searching ? (
+          searchHits.length > 0 ? (
+            <div className="flex flex-col gap-1.5" role="list">
+              {searchHits.map((h) => (
+                <button
+                  key={h.key}
+                  type="button"
+                  role="listitem"
+                  onClick={h.onClick}
+                  className={`group nb-transition flex w-full items-center gap-3 rounded-2xl p-2 text-left text-sm font-medium ${
+                    h.active
+                      ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent"
+                      : "border border-white/[0.06] bg-white/[0.025] text-nb-text/90 hover:border-nb-primary/30 hover:bg-white/[0.07] hover:text-nb-text"
+                  }`}
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] ring-1 ring-white/[0.08] transition group-hover:bg-nb-primary/15 group-hover:ring-nb-primary/30">
+                    {h.icon}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate" title={h.label}>{highlight(h.label)}</span>
+                  {h.locked ? (
+                    <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95" aria-hidden>
+                      {L.featureLockedBadge}
+                    </span>
+                  ) : null}
+                  {h.pro ? (
+                    <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300" aria-hidden>Pro</span>
+                  ) : null}
+                  <ChevronRight className="h-4 w-4 shrink-0 text-nb-muted/50 transition group-hover:translate-x-0.5 group-hover:text-nb-text" aria-hidden />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="px-2 py-6 text-center text-[13px] text-nb-muted">
+              {tr ? `“${query.trim()}” için araç bulunamadı.` : `No tools found for “${query.trim()}”.`}
+            </p>
+          )
         ) : null}
         {/* ── Ayrı AI kategorisi (Özetle + Sohbet) — kendi modal'ını açar ── */}
-        {onOpenAi && aiVisibleTools.length > 0 ? (
+        {onOpenAi && !searching ? (
           <section>
             <button
               type="button"
               onClick={() => toggleCat("ai")}
-              aria-expanded={searching || openCats.has("ai")}
+              aria-expanded={openCats.has("ai")}
               data-nb-keep-sidebar
               className="mb-1.5 flex w-full items-center gap-2 px-2"
             >
@@ -668,25 +769,23 @@ export function DashboardSidebar({
               </h3>
               <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
               <svg
-                className={`h-3.5 w-3.5 shrink-0 text-nb-muted/70 transition-transform ${searching || openCats.has("ai") ? "rotate-180" : ""}`}
+                className={`h-3.5 w-3.5 shrink-0 text-nb-muted/70 transition-transform ${openCats.has("ai") ? "rotate-180" : ""}`}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            {searching || openCats.has("ai") ? (
+            {openCats.has("ai") ? (
               <div className="flex flex-col gap-1">
-                {aiVisibleTools.map((t) => renderAiRow(t, "ai-"))}
+                {AI_TOOLS.map((t) => renderAiRow(t, "ai-"))}
               </div>
             ) : null}
           </section>
         ) : null}
 
-        {sidebarGroups.map((group) => {
-          if (!groupHasMatch(group)) return null;
+        {searching ? null : sidebarGroups.map((group) => {
           const accent = CATEGORY_ACCENT[group.id];
-          const open = searching || openCats.has(group.id);
-          const catMatch = searching && matchesSearch(query, groupLabelOf(group.id));
+          const open = openCats.has(group.id);
           const heading =
             group.id === "favorites"
               ? tr ? "★ Favoriler" : "★ Favorites"
@@ -721,21 +820,21 @@ export function DashboardSidebar({
               {open ? (
                 <div className="flex flex-col gap-1">
                   {/* Belge Tara — kamerayla tarama, Düzenle grubunun başında */}
-                  {group.id === "organize" && rowShown(catMatch, "Belge Tara", "Scan document") ? renderScanRow("organize-") : null}
+                  {group.id === "organize" ? renderScanRow("organize-") : null}
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
-                  {group.id === "organize" && rowShown(catMatch, "PDF Düzenle", "Edit PDF") ? renderEditorRow("organize-") : null}
+                  {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {/* Panel araçları (Kesit Al, Görsel Sıkıştır/Boyutlandır, CV, UDF) — kendi kategorisinde */}
-                  {CUSTOM_TOOLS.filter((t) => t.group === group.id && rowShown(catMatch, t.tr, t.en)).map((t) => renderCustomRow(t, `${group.id}-`))}
+                  {CUSTOM_TOOLS.filter((t) => t.group === group.id).map((t) => renderCustomRow(t, `${group.id}-`))}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
-                  {group.id === "annotate" && rowShown(catMatch, "PDF İmzala", "Sign PDF") ? renderSignRow("annotate-") : null}
-                  {group.id === "annotate" && rowShown(catMatch, "PDF İşaretle", "Markup PDF") ? renderAnnotateRow("annotate-") : null}
+                  {group.id === "annotate" ? renderSignRow("annotate-") : null}
+                  {group.id === "annotate" ? renderAnnotateRow("annotate-") : null}
                   {group.id === "favorites" && signFavorited ? renderSignRow("fav-") : null}
                   {group.id === "favorites" && annotateFavorited ? renderAnnotateRow("fav-") : null}
                   {group.id === "favorites" && scanFavorited ? renderScanRow("fav-") : null}
                   {group.id === "favorites" ? favAiTools.map((t) => renderAiRow(t, "fav-")) : null}
                   {group.id === "favorites" ? favCustomTools.map((t) => renderCustomRow(t, "fav-")) : null}
-                  {group.tools.filter((id) => !searching || catMatch || toolMatches(id)).map((id) => renderTool(id, `${group.id}-`))}
+                  {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
             </section>
