@@ -415,10 +415,11 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
           {!report && !running && (
             <>
               <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); void pick(e.dataTransfer.files[0]); }}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.dataset.over = "true"; }}
+                onDragLeave={(e) => { delete e.currentTarget.dataset.over; }}
+                onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset.over; void pick(e.dataTransfer.files[0]); }}
                 onClick={() => fileRef.current?.click()}
-                className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition ${text ? "border-fuchsia-400/40 bg-fuchsia-500/[0.05]" : "border-white/15 bg-white/[0.02] hover:border-fuchsia-400/40"}`}>
+                className="nb-dropzone cursor-pointer rounded-2xl p-6 text-center">
                 <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200">
                   {reading ? <Loader2 className="h-5 w-5 animate-spin" /> : text ? <FileText className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
@@ -432,8 +433,8 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                   </>
                 ) : (
                   <>
-                    <p className="mt-2 text-[14px] font-semibold text-white">Sözleşme veya şartname PDF’ini sürükleyin ya da seçin</p>
-                    <p className="mt-0.5 text-[12px] text-slate-400">Metin cihazınızda çıkarılır. PDF dosyanız cihazınızdan çıkmaz; analiz için yalnızca belgenin METNİ sunucuya gönderilir.</p>
+                    <p className="nb-dropzone__title mt-2 text-[15px]">Sözleşme veya şartname PDF’ini sürükleyin ya da seçin</p>
+                    <p className="nb-dropzone__hint mt-0.5 text-[13px]">Metin cihazınızda çıkarılır. PDF dosyanız cihazınızdan çıkmaz; analiz için yalnızca belgenin METNİ sunucuya gönderilir.</p>
                   </>
                 )}
               </div>

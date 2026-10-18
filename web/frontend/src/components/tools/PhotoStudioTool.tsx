@@ -386,15 +386,16 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileRef.current?.click(); }}
-                className={`flex min-h-[420px] cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 text-center transition ${dragOver ? "border-fuchsia-400 bg-fuchsia-500/10" : "border-white/15 bg-white/[0.02] hover:border-fuchsia-400/50 hover:bg-fuchsia-500/[0.04]"}`}
+                data-over={dragOver}
+                className="nb-dropzone flex min-h-[420px] cursor-pointer flex-col items-center justify-center rounded-3xl p-8 text-center"
               >
                 {phase === "loading" ? (
                   <Loader2 className="h-10 w-10 animate-spin text-fuchsia-300" />
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-fuchsia-500/15 text-fuchsia-200"><UploadCloud className="h-8 w-8" /></div>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-fuchsia-500/25 text-fuchsia-100 nb-dropzone__icon"><UploadCloud className="h-9 w-9" strokeWidth={2.25} /></div>
                 )}
-                <p className="mt-4 text-lg font-bold text-white">{tr ? "Fotoğrafınızı sürükleyin ya da seçin" : "Drag your photo here or choose one"}</p>
-                <p className="mt-1 max-w-sm text-[13px] text-slate-400">{tr ? "Yüzünüzün net göründüğü, ışığı iyi bir fotoğraf en iyi sonucu verir. JPG, PNG, WebP." : "A sharp, well-lit photo of your face works best. JPG, PNG, WebP."}</p>
+                <p className="nb-dropzone__title mt-4 text-xl">{tr ? "Fotoğrafınızı sürükleyin ya da seçin" : "Drag your photo here or choose one"}</p>
+                <p className="nb-dropzone__hint mt-1 max-w-sm text-sm">{tr ? "Yüzünüzün net göründüğü, ışığı iyi bir fotoğraf en iyi sonucu verir. JPG, PNG, WebP." : "A sharp, well-lit photo of your face works best. JPG, PNG, WebP."}</p>
                 {error ? <p className="mt-4 max-w-md rounded-xl border border-red-500/25 bg-red-500/[0.07] px-4 py-2.5 text-[13px] text-red-300">{error}</p> : null}
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ""; }} />
               </div>

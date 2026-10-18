@@ -202,12 +202,13 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
           </div>
 
           {!file ? (
-            <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void pickFile(e.dataTransfer.files[0]); }} onClick={() => inputRef.current?.click()}
-              className="cursor-pointer rounded-3xl border-2 border-dashed border-white/15 bg-white/[0.02] p-10 text-center transition hover:border-fuchsia-400/40">
+            <div onDragOver={(e) => { e.preventDefault(); e.currentTarget.dataset.over = "true"; }} onDragLeave={(e) => { delete e.currentTarget.dataset.over; }}
+              onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset.over; void pickFile(e.dataTransfer.files[0]); }} onClick={() => inputRef.current?.click()}
+              className="nb-dropzone cursor-pointer rounded-3xl p-10 text-center">
               <input ref={inputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ""; }} />
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200">{busy ? <Loader2 className="h-7 w-7 animate-spin" /> : <UploadCloud className="h-7 w-7" />}</div>
-              <p className="mt-4 text-base font-bold text-white">{busy ? (tr ? "Belge okunuyor…" : "Reading…") : tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}</p>
-              <p className="mt-1 text-[13px] text-slate-400">{tr ? "TC, IBAN, telefon, e-posta otomatik bulunur" : "ID, IBAN, phone, email auto-detected"}</p>
+              <div className="nb-dropzone__icon mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/30 to-indigo-600/30 text-fuchsia-100">{busy ? <Loader2 className="h-7 w-7 animate-spin" /> : <UploadCloud className="h-8 w-8" strokeWidth={2.25} />}</div>
+              <p className="nb-dropzone__title mt-4 text-lg">{busy ? (tr ? "Belge okunuyor…" : "Reading…") : tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}</p>
+              <p className="nb-dropzone__hint mt-1 text-sm">{tr ? "TC, IBAN, telefon, e-posta otomatik bulunur" : "ID, IBAN, phone, email auto-detected"}</p>
             </div>
           ) : (
             <>

@@ -299,12 +299,13 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); }}
             onClick={() => !running && inputRef.current?.click()}
-            className={`cursor-pointer rounded-3xl border-2 border-dashed p-6 text-center transition ${dragOver ? "border-fuchsia-400/70 bg-fuchsia-400/[0.07]" : "border-white/15 bg-white/[0.02] hover:border-fuchsia-400/40"}`}>
+            data-over={dragOver}
+            className="nb-dropzone cursor-pointer rounded-3xl p-6 text-center">
             <input ref={inputRef} type="file" accept="application/pdf" multiple className="hidden"
               onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }} />
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200"><UploadCloud className="h-6 w-6" /></div>
-            <p className="mt-3 text-[14px] font-bold text-white">{tr ? "PDF'leri buraya sürükle" : "Drag your PDFs here"}</p>
-            <p className="mt-1 text-[12px] text-slate-400">{tr ? `ya da tıklayıp seç · en fazla ${MAX_FILES} dosya` : `or click to choose · up to ${MAX_FILES} files`}</p>
+            <div className="nb-dropzone__icon mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/30 to-indigo-600/30 text-fuchsia-100"><UploadCloud className="h-7 w-7" strokeWidth={2.25} /></div>
+            <p className="nb-dropzone__title mt-3 text-base">{tr ? "PDF'leri buraya sürükle" : "Drag your PDFs here"}</p>
+            <p className="nb-dropzone__hint mt-1 text-[13px]">{tr ? `ya da tıklayıp seç · en fazla ${MAX_FILES} dosya` : `or click to choose · up to ${MAX_FILES} files`}</p>
           </div>
 
           {error && <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">{error}</p>}

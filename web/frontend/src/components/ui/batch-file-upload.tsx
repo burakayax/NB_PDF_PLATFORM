@@ -69,18 +69,20 @@ export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, langua
       {/* Desktop: Large dashed box */}
       <div className="hidden lg:block">
         <div
-          className={`border border-dashed rounded-xl p-8 text-center transition-all min-h-[140px] w-full touch-manipulation flex flex-col items-center justify-center ${disabled ? "border-white/10 opacity-40 cursor-not-allowed" : "border-white/20 cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5"}`}
+          aria-disabled={disabled}
+          className={`nb-dropzone rounded-xl p-8 text-center min-h-[140px] w-full touch-manipulation flex flex-col items-center justify-center ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
           onClick={() => !disabled && inputRef.current?.click()}
-          onDragOver={(e) => { if (!disabled) e.preventDefault(); }}
-          onDrop={(e) => { e.preventDefault(); if (!disabled) onDrop(e); }}
+          onDragOver={(e) => { if (!disabled) { e.preventDefault(); e.currentTarget.dataset.over = "true"; } }}
+          onDragLeave={(e) => { delete e.currentTarget.dataset.over; }}
+          onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset.over; if (!disabled) onDrop(e); }}
         >
-          <svg className="h-12 w-12 mb-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          <svg className="h-12 w-12 mb-3 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
-          <p className="text-sm font-medium text-gray-300 mb-1">
+          <p className="nb-dropzone__title text-base mb-1">
             {tr ? "Dosyaları Seçin veya Sürükleyin" : "Select or Drag Files"}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="nb-dropzone__hint text-[13px]">
             {tr
               ? `${maxFiles} dosyaya kadar`
               : `Up to ${maxFiles} files`}
