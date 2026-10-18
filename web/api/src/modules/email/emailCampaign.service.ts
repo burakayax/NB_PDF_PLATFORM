@@ -7,6 +7,7 @@ import { assertCommercialConsent } from "../../lib/commercial-email-gate.js";
 import { sendMail } from "../../lib/mailer.js";
 import { emailT, type Locale } from "../../lib/email-i18n.js";
 import { unsubscribeUrlFor } from "./email-unsubscribe.service.js";
+import { emailUtm, withUtm } from "../../lib/utm.js";
 
 /** Admin gövdesini güvenli HTML'e çevirir: escape + **kalın** + çift satır = paragraf. */
 function bodyToHtml(body: string): string {
@@ -58,6 +59,8 @@ export function renderCampaign(
   if (c.couponCode) {
     ctaUrl += `${ctaUrl.includes("?") ? "&" : "?"}coupon=${encodeURIComponent(c.couponCode)}`;
   }
+
+  ctaUrl = withUtm(ctaUrl, emailUtm("kampanya"));
 
   const coupon = c.couponCode ? couponBlock(c.couponCode, tr ? "İndirim kodunuz" : "Your discount code") : "";
   const cta = ctaLabel ? ctaButton(ctaUrl, ctaLabel) : "";

@@ -7,6 +7,8 @@
 
 import { coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
+import { socialUtm, withUtm } from "../../../lib/utm.js";
+import { toolIdFromGuid } from "./reel-cover.js";
 
 const API = "https://api.pinterest.com/v5/pins";
 
@@ -22,7 +24,7 @@ export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secr
       board_id: boardId,
       title: item.title.slice(0, 100),
       description: body,
-      link: item.link,
+      link: withUtm(item.link, socialUtm("PINTEREST", toolIdFromGuid(item.guid) ? "arac-videosu" : "blog")),
       alt_text: coverAltText(item, 500),
       media_source: { source_type: "image_url", url: imageUrl },
     }),

@@ -23,6 +23,8 @@ import { ALL_PLATFORMS, PLATFORM_SPECS } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 import type { KeywordSet } from "./keywords.service.js";
 import type { SocialPlatform } from "@prisma/client";
+import { socialUtm, withUtm } from "../../lib/utm.js";
+import { toolIdFromGuid } from "./platforms/reel-cover.js";
 
 /** İki dilli gönderide blokları ayıran çizgi. */
 const LANG_SEPARATOR = "\n\n— — —\n\n";
@@ -207,7 +209,9 @@ const BROAD_TAGS: Record<"tr" | "en", string[]> = {
 function broadTagFor(side: LangSide): string {
   const pool = BROAD_TAGS[side.lang];
   let hash = 0;
-  for (let i = 0; i < side.link.length; i++) hash = (hash * 31 + side.link.charCodeAt(i)) >>> 0;
+  // Etiket seçimi ağdan bağımsız kalsın diye kampanya etiketi (?utm_…) hesaba katılmaz.
+  const stable = side.link.split("?")[0] ?? side.link;
+  for (let i = 0; i < stable.length; i++) hash = (hash * 31 + stable.charCodeAt(i)) >>> 0;
   return pool[hash % pool.length] ?? pool[0] ?? "";
 }
 
@@ -328,7 +332,10 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
       lang,
       title: isPrimary ? item.title : (item.alt?.title ?? item.title),
       summary: isPrimary ? item.summary : (item.alt?.summary ?? item.summary),
-      link: isPrimary ? item.link : (item.alt?.link ?? item.link),
+      link: withUtm(
+        isPrimary ? item.link : (item.alt?.link ?? item.link),
+        socialUtm(platform, toolIdFromGuid(item.guid) ? "arac-videosu" : "blog"),
+      ),
       terms: lang === "tr" ? keywords.tr : keywords.en,
       tags: lang === "tr" ? keywords.tagsTr : keywords.tagsEn,
     };

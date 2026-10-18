@@ -10,6 +10,7 @@ import {
   refreshSenderIdentity,
 } from "../modules/email/sender-identity.service.js";
 import type { Locale } from "../lib/email-i18n.js";
+import { emailUtm, withUtm } from "../lib/utm.js";
 
 /**
  * Checkout recovery (terk edilen yükseltme geri kazanımı).
@@ -111,7 +112,7 @@ async function runCheckoutRecovery(): Promise<void> {
     const label = PLAN_LABELS[r.plan] ?? { tr: r.plan, en: r.plan };
     const planLabel = locale === "tr" ? label.tr : label.en;
     const origin = env.FRONTEND_ORIGIN.replace(/\/$/, "");
-    const ctaUrl = `${origin}/workspace?upgrade=1`;
+    const ctaUrl = withUtm(`${origin}/workspace?upgrade=1`, emailUtm("odeme-hatirlatma"));
     const name = (u.firstName || u.name || (locale === "tr" ? "Merhaba" : "there")).trim();
 
     try {
