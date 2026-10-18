@@ -157,8 +157,8 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
         </div>
       ) : gate ? (
         <div className="rounded-3xl border border-fuchsia-400/25 bg-fuchsia-500/[0.06] p-8 text-center">
-          <p className="text-lg font-bold text-white">{gate === "login" ? (tr ? "Giriş gerekli" : "Login required") : (tr ? "Başlangıç ve üzeri plan gerekir" : "Needs a Starter-or-higher plan")}</p>
-          <button type="button" onClick={gate === "login" ? onLogin : onUpgrade} className="mt-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white">{gate === "login" ? (tr ? "Giriş yap" : "Log in") : (tr ? "Planları gör" : "See plans")}</button>
+          <p className="text-lg font-bold text-white">{gate === "login" ? (tr ? "Ücretsiz hesabınla devam et" : "Continue with a free account") : (tr ? "Başlangıç ve üzeri plan gerekir" : "Needs a Starter-or-higher plan")}</p>
+          <button type="button" onClick={gate === "login" ? onLogin : onUpgrade} className="mt-4 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white">{gate === "login" ? (tr ? "Giriş yap / ücretsiz üye ol" : "Log in / sign up free") : (tr ? "Planları gör" : "See plans")}</button>
         </div>
       ) : (
         <>
