@@ -195,7 +195,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     const err = e as AiError;
     if (err?.status === 401) {
       setGate("login");
-      setError(tr ? "Bu özellik için giriş yapmalısın." : "Please log in to use this.");
+      setError(tr ? "Devam etmek için ücretsiz hesabınla giriş yap." : "Log in with your free account to continue.");
     } else if (err?.status === 403 || err?.code === "pro_required") {
       setGate("upgrade");
       setError(
@@ -1084,7 +1084,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-amber-400/30 bg-gradient-to-b from-amber-500/[0.1] to-transparent p-5 text-center">
           <p className="text-sm font-semibold text-amber-100">
             {gate === "login"
-              ? tr ? "Devam etmek için giriş yap" : "Log in to continue"
+              ? tr ? "Ücretsiz hesabınla devam et" : "Continue with a free account"
               : tr ? "Yapay zekâ için Başlangıç ve üzeri plan ya da kredi gerekir" : "AI needs a Starter-or-higher plan or credits"}
           </p>
           {gate === "upgrade" && (
@@ -1097,7 +1097,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button type="button" onClick={gate === "login" ? onLogin : onUpgrade}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110">
-              {gate === "login" ? (tr ? "Giriş yap" : "Log in") : tr ? "Planı yükselt" : "Upgrade"}
+              {gate === "login" ? (tr ? "Giriş yap / ücretsiz üye ol" : "Log in / sign up free") : tr ? "Planı yükselt" : "Upgrade"}
             </button>
             {gate === "upgrade" && (
               <button type="button" onClick={() => setTopUpOpen(true)}

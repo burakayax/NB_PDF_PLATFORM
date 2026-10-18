@@ -403,10 +403,10 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
         </div>
       ) : gate ? (
         <div className="rounded-3xl border border-fuchsia-400/25 bg-fuchsia-500/[0.06] p-8 text-center">
-          <p className="text-lg font-bold text-white">{gate === "login" ? "Giriş gerekli" : "Bu araç için hak ya da kredi gerekir"}</p>
+          <p className="text-lg font-bold text-white">{gate === "login" ? "Ücretsiz hesabınla devam et" : "Bu araç için hak ya da kredi gerekir"}</p>
           {gate === "upgrade" && <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-slate-300">Bu araç için paketinizden gelen aylık AI hakkı ya da satın alınmış kredi gerekir. Hızlı tarama aylık haktan (bitince krediden), detaylı denetim yalnızca krediden düşer. Başlamak için bir kredi paketi alabilir ya da bir plana geçebilirsiniz.</p>}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <button type="button" onClick={gate === "login" ? onLogin : () => setTopUpOpen(true)} className="rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white">{gate === "login" ? "Giriş yap" : "Kredi paketlerini gör"}</button>
+            <button type="button" onClick={gate === "login" ? onLogin : () => setTopUpOpen(true)} className="rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white">{gate === "login" ? "Giriş yap / ücretsiz üye ol" : "Kredi paketlerini gör"}</button>
             {gate === "upgrade" && <button type="button" onClick={onUpgrade} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-white/[0.06]">Planları gör</button>}
           </div>
         </div>
