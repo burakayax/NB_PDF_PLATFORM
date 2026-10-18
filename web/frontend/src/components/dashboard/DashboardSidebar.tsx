@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Crop, FileUser, ImageDown, Scale, Scaling, Scissors } from "lucide-react";
+import { Crop, FileSearch, FileUser, ImageDown, Scale, Scaling, Scissors } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -121,11 +121,11 @@ const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
   { mode: "summarize", tr: "PDF Özetle", en: "Summarize PDF" },
   { mode: "chat", tr: "PDF ile Sohbet", en: "Chat with PDF" },
   { mode: "extract", tr: "PDF Veri Çıkar", en: "Extract Data" },
-  { mode: "translate", tr: "PDF Çevir", en: "Translate PDF" },
+  { mode: "translate", tr: "PDF Çeviri", en: "Translate PDF" },
   { mode: "compare", tr: "PDF Karşılaştır", en: "Compare PDFs" },
   { mode: "contract", tr: "Sözleşme Denetçisi", en: "Contract Auditor" },
   { mode: "photo", tr: "AI Fotoğraf Stüdyosu", en: "AI Photo Studio" },
-  { mode: "redact", tr: "Hassas Veri Gizle", en: "Redact Data" },
+  { mode: "redact", tr: "Hassas Veri Gizle", en: "Redact PDF" },
   { mode: "batch", tr: "AI Toplu İşlem", en: "AI Batch" },
 ];
 
@@ -141,7 +141,7 @@ const SCAN_FAV_ID = "scan-doc";
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 /** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
-type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf";
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "searchable";
 const CUSTOM_TOOLS: {
   key: CustomToolKey;
   favId: string;
@@ -151,10 +151,11 @@ const CUSTOM_TOOLS: {
   Icon: typeof Scissors;
   iconClass: string;
 }[] = [
-  { key: "snip", favId: "snip-pdf", group: "convert", tr: "PDF'ten Kesit Al", en: "Snip PDF to Image", Icon: Scissors, iconClass: "text-cyan-300" },
+  { key: "snip", favId: "snip-pdf", group: "convert", tr: "PDF'ten Kesit Al", en: "Snip to Image", Icon: Scissors, iconClass: "text-cyan-300" },
   { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF → PDF", en: "UDF → PDF", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
   { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
+  { key: "searchable", favId: "searchable-pdf", group: "convert", tr: "Aranabilir PDF", en: "Searchable PDF", Icon: FileSearch, iconClass: "text-cyan-300" },
   { key: "cv", favId: "cv-maker", group: "organize", tr: "CV Oluştur", en: "CV Maker", Icon: FileUser, iconClass: "text-sky-300" },
 ];
 
@@ -194,6 +195,8 @@ type DashboardSidebarProps = {
   onOpenResizeImage?: () => void;
   onOpenUdf?: () => void;
   onOpenCv?: () => void;
+  /** Aranabilir PDF (OCR) aracını aç. */
+  onOpenSearchable?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -243,6 +246,7 @@ export function DashboardSidebar({
   onOpenResizeImage,
   onOpenUdf,
   onOpenCv,
+  onOpenSearchable,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -278,6 +282,7 @@ export function DashboardSidebar({
     "resize-image": onOpenResizeImage,
     cv: onOpenCv,
     udf: onOpenUdf,
+    searchable: onOpenSearchable,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const sidebarGroups = useMemo(() => {
@@ -749,6 +754,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenResizeImage,
   onOpenUdf,
   onOpenCv,
+  onOpenSearchable,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -776,9 +782,11 @@ export function DashboardSidebarMobileLauncher({
           : contentPanel === "resize-image"
           ? tr ? "Görsel Boyutlandır" : "Resize Image"
           : contentPanel === "snip"
-          ? tr ? "PDF'ten Kesit Al" : "Snip PDF to Image"
+          ? tr ? "PDF'ten Kesit Al" : "Snip to Image"
           : contentPanel === "udf"
-          ? tr ? "UDF'yi PDF Yap" : "UDF to PDF"
+          ? tr ? "UDF → PDF" : "UDF → PDF"
+          : contentPanel === "searchable"
+          ? tr ? "Aranabilir PDF" : "Searchable PDF"
           : contentPanel === "cv"
           ? tr ? "CV Oluştur" : "CV Maker"
           : contentPanel === "ai" && aiMode
@@ -804,6 +812,7 @@ export function DashboardSidebarMobileLauncher({
     "resize-image": onOpenResizeImage,
     cv: onOpenCv,
     udf: onOpenUdf,
+    searchable: onOpenSearchable,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const groups = useMemo(() => {

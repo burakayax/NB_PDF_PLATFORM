@@ -121,8 +121,8 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "ai-toplu-islem", cat: "ai", Icon: FileStack, ai: true,
-    tr: { name: "Toplu İşle", desc: "Onlarca belgeyi tek seferde özetler veya işler." },
-    en: { name: "Batch Process", desc: "Summarizes or processes dozens of files at once." },
+    tr: { name: "AI Toplu İşlem", desc: "Onlarca belgeyi tek seferde özetler veya işler." },
+    en: { name: "AI Batch", desc: "Summarizes or processes dozens of files at once." },
   },
   {
     id: "taranmis-pdf-ocr", cat: "scan", Icon: FileSearch, account: true,
@@ -168,8 +168,8 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "organize-pdf", cat: "edit", Icon: ListOrdered, free: true,
-    tr: { name: "Sayfaları Düzenle", desc: "Sayfaların sırasını sürükleyerek değiştirin." },
-    en: { name: "Organize Pages", desc: "Drag pages into the order you want." },
+    tr: { name: "Sayfa Sırala", desc: "Sayfaların sırasını sürükleyerek değiştirin." },
+    en: { name: "Reorder Pages", desc: "Drag pages into the order you want." },
   },
   {
     id: "delete-pages", cat: "edit", Icon: Trash2, free: true,

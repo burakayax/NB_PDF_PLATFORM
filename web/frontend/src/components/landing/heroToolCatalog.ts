@@ -56,7 +56,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
       { k: "free", id: "rotate-pdf" },
       { k: "free", id: "delete-pages" },
       { k: "free", id: "organize-pdf" },
-      { k: "page", slug: "sayfa-duzeni", Icon: Grid2x2, tr: "Sayfa Düzeni", en: "Page Layout" },
+      { k: "page", slug: "sayfa-duzeni", Icon: Grid2x2, tr: "PDF Sayfa Düzeni", en: "PDF Page Layout" },
     ],
   },
   {
@@ -65,9 +65,9 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
     en: "Edit",
     items: [
       { k: "editor" },
-      { k: "page", slug: "pdf-kesit-al", Icon: Crop, tr: "Kesit Al", en: "Snip" },
-      { k: "page", slug: "pdf-imzala", Icon: PenTool, tr: "İmzala", en: "Sign" },
-      { k: "page", slug: "pdf-yorumla", Icon: Highlighter, tr: "İşaretle", en: "Annotate" },
+      { k: "page", slug: "pdf-kesit-al", Icon: Crop, tr: "PDF'ten Kesit Al", en: "Snip to Image" },
+      { k: "page", slug: "pdf-imzala", Icon: PenTool, tr: "PDF İmzala", en: "Sign PDF" },
+      { k: "page", slug: "pdf-yorumla", Icon: Highlighter, tr: "PDF İşaretle", en: "Markup PDF" },
       { k: "member", slug: "unlock-pdf", Icon: Unlock, tr: "Şifre Kaldır", en: "Unlock PDF" },
       { k: "member", slug: "cv-olustur", Icon: FileUser, tr: "CV Oluştur", en: "CV Maker" },
     ],
@@ -79,7 +79,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
     items: [
       { k: "free", id: "image-to-pdf" },
       { k: "page", slug: "udf-to-pdf", Icon: Scale, tr: "UDF → PDF", en: "UDF → PDF" },
-      { k: "page", slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan" },
+      { k: "page", slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan Document" },
       { k: "member", slug: "pdf-to-text", Icon: FileType2, tr: "PDF → Metin", en: "PDF → Text" },
       { k: "member", slug: "aranabilir-pdf", Icon: FileSearch, tr: "Aranabilir PDF", en: "Searchable PDF" },
     ],

@@ -133,7 +133,7 @@ export function groupToolsByCategory(
 }
 
 const SB: Record<FeatureKey, { tr: string; en: string }> = {
-  split: { tr: "PDF Ayır", en: "Split PDF" },
+  split: { tr: "PDF Böl", en: "Split PDF" },
   merge: { tr: "PDF Birleştir", en: "Merge PDF" },
   "pdf-to-word": { tr: "PDF → Word", en: "PDF → Word" },
   "word-to-pdf": { tr: "Word → PDF", en: "Word → PDF" },
@@ -141,19 +141,19 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "pdf-to-excel": { tr: "PDF → Excel", en: "PDF → Excel" },
   compress: { tr: "PDF Sıkıştır", en: "Compress PDF" },
   encrypt: { tr: "PDF Şifrele", en: "Encrypt PDF" },
-  "delete-pages": { tr: "Sayfa Sil", en: "Delete pages" },
+  "delete-pages": { tr: "Sayfa Sil", en: "Delete Pages" },
   "rotate-pdf": { tr: "PDF Döndür", en: "Rotate PDF" },
-  "organize-pdf": { tr: "Sayfa Sırala", en: "Organize pages" },
-  "unlock-pdf": { tr: "PDF Şifre Çöz", en: "Unlock PDF" },
-  watermark: { tr: "Filigran Ekle", en: "Add watermark" },
-  "page-numbers": { tr: "Sayfa Numarası", en: "Page numbers" },
+  "organize-pdf": { tr: "Sayfa Sırala", en: "Reorder Pages" },
+  "unlock-pdf": { tr: "Şifre Kaldır", en: "Unlock PDF" },
+  watermark: { tr: "Filigran Ekle", en: "Add Watermark" },
+  "page-numbers": { tr: "Sayfa Numarası", en: "Page Numbers" },
   "repair-pdf": { tr: "PDF Onar", en: "Repair PDF" },
   "pdf-to-ppt": { tr: "PDF → PowerPoint", en: "PDF → PowerPoint" },
   "ppt-to-pdf": { tr: "PowerPoint → PDF", en: "PowerPoint → PDF" },
-  "pdf-to-image": { tr: "PDF → Görüntü", en: "PDF to image" },
-  "image-to-pdf": { tr: "Görüntü → PDF", en: "Image to PDF" },
-  "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
-  "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
+  "pdf-to-image": { tr: "PDF → Görsel", en: "PDF → Image" },
+  "image-to-pdf": { tr: "Görsel → PDF", en: "Image → PDF" },
+  "html-to-pdf": { tr: "HTML → PDF", en: "HTML → PDF" },
+  "pdf-to-text": { tr: "PDF → Metin", en: "PDF → Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
   "grayscale-pdf": { tr: "PDF Gri Tonlama", en: "Grayscale PDF" },
   "resize-pdf": { tr: "PDF Sayfa Boyutu", en: "Resize PDF Pages" },
@@ -163,9 +163,9 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
   "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
-  "sayfa-duzeni": { tr: "Sayfa Düzeni", en: "Page Layout" },
+  "sayfa-duzeni": { tr: "PDF Sayfa Düzeni", en: "PDF Page Layout" },
   "imza-iste": { tr: "İmza İste", en: "Request Signature" },
-  "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
+  "extract-images": { tr: "Görselleri Çıkar", en: "Extract Images" },
 };
 
 export function sidebarToolLabel(id: FeatureKey, lang: Language): string {
@@ -528,7 +528,7 @@ export function featureCopy(
     { title: string; description: string; button: string }
   > = {
     split: {
-      title: tr ? "SAYFA AYIR" : "SPLIT PAGES",
+      title: tr ? "PDF BÖL" : "SPLIT PDF",
       description: tr
         ? "Seçilen PDF içinden istediğiniz sayfaları düzenli ve güvenli biçimde ayırır."
         : "Extract selected pages from your PDF safely.",
@@ -598,14 +598,14 @@ export function featureCopy(
       button: tr ? "DÖNDÜRÜLMÜŞ PDF AL" : "GET ROTATED PDF",
     },
     "organize-pdf": {
-      title: tr ? "SAYFA SIRALA" : "ORGANIZE PAGES",
+      title: tr ? "SAYFA SIRALA" : "REORDER PAGES",
       description: tr
         ? "Sayfa sırasını virgülle (ör. 3,1,2,4) belirterek yeniden düzenler."
         : "Reorder pages by listing the new 1-based order (e.g. 3,1,2,4).",
       button: tr ? "SIRALANMIŞ PDF AL" : "GET REORDERED PDF",
     },
     "unlock-pdf": {
-      title: tr ? "PDF ŞİFRE ÇÖZ" : "UNLOCK PDF",
+      title: tr ? "ŞİFRE KALDIR" : "UNLOCK PDF",
       description: tr
         ? "Bilinen açılış parolası ile korumayı kaldırır; yalnızca yetkili belgeler için."
         : "Remove open-password protection if you supply the correct password.",
@@ -647,28 +647,28 @@ export function featureCopy(
       button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
     },
     "pdf-to-image": {
-      title: tr ? "PDF → GÖRÜNTÜ" : "PDF TO IMAGE",
+      title: tr ? "PDF → GÖRSEL" : "PDF → IMAGE",
       description: tr
         ? "Her sayfayı JPG veya PNG olarak ZIP içinde dışa aktarır."
         : "Export each page as JPG/PNG in a ZIP file.",
       button: tr ? "ZIP İNDİR" : "DOWNLOAD ZIP",
     },
     "image-to-pdf": {
-      title: tr ? "GÖRÜNTÜ → PDF" : "IMAGE TO PDF",
+      title: tr ? "GÖRSEL → PDF" : "IMAGE → PDF",
       description: tr
         ? "Birden çok görüntüyü tek PDF’e birleştirir."
         : "Combine multiple images into one PDF.",
       button: tr ? "PDF AL" : "GET PDF",
     },
     "html-to-pdf": {
-      title: tr ? "HTML → PDF" : "HTML TO PDF",
+      title: tr ? "HTML → PDF" : "HTML → PDF",
       description: tr
         ? "Bir web adresini veya HTML parçasını PDF’e çevirir."
         : "Turn a web URL or HTML snippet into a PDF.",
       button: tr ? "PDF OLUŞTUR" : "CREATE PDF",
     },
     "pdf-to-text": {
-      title: tr ? "PDF → METİN" : "PDF TO TEXT",
+      title: tr ? "PDF → METİN" : "PDF → TEXT",
       description: tr
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
@@ -682,21 +682,21 @@ export function featureCopy(
       button: tr ? "İMZA İSTE" : "REQUEST",
     },
     "sayfa-duzeni": {
-      title: tr ? "SAYFA DÜZENİ" : "PAGE LAYOUT",
+      title: tr ? "PDF SAYFA DÜZENİ" : "PDF PAGE LAYOUT",
       description: tr
         ? "Birden çok sayfayı tek kâğıda sığdırır ya da katlanınca okunan kitapçık dizer."
         : "Fits several pages on one sheet, or imposes a foldable booklet.",
       button: tr ? "DÜZENLE" : "APPLY",
     },
     "pdf-to-pdfa": {
-      title: tr ? "PDF → PDF/A" : "PDF TO PDF/A",
+      title: tr ? "PDF → PDF/A (ARŞİV)" : "PDF TO PDF/A (ARCHIVE)",
       description: tr
         ? "Belgeyi arşiv biçimine çevirir: yazı tipleri gömülür, yıllar sonra da aynı görünür."
         : "Converts to the archival format: fonts are embedded so it looks the same years later.",
       button: tr ? "ARŞİVE ÇEVİR" : "CONVERT",
     },
     "ustveri-temizle": {
-      title: tr ? "ÜSTVERİ TEMİZLE" : "REMOVE METADATA",
+      title: tr ? "PDF ÜSTVERİ TEMİZLE" : "REMOVE PDF METADATA",
       description: tr
         ? "Yazar adı, program bilgisi, tarihler, XMP bloğu ve fotoğraf EXIF/GPS izlerini siler."
         : "Removes author name, software info, dates, the XMP block and photo EXIF/GPS traces.",
@@ -738,21 +738,21 @@ export function featureCopy(
       button: tr ? "SERPİŞTİR" : "INTERLEAVE",
     },
     "deskew-pdf": {
-      title: tr ? "PDF EĞRİ TARAMA DÜZELT" : "DESKEW PDF",
+      title: tr ? "PDF EĞRİ TARAMA DÜZELTME" : "DESKEW PDF",
       description: tr
         ? "Eğri taranmış sayfaları düzeltir; yazı katmanlı sayfalara dokunmaz."
         : "Straightens crooked scanned pages; leaves text-layer pages alone.",
       button: tr ? "EĞRİLİĞİ DÜZELT" : "STRAIGHTEN",
     },
     "flatten-pdf": {
-      title: tr ? "PDF DÜZLEŞTIR" : "FLATTEN PDF",
+      title: tr ? "PDF DÜZLEŞTİR" : "FLATTEN PDF",
       description: tr
         ? "Etkileşimli form alanlarını ve açıklamaları sayfaya gömer, düzenlenemez hale getirir."
         : "Embed interactive form fields and annotations into the page permanently.",
       button: tr ? "DÜZLEŞTİR" : "FLATTEN",
     },
     "extract-images": {
-      title: tr ? "PDF'TEN GÖRSEL ÇIKAR" : "EXTRACT IMAGES",
+      title: tr ? "GÖRSELLERİ ÇIKAR" : "EXTRACT IMAGES",
       description: tr
         ? "PDF içindeki gömülü fotoğraf ve logoları özgün formatında çıkarır, ZIP olarak indirir."
         : "Pull embedded photos and logos out of the PDF in their original format as a ZIP.",
