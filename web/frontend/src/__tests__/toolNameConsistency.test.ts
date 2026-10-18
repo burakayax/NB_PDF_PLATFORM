@@ -10,8 +10,6 @@ import type { FeatureKey } from "../api/subscription";
  * araç seçicide ve araç sayfası başlığında AYNI adla görünmelidir. Ad değiştirirken
  * tek kaynak `lib/toolCatalog.ts`'tir; diğer yüzeyler buna uymak zorundadır.
  */
-/** Büyük harf farkını (i/İ/ı) yok sayarak karşılaştırmak için. */
-const up = (s: string) => s.toLocaleUpperCase("en").replace(/İ/g, "I").replace(/ı/g, "I");
 const byId = new Map(TOOLS.map((t) => [t.id, t] as const));
 
 describe("araç adı tutarlılığı", () => {
@@ -28,15 +26,15 @@ describe("araç adı tutarlılığı", () => {
     expect(bad).toEqual([]);
   });
 
-  it("araç sayfası başlığı katalog adının büyük harfli hâli (EN/TR)", () => {
+  it("araç sayfası başlığı katalog adıyla aynı (büyük harfle yazılmamış)", () => {
     const bad: string[] = [];
     for (const id of SIDEBAR_TOOL_ORDER) {
       const t = byId.get(id);
       if (!t) continue;
       const tr = featureCopy(id as FeatureKey, "tr").title;
       const en = featureCopy(id as FeatureKey, "en").title;
-      if (up(tr) !== up(t.tr.name)) bad.push(`${id} [tr]: "${tr}" ≠ "${t.tr.name}"`);
-      if (up(en) !== up(t.en.name)) bad.push(`${id} [en]: "${en}" ≠ "${t.en.name}"`);
+      if (tr !== t.tr.name) bad.push(`${id} [tr]: "${tr}" ≠ "${t.tr.name}"`);
+      if (en !== t.en.name) bad.push(`${id} [en]: "${en}" ≠ "${t.en.name}"`);
     }
     expect(bad).toEqual([]);
   });
