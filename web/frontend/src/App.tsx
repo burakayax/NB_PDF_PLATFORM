@@ -6732,6 +6732,7 @@ function App() {
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
+          onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6764,6 +6765,8 @@ function App() {
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
+          onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
+          onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />

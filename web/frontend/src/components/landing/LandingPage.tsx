@@ -72,23 +72,23 @@ type AiToolId =
 type HeroMeta = { Icon: LucideIcon; tr: string; en: string; trDesc: string; enDesc: string };
 
 const AI_TOOLS: { id: AiToolId; meta: HeroMeta }[] = [
-  { id: "summarize", meta: { Icon: Sparkles, tr: "Özetle", en: "Summarize",
+  { id: "summarize", meta: { Icon: Sparkles, tr: "PDF Özetle", en: "Summarize PDF",
     trDesc: "Uzun belgenin ana fikrini çıkarır.", enDesc: "Pulls out the key points of a long document." } },
-  { id: "chat", meta: { Icon: MessageSquareText, tr: "Sohbet", en: "Chat",
+  { id: "chat", meta: { Icon: MessageSquareText, tr: "PDF ile Sohbet", en: "Chat with PDF",
     trDesc: "Belgeye soru sorun, cevabı kaynağıyla alın.", enDesc: "Ask the document questions, get sourced answers." } },
-  { id: "extract", meta: { Icon: Table2, tr: "Veri Çıkar", en: "Extract",
+  { id: "extract", meta: { Icon: Table2, tr: "PDF Veri Çıkar", en: "Extract Data",
     trDesc: "Fatura ve formlardaki bilgileri tabloya döker.", enDesc: "Turns invoice and form fields into a table." } },
-  { id: "translate", meta: { Icon: Languages, tr: "Çeviri", en: "Translate",
+  { id: "translate", meta: { Icon: Languages, tr: "PDF Çeviri", en: "Translate PDF",
     trDesc: "Düzeni bozmadan başka dile çevirir.", enDesc: "Translates while keeping the layout." } },
-  { id: "batch", meta: { Icon: FileStack, tr: "Toplu İşlem", en: "Batch",
+  { id: "batch", meta: { Icon: FileStack, tr: "AI Toplu İşlem", en: "AI Batch",
     trDesc: "Onlarca belgeyi tek seferde işler.", enDesc: "Handles dozens of documents at once." } },
-  { id: "compare", meta: { Icon: ArrowRightLeft, tr: "Karşılaştır", en: "Compare",
+  { id: "compare", meta: { Icon: ArrowRightLeft, tr: "PDF Karşılaştır", en: "Compare PDFs",
     trDesc: "İki sürüm arasındaki farkları gösterir.", enDesc: "Shows what changed between two versions." } },
-  { id: "redact", meta: { Icon: Eraser, tr: "Veri Gizle", en: "Redact",
+  { id: "redact", meta: { Icon: Eraser, tr: "Hassas Veri Gizle", en: "Redact PDF",
     trDesc: "Kimlik ve IBAN gibi bilgileri karartır.", enDesc: "Blacks out IDs and account numbers." } },
-  { id: "contract", meta: { Icon: Gavel, tr: "Sözleşme Denetle", en: "Audit Contract",
+  { id: "contract", meta: { Icon: Gavel, tr: "Sözleşme Denetçisi", en: "Contract Auditor",
     trDesc: "Riskli maddeleri bulur, belgede boyar. Hızlı tarama ya da mevzuatlı detaylı denetim.", enDesc: "Finds and highlights risky clauses. Quick scan or a detailed audit with a current-law check." } },
-  { id: "photo", meta: { Icon: UserRound, tr: "AI Fotoğraf", en: "AI Photo",
+  { id: "photo", meta: { Icon: UserRound, tr: "AI Fotoğraf Stüdyosu", en: "AI Photo Studio",
     trDesc: "Vesikalık, CV ve LinkedIn fotoğrafınızı hazırlar; arka planı değiştirir. Fotoğraf cihazdan çıkmaz.", enDesc: "Prepares ID, CV and LinkedIn photos and swaps the background. The photo never leaves your device." } },
 ];
 
@@ -116,13 +116,13 @@ const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
 };
 
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
-  { id: "merge", tr: "Birleştir", en: "Merge" },
-  { id: "split", tr: "Böl", en: "Split" },
+  { id: "merge", tr: "PDF Birleştir", en: "Merge PDF" },
+  { id: "split", tr: "PDF Böl", en: "Split PDF" },
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
   { id: "gorsel-sikistir", tr: "Görsel Sıkıştır", en: "Compress Image" },
-  { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
-  { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
-  { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder" },
+  { id: "rotate-pdf", tr: "PDF Döndür", en: "Rotate PDF" },
+  { id: "delete-pages", tr: "Sayfa Sil", en: "Delete Pages" },
+  { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder Pages" },
 ];
 
 import { HERO_CATS, catOfFreeTool, firstRunnable, type HeroCatId } from "./heroToolCatalog";
@@ -592,8 +592,12 @@ function Navbar({
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
+/** Üye kutuları arasında FeatureKey OLMAYAN, kendi /tools/<slug> sayfasında açılanlar. */
+const MEMBER_PAGE_SLUGS = new Set<string>(["aranabilir-pdf", "cv-olustur"]);
+
 function Hero({
   language,
+  onOpenTool,
   onRegister,
   onLogin,
   accessToken,
@@ -604,6 +608,7 @@ function Hero({
 }: {
   language: Language;
   onUseWebApp: () => void;
+  onOpenTool: (id: FeatureKey) => void;
   onRegister: () => void;
   onLogin: () => void;
   accessToken: string | null;
@@ -945,9 +950,33 @@ function Hero({
                       );
                     }
 
-                    // k === "member" — ücretsiz üyelikle açılır; girişli kullanıcıda gizlenir.
-                    if (accessToken) return null;
+                    // k === "member" — ücretsiz üyelikle açılır. Girişli kullanıcıda GİZLENMEZ
+                    // (eskiden gizleniyordu: misafir Dönüştür'de 5, üye 3 araç görüyordu);
+                    // kilit yerine aracın kendisini açar.
                     const MemberIcon = it.Icon;
+                    if (accessToken) {
+                      return (
+                        <button
+                          key={it.slug}
+                          type="button"
+                          onClick={() => {
+                            if (MEMBER_PAGE_SLUGS.has(it.slug)) {
+                              window.location.assign(`/tools/${it.slug}`);
+                            } else {
+                              onOpenTool(it.slug as FeatureKey);
+                            }
+                          }}
+                          className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
+                        >
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          </span>
+                          <span className="text-[12px] font-semibold leading-tight text-slate-300">
+                            {tr ? it.tr : it.en}
+                          </span>
+                        </button>
+                      );
+                    }
                     return (
                       <button
                         key={it.slug}
@@ -2328,6 +2357,7 @@ export function LandingPage({
         <Hero
           language={language}
           onUseWebApp={onUseWebApp}
+          onOpenTool={onOpenTool}
           onRegister={onRegister}
           onLogin={onLogin}
           accessToken={accessToken ?? null}
