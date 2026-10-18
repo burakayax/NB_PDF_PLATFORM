@@ -184,7 +184,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // On-screen subheading. (The meta description does NOT come from here —
       // it lives in seo/seoContent.mjs → LANDING_SEO.)
       description:
-        `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total, all in one place. No install. 20 tools run right in your browser, 14 of them without an account.`,
+        `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total, all in one place. No install, no watermark. 14 tools work without an account.`,
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -500,7 +500,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // kullanılıyor (arama verisinde ikisi de üst sıralarda), o yüzden biri
       // başlıkta biri burada geçiyor.
       description:
-        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Kurulum gerekmez. 20 araç doğrudan tarayıcınızda çalışır, 14'ü üyeliksiz.`,
+        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Kurulum gerekmez, filigran yok. 14 araç üyeliksiz çalışır.`,
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",

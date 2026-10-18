@@ -19,11 +19,11 @@ export function upgradeModalCopy(lang: Language) {
       ? ["Günlük sınırlı işlem", "Temel araçlar", "Web erişimi"]
       : ["Limited daily operations", "Core TOOLS", "Web access"],
     basicBullets: tr
-      ? ["Sınırsız işlem", "Tüm araçlar", "Standart öncelik"]
-      : ["Unlimited operations", "Full toolkit", "Standard priority"],
+      ? ["Günlük sınır yok", "Tüm araçlar", "Standart öncelik"]
+      : ["No daily limit", "Full toolkit", "Standard priority"],
     proBullets: tr
-      ? ["Sınırsız işlem", "Öncelikli işlem hattı", "Tam kalite çıktı"]
-      : ["Unlimited operations", "Priority processing lane", "Full quality output"],
+      ? ["Günlük sınır yok", "Öncelikli işlem hattı", "Tam kalite çıktı"]
+      : ["No daily limit", "Priority processing lane", "Full quality output"],
     annualBullets: tr
       ? ["Pro’nun tümü", "En iyi aylık değer", "Tek yıllık ödeme"]
       : ["Everything in Pro", "Best monthly value", "One annual payment"],

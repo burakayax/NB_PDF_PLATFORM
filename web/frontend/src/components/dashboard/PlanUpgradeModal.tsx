@@ -168,7 +168,7 @@ export function PlanUpgradeModal({
                       ? "Hakkın ay başında yenilenir ya da daha yüksek bir plana geçebilirsin."
                       : "Your allowance renews at the start of the month, or you can move to a higher plan."
                     : tr
-                      ? "Hakkın gece yarısı yenilenir ya da Pro'ya geçerek sınırsız kullanabilirsin."
+                      ? "Hakkın gece yarısı yenilenir ya da Pro'ya geçerek günlük sınır olmadan kullanabilirsin."
                       : "Your allowance renews at midnight, or upgrade to Pro to use it without a daily limit."}
                 </p>
               </div>

@@ -894,8 +894,8 @@ function App() {
         placement: "bottom",
         title: t ? "Daha fazlası için yükselt" : "Upgrade for more",
         body: t
-          ? "Yapay zekâ araçları, daha büyük dosyalar ve limitsiz işlem için planını buradan yükseltebilirsin."
-          : "Unlock AI tools, larger files and unlimited operations by upgrading here.",
+          ? "Yapay zekâ araçları, daha büyük dosyalar ve günlük sınırsız kullanım için planını buradan yükseltebilirsin."
+          : "Unlock AI tools, larger files and no daily limit by upgrading here.",
       },
     ];
   }, [language, isMobileOrTablet]);

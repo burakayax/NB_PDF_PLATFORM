@@ -66,7 +66,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     subject: "Yalnızca bugün: PRO planda %20 indirim ⏰",
     bodyHtml:
       `<p>Merhaba {{name}},</p>` +
-      `<p>Bugüne özel: <strong>PRO plana geçenlere %20 indirim</strong>. Sınırsız kullanım, yapay zekâ araçları ve öncelikli işlem hızı bu fiyatla senin.</p>` +
+      `<p>Bugüne özel: <strong>PRO plana geçenlere %20 indirim</strong>. Günlük sınır yok, yapay zekâ araçları ve öncelikli işlem hızı bu fiyatla senin.</p>` +
       `<p>Bu teklif yalnızca <u>bugün 23:59'a kadar</u> geçerli — sonra normal fiyata döner.</p>` +
       `<p>${ctaButton("İndirimi Kullan", "https://pdfplatform.app/#pricing")}</p>`,
   },
