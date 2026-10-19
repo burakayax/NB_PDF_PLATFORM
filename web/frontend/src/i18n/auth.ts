@@ -196,6 +196,8 @@ export function translateAuthApiMessage(
       "Yeni şifre mevcut şifrenizden farklı olmalıdır.",
     "An account with this email already exists.":
       "Bu e-posta adresi ile kayıtlı bir hesap zaten var.",
+    "An account with this email already exists. Gmail ignores dots and +tags in addresses, so this may match an account registered with a slightly different spelling.":
+      "Bu e-posta adresi ile kayıtlı bir hesap zaten var. Gmail adreslerinde noktalar ve + etiketleri dikkate alınmaz; bu adres, noktası farklı yazılmış mevcut bir hesapla aynı posta kutusuna denk geliyor olabilir. Giriş yapmayı veya şifrenizi sıfırlamayı deneyin.",
     "An account with this email already exists. Sign in with your email and password, or use a different Google account.":
       "Bu e-posta adresi ile kayıtlı bir hesap zaten var. E-posta ve şifrenizle giriş yapın veya farklı bir Google hesabı kullanın.",
     "This email address cannot be used to create an account.":
