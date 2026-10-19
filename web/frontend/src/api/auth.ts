@@ -5,6 +5,9 @@ import { getCountryCode } from "../lib/geoCountry";
 /** useAuthSession ile aynı anahtar; yenileme sonrası güncel jetonu paylaşmak için dışa açık. */
 export const AUTH_ACCESS_TOKEN_STORAGE_KEY = "nbpdf-access-token";
 
+/** Oturum güvenlik nedeniyle kapandığında yazılır; App bir kez gösterip siler. */
+export const SESSION_CLOSED_NOTICE_KEY = "nb_session_closed_notice";
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -217,6 +220,15 @@ async function refreshAuthSessionOnce(): Promise<AuthResponse | null> {
     { timeoutMs: 15000 },
   );
   if (response.status === 401) {
+    // Sunucu "çalıntı oturum şüphesi" ile kapattıysa kullanıcıya nedenini göstermek için işaretle.
+    try {
+      const body = (await response.json()) as { message?: unknown };
+      if (typeof body?.message === "string" && body.message.includes("closed for security")) {
+        window.sessionStorage.setItem(SESSION_CLOSED_NOTICE_KEY, "security");
+      }
+    } catch {
+      /* gövde yoksa sessiz çıkış */
+    }
     return null;
   }
   await ensureOk(response, "Session refresh failed.");
