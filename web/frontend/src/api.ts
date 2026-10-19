@@ -1723,15 +1723,19 @@ export class EntitlementPaymentRequiredError extends Error {
 
 /** PDF worker returns 402 + JSON; map to a typed error for the workspace UI. */
 async function throwIfEntitlementPaymentRequired(response: Response): Promise<void> {
-  if (response.status !== 402) {
+  if (response.status !== 402 && response.status !== 403) {
     return;
   }
   let g: SaaSGating | null = null;
   try {
-    const j = (await response.json()) as { saasGating?: unknown };
+    // 403 yalnız "araç planda kilitli" ise yükseltme akışına çevrilir (başka 403'ler olduğu gibi kalır).
+    const j = (await response.clone().json()) as { saasGating?: unknown; error?: unknown };
+    if (response.status === 403 && j.error !== "tool_not_allowed_on_plan") {
+      return;
+    }
     g = normaliseSaasGating(j.saasGating);
   } catch {
-    /* ignore */
+    if (response.status === 403) return;
   }
   throw new EntitlementPaymentRequiredError(g);
 }
