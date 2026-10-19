@@ -28,6 +28,8 @@ import {
 import { trackFunnelEvent } from "../../lib/analytics";
 import { peekPendingTool } from "../../lib/appNavigation";
 import { TOOLS } from "../../lib/toolCatalog";
+import { TURNSTILE_SITE_KEY, useCaptchaNeeded } from "../../lib/loginCaptcha";
+import { TurnstileBox } from "./TurnstileBox";
 
 /**
  * Giriş/kayıt ekranının SOL sütunu — marka ve kazanım paneli.
@@ -248,6 +250,8 @@ export function AuthPage({
     const tool = TOOLS.find((t) => t.id === id);
     return tool ? (language === "tr" ? tool.tr.name : tool.en.name) : null;
   }, [adminPortal, mode, language]);
+  const captchaNeeded = useCaptchaNeeded();
+  const [captchaReset, setCaptchaReset] = useState(0);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -400,6 +404,7 @@ export function AuthPage({
       }
     } catch {
       /* Hata üst bileşende serverError prop olarak gelir; serverEmailErr/serverPasswordErr ile alanlara yönlendirilir */
+      setCaptchaReset((n) => n + 1); // Turnstile jetonu tek kullanımlık: yenisi alınsın
     }
   }
 
@@ -823,6 +828,9 @@ export function AuthPage({
               </div>
             ) : null}
 
+            {mode === "login" && captchaNeeded && TURNSTILE_SITE_KEY ? (
+              <TurnstileBox language={language === "tr" ? "tr" : "en"} resetKey={captchaReset} />
+            ) : null}
             <button
               type="submit"
               disabled={submitting || (mode === "register" && !requiredAccepted)}
