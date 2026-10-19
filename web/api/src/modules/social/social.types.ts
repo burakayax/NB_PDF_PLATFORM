@@ -163,7 +163,8 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "square",
     hashtagCount: 5,
     hashtagTotalCap: 5,
-    bilingual: true,
+    // Instagram içeriği sadece Türkçe (içerik kuralları).
+    bilingual: false,
     linkStyle: "bio",
     secretFields: [
       { key: "igUserId", label: "Instagram İşletme Hesabı ID", help: "Facebook sayfasına bağlı IG Business hesabının kimliği" },
