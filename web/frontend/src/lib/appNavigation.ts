@@ -6,6 +6,7 @@
  * dosyasının içinde durduğunda o dosyayı gereksiz büyütüyor ve bu mantığı
  * bulmayı zorlaştırıyordu.
  */
+import { accountPanelFromPath } from "./accountPaths";
 import type { FeatureKey } from "../api/subscription";
 import { stripLangPrefix } from "../hooks/usePreferredLanguage";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./toolRoutes";
@@ -120,6 +121,10 @@ export function getInitialViewFromLocation(): AppView {
   const rawPath =
     stripLangPrefix(window.location.pathname.replace(/\/$/, "")) || "/";
   if (parseWorkspaceToolPath(rawPath)) {
+    return "web";
+  }
+  // Hesap ekranları (/hesap/profil, /taramalarim…): çalışma alanı görünümü; ekranı App açar.
+  if (accountPanelFromPath(rawPath)) {
     return "web";
   }
   // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil ama "web" görünümü

@@ -518,7 +518,9 @@ function App() {
       ? readInitialWorkspaceToolSelection(window.location.pathname)
       : "split",
   );
-  const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
+  const [contentPanel, setContentPanel] = useState<ContentPanel>(() =>
+    typeof window !== "undefined" ? (accountPanelFromPath(window.location.pathname) ?? "tool") : "tool",
+  );
   // Dashboard içerik bölgesi kaydırma kabı (sayfa değil, bu bölge kayar).
   const dashboardScrollRef = useRef<HTMLDivElement>(null);
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>(() =>
