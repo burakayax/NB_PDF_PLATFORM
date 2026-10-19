@@ -29,7 +29,7 @@ import { curatedCarousel } from "../src/blog/carouselCopy.mjs";
 import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
-import { blogLayoutMap, renderBlogCover } from "./lib/blog-cover.mjs";
+import { blogLayoutMap, fitHook, renderBlogCover } from "./lib/blog-cover.mjs";
 
 const W = 1080;
 const H = 1350;
@@ -232,7 +232,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       if (svgs.length === 0) continue;
 
       const signature = createHash("sha1")
-        .update(JSON.stringify([DESIGN_VERSION, svgs, hook, layouts.get(post.slug)]))
+        .update(JSON.stringify([DESIGN_VERSION, svgs, fitHook(hook), layouts.get(post.slug)]))
         .digest("hex");
       const urls = svgs.map((_, i) => `${baseUrl}/social/carousel/${lang}/${slug}/${i + 1}.jpg`);
       manifest[url] = { signature, count: svgs.length, urls };
@@ -249,7 +249,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
         if (i === 0) {
           // İlk slayt: yeni kapak tasarımı (logo sol üstte, varyant yazıdan sabit); kalan slaytlar kurumsal akışta devam eder.
           const cover = await renderBlogCover({
-            title: hook,
+            title: fitHook(hook),
             post,
             layout: layouts.get(post.slug),
             w: W,

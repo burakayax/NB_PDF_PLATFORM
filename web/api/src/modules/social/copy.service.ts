@@ -25,6 +25,7 @@ import type { KeywordSet } from "./keywords.service.js";
 import type { SocialPlatform } from "@prisma/client";
 import { socialUtm, withUtm } from "../../lib/utm.js";
 import { toolIdFromGuid } from "./platforms/reel-cover.js";
+import { instagramHashtags } from "./instagram-tags.js";
 
 /** İki dilli gönderide blokları ayıran çizgi. */
 const LANG_SEPARATOR = "\n\n— — —\n\n";
@@ -51,6 +52,7 @@ Kurallar:
   KÖTÜ: "Ekran görüntüsüyle aldığınız tabloların bulanıklığından sıkılmış mısınız?"
   İYİ:  "Ekran görüntüsüyle aldığınız tablolar bulanık çıkıyor."
 - Soru cümlesi kurma zorunluluğun yok. Düz bir tespit çoğu zaman daha güçlü.
+- LONG metin biçimi: İLK SATIR kancadır (en fazla 125 karakter, tek başına anlamlı). Toplam 4–6 KISA satır; her satır yeni satırda. İnsanların arayacağı kelimeler ("Konu terimleri") metinde doğal biçimde geçsin. SON SATIR bir soru ya da harekete çağrı olsun (örn. "Hangi meslek için rehber istersin? Yorumlara yaz" ya da "Kaydet, lazım olacak").
 - Kısa çizgi (—) ile cümle bölme: en fazla bir kez, o da gerçekten gerekliyse.
 - İngilizce metin o dilde DOĞRUDAN yazılmış gibi olmalı; Türkçenin çevirisi olmasın.
   İki dil aynı şeyi anlatır ama cümle cümle birbirinin karşılığı olmak zorunda değil.
@@ -266,6 +268,17 @@ export function tagCountFor(platform: SocialPlatform, blockCount: number, blockI
   return Math.min(spec.hashtagCount, share);
 }
 
+/** Instagram etiketleri: konu havuzundan, genel etiketsiz, bir öncekinden farklı (instagram-tags.ts). */
+function igTagText(side: LangSide, avoid?: string[]): string {
+  let key = side.link;
+  try {
+    key = new URL(side.link).pathname;
+  } catch {
+    /* göreli adres: olduğu gibi */
+  }
+  return instagramHashtags({ key, text: `${side.title} ${side.summary}`, avoid }).join(" ");
+}
+
 /** Bir blok için etiket dizesi (karışım kuralına göre, sabit yazımla). */
 function tagsFor(side: LangSide, count: number): string {
   return tagTermsFor(side, count).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
@@ -289,21 +302,30 @@ function fallbackBlock(
   room: number,
   style: "url" | "bio" | "none",
   tagCount: number,
+  igTagText?: string,
 ): string {
-  const tags = tagsFor(side, tagCount);
+  const tags = igTagText ?? tagsFor(side, tagCount);
   const linkText = linkLine(side, style);
   const link = linkText ? `\n\n${linkText}` : "";
   const tail = `${link}${tags ? `\n\n${tags}` : ""}`;
-  const lead = side.summary ? `${side.title}\n\n${side.summary}` : side.title;
+  // Instagram: kanca ilk satır (≤125 karakter), sonda harekete çağrı.
+  const lead =
+    igTagText !== undefined
+      ? `${truncateWords(side.title, 125)}${side.summary ? `\n\n${side.summary}` : ""}\n\nKaydet, lazım olacak 📌`
+      : side.summary
+        ? `${side.title}\n\n${side.summary}`
+        : side.title;
   return `${truncateWords(lead, Math.max(40, room - tail.length))}${tail}`;
 }
 
 /** Model kullanılamadığında devreye giren sade şablon. */
-function fallbackBody(sides: LangSide[], platform: SocialPlatform): string {
+function fallbackBody(sides: LangSide[], platform: SocialPlatform, avoid?: string[]): string {
   const spec = PLATFORM_SPECS[platform];
   const per = Math.floor(effectiveMax(platform, sides) / sides.length);
   return sides
-    .map((side, i) => fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i)))
+    .map((side, i) =>
+      fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i), platform === "INSTAGRAM" ? igTagText(side, avoid) : undefined),
+    )
     .join(LANG_SEPARATOR);
 }
 
@@ -321,6 +343,8 @@ export type CopyRequest = {
    * ("kalite kaybı olmaz", "kayıt gerekmez") ekleyebildiği için kapatılır.
    */
   templateOnly?: boolean;
+  /** Bir önceki Instagram gönderisinin etiketleri: art arda aynı set kullanılmasın. */
+  avoidTags?: string[];
 };
 
 /** Bir gönderide hangi dil(ler) yer alacak? */
@@ -340,6 +364,9 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
       tags: lang === "tr" ? keywords.tagsTr : keywords.tagsEn,
     };
   };
+
+  // Instagram içeriği SADECE Türkçe: açıklamada İngilizce bölüm olmaz (içerik kuralları, bölüm 1).
+  if (platform === "INSTAGRAM") return [sideOf("tr")];
 
   const bilingualPossible = req.bilingual && Boolean(item.alt) && PLATFORM_SPECS[platform].bilingual;
   // Çift dilde Türkçe üstte: asıl kitle Türkiye, İngilizce altta tam
@@ -368,7 +395,9 @@ function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
   const sides = sidesFor(req, platform);
   const perBlock = Math.floor(effectiveMax(platform, sides) / Math.max(1, sides.length));
   const side = sides[0];
-  const tagLen = side ? tagsFor(side, tagCountFor(platform, sides.length, 0)).length : 0;
+  const tagLen = side
+    ? (platform === "INSTAGRAM" ? igTagText(side, req.avoidTags) : tagsFor(side, tagCountFor(platform, sides.length, 0))).length
+    : 0;
   const linkLen = side ? linkLine(side, spec.linkStyle).length : 0;
   // +4: bloğu ayıran satır sonları.
   return Math.max(60, perBlock - tagLen - linkLen - 4);
@@ -401,13 +430,14 @@ function buildBlock(
   side: LangSide,
   platform: SocialPlatform,
   tagCount: number,
+  avoid?: string[],
 ): string {
   const spec = PLATFORM_SPECS[platform];
   const clean = sanitizeHashtags(body, side.lang)
     .replace(URL_PATTERN_GLOBAL, "")
     .replace(/[ \t]+\n/g, "\n")
     .trim();
-  const tags = tagsFor(side, tagCount);
+  const tags = platform === "INSTAGRAM" ? igTagText(side, avoid) : tagsFor(side, tagCount);
   const parts = [clean];
   const link = linkLine(side, spec.linkStyle);
   if (link) parts.push(link);
@@ -424,7 +454,7 @@ function buildBlock(
  */
 export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPlatform, string>> {
   const result = {} as Record<SocialPlatform, string>;
-  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p);
+  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p, req.avoidTags);
 
   if (req.templateOnly || !isAiConfigured() || req.platforms.length === 0) return result;
 
@@ -484,7 +514,7 @@ Uzunluklar:
     const kind = bodyKind(p);
     const blocks = sides.map((side, i) => {
       const body = bodies[kind][side.lang];
-      return body ? buildBlock(body, side, p, tagCountFor(p, sides.length, i)) : "";
+      return body ? buildBlock(body, side, p, tagCountFor(p, sides.length, i), req.avoidTags) : "";
     });
     // Bir dil için metin gelmediyse o platformda şablon korunur.
     if (blocks.some((b) => !b)) continue;

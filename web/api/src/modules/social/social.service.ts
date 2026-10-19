@@ -36,6 +36,7 @@ import {
 } from "./tool-reels.service.js";
 import type { ToolReel, ToolReelVideoInfo } from "./tool-reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
+import { parseTags } from "./instagram-tags.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 
@@ -529,6 +530,7 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
       keywords,
       bilingual: config.bilingual,
       singleLang: config.singleLang,
+      avoidTags: await lastInstagramTags(),
     });
     for (const platform of platforms) {
       // Blog gönderileri Reels olmaz (yalnız araç videoları Reels olur): carousel/tek görsel.
@@ -563,6 +565,21 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
   }
 
   return result;
+}
+
+/** Bir önceki Instagram gönderisinin etiketleri: art arda iki gönderide aynı set çıkmasın. */
+async function lastInstagramTags(): Promise<string[]> {
+  // EN İYİ ÇABA: etiket çeşitliliği için bakılıyor; okunamazsa gönderi hazırlığı durmaz.
+  try {
+    const last = await prisma.socialPost.findFirst({
+      where: { platform: "INSTAGRAM" },
+      orderBy: { createdAt: "desc" },
+      select: { body: true },
+    });
+    return last ? parseTags(last.body) : [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Araç tanıtım videoları ───────────────────────────────────────────────────
@@ -629,6 +646,7 @@ export async function queueToolReel(
     bilingual: config.bilingual,
     singleLang: config.singleLang,
     templateOnly: true,
+    avoidTags: await lastInstagramTags(),
   });
   const targets = options?.platforms?.length
     ? TOOL_REEL_PLATFORMS.filter((p) => options.platforms?.includes(p))
