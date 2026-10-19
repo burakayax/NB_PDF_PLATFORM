@@ -72,6 +72,38 @@ export const COVER_SPECS = {
   "deskew-pdf": { design: "grid", l1: "Eğri taranmış", l2: "sayfayı düzelt", toolIcon: "rotate", toolLabel: "Eğri Düzelt" },
   "pdf-to-image": { design: "grid", l1: "Her sayfa", l2: "bir fotoğraf olsun", toolIcon: "image", toolLabel: "PDF'den Görsel" },
 
+  // ── Henüz video senaryosu olmayan araçlar ──
+  // Kimlik = site araç sayfası adı. Video eklenirken katalog kimliği farklıysa (ör. merge / merge-pdf) satır kopyalanır.
+  // Metinler aracın adından ve bilinen davranışından türetildi; yapay zekâ araçlarında iddia kasıtlı olarak genel tutuldu.
+  "split-pdf": { design: "poster", lines: ["UZUN", "PDF"], word: "böl", icon: "split", sub: "İstediğin sayfaları ayır" },
+  "delete-pages": { design: "poster", lines: ["FAZLA", "SAYFA"], word: "sil", icon: "trash", sub: "Gereksiz sayfaları PDF'ten çıkar" },
+  "rotate-pdf": { design: "poster", lines: ["YAN", "SAYFA"], word: "döndür", icon: "rotate", sub: "Sayfaları istediğin yöne çevir" },
+  "organize-pdf": { design: "poster", lines: ["KARIŞIK", "SAYFA"], word: "sırala", icon: "list", sub: "Sayfaları yeniden düzenle" },
+  "page-numbers": { design: "poster", lines: ["SAYFA", "NUMARASI"], word: "ekle", icon: "hash", sub: "PDF sayfalarına numara ekle" },
+  watermark: { design: "poster", lines: ["BELGEYE", "FİLİGRAN"], word: "ekle", icon: "drop", sub: "PDF'e metin filigranı ekle" },
+  "pdf-imzala": { design: "poster", lines: ["PDF'E", "İMZA"], word: "at", icon: "edit", sub: "Belgeyi cihazında imzala" },
+  "imza-iste": { design: "poster", lines: ["İMZA", "İSTE"], word: "e-postayla", icon: "mail", sub: "Karşı tarafa imza isteği gönder" },
+  "pdf-yorumla": { design: "poster", lines: ["PDF'E", "NOT"], word: "düş", icon: "message", sub: "Belgeyi işaretle, yorum ekle" },
+  "pdf-kesit-al": { design: "poster", lines: ["SAYFADAN", "KESİT"], word: "al", icon: "crop", sub: "Sayfanın istediğin bölümünü kırp" },
+  "pdf-duzenle": { design: "poster", lines: ["PDF'TEKİ", "YAZI"], word: "düzenle", icon: "edit", sub: "Belgedeki metni düzenle" },
+  "hassas-veri-gizle": { design: "poster", lines: ["HASSAS", "VERİ"], word: "gizle", icon: "eyeoff", sub: "Belgedeki hassas bilgileri gizle" },
+  "pdf-veri-cikar": { design: "poster", lines: ["PDF'TEN", "VERİ"], word: "çıkar", icon: "table", sub: "Belgedeki verileri al" },
+  "belge-tara": {
+    design: "steps", top: "Telefonunla", hl: "belge tara",
+    steps: [step("Kamerayı aç", "Belgeyi çerçeveye al", "scan"), step("Kenarlar bulunsun", "Eğri çekim düzelir", "crop"), step("PDF'i kaydet", "Kaydet ya da paylaş", "check")],
+  },
+  "ai-fotograf-studyosu": {
+    design: "steps", top: "Fotoğrafını", hl: "hazırla",
+    steps: [step("Fotoğrafı seç", "Fotoğrafın tarayıcıdan çıkmaz", "image"), step("Düzenle", "Yapay zekâ cihazında çalışır", "edit"), step("İndir", "Hazır fotoğrafı kaydet", "check")],
+  },
+  "pdf-ozetle": { design: "dark", l1: "Uzun PDF'i", l2: "özetle", from: "PDF", to: "Özet", caption: "Yapay zekâ ile belgenin özetini al" },
+  "pdf-sohbet": { design: "dark", l1: "PDF'inle", l2: "sohbet et", from: "PDF", to: "Soru", caption: "Belgene soru sor, yanıt al" },
+  "pdf-ceviri": { design: "dark", l1: "PDF'i", l2: "çevir", from: "PDF", to: "Çeviri", caption: "Belgeyi başka bir dile çevir" },
+  "pdf-karsilastir": { design: "dark", l1: "İki PDF'i", l2: "karşılaştır", from: "PDF 1", to: "PDF 2", caption: "Farkları tek bakışta gör" },
+  "sozlesme-denetci": { design: "dark", l1: "Sözleşmeyi", l2: "denetle", from: "Sözleşme", to: "Rapor", caption: "Riskli maddeleri belgede işaretle" },
+  "sayfa-duzeni": { design: "grid", l1: "Sayfa düzenini", l2: "sen belirle", toolIcon: "columns", toolLabel: "Sayfa Düzeni" },
+  "ai-toplu-islem": { design: "grid", l1: "Çok dosya", l2: "tek seferde", toolIcon: "layers", toolLabel: "Toplu İşlem" },
+
   // ── Önce / sonra ──
   "grayscale-pdf": { design: "split", l1: "Renkliden", l2: "siyah-beyaza" },
 };
