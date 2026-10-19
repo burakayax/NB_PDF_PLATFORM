@@ -6839,6 +6839,10 @@ function App() {
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
+          onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
+          onOpenFormFill={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("form-doldur"); setContentPanel("formfill"); }}
+          onOpenSignRequest={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("imza-iste"); setContentPanel("signrequest"); }}
+          onOpenMetadata={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("ustveri-temizle"); setContentPanel("metadata"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6873,6 +6877,10 @@ function App() {
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
+          onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
+          onOpenFormFill={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("form-doldur"); setContentPanel("formfill"); }}
+          onOpenSignRequest={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("imza-iste"); setContentPanel("signrequest"); }}
+          onOpenMetadata={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("ustveri-temizle"); setContentPanel("metadata"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
