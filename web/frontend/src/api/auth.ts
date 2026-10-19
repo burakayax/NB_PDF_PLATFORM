@@ -238,18 +238,63 @@ async function refreshAuthSessionOnce(): Promise<AuthResponse | null> {
 let refreshInFlight: Promise<AuthResponse | null> | null = null;
 
 /**
- * Yenileme anahtarı her kullanımda döner; eski sürümün ikinci kez kullanılması
- * sunucuda "çalıntı oturum" sayılıp hesabın tüm oturumlarını kapatır. Sayfa açılırken
- * birden çok istek aynı anda 401 alınca hepsi yenileme başlatıyordu → kullanıcı atılıyordu.
- * Bu yüzden aynı sekmedeki eşzamanlı çağrılar tek isteği paylaşır, sekmeler arası da
- * Web Locks ile sıraya girer (sonraki sekme güncellenmiş çerezle gider).
+ * SEKMELER ARASI TEK YENİLEME.
+ *
+ * Aynı tarayıcıdaki sekmeler aynı yenileme çerezini paylaşır. Her sekme kendi başına
+ * yenileme isterse çerez gereksiz yere defalarca döner ve istekler birbirine girer.
+ * Bu yüzden: (1) Web Locks ile aynı anda yalnız bir sekme yeniler; (2) yenileyen sekme
+ * sonucu BroadcastChannel ile diğerlerine iletir, sırası gelen sekme çok yeni bir sonuç
+ * varsa yeniden yenilemek yerine onu kullanır. Erişim anahtarı yine yalnız BELLEKTE
+ * kalır: kanal mesajı kalıcı değildir, hiçbir depoya yazılmaz.
  */
+const PAYLASIM_PENCERESI_MS = 5000;
+let paylasilan: { at: number; sonuc: AuthResponse } | null = null;
+let kanal: BroadcastChannel | null = null;
+
+function kanalAc(): BroadcastChannel | null {
+  if (kanal) return kanal;
+  if (typeof BroadcastChannel === "undefined") return null;
+  try {
+    kanal = new BroadcastChannel("nb-auth-refresh");
+    kanal.onmessage = (olay: MessageEvent) => {
+      const veri = olay.data as { tur?: string; sonuc?: AuthResponse } | null;
+      if (veri?.tur === "yenilendi" && veri.sonuc?.accessToken) {
+        paylasilan = { at: Date.now(), sonuc: veri.sonuc };
+      } else if (veri?.tur === "cikis") {
+        paylasilan = null;
+      }
+    };
+  } catch {
+    kanal = null;
+  }
+  return kanal;
+}
+
+async function kilitliYenile(): Promise<AuthResponse | null> {
+  const k = kanalAc();
+  // Kilidi bekleyen sekme için öndeki sekmenin mesajı kilitle birlikte gelebilir; kısa bekle.
+  await new Promise((r) => setTimeout(r, 40));
+  if (paylasilan && Date.now() - paylasilan.at < PAYLASIM_PENCERESI_MS) {
+    return paylasilan.sonuc;
+  }
+  const sonuc = await refreshAuthSessionOnce();
+  if (sonuc) {
+    // Kendi sonucumuz önbelleğe alınmaz: 401 sonrası yeniden deneme eski anahtarı almasın.
+    try {
+      k?.postMessage({ tur: "yenilendi", sonuc });
+    } catch {
+      /* iletilemezse diğer sekme kendisi yeniler */
+    }
+  }
+  return sonuc;
+}
+
 export function refreshAuthSession(): Promise<AuthResponse | null> {
   if (refreshInFlight) return refreshInFlight;
   const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
   const run = locks
-    ? locks.request("nb-auth-refresh", () => refreshAuthSessionOnce())
-    : refreshAuthSessionOnce();
+    ? locks.request("nb-auth-refresh", () => kilitliYenile())
+    : kilitliYenile();
   refreshInFlight = run.finally(() => {
     refreshInFlight = null;
   });
@@ -257,6 +302,12 @@ export function refreshAuthSession(): Promise<AuthResponse | null> {
 }
 
 export async function logoutAuthUser() {
+  paylasilan = null;
+  try {
+    kanalAc()?.postMessage({ tur: "cikis" });
+  } catch {
+    /* yoksay */
+  }
   await sendAuthRequest("/logout");
 }
 

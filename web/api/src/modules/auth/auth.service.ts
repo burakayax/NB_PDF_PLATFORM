@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type {
   AuthProvider,
   EmailVerificationToken,
@@ -15,7 +16,7 @@ import { HttpError } from "../../lib/http-error.js";
 import {
   signAccessToken,
   signDesktopAccessToken,
-  signRefreshToken,
+  signStableRefreshToken,
   verifyRefreshToken,
 } from "../../lib/jwt.js";
 import { sendMail } from "../../lib/mailer.js";
@@ -205,8 +206,20 @@ async function eskiOturumlariBudaOturum(userId: string) {
   }
 }
 
-async function createSession(user: User, isDesktop = false, bilgi: OturumBilgisi = {}) {
-  await eskiOturumlariBudaOturum(user.id);
+/**
+ * Yeni oturum açar. `rotateFrom` verilirse bu bir YENİLEMEdir: eski kayıt aynı işlemde
+ * "yerine geçildi" diye işaretlenir. İki istek aynı anda aynı eski anahtarla gelirse
+ * yalnız biri kazanır; kaybeden yazdığı kaydı geri alır ve `null` döner (çağıran,
+ * kazananın verdiği anahtarı tekrar vermelidir) → kayıtlar çoğalmaz.
+ */
+async function issueSession(
+  user: User,
+  isDesktop: boolean,
+  bilgi: OturumBilgisi,
+  rotateFrom?: { id: string },
+): Promise<AuthSessionResult | null> {
+  // Yenileme oturum SAYISINI değiştirmez; yalnız yeni giriş sınırı zorlar.
+  if (!rotateFrom) await eskiOturumlariBudaOturum(user.id);
 
   const payload = {
     sub: user.id,
@@ -220,16 +233,25 @@ async function createSession(user: User, isDesktop = false, bilgi: OturumBilgisi
   const accessToken = isDesktop
     ? signDesktopAccessToken(payload)
     : signAccessToken(payload);
-  const refreshToken = signRefreshToken(payload);
-  const refreshTokenHash = hashToken(refreshToken);
 
+  // Saniye hassasiyeti: anahtar bu değerlerden yeniden üretilebilsin (bkz. signStableRefreshToken).
+  const createdAt = new Date(Math.floor(Date.now() / 1000) * 1000);
   const expiresAt = new Date(
-    Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+    createdAt.getTime() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
   );
+  const sessionId = randomUUID();
+  const refreshToken = signStableRefreshToken({
+    userId: user.id,
+    sessionId,
+    createdAt,
+    expiresAt,
+  });
 
   await prisma.refreshToken.create({
     data: {
-      tokenHash: refreshTokenHash,
+      id: sessionId,
+      tokenHash: hashToken(refreshToken),
+      createdAt,
       expiresAt,
       userId: user.id,
       userAgent: bilgi.userAgent ? bilgi.userAgent.slice(0, 500) : null,
@@ -239,6 +261,33 @@ async function createSession(user: User, isDesktop = false, bilgi: OturumBilgisi
     },
   });
 
+  if (rotateFrom) {
+    const talep = await prisma.refreshToken.updateMany({
+      where: { id: rotateFrom.id, revokedAt: null },
+      data: { revokedAt: new Date(), replacedById: sessionId },
+    });
+    if (talep.count === 0) {
+      await prisma.refreshToken.deleteMany({ where: { id: sessionId } });
+      return null;
+    }
+  }
+
+  return sessionResult(user, accessToken, refreshToken);
+}
+
+async function createSession(
+  user: User,
+  isDesktop = false,
+  bilgi: OturumBilgisi = {},
+): Promise<AuthSessionResult> {
+  return (await issueSession(user, isDesktop, bilgi))!;
+}
+
+async function sessionResult(
+  user: User,
+  accessToken: string,
+  refreshToken: string,
+): Promise<AuthSessionResult> {
   const publicUser = toPublicUser(user);
 
   if (user.plan !== "FREE") {
@@ -730,63 +779,66 @@ export async function refreshSession(
     },
   });
 
-  /**
-   * ÇALINMIŞ OTURUM TESPİTİ: Her yenilemede oturum anahtarı değişir ve eskisi
-   * iptal edilir. İptal edilmiş bir anahtar YİNE kullanılıyorsa, o anahtarın
-   * bir kopyası başka birinin elinde demektir (kullanıcı ile saldırgan aynı
-   * zinciri kullanıyor). Bu durumda tek isteği reddetmek yetmez; güvenlik
-   * kılavuzlarının önerdiği davranış, o hesabın TÜM oturumlarını kapatıp
-   * yeniden giriş istemektir.
-   */
-  if (storedToken?.revokedAt) {
-    // Tolerans: aynı anda gelen iki yenileme (sekmeler, paralel istekler) ya da sayfa
-    // geçişinde yanıtı tarayıcıya ulaşmadan kesilen yenileme meşru bir yarıştır: çerezde
-    // hâlâ bir önceki anahtar kalır. Dönüşümden hemen sonra gelen eski anahtarı REDDETME
-    // (reddetmek kullanıcıyı atar) ve oturumları da kapatma; aşağıda yeni oturum verilir.
-    // Yalnız DÖNÜŞÜM yüzünden iptal edilmiş anahtar tolere edilir (ardılı vardır).
-    // Çıkış / uzaktan kapatma / cihaz sınırı iptallerinde ardıl yoktur: onlar kesin kapanır.
-    let ardillar: { id: string }[] = [];
-    if (
-      storedToken.deviceKey &&
-      Date.now() - storedToken.revokedAt.getTime() < REFRESH_REUSE_GRACE_MS &&
-      storedToken.expiresAt >= new Date()
-    ) {
-      ardillar = await prisma.refreshToken.findMany({
-        where: {
-          userId: storedToken.userId,
-          deviceKey: storedToken.deviceKey,
-          id: { not: storedToken.id },
-          createdAt: { gte: new Date(storedToken.revokedAt.getTime() - 5_000) },
-        },
-        select: { id: true },
-      });
-    }
-    if (ardillar.length > 0) {
-      // Kesilen yenilemeden artakalan, teslim edilmemiş kardeş oturumları kapat ki aynı
-      // tarayıcı "cihaz sınırı" yuvalarını doldurup diğer cihazları dışarı atmasın.
-      await prisma.refreshToken.updateMany({
-        where: { id: { in: ardillar.map((t) => t.id) }, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-    } else {
-    authLog.warn("refresh: iptal edilmiş oturum anahtarı yeniden kullanıldı", {
-      userId: storedToken.userId,
-    });
-    await prisma.refreshToken.updateMany({
-      where: { userId: storedToken.userId, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
-    throw new HttpError(401, "Session closed for security: refresh token was reused.");
-    }
-  }
-
-  if (!storedToken || storedToken.expiresAt < new Date()) {
+  if (!storedToken) {
     throw new HttpError(401, "Session refresh token has expired.");
   }
 
-  let user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-  });
+  /**
+   * ÇALINMIŞ OTURUM TESPİTİ: Her yenilemede oturum anahtarı değişir ve eskisi
+   * iptal edilir. İptal edilmiş bir anahtar YİNE kullanılıyorsa, o anahtarın
+   * bir kopyası başka birinin elinde olabilir. Bu durumda güvenlik kılavuzlarının
+   * önerdiği davranış, o hesabın TÜM oturumlarını kapatıp yeniden giriş istemektir.
+   *
+   * İSTİSNA (meşru yarış): iki sekme aynı anda yenilerse ya da sayfa geçişinde
+   * yanıt tarayıcıya ulaşmadan kesilirse çerezde bir önceki anahtar kalır. Eski
+   * anahtar DÖNÜŞÜM yüzünden ve kısa süre önce iptal edildiyse, yerine geçen oturumun
+   * anahtarı AYNEN tekrar verilir (yeni kayıt açılmaz). Çıkış / uzaktan kapatma /
+   * cihaz sınırı iptallerinde "yerine geçen" yoktur → onlar kesin kapanır.
+   */
+  if (storedToken.revokedAt) {
+    const ardil = await yerineGecenOturum(storedToken);
+    if (!ardil) {
+      authLog.warn("refresh: iptal edilmiş oturum anahtarı yeniden kullanıldı", {
+        userId: storedToken.userId,
+      });
+      await prisma.refreshToken.updateMany({
+        where: { userId: storedToken.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      throw new HttpError(401, "Session closed for security: refresh token was reused.");
+    }
+    return tekrarVer(ardil);
+  }
+
+  if (storedToken.expiresAt < new Date()) {
+    throw new HttpError(401, "Session refresh token has expired.");
+  }
+
+  const user = await kullaniciyiDogrula(payload.sub);
+
+  // Yenileme, oturumun DEVAMIDIR: cihaz kimliği ve masaüstü bilgisi korunur ki
+  // kullanıcının oturum listesinde aynı cihaz yeni bir satır gibi görünmesin.
+  const yeni = await issueSession(
+    user,
+    storedToken.isDesktop,
+    {
+      userAgent: bilgi.userAgent ?? storedToken.userAgent,
+      ip: bilgi.ip,
+      isDesktop: storedToken.isDesktop,
+    },
+    storedToken,
+  );
+  if (yeni) return yeni;
+
+  // Aynı anahtarla gelen başka bir istek bizden önce yenilemeyi tamamladı.
+  const guncel = await prisma.refreshToken.findUnique({ where: { id: storedToken.id } });
+  const ardil = guncel ? await yerineGecenOturum(guncel) : null;
+  if (!ardil) throw new HttpError(401, "Session refresh token has expired.");
+  return tekrarVer(ardil);
+}
+
+async function kullaniciyiDogrula(userId: string) {
+  let user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     throw new HttpError(404, "User account could not be found.");
@@ -800,16 +852,59 @@ export async function refreshSession(
   }
 
   user = await syncUserRoleFromEmail(user);
+  return user;
+}
 
-  await revokeRefreshToken(refreshToken);
+type OturumKaydi = {
+  id: string;
+  userId: string;
+  createdAt: Date;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  replacedById: string | null;
+  isDesktop: boolean;
+};
 
-  // Yenileme, oturumun DEVAMIDIR: cihaz kimliği ve masaüstü bilgisi korunur ki
-  // kullanıcının oturum listesinde aynı cihaz yeni bir satır gibi görünmesin.
-  return createSession(user, storedToken.isDesktop, {
-    userAgent: bilgi.userAgent ?? storedToken.userAgent,
-    ip: bilgi.ip,
-    isDesktop: storedToken.isDesktop,
+/**
+ * İptal edilmiş kaydın, tolerans süresi içinde DÖNÜŞÜMLE yerine geçen güncel
+ * (iptal edilmemiş, süresi dolmamış) oturumunu bulur. Yoksa `null`.
+ */
+async function yerineGecenOturum(kayit: OturumKaydi): Promise<OturumKaydi | null> {
+  let mevcut = kayit;
+  for (let adim = 0; adim < 5; adim++) {
+    if (!mevcut.revokedAt) {
+      return mevcut.expiresAt >= new Date() ? mevcut : null;
+    }
+    if (!mevcut.replacedById) return null;
+    if (Date.now() - mevcut.revokedAt.getTime() >= REFRESH_REUSE_GRACE_MS) return null;
+    const sonraki = await prisma.refreshToken.findUnique({ where: { id: mevcut.replacedById } });
+    if (!sonraki) return null;
+    mevcut = sonraki;
+  }
+  return null;
+}
+
+/** Yerine geçen oturumun anahtarını (saklanmadan, kayıttan türeterek) yeniden verir. */
+async function tekrarVer(ardil: OturumKaydi): Promise<AuthSessionResult> {
+  const user = await kullaniciyiDogrula(ardil.userId);
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    plan: user.plan,
+    role: user.role,
+    orgRole: user.orgRole,
+    ...(user.organizationId ? { organizationId: user.organizationId } : {}),
+  };
+  const accessToken = ardil.isDesktop
+    ? signDesktopAccessToken(payload)
+    : signAccessToken(payload);
+  const refreshToken = signStableRefreshToken({
+    userId: ardil.userId,
+    sessionId: ardil.id,
+    createdAt: ardil.createdAt,
+    expiresAt: ardil.expiresAt,
   });
+  return sessionResult(user, accessToken, refreshToken);
 }
 
 export async function logoutUser(refreshToken: string | undefined) {

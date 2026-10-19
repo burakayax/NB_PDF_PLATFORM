@@ -415,6 +415,11 @@ model RefreshToken {
   // sayısıdır; bu alan o sayımı mümkün kılar.
   deviceKey  String?   @map("device_key")
   isDesktop  Boolean   @default(false) @map("is_desktop")
+  // Yenilemede bu oturumun YERİNE geçen oturumun kimliği. Sayfa geçişinde yanıtı
+  // kesilen yenilemeden sonra çerezde kalan eski anahtar gelirse, yeni oturum
+  // açmak yerine bu bağ izlenip aynı yeni anahtar tekrar verilir. Çıkış / uzaktan
+  // kapatma / cihaz sınırı iptallerinde BOŞ kalır → onlar kesin kapanır.
+  replacedById String?  @map("replaced_by_id")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
