@@ -1,4 +1,5 @@
 import type { Language } from "../i18n/landing";
+import { setCaptchaNeeded, takeCaptchaToken } from "../lib/loginCaptcha";
 import { buildSaasApiUrl, saasFetch } from "./saasHttp";
 import { getCountryCode } from "../lib/geoCountry";
 
@@ -105,7 +106,11 @@ async function ensureOk(response: Response, defaultMessage: string) {
     if (import.meta.env.DEV) {
       console.warn("[auth] request failed", response.status, message);
     }
-    throw new Error(message);
+    const err = new Error(message) as Error & { code?: string };
+    if (payload && typeof payload === "object" && typeof (payload as { code?: unknown }).code === "string") {
+      err.code = (payload as { code: string }).code;
+    }
+    throw err;
   }
 
   const message = await response.text();
@@ -196,15 +201,26 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
 }
 
 export async function loginAuthUser(email: string, password: string, isAdmin = false) {
-  const payload = { email: email.trim().toLowerCase(), password };
+  const payload: Record<string, string> = { email: email.trim().toLowerCase(), password };
+  // Bot doğrulaması istendiyse (Turnstile) tek kullanımlık jeton isteğe eklenir.
+  const captcha = takeCaptchaToken();
+  if (captcha) payload.turnstileToken = captcha;
   const endpoint = isAdmin ? "/nbadmin" : "/login";
   if (import.meta.env.DEV) {
     console.info(`[auth] POST /api/auth${endpoint}`, { email: payload.email });
   }
-  const response = await sendAuthRequest<AuthResponse>(endpoint, payload);
+  let response: AuthResponse | null;
+  try {
+    response = await sendAuthRequest<AuthResponse>(endpoint, payload);
+  } catch (error) {
+    // Sunucu bot doğrulaması isterse kutuyu göster; aksi halde (başarısız giriş) taze jeton gerekir.
+    if ((error as { code?: string }).code === "captcha_required") setCaptchaNeeded(true);
+    throw error;
+  }
   if (!response) {
     throw new Error("Login response was empty.");
   }
+  setCaptchaNeeded(false);
   return response;
 }
 

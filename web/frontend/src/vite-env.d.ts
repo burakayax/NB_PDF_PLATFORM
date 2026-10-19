@@ -16,6 +16,8 @@ interface ImportMetaEnv {
   readonly VITE_PDF_PROXY_TARGET?: string;
   readonly VITE_SAAS_PROXY_TARGET?: string;
   readonly VITE_DISABLE_OBFUSCATION?: string;
+  /** Cloudflare Turnstile site anahtarı (herkese açık). Boşsa giriş ekranında bot doğrulaması gösterilmez. */
+  readonly VITE_TURNSTILE_SITE_KEY?: string;
   /** Google Analytics 4 Measurement ID (örn. G-XXXXXXXXXX). Placeholder ile GA yüklenmez. */
   readonly VITE_GA_MEASUREMENT_ID?: string;
   /** When true at build-time, maintenance UI is forced on for this SPA bundle only (local .env); combined with API `MAINTENANCE_MODE`. */
