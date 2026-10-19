@@ -40,6 +40,7 @@ import { submitContactForm } from "./api/contact";
 import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
+import { SESSION_CLOSED_NOTICE_KEY } from "./api/auth";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
 import { ToolResultPanel } from "./components/common/ToolResultPanel";
 import { ToolScore } from "./components/common/ToolScore";
@@ -1383,6 +1384,25 @@ function App() {
 
   const showToastRef = useRef(showToast);
   showToastRef.current = showToast;
+
+  // Oturum, çalıntı şüphesiyle sunucuda kapatıldıysa kullanıcıya nedenini söyle.
+  useEffect(() => {
+    if (isRestoring || isAuthenticated) return;
+    try {
+      if (window.sessionStorage.getItem(SESSION_CLOSED_NOTICE_KEY) !== "security") return;
+      window.sessionStorage.removeItem(SESSION_CLOSED_NOTICE_KEY);
+    } catch {
+      return;
+    }
+    const tr = language === "tr";
+    showToastRef.current(
+      "info",
+      tr ? "Oturumunuz güvenlik nedeniyle kapandı" : "Your session was closed for security",
+      tr
+        ? "Hesabınızın oturum anahtarı beklenmedik şekilde tekrar kullanıldı. Lütfen yeniden giriş yapın."
+        : "Your session key was unexpectedly reused. Please sign in again.",
+    );
+  }, [isRestoring, isAuthenticated, language]);
 
   const navigateToDashboardAfterOAuth = useCallback(
     async (loggedInUser: AuthUser) => {

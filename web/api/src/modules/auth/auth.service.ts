@@ -739,11 +739,36 @@ export async function refreshSession(
    * yeniden giriş istemektir.
    */
   if (storedToken?.revokedAt) {
-    // Tolerans: aynı anda gelen iki yenileme (sekmeler, paralel istekler) meşru bir
-    // yarıştır; dönüşümden hemen sonra gelen eski anahtarı yalnız reddet, oturumları kapatma.
-    if (Date.now() - storedToken.revokedAt.getTime() < REFRESH_REUSE_GRACE_MS) {
-      throw new HttpError(401, "Session refresh token has expired.");
+    // Tolerans: aynı anda gelen iki yenileme (sekmeler, paralel istekler) ya da sayfa
+    // geçişinde yanıtı tarayıcıya ulaşmadan kesilen yenileme meşru bir yarıştır: çerezde
+    // hâlâ bir önceki anahtar kalır. Dönüşümden hemen sonra gelen eski anahtarı REDDETME
+    // (reddetmek kullanıcıyı atar) ve oturumları da kapatma; aşağıda yeni oturum verilir.
+    // Yalnız DÖNÜŞÜM yüzünden iptal edilmiş anahtar tolere edilir (ardılı vardır).
+    // Çıkış / uzaktan kapatma / cihaz sınırı iptallerinde ardıl yoktur: onlar kesin kapanır.
+    let ardillar: { id: string }[] = [];
+    if (
+      storedToken.deviceKey &&
+      Date.now() - storedToken.revokedAt.getTime() < REFRESH_REUSE_GRACE_MS &&
+      storedToken.expiresAt >= new Date()
+    ) {
+      ardillar = await prisma.refreshToken.findMany({
+        where: {
+          userId: storedToken.userId,
+          deviceKey: storedToken.deviceKey,
+          id: { not: storedToken.id },
+          createdAt: { gte: new Date(storedToken.revokedAt.getTime() - 5_000) },
+        },
+        select: { id: true },
+      });
     }
+    if (ardillar.length > 0) {
+      // Kesilen yenilemeden artakalan, teslim edilmemiş kardeş oturumları kapat ki aynı
+      // tarayıcı "cihaz sınırı" yuvalarını doldurup diğer cihazları dışarı atmasın.
+      await prisma.refreshToken.updateMany({
+        where: { id: { in: ardillar.map((t) => t.id) }, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    } else {
     authLog.warn("refresh: iptal edilmiş oturum anahtarı yeniden kullanıldı", {
       userId: storedToken.userId,
     });
@@ -751,7 +776,8 @@ export async function refreshSession(
       where: { userId: storedToken.userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
-    throw new HttpError(401, "Session refresh token has expired.");
+    throw new HttpError(401, "Session closed for security: refresh token was reused.");
+    }
   }
 
   if (!storedToken || storedToken.expiresAt < new Date()) {
