@@ -108,7 +108,7 @@ export function ApiKeysPanel({
           className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-400 disabled:opacity-60" />
         <button type="button" onClick={() => void create()} disabled={hasApiAccess && (creating || !name.trim())}
           className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
-          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : hasApiAccess ? <Plus className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}{tr ? "Anahtar oluştur" : "Create key"}
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : hasApiAccess ? <Plus className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}{hasApiAccess ? (tr ? "Anahtar oluştur" : "Create key") : (tr ? "Pro ile aç" : "Unlock with Pro")}
         </button>
       </div>
       {error && <p className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">{error}</p>}

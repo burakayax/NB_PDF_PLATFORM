@@ -1,3 +1,4 @@
+import { ACCOUNT_PANEL_PATHS, ACCOUNT_PANEL_TITLES, accountPanelFromPath } from "../lib/accountPaths";
 import type { Language } from "../i18n/landing";
 import { getPublicSiteOrigin } from "../lib/siteOrigin";
 import { toolSlugForFeature } from "../lib/toolRoutes";
@@ -125,6 +126,21 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       index: true,
       follow: true,
       ogImage: "/og-image.png",
+      ogLocale: locale,
+      ogLocaleAlternate: localeAlt,
+    };
+  }
+
+  // Hesap ekranları (profil, taramalar, API, abonelik): başlık ekranın adını taşır, dizine alınmaz.
+  const hesapEkrani = accountPanelFromPath(pathname);
+  if (hesapEkrani) {
+    const ad = ACCOUNT_PANEL_TITLES[hesapEkrani][context.language === "tr" ? "tr" : "en"];
+    return {
+      title: `${ad} | ${BRAND}`,
+      description: context.language === "tr" ? "Hesabınıza ait ekran." : "Your account screen.",
+      canonicalPath: ACCOUNT_PANEL_PATHS[hesapEkrani],
+      index: false,
+      follow: false,
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };

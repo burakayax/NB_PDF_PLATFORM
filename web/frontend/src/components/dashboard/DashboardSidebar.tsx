@@ -1,3 +1,4 @@
+import { ACCOUNT_PANEL_TITLES } from "../../lib/accountPaths";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
@@ -957,7 +958,9 @@ export function DashboardSidebarMobileLauncher({
   // FeatureKey OLMAYAN aktif panelleri de başlıkta göster (activeSidebar bunlarda
   // güncellenmiyor). Öncelik: aktif özel/AI panel → normal araç → "Menü".
   const panelLabel =
-    contentPanel === "editor"
+    contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription"
+      ? ACCOUNT_PANEL_TITLES[contentPanel][tr ? "tr" : "en"]
+      : contentPanel === "editor"
       ? tr ? "PDF Düzenle" : "Edit PDF"
       : contentPanel === "sign"
         ? tr ? "PDF İmzala" : "Sign PDF"
@@ -1088,7 +1091,7 @@ export function DashboardSidebarMobileLauncher({
   };
 
   return (
-    <div data-tour="tools-mobile" className="sticky top-14 z-30 border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden">
+    <div data-tour="tools-mobile" className={`sticky top-14 ${open ? "z-[55]" : "z-30"} border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden`}>
       {/* Tetikleyici: hamburger + aktif araç adı */}
       <button
         type="button"

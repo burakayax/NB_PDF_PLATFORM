@@ -138,7 +138,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
             onMouseEnter={() => setHover(n)}
             onMouseLeave={() => setHover(0)}
             onClick={() => pick(n)}
-            className="rounded p-1 transition disabled:opacity-50"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-1 transition disabled:opacity-50"
           >
             <Star
               className={`h-6 w-6 transition ${

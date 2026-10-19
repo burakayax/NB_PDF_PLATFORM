@@ -1,3 +1,4 @@
+import { touchifyDropText } from "../../lib/touchCopy";
 import { useEffect, useRef, useState } from "react";
 import {
   Check,
@@ -304,7 +305,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
             <input ref={inputRef} type="file" accept="application/pdf" multiple className="hidden"
               onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }} />
             <div className="nb-dropzone__icon mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/30 to-indigo-600/30 text-fuchsia-100"><UploadCloud className="h-7 w-7" strokeWidth={2.25} /></div>
-            <p className="nb-dropzone__title mt-3 text-base">{tr ? "PDF'leri buraya sürükle" : "Drag your PDFs here"}</p>
+            <p className="nb-dropzone__title mt-3 text-base">{touchifyDropText(tr ? "PDF'leri buraya sürükle" : "Drag your PDFs here")}</p>
             <p className="nb-dropzone__hint mt-1 text-[13px]">{tr ? `ya da tıklayıp seç · en fazla ${MAX_FILES} dosya` : `or click to choose · up to ${MAX_FILES} files`}</p>
           </div>
 

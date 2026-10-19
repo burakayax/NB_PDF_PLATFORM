@@ -395,7 +395,7 @@ function Navbar({
 
         {/* Nav links */}
         <nav
-          className="hidden md:flex items-center gap-1"
+          className="hidden lg:flex items-center gap-1"
           aria-label="Ana navigasyon"
         >
           {navLinks.map(([href, label]) => (
@@ -418,7 +418,7 @@ function Navbar({
             aria-label={menuOpen ? (tr ? "Menüyü kapat" : "Close menu") : (tr ? "Menüyü aç" : "Open menu")}
             aria-expanded={menuOpen}
             aria-controls="mobil-menu"
-            className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-200 hover:bg-white/10 transition-colors"
+            className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-200 hover:bg-white/10 transition-colors"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               {menuOpen ? (
@@ -429,7 +429,7 @@ function Navbar({
             </svg>
           </button>
           {/* Language */}
-          <div className="relative hidden md:block" ref={langRef}>
+          <div className="relative hidden lg:block" ref={langRef}>
             <button
               onClick={() => setLangOpen((o) => !o)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 bg-white/5 text-xs font-semibold text-gray-300 hover:bg-white/10 transition-all"
@@ -489,19 +489,19 @@ function Navbar({
               {/* Mobil/tablet: tek birleşik Giriş/Kayıt butonu (giriş ekranında
                   kayıt seçeneği de var). sm+ : ayrı Giriş + Kayıt. */}
               <button
-                onClick={onLogin}
+                data-auth-cta onClick={onLogin}
                 className="sm:hidden h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_24px_rgba(59,130,246,0.4)] transition-all"
               >
                 {tr ? "Giriş / Kayıt" : "Sign in / up"}
               </button>
               <button
-                onClick={onLogin}
+                data-auth-cta onClick={onLogin}
                 className="h-9 px-4 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all hidden sm:flex items-center"
               >
                 {copy.navbar.login}
               </button>
               <button
-                onClick={onRegister}
+                data-auth-cta onClick={onRegister}
                 className="hidden sm:inline-flex h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_24px_rgba(59,130,246,0.4)] hover:shadow-[0_0_32px_rgba(99,102,241,0.6)] transition-all items-center"
               >
                 {copy.navbar.register}
@@ -515,7 +515,7 @@ function Navbar({
         <div
           id="mobil-menu"
           ref={menuRef}
-          className="md:hidden border-t border-white/[0.07] bg-[#0a0f1e]/95 backdrop-blur-xl px-5 pb-5 pt-3"
+          className="lg:hidden border-t border-white/[0.07] bg-[#0a0f1e]/95 backdrop-blur-xl px-5 pb-5 pt-3"
         >
           <nav aria-label={tr ? "Mobil menü" : "Mobile menu"} className="flex flex-col">
             {navLinks.map(([href, label]) => (

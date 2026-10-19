@@ -568,14 +568,14 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initi
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onLogin}
+              data-auth-cta onClick={onLogin}
               className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white"
             >
               {tr ? "Giriş yap" : "Log in"}
             </button>
             <button
               type="button"
-              onClick={onRegister}
+              data-auth-cta onClick={onRegister}
               className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15"
             >
               {tr ? "Üye Ol" : "Sign up"}

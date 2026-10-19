@@ -126,6 +126,20 @@ router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS"])
 engine = get_engine()
 
 
+async def _safe_preview(coro):
+    """Önizleme üretimi bozuk/okunamayan dosyada 500 yerine anlamlı bir 422 döndürsün."""
+    try:
+        return await coro
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 — önizleme hatası kullanıcıya sade mesajla dönmeli
+        logger.warning("preview generation failed: %s", exc)
+        raise HTTPException(
+            status_code=422,
+            detail="Dosya okunamadı veya önizlenemiyor. Dosyanın bozuk olmadığından emin olun.",
+        ) from exc
+
+
 async def _require_tool_unlocked(token: str, tool: str) -> None:
     """Sonuç/önizleme yolları: araç kullanıcının planında kilitliyse 403 (PlanLockedError).
 
@@ -354,7 +368,7 @@ async def preview_merge_job_hero(
     """Birleştirilmiş çıktının ilk sayfası — ücretsiz filigranlı PNG (indirme kotası düşmez)."""
     await _require_tool_unlocked(token, "merge")
     output_path, _output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
-    png = await generate_hero_watermarked_preview_png_queued_from_path(output_path)
+    png = await _safe_preview(generate_hero_watermarked_preview_png_queued_from_path(output_path))
     if not png:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     return Response(content=png, media_type="image/png")
@@ -371,7 +385,7 @@ async def preview_merge_job_pdf(
     dosya, indirme kapısını atlamak için kullanılabiliyordu."""
     await _require_tool_unlocked(token, "merge")
     output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
-    preview = await generate_watermarked_preview_pdf_queued_from_path(output_path)
+    preview = await _safe_preview(generate_watermarked_preview_pdf_queued_from_path(output_path))
     if not preview:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp_headers = {"Content-Disposition": content_disposition(output_name, disposition="inline")}
@@ -1552,7 +1566,7 @@ async def preview_result_hero(
     read = get_result(result_id, user_id)
     await _require_tool_unlocked(token, str(read_meta_only(result_id).get("tool") or "compress"))
     async with _preview_source(result_id, read) as src:
-        png = await generate_hero_watermarked_preview_png_queued_from_path(src)
+        png = await _safe_preview(generate_hero_watermarked_preview_png_queued_from_path(src))
     if not png:
         raise HTTPException(status_code=404, detail="Preview could not be generated.")
     return Response(content=png, media_type="image/png")
@@ -1578,7 +1592,7 @@ async def preview_result_pdf(
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
     async with _preview_source(result_id, read) as src:
-        preview = await generate_watermarked_preview_pdf_queued_from_path(src)
+        preview = await _safe_preview(generate_watermarked_preview_pdf_queued_from_path(src))
     if not preview:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp = {"Content-Disposition": content_disposition(read.filename, disposition="inline")}

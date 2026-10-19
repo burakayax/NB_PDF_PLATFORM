@@ -103,11 +103,11 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <button type="button" onClick={onLogin}
+              <button type="button" data-auth-cta onClick={onLogin}
                 className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">
                 {tr ? "Giriş yap" : "Log in"}
               </button>
-              <button type="button" onClick={onRegister}
+              <button type="button" data-auth-cta onClick={onRegister}
                 className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">
                 {tr ? "Üye Ol" : "Sign up"}
               </button>
@@ -258,7 +258,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
               </p>
               <button
                 type="button"
-                onClick={onRegister}
+                data-auth-cta onClick={onRegister}
                 className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(6,182,212,0.7)] ring-1 ring-white/10 transition hover:brightness-110"
               >
                 {tr ? "Ücretsiz hesap aç" : "Create a free account"}

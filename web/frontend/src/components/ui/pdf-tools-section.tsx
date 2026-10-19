@@ -10,6 +10,7 @@ import {
 } from "../../lib/toolCatalog";
 import type { Language } from "../../i18n/landing";
 import { localizedPath } from "../../seo/enSlugs.mjs";
+import { AI_SOON_TOOL_IDS, useAiNotOpen } from "../../lib/aiAvailability";
 import { accountToneCount, toolAccessBadge, type AccessTone } from "../../lib/toolAccess";
 import type { FeatureKey } from "../../api/subscription";
 
@@ -142,6 +143,9 @@ export default function PdfToolsSection({
   onRegister,
 }: PdfToolsSectionProps) {
   const tr = language === "tr";
+  const aiNotOpen = useAiNotOpen();
+  /** Kullanılabilir araç sayısı: "Çok yakında" yapay zekâ araçları sayılmaz. */
+  const usableCount = aiNotOpen ? TOOLS.filter((t) => !AI_SOON_TOOL_IDS.has(t.id)).length : TOOLS.length;
   /** Ücretsiz üyelikle açılan araç sayısı — listeden hesaplanır. */
   const hesapAracSayisi = useMemo(() => accountToneCount(TOOLS), []);
   const [filter, setFilter] = useState<CategoryId | "all">("all");
@@ -191,7 +195,7 @@ export default function PdfToolsSection({
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[12px] font-semibold tracking-wide text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-            {tr ? `${TOOLS.length} PDF ARACI` : `${TOOLS.length} PDF TOOLS`}
+            {tr ? `${usableCount} PDF ARACI` : `${usableCount} PDF TOOLS`}
           </span>
           <h2
             className="mt-5 text-4xl font-extrabold tracking-tight text-white md:text-5xl"
@@ -228,7 +232,7 @@ export default function PdfToolsSection({
                   ? tr ? "Tümü" : "All"
                   : tr ? CATEGORY_META[c].tr : CATEGORY_META[c].en;
               const count =
-                c === "all" ? TOOLS.length : TOOLS.filter((t) => t.cat === c).length;
+                c === "all" ? usableCount : TOOLS.filter((t) => t.cat === c).length;
               return (
                 <button
                   key={c}
@@ -333,7 +337,7 @@ export default function PdfToolsSection({
                               {copy.name}
                             </span>
                             {(() => {
-                              const rozet = toolAccessBadge(t, tr);
+                              const rozet = toolAccessBadge(t, tr, aiNotOpen);
                               const renk = ROZET_RENK[rozet.tone];
                               return (
                                 <span

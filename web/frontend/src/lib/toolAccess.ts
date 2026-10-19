@@ -13,6 +13,7 @@
  * NOT: Canlı yönetim panelindeki "Paket & fiyat" ayarı sunucudaki varsayılanları ezebilir; buradaki
  * rozetler KOD varsayılanlarını yansıtır.
  */
+import { AI_SOON_TOOL_IDS } from "./aiAvailability";
 import { FREE_PLAN_TOOL_IDS, STARTER_TOOL_IDS } from "./planConfig";
 
 /** Rozetin rengini belirler: guest=yeşil, account=mavi, starter=sarı, plus=mor, ai=fuşya. */
@@ -45,6 +46,11 @@ const BASE_LABEL: Record<AccessTone, Bi> = {
 };
 
 const AI_GIFT: Bi = { tr: "3 hediye işlem", en: "3 free tries" };
+
+const AI_SOON_DETAIL: Bi = {
+  tr: "Bu yapay zekâ aracı çok yakında açılıyor. Açıldığında ücretsiz üyeye kayıtta 3 hediye işlem verilecek.",
+  en: "This AI tool opens very soon. Free members will get 3 free tries at sign-up once it does.",
+};
 
 const AI_DETAIL: Bi = {
   tr: "Başlangıç ve üzeri planlar ya da satın alınmış kredi gerekir. Ücretsiz üyeye kayıtta bir kez 3 hediye işlem verilir.",
@@ -128,8 +134,12 @@ function isPlainAiTool(id: string, ai: boolean | undefined): boolean {
 type ToolFlags = { id: string; free?: boolean; account?: boolean; ai?: boolean };
 
 /** Bir aracın erişim rozetini (etiket + renk + açıklama) üretir. */
-export function toolAccessBadge(t: ToolFlags, tr: boolean): AccessBadge {
+export function toolAccessBadge(t: ToolFlags, tr: boolean, aiNotOpen = false): AccessBadge {
   const pick = (b: Bi) => (tr ? b.tr : b.en);
+  // Yapay zekâ araçları halka açık değilken sayfaları "Çok yakında"dır; rozet de aynısını söylemeli.
+  if (aiNotOpen && (AI_SOON_TOOL_IDS.has(t.id) || isPlainAiTool(t.id, t.ai))) {
+    return { tone: "ai", label: tr ? "Çok yakında" : "Coming soon", detail: pick(AI_SOON_DETAIL) };
+  }
   const sp = SPECIAL[t.id];
   if (sp) {
     const base = pick(BASE_LABEL[sp.tone]);

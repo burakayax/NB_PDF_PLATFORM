@@ -478,6 +478,12 @@ export function DashboardTopNav({
           onPassword={onPassword}
           onApi={onApi}
           onLogout={onLogout}
+          creditsLabel={
+            showCreditsCenter && showAiBalance && aiQuota && !aiQuota.unlimited
+              ? `${tr ? "Kredi" : "Credits"}: ${aiCreditBalance(aiQuota)}`
+              : undefined
+          }
+          onTopUp={() => setTopUpOpen(true)}
         />
       </div>
 

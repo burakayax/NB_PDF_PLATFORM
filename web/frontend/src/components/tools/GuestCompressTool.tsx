@@ -1,3 +1,4 @@
+import { touchifyDropText } from "../../lib/touchCopy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Lock, ShieldCheck, Sparkles, Trash2, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -415,7 +416,7 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
           accept="application/pdf,.pdf"
           disabled={phase === "running"}
           appendMode={!!file}
-          label={t.dropLabel}
+          label={touchifyDropText(t.dropLabel)}
           note={t.dropNote(maxMB)}
           hideHeader={describesTool}
           onFiles={pick}

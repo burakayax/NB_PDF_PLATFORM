@@ -34,3 +34,43 @@ describe("hız sınırı kimliği", () => {
     expect(rateLimitIdentity(istek("2.2.2.2", "Bearer bozuk.anahtar"))).toEqual({ id: "2.2.2.2", authed: false });
   });
 });
+
+import { IP_CEILING_PER_MINUTE, authedIpCeilingLimiter } from "../middleware/api-security.middleware.js";
+
+describe("IP tavanı (giriş yapmış trafik için güvenlik ağı)", () => {
+  const sahte = (ip: string, auth?: string) => {
+    const req = { ip, method: "GET", baseUrl: "/api", path: "/x", originalUrl: "/api/x", headers: auth ? { authorization: auth } : {}, socket: {}, app: { get: () => undefined } } as unknown as Request;
+    let status = 0;
+    const res = {
+      statusCode: 200,
+      setHeader() {},
+      getHeader() { return undefined; },
+      status(c: number) { status = c; return this; },
+      json() { return this; },
+      set() { return this; },
+    } as never;
+    return { req, res, getStatus: () => status };
+  };
+
+  it("misafir bu tavana takılmaz (zaten IP ile sayılıyor)", async () => {
+    for (let i = 0; i < IP_CEILING_PER_MINUTE + 50; i++) {
+      const { req, res, getStatus } = sahte("7.7.7.7");
+      await new Promise<void>((ok) => authedIpCeilingLimiter(req, res, () => ok()));
+      expect(getStatus()).toBe(0);
+    }
+  });
+
+  it("aynı IP'den giriş yapmış çok hesap tavanı aşınca 429 alır", async () => {
+    let engellenen = 0;
+    for (let i = 0; i < IP_CEILING_PER_MINUTE + 20; i++) {
+      const tok = signAccessToken({ sub: `U${i}`, email: `u${i}@x.com`, plan: "FREE", role: "USER", orgRole: "OWNER", organizationId: null } as never);
+      const { req, res, getStatus } = sahte("8.8.8.8", `Bearer ${tok}`);
+      await new Promise<void>((ok) => {
+        authedIpCeilingLimiter(req, res, () => ok());
+        setTimeout(ok, 5);
+      });
+      if (getStatus() === 429) engellenen++;
+    }
+    expect(engellenen).toBeGreaterThan(0);
+  });
+});
