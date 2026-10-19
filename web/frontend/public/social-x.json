@@ -1,0 +1,3950 @@
+{
+  "posts": {
+    "https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma": {
+      "slug": "faturadan-excele-veri-aktarma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Faturadan Excel'e Veri Aktarma",
+      "tips": [
+        {
+          "title": "Neden zor?",
+          "text": "PDF görüntüleme için tasarlandı. Fatura no, tarih, tutar ve kalemler sayfada görünür ama arkada düzenli bir tablo olarak durmaz"
+        },
+        {
+          "title": "1. Elle giriş",
+          "text": "Ayda birkaç fatura için olur. Onlarca faturada yavaş, yorucu ve hataya açık"
+        },
+        {
+          "title": "2. OCR ile metin",
+          "text": "Taranmış faturada önce OCR yazıyı metne çevirir. Ama hangi sayının hangi alan olduğunu yine siz kurarsınız"
+        },
+        {
+          "title": "3. Yapay zekâ ile çıkarma",
+          "text": "Fatura no, tarih, satıcı ve alıcı, vergi no, ara toplam, KDV, genel toplam ve varsa satır kalemleri yapılandırılmış çıkar. CSV ya da JSON indirin"
+        },
+        {
+          "title": "Onlarca fatura",
+          "text": "Bir seferde en fazla 25 dosya işlenir, her biri için canlı ilerleme görürsünüz. Hepsi tek CSV'de birleşir; her satır bir fatura"
+        },
+        {
+          "title": "Gizlilik",
+          "text": "PDF'inizin metni cihazınızda çıkarılır; yapay zekâya yalnızca metin gider, dosyanın kendisi yüklenmez"
+        }
+      ],
+      "card": "/x-cards/tip/faturadan-excele-veri-aktarma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/faturadan-excele-veri-aktarma-1.png",
+        "/x-cards/fact/faturadan-excele-veri-aktarma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz": {
+      "slug": "iki-pdf-birlestirme-ucretsiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "İki veya Daha Fazla PDF'i Ücretsiz Birleştirme (Kurulumsuz)",
+      "tips": [
+        {
+          "title": "Dosyanız yüklenmez",
+          "text": "Birleştirme tamamen tarayıcınızda çalışır. İnternet kesilse bile işler"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'leri bırakın, yukarı ve aşağı okla sırayı ayarlayın, «Birleştir» deyin"
+        },
+        {
+          "title": "Sıra sorunu",
+          "text": "Bilgisayar dosya adlarını karakterle sıralar: «ek-10», «ek-2»'den önce gelir. Ekleri 01, 02, 10 diye numaralandırın"
+        },
+        {
+          "title": "Önce kapak, sonra ekler",
+          "text": "Kapak ya da dilekçe en başa, ekler sözleşmede geçtiği sırayla arkaya. Eklemeden önce her dosyanın ilk sayfasına bakın"
+        },
+        {
+          "title": "Birleştirdikten sonra",
+          "text": "Sayfa numarası ekleyin, boyut büyükse sıkıştırın, gereksiz boş sayfaları silin, hassas bilgi varsa göndermeden önce kalıcı kaldırın"
+        },
+        {
+          "title": "Şifreli PDF mi var?",
+          "text": "Önce şifresini kaldırmanız gerekir"
+        }
+      ],
+      "card": "/x-cards/tip/iki-pdf-birlestirme-ucretsiz.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/iki-pdf-birlestirme-ucretsiz-2.png",
+        "/x-cards/fact/iki-pdf-birlestirme-ucretsiz-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme": {
+      "slug": "pdf-baska-dile-cevirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan)",
+      "tips": [
+        {
+          "title": "Kopyala-yapıştır neden yetmez?",
+          "text": "Başlıklar, listeler ve tablolar kaybolur; uzun belgede iş içinden çıkılmaz. Sayı, tarih ve özel isimlerin olduğu gibi kalması gerekir"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i yükleyin, hedef dili seçin (12'den fazla dil), çevirin. Başlık, liste ve tablo korunur; çeviriyi kopyalayabilir ya da PDF indirebilirsiniz"
+        },
+        {
+          "title": "Neler çevrilmemeli?",
+          "text": "Kişi, kurum ve marka adları, adresler, ürün kodları ve seri numaraları, yasal metin adları ve madde numaraları, para birimi ve teknik birimler"
+        },
+        {
+          "title": "Teknik ve hukuki metin",
+          "text": "«Tazminat», «garanti», «sorumluluk» gibi kavramların karşılığı hukuk sistemine göre değişir. Aynı teknik kelime sektöre göre farklı anlaşılır"
+        },
+        {
+          "title": "Anlamak ile geçerlilik",
+          "text": "Yapay zekâ çevirisi hız ve anlama içindir. Noter, mahkeme ve resmî başvuruda yeminli tercüman şart"
+        },
+        {
+          "title": "İkisini yan yana tutun",
+          "text": "Asıl metin ile çeviriyi bir arada saklayın. Bir maddeyi tartışırken karşı tarafın gördüğüyle sizin okuduğunuz aynı olsun"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-baska-dile-cevirme.png",
+      "factTips": [
+        1,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-baska-dile-cevirme-1.png",
+        "/x-cards/fact/pdf-baska-dile-cevirme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-word-donusturme": {
+      "slug": "pdf-word-donusturme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'i Word'e Dönüştürme",
+      "tips": [
+        {
+          "title": "Neden doğrudan düzenlenmez?",
+          "text": "PDF'te metin sabit konumlara yerleşir; bir kelimeyi değiştirince düzen bozulur. Word'de paragraflar ve tablolar yeniden akışkan olur"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i yükleyin, dönüştürün, .docx dosyasını indirip Word ya da Google Docs'ta düzenleyin"
+        },
+        {
+          "title": "Hangi belgeler temiz döner?",
+          "text": "Tek sütunlu, metin ağırlıklı raporlar, dilekçeler ve sözleşmeler çok iyi. Çok sütunlu dergi düzenleri, iç içe tablolar ve metin kutusu bolluğu zorlanır"
+        },
+        {
+          "title": "Taranmış belge",
+          "text": "Önce OCR ile aranabilir hâle getirin, sonra Word'e çevirin. Aksi hâlde Word dosyasına metin değil resim gömülür"
+        },
+        {
+          "title": "Açar açmaz kontrol",
+          "text": "Tablolar bölünmüş mü, başlık stilleri doğru mu, sayfa sonları paragrafı kopardı mı, ı, ğ, ş, ç doğru geldi mi?"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-word-donusturme.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-word-donusturme-1.png",
+        "/x-cards/fact/pdf-word-donusturme-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-boyutu-kucultme-sikistirma": {
+      "slug": "pdf-boyutu-kucultme-sikistirma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Boyutunu Küçültme (Sıkıştırma)",
+      "tips": [
+        {
+          "title": "Neden büyür?",
+          "text": "Boyutu en çok görseller belirler: yüksek çözünürlüklü taramalar, fotoğraflar, gömülü resimler. Metin çok az yer kaplar"
+        },
+        {
+          "title": "Önce gereksiz sayfa",
+          "text": "Taranmış belgelerde boş arka yüzler, iki kez taranmış sayfalar, işe yaramayan kapaklar birkaç MB tutabilir. Silmek çoğu zaman sıkıştırmaktan hızlıdır"
+        },
+        {
+          "title": "Ne kadar küçülür?",
+          "text": "Taranmış belgeler en çok kazandırır. Salt metin belge zaten küçüktür, 400 KB'lık sözleşmeyi 100 KB yapamazsınız. Daha önce sıkıştırılmış dosyada kazanç az, kayıp fazla"
+        },
+        {
+          "title": "Kaliteyi nasıl anlarsınız?",
+          "text": "Etki baskıda ve yakınlaştırmada görünür. En küçük yazının olduğu sayfayı %200 yakınlaştırın; harfler okunuyorsa kullanılabilir"
+        },
+        {
+          "title": "Yetmezse böl",
+          "text": "Belgeyi mantıklı parçalara ayırıp iki e-postada göndermek çoğu zaman en temiz çözümdür"
+        },
+        {
+          "title": "Baştan küçük tarayın",
+          "text": "600 DPI yerine 300 DPI, renkli yerine gri tonlama. Telefon fotoğraflarını belge tarayıcıdan geçirin. Aynı belgeyi defalarca sıkıştırmayın"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-boyutu-kucultme-sikistirma.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-boyutu-kucultme-sikistirma-2.png",
+        "/x-cards/fact/pdf-boyutu-kucultme-sikistirma-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma": {
+      "slug": "pdf-sifre-kaldirma-koyma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Şifresini Kaldırma ve PDF'e Şifre Koyma",
+      "tips": [
+        {
+          "title": "Şifreyi kaldırmak",
+          "text": "Her açılışta parola girmek istemiyorsanız şifreyi kalıcı kaldırın. Şifreyi bilmeniz gerekir ve yalnızca yetkili olduğunuz belgelerde yapın"
+        },
+        {
+          "title": "Şifre koymak",
+          "text": "Sözleşme, sağlık raporu ya da mali belgeyi paylaşırken açılış şifresi ekleyin. Dosyayı yalnızca şifreyi bilenler açar"
+        },
+        {
+          "title": "İki ayrı parola var",
+          "text": "Açılış parolası belgeyi açmak için gerekir; içerik gerçekten şifrelidir. İzin parolası belgeyi açtırır ama yazdırma, kopyalama ya da düzenlemeyi kısıtlar; şifreleme kadar güçlü değildir"
+        },
+        {
+          "title": "Parolayı nasıl iletmeli?",
+          "text": "Dosyayı ve parolasını aynı e-postada göndermeyin. Dosya e-postayla, parola telefon, kısa mesaj ya da başka uygulamayla"
+        },
+        {
+          "title": "Parola seçerken",
+          "text": "Dosya adına yazmayın, her belgede aynısını kullanmayın, doğum tarihi ya da TC numarası gibi tahmin edilebilir dizi seçmeyin"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-sifre-kaldirma-koyma.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-sifre-kaldirma-koyma-2.png",
+        "/x-cards/fact/pdf-sifre-kaldirma-koyma-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/resimleri-pdf-yapma": {
+      "slug": "resimleri-pdf-yapma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "JPG/PNG Resimleri Tek PDF'e Dönüştürme (Ücretsiz)",
+      "tips": [
+        {
+          "title": "Neden tek PDF?",
+          "text": "Birden çok JPG göndermek yerine tek PDF daha düzenli: sıralı sayfalar, tek dosya, kolay yazdırma. Karşı taraf tek tıkla hepsini açar"
+        },
+        {
+          "title": "Üç adım",
+          "text": "JPG ve PNG dosyalarını bırakın, sırayı düzenleyin, «PDF'e Çevir» deyin. Görselleriniz cihazınızdan çıkmaz"
+        },
+        {
+          "title": "Asıl kalite çekimde",
+          "text": "Araç fotoğrafı düzeltmez. Dört kenar kadrajda olsun, gölge ve parlama olmasın, belge dik çekilsin, yazı okunsun"
+        },
+        {
+          "title": "Eğri ya da gölgeliyse",
+          "text": "Doğrudan PDF yapmayın, belge tarayıcıdan geçirin. Kenarları bulur, perspektifi düzeltir"
+        },
+        {
+          "title": "Sayfa sırası",
+          "text": "Galeri çekim saatine göre sıralar, belgenin mantığına göre değil. İki yüzlü evrakta ön ve arka yüz karışabilir"
+        },
+        {
+          "title": "Dosya büyük çıkarsa",
+          "text": "Yeni telefonların fotoğrafları 3–5 MB olabilir. On sayfa 30–50 MB eder ve e-posta sınırını aşar; sıkıştırın"
+        }
+      ],
+      "card": "/x-cards/tip/resimleri-pdf-yapma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/resimleri-pdf-yapma-1.png",
+        "/x-cards/fact/resimleri-pdf-yapma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/uzun-belgeleri-ai-ile-ozetleme": {
+      "slug": "uzun-belgeleri-ai-ile-ozetleme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Uzun Sözleşme ve Raporları Yapay Zekâ ile Özetleme",
+      "tips": [
+        {
+          "title": "Türünü tanıyıp öne çıkarır",
+          "text": "İhale, sözleşme, akademik makale, mali rapor gibi türleri ayırt eder; tarafları, önemli tarihleri, tutarları ve yükümlülükleri vurgular"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i yükleyin, taranmışsa OCR kendiliğinden devreye girer. «Özet Oluştur» deyin. Özeti PDF olarak indirin ya da paylaşın"
+        },
+        {
+          "title": "Belgeyi hazırlayın",
+          "text": "İki yüz sayfanın tamamı yerine ilgili bölümü vermek daha isabetli ve daha kısa bir özet verir"
+        },
+        {
+          "title": "Özeti belgeden doğrulayın",
+          "text": "Tutarlar, tarihler ve süreler, taraf adları, ceza ve fesih koşulları. «Hariçtir», «sınırlıdır» gibi olumsuz hükümler özette kolay silikleşir"
+        },
+        {
+          "title": "Özet yetmeyen belgeler",
+          "text": "İmzalayacağınız sözleşmeler, hukuki sonuç doğuran bildirimler, sağlık raporları ve resmî yazışmalar. Özet başlangıç noktasıdır"
+        },
+        {
+          "title": "Aklınızdaki somut soru",
+          "text": "«Cayma bedeli ne kadar?», «Bu madde bizi bağlıyor mu?» Belgeye doğrudan soru sorun; yanıt belgenin kendi metnine dayanır"
+        }
+      ],
+      "card": "/x-cards/tip/uzun-belgeleri-ai-ile-ozetleme.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/uzun-belgeleri-ai-ile-ozetleme-1.png",
+        "/x-cards/fact/uzun-belgeleri-ai-ile-ozetleme-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr": {
+      "slug": "taranmis-pdf-metne-cevirme-ocr",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Taranmış PDF'i Düzenlenebilir Metne Çevirme (OCR)",
+      "tips": [
+        {
+          "title": "Sebep",
+          "text": "Taranan sayfadaki yazı aslında bir fotoğraftır. Seçemez, arayamaz, kopyalayamazsınız. OCR harf ve kelimeleri tanıyıp düzenlenebilir metne çevirir"
+        },
+        {
+          "title": "Üç adım",
+          "text": "Taranmış PDF'i yükleyin, OCR yazıyı cihazınızda gerçek metne çevirsin (Türkçe ve İngilizce), metni arayın, kopyalayın, özet ya da çeviri aracına verin"
+        },
+        {
+          "title": "Sonucu girdi belirler",
+          "text": "300 DPI civarı net taramalar çok daha iyi okunur; 150 DPI altında hata hızla artar. Soluk mürekkep, eğik sayfa ve el yazısı sorun çıkarır"
+        },
+        {
+          "title": "Türkçe harflere dikkat",
+          "text": "ı ile i, İ ile I en sık karışanlar. Kimlik, tapu ve sözleşmede tek harf önemlidir; çıktıyı gözle doğrulayın"
+        },
+        {
+          "title": "Önce hazırlayın",
+          "text": "Eğri sayfaları döndürün, boş ve tekrar eden sayfaları silin, telefon fotoğraflarını önce belge tarayıcıdan geçirin"
+        },
+        {
+          "title": "Belgeniz sunucuya gitmez",
+          "text": "İşlem tamamen cihazınızda yapılır. Görünümü korumak istiyorsanız aranabilir PDF, yalnızca yazı lazımsa düz metin seçin"
+        }
+      ],
+      "card": "/x-cards/tip/taranmis-pdf-metne-cevirme-ocr.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/taranmis-pdf-metne-cevirme-ocr-2.png",
+        "/x-cards/fact/taranmis-pdf-metne-cevirme-ocr-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ihale-sartnamesi-nasil-okunur": {
+      "slug": "ihale-sartnamesi-nasil-okunur",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "İhale Şartnamesi Nasıl Okunur?",
+      "tips": [
+        {
+          "title": "Önce teklif verip vermeyeceğinize karar verin",
+          "text": "Şartnameyi baştan sona okumadan önce birkaç dakikada karar verecek bilgiye bakın"
+        },
+        {
+          "title": "İlk bakılacak yer",
+          "text": "Yeterlilik kriterleri: iş deneyimi, ciro, kapasite. Şartları karşılamıyorsanız geri kalanını okumanın anlamı yok"
+        },
+        {
+          "title": "Sonra tarih ve kapsam",
+          "text": "Son teklif tarihi ve saati gerçekçi mi? İstenen işi yapabiliyor musunuz, taşeron gerekiyor mu?"
+        },
+        {
+          "title": "Teminat ve ödeme",
+          "text": "Geçici ve kesin teminat tutarı ve türü, ödeme koşulları. Nakit akışınız bunu kaldırıyor mu?"
+        },
+        {
+          "title": "Değerlendirme kriteri",
+          "text": "En düşük fiyat mı, ekonomik açıdan en avantajlı teklif mi? Cayma bedeli, gecikme cezası ve fesih şartlarına da bakın"
+        },
+        {
+          "title": "Biçimsel eksikten elenmeyin",
+          "text": "Eksik ya da süresi geçmiş belge, tutarı ya da süresi uymayan teminat mektubu. Bunların hepsi önlenebilir"
+        }
+      ],
+      "card": "/x-cards/tip/ihale-sartnamesi-nasil-okunur.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/ihale-sartnamesi-nasil-okunur-1.png",
+        "/x-cards/fact/ihale-sartnamesi-nasil-okunur-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler": {
+      "slug": "kira-kontrati-dikkat-edilecek-maddeler",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler",
+      "tips": [
+        {
+          "title": "Bedel ve artış",
+          "text": "Kira bedeli, ödeme günü ve şekli. Artış sabit bir yüzde mi, bir endekse mi bağlı, endeks hangi dönemin verisi?"
+        },
+        {
+          "title": "Depozito",
+          "text": "En sık anlaşmazlık çıkan madde. Ne zaman, hangi koşulla ve hangi kesintilerle iade edileceği yazmıyorsa tarafların hafızasına kalır"
+        },
+        {
+          "title": "Girişte durumu kayıt altına alın",
+          "text": "Taşınma günü boyayı, parkeyi, dolapları, banyo armatürlerini, mevcut çizik ve lekeleri fotoğraflayın. Sayaç değerlerini not edin"
+        },
+        {
+          "title": "Kim neyi öder?",
+          "text": "Aidat kalemleri, kombi ve klima bakımı, abonelikler kimin adına açılacak, tadilat ve boya için yazılı izin gerekiyor mu?"
+        },
+        {
+          "title": "Süre ve çıkış",
+          "text": "Yenileme ve fesih şartları, tahliye bildirim süresi. Bildirimi kaçırmak bir dönem daha bağlı kalmanıza yol açabilir"
+        },
+        {
+          "title": "İmzalı nüshayı saklayın",
+          "text": "Kira yardımı başvurusundan vergi beyanına kadar birçok yerde istenir"
+        }
+      ],
+      "card": "/x-cards/tip/kira-kontrati-dikkat-edilecek-maddeler.png",
+      "factTips": [
+        1,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/kira-kontrati-dikkat-edilecek-maddeler-1.png",
+        "/x-cards/fact/kira-kontrati-dikkat-edilecek-maddeler-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma": {
+      "slug": "banka-ekstresi-excele-aktarma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Banka Ekstresini (PDF) Excel'e Aktarma",
+      "tips": [
+        {
+          "title": "Neden zor?",
+          "text": "PDF ekstrede satırlar düzenli görünür ama arkada tablo yapısı yoktur. Kopyalayınca tarih, açıklama ve tutar tek hücreye ya da yanlış sütunlara düşer"
+        },
+        {
+          "title": "Önce bankaya bakın",
+          "text": "İnternet şubesinde ekstreyi CSV ya da Excel olarak indirebiliyorsanız en temiz yol odur"
+        },
+        {
+          "title": "PDF'ten çıkarmak",
+          "text": "Ekstreyi yükleyin, veriyi çıkarın. Hareketler tarih, açıklama ve tutar olarak tabloya dökülür; CSV indirin. Çok aylıysa toplu işlem hepsini tek CSV'de birleştirir"
+        },
+        {
+          "title": "Kontrol edin",
+          "text": "Satır sayısı ekstredeki toplamla aynı mı? Giriş ve çıkış toplamları özetle uyuşuyor mu? Gün/ay sırası, ondalık ayracı ve eksi işareti doğru mu?"
+        },
+        {
+          "title": "Excel'de açarken",
+          "text": "CSV'yi çift tıklamak Türkçe Windows'ta tutarları bozabilir. Excel'i boş açıp «Veri, Metin/CSV'den» ile içe aktarın"
+        },
+        {
+          "title": "Paylaşmadan önce",
+          "text": "Ekstre hesap numaranızı ve harcama alışkanlığınızı gösterir. Muhasebeciye giderken gerekmeyen bilgileri kaldırın"
+        }
+      ],
+      "card": "/x-cards/tip/banka-ekstresi-excele-aktarma.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/banka-ekstresi-excele-aktarma-2.png",
+        "/x-cards/fact/banka-ekstresi-excele-aktarma-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/yabanci-dildeki-sozlesmeyi-anlama": {
+      "slug": "yabanci-dildeki-sozlesmeyi-anlama",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "Yabancı Dildeki Sözleşmeyi Anlamanın Hızlı Yolu",
+      "tips": [
+        {
+          "title": "Önce çevirin, sonra özetleyin",
+          "text": "Belgeyi anadilinize çevirin; başlık, liste ve tablo yapısı korunur. Uzunsa özetleyin: taraflar, tarihler, yükümlülükler öne çıkar"
+        },
+        {
+          "title": "Baştan sona okumayın",
+          "text": "Risk birkaç maddede toplanır: taraflar ve yetki, süre ve yenileme, fesih, ödeme, sorumluluk sınırı, uygulanacak hukuk, gizlilik ve rekabet yasağı"
+        },
+        {
+          "title": "En kısa madde en belirleyici olabilir",
+          "text": "«Uygulanacak hukuk ve yetkili mahkeme» uyuşmazlıkta diğer maddelerden daha belirleyici olabilir. Başka ülkede hak aramak işin değerini aşabilir"
+        },
+        {
+          "title": "Terimler yanıltabilir",
+          "text": "İngilizce sözleşmede «shall» yükümlülük, «may» takdir yetkisi anlatır. «Indemnify», «warranty», «best efforts» hukuk sistemine göre özel anlam taşır"
+        },
+        {
+          "title": "Takıldığınız yeri sorun",
+          "text": "Belirli bir maddeyi anlamak için belgeye doğrudan soru sorabilirsiniz"
+        },
+        {
+          "title": "Çeviri yeminli tercümanın yerine geçmez",
+          "text": "Yapay zekâ çevirisi hızlı anlamak içindir. Resmî ve hukuki geçerlilik gereken belgede yeminli tercüman şart"
+        }
+      ],
+      "card": "/x-cards/tip/yabanci-dildeki-sozlesmeyi-anlama.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/yabanci-dildeki-sozlesmeyi-anlama-1.png",
+        "/x-cards/fact/yabanci-dildeki-sozlesmeyi-anlama-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/akademik-makale-ozetleme-literatur": {
+      "slug": "akademik-makale-ozetleme-literatur",
+      "topic": "ogrenci",
+      "tags": [
+        "#Öğrenci"
+      ],
+      "hook": "Akademik Makaleleri Hızlı Özetleme (Literatür Taraması İçin)",
+      "tips": [
+        {
+          "title": "Bir makalede ne bakılır?",
+          "text": "Araştırma sorusu, yöntem, bulgular, sonuç ve katkı. Sınırlılıklar bölümü en değerli kısımlardan biri"
+        },
+        {
+          "title": "Üç aşamalı eleme",
+          "text": "Başlık ve özet: konuyla ilgisiz olanlar düşer. Yapılandırılmış özet: soru, yöntem, bulgu. Tam okuma: yalnızca gerçekten gireceklere"
+        },
+        {
+          "title": "Yapay zekâ özeti",
+          "text": "Akademik metni tanır, araştırma sorusu, yöntem, bulgular ve sonuç ekseninde özet verir. Makalenin işinize yarayıp yaramadığını okumadan görürsünüz"
+        },
+        {
+          "title": "Yöntemi atlamayın",
+          "text": "Elli kişilik anket ile binlerce kişilik boylamsal çalışmayı aynı ağırlıkta aktarmak en sık eleştirilen hata"
+        },
+        {
+          "title": "Notları kaynağa bağlı tutun",
+          "text": "Her makale için tek satırlık künye, üç dört maddelik özet ve sayfa numaralı alıntılar. Tez yazarken kaynağı yeniden aramazsınız"
+        },
+        {
+          "title": "Özet iddiayı aktarır",
+          "text": "Doğru olup olmadığını değerlendirmez. Kaynağı okumak ve doğru atıf yapmak yerine geçmez"
+        }
+      ],
+      "card": "/x-cards/tip/akademik-makale-ozetleme-literatur.png",
+      "factTips": [
+        1,
+        5
+      ],
+      "factCards": [
+        "/x-cards/fact/akademik-makale-ozetleme-literatur-1.png",
+        "/x-cards/fact/akademik-makale-ozetleme-literatur-5.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama": {
+      "slug": "faturalari-toplu-muhasebeye-hazirlama",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem)",
+      "tips": [
+        {
+          "title": "Asıl dert toplu iş",
+          "text": "Tek fatura işlemek kolay. Onlarca faturayı arka arkaya işlemek zaman alır. Toplu işlem her faturadan fatura no, tarih, satıcı, tutar ve KDV'yi çıkarıp tek tabloda birleştirir"
+        },
+        {
+          "title": "Üç adım",
+          "text": "Faturaları yükleyin (en fazla 25 dosya), «Veri Çıkar»ı seçin, ilerlemeyi izleyin. Her satırı bir fatura olan tek bir CSV indirin"
+        },
+        {
+          "title": "Klasörü düzenleyin",
+          "text": "Çift kopyaları ayıklayın, irsaliye ve dekontları ayrı klasöre alın, fotoğrafla çekilen faturaları önce belge tarayıcıdan geçirin"
+        },
+        {
+          "title": "Tabloyu toplu kontrol edin",
+          "text": "Tutar toplamını dönem toplamıyla karşılaştırın, KDV'yi tutarla oranlayın, dönem dışı tarihlere ve beklemediğiniz satıcı adlarına bakın"
+        },
+        {
+          "title": "Hata riski yüksek olanlar",
+          "text": "Gölgeli ya da eğri fotoğraflar, ay/gün sırası farklı yabancı faturalar, çok kalemli faturalar, el yazısı not ve kaşe, iskonto ve iade içerenler"
+        }
+      ],
+      "card": "/x-cards/tip/faturalari-toplu-muhasebeye-hazirlama.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/faturalari-toplu-muhasebeye-hazirlama-1.png",
+        "/x-cards/fact/faturalari-toplu-muhasebeye-hazirlama-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-sayfa-silme": {
+      "slug": "pdf-sayfa-silme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'ten Sayfa Silme",
+      "tips": [
+        {
+          "title": "Ne zaman gerekir?",
+          "text": "Tarayıcının eklediği boş ve çift sayfalar, birleştirmeden sonra tekrar eden kapaklar, paylaşmadan önce çıkarılacak iç sayfalar"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i bırakın, silinecek sayfalara tıklayarak işaretleyin, temizlenmiş PDF'i indirin. İndirmeden önce seçimi geri alabilirsiniz"
+        },
+        {
+          "title": "Cihazınızda çalışır",
+          "text": "Giriş yapmadan kullanıldığında dosya internete gönderilmez"
+        },
+        {
+          "title": "Paylaşmadan önce bakın",
+          "text": "İç fiyatlandırma ve kâr marjı sayfaları, eski müşteri bilgisi kalan şablon sayfaları, iç onay formları, eski sürüm damgalı sayfalar, kimlik kopyaları"
+        },
+        {
+          "title": "Sayfadaki birkaç satırı gizlemek?",
+          "text": "Sayfayı silmek yeni dosyada o içeriği taşımaz. Ama bir sayfadaki birkaç satırı gizlemek için siyah kutu yetmez; veriyi gerçekten silmek gerekir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-sayfa-silme.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-sayfa-silme-2.png",
+        "/x-cards/fact/pdf-sayfa-silme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-dondurme-kaydetme": {
+      "slug": "pdf-dondurme-kaydetme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Döndürme ve Kalıcı Kaydetme (2026)",
+      "tips": [
+        {
+          "title": "Neden kalıcı olmuyor?",
+          "text": "Çoğu PDF görüntüleyicide döndür düğmesi yalnızca ekrandaki görünümü çevirir, dosyaya yazılmaz. Paylaşınca ya da yazdırınca yine yan görünür"
+        },
+        {
+          "title": "Kalıcı döndürme",
+          "text": "PDF'i açın, her sayfa kartındaki sola ya da sağa düğmeleriyle 90 derecelik adımlarla çevirin, indirin. Yeni dosya her açılışta düzgün görünür"
+        },
+        {
+          "title": "Sayfalar neden yan çıkar?",
+          "text": "Belge tarayıcıya yatay konmuştur, otomatik besleyici bazı sayfaları ters çekmiştir ya da telefon fotoğraf yönünü kaydetmiş ama PDF'e çevrilirken kullanılmamıştır"
+        },
+        {
+          "title": "Yalnızca yanlış olanı çevirin",
+          "text": "Raporda geniş tablolar bilinçli olarak yatay olabilir. Hepsini aynı yöne çevirmek onları okunmaz yapar"
+        },
+        {
+          "title": "Baskıda gerçek sorun",
+          "text": "Yan duran sayfayı yazıcı küçültebilir, kenarlarını kesebilir ya da yatay basabilir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-dondurme-kaydetme.png",
+      "factTips": [
+        3,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-dondurme-kaydetme-3.png",
+        "/x-cards/fact/pdf-dondurme-kaydetme-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-sayfa-sirasi-degistirme": {
+      "slug": "pdf-sayfa-sirasi-degistirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Sayfa Sırasını Değiştirme ve Yeniden Düzenleme",
+      "tips": [
+        {
+          "title": "Ne zaman gerekir?",
+          "text": "Tarayıcının ters sırayla verdiği sayfalar, başa ya da sona taşınacak ek ve kapak, birleştirmeden sonra akışı düzeltmek"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i açın, sayfaları yukarı ya da aşağı düğmeleriyle taşıyın ya da hedef konum numarasını yazın, indirin"
+        },
+        {
+          "title": "Klasik tarayıcı hatası",
+          "text": "Çift taraflı tarayınca önce tüm ön yüzler, sonra desteyi ters çevirince tüm arka yüzler okunur. Sayfalar 1, 3, 5… 6, 4, 2 diye dizilir"
+        },
+        {
+          "title": "Önce planlayın",
+          "text": "Hedef sırayı kâğıt üstünde netleştirin: hangi bölüm başta, ekler nerede, imza sayfası nerede"
+        },
+        {
+          "title": "Sıralamadan sonra",
+          "text": "Basılı sayfa numaraları artık uyuşmaz, numaralandırmayı en sona bırakın. «Bkz. sayfa 12» gibi göndermeleri gözden geçirin"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-sayfa-sirasi-degistirme.png",
+      "factTips": [
+        3,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-sayfa-sirasi-degistirme-3.png",
+        "/x-cards/fact/pdf-sayfa-sirasi-degistirme-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-bolme-sayfalara-ayirma": {
+      "slug": "pdf-bolme-sayfalara-ayirma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Bölme",
+      "tips": [
+        {
+          "title": "Ne zaman gerekir?",
+          "text": "Sözleşmenin imza sayfası, raporun tek bölümü, e-postaya sığacak küçük bir parça. Belgenin tamamını göndermek çoğu zaman alışkanlık, gereklilik değil"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i bırakın, çıkarmak istediğiniz sayfaları ya da aralığı işaretleyin, tek PDF ya da ayrı dosyalar (ZIP) olarak indirin"
+        },
+        {
+          "title": "Bölmek mi, silmek mi?",
+          "text": "Birkaç sayfa tutacaksanız bölün. Çoğunu tutup birkaçını atacaksanız sayfa silmek daha hızlı"
+        },
+        {
+          "title": "Aralığı bulun",
+          "text": "Uzun belgede bölümün nerede başlayıp bittiğini içindekiler listesinden okumak en hızlısı"
+        },
+        {
+          "title": "Parçaları adlandırın",
+          "text": "«sozlesme-s12-18.pdf» gibi: belge adı ve sayfa aralığı. Tarih ekleyecekseniz yıl-ay-gün yazın, kendiliğinden doğru sıralanır"
+        },
+        {
+          "title": "Geri birleştirebilirsiniz",
+          "text": "Böldükten sonra parçaları tekrar tek dosyada toplamak mümkün. İşlem tarayıcınızda, dosya internete çıkmaz"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-bolme-sayfalara-ayirma.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-bolme-sayfalara-ayirma-2.png",
+        "/x-cards/fact/pdf-bolme-sayfalara-ayirma-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir": {
+      "slug": "pdf-e-imza-atma-nasil-yapilir",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'e Elektronik İmza Atma",
+      "tips": [
+        {
+          "title": "Yazdır, imzala, tara: gerek yok",
+          "text": "Hem zaman hem kalite kaybı. PDF'e doğrudan imza görselinizi yerleştirmek çok daha temiz"
+        },
+        {
+          "title": "İmzanız üç şekilde",
+          "text": "Parmak ya da fareyle çizin, adınızı el yazısı yazı tipiyle yazın, ya da hazır imza görselinizi yükleyin. Şeffaf PNG en iyisi"
+        },
+        {
+          "title": "Yerleştirin",
+          "text": "İmzayı sürükleyerek taşıyın, köşeden boyutlandırın, tutamakla döndürün. Çok sayfalıysa «Tüm sayfalara uygula» aynı yere kopyalar"
+        },
+        {
+          "title": "Tarih ve not ekleyin",
+          "text": "İmzanın yanına tarih ve «Okudum, onaylıyorum» gibi serbest metin de koyabilirsiniz"
+        },
+        {
+          "title": "Gizli belge olabilir",
+          "text": "İmzanız ve dosyanız sunucuya gitmez; imzalama tarayıcınızda yapılır"
+        },
+        {
+          "title": "Bilmeniz gereken",
+          "text": "Bu, görsel imzadır; kira formu, teklif ve dilekçe gibi belgelerin çoğuna yeter. Resmî kurumların istediği nitelikli elektronik imza (NES) ayrı bir e-imza cihazı ya da sertifikası ister"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-e-imza-atma-nasil-yapilir.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-e-imza-atma-nasil-yapilir-2.png",
+        "/x-cards/fact/pdf-e-imza-atma-nasil-yapilir-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-filigran-ekleme": {
+      "slug": "pdf-filigran-ekleme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'e Filigran Ekleme",
+      "tips": [
+        {
+          "title": "Ne işe yarar?",
+          "text": "Belgenin durumunu belirtir (TASLAK, GİZLİ), şirketinizi ya da sitenizi basar, izinsiz paylaşımı caydırır"
+        },
+        {
+          "title": "Dört adım",
+          "text": "PDF'i yükleyin, filigran metnini yazın, rengi, yazı tipini ve saydamlığı ayarlayın, önizleyip indirin"
+        },
+        {
+          "title": "Saydamlık",
+          "text": "Çok koyu olursa yazıyı okumayı zorlaştırır, çok soluksa fark edilmez. %10–20 çoğu belge için ideal"
+        },
+        {
+          "title": "Ne yazmalı?",
+          "text": "Yalnızca «Kopya» pek bilgi vermez. «Kopya, 12.03.2026, Muhasebe» sızdığında nereden çıktığını anlatır"
+        },
+        {
+          "title": "Filigran engellemez, caydırır",
+          "text": "Kopyalamayı, yazdırmayı ya da paylaşmayı durdurmaz. Gerçek koruma için PDF'i parolayla şifreleyin"
+        },
+        {
+          "title": "Sürümleri ayırın",
+          "text": "Aynı sözleşmenin beş sürümü dolaşırken yanlış sürümü imzalamak gerçek bir risk. Taslaklara sürüm ve tarih filigranı koyun"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-filigran-ekleme.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-filigran-ekleme-2.png",
+        "/x-cards/fact/pdf-filigran-ekleme-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-uzerine-yazma-isaretleme": {
+      "slug": "pdf-uzerine-yazma-isaretleme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Üzerine Yazma ve İşaretleme",
+      "tips": [
+        {
+          "title": "Hangi araçlar var?",
+          "text": "Fosforlu, serbest kalem (düz çizgi modu da var), kutu, ok ve metin. Her biri için renk ve kalınlık seçebilirsiniz"
+        },
+        {
+          "title": "Dört adım",
+          "text": "PDF'i açın, aracı ve rengi seçin, sayfada çizin. «Seç» aracıyla işareti taşıyın, boyutlandırın, Ctrl+Z ile geri alın"
+        },
+        {
+          "title": "Yazı silinmez",
+          "text": "İşaretler belgenin üzerine eklenir. Fosforlu ve kalem yarı saydamdır, altındaki yazı okunmaya devam eder"
+        },
+        {
+          "title": "Karıştırmayın",
+          "text": "İşaretleme: katman ekler. Düzenleme: yazıyı gerçekten değiştirir. Kalıcı kaldırma: metni belgeden çıkarır; kişisel veri gizlemenin tek doğru yolu"
+        },
+        {
+          "title": "Başkası okuyacaksa",
+          "text": "Yalnızca fosforluyla boyanmış paragraf karşı tarafa «burada ne var?» sorusunu bırakır. Yanına bir not yazın"
+        },
+        {
+          "title": "Sözleşme incelerken",
+          "text": "Önce tutar, tarih ve süre içeren yerleri, sonra yükümlülük bildiren cümleleri, en sonda belirsiz bulduklarınızı işaretleyin"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-uzerine-yazma-isaretleme.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-uzerine-yazma-isaretleme-1.png",
+        "/x-cards/fact/pdf-uzerine-yazma-isaretleme-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf": {
+      "slug": "telefonla-belge-tarama-pdf",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Telefonla Belge Tarama",
+      "tips": [
+        {
+          "title": "Uygulama kurmadan",
+          "text": "Telefonunuzda pdfplatform.app'i açıp «Belge Tara»ya dokunun. Kenar bulma, perspektif düzeltme ve PDF oluşturma cihazınızda çalışır"
+        },
+        {
+          "title": "Kamerayı belgeye tutun",
+          "text": "Belgenin kenarları canlı olarak yeşil çerçeveyle işaretlenir. Işık iyiyse ve belge zeminden ayrışıyorsa kenarlar hemen bulunur"
+        },
+        {
+          "title": "Köşeler tutmadıysa",
+          "text": "Köşeleri elle sürükleyerek düzeltin. Sonra Renkli, Gri ya da Siyah-Beyaz filtreyi seçin"
+        },
+        {
+          "title": "Çok sayfalı belge",
+          "text": "Sayfaları arka arkaya tarayın; her biri küçük önizleme olarak eklenir. Sırayı görür, istemediğinizi silersiniz. Sonunda «PDF Oluştur»"
+        },
+        {
+          "title": "Belgeniz cihazınızdan çıkmaz",
+          "text": "Kimlik, sözleşme ya da fatura tararken en büyük endişe dosyanın sunucuya gitmesi. Burada kamera görüntüsü ve PDF üretimi tarayıcınızda yapılır"
+        }
+      ],
+      "card": "/x-cards/tip/telefonla-belge-tarama-pdf.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/telefonla-belge-tarama-pdf-1.png",
+        "/x-cards/fact/telefonla-belge-tarama-pdf-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr": {
+      "slug": "aranabilir-pdf-olusturma-ocr",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Aranabilir PDF Nasıl Oluşturulur?",
+      "tips": [
+        {
+          "title": "Sebep",
+          "text": "Taranan PDF'teki yazı bilgisayar için metin değil, piksellerden oluşan bir resimdir. Kelime aratamaz, cümle kopyalayamazsınız"
+        },
+        {
+          "title": "Aranabilir PDF nedir?",
+          "text": "Görüntünün üstüne hizalanmış, gözle görünmeyen bir metin katmanı eklenmiş PDF. Göze aynı görünür ama arkada gerçek metin durur"
+        },
+        {
+          "title": "OCR ne yapar?",
+          "text": "Görüntüdeki yazıyı okur, her kelimenin metnini ve konumunu çıkarır, kelimeleri görüntünün üstüne görünmez olarak yerleştirir"
+        },
+        {
+          "title": "Cihazınızda yapılır",
+          "text": "Belgeyi tarayın ya da taranmış PDF'i açın, «Aranabilir PDF yap»ı seçin. Türkçe ve İngilizce tanınır; ş, ğ, ı, İ dahil. Belge sunucuya gitmez"
+        },
+        {
+          "title": "Nerede işe yarar?",
+          "text": "Yüzlerce taranmış belge arasında kelimeyle arama, sözleşme ya da faturada tutar bulma, ders notlarında konu arama, ekran okuyuculara erişilebilirlik"
+        }
+      ],
+      "card": "/x-cards/tip/aranabilir-pdf-olusturma-ocr.png",
+      "factTips": [
+        3,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/aranabilir-pdf-olusturma-ocr-3.png",
+        "/x-cards/fact/aranabilir-pdf-olusturma-ocr-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/belge-fotografini-kaliteli-pdf-yapma": {
+      "slug": "belge-fotografini-kaliteli-pdf-yapma",
+      "topic": "foto",
+      "tags": [
+        "#Fotoğraf"
+      ],
+      "hook": "Belge Fotoğrafını Düzgün PDF'e Çevirme (Eğiklik, Gölge)",
+      "tips": [
+        {
+          "title": "Eğri çıkıyor",
+          "text": "Belgeyi tam tepeden çekmediğiniz için kenarlar paralel çıkmaz. Tarayıcı dört köşeyi bulup belgeyi karşıdan bakılmış gibi düz bir dikdörtgene çevirir"
+        },
+        {
+          "title": "Gölge ve soluk zemin",
+          "text": "Işık eşit gelmez, bir kenar koyu kalır. «Otomatik» filtre arka plan aydınlatmasını dengeler, zemini beyaza yaklaştırır, yazıyı keskinleştirir"
+        },
+        {
+          "title": "Hangi filtre?",
+          "text": "Renkli: logolu ve renkli faturalar. Gri: metin ağırlıklı belgeler, daha küçük dosya. Siyah-Beyaz: en keskin yazı ve en küçük dosya"
+        },
+        {
+          "title": "İyi çekim için",
+          "text": "Belgeyi düz zemine koyun, üstten çekin, gölge düşürmeyin. Kamerayı sabit tutun; kenarlar yeşil çerçeveyle işaretlenir ve belge kendiliğinden yakalanır"
+        },
+        {
+          "title": "Sonrası",
+          "text": "Dosya büyükse sıkıştırın. Sayfaları yeniden sıralayabilir, döndürebilir ya da silebilirsiniz"
+        }
+      ],
+      "card": "/x-cards/tip/belge-fotografini-kaliteli-pdf-yapma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/belge-fotografini-kaliteli-pdf-yapma-1.png",
+        "/x-cards/fact/belge-fotografini-kaliteli-pdf-yapma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif": {
+      "slug": "camscanner-ucretsiz-gizli-alternatif",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "CamScanner'a Ücretsiz Alternatif",
+      "tips": [
+        {
+          "title": "Uygulamalarda sık görülenler",
+          "text": "Üyelik, ücretsiz sürümde filigran, reklam ve belgeyi işlemek için bulutlarına yükleme. Hassas belgede sonuncusu tek başına yeterince rahatsız edici"
+        },
+        {
+          "title": "Tarayıcıda çalışıyor",
+          "text": "Telefonunuzun tarayıcısında açılır, kurulum yok. Kamera görüntüsü, kenar bulma, perspektif düzeltme ve PDF oluşturma cihazınızda yapılır"
+        },
+        {
+          "title": "Ücretsiz olanlar",
+          "text": "Tarama, kenar bulma, perspektif düzeltme, Renkli, Gri ve Siyah-Beyaz filtre, PDF kaydetme ve paylaşma. Üyelik istemez, tek taramada 3 sayfa"
+        },
+        {
+          "title": "Pro ne ekler?",
+          "text": "Gölgeleri temizleyen «Otomatik» filtre, tek taramada sınırsız sayfa ve Ctrl+F ile aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır"
+        },
+        {
+          "title": "Kimler için?",
+          "text": "Ara sıra belge tarayan, telefona bir uygulama daha kurmak istemeyen, kimlik ve sözleşmeyi buluta yüklemeden dijitalleştirmek isteyenler için"
+        }
+      ],
+      "card": "/x-cards/tip/camscanner-ucretsiz-gizli-alternatif.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/camscanner-ucretsiz-gizli-alternatif-1.png",
+        "/x-cards/fact/camscanner-ucretsiz-gizli-alternatif-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/word-pdf-cevirme": {
+      "slug": "word-pdf-cevirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Word'ü PDF'e Çevirme",
+      "tips": [
+        {
+          "title": "Neden PDF?",
+          "text": "Karşıdaki farklı Office sürümü ya da eksik yazı tipi düzeni kaydırabilir. PDF herkeste birebir aynı görünür"
+        },
+        {
+          "title": "Üç adım",
+          "text": ".doc, .docx, .odt ya da .rtf dosyasını yükleyin, dönüştürün, önizleyip indirin"
+        },
+        {
+          "title": "Önce Word'de hazırlık",
+          "text": "Değişiklik izlemeyi kapatın ve düzeltmeleri kabul edin, yorumları temizleyin, içindekiler ve alan kodlarını güncelleyin"
+        },
+        {
+          "title": "Belge özellikleri",
+          "text": "Yazar adı ve şirket bilgisini gözden geçirin; PDF'e taşınabilir"
+        },
+        {
+          "title": "Yazı tipi neden kayar?",
+          "text": "Word dosyası yazı tipini içine gömmez, yalnızca adını taşır. Arial, Times New Roman ve Calibri gibi yaygın yazı tipleri en güvenlisi"
+        },
+        {
+          "title": "CV gönderiyorsanız",
+          "text": "Word'den doğrudan PDF üretin. Ekran görüntüsü ya da resim olarak dışa aktarırsanız yazı okunamaz"
+        }
+      ],
+      "card": "/x-cards/tip/word-pdf-cevirme.png",
+      "factTips": [
+        3,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/word-pdf-cevirme-3.png",
+        "/x-cards/fact/word-pdf-cevirme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme": {
+      "slug": "pdf-jpg-resme-cevirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'i JPG'ye / Resme Çevirme",
+      "tips": [
+        {
+          "title": "Ne zaman işe yarar?",
+          "text": "Tek bir sayfayı sosyal medyada paylaşmak, web sayfasına ya da sunuma koymak, PDF açamayan birine hızlıca göstermek"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i yükleyin, her sayfa ayrı JPG ya da PNG olsun, tek tek ya da ZIP olarak indirin"
+        },
+        {
+          "title": "JPG mi, PNG mi?",
+          "text": "JPG küçüktür, fotoğraf ve yoğun sayfalarda iyi. PNG keskin kenarı ve yazıyı korur, logo, diyagram ve çok metinli sayfalarda daha iyi"
+        },
+        {
+          "title": "Sayfanın tamamı resim olur",
+          "text": "Yalnızca içindeki fotoğraf ya da logoyu özgün kalitede istiyorsanız sayfayı çevirmeyin, gömülü görselleri çıkarın"
+        },
+        {
+          "title": "Çözünürlük geri dönmez",
+          "text": "Düşük çözünürlükte üretilen görseli sonradan netleştiremezsiniz. Ekran görüntüsü de ekranınızın çözünürlüğüyle sınırlıdır"
+        },
+        {
+          "title": "Yazı artık metin değil",
+          "text": "Görsele çevrilen sayfadaki yazıyı arama motorları okuyamaz. Önemli metni ayrıca yazıyla da verin"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-jpg-resme-cevirme.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-jpg-resme-cevirme-2.png",
+        "/x-cards/fact/pdf-jpg-resme-cevirme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme": {
+      "slug": "pdf-metin-duzenleme-silme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Nasıl Düzenlenir",
+      "tips": [
+        {
+          "title": "Üzerini kapatmak silmek değildir",
+          "text": "Çoğu araç beyaz kutu koyar. Orijinal yazı belgede kalır; kopyalayınca ya da aratınca çıkar"
+        },
+        {
+          "title": "Gerçek silme",
+          "text": "Mevcut metni belgeden kaldırıp yerine yazdığınızı koyar. Türkçe karakterler tam desteklenir"
+        },
+        {
+          "title": "Dört adım",
+          "text": "PDF'i açın, değiştireceğiniz yazıya tıklayın, silin ya da yeniden yazın, indirin"
+        },
+        {
+          "title": "Ne zaman çalışır?",
+          "text": "Gerçek metin katmanı olan PDF'lerde, örneğin Word'den üretilenlerde. Taranmış belgede yazı resimdir; önce OCR gerekir"
+        },
+        {
+          "title": "Küçük düzeltmeler için",
+          "text": "Bir tarih, tutar, isim ya da yazım hatası için doğrudan düzenleme en temizi. Yeni metin eskisinden uzunsa satır sonuna taşabilir"
+        },
+        {
+          "title": "Resmî belgelerde dikkat",
+          "text": "Fatura, resmî yazı ya da imzalı sözleşmenin içeriğini değiştirmek belgenin niteliğini bozar ve ciddi sonuç doğurabilir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-metin-duzenleme-silme.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-metin-duzenleme-silme-1.png",
+        "/x-cards/fact/pdf-metin-duzenleme-silme-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme": {
+      "slug": "pdf-excel-tablo-cevirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'i Excel'e Çevirme",
+      "tips": [
+        {
+          "title": "Kopyala-yapıştır neden bozuyor?",
+          "text": "PDF'te tablo diye bir nesne yok. Gördüğünüz ızgara çizgiler ve hizalı metin parçalarından oluşan bir görüntü"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i yükleyin, tablolar algılansın, .xlsx dosyasını indirip Excel'de düzenleyin"
+        },
+        {
+          "title": "Sorunlu tablolar",
+          "text": "Çizgisiz tablolar, birleştirilmiş hücreler, sayfaya yayılan başlık satırları. Taranmış belgede önce OCR gerekir"
+        },
+        {
+          "title": "Açtıktan sonra",
+          "text": "Sayıya dönmemiş sütunları biçimlendirin, binlik ayracı yüzünden metne dönen tutarları düzeltin, tarih biçimini kontrol edin"
+        },
+        {
+          "title": "Fatura ve irsaliyede",
+          "text": "Her biri farklı düzendeyse tablo değil alan çıkarmak daha doğru: fatura no, tarih, tutar, kalemler. Yapay zekâ ile veri çıkarma bunun için"
+        },
+        {
+          "title": "Yüz sayfalık rapor",
+          "text": "Yalnızca tek sayfadaki tablo lazımsa belgeyi önce bölün, o sayfayı dönüştürün"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-excel-tablo-cevirme.png",
+      "factTips": [
+        1,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-excel-tablo-cevirme-1.png",
+        "/x-cards/fact/pdf-excel-tablo-cevirme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/excel-pdf-cevirme": {
+      "slug": "excel-pdf-cevirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Excel'i PDF'e Çevirme",
+      "tips": [
+        {
+          "title": "Neden PDF?",
+          "text": "Hücreler, sütun genişlikleri ve sayfa sonları herkeste aynı görünür. Yazdırma sorunları biter, tablo yanlışlıkla değiştirilmez"
+        },
+        {
+          "title": "Üç adım",
+          "text": "Excel dosyasını yükleyin, dönüştürün, önizleyip indirin. .xls, .xlsx, .ods ve .csv kabul edilir"
+        },
+        {
+          "title": "Çevirmeden önce Excel'de",
+          "text": "Sayfa yönünü yatay yapın, yazdırma alanını tanımlayın, «tüm sütunları tek sayfaya sığdır»ı seçin, başlık satırını her sayfada tekrarlatın"
+        },
+        {
+          "title": "Sekmelere dikkat",
+          "text": "Ara hesap, ham veri ve eski dönem sekmeleri çıktıya girerse belge şişer ve paylaşılmaması gereken bilgi taşıyabilir"
+        },
+        {
+          "title": "Gizli bilgi",
+          "text": "Excel göründüğünden fazlasını taşır: gizli satırlar, filtreyle saklanan veriler, hücre notları. Göndermeden önce çıktıyı açıp kontrol edin"
+        }
+      ],
+      "card": "/x-cards/tip/excel-pdf-cevirme.png",
+      "factTips": [
+        1,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/excel-pdf-cevirme-1.png",
+        "/x-cards/fact/excel-pdf-cevirme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme": {
+      "slug": "powerpoint-pdf-cevirme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PowerPoint'i PDF'e Çevirme (ve PDF'i PowerPoint'e)",
+      "tips": [
+        {
+          "title": "Neden PDF?",
+          "text": "Karşı tarafta yazı tipleri kayabilir, animasyonlar bozulabilir, slaytlar yanlışlıkla değişebilir. PDF herkeste aynı görünür"
+        },
+        {
+          "title": "Üç adım",
+          "text": ".ppt ya da .pptx dosyasını yükleyin, dönüştürün, indirin. Tasarım korunur"
+        },
+        {
+          "title": "Neler kaybolur?",
+          "text": "Geçişler ve animasyonlar. Animasyonlu slayt, son hâliyle tek sayfa olur. Gömülü video ve ses de gider, yerinde kapak görüntüsü kalır"
+        },
+        {
+          "title": "Konuşmacı notları",
+          "text": "Varsayılan olarak çıktıya girmez"
+        },
+        {
+          "title": "Tersi: PDF'ten PowerPoint",
+          "text": "Her sayfa bir slayt olur, içeriği yeniden kullanabilirsiniz. Ama sunumun özgün düzenlenebilir hâli geri gelmez"
+        },
+        {
+          "title": "Göndermeden önce",
+          "text": "Animasyonla ortaya çıkan içerik doğru görünüyor mu, küçük yazılar okunuyor mu, gizli slayt çıktıya girmiş mi?"
+        }
+      ],
+      "card": "/x-cards/tip/powerpoint-pdf-cevirme.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/powerpoint-pdf-cevirme-2.png",
+        "/x-cards/fact/powerpoint-pdf-cevirme-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme": {
+      "slug": "pdf-sayfa-numarasi-ekleme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'e Sayfa Numarası Ekleme",
+      "tips": [
+        {
+          "title": "Ne zaman gerekir?",
+          "text": "Rapor, tez ve akademik belgelerde atıf için. Sözleşme ve resmî evrakta bütünlük için. Baskıya giden uzun belgelerde sıra için"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i yükleyin, numaranın konumunu ve biçimini seçin, indirin"
+        },
+        {
+          "title": "Hangi biçim?",
+          "text": "Sade rakam çoğu belgeye yeter. «1 / 12» sözleşme ve tekliflerde sayfa eksik mi anlaşılsın diye tercih edilir"
+        },
+        {
+          "title": "Kapakta numara olmasın",
+          "text": "Kapak neredeyse hiç numaralanmaz. Akademik işlerde yaygın düzen: kapak numarasız, ön bölümler roma rakamıyla, asıl metin 1'den"
+        },
+        {
+          "title": "Önce sırayı kesinleştirin",
+          "text": "Numara belgeye sabit basılır. Sonradan sayfa eklerseniz numaralar içerikle uyuşmaz. Birleştireceksiniz de önce birleştirin"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-sayfa-numarasi-ekleme.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-sayfa-numarasi-ekleme-1.png",
+        "/x-cards/fact/pdf-sayfa-numarasi-ekleme-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/bozuk-pdf-onarma": {
+      "slug": "bozuk-pdf-onarma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Açılmayan / Bozuk PDF'i Onarma",
+      "tips": [
+        {
+          "title": "Neden bozulur?",
+          "text": "Yarım kalan indirme, USB ya da disk hatası, uyumsuz programla düzenleme, e-posta eki sıkıştırması"
+        },
+        {
+          "title": "Önce gerçekten bozuk mu bakın",
+          "text": "Başka programda açın. Dosya birkaç KB ise indirme yarım kalmıştır, yeniden indirin. Parola isteniyorsa dosya şifrelidir, bozuk değil"
+        },
+        {
+          "title": "Onarım ne yapar?",
+          "text": "PDF'in sonunda nesnelerin yerini gösteren bir dizin bulunur. Dizin bozulunca dosya açılmaz ama sayfalar yerinde durur; araç yapıyı yeniden kurar"
+        },
+        {
+          "title": "Üç adım",
+          "text": "Bozuk dosyayı yükleyin, onarımı çalıştırın, sonucu indirip açın"
+        },
+        {
+          "title": "Garanti yok",
+          "text": "Başarı hasarın derecesine bağlı. Silinmiş ya da şifreli veriyi geri getiremez"
+        },
+        {
+          "title": "Onardıktan sonra kontrol",
+          "text": "Sayfa sayısı eksik mi, metin seçiliyor mu, görseller yerinde mi, son sayfa ve imza bölümü tam mı?"
+        }
+      ],
+      "card": "/x-cards/tip/bozuk-pdf-onarma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/bozuk-pdf-onarma-1.png",
+        "/x-cards/fact/bozuk-pdf-onarma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma": {
+      "slug": "pdf-karsilastirma-farklari-bulma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "İki PDF'i Karşılaştırma",
+      "tips": [
+        {
+          "title": "Elle karşılaştırmak riskli",
+          "text": "Sayfalarca metinde eklenen bir cümle, silinen bir istisna ya da değişen bir rakam kolayca kaçar. Numara kayması gerçek değişikliği gizler"
+        },
+        {
+          "title": "Üç adım",
+          "text": "Eski ve yeni sürümü yükleyin, karşılaştırın, farkları inceleyin. Eklenen, çıkarılan ve değiştirilen maddeler ayıklanır"
+        },
+        {
+          "title": "Önce şuralara bakın",
+          "text": "Tutarlar, tarihler ve süreler, sorumluluk üst sınırı ve cezai şart, taraflar, uygulanacak hukuk ve yetkili mahkeme"
+        },
+        {
+          "title": "Tek kelime kapsamı değiştirir",
+          "text": "«Hariç», «dâhil değildir», «sınırlıdır» gibi olumsuz ifadelerdeki küçük eklemelere dikkat edin"
+        },
+        {
+          "title": "Aynı bölümleri karşılaştırın",
+          "text": "Bir sürümde ekler varken diğerinde yoksa farkların çoğu eklerden gelir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-karsilastirma-farklari-bulma.png",
+      "factTips": [
+        1,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-karsilastirma-farklari-bulma-1.png",
+        "/x-cards/fact/pdf-karsilastirma-farklari-bulma-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk": {
+      "slug": "pdf-hassas-veri-gizleme-kvkk",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'te Hassas Veri Gizleme (Redaction)",
+      "tips": [
+        {
+          "title": "Siyah kutu yetmez",
+          "text": "Yazının üstüne kutu çizseniz bile asıl yazı belgenin içinde durur. Kopyalayan ya da kutuyu kaldıran biri veriyi geri okur"
+        },
+        {
+          "title": "Gerçek gizleme",
+          "text": "Veriyi belgenin içeriğinden siler. TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda bulunur; belgeyi yükleyin, onaylayın, kalıcı olarak kaldırılır"
+        },
+        {
+          "title": "Ne zaman gerekir?",
+          "text": "Sözleşme ya da faturayı üçüncü kişiyle paylaşmadan önce, resmî başvuruda, ihale ve mahkeme dosyalarında, örnek olarak yayınlanacak belgelerde"
+        },
+        {
+          "title": "Gözden kaçanlar",
+          "text": "Üst ve alt bilgideki isim ve şube, imza bloğundaki doğrudan telefon, tabloda kalan üçüncü kişi kayıtları, faturadaki müşteri numarası"
+        },
+        {
+          "title": "Görünmeyenler de var",
+          "text": "Belgeyi oluşturanın adı, kullanılan program, oluşturma ve değiştirme tarihleri belge özelliklerinde durur"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-hassas-veri-gizleme-kvkk.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-hassas-veri-gizleme-kvkk-1.png",
+        "/x-cards/fact/pdf-hassas-veri-gizleme-kvkk-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik": {
+      "slug": "dosya-yuklemeden-pdf-isleme-gizlilik",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Dosya Yüklemeden PDF İşleme",
+      "tips": [
+        {
+          "title": "Çoğu araç ne yapıyor?",
+          "text": "Dosyanızı sunucusuna yükler, orada işler, sonucu geri verir. Sözleşme ya da kimlik için bu, tanımadığınız bir sunucuda kopyası oluşması demektir"
+        },
+        {
+          "title": "«Cihazda işleme» ne demek?",
+          "text": "İşin tamamı tarayıcınızın içinde yapılır; dosya internete gönderilmez. Yükleme beklemezsiniz, çevrimdışı da çalışır"
+        },
+        {
+          "title": "Hangileri cihazda?",
+          "text": "Birleştirme, bölme, döndürme, sayfa silme, sıralama, görselden PDF, imza, işaretleme ve belge tarama"
+        },
+        {
+          "title": "Her iş cihazda olmuyor",
+          "text": "Word ve Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır"
+        },
+        {
+          "title": "Nasıl sınarsınız?",
+          "text": "İşlemi internet bağlantısı kesikken deneyin. Tamamlanıyorsa dosya hiçbir yere gitmemiştir"
+        },
+        {
+          "title": "«1 saat sonra siliniyor» ne demek?",
+          "text": "Dürüst bir vaat ama dosya silinene kadar sunucuda durur ve ağdan geçer. Kimlik, sağlık, mali ve hukuki belgelerde mümkünse cihazda işleyin"
+        }
+      ],
+      "card": "/x-cards/tip/dosya-yuklemeden-pdf-isleme-gizlilik.png",
+      "factTips": [
+        1,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/dosya-yuklemeden-pdf-isleme-gizlilik-1.png",
+        "/x-cards/fact/dosya-yuklemeden-pdf-isleme-gizlilik-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz": {
+      "slug": "telefonda-pdf-islemleri-uygulamasiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Telefonda PDF İşlemleri",
+      "tips": [
+        {
+          "title": "Neden uygulama kurmayın?",
+          "text": "Yer kaplar, güncelleme ister, ücretsizlerin çoğu özellikleri kilitler ya da çıktıya filigran basar. Tarayıcıda bağlantı açılır, iş biter"
+        },
+        {
+          "title": "Telefonda rahat yapılanlar",
+          "text": "PDF birleştirme ve ayırma, sayfa silme, döndürme, sıralama, fotoğraflardan PDF yapma, kamerayla belge tarama"
+        },
+        {
+          "title": "Belge tarama",
+          "text": "Telefon kamerası belgenin köşelerini bulur, perspektifi düzeltir, temiz bir PDF üretir. Kimlik ve sözleşme buluta gitmez"
+        },
+        {
+          "title": "Çekim anında",
+          "text": "Belgeyi düz zemine koyun, ışığı karşıdan alın, dört kenarı kadraja sokun, telefonu sayfaya paralel tutun"
+        },
+        {
+          "title": "Ağır işler",
+          "text": "Word ya da Excel'e dönüştürme, OCR ve sıkıştırma telefonda da çalışır ama dosya sunucuya yüklenir"
+        }
+      ],
+      "card": "/x-cards/tip/telefonda-pdf-islemleri-uygulamasiz.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/telefonda-pdf-islemleri-uygulamasiz-1.png",
+        "/x-cards/fact/telefonda-pdf-islemleri-uygulamasiz-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari": {
+      "slug": "en-iyi-ucretsiz-pdf-araclari",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "En İyi Ücretsiz Online PDF Araçları (2026 Rehberi)",
+      "tips": [
+        {
+          "title": "Düzenleme ve organizasyon",
+          "text": "Birleştirme, bölme, silme, döndürme, sıralama. Hafif işlerdir; iyi araçlarda tarayıcınızda çalışır"
+        },
+        {
+          "title": "Dönüştürme",
+          "text": "PDF'ten Word, Excel, PowerPoint ya da JPG'ye ve tersine. Ağır işlerdir, genelde sunucuda yapılır"
+        },
+        {
+          "title": "Küçültme ve güvenlik",
+          "text": "Sıkıştırma, şifre koyma ve kaldırma, filigran, sayfa numarası. E-postaya sığdırmak için sıkıştırın, paylaşmadan önce şifreleyin"
+        },
+        {
+          "title": "Yapay zekâ ile PDF",
+          "text": "Uzun belgeyi özetlemek, belgeye soru sormak, faturadan veri çıkarmak, iki sözleşmeyi karşılaştırmak"
+        },
+        {
+          "title": "Seçerken dört soru",
+          "text": "Dosya sunucuya mı yükleniyor? Zorunlu filigran var mı? Üyelik isteniyor mu? Kaç MB'a kadar, günde kaç işlem?"
+        }
+      ],
+      "card": "/x-cards/tip/en-iyi-ucretsiz-pdf-araclari.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/en-iyi-ucretsiz-pdf-araclari-1.png",
+        "/x-cards/fact/en-iyi-ucretsiz-pdf-araclari-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz": {
+      "slug": "ilovepdf-alternatifi-cihazda-ucretsiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "iLovePDF Alternatifi",
+      "tips": [
+        {
+          "title": "Çoğu araçta yükleme olur",
+          "text": "Birleştirme, bölme ya da dönüştürme için dosya sunucuya yüklenir, orada işlenir ve silinir. Genelde güvenli ama dosya yine de bir süre internete çıkar"
+        },
+        {
+          "title": "Cihazda işleyen araç",
+          "text": "Birleştirme, bölme, döndürme, sayfa silme, sıralama, görselden PDF, belge tarama ve imza tarayıcınızda çalışır. İnternet kesilse de işler"
+        },
+        {
+          "title": "İlk bakılacak şey",
+          "text": "Dosya sunucuya mı yükleniyor? Çıktıya zorunlu filigran var mı? Basit işlem için üyelik isteniyor mu? Günlük sınır kaç?"
+        },
+        {
+          "title": "iLovePDF'in iyi yanları",
+          "text": "Uzun geçmişi, oturmuş altyapısı, masaüstü ve mobil uygulamaları, geniş dil desteği ve kurumsal geliştirici araçları var"
+        },
+        {
+          "title": "Hangisini seçmeli?",
+          "text": "Belge hassassa ve iş sayfa düzenlemeyse cihazda çalışan araç. Masaüstü programı ya da kurumsal ölçek lazımsa orada kalın. Bizim masaüstü programımız yok"
+        }
+      ],
+      "card": "/x-cards/tip/ilovepdf-alternatifi-cihazda-ucretsiz.png",
+      "factTips": [
+        4,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/ilovepdf-alternatifi-cihazda-ucretsiz-4.png",
+        "/x-cards/fact/ilovepdf-alternatifi-cihazda-ucretsiz-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/cv-ozgecmis-word-pdf-cevirme": {
+      "slug": "cv-ozgecmis-word-pdf-cevirme",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "CV'yi Word'den PDF'e Çevirme",
+      "tips": [
+        {
+          "title": "Neden PDF?",
+          "text": "Her cihazda aynı görünür. Word dosyası başka bilgisayarda açılırken yazı tipi ve sayfa düzeni kayabilir"
+        },
+        {
+          "title": "Önce Word'de temizlik",
+          "text": "Değişiklik izlemeyi kapatın, düzeltmeleri kabul edin, yorumları silin. Aksi hâlde bu izler PDF'e girebilir"
+        },
+        {
+          "title": "Dosya adı",
+          "text": "«belge1.pdf» yerine «Ad_Soyad_CV.pdf». İşe alımcı günde onlarca dosya indirir; «cv_son_v3» klasörde kaybolur"
+        },
+        {
+          "title": "Sistem sizi okuyabilsin",
+          "text": "İki sütun, tablo ve metin kutuları okuma sırasını karıştırabilir. Telefonu üst bilgiye yazmayın; bazı sistemler üst bilgiyi hiç okumaz"
+        },
+        {
+          "title": "Birden çok belge isteniyorsa",
+          "text": "CV, ön yazı ve sertifikaları PDF yaptıktan sonra tek belgede birleştirin. Dosya büyükse e-posta boyutuna küçültün"
+        }
+      ],
+      "card": "/x-cards/tip/cv-ozgecmis-word-pdf-cevirme.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/cv-ozgecmis-word-pdf-cevirme-1.png",
+        "/x-cards/fact/cv-ozgecmis-word-pdf-cevirme-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz": {
+      "slug": "smallpdf-alternatifi-sinirsiz-ucretsiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "SmallPDF Alternatifi",
+      "tips": [
+        {
+          "title": "Ücretsiz sürümde ne oluyor?",
+          "text": "Belirli sayıda işlemden sonra beklemeniz ya da Pro'ya geçmeniz istenir. Bazı araçlar ve toplu işlemler hesap ister. Dosyanız çoğu işlemde sunucuya gider"
+        },
+        {
+          "title": "SmallPDF'in iyi yanları",
+          "text": "Arayüzü sade, araç yelpazesi geniş, masaüstü ve mobil uygulamaları var, ekip hesabı ve bulut entegrasyonları kurumsal kullanımda işe yarıyor"
+        },
+        {
+          "title": "Fark nerede?",
+          "text": "Özellik listesinde değil, işin nerede yapıldığında. Sunucuda çalışan her aracın maliyeti var ve bu yüzden sınır konur"
+        },
+        {
+          "title": "Gerçekten sınırsız olanlar",
+          "text": "Birleştirme, bölme, sayfa silme, sıralama, döndürme, kırpma, görselden PDF, belge tarama, imza. Cihazınızda çalışır, üyelik yok"
+        },
+        {
+          "title": "Sınırı olanlar",
+          "text": "Word ve Excel'e dönüştürme, OCR ve sıkıştırma ücretsiz planda günlük hakla çalışır. Yapay zekâ araçları plana bağlıdır"
+        }
+      ],
+      "card": "/x-cards/tip/smallpdf-alternatifi-sinirsiz-ucretsiz.png",
+      "factTips": [
+        2,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/smallpdf-alternatifi-sinirsiz-ucretsiz-2.png",
+        "/x-cards/fact/smallpdf-alternatifi-sinirsiz-ucretsiz-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-form-doldurma-online-ucretsiz": {
+      "slug": "pdf-form-doldurma-online-ucretsiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Form Doldurma",
+      "tips": [
+        {
+          "title": "30 saniyede formun türünü anlayın",
+          "text": "Boş bir alana tıklayın. İmleç yanıp sönüyor ve yazabiliyorsanız form doldurulabilir. Hiçbir şey olmuyorsa form düzdür"
+        },
+        {
+          "title": "Düz formu doldurmak",
+          "text": "Formu işaretleme aracına yükleyin, her boşluğa tıklayıp cevabınızı yazın. Her alana ayrı kutu ekleyin"
+        },
+        {
+          "title": "Hizalama",
+          "text": "Yazı boyutunu satır yüksekliğine yakın seçin. Onay kutusuna küçük bir X ya da ✓ yeter. İndirmeden önce %100 ölçekte bakın"
+        },
+        {
+          "title": "İmza",
+          "text": "Metni ekledikten sonra imzanızı çizip yerleştirin. İmzalama cihazınızda yapılır, belge sunucuya gitmez"
+        },
+        {
+          "title": "Türkçe karakter sorunu",
+          "text": "Bazı formlar yalnızca sınırlı karakter kümesiyle hazırlanmıştır; ı, ğ, ş kaybolabilir. Bu sizin değil, formu hazırlayanın yazı tipi seçimidir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-form-doldurma-online-ucretsiz.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-form-doldurma-online-ucretsiz-2.png",
+        "/x-cards/fact/pdf-form-doldurma-online-ucretsiz-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz": {
+      "slug": "adobe-acrobat-alternatifi-ucretsiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Adobe Acrobat Alternatifi",
+      "tips": [
+        {
+          "title": "Çoğu iş tarayıcıda biter",
+          "text": "Birleştirme, bölme, döndürme, sayfa silme ve sıralama ücretsiz ve cihazınızda yapılır. Görselden PDF, belge tarama, imza da öyle"
+        },
+        {
+          "title": "Kurulum ve abonelik yok",
+          "text": "İndirme, eklenti ya da lisans yenileme gerekmez. Mac, Linux, Chromebook ve telefonda aynı çalışır"
+        },
+        {
+          "title": "Yönetici izni yoksa",
+          "text": "İş bilgisayarına program kuramıyorsanız tarayıcı yeter. Başkasının bilgisayarında hesabınıza dokunmadan iş yaparsınız"
+        },
+        {
+          "title": "Acrobat ne zaman gerekir?",
+          "text": "Karmaşık form tasarımı, baskı öncesi ayarlar, sertifika tabanlı dijital imza, erişilebilirlik etiketleri, kurumsal iş akışları"
+        },
+        {
+          "title": "Reader ile karıştırmayın",
+          "text": "Acrobat Reader ücretsizdir ama okuyucudur: görüntüler, yorum ekler, form doldurur. Sayfa silme ve birleştirme gibi işler için ayrı araç gerekir"
+        }
+      ],
+      "card": "/x-cards/tip/adobe-acrobat-alternatifi-ucretsiz.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/adobe-acrobat-alternatifi-ucretsiz-1.png",
+        "/x-cards/fact/adobe-acrobat-alternatifi-ucretsiz-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi": {
+      "slug": "ucretsiz-pdf-duzenleyici-rehberi",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Ücretsiz PDF Düzenleyici",
+      "tips": [
+        {
+          "title": "Mevcut yazıyı değiştirmek",
+          "text": "Değiştireceğiniz metnin üstüne kutu çizin, yenisini yazın. Boş bırakırsanız yazı silinir"
+        },
+        {
+          "title": "Üzerine not eklemek",
+          "text": "Mevcut yazıya dokunmadan metin, vurgu, kutu ya da çizim eklemek ve formdaki boşlukları doldurmak için işaretleme aracı"
+        },
+        {
+          "title": "İmza atmak",
+          "text": "İmzanızı çizin, yazın ya da yükleyin, sayfada istediğiniz yere yerleştirin. İmzalama cihazınızda yapılır"
+        },
+        {
+          "title": "Bir bilgiyi kalıcı kaldırmak",
+          "text": "İşaretleme ya da kırpma yetmez. Bilgiyi belgeden gerçekten silen bir araç gerekir"
+        },
+        {
+          "title": "Taranmış belge mi?",
+          "text": "Sayfa görüntüdür; yazıyı değiştirmeden önce metne çevirmek gerekir"
+        },
+        {
+          "title": "Ücretsiz araçta bedel nerede?",
+          "text": "Çıktıya filigran, işlem sınırı, dosyanın sunucuya yüklenmesi, zorunlu üyelik ya da düşürülmüş kalite olabilir"
+        }
+      ],
+      "card": "/x-cards/tip/ucretsiz-pdf-duzenleyici-rehberi.png",
+      "factTips": [
+        3,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/ucretsiz-pdf-duzenleyici-rehberi-3.png",
+        "/x-cards/fact/ucretsiz-pdf-duzenleyici-rehberi-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme": {
+      "slug": "pdf-kirpma-kenar-boslugu-kesme",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF Kırpma",
+      "tips": [
+        {
+          "title": "Ne işe yarar?",
+          "text": "Sayfadaki tek bir tabloyu, sınavdan tek bir soruyu, faturanın yalnızca gereken kısmını ayırıp paylaşmak"
+        },
+        {
+          "title": "Üç adım",
+          "text": "PDF'i bırakın, sayfada sürükleyerek bir kutu çizin, «Kesiti Ekle» deyin. PDF, PNG ya da JPEG olarak kaydedin"
+        },
+        {
+          "title": "Üç düzen",
+          "text": "Hepsi arka arkaya A4'e dizilir, her kesit ayrı sayfada durur, ya da her kesit ayrı PDF olur. Çok kesitte ayrı PDF'ler ZIP içinde iner"
+        },
+        {
+          "title": "Kesilen yer gerçekten gider",
+          "text": "Bazı programlar sayfa kutusunu daraltır; kesilen kısım dosyada gizli durur. Burada yalnızca seçtiğiniz alan çıktıya girer"
+        },
+        {
+          "title": "Çözünürlük",
+          "text": "2x çoğu iş ve baskı için yeter. 3x ince yazılı tablolar ve büyük baskı için, 1x yalnızca ekranda görülecek kesitler için"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-kirpma-kenar-boslugu-kesme.png",
+      "factTips": [
+        3,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-kirpma-kenar-boslugu-kesme-3.png",
+        "/x-cards/fact/pdf-kirpma-kenar-boslugu-kesme-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir": {
+      "slug": "ucretsiz-pdf-araci-nasil-secilir",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Ücretsiz PDF Aracı Nasıl Seçilir?",
+      "tips": [
+        {
+          "title": "Gizlilik",
+          "text": "Dosyanız sunucuya mı yükleniyor, yoksa tarayıcınızda mı işleniyor? Sözleşme, kimlik ve mali tablo için cihazda işleme en güvenlisi"
+        },
+        {
+          "title": "Filigran ve üyelik",
+          "text": "Ücretsiz çıktıya damga ekleniyor mu? Basit bir birleştirme için hesap açmak gerekiyor mu?"
+        },
+        {
+          "title": "Sınır",
+          "text": "Belirli sayıda işlemden sonra bekletiliyor ya da ödeme isteniyor mu?"
+        },
+        {
+          "title": "Kurulum ve kapsam",
+          "text": "Tarayıcıda mı çalışıyor, program ya da eklenti mi istiyor? Birleştirmenin yanında böl, kırp, döndür, dönüştür, imza da var mı?"
+        },
+        {
+          "title": "Her iş cihazda yapılamaz",
+          "text": "Birleştirme, bölme, döndürme, kırpma, sayfa silme ve imza cihazda olur. Word dönüştürme, OCR, sıkıştırma ve yapay zekâ sunucu ister. İyi araç bunu açıkça söyler"
+        }
+      ],
+      "card": "/x-cards/tip/ucretsiz-pdf-araci-nasil-secilir.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/ucretsiz-pdf-araci-nasil-secilir-2.png",
+        "/x-cards/fact/ucretsiz-pdf-araci-nasil-secilir-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-kucultme-eposta-whatsapp": {
+      "slug": "pdf-kucultme-eposta-whatsapp",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'i E-posta ve WhatsApp İçin Küçültme",
+      "tips": [
+        {
+          "title": "Sınırlar",
+          "text": "Gmail eki yaklaşık 25 MB, Outlook yaklaşık 20 MB. E-posta ekleri kodlanırken yaklaşık üçte bir büyür; 25 MB'lık dosya çoğu zaman geçmez"
+        },
+        {
+          "title": "Sıkıştırın",
+          "text": "Dosyayı sıkıştırma aracına bırakın, dengeli düzeyi seçin. Metin seçilebilir ve net kalır, görseller okunaklı olur"
+        },
+        {
+          "title": "Sonucu kontrol edin",
+          "text": "En küçük yazının olduğu sayfayı açıp yakınlaştırın. Harfler okunuyorsa dosya kullanılabilir"
+        },
+        {
+          "title": "Hâlâ büyükse",
+          "text": "Taranmış belgelerdeki boş arka yüzleri silin, yalnızca gereken sayfaları gönderin ya da dosyayı parçalara bölün"
+        },
+        {
+          "title": "Tekrar tekrar sıkıştırmayın",
+          "text": "İkinci ve üçüncü turda kalite biraz daha düşer ama boyut kazancı kayda değer olmaz. Hedefe tek turda ulaşın"
+        },
+        {
+          "title": "WhatsApp'a belge olarak gönderin",
+          "text": "Belgeyi olduğu gibi iletir, bozmaz. Fotoğraf olarak gönderirseniz görüntüyü küçültür ve yazı okunmaz hâle gelebilir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-kucultme-eposta-whatsapp.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-kucultme-eposta-whatsapp-1.png",
+        "/x-cards/fact/pdf-kucultme-eposta-whatsapp-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/telefonda-pdf-duzenleme-uygulamasiz": {
+      "slug": "telefonda-pdf-duzenleme-uygulamasiz",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Telefonda PDF Düzenleme",
+      "tips": [
+        {
+          "title": "Tarayıcıdan açın",
+          "text": "Telefonunuzun tarayıcısında (Chrome ya da Safari) aracı açın, PDF'inizi seçin. Kurulum yok"
+        },
+        {
+          "title": "Neler yapılır?",
+          "text": "Üzerine yazı ve not eklemek, formu doldurmak, imza atmak, fosforlu ya da kutuyla işaretlemek, mevcut yazıyı gerçekten değiştirmek"
+        },
+        {
+          "title": "İmza telefonda daha iyi",
+          "text": "Parmakla çizilen imza genelde fareyle çizilenden daha doğal çıkar. Ya da imzanızı kâğıda atıp fotoğrafını yükleyin; arka planı temizlenir"
+        },
+        {
+          "title": "Dosyanız nerede kalıyor?",
+          "text": "İşaretleme ve imzalama telefonunuzun tarayıcısında yapılır, PDF yüklenmez. Yalnızca gerçek metin değiştirme sunucuda çalışır"
+        },
+        {
+          "title": "Rahat olanlar, zor olanlar",
+          "text": "Rahat: sayfa silme, sıralama, döndürme, birleştirme, imza. Zor: çok alanlı formlar, hassas hizalama, yüzlerce sayfalık taranmış belgeler"
+        },
+        {
+          "title": "Eğik evrak fotoğrafı",
+          "text": "Doğrudan PDF yapmayın, belge tarayıcıdan geçirin. Eğik ve gölgeli çıktı resmî başvuruda ret sebebi olabilir"
+        }
+      ],
+      "card": "/x-cards/tip/telefonda-pdf-duzenleme-uygulamasiz.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/telefonda-pdf-duzenleme-uygulamasiz-2.png",
+        "/x-cards/fact/telefonda-pdf-duzenleme-uygulamasiz-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma": {
+      "slug": "pdften-gorsel-resim-cikarma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'ten Resim Çıkarma",
+      "tips": [
+        {
+          "title": "İki ayrı iş var",
+          "text": "PDF'i resme çevirmek sayfanın tamamının görüntüsünü alır. Görsel çıkarmak ise belgeye gömülü asıl fotoğraf ve logoları ayrı dosya yapar"
+        },
+        {
+          "title": "Ekran görüntüsü en kötüsü",
+          "text": "Çözünürlük ekranınızla sınırlı, kenarları kırpmak zor ve özgün kalite kaybolur"
+        },
+        {
+          "title": "Gömülü görselleri çıkarın",
+          "text": "PDF'i yükleyin, «Görselleri Çıkar» deyin. Araç tüm sayfaları tarar, görselleri özgün biçiminde (JPG/PNG) ayıklar, aynı görseli tekrar vermez"
+        },
+        {
+          "title": "Hepsi tek ZIP'te",
+          "text": "Çıkarılan görselleri tek bir arşivde indirirsiniz"
+        },
+        {
+          "title": "Ne işe yarar?",
+          "text": "Sunumdaki fotoğrafları yeniden kullanmak, eski bir PDF'ten logoyu özgün kalitede geri almak, katalogdaki ürün görsellerini toplu indirmek"
+        }
+      ],
+      "card": "/x-cards/tip/pdften-gorsel-resim-cikarma.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/pdften-gorsel-resim-cikarma-2.png",
+        "/x-cards/fact/pdften-gorsel-resim-cikarma-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/gorsel-boyutlandirma-sosyal-medya": {
+      "slug": "gorsel-boyutlandirma-sosyal-medya",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Görsel Boyutlandırma",
+      "tips": [
+        {
+          "title": "Neden kırpılıyor?",
+          "text": "Görselin ölçüsü platformun beklediğiyle uyuşmayınca ağ onu kendi çerçevesine göre kırpar ve ölçekler. Yazı ya da yüz kenarda kalabilir"
+        },
+        {
+          "title": "Instagram",
+          "text": "Kare: 1080×1080. Dikey 4:5: 1080×1350, akışta en çok yer kaplayan oran. Hikâye ve Reels: 1080×1920"
+        },
+        {
+          "title": "Facebook, X, LinkedIn",
+          "text": "Facebook paylaşımı 1200×630. X gönderisi 1600×900. LinkedIn kare gönderi 1200×1200"
+        },
+        {
+          "title": "Tek görsel, çok platform",
+          "text": "1080×1350 (4:5) ile başlayın. Kareye de 9:16'ya da temiz kırpılır"
+        },
+        {
+          "title": "Doldur, sığdır, esnet",
+          "text": "Doldur: taşan kenarlar kırpılır, fotoğraflar için. Sığdır: hiçbir yeri kesilmez, boşluk renkle dolar, logo ve afişler için. Esnet: yüz ve yazıda kullanmayın"
+        },
+        {
+          "title": "Önce kırp, sonra küçült",
+          "text": "Büyütmek yeni ayrıntı yaratmaz; 600 piksellik görseli 1920'ye çıkarmak netleştirmez"
+        }
+      ],
+      "card": "/x-cards/tip/gorsel-boyutlandirma-sosyal-medya.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/gorsel-boyutlandirma-sosyal-medya-1.png",
+        "/x-cards/fact/gorsel-boyutlandirma-sosyal-medya-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma": {
+      "slug": "pdf-ten-kesit-alma-gorsel-kirpma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'ten Kesit Alma",
+      "tips": [
+        {
+          "title": "Ekran görüntüsü neden yetmez?",
+          "text": "Çözünürlüğü ekranınızla sınırlı. Yazılar ve ince çizgiler yakınlaştırınca dağılır, baskıda ya da perdede fark hemen belli olur"
+        },
+        {
+          "title": "Kesit belgeden üretilir",
+          "text": "Sayfada bir alan seçersiniz; araç yalnızca o bölgeyi, seçtiğiniz çözünürlükte yeniden çizer"
+        },
+        {
+          "title": "1x, 2x ya da 3x?",
+          "text": "1x ekran için, 2x baskı ve sunum için yeter. 3x afiş gibi büyük çıktılar ya da çok küçük bir ayrıntı için"
+        },
+        {
+          "title": "Üç grafik, beş soru",
+          "text": "Aldığınız her kesit sepete düşer. Hepsini tek tek, ZIP olarak ya da yazdırmaya hazır A4 çalışma kâğıdı olarak indirebilirsiniz"
+        },
+        {
+          "title": "Karıştırmayın",
+          "text": "Kesit: sayfada seçtiğiniz bölge. Sayfayı resme çevirme: sayfanın tamamı. Görsel çıkarma: belgeye gömülü asıl fotoğraflar"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-ten-kesit-alma-gorsel-kirpma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-ten-kesit-alma-gorsel-kirpma-1.png",
+        "/x-cards/fact/pdf-ten-kesit-alma-gorsel-kirpma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/docusign-alternatifi-imza-istegi": {
+      "slug": "docusign-alternatifi-imza-istegi",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "DocuSign Alternatifi",
+      "tips": [
+        {
+          "title": "Fiyat «zarf» üzerinden işliyor",
+          "text": "İmzaya gönderdiğiniz her belge paketi bir zarf. Bireysel plan ayda 5 zarf veriyor. Üst planlarda bile sınır yılda 100"
+        },
+        {
+          "title": "DocuSign'ın güçlü olduğu yerler",
+          "text": "Salesforce, SAP gibi hazır bütünleşmeler, nitelikli elektronik imza, toplu gönderim ve şablon yönetimi. Bunlara ihtiyacınız varsa alternatif aramayın"
+        },
+        {
+          "title": "Çoğu kişinin ihtiyacı",
+          "text": "«Sözleşmeyi göndereyim, imzalasın, imzalandığına dair kaydım kalsın.» Serbest çalışan, ajans, muhasebeci, emlakçı için bu yeter"
+        },
+        {
+          "title": "PDF Platform'da nasıl?",
+          "text": "Belgeyi yükleyin, imzalayacak kişinin e-postasını girin. Karşı taraf hesap açmadan belgeyi görür, adını yazar, imzasını çizer"
+        },
+        {
+          "title": "İmza asıl belgeye uygulanır",
+          "text": "İmzalayandan geri dosya alınmaz. Belgenin sonuna imza, görüntülenme ve onay anlarını gösteren bir denetim sertifikası eklenir"
+        },
+        {
+          "title": "Bağlantı 14 gün geçerli",
+          "text": "Karşı taraf reddederse gerekçesini yazabilir; size e-postayla bildirilir ve denetim kaydına işlenir"
+        }
+      ],
+      "card": "/x-cards/tip/docusign-alternatifi-imza-istegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/docusign-alternatifi-imza-istegi-2.png",
+        "/x-cards/fact/docusign-alternatifi-imza-istegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux": {
+      "slug": "pdf24-alternatifi-mac-linux",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF24 Alternatifi",
+      "tips": [
+        {
+          "title": "PDF24 iki ayrı ürün",
+          "text": "Tools çevrimiçi çalışır ve her sistemde açılır ama dosyanız sunucuya yüklenir. Creator bilgisayara kurulur, dosya hiçbir yere gitmez ama yalnızca Windows için var"
+        },
+        {
+          "title": "Mac ve Linux'ta ne kalıyor?",
+          "text": "Çevrimiçi araçlar, yani dosyanızın yüklendiği seçenek. Market fişi için sorun değil; sözleşme, kimlik ya da sağlık raporu için olabilir"
+        },
+        {
+          "title": "PDF24'ün iyi yanları",
+          "text": "Çevrimiçi araçlar ücretsiz, üyeliksiz ve günlük sınırsız. Windows'ta Creator gerçek bir masaüstü programı. Windows'taysanız alternatife gerek olmayabilir"
+        },
+        {
+          "title": "Boşluk nasıl kapanıyor?",
+          "text": "PDF Platform tarayıcıda çalışır; Mac, Linux, Windows ve telefonda aynı. Sayfa işlemleri cihazınızda yapılır, dosya yüklenmez"
+        },
+        {
+          "title": "Hangi işler cihazda?",
+          "text": "Birleştirme, bölme, döndürme, kırpma, sayfa silme, sıralama, görselden PDF, imzalama. Word dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları sunucuda çalışır"
+        },
+        {
+          "title": "30 saniyede sınayın",
+          "text": "Birleştirme aracını açın, interneti kesin, birleştirin. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir"
+        }
+      ],
+      "card": "/x-cards/tip/pdf24-alternatifi-mac-linux.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf24-alternatifi-mac-linux-1.png",
+        "/x-cards/fact/pdf24-alternatifi-mac-linux-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/microsoft-lens-alternatifi": {
+      "slug": "microsoft-lens-alternatifi",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Microsoft Lens Kapandı",
+      "tips": [
+        {
+          "title": "Ne zaman, ne oldu?",
+          "text": "9 Ocak 2026'da emeklilik duyuruldu, 9 Şubat'ta uygulama mağazalardan kalktı, 9 Mart'ta yeni tarama özelliği kapandı"
+        },
+        {
+          "title": "Önce telefonunuza bakın",
+          "text": "iPhone'da Notlar'daki «Belgeleri Tara», Android'de Google Drive'daki «Tara». Ara sıra tek sayfa tarıyorsanız bunlar fazlasıyla yeter"
+        },
+        {
+          "title": "Yetmediği yerler",
+          "text": "Birden çok sayfayı düzgün birleştirmek, PDF olarak paylaşmak, yazının aranabilir olması, bilgisayardan da aynı işi yapmak"
+        },
+        {
+          "title": "Tarayıcıda çalışan tarayıcı",
+          "text": "Kurulum ve hesap yok. Kamerayı belgeye tutun; kenarlar bulunur, eğri fotoğraf düzleşir, PDF oluşur. Belge cihazınızdan çıkmaz"
+        },
+        {
+          "title": "Ücretsiz mi, ücretli mi?",
+          "text": "Ücretsiz: tarama başına 3 sayfa, PDF indirme, üyelik yok. Pro: sınırsız sayfa, otomatik çekim, gölge temizleme ve aranabilir PDF"
+        }
+      ],
+      "card": "/x-cards/tip/microsoft-lens-alternatifi.png",
+      "factTips": [
+        3,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/microsoft-lens-alternatifi-3.png",
+        "/x-cards/fact/microsoft-lens-alternatifi-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit": {
+      "slug": "sejda-alternatifi-saatlik-limit",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Sejda Alternatifi",
+      "tips": [
+        {
+          "title": "Sınır neyi kapsıyor?",
+          "text": "Sejda ücretsiz planda saatte 3 işlem veriyor ve bu tüm araçları kapsıyor. Üyelik gerekmemesi iyi bir taraf"
+        },
+        {
+          "title": "Sejda'nın iyi olduğu yerler",
+          "text": "Metni gerçekten düzenleyebilen az sayıdaki çevrimiçi araçtan biri, masaüstü sürümü var, haftalık 5 dolarlık geçiş kartı esnek"
+        },
+        {
+          "title": "Sayfa işleri sunucu istemez",
+          "text": "Birleştirme, bölme, döndürme, kırpma, silme, sıralama tarayıcıda yapılabilir. Dosya yüklenmez, sayacak bir sunucu işi de kalmaz"
+        },
+        {
+          "title": "Bizde nasıl?",
+          "text": "Bu araçlar PDF Platform'da tarayıcıda çalışır: saatlik ve günlük sınır yok, üyelik yok, dosya başına 80 MB'a kadar"
+        },
+        {
+          "title": "Dürüst olalım",
+          "text": "Word'e çevirme, OCR ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük hak var. Bu araçlarda biz de sınırlıyız"
+        },
+        {
+          "title": "Kendiniz deneyin",
+          "text": "Birleştirme aracını açın, interneti kesin, birleştirin. Tamamlanıyorsa işlem cihazınızda yapılıyor demektir"
+        }
+      ],
+      "card": "/x-cards/tip/sejda-alternatifi-saatlik-limit.png",
+      "factTips": [
+        3,
+        5
+      ],
+      "factCards": [
+        "/x-cards/fact/sejda-alternatifi-saatlik-limit-3.png",
+        "/x-cards/fact/sejda-alternatifi-saatlik-limit-5.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/uyap-belge-yukleme-boyut-hatasi": {
+      "slug": "uyap-belge-yukleme-boyut-hatasi",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "UYAP'a Belge Yüklenmiyor",
+      "tips": [
+        {
+          "title": "Önce sebebi bulun",
+          "text": "Üç sebep olur: boyut sınırı aşılmış, biçim kabul edilmiyor ya da dosya bozuk veya parolalı. Küçük bir test PDF'iyle deneyin"
+        },
+        {
+          "title": "Şişiren şey eklerdir",
+          "text": "Dilekçe birkaç yüz KB'tır. Dosyayı onlarca MB yapan, yüksek çözünürlükte renkli taranmış ekler ve telefon fotoğraflarıdır"
+        },
+        {
+          "title": "Sıkıştırın, sonra gözle bakın",
+          "text": "Dosyayı sıkıştırın, en küçük puntolu sayfayı açıp okunduğundan emin olun. Hâlâ büyükse dilekçe ve ekleri ayrı yükleyin"
+        },
+        {
+          "title": "Baştan doğru tarayın",
+          "text": "Gri tonlama, 300 DPI. Renkli mühür yoksa renk dosyayı üç katına çıkarır. Telefonda fotoğraf yerine belge tarayıcıyı kullanın"
+        },
+        {
+          "title": "UDF'nin ayrı sınırı",
+          "text": "Uygulamada 10 MB üzerindeki UDF'ler kabul edilmiyor diye bildiriliyor. Sebep genelde yapıştırılmış görseller; onları ek olarak ayrı yükleyin"
+        },
+        {
+          "title": "Yüklemeden önce",
+          "text": "Dosya parolalı mı, sayfalar doğru yönde mi, konu dışı bir belge karışmış mı? Bir dakikalık kontrol son gün krizini önler"
+        }
+      ],
+      "card": "/x-cards/tip/uyap-belge-yukleme-boyut-hatasi.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/uyap-belge-yukleme-boyut-hatasi-1.png",
+        "/x-cards/fact/uyap-belge-yukleme-boyut-hatasi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/udf-dosyasi-nasil-acilir": {
+      "slug": "udf-dosyasi-nasil-acilir",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "UDF Dosyası Nasıl Açılır?",
+      "tips": [
+        {
+          "title": "UDF nedir?",
+          "text": "UYAP'ın kendi belge biçimi. Dilekçe, müzekkere ve gerekçeli kararlar bu uzantıyla iner. Sistemin dışında çoğu program açamaz"
+        },
+        {
+          "title": "Klasik yolun sorunu",
+          "text": "UYAP Doküman Editörü ücretsiz ama kurulum ister, bazen Java gerekir. Karşı tarafın da aynı programı kurması gerekir"
+        },
+        {
+          "title": "Kurulumsuz yol",
+          "text": "UDF dosyasını alana bırakın, «PDF'e çevir»e dokunun. Dönüşüm tarayıcınızda yapılır; yazı biçimi, tablolar ve görseller korunur"
+        },
+        {
+          "title": "Metni ayrıca alın",
+          "text": "İsterseniz belgedeki yazıyı .txt olarak da indirip Word'e kopyalayabilirsiniz"
+        },
+        {
+          "title": "PDF imzalı asıl değildir",
+          "text": "Okumak, arşivlemek, müvekkile göndermek için uygundur. Resmî işlemde imzalı UDF aslını kullanın"
+        },
+        {
+          "title": "Karşı taraf açamıyor mu?",
+          "text": "Sistem dışına çıkan her belgeyi PDF gönderin"
+        }
+      ],
+      "card": "/x-cards/tip/udf-dosyasi-nasil-acilir.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/udf-dosyasi-nasil-acilir-1.png",
+        "/x-cards/fact/udf-dosyasi-nasil-acilir-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/edevlet-belgelerini-tek-pdf-yapma": {
+      "slug": "edevlet-belgelerini-tek-pdf-yapma",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "e-Devlet Belgelerini Tek PDF'te Birleştirme",
+      "tips": [
+        {
+          "title": "Barkod belgenin kimliği",
+          "text": "Kurum barkodu okutarak belgenin gerçekten sizin adınıza üretildiğini doğrular. Barkod okunabilir kalmalı"
+        },
+        {
+          "title": "Yazdırıp taramayın",
+          "text": "PDF zaten dijital ve net. Yazdırıp taramak boyutu şişirir ve barkodun okunma ihtimalini düşürür. «PDF olarak indir»i kullanın"
+        },
+        {
+          "title": "Birleştirin",
+          "text": "Belgeleri tek seferde seçin, kurumun istediği sıraya sürükleyin, tek PDF olarak indirin"
+        },
+        {
+          "title": "Dosya şiştiyse",
+          "text": "Sebep neredeyse her zaman araya karışan taranmış bir belge. Yalnızca onu küçültüp öyle birleştirin; e-Devlet çıktılarına dokunmayın"
+        },
+        {
+          "title": "Kişisel veriye dikkat",
+          "text": "Resmî kuruma verirken hiçbir şeyi gizlemeyin. Emlakçıya ya da işverene gidiyorsa gerekmeyen alanları gerçekten silin; siyah kutu yetmez"
+        }
+      ],
+      "card": "/x-cards/tip/edevlet-belgelerini-tek-pdf-yapma.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/edevlet-belgelerini-tek-pdf-yapma-1.png",
+        "/x-cards/fact/edevlet-belgelerini-tek-pdf-yapma-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/tc-kimlik-numarasi-gizleme-belge": {
+      "slug": "tc-kimlik-numarasi-gizleme-belge",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "Belgedeki TC Kimlik Numarasını Gizleme Yolları",
+      "tips": [
+        {
+          "title": "Siyah kutu gizlemez",
+          "text": "PDF'te çizdiğiniz kutu belgenin üstüne eklenen bir şekildir. Altındaki yazı yerinde durur"
+        },
+        {
+          "title": "Kendiniz deneyin",
+          "text": "Kapattığınız alanı fareyle seçip kopyalayın, bir metin kutusuna yapıştırın. Bilgi geliyorsa gizlemiş değil, örtmüşsünüz"
+        },
+        {
+          "title": "Doğrusu: veriyi silmek",
+          "text": "Gizleme aracı, metni belgenin içinden kaldırır. Kopyalanacak ve aranacak bir şey kalmaz. TC, telefon, IBAN gibi kalıplar otomatik bulunur"
+        },
+        {
+          "title": "Neyi gizlemeli?",
+          "text": "Resmî kuruma verirken hiçbir şeyi. İşverene verirken adres ve sağlık verisini. Emlakçıya ya da bir siteye verirken kimlik numarası ve doğum tarihini"
+        },
+        {
+          "title": "Belki hiç gizlemeyin",
+          "text": "Sekiz sayfalık dökümün altı sayfasını karartmak yerine yalnızca gereken sayfayı ayırıp gönderin. Hem daha güvenli, hem daha nazik"
+        }
+      ],
+      "card": "/x-cards/tip/tc-kimlik-numarasi-gizleme-belge.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/tc-kimlik-numarasi-gizleme-belge-2.png",
+        "/x-cards/fact/tc-kimlik-numarasi-gizleme-belge-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/vize-basvurusu-evrak-hazirlama": {
+      "slug": "vize-basvurusu-evrak-hazirlama",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "Vize Başvurusu İçin Evrak Dosyası Hazırlama",
+      "tips": [
+        {
+          "title": "Önce güncel listeyi alın",
+          "text": "Her ülkenin ve vize türünün listesi farklı. Konsolosluğun ya da başvuru merkezinin kendi sayfasındaki listeyi indirip her maddeyi işaretleyin"
+        },
+        {
+          "title": "Belgeleri doğru yoldan alın",
+          "text": "e-Devlet belgelerini PDF olarak indirin, ekran görüntüsü almayın. Banka dökümünü bankanın uygulamasından PDF alın"
+        },
+        {
+          "title": "Kâğıt belgeleri tarayın",
+          "text": "Telefonla fotoğraf çekmek yerine belge tarayıcıyı kullanın. Pasaport sayfalarını tam çerçevede alın; köşesi kesilmiş sayfa sık geri döner"
+        },
+        {
+          "title": "Fotoğraf en çok geri dönen kalem",
+          "text": "Kimlik ve pasaportta yaygın ölçü 50×60 mm, Schengen'de 35×45 mm. Piksel ölçüsünü tutturmak biyometrik şartı sağladığınız anlamına gelmez"
+        },
+        {
+          "title": "Tek PDF isteniyorsa",
+          "text": "Belgeleri konsolosluğun listesindeki sırayla birleştirin. Dosya sınırın üstündeyse yalnızca taranmış sayfaları sıkıştırın"
+        },
+        {
+          "title": "Göndermeden önce",
+          "text": "Yan yatmış sayfa var mı, en küçük yazı okunuyor mu, listede olmayan bir belge karışmış mı? Bu kontrol beş dakika sürer"
+        }
+      ],
+      "card": "/x-cards/tip/vize-basvurusu-evrak-hazirlama.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/vize-basvurusu-evrak-hazirlama-1.png",
+        "/x-cards/fact/vize-basvurusu-evrak-hazirlama-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ihale-dosyasi-pdf-hazirlama": {
+      "slug": "ihale-dosyasi-pdf-hazirlama",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "İhale Dosyasını PDF Olarak Hazırlama Rehberi",
+      "tips": [
+        {
+          "title": "Şartname ne diyorsa o",
+          "text": "Belge sırası, dosya biçimi, adlandırma, boyut sınırı. Şartnamedeki talimata harfi harfine uyun. «Dosya», «biçim», «imza», «boyut» kelimelerini arayın"
+        },
+        {
+          "title": "Şartname sırasıyla dizin",
+          "text": "Belgeleri tek tek PDF yapın, sonra listedeki numaralara göre sıralayıp tek dosyada birleştirin"
+        },
+        {
+          "title": "Sayfa numarası ekleyin",
+          "text": "Komisyon yüz sayfalık dosyada aradığı belgeyi hızla bulur. Başa bir içindekiler sayfası koymak da işi kolaylaştırır"
+        },
+        {
+          "title": "Boyut ve okunaklılık",
+          "text": "Belgeleri gri tonlamada, 300 DPI tarayın. Kaşe ya da renkli imza sayfalarını renkli bırakın. Okunmayan belge eksik sayılır"
+        },
+        {
+          "title": "İmza meselesi",
+          "text": "İdareler genelde ıslak imza ya da nitelikli elektronik imza ister. PDF'e imza resmi koymak bu şartları karşılamaz"
+        },
+        {
+          "title": "Teslimden önce",
+          "text": "Her madde dosyada var mı? Faaliyet belgesi gibi süreli belgeler güncel mi? Yüklemeyi son saate bırakmayın"
+        }
+      ],
+      "card": "/x-cards/tip/ihale-dosyasi-pdf-hazirlama.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/ihale-dosyasi-pdf-hazirlama-2.png",
+        "/x-cards/fact/ihale-dosyasi-pdf-hazirlama-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma": {
+      "slug": "bordro-sayfalarini-ayirma",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Bordroyu Kişi Kişi Ayırma",
+      "tips": [
+        {
+          "title": "Asıl risk hata",
+          "text": "Maaş bilgisi en hassas verilerden biri ve yanlış kişiye gitmesi geri alınamaz. Elle ayırmak bu yüzden riskli"
+        },
+        {
+          "title": "Sayfaları görerek seçin",
+          "text": "Bordro dosyasını bölme aracına verin. Sayfalar küçük görseller olarak listelenir, kör numara girmezsiniz"
+        },
+        {
+          "title": "Her sayfa ayrı dosya",
+          "text": "Sayfalar tek tek ayrılır ve bir ZIP içinde iner. Göndermeden önce dosyaları çalışanın adıyla adlandırın"
+        },
+        {
+          "title": "Bordro birden çok sayfaysa",
+          "text": "Sayfa aralığıyla çalışın: 1–2 bir dosya, 3–4 başka bir dosya"
+        },
+        {
+          "title": "Göndermeden kontrol",
+          "text": "Rastgele üç dosyayı açıp içindeki ismin dosya adıyla aynı olduğuna bakın. Dosya sayısı çalışan sayısına eşit mi?"
+        },
+        {
+          "title": "Toplu e-posta göndermeyin",
+          "text": "Yanlış seçilmiş bir alıcı listesi bütün şirketin maaşlarını ifşa edebilir. Herkese kendi dosyasını ayrı gönderin"
+        }
+      ],
+      "card": "/x-cards/tip/bordro-sayfalarini-ayirma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/bordro-sayfalarini-ayirma-1.png",
+        "/x-cards/fact/bordro-sayfalarini-ayirma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu": {
+      "slug": "osym-sinav-basvurusu-fotograf-boyutu",
+      "topic": "foto",
+      "tags": [
+        "#Fotoğraf"
+      ],
+      "hook": "ÖSYM Fotoğraf Boyutu",
+      "tips": [
+        {
+          "title": "İstenen şartlar",
+          "text": "Yaygın şart: 300×400 piksel, en fazla 60 KB, JPG, son altı ayda çekilmiş, beyaz arka planlı. Başvuru ekranındaki açıklama her zaman esastır"
+        },
+        {
+          "title": "Piksel ile KB aynı şey değil",
+          "text": "Piksel ölçüsü fotoğrafın eni ve boyu. Dosya boyutu KB. 300×400 bir fotoğraf yine de 400 KB tutabilir"
+        },
+        {
+          "title": "Önce kırpın, sonra küçültün",
+          "text": "Telefon fotoğrafı 4:3 ya da 16:9, vesikalık ise 3:4. Önce 3:4'e kırpın, yüz ortada kalsın; sonra 300×400'e getirin"
+        },
+        {
+          "title": "Hâlâ büyükse",
+          "text": "Dosyayı sıkıştırın ve kaliteyi kademeli düşürün. Sonra fotoğrafı tam boyutta açıp yüzün net olduğunu kontrol edin"
+        },
+        {
+          "title": "Sık yapılan hatalar",
+          "text": "Ekran görüntüsü kullanmak, küçük fotoğrafı büyütüp bulanıklaştırmak, krem ya da gri duvarı beyaz sanmak"
+        }
+      ],
+      "card": "/x-cards/tip/osym-sinav-basvurusu-fotograf-boyutu.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/osym-sinav-basvurusu-fotograf-boyutu-1.png",
+        "/x-cards/fact/osym-sinav-basvurusu-fotograf-boyutu-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma": {
+      "slug": "uyap-karari-word-e-aktarma",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "UYAP Kararını Word'e Aktarma",
+      "tips": [
+        {
+          "title": "Neden doğrudan olmuyor?",
+          "text": "UDF, UYAP'ın kendi biçimi. Uzantıyı .doc yapmak işe yaramaz, yalnızca adı değişir. Aradaki köprü PDF"
+        },
+        {
+          "title": "Yalnızca metin lazımsa",
+          "text": "UDF aracının verdiği düz metni (.txt) alıp Word'e yapıştırın. En hızlısı bu; biçimlendirme gelmez ama metin gelir"
+        },
+        {
+          "title": "Biçim de lazımsa",
+          "text": "Önce UDF'yi PDF'ye, sonra PDF'i Word'e çevirin. Paragraf düzeni, kalın yazılar ve tablolar korunur"
+        },
+        {
+          "title": "Taranmış karar mı?",
+          "text": "Eski dosyalarda yazı aslında resimdir. Önce OCR'dan geçirip metne çevirmeniz gerekir"
+        },
+        {
+          "title": "Mutlaka karşılaştırın",
+          "text": "Esas ve karar numarası, tarihler, tutarlar, kanun maddeleri, taraf adları. Hukuki metinde tek bir rakam kayması ciddi sonuç doğurur"
+        },
+        {
+          "title": "PDF imzalı asıl değildir",
+          "text": "UDF'deki elektronik imza PDF'ye taşınmaz. Çevirdiğiniz dosya çalışmak ve alıntılamak için okunabilir bir kopyadır"
+        }
+      ],
+      "card": "/x-cards/tip/uyap-karari-word-e-aktarma.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/uyap-karari-word-e-aktarma-1.png",
+        "/x-cards/fact/uyap-karari-word-e-aktarma-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/universite-kayit-evraklarini-hazirlama": {
+      "slug": "universite-kayit-evraklarini-hazirlama",
+      "topic": "evrak",
+      "tags": [
+        "#eDevlet"
+      ],
+      "hook": "Üniversite Kayıt Evraklarını Dijital Hazırlama",
+      "tips": [
+        {
+          "title": "Fotoğraf çekmeyin, tarayın",
+          "text": "Masa görünür, kenarlar eğri, ışık bir köşeye vurur ve dosya gereksiz büyük olur. Belge tarayıcı kenarları bulup sayfayı düzleştirir"
+        },
+        {
+          "title": "e-Devlet'ten alınanları taramayın",
+          "text": "İkametgâh, nüfus kayıt örneği, adli sicil, askerlik durumu e-Devlet'ten doğrudan PDF inir. Yazdırıp taramak netliği ve barkod doğrulamasını bozar"
+        },
+        {
+          "title": "Fotoğraf ölçüsü",
+          "text": "Telefon fotoğrafı yanlış oranda ve gereğinden büyüktür. Önce vesikalık oranında kırpın, dosya hâlâ büyükse sıkıştırın"
+        },
+        {
+          "title": "Çok sayfa, tek dosya",
+          "text": "Diplomanın iki yüzü gibi çok sayfalı belgeleri tek PDF'te birleştirin. Sistem çoğu zaman alan başına tek dosya kabul eder"
+        },
+        {
+          "title": "Yükleme sınırına takılırsanız",
+          "text": "Taranmış belgeleri sıkıştırın, renk gerekmiyorsa gri tonlamada tarayın. Sıkıştırdıktan sonra en küçük yazıyı kontrol edin"
+        },
+        {
+          "title": "Son günü beklemeyin",
+          "text": "Kayıt sistemleri son gün yoğun olur. Yüklemeden önce belgeyi telefonunuzda açıp okuyun; siz zor okuyorsanız görevli hiç okuyamaz"
+        }
+      ],
+      "card": "/x-cards/tip/universite-kayit-evraklarini-hazirlama.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/universite-kayit-evraklarini-hazirlama-2.png",
+        "/x-cards/fact/universite-kayit-evraklarini-hazirlama-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/sozlesme-imzalamadan-once-kontrol-listesi": {
+      "slug": "sozlesme-imzalamadan-once-kontrol-listesi",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "Sözleşme İmzalamadan Önce Kontrol Edilecek 12 Şey",
+      "tips": [
+        {
+          "title": "Taraflar ve konu",
+          "text": "Unvan ve vergi numarası doğru mu? İmzayı atan şirketi bağlayabilir mi? \"Makul süre\" gibi belirsiz ifadeler sonradan tartışma çıkarır"
+        },
+        {
+          "title": "Bedel ve süreler",
+          "text": "Tutar KDV dahil mi? Vade kaç gün ve neresinden başlıyor? Teslim ve bildirim süreleri ne kadar, bildirim nasıl yapılacak?"
+        },
+        {
+          "title": "Ceza ve fesih",
+          "text": "Gecikme cezasının oranı ve üst sınırı var mı? Fesih hakkı karşılıklı mı, bildirim süresi kaç gün?"
+        },
+        {
+          "title": "Sorumluluk ve gizlilik",
+          "text": "Dolaylı zarar ve kâr kaybı nasıl düzenlenmiş? Üst sınır yalnızca bir taraf için mi? Gizlilik süresiz mi?"
+        },
+        {
+          "title": "Ekler ve yenileme",
+          "text": "Atıf yapılan her ek elinizde mi? Sözleşme kendiliğinden uzuyor mu, yenilememe için son tarih ne?"
+        },
+        {
+          "title": "Rakama dökün",
+          "text": "\"Günlük %1\" masum görünür. 2.400.000 TL'lik işte günde 24.000 TL demektir"
+        }
+      ],
+      "card": "/x-cards/tip/sozlesme-imzalamadan-once-kontrol-listesi.png",
+      "factTips": [
+        5,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/sozlesme-imzalamadan-once-kontrol-listesi-5.png",
+        "/x-cards/fact/sozlesme-imzalamadan-once-kontrol-listesi-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/gecikme-cezasi-cezai-sart-hesaplama": {
+      "slug": "gecikme-cezasi-cezai-sart-hesaplama",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "Gecikme Cezası ve Cezai Şart Nasıl Hesaplanır?",
+      "tips": [
+        {
+          "title": "Formül",
+          "text": "Bedel × günlük oran × gecikilen gün. Bedeli 1.000.000 TL, günlük oranı %0,5 olan işte gün başına ceza 5.000 TL"
+        },
+        {
+          "title": "Küçük oran, büyük sonuç",
+          "text": "Günlük %0,5 ile 100 günde bedelin yarısı gider. Günlük %1'de 100 günde bedelin tamamı"
+        },
+        {
+          "title": "Tavan var mı?",
+          "text": "\"Toplam ceza bedelin %10'unu geçemez\" gibi bir üst sınır yoksa ceza bedeli aşabilir"
+        },
+        {
+          "title": "Hangi bedel?",
+          "text": "KDV dahil mi, hariç mi, yalnızca geciken kısım mı? Yazmıyorsa karşı taraf en yüksek rakamı esas alabilir"
+        },
+        {
+          "title": "Gecikme kimin yüzünden?",
+          "text": "Süre karşı tarafın onayına ya da belgesine bağlıysa, o gecikmenin size yazılmaması gerekir. Sözleşmede bunu düzenleyen bir hüküm arayın"
+        },
+        {
+          "title": "İmzadan önce konuşun",
+          "text": "Tacirler arasında cezanın sonradan indirilmesi kısıtlı olabilir. Tavan ve cezanın karşılıklı olmasını isteyin"
+        }
+      ],
+      "card": "/x-cards/tip/gecikme-cezasi-cezai-sart-hesaplama.png",
+      "factTips": [
+        1,
+        5
+      ],
+      "factCards": [
+        "/x-cards/fact/gecikme-cezasi-cezai-sart-hesaplama-1.png",
+        "/x-cards/fact/gecikme-cezasi-cezai-sart-hesaplama-5.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu": {
+      "slug": "ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "İhale Şartnamesi ve Sözleşme Tasarısında Risk Kontrolü",
+      "tips": [
+        {
+          "title": "Pazarlık yok",
+          "text": "Teklif verdiğinizde şartnameyi ve sözleşme tasarısını kabul etmiş sayılırsınız. Asıl karar, belgeleri okurken verilir"
+        },
+        {
+          "title": "Belgeler birbirini tutuyor mu?",
+          "text": "İdari şartname 90 gün, teknik şartname 60 gün diyebilir. Önce rakamları yan yana koyun"
+        },
+        {
+          "title": "Gecikme cezası ve teminat",
+          "text": "Günlük oran, üst sınır, hangi bedel üzerinden hesaplandığı. Teminatların tutarı ve ne zaman gelir kaydedileceği"
+        },
+        {
+          "title": "Ödeme ve fiyat farkı",
+          "text": "Hakediş ne sıklıkla ödeniyor, gecikmede faiz var mı? Uzun işlerde girdi maliyeti artışına dair bir düzenleme var mı?"
+        },
+        {
+          "title": "Fesih",
+          "text": "İdare hangi hallerde feshedebilir? Feshin mali sonucu sizin için ne?"
+        },
+        {
+          "title": "İlk günlerde okuyun",
+          "text": "Açıklama ve itiraz süreleri kısadır. Belgeleri teklif gününe bırakmayın"
+        }
+      ],
+      "card": "/x-cards/tip/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu-1.png",
+        "/x-cards/fact/ihale-sartnamesi-sozlesme-tasarisi-risk-kontrolu-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/sozlesmede-ek-madde-celiski-oncelik": {
+      "slug": "sozlesmede-ek-madde-celiski-oncelik",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "Sözleşmede Ek ile Madde Çelişirse Hangisi Geçerli?",
+      "tips": [
+        {
+          "title": "Bir örnek",
+          "text": "Madde 4 teslimi 45 gün diyor, Ek-1 teknik şartname 30 gün. Madde 13 de \"çelişkide ekler geçerlidir\" diyor. Ne olur?"
+        },
+        {
+          "title": "Öncelik maddesini bulun",
+          "text": "\"Ekler geçerlidir\" yazıyorsa ekteki ayrıntı ana metni geçersiz kılabilir. Ekleri ana metin kadar dikkatle okuyun"
+        },
+        {
+          "title": "Madde hiç yoksa",
+          "text": "Hangisinin geçerli olacağı tartışmaya açıktır. Bu da uyuşmazlık demektir"
+        },
+        {
+          "title": "Çelişkiyi nasıl bulursunuz?",
+          "text": "Süre, bedel, ceza, vade gibi rakamlı konuları ana metinde işaretleyin, sonra her birini eklerde arayın"
+        },
+        {
+          "title": "İmzadan önce",
+          "text": "Çelişen yerleri karşı tarafa yazılı bildirin ve tek bir rakamda anlaşın. Görmediğiniz bir ekin sizi bağlamasına izin vermeyin"
+        }
+      ],
+      "card": "/x-cards/tip/sozlesmede-ek-madde-celiski-oncelik.png",
+      "factTips": [
+        2,
+        1
+      ],
+      "factCards": [
+        "/x-cards/fact/sozlesmede-ek-madde-celiski-oncelik-2.png",
+        "/x-cards/fact/sozlesmede-ek-madde-celiski-oncelik-1.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir": {
+      "slug": "yapay-zeka-ile-sozlesme-inceleme-nasil-calisir",
+      "topic": "sozlesme",
+      "tags": [
+        "#Sözleşme"
+      ],
+      "hook": "Yapay Zekâ ile Sözleşme İnceleme",
+      "tips": [
+        {
+          "title": "Metin cihazınızda çıkarılır",
+          "text": "PDF'inizin kendisi gönderilmez; yalnızca metni analiz için sunucuya iletilir"
+        },
+        {
+          "title": "Önce belgeyi tanır",
+          "text": "Belgenin türünü ve taraflarını çıkarır, cevabı analizi değiştirecek birkaç soru sorar"
+        },
+        {
+          "title": "Her bulgu alıntıyla gelir",
+          "text": "Bulgu belgeden birebir alıntıyla verilir ve alıntı metinde aranır. Bulunamayan bulgu rapora girmez"
+        },
+        {
+          "title": "Sonuç belgenin üstünde",
+          "text": "Riskli yerler PDF'inizde boyanır; her biri için nedeni ve etkisi yazılır"
+        },
+        {
+          "title": "Sınırları açıkça",
+          "text": "Hata yapabilir, bir riski kaçırabilir. Bu bir ön değerlendirmedir, hukuki danışmanlık değil. Önemli sözleşmede avukata gösterin"
+        }
+      ],
+      "card": "/x-cards/tip/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir-2.png",
+        "/x-cards/fact/yapay-zeka-ile-sozlesme-inceleme-nasil-calisir-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/cv-nasil-hazirlanir": {
+      "slug": "cv-nasil-hazirlanir",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "CV Nasıl Hazırlanır?",
+      "tips": [
+        {
+          "title": "Önce hedefi belirleyin",
+          "text": "İlanı okuyun, istenen becerileri not edin. İlanla örtüşen deneyimleri öne alın, ilgisizleri kısaltın"
+        },
+        {
+          "title": "Görevi değil sonucu yazın",
+          "text": "\"Satış raporlarını hazırladı\" bir görev. \"Fire oranını %12 düşürdü\" bir sonuç. Sayı yoksa ekip büyüklüğünü ya da ölçeği yazın"
+        },
+        {
+          "title": "Rakam uydurmayın",
+          "text": "Kesin sayı yoksa \"yaklaşık\" yazmak dürüst ve yeterli. Mülakatta sorulacağını varsayın"
+        },
+        {
+          "title": "Sade görünüm",
+          "text": "Birkaç yıllık deneyim için tek sayfa yeter. En fazla iki yazı tipi ve tek bir vurgu rengi kullanın"
+        },
+        {
+          "title": "PDF olarak kaydedin",
+          "text": "ad-soyad-cv.pdf gibi bir adla. Yazıyı fareyle seçebildiğinizi kontrol edin; başvuru sistemleri de okuyabilir demektir"
+        },
+        {
+          "title": "Son bir deneme",
+          "text": "CV'nizi bir arkadaşınıza gösterin, 30 saniye sonra neyi hatırladığını sorun. Öne çıkarmak istediğiniz şey bu değilse sıralamayı değiştirin"
+        }
+      ],
+      "card": "/x-cards/tip/cv-nasil-hazirlanir.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/cv-nasil-hazirlanir-1.png",
+        "/x-cards/fact/cv-nasil-hazirlanir-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ats-uyumlu-cv-nasil-yazilir": {
+      "slug": "ats-uyumlu-cv-nasil-yazilir",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "ATS Uyumlu CV Nasıl Yazılır?",
+      "tips": [
+        {
+          "title": "Gerçek metinli PDF",
+          "text": "PDF'te yazıyı fareyle seçebiliyorsanız doğru yoldasınız. Ekran görüntüsü ya da taranmış resim olarak kaydedilen CV'nin yazısı okunmayabilir"
+        },
+        {
+          "title": "Bilgiyi resme gömmeyin",
+          "text": "Telefon, e-posta ve becerileriniz logo ya da görsel değil, yazı olarak durmalı"
+        },
+        {
+          "title": "Bilinen başlıklar",
+          "text": "\"İş Deneyimi\", \"Eğitim\", \"Beceriler\". \"Yolculuğum\" gibi yaratıcı başlıklar sistemin bölümü tanımasını zorlaştırabilir"
+        },
+        {
+          "title": "Sade yerleşim",
+          "text": "Bazı sistemler çok sütunlu, tablolu ya da kutulu tasarımları yanlış sırada okur. Emin değilseniz tek sütun seçin"
+        },
+        {
+          "title": "İletişim bilgisi sayfa gövdesinde",
+          "text": "Bazı sistemler sayfanın üst ve alt kısmını okumaz. Telefon ve e-postanızı üst bilgi alanına koymayın"
+        },
+        {
+          "title": "1 dakikalık kontrol",
+          "text": "PDF'i açın, Ctrl+A ile tümünü seçip bir metin düzenleyiciye yapıştırın. Sıra ve içerik mantıklı mı, telefon ve e-posta okunuyor mu?"
+        }
+      ],
+      "card": "/x-cards/tip/ats-uyumlu-cv-nasil-yazilir.png",
+      "factTips": [
+        2,
+        4
+      ],
+      "factCards": [
+        "/x-cards/fact/ats-uyumlu-cv-nasil-yazilir-2.png",
+        "/x-cards/fact/ats-uyumlu-cv-nasil-yazilir-4.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/cv-fotografi-nasil-olmali": {
+      "slug": "cv-fotografi-nasil-olmali",
+      "topic": "foto",
+      "tags": [
+        "#Fotoğraf"
+      ],
+      "hook": "CV Fotoğrafı Nasıl Olmalı?",
+      "tips": [
+        {
+          "title": "Baş ve omuzlar",
+          "text": "Göğüs hizasına kadar bir kadraj. Yüz kadrajın yaklaşık yarısını kaplasın"
+        },
+        {
+          "title": "Düz ve sade arka plan",
+          "text": "Açık gri, açık mavi ya da beyaz. Dağınık bir oda ya da tatil manzarası dikkat dağıtır"
+        },
+        {
+          "title": "Yumuşak ışık",
+          "text": "Pencere ışığı idealdir. Arkadan gelen ışık yüzü karartır, doğrudan flaş parlama yapar"
+        },
+        {
+          "title": "Sık yapılan hatalar",
+          "text": "Grup fotoğrafını kırpmak (omuzda başka bir kol kalır), filtre kullanmak, düşük çözünürlük, yan dönük duruş"
+        },
+        {
+          "title": "Çerçeveye oturtun",
+          "text": "Çoğu şablon 3:4 dikey ya da kare alan kullanır. Fotoğrafı buna yakın oranda hazırlayın, CV'de kırpılma sorunu çıkmaz"
+        }
+      ],
+      "card": "/x-cards/tip/cv-fotografi-nasil-olmali.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/cv-fotografi-nasil-olmali-1.png",
+        "/x-cards/fact/cv-fotografi-nasil-olmali-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/biyometrik-fotograf-olculeri-ve-kurallari": {
+      "slug": "biyometrik-fotograf-olculeri-ve-kurallari",
+      "topic": "foto",
+      "tags": [
+        "#Fotoğraf"
+      ],
+      "hook": "Biyometrik Fotoğraf Ölçüleri ve Kuralları (2026)",
+      "tips": [
+        {
+          "title": "Türkiye",
+          "text": "Kimlik, pasaport, ehliyet: 50×60 mm, düz beyaz arka plan. Yüz fotoğrafın yaklaşık %70–80'ini kaplar"
+        },
+        {
+          "title": "Schengen ve AB",
+          "text": "35×45 mm, baş yüksekliği yaklaşık 32–36 mm, açık ve düz arka plan"
+        },
+        {
+          "title": "ABD ve Birleşik Krallık",
+          "text": "ABD: 2×2 inç (51×51 mm). Birleşik Krallık: 35×45 mm. Başvurduğunuz yerin güncel şartını mutlaka kontrol edin"
+        },
+        {
+          "title": "Her yerde geçerli kurallar",
+          "text": "Karşıdan bakış, nötr ifade, gölgesiz düz arka plan. Filtre ve rötuş kabul edilmez; fotoğraf genelde son 6 ayda çekilmiş olmalı"
+        },
+        {
+          "title": "Ölçüyü kendiniz ayarlayın",
+          "text": "Fotoğraf Stüdyosu'nda ülkenin ön ayarını seçin, baş oranı kendiliğinden ayarlanır. e-Devlet KB sınırı koyuyorsa onu da girin"
+        }
+      ],
+      "card": "/x-cards/tip/biyometrik-fotograf-olculeri-ve-kurallari.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/biyometrik-fotograf-olculeri-ve-kurallari-1.png",
+        "/x-cards/fact/biyometrik-fotograf-olculeri-ve-kurallari-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/vesikalik-fotograf-evde-nasil-cekilir": {
+      "slug": "vesikalik-fotograf-evde-nasil-cekilir",
+      "topic": "foto",
+      "tags": [
+        "#Fotoğraf"
+      ],
+      "hook": "Evde Vesikalık Fotoğraf Nasıl Çekilir?",
+      "tips": [
+        {
+          "title": "Pencere ışığı",
+          "text": "Pencereye dönük durun, ışık yüzünüze yumuşak düşsün. Güneş sertse perde ya da tül kullanın"
+        },
+        {
+          "title": "Düz bir duvar",
+          "text": "Açık renkli, desensiz bir duvar seçin. Arka plan sonradan değişir ama düz zemin sonucu iyileştirir"
+        },
+        {
+          "title": "Telefonu sabitleyin",
+          "text": "Göz hizasında, bir yere dayayarak. Aşağıdan ya da yukarıdan çekim yüzü bozar. 1,5–2 metre uzaktan çekin"
+        },
+        {
+          "title": "Arka kamera, birkaç kare",
+          "text": "Ön kamera daha düşük kalitelidir; zamanlayıcıyla çekin. Gözün kırpılmadığı en iyi kareyi seçin"
+        },
+        {
+          "title": "Sonrası kolay",
+          "text": "Fotoğraf Stüdyosu başı doğru orana yerleştirir, arka planı beyaz yapar, ölçüye kırpar. KB sınırınız varsa yazın"
+        }
+      ],
+      "card": "/x-cards/tip/vesikalik-fotograf-evde-nasil-cekilir.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/vesikalik-fotograf-evde-nasil-cekilir-1.png",
+        "/x-cards/fact/vesikalik-fotograf-evde-nasil-cekilir-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/linkedin-profil-fotografi-ipuclari": {
+      "slug": "linkedin-profil-fotografi-ipuclari",
+      "topic": "foto",
+      "tags": [
+        "#Fotoğraf"
+      ],
+      "hook": "LinkedIn Profil Fotoğrafı",
+      "tips": [
+        {
+          "title": "Ölçü",
+          "text": "LinkedIn'in yardım sayfasına göre en az 400×400 piksel ve en çok 8 MB. 800×800 kare bir fotoğraf rahatça yeter"
+        },
+        {
+          "title": "Işık ve duvar",
+          "text": "Pencere önünde, düz bir duvara karşı çekin. Telefonu göz hizasında sabitleyin, arka kamerayı kullanın"
+        },
+        {
+          "title": "Kadraj",
+          "text": "Yüz kadrajın yaklaşık %60'ını kaplasın. Çok uzak da çok yakın da olmasın"
+        },
+        {
+          "title": "Arka plan",
+          "text": "Açık gri ya da açık mavi dikkati yüzünüze toplar. Fotoğraf Stüdyosu'nda arka planı kendiniz seçebilirsiniz"
+        },
+        {
+          "title": "Güncel olsun",
+          "text": "Bugünkü görünüşünüze benzesin. Yıllar önceki fotoğraf mülakatta şaşırtır"
+        }
+      ],
+      "card": "/x-cards/tip/linkedin-profil-fotografi-ipuclari.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/linkedin-profil-fotografi-ipuclari-1.png",
+        "/x-cards/fact/linkedin-profil-fotografi-ipuclari-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/cv-is-ilanina-gore-nasil-uyarlanir": {
+      "slug": "cv-is-ilanina-gore-nasil-uyarlanir",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "CV İş İlanına Göre Nasıl Uyarlanır?",
+      "tips": [
+        {
+          "title": "İlanı iyi okuyun",
+          "text": "Zorunlu nitelikleri (\"en az 3 yıl\", \"Excel\") ve tercih sebeplerini ayrı ayrı not edin. Tekrar eden kelimeler işverenin önceliğidir"
+        },
+        {
+          "title": "İlanın kelimeleriyle yazın",
+          "text": "İlan \"paydaş yönetimi\" diyorsa ve siz \"birimlerle iletişim\" yazdıysanız, iş aynıysa ilanın kelimesini kullanın"
+        },
+        {
+          "title": "Ama uydurmayın",
+          "text": "Yalnızca ilanda geçiyor diye olmayan bir beceriyi eklemeyin. Mülakatta anlatamayacağınız bir cümle CV'de durmasın"
+        },
+        {
+          "title": "Eksik kelimeleri bulun",
+          "text": "CV Oluştur'a ilan metnini yapıştırın; hangi kelimelerin CV'nizde geçtiğini, hangilerinin geçmediğini görün"
+        },
+        {
+          "title": "Her ilana ayrı kopya",
+          "text": "Ana CV'nizi koruyun, her başvuru için bir kopya çıkarın. Aynı cihazda 12 CV'ye kadar saklanır"
+        }
+      ],
+      "card": "/x-cards/tip/cv-is-ilanina-gore-nasil-uyarlanir.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/cv-is-ilanina-gore-nasil-uyarlanir-2.png",
+        "/x-cards/fact/cv-is-ilanina-gore-nasil-uyarlanir-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/europass-tarzi-cv-nasil-hazirlanir": {
+      "slug": "europass-tarzi-cv-nasil-hazirlanir",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Europass Tarzı CV Nedir, Ne Zaman Kullanılır?",
+      "tips": [
+        {
+          "title": "Düzenin mantığı",
+          "text": "Tarihler solda, görevler sağda. Gözünüz tarih sütunundan aşağı inerek kariyer sırasını ve boşlukları hemen görür"
+        },
+        {
+          "title": "Kimler tercih ediyor?",
+          "text": "Akademi, kamu, hukuk, sağlık ve uluslararası başvurular: Erasmus, burs ve araştırma programları gibi"
+        },
+        {
+          "title": "Size uyar mı?",
+          "text": "Kariyeriniz uzun ve düzenli ilerlediyse, tarih sıralaması sizin lehinize çalışır"
+        },
+        {
+          "title": "Küçük bir not",
+          "text": "Bu, AB'nin resmî Europass dosyası değil, ondan esinlenen bir düzen. Kurum özel şablon istiyorsa onu kullanın"
+        },
+        {
+          "title": "Başvuru sistemine yükleyecekseniz",
+          "text": "Sütunlu düzenleri bazı sistemler karıştırabilir. Emin değilseniz tek sütunlu bir şablon daha güvenli olabilir"
+        }
+      ],
+      "card": "/x-cards/tip/europass-tarzi-cv-nasil-hazirlanir.png",
+      "factTips": [
+        1,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/europass-tarzi-cv-nasil-hazirlanir-1.png",
+        "/x-cards/fact/europass-tarzi-cv-nasil-hazirlanir-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/cv-on-yazi-nasil-yazilir": {
+      "slug": "cv-on-yazi-nasil-yazilir",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Ön Yazı (Cover Letter) Nasıl Yazılır?",
+      "tips": [
+        {
+          "title": "Açılış",
+          "text": "Hangi pozisyona başvurduğunuzu ve sizi neyin ilgilendirdiğini bir iki cümleyle söyleyin"
+        },
+        {
+          "title": "Kanıt",
+          "text": "İlandaki bir ya da iki gereksinimi, CV'nizdeki somut bir sonuçla bağlayın. Mümkünse rakamla"
+        },
+        {
+          "title": "Neden bu şirket?",
+          "text": "Bu işi ya da şirketi neden seçtiğinizi ve ona ne katacağınızı anlatın"
+        },
+        {
+          "title": "Kapanış",
+          "text": "Görüşme isteğinizi belirtin, teşekkür edin. Bir sayfayı geçmeyin; 250–350 kelime çoğu başvuruya yeter"
+        },
+        {
+          "title": "Bunlardan kaçının",
+          "text": "CV'nizi cümle cümle tekrar etmeyin, her şirkete gidebilecek genel cümleler yazmayın. Göndermeden önce yüksek sesle okuyun"
+        }
+      ],
+      "card": "/x-cards/tip/cv-on-yazi-nasil-yazilir.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/cv-on-yazi-nasil-yazilir-2.png",
+        "/x-cards/fact/cv-on-yazi-nasil-yazilir-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/satis-danismani-cv-ornegi": {
+      "slug": "satis-danismani-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Satış Danışmanı CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Müşteri ihtiyaçlarını doğru analiz eden, hedef odaklı bir satış profesyoneliyim. Kalıcı müşteri ilişkileri kurarak satış hedeflerini düzenli olarak aşmayı amaçlarım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Aylık satış hedefini ortalama %X oranında aştım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: İkna ve Müzakere, Müşteri İlişkileri, Satış Raporlama, CRM (Salesforce, HubSpot) gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/satis-danismani-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/satis-danismani-cv-ornegi-2.png",
+        "/x-cards/fact/satis-danismani-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/muhasebeci-cv-ornegi": {
+      "slug": "muhasebeci-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Muhasebeci CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Titiz ve detay odaklı bir muhasebe uzmanıyım. Aylık kapanış, KDV/stopaj beyannameleri ve mutabakat süreçlerinde deneyimliyim"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Aylık kapanış işlemlerini X iş gününde tamamladım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Genel Muhasebe, Vergi Beyannameleri, Excel (ileri), Logo / Mikro / Netsis gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/muhasebeci-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/muhasebeci-cv-ornegi-2.png",
+        "/x-cards/fact/muhasebeci-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/yazilim-gelistirici-cv-ornegi": {
+      "slug": "yazilim-gelistirici-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Yazılım Geliştirici CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Temiz, test edilebilir kod yazmaya önem veren bir yazılım geliştiricisiyim. Web uygulamalarını uçtan uca geliştirme ve ekip içinde iş birliği konusunda deneyimliyim"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: [Teknoloji] ile geliştirilen uygulamayı X kullanıcıya ulaştırdım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: JavaScript / TypeScript, React, Node.js, SQL gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/yazilim-gelistirici-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/yazilim-gelistirici-cv-ornegi-2.png",
+        "/x-cards/fact/yazilim-gelistirici-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ogretmen-cv-ornegi": {
+      "slug": "ogretmen-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Öğretmen CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Öğrencilerin potansiyelini ortaya çıkarmayı hedefleyen, sabırlı ve yaratıcı bir öğretmenim. Farklı öğrenme stillerine uygun ders planları hazırlarım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: X öğrencilik sınıfta yıllık plan ve ders programı uyguladım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Ders Planlama, Sınıf Yönetimi, Ölçme ve Değerlendirme, Eğitim Teknolojileri gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/ogretmen-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/ogretmen-cv-ornegi-2.png",
+        "/x-cards/fact/ogretmen-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/hemsire-cv-ornegi": {
+      "slug": "hemsire-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Hemşire CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Hasta güvenliğini ve empatiyi ön planda tutan bir hemşireyim. Yoğun tempoda çalışma, ekip iletişimi ve doğru kayıt tutma konularında deneyimliyim"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Günde ortalama X hastanın bakımını ve takibini üstlendim. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Hasta Bakımı, Acil Müdahale, İlaç Uygulama, Hasta Eğitimi gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/hemsire-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/hemsire-cv-ornegi-2.png",
+        "/x-cards/fact/hemsire-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/musteri-temsilcisi-cv-ornegi": {
+      "slug": "musteri-temsilcisi-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Müşteri Temsilcisi CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Sakin ve çözüm odaklı bir müşteri temsilcisiyim. Zor durumdaki müşterileri memnun etmeyi ve ilk görüşmede çözüm sunmayı hedeflerim"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Günde ortalama X müşteri talebini yanıtladım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Aktif Dinleme, Problem Çözme, CRM Yazılımları, Yazılı İletişim gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/musteri-temsilcisi-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/musteri-temsilcisi-cv-ornegi-2.png",
+        "/x-cards/fact/musteri-temsilcisi-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/insan-kaynaklari-uzmani-cv-ornegi": {
+      "slug": "insan-kaynaklari-uzmani-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "İnsan Kaynakları Uzmanı CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: İşe alım, çalışan deneyimi ve özlük süreçlerinde deneyimli bir İK uzmanıyım. Adayla ve yöneticiyle şeffaf iletişim kurarım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Yılda X pozisyon için işe alım sürecini yönettim. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: İşe Alım, Mülakat Teknikleri, Bordro Süreçleri, İş Hukuku gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/insan-kaynaklari-uzmani-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/insan-kaynaklari-uzmani-cv-ornegi-2.png",
+        "/x-cards/fact/insan-kaynaklari-uzmani-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/dijital-pazarlama-uzmani-cv-ornegi": {
+      "slug": "dijital-pazarlama-uzmani-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Dijital Pazarlama Uzmanı CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Veriye dayalı kampanyalar kuran bir dijital pazarlama uzmanıyım. Reklam, içerik ve sosyal medya yönetiminde ölçülebilir sonuçlara odaklanırım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Aylık X TL reklam bütçesini yönetti ve dönüşümü %X artırdım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Google Ads, Meta Ads, SEO, Google Analytics gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/dijital-pazarlama-uzmani-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/dijital-pazarlama-uzmani-cv-ornegi-2.png",
+        "/x-cards/fact/dijital-pazarlama-uzmani-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/muhendis-cv-ornegi": {
+      "slug": "muhendis-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Mühendis CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Analitik düşünen, sahada ve ofiste proje yürütebilen bir mühendisim. Güvenlik, kalite ve termin odaklı çalışırım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: X TL bütçeli projeyi zamanında ve bütçe içinde teslim ettim. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: AutoCAD, Proje Yönetimi, MS Project, Kalite Yönetimi (ISO 9001) gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/muhendis-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/muhendis-cv-ornegi-2.png",
+        "/x-cards/fact/muhendis-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/garson-otel-restoran-cv-ornegi": {
+      "slug": "garson-otel-restoran-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Garson / Otel / Restoran Çalışanı CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Güler yüzlü, hızlı ve müşteri memnuniyetini önceleyen bir servis profesyoneliyim. Yoğun saatlerde sakin kalarak ekiple uyumlu çalışırım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Yoğun vardiyalarda günde ortalama X misafire hizmet verdim. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Müşteri Hizmeti, Takım Çalışması, Kasa Kullanımı, Hijyen Standartları gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/garson-otel-restoran-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/garson-otel-restoran-cv-ornegi-2.png",
+        "/x-cards/fact/garson-otel-restoran-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/depo-lojistik-cv-ornegi": {
+      "slug": "depo-lojistik-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Depo ve Lojistik Çalışanı CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Düzenli ve sorumluluk sahibi bir depo ve lojistik çalışanıyım. Stok doğruluğu, zamanında sevkiyat ve iş güvenliği konusunda titizimdir"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Günde ortalama X koli/palet sevkiyatını hazırladım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Stok Yönetimi, Forklift Kullanımı, WMS / ERP, Sevkiyat Planlama gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/depo-lojistik-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/depo-lojistik-cv-ornegi-2.png",
+        "/x-cards/fact/depo-lojistik-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/yonetici-cv-ornegi": {
+      "slug": "yonetici-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Yönetici CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Ekiplerini hedeflere taşıyan, sonuç odaklı bir yöneticiyim. Strateji, bütçe ve insan yönetimini dengeli yürütürüm"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: X kişilik ekibi yöneterek hedeflerin %X'ini gerçekleştirdim. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Ekip Yönetimi, Stratejik Planlama, Bütçe Yönetimi, Performans Yönetimi gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/yonetici-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/yonetici-cv-ornegi-2.png",
+        "/x-cards/fact/yonetici-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/grafik-tasarimci-cv-ornegi": {
+      "slug": "grafik-tasarimci-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Grafik Tasarımcı CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Markaların hikâyesini görsel dille anlatan bir grafik tasarımcıyım. Baskı ve dijital mecralarda tutarlı kimlik çalışmaları yaparım"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: X markanın kurumsal kimliğini ve görsel setlerini tasarladım. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: Adobe Photoshop, Adobe Illustrator, Figma, Marka Kimliği gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/grafik-tasarimci-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/grafik-tasarimci-cv-ornegi-2.png",
+        "/x-cards/fact/grafik-tasarimci-cv-ornegi-3.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/ofis-asistani-cv-ornegi": {
+      "slug": "ofis-asistani-cv-ornegi",
+      "topic": "cv",
+      "tags": [
+        "#CV",
+        "#İşArama"
+      ],
+      "hook": "Ofis Asistanı / Sekreter CV Örneği",
+      "tips": [
+        {
+          "title": "Özetle başlayın",
+          "text": "Üstte 2–4 cümlelik özet: Organize, güvenilir ve çok görevli çalışmaya yatkın bir ofis asistanıyım. Yazışma, toplantı ve evrak süreçlerini eksiksiz yürütürüm"
+        },
+        {
+          "title": "Rakamla yazın",
+          "text": "Örnek madde: Yöneticinin takvimini, toplantı ve seyahat planlarını yönettim. X yerine kendi gerçek rakamınızı yazın"
+        },
+        {
+          "title": "Becerileri ilandan alın",
+          "text": "İlanın kullandığı kelimeleri yazın: MS Office (Word, Excel, PowerPoint), Takvim Yönetimi, Yazışma, Dosyalama gibi. Yalnızca gerçekten bildiklerinizi ekleyin"
+        },
+        {
+          "title": "Uydurmayın",
+          "text": "Mülakatta anlatamayacağınız bir madde CV'de durmasın. Rakamınızı bilmiyorsanız o maddeyi yazmayın"
+        },
+        {
+          "title": "Hazır cümleler",
+          "text": "CV Oluştur'da mesleğinizi seçin; bu cümleler ve beceri önerileri tek tıkla CV'nize eklensin. Ücretsiz"
+        }
+      ],
+      "card": "/x-cards/tip/ofis-asistani-cv-ornegi.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/ofis-asistani-cv-ornegi-2.png",
+        "/x-cards/fact/ofis-asistani-cv-ornegi-3.png"
+      ]
+    }
+  },
+  "products": [
+    {
+      "id": "compress",
+      "text": "PDF e-postaya sığmıyor mu? Boyutu küçült: hedef boyut seç, sonucu indir. Örnek: 12 MB → 1,8 MB. Üyelik gerekmeden dene.",
+      "link": "https://www.pdfplatform.app/tools/compress",
+      "card": "/x-cards/product/compress.png"
+    },
+    {
+      "id": "merge",
+      "text": "Dağınık PDF'leri tek dosyada topla: sırala ve birleştir. Dosyaların cihazında işlenir, sunucuya yüklenmez.",
+      "link": "https://www.pdfplatform.app/tools/merge-pdf",
+      "card": "/x-cards/product/merge.png"
+    },
+    {
+      "id": "pdf-to-word",
+      "text": "PDF'i düzenlenebilir Word belgesine çevir. Kurulum gerekmez.",
+      "link": "https://www.pdfplatform.app/tools/pdf-to-word",
+      "card": "/x-cards/product/pdf-to-word.png"
+    },
+    {
+      "id": "cv-olustur",
+      "text": "CV'ni hazır şablonla dakikalar içinde hazırla, ATS röntgeniyle kontrol et. Bilgilerin yalnızca tarayıcında kalır.",
+      "link": "https://www.pdfplatform.app/tools/cv-olustur",
+      "card": "/x-cards/product/cv-olustur.png"
+    },
+    {
+      "id": "image-to-pdf",
+      "text": "Fotoğrafları tek PDF'te topla. Dosyalar cihazında işlenir.",
+      "link": "https://www.pdfplatform.app/tools/image-to-pdf",
+      "card": "/x-cards/product/image-to-pdf.png"
+    },
+    {
+      "id": "belge-tara",
+      "text": "Telefon kamerasıyla belge tara: kenarlar otomatik bulunur, eğri çekim düzelir, PDF olarak kaydedersin. Cihazında işlenir.",
+      "link": "https://www.pdfplatform.app/tools/belge-tara",
+      "card": "/x-cards/product/belge-tara.png"
+    },
+    {
+      "id": "encrypt",
+      "text": "Gizli belgeni parolayla koru: PDF'e şifre koymak birkaç adım.",
+      "link": "https://www.pdfplatform.app/tools/encrypt",
+      "card": "/x-cards/product/encrypt.png"
+    },
+    {
+      "id": "grayscale-pdf",
+      "text": "Renkli PDF'i siyah-beyaza çevir; metin seçilebilir kalır.",
+      "link": "https://www.pdfplatform.app/tools/grayscale-pdf",
+      "card": "/x-cards/product/grayscale-pdf.png"
+    }
+  ],
+  "polls": [
+    {
+      "id": "kullanim",
+      "question": "PDF'i en çok ne için kullanıyorsunuz?",
+      "options": [
+        "Birleştirme",
+        "Sıkıştırma",
+        "Word'e çevirme",
+        "İmzalama"
+      ]
+    },
+    {
+      "id": "eposta",
+      "question": "PDF e-postaya sığmayınca ne yapıyorsunuz?",
+      "options": [
+        "Sıkıştırıyorum",
+        "Parçalara bölüyorum",
+        "Link gönderiyorum",
+        "Vazgeçiyorum"
+      ]
+    },
+    {
+      "id": "cvbicim",
+      "question": "CV'nizi hangi biçimde gönderiyorsunuz?",
+      "options": [
+        "PDF",
+        "Word",
+        "Başvuru formu",
+        "Karışık"
+      ]
+    },
+    {
+      "id": "tarama",
+      "question": "Belge taramak için ne kullanıyorsunuz?",
+      "options": [
+        "Telefon kamerası",
+        "Tarayıcı cihaz",
+        "Tarama uygulaması",
+        "Fotokopi"
+      ]
+    }
+  ]
+}

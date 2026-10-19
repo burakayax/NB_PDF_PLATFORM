@@ -107,3 +107,4 @@ web/frontend/public/social/
 
 # AI Fotoğraf Stüdyosu model/wasm dosyaları (build-zamanı: scripts/setup-photo-ai.mjs)
 web/frontend/public/photo-ai/
+web/frontend/public/x-cards/

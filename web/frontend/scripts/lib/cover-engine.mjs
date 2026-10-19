@@ -102,6 +102,30 @@ const pillBox = (label, x, y, h, { fill, text, stroke, shadow }) => {
   };
 };
 
+/**
+ * "Somut ipucu" kartı (X görselleri): ipucu/rakam satırı tek başına okunur. Düğmenin yerini alır, 1–2 satıra sığar.
+ * Düzen motoru düğme için bir yükseklik ayırdığından kart da aynı mekanizmayla yerleşir.
+ */
+const factBox = (fact, x, y, h, maxW, pal) => {
+  const size0 = Math.round(h * 0.26);
+  let size = size0, lines = [];
+  const innerW = maxW - h * 0.95 - 28;
+  for (; size >= 18; size -= 2) {
+    lines = wrapLines(fact, size, innerW);
+    if (lines.length <= 2 && lines.length * size * 1.25 <= h - 24) break;
+  }
+  lines = lines.slice(0, 2);
+  const blockH = lines.length * size * 1.25;
+  const ty = y + (h - blockH) / 2 + size * 0.95;
+  return {
+    w: maxW,
+    svg: `<g filter="url(#shadow)"><rect x="${x}" y="${y}" width="${maxW}" height="${h}" rx="${Math.min(30, h / 3)}" fill="#fff"/></g>
+    <rect x="${x}" y="${y}" width="${Math.max(10, h * 0.07)}" height="${h}" rx="${Math.min(30, h / 3)}" fill="${pal.a}"/>
+    <circle cx="${x + h * 0.5 + 8}" cy="${y + h / 2}" r="${h * 0.3}" fill="${C.amber}"/>${icon("bulb", x + h * 0.5 + 8 - h * 0.18, y + h / 2 - h * 0.18, h * 0.36, NAVY, 2.2)}
+    ${lines.map((l, i) => T(l, size, x + h * 0.95 + 14, ty + i * size * 1.25, NAVY)).join("")}`,
+  };
+};
+
 /** Ortak geometri. */
 function geometry(w, h, key) {
   const isH = w / h > 1.3;
@@ -113,7 +137,7 @@ function geometry(w, h, key) {
   const y0 = logoTop + logoH + (reel ? 44 : Math.round(h * (isH ? 0.07 : 0.04)));
   const yb = reel ? 1670 : h - Math.round(m * 0.8);
   const ph = reel ? 104 : Math.round(h * (isH ? 0.125 : 0.07));
-  return { w, h, isH, reel, m, logoW, logoH, logoTop, y0, yb, ph };
+  return { w, h, isH, reel, m, logoW, logoH, logoTop, y0, yb, ph, fh: Math.round(ph * (isH ? 1.9 : 1.7)) };
 }
 
 /* ─────────────────────────── Düzenler ─────────────────────────── */
@@ -133,15 +157,15 @@ const LAYOUT_FNS = {
       const blk = blkIn({ maxW: w * 0.5, maxH: yb - ph - 40 - y0, sizeMax: 64, caps });
       const t = drawText(blk, { x: m, y: y0, maxW: w * 0.5, color: NAVY, last: C.blue2, banner });
       const D = Math.min(h * 0.8, w * 0.38), cx = w * 0.75, cy = h * 0.5;
-      const pill = pillBox(c.cta, m, yb - ph, ph, { fill: "#fff", text: NAVY, stroke: NAVY, shadow: NAVY });
+      const pill = c.pill(m, yb - ph, ph, { fill: "#fff", text: NAVY, stroke: NAVY, shadow: NAVY });
       return { defs, bg: bgBody, body: `${t.svg}<circle cx="${cx + 10}" cy="${cy + 10}" r="${D / 2}" fill="${NAVY}"/><circle cx="${cx}" cy="${cy}" r="${D / 2}" fill="${pal.a}" stroke="${NAVY}" stroke-width="7"/>${c.place({ ...pal, t: "#fff" }, cx - D * 0.44, cy - D * 0.44, D * 0.88)}${pill.svg}` };
     }
     const blk = blkIn({ maxW: w - 2 * m, maxH: (yb - y0) * 0.38, sizeMax: Math.round(w * 0.17), caps });
     const t = drawText(blk, { x: m, y: y0, align: "center", maxW: w - 2 * m, color: NAVY, last: C.blue2, banner });
     const zoneTop = t.bottom + 20, zoneBot = yb - ph - 24;
     const D = Math.max(160, Math.min(w * 0.64, zoneBot - zoneTop)), cy = (zoneTop + zoneBot) / 2, cx = w / 2;
-    const pillW = pillBox(c.cta, 0, 0, ph, { fill: "#fff", text: NAVY }).w;
-    const pill2 = pillBox(c.cta, (w - pillW) / 2, yb - ph, ph, { fill: "#fff", text: NAVY, stroke: NAVY, shadow: NAVY });
+    const pillW = c.pill(0, 0, ph, { fill: "#fff", text: NAVY }).w;
+    const pill2 = c.pill((w - pillW) / 2, yb - ph, ph, { fill: "#fff", text: NAVY, stroke: NAVY, shadow: NAVY });
     return { defs, bg: bgBody, body: `${t.svg}<circle cx="${cx + 10}" cy="${cy + 10}" r="${D / 2}" fill="${NAVY}"/><circle cx="${cx}" cy="${cy}" r="${D / 2}" fill="${pal.a}" stroke="${NAVY}" stroke-width="7"/>${c.place({ ...pal, t: "#fff" }, cx - D * 0.44, cy - D * 0.44, D * 0.88)}${pill2.svg}` };
   },
 
@@ -151,7 +175,7 @@ const LAYOUT_FNS = {
     const defs = `<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7faff"/><stop offset="1" stop-color="#dfeaff"/></linearGradient>`;
     const bgBody = `<rect width="${w}" height="${h}" fill="url(#bg)"/><circle cx="${w * 0.8}" cy="${h * 0.55}" r="${Math.min(w, h) * 0.46}" fill="${pal.t}" fill-opacity="0.9"/><circle cx="${w * 0.02}" cy="${h}" r="${Math.min(w, h) * 0.32}" fill="#d3e2ff"/>`;
     const banner = { fill: C.amber, text: NAVY };
-    const pill = pillBox(c.cta, m, yb - ph, ph, { fill: C.blue2, text: "#fff" });
+    const pill = c.pill(m, yb - ph, ph, { fill: C.blue2, text: "#fff" });
     if (isH) {
       const blk = blkIn({ maxW: w * 0.52, maxH: yb - ph - 36 - y0, sizeMax: 64 });
       const t = drawText(blk, { x: m, y: y0, maxW: w * 0.52, color: C.ink, last: pal.a, banner });
@@ -173,7 +197,7 @@ const LAYOUT_FNS = {
       <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset="0.55" stop-color="#60a5fa"/><stop offset="1" stop-color="${pal.m}"/></linearGradient>`;
     const bgBody = `<rect width="${w}" height="${h}" fill="#050a1c"/><rect width="${w}" height="${h}" fill="url(#g1)"/><rect width="${w}" height="${h}" fill="url(#g2)"/>`;
     const banner = { fill: C.amber, text: NAVY };
-    const pill = pillBox(c.cta, isH ? m : (w - 400) / 2, yb - ph, ph, { fill: C.amber, text: NAVY });
+    const pill = c.pill(isH ? m : (w - 400) / 2, yb - ph, ph, { fill: C.amber, text: NAVY });
     if (isH) {
       const blk = blkIn({ maxW: w * 0.5, maxH: yb - ph - 36 - y0, sizeMax: 64 });
       const t = drawText(blk, { x: m, y: y0, maxW: w * 0.5, color: "#fff", last: "url(#txt)", banner });
@@ -183,8 +207,8 @@ const LAYOUT_FNS = {
     const S = Math.min(w * 0.74, (yb - y0) * 0.5), cx = w / 2, cy = y0 + S / 2 + 6;
     const blk = blkIn({ maxW: w - 2 * m, maxH: yb - ph - 30 - (cy + S / 2 + 20), sizeMax: Math.round(w * 0.1) });
     const t = drawText(blk, { x: m, y: cy + S / 2 + 24, align: "center", maxW: w - 2 * m, color: "#fff", last: "url(#txt)", banner });
-    const pill2 = pillBox(c.cta, 0, 0, ph, { fill: C.amber, text: NAVY });
-    const pillC = pillBox(c.cta, (w - pill2.w) / 2, yb - ph, ph, { fill: C.amber, text: NAVY });
+    const pill2 = c.pill(0, 0, ph, { fill: C.amber, text: NAVY });
+    const pillC = c.pill((w - pill2.w) / 2, yb - ph, ph, { fill: C.amber, text: NAVY });
     return { defs, bg: bgBody, body: `<circle cx="${cx}" cy="${cy}" r="${S * 0.7}" fill="url(#g3)"/><circle cx="${cx}" cy="${cy}" r="${S * 0.56}" fill="none" stroke="${pal.m}" stroke-opacity="0.35" stroke-width="2"/>${c.place(pal, cx - S / 2, cy - S / 2, S)}${t.svg}${pillC.svg}` };
   },
 
@@ -195,7 +219,7 @@ const LAYOUT_FNS = {
     const poly = isH ? `M0 0H${w * 0.62}L${w * 0.46} ${h}H0Z` : `M0 0H${w}V${h * 0.56}L0 ${h * 0.7}Z`;
     const bgBody = `<rect width="${w}" height="${h}" fill="#0b1b4d"/><path d="${poly}" fill="url(#dg)"/><path d="${isH ? `M${w * 0.62} 0L${w * 0.46} ${h}` : `M${w} ${h * 0.56}L0 ${h * 0.7}`}" stroke="#fff" stroke-width="7" stroke-opacity="0.9"/>`;
     const banner = { fill: C.amber, text: NAVY };
-    const pill = pillBox(c.cta, isH ? m : (w - 400) / 2, yb - ph, ph, { fill: "#fff", text: NAVY });
+    const pill = c.pill(isH ? m : (w - 400) / 2, yb - ph, ph, { fill: "#fff", text: NAVY });
     if (isH) {
       const blk = blkIn({ maxW: w * 0.42, maxH: yb - ph - 36 - y0, sizeMax: 60 });
       const t = drawText(blk, { x: m, y: y0, maxW: w * 0.42, color: "#fff", last: C.amber, banner });
@@ -205,8 +229,8 @@ const LAYOUT_FNS = {
     const blk = blkIn({ maxW: w - 2 * m, maxH: (h * 0.56 - y0) * 0.95, sizeMax: Math.round(w * 0.1) });
     const t = drawText(blk, { x: m, y: y0, maxW: w - 2 * m, color: "#fff", last: C.amber, banner });
     const S = Math.min(w * 0.74, (yb - ph - 20 - (h * 0.46)) * 1.0 + 90);
-    const pillC = pillBox(c.cta, 0, 0, ph, { fill: "#fff", text: NAVY });
-    const pillX = pillBox(c.cta, (w - pillC.w) / 2, yb - ph, ph, { fill: "#fff", text: NAVY });
+    const pillC = c.pill(0, 0, ph, { fill: "#fff", text: NAVY });
+    const pillX = c.pill((w - pillC.w) / 2, yb - ph, ph, { fill: "#fff", text: NAVY });
     return { defs, bg: bgBody, body: `${t.svg}${c.place(pal, w / 2 - S / 2, Math.max(t.bottom + 6, h * 0.5 - S * 0.12), S)}${pillX.svg}` };
   },
 
@@ -221,14 +245,14 @@ const LAYOUT_FNS = {
       const blk = blkIn({ maxW: w * 0.4, maxH: yb - ph - 36 - y0, sizeMax: 62 });
       const t = drawText(blk, { x: m, y: y0, maxW: w * 0.4, color: "#fff", last: C.amber, banner });
       const D = h * 1.02, cx = w * 0.78, cy = h * 0.52;
-      const pill = pillBox(c.cta, m, yb - ph, ph, { fill: C.amber, text: NAVY });
+      const pill = c.pill(m, yb - ph, ph, { fill: C.amber, text: NAVY });
       return { defs, bg: bgBody, body: `<circle cx="${cx}" cy="${cy}" r="${D / 2 + 22}" fill="#fff" fill-opacity="0.16"/><circle cx="${cx}" cy="${cy}" r="${D / 2}" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="${D / 2 - 18}" fill="${pal.t}"/>${c.place(pal, cx - D * 0.4, cy - D * 0.4, D * 0.8)}${sparkle(cx - D * 0.5, cy - D * 0.32, 26)}${sparkle(cx + D * 0.42, cy + D * 0.4, 18)}${t.svg}${pill.svg}` };
     }
     const D = Math.min(w * 0.78, (yb - y0) * 0.5), cx = w / 2, cy = y0 + D / 2;
     const blk = blkIn({ maxW: w - 2 * m, maxH: yb - ph - 28 - (cy + D / 2 + 26), sizeMax: Math.round(w * 0.095) });
     const t = drawText(blk, { x: m, y: cy + D / 2 + 28, align: "center", maxW: w - 2 * m, color: "#fff", last: C.amber, banner });
-    const p0 = pillBox(c.cta, 0, 0, ph, { fill: C.amber, text: NAVY });
-    const pill = pillBox(c.cta, (w - p0.w) / 2, yb - ph, ph, { fill: C.amber, text: NAVY });
+    const p0 = c.pill(0, 0, ph, { fill: C.amber, text: NAVY });
+    const pill = c.pill((w - p0.w) / 2, yb - ph, ph, { fill: C.amber, text: NAVY });
     return { defs, bg: bgBody, body: `<circle cx="${cx}" cy="${cy}" r="${D / 2 + 20}" fill="#fff" fill-opacity="0.16"/><circle cx="${cx}" cy="${cy}" r="${D / 2}" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="${D / 2 - 16}" fill="${pal.t}"/>${c.place(pal, cx - D * 0.4, cy - D * 0.4, D * 0.8)}${sparkle(cx - D * 0.5, cy - D * 0.3, 28)}${sparkle(cx + D * 0.46, cy + D * 0.36, 20)}${t.svg}${pill.svg}` };
   },
 
@@ -253,7 +277,7 @@ const LAYOUT_FNS = {
       parts.push(b.svg);
       y += blk.size * 0.1 + b.h;
     }
-    const pill = pillBox(c.cta, m, yb - ph, ph, { fill: C.amber, text: NAVY });
+    const pill = c.pill(m, yb - ph, ph, { fill: C.amber, text: NAVY });
     if (isH) {
       const S = h * 0.9;
       return { defs, bg: bgBody, body: `${c.place(pal, w * 0.78 - S / 2, h * 0.52 - S / 2, S)}${parts.join("")}${pill.svg}` };
@@ -272,7 +296,7 @@ const LAYOUT_FNS = {
       <rect x="${x}" y="${y}" width="${ww}" height="${Math.min(54, hh * 0.1)}" rx="26" fill="#eef3ff"/><rect x="${x}" y="${y + 24}" width="${ww}" height="${Math.min(30, hh * 0.06)}" fill="#eef3ff"/>
       ${[0, 1, 2].map((i) => `<circle cx="${x + 30 + i * 26}" cy="${y + Math.min(54, hh * 0.1) / 2}" r="7" fill="${["#ff6b6b", "#ffd34d", "#4ade80"][i]}"/>`).join("")}
       <rect x="${x + 18}" y="${y + Math.min(54, hh * 0.1) + 14}" width="${ww - 36}" height="${hh - Math.min(54, hh * 0.1) - 32}" rx="18" fill="${pal.t}"/>`;
-    const pill = pillBox(c.cta, m, yb - ph, ph, { fill: C.blue2, text: "#fff" });
+    const pill = c.pill(m, yb - ph, ph, { fill: C.blue2, text: "#fff" });
     if (isH) {
       const blk = blkIn({ maxW: w * 0.46, maxH: yb - ph - 36 - y0, sizeMax: 62 });
       const t = drawText(blk, { x: m, y: y0, maxW: w * 0.46, color: C.ink, last: pal.a, banner });
@@ -295,7 +319,7 @@ const LAYOUT_FNS = {
     const bgBody = `<rect width="${w}" height="${h}" fill="#ffffff"/><rect width="${band}" height="${h}" fill="url(#sb)"/>`;
     const banner = { fill: C.amber, text: NAVY };
     const x0 = m + band;
-    const pill = pillBox(c.cta, x0, yb - ph, ph, { fill: C.blue2, text: "#fff" });
+    const pill = c.pill(x0, yb - ph, ph, { fill: C.blue2, text: "#fff" });
     if (isH) {
       const blk = blkIn({ maxW: w * 0.48, maxH: yb - ph - 36 - y0, sizeMax: 64 });
       const t = drawText(blk, { x: x0, y: y0, maxW: w * 0.48, color: C.ink, last: pal.a, banner });
@@ -340,13 +364,24 @@ export function hash(s) {
 }
 
 /** Kapak SVG'si. */
-export function coverSvg({ layout, title, tag = "", hero, heroOpts, accent, w, h, key, cta = "pdfplatform.app", forceCaps = false }) {
+export function coverSvg({ layout, title, tag = "", hero, heroOpts, accent, w, h, key, cta = "pdfplatform.app", forceCaps = false, fact = "" }) {
   const g = geometry(w, h, key);
   const pal = palFor(accent);
   // 1920 piksellik uzun tuvalde (Reels/Shorts) başlık, genişlikten türeyen punto yüzünden küçük kalıyordu.
   const boost = g.reel ? 1.3 : 1;
   const blkIn = (o) => fitBlock({ head: title, tag, caps: forceCaps, ...o, sizeMax: o.sizeMax * boost, ...(forceCaps && o.caps === undefined ? { caps: true } : {}) });
-  const ctx = { ...g, pal, hero, cta, blkIn, place: (p, x, y, S) => placeHero(hero, p, x, y, S, heroOpts) };
+  // Somut ipucu varsa düğmenin yerine kart gelir (daha yüksek: layout metin alanını ona göre daraltır).
+  const factW = g.isH ? Math.min(w * 0.5, 600) : w - 2 * g.m;
+  const ctx = {
+    ...g,
+    ...(fact ? { ph: g.fh } : {}),
+    pal,
+    hero,
+    cta,
+    blkIn,
+    place: (p, x, y, S) => placeHero(hero, p, x, y, S, heroOpts),
+    pill: (x, y, hh, style) => (fact ? factBox(fact, x, y, hh, factW, pal) : pillBox(cta, x, y, hh, style)),
+  };
   const fn = LAYOUT_FNS[layout] ?? LAYOUT_FNS.classic;
   const r = fn(ctx);
   const svg = `${svgOpen(w, h, r.defs)}${r.bg}${r.body}</svg>`;

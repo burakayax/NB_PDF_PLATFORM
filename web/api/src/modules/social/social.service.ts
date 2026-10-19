@@ -10,6 +10,7 @@
  * sunucu örneği aynı anda çalışsa bile veritabanı ikinciyi reddeder.
  */
 
+import { env } from "../../config/env.js";
 import { Prisma } from "@prisma/client";
 import type { SocialAccount, SocialPlatform } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
@@ -37,6 +38,9 @@ import {
 import type { ToolReel, ToolReelVideoInfo } from "./tool-reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { parseTags } from "./instagram-tags.js";
+import { loadXContent } from "./x-content.service.js";
+import { kindForCount, pickXPost } from "./x-queue.js";
+import type { XUsage } from "./x-queue.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 
@@ -498,6 +502,8 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
   for (const platform of ALL_PLATFORMS) {
     // Yalnız video kabul eden ağ (YouTube) blog görseliyle beslenmez; araç videoları ayrı akışta gider.
     if (PLATFORM_SPECS[platform].videoOnly) continue;
+    // X kendi haftalık döngüsünden beslenir (queueXPost): blog hattı bu ağı atlar.
+    if (PLATFORM_SPECS[platform].ownQueue) continue;
     const item = await pickNextItem(items, platform, config.recycleOldPosts);
     if (!item) {
       result.skipped.push({ platform, reason: "Paylaşılacak yeni yazı yok" });
@@ -565,6 +571,60 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
   }
 
   return result;
+}
+
+/**
+ * X: haftalık döngüden o günün gönderisini hazırlar (ipucu, ürün, ipucu, ürün, anket, "biliyor muydunuz").
+ * Yayın zamanı diğer ağlarla aynı mekanizmadan gelir; burada zamanlamaya dokunulmaz.
+ * Gönderi gövdesi thread/link yanıtı/anket planını taşır (x-compose.ts); yayıncı gövdeden okur.
+ */
+async function queueXPost(scheduledAt: Date, hold: boolean, result: QueueResult): Promise<void> {
+  const config = await readSocialConfig();
+  const dayKey = calendarDayKey(scheduledAt, config.timeZone);
+  const accounts = await readyAccounts();
+
+  // Gün başına bir X gönderisi: bugün zaten hazırlandıysa yenisi açılmaz.
+  if ((await prisma.socialPost.count({ where: { platform: "X", dayKey } })) > 0) return;
+
+  const content = await loadXContent();
+  if (!content) {
+    result.skipped.push({ platform: "X", reason: "X içerik kaynağı (social-x.json) okunamadı" });
+    return;
+  }
+  const rows = await prisma.socialPost.findMany({ where: { platform: "X" }, select: { guid: true, createdAt: true } });
+  const usage: XUsage = new Map();
+  for (const r of rows) usage.set(r.guid, Math.max(usage.get(r.guid) ?? 0, r.createdAt.getTime()));
+
+  const items = await fetchPairedFeedItems(PRIMARY_FEED_LANG);
+  const pick = pickXPost({
+    kind: kindForCount(rows.length),
+    content,
+    usage,
+    postUrls: items.map((i) => i.link),
+    recycle: config.recycleOldPosts,
+    siteOrigin: env.FRONTEND_ORIGIN.replace(/\/$/, ""),
+  });
+  if (!pick) {
+    result.skipped.push({ platform: "X", reason: "X için uygun içerik bulunamadı" });
+    return;
+  }
+
+  const manual = !accounts.has("X");
+  await prisma.socialPost.create({
+    data: {
+      platform: "X",
+      guid: pick.guid,
+      lang: "tr",
+      title: pick.title,
+      linkUrl: pick.linkUrl,
+      body: pick.body,
+      imageUrl: pick.imageUrl,
+      scheduledAt,
+      dayKey,
+      status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
+    },
+  });
+  result.queued.push({ platform: "X", title: pick.title, body: pick.body, imageUrl: pick.imageUrl, manual });
 }
 
 /** Bir önceki Instagram gönderisinin etiketleri: art arda iki gönderide aynı set çıkmasın. */
@@ -790,6 +850,12 @@ async function cleanupToolVideosSafely(): Promise<void> {
 /** Günün gönderilerini hazırlar: blog yazıları + (açıksa) sıradaki araç videosu. */
 export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
   const result = await queueBlogPosts(scheduledAt, hold);
+  try {
+    await queueXPost(scheduledAt, hold, result);
+  } catch (err) {
+    // X ek bir akış: hatası diğer ağların gönderilerini geri almamalı.
+    logger.warn("social", `X gönderisi kuyruğa alınamadı: ${String(err)}`);
+  }
   try {
     await maybeQueueToolReel(scheduledAt, hold, result);
   } catch (err) {

@@ -101,6 +101,10 @@ export type PlatformSpec = {
    * yalnızca araç videoları (Reels) gider.
    */
   videoOnly?: boolean;
+  /**
+   * Gönderileri kendi kuyruğundan çıkan ağ (X): blog hattı bu ağı atlar; içerik `queueXPost` ile haftalık döngüden gelir.
+   */
+  ownQueue?: boolean;
   /** Bu platformda saklanması gereken gizli alanlar. */
   secretFields: { key: string; label: string; help: string }[];
 };
@@ -109,6 +113,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   X: {
     platform: "X",
     label: "X (Twitter)",
+    ownQueue: true,
     // X'in gerçek sınırı. Bağlantı uzunluğu ne olursa olsun 23 karakter
     // sayılır (t.co kısaltması) — bu hesap `effectiveMax` içinde yapılır.
     maxChars: 280,
