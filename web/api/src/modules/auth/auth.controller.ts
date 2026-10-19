@@ -393,11 +393,21 @@ export async function loginController(request: Request, response: Response) {
     });
     return;
   }
-  if (captchaEnabled() && captchaRequired(parsed.data.email)) {
+  // Masaüstü uygulamasında doğrulama kutusu yok; orada yalnızca hesap kilidi geçerlidir.
+  if (!meta.desktop && captchaEnabled() && captchaRequired(parsed.data.email)) {
     const token = (request.body as { turnstileToken?: unknown } | undefined)?.turnstileToken;
     if (!(await verifyCaptcha(token, meta.ip))) {
+      logLoginAttempt({
+        outcome: "failure",
+        reason: token ? "captcha_failed" : "captcha_missing",
+        email: parsed.data.email,
+        httpStatus: 428,
+        ...meta,
+      });
       response.status(428).json({
-        message: "Devam etmek için lütfen robot olmadığınızı doğrulayın.",
+        message: token
+          ? "Robot doğrulaması başarısız oldu. Lütfen kutuyu yeniden işaretleyip tekrar deneyin."
+          : "Güvenliğiniz için lütfen “Robot değilim” kutusunu işaretleyin.",
         code: "captcha_required",
       });
       return;

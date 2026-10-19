@@ -285,6 +285,10 @@ export function AuthPage({
   const { serverEmailErr, serverPasswordErr, serverGeneralErr } = useMemo(() => {
     if (!serverError) return { serverEmailErr: "", serverPasswordErr: "", serverGeneralErr: "" };
     const lower = serverError.toLowerCase();
+    // Bot doğrulaması / kilit mesajları alan hatası değildir: genel uyarı olarak gösterilir.
+    if (lower.includes("robot") || lower.includes("hatalı deneme")) {
+      return { serverEmailErr: "", serverPasswordErr: "", serverGeneralErr: serverError };
+    }
     if (
       lower.includes("e-posta veya şifre") ||
       lower.includes("email or password") ||
