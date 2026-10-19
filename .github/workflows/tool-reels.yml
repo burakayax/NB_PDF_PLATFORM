@@ -7,6 +7,10 @@ name: Arac videosu uretimi
 # turu videoyu Instagram + Facebook Reels'e çevirir; paylaşılınca API videoyu siler (bu iş hiçbir
 # şey saklamaz). Yapay zekâ kullanan araçlar bu işe EKLENMEZ (kredi/ücret keser).
 #
+# İKİ SÜRÜM: Aynı çekimden iki video çıkar, yalnız son karedeki cümle farklıdır.
+#   reel.mp4          → Instagram          ("Bağlantı profilde"; açıklamadaki adres tıklanmaz)
+#   reel-aciklama.mp4 → YouTube + Facebook ("Bağlantı açıklamada"; açıklamadaki adres tıklanır)
+#
 # GEREKLİ GİZLİ ANAHTARLAR (GitHub → Settings → Secrets and variables → Actions):
 #   TOOL_REEL_API_BASE     Kimlik API'nin dışarıdan erişilen kökü, ör. https://api.pdfplatform.app
 #   TOOL_REEL_FACTORY_KEY  Rastgele uzun parola; API'de AYNI değer TOOL_REEL_FACTORY_KEY olarak tanımlı olmalı
@@ -107,27 +111,33 @@ jobs:
         if: steps.need.outputs.needed == 'true'
         run: |
           set -euo pipefail
-          ls -l "$RUNNER_TEMP/reel.mp4"
-          ffprobe -v error -show_entries format=duration,size:stream=index,codec_type,codec_name,width,height,duration -of default=nw=1 "$RUNNER_TEMP/reel.mp4"
-          DUR="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
-          echo "Sure: ${DUR}"
-          # Bozuk/bos video sunucuya yuklenmesin.
-          awk -v d="$DUR" 'BEGIN { exit !(d+0 >= 10) }'
-          # Meta Reels şartları (9:16, 1080x1920, 24-60 fps, 3-90 sn, AAC 48 kHz stereo).
-          W="$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
-          H="$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
-          FPS="$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
-          AR="$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
-          AC="$(ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 "$RUNNER_TEMP/reel.mp4")"
-          echo "Meta sartlari: ${W}x${H} ${FPS} fps, ses ${AR} Hz ${AC} kanal"
-          [ "$W" = "1080" ] && [ "$H" = "1920" ] && [ "$FPS" = "30/1" ] && [ "$AR" = "48000" ] && [ "$AC" = "2" ]
+          for F in reel.mp4 reel-aciklama.mp4; do
+            V="$RUNNER_TEMP/$F"
+            echo "== $F =="
+            ls -l "$V"
+            ffprobe -v error -show_entries format=duration,size:stream=index,codec_type,codec_name,width,height,duration -of default=nw=1 "$V"
+            DUR="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$V")"
+            echo "Sure: ${DUR}"
+            # Bozuk/bos video sunucuya yuklenmesin.
+            awk -v d="$DUR" 'BEGIN { exit !(d+0 >= 10) }'
+            # Meta Reels şartları (9:16, 1080x1920, 24-60 fps, 3-90 sn, AAC 48 kHz stereo).
+            W="$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$V")"
+            H="$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$V")"
+            FPS="$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 "$V")"
+            AR="$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$V")"
+            AC="$(ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 "$V")"
+            echo "Meta sartlari: ${W}x${H} ${FPS} fps, ses ${AR} Hz ${AC} kanal"
+            [ "$W" = "1080" ] && [ "$H" = "1920" ] && [ "$FPS" = "30/1" ] && [ "$AR" = "48000" ] && [ "$AC" = "2" ]
+          done
 
       - name: Videoyu inceleme icin sakla
         if: always() && steps.need.outputs.needed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: arac-videosu-cikti
-          path: ${{ runner.temp }}/reel.mp4
+          path: |
+            ${{ runner.temp }}/reel.mp4
+            ${{ runner.temp }}/reel-aciklama.mp4
           if-no-files-found: ignore
           retention-days: 2
 
@@ -135,11 +145,19 @@ jobs:
         if: steps.need.outputs.needed == 'true'
         run: |
           set -euo pipefail
+          # Once Instagram surumu, sonra YouTube + Facebook surumu.
           curl -fsS --max-time 300 -X PUT \
             -H "x-factory-key: ${FACTORY_KEY}" \
             -H "content-type: video/mp4" \
             -H "x-video-seconds: $(cat "$RUNNER_TEMP/reel.seconds")" \
             --data-binary "@$RUNNER_TEMP/reel.mp4" \
+            "${API_BASE%/}/api/tool-reel-factory/${{ steps.need.outputs.tool }}/video"
+          curl -fsS --max-time 300 -X PUT \
+            -H "x-factory-key: ${FACTORY_KEY}" \
+            -H "x-video-variant: caption" \
+            -H "content-type: video/mp4" \
+            -H "x-video-seconds: $(cat "$RUNNER_TEMP/reel.seconds")" \
+            --data-binary "@$RUNNER_TEMP/reel-aciklama.mp4" \
             "${API_BASE%/}/api/tool-reel-factory/${{ steps.need.outputs.tool }}/video"
 
       - name: Hata ekran goruntusu

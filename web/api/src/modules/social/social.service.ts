@@ -32,6 +32,7 @@ import {
   toolReelFeedItem,
   toolReelGuid,
   unusedFreshVideoFor,
+  variantForPlatform,
 } from "./tool-reels.service.js";
 import type { ToolReel, ToolReelVideoInfo } from "./tool-reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
@@ -586,7 +587,15 @@ export async function queueToolReel(
    * Elle hazırlıkta: `platforms` ile yalnız seçilen ağlar; `repeat` ile aynı gün aynı ağa ikinci kez
    * hazırlanabilir (örn. ilk gönderi hatalı çıktı, yeniden yayınlanacak). Otomatik tur bunları KULLANMAZ.
    */
-  options?: { platforms?: SocialPlatform[]; repeat?: boolean },
+  options?: {
+    platforms?: SocialPlatform[];
+    repeat?: boolean;
+    /**
+     * YouTube + Facebook için "Bağlantı açıklamada" sürümü. Verilmezse en yeni sürüm aranır; `null`
+     * (otomatik turda sürüm henüz hazır değil) ya da hiç bulunmazsa Instagram sürümü kullanılır.
+     */
+    captionVideo?: ToolReelVideoInfo | null;
+  },
 ): Promise<QueueResult> {
   const result: QueueResult = { queued: [], skipped: [] };
   const entry = findCatalogEntry(toolId);
@@ -601,6 +610,13 @@ export async function queueToolReel(
       reason: "Bu araç için henüz video üretilmedi (paylaşım zamanı yaklaşınca kendiliğinden üretilir)",
     });
     return result;
+  }
+  const captionVideo =
+    options?.captionVideo === undefined
+      ? await latestVideoFor(toolId, MANUAL_MAX_AGE_MS, scheduledAt, "caption")
+      : options.captionVideo;
+  if (!captionVideo) {
+    logger.warn("social", `${toolId}: "açıklamada" sürümü yok; YouTube/Facebook Instagram sürümüyle gidiyor`);
   }
   const config = await readSocialConfig();
   const dayKey = calendarDayKey(scheduledAt, config.timeZone);
@@ -620,10 +636,12 @@ export async function queueToolReel(
   for (const platform of targets) {
     const manual = !accounts.has(platform);
     const status = manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED";
+    // Instagram "profilde" sürümünü, YouTube + Facebook "açıklamada" sürümünü paylaşır.
+    const media = variantForPlatform(platform) === "caption" ? (captionVideo ?? usable) : usable;
     // Tekrar hazırlıkta: bu video için bu ağda zaten bekleyen bir gönderi varsa ikincisi açılmaz.
     if (options?.repeat) {
       const waiting = await prisma.socialPost.count({
-        where: { platform, imageUrl: usable.url, status: { in: ["DRAFT", "QUEUED", "PUBLISHING", "MANUAL"] } },
+        where: { platform, imageUrl: media.url, status: { in: ["DRAFT", "QUEUED", "PUBLISHING", "MANUAL"] } },
       });
       if (waiting > 0) {
         result.skipped.push({ platform, reason: "Bu video için bu hesapta zaten bekleyen bir gönderi var" });
@@ -641,13 +659,13 @@ export async function queueToolReel(
             title: item.title,
             linkUrl: item.link,
             body: bodies[platform],
-            imageUrl: usable.url,
+            imageUrl: media.url,
             scheduledAt,
             dayKey: attempt === 1 ? dayKey : `${dayKey}~${attempt}`,
             status,
           },
         });
-        result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: usable.url, manual });
+        result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: media.url, manual });
         break;
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -695,7 +713,8 @@ async function maybeQueueToolReel(scheduledAt: Date, hold: boolean, result: Queu
     result.skipped.push({ platform: null, reason: `Araç videosu (${due.id}) henüz hazır değil; bugün atlandı` });
     return;
   }
-  const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video);
+  const captionVideo = await unusedFreshVideoFor(due.id, scheduledAt, "caption");
+  const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video, { captionVideo });
   result.queued.push(...queued.queued);
   result.skipped.push(...queued.skipped);
 }
@@ -730,7 +749,8 @@ export async function catchUpToolReel(now: Date = new Date()): Promise<QueueResu
   const video = await unusedFreshVideoFor(due.id, scheduledAt);
   if (!video) return result;
 
-  const queued = await queueToolReel(due.id, scheduledAt, !config.reelsAutoPublish, video);
+  const captionVideo = await unusedFreshVideoFor(due.id, scheduledAt, "caption");
+  const queued = await queueToolReel(due.id, scheduledAt, !config.reelsAutoPublish, video, { captionVideo });
   result.queued.push(...queued.queued);
   result.skipped.push(...queued.skipped);
   if (queued.queued.length > 0) {
