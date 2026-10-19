@@ -119,15 +119,26 @@ export function useAuthSession() {
     if (window.localStorage.getItem(SESSION_HINT_KEY) !== "1") {
       return;
     }
-    try {
-      const refreshed = await refreshAuthSession();
-      if (refreshed) {
-        persistSession(refreshed.accessToken, refreshed.user);
+    // GEÇİCİ hata (429 / 5xx / ağ / zaman aşımı) oturumun bittiği anlamına GELMEZ.
+    // Eskiden her hata oturumu sessizce siliyordu → kullanıcı, sunucu bir an yoğun
+    // diye çıkış yapmış görünüyordu. Şimdi birkaç kez yeniden denenir; yine olmazsa
+    // oturum ipucu KORUNUR (bir sonraki sayfada yeniden denenir). Kesin 401 zaten
+    // `null` döner ve burada ele alınmaz.
+    const BEKLEMELER_MS = [800, 2000, 4500];
+    for (let deneme = 0; deneme <= BEKLEMELER_MS.length; deneme++) {
+      try {
+        const refreshed = await refreshAuthSession();
+        if (refreshed) {
+          persistSession(refreshed.accessToken, refreshed.user);
+        }
+        return;
+      } catch {
+        const bekleme = BEKLEMELER_MS[deneme];
+        if (bekleme === undefined) return; // pes et ama oturum ipucunu SİLME
+        await new Promise((r) => setTimeout(r, bekleme));
       }
-    } catch {
-      clearSession();
     }
-  }, [clearSession, persistSession]);
+  }, [persistSession]);
 
   useEffect(() => {
     registerSaasSessionSync((session) => {

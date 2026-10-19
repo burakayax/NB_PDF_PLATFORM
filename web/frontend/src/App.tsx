@@ -1387,10 +1387,15 @@ function App() {
 
   // Oturum, çalıntı şüphesiyle sunucuda kapatıldıysa kullanıcıya nedenini söyle.
   useEffect(() => {
-    if (isRestoring || isAuthenticated) return;
+    if (isRestoring) return;
     try {
+      // Giriş yapılınca not silinir; çıkışlı kaldıkça (sayfa değişse de) hatırlatılır,
+      // yoksa toast'u tek seferde kaçıran kullanıcı nedenini hiç göremez.
+      if (isAuthenticated) {
+        window.sessionStorage.removeItem(SESSION_CLOSED_NOTICE_KEY);
+        return;
+      }
       if (window.sessionStorage.getItem(SESSION_CLOSED_NOTICE_KEY) !== "security") return;
-      window.sessionStorage.removeItem(SESSION_CLOSED_NOTICE_KEY);
     } catch {
       return;
     }
