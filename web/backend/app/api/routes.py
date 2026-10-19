@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
+import tempfile
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
@@ -75,17 +78,48 @@ import src.pdf_toolkit_extra as ptx
 logger = logging.getLogger(__name__)
 
 
-def _result_payload_looks_like_pdf(mime: str, filename: str, payload_path: Path) -> bool:
-    """Meta bazen yanlış mime ile yazılır; dosya adı veya %PDF imzası ile doğrula."""
+def _result_payload_looks_like_pdf(mime: str, filename: str, payload_path: Path | None) -> bool:
+    """Meta bazen yanlış mime ile yazılır; dosya adı veya %PDF imzası ile doğrula.
+
+    R2/S3 depolamada yerel yol yoktur (``None``): karar yalnızca mime/ada göre verilir."""
     if "pdf" in (mime or "").lower():
         return True
     if (filename or "").lower().strip().endswith(".pdf"):
         return True
+    if payload_path is None:
+        return False
     try:
         with payload_path.open("rb") as fh:
             return fh.read(5).startswith(b"%PDF-")
     except OSError:
         return False
+
+
+@asynccontextmanager
+async def _preview_source(result_id: str, read: Any):
+    """Önizleme üretimi için yerel dosya yolu verir.
+
+    Yerel depoda ``read.payload_path`` doludur. Üretimde sonuçlar R2/S3'te durur ve yol
+    ``None`` gelir; o zaman dosya geçici bir klasöre indirilir ve iş bitince silinir.
+    (Eskiden yol doğrudan kullanıldığı için her önizleme isteği ``TypeError`` ile 500 veriyordu.)"""
+    if read.payload_path is not None:
+        yield read.payload_path
+        return
+    from app.core.result_store import _PAYLOAD_FILENAME, _s3_get
+
+    try:
+        data = await asyncio.to_thread(_s3_get, f"{result_id}/{_PAYLOAD_FILENAME}")
+    except Exception as exc:
+        logger.error("preview payload fetch failed result_id=%s: %s", result_id, exc)
+        raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
+    tmp_dir = Path(tempfile.mkdtemp(prefix="nb_preview_"))
+    suffix = Path(str(read.filename or "")).suffix[:8] or ".pdf"
+    path = tmp_dir / f"payload{suffix}"
+    try:
+        path.write_bytes(data)
+        yield path
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS"])
@@ -1517,7 +1551,8 @@ async def preview_result_hero(
     user_id = await saas_current_user_id(token)
     read = get_result(result_id, user_id)
     await _require_tool_unlocked(token, str(read_meta_only(result_id).get("tool") or "compress"))
-    png = await generate_hero_watermarked_preview_png_queued_from_path(read.payload_path)
+    async with _preview_source(result_id, read) as src:
+        png = await generate_hero_watermarked_preview_png_queued_from_path(src)
     if not png:
         raise HTTPException(status_code=404, detail="Preview could not be generated.")
     return Response(content=png, media_type="image/png")
@@ -1542,7 +1577,8 @@ async def preview_result_pdf(
     await _require_tool_unlocked(token, str(meta.get("tool") or "compress"))
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
-    preview = await generate_watermarked_preview_pdf_queued_from_path(read.payload_path)
+    async with _preview_source(result_id, read) as src:
+        preview = await generate_watermarked_preview_pdf_queued_from_path(src)
     if not preview:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp = {"Content-Disposition": content_disposition(read.filename, disposition="inline")}
