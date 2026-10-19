@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { PROFESSIONS } from "../components/tools/cv/cvProfessionData.mjs";
+import { cvFaq } from "./blogFaqCv.mjs";
 
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
@@ -87,6 +88,7 @@ function enBlocks(p, name) {
 
 export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS[p.id]).map((p, i) => {
   const [slugTr, , nameTr, nameEn] = CV_PROFESSION_SLUGS[p.id];
+  const faq = cvFaq(p.id, nameTr, nameEn);
   return post(
     {
       slug: slugTr,
@@ -102,14 +104,14 @@ export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS
       description: `${nameTr} CV'si nasıl yazılır? Profil özeti, rakamlı deneyim maddeleri ve beceri örnekleri; kopyalayıp kendinize uyarlayın.`,
       excerpt: `${nameTr} CV'sinde görev listesi yerine sonuç yazın. Özet, deneyim maddesi ve beceri örnekleri bu rehberde.`,
       blocks: trBlocks(p, nameTr),
-      faq: [],
+      faq: faq.tr,
     },
     {
       title: `${nameEn} CV Example`,
       description: `How to write a ${nameEn} CV: profile summary, number-driven bullets and key skills, with examples you can adapt.`,
       excerpt: `In a ${nameEn.toLowerCase()} CV, write results rather than a duty list. Summary, bullet and skills examples inside.`,
       blocks: enBlocks(p, nameEn),
-      faq: [],
+      faq: faq.en,
     },
   );
 });
