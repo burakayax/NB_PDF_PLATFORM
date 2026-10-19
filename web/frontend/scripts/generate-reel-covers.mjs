@@ -66,6 +66,9 @@ async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
   const scenarios = loadScenarios();
   warnMissingCatalog(scenarios.map((x) => x.id));
+  // Senaryosu (video) olmayan araçlar da COVER_SPECS'te satırı varsa kapak alır: video eklendiği gün kapak hazır olsun.
+  const known = new Set(scenarios.map((x) => x.id));
+  for (const id of Object.keys(COVER_SPECS)) if (!known.has(id)) scenarios.push({ id, title: id, sub: "" });
   for (const scenario of scenarios) {
     const spec = COVER_SPECS[scenario.id] ?? fallbackSpec(scenario);
     const jpg = await renderReelCover(spec);
