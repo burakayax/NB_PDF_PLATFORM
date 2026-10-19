@@ -15,6 +15,11 @@ Blog yazıları için video yapılmaz (onlar görselle gider).
    hiçbir şey saklanmaz. Yapay zekâ kullanan araçlar bu işe eklenmez (kredi keser).
 3. Günlük paylaşım turu videoyu Instagram + Facebook Reels gönderisine çevirir. "Önce onay"
    modundaysa taslak olarak bekler; sen izleyip onaylarsın.
+   **İki sürüm üretilir:** aynı çekimden iki video çıkar, yalnız son karedeki cümle farklıdır.
+   Instagram videosunda "Bağlantı profilde" yazar (Instagram'da açıklamadaki adres tıklanmaz).
+   YouTube + Facebook videosunda "Bağlantı açıklamada" yazar (orada açıklamadaki adres tıklanır).
+   Biri eksikse ikisi birlikte yeniden üretilir. "Açıklamada" sürümü bir sebeple yoksa YouTube/Facebook
+   Instagram sürümüyle gider (gönderi kaybolmasın diye); son karedeki cümle o zaman o platform için yanlış olur.
 4. Gönderiler yayınlanınca (ya da elle "paylaştım" işaretlenince) video sunucudan **otomatik silinir**.
    Hiç kullanılmayan video 36 saat, unutulmuş taslağın videosu 14 gün sonra silinir.
 
