@@ -237,11 +237,11 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
         </article>
 
         {/* SSS */}
-        {c.faq.length > 0 && (
+        {(c.faq?.length ?? 0) > 0 && (
           <section className="mt-14">
             <h2 className="mb-4 text-xl font-extrabold text-white">{tr ? "Sık Sorulan Sorular" : "Frequently Asked Questions"}</h2>
             <div className="space-y-3">
-              {c.faq.map((f, i) => (
+              {(c.faq ?? []).map((f, i) => (
                 <details key={i} className="group rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-[15px] font-semibold text-slate-100">{f.q}<span className="text-slate-400 transition group-open:rotate-45">+</span></summary>
                   <p className="mt-3 text-[14px] leading-relaxed text-slate-400">{f.a}</p>
