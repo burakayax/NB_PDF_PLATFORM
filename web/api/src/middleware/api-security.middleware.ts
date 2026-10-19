@@ -9,6 +9,7 @@ import {
   apiRateLimitForRequest,
   getApiSecurityResolved,
   logicalApiPath,
+  isSessionRefreshRequest,
   rateLimitCountsTowardAbuseBlock,
   rateLimitTierForRequest,
 } from "../lib/api-security-settings.js";
@@ -200,6 +201,12 @@ export async function abuseBlockMiddleware(request: Request, response: Response,
   // tek bir IP'den çıktığı için, aksi halde tek bir taşkın kullanıcı giriş
   // yapmış tüm kullanıcıları 60 dakika dışarıda bırakabiliyordu.
   if (requestHasInternalServiceSecret(request)) {
+    next();
+    return;
+  }
+  // Oturum yenileme bloktan muaf: geçerli imzalı çerez ister, ucuzdur; blok yüzünden
+  // kullanıcıyı sessizce oturumdan düşürmek (ortak IP'de herkesi) kabul edilemez.
+  if (isSessionRefreshRequest(request)) {
     next();
     return;
   }

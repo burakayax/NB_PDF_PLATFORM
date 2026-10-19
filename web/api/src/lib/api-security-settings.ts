@@ -108,11 +108,28 @@ export function apiRateLimitForRequest(request: Request, cfg: ApiSecurityResolve
   if (path === "/auth/password" && request.method === "PATCH") {
     return cfg.authPasswordPerMinute;
   }
+  // Oturum yenileme: her tam sayfa yüklemesinde bir kez çağrılır ve ortak "default"
+  // kovasına girerse sayfa geçişleri sırasında 429 alıp kullanıcıyı sessizce
+  // oturumdan düşürürdü. Ayrı ve geniş bir kova; kötüye kullanım yine sınırlı.
+  if (path === "/auth/refresh" && request.method === "POST") {
+    return REFRESH_PER_MINUTE;
+  }
   return cfg.defaultPerMinute;
+}
+
+/** IP başına dakikada oturum yenileme tavanı (normal kullanım: sayfa başına 1). */
+export const REFRESH_PER_MINUTE = 240;
+
+/** Oturum yenileme isteği mi (kötüye kullanım blokundan muaf tutulur). */
+export function isSessionRefreshRequest(request: Request): boolean {
+  return logicalApiPath(request) === "/auth/refresh" && request.method === "POST";
 }
 
 export function rateLimitTierForRequest(request: Request): string {
   const path = logicalApiPath(request);
+  if (path === "/auth/refresh" && request.method === "POST") {
+    return "auth-refresh";
+  }
   if (path === "/health" || path === "/health/db") {
     return "health";
   }
@@ -159,6 +176,10 @@ export function rateLimitCountsTowardAbuseBlock(request: Request): boolean {
     return false;
   }
   if (p === "/auth/password" && m === "PATCH") {
+    return false;
+  }
+  // Yenileme taşması, kullanıcıyı değil ortak IP'yi bloklatıp herkesi oturumdan düşürürdü.
+  if (p === "/auth/refresh" && m === "POST") {
     return false;
   }
   return true;
