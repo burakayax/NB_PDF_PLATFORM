@@ -40,6 +40,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
 
+from app.core.saas_gate import PlanLockedError, plan_locked_payload
 from app.core.tool_errors import GENERIC_TOOL_FAILURE_TR
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -139,6 +140,11 @@ async def cpu_capacity_exception_handler(request: Request, exc: CpuCapacityTimeo
             "retry_after_seconds": exc.retry_after_sec,
         },
     )
+
+
+@app.exception_handler(PlanLockedError)
+async def plan_locked_exception_handler(request: Request, exc: PlanLockedError):
+    return JSONResponse(status_code=403, content=plan_locked_payload(exc))
 
 
 @app.exception_handler(RateLimitExceeded)

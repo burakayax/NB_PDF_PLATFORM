@@ -92,6 +92,15 @@ router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS"])
 engine = get_engine()
 
 
+async def _require_tool_unlocked(token: str, tool: str) -> None:
+    """Sonuç/önizleme yolları: araç kullanıcının planında kilitliyse 403 (PlanLockedError).
+
+    Kilitli araçta işlem zaten başlamaz; bu kontrol plan düşürülmüş ya da eski kalmış sonuçların
+    süzülmüş önizlemesinin bile verilmemesini sağlar. Kota/limit durumuna bakmaz (önizleme ücretsiz).
+    """
+    await entitlement_check(token, tool)
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -279,7 +288,7 @@ async def download_job_output(
 ):
     # Kota artık indirme ONAYINDA (frontend ack) düşülür; burada sadece limit
     # dolu mu kontrol edilir. Böylece indirme yarıda kalırsa kullanıcının hakkı yanmaz.
-    decision = await entitlement_check(token, "merge")
+    decision = await entitlement_check(token, "merge", reject_plan_locked=False)
     if not decision.get("allowed"):
         return JSONResponse(
             status_code=402,
@@ -309,6 +318,7 @@ async def preview_merge_job_hero(
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
     """Birleştirilmiş çıktının ilk sayfası — ücretsiz filigranlı PNG (indirme kotası düşmez)."""
+    await _require_tool_unlocked(token, "merge")
     output_path, _output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
     png = await generate_hero_watermarked_preview_png_queued_from_path(output_path)
     if not png:
@@ -325,6 +335,7 @@ async def preview_merge_job_pdf(
     """Çok sayfalı önizleme (inline). FİLİGRANLI ve düşük çözünürlüklü bir kopya
     döner — kota düşmez. Ham çıktı burada ASLA servis edilmez: tarayıcıya inen
     dosya, indirme kapısını atlamak için kullanılabiliyordu."""
+    await _require_tool_unlocked(token, "merge")
     output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
     preview = await generate_watermarked_preview_pdf_queued_from_path(output_path)
     if not preview:
@@ -1461,6 +1472,7 @@ async def preview_result(
     user_id = await saas_current_user_id(token)
     read = get_result(result_id, user_id)
     meta = read_meta_only(result_id)
+    await _require_tool_unlocked(token, str(meta.get("tool") or "compress"))
     created = float(meta.get("created_at") or 0.0)
     created_iso: str | None = None
     if created > 0:
@@ -1489,6 +1501,7 @@ async def preview_result_thumbnail(
     """Serve the blurred preview PNG. FREE — no ``saas_check_access``."""
     user_id = await saas_current_user_id(token)
     read = get_result(result_id, user_id)
+    await _require_tool_unlocked(token, str(read_meta_only(result_id).get("tool") or "compress"))
     if read.thumbnail_path is None:
         raise HTTPException(status_code=404, detail="Thumbnail not available.")
     return FileResponse(path=str(read.thumbnail_path), media_type="image/png")
@@ -1503,6 +1516,7 @@ async def preview_result_hero(
     """Large watermarked first-page preview for gated-download modal (FREE, owner-only)."""
     user_id = await saas_current_user_id(token)
     read = get_result(result_id, user_id)
+    await _require_tool_unlocked(token, str(read_meta_only(result_id).get("tool") or "compress"))
     png = await generate_hero_watermarked_preview_png_queued_from_path(read.payload_path)
     if not png:
         raise HTTPException(status_code=404, detail="Preview could not be generated.")
@@ -1525,6 +1539,7 @@ async def preview_result_pdf(
         raise HTTPException(status_code=403, detail="Forbidden")
     mime_meta = str(meta.get("mime") or "").lower().strip()
     read = get_result(result_id, user_id)
+    await _require_tool_unlocked(token, str(meta.get("tool") or "compress"))
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
     preview = await generate_watermarked_preview_pdf_queued_from_path(read.payload_path)
@@ -1552,7 +1567,7 @@ async def download_result(
     # Kota (günlük/aylık hak) artık indirme ONAYINDA (frontend ack →
     # POST /api/entitlement/download-log/:id/ack) düşülür. Burada SADECE limitin
     # dolu olup olmadığı kontrol edilir; böylece indirme yarıda kalırsa hak yanmaz.
-    decision = await entitlement_check(token, tool)
+    decision = await entitlement_check(token, tool, reject_plan_locked=False)
     if not decision.get("allowed"):
         return JSONResponse(
             status_code=402,
