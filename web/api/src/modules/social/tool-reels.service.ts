@@ -30,7 +30,31 @@ export const MANUAL_MAX_AGE_MS = 14 * 24 * 3600_000;
 const PENDING_STATUSES = ["DRAFT", "QUEUED", "PUBLISHING", "MANUAL", "FAILED"];
 
 export type ToolReelVideoInfo = { id: string; url: string; seconds: number; createdAt: Date };
-export type ToolReel = ToolReelCatalogEntry & { guid: string; video: ToolReelVideoInfo | null };
+export type ToolReel = ToolReelCatalogEntry & {
+  guid: string;
+  /** Instagram sürümü (son karede "Bağlantı profilde"). */
+  video: ToolReelVideoInfo | null;
+  /** YouTube + Facebook sürümü (son karede "Bağlantı açıklamada"). */
+  captionVideo: ToolReelVideoInfo | null;
+};
+
+/**
+ * Aynı çekimin iki sürümü vardır; yalnız son karedeki yönlendirme cümlesi farklıdır.
+ *   profile → Instagram: açıklamadaki adres tıklanmaz, bağlantı profildedir.
+ *   caption → YouTube + Facebook: açıklamadaki adres tıklanır.
+ * Veritabanı şeması değişmesin diye sürüm kimlikten okunur: açıklama sürümünün kimliği
+ * `<araç>-aciklama-<ms>`, profil sürümününki eskisi gibi `<araç>-<ms>`.
+ */
+export type ReelVariant = "profile" | "caption";
+const CAPTION_MARK = "-aciklama-";
+
+export const variantOfId = (videoId: string): ReelVariant => (videoId.includes(CAPTION_MARK) ? "caption" : "profile");
+
+/** Gönderinin hangi ağı hangi sürümü kullanır? */
+export const variantForPlatform = (platform: string): ReelVariant => (platform === "INSTAGRAM" ? "profile" : "caption");
+
+const variantWhere = (variant: ReelVariant) =>
+  variant === "caption" ? { id: { contains: CAPTION_MARK } } : { id: { not: { contains: CAPTION_MARK } } };
 
 export const toolReelGuid = (toolId: string): string => `${TOOL_REEL_PREFIX}${toolId}`;
 
@@ -56,15 +80,26 @@ export async function loadToolReels(): Promise<ToolReel[]> {
     orderBy: { createdAt: "desc" },
   });
   return TOOL_REEL_CATALOG.map((entry) => {
-    const latest = rows.find((r) => r.toolId === entry.id);
-    return { ...entry, guid: toolReelGuid(entry.id), video: latest ? infoOf(latest) : null };
+    const latest = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "profile");
+    const latestCaption = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "caption");
+    return {
+      ...entry,
+      guid: toolReelGuid(entry.id),
+      video: latest ? infoOf(latest) : null,
+      captionVideo: latestCaption ? infoOf(latestCaption) : null,
+    };
   });
 }
 
-/** Aracın, en fazla `maxAgeMs` yaşında en yeni videosu. */
-export async function latestVideoFor(toolId: string, maxAgeMs: number, now = new Date()): Promise<ToolReelVideoInfo | null> {
+/** Aracın, en fazla `maxAgeMs` yaşında en yeni videosu (`variant` ile istenen sürüm). */
+export async function latestVideoFor(
+  toolId: string,
+  maxAgeMs: number,
+  now = new Date(),
+  variant: ReelVariant = "profile",
+): Promise<ToolReelVideoInfo | null> {
   const row = await prisma.socialToolVideo.findFirst({
-    where: { toolId, createdAt: { gte: new Date(now.getTime() - maxAgeMs) } },
+    where: { toolId, createdAt: { gte: new Date(now.getTime() - maxAgeMs) }, ...variantWhere(variant) },
     orderBy: { createdAt: "desc" },
     select: { id: true, seconds: true, createdAt: true },
   });
@@ -72,15 +107,24 @@ export async function latestVideoFor(toolId: string, maxAgeMs: number, now = new
 }
 
 /** Henüz hiçbir gönderiye bağlanmamış taze video (otomatik tur yalnız bunu kullanır). */
-export async function unusedFreshVideoFor(toolId: string, now = new Date()): Promise<ToolReelVideoInfo | null> {
-  const video = await latestVideoFor(toolId, FRESH_MS, now);
+export async function unusedFreshVideoFor(
+  toolId: string,
+  now = new Date(),
+  variant: ReelVariant = "profile",
+): Promise<ToolReelVideoInfo | null> {
+  const video = await latestVideoFor(toolId, FRESH_MS, now, variant);
   if (!video) return null;
   const used = await prisma.socialPost.count({ where: { imageUrl: { contains: video.id } } });
   return used === 0 ? video : null;
 }
 
-export async function saveToolVideo(toolId: string, data: Buffer, seconds: number): Promise<ToolReelVideoInfo> {
-  const id = `${toolId}-${Date.now()}`;
+export async function saveToolVideo(
+  toolId: string,
+  data: Buffer,
+  seconds: number,
+  variant: ReelVariant = "profile",
+): Promise<ToolReelVideoInfo> {
+  const id = variant === "caption" ? `${toolId}${CAPTION_MARK}${Date.now()}` : `${toolId}-${Date.now()}`;
   const row = await prisma.socialToolVideo.create({
     data: { id, toolId, data, sizeBytes: data.length, seconds },
     select: { id: true, seconds: true, createdAt: true },

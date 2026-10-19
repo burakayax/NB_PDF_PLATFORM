@@ -2,7 +2,7 @@
  * Araç videosu "fabrikası" uçları (GitHub iş akışı için) + videonun herkese açık adresi.
  *
  *   GET  /api/tool-reel-factory/needed          → şu an video üretilmeli mi, hangi araç için?
- *   PUT  /api/tool-reel-factory/:toolId/video   → üretilen MP4'ü yükle
+ *   PUT  /api/tool-reel-factory/:toolId/video   → üretilen MP4'ü yükle (`x-video-variant: caption` = YouTube/Facebook sürümü)
  *   GET  /api/public/tool-reels/:id.mp4         → Instagram/Facebook videoyu buradan indirir
  *
  * Fabrika uçları oturum değil `TOOL_REEL_FACTORY_KEY` ile yetkilenir (iş akışı bir kullanıcı
@@ -108,7 +108,9 @@ toolReelFactoryRouter.get(
       response.json({ needed: false, reason: "bu paylaşım gününde araç videosu sırası değil" });
       return;
     }
-    if (await unusedFreshVideoFor(due.id, runAt.getTime() > now.getTime() ? runAt : now)) {
+    // İki sürüm de hazır olmalı (Instagram + YouTube/Facebook); biri eksikse ikisi birlikte yeniden üretilir.
+    const at = runAt.getTime() > now.getTime() ? runAt : now;
+    if ((await unusedFreshVideoFor(due.id, at, "profile")) && (await unusedFreshVideoFor(due.id, at, "caption"))) {
       response.json({ needed: false, tool: due.id, reason: "video zaten hazır" });
       return;
     }
@@ -127,7 +129,8 @@ toolReelFactoryRouter.put(
     // MP4 imzası: 4. baytta "ftyp". Rastgele bir dosya adres olarak sunulmasın.
     if (body.subarray(4, 8).toString("latin1") !== "ftyp") throw new HttpError(400, "Dosya MP4 değil.");
     const seconds = Math.max(0, Math.round(Number(request.headers["x-video-seconds"]) || 0));
-    const video = await saveToolVideo(toolId, body, seconds);
+    const variant = String(request.headers["x-video-variant"] ?? "") === "caption" ? "caption" : "profile";
+    const video = await saveToolVideo(toolId, body, seconds, variant);
     logger.info("social", `Araç videosu yüklendi: ${video.id} (${Math.round(body.length / 1024)} KB)`);
     response.json({ id: video.id, url: video.url, seconds: video.seconds });
   }),
