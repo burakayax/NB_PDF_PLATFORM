@@ -711,6 +711,8 @@ export async function refreshSession(
 ): Promise<AuthSessionResult> {
   let payload;
   try {
+const REFRESH_REUSE_GRACE_MS = 30_000;
+
     payload = verifyRefreshToken(refreshToken);
   } catch {
     throw new HttpError(401, "Session refresh token is invalid.");
@@ -737,6 +739,11 @@ export async function refreshSession(
     await prisma.refreshToken.updateMany({
       where: { userId: storedToken.userId, revokedAt: null },
       data: { revokedAt: new Date() },
+    // Tolerans: aynı anda gelen iki yenileme (sekmeler, paralel istekler) meşru bir
+    // yarıştır; dönüşümden hemen sonra gelen eski anahtarı yalnız reddet, oturumları kapatma.
+    if (Date.now() - storedToken.revokedAt.getTime() < REFRESH_REUSE_GRACE_MS) {
+      throw new HttpError(401, "Session refresh token has expired.");
+    }
     });
     throw new HttpError(401, "Session refresh token has expired.");
   }
