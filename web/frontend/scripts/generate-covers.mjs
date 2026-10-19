@@ -25,7 +25,7 @@ import fontkit from "@pdf-lib/fontkit";
 import sharp from "sharp";
 
 import { getBlogPostsSorted } from "../src/blog/blogContent.mjs";
-import { renderBlogCover } from "./lib/blog-cover.mjs";
+import { blogLayoutMap, renderBlogCover } from "./lib/blog-cover.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 
 // ─── Ölçüler ──────────────────────────────────────────────────────────────────
@@ -52,7 +52,7 @@ const FORMATS = {
 const BASE_W = 1200;
 
 /** Tasarım değişince bu numarayı artır → tüm kapaklar yeniden üretilir. */
-const DESIGN_VERSION = 4;
+const DESIGN_VERSION = 6;
 
 // ─── Renkler ──────────────────────────────────────────────────────────────────
 
@@ -165,6 +165,7 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
   }
 
   const host = baseUrl.replace(/^https?:\/\//, "").replace(/^www\./, "");
+  const layouts = blogLayoutMap(getBlogPostsSorted());
   const written = [];
   const map = new Map();
   let skipped = 0;
@@ -184,7 +185,7 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
 
         // Girdi imzası: bunlar değişmediyse dosyaya dokunma.
         const signature = createHash("sha1")
-          .update(JSON.stringify([DESIGN_VERSION, copy.title, post.accent ?? "", host, fmt.w, fmt.h]))
+          .update(JSON.stringify([DESIGN_VERSION, copy.title, post.accent ?? "", host, fmt.w, fmt.h, layouts.get(post.slug)]))
           .digest("hex");
 
         if (manifest[rel] === signature && existsSync(outPath)) {
@@ -195,7 +196,8 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
         // Yeni tasarım sistemi (scripts/lib/blog-cover.mjs): varyant slug'dan sabit seçilir, logo sol üstte.
         const buf = await renderBlogCover({
           title: copy.title,
-          slug: post.slug,
+          post,
+          layout: layouts.get(post.slug),
           w: fmt.w,
           h: fmt.h,
           key: fmt.key,

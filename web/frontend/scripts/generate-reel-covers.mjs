@@ -22,11 +22,27 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { renderReelCover } from "./lib/cover-designs.mjs";
+import { assignLayouts, renderCover } from "./lib/cover-engine.mjs";
+import { heroFor } from "./lib/heroes.mjs";
 import { COVER_SPECS, fallbackSpec } from "./tool-reels/cover-specs.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "public", "reel-covers");
 const SCENARIOS_DIR = join(ROOT, "scripts", "tool-reels", "scenarios");
+const PUBLIC_DIR = join(ROOT, "public");
+
+/** Gerçek içerik taşıdığı için özel tasarımda kalan kapaklar (önce/sonra, gerçek adımlar, ızgara vurgusu). */
+const CUSTOM_DESIGN = new Set(["compress", "grayscale-pdf", "cv-olustur", "belge-tara", "taranmis-pdf-ocr", "sayfa-duzeni", "ustveri-temizle"]);
+const ACCENT_CYCLE = ["blue", "violet", "emerald", "amber", "rose", "cyan", "fuchsia", "sky"];
+
+/** Araç spec'ini motor girdisine çevirir (başlık + vurgulu etiket + konu çizimi). */
+function engineSpec(id, spec) {
+  const hero = spec.hero ?? heroFor(id);
+  if (spec.design === "poster") return { title: spec.lines.join(" "), tag: spec.word, hero, forceCaps: true };
+  if (spec.design === "dark") return { title: spec.l1, tag: spec.l2, hero: "convert", heroOpts: { from: spec.from, to: spec.to } };
+  if (spec.design === "steps") return { title: spec.top, tag: spec.hl, hero };
+  return { title: spec.l1, tag: spec.l2, hero };
+}
 
 /**
  * Senaryo dosyalarını KAYNAK METİN olarak tarar (modül olarak çalıştırmaz): senaryolar Playwright gibi
@@ -69,11 +85,25 @@ async function main() {
   // Senaryosu (video) olmayan araçlar da COVER_SPECS'te satırı varsa kapak alır: video eklendiği gün kapak hazır olsun.
   const known = new Set(scenarios.map((x) => x.id));
   for (const id of Object.keys(COVER_SPECS)) if (!known.has(id)) scenarios.push({ id, title: id, sub: "" });
+  const specs = new Map(scenarios.map((x) => [x.id, COVER_SPECS[x.id] ?? fallbackSpec(x)]));
+  // Gerçek içerik taşıyan yedi özel tasarım dışındaki her araç düzen motoruna girer; düzenler yan yana tekrar etmesin diye atanır.
+  const engineIds = [...specs.keys()].filter((id) => !CUSTOM_DESIGN.has(id));
+  const layouts = assignLayouts(engineIds);
   for (const scenario of scenarios) {
-    const spec = COVER_SPECS[scenario.id] ?? fallbackSpec(scenario);
-    const jpg = await renderReelCover(spec);
+    const spec = specs.get(scenario.id);
+    let jpg;
+    let label;
+    if (CUSTOM_DESIGN.has(scenario.id)) {
+      jpg = await renderReelCover(spec);
+      label = spec.design;
+    } else {
+      const e = engineSpec(scenario.id, spec);
+      const idx = engineIds.indexOf(scenario.id);
+      jpg = await renderCover({ ...e, layout: layouts.get(scenario.id), accent: ACCENT_CYCLE[idx % ACCENT_CYCLE.length], w: 1080, h: 1920, key: "reel", format: "jpeg", publicDir: PUBLIC_DIR });
+      label = layouts.get(scenario.id);
+    }
     writeFileSync(join(OUT_DIR, `${scenario.id}.jpg`), jpg);
-    console.log(`reel-covers/${scenario.id}.jpg [${spec.design}] (${Math.round(jpg.length / 1024)} KB)`);
+    console.log(`reel-covers/${scenario.id}.jpg [${label}] (${Math.round(jpg.length / 1024)} KB)`);
   }
 }
 
