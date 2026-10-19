@@ -53,6 +53,35 @@ export function signRefreshToken(payload: AuthUserPayload) {
   });
 }
 
+/**
+ * Yenileme anahtarını oturum kaydından YENİDEN ÜRETİLEBİLİR biçimde imzalar.
+ *
+ * NEDEN: Sayfa geçişinde yanıtı tarayıcıya ulaşmayan yenilemeden sonra çerezde bir
+ * önceki anahtar kalır. Onu geri çevirmek kullanıcıyı atar; yeni oturum açmak kayıtları
+ * çoğaltır. Doğrusu "yerine geçen" anahtarı tekrar vermek — ama sunucu ham anahtarı
+ * SAKLAMAZ (yalnız özetini). Çözüm: anahtarı yalnız kayıttaki değerlerden (kimlik,
+ * oluşturma ve bitiş zamanı, kullanıcı) türetmek. Aynı girdi + aynı gizli anahtar =
+ * birebir aynı metin; yani saklamadan tekrar üretilir. Taşıdığı bilgi yalnız kullanıcı
+ * kimliğidir (plan/rol yok), böylece sonradan değişen alanlar metni bozmaz.
+ */
+export function signStableRefreshToken(input: {
+  userId: string;
+  sessionId: string;
+  createdAt: Date;
+  expiresAt: Date;
+}) {
+  return jwt.sign(
+    {
+      sub: input.userId,
+      type: "refresh",
+      iat: Math.floor(input.createdAt.getTime() / 1000),
+      exp: Math.floor(input.expiresAt.getTime() / 1000),
+      jti: input.sessionId,
+    },
+    env.JWT_REFRESH_SECRET,
+  );
+}
+
 export function verifyAccessToken(token: string) {
   const payload = jwt.verify(
     token,
