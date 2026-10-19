@@ -19,4 +19,15 @@ describe("blog yazısı şekli", () => {
     }
     expect(bad).toEqual([]);
   });
+
+  it("CV örneği rehberlerinde TR ve EN için en az 3 soru-cevap var", () => {
+    const bad: string[] = [];
+    for (const p of BLOG_POSTS.filter((x) => x.slug.endsWith("-cv-ornegi"))) {
+      for (const lang of ["tr", "en"] as const) {
+        const faq = p[lang]?.faq ?? [];
+        if (faq.length < 3 || faq.some((f) => !f.q.trim() || !f.a.trim())) bad.push(`${p.slug} [${lang}]`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
 });
