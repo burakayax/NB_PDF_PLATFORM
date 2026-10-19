@@ -114,7 +114,41 @@ export function apiRateLimitForRequest(request: Request, cfg: ApiSecurityResolve
   if (path === "/auth/refresh" && request.method === "POST") {
     return REFRESH_PER_MINUTE;
   }
+  if (isReadTierRequest(request)) {
+    return READ_PER_MINUTE;
+  }
   return cfg.defaultPerMinute;
+}
+
+/**
+ * Sayfa başına tekrar çağrılan, yalnız-okuma durum uçları (kota, plan, bakiye, oturum listesi,
+ * araç puanı). Ortak "default" kovasına girerse ~10 sayfa/dk gezinen tek kullanıcı 429 alır;
+ * 429 gelince plan bilgisi kaybolur. Ayrı ve geniş kova (IP başına dakikada).
+ */
+export const READ_PER_MINUTE = 900;
+
+const READ_TIER_PREFIXES = [
+  "/ai/quota",
+  "/ai/tool-status",
+  "/auth/sessions",
+  "/auth/me",
+  "/tool-rating/",
+  "/entitlement/balance",
+  "/subscription/current",
+  "/subscription/status",
+  "/subscription/plans",
+  "/public/",
+];
+
+export function isReadTierRequest(request: Request): boolean {
+  if (request.method !== "GET") {
+    return false;
+  }
+  const path = logicalApiPath(request);
+  return READ_TIER_PREFIXES.some((p) => {
+    const base = p.replace(/\/$/, "");
+    return path === base || path.startsWith(`${base}/`);
+  });
 }
 
 /** IP başına dakikada oturum yenileme tavanı (normal kullanım: sayfa başına 1). */
@@ -129,6 +163,9 @@ export function rateLimitTierForRequest(request: Request): string {
   const path = logicalApiPath(request);
   if (path === "/auth/refresh" && request.method === "POST") {
     return "auth-refresh";
+  }
+  if (isReadTierRequest(request)) {
+    return "read";
   }
   if (path === "/health" || path === "/health/db") {
     return "health";
@@ -180,6 +217,10 @@ export function rateLimitCountsTowardAbuseBlock(request: Request): boolean {
   }
   // Yenileme taşması, kullanıcıyı değil ortak IP'yi bloklatıp herkesi oturumdan düşürürdü.
   if (p === "/auth/refresh" && m === "POST") {
+    return false;
+  }
+  // Okuma kovası taşması da blok sayılmaz: yan etkisiz durum uçları; blok herkesi düşürürdü.
+  if (isReadTierRequest(request)) {
     return false;
   }
   return true;
