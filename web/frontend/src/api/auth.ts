@@ -266,6 +266,16 @@ let refreshInFlight: Promise<AuthResponse | null> | null = null;
 const PAYLASIM_PENCERESI_MS = 5000;
 let paylasilan: { at: number; sonuc: AuthResponse } | null = null;
 let kanal: BroadcastChannel | null = null;
+const uzaktanCikisDinleyicileri = new Set<() => void>();
+
+/** Başka bir sekmede çıkış yapıldığında çağrılır (BroadcastChannel). Dönen işlev aboneliği iptal eder. */
+export function onRemoteLogout(cb: () => void): () => void {
+  uzaktanCikisDinleyicileri.add(cb);
+  kanalAc();
+  return () => {
+    uzaktanCikisDinleyicileri.delete(cb);
+  };
+}
 
 function kanalAc(): BroadcastChannel | null {
   if (kanal) return kanal;
@@ -278,6 +288,13 @@ function kanalAc(): BroadcastChannel | null {
         paylasilan = { at: Date.now(), sonuc: veri.sonuc };
       } else if (veri?.tur === "cikis") {
         paylasilan = null;
+        for (const cb of uzaktanCikisDinleyicileri) {
+          try {
+            cb();
+          } catch {
+            /* dinleyici hatası diğerlerini engellemesin */
+          }
+        }
       }
     };
   } catch {

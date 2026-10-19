@@ -4715,3 +4715,27 @@ textarea {
 .pdfTextLayer ::selection {
   background: rgba(59, 130, 246, 0.4);
 }
+
+
+/* Oturum doğrulanırken (veya ipucu varken) giriş/kayıt düğmeleri yerine sönük "yükleniyor" kapsülü. */
+@keyframes nb-auth-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+html[data-auth-pending="1"] [data-auth-cta] {
+  color: transparent !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  pointer-events: none;
+  animation: nb-auth-pulse 1.1s ease-in-out infinite;
+}
+
+/* Dokunmatik cihazlarda alt bilgi bağlantıları en az 44px yüksekliğinde dokunma alanı alsın. */
+@media (pointer: coarse) {
+  footer a,
+  footer button,
+  .footer-bar button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding-inline: 6px;
+  }
+}

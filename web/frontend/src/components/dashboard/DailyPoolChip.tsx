@@ -84,7 +84,7 @@ export function DailyPoolChip({
         <span>
           <span className="hidden md:inline">{tr ? "Bugün " : "Today "}</span>
           {left}/{limit}
-          <span className="hidden md:inline">{tr ? " hak" : " left"}</span>
+          <span>{tr ? " hak" : " left"}</span>
         </span>
       </button>
 

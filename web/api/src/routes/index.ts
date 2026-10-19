@@ -33,6 +33,7 @@ import { prisma } from "../lib/prisma.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
+  authedIpCeilingLimiter,
   requireJwtUnlessPublic,
 } from "../middleware/api-security.middleware.js";
 
@@ -41,6 +42,7 @@ export const apiRouter = Router();
 // Sıra: kötüye kullanım bloku → dakikalık sınır → JWT (public istisnaları hariç).
 apiRouter.use(abuseBlockMiddleware);
 apiRouter.use(globalApiLimiter);
+apiRouter.use(authedIpCeilingLimiter);
 apiRouter.use(requireJwtUnlessPublic);
 
 // Kimlik doğrulama ve ödeme endpoint'lerinin tarayıcı tarafından cache'lenmesini engelle.

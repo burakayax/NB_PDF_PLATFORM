@@ -204,6 +204,7 @@ export function PlanUpgradeModal({
             language={language}
             onUseWebApp={onClose}
             onSelectPlan={accessToken && user ? handleSelectPlan : undefined}
+            currentPlan={user?.plan ?? null}
           />
         </div>
       </div>

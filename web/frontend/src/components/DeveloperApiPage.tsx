@@ -20,7 +20,7 @@ export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegiste
   const primaryAction = isAuthenticated ? (onOpenApiKeys ?? onRegister) : onRegister;
   const primaryLabel = isAuthenticated
     ? (tr ? "Panelde API anahtarı oluştur" : "Create an API key in your dashboard")
-    : (tr ? "Ücretsiz kaydol & anahtar oluştur" : "Sign up free & create a key");
+    : (tr ? "Kaydol & planları gör" : "Sign up & see plans");
 
   const curl = `curl -X POST https://api.pdfplatform.app/v1/extract \\
   -H "Authorization: Bearer nb_live_xxx" \\
@@ -41,25 +41,25 @@ export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegiste
 
   const steps = tr
     ? [
-        { t: "Hesap aç & anahtar üret", d: "Ücretsiz kaydol, panelden bir API anahtarı (nb_live_…) oluştur." },
+        { t: "Pro/Business planına geç", d: "API anahtarı yalnızca Pro ve Business planlarında oluşturulur; anahtarı panelden (nb_live_…) üret." },
         { t: "Uçları çağır", d: "/v1/extract, /v1/summarize, /v1/translate — anahtarınla, JSON gövdeyle." },
         { t: "JSON al & entegre et", d: "Yapılandırılmış yanıtı kendi sistemine işle. Her istek 1 kredi harcar." },
       ]
     : [
-        { t: "Create account & key", d: "Sign up free, generate an API key (nb_live_…) from the dashboard." },
+        { t: "Get a Pro or Business plan", d: "API keys are only available on the Pro and Business plans; generate one (nb_live_…) from the dashboard." },
         { t: "Call the endpoints", d: "/v1/extract, /v1/summarize, /v1/translate — with your key and a JSON body." },
         { t: "Get JSON & integrate", d: "Process the structured response in your system. Each request uses 1 credit." },
       ];
 
   const faq = tr
     ? [
-        { q: "API'yi nasıl kullanmaya başlarım?", a: "Ücretsiz hesap açın, dashboard'da hesap menüsünden «API Erişimi» ile bir anahtar üretin ve /v1 uçlarını çağırın." },
-        { q: "Faturalandırma nasıl işliyor?", a: "Kullanım kredi bazlıdır. Hesap açmak ve anahtar oluşturmak ücretsizdir; her başarılı API çağrısında 1 AI kredisi harcanır. Krediler kredi paketi (top-up) ya da Pro/Business aboneliğiyle gelir; kredi bitince uçlar 402 (insufficient_credits) döner. Fatura otomatik kesilir." },
+        { q: "API'yi nasıl kullanmaya başlarım?", a: "API erişimi yalnızca Pro ve Business planlarındadır. Planınız varsa hesap menüsünden «API Erişimi» ile bir anahtar üretin ve /v1 uçlarını çağırın. Yapay zekâ uçları şu an «çok yakında» durumundadır." },
+        { q: "Faturalandırma nasıl işliyor?", a: "Kullanım kredi bazlıdır. Anahtar oluşturmak Pro veya Business planı gerektirir; her başarılı API çağrısında 1 AI kredisi harcanır. Krediler kredi paketi (top-up) ya da Pro/Business aboneliğiyle gelir; kredi bitince uçlar 402 (insufficient_credits) döner. Fatura otomatik kesilir." },
         { q: "Hangi işlemler var?", a: "Şu an /v1/extract (veri çıkarma), /v1/summarize (özet), /v1/translate (çeviri) ve /v1/me (anahtar/kota kontrolü)." },
       ]
     : [
-        { q: "How do I start using the API?", a: "Create a free account, generate a key via «API Access» in the dashboard account menu, and call the /v1 endpoints." },
-        { q: "How does billing work?", a: "Usage is credit-based. Creating an account and a key is free; each successful API call spends 1 AI credit. Credits come from a top-up pack or a Pro/Business plan; when out, endpoints return 402 (insufficient_credits). Invoices are issued automatically." },
+        { q: "How do I start using the API?", a: "API access is only on the Pro and Business plans. With a plan, generate a key via «API Access» in the account menu and call the /v1 endpoints. The AI endpoints are currently «coming soon»." },
+        { q: "How does billing work?", a: "Usage is credit-based. Creating a key requires a Pro or Business plan; each successful API call spends 1 AI credit. Credits come from a top-up pack or a Pro/Business plan; when out, endpoints return 402 (insufficient_credits). Invoices are issued automatically." },
         { q: "Which operations are available?", a: "Currently /v1/extract (data extraction), /v1/summarize, /v1/translate, and /v1/me (key/quota check)." },
       ];
 
@@ -99,8 +99,8 @@ export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegiste
           {/* Fiyat şeffaflığı — anahtar ücretsiz, kullanım kredi bazlı */}
           <p className="mx-auto mt-4 max-w-xl text-[12.5px] leading-relaxed text-slate-400">
             {tr
-              ? "Hesap açmak ve anahtar oluşturmak ücretsizdir. Her başarılı API çağrısı 1 AI kredisi harcar — krediler kredi paketi (top-up) ya da Pro/Business aboneliğiyle gelir."
-              : "Creating an account and a key is free. Each successful API call spends 1 AI credit — credits come from a top-up pack or a Pro/Business plan."}
+              ? "API anahtarı yalnızca Pro ve Business planlarında oluşturulur. Her başarılı API çağrısı 1 AI kredisi harcar. Yapay zekâ uçları şu an çok yakında durumundadır; açıldığında kredi paketi (top-up) ya da Pro/Business aboneliğiyle kullanılır."
+              : "API keys are only available on the Pro and Business plans. Each successful API call spends 1 AI credit. The AI endpoints are currently coming soon; once open, credits come from a top-up pack or a Pro/Business plan."}
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegiste
         {/* Son CTA */}
         <div className="mt-14 rounded-3xl border border-cyan-400/25 bg-gradient-to-b from-cyan-500/[0.1] to-transparent p-8 text-center">
           <p className="text-lg font-black text-white">{tr ? "Bugün entegre etmeye başla" : "Start integrating today"}</p>
-          <p className="mx-auto mt-1 max-w-md text-[14px] text-slate-300">{tr ? "Ücretsiz hesap aç, anahtarını üret ve ilk isteğini dakikalar içinde gönder." : "Create a free account, generate your key and send your first request in minutes."}</p>
+          <p className="mx-auto mt-1 max-w-md text-[14px] text-slate-300">{tr ? "Pro veya Business planıyla anahtarını üret ve ilk isteğini dakikalar içinde gönder." : "With a Pro or Business plan, generate your key and send your first request in minutes."}</p>
           <button type="button" onClick={primaryAction} className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110">{primaryLabel}<ArrowRight className="h-4 w-4" /></button>
         </div>
       </main>

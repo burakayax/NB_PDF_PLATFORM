@@ -61,8 +61,8 @@ function Header({
             <button type="button" onClick={onOpenApp} className="min-h-[40px] whitespace-nowrap rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Uygulamaya git" : "Open app"}</button>
           ) : (
             <>
-              <button type="button" onClick={onLogin} className="min-h-[40px] whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
-              <button type="button" onClick={onRegister} className="min-h-[40px] whitespace-nowrap rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Üye Ol" : "Sign up"}</button>
+              <button type="button" data-auth-cta onClick={onLogin} className="min-h-[40px] whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
+              <button type="button" data-auth-cta onClick={onRegister} className="min-h-[40px] whitespace-nowrap rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Üye Ol" : "Sign up"}</button>
             </>
           )}
         </div>

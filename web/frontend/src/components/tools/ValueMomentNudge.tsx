@@ -1,3 +1,4 @@
+import { useAiNotOpen } from "../../lib/aiAvailability";
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Unlock, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -84,6 +85,7 @@ export const SIGNIN_ONLY_UNLOCKS = new Set<string>(["aranabilir-pdf"]);
 type Props = { language: Language; source?: string };
 
 export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
+  const aiNotOpen = useAiNotOpen();
   const tr = language === "tr";
   const planState = useCurrentPlan();
   const [hidden, setHidden] = useState(() => isSnoozed());
@@ -192,9 +194,13 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-3 py-2.5">
           <Sparkles className="h-4 w-4 shrink-0 text-emerald-300" />
           <span className="text-[12.5px] font-semibold leading-snug text-emerald-100">
-            {tr
-              ? `Hesap açınca ${AI_WELCOME_CREDITS_DISPLAY} ücretsiz yapay zekâ işlemi hediye: özetle, veri çıkar, belgeyle sohbet.`
-              : `Sign up and get ${AI_WELCOME_CREDITS_DISPLAY} free AI operations: summarize, extract data, chat with your document.`}
+            {aiNotOpen
+              ? tr
+                ? `Yapay zekâ araçları çok yakında açılıyor: açıldığında ücretsiz üyeye ${AI_WELCOME_CREDITS_DISPLAY} hediye işlem.`
+                : `AI tools open very soon: free members get ${AI_WELCOME_CREDITS_DISPLAY} free operations when they do.`
+              : tr
+                ? `Hesap açınca ${AI_WELCOME_CREDITS_DISPLAY} ücretsiz yapay zekâ işlemi hediye: özetle, veri çıkar, belgeyle sohbet.`
+                : `Sign up and get ${AI_WELCOME_CREDITS_DISPLAY} free AI operations: summarize, extract data, chat with your document.`}
           </span>
         </div>
 

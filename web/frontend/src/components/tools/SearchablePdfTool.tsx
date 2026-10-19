@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Download, FileCheck2, FileText, Loader2, Lock, Search, Share2, Sparkles, Trash2 } from "lucide-react";
+import { Check, Download, FileCheck2, FileText, Loader2, Lock, Search, Share2, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolRating } from "../common/ToolRating";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
@@ -196,6 +196,12 @@ export function SearchablePdfTool({
 
   return (
     <div>
+      <p className="mb-3 flex justify-end">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[11.5px] font-bold text-emerald-300">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {tr ? "Cihazında çalışır" : "Runs on your device"}
+        </span>
+      </p>
       <ToolUploadPanel
         toolId="aranabilir-pdf"
         language={language}
