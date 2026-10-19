@@ -22,9 +22,16 @@ vi.mock("../lib/prisma.js", () => ({
   prisma: {
     socialToolVideo: {
       findMany: vi.fn(async () => videos),
-      findFirst: vi.fn(async ({ where }: { where: { toolId: string; createdAt: { gte: Date } } }) =>
+      findFirst: vi.fn(
+        async ({
+          where,
+        }: {
+          where: { toolId: string; createdAt: { gte: Date }; id?: { contains?: string; not?: { contains: string } } };
+        }) =>
         videos
           .filter((v) => v.toolId === where.toolId && v.createdAt >= where.createdAt.gte)
+          .filter((v) => !where.id?.contains || v.id.includes(where.id.contains))
+          .filter((v) => !where.id?.not || !v.id.includes(where.id.not.contains))
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null,
       ),
       delete: vi.fn(async ({ where }: { where: { id: string } }) => {
@@ -118,6 +125,24 @@ describe("taze ve kullanılmamış video", () => {
     const { unusedFreshVideoFor } = await import("../modules/social/tool-reels.service.js");
 
     expect(await unusedFreshVideoFor("merge", NOW)).toBeNull();
+  });
+
+  it("iki sürüm ayrı aranır: 'profilde' (Instagram) ve 'açıklamada' (YouTube + Facebook)", async () => {
+    videos = [
+      video("merge-1000000000002", "merge", 5 * HOUR),
+      video("merge-aciklama-1000000000003", "merge", 4 * HOUR), // daha yeni; yine de profil aramasına girmez
+    ];
+    const { unusedFreshVideoFor, variantForPlatform, variantOfId } = await import(
+      "../modules/social/tool-reels.service.js"
+    );
+
+    expect((await unusedFreshVideoFor("merge", NOW, "profile"))?.id).toBe("merge-1000000000002");
+    expect((await unusedFreshVideoFor("merge", NOW, "caption"))?.id).toBe("merge-aciklama-1000000000003");
+    expect(variantOfId("merge-aciklama-1000000000003")).toBe("caption");
+    expect(variantOfId("merge-1000000000002")).toBe("profile");
+    expect(variantForPlatform("INSTAGRAM")).toBe("profile");
+    expect(variantForPlatform("YOUTUBE")).toBe("caption");
+    expect(variantForPlatform("FACEBOOK")).toBe("caption");
   });
 
   it("36 saatten eski video taze sayılmaz", async () => {

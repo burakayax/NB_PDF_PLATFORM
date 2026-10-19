@@ -13,7 +13,7 @@ import { makeMusic } from "./music.mjs";
 const require = createRequire(import.meta.url);
 
 /** @returns {{ total: number }} */
-export function compose({ workDir: S, out: OUT, intro, publicDir }) {
+export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Bağlantı profilde" }) {
   const ffmpeg = process.env.FFMPEG_PATH || require("ffmpeg-static");
   const T = JSON.parse(readFileSync(S + "/timeline.json", "utf8"));
   const webm = readdirSync(S + "/rec").find((f) => f.endsWith(".webm"));
@@ -86,7 +86,7 @@ export function compose({ workDir: S, out: OUT, intro, publicDir }) {
   const OS = +ME.toFixed(2), OE = TOTAL;
   text("pdfplatform.app", ACC, 84, 1000, OS, OE, 0.6);
   text("PDF Sıkıştır · Birleştir · Böl · Dönüştür", SOFT, 44, 1115, OS, OE, 0.6);
-  text("Bağlantı profilde", "white", 58, 1220, OS, OE, 0.6);
+  text(linkLine, "white", 58, 1220, OS, OE, 0.6);
 
   // ---- Animasyonlu büyütme (zoompan): odak pencereleri kayıttaki vurgu anlarından ----
   const E_ZOOM = 0.45; // yaklaşma/uzaklaşma süresi

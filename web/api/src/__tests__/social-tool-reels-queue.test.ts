@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FeedItem } from "../modules/social/social.types.js";
 
 const VIDEO_URL = "https://api.example.test/api/public/tool-reels/compress-1791728774504.mp4";
+const CAPTION_URL = "https://api.example.test/api/public/tool-reels/compress-aciklama-1791728774900.mp4";
 
 const ITEM: FeedItem = {
   guid: "https://example.test/blog/yazi",
@@ -27,6 +28,7 @@ let due: { id: string } | null = null;
 let dayPostCount = 1;
 let reelPostCount = 0;
 let fresh: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
+let freshCaption: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
 const cleanup = vi.fn(async () => 0);
 
 vi.mock("../lib/prisma.js", () => ({
@@ -60,8 +62,12 @@ vi.mock("../modules/social/tool-reels.service.js", async (importOriginal) => {
   return {
     ...actual,
     pickDueToolReel: vi.fn(async () => due),
-    unusedFreshVideoFor: vi.fn(async () => fresh),
-    latestVideoFor: vi.fn(async () => fresh),
+    unusedFreshVideoFor: vi.fn(async (_t: string, _n?: Date, variant?: string) =>
+      variant === "caption" ? freshCaption : fresh,
+    ),
+    latestVideoFor: vi.fn(async (_t: string, _a: number, _n?: Date, variant?: string) =>
+      variant === "caption" ? freshCaption : fresh,
+    ),
     cleanupToolVideos: cleanup,
   };
 });
@@ -87,6 +93,7 @@ beforeEach(() => {
   config = { reelsAutoPublish: false, researchKeywords: false, toolReelEveryDays: 3 };
   due = { id: "compress" };
   fresh = { id: "compress-1791728774504", url: VIDEO_URL, seconds: 27, createdAt: new Date() };
+  freshCaption = null;
 });
 
 describe("araç videosu otomatik sırası", () => {
@@ -137,6 +144,27 @@ describe("araç videosu otomatik sırası", () => {
     expect(ig?.imageUrl).toBe(VIDEO_URL);
     // Facebook hesabı bağlı değil → elle paylaşılacak.
     expect(toolPosts().find((p) => p.platform === "FACEBOOK")?.status).toBe("MANUAL");
+  });
+
+  it("iki sürüm hazırsa: Instagram 'profilde' videosunu, Facebook + YouTube 'açıklamada' videosunu alır", async () => {
+    freshCaption = { id: "compress-aciklama-1791728774900", url: CAPTION_URL, seconds: 27, createdAt: new Date() };
+    const { queueDailyPosts } = await import("../modules/social/social.service.js");
+
+    await queueDailyPosts(new Date(), false);
+
+    const urlOf = (platform: string) => toolPosts().find((p) => p.platform === platform)?.imageUrl;
+    expect(urlOf("INSTAGRAM")).toBe(VIDEO_URL);
+    expect(urlOf("FACEBOOK")).toBe(CAPTION_URL);
+    expect(urlOf("YOUTUBE")).toBe(CAPTION_URL);
+  });
+
+  it("'açıklamada' sürümü yoksa: Facebook + YouTube Instagram sürümüyle gider (gönderi kaybolmaz)", async () => {
+    const { queueDailyPosts } = await import("../modules/social/social.service.js");
+
+    await queueDailyPosts(new Date(), false);
+
+    expect(toolPosts().find((p) => p.platform === "YOUTUBE")?.imageUrl).toBe(VIDEO_URL);
+    expect(toolPosts().find((p) => p.platform === "FACEBOOK")?.imageUrl).toBe(VIDEO_URL);
   });
 
   it("Reels otomatik mod açıksa: onaysız KUYRUĞA girer; elle hazırlıkta (hold) yine taslak", async () => {

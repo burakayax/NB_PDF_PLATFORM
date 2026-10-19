@@ -111,6 +111,12 @@ try {
 await stage.finish(extra);
 
 mkdirSync(dirname(out), { recursive: true });
-const { total } = compose({ workDir, out, intro: scenario.intro, publicDir });
+// Aynı çekimden iki sürüm: yalnız son karedeki yönlendirme cümlesi farklı.
+//   out          → Instagram (açıklamadaki adres tıklanmaz: "Bağlantı profilde")
+//   out-aciklama → YouTube + Facebook (açıklamadaki adres tıklanır: "Bağlantı açıklamada")
+const { total } = compose({ workDir, out, intro: scenario.intro, publicDir, linkLine: "Bağlantı profilde" });
 copyFileSync(out, out); // varlık denetimi (yazılmadıysa hata verir)
-console.log(JSON.stringify({ ok: true, tool: toolId, out, seconds: Math.round(total) }));
+const outCaption = resolve(arg("out-aciklama", out.replace(/\.mp4$/, "-aciklama.mp4")));
+compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı açıklamada" });
+copyFileSync(outCaption, outCaption);
+console.log(JSON.stringify({ ok: true, tool: toolId, out, outCaption, seconds: Math.round(total) }));
