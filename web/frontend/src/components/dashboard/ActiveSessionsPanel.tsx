@@ -56,6 +56,13 @@ export function ActiveSessionsPanel({ accessToken, language }: Props) {
     void yukle();
   }, [yukle]);
 
+  // Geçici hata (ör. 429): liste hiç yüklenmediyse birkaç saniye sonra kendiliğinden yeniden dene.
+  useEffect(() => {
+    if (!hata || oturumlar !== null) return;
+    const t = window.setTimeout(() => void yukle(), 6000);
+    return () => window.clearTimeout(t);
+  }, [hata, oturumlar, yukle]);
+
   const kapat = async (id: string) => {
     setIslemdeki(id);
     try {
@@ -99,6 +106,11 @@ export function ActiveSessionsPanel({ accessToken, language }: Props) {
       {hata && (
         <p className="mt-4 rounded-xl border border-amber-400/25 bg-amber-500/[0.08] px-4 py-2.5 text-[13px] text-amber-200">
           {hata}
+          {oturumlar === null ? (
+            <button type="button" onClick={() => void yukle()} className="ml-3 underline">
+              {tr ? "Tekrar dene" : "Retry"}
+            </button>
+          ) : null}
         </p>
       )}
 

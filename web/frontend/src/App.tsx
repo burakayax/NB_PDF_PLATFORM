@@ -86,6 +86,7 @@ import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
 import { DashboardScannedDocs } from "./components/dashboard/DashboardScannedDocs";
 import { PaymentSuccessModal } from "./components/dashboard/PaymentSuccessModal";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
+import { isFeatureLockedByPlan } from "./lib/planGate";
 import { SeoRouteManager } from "./components/seo/SeoRouteManager";
 import {
   fetchSubscriptionStatus,
@@ -538,12 +539,18 @@ function App() {
   const [subscriptionSummary, setSubscriptionSummary] =
     useState<SubscriptionSummary | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  // Plan bilgisi alınamadı (429/500/ağ): kilitli araçlar AÇIK görünmemeli (güvenli taraf).
+  const [subscriptionFailed, setSubscriptionFailed] = useState(false);
+  const retrySubscriptionRef = useRef<(() => void) | null>(null);
   const [paymentSuccessModal, setPaymentSuccessModal] = useState<{
     planName: string | null;
     addedSeats?: number;
   } | null>(null);
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  // Bakiye/kota alınamadı (429/ağ): üst çubuk kaybolmasın, "alınamadı" + yeniden dene göstersin.
+  const [balanceFailed, setBalanceFailed] = useState(false);
+  const [balanceRetryNonce, setBalanceRetryNonce] = useState(0);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [batchFiles, setBatchFiles] = useState<File[]>([]);
@@ -1244,19 +1251,21 @@ function App() {
 
   const lockedFeatures = useMemo(() => {
     const next = new Set<FeatureKey>();
-    if (!isAuthenticated || !subscriptionSummary || subscriptionLoading) {
-      return next;
-    }
+    const gate = {
+      isAuthenticated,
+      allowedFeatures: subscriptionSummary?.allowedFeatures ?? null,
+      loading: subscriptionLoading,
+      failed: subscriptionFailed,
+    };
     for (const f of workspaceFeatures) {
-      if (!subscriptionSummary.allowedFeatures.includes(f.id)) {
-        next.add(f.id);
-      }
+      if (isFeatureLockedByPlan(f.id, gate)) next.add(f.id);
     }
     return next;
   }, [
     isAuthenticated,
     subscriptionSummary,
     subscriptionLoading,
+    subscriptionFailed,
     workspaceFeatures,
   ]);
 
@@ -1275,20 +1284,22 @@ function App() {
   const currentPdfIsEncrypted = Boolean(primaryUpload?.encrypted);
   const shouldInspectCurrentFeature =
     pdfInspectionFeatures.includes(selectedFeatureId);
-  const selectedFeatureAllowed = useMemo(() => {
-    if (!isAuthenticated) {
-      return true;
-    }
-    if (subscriptionLoading || !subscriptionSummary) {
-      return true;
-    }
-    return subscriptionSummary.allowedFeatures.includes(selectedFeatureId);
-  }, [
-    isAuthenticated,
-    subscriptionLoading,
-    subscriptionSummary,
-    selectedFeatureId,
-  ]);
+  const selectedFeatureAllowed = useMemo(
+    () =>
+      !isFeatureLockedByPlan(selectedFeatureId, {
+        isAuthenticated,
+        allowedFeatures: subscriptionSummary?.allowedFeatures ?? null,
+        loading: subscriptionLoading,
+        failed: subscriptionFailed,
+      }),
+    [
+      isAuthenticated,
+      subscriptionFailed,
+      subscriptionLoading,
+      subscriptionSummary,
+      selectedFeatureId,
+    ],
+  );
   const shouldShowCookieNotice =
     !GA_TEST_BYPASS_COOKIE_CONSENT && isCookieConsentReady && !hasConsent;
   const trackedView = getTrackedViewName(view);
@@ -2066,25 +2077,36 @@ function App() {
   useEffect(() => {
     if (!isAuthenticated || !accessToken || !user) {
       setUserBalance(null);
+      setBalanceFailed(false);
       return;
     }
     let cancelled = false;
+    let retryTimer: number | undefined;
     setBalanceLoading(true);
     fetchUserBalance(accessToken, {
       userId: user.id,
       role: user.role === "ADMIN" ? "ADMIN" : "USER",
     })
       .then((b) => {
-        if (!cancelled) setUserBalance(b);
+        if (!cancelled) {
+          setUserBalance(b);
+          setBalanceFailed(false);
+        }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (cancelled) return;
+        setBalanceFailed(true);
+        // Geçici hata (ör. 429): kısa bekleyip yeniden dene; eski bakiye varsa korunur.
+        retryTimer = window.setTimeout(() => setBalanceRetryNonce((n) => n + 1), 6_000);
+      })
       .finally(() => {
         if (!cancelled) setBalanceLoading(false);
       });
     return () => {
       cancelled = true;
+      window.clearTimeout(retryTimer);
     };
-  }, [isAuthenticated, accessToken, user?.id, user?.role]);
+  }, [isAuthenticated, accessToken, user?.id, user?.role, balanceRetryNonce]);
 
   /** After blob download + audited server ACK — clear drafts/uploads; keep user on the active tool (no jump to Split/home). */
   const applyWorkspaceCleanSlateAfterDownload = useCallback(
@@ -3328,6 +3350,7 @@ function App() {
   useEffect(() => {
     if (!isAuthenticated || !user || !accessToken) {
       setSubscriptionSummary(null);
+      setSubscriptionFailed(false);
       return;
     }
 
@@ -3335,8 +3358,11 @@ function App() {
     const authUser = user;
 
     let cancelled = false;
+    let retryTimer: number | undefined;
+    let failStreak = 0;
 
     async function loadSubscriptionBlock() {
+      window.clearTimeout(retryTimer);
       setSubscriptionLoading(true);
       try {
         const [summary, status] = await Promise.all([
@@ -3347,6 +3373,8 @@ function App() {
           return;
         }
         setSubscriptionSummary(summary);
+        setSubscriptionFailed(false);
+        failStreak = 0;
 
         const adminProNavbar =
           authUser.role === "ADMIN" && status.plan === "PRO";
@@ -3367,6 +3395,13 @@ function App() {
         }
       } catch (error) {
         if (!cancelled) {
+          setSubscriptionFailed(true);
+          // 429/geçici hata: kısa bekleyip yeniden dene (4s, 8s, 16s, en çok 30s).
+          failStreak += 1;
+          retryTimer = window.setTimeout(
+            () => void loadSubscriptionBlock(),
+            Math.min(30_000, 2_000 * 2 ** failStreak),
+          );
           if (import.meta.env.DEV) {
             console.warn(
               "[subscription] load failed (will retry on next poll)",
@@ -3381,6 +3416,7 @@ function App() {
       }
     }
 
+    retrySubscriptionRef.current = () => void loadSubscriptionBlock();
     void loadSubscriptionBlock();
     const intervalId = window.setInterval(() => {
       void loadSubscriptionBlock();
@@ -3388,6 +3424,8 @@ function App() {
 
     return () => {
       cancelled = true;
+      retrySubscriptionRef.current = null;
+      window.clearTimeout(retryTimer);
       window.clearInterval(intervalId);
     };
   }, [accessToken, isAuthenticated, refreshSession, user?.id]);
@@ -6690,6 +6728,8 @@ function App() {
               : undefined
           }
           creditBalanceLoading={balanceLoading && user?.role !== "ADMIN"}
+          creditBalanceFailed={balanceFailed && !userBalance && user?.role !== "ADMIN"}
+          onRetryBalance={() => setBalanceRetryNonce((n) => n + 1)}
           dailyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.daily ?? null) : null}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
           limitsizProActive={limitsizProActive}
@@ -9061,19 +9101,41 @@ function App() {
                       <div className="absolute inset-0 z-20 flex flex-col items-center bg-nb-bg/70 px-5 text-center backdrop-blur-sm">
                         {/* Alan uzun olduğundan dikey ortalama mesajı ekranın dışına itiyordu; kaydırırken görünür kalsın diye üste yapışık. */}
                         <div className="sticky top-24 mt-12 flex flex-col items-center sm:mt-20">
-                          <p className="text-base font-semibold text-nb-text">
-                            {W.proGateTitle}
-                          </p>
-                          <p className="mt-2 max-w-sm text-sm leading-relaxed text-nb-muted">
-                            {W.proGateBody}
-                          </p>
-                          <button
-                            type="button"
-                            className="primary-action mt-5"
-                            onClick={() => setUpgradeModalOpen(true)}
-                          >
-                            {W.proGateCta}
-                          </button>
+                          {!subscriptionSummary && subscriptionFailed ? (
+                            <>
+                              <p className="text-base font-semibold text-nb-text">
+                                {language === "tr" ? "Plan bilgisi alınamadı" : "Could not load your plan"}
+                              </p>
+                              <p className="mt-2 max-w-sm text-sm leading-relaxed text-nb-muted">
+                                {language === "tr"
+                                  ? "Planınız doğrulanamadığı için bu araç geçici olarak kapalı. Birkaç saniyede kendiliğinden yeniden denenir."
+                                  : "This tool is temporarily closed because your plan could not be verified. We retry automatically."}
+                              </p>
+                              <button
+                                type="button"
+                                className="primary-action mt-5"
+                                onClick={() => retrySubscriptionRef.current?.()}
+                              >
+                                {language === "tr" ? "Tekrar dene" : "Retry"}
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-base font-semibold text-nb-text">
+                                {W.proGateTitle}
+                              </p>
+                              <p className="mt-2 max-w-sm text-sm leading-relaxed text-nb-muted">
+                                {W.proGateBody}
+                              </p>
+                              <button
+                                type="button"
+                                className="primary-action mt-5"
+                                onClick={() => setUpgradeModalOpen(true)}
+                              >
+                                {W.proGateCta}
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     ) : null}
