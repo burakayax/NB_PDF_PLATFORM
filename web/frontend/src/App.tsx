@@ -9033,20 +9033,23 @@ function App() {
                       </form>
                     </div>
                     {!selectedFeatureAllowed ? (
-                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-nb-bg/70 px-5 text-center backdrop-blur-sm">
-                        <p className="text-base font-semibold text-nb-text">
-                          {W.proGateTitle}
-                        </p>
-                        <p className="mt-2 max-w-sm text-sm leading-relaxed text-nb-muted">
-                          {W.proGateBody}
-                        </p>
-                        <button
-                          type="button"
-                          className="primary-action mt-5"
-                          onClick={() => setUpgradeModalOpen(true)}
-                        >
-                          {W.proGateCta}
-                        </button>
+                      <div className="absolute inset-0 z-20 flex flex-col items-center bg-nb-bg/70 px-5 text-center backdrop-blur-sm">
+                        {/* Alan uzun olduğundan dikey ortalama mesajı ekranın dışına itiyordu; kaydırırken görünür kalsın diye üste yapışık. */}
+                        <div className="sticky top-24 mt-12 flex flex-col items-center sm:mt-20">
+                          <p className="text-base font-semibold text-nb-text">
+                            {W.proGateTitle}
+                          </p>
+                          <p className="mt-2 max-w-sm text-sm leading-relaxed text-nb-muted">
+                            {W.proGateBody}
+                          </p>
+                          <button
+                            type="button"
+                            className="primary-action mt-5"
+                            onClick={() => setUpgradeModalOpen(true)}
+                          >
+                            {W.proGateCta}
+                          </button>
+                        </div>
                       </div>
                     ) : null}
                   </div>
