@@ -12,6 +12,15 @@ import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
 import { tryNormalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
 import { HttpError } from "../../lib/http-error.js";
+import {
+  captchaEnabled,
+  captchaRequired,
+  lockSecondsRemaining,
+  registerFailure,
+  registerSuccess,
+  sendLockoutAlert,
+  verifyCaptcha,
+} from "./login-guard.js";
 import { createSecureToken } from "../../lib/token.js";
 import {
   authCredentialsSchema,
@@ -371,12 +380,37 @@ export async function loginController(request: Request, response: Response) {
   const deviceId = isDesktopClient(request.headers)
     ? getDesktopDeviceIdFromHeaders(request.headers)
     : "";
+
+  // Hesap bazlı koruma (IP sınırını VPN ile aşmaya karşı): kilit + bot doğrulaması.
+  const lockedFor = lockSecondsRemaining(parsed.data.email);
+  if (lockedFor > 0) {
+    logLoginAttempt({ outcome: "failure", reason: "account_locked", email: parsed.data.email, httpStatus: 429, ...meta });
+    response.setHeader("Retry-After", String(lockedFor));
+    response.status(429).json({
+      message: `Çok fazla hatalı deneme. Güvenliğiniz için giriş geçici olarak kapatıldı; ${Math.ceil(lockedFor / 60)} dakika sonra tekrar deneyin.`,
+      code: "login_locked",
+      retryAfterSeconds: lockedFor,
+    });
+    return;
+  }
+  if (captchaEnabled() && captchaRequired(parsed.data.email)) {
+    const token = (request.body as { turnstileToken?: unknown } | undefined)?.turnstileToken;
+    if (!(await verifyCaptcha(token, meta.ip))) {
+      response.status(428).json({
+        message: "Devam etmek için lütfen robot olmadığınızı doğrulayın.",
+        code: "captcha_required",
+      });
+      return;
+    }
+  }
+
   try {
     const session = await loginUser(parsed.data, deviceId || undefined, {
       userAgent: meta.userAgent,
       ip: meta.ip,
       isDesktop: meta.desktop,
     });
+    registerSuccess(parsed.data.email);
     logLoginAttempt({
       outcome: "success",
       email: session.user.email,
@@ -386,6 +420,11 @@ export async function loginController(request: Request, response: Response) {
     writeSession(response, session);
   } catch (error) {
     if (error instanceof HttpError) {
+      // Yalnızca kimlik bilgisi hatası (401) sayılır; doğrulanmamış e-posta (403) vb. sayılmaz.
+      if (error.statusCode === 401) {
+        const f = registerFailure(parsed.data.email);
+        if (f.alert) void sendLockoutAlert(parsed.data.email, meta.ip);
+      }
       logLoginAttempt({
         outcome: "failure",
         email: parsed.data.email,
