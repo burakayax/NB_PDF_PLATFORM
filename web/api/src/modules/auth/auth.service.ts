@@ -479,7 +479,13 @@ export async function registerUser(
     authLog.warn("register rejected: email already exists", {
       email: input.email,
     });
-    throw new HttpError(409, "An account with this email already exists.");
+    // Gmail'de nokta/+etiket aynı kutuya gider; kullanıcı "noktalı adresim reddedildi" sanmasın.
+    throw new HttpError(
+      409,
+      input.email.endsWith("@gmail.com")
+        ? "An account with this email already exists. Gmail ignores dots and +tags in addresses, so this may match an account registered with a slightly different spelling."
+        : "An account with this email already exists.",
+    );
   }
 
   const firstName = input.firstName.trim();
