@@ -29,11 +29,12 @@ import { curatedCarousel } from "../src/blog/carouselCopy.mjs";
 import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
+import { renderBlogCover, variantFor } from "./lib/blog-cover.mjs";
 
 const W = 1080;
 const H = 1350;
 const M = 84; // kenar boşluğu
-const DESIGN_VERSION = 5;
+const DESIGN_VERSION = 6;
 /**
  * Hangi dillerde carousel üretilir? Otomasyon yalnızca besleme dilinde
  * (PRIMARY_FEED_LANG = "tr") paylaşıyor; İngilizce slaytlar kullanılmayacak, boşuna
@@ -172,7 +173,7 @@ export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, b
   const auto = curated ? null : extractCarousel(copyBlocks);
   const content = curated ? curated.slides : auto.slides;
   const kind = curated ? "points" : auto.kind;
-  if (content.length === 0) return { svgs: [], kind: "steps" };
+  if (content.length === 0) return { svgs: [], kind: "steps", hook: title };
   const copy = CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr;
   const total = content.length + 2;
   const link = tool ? `${host}${tool}` : null;
@@ -181,7 +182,7 @@ export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, b
     svgs.push(stepSvg({ slide, index: i + 1, count: content.length, bold, regular, host, total, copy, kind }));
   });
   svgs.push(ctaSvg({ bold, regular, host, total, copy, link }));
-  return { svgs, kind };
+  return { svgs, kind, hook: curated ? curated.hook : title };
 }
 
 /**
@@ -216,7 +217,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       const slug = localizedPath(`/blog/${post.slug}`, lang).split("/").pop();
       const url = `${baseUrl}${localizedPath(`/blog/${post.slug}`, lang)}`;
 
-      const { svgs } = buildCarouselSvgs({
+      const { svgs, hook } = buildCarouselSvgs({
         copyBlocks: copy.blocks,
         title: copy.title,
         slug: post.slug,
@@ -230,7 +231,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       if (svgs.length === 0) continue;
 
       const signature = createHash("sha1")
-        .update(JSON.stringify([DESIGN_VERSION, svgs]))
+        .update(JSON.stringify([DESIGN_VERSION, svgs, hook, variantFor(post.slug)]))
         .digest("hex");
       const urls = svgs.map((_, i) => `${baseUrl}/social/carousel/${lang}/${slug}/${i + 1}.jpg`);
       manifest[url] = { signature, count: svgs.length, urls };
@@ -244,6 +245,22 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
 
       mkdirSync(dir, { recursive: true });
       for (let i = 0; i < svgs.length; i++) {
+        if (i === 0) {
+          // İlk slayt: yeni kapak tasarımı (logo sol üstte, varyant yazıdan sabit); kalan slaytlar kurumsal akışta devam eder.
+          const cover = await renderBlogCover({
+            title: hook,
+            slug: post.slug,
+            w: W,
+            h: H,
+            key: "carousel",
+            cta: (CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr).swipe,
+            format: "jpeg",
+            publicDir,
+          });
+          writeFileSync(join(dir, `${i + 1}.jpg`), cover);
+          written++;
+          continue;
+        }
         let img = sharp(Buffer.from(svgs[i]));
         if (logo) img = img.composite([{ input: logo, top: 34, left: M }]);
         await img.jpeg({ quality: 88 }).toFile(join(dir, `${i + 1}.jpg`));

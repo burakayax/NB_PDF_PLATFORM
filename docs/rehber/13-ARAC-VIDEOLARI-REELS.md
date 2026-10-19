@@ -81,3 +81,22 @@ Sıra: hiç paylaşılmayan araç önce, sonra en eski paylaşılan.
 - Facebook Sayfası Reels için sayfa erişim anahtarının video paylaşma izni (`pages_manage_posts`) olmalıdır.
   Reels yayını başlamadan hata olursa Facebook'ta bağlantılı yazı gönderisine, Instagram'da kapak görseline düşülür;
   yayın başladıktan sonraki hata yedeğe düşmez (aynı gönderi iki kez çıkmasın).
+
+## Kapak görselleri (profilde görünen kapak)
+
+Reels/Shorts kapağı ve blog kapakları **aynı tasarım sisteminden** çıkar: `web/frontend/scripts/lib/cover-designs.mjs`
+(araç kapakları, 1080×1920) ve `scripts/lib/blog-cover.mjs` (blog + kaydırmalı gönderinin ilk slaytı). Logo her zaman sol üsttedir.
+
+- **Araç kapakları:** `scripts/tool-reels/cover-specs.mjs` her aracın tasarım dilini ve başlığını tutar. Beş dil vardır: poster,
+  adım adım, koyu premium, özellik ızgarası, önce/sonra. Başlıkta kelime oyunu kuralı: büyük harfli iri yazı + küçük harfli,
+  daha küçük anahtar kelime ("BÜYÜK PDF'İ" / küçült). Yeni araç eklenince oraya bir satır ekle; eklenmezse başlıktan sade bir
+  poster üretilir. `node scripts/generate-reel-covers.mjs` çalıştırıp çıkan `public/reel-covers/*.jpg` dosyalarını commitle
+  (build sırasında da otomatik üretilir).
+- **Blog kapakları:** dört renk varyantı (amber poster, açık zemin, doygun mavi, koyu premium) yazının adresinden sabit seçilir.
+  "Başlık: alt başlık" biçimindeki başlıklar otomatik bölünür; alt başlık renkli bantta görünür. Site paylaşım görseli,
+  kare ve dikey kesimler ile kaydırmalı gönderinin ilk slaytı aynı varyantı kullanır. Tasarım değişince
+  `generate-covers.mjs` ve `generate-carousels.mjs` içindeki `DESIGN_VERSION` artırılır.
+- **Renk ilkesi:** doygun mavi zemin + tek sıcak vurgu (amber). Kontrast ve doygunluk dikkat çeker. Kesin sonuç için canlıda
+  iki tasarımı dönüşümlü kullanıp performansa bakmak en güvenilir yoldur.
+- **Güvenli alan:** Instagram profil ızgarası kapağı 3:4 kırpar (üstten ve alttan 240 px gider); önemli her şey y=250–1670 arasındadır.
+- **Kapaktaki iddialar** yalnızca aracın gerçek yaptığını söyler; rakamlar örnekse "Örnek" yazılır.
