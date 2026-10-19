@@ -77,6 +77,29 @@ async function requestHasAdminBearer(request: Request): Promise<boolean> {
   }
 }
 
+/**
+ * Hız sınırı / kötüye kullanım kimliği: geçerli erişim anahtarı varsa KULLANICI (`u:<id>`),
+ * yoksa (misafir, giriş, kayıt) IP. Böylece ortak IP'den (ofis, mobil operatör) giren giriş
+ * yapmış kullanıcılar birbirinin kotasını yemez; IP sayacı yalnız misafire uygulanır.
+ */
+export function rateLimitIdentity(request: Request): { id: string; authed: boolean } {
+  const header = request.headers.authorization ?? "";
+  if (header.startsWith("Bearer ")) {
+    const token = header.slice("Bearer ".length).trim();
+    if (token) {
+      try {
+        const payload = verifyAccessToken(token);
+        if (payload.sub) {
+          return { id: `u:${payload.sub}`, authed: true };
+        }
+      } catch {
+        /* geçersiz anahtar → misafir sayılır */
+      }
+    }
+  }
+  return { id: getClientIp(request), authed: false };
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // Redis-backed abuse store (falls back to in-memory when REDIS_URL is not set)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -211,7 +234,7 @@ export async function abuseBlockMiddleware(request: Request, response: Response,
     return;
   }
   const ip = getClientIp(request);
-  const blockedUntil = await readBlockedUntil(ip);
+  const blockedUntil = await readBlockedUntil(rateLimitIdentity(request).id);
   const now = Date.now();
   if (blockedUntil > now) {
     logSuspiciousActivity({
@@ -249,8 +272,12 @@ export const globalApiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `${ipKeyGenerator(getClientIp(req))}:${rateLimitTierForRequest(req)}`,
-  message: { message: "Bu IP'den çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin." },
+  keyGenerator: (req) => {
+    const who = rateLimitIdentity(req);
+    const base = who.authed ? who.id : ipKeyGenerator(who.id);
+    return `${base}:${rateLimitTierForRequest(req)}`;
+  },
+  message: { message: "Çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin." },
   handler: async (request, response, _next, options) => {
     const cfg = await getApiSecurityResolved();
     const ip = getClientIp(request);
@@ -263,7 +290,7 @@ export const globalApiLimiter = rateLimit({
       detail: `limit=${options.limit}`,
     });
     if (rateLimitCountsTowardAbuseBlock(request)) {
-      await recordRateLimitViolation(ip, cfg.abuseThreshold, cfg.abuseBlockMinutes);
+      await recordRateLimitViolation(rateLimitIdentity(request).id, cfg.abuseThreshold, cfg.abuseBlockMinutes);
     }
     response.status(options.statusCode ?? 429).json(options.message ?? { message: "Too many requests." });
   },
