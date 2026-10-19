@@ -395,12 +395,56 @@ def _validate_consume(data: Any) -> dict[str, Any]:
     return data
 
 
-async def entitlement_check(token: str, tool_id: str, file_count: int = 1) -> dict[str, Any]:
+PLAN_LOCKED_REASON = "tool_not_allowed_on_plan"
+
+
+class PlanLockedError(HTTPException):
+    """Aracın planda kilitli olduğu (``tool_not_allowed_on_plan``) kararı; HTTP 403'e çevrilir.
+
+    HTTPException alt sınıfıdır: rota içindeki ``except HTTPException: raise`` kalıpları onu
+    genel hataya (500) çevirmeden yukarı taşır. Gövdeyi main.py'deki özel işleyici üretir."""
+
+    def __init__(self, tool_id: str, decision: dict[str, Any]):
+        super().__init__(status_code=403, detail=PLAN_LOCKED_REASON)
+        self.tool_id = tool_id
+        self.decision = decision
+
+
+def plan_locked_payload(exc: PlanLockedError) -> dict[str, Any]:
+    """403 gövdesi: ön yüzün yükseltme akışı ``saasGating`` alanını okur."""
+    d = exc.decision
+    return {
+        "error": PLAN_LOCKED_REASON,
+        "detail": "Bu araç mevcut planınızda kapalı. Kullanmak için planınızı yükseltin.",
+        "tool": exc.tool_id,
+        "saasGating": {
+            "allowed": False,
+            "reason": PLAN_LOCKED_REASON,
+            "cost": 0,
+            "creditsBefore": int(d.get("creditsBefore") or 0),
+            "creditsAfter": int(d.get("creditsAfter") or 0),
+            "watermarkEnabled": bool(d.get("watermarkEnabled", False)),
+        },
+    }
+
+
+async def entitlement_check(
+    token: str,
+    tool_id: str,
+    file_count: int = 1,
+    *,
+    reject_plan_locked: bool = True,
+) -> dict[str, Any]:
     """POST ``/api/entitlement/check`` — pure engine decision, no side effects.
 
     Raises on transport / auth failure; returns the raw decision dict for
     ``allowed=true`` AND ``allowed=false``. The caller decides whether to
     reject the request (typically ``allowed=false`` → 402).
+
+    İSTİSNA: araç kullanıcının planında KİLİTLİYSE (``tool_not_allowed_on_plan``) varsayılan olarak
+    ``PlanLockedError`` (→ 403) fırlatılır; böylece dosya hiç işlenmez. Tüm işlem uçları bu tek
+    kapıdan geçer; araç listesi sunucudaki plan tanımından (yönetim paneli ayarı dahil) gelir.
+    İndirme/önizleme uçları kendi 402 yanıtını verdiği için ``reject_plan_locked=False`` geçer.
     """
     base = saas_api_base()
     json_body: dict[str, Any] = {"toolId": tool_id}
@@ -422,7 +466,14 @@ async def entitlement_check(token: str, tool_id: str, file_count: int = 1) -> di
         data = r.json()
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Entitlement response unreadable.") from exc
-    return _validate_decision(data)
+    decision = _validate_decision(data)
+    if (
+        reject_plan_locked
+        and not decision.get("allowed")
+        and decision.get("reason") == PLAN_LOCKED_REASON
+    ):
+        raise PlanLockedError(tool_id, decision)
+    return decision
 
 
 async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
