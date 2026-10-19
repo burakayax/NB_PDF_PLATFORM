@@ -156,7 +156,7 @@ const rawEnvSchema = z
     LOG_FILE_PATH: z.string().min(1).default("logs/nb-pdf-TOOLS-api.log"),
     LOG_FILE_ENABLED: z.enum(["true", "false"]).optional().default("true"),
     /** Dakikada çoğu /api yolu için IP başına üst sınır (SPA eşzamanlı istekleri için 60 önerilir; /auth/preferences ayrı kota). */
-    API_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(60),
+    API_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(300),
     /** Aynı IP tekrarlı rate limit ihlalinde kaç kez sonra geçici blok (varsayılan 5). */
     API_ABUSE_THRESHOLD: z.coerce.number().int().positive().default(5),
     /** Tekrarlı kötüye kullanım sonrası IP blok süresi (dakika). */
