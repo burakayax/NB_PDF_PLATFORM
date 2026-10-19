@@ -102,12 +102,14 @@ export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS
       description: `${nameTr} CV'si nasıl yazılır? Profil özeti, rakamlı deneyim maddeleri ve beceri örnekleri; kopyalayıp kendinize uyarlayın.`,
       excerpt: `${nameTr} CV'sinde görev listesi yerine sonuç yazın. Özet, deneyim maddesi ve beceri örnekleri bu rehberde.`,
       blocks: trBlocks(p, nameTr),
+      faq: [],
     },
     {
       title: `${nameEn} CV Example`,
       description: `How to write a ${nameEn} CV: profile summary, number-driven bullets and key skills, with examples you can adapt.`,
       excerpt: `In a ${nameEn.toLowerCase()} CV, write results rather than a duty list. Summary, bullet and skills examples inside.`,
       blocks: enBlocks(p, nameEn),
+      faq: [],
     },
   );
 });
