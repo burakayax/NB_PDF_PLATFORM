@@ -209,7 +209,7 @@ export async function loginAuthUser(email: string, password: string, isAdmin = f
  * HttpOnly yenileme çerezi varsa yeni access token döner.
  * Çerez yoksa veya oturum geçersizse 401 beklenir; bu normaldir (misafir veya süresi dolmuş oturum) — konsola uyarı yazılmaz.
  */
-export async function refreshAuthSession(): Promise<AuthResponse | null> {
+async function refreshAuthSessionOnce(): Promise<AuthResponse | null> {
   // Zaman aşımı: takılan refresh isteği uygulama açılışını (isRestoring) sonsuza dek bekletmesin.
   const response = await saasFetch(
     `/api/auth/refresh`,
@@ -221,6 +221,27 @@ export async function refreshAuthSession(): Promise<AuthResponse | null> {
   }
   await ensureOk(response, "Session refresh failed.");
   return response.json() as Promise<AuthResponse>;
+}
+
+let refreshInFlight: Promise<AuthResponse | null> | null = null;
+
+/**
+ * Yenileme anahtarı her kullanımda döner; eski sürümün ikinci kez kullanılması
+ * sunucuda "çalıntı oturum" sayılıp hesabın tüm oturumlarını kapatır. Sayfa açılırken
+ * birden çok istek aynı anda 401 alınca hepsi yenileme başlatıyordu → kullanıcı atılıyordu.
+ * Bu yüzden aynı sekmedeki eşzamanlı çağrılar tek isteği paylaşır, sekmeler arası da
+ * Web Locks ile sıraya girer (sonraki sekme güncellenmiş çerezle gider).
+ */
+export function refreshAuthSession(): Promise<AuthResponse | null> {
+  if (refreshInFlight) return refreshInFlight;
+  const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+  const run = locks
+    ? locks.request("nb-auth-refresh", () => refreshAuthSessionOnce())
+    : refreshAuthSessionOnce();
+  refreshInFlight = run.finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
 }
 
 export async function logoutAuthUser() {

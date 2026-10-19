@@ -7201,7 +7201,10 @@ function App() {
                           Kullanıcı hakkının bittiğini işi yarıda kesildiğinde
                           öğreniyordu; sayaç önceden görünürse yükseltmeyi
                           planlayabiliyor. */}
-                      {userBalance && (
+                      {/* Cihazda çalışan araçlar günlük hakka SAYILMAZ (bkz. runClientPdfTool);
+                          "0/3 kullanıldı" göstermek yanıltıcıydı ve Görsel Sıkıştır/Boyutlandır
+                          ile tutarsızdı. */}
+                      {userBalance && !isWorkspaceClientTool(selectedFeature.id) && (
                         <QuotaMeter
                           language={language}
                           used={userBalance.daily?.used ?? 0}
