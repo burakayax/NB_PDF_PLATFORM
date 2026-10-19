@@ -159,6 +159,9 @@ type DashboardTopNavProps = {
   /** Remaining ops / credit balance for the chip. */
   creditBalance?: number | null;
   creditBalanceLoading?: boolean;
+  /** Bakiye alınamadı (429/ağ) — rozet kaybolmak yerine "alınamadı" gösterir. */
+  creditBalanceFailed?: boolean;
+  onRetryBalance?: () => void;
   /** Günlük hak havuzu (sunucuda işlenen araçların ortak sayacı) — limit yoksa rozet çizilmez. */
   dailyPool?: DailyPool | null;
   hasActiveSubscription?: boolean;
@@ -185,6 +188,8 @@ export function DashboardTopNav({
   accessToken,
   creditBalance,
   creditBalanceLoading,
+  creditBalanceFailed,
+  onRetryBalance,
   dailyPool,
   hasActiveSubscription,
   limitsizProActive,
@@ -212,11 +217,12 @@ export function DashboardTopNav({
   const showCreditsCenter =
     !isTeamMember &&
     user.role !== "ADMIN" &&
-    (creditBalanceLoading || typeof creditBalance === "number" || plan != null);
+    (creditBalanceLoading || creditBalanceFailed || typeof creditBalance === "number" || plan != null);
   const upgradeVisible = Boolean(
     onUpgradeClick &&
     showCreditsCenter &&
     !limitsizProActive &&
+    !creditBalanceFailed &&
     plan !== "PRO" &&
     plan !== "BUSINESS",
   );
@@ -241,7 +247,8 @@ export function DashboardTopNav({
       return;
     }
     const q = await fetchAiQuota(accessToken ?? null);
-    setAiQuota(q);
+    // Geçici hata (429/ağ) son iyi değeri silmesin.
+    if (q) setAiQuota(q);
   }, [showAiBalance, accessToken]);
 
   useEffect(() => {
@@ -252,7 +259,7 @@ export function DashboardTopNav({
     let alive = true;
     const load = () =>
       fetchAiQuota(accessToken ?? null).then((q) => {
-        if (alive) setAiQuota(q);
+        if (alive && q) setAiQuota(q);
       });
     void load();
     const id = window.setInterval(() => void load(), 60_000);
@@ -284,6 +291,7 @@ export function DashboardTopNav({
 
   const centerLabel = () => {
     if (creditBalanceLoading) return "…";
+    if (creditBalanceFailed) return tr ? "Hak bilgisi alınamadı · Tekrar dene" : "Usage unavailable · Retry";
     // AI erişimi olan HERKES (PRO/limitsiz dahil): AI işlem hakkını göster.
     if (hasAiAccess) {
       if (!aiQuota) return planLabel();
@@ -375,7 +383,7 @@ export function DashboardTopNav({
             ) : creditsPanelVisible ? (
               <button
                 type="button"
-                onClick={() => onOpenCreditsPanel?.()}
+                onClick={() => (creditBalanceFailed ? onRetryBalance?.() : onOpenCreditsPanel?.())}
                 className={`hidden sm:inline-flex max-w-[min(100vw-12rem,14rem)] md:max-w-[min(100vw-14rem,18rem)] lg:max-w-[22rem] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition focus:outline-none focus-visible:ring-2 ${
                   isLimitExhausted
                     ? "border border-red-500/50 bg-red-950/80 text-red-200 hover:bg-red-900/80 focus-visible:ring-red-500/35"
