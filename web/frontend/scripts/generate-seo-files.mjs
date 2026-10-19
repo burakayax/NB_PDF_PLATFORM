@@ -42,6 +42,7 @@ import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
 import { writeBlogCovers } from "./generate-covers.mjs";
 import { writeSocialKeywords } from "./generate-social-keywords.mjs";
 import { writeCarousels } from "./generate-carousels.mjs";
+import { writeSocialX } from "./generate-social-x.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -1218,6 +1219,15 @@ try {
   );
 } catch (err) {
   console.warn(`[seo] carousel üretilemedi (otomasyon tek görselle sürer): ${err instanceof Error ? err.message : err}`);
+}
+
+// ─── X (Twitter) içerik kaynağı + görseller ──────────────────────────────────
+// İpuçları yazıların kendi başlıklarından alınır; görseller gitignore'da. Üretilemezse otomasyon X'i atlar (yayın bloke olmaz).
+try {
+  const x = await writeSocialX({ publicDir, baseUrl: base });
+  console.log(`[seo] X içeriği: ${x.posts} yazı, ${x.products} ürün; ${x.written} görsel yazıldı, ${x.skipped} değişmedi → ${x.path}`);
+} catch (err) {
+  console.warn(`[seo] X içeriği üretilemedi (otomasyon X'i atlar): ${err instanceof Error ? err.message : err}`);
 }
 
 console.log(
