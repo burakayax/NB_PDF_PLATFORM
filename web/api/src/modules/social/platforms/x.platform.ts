@@ -10,6 +10,8 @@ import { oauth1Header } from "./oauth1.js";
 import type { OAuth1Keys } from "./oauth1.js";
 import { PlatformError, downloadImage, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
+import { logger } from "../../../lib/file-log.js";
+import { decodeXBody } from "../x-compose.js";
 
 /** Güncel medya ucu. X, eski 1.1 ucunu kullanımdan kaldırma sürecinde. */
 const MEDIA_UPLOAD_URL = "https://api.x.com/2/media/upload";
@@ -111,14 +113,7 @@ async function uploadMedia(imageUrl: string, keys: OAuth1Keys): Promise<string> 
   return id;
 }
 
-export const publishToX: Publisher = async ({ body, imageUrl, secrets }) => {
-  const keys = keysFrom(secrets);
-
-  const payload: Record<string, unknown> = { text: body };
-  if (imageUrl) {
-    payload.media = { media_ids: [await uploadMedia(imageUrl, keys)] };
-  }
-
+async function postTweet(keys: OAuth1Keys, payload: Record<string, unknown>): Promise<string | null> {
   const json = await requestJson("X", TWEET_URL, {
     method: "POST",
     headers: {
@@ -127,10 +122,53 @@ export const publishToX: Publisher = async ({ body, imageUrl, secrets }) => {
     },
     body: JSON.stringify(payload),
   });
+  return (json.data as { id?: string } | undefined)?.id ?? null;
+}
 
-  const data = json.data as { id?: string } | undefined;
-  const id = data?.id ?? null;
-  return { externalId: id, externalUrl: id ? `https://x.com/i/web/status/${id}` : null };
+/** Devam gönderisi (thread / link yanıtı). Ana gönderi çıktıktan sonra olduğundan hata yukarı fırlatılmaz. */
+async function replyTo(keys: OAuth1Keys, text: string, toId: string): Promise<string | null> {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await postTweet(keys, { text, reply: { in_reply_to_tweet_id: toId } });
+    } catch (err) {
+      logger.warn("social", `X yanıtı gönderilemedi (deneme ${attempt}/2): ${String(err).slice(0, 200)}`);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  return null;
+}
+
+/**
+ * Yayın planı (gövdeden okunur, bkz. x-compose.ts):
+ *  - anket: soru + 2–4 seçenek (X, anketle görseli birlikte kabul etmez)
+ *  - metin: ana gönderi (+ görsel) → thread parçaları peş peşe yanıt → LİNK EN SON YANITTA
+ * Ana gönderi çıktıktan sonra devam gönderileri başarısız olursa gönderi BAŞARILI sayılır (yeniden deneme aynı
+ * gönderiyi iki kez çıkarırdı); yalnız kayda uyarı düşer.
+ */
+export const publishToX: Publisher = async ({ body, imageUrl, secrets }) => {
+  const keys = keysFrom(secrets);
+  const plan = decodeXBody(body);
+
+  let firstId: string | null;
+  if (plan.kind === "poll") {
+    firstId = await postTweet(keys, { text: plan.question, poll: { options: plan.options, duration_minutes: 1440 } });
+  } else {
+    const [first = "", ...rest] = plan.parts.length > 0 ? plan.parts : [""];
+    const payload: Record<string, unknown> = { text: first };
+    if (imageUrl) payload.media = { media_ids: [await uploadMedia(imageUrl, keys)] };
+    firstId = await postTweet(keys, payload);
+
+    let lastId = firstId;
+    if (firstId) {
+      for (const part of rest) {
+        const id = await replyTo(keys, part, lastId ?? firstId);
+        if (id) lastId = id;
+      }
+      // Link ana gönderiye değil, zincirin SON gönderisine yanıt olarak gider.
+      if (plan.replyLink) await replyTo(keys, plan.replyLink, lastId ?? firstId);
+    }
+  }
+  return { externalId: firstId, externalUrl: firstId ? `https://x.com/i/web/status/${firstId}` : null };
 };
 
 /** Anahtarların X tarafından kabul edildiğini ve hangi hesaba ait olduğunu söyler. */

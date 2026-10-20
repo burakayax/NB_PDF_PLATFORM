@@ -31,6 +31,7 @@ vi.mock("../lib/prisma.js", () => ({
     socialToolVideo: { findMany: vi.fn(async () => []), delete: vi.fn() },
     socialPost: {
       findMany: vi.fn(async () => []),
+      count: vi.fn(async () => 0),
       create: vi.fn(async ({ data }: { data: { platform: string; status: string; imageUrl: string | null } }) => {
         created.push({ platform: data.platform, status: data.status, imageUrl: data.imageUrl });
         return data;

@@ -11,6 +11,7 @@ import { carouselSlidesFor } from "../carousel.service.js";
 import { isReelUrl } from "../reels.service.js";
 import { PublishStageError, coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
+import { postFirstComment } from "./facebook-comment.js";
 import { publishFacebookReel } from "./facebook-reels.js";
 import { publishInstagramReel } from "./instagram-reels.js";
 
@@ -27,6 +28,19 @@ export const publishToFacebook: Publisher = async (input) => {
   // gönderi yeniden denenir, bitmezse "Hata" olarak görünür ve video silinmeden kalır.
   if (isReelUrl(imageUrl)) {
     return await publishFacebookReel(input, imageUrl);
+  }
+
+  // Zaman zaman çoklu görsel (3-5 kart): kaydırmalı gönderi daha uzun izleniyor. Hazırlanamazsa tek görsele düşülür.
+  if (imageUrl && wantsFacebookCarousel(item.guid)) {
+    const slides = (await carouselSlidesFor(item).catch(() => [] as string[])).slice(0, 5);
+    if (slides.length >= 3) {
+      try {
+        return await publishFacebookCarousel(input, slides, pageId, token);
+      } catch (err) {
+        if (err instanceof PublishStageError) throw err;
+        logger.warn("social", `Facebook çoklu görsel hazırlanamadı, tek görsele düşülüyor: ${String(err)}`);
+      }
+    }
   }
 
   // Görsel varsa /photos ucu kullanılır: gönderi tek parça olur (metin + görsel).
@@ -50,8 +64,58 @@ export const publishToFacebook: Publisher = async (input) => {
   });
 
   const id = (json.post_id as string | undefined) ?? (json.id as string | undefined) ?? null;
+  await postFirstComment(id, token, item.link, item.guid);
   return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null };
 };
+
+/** Gönderilerin yaklaşık üçte biri kaydırmalı olur; yazıdan sabit seçim (yeniden denemede değişmez). */
+function wantsFacebookCarousel(guid: string): boolean {
+  let hash = 0;
+  for (let i = 0; i < guid.length; i++) hash = (hash * 31 + guid.charCodeAt(i)) >>> 0;
+  return hash % 3 === 0;
+}
+
+/** Yayınlanmamış fotoğraflar yüklenir, sonra tek gönderiye eklenir (Graph API attached_media). */
+async function publishFacebookCarousel(
+  { body, item }: Parameters<Publisher>[0],
+  slideUrls: string[],
+  pageId: string,
+  token: string,
+) {
+  const mediaIds: string[] = [];
+  for (const url of slideUrls) {
+    const photo = new URLSearchParams();
+    photo.set("access_token", token);
+    photo.set("url", url);
+    photo.set("published", "false");
+    const json = await requestJson("Facebook", `${GRAPH}/${pageId}/photos`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: photo.toString(),
+    });
+    const id = json.id as string | undefined;
+    if (!id) throw new Error("Facebook fotoğraf kimliği dönmedi");
+    mediaIds.push(id);
+  }
+
+  // Yayın başladıktan sonraki hata yedek yola düşmez (çift paylaşım olmasın).
+  try {
+    const post = new URLSearchParams();
+    post.set("access_token", token);
+    post.set("message", body);
+    mediaIds.forEach((id, i) => post.set(`attached_media[${i}]`, JSON.stringify({ media_fbid: id })));
+    const json = await requestJson("Facebook", `${GRAPH}/${pageId}/feed`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: post.toString(),
+    });
+    const id = (json.id as string | undefined) ?? null;
+    await postFirstComment(id, token, item.link, item.guid);
+    return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null, slides: slideUrls };
+  } catch (err) {
+    throw new PublishStageError(err instanceof Error ? err.message : String(err));
+  }
+}
 
 export const publishToInstagram: Publisher = async (input) => {
   const slides = await carouselSlidesFor(input.item).catch(() => [] as string[]);

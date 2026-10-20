@@ -10,6 +10,7 @@
  * sunucu örneği aynı anda çalışsa bile veritabanı ikinciyi reddeder.
  */
 
+import { env } from "../../config/env.js";
 import { Prisma } from "@prisma/client";
 import type { SocialAccount, SocialPlatform } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
@@ -21,6 +22,7 @@ import { logger } from "../../lib/file-log.js";
 import { fetchPairedFeedItems } from "./rss.service.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
+import { facebookKindFor } from "./facebook-kind.js";
 import {
   MANUAL_MAX_AGE_MS,
   TOOL_REEL_PREFIX,
@@ -36,6 +38,11 @@ import {
 } from "./tool-reels.service.js";
 import type { ToolReel, ToolReelVideoInfo } from "./tool-reels.service.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
+import { parseTags } from "./instagram-tags.js";
+import { isTooSimilar } from "./facebook-similarity.js";
+import { loadXContent } from "./x-content.service.js";
+import { kindForCount, pickXPost } from "./x-queue.js";
+import type { XUsage } from "./x-queue.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 
@@ -401,6 +408,11 @@ async function readyAccounts(): Promise<Map<SocialPlatform, Record<string, strin
   return out;
 }
 
+/** Facebook sayfasının çözülmüş anahtarları (bağlı ve açıksa); yorum/rapor servisleri kullanır. */
+export async function facebookSecrets(): Promise<Record<string, string> | null> {
+  return (await readyAccounts()).get("FACEBOOK") ?? null;
+}
+
 // ─── Kuyruk oluşturma ─────────────────────────────────────────────────────────
 
 /**
@@ -497,6 +509,8 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
   for (const platform of ALL_PLATFORMS) {
     // Yalnız video kabul eden ağ (YouTube) blog görseliyle beslenmez; araç videoları ayrı akışta gider.
     if (PLATFORM_SPECS[platform].videoOnly) continue;
+    // X kendi haftalık döngüsünden beslenir (queueXPost): blog hattı bu ağı atlar.
+    if (PLATFORM_SPECS[platform].ownQueue) continue;
     const item = await pickNextItem(items, platform, config.recycleOldPosts);
     if (!item) {
       result.skipped.push({ platform, reason: "Paylaşılacak yeni yazı yok" });
@@ -529,11 +543,19 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
       keywords,
       bilingual: config.bilingual,
       singleLang: config.singleLang,
+      avoidTags: await lastInstagramTags(),
+      fbKind: facebookKindFor(await prisma.socialPost.count({ where: { platform: "FACEBOOK", NOT: { guid: { startsWith: TOOL_REEL_PREFIX } } } })),
     });
+    // Son 30 Facebook gönderisiyle benzerlik: çok benzerse TASLAK kalır, admin görüp düzeltir.
+    const recentFb = platforms.includes("FACEBOOK")
+      ? (await prisma.socialPost.findMany({ where: { platform: "FACEBOOK" }, orderBy: { createdAt: "desc" }, take: 30, select: { body: true } })).map((r) => r.body)
+      : [];
     for (const platform of platforms) {
       // Blog gönderileri Reels olmaz (yalnız araç videoları Reels olur): carousel/tek görsel.
       const imageUrl = pickImage(item, platform);
-      const holdThis = hold;
+      const similar = platform === "FACEBOOK" && isTooSimilar(bodies[platform], recentFb);
+      if (similar) result.skipped.push({ platform, reason: "Facebook metni son 30 gönderiden birine çok benziyor; taslak olarak bekliyor" });
+      const holdThis = hold || similar;
       try {
         const manual = !accounts.has(platform);
         await prisma.socialPost.create({
@@ -563,6 +585,75 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
   }
 
   return result;
+}
+
+/**
+ * X: haftalık döngüden o günün gönderisini hazırlar (ipucu, ürün, ipucu, ürün, anket, "biliyor muydunuz").
+ * Yayın zamanı diğer ağlarla aynı mekanizmadan gelir; burada zamanlamaya dokunulmaz.
+ * Gönderi gövdesi thread/link yanıtı/anket planını taşır (x-compose.ts); yayıncı gövdeden okur.
+ */
+async function queueXPost(scheduledAt: Date, hold: boolean, result: QueueResult): Promise<void> {
+  const config = await readSocialConfig();
+  const dayKey = calendarDayKey(scheduledAt, config.timeZone);
+  const accounts = await readyAccounts();
+
+  // Gün başına bir X gönderisi: bugün zaten hazırlandıysa yenisi açılmaz.
+  if ((await prisma.socialPost.count({ where: { platform: "X", dayKey } })) > 0) return;
+
+  const content = await loadXContent();
+  if (!content) {
+    result.skipped.push({ platform: "X", reason: "X içerik kaynağı (social-x.json) okunamadı" });
+    return;
+  }
+  const rows = await prisma.socialPost.findMany({ where: { platform: "X" }, select: { guid: true, createdAt: true } });
+  const usage: XUsage = new Map();
+  for (const r of rows) usage.set(r.guid, Math.max(usage.get(r.guid) ?? 0, r.createdAt.getTime()));
+
+  const items = await fetchPairedFeedItems(PRIMARY_FEED_LANG);
+  const pick = pickXPost({
+    kind: kindForCount(rows.length),
+    content,
+    usage,
+    postUrls: items.map((i) => i.link),
+    recycle: config.recycleOldPosts,
+    siteOrigin: env.FRONTEND_ORIGIN.replace(/\/$/, ""),
+  });
+  if (!pick) {
+    result.skipped.push({ platform: "X", reason: "X için uygun içerik bulunamadı" });
+    return;
+  }
+
+  const manual = !accounts.has("X");
+  await prisma.socialPost.create({
+    data: {
+      platform: "X",
+      guid: pick.guid,
+      lang: "tr",
+      title: pick.title,
+      linkUrl: pick.linkUrl,
+      body: pick.body,
+      imageUrl: pick.imageUrl,
+      scheduledAt,
+      dayKey,
+      status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
+    },
+  });
+  result.queued.push({ platform: "X", title: pick.title, body: pick.body, imageUrl: pick.imageUrl, manual });
+}
+
+/** Bir önceki Instagram gönderisinin etiketleri: art arda iki gönderide aynı set çıkmasın. */
+async function lastInstagramTags(): Promise<string[]> {
+  // EN İYİ ÇABA: etiket çeşitliliği için bakılıyor; okunamazsa gönderi hazırlığı durmaz.
+  try {
+    const last = await prisma.socialPost.findFirst({
+      where: { platform: "INSTAGRAM" },
+      orderBy: { createdAt: "desc" },
+      select: { body: true },
+    });
+    return last ? parseTags(last.body) : [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Araç tanıtım videoları ───────────────────────────────────────────────────
@@ -629,6 +720,7 @@ export async function queueToolReel(
     bilingual: config.bilingual,
     singleLang: config.singleLang,
     templateOnly: true,
+    avoidTags: await lastInstagramTags(),
   });
   const targets = options?.platforms?.length
     ? TOOL_REEL_PLATFORMS.filter((p) => options.platforms?.includes(p))
@@ -754,6 +846,7 @@ export async function catchUpToolReel(now: Date = new Date()): Promise<QueueResu
   result.queued.push(...queued.queued);
   result.skipped.push(...queued.skipped);
   if (queued.queued.length > 0) {
+    await scheduleFacebookSlots(dayKey).catch((err) => logger.warn("social", `Facebook saatleri ayarlanamadı: ${String(err)}`));
     logger.info("social", `${dayKey}: geç gelen araç videosu (${due.id}) için ${queued.queued.length} gönderi hazırlandı`);
   }
   return result;
@@ -770,16 +863,89 @@ async function cleanupToolVideosSafely(): Promise<void> {
 }
 
 /** Günün gönderilerini hazırlar: blog yazıları + (açıksa) sıradaki araç videosu. */
-export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<QueueResult> {
+export async function queueDailyPosts(
+  scheduledAt: Date,
+  hold = false,
+  /** Otomatik tur: Facebook gönderileri kendi saat penceresine (öğle / akşam) taşınır. */
+  spreadFacebook = false,
+): Promise<QueueResult> {
   const result = await queueBlogPosts(scheduledAt, hold);
+  try {
+    await queueXPost(scheduledAt, hold, result);
+  } catch (err) {
+    // X ek bir akış: hatası diğer ağların gönderilerini geri almamalı.
+    logger.warn("social", `X gönderisi kuyruğa alınamadı: ${String(err)}`);
+  }
   try {
     await maybeQueueToolReel(scheduledAt, hold, result);
   } catch (err) {
     // Araç videosu ek bir akış: hatası blog gönderilerini geri almamalı.
     logger.warn("social", `Araç videosu kuyruğa alınamadı: ${String(err)}`);
   }
+  if (spreadFacebook) {
+    try {
+      await scheduleFacebookSlots(calendarDayKey(scheduledAt, (await readSocialConfig()).timeZone));
+    } catch (err) {
+      // Saat ayarı ek bir adım: hatası gönderileri geri almamalı, gönderiler olduğu saatte gider.
+      logger.warn("social", `Facebook saatleri ayarlanamadı: ${String(err)}`);
+    }
+  }
   await cleanupToolVideosSafely();
   return result;
+}
+
+// ─── Facebook paylaşım saatleri ───────────────────────────────────────────────
+
+/**
+ * Facebook'ta gönderi türüne göre yayın penceresi (yerel saat, [başlangıç, bitiş) saat).
+ * Normal gönderi öğle arası, Reels akşam; tam saatte yığılma olmasın diye pencerenin
+ * içinde rastgele bir dakika seçilir (başta/sonda 3 dk pay bırakılır).
+ */
+export const FACEBOOK_WINDOWS = {
+  post: { from: 12, to: 13 },
+  reel: { from: 20, to: 22 },
+} as const;
+
+/** Verilen takvim gününde, saat diliminde `hour:minute` anının gerçek zamanı. */
+function instantAtLocal(dayKey: string, hour: number, minute: number, timeZone: string): Date {
+  const [y, m, d] = dayKey.split("-").map((v) => Number.parseInt(v, 10));
+  const wall = Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1, hour, minute);
+  let instant = new Date(wall - zoneOffsetMs(new Date(wall), timeZone));
+  instant = new Date(wall - zoneOffsetMs(instant, timeZone));
+  return instant;
+}
+
+/** Pencere içinde rastgele bir an. `random` testler için dışarıdan verilebilir. */
+export function facebookSlot(
+  kind: keyof typeof FACEBOOK_WINDOWS,
+  dayKey: string,
+  timeZone: string,
+  random: () => number = Math.random,
+): Date {
+  const { from, to } = FACEBOOK_WINDOWS[kind];
+  const spanMinutes = (to - from) * 60 - 6;
+  let offset = 3 + Math.floor(random() * spanMinutes);
+  // Pencere ortasındaki tam saat (örn. 21:00) de yığılma noktası: dakika 3'ün altındaysa kaydır.
+  if (offset % 60 < 3) offset += 3;
+  return instantAtLocal(dayKey, from + Math.floor(offset / 60), offset % 60, timeZone);
+}
+
+/**
+ * Günün Facebook gönderilerini kendi saat penceresine taşır (yalnız otomatik turda).
+ * Pencere çoktan geçtiyse (sunucu geç kaldı) gönderi olduğu gibi bırakılır, hemen gider.
+ */
+export async function scheduleFacebookSlots(dayKey: string, now: Date = new Date()): Promise<void> {
+  const config = await readSocialConfig();
+  const rows = await prisma.socialPost.findMany({
+    where: { platform: "FACEBOOK", dayKey: { startsWith: dayKey }, status: { in: ["QUEUED", "DRAFT"] } },
+    select: { id: true, guid: true, scheduledAt: true },
+  });
+  for (const row of rows) {
+    const kind = row.guid.startsWith(TOOL_REEL_PREFIX) ? "reel" : "post";
+    const slot = facebookSlot(kind, dayKey, config.timeZone);
+    if (slot.getTime() <= now.getTime()) continue;
+    await prisma.socialPost.update({ where: { id: row.id }, data: { scheduledAt: slot } });
+  }
 }
 
 // ─── Yayınlama ────────────────────────────────────────────────────────────────

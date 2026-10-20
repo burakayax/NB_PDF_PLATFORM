@@ -21,6 +21,10 @@ export const SITE_SETTING_KEYS = {
   EMAIL_AUTOMATION: "email.automation",
   /** Sosyal medya otomasyonu: JSON { enabled, hour, minute, timeZone, lang, platforms[] } */
   SOCIAL_AUTOMATION: "social.automation",
+  /** Facebook yorum yanıt taslakları: JSON { drafts[], seen[] } (onay bekler, otomatik yayınlanmaz) */
+  FACEBOOK_REPLY_DRAFTS: "social.facebook.replyDrafts",
+  /** Facebook haftalık rapor: JSON { weekKey, text, createdAt, followers[] } */
+  FACEBOOK_WEEKLY_REPORT: "social.facebook.weeklyReport",
   /**
    * Misafir (üye olmayan) PDF Sıkıştır hakkı — yönetim panelinden ayarlanır: JSON
    * { enabled, dailyLimit, globalDailyLimit, maxMB }. PDF servisi bunu dahili uçtan okur.

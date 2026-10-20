@@ -440,8 +440,9 @@ describe("linkStyle", () => {
     // Instagram caption'ındaki adres tıklanmıyor; tam adres yazmak 55 karakter
     // harcayıp kullanıcıdan kopyalamasını beklemek olurdu.
     expect(PLATFORM_SPECS.INSTAGRAM.linkStyle).toBe("bio");
+    // Facebook: bağlantı metne değil ilk yoruma gider.
+    expect(PLATFORM_SPECS.FACEBOOK.linkStyle).toBe("none");
     // Tıklanabilir ağlarda tam adres kalmalı.
-    expect(PLATFORM_SPECS.FACEBOOK.linkStyle).toBe("url");
     expect(PLATFORM_SPECS.LINKEDIN.linkStyle).toBe("url");
     expect(PLATFORM_SPECS.X.linkStyle).toBe("url");
     // Pinterest'te adres ayrı alanda gidiyor, metne yazılmaz.
@@ -558,9 +559,9 @@ describe("Instagram — toplam etiket sınırı bloklara paylaştırılır", () 
     expect(tagCountFor("INSTAGRAM", 2, 0)).toBe(3);
     expect(tagCountFor("INSTAGRAM", 2, 1)).toBe(2);
     expect(tagCountFor("INSTAGRAM", 1, 0)).toBe(5);
-    // Facebook'ta toplam sınır yok: her blok kendi 3 etiketini alır.
-    expect(tagCountFor("FACEBOOK", 2, 0)).toBe(3);
-    expect(tagCountFor("FACEBOOK", 2, 1)).toBe(3);
+    // Facebook'ta toplam sınır yok: her blok kendi payını (4 konu etiketi) alır.
+    expect(tagCountFor("FACEBOOK", 2, 0)).toBe(4);
+    expect(tagCountFor("FACEBOOK", 2, 1)).toBe(4);
   });
 
   it("çift dilli Instagram gönderisinde toplam etiket sayısı 5'i aşmaz", async () => {

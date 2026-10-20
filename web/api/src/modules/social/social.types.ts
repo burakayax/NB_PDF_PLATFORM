@@ -101,6 +101,10 @@ export type PlatformSpec = {
    * yalnızca araç videoları (Reels) gider.
    */
   videoOnly?: boolean;
+  /**
+   * Gönderileri kendi kuyruğundan çıkan ağ (X): blog hattı bu ağı atlar; içerik `queueXPost` ile haftalık döngüden gelir.
+   */
+  ownQueue?: boolean;
   /** Bu platformda saklanması gereken gizli alanlar. */
   secretFields: { key: string; label: string; help: string }[];
 };
@@ -109,6 +113,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   X: {
     platform: "X",
     label: "X (Twitter)",
+    ownQueue: true,
     // X'in gerçek sınırı. Bağlantı uzunluğu ne olursa olsun 23 karakter
     // sayılır (t.co kısaltması) — bu hesap `effectiveMax` içinde yapılır.
     maxChars: 280,
@@ -146,9 +151,12 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     maxChars: 2200,
     imageRequired: false,
     imageFormat: "wide",
-    hashtagCount: 3,
-    linkStyle: "url",
-    bilingual: true,
+    // 3-5 konuya özel etiket (genel havuz kullanılmaz).
+    hashtagCount: 4,
+    // Dış bağlantılı gönderinin erişimi düşüyor: bağlantı metne değil İLK YORUMA konur.
+    linkStyle: "none",
+    // Facebook yalnız Türkçe: karışık dil kitle dağıtımını bozuyor.
+    bilingual: false,
     secretFields: [
       { key: "pageId", label: "Sayfa ID", help: "Facebook sayfasının sayısal kimliği" },
       { key: "pageAccessToken", label: "Sayfa Erişim Anahtarı", help: "Süresiz (long-lived) page access token" },
@@ -163,7 +171,8 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "square",
     hashtagCount: 5,
     hashtagTotalCap: 5,
-    bilingual: true,
+    // Instagram içeriği sadece Türkçe (içerik kuralları).
+    bilingual: false,
     linkStyle: "bio",
     secretFields: [
       { key: "igUserId", label: "Instagram İşletme Hesabı ID", help: "Facebook sayfasına bağlı IG Business hesabının kimliği" },
