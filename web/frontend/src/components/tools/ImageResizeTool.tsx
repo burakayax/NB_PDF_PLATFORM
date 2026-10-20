@@ -5,7 +5,7 @@ import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
-import { canEncode, extForFormat, type OutputFormat } from "../../lib/imageCompress";
+import { extForFormat, type OutputFormat } from "../../lib/imageCompress";
 import { resizeImage, SIZE_PRESETS, type FitMode } from "../../lib/imageResize";
 
 /**
@@ -34,12 +34,13 @@ function humanSize(b: number): string {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** "Otomatik" biçim — kaynağın türüne göre en küçük sonucu verecek biçim. */
-function resolveFormat(chosen: Format, file: File, webpOk: boolean): OutputFormat {
+/** Varsayılan ("auto") biçim = yüklenenle aynı (JPG→JPG, PNG→PNG); WebP yalnız kullanıcı seçerse. */
+function resolveFormat(chosen: Format, file: File): OutputFormat {
   if (chosen !== "auto") return chosen;
-  if (webpOk) return "image/webp";
   const t = (file.type || "").toLowerCase();
-  if (t === "image/png" || t === "image/webp" || t === "image/gif") return "image/png";
+  if (t === "image/jpeg" || t === "image/jpg") return "image/jpeg";
+  if (t === "image/webp") return "image/webp";
+  if (t === "image/png" || t === "image/gif") return "image/png";
   return "image/jpeg";
 }
 
@@ -59,17 +60,11 @@ export function ImageResizeTool({ language }: { language: Language }) {
   const [background, setBackground] = useState("#ffffff");
   const [format, setFormat] = useState<Format>("auto");
   const [quality, setQuality] = useState(85);
-  const [webpOk, setWebpOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let alive = true;
-    void canEncode("image/webp").then((ok) => { if (alive) setWebpOk(ok); });
-    return () => { alive = false; };
-  }, []);
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
@@ -149,7 +144,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
       setError(tr ? "Genişlik ve yükseklik 1–12000 piksel arasında olmalı." : "Width and height must be between 1 and 12000 pixels.");
       return;
     }
-    const outFormat = resolveFormat(format, file, webpOk);
+    const outFormat = resolveFormat(format, file);
     try {
       setBusy(true);
       const out = await resizeImage(file, {
@@ -348,7 +343,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
             <label className="field">
               <span>{tr ? "Biçim" : "Format"}</span>
               <select value={format} onChange={(e) => setFormat(e.target.value as Format)}>
-                <option value="auto">{tr ? "Otomatik (en küçük)" : "Automatic (smallest)"}</option>
+                <option value="auto">{tr ? "Yüklenenle aynı biçim" : "Same format as uploaded"}</option>
                 <option value="image/webp">WebP (.webp)</option>
                 <option value="image/jpeg">JPEG (.jpg)</option>
                 <option value="image/png">PNG (.png)</option>

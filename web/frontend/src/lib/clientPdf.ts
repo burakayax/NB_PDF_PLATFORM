@@ -13,6 +13,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { zipSync, strToU8 } from "fflate";
 import { PdfEncryptedError } from "./clientPdfCore";
 import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
+import { yerImleriniAktar } from "./pdfOutlines";
 import type { SearchablePage, SignatureItem, AnnotationItem } from "./clientPdfCore";
 
 // Geriye-uyum: `./clientPdf`'ten doğrudan import eden çağıranlar (SearchablePdfTool,
@@ -420,6 +421,7 @@ export async function deletePages(
   const out = await PDFDocument.create();
   const kopyalar = await out.copyPages(doc, kalan);
   for (const sayfa of kopyalar) out.addPage(sayfa);
+  yerImleriniAktar(doc, out, kalan);
   markaKunyesi(out);
   return out.save(PDF_SAVE_OPTIONS);
 }
@@ -433,6 +435,7 @@ export async function reorderPages(
   const out = await PDFDocument.create();
   const copied = await out.copyPages(src, order);
   copied.forEach((p) => out.addPage(p));
+  yerImleriniAktar(src, out, order);
   markaKunyesi(out);
   return out.save(PDF_SAVE_OPTIONS);
 }
@@ -459,6 +462,7 @@ export async function splitPagesToZip(
     const out = await PDFDocument.create();
     const copied = await out.copyPages(src, [i]);
     copied.forEach((p) => out.addPage(p));
+    yerImleriniAktar(src, out, [i]);
     markaKunyesi(out);
     files[`${baseName}_${i + 1}.pdf`] = await out.save(PDF_SAVE_OPTIONS);
   }
@@ -471,6 +475,7 @@ async function aralikKaydet(src: PDFDocument, ilk: number, son: number): Promise
   const idx = Array.from({ length: son - ilk + 1 }, (_, k) => ilk + k);
   const copied = await out.copyPages(src, idx);
   copied.forEach((p) => out.addPage(p));
+  yerImleriniAktar(src, out, idx);
   markaKunyesi(out);
   return out.save(PDF_SAVE_OPTIONS);
 }
