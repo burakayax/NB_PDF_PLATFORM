@@ -57,9 +57,9 @@ def _hex(c) -> str:
 
 
 def _snap_text_color(c) -> Tuple[int, int, int]:
-    if all(v < 70 for v in c):
+    if all(v < 120 for v in c):
         return (0, 0, 0)
-    if all(v > 200 for v in c):
+    if all(v > 170 for v in c):
         return (255, 255, 255)
     return (int(c[0]), int(c[1]), int(c[2]))
 
@@ -276,7 +276,7 @@ def _ocr_zone(img: Image.Image, arr: np.ndarray, zone: Dict[str, Any],
         for w in ws:
             if "©" in w["text"] and "." in w["text"]:
                 w["text"] = w["text"].replace("©", "@")
-        if len(ws) >= 2 and len(ws[0]["text"]) == 1 and ws[0]["text"] not in "AaBbCcDdIi" and                 ws[1]["left"] - (ws[0]["left"] + ws[0]["width"]) > 1.2 * ws[0]["height"]:
+        if len(ws) >= 2 and len(ws[0]["text"]) == 1 and ws[0]["text"] in "OoeEcCQ0" and                 ws[1]["left"] - (ws[0]["left"] + ws[0]["width"]) > 0.8 * ws[0]["height"]:
             ws.pop(0)
         text = " ".join(w["text"] for w in ws)
         if sum(c.isalnum() for c in text) < 2:
