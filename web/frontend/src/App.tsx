@@ -3619,6 +3619,33 @@ function App() {
     return estimateBase;
   }, [toolRunFileBytes, selectedFeatureId, premiumProcessingLane]);
 
+  // PDF → Word: yüklenen dosya taranmış (görüntü) ise önceden bilgi verilir.
+  // Kontrol cihazda yapılır; dosya bu iş için sunucuya gönderilmez.
+  const [scannedWordWarn, setScannedWordWarn] = useState(false);
+  const wordWarnFile =
+    selectedFeatureId === "pdf-to-word" ? uploads[0]?.file ?? null : null;
+  const wordWarnEncrypted = uploads[0]?.encrypted ?? false;
+  useEffect(() => {
+    setScannedWordWarn(false);
+    if (!wordWarnFile || wordWarnEncrypted) {
+      return;
+    }
+    let cancelled = false;
+    void import("./lib/pdfText")
+      .then((m) => m.extractPdfText(wordWarnFile))
+      .then((r) => {
+        if (!cancelled && r.likelyScanned) {
+          setScannedWordWarn(true);
+        }
+      })
+      .catch(() => {
+        /* okunamayan dosyada uyarı gösterilmez */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [wordWarnFile, wordWarnEncrypted]);
+
   const genericToolFileMb = toolRunFileBytes / (1024 * 1024);
   const genericToolRemainingSec = Math.max(
     0,
@@ -8498,6 +8525,22 @@ function App() {
                             {language === "tr"
                               ? "Düz metin içerikli PDF'lerde iyi sonuç alınır. Karmaşık düzen, tablo ve görseller tam olarak korunamayabilir."
                               : "Works well for text-based PDFs. Complex layouts, tables, and images may not be fully preserved."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-word" && scannedWordWarn ? (
+                          <div
+                            role="alert"
+                            className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90"
+                          >
+                            <strong className="block text-amber-100">
+                              {language === "tr"
+                                ? "Yüklediğiniz PDF taranmış bir belgedir"
+                                : "The PDF you uploaded is a scanned document"}
+                            </strong>
+                            {language === "tr"
+                              ? "Taranmış belgelerde metin görüntü olarak durduğundan, yazıları tanıyıp düzenlenebilir hâle getiriyoruz. Orijinal görünümü korumak için elimizden gelenin en iyisini yapacağız; ancak yazı tipi, boşluk ve düzen gibi bazı ayrıntılarda çıktı ile orijinal arasında farklılıklar oluşabilir. Dönüşümden sonra belgeyi gözden geçirmenizi öneririz."
+                              : "In scanned documents the text is stored as an image, so we recognize it and make it editable. We will do our best to preserve the original look; however, some details such as fonts, spacing and layout may differ between the output and the original. We recommend reviewing the document after conversion."}
                           </div>
                         ) : null}
 
