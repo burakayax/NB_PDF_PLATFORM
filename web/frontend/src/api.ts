@@ -872,6 +872,16 @@ type ShowSavePickerWindow = Window &
     }) => Promise<FileSystemFileHandle>;
   };
 
+/**
+ * "Farklı kaydet" penceresi indirmelerde KAPALI: tek tıkla doğrudan tarayıcının
+ * indirme klasörüne iner (iLovePDF/Smallpdf gibi araçların alışkanlığı; dosya
+ * tarayıcının indirilenler listesinde de görünür). Pencere yalnızca Chrome/Edge'de
+ * var, Firefox/Safari'de zaten yoktu — davranış her tarayıcıda aynı olsun.
+ * Düzenle-ve-aynı yere-kaydet akışları (Belge Tarayıcı, PDF Merkezi) kendi
+ * seçicilerini kullanmaya devam eder.
+ */
+export const NATIVE_SAVE_DIALOG = false;
+
 export function showSavePickerTypesFor(filename: string, blob?: Blob) {
   const extMatch = filename.match(/(\.[a-z0-9]+)$/i);
   const ext = extMatch?.[1]?.toLowerCase() ?? ".bin";
@@ -928,7 +938,7 @@ export async function askSaveLocation(
       types?: Array<{ description: string; accept: Record<string, string[]> }>;
     }) => Promise<FileSystemFileHandle>;
   };
-  if (typeof win.showSaveFilePicker !== "function") {
+  if (!NATIVE_SAVE_DIALOG || typeof win.showSaveFilePicker !== "function") {
     return "desteklenmiyor";
   }
   try {
@@ -1011,7 +1021,7 @@ async function deliverBlobAsDownload(
   // 2. Fallback: try showSaveFilePicker directly (works if user activation still valid)
   if (!usedNativeSave) {
     try {
-      if (typeof w.showSaveFilePicker === "function") {
+      if (NATIVE_SAVE_DIALOG && typeof w.showSaveFilePicker === "function") {
         const handle = await w.showSaveFilePicker({
           suggestedName: filename,
           types: showSavePickerTypesFor(filename, blob),

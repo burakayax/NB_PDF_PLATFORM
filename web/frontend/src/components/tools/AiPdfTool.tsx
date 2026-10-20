@@ -26,7 +26,7 @@ import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
-import { analyzePdf, editPdfText, type PdfTextEdit, type PdfFontKey } from "../../api";
+import { analyzePdf, editPdfText, NATIVE_SAVE_DIALOG, type PdfTextEdit, type PdfFontKey } from "../../api";
 import {
   aiSummarize,
   aiChat,
@@ -65,7 +65,7 @@ async function saveBlobWithPicker(
       types?: { description: string; accept: Record<string, string[]> }[];
     }) => Promise<{ createWritable: () => Promise<{ write: (d: Blob) => Promise<void>; close: () => Promise<void> }> }>;
   }).showSaveFilePicker;
-  if (typeof picker === "function") {
+  if (NATIVE_SAVE_DIALOG && typeof picker === "function") {
     try {
       const handle = await picker({
         suggestedName,

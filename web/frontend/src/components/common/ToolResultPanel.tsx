@@ -3,6 +3,7 @@ import { Check, Download, ExternalLink, FileCheck2, Share2, X } from "lucide-rea
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
+import { NATIVE_SAVE_DIALOG } from "../../api";
 
 /**
  * TÜM araçların ortak "işlem bitti" ekranı.
@@ -190,7 +191,7 @@ export function ToolResultPanel({
           types?: Array<{ description: string; accept: Record<string, string[]> }>;
         }) => Promise<FileSystemFileHandle>;
       };
-      if (typeof win.showSaveFilePicker === "function") {
+      if (NATIVE_SAVE_DIALOG && typeof win.showSaveFilePicker === "function") {
         try {
           const handle = await win.showSaveFilePicker({
             suggestedName: filename,
