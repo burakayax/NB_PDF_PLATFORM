@@ -85,7 +85,14 @@ export type ResolvedPackagesConfig = {
 };
 
 async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> {
-  const unifiedRaw = await getSetting(SITE_SETTING_KEYS.PACKAGES_CONFIG);
+  // Dört anahtar AYNI ANDA istenir: getSetting bunları tek `WHERE key IN (...)` sorgusunda toplar.
+  // Eskiden eski (legacy) anahtarlar sırayla bekleniyordu → her biri ayrı sorgu (Sentry "N+1 sorgu").
+  const [unifiedRaw, legacyPlans, legacyMarketing, legacyPrices] = await Promise.all([
+    getSetting(SITE_SETTING_KEYS.PACKAGES_CONFIG),
+    getSetting(SITE_SETTING_KEYS.PLANS_OVERRIDE_LEGACY),
+    getSetting(SITE_SETTING_KEYS.PACKAGES_MARKETING_LEGACY),
+    getSetting(SITE_SETTING_KEYS.PAYMENT_PRICES_LEGACY),
+  ]);
   const unified =
     unifiedRaw != null && typeof unifiedRaw === "object" && !Array.isArray(unifiedRaw)
       ? (unifiedRaw as UnifiedPackagesShape)
@@ -97,7 +104,7 @@ async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> 
     plansOverride =
       po != null && typeof po === "object" && !Array.isArray(po) ? { ...(po as Record<string, unknown>) } : {};
   } else {
-    const leg = await getSetting(SITE_SETTING_KEYS.PLANS_OVERRIDE_LEGACY);
+    const leg = legacyPlans;
     plansOverride =
       leg != null && typeof leg === "object" && !Array.isArray(leg) ? { ...(leg as Record<string, unknown>) } : {};
   }
@@ -106,14 +113,14 @@ async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> 
   if (hasOwn(unified as object, "marketing")) {
     marketing = unified.marketing ?? {};
   } else {
-    marketing = (await getSetting(SITE_SETTING_KEYS.PACKAGES_MARKETING_LEGACY)) ?? {};
+    marketing = legacyMarketing ?? {};
   }
 
   let prices: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>;
   if (hasOwn(unified as object, "prices")) {
     prices = mergePricesFromUnknown(unified.prices);
   } else {
-    const leg = await getSetting(SITE_SETTING_KEYS.PAYMENT_PRICES_LEGACY);
+    const leg = legacyPrices;
     prices = mergePricesFromUnknown(leg);
   }
 

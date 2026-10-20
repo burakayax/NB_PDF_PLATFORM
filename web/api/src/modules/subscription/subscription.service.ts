@@ -138,8 +138,8 @@ async function serializePlanCatalog() {
 
 export async function getSubscriptionSummary(userId: string) {
   const { user } = await ensurePaidSubscriptionActiveOrDowngrade(userId);
-  const defs = await getPlanDefinitionsResolved();
-  const TOOLSCfg = await getResolvedTOOLSBusinessConfig();
+  // Paket ve araç ayarları birlikte istenir: ayar okumaları tek sorguda toplanır.
+  const [defs, TOOLSCfg] = await Promise.all([getPlanDefinitionsResolved(), getResolvedTOOLSBusinessConfig()]);
 
   const usageDate = todayKey();
   const usage = await prisma.dailyUsage.findUnique({
