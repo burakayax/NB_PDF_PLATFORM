@@ -1485,6 +1485,15 @@ def pdf_to_word(
         except Exception:
             _scanned = False
         if _scanned:
+            # Tasarımlı belge (yan panel / renkli şerit / fotoğraf): bölgelere ayırarak çevir.
+            try:
+                from src.pdf_designed_scan import try_designed_pdf_to_word
+                if try_designed_pdf_to_word(pdf_path, docx_path, password, progress_callback):
+                    if progress_callback:
+                        progress_callback(4, 4, "Tamamlandı.")
+                    return True
+            except Exception as _ds_err:
+                print(f"[pdf_to_word] tasarım korumalı yol atlandı: {_ds_err}")
             if progress_callback:
                 progress_callback(0, 4, "Taranmış belge — OCR ile metin tanınıyor...")
             if _pdf_to_word_easyocr(pdf_path, docx_path, password=password, progress_callback=progress_callback):
