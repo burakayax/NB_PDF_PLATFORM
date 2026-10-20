@@ -57,7 +57,7 @@ def _hex(c) -> str:
 
 
 def _snap_text_color(c) -> Tuple[int, int, int]:
-    if all(v < 120 for v in c):
+    if all(v < 95 for v in c) and max(c) - min(c) < 60:
         return (0, 0, 0)
     if all(v > 170 for v in c):
         return (255, 255, 255)
@@ -268,6 +268,10 @@ def _ocr_zone(img: Image.Image, arr: np.ndarray, zone: Dict[str, Any],
 
     lines: List[Dict[str, Any]] = []
     for ws in groups.values():
+        # tablo kenar çizgilerinin OCR'a "|" gibi sızan artıkları
+        ws[:] = [w for w in ws if not (len(w["text"]) <= 2 and all(c in "|¦![]{}_/\\" for c in w["text"]))]
+        if not ws:
+            continue
         ws.sort(key=lambda w: w["left"])
         # satır başındaki simge artıkları (e-posta/telefon ikonu → "©", "ois")
         while len(ws) > 1 and (not any(c.isalnum() for c in ws[0]["text"]) or
@@ -278,23 +282,76 @@ def _ocr_zone(img: Image.Image, arr: np.ndarray, zone: Dict[str, Any],
                 w["text"] = w["text"].replace("©", "@")
         if len(ws) >= 2 and len(ws[0]["text"]) == 1 and ws[0]["text"] in "OoeEcCQ0" and                 ws[1]["left"] - (ws[0]["left"] + ws[0]["width"]) > 0.8 * ws[0]["height"]:
             ws.pop(0)
-        text = " ".join(w["text"] for w in ws)
-        if sum(c.isalnum() for c in text) < 2:
-            continue
-        if statistics.mean(w["conf"] for w in ws) < 40:
-            continue
-        hs = sorted(w["height"] for w in ws)
-        h = hs[len(hs) // 2]
-        lines.append({
-            "words": ws, "text": text,
-            "left": min(w["left"] for w in ws),
-            "right": max(w["left"] + w["width"] for w in ws),
-            "top": min(w["top"] for w in ws),
-            "bottom": max(w["top"] + w["height"] for w in ws),
-            "h": h,
-        })
+        # geniş boşluklarla ayrılmış parçalar (tablo sütunları, yan yana bloklar) ayrı satır olsun
+        hs_all = sorted(w["height"] for w in ws)
+        ref_h = hs_all[len(hs_all) // 2]
+        segs: List[List[Dict[str, Any]]] = [[ws[0]]]
+        for prev, w in zip(ws, ws[1:]):
+            if w["left"] - (prev["left"] + prev["width"]) > 2.0 * ref_h:
+                segs.append([w])
+            else:
+                segs[-1].append(w)
+        for seg in segs:
+            text = " ".join(w["text"] for w in seg)
+            if sum(c.isalnum() for c in text) < 2:
+                continue
+            # düşük güvenli okuma (mühür, el yazısı, logo yazısı): satır yapma, görüntüde kalsın
+            if statistics.mean(w["conf"] for w in seg) < 50:
+                continue
+            hs = sorted(w["height"] for w in seg)
+            lines.append({
+                "words": seg, "text": text,
+                "left": min(w["left"] for w in seg),
+                "right": max(w["left"] + w["width"] for w in seg),
+                "top": min(w["top"] for w in seg),
+                "bottom": max(w["top"] + w["height"] for w in seg),
+                "h": hs[len(hs) // 2],
+            })
     lines.sort(key=lambda l: (l["top"], l["left"]))
     return lines
+
+
+def _graphic_boxes(arr: np.ndarray, zone: Dict[str, Any]) -> List[Tuple[int, int, int, int]]:
+    """Renkli (doygun) büyük kümeler: logo, mühür, sertifika rozeti. İnce renkli başlıklar sayılmaz."""
+    try:
+        import cv2
+    except Exception:
+        return []
+    x0, x1 = zone["x0"], zone["x1"]
+    reg = arr[:, x0:x1, :].astype(np.int16)
+    sat = (reg.max(axis=2) - reg.min(axis=2)) > 60
+    mask = sat.astype(np.uint8)
+    k = max(5, int(arr.shape[1] * 0.012))
+    merged = cv2.dilate(mask, np.ones((k, k), np.uint8))
+    n, _lab, stats, _c = cv2.connectedComponentsWithStats(merged, connectivity=8)
+    out = []
+    for i in range(1, n):
+        x, y, w, h, _a = stats[i]
+        if w < 0.045 * arr.shape[1] or h < 0.03 * arr.shape[1]:
+            continue
+        if int(mask[y:y + h, x:x + w].sum()) < 2500:
+            continue
+        out.append((x0 + int(x), int(y), int(w), int(h)))
+    return out
+
+
+def _drop_graphic_text(arr: np.ndarray, zone: Dict[str, Any], lines: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Mühür, logo, rozet gibi renkli grafiklerin içindeki yazıyı satır yapma (görüntüde kalsın)."""
+    if _luma(zone["bg"]) < 110:
+        return lines
+    boxes = _graphic_boxes(arr, zone)
+    if not boxes:
+        return lines
+    keep = []
+    for l in lines:
+        cx, cy = (l["left"] + l["right"]) / 2, (l["top"] + l["bottom"]) / 2
+        # renkli metinli belgelerde (mavi başlık/tablo) düzenlenebilirliği korumak için yalnızca
+        # düşük güvenli (mühür/logo gürültüsü) okumaları görüntüde bırak
+        conf = statistics.mean(w["conf"] for w in l["words"])
+        if conf < 72 and any(x <= cx <= x + w and y <= cy <= y + h for (x, y, w, h) in boxes):
+            continue
+        keep.append(l)
+    return keep
 
 
 def _style_line(arr: np.ndarray, zone: Dict[str, Any], line: Dict[str, Any]) -> None:
@@ -326,29 +383,25 @@ def _style_line(arr: np.ndarray, zone: Dict[str, Any], line: Dict[str, Any]) -> 
 
 
 def _mark_bold(lines: List[Dict[str, Any]]) -> None:
-    """Aynı boy sınıfındaki kelimelerin mürekkep yoğunluğunu karşılaştırıp kalın olanları işaretle."""
-    buckets: Dict[int, List[float]] = {}
+    """Kalınlık satır düzeyinde: satırdaki kelimelerin mürekkep yoğunluğu, aynı türdeki (BÜYÜK / küçük harfli)
+    kelimelerin bölge medyanından belirgin yüksekse satır kalındır. Kelime bazlı karar çok gürültülü."""
+    classes: Dict[bool, List[float]] = {True: [], False: []}
     for l in lines:
-        b = int(round(l["h"] / 3.0))
-        for d in l.get("dens", []):
+        for w, d in zip(l["words"], l.get("dens", [])):
             if d is not None:
-                buckets.setdefault(b, []).append(d)
+                classes[w["text"].isupper()].append(d)
+    all_vals = classes[True] + classes[False]
+    meds: Dict[bool, Optional[float]] = {}
+    for k, v in classes.items():
+        meds[k] = statistics.median(v) if len(v) >= 5 else (statistics.median(all_vals) if len(all_vals) >= 5 else None)
     for l in lines:
-        b = int(round(l["h"] / 3.0))
-        vals = buckets.get(b, [])
-        flags: List[bool] = []
-        if len(vals) >= 8:
-            med = statistics.median(vals)
-            prev = False
-            for d in l.get("dens", []):
-                if d is None:
-                    flags.append(prev)
-                else:
-                    prev = d > med * 1.45
-                    flags.append(prev)
-        else:
-            flags = [False] * len(l["words"])
-        l["bold_flags"] = flags
+        ratios = []
+        for w, d in zip(l["words"], l.get("dens", [])):
+            m = meds[w["text"].isupper()]
+            if d is not None and m:
+                ratios.append(d / m)
+        bold = bool(ratios) and statistics.median(ratios) > 1.22
+        l["bold_flags"] = [bold] * len(l["words"])
 
 
 def _find_rules(arr: np.ndarray, zone: Dict[str, Any], lines: List[Dict[str, Any]]) -> List[Tuple[int, int]]:
@@ -377,6 +430,7 @@ def _build_items(arr: np.ndarray, zone: Dict[str, Any], photos) -> List[Dict[str
     lines = _ocr_zone(Image.fromarray(arr), arr, zone, photos)
     for l in lines:
         _style_line(arr, zone, l)
+    lines = _drop_graphic_text(arr, zone, lines)
     _mark_bold(lines)
     rules = _find_rules(arr, zone, lines) if _luma(zone["bg"]) >= 110 else []
 

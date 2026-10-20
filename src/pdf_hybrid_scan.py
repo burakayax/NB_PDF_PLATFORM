@@ -139,9 +139,26 @@ def _fit_sizes(lines: List[Dict[str, Any]], texts: List[str], k: float) -> List[
     satırın kendi genişliğinden büyük olmaz (satır taşıp bölünmesin)."""
     raw: List[Optional[float]] = []
     for l, t in zip(lines, texts):
-        w = (l["right"] - l["left"]) * k
-        nat = _natural_width(_runs(l, t), 1.0)
-        raw.append(w / nat if nat > 0 and len(t.replace(" ", "")) >= 6 else None)
+        words = t.split(" ")
+        flags = l.get("bold_flags") or []
+        ests: List[float] = []
+        if len(words) == len(l["words"]):
+            for i, (tok, ow) in enumerate(zip(words, l["words"])):
+                if len(tok) < 3:
+                    continue
+                b = flags[i] if i < len(flags) else False
+                nat = _natural_width([(tok, b)], 1.0)
+                if nat > 0:
+                    ests.append(ow["width"] * k / nat)
+        r: Optional[float] = None
+        if ests:
+            ests.sort()
+            r = ests[len(ests) // 2]  # kelime genişliklerinin medyanı: iki yana yaslı boşluklardan etkilenmez
+        if r is not None:
+            hp = ds._font_pt(l["h"], k)
+            if r > hp * 1.5 or r < hp * 0.55:
+                r = None
+        raw.append(r)
     good = sorted(v for v in raw if v)
     levels: List[float] = []
     cur: List[float] = []
@@ -159,6 +176,7 @@ def _fit_sizes(lines: List[Dict[str, Any]], texts: List[str], k: float) -> List[
         cand = [v for v in levels if r / 1.08 <= v <= r * 1.02]
         if cand:
             r = max(cand)
+        r = min(r, ds._font_pt(l["h"], k) * 1.3)  # yüksekliğin izin verdiğinden büyük olmasın
         out.append(max(6.0, min(40.0, round(r * 2) / 2.0)))
     return out
 
@@ -182,6 +200,31 @@ def _frame_line(doc, l: Dict[str, Any], k: float, size: float, text: str, page_w
     fr.set(qn("w:x"), str(int(max(0, l["left"] * k) * 20)))
     fr.set(qn("w:y"), str(int(max(0, l["top"] * k - _Y_OFFSET * size) * 20)))
     p._p.get_or_add_pPr().insert(0, fr)
+
+    words = text.split(" ")
+    flags = l.get("bold_flags") or []
+    ow = l["words"]
+    if len(words) == len(ow):
+        def _add(t: str, bold: bool, spacing_pt: float) -> None:
+            r = p.add_run(t)
+            r.font.size = Pt(size)
+            r.font.name = "Arial"
+            r.bold = bold
+            r.font.color.rgb = RGBColor(*l["color"])
+            sp = OxmlElement("w:spacing")
+            sp.set(qn("w:val"), str(int(round(spacing_pt * 20))))
+            r._element.get_or_add_rPr().append(sp)
+
+        space_nat = _natural_width([(" ", False)], size)
+        for i, (tok, w) in enumerate(zip(words, ow)):
+            b = flags[i] if i < len(flags) else False
+            nat = _natural_width([(tok, b)], size)
+            sp = (w["width"] * k - nat) / max(1, len(tok))
+            _add(tok, b, max(-0.6, min(1.0, sp)))
+            if i + 1 < len(ow):
+                gap = (ow[i + 1]["left"] - (w["left"] + w["width"])) * k
+                _add(" ", False, max(-1.0, min(60.0, gap - space_nat)))
+        return
 
     runs = _runs(l, text)
     nchar = max(1, sum(len(t) for t, _ in runs))
