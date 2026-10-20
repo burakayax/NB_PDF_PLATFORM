@@ -85,6 +85,15 @@ def _erase_text(arr: np.ndarray, lines: List[Dict[str, Any]]) -> np.ndarray:
         return out
 
 
+def _smallest_image(img: Image.Image) -> bytes:
+    """Arka planı JPEG (kalite 82) ve PNG olarak dener, küçük olanı döndürür (düz belgelerde PNG, fotoğraflıda JPEG)."""
+    j = io.BytesIO()
+    img.save(j, "JPEG", quality=82, optimize=True, subsampling=0)
+    p = io.BytesIO()
+    img.save(p, "PNG", optimize=True)
+    return j.getvalue() if len(j.getvalue()) < len(p.getvalue()) else p.getvalue()
+
+
 def _anchor_background(doc, png_bytes: bytes, w_pt: float, h_pt: float) -> None:
     """Görüntüyü sayfaya sabit, metnin ARKASINDA duran şekilde ekle."""
     from docx.shared import Pt
@@ -294,11 +303,10 @@ def hybrid_pdf_to_word(pdf_path: str, docx_path: str, *, use_claude: bool = Fals
                     info["fixes"] += 1
 
         clean = Image.fromarray(_erase_text(arr, lines))
-        buf = io.BytesIO()
-        clean.save(buf, "PNG")
+        buf = _smallest_image(clean)
         if i > 0:
             dw.add_page_break()
-        _anchor_background(dw, buf.getvalue(), wpt, hpt)
+        _anchor_background(dw, buf, wpt, hpt)
         sizes = _fit_sizes(lines, texts, k)
         for l, t, sz in zip(lines, texts, sizes):
             _frame_line(dw, l, k, sz, t, wpt)
