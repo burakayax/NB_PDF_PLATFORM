@@ -1044,6 +1044,8 @@ function App() {
   /** One-shot: user acknowledged PDF→Excel table-structure warning. */
   const excelConfirmRef = useRef(false);
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
+  const scannedWordConfirmRef = useRef(false);
+  const [scannedDialogOpen, setScannedDialogOpen] = useState(false);
   const [pageVisualModalOpen, setPageVisualModalOpen] = useState(false);
   // İşlemi başlatan ana buton — görsel seçici «Tamam» ile kapanınca odağı buraya
   // kaydır (misafir araçlarındaki davranışın aynısı).
@@ -4756,6 +4758,16 @@ function App() {
       setExcelDialogOpen(true);
       return;
     }
+    // Taranmış PDF → Word: dönüştürmeden önce bir kez bilgilendir.
+    if (
+      selectedFeature.id === "pdf-to-word" &&
+      scannedWordWarn &&
+      !scannedWordConfirmRef.current
+    ) {
+      setScannedDialogOpen(true);
+      return;
+    }
+    scannedWordConfirmRef.current = false;
     if (!check.ok) {
       if (check.toast) {
         showToast("error", check.toast.title, check.toast.detail);
@@ -6725,6 +6737,59 @@ function App() {
           </div>
         ) : null}
 
+        {scannedDialogOpen ? (
+          <div
+            className="fixed inset-0 z-[11500] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+            role="presentation"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                setScannedDialogOpen(false);
+              }
+            }}
+          >
+            <div
+              className="w-full max-w-lg rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/98 to-slate-950/98 p-6 shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+            >
+              <h2 className="text-lg font-semibold text-slate-50">
+                {language === "tr"
+                  ? "Yüklediğiniz PDF taranmış bir belgedir"
+                  : "The PDF you uploaded is a scanned document"}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                {language === "tr"
+                  ? "Taranmış belgelerde metin görüntü olarak durduğundan, yazıları tanıyıp düzenlenebilir hâle getiriyoruz. Orijinal görünümü korumak için elimizden gelenin en iyisini yapacağız; ancak yazı tipi, boşluk ve düzen gibi bazı ayrıntılarda çıktı ile orijinal arasında farklılıklar oluşabilir. Dönüşümden sonra belgeyi gözden geçirmenizi öneririz."
+                  : "In scanned documents the text is stored as an image, so we recognize it and make it editable. We will do our best to preserve the original look; however, some details such as fonts, spacing and layout may differ between the output and the original. We recommend reviewing the document after conversion."}
+              </p>
+              <div className="mt-5 flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/12 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                  onClick={() => setScannedDialogOpen(false)}
+                >
+                  {language === "tr" ? "Vazgeç" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg border border-amber-500/35 bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/25"
+                  onClick={() => {
+                    scannedWordConfirmRef.current = true;
+                    setScannedDialogOpen(false);
+                    (
+                      document.getElementById(
+                        "nb-workspace-tool-form",
+                      ) as HTMLFormElement | null
+                    )?.requestSubmit();
+                  }}
+                >
+                  {language === "tr" ? "Anladım, dönüştür" : "Got it, convert"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {toast ? (
           <AppToast
             key={toast.id}
@@ -8525,22 +8590,6 @@ function App() {
                             {language === "tr"
                               ? "Düz metin içerikli PDF'lerde iyi sonuç alınır. Karmaşık düzen, tablo ve görseller tam olarak korunamayabilir."
                               : "Works well for text-based PDFs. Complex layouts, tables, and images may not be fully preserved."}
-                          </div>
-                        ) : null}
-
-                        {selectedFeature.id === "pdf-to-word" && scannedWordWarn ? (
-                          <div
-                            role="alert"
-                            className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90"
-                          >
-                            <strong className="block text-amber-100">
-                              {language === "tr"
-                                ? "Yüklediğiniz PDF taranmış bir belgedir"
-                                : "The PDF you uploaded is a scanned document"}
-                            </strong>
-                            {language === "tr"
-                              ? "Taranmış belgelerde metin görüntü olarak durduğundan, yazıları tanıyıp düzenlenebilir hâle getiriyoruz. Orijinal görünümü korumak için elimizden gelenin en iyisini yapacağız; ancak yazı tipi, boşluk ve düzen gibi bazı ayrıntılarda çıktı ile orijinal arasında farklılıklar oluşabilir. Dönüşümden sonra belgeyi gözden geçirmenizi öneririz."
-                              : "In scanned documents the text is stored as an image, so we recognize it and make it editable. We will do our best to preserve the original look; however, some details such as fonts, spacing and layout may differ between the output and the original. We recommend reviewing the document after conversion."}
                           </div>
                         ) : null}
 
