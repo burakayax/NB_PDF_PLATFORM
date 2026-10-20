@@ -96,7 +96,23 @@ export const TOOL_SLUGS = [
  * 46 araç sunarken Google'a ve ziyaretçiye "45 araç" diyordu. Artık listeden
  * türetiliyor, kendiliğinden doğru kalıyor.
  */
-export const ARAC_SAYISI = TOOL_SLUGS.length;
+export const ARAC_SAYISI = TOOL_SLUGS.length - 9; // AI_COMING_SOON_SLUGS.length (aşağıda)
+
+/**
+ * Yapay zekâ araçları halka açılana kadar "Çok yakında" durumunda; sayıma KATILMAZ (kullanılamayan
+ * aracı "var" diye saymak güven kırar). AI açıldığında bu listeyi boşalt VE yukarıdaki `- 9`'u kaldır.
+ */
+export const AI_COMING_SOON_SLUGS = [
+  "pdf-ozetle",
+  "pdf-sohbet",
+  "pdf-ceviri",
+  "pdf-karsilastir",
+  "pdf-veri-cikar",
+  "sozlesme-denetci",
+  "ai-fotograf-studyosu",
+  "ai-toplu-islem",
+  "hassas-veri-gizle",
+];
 
 /**
  * Başlığa marka ekini YALNIZCA 60 karakterlik görünür sınıra sığdığında ekler.
@@ -2051,7 +2067,7 @@ export const API_SEO = {
     keywords: ["pdf api", "belge işleme api", "fatura okuma api", "pdf veri çıkarma api", "yapay zeka pdf api", "pdf özetleme api", "document ai api"],
     faq: [
       { q: "PDF Platform API'si ne yapar?", a: "PDF/belge metninden yapılandırılmış veri çıkarma, özetleme ve çeviriyi programatik sunar. /v1 uçlarını API anahtarınızla çağırır, JSON yanıt alırsınız." },
-      { q: "Nasıl başlarım?", a: "Hesap açın, panelden bir API anahtarı üretin ve /v1/extract, /v1/summarize, /v1/translate uçlarını çağırın. Her istek AI kredinizden düşer." },
+      { q: "Nasıl başlarım?", a: "API anahtarı yalnızca Pro ve Business planlarında üretilir. Planınız varsa panelden bir anahtar üretin ve /v1/extract, /v1/summarize, /v1/translate uçlarını çağırın; her istek AI kredinizden düşer. Yapay zekâ uçları şu an çok yakında durumundadır." },
       { q: "Faturalandırma nasıl?", a: "Kullanım kredi bazlıdır: kredi paketi (top-up) alır, her API çağrısında 1 kredi harcarsınız. Fatura otomatik kesilir." },
       { q: "Hangi işlemler API üzerinden yapılabiliyor?", a: "Faturalardan ve tablolardan yapılandırılmış veri çıkarma, uzun belgeleri özetleme, 12'den fazla dile çeviri ve iki belgeyi karşılaştırma. Hepsi tek API anahtarı ve aynı istek biçimiyle çalışır." },
       { q: "Yanıtlar hangi biçimde geliyor?", a: "Tüm uçlar JSON döner. Veri çıkarma uçlarında alan adları sabittir, böylece yanıtı doğrudan kendi veritabanınıza ya da muhasebe yazılımınıza yazabilirsiniz; serbest metin ayrıştırmanıza gerek kalmaz." },

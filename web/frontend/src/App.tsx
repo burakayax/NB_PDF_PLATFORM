@@ -1,6 +1,7 @@
 // Web uygulamasının kök bileşeni: karşılama, kimlik, yasal sayfalar ve PDF araçları görünümlerini tek state ile yönetir.
 // Oturum, abonelik ve dosya yükleme durumunun modüller arasında paylaşılması için tek React ağacında toplanır.
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
+import { ACCOUNT_PANEL_PATHS, accountPanelFromPath } from "./lib/accountPaths";
 import {
   Suspense,
   useCallback,
@@ -517,7 +518,9 @@ function App() {
       ? readInitialWorkspaceToolSelection(window.location.pathname)
       : "split",
   );
-  const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
+  const [contentPanel, setContentPanel] = useState<ContentPanel>(() =>
+    typeof window !== "undefined" ? (accountPanelFromPath(window.location.pathname) ?? "tool") : "tool",
+  );
   // Dashboard içerik bölgesi kaydırma kabı (sayfa değil, bu bölge kayar).
   const dashboardScrollRef = useRef<HTMLDivElement>(null);
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>(() =>
@@ -820,12 +823,21 @@ function App() {
     if (isRestoring) return; // oturum geri yüklenene kadar bekle
     didBootRedirectRef.current = true; // yalnız ilk çözümde bir kez tüket
     if (!isAuthenticated || view !== "landing") return;
+    // /pricing paylaşılabilir bir sayfa: giriş yapmış kullanıcı da fiyatları görebilsin (çalışma alanına atma).
+    if (stripLangPrefix(window.location.pathname.replace(/\/+$/, "")) === "/pricing") return;
     try {
       if (new URLSearchParams(window.location.search).get("home") === "1") return;
     } catch {
       /* yoksay */
     }
     setView("web");
+    // Hesap ekranı adresiyle açıldıysa (ör. /hesap/profil) o ekranı aç; adresi /workspace'e çevirme.
+    const hesapEkrani = accountPanelFromPath(window.location.pathname);
+    if (hesapEkrani) {
+      setContentPanel(hesapEkrani);
+      if (hesapEkrani === "subscription") setActiveSidebar("subscription");
+      return;
+    }
     try {
       window.history.replaceState({}, "", "/workspace");
     } catch {
@@ -2059,6 +2071,11 @@ function App() {
     window.addEventListener("pointercancel", onUp);
   }
 
+  // Oturum doğrulaması bitince "yükleniyor" görünümünü (giriş/kayıt düğmeleri) kaldır.
+  useEffect(() => {
+    if (!isRestoring) document.documentElement.removeAttribute("data-auth-pending");
+  }, [isRestoring]);
+
   const refreshSubscriptionState = useCallback(async () => {
     if (!accessToken || !isAuthenticated || !user) {
       return;
@@ -2564,6 +2581,10 @@ function App() {
     if (path === "/login-success") {
       return;
     }
+    // Hesap ekranı (profil/taramalar/API/abonelik) kendi adresinde açıksa adresi ezme.
+    if (view === "web" && contentPanel !== "tool" && accountPanelFromPath(path)) {
+      return;
+    }
     // Public tam-sayfa rotaları (workspace aracı DEĞİL) — giriş yapılmış olsa da
     // URL'i /workspace'e YENİDEN YAZMA. Aksi halde oturum açık kullanıcı /pdf-api,
     // /pdf-api/docs, /blog VEYA özel SEO araç sayfalarına (belge-tara, pdf-duzenle…)
@@ -2628,7 +2649,22 @@ function App() {
         `${next}${qs ? `?${qs}` : ""}${window.location.hash}`,
       );
     }
-  }, [view, isAuthenticated, isRestoring, user?.role, selectedFeatureId, language]);
+  }, [view, isAuthenticated, isRestoring, user?.role, selectedFeatureId, language, contentPanel]);
+
+  // Hesap ekranlarının KENDİ adresi: panel açılınca adres /hesap/profil, /taramalarim… olur;
+  // araca dönülünce araç adresine geri döner. Yenileme ve bağlantı paylaşımı doğru ekrana gider.
+  useEffect(() => {
+    if (view !== "web" || !isAuthenticated || isRestoring) return;
+    const mevcut = window.location.pathname;
+    if (contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription") {
+      const hedef = withLangPrefix(ACCOUNT_PANEL_PATHS[contentPanel], language);
+      if (mevcut.replace(/\/+$/, "") !== hedef) {
+        window.history.pushState({}, "", hedef);
+      }
+    } else if (contentPanel === "tool" && accountPanelFromPath(mevcut)) {
+      window.history.replaceState({}, "", withLangPrefix(workspacePathForFeature(selectedFeatureId), language));
+    }
+  }, [view, contentPanel, isAuthenticated, isRestoring, language, selectedFeatureId]);
 
   useEffect(() => {
     if (view !== "admin" || isRestoring || !isAuthenticated) {
@@ -6076,6 +6112,90 @@ function App() {
     );
   }
 
+  // İletişim penceresi: landing VE çalışma alanı footer'ındaki "İLETİŞİM" düğmesi aynı pencereyi açar.
+  const contactModalEl = contactModalOpen ? (
+    <div
+      className="contact-modal-backdrop"
+      role="presentation"
+      onClick={closeContactModal}
+    >
+      <div
+        className="contact-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="contact-modal__header">
+          <h2 id="contact-modal-title">{contactCopy.title}</h2>
+          <button
+            type="button"
+            className="contact-modal__close"
+            onClick={closeContactModal}
+            aria-label={contactCopy.close}
+          >
+            ×
+          </button>
+        </div>
+        <p className="px-1 pb-2 text-[13px] text-slate-400">
+          {language === "tr" ? "Ya da doğrudan yazın: " : "Or write to us directly: "}
+          <a className="underline" href="mailto:info@pdfplatform.app">info@pdfplatform.app</a>
+        </p>
+        <form
+          className="contact-modal__form"
+          onSubmit={handleContactModalSubmit}
+        >
+          <label className="field">
+            <span>{contactCopy.name}</span>
+            <input
+              type="text"
+              value={contactName}
+              onChange={(event) => setContactName(event.target.value)}
+              autoComplete="name"
+              disabled={contactSubmitting}
+            />
+          </label>
+          <label className="field">
+            <span>{contactCopy.email}</span>
+            <input
+              type="email"
+              value={contactEmail}
+              onChange={(event) => setContactEmail(event.target.value)}
+              autoComplete="email"
+              disabled={contactSubmitting}
+            />
+          </label>
+          <label className="field">
+            <span>{contactCopy.message}</span>
+            <textarea
+              value={contactMessage}
+              onChange={(event) => setContactMessage(event.target.value)}
+              rows={4}
+              disabled={contactSubmitting}
+            />
+          </label>
+          <input
+            type="text"
+            name="website"
+            style={{ display: "none" }}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+          <button
+            type="submit"
+            className="contact-modal__button"
+            disabled={contactSubmitting}
+          >
+            {contactSubmitting ? contactCopy.submitting : contactCopy.submit}
+          </button>
+          {contactError && (
+            <p className="contact-modal__error">{contactError}</p>
+          )}
+        </form>
+      </div>
+    </div>
+  ) : null;
+
   if (view === "landing") {
     // Oturum açık kullanıcı ilk açılışta dashboard'a yönlendirilecek (yukarıdaki effect) —
     // landing'in bir an yanıp sönmesini önlemek için iskelet göster.
@@ -6172,84 +6292,7 @@ function App() {
             onSavePreferences={saveCookiePreferences}
             onOpenPrivacy={() => openLegalPage("privacy")}
           />
-          {contactModalOpen ? (
-            <div
-              className="contact-modal-backdrop"
-              role="presentation"
-              onClick={closeContactModal}
-            >
-              <div
-                className="contact-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="contact-modal-title"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="contact-modal__header">
-                  <h2 id="contact-modal-title">{contactCopy.title}</h2>
-                  <button
-                    type="button"
-                    className="contact-modal__close"
-                    onClick={closeContactModal}
-                    aria-label={contactCopy.close}
-                  >
-                    ×
-                  </button>
-                </div>
-                <form
-                  className="contact-modal__form"
-                  onSubmit={handleContactModalSubmit}
-                >
-                  <label className="field">
-                    <span>{contactCopy.name}</span>
-                    <input
-                      type="text"
-                      value={contactName}
-                      onChange={(event) => setContactName(event.target.value)}
-                      autoComplete="name"
-                      disabled={contactSubmitting}
-                    />
-                  </label>
-                  <label className="field">
-                    <span>{contactCopy.email}</span>
-                    <input
-                      type="email"
-                      value={contactEmail}
-                      onChange={(event) => setContactEmail(event.target.value)}
-                      autoComplete="email"
-                      disabled={contactSubmitting}
-                    />
-                  </label>
-                  <label className="field">
-                    <span>{contactCopy.message}</span>
-                    <textarea
-                      value={contactMessage}
-                      onChange={(event) => setContactMessage(event.target.value)}
-                      rows={4}
-                      disabled={contactSubmitting}
-                    />
-                  </label>
-                  <input
-                    type="text"
-                    name="website"
-                    style={{ display: "none" }}
-                    tabIndex={-1}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="submit"
-                    className="contact-modal__button"
-                    disabled={contactSubmitting}
-                  >
-                    {contactSubmitting ? contactCopy.submitting : contactCopy.submit}
-                  </button>
-                  {contactError && (
-                    <p className="contact-modal__error">{contactError}</p>
-                  )}
-                </form>
-              </div>
-            </div>
-          ) : null}
+          {contactModalEl}
         </>
       </CheckoutCurrencyProvider>
     );
@@ -6890,6 +6933,10 @@ function App() {
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
+          onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
+          onOpenFormFill={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("form-doldur"); setContentPanel("formfill"); }}
+          onOpenSignRequest={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("imza-iste"); setContentPanel("signrequest"); }}
+          onOpenMetadata={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("ustveri-temizle"); setContentPanel("metadata"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6924,6 +6971,10 @@ function App() {
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
+          onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
+          onOpenFormFill={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("form-doldur"); setContentPanel("formfill"); }}
+          onOpenSignRequest={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("imza-iste"); setContentPanel("signrequest"); }}
+          onOpenMetadata={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("ustveri-temizle"); setContentPanel("metadata"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
@@ -9313,6 +9364,8 @@ function App() {
           </div>
         </footer>
         </div>
+
+        {contactModalEl}
 
         <CookieNotice
           language={language}

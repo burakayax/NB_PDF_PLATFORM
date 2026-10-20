@@ -60,6 +60,16 @@
     <meta name="msapplication-config" content="/browserconfig.xml" />
 
     <title>PDF Birleştir, Dönüştür, Sıkıştır | PDF PLATFORM</title>
+    <!-- Oturum ipucu varsa oturum doğrulanana kadar "Giriş yap / Üye Ol" yerine yükleniyor görünümü
+         (güncelleme sonrası yenilemede çıkışlı görünüp sonra tanınma titremesini önler). -->
+    <script>
+      try {
+        if (localStorage.getItem("nb_session_hint") === "1") {
+          document.documentElement.setAttribute("data-auth-pending", "1");
+          setTimeout(function () { document.documentElement.removeAttribute("data-auth-pending"); }, 10000);
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

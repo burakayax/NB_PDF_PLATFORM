@@ -1,3 +1,4 @@
+import { touchifyDropText } from "../../lib/touchCopy";
 import { useRef, useState } from "react";
 import { Lock, Loader2, ShieldCheck, Trash2, UploadCloud, Zap, type LucideIcon } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -200,7 +201,7 @@ export function ToolUploadPanel({
             <p className="nb-dropzone__title relative mt-4 text-lg sm:mt-5 sm:text-xl">
               {busy
                 ? tr ? "İşleniyor…" : "Processing…"
-                : (title ??
+                : touchifyDropText(title ??
                   (multiple
                     ? tr ? "Dosyaları buraya sürükle" : "Drag your files here"
                     : tr ? "Dosyayı buraya sürükle" : "Drag your file here"))}

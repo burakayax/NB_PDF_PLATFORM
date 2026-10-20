@@ -1,3 +1,4 @@
+import { softenGiftLines, useAiNotOpen } from "../../lib/aiAvailability";
 import { useMemo, useState } from "react";
 import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -203,15 +204,17 @@ function FreeCard({
   currency,
   displaySymbol,
   onCta,
+  isCurrent,
 }: {
   plan: PlanDefinition;
   lang: Language;
   currency: Currency;
   displaySymbol?: string;
   onCta: () => void;
+  isCurrent?: boolean;
 }) {
   const tr = lang === "tr";
-  const features = tr ? plan.featuresTr : plan.featuresEn;
+  const features = softenGiftLines(tr ? plan.featuresTr : plan.featuresEn, tr, useAiNotOpen());
   const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
   const freeLabel = `${sym}0`;
   return (
@@ -232,15 +235,28 @@ function FreeCard({
       <ul className="space-y-2.5 flex-1 mb-7">
         {features.map((f) => <Feature key={f} text={f} highlight={false} />)}
       </ul>
-      <button
-        onClick={onCta}
-        className="w-full py-3 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/8 transition-all"
-      >
-        {tr ? "Ücretsiz Başla" : "Start for Free"}
-      </button>
-      <p className="mt-3 text-center text-[11px] text-gray-400">
-        {tr ? "Kart bilgisi istenmez · 30 saniyede hazır" : "No card required · ready in 30 seconds"}
-      </p>
+      {isCurrent ? (
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          className="w-full cursor-default rounded-xl border border-emerald-400/30 bg-emerald-500/10 py-3 text-sm font-semibold text-emerald-300"
+        >
+          {tr ? "Mevcut planın" : "Your current plan"}
+        </button>
+      ) : (
+        <button
+          onClick={onCta}
+          className="w-full py-3 rounded-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/8 transition-all"
+        >
+          {tr ? "Ücretsiz Başla" : "Start for Free"}
+        </button>
+      )}
+      {isCurrent ? null : (
+        <p className="mt-3 text-center text-[11px] text-gray-400">
+          {tr ? "Kart bilgisi istenmez · 30 saniyede hazır" : "No card required · ready in 30 seconds"}
+        </p>
+      )}
     </motion.div>
   );
 }
@@ -270,7 +286,7 @@ function MonthlyOnlyCard({
   starterTools?: FeatureKey[];
 }) {
   const tr = lang === "tr";
-  const features = tr ? plan.featuresTr : plan.featuresEn;
+  const features = softenGiftLines(tr ? plan.featuresTr : plan.featuresEn, tr, useAiNotOpen());
   const price = faceValue(plan.pricing.monthly[currency]);
   const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
   const isPlus = plan.id === "PLUS";
@@ -438,7 +454,7 @@ function CycleAwareCard({
   const [cycle, setCycle] = useState<BillingCycle>("YEARLY");
   const [extraSeats, setExtraSeats] = useState(0);
   const tr = lang === "tr";
-  const features = tr ? plan.featuresTr : plan.featuresEn;
+  const features = softenGiftLines(tr ? plan.featuresTr : plan.featuresEn, tr, useAiNotOpen());
   const isPro = plan.id === "PRO";
   const isPlus = plan.id === "PLUS";
   const isBusiness = plan.id === "BUSINESS";
@@ -701,9 +717,11 @@ interface PricingSectionProps {
   /** Ödemeler kapalıyken kartlardaki "Haber ver" düğmesi (iletişim penceresini açar). */
   onNotify?: () => void;
   onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: BillingCycle, extraSeats?: number) => void;
+  /** Giriş yapmış kullanıcının planı: FREE ise ücretsiz kartı "Mevcut planın" (tıklanamaz) olur. */
+  currentPlan?: string | null;
 }
 
-export default function PricingSection({ language, onUseWebApp, onSelectPlan, onNotify }: PricingSectionProps) {
+export default function PricingSection({ language, onUseWebApp, onSelectPlan, onNotify, currentPlan }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { cards, flags, pricing } = useSettings();
@@ -807,6 +825,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             currency={currency}
             displaySymbol={currencySymbol}
             onCta={onUseWebApp}
+            isCurrent={currentPlan === "FREE"}
           />
           <MonthlyOnlyCard
             plan={starter}

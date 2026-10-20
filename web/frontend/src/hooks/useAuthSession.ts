@@ -5,6 +5,7 @@ import {
   fetchAuthenticatedUser,
   loginAuthUser,
   logoutAuthUser,
+  onRemoteLogout,
   refreshAuthSession,
   registerAuthUser,
   setInitialAuthPassword,
@@ -61,6 +62,25 @@ export function useAuthSession() {
     clearAccessToken();
     window.localStorage.removeItem(SESSION_HINT_KEY);
     clearPersistedWorkspaceTool();
+  }, []);
+
+  // Başka bir sekmede çıkış yapıldıysa bu sekme de anında çıkışlı duruma geçer
+  // (BroadcastChannel; yoksa oturum ipucunun silinmesini izleyen storage olayı).
+  useEffect(() => {
+    const yerelCikis = () => {
+      setAccessToken(null);
+      setUser(null);
+      clearAccessToken();
+    };
+    const offBroadcast = onRemoteLogout(yerelCikis);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === SESSION_HINT_KEY && e.newValue === null) yerelCikis();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      offBroadcast();
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   const completeOAuthLogin = useCallback(async (rawToken: string) => {

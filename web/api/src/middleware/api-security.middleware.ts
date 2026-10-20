@@ -296,6 +296,40 @@ export const globalApiLimiter = rateLimit({
   },
 });
 
+/**
+ * Giriş yapmış kullanıcılar için IP başına YÜKSEK tavan (güvenlik ağı).
+ *
+ * Kullanıcı kimlikli sayım normal kullanıcıyı korur; ama çok sayıda hesap açan biri her hesapta ayrı
+ * kota alır. Bu tavan tek bir IP'den gelen TOPLAM giriş yapmış trafiği sınırlar. Değer, ortak IP'li
+ * (ofis/okul/operatör) çok kullanıcıyı da rahatça taşıyacak kadar yüksektir. Misafirler zaten IP ile
+ * sayıldığı için burada atlanır.
+ */
+export const IP_CEILING_PER_MINUTE = 1000;
+
+export const authedIpCeilingLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: IP_CEILING_PER_MINUTE,
+  standardHeaders: false,
+  legacyHeaders: false,
+  skip: async (request) => {
+    if (requestHasInternalServiceSecret(request)) return true;
+    if (!rateLimitIdentity(request).authed) return true;
+    return await requestHasAdminBearer(request);
+  },
+  keyGenerator: (req) => `ip-ceiling:${ipKeyGenerator(getClientIp(req))}`,
+  handler: (request, response) => {
+    logSuspiciousActivity({
+      type: "rate_limit_exceeded",
+      ip: getClientIp(request),
+      path: request.originalUrl?.split("?")[0],
+      method: request.method,
+      userAgent: request.headers["user-agent"] as string | undefined,
+      detail: `ip_ceiling=${IP_CEILING_PER_MINUTE}`,
+    });
+    response.status(429).json({ message: "Bu ağdan çok fazla istek geliyor. Lütfen kısa süre sonra tekrar deneyin." });
+  },
+});
+
 /** iyzico callback uçları için ayrı rate limit: 60 istek/dakika/IP (HMAC doğrulaması CPU'ya pahalı). */
 export const paymentCallbackLimiter = rateLimit({
   windowMs: 60 * 1000,

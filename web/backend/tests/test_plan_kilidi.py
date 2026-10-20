@@ -145,3 +145,44 @@ def test_kilitli_aracin_sonucu_onizlemeden_de_verilmez(monkeypatch, yol):
     r = client2.get(yol, headers=_AUTH)
     assert r.status_code == 403, r.text
     assert r.json()["error"] == "tool_not_allowed_on_plan"
+
+
+def test_bozuk_dosyada_onizleme_500_degil_422_verir(monkeypatch):
+    _motor_karari(monkeypatch, {"allowed": True, "reason": "ok"})
+
+    async def _uid(_t):
+        return "u1"
+
+    async def _ok(_t):
+        return None
+
+    class _R:
+        filename = "a.pdf"
+        mime = "application/pdf"
+        size_bytes = 1
+        thumbnail_path = None
+        payload_path = "x"
+        presigned_url = None
+
+    class _Kaynak:
+        async def __aenter__(self):
+            return "x"
+
+        async def __aexit__(self, *a):
+            return False
+
+    async def _patlar(*_a, **_k):
+        raise RuntimeError("fitz: cannot open broken document")
+
+    monkeypatch.setattr(rt, "saas_current_user_id", _uid)
+    monkeypatch.setattr(rt, "saas_session_ok", _ok)
+    monkeypatch.setattr(rt, "get_result", lambda *_a, **_k: _R())
+    monkeypatch.setattr(rt, "read_meta_only", lambda _i: {"tool": "rotate-pdf", "user_id": "u1", "mime": "application/pdf", "created_at": 1})
+    monkeypatch.setattr(rt, "_preview_source", lambda *_a, **_k: _Kaynak())
+    monkeypatch.setattr(rt, "_result_payload_looks_like_pdf", lambda *_a, **_k: True)
+    monkeypatch.setattr(rt, "generate_hero_watermarked_preview_png_queued_from_path", _patlar)
+    monkeypatch.setattr(rt, "generate_watermarked_preview_pdf_queued_from_path", _patlar)
+    for yol in ("/api/pdf/result/abc/preview/hero", "/api/pdf/result/abc/preview/pdf"):
+        r = client2.get(yol, headers=_AUTH)
+        assert r.status_code == 422, r.text
+        assert "okunamadı" in r.json()["detail"]
