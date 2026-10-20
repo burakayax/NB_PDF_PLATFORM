@@ -1,7 +1,8 @@
+import { ACCOUNT_PANEL_TITLES } from "../../lib/accountPaths";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { ChevronRight, Crop, FileSearch, FileUser, Highlighter, ImageDown, Pencil, PenLine, Scale, Scaling, ScanLine, Scissors, Search, Sparkles, X } from "lucide-react";
+import { ChevronRight, Crop, Eraser, FileSearch, FileUser, Highlighter, ImageDown, LayoutGrid, Pencil, PenLine, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -144,7 +145,7 @@ const SCAN_FAV_ID = "scan-doc";
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 /** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
-type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "searchable";
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest";
 const CUSTOM_TOOLS: {
   key: CustomToolKey;
   favId: string;
@@ -160,6 +161,10 @@ const CUSTOM_TOOLS: {
   { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
   { key: "searchable", favId: "searchable-pdf", group: "convert", tr: "Aranabilir PDF", en: "Searchable PDF", Icon: FileSearch, iconClass: "text-cyan-300" },
   { key: "cv", favId: "cv-maker", group: "organize", tr: "CV Oluştur", en: "CV Maker", Icon: FileUser, iconClass: "text-sky-300" },
+  { key: "layout", favId: "page-layout", group: "organize", tr: "Sayfa Düzeni", en: "Page Layout", Icon: LayoutGrid, iconClass: "text-cyan-300" },
+  { key: "formfill", favId: "form-fill", group: "annotate", tr: "Form Doldur", en: "Fill Form", Icon: TextCursorInput, iconClass: "text-cyan-300" },
+  { key: "signrequest", favId: "sign-request", group: "annotate", tr: "İmza İste", en: "Request Signature", Icon: Send, iconClass: "text-cyan-300" },
+  { key: "metadata", favId: "metadata-clean", group: "secure", tr: "Üstveri Temizle", en: "Clean Metadata", Icon: Eraser, iconClass: "text-cyan-300" },
 ];
 
 export type SidebarToolId = FeatureKey | "subscription";
@@ -200,6 +205,11 @@ type DashboardSidebarProps = {
   onOpenCv?: () => void;
   /** Aranabilir PDF (OCR) aracını aç. */
   onOpenSearchable?: () => void;
+  /** Kendi paneliyle açılan sayfa araçları (Sayfa Düzeni, Form Doldur, İmza İste, Üstveri Temizle). */
+  onOpenLayout?: () => void;
+  onOpenFormFill?: () => void;
+  onOpenSignRequest?: () => void;
+  onOpenMetadata?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -250,6 +260,10 @@ export function DashboardSidebar({
   onOpenUdf,
   onOpenCv,
   onOpenSearchable,
+  onOpenLayout,
+  onOpenFormFill,
+  onOpenSignRequest,
+  onOpenMetadata,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -286,6 +300,10 @@ export function DashboardSidebar({
     cv: onOpenCv,
     udf: onOpenUdf,
     searchable: onOpenSearchable,
+    layout: onOpenLayout,
+    formfill: onOpenFormFill,
+    signrequest: onOpenSignRequest,
+    metadata: onOpenMetadata,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const sidebarGroups = useMemo(() => {
@@ -941,6 +959,10 @@ export function DashboardSidebarMobileLauncher({
   onOpenUdf,
   onOpenCv,
   onOpenSearchable,
+  onOpenLayout,
+  onOpenFormFill,
+  onOpenSignRequest,
+  onOpenMetadata,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -957,7 +979,17 @@ export function DashboardSidebarMobileLauncher({
   // FeatureKey OLMAYAN aktif panelleri de başlıkta göster (activeSidebar bunlarda
   // güncellenmiyor). Öncelik: aktif özel/AI panel → normal araç → "Menü".
   const panelLabel =
-    contentPanel === "editor"
+    contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription"
+      ? ACCOUNT_PANEL_TITLES[contentPanel][tr ? "tr" : "en"]
+      : contentPanel === "layout"
+      ? tr ? "Sayfa Düzeni" : "Page Layout"
+      : contentPanel === "formfill"
+      ? tr ? "Form Doldur" : "Fill Form"
+      : contentPanel === "signrequest"
+      ? tr ? "İmza İste" : "Request Signature"
+      : contentPanel === "metadata"
+      ? tr ? "Üstveri Temizle" : "Clean Metadata"
+      : contentPanel === "editor"
       ? tr ? "PDF Düzenle" : "Edit PDF"
       : contentPanel === "sign"
         ? tr ? "PDF İmzala" : "Sign PDF"
@@ -999,6 +1031,10 @@ export function DashboardSidebarMobileLauncher({
     cv: onOpenCv,
     udf: onOpenUdf,
     searchable: onOpenSearchable,
+    layout: onOpenLayout,
+    formfill: onOpenFormFill,
+    signrequest: onOpenSignRequest,
+    metadata: onOpenMetadata,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const groups = useMemo(() => {
@@ -1088,7 +1124,7 @@ export function DashboardSidebarMobileLauncher({
   };
 
   return (
-    <div data-tour="tools-mobile" className="sticky top-14 z-30 border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden">
+    <div data-tour="tools-mobile" className={`sticky top-14 ${open ? "z-[55]" : "z-30"} border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden`}>
       {/* Tetikleyici: hamburger + aktif araç adı */}
       <button
         type="button"

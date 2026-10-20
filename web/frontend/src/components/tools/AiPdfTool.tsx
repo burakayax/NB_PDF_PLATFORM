@@ -1,3 +1,4 @@
+import { touchifyDropText } from "../../lib/touchCopy";
 import { useEffect, useRef, useState } from "react";
 import {
   Check,
@@ -749,7 +750,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             ))}
           </div>
           <p className="mt-6 text-[12px] text-slate-400">
-            {tr ? "Bu sırada tüm PDF araçlarımız ücretsiz ve sınırsız — yukarıdan deneyebilirsin." : "Meanwhile, all our PDF tools are free and unlimited — try them above."}
+            {tr ? "Bu sırada diğer PDF araçlarımızı kullanabilirsin — yukarıdan deneyebilirsin." : "Meanwhile, you can use our other PDF tools — try them above."}
           </p>
         </div>
       ) : /* ── Cihazda hazırlanıyor (taranmış belge sessizce metne çevriliyor) ── */
@@ -782,7 +783,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           <p className="nb-dropzone__title relative mt-5 text-xl">
             {busy
               ? tr ? "Belge okunuyor…" : "Reading document…"
-              : tr ? "PDF'i buraya sürükle veya seç" : "Drag your PDF here or browse"}
+              : touchifyDropText(tr ? "PDF'i buraya sürükle veya seç" : "Drag your PDF here or browse")}
           </p>
           <p className="nb-dropzone__hint relative mt-1.5 text-sm">
             {tr ? "Metin cihazında çıkarılır — dosyan sunucuya yüklenmez." : "Text is extracted on your device — the file is never uploaded."}

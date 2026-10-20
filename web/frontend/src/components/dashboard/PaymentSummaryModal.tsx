@@ -1,3 +1,4 @@
+import { softenGiftLines, useAiNotOpen } from "../../lib/aiAvailability";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { Language } from "../../i18n/landing";
 import type { PlanId } from "../../lib/planConfig";
@@ -137,6 +138,7 @@ export function PaymentSummaryModal({
   onBeforeExternalCheckout,
   initialCoupon,
 }: Props) {
+  const aiNotOpen = useAiNotOpen();
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoApplied, setPromoApplied] = useState<{ discountPercent: number } | null>(null);
@@ -377,7 +379,7 @@ export function PaymentSummaryModal({
     ? (tr
         ? [`${extraSeats} ekstra koltuk`, "Business planı kapsamında", "Hemen aktif", `Koltuk başı ${seatSym}${isTry ? Math.round(seatUnit) : seatUnit}/ay`]
         : [`${extraSeats} extra seat${extraSeats !== 1 ? "s" : ""}`, "Within Business plan", "Active immediately", `${seatSym}${isTry ? Math.round(seatUnit) : seatUnit}/seat/mo`])
-    : (plan ? (tr ? plan.featuresTr : plan.featuresEn).slice(0, 5) : []);
+    : (plan ? softenGiftLines(tr ? plan.featuresTr : plan.featuresEn, tr, aiNotOpen).slice(0, 5) : []);
 
   return (
     <>

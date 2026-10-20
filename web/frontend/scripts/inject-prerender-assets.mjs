@@ -57,7 +57,11 @@ if (!entryScriptMatch) {
 }
 
 const entryScript = entryScriptMatch[0];
-const headInjection = [...stylesheetTags, ...modulePreloadTags].join("\n    ");
+// Oturum ipucu varsa oturum doğrulanana kadar giriş/kayıt düğmeleri "yükleniyor" görünür (titreme önlemi).
+// index.html'deki aynı betik prerender sayfalara da taşınır (onlar index.html'den üretilmez).
+const AUTH_PENDING_SNIPPET =
+  '<script>try{if(localStorage.getItem("nb_session_hint")==="1"){document.documentElement.setAttribute("data-auth-pending","1");setTimeout(function(){document.documentElement.removeAttribute("data-auth-pending")},10000)}}catch(e){}</script>';
+const headInjection = [AUTH_PENDING_SNIPPET, ...stylesheetTags, ...modulePreloadTags].join("\n    ");
 const bodyInjection = [...modulePreloadTags, entryScript].join("\n    ");
 
 const DEV_ENTRY = '<script type="module" src="/src/main.tsx"></script>';

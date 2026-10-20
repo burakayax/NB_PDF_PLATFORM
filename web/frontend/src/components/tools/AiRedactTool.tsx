@@ -1,3 +1,4 @@
+import { touchifyDropText } from "../../lib/touchCopy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
@@ -207,7 +208,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
               className="nb-dropzone cursor-pointer rounded-3xl p-10 text-center">
               <input ref={inputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ""; }} />
               <div className="nb-dropzone__icon mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/30 to-indigo-600/30 text-fuchsia-100">{busy ? <Loader2 className="h-7 w-7 animate-spin" /> : <UploadCloud className="h-8 w-8" strokeWidth={2.25} />}</div>
-              <p className="nb-dropzone__title mt-4 text-lg">{busy ? (tr ? "Belge okunuyor…" : "Reading…") : tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}</p>
+              <p className="nb-dropzone__title mt-4 text-lg">{busy ? (tr ? "Belge okunuyor…" : "Reading…") : touchifyDropText(tr ? "PDF'i buraya sürükle" : "Drag your PDF here")}</p>
               <p className="nb-dropzone__hint mt-1 text-sm">{tr ? "TC, IBAN, telefon, e-posta otomatik bulunur" : "ID, IBAN, phone, email auto-detected"}</p>
             </div>
           ) : (

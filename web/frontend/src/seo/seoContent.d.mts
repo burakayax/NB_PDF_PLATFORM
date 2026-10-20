@@ -32,6 +32,7 @@ export const DEFAULT_OG_IMAGE_HEIGHT: string;
 export const TOOL_SLUGS: string[];
 /** Sitedeki araç sayısı — TOOL_SLUGS'tan türetilir, elle yazılmaz. */
 export const ARAC_SAYISI: number;
+export const AI_COMING_SOON_SLUGS: string[];
 
 export const TOOL_SEO: Record<string, Record<SeoLang, ToolSeoCopy>>;
 export const LANDING_SEO: Record<SeoLang, PageSeoCopy>;
