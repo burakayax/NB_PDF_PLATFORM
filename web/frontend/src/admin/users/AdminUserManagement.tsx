@@ -50,8 +50,9 @@ function userStatus(
   if (u.plan === "FREE") {
     return { label: "Ücretsiz", className: "bg-slate-500/20 text-slate-200 ring-slate-500/35" };
   }
-  // Ücretli abone — planı göster (Pro / Business).
-  return { label: u.plan === "BUSINESS" ? "Business" : "Pro", className: "bg-emerald-500/20 text-emerald-200 ring-emerald-500/30" };
+  // Ücretli abone — planı göster (Starter / Plus / Pro / Business).
+  const paidLabels: Record<string, string> = { STARTER: "Starter", PLUS: "Plus", BUSINESS: "Business" };
+  return { label: paidLabels[u.plan] ?? "Pro", className: "bg-emerald-500/20 text-emerald-200 ring-emerald-500/30" };
 }
 
 const PAGE_SIZE = 20;
@@ -60,7 +61,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
   const advanced = uiMode === "advanced";
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
-  const [plan, setPlan] = useState<"all" | "FREE" | "PRO" | "BUSINESS">("all");
+  const [plan, setPlan] = useState<"all" | "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS">("all");
   const [verified, setVerified] = useState<"all" | "yes" | "no">("all");
   // Sıralama — backend createdAt/email/plan (asc/desc) destekler.
   const [sortKey, setSortKey] = useState<"createdAt-desc" | "createdAt-asc" | "plan-desc" | "email-asc">("createdAt-desc");
@@ -248,6 +249,8 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
             >
               <option value="all">Tüm planlar</option>
               <option value="FREE">FREE</option>
+              <option value="STARTER">STARTER</option>
+              <option value="PLUS">PLUS</option>
               <option value="PRO">PRO</option>
               <option value="BUSINESS">BUSINESS</option>
             </select>
@@ -959,7 +962,7 @@ function UserManagePanel({
   const [plan, setPlan] = useState(user?.plan ?? "FREE");
   const [saving, setSaving] = useState(false);
   const [vOk, setVok] = useState(user?.isVerified ?? true);
-  const [tempPlan, setTempPlan] = useState<"PRO" | "BUSINESS">("PRO");
+  const [tempPlan, setTempPlan] = useState<"STARTER" | "PLUS" | "PRO" | "BUSINESS">("PRO");
   const [tempDays, setTempDays] = useState(3);
   const [tempBusy, setTempBusy] = useState(false);
   const [tempMsg, setTempMsg] = useState<string | null>(null);
@@ -1008,6 +1011,8 @@ function UserManagePanel({
                 onChange={(e) => setPlan(e.target.value)}
               >
                 <option value="FREE">FREE</option>
+                <option value="STARTER">STARTER</option>
+                <option value="PLUS">PLUS</option>
                 <option value="PRO">PRO</option>
                 <option value="BUSINESS">BUSINESS</option>
               </select>
@@ -1025,7 +1030,7 @@ function UserManagePanel({
                 setSaving(true);
                 try {
                   await patchAdminUser(accessToken, user.id, {
-                    plan: plan as "FREE" | "PRO" | "BUSINESS",
+                    plan: plan as "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS",
                     isVerified: vOk,
                   });
                   onRefresh();
@@ -1059,8 +1064,10 @@ function UserManagePanel({
                 <select
                   className={adminInputClass}
                   value={tempPlan}
-                  onChange={(e) => setTempPlan(e.target.value as "PRO" | "BUSINESS")}
+                  onChange={(e) => setTempPlan(e.target.value as typeof tempPlan)}
                 >
+                  <option value="STARTER">STARTER</option>
+                  <option value="PLUS">PLUS</option>
                   <option value="PRO">PRO</option>
                   <option value="BUSINESS">BUSINESS</option>
                 </select>

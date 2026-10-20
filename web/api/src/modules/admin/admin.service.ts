@@ -373,6 +373,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     guestToolUsage,
     usagePerPackage: [
       { plan: "FREE", userCount: usersByPlan["FREE"] ?? 0 },
+      { plan: "STARTER", userCount: usersByPlan["STARTER"] ?? 0 },
       { plan: "PLUS", userCount: usersByPlan["PLUS"] ?? 0 },
       { plan: "PRO", userCount: usersByPlan["PRO"] ?? 0 },
       { plan: "BUSINESS", userCount: usersByPlan["BUSINESS"] ?? 0 },
@@ -427,7 +428,7 @@ export async function listUsersForAdmin(params: {
   pageSize: number;
   sort: "createdAt" | "email" | "plan";
   dir: "asc" | "desc";
-  plan?: "FREE" | "PRO" | "BUSINESS" | "all";
+  plan?: "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS" | "all";
   verified?: "all" | "yes" | "no";
 }) {
   const { q, page, pageSize, sort, dir, plan: planFilter, verified: verifiedFilter } = params;
