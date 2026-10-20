@@ -136,6 +136,34 @@ def rotate_pdf(
     return True
 
 
+def _yer_imlerini_aktar(src, out, kaynak_sayfalar: list[int]) -> None:
+    """Yer imlerini (içindekiler) yeni belgeye taşır. insert_pdf bunları KOPYALAMAZ.
+
+    ``kaynak_sayfalar[k]`` = çıktının k'ıncı sayfasının kaynaktaki 0 tabanlı sayfası. Yalnız çıktıda
+    kalan sayfalara işaret edenler yazılır; seviye atlaması (ör. 1 → 3) PyMuPDF'in kuralına göre düzeltilir.
+    Hata olursa sessizce geçer — çıktı yer imsiz kalsa da geçerlidir.
+    """
+    try:
+        eski_yeni: dict[int, int] = {}
+        for yeni, eski in enumerate(kaynak_sayfalar):
+            eski_yeni.setdefault(eski, yeni)
+        yeni_toc: list[list] = []
+        for lvl, baslik, sayfa, *_ in src.get_toc(simple=False):
+            if sayfa < 1:
+                continue
+            yeni = eski_yeni.get(sayfa - 1)
+            if yeni is None:
+                continue
+            seviye = max(1, int(lvl))
+            onceki = yeni_toc[-1][0] if yeni_toc else 0
+            seviye = min(seviye, onceki + 1)
+            yeni_toc.append([seviye, baslik, yeni + 1])
+        if yeni_toc:
+            out.set_toc(yeni_toc)
+    except Exception:
+        pass
+
+
 def organize_pdf(
     pdf_path: str,
     output_path: str,
@@ -174,6 +202,7 @@ def organize_pdf(
         try:
             for from_p, to_p in ranges:
                 new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
+            _yer_imlerini_aktar(src, new_doc, order_0)
             new_doc.save(output_path, garbage=0, deflate=False, linear=False)
         finally:
             new_doc.close()
@@ -915,6 +944,7 @@ def split_pdf_advanced(
             d = fitz.open()
             try:
                 d.insert_pdf(src, from_page=a, to_page=b)
+                _yer_imlerini_aktar(src, d, list(range(a, b + 1)))
                 d.save(yol, garbage=3, deflate=True, linear=False)
             finally:
                 d.close()

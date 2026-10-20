@@ -7,7 +7,6 @@ import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { zipStore } from "../../lib/zipStore";
 import {
-  canEncode,
   compressImage,
   extForFormat,
   type CompressOutcome,
@@ -90,16 +89,17 @@ function humanSize(b: number): string {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 /**
- * "Otomatik" biçim kararı — dosya seçme penceresi işlemden ÖNCE açıldığı için
- * uzantının baştan bilinmesi şart; bu yüzden karar kaynağın türüne göre anında
- * verilir. WebP en küçük sonucu verir; tarayıcı WebP kodlayamıyorsa şeffaflık
- * taşıyabilen kaynaklar PNG, diğerleri JPEG olur.
+ * Varsayılan ("auto") biçim = YÜKLENENLE AYNI. JPG yükleyen JPG, PNG yükleyen PNG alır:
+ * resmi başvuru siteleri ve eski programlar WebP kabul etmez, kullanıcı beklemediği biçimle
+ * karşılaşmamalı. Dosya seçme penceresi işlemden ÖNCE açıldığı için uzantı baştan bilinir.
+ * WebP isteyen biçim listesinden kendisi seçer (en küçük sonuç oradadır).
  */
-function resolveFormat(chosen: Format, file: File, webpOk: boolean): OutputFormat {
+function resolveFormat(chosen: Format, file: File): OutputFormat {
   if (chosen !== "auto") return chosen;
-  if (webpOk) return "image/webp";
   const t = (file.type || "").toLowerCase();
-  if (t === "image/png" || t === "image/webp" || t === "image/gif") return "image/png";
+  if (t === "image/jpeg" || t === "image/jpg") return "image/jpeg";
+  if (t === "image/webp") return "image/webp";
+  if (t === "image/png" || t === "image/gif") return "image/png";
   return "image/jpeg";
 }
 
@@ -116,7 +116,6 @@ export function ImageCompressTool({ language }: { language: Language }) {
   const [format, setFormat] = useState<Format>("auto");
   /** 0 = orijinal ölçü. Uzun kenar sınırı — en büyük kazancı bu sağlar. */
   const [maxDim, setMaxDim] = useState(0);
-  const [webpOk, setWebpOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -126,12 +125,6 @@ export function ImageCompressTool({ language }: { language: Language }) {
     if (files.length > 0) listRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [files.length]);
 
-  // Tarayıcı WebP kodlayabiliyor mu? ("Otomatik" biçim kararı buna bakar.)
-  useEffect(() => {
-    let alive = true;
-    void canEncode("image/webp").then((ok) => { if (alive) setWebpOk(ok); });
-    return () => { alive = false; };
-  }, []);
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     setError(null);
@@ -180,7 +173,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
     const targetBytes = mode === "target" ? Math.max(1, Math.round(targetKb * 1024)) : undefined;
     const multi = files.length > 1;
     const first = files[0]!.file;
-    const firstFormat = resolveFormat(format, first, webpOk);
+    const firstFormat = resolveFormat(format, first);
     const outName = multi
       ? "sikistirilmis-gorseller.zip"
       : `${(first.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${extForFormat(firstFormat)}`;
@@ -194,7 +187,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
           await compressImage(p.file, {
             quality: q,
             maxDim,
-            format: resolveFormat(format, p.file, webpOk),
+            format: resolveFormat(format, p.file),
             targetBytes,
           }),
         );
@@ -448,7 +441,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
             <label className="field">
               <span>{tr ? "Biçim" : "Format"}</span>
               <select value={format} onChange={(e) => setFormat(e.target.value as Format)}>
-                <option value="auto">{tr ? "Otomatik (en küçük)" : "Automatic (smallest)"}</option>
+                <option value="auto">{tr ? "Yüklenenle aynı biçim" : "Same format as uploaded"}</option>
                 <option value="image/webp">WebP (.webp)</option>
                 <option value="image/jpeg">JPEG (.jpg)</option>
                 <option value="image/png">PNG (.png)</option>
@@ -498,8 +491,8 @@ export function ImageCompressTool({ language }: { language: Language }) {
                     : "In target-size mode we choose the quality — the highest value that stays under your target — and tell you what it turned out to be."
                   : format === "image/png"
                     ? tr
-                      ? "PNG kayıpsızdır — kalite ayarı işlemez. En çok kazanç için «Otomatik» veya WebP seçin."
-                      : "PNG is lossless — the quality slider has no effect. Pick «Automatic» or WebP for the biggest savings."
+                      ? "PNG kayıpsızdır — kalite ayarı işlemez. En çok kazanç için biçim olarak WebP veya JPEG seçin."
+                      : "PNG is lossless — the quality slider has no effect. Pick WebP or JPEG as the format for the biggest savings."
                     : tr
                       ? "%70 civarı çoğu fotoğrafta gözle fark edilmeyen kayıpla ciddi boyut düşüşü sağlar. Altına indikçe önce yazılar ve ince ayrıntılar bozulur."
                       : "Around 70% gives a big size reduction with loss that's usually invisible for photos. Below that, text and fine detail degrade first."}

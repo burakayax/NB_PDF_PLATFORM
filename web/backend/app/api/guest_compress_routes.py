@@ -69,13 +69,21 @@ def _client_ip(request: Request) -> str:
     sunucu bağlandığı IP'yi listenin sonuna ekler. ``GUEST_TRUSTED_PROXY_HOPS`` (varsayılan 1) kaç
     güvenilir ara sunucu olduğunu söyler: yalnız Render önünde 1, Cloudflare + Render ise 2.
 
-    ``CF-Connecting-IP`` yalnızca ``GUEST_TRUST_CF_HEADER=1`` ise kullanılır: PDF servisine doğrudan
-    (onrender.com adresiyle) erişilebiliyorsa o başlığı da istemci yazabilir.
+    ``CF-Connecting-IP`` (Cloudflare'in yazdığı GERÇEK ziyaretçi IP'si): ``GUEST_TRUST_CF_HEADER=1`` ise
+    her zaman, ``0`` ise hiçbir zaman; tanımsızsa YALNIZ istek gerçekten Cloudflare'den geçmişse
+    (``Cdn-Loop: cloudflare``) kullanılır. Render, servisleri Cloudflare arkasında yayınlar ve Cloudflare
+    bu başlığı istemcinin yazdığı değerin ÜSTÜNE kendi değeriyle yazar.
+
+    NEDEN ÖNCELİKLİ: XFF'nin sağ girdisi çoğu zaman Cloudflare'in KENAR sunucusunun adresidir; aynı
+    ziyaretçi her istekte farklı kenardan gelebildiği için farklı kişi sayılıp günlük hak yeniden
+    doğuyordu (canlıda ölçüldü: aynı ziyaretçide sayaç 1 iken sonra 0 göründü).
     """
-    if os.getenv("GUEST_TRUST_CF_HEADER", "").strip().lower() in ("1", "true", "yes"):
-        cf = request.headers.get("cf-connecting-ip")
-        if cf:
-            return cf.strip()
+    trust = os.getenv("GUEST_TRUST_CF_HEADER", "").strip().lower()
+    cf = (request.headers.get("cf-connecting-ip") or "").strip()
+    if cf and trust not in ("0", "false", "no"):
+        via_cloudflare = "cloudflare" in (request.headers.get("cdn-loop") or "").lower()
+        if trust in ("1", "true", "yes") or via_cloudflare:
+            return cf
     fwd = request.headers.get("x-forwarded-for")
     if fwd:
         parts = [p.strip() for p in fwd.split(",") if p.strip()]

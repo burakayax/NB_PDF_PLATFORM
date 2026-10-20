@@ -36,6 +36,9 @@ import { saveBlobToUser } from "../../api";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+/** Vurguda ince sürüklemenin açıldığı en küçük kalınlık (sayfa ölçüsüne oran). */
+const HIGHLIGHT_MIN_THIN = 0.025;
+
 type Tool = "select" | "highlight" | "marker" | "rect" | "pen" | "arrow" | "text";
 
 /** Ekran (overlay) koordinatlarıyla tutulan yorumlama nesnesi; hepsi 0..1 oranlı. */
@@ -517,25 +520,27 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
     const move = (e: PointerEvent) => {
       if (!drawing.current) return;
       const [x, y] = relPoint(e);
-      setDraft((d) => {
-        if (!d) return d;
-        let nd: Anno = d;
-        if (d.kind === "pen") {
-          if (straightModeRef.current) {
-            const s = d.points[0];
-            const [ex, ey] = Math.abs(x - s[0]) >= Math.abs(y - s[1]) ? [x, s[1]] : [s[0], y];
-            nd = { ...d, points: [s, [ex, ey]] };
-          } else {
-            nd = { ...d, points: [...d.points, [x, y]] };
-          }
-        } else if (d.kind === "arrow") {
-          nd = { ...d, x2: x, y2: y };
-        } else if (d.kind === "highlight" || d.kind === "rect") {
-          nd = { ...d, w: x - d.x, h: y - d.y };
+      // `draftRef` AYNI ANDA güncellenir (setState güncelleyicisinin içinde DEĞİL): güncelleyici
+      // sonraki çizimde çalışır; fare hemen bırakılırsa `up` eski konumu okuyup çizimin son
+      // parçasını kaybediyordu (canlıda vurgu, fare bırakılan yerden önce bitti).
+      const d = draftRef.current;
+      if (!d) return;
+      let nd: Anno = d;
+      if (d.kind === "pen") {
+        if (straightModeRef.current) {
+          const s = d.points[0];
+          const [ex, ey] = Math.abs(x - s[0]) >= Math.abs(y - s[1]) ? [x, s[1]] : [s[0], y];
+          nd = { ...d, points: [s, [ex, ey]] };
+        } else {
+          nd = { ...d, points: [...d.points, [x, y]] };
         }
-        draftRef.current = nd;
-        return nd;
-      });
+      } else if (d.kind === "arrow") {
+        nd = { ...d, x2: x, y2: y };
+      } else if (d.kind === "highlight" || d.kind === "rect") {
+        nd = { ...d, w: x - d.x, h: y - d.y };
+      }
+      draftRef.current = nd;
+      setDraft(nd);
     };
     const up = () => {
       drawing.current = false;
@@ -545,10 +550,21 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
       if (!d) return;
       // Normalize + çok küçükleri at; geçerliyse geçmişe kaydedip ekle.
       if (d.kind === "highlight" || d.kind === "rect") {
-        const x = Math.min(d.x, d.x + d.w);
-        const y = Math.min(d.y, d.y + d.h);
-        const w = Math.abs(d.w);
-        const h = Math.abs(d.h);
+        let x = Math.min(d.x, d.x + d.w);
+        let y = Math.min(d.y, d.y + d.h);
+        let w = Math.abs(d.w);
+        let h = Math.abs(d.h);
+        // Vurgu ile metin satırı boyunca DÜZ sürüklemek (yükseklik ≈ 0) işaret üretmiyordu; kullanıcı
+        // "çalışmıyor" sanıyordu. Uzun ama ince sürüklemede ince kenar satır yüksekliğine açılır.
+        if (d.kind === "highlight") {
+          if (w >= 0.03 && h < 0.01) {
+            y = Math.max(0, Math.min(1 - HIGHLIGHT_MIN_THIN, y + h / 2 - HIGHLIGHT_MIN_THIN / 2));
+            h = HIGHLIGHT_MIN_THIN;
+          } else if (h >= 0.03 && w < 0.01) {
+            x = Math.max(0, Math.min(1 - HIGHLIGHT_MIN_THIN, x + w / 2 - HIGHLIGHT_MIN_THIN / 2));
+            w = HIGHLIGHT_MIN_THIN;
+          }
+        }
         if (w < 0.01 || h < 0.01) return;
         pushHistory();
         setAnnos((a) => [...a, { ...d, x, y, w, h }]);

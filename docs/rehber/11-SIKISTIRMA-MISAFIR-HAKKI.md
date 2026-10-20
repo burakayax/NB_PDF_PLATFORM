@@ -93,7 +93,7 @@ sayfa `web/frontend/src/components/tools/GuestCompressTool.tsx`, bağlantı `App
 |---|---|---|
 | `INTERNAL_SERVICE_SECRET` | — | **Gerekli** (iki serviste aynı): sayaç ve panel ayarının köprüsü. |
 | `GUEST_TRUSTED_PROXY_HOPS` | `1` | PDF servisinin önündeki güvenilir ara sunucu sayısı (yalnız Render = 1, Cloudflare + Render = 2). IP, adres listesinin **sağından** bu kadar geriden alınır; istemcinin yazdığı sahte değerler sayılmaz. Altyapıya bağlı olduğu için panelde **yok**. |
-| `GUEST_TRUST_CF_HEADER` | kapalı | `1` ise Cloudflare'in `CF-Connecting-IP` başlığına güvenilir. Yalnız PDF servisine **sadece** Cloudflare üzerinden erişiliyorsa aç; aksi halde istemci o başlığı da taklit edebilir. |
+| `GUEST_TRUST_CF_HEADER` | otomatik | Boş bırakılırsa istek Cloudflare'den geçtiyse (`Cdn-Loop: cloudflare`) Cloudflare'in yazdığı gerçek ziyaretçi IP'si (`CF-Connecting-IP`) kullanılır. Render bu servisi Cloudflare arkasında yayınlar. `1` = her zaman güven, `0` = hiç güvenme. **Neden otomatik:** Cloudflare kenar adresi istekten isteğe değişebiliyor; adres listesinin sağ ucu ziyaretçi yerine kenar sunucusu olunca aynı kişi farklı kişi sayılıp günlük hak yeniden doğuyordu (canlıda ölçüldü). |
 | `GUEST_COMPRESS_DAILY_LIMIT` / `…_GLOBAL_DAILY_LIMIT` / `…_MAX_MB` | 1 / 400 / 20 | **Yalnız yedek:** panelle bağlantı hiç kurulamazsa (anahtar yok ya da ana sunucu kapalı) geçerli olur. Panel erişilebilirken panel kazanır. |
 | `GUEST_LIMIT_DB` | `tmp/guest_daily_limit.db` | Yalnız yedek sayaç dosyası (köprü çalışırken kullanılmaz). |
 

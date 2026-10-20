@@ -122,6 +122,50 @@ def test_cloudflare_header_is_ignored_unless_explicitly_trusted(client, monkeypa
     assert go("9.9.9.3").status_code == 200
 
 
+def test_cloudflare_real_ip_wins_over_changing_edge_address(client):
+    """Canlıda ölçülen hata: XFF'nin sağ girdisi Cloudflare KENAR adresi; aynı ziyaretçi farklı kenardan
+    gelince farklı kişi sayılıp hak yeniden doğuyordu. İstek Cloudflare'den geçtiyse (Cdn-Loop) gerçek IP kullanılır."""
+    def go(edge):
+        return client.post(
+            "/api/guest-compress/start",
+            files={"file": ("a.pdf", _pdf_bytes(), "application/pdf")},
+            headers={
+                "cf-connecting-ip": "92.44.25.203",
+                "cdn-loop": "cloudflare; loops=1",
+                "x-forwarded-for": f"92.44.25.203, {edge}",
+            },
+        )
+
+    assert go("172.70.1.1").status_code == 200
+    assert go("172.71.9.9").status_code == 429  # kenar adresi değişti, ziyaretçi aynı
+
+
+def test_cloudflare_header_without_cdn_loop_is_still_ignored(client):
+    def go(cf):
+        return client.post(
+            "/api/guest-compress/start",
+            files={"file": ("a.pdf", _pdf_bytes(), "application/pdf")},
+            headers={"cf-connecting-ip": cf, "x-forwarded-for": "192.0.2.91"},
+        )
+
+    assert go("9.9.9.7").status_code == 200
+    assert go("9.9.9.8").status_code == 429  # Cloudflare'den geçtiğinin işareti yok → başlığa güvenilmez
+
+
+def test_cloudflare_header_can_be_switched_off_explicitly(client, monkeypatch):
+    monkeypatch.setenv("GUEST_TRUST_CF_HEADER", "0")
+
+    def go(cf):
+        return client.post(
+            "/api/guest-compress/start",
+            files={"file": ("a.pdf", _pdf_bytes(), "application/pdf")},
+            headers={"cf-connecting-ip": cf, "cdn-loop": "cloudflare", "x-forwarded-for": "192.0.2.92"},
+        )
+
+    assert go("9.9.9.11").status_code == 200
+    assert go("9.9.9.12").status_code == 429
+
+
 def test_two_trusted_hops_picks_the_client_entry(client, monkeypatch):
     monkeypatch.setenv("GUEST_TRUSTED_PROXY_HOPS", "2")
     # "taklit, gerçek-istemci, cloudflare-ucu" → sağdan 2. girdi gerçek istemcidir.

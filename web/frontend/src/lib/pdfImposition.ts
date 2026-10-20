@@ -77,31 +77,50 @@ export function kitapcikSirasi(sayfaSayisi: number): (number | null)[][] {
 }
 
 /**
- * Kaynak sayfaları TEK TEK gömer.
+ * Kaynak sayfaları gömer; sayfaların ORTAK kaynakları (fotoğraf, logo, yazı tipi) çıktıda TEK kopya kalır.
  *
- * NEDEN TEK TEK: Kütüphane hepsini birden gömerken, içeriği HİÇ olmayan bir
- * sayfaya rastlarsa tüm işlemi hata ile durduruyor ("Can't embed page with
- * missing Contents"). Gerçek belgelerde tamamen boş sayfa olabilir (ör. bölüm
- * arası); tek boş sayfa yüzünden kullanıcının 200 sayfalık işi başarısız
- * olmamalı. Gömülemeyen sayfanın yeri çıktıda boş bırakılır.
+ * NEDEN TOPLU: Kütüphane her `embedPages` çağrısında yeni bir kopyalayıcı açar. Sayfaları tek tek
+ * gömmek, birden çok sayfanın paylaştığı görsel ve yazı tiplerini HER SAYFA İÇİN YENİDEN kopyalıyordu
+ * (ölçüm: ortak görselli 4 sayfa, 42 KB → 164 KB). Hepsini tek çağrıda gömünce kopyalayıcı ortak
+ * nesneleri tanır ve bir kez yazar.
+ *
+ * NEDEN YEDEK YOL: İçeriği HİÇ olmayan bir sayfa toplu gömmeyi durduruyordu ("Can't embed page with
+ * missing Contents"); gerçek belgelerde tamamen boş sayfa olabilir (ör. bölüm arası), tek boş sayfa
+ * yüzünden 200 sayfalık iş başarısız olmamalı. Hata gömme anında değil KAYDETME anında ortaya çıkıyor;
+ * bu yüzden içerik akışı olmayan sayfa önceden elenir ve yeri çıktıda boş bırakılır. Toplu gömme yine de
+ * hata verirse (bozuk bir sayfa) tek tek gömmeye düşülür.
  */
 async function sayfalariGom(
   cikti: PDFDocument,
   kaynak: PDFDocument,
 ): Promise<(PDFEmbeddedPage | null)[]> {
-  const sonuc: (PDFEmbeddedPage | null)[] = [];
-  for (const sayfa of kaynak.getPages()) {
-    // Hata gömme anında değil KAYDETME anında ortaya çıkıyor; bu yüzden sayfa
-    // önceden elenir: içerik akışı yoksa gömmeye hiç kalkışılmaz.
-    if (!sayfa.node.Contents()) {
-      sonuc.push(null);
-      continue;
-    }
+  const sayfalar = kaynak.getPages();
+  const gomulecek = sayfalar.map((sayfa) => !!sayfa.node.Contents());
+  const sonuc: (PDFEmbeddedPage | null)[] = sayfalar.map(() => null);
+
+  const secilen = sayfalar.filter((_, i) => gomulecek[i]);
+  let toplu: PDFEmbeddedPage[] | null = null;
+  if (secilen.length > 0) {
     try {
-      const [g] = await cikti.embedPages([sayfa]);
-      sonuc.push(g ?? null);
+      toplu = await cikti.embedPages(secilen);
     } catch {
-      sonuc.push(null); // bozuk sayfa → yeri boş kalır
+      toplu = null;
+    }
+  }
+  if (toplu) {
+    let k = 0;
+    sayfalar.forEach((_, i) => {
+      if (gomulecek[i]) sonuc[i] = toplu![k++] ?? null;
+    });
+  } else {
+    for (let i = 0; i < sayfalar.length; i++) {
+      if (!gomulecek[i]) continue;
+      try {
+        const [g] = await cikti.embedPages([sayfalar[i]!]);
+        sonuc[i] = g ?? null;
+      } catch {
+        sonuc[i] = null; // bozuk sayfa → yeri boş kalır
+      }
     }
   }
   if (sonuc.every((g) => g === null)) {
