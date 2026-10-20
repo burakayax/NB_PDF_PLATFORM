@@ -428,6 +428,12 @@ def get_result(result_id: str, user_id: str) -> ResultRead:
         )
 
 
+def read_payload_bytes(result_id: str) -> bytes:
+    """S3 modunda yük baytlarını okur (önizleme üretimi için; sahiplik çağıran tarafça doğrulanmış olmalı)."""
+    _validate_result_id(result_id)
+    return _s3_get(f"{result_id}/{_PAYLOAD_FILENAME}")
+
+
 def read_meta_only(result_id: str) -> dict:
     """Return the parsed meta.json without touching the payload."""
     _validate_result_id(result_id)
