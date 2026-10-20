@@ -1485,6 +1485,15 @@ def pdf_to_word(
         except Exception:
             _scanned = False
         if _scanned:
+            # Önce hibrit: orijinal görünüm (yazısız arka plan) + üstünde düzenlenebilir metin.
+            try:
+                from src.pdf_hybrid_scan import try_hybrid_pdf_to_word
+                if try_hybrid_pdf_to_word(pdf_path, docx_path, password, progress_callback):
+                    if progress_callback:
+                        progress_callback(4, 4, "Tamamlandı.")
+                    return True
+            except Exception as _hy_err:
+                print(f"[pdf_to_word] hibrit yol atlandı: {_hy_err}")
             # Tasarımlı belge (yan panel / renkli şerit / fotoğraf): bölgelere ayırarak çevir.
             try:
                 from src.pdf_designed_scan import try_designed_pdf_to_word

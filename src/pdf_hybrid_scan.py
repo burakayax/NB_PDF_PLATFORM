@@ -242,13 +242,16 @@ def _frame_line(doc, l: Dict[str, Any], k: float, size: float, text: str, page_w
 
 
 def hybrid_pdf_to_word(pdf_path: str, docx_path: str, *, use_claude: bool = False,
-                       api_key: str = "", model: str = "claude-haiku-5-5") -> Dict[str, Any]:
+                       api_key: str = "", model: str = "claude-haiku-5-5",
+                       password: Optional[str] = None, progress_callback=None) -> Dict[str, Any]:
     import fitz
     from docx import Document
     from docx.shared import Pt
 
     info: Dict[str, Any] = {"usage": {}, "fixes": 0}
     doc = fitz.open(pdf_path)
+    if doc.needs_pass and not doc.authenticate(password or ""):
+        raise ValueError("PDF şifreli")
     dw = Document()
     sec = dw.sections[0]
     wpt, hpt = doc.load_page(0).rect.width, doc.load_page(0).rect.height
@@ -256,6 +259,8 @@ def hybrid_pdf_to_word(pdf_path: str, docx_path: str, *, use_claude: bool = Fals
     sec.left_margin = sec.right_margin = sec.top_margin = sec.bottom_margin = Pt(0)
 
     for i in range(len(doc)):
+        if progress_callback:
+            progress_callback(i + 1, len(doc), f"Görünüm korunarak okunuyor: sayfa {i + 1}/{len(doc)}")
         pg = doc.load_page(i)
         scale = max(1.5, min(3.0, 1700.0 / max(1.0, pg.rect.width)))
         pix = pg.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False, colorspace=fitz.csRGB)
@@ -300,3 +305,29 @@ def hybrid_pdf_to_word(pdf_path: str, docx_path: str, *, use_claude: bool = Fals
     dw.save(docx_path)
     doc.close()
     return info
+
+
+_PRODUCT_MAX_PAGES = 10
+
+
+def try_hybrid_pdf_to_word(pdf_path: str, docx_path: str, password: Optional[str] = None,
+                           progress_callback=None) -> bool:
+    """Taranmış PDF'i hibrit Word'e çevir (ürün girişi). Uygun değilse veya hata olursa False."""
+    import fitz
+    doc = fitz.open(pdf_path)
+    try:
+        if doc.needs_pass and not doc.authenticate(password or ""):
+            return False
+        n = len(doc)
+        if n == 0 or n > _PRODUCT_MAX_PAGES:
+            return False
+        w0, h0 = doc.load_page(0).rect.width, doc.load_page(0).rect.height
+        for i in range(1, n):
+            r = doc.load_page(i).rect
+            if abs(r.width - w0) > 2 or abs(r.height - h0) > 2:
+                return False  # karışık sayfa boyutu: tek bölümlü düzen uymaz
+    finally:
+        doc.close()
+    hybrid_pdf_to_word(pdf_path, docx_path, password=password, progress_callback=progress_callback)
+    import os
+    return os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0
