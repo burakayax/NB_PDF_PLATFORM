@@ -119,4 +119,8 @@ copyFileSync(out, out); // varlık denetimi (yazılmadıysa hata verir)
 const outCaption = resolve(arg("out-aciklama", out.replace(/\.mp4$/, "-aciklama.mp4")));
 compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı açıklamada" });
 copyFileSync(outCaption, outCaption);
+// Facebook Reels kuralı: 7-20 sn. Süre kayıttan geliyor; kaliteyi bozmamak için kesilmez, yalnız uyarılır.
+if (total > 20 || total < 7) {
+  console.warn(`UYARI: video ${total.toFixed(1)} sn; Facebook Reels hedefi 7-20 sn. Senaryoyu kısaltmayı düşün.`);
+}
 console.log(JSON.stringify({ ok: true, tool: toolId, out, outCaption, seconds: Math.round(total) }));

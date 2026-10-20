@@ -13,6 +13,14 @@ import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { logAdminAudit } from "../admin/admin-audit.service.js";
 import { env } from "../../config/env.js";
 import { isGscConfigured } from "./gsc.service.js";
+import {
+  approveReplyDraft,
+  collectReplyDrafts,
+  generateWeeklyReport,
+  listReplyDrafts,
+  readWeeklyReport,
+  rejectReplyDraft,
+} from "./facebook-engagement.service.js";
 import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
@@ -312,5 +320,56 @@ socialRouter.delete(
   asyncHandler(async (request, response) => {
     await deletePost(String(request.params.id));
     response.json({ ok: true });
+  }),
+);
+
+// ─── Facebook: yorum yanıt taslakları + haftalık rapor ────────────────────────
+
+socialRouter.get(
+  "/facebook/reply-drafts",
+  asyncHandler(async (_request, response) => {
+    response.json({ drafts: await listReplyDrafts() });
+  }),
+);
+
+/** Yeni yorumları şimdi tara (cron her 2 saatte bir de yapar). */
+socialRouter.post(
+  "/facebook/reply-drafts/scan",
+  asyncHandler(async (_request, response) => {
+    response.json({ created: await collectReplyDrafts() });
+  }),
+);
+
+socialRouter.post(
+  "/facebook/reply-drafts/:id/approve",
+  asyncHandler(async (request, response) => {
+    const text = (request.body as { text?: unknown } | undefined)?.text;
+    const result = await approveReplyDraft(String(request.params.id), typeof text === "string" ? text : undefined);
+    if (!result.ok) throw new HttpError(400, result.error ?? "Yanıt gönderilemedi");
+    response.json({ ok: true });
+  }),
+);
+
+socialRouter.post(
+  "/facebook/reply-drafts/:id/reject",
+  asyncHandler(async (request, response) => {
+    await rejectReplyDraft(String(request.params.id));
+    response.json({ ok: true });
+  }),
+);
+
+socialRouter.get(
+  "/facebook/report",
+  asyncHandler(async (_request, response) => {
+    response.json({ report: await readWeeklyReport() });
+  }),
+);
+
+socialRouter.post(
+  "/facebook/report/run",
+  asyncHandler(async (_request, response) => {
+    const text = await generateWeeklyReport();
+    if (text == null) throw new HttpError(400, "Facebook hesabı bağlı değil");
+    response.json({ text });
   }),
 );

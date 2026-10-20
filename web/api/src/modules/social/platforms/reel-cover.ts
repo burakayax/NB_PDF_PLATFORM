@@ -14,8 +14,13 @@ export function toolIdFromGuid(guid: string): string | null {
   return guid.startsWith(TOOL_REEL_PREFIX) ? guid.slice(TOOL_REEL_PREFIX.length) || null : null;
 }
 
+/**
+ * Kapaklar SİTENİN statik dosyasıdır (frontend/public/reel-covers); API alan adında YOKTUR.
+ * Bu yüzden adres APP_BASE_URL (API) değil FRONTEND_ORIGIN (site) üzerinden kurulur. Videonun kendisi ise
+ * API'den sunulur (`videoUrlFor`), ikisi karıştırılmamalı.
+ */
 export const reelCoverUrl = (toolId: string): string =>
-  `${env.APP_BASE_URL.replace(/\/$/, "")}/reel-covers/${encodeURIComponent(toolId)}.jpg`;
+  `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/reel-covers/${encodeURIComponent(toolId)}.jpg`;
 
 /**
  * Kapak adresi, yalnızca gerçekten erişilebilir bir görsel olarak yanıt veriyorsa döner.
@@ -26,9 +31,11 @@ export async function availableReelCover(guid: string): Promise<string | null> {
   if (!toolId) return null;
   const url = reelCoverUrl(toolId);
   try {
-    const res = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10_000) });
+    // Yönlendirme izlenir (ör. pdfplatform.app → www.pdfplatform.app); Instagram yönlendirmeli kapak adresini
+    // indirmeyebilir, bu yüzden NİHAİ adres döner.
+    const res = await fetch(url, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(10_000) });
     const type = res.headers.get("content-type") ?? "";
-    return res.ok && type.startsWith("image/") ? url : null;
+    return res.ok && type.startsWith("image/") ? res.url || url : null;
   } catch {
     return null;
   }

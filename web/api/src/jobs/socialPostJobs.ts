@@ -12,6 +12,7 @@ import cron from "node-cron";
 import { logError } from "../lib/app-logger.js";
 import { logger } from "../lib/file-log.js";
 import { prisma } from "../lib/prisma.js";
+import { collectReplyDrafts, maybeGenerateWeeklyReport } from "../modules/social/facebook-engagement.service.js";
 import {
   calendarDayKey,
   catchUpToolReel,
@@ -85,7 +86,7 @@ async function tick(): Promise<void> {
     if (alreadyQueued > 0) continue;
 
     // scheduledAt = gerçek yayın anı. Yayın turu bu ana kadar kayda dokunmaz.
-    const result = await queueDailyPosts(runAt);
+    const result = await queueDailyPosts(runAt, false, true);
     if (result.queued.length > 0) {
       logger.info(
         "social",
@@ -100,7 +101,28 @@ async function tick(): Promise<void> {
   }
 }
 
+/** Yorum taslakları: iki saatte bir. Otomasyon açıkken çalışır; hata cron'u durdurmaz. */
+async function replyTick(): Promise<void> {
+  if (!(await readSocialConfig()).enabled) return;
+  const created = await collectReplyDrafts();
+  if (created > 0) logger.info("social", `${created} Facebook yorum yanıtı taslağı hazırlandı (onay bekliyor)`);
+}
+
+/** Haftalık rapor: Pazartesi 09:00'dan sonra, hafta başına bir kez. */
+async function reportTick(): Promise<void> {
+  const config = await readSocialConfig();
+  if (!config.enabled) return;
+  const now = new Date();
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: config.timeZone, weekday: "short" }).format(now);
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: config.timeZone, hour: "2-digit", hour12: false }).format(now));
+  if (weekday !== "Mon" || hour < 9) return;
+  if (await maybeGenerateWeeklyReport(now)) logger.info("social", "Facebook haftalık raporu hazırlandı");
+}
+
 export function registerSocialPostJobs() {
+  cron.schedule("7 */2 * * *", () => safeRun("facebookReplyDrafts", replyTick));
+  // Pazartesi günleri yarım saatte bir bakar; hafta başına yalnız bir kez üretir.
+  cron.schedule("*/30 * * * 1", () => safeRun("facebookWeeklyReport", reportTick));
   cron.schedule(TICK, () => {
     safeRun("socialDailyPost", tick);
   });

@@ -13,6 +13,8 @@
 import { logger } from "../../../lib/file-log.js";
 import { PublishStageError, requestJson, requireSecret } from "./common.js";
 import type { PublishInput } from "./common.js";
+import { postFirstComment } from "./facebook-comment.js";
+import { availableReelCover } from "./reel-cover.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 const POLL_DELAY_MS = 6000;
@@ -56,6 +58,29 @@ async function waitForReel(videoId: string, token: string): Promise<void> {
   throw new Error("Facebook videoyu zamanında işlemedi");
 }
 
+/**
+ * Markalı kapağı yükler (Graph API video küçük resmi, `is_preferred`). EN İYİ ÇABA: Reels bu noktada zaten
+ * yayında; kapak yüklenemezse (izin eksik, görsel reddedildi) paylaşım başarısız sayılmaz, yalnız kayda düşer.
+ */
+async function setReelCover(videoId: string, token: string, guid: string): Promise<void> {
+  try {
+    const coverUrl = await availableReelCover(guid);
+    if (!coverUrl) return;
+    const img = await fetch(coverUrl, { signal: AbortSignal.timeout(30_000) });
+    if (!img.ok) return;
+    const form = new FormData();
+    form.set("access_token", token);
+    form.set("is_preferred", "true");
+    form.set("source", new Blob([new Uint8Array(await img.arrayBuffer())], { type: "image/jpeg" }), "kapak.jpg");
+    const res = await fetch(`${GRAPH}/${videoId}/thumbnails`, { method: "POST", body: form, signal: AbortSignal.timeout(60_000) });
+    if (!res.ok) {
+      logger.warn("social", `Facebook Reels kapağı yüklenemedi (HTTP ${res.status}): ${(await res.text()).slice(0, 200)}`);
+    }
+  } catch (err) {
+    logger.warn("social", `Facebook Reels kapağı yüklenemedi: ${String(err)}`);
+  }
+}
+
 export async function publishFacebookReel(
   { body, item, secrets }: Pick<PublishInput, "body" | "item" | "secrets">,
   videoUrl: string,
@@ -96,6 +121,8 @@ export async function publishFacebookReel(
       }),
     );
     logger.info("social", `Facebook Reels yayınlandı: ${item.title}`);
+    await setReelCover(videoId, token, item.guid);
+    await postFirstComment(videoId, token, item.link, item.guid);
     return { externalId: videoId, externalUrl: `https://www.facebook.com/reel/${videoId}` };
   } catch (err) {
     throw new PublishStageError(err instanceof Error ? err.message : String(err));

@@ -25,6 +25,8 @@ import type { KeywordSet } from "./keywords.service.js";
 import type { SocialPlatform } from "@prisma/client";
 import { socialUtm, withUtm } from "../../lib/utm.js";
 import { toolIdFromGuid } from "./platforms/reel-cover.js";
+import { instagramHashtags } from "./instagram-tags.js";
+import type { FacebookKind } from "./facebook-kind.js";
 
 /** İki dilli gönderide blokları ayıran çizgi. */
 const LANG_SEPARATOR = "\n\n— — —\n\n";
@@ -51,14 +53,23 @@ Kurallar:
   KÖTÜ: "Ekran görüntüsüyle aldığınız tabloların bulanıklığından sıkılmış mısınız?"
   İYİ:  "Ekran görüntüsüyle aldığınız tablolar bulanık çıkıyor."
 - Soru cümlesi kurma zorunluluğun yok. Düz bir tespit çoğu zaman daha güçlü.
+- LONG metin biçimi: İLK SATIR kancadır (en fazla 125 karakter, tek başına anlamlı). Toplam 4–6 KISA satır; her satır yeni satırda. İnsanların arayacağı kelimeler ("Konu terimleri") metinde doğal biçimde geçsin. SON SATIR bir soru ya da harekete çağrı olsun (örn. "Hangi meslek için rehber istersin? Yorumlara yaz" ya da "Kaydet, lazım olacak").
 - Kısa çizgi (—) ile cümle bölme: en fazla bir kez, o da gerçekten gerekliyse.
 - İngilizce metin o dilde DOĞRUDAN yazılmış gibi olmalı; Türkçenin çevirisi olmasın.
   İki dil aynı şeyi anlatır ama cümle cümle birbirinin karşılığı olmak zorunda değil.
 - ETİKET YAZMA, BAĞLANTI YAZMA. "#" ve adres koyma — ikisini de sistem ekleyecek.
 - Karakter sınırlarını ASLA aşma.
 
+FACEBOOK AYRI YAZILIR (FB_TR, yalnız Türkçe): Facebook sayfasında Türk okuyucuyla konuşur gibi yaz.
+- İLK SATIR kanca: en fazla 10-12 kelime; bir sorunu söyleyen ya da merak uyandıran cümle (örn. "CV'n 5 MB olunca e-postan geri mi dönüyor?").
+- Toplam 60-120 kelime, kısa paragraflar, en fazla 2-3 emoji.
+- SON SATIR gerçek, cevaplanabilir bir soru olsun (örn. "Sen CV'ni Word mü PDF mi gönderiyorsun?").
+- "Beğen, paylaş, etiketle, yorum yaz" gibi etkileşim dilenen ifade YASAK.
+- Arama motoru kelimesi doldurma, "Konu terimleri"ni listeleme; doğal, konuşur gibi yaz.
+- Bağlantı, "link ilk yorumda" cümlesi ve etiket YAZMA; sistem ekler.
+
 Yanıtı YALNIZCA şu JSON biçiminde ver, başka hiçbir şey yazma:
-{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"..."}`;
+{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"...","FB_TR":"..."}`;
 
 /** Modelin bazen eklediği ```json çitlerini ve ön/arka gevezeliği ayıklar. */
 function parseJsonObject(raw: string): Record<string, unknown> | null {
@@ -266,8 +277,35 @@ export function tagCountFor(platform: SocialPlatform, blockCount: number, blockI
   return Math.min(spec.hashtagCount, share);
 }
 
+/** Instagram etiketleri: konu havuzundan, genel etiketsiz, bir öncekinden farklı (instagram-tags.ts). */
+function igTagText(side: LangSide, avoid?: string[]): string {
+  let key = side.link;
+  try {
+    key = new URL(side.link).pathname;
+  } catch {
+    /* göreli adres: olduğu gibi */
+  }
+  return instagramHashtags({ key, text: `${side.title} ${side.summary}`, avoid }).join(" ");
+}
+
+/**
+ * Facebook etiketleri: yalnızca yazının KONUSUNA ait terimler. Genel havuz (Ofis İpuçları,
+ * Dijitalleşme…) ve marka etiketi kullanılmaz; konuyla ilgisiz etiket erişimi bozuyor.
+ * Konu etiketi azsa tek genel etiket "PDF" ile tamamlanır.
+ */
+function facebookTagText(side: LangSide, count: number): string {
+  const out: string[] = [];
+  for (const term of [...side.tags, "PDF"]) {
+    const tag = toHashtag(term, side.lang);
+    if (tag && !out.some((t) => t.toLocaleLowerCase("tr") === tag.toLocaleLowerCase("tr"))) out.push(tag);
+    if (out.length >= count) break;
+  }
+  return out.join(" ");
+}
+
 /** Bir blok için etiket dizesi (karışım kuralına göre, sabit yazımla). */
-function tagsFor(side: LangSide, count: number): string {
+function tagsFor(side: LangSide, count: number, platform?: SocialPlatform): string {
+  if (platform === "FACEBOOK") return facebookTagText(side, count);
   return tagTermsFor(side, count).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
 }
 
@@ -283,27 +321,59 @@ type LangSide = {
   tags: string[];
 };
 
+/** Facebook şablon metninin sonundaki soru; bağlantıdan sabit seçilir (aynı soru art arda gelmesin). */
+const FB_QUESTIONS = [
+  "Sen bu işi şimdiye kadar nasıl hallettin?",
+  "Sende en çok hangi PDF işi vakit alıyor?",
+  "Bu sorunla sen de karşılaştın mı?",
+  "Sen hangi yöntemi kullanıyorsun?",
+  "Sence bu iş neden hâlâ bu kadar zor?",
+];
+
+/** Facebook'ta bağlantı metne değil ilk yoruma gider; metinde yalnızca yönlendirme satırı durur. */
+const FB_LINK_HINT = "Link ilk yorumda 👇";
+
+function facebookQuestion(side: LangSide): string {
+  let hash = 0;
+  const stable = side.link.split("?")[0] ?? side.link;
+  for (let i = 0; i < stable.length; i++) hash = (hash * 31 + stable.charCodeAt(i)) >>> 0;
+  return FB_QUESTIONS[hash % FB_QUESTIONS.length] ?? "";
+}
+
 /** Bir dil için şablon bloğu (model kullanılamadığında). */
 function fallbackBlock(
   side: LangSide,
   room: number,
   style: "url" | "bio" | "none",
   tagCount: number,
+  igTagText?: string,
+  platform?: SocialPlatform,
 ): string {
-  const tags = tagsFor(side, tagCount);
+  const isFb = platform === "FACEBOOK";
+  const tags = igTagText ?? tagsFor(side, tagCount, platform);
   const linkText = linkLine(side, style);
   const link = linkText ? `\n\n${linkText}` : "";
-  const tail = `${link}${tags ? `\n\n${tags}` : ""}`;
-  const lead = side.summary ? `${side.title}\n\n${side.summary}` : side.title;
+  // Facebook: sonda bir soru + "link ilk yorumda" yönlendirmesi (bağlantı ilk yoruma gider).
+  const fbTail = isFb ? `\n\n${facebookQuestion(side)}\n\n${FB_LINK_HINT}` : "";
+  const tail = `${fbTail}${link}${tags ? `\n\n${tags}` : ""}`;
+  // Instagram: kanca ilk satır (≤125 karakter), sonda harekete çağrı.
+  const lead =
+    igTagText !== undefined
+      ? `${truncateWords(side.title, 125)}${side.summary ? `\n\n${side.summary}` : ""}\n\nKaydet, lazım olacak 📌`
+      : side.summary
+        ? `${side.title}\n\n${side.summary}`
+        : side.title;
   return `${truncateWords(lead, Math.max(40, room - tail.length))}${tail}`;
 }
 
 /** Model kullanılamadığında devreye giren sade şablon. */
-function fallbackBody(sides: LangSide[], platform: SocialPlatform): string {
+function fallbackBody(sides: LangSide[], platform: SocialPlatform, avoid?: string[]): string {
   const spec = PLATFORM_SPECS[platform];
   const per = Math.floor(effectiveMax(platform, sides) / sides.length);
   return sides
-    .map((side, i) => fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i)))
+    .map((side, i) =>
+      fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i), platform === "INSTAGRAM" ? igTagText(side, avoid) : undefined, platform),
+    )
     .join(LANG_SEPARATOR);
 }
 
@@ -321,6 +391,18 @@ export type CopyRequest = {
    * ("kalite kaybı olmaz", "kayıt gerekmez") ekleyebildiği için kapatılır.
    */
   templateOnly?: boolean;
+  /** Bir önceki Instagram gönderisinin etiketleri: art arda aynı set kullanılmasın. */
+  avoidTags?: string[];
+  /** Facebook metninin türü (içerik karışımı); verilmezse "tip". */
+  fbKind?: FacebookKind;
+};
+
+const FB_KIND_NOTE: Record<FacebookKind, string> = {
+  tip: "FB_TR türü: İPUCU. Yazının işe yarar tek bir fikrini söyle.",
+  problem:
+    "FB_TR türü: SORUN→ÇÖZÜM. İlk satır okuyucunun yaşadığı somut sorun (örn. 'e-Devlet belgesi çok büyük, yüklenmiyor'); ortada çözümü tek cümleyle anlat.",
+  engage:
+    "FB_TR türü: ETKİLEŞİM. Konuyla ilgili iki seçenekli kısa bir soru kur ('A mı B mi?'); gövde en fazla 3 kısa satır; çözüm anlatma.",
 };
 
 /** Bir gönderide hangi dil(ler) yer alacak? */
@@ -341,6 +423,11 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
     };
   };
 
+  // Instagram içeriği SADECE Türkçe: açıklamada İngilizce bölüm olmaz (içerik kuralları, bölüm 1).
+  if (platform === "INSTAGRAM") return [sideOf("tr")];
+  // Facebook içeriği SADECE Türkçe: karışık dil Facebook'un kitle seçimini bozuyor.
+  if (platform === "FACEBOOK") return [sideOf("tr")];
+
   const bilingualPossible = req.bilingual && Boolean(item.alt) && PLATFORM_SPECS[platform].bilingual;
   // Çift dilde Türkçe üstte: asıl kitle Türkiye, İngilizce altta tam
   // karşılığıyla durur.
@@ -353,11 +440,12 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
  * Dönen kayıtta HER platform için bir metin bulunur (model başarısızsa şablon).
  */
 /** Uzun metni kullanan ağlar — üçünde de AYNI metin görünür. */
-const LONG_FORM: SocialPlatform[] = ["FACEBOOK", "INSTAGRAM", "LINKEDIN", "YOUTUBE"];
+const LONG_FORM: SocialPlatform[] = ["INSTAGRAM", "LINKEDIN", "YOUTUBE"];
 
 /** Bir ağ hangi metni kullanır? */
-type BodyKind = "long" | "short" | "pin";
+type BodyKind = "long" | "short" | "pin" | "fb";
 function bodyKind(platform: SocialPlatform): BodyKind {
+  if (platform === "FACEBOOK") return "fb";
   if (LONG_FORM.includes(platform)) return "long";
   return platform === "PINTEREST" ? "pin" : "short";
 }
@@ -368,7 +456,9 @@ function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
   const sides = sidesFor(req, platform);
   const perBlock = Math.floor(effectiveMax(platform, sides) / Math.max(1, sides.length));
   const side = sides[0];
-  const tagLen = side ? tagsFor(side, tagCountFor(platform, sides.length, 0)).length : 0;
+  const tagLen = side
+    ? (platform === "INSTAGRAM" ? igTagText(side, req.avoidTags) : tagsFor(side, tagCountFor(platform, sides.length, 0), platform)).length
+    : 0;
   const linkLen = side ? linkLine(side, spec.linkStyle).length : 0;
   // +4: bloğu ayıran satır sonları.
   return Math.max(60, perBlock - tagLen - linkLen - 4);
@@ -401,15 +491,18 @@ function buildBlock(
   side: LangSide,
   platform: SocialPlatform,
   tagCount: number,
+  avoid?: string[],
+  noLinkHint = false,
 ): string {
   const spec = PLATFORM_SPECS[platform];
   const clean = sanitizeHashtags(body, side.lang)
     .replace(URL_PATTERN_GLOBAL, "")
     .replace(/[ \t]+\n/g, "\n")
     .trim();
-  const tags = tagsFor(side, tagCount);
+  const tags = platform === "INSTAGRAM" ? igTagText(side, avoid) : tagsFor(side, tagCount, platform);
   const parts = [clean];
   const link = linkLine(side, spec.linkStyle);
+  if (platform === "FACEBOOK" && !noLinkHint) parts.push(FB_LINK_HINT);
   if (link) parts.push(link);
   if (tags) parts.push(tags);
   return parts.filter(Boolean).join("\n\n");
@@ -424,7 +517,7 @@ function buildBlock(
  */
 export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPlatform, string>> {
   const result = {} as Record<SocialPlatform, string>;
-  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p);
+  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p, req.avoidTags);
 
   if (req.templateOnly || !isAiConfigured() || req.platforms.length === 0) return result;
 
@@ -458,7 +551,9 @@ Türkçe: ${keywords.tr.join(", ") || "(yok)"}
 Uzunluklar:
 - LONG_EN ve LONG_TR: en fazla ${Number.isFinite(longRoom) ? longRoom : 900} karakter.
 - SHORT_EN ve SHORT_TR: en fazla ${Number.isFinite(shortRoom) ? shortRoom : 220} karakter.
-- PIN_EN ve PIN_TR: en fazla ${Number.isFinite(pinRoom) ? pinRoom : 400} karakter (arama terimi yüklü).`;
+- PIN_EN ve PIN_TR: en fazla ${Number.isFinite(pinRoom) ? pinRoom : 400} karakter (arama terimi yüklü).
+- FB_TR: en fazla 800 karakter (60-120 kelime).
+${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
 
   let raw: string;
   try {
@@ -473,6 +568,8 @@ Uzunluklar:
   const pick = (key: string): string =>
     typeof parsed[key] === "string" ? (parsed[key] as string).trim() : "";
   const bodies: Record<BodyKind, { en: string; tr: string }> = {
+    // Facebook yalnız Türkçe; model yazmadıysa şablon kalır.
+    fb: { en: "", tr: pick("FB_TR") },
     long: { en: pick("LONG_EN"), tr: pick("LONG_TR") },
     short: { en: pick("SHORT_EN"), tr: pick("SHORT_TR") },
     // Pin metni gelmediyse kısa metne düşülür: Pinterest metinsiz kalmasın.
@@ -484,7 +581,7 @@ Uzunluklar:
     const kind = bodyKind(p);
     const blocks = sides.map((side, i) => {
       const body = bodies[kind][side.lang];
-      return body ? buildBlock(body, side, p, tagCountFor(p, sides.length, i)) : "";
+      return body ? buildBlock(body, side, p, tagCountFor(p, sides.length, i), req.avoidTags, p === "FACEBOOK" && req.fbKind === "engage") : "";
     });
     // Bir dil için metin gelmediyse o platformda şablon korunur.
     if (blocks.some((b) => !b)) continue;
