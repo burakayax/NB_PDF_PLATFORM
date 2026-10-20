@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const planEnum = z.enum(["FREE", "PRO", "BUSINESS"]);
+const planEnum = z.enum(["FREE", "STARTER", "PLUS", "PRO", "BUSINESS"]);
 const roleEnum = z.enum(["USER", "ADMIN"]);
 
 export const adminListUsersQuerySchema = z.object({
@@ -10,7 +10,7 @@ export const adminListUsersQuerySchema = z.object({
   sort: z.enum(["createdAt", "email", "plan"]).default("createdAt"),
   dir: z.enum(["asc", "desc"]).default("desc"),
   /** Boş / all = tüm planlar. */
-  plan: z.enum(["FREE", "PRO", "BUSINESS", "all"]).optional().default("all"),
+  plan: z.enum(["FREE", "STARTER", "PLUS", "PRO", "BUSINESS", "all"]).optional().default("all"),
   /** E-posta doğrulama filtresi. */
   verified: z.enum(["all", "yes", "no"]).optional().default("all"),
 });
@@ -35,7 +35,7 @@ export const adminUpdateUserSchema = z.object({
 
 /** Süreli (geçici) plan tanımı: N gün sonra kullanıcı önceki planına döner. */
 export const adminGrantTempPlanSchema = z.object({
-  plan: z.enum(["PRO", "BUSINESS"]),
+  plan: z.enum(["STARTER", "PLUS", "PRO", "BUSINESS"]),
   days: z.coerce.number().int().min(1).max(365),
 });
 

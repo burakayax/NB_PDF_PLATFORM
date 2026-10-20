@@ -161,7 +161,7 @@ export async function fetchAdminUsers(
     pageSize?: number;
     sort?: string;
     dir?: string;
-    plan?: "FREE" | "PRO" | "BUSINESS" | "all";
+    plan?: "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS" | "all";
     verified?: "all" | "yes" | "no";
   },
 ): Promise<{ total: number; page: number; pageSize: number; items: AdminUserRow[] }> {
@@ -266,7 +266,7 @@ export async function patchAdminUser(
 export async function grantAdminTempPlan(
   accessToken: string,
   userId: string,
-  plan: "PRO" | "BUSINESS",
+  plan: "STARTER" | "PLUS" | "PRO" | "BUSINESS",
   days: number,
 ): Promise<{ plan: string; days: number; basePlan: string; overrideExpiresAt: string }> {
   const r = await adminFetch(accessToken, `/users/${encodeURIComponent(userId)}/temp-plan`, {
