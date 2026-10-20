@@ -103,6 +103,7 @@ export const ICON = {
   hash: ["M4 9h16", "M4 15h16", "M10 3 8 21", "M16 3l-2 18"],
   message: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
   columns: ["M12 3v18", "M3 3h18v18H3z"],
+  bulb: ["M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5", "M9 18h6", "M10 22h4"],
 };
 export const icon = (name, x, y, size, color, sw = 2) =>
   `<g transform="translate(${x} ${y}) scale(${size / 24})" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${(ICON[name] ?? ICON.word).map((d) => `<path d="${d}"/>`).join("")}</g>`;
