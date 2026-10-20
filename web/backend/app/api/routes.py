@@ -9,9 +9,12 @@ record-usage) kaldırılmıştır.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import os
+import tempfile
 from datetime import datetime, timezone
-from typing import Annotated, Any
+from typing import Annotated, Any, Optional
 
 from pathlib import Path
 
@@ -58,6 +61,7 @@ from app.core.result_store import (
     delete_result,
     get_result,
     read_meta_only,
+    read_payload_bytes,
     save_result_from_file,
 )
 from app.core.saas_gate import (
@@ -75,12 +79,33 @@ import src.pdf_toolkit_extra as ptx
 logger = logging.getLogger(__name__)
 
 
-def _result_payload_looks_like_pdf(mime: str, filename: str, payload_path: Path) -> bool:
+@contextlib.contextmanager
+def _local_payload_path(result_id: str, read: Any):
+    """Önizleme üreticileri dosya yolu ister. Yerel modda yol hazırdır; R2/S3 modunda
+    (payload_path=None) yük geçici dosyaya indirilir ve iş bitince silinir."""
+    if read.payload_path is not None:
+        yield read.payload_path
+        return
+    fd, tmp_name = tempfile.mkstemp(suffix=".pdf")
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(read_payload_bytes(result_id))
+        yield Path(tmp_name)
+    finally:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+
+
+def _result_payload_looks_like_pdf(mime: str, filename: str, payload_path: Optional[Path]) -> bool:
     """Meta bazen yanlış mime ile yazılır; dosya adı veya %PDF imzası ile doğrula."""
     if "pdf" in (mime or "").lower():
         return True
     if (filename or "").lower().strip().endswith(".pdf"):
         return True
+    if payload_path is None:
+        return False
     try:
         with payload_path.open("rb") as fh:
             return fh.read(5).startswith(b"%PDF-")
@@ -1517,7 +1542,8 @@ async def preview_result_hero(
     user_id = await saas_current_user_id(token)
     read = get_result(result_id, user_id)
     await _require_tool_unlocked(token, str(read_meta_only(result_id).get("tool") or "compress"))
-    png = await generate_hero_watermarked_preview_png_queued_from_path(read.payload_path)
+    with _local_payload_path(result_id, read) as src_path:
+        png = await generate_hero_watermarked_preview_png_queued_from_path(src_path)
     if not png:
         raise HTTPException(status_code=404, detail="Preview could not be generated.")
     return Response(content=png, media_type="image/png")
@@ -1542,7 +1568,8 @@ async def preview_result_pdf(
     await _require_tool_unlocked(token, str(meta.get("tool") or "compress"))
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
-    preview = await generate_watermarked_preview_pdf_queued_from_path(read.payload_path)
+    with _local_payload_path(result_id, read) as src_path:
+        preview = await generate_watermarked_preview_pdf_queued_from_path(src_path)
     if not preview:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp = {"Content-Disposition": content_disposition(read.filename, disposition="inline")}
