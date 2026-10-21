@@ -1381,6 +1381,7 @@ function App() {
   useErrorLogging({
     language,
     accessToken,
+    guestConsent: isCookieConsentReady && cookiePrefs.errorMonitoring,
   });
 
   function showToast(type: ToastType, title: string, detail: string) {
@@ -6868,6 +6869,7 @@ function App() {
           creditBalanceFailed={balanceFailed && !userBalance && user?.role !== "ADMIN"}
           onRetryBalance={() => setBalanceRetryNonce((n) => n + 1)}
           dailyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.daily ?? null) : null}
+          monthlyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.monthly ?? null) : null}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
           monthlyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.monthly ?? null) : null}
           limitsizProActive={limitsizProActive}
@@ -7219,6 +7221,9 @@ function App() {
 
             {contentPanel === "subscription" ? (
               <section className="subscription-card space-y-4">
+                <h1 className="text-xl font-semibold tracking-tight text-nb-text">
+                  {language === "tr" ? "Abonelik ve krediler" : "Subscription & credits"}
+                </h1>
                 <QuotaWidget
                   language={language}
                   accessToken={accessToken}

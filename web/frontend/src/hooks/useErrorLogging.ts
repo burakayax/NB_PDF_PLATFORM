@@ -5,13 +5,18 @@ import type { Language } from "../i18n/landing";
 type ErrorLoggingOptions = {
   language: Language;
   accessToken?: string | null;
+  /**
+   * Misafir (oturumsuz) ziyaretçi hatalarını da topla. Yalnızca "hata izleme" çerez onayı varsa
+   * true verilmelidir; üyelerin hatası eskisi gibi onaydan bağımsız toplanır.
+   */
+  guestConsent?: boolean;
 };
 
-export function useErrorLogging({ language, accessToken }: ErrorLoggingOptions) {
+export function useErrorLogging({ language, accessToken, guestConsent = false }: ErrorLoggingOptions) {
   const recentErrorsRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!accessToken && !guestConsent) {
       return;
     }
 
@@ -80,5 +85,5 @@ export function useErrorLogging({ language, accessToken }: ErrorLoggingOptions) 
       window.removeEventListener("error", handleError);
       window.removeEventListener("unhandledrejection", handleRejection);
     };
-  }, [accessToken, language]);
+  }, [accessToken, guestConsent, language]);
 }

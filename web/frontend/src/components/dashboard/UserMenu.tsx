@@ -97,7 +97,7 @@ export function UserMenu({
           className="absolute right-0 z-[60] mt-2 w-56 overflow-hidden rounded-xl border border-white/[0.08] bg-nb-bg-elevated/98 py-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md"
         >
           {creditsLabel ? (
-            <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] px-4 py-2.5 sm:hidden">
+            <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] px-4 py-2.5 lg:hidden">
               <span className="text-sm font-semibold text-nb-text">{creditsLabel}</span>
               {onTopUp ? (
                 <button

@@ -119,6 +119,7 @@ import { ToolRatingsTab } from "./ratings/ToolRatingsTab";
 import { UserJourneyTab } from "./journey/UserJourneyTab";
 import { ConsentLogTab } from "./compliance/ConsentLogTab";
 import { SystemControlTab } from "./SystemControlTab";
+import { AutoHealTab } from "./AutoHealTab";
 import { AdminToaster } from "./AdminToaster";
 import { readAccessToken } from "../lib/accessTokenStore";
 
@@ -138,6 +139,7 @@ type AdminTabId =
   | "ratings"
   | "journeys"
   | "consents"
+  | "autoheal"
   | "audit";
 
 const ADMIN_UI_MODE_STORAGE_KEY = "nb-admin-ui-mode";
@@ -182,6 +184,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "settings", label: "Ayarlar" },
       { id: "analytics", label: "Analitik" },
       { id: "consents", label: "Onay kayıtları" },
+      { id: "autoheal", label: "Hata izleme" },
       { id: "audit", label: "İşlem günlüğü" },
     ],
   },
@@ -566,6 +569,7 @@ export function AdminPanel({
         {tab === "ratings" ? <ToolRatingsTab accessToken={accessToken} /> : null}
         {tab === "journeys" ? <UserJourneyTab accessToken={accessToken} /> : null}
         {tab === "consents" ? <ConsentLogTab accessToken={accessToken} /> : null}
+        {tab === "autoheal" ? <AutoHealTab accessToken={accessToken} /> : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
       <AdminToaster />

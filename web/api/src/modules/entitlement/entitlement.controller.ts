@@ -149,6 +149,10 @@ export async function entitlementBalanceController(
         select: { subscriptionExpiry: true },
       });
       subscriptionExpiry = org?.subscriptionExpiry?.toISOString() ?? null;
+      // Admin hediyesi planlar ~100 yıl sonrası bir tarih taşır; gerçek dönem sonu olmadığı için gösterilmez.
+      if (org?.subscriptionExpiry && org.subscriptionExpiry.getTime() > Date.now() + 50 * 365 * 24 * 60 * 60 * 1000) {
+        subscriptionExpiry = null;
+      }
     }
     // Dönem başlangıcı: son tamamlanmış ödemenin tarihi
     const lastCheckout = await prisma.paymentCheckout.findFirst({
