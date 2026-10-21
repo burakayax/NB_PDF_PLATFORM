@@ -66,7 +66,7 @@ export default {
     await hlOff();
 
     // Birleştir
-    const btn = pg.getByRole("button", { name: /PDF.LERİ BİRLEŞTİR/ });
+    const btn = pg.getByRole("button", { name: /PDF.leri Birleştir/ });
     const btnBoxFinal = await box(btn);
     const bp = await center(btn);
     await moveTo(bp.x, bp.y);
