@@ -96,7 +96,7 @@ export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS
       updated: "2026-10-14",
       readMinutes: 5,
       tags: { tr: ["CV Örneği", nameTr, "ATS"], en: ["CV Example", nameEn, "ATS"] },
-      accent: ACCENTS[i % ACCENTS.length],
+      accent: ACCENTS[(i + Math.floor(i / ACCENTS.length)) % ACCENTS.length],
       tool: "/tools/cv-olustur",
     },
     {

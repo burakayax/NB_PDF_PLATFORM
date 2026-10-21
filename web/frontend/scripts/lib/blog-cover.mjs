@@ -8,7 +8,7 @@
  * renkli bantta görünür. Kapak yazının kendi başlığından üretilir; içerik uydurulmaz. Logo her zaman SOL ÜSTTE.
  */
 
-import { assignLayouts, renderCover } from "./cover-engine.mjs";
+import { LAYOUTS, assignLayouts, renderCover } from "./cover-engine.mjs";
 import { heroFor } from "./heroes.mjs";
 
 /** "CV Nasıl Hazırlanır? Adım Adım Rehber" → { head: "CV Nasıl Hazırlanır?", tag: "Adım Adım Rehber" } */
@@ -60,7 +60,21 @@ export function fitHook(title, max = 8) {
  * böylece yeni yazı eklenince eski yazıların düzeni değişmez.
  */
 export function blogLayoutMap(posts) {
-  return assignLayouts(posts.map((p) => p.slug).reverse());
+  const map = assignLayouts(posts.map((p) => p.slug).reverse());
+  // Aynı çizim ailesindeki yazılar (ör. 14 meslek CV'si) yan yana tarihli olduğundan hep aynı düzene düşerdi:
+  // aile içinde düzenleri sırayla dağıt, böylece iki meslek aynı düzen + aynı renkle çıkmaz.
+  // Her renk ilk kez geldiğinde bir düzene, ikinci kez geldiğinde ondan çok farklı (4 ileri) bir düzene bağlanır:
+  // aynı düzen yalnız FARKLI renkle tekrar eder, iki meslek aynı düzen + aynı renkle çıkmaz.
+  const ACCENT_ORDER = ["sky", "emerald", "violet", "amber", "blue", "cyan", "fuchsia", "rose"];
+  const seen = new Map();
+  for (const p of posts.slice().reverse()) {
+    if (!heroFor(p.slug, p.tool).startsWith("cv-")) continue;
+    const a = Math.max(0, ACCENT_ORDER.indexOf(p.accent));
+    const k = seen.get(a) ?? 0;
+    seen.set(a, k + 1);
+    map.set(p.slug, LAYOUTS[(a * 3 + 1 + 4 * k) % LAYOUTS.length]);
+  }
+  return map;
 }
 
 /** Bir yazının kapağı. `post`: { slug, accent, tool }. */
