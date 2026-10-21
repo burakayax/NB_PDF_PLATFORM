@@ -23,6 +23,36 @@ export async function getPdfPageCount(file: File): Promise<number> {
 }
 
 /**
+ * PDF'in TÜM sayfalarında zaten yazı katmanı var mı? (İlk MAX_OCR_PAGES sayfa bakılır.)
+ * Varsa OCR gereksizdir: sayfaları resme çevirip yeniden taramak hem kaliteyi hem boyutu bozar.
+ * Okunamayan/şifreli dosyada false döner (araç eskisi gibi OCR'a devam eder).
+ */
+export async function pdfAlreadyHasText(file: File, minChars = 20): Promise<boolean> {
+  try {
+    const data = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+    try {
+      const n = Math.min(doc.numPages, MAX_OCR_PAGES);
+      if (n === 0) return false;
+      for (let i = 1; i <= n; i++) {
+        const page = await doc.getPage(i);
+        const content = await page.getTextContent();
+        const chars = content.items.reduce(
+          (sum, it) => sum + ("str" in it ? it.str.trim().length : 0),
+          0,
+        );
+        if (chars < minChars) return false;
+      }
+      return true;
+    } finally {
+      await doc.destroy();
+    }
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Bir PDF'in sayfalarını canvas'lara render eder (aranabilir PDF üretimi için).
  * `scale` OCR doğruluğu için ~2 önerilir. `maxPages` maliyet/süre sınırı.
  */

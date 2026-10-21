@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { QuotaCountdown } from "../ui/quota-countdown";
+import { FREE_OPS } from "../../lib/allowance";
 
 interface QuotaSummary {
   plan: string;
@@ -82,8 +83,8 @@ export function QuotaWidget({
         <div className="rounded-lg bg-amber-500/15 border border-amber-500/30 px-4 py-3 text-sm">
           <p className="text-amber-200 font-semibold mb-1">
             {tr
-              ? "Bugünkü ücretsiz dönüştürme/gelişmiş işlem hakkın doldu."
-              : "Your free daily conversion/advanced quota is used up."}
+              ? `Bugünkü ${FREE_OPS.daily} ücretsiz sunucu işlem hakkın doldu.`
+              : `You've used today's ${FREE_OPS.daily} free server operations.`}
           </p>
           <p className="text-amber-300/70 text-xs">
             {tr
@@ -107,9 +108,9 @@ export function QuotaWidget({
         <div>
           <div className="flex items-center justify-between mb-1.5 text-xs">
             <span className="text-gray-400 font-medium">
-              {tr ? "Bugün" : "Today"}:{" "}
+              {tr ? "Bugün kalan" : "Left today"}:{" "}
               <span className={dailyFull ? "text-red-400" : "text-white"}>
-                {quota.daily.used}/{quota.daily.limit}
+                {Math.max(0, quota.daily.limit - quota.daily.used)}/{quota.daily.limit}
               </span>
             </span>
             {resetAt && <QuotaCountdown resetAt={resetAt} timezone={timezone} tr={tr} />}
@@ -131,9 +132,9 @@ export function QuotaWidget({
         <div>
           <div className="flex items-center justify-between mb-1.5 text-xs">
             <span className="text-gray-400 font-medium">
-              {tr ? "Bu ay" : "This month"}:{" "}
+              {tr ? "Bu ay kalan" : "Left this month"}:{" "}
               <span className={monthlyFull ? "text-red-400" : monthlyWarn ? "text-amber-400" : "text-white"}>
-                {quota.monthly.used}/{quota.monthly.limit}
+                {Math.max(0, quota.monthly.limit - quota.monthly.used)}/{quota.monthly.limit}
               </span>
             </span>
             <span className="text-gray-600 text-[10px]">

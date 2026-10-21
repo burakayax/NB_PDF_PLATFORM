@@ -13,13 +13,15 @@ import { MEMBER_DAILY_OPS } from "../components/tools/GuestCompressTool";
  */
 const buDosya = dirname(fileURLToPath(import.meta.url));
 const planConfig = resolve(buDosya, "../../../api/src/modules/subscription/subscription.config.ts");
+const katalog = resolve(buDosya, "../../../api/src/lib/plan-catalogue.ts");
 const misafirAyari = resolve(buDosya, "../../../api/src/modules/guest-compress/guest-compress.config.ts");
 const misafirYedek = resolve(buDosya, "../../../backend/app/core/guest_daily_limit.py");
 
 describe("PDF Sıkıştır hak vaadi", () => {
   it("üye (FREE) günlük hakkı arayüzdeki rakamla aynı", () => {
-    const kaynak = readFileSync(planConfig, "utf8");
-    const free = kaynak.match(/FREE:\s*\{[\s\S]*?dailyLimit:\s*(\d+)/);
+    // Sayısal limitlerin tek kaynağı plan kataloğudur (subscription.config.ts oradan okur).
+    const kaynak = readFileSync(katalog, "utf8");
+    const free = kaynak.match(/PLAN_LIMITS[\s\S]*?FREE:\s*\{\s*dailyOperationLimit:\s*(\d+)/);
     expect(free, "FREE planı bulunamadı").not.toBeNull();
     expect(Number(free![1])).toBe(MEMBER_DAILY_OPS);
   });

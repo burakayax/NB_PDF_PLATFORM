@@ -3,6 +3,7 @@
  * has no overlay. Runtime entitlements resolve via `getPlanDefinitionsResolved()` (DB + fallback).
  */
 import type { Plan } from "@prisma/client";
+import { PLAN_LIMITS } from "../../lib/plan-catalogue.js";
 export const featureCatalog = [
   "split",
   "merge",
@@ -97,7 +98,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
     name: "FREE",
     displayName: "Free",
     description: "Full toolkit with usage limits.",
-    dailyLimit: 3,
+    dailyLimit: PLAN_LIMITS.FREE.dailyOperationLimit,
     allowedFeatures: FREE_TOOLS,
     multiUser: false,
   },
@@ -105,7 +106,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
     name: "STARTER",
     displayName: "Starter",
     description: "Great for getting started with 25 daily operations.",
-    dailyLimit: 25,
+    dailyLimit: PLAN_LIMITS.STARTER.dailyOperationLimit,
     allowedFeatures: STARTER_TOOLS,
     multiUser: false,
   },
@@ -113,7 +114,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
     name: "PLUS",
     displayName: "Plus",
     description: "Unlimited daily use with 600 monthly operations.",
-    dailyLimit: null,
+    dailyLimit: PLAN_LIMITS.PLUS.dailyOperationLimit,
     allowedFeatures: [...featureCatalog],
     multiUser: false,
   },

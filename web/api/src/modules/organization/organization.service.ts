@@ -2,6 +2,7 @@ import type { OrgRole, Organization, Plan } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import crypto from "crypto";
 import { sendMail } from "../../lib/mailer.js";
+import { PLAN_LIMITS } from "../../lib/plan-catalogue.js";
 
 function generateSlug(name: string): string {
   return (
@@ -23,11 +24,11 @@ export async function createOrganizationForUser(
 
   const planConfig = await prisma.planConfig.findUnique({ where: { plan } });
   const PLAN_DEFAULTS: Record<string, { dailyOperationLimit: number | null; monthlyOperationLimit: number; fileSizeLimitMB: number; batchLimit: number; watermarkEnabled: boolean; queuePriority: "LOW" | "MEDIUM" | "HIGH" | "HIGHEST"; maxSeats: number }> = {
-    FREE:     { dailyOperationLimit: 3,    monthlyOperationLimit: 30,     fileSizeLimitMB: 80,     batchLimit: 0,   watermarkEnabled: false,  queuePriority: "LOW",     maxSeats: 1 },
-    STARTER:  { dailyOperationLimit: 25,   monthlyOperationLimit: 250,    fileSizeLimitMB: 100,    batchLimit: 2,   watermarkEnabled: false,  queuePriority: "LOW",     maxSeats: 1 },
-    PLUS:     { dailyOperationLimit: null, monthlyOperationLimit: 600,    fileSizeLimitMB: 250,    batchLimit: 5,   watermarkEnabled: false, queuePriority: "MEDIUM",  maxSeats: 1 },
-    PRO:      { dailyOperationLimit: null, monthlyOperationLimit: 1000,   fileSizeLimitMB: 500,    batchLimit: 25,  watermarkEnabled: false, queuePriority: "HIGH",    maxSeats: 1 },
-    BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: 999999, fileSizeLimitMB: 999999, batchLimit: 999, watermarkEnabled: false, queuePriority: "HIGHEST", maxSeats: 999 },
+    FREE:     { ...PLAN_LIMITS.FREE,     watermarkEnabled: false, queuePriority: "LOW",     maxSeats: 1 },
+    STARTER:  { ...PLAN_LIMITS.STARTER,  watermarkEnabled: false, queuePriority: "LOW",     maxSeats: 1 },
+    PLUS:     { ...PLAN_LIMITS.PLUS,     watermarkEnabled: false, queuePriority: "MEDIUM",  maxSeats: 1 },
+    PRO:      { ...PLAN_LIMITS.PRO,      watermarkEnabled: false, queuePriority: "HIGH",    maxSeats: 1 },
+    BUSINESS: { ...PLAN_LIMITS.BUSINESS, watermarkEnabled: false, queuePriority: "HIGHEST", maxSeats: 999 },
   };
   const limits = planConfig ?? PLAN_DEFAULTS[plan] ?? PLAN_DEFAULTS["FREE"];
 
@@ -244,7 +245,8 @@ export async function applyPlanLimitsToOrg(orgId: string, plan: Plan) {
     where: { id: orgId },
     data: {
       plan,
-      dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+      // null = günlük sınır yok; undefined yazılırsa eski plandan kalan limit silinmez.
+      dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
       monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
       fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
       batchLimit: planConfig.batchLimit,
@@ -285,7 +287,7 @@ export async function applyTemporaryPlan(orgId: string, tempPlan: Plan, days: nu
     where: { id: orgId },
     data: {
       plan: tempPlan,
-      dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+      dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
       monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
       fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
       batchLimit: planConfig.batchLimit,
@@ -322,7 +324,7 @@ export async function revertExpiredOverride(org: Organization): Promise<Organiza
       plan: revertPlan,
       ...(planConfig
         ? {
-            dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+            dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
             monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
             fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
             batchLimit: planConfig.batchLimit,
