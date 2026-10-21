@@ -1381,6 +1381,7 @@ function App() {
   useErrorLogging({
     language,
     accessToken,
+    guestConsent: isCookieConsentReady && cookiePrefs.errorMonitoring,
   });
 
   function showToast(type: ToastType, title: string, detail: string) {

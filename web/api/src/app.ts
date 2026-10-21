@@ -25,6 +25,8 @@ import { v1Router } from "./modules/v1/v1.routes.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
 import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
 import { registerHealthMonitorJobs } from "./jobs/healthMonitorJobs.js";
+import { registerErrorTriageJobs } from "./jobs/errorTriageJobs.js";
+import { recordServerError } from "./modules/autoheal/autoheal.service.js";
 import { registerContractReviewJobs } from "./jobs/contractReviewJobs.js";
 import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
 import { registerLifecycleEmailJobs } from "./jobs/lifecycleEmailJobs.js";
@@ -194,6 +196,7 @@ app.use("/v1", abuseBlockMiddleware, v1Router);
 registerTeamJobs();
 registerDataRetentionJobs();
 registerHealthMonitorJobs();
+registerErrorTriageJobs();
 registerSubscriptionJobs();
 registerLifecycleEmailJobs();
 registerCheckoutRecoveryJobs();
@@ -347,5 +350,11 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
     stack,
   });
   console.error(error);
+  recordServerError({
+    method: request.method,
+    path,
+    message: error instanceof Error ? error.message : String(error),
+    stack,
+  });
   response.status(500).json({ message: "Bir hata oluştu. Lütfen tekrar deneyin." });
 });
