@@ -501,7 +501,7 @@ export const BLOG_POSTS = [
         { t: "tip", x: "Sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa işlem cihazınızda yapılıyor demektir — sayılacak bir sunucu işi yok." },
 
         { t: "h2", x: "Peki sunucu gereken işler?" },
-        { t: "p", x: "Burada dürüst olmak gerek: Word'e çevirme, OCR ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük bir hak vardır. Yani bu araçlarda biz de sınırlıyız." },
+        { t: "p", x: "Burada dürüst olmak gerek: Word'e çevirme ve sıkıştırma bizde de sunucuda çalışır (OCR ise cihazınızda çalışır) ve ücretsiz planda günlük bir hak vardır. Yani bu araçlarda biz de sınırlıyız." },
         { t: "p", x: "Fark şurada: Sejda'da saatlik sınır TÜM araçları kapsar, sayfa düzenleme dahil. Bizde sayfa işlemleri hiç sayılmaz, çünkü bize maliyeti yoktur. Ücretsiz kullanıcının en sık yaptığı işler de zaten bunlardır." },
 
         { t: "cta", title: "PDF Birleştir", x: "Saatlik sınır yok, üyelik yok — tarayıcınızda çalışır, dosyanız yüklenmez.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
@@ -519,7 +519,7 @@ export const BLOG_POSTS = [
       faq: [
         { q: "Sejda'nın ücretsiz sınırı nedir?", a: "Saatte 3 işlem. Ayrıca araç başına sayfa sınırı (sayfa düzenlemede 50, çoğu araçta 200) ve dosya boyutu sınırı (çoğu araçta 50 MB, sıkıştırmada 100 MB) bulunuyor. Üyelik gerekmiyor." },
         { q: "Saatlik sınır olmayan bir alternatif var mı?", a: "Sayfa işlemleri için evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama tarayıcınızda çalışır; saatlik ya da günlük sınır yoktur ve üyelik gerekmez." },
-        { q: "Dönüştürme ve OCR'de de sınırsız mı?", a: "Hayır. Word'e çevirme, OCR ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır. Bu araçlarda biz de sınırlıyız." },
+        { q: "Dönüştürmede de sınırsız mı?", a: "Hayır. Word'e çevirme ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır; OCR ise cihazınızda çalışır. Bu araçlarda biz de sınırlıyız." },
         { q: "Sejda'da olup sizde olmayan ne var?", a: "Masaüstü sürümü ve haftalık geçiş kartı. Tek seferlik yoğun bir iş için 5 dolarlık haftalık kart, bizde karşılığı olmayan kullanışlı bir seçenek." },
         { q: "PDF metnini düzenleyebiliyor musunuz?", a: "Evet. PDF Düzenle aracı belgedeki mevcut metni gerçekten değiştirir ve siler; bu işlem sunucuda yapılır." },
       ],
@@ -777,7 +777,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "PDF Platform, Creator'ın gizlilik tarafını Tools'un platform bağımsızlığıyla birleştiriyor: tarayıcıda çalışır, dolayısıyla Mac, Linux, Windows ve telefon fark etmez; ve sayfa işlemleri cihazınızda yapılır, dolayısıyla dosya yüklenmez." },
         { t: "ul", items: [
           "Cihazda çalışanlar (dosya yüklenmez): birleştirme, bölme, döndürme, kırpma, sayfa silme, sayfa sıralama, görselden PDF, imzalama ve işaretleme.",
-          "Sunucuda çalışanlar: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları. Bunlar tarayıcının yapabileceğinin dışında; her aracın sayfasında hangisinin hangisi olduğu yazıyor.",
+          "Sunucuda çalışanlar: Word/Excel/PowerPoint dönüştürme, sıkıştırma ve yapay zekâ araçları (OCR cihazınızda çalışır). Bunlar tarayıcının yapabileceğinin dışında; her aracın sayfasında hangisinin hangisi olduğu yazıyor.",
         ] },
         { t: "tip", x: "İddiayı sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir." },
 
@@ -785,7 +785,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Burada da açık olalım, çünkü PDF24'ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:" },
         { t: "ul", items: [
           "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.",
-          "Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.",
+          "Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.",
         ] },
         { t: "p", x: "Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR'de durum farklıdır — bunu bilerek seçin." },
 
@@ -795,7 +795,7 @@ export const BLOG_POSTS = [
         { t: "ul", items: [
           "Windows'tasınız ve program kurmak sorun değilse: PDF24 Creator zaten çevrimdışı çalışıyor, yerinde kalın.",
           "Mac, Linux ya da Android'desiniz ve belge hassas: tarayıcıda çalışan, dosyayı yüklemeyen bir araç seçin.",
-          "Yapacağınız iş dönüştürme ya da OCR ise: ikisinde de dosya sunucuya gider. Burada seçim, kimin sunucusuna güvendiğinizle ilgilidir — kısıtsız ücretsizlik istiyorsanız PDF24 güçlüdür.",
+          "Yapacağınız iş dönüştürme ise dosya sunucuya gider. Burada seçim, kimin sunucusuna güvendiğinizle ilgilidir — kısıtsız ücretsizlik istiyorsanız PDF24 güçlüdür.",
           "Kurumsal bir bilgisayardasınız ve program kuramıyorsanız: tarayıcıda çalışan araç zaten tek seçenektir.",
         ] },
       ],
@@ -804,7 +804,7 @@ export const BLOG_POSTS = [
         { q: "PDF24 dosyalarımı sunucuya yüklüyor mu?", a: "Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24'ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows'taki Creator sürümü çevrimdışı çalıştığı için yüklemez." },
         { q: "Mac veya Linux'ta dosyamı yüklemeden PDF işleyebilir miyim?", a: "Evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez." },
         { q: "Dosyamın yüklenmediğini nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
-        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir." },
+        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir." },
       ],
     },
     {
@@ -1236,7 +1236,7 @@ export const BLOG_POSTS = [
         {"t": "p", "x": "Tek dosya hâline gelen belge çoğu zaman doğrudan gönderilmeye hazır değildir. Birkaç sayfa numarası, küçültme ya da kapak düzenlemesi, belgenin karşı tarafta nasıl algılandığını belirgin biçimde değiştirir."},
         {"t": "ul", "items": ["Sayfa numarası ekleyin: eklerin eksiksiz gittiğini karşı taraf görebilir.", "Boyut büyükse sıkıştırın; birleşmiş taramalar kolayca e-posta sınırını aşar.", "Gereksiz boş sayfaları silin — özellikle taranmış arka yüzler.", "Belgede hassas bilgi varsa göndermeden önce kalıcı olarak kaldırın."]},
         {"t": "h2", "x": "Neden dosya yüklenmeden birleşebiliyor?"},
-        {"t": "p", "x": "Sayfaları birleştirmek belgenin içeriğini yeniden işlemeyi gerektirmez; sayfa nesneleri tek bir dosyada yeniden düzenlenir. Bu, tarayıcının kendi gücüyle yapılabilecek bir iştir. Sunucu gerektirmediği için de sayılacak bir işlem yoktur: günlük hak, saatlik sınır ya da üyelik gerekmez. Word'e çevirme ya da OCR gibi işler ise gerçekten hesaplama gerektirdiği için sunucuda çalışır; aradaki fark burada."},
+        {"t": "p", "x": "Sayfaları birleştirmek belgenin içeriğini yeniden işlemeyi gerektirmez; sayfa nesneleri tek bir dosyada yeniden düzenlenir. Bu, tarayıcının kendi gücüyle yapılabilecek bir iştir. Sunucu gerektirmediği için de sayılacak bir işlem yoktur: günlük hak, saatlik sınır ya da üyelik gerekmez. Word'e çevirme gibi işler ise gerçekten hesaplama gerektirdiği için sunucuda çalışır; aradaki fark burada."},
         {"t": "h2", "x": "Farklı boyut ve yöndeki sayfalar"},
         {"t": "p", "x": "Birleştirilen dosyalar farklı sayfa ölçülerinde olabilir; A4 bir sözleşmeye yatay bir tablo eklerseniz belge karışık ölçülerde olur. Bu bir hata değildir, ekranda sorun çıkarmaz; ama baskıya gidecekse yazıcı her sayfayı ayrı ölçekleyebilir. Baskı önemliyse, birleştirmeden önce sayfaları aynı yöne getirmek daha derli toplu bir çıktı verir."},
       ],

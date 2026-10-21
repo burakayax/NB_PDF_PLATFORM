@@ -131,7 +131,7 @@ export const PLANS: PlanDefinition[] = [
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
-      "Ücretsiz'deki her şey",
+      "Ücretsiz'deki her şey + PDF şifreleme, filigran, sayfa numarası, görselleri çıkarma",
       "✨ Aylık 5 yapay zekâ işlemi (özetle, veri çıkar…); Sözleşme Denetçisi ek krediyle",
       "Günde 25, ayda en fazla 250 sunucu işlemi (dönüştür/sıkıştır)",
       "Dosya boyutu ≤ 100 MB",
@@ -139,7 +139,7 @@ export const PLANS: PlanDefinition[] = [
       "E-posta destek",
     ],
     featuresEn: [
-      "Everything in Free",
+      "Everything in Free + PDF encryption, watermark, page numbers, extract images",
       "✨ 5 AI operations/month (summarize, extract…); Contract Auditor with extra credits",
       "25 server operations a day (250 a month): convert/compress",
       "Files up to 100 MB",
@@ -170,7 +170,7 @@ export const PLANS: PlanDefinition[] = [
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
-      "Ücretsiz'deki her şey",
+      "Starter'daki her şey + Excel/PowerPoint/HTML dönüşümleri ve gelişmiş PDF araçları",
       "✨ Aylık 15 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
       "Günlük limit yok — ayda 600 sunucu işlemi",
       "Dosya boyutu ≤ 250 MB",
@@ -178,7 +178,7 @@ export const PLANS: PlanDefinition[] = [
       "E-posta destek",
     ],
     featuresEn: [
-      "Everything in Free",
+      "Everything in Starter + Excel/PowerPoint/HTML conversions and advanced PDF tools",
       "✨ 15 AI operations/month; Contract Auditor with extra credits",
       "No daily cap — 600 server operations a month",
       "Files up to 250 MB",

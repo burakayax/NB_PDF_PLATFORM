@@ -36,6 +36,10 @@ export const SITE_SETTING_KEYS = {
    * Ticari İletişim Yönetmeliği md.7 gereği zorunlu; eksikse gönderim durur.
    */
   EMAIL_SENDER_IDENTITY: "email.senderIdentity",
+  /** Hata otomasyonu ayarları (yönetim paneli): JSON, bkz. modules/autoheal/autoheal.config.ts */
+  AUTOHEAL_CONFIG: "autoheal.config",
+  /** Hata otomasyonu durumu (olay listesi, imleç, e-posta sayacı): JSON */
+  AUTOHEAL_STATE: "autoheal.state",
 } as const;
 
 export type SiteSettingKey = (typeof SITE_SETTING_KEYS)[keyof typeof SITE_SETTING_KEYS];

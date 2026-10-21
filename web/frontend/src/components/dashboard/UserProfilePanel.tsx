@@ -246,7 +246,10 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
   const planName = planNameFromUser(user.plan);
   const isPaidPlan = planName !== "FREE";
-  const effectiveExpiry = subscriptionExpiry ?? user.subscription_expiry;
+  const rawExpiry = subscriptionExpiry ?? user.subscription_expiry;
+  // Admin hediyesi planlar ~100 yıl sonrası tarih taşır; gerçek dönem sonu olmadığı için gösterme.
+  const effectiveExpiry =
+    rawExpiry && new Date(rawExpiry).getTime() > Date.now() + 50 * 365 * 24 * 60 * 60 * 1000 ? null : rawExpiry;
   const renewalDate = formatDate(effectiveExpiry, language);
   const startedAtDate = formatDate(subscriptionStartedAt, language);
 
@@ -484,7 +487,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                 <span>{lang === "tr" ? `Kullanılan: ${aiLimit - aiMonthly}/${aiLimit}` : `Used: ${aiLimit - aiMonthly}/${aiLimit}`}</span>
-                {aiQuota.resetAt && <span>{lang === "tr" ? "Yenilenme" : "Resets"}: {formatDate(aiQuota.resetAt, language)}</span>}
+                {aiQuota.resetAt && <span>{lang === "tr" ? "AI hakkı sıfırlanır" : "AI allowance resets"}:{formatDate(aiQuota.resetAt, language)}</span>}
               </div>
               <div className="mt-4 flex items-baseline justify-between gap-2 border-t border-white/[0.06] pt-3">
                 <span className="inline-flex items-center gap-1.5 text-sm text-slate-400">{lang === "tr" ? "Kredi (satın alınan, süresi dolmaz)" : "Credits (purchased, never expire)"}<AiCreditHelp language={language} quota={aiQuota} topic="credit" onTopUp={() => setTopUpOpen(true)} /></span>

@@ -1332,3 +1332,51 @@ export async function saveGuestCompressSettings(
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<GuestCompressAdminState>;
 }
+
+// ─── Hata izleme ────────────────────────────────────────────────────────────
+
+export type AutoHealSeverity = "low" | "medium" | "high" | "critical";
+
+export type AutoHealConfig = {
+  enabled: boolean;
+  emailMinSeverity: AutoHealSeverity;
+};
+
+export type AutoHealIncident = {
+  id: string;
+  message: string;
+  source: string | null;
+  url: string | null;
+  stack: string | null;
+  server: boolean;
+  severity: AutoHealSeverity;
+  count: number;
+  visitors: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  status: "open" | "ignored" | "resolved";
+  notifiedSeverity: AutoHealSeverity | null;
+  notifiedAt: string | null;
+};
+
+export type AutoHealAdminState = {
+  config: AutoHealConfig;
+  defaults: AutoHealConfig;
+  lastRunAt: string | null;
+  noise: Record<"extension" | "injected-script" | "bot" | "browser-noise" | "cross-origin-script", number>;
+  noiseSince: string | null;
+  incidents: AutoHealIncident[];
+};
+
+async function autoHealCall(accessToken: string, path: string, init?: RequestInit): Promise<AutoHealAdminState> {
+  const r = await adminFetch(accessToken, `/autoheal${path}`, init);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<AutoHealAdminState>;
+}
+
+export const fetchAutoHeal = (t: string) => autoHealCall(t, "");
+export const saveAutoHeal = (t: string, patch: unknown) =>
+  autoHealCall(t, "", { method: "PUT", body: JSON.stringify(patch) });
+export const setAutoHealIncidentStatus = (t: string, id: string, status: AutoHealIncident["status"]) =>
+  autoHealCall(t, `/incidents/${encodeURIComponent(id)}/status`, { method: "POST", body: JSON.stringify({ status }) });
+export const runAutoHealNow = (t: string) => autoHealCall(t, "/run", { method: "POST", body: "{}" });

@@ -15,6 +15,7 @@ import { TOOL_SLUGS } from "./seo/seoContent.mjs";
 import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/usePreferredLanguage";
 import { getSaasApiBase } from "./api/saasBase";
+import { isKnownAppPath } from "./lib/appNavigation";
 import "./styles/app.css";
 
 // Eski e-postalardaki doğrulama bağlantısı SPA'nın kendi alanına (/api/auth/verify-email) düşüyordu
@@ -128,11 +129,12 @@ if (googleKayitSayfasi) {
       </GlobalErrorBoundary>
     </React.StrictMode>,
   );
-} else if (taninmayanAracAdresiMi()) {
-  const dil = document.documentElement.lang === "en" ? "en" : "tr";
+} else if (taninmayanAracAdresiMi() || !isKnownAppPath(window.location.pathname)) {
+  const dil = isEnglishPath(window.location.pathname) || document.documentElement.lang === "en" ? "en" : "tr";
   kok.render(
     <React.StrictMode>
       <NotFoundPage
+        kind={taninmayanAracAdresiMi() ? "tool" : "page"}
         language={dil}
         onGoHome={() => {
           window.location.href = "/";

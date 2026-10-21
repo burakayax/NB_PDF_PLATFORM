@@ -13,11 +13,15 @@ import type { Language } from "../../i18n/landing";
 export function NotFoundPage({
   language,
   onGoHome,
+  kind = "tool",
 }: {
   language: Language;
   onGoHome: () => void;
+  /** "tool": bulunamayan araç adresi; "page": bilinmeyen herhangi bir adres. */
+  kind?: "tool" | "page";
 }) {
   const tr = language === "tr";
+  const page = kind === "page";
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-slate-950 px-6 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-800/60 text-slate-300 ring-1 ring-white/10">
@@ -25,13 +29,19 @@ export function NotFoundPage({
       </div>
 
       <h1 className="mt-6 text-2xl font-bold text-white sm:text-3xl">
-        {tr ? "Böyle bir araç bulunamadı" : "This tool doesn’t exist"}
+        {page
+          ? tr ? "Sayfa bulunamadı" : "Page not found"
+          : tr ? "Böyle bir araç bulunamadı" : "This tool doesn’t exist"}
       </h1>
 
       <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-        {tr
-          ? "Adres yanlış yazılmış ya da bu araç artık başka bir adreste olabilir. Ana sayfadan tüm araçlara ulaşabilirsin."
-          : "The address may be mistyped, or this tool may have moved. You can reach every tool from the home page."}
+        {page
+          ? tr
+            ? "Adres yanlış yazılmış ya da bu sayfa taşınmış olabilir. Ana sayfadan tüm araçlara ulaşabilirsin."
+            : "The address may be mistyped, or this page may have moved. You can reach every tool from the home page."
+          : tr
+            ? "Adres yanlış yazılmış ya da bu araç artık başka bir adreste olabilir. Ana sayfadan tüm araçlara ulaşabilirsin."
+            : "The address may be mistyped, or this tool may have moved. You can reach every tool from the home page."}
       </p>
 
       <button
