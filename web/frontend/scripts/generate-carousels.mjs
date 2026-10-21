@@ -34,7 +34,7 @@ import { blogLayoutMap, fitHook, renderBlogCover } from "./lib/blog-cover.mjs";
 const W = 1080;
 const H = 1350;
 const M = 84; // kenar boşluğu
-const DESIGN_VERSION = 8;
+const DESIGN_VERSION = 11;
 /**
  * Hangi dillerde carousel üretilir? Otomasyon yalnızca besleme dilinde
  * (PRIMARY_FEED_LANG = "tr") paylaşıyor; İngilizce slaytlar kullanılmayacak, boşuna

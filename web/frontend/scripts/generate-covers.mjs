@@ -52,7 +52,7 @@ const FORMATS = {
 const BASE_W = 1200;
 
 /** Tasarım değişince bu numarayı artır → tüm kapaklar yeniden üretilir. */
-const DESIGN_VERSION = 6;
+const DESIGN_VERSION = 10;
 
 // ─── Renkler ──────────────────────────────────────────────────────────────────
 

@@ -251,11 +251,46 @@ export const HEROES = {
     ${star(200, 110, 44, "#fbbf24")}${star(104, 168, 22, "#fde68a")}${star(298, 188, 22, "#fde68a")}`,
 };
 
+
+/** Meslek CV'leri: aynı CV kâğıdı, ama sağ altta mesleğe özgü rozet (hepsi aynı görünmesin). Rozet merkezi (276, 268). */
+const E = (inner) => `<g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" transform="translate(276 268)">${inner}</g>`;
+const EMBLEMS = {
+  sales: E(`<path d="M-44 36V4M-14 36V-14M16 36V-4M46 36V-34"/><path d="M-44 -6l32-24 26 12 38-30"/><path d="M28 -66h24v24"/>`),
+  accounting: E(`<rect x="-36" y="-46" width="72" height="92" rx="10"/><rect x="-22" y="-32" width="44" height="18" rx="4"/><path d="M-20 4h.1M0 4h.1M20 4h.1M-20 24h.1M0 24h.1M20 24h.1"/>`),
+  software: E(`<path d="M-20 -30l-30 30 30 30"/><path d="M20 -30l30 30-30 30"/><path d="M8 -42l-16 84"/>`),
+  teacher: E(`<path d="M0 -44L-60 -14 0 16 60 -14z"/><path d="M-36 -2v30c0 10 72 10 72 0V-2"/><path d="M60 -14v38"/><circle cx="60" cy="30" r="5" fill="#fff"/>`),
+  health: E(`<path d="M-14 -50h28v36h36v28H14v36h-28V14h-36v-28h36z"/>`),
+  support: E(`<path d="M-48 8v-14a48 48 0 0 1 96 0v14"/><rect x="-58" y="2" width="22" height="40" rx="10"/><rect x="36" y="2" width="22" height="40" rx="10"/><path d="M46 42q-4 16-30 18"/>`),
+  hr: E(`<circle cx="-22" cy="-24" r="16"/><path d="M-54 40a32 32 0 0 1 64 0"/><circle cx="30" cy="-18" r="13"/><path d="M12 30a26 26 0 0 1 48 8"/>`),
+  marketing: E(`<circle r="52"/><circle r="30"/><circle r="8" fill="#fff"/><path d="M0 0l40-40"/>`),
+  engineer: E(`<circle r="22"/><path d="M0 -58v16M0 42v16M-58 0h16M42 0h16M-41 -41l11 11M30 30l11 11M41 -41l-11 11M-30 30l-11 11"/><circle r="40"/>`),
+  hospitality: E(`<path d="M-56 24h112"/><path d="M-46 24a46 46 0 0 1 92 0"/><path d="M0 -30v-12"/><circle cy="-48" r="6"/><path d="M-56 44h112"/>`),
+  logistics: E(`<path d="M-50 -22l50-26 50 26v50l-50 26-50-26z"/><path d="M-50 -22l50 26 50-26M0 4v50"/><path d="M-26 -35l50 26"/>`),
+  manager: E(`<rect x="-20" y="-54" width="40" height="28" rx="6"/><path d="M0 -26v14M-40 -12h80M-40 -12v16M40 -12v16"/><rect x="-60" y="4" width="40" height="28" rx="6"/><rect x="20" y="4" width="40" height="28" rx="6"/>`),
+  design: E(`<path d="M-8 -54l40 40-52 64-34 8 8-34z"/><circle cx="-6" cy="14" r="7"/><path d="M-22 -22l18 18"/>`),
+  admin: E(`<rect x="-44" y="-44" width="88" height="100" rx="10"/><rect x="-18" y="-56" width="36" height="22" rx="6"/><path d="M-26 -6h52M-26 16h52M-26 36h30"/>`),
+};
+for (const [id, emblem] of Object.entries(EMBLEMS)) {
+  HEROES[`cv-${id}`] = (pal) => `
+    ${pg(150, 36, 210, 290, { rot: 7, fill: pal.t })}
+    ${pg(70, 30, 220, 310, { rot: -4 })}
+    <g transform="rotate(-4 180 185)"><rect x="70" y="30" width="220" height="82" rx="18" fill="${pal.a}"/><rect x="70" y="80" width="220" height="32" fill="${pal.a}"/>
+    <circle cx="116" cy="71" r="22" fill="#fff"/>${bar(150, 56, 100, "#fff", 12)}${bar(150, 78, 70, pal.t, 10)}
+    ${lines(94, 140, [150, 120, 150, 100], { gap: 22 })}${bar(94, 240, 90, pal.m, 12)}${lines(94, 270, [140, 110], { gap: 22 })}</g>
+    <g filter="url(#shadow)"><circle cx="276" cy="268" r="92" fill="${pal.d}"/></g><circle cx="276" cy="268" r="80" fill="none" stroke="${pal.m}" stroke-width="3" stroke-opacity="0.7"/>
+    ${emblem}`;
+}
+
 /** Konu kuralları: ilk eşleşen kazanır. Anahtar: slug ya da araç adı. */
 const RULES = [
   [/biyometrik|vesikalik|profil-fotograf|cv-fotografi|fotograf-boyutu|osym|fotograf-studyosu/, "photo"],
   [/cv-on-yazi|cv-ozgecmis-word|word-pdf|pdf-word|uyap-karari-word|pdf-metin-duzenleme/, "word"],
   [/ats-uyumlu|cv-is-ilanina|kontrol-listesi/, "checklist"],
+  [/satis-danismani-cv/, "cv-sales"], [/muhasebeci-cv/, "cv-accounting"], [/yazilim-gelistirici-cv/, "cv-software"],
+  [/ogretmen-cv/, "cv-teacher"], [/hemsire-cv/, "cv-health"], [/musteri-temsilcisi-cv/, "cv-support"],
+  [/insan-kaynaklari-uzmani-cv/, "cv-hr"], [/dijital-pazarlama-uzmani-cv/, "cv-marketing"], [/muhendis-cv/, "cv-engineer"],
+  [/garson-otel-restoran-cv/, "cv-hospitality"], [/depo-lojistik-cv/, "cv-logistics"], [/yonetici-cv/, "cv-manager"],
+  [/grafik-tasarimci-cv/, "cv-design"], [/ofis-asistani-cv/, "cv-admin"],
   [/(^|-)cv(-|$)/, "cv"],
   [/udf/, "udf"],
   [/yabanci-dildeki|baska-dile|ceviri|translate/, "translate"],
