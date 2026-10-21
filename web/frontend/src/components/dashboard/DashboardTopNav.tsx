@@ -164,6 +164,8 @@ type DashboardTopNavProps = {
   onRetryBalance?: () => void;
   /** Günlük hak havuzu (sunucuda işlenen araçların ortak sayacı) — limit yoksa rozet çizilmez. */
   dailyPool?: DailyPool | null;
+  /** Aylık sunucu işlem sayacı — günlük sınırı olmayan planlarda rozet bunu gösterir. */
+  monthlyPool?: { used: number; limit: number | null } | null;
   hasActiveSubscription?: boolean;
   /** Limitsiz Pro (active PRO subscription) — infinity UI, hide upgrade, special copy. */
   limitsizProActive?: boolean;
@@ -191,6 +193,7 @@ export function DashboardTopNav({
   creditBalanceFailed,
   onRetryBalance,
   dailyPool,
+  monthlyPool,
   hasActiveSubscription,
   limitsizProActive,
   onLogoClick,
@@ -336,11 +339,11 @@ export function DashboardTopNav({
         />
       </button>
 
-      <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2 md:gap-3 lg:gap-4">
+      <div className="ml-auto flex min-w-0 items-center justify-end gap-1 sm:gap-2 md:gap-3 lg:gap-4">
         {showCreditsCenter ? (
           <>
             {aiChips && aiQuota ? (
-              <span className="hidden sm:inline-flex items-center gap-2">
+              <span className="hidden lg:inline-flex items-center gap-2">
                 {(aiQuota.limit ?? 0) > 0 ? (
                   <span
                     className={`inline-flex ${chipBase} ${
@@ -349,7 +352,7 @@ export function DashboardTopNav({
                   >
                     <Sparkles className={`h-4 w-4 shrink-0 ${monthlyLeft(aiQuota) <= 0 ? "text-red-400" : "text-amber-300/90"}`} strokeWidth={2.25} aria-hidden />
                     <button type="button" onClick={() => onOpenCreditsPanel?.()} className="focus:outline-none">
-                      {tr ? "Aylık" : "Monthly"} {monthlyLeft(aiQuota)}/{aiQuota.limit}
+                      {tr ? "Aylık AI" : "Monthly AI"} {monthlyLeft(aiQuota)}/{aiQuota.limit}
                     </button>
                     <AiCreditHelp language={language} quota={aiQuota} topic="monthly" align="right" />
                   </span>
@@ -384,7 +387,7 @@ export function DashboardTopNav({
               <button
                 type="button"
                 onClick={() => (creditBalanceFailed ? onRetryBalance?.() : onOpenCreditsPanel?.())}
-                className={`hidden sm:inline-flex max-w-[min(100vw-12rem,14rem)] md:max-w-[min(100vw-14rem,18rem)] lg:max-w-[22rem] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition focus:outline-none focus-visible:ring-2 ${
+                className={`hidden lg:inline-flex max-w-[min(100vw-12rem,14rem)] md:max-w-[min(100vw-14rem,18rem)] lg:max-w-[22rem] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition focus:outline-none focus-visible:ring-2 ${
                   isLimitExhausted
                     ? "border border-red-500/50 bg-red-950/80 text-red-200 hover:bg-red-900/80 focus-visible:ring-red-500/35"
                     : "border border-white/[0.06] bg-slate-800/95 text-slate-100 hover:bg-slate-700/95 focus-visible:ring-cyan-500/35"
@@ -403,7 +406,7 @@ export function DashboardTopNav({
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </button>
             ) : (
-              <span className={`hidden sm:inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-[13px] font-semibold tabular-nums ring-1 ring-black/20 sm:max-w-[22rem] ${
+              <span className={`hidden lg:inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-[13px] font-semibold tabular-nums ring-1 ring-black/20 sm:max-w-[22rem] ${
                 isLimitExhausted
                   ? "border border-red-500/50 bg-red-950/80 text-red-200"
                   : "border border-white/[0.06] bg-slate-800/95 text-slate-100"
@@ -417,7 +420,7 @@ export function DashboardTopNav({
               </span>
             )}
             {hasAiAccess && aiQuota && !aiChips ? (
-              <span className="hidden sm:inline-flex">
+              <span className="hidden lg:inline-flex">
                 <AiCreditHelp language={language} quota={aiQuota} onTopUp={() => setTopUpOpen(true)} align="right" />
               </span>
             ) : null}
@@ -427,7 +430,7 @@ export function DashboardTopNav({
                 onClick={() => setTopUpOpen(true)}
                 title={tr ? "Ek AI kredisi al" : "Buy extra AI credits"}
                 aria-label={tr ? "Ek AI kredisi al" : "Buy extra AI credits"}
-                className="nb-transition hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full border border-fuchsia-400/45 bg-gradient-to-r from-fuchsia-500/25 to-indigo-500/25 px-2.5 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-fuchsia-50 shadow-[0_0_22px_-8px_rgba(217,70,239,0.55)] hover:border-fuchsia-300/60 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/45"
+                className="nb-transition hidden lg:inline-flex shrink-0 items-center gap-1 rounded-full border border-fuchsia-400/45 bg-gradient-to-r from-fuchsia-500/25 to-indigo-500/25 px-2.5 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-fuchsia-50 shadow-[0_0_22px_-8px_rgba(217,70,239,0.55)] hover:border-fuchsia-300/60 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/45"
               >
                 <Zap className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
                 {tr ? "Ek AI" : "Add AI"}
@@ -438,20 +441,21 @@ export function DashboardTopNav({
                 type="button"
                 data-tour="plan"
                 onClick={onUpgradeClick}
-                className="nb-transition inline-flex shrink-0 items-center gap-1 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 min-h-[40px] px-3 py-0.5 sm:min-h-0 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[11px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
+                aria-label={W.navbarUpgrade}
+                className="nb-transition inline-flex shrink-0 items-center gap-1 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 min-h-[40px] px-2.5 sm:px-3 py-0.5 sm:min-h-0 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[11px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
               >
                 <Sparkles
                   className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5"
                   aria-hidden
                 />
-                {W.navbarUpgrade}
+                <span className="hidden sm:inline">{W.navbarUpgrade}</span>
               </button>
             ) : null}
           </>
         ) : null}
 
         {!isTeamMember && user.role !== "ADMIN" ? (
-          <DailyPoolChip language={language} daily={dailyPool} onUpgrade={upgradeVisible ? onUpgradeClick : undefined} />
+          <DailyPoolChip language={language} daily={dailyPool} monthly={monthlyPool} onUpgrade={upgradeVisible ? onUpgradeClick : undefined} />
         ) : null}
 
         <HeaderInstallButton tr={tr} />
@@ -480,7 +484,7 @@ export function DashboardTopNav({
           onLogout={onLogout}
           creditsLabel={
             showCreditsCenter && showAiBalance && aiQuota && !aiQuota.unlimited
-              ? `${tr ? "Kredi" : "Credits"}: ${aiCreditBalance(aiQuota)}`
+              ? `${(aiQuota.limit ?? 0) > 0 ? `${tr ? "Aylık AI" : "Monthly AI"}: ${monthlyLeft(aiQuota)}/${aiQuota.limit} · ` : ""}${tr ? "Kredi" : "Credits"}: ${aiCreditBalance(aiQuota)}`
               : undefined
           }
           onTopUp={() => setTopUpOpen(true)}

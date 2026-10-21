@@ -21,10 +21,13 @@ export type DailyPool = { used: number; limit: number | null; resetAt?: string }
 export function DailyPoolChip({
   language,
   daily,
+  monthly,
   onUpgrade,
 }: {
   language: Language;
   daily?: DailyPool | null;
+  /** Günlük sınırı olmayan planlarda (Plus/Pro) rozet aylık sunucu işlem hakkını gösterir. */
+  monthly?: { used: number; limit: number | null } | null;
   /** Verilirse popover'da "Pro'ya geç" düğmesi çıkar (ödeme/yükseltme ekranını açar). */
   onUpgrade?: () => void;
 }) {
@@ -48,10 +51,13 @@ export function DailyPoolChip({
     };
   }, [open]);
 
-  if (!daily || daily.limit === null || daily.limit <= 0) return null;
+  const hasDaily = !!daily && daily.limit !== null && daily.limit > 0;
+  const monthlyMode = !hasDaily && !!monthly && monthly.limit !== null && monthly.limit > 0;
+  if (!hasDaily && !monthlyMode) return null;
 
-  const limit = daily.limit;
-  const left = Math.max(0, limit - daily.used);
+  const src = monthlyMode ? monthly! : daily!;
+  const limit = src.limit as number;
+  const left = Math.max(0, limit - src.used);
   const ratio = Math.min(1, left / limit);
   const tone =
     left === 0
@@ -63,7 +69,7 @@ export function DailyPoolChip({
 
   const pro = PLANS.find((p) => p.id === "PRO");
   const proMonthly = pro?.monthlyOpsLimit ?? null;
-  const resetText = daily.resetAt
+  const resetText = !monthlyMode && daily?.resetAt
     ? new Date(daily.resetAt).toLocaleTimeString(tr ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })
     : null;
 
@@ -74,15 +80,21 @@ export function DailyPoolChip({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label={
-          tr
-            ? `Bugünkü işlem hakkı: ${left} / ${limit} kaldı`
-            : `Today's operations: ${left} of ${limit} left`
+          monthlyMode
+            ? tr
+              ? `Bu ayki sunucu işlem hakkı: ${left} / ${limit} kaldı`
+              : `Server operations this month: ${left} of ${limit} left`
+            : tr
+              ? `Bugünkü işlem hakkı: ${left} / ${limit} kaldı`
+              : `Today's operations: ${left} of ${limit} left`
         }
         className={`nb-transition inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-2 text-[12px] font-bold tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 sm:px-3 sm:text-[13px] ${tone}`}
       >
         <Gauge className="hidden h-3.5 w-3.5 shrink-0 sm:block" aria-hidden />
         <span>
-          <span className="hidden md:inline">{tr ? "Bugün " : "Today "}</span>
+          <span className="hidden md:inline">
+            {monthlyMode ? (tr ? "Bu ay " : "This month ") : tr ? "Bugün " : "Today "}
+          </span>
           {left}/{limit}
           <span>{tr ? " hak" : " left"}</span>
         </span>
@@ -91,10 +103,12 @@ export function DailyPoolChip({
       {open && (
         <div
           role="dialog"
-          aria-label={tr ? "Günlük hak havuzu" : "Daily allowance"}
+          aria-label={monthlyMode ? (tr ? "Aylık hak havuzu" : "Monthly allowance") : tr ? "Günlük hak havuzu" : "Daily allowance"}
           className="fixed inset-x-3 top-16 z-[70] rounded-2xl border border-white/[0.12] bg-nb-bg-elevated/98 p-4 text-left shadow-[0_18px_44px_-10px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-80"
         >
-          <p className="text-[13px] font-bold text-white">{tr ? "Günlük işlem hakkın" : "Your daily allowance"}</p>
+          <p className="text-[13px] font-bold text-white">
+            {monthlyMode ? (tr ? "Aylık sunucu işlem hakkın" : "Your monthly server allowance") : tr ? "Günlük işlem hakkın" : "Your daily allowance"}
+          </p>
           <div className="mt-2 flex items-center gap-3">
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
               <div className={`h-full rounded-full ${bar}`} style={{ width: `${Math.round(ratio * 100)}%` }} />
@@ -115,11 +129,16 @@ export function DailyPoolChip({
                 : "Tools that run on your device (merge, split, rotate, delete, reorder, image→PDF) never use your allowance."}
             </li>
             <li className="text-slate-400">
-              {tr
-                ? `Hakkın gece yarısı yenilenir${resetText ? ` (${resetText})` : ""}.`
-                : `Your allowance renews at midnight${resetText ? ` (${resetText})` : ""}.`}
+              {monthlyMode
+                ? tr
+                  ? "Günlük sınırın yok; hakkın her ayın başında yenilenir."
+                  : "No daily cap; your allowance renews at the start of each month."
+                : tr
+                  ? `Hakkın gece yarısı yenilenir${resetText ? ` (${resetText})` : ""}.`
+                  : `Your allowance renews at midnight${resetText ? ` (${resetText})` : ""}.`}
             </li>
           </ul>
+          {!monthlyMode && (
           <div className="mt-3 rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/[0.08] p-3 text-[12px] leading-snug text-fuchsia-100">
             <p className="flex items-center gap-1.5 font-bold">
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
@@ -143,6 +162,7 @@ export function DailyPoolChip({
               </button>
             ) : null}
           </div>
+          )}
         </div>
       )}
     </div>
