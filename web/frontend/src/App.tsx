@@ -6871,7 +6871,6 @@ function App() {
           dailyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.daily ?? null) : null}
           monthlyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.monthly ?? null) : null}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
-          monthlyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.monthly ?? null) : null}
           limitsizProActive={limitsizProActive}
           onLogoClick={handleDashboardLogoClick}
           onProfile={handleNavProfile}
@@ -7426,12 +7425,11 @@ function App() {
                           used={userBalance.daily?.used ?? 0}
                           limit={userBalance.daily?.limit ?? null}
                           resetAt={userBalance.daily?.resetAt ?? null}
+                          monthly={userBalance.monthly ?? null}
                           onUpgrade={() => setContentPanel("pricing")}
                           className="mb-4"
                         />
                       )}
-                          monthly={userBalance.monthly ?? null}
-
                       <form
                         key={workspaceSlateNonce}
                         id="nb-workspace-tool-form"
