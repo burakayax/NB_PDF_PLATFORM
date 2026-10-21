@@ -78,7 +78,7 @@ export default {
     await wait(322);
 
     // Sıkıştır
-    const btn = pg.getByRole("button", { name: /SIKIŞTIRILMIŞ PDF İNDİR/i });
+    const btn = pg.getByRole("button", { name: /PDF.i Sıkıştır/ });
     await hlOff();
     const btnBoxFinal = await box(btn);
     const bp = await center(btn);
