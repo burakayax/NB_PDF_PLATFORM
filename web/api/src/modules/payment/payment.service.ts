@@ -79,7 +79,7 @@ async function resolvePlanLimits(plan: string) {
     const config = await prisma.planConfig.findUnique({ where: { plan: plan as never } });
     if (config) {
       return {
-        dailyOperationLimit: config.dailyOperationLimit ?? undefined,
+        dailyOperationLimit: config.dailyOperationLimit ?? null,
         monthlyOperationLimit: config.monthlyOperationLimit,
         fileSizeLimitMB: config.fileSizeLimitMB,
         batchLimit: config.batchLimit,
@@ -92,7 +92,7 @@ async function resolvePlanLimits(plan: string) {
   }
   const def = PLAN_ORG_LIMITS[plan] ?? PLAN_ORG_LIMITS["FREE"];
   return {
-    dailyOperationLimit: def.dailyOperationLimit ?? undefined,
+    dailyOperationLimit: def.dailyOperationLimit ?? null,
     monthlyOperationLimit: def.monthlyOperationLimit,
     fileSizeLimitMB: def.fileSizeLimitMB,
     batchLimit: def.batchLimit,

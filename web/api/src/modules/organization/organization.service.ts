@@ -244,7 +244,8 @@ export async function applyPlanLimitsToOrg(orgId: string, plan: Plan) {
     where: { id: orgId },
     data: {
       plan,
-      dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+      // null = günlük sınır yok; undefined yazılırsa eski plandan kalan limit silinmez.
+      dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
       monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
       fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
       batchLimit: planConfig.batchLimit,
@@ -285,7 +286,7 @@ export async function applyTemporaryPlan(orgId: string, tempPlan: Plan, days: nu
     where: { id: orgId },
     data: {
       plan: tempPlan,
-      dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+      dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
       monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
       fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
       batchLimit: planConfig.batchLimit,
@@ -322,7 +323,7 @@ export async function revertExpiredOverride(org: Organization): Promise<Organiza
       plan: revertPlan,
       ...(planConfig
         ? {
-            dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+            dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
             monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
             fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
             batchLimit: planConfig.batchLimit,
