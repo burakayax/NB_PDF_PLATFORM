@@ -1784,7 +1784,7 @@ async def tool_repair_pdf(
         pwd = password.strip() or None
         sp = str(saved)
         user_id = await saas_current_user_id(token)
-        out_n = format_derived_filename(file.filename or saved.name, "Onarilmis", "pdf")
+        out_n = format_derived_filename(file.filename or saved.name, "Onarılmış", "pdf")
         out_p = workdir / out_n
 
         def _run():

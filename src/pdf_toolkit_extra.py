@@ -825,7 +825,10 @@ def deskew_pdf(
         if duzeltilen == 0:
             if atlanan_metin == n:
                 raise Exception("Bu PDF taranmış görüntü değil (yazı katmanı var); eğri düzeltme gerekmiyor.")
-            raise Exception("Eğri taranmış sayfa bulunamadı; sayfalar zaten düz görünüyor.")
+            raise Exception(
+                f"Düzeltilecek eğri sayfa bulunamadı: {atlanan_duz} taranmış sayfa zaten düz, "
+                f"{atlanan_metin} sayfa yazı katmanlı. Dosyan olduğu gibi kullanılabilir."
+            )
         out.save(output_path, garbage=3, deflate=True, linear=False)
         return {
             "duzeltilen": duzeltilen, "atlanan_metinli": atlanan_metin,

@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 import { AlertTriangle, Infinity as InfinityIcon, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { trackFunnelEvent } from "../../lib/analytics";
+import { effectiveAllowance, FREE_OPS } from "../../lib/allowance";
 
 export type QuotaMeterProps = {
   language: Language;
@@ -23,6 +24,8 @@ export type QuotaMeterProps = {
   limit: number | null;
   /** Sınırın yenileneceği an (ISO). */
   resetAt?: string | null;
+  /** Aylık sunucu işlem hakkı; verilirse günlük ile aylıktan hangisi önce dolacaksa o gösterilir. */
+  monthly?: { used: number; limit: number | null } | null;
   /** Ücretli plana geçiş akışını açar. */
   onUpgrade?: () => void;
   /** Misafir kullanıcıya kayıt çağrısı gösterilir (ücretsiz plan daha geniş). */
@@ -45,15 +48,23 @@ function yenilenmeMetni(resetAt: string | null | undefined, tr: boolean): string
 
 export function QuotaMeter({
   language,
-  used,
-  limit,
-  resetAt,
+  used: dailyUsed,
+  limit: dailyLimit,
+  resetAt: dailyResetAt,
+  monthly,
   onUpgrade,
   isGuest,
   onRegister,
   className = "",
 }: QuotaMeterProps) {
   const tr = language === "tr";
+
+  // Günlük ve aylık sınırdan hangisi önce dolacaksa o geçerlidir (üst çubukla AYNI hesap).
+  const eff = effectiveAllowance({ used: dailyUsed, limit: dailyLimit, resetAt: dailyResetAt }, monthly);
+  const aylik = eff?.kind === "monthly";
+  const used = eff?.used ?? dailyUsed;
+  const limit = eff ? eff.limit : dailyLimit;
+  const resetAt = aylik ? null : dailyResetAt;
 
   const sinirli = limit !== null;
   const kalan = sinirli ? Math.max(0, limit - used) : 0;
@@ -111,11 +122,11 @@ export function QuotaMeter({
         <p className="text-[12px] font-semibold text-slate-200">
           {bitti
             ? tr
-              ? "Bugünkü hakkın doldu"
-              : "You've used today's operations"
+              ? aylik ? "Bu ayki hakkın doldu" : "Bugünkü hakkın doldu"
+              : aylik ? "You've used this month's operations" : "You've used today's operations"
             : tr
-              ? `Bugün ${used}/${limit} işlem kullanıldı`
-              : `${used} of ${limit} operations used today`}
+              ? `${aylik ? "Bu ay" : "Bugün"} ${kalan}/${limit} hak kaldı`
+              : `${kalan} of ${limit} operations left ${aylik ? "this month" : "today"}`}
         </p>
         {(azKaldi || bitti) && (
           <button
@@ -152,11 +163,11 @@ export function QuotaMeter({
         <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
           {bitti
             ? tr
-              ? `Hakkın ${yenilenme ?? "gece yarısı yenilenir"}. Beklemek istemiyorsan ${
-                  isGuest ? "ücretsiz üyelik günde 5 işlem verir" : "Pro'da işlem sınırı yoktur"
+              ? `Hakkın ${yenilenme ?? (aylik ? "ay başında yenilenir" : "gece yarısı yenilenir")}. Beklemek istemiyorsan ${
+                  isGuest ? `ücretsiz üyelik günde ${FREE_OPS.daily} işlem verir` : "Pro'da günlük sınır yoktur"
                 }.`
-              : `Your quota ${yenilenme ?? "renews at midnight"}. If you'd rather not wait, ${
-                  isGuest ? "a free account gives you 5 a day" : "Pro removes the limit entirely"
+              : `Your quota ${yenilenme ?? (aylik ? "renews at the start of the month" : "renews at midnight")}. If you'd rather not wait, ${
+                  isGuest ? `a free account gives you ${FREE_OPS.daily} a day` : "Pro removes the daily limit"
                 }.`
             : tr
               ? `Son ${kalan} hakkın kaldı${yenilenme ? ` · ${yenilenme}` : ""}.`
@@ -213,8 +224,8 @@ export function QuotaWall({
           <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
             {isGuest
               ? tr
-                ? "Ücretsiz üyelik günde 5 işlem veriyor ve taramalarını hesabında saklıyor — kart bilgisi istenmez, 30 saniye sürer."
-                : "A free account gives you 5 operations a day and keeps your scans in your account — no card, 30 seconds."
+                ? `Ücretsiz üyelik günde ${FREE_OPS.daily} işlem (ayda ${FREE_OPS.monthly}) veriyor ve taramalarını hesabında saklıyor — kart bilgisi istenmez, 30 saniye sürer.`
+                : `A free account gives you ${FREE_OPS.daily} operations a day (${FREE_OPS.monthly} a month) and keeps your scans in your account — no card, 30 seconds.`
               : tr
                 ? "Pro'da günlük sınır yoktur: belgeleri arka arkaya işler, büyük dosyaları yükler ve toplu dönüştürme yaparsın."
                 : "Pro has no daily cap: process documents back to back, upload larger files and convert in batches."}

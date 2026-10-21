@@ -135,6 +135,32 @@ export const AI_MONTHLY_CREDITS: Record<CataloguePlanId, number> = {
   BUSINESS: 100,
 };
 
+/** Aylık sunucu işlem sınırı yok anlamına gelen büyük değer (DB'de null yerine bu tutulur). */
+export const UNLIMITED_MONTHLY_OPS = 999999;
+
+export type PlanLimits = {
+  /** Günlük sunucu işlem hakkı; null = günlük sınır yok. */
+  dailyOperationLimit: number | null;
+  /** Aylık sunucu işlem hakkı; UNLIMITED_MONTHLY_OPS = sınırsız. */
+  monthlyOperationLimit: number;
+  fileSizeLimitMB: number;
+  batchLimit: number;
+};
+
+/**
+ * Plan başına SAYISAL LİMİTLER — tek kaynak. Ödeme, organizasyon oluşturma, abonelik
+ * tanımları ve e-posta işleri buradan okur; ön yüzdeki `planConfig.ts` (üst çubuk, plan kartı,
+ * uyarılar) aynı sayıları taşımak zorundadır ve `plan-catalogue.test.ts` ayrışmayı yakalar.
+ * Yönetim panelindeki PlanConfig kaydı varsa çalışma anında o geçerli olur; bu değerler varsayılandır.
+ */
+export const PLAN_LIMITS: Record<CataloguePlanId, PlanLimits> = {
+  FREE: { dailyOperationLimit: 3, monthlyOperationLimit: 30, fileSizeLimitMB: 80, batchLimit: 0 },
+  STARTER: { dailyOperationLimit: 25, monthlyOperationLimit: 250, fileSizeLimitMB: 100, batchLimit: 2 },
+  PLUS: { dailyOperationLimit: null, monthlyOperationLimit: 600, fileSizeLimitMB: 250, batchLimit: 5 },
+  PRO: { dailyOperationLimit: null, monthlyOperationLimit: 1000, fileSizeLimitMB: 500, batchLimit: 25 },
+  BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: UNLIMITED_MONTHLY_OPS, fileSizeLimitMB: 999999, batchLimit: 999 },
+};
+
 /** Ölçülen en kötü durum: bir yapay zekâ hakkının bize maliyeti (USD). */
 export const AI_COST_PER_CREDIT_USD = 0.035;
 

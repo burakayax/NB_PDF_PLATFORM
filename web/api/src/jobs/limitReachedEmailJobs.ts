@@ -11,6 +11,7 @@ import {
 } from "../modules/email/sender-identity.service.js";
 import type { Locale } from "../lib/email-i18n.js";
 import { emailUtm, withUtm } from "../lib/utm.js";
+import { PLAN_LIMITS } from "../lib/plan-catalogue.js";
 
 /**
  * "Aylık limitine ulaştın" davranış-tetikli yükseltme e-postası.
@@ -25,7 +26,7 @@ import { emailUtm, withUtm } from "../lib/utm.js";
  * Dedup: takvim ayı başına bir kez (AdminAuditLog `email.limit_reached.{YYYY-MM}`).
  */
 
-const FREE_MONTHLY_LIMIT = 30; // planConfig FREE.monthlyOpsLimit
+const FREE_MONTHLY_LIMIT = PLAN_LIMITS.FREE.monthlyOperationLimit;
 
 function safeRun(name: string, fn: () => Promise<void>) {
   fn().catch((err) => {

@@ -8,6 +8,7 @@ record-usage) kaldırılmıştır.
 
 from __future__ import annotations
 
+import zipfile
 import asyncio
 import contextlib
 import logging
@@ -1311,7 +1312,20 @@ async def batch_process(
             output_paths.append((result_path, result_name))
 
         zip_name = f"toplu_{tool_type.replace('-', '_')}.zip"
-        zip_path = create_zip_archive(workdir / zip_name, [p for p, _ in output_paths])
+        # ZIP içindeki adlar temiz çıktı adı olsun ("0003_belge.pdf" gibi sıra öneki görünmesin);
+        # aynı ad iki kez çıkarsa " (2)" eklenir.
+        zip_path = workdir / zip_name
+        with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            kullanilan: set[str] = set()
+            for out_file, shown_name in output_paths:
+                arc = Path(shown_name).name or out_file.name
+                stem, ext = Path(arc).stem, Path(arc).suffix
+                sayac = 2
+                while arc.lower() in kullanilan:
+                    arc = f"{stem} ({sayac}){ext}"
+                    sayac += 1
+                kullanilan.add(arc.lower())
+                archive.write(out_file, arcname=arc)
 
         def _store_zip():
             return save_result_from_file(

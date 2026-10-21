@@ -9,6 +9,8 @@
 // neredeyse boş görüyordu. Artık tam metin de üretiliyor.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { toolProcessingTableLines } from "./toolProcessing.mjs";
+
 export const legalDocuments = {
   en: {
     terms: {
@@ -124,6 +126,14 @@ export const legalDocuments = {
           ],
         },
         {
+          title: "2a. Where is your file processed, tool by tool?",
+          paragraphs: [
+            "The table below shows, for every tool, whether your file is processed on your device or on our servers and how long anything is kept. For tools that run on our servers, the file you upload is deleted as soon as processing ends; the output file we produce is kept for at most 24 hours so you can download it, then deleted automatically. For tools that run on your device, your file never reaches our servers.",
+            ...toolProcessingTableLines("en"),
+            "For AI tools the file itself is not uploaded; text extracted on your device is sent to our server and our AI provider (Anthropic) only to produce your result, and is not stored. For server-side tools we keep non-content records such as the output's SHA-256 fingerprint and size (section 6).",
+          ],
+        },
+        {
           title: "3. Why we use personal data",
           paragraphs: [
             "To provide and secure the service: register and authenticate users, enforce plan limits, prevent fraud and abuse, and maintain infrastructure.",
@@ -177,7 +187,7 @@ export const legalDocuments = {
             "Error and diagnostic logs: 30 days.",
             "Comment text attached to tool ratings: 180 days. After that the comment is deleted; the star rating itself is kept because it forms the average.",
             "Commercial electronic message consent records: 3 years after the consent ceases to be valid, as required by Turkish regulations on commercial electronic messages.",
-            "Uploaded files: automatically deleted within 24 hours of processing completion. Two features keep documents until you delete them or your account is deleted: scans you choose to \"save to my account\" in Document Scanner (older scans are removed automatically beyond your plan's scan limit), and documents sent through Signature Requests together with their signed copies (the signing link itself is valid for 14 days).",
+            "Uploaded files: on server-side tools the file you upload is deleted as soon as processing ends; the output file we produce is kept for at most 24 hours so you can download it, then deleted automatically (see the table in section 2a). Two features keep documents until you delete them or your account is deleted: scans you choose to \"save to my account\" in Document Scanner (older scans are removed automatically beyond your plan's scan limit), and documents sent through Signature Requests together with their signed copies (the signing link itself is valid for 14 days).",
           ],
         },
         {
@@ -485,6 +495,14 @@ export const legalDocuments = {
           ],
         },
         {
+          title: "2a. Hangi araçta dosyanız nerede işlenir?",
+          paragraphs: [
+            "Aşağıdaki tablo her aracımız için dosyanızın cihazınızda mı yoksa sunucumuzda mı işlendiğini ve ne kadar süre tutulduğunu gösterir. Sunucuda işlenen araçlarda yüklediğiniz dosya işlem biter bitmez geçici alandan silinir; ürettiğimiz çıktı dosyası indirebilmeniz için en fazla 24 saat tutulur ve otomatik silinir. Cihazda çalışan araçlarda dosyanız sunucumuza hiç ulaşmaz.",
+            ...toolProcessingTableLines("tr"),
+            "Yapay zekâ araçlarında dosyanın kendisi yüklenmez; cihazınızda çıkarılan metin sonucu üretmek için sunucumuza ve yapay zekâ sağlayıcımıza (Anthropic) gönderilir, saklanmaz. Sunucuda işlenen araçlarda çıktı için SHA-256 parmak izi ve boyut gibi içerik taşımayan kayıtlar tutulur (6. bölüm).",
+          ],
+        },
+        {
           title: "3. Kişisel verileri kullanma amaçları",
           paragraphs: [
             "Hizmeti sunmak ve güvence altına almak: kullanıcı kaydı ve kimlik doğrulama, plan limitlerini uygulama, dolandırıcılık ve kötüye kullanımı önleme, altyapıyı işletme.",
@@ -539,7 +557,7 @@ export const legalDocuments = {
             "Hata ve tanı günlükleri: 30 gün.",
             "Araç puanlarındaki açıklama metinleri: 180 gün. Bu sürenin sonunda açıklama silinir; puanın kendisi (yıldız) ortalamayı oluşturduğu için kalır.",
             "Ticari elektronik ileti onay kayıtları: Ticari İletişim ve Ticari Elektronik İletiler Hakkında Yönetmelik gereği, onayın geçerliliği sona erdikten sonra 3 yıl.",
-            "Yüklenen dosyalar: İşlemin tamamlanmasının ardından 24 saat içinde otomatik olarak silinir. İki özellik bunun istisnasıdır ve belgeleri siz silene veya hesabınız silinene kadar saklar: Belge Tarayıcı'da «Hesabıma kaydet» ile sakladığınız taramalar (planınızın tarama sınırını aşan eski taramalar otomatik silinir) ve «İmza İste» ile gönderdiğiniz belgeler ile imzalı kopyaları (imza bağlantısı 14 gün geçerlidir).",
+            "Yüklenen dosyalar: Sunucuda işlenen araçlarda yüklediğiniz dosya işlem biter bitmez geçici alandan silinir; ürettiğimiz çıktı dosyası indirebilmeniz için en fazla 24 saat tutulur ve otomatik olarak silinir (araç bazında ayrıntı için 2a. bölümdeki tabloya bakın). İki özellik bunun istisnasıdır ve belgeleri siz silene veya hesabınız silinene kadar saklar: Belge Tarayıcı'da «Hesabıma kaydet» ile sakladığınız taramalar (planınızın tarama sınırını aşan eski taramalar otomatik silinir) ve «İmza İste» ile gönderdiğiniz belgeler ile imzalı kopyaları (imza bağlantısı 14 gün geçerlidir).",
           ],
         },
         {
@@ -639,7 +657,7 @@ export const legalDocuments = {
             "Hesap bilgileri: Hesabınız aktif olduğu süre boyunca ve hesap silme talebinin ardından en fazla 30 gün.",
             "Ödeme ve fatura kayıtları: Vergi mevzuatı gereği en az 5 yıl; ilgili mevzuat uyarınca daha uzun süreler uygulanabilir.",
             "Teknik günlükler (log): IP adresi ve tarayıcı bilgisi en fazla 90 gün; kimliksiz kayıt iskeleti 1 yıl; güvenlik ihlali şüphesi varsa ilgili soruşturma tamamlanana kadar.",
-            "Yüklenen belgeler: İşlemin tamamlanmasının ardından otomatik olarak 24 saat içinde silinir (Belge Tarayıcı'daki «Hesabıma kaydet» taramaları ile «İmza İste» belgeleri bu kuralın istisnasıdır; siz silene veya hesabınız silinene kadar saklanır).",
+            "Yüklenen belgeler: Yüklediğiniz dosya işlem biter bitmez silinir; çıktı dosyası en fazla 24 saat tutulur ve otomatik olarak silinir (Belge Tarayıcı'daki «Hesabıma kaydet» taramaları ile «İmza İste» belgeleri bu kuralın istisnasıdır; siz silene veya hesabınız silinene kadar saklanır).",
           ],
         },
         {

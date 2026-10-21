@@ -3785,6 +3785,8 @@ function App() {
    */
   const compressResultSubtitle = useMemo(() => {
     if (!resultReady || resultReady.toolId !== "compress") {
+    if (resultReady?.toolId === "deskew-pdf") return W.deskewResultNote;
+    if (resultReady?.toolId === "repair-pdf") return W.repairResultNote;
       return undefined;
     }
     const from = resultReady.sourceBytes ?? 0;
@@ -6867,6 +6869,7 @@ function App() {
           onRetryBalance={() => setBalanceRetryNonce((n) => n + 1)}
           dailyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.daily ?? null) : null}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
+          monthlyPool={user?.role !== "ADMIN" && !isTeamMember ? (userBalance?.monthly ?? null) : null}
           limitsizProActive={limitsizProActive}
           onLogoClick={handleDashboardLogoClick}
           onProfile={handleNavProfile}
@@ -7422,6 +7425,7 @@ function App() {
                           className="mb-4"
                         />
                       )}
+                          monthly={userBalance.monthly ?? null}
 
                       <form
                         key={workspaceSlateNonce}

@@ -20,7 +20,7 @@ describe("günlük hak göstergesi", () => {
 
   it("hak bolken sessiz kalır (yükseltme çağrısı yok)", () => {
     render(<QuotaMeter language="tr" used={0} limit={10} />);
-    expect(screen.getByText(/0\/10 işlem/)).toBeTruthy();
+    expect(screen.getByText(/10\/10 hak kaldı/)).toBeTruthy();
     expect(screen.queryByText(/Sınırsıza geç/)).toBeNull();
     expect(trackGAEvent).not.toHaveBeenCalled();
   });
@@ -44,6 +44,11 @@ describe("günlük hak göstergesi", () => {
     expect(screen.getByText(/Bugünkü hakkın doldu/)).toBeTruthy();
     expect(screen.getByText(/3 saat içinde yenilenir/)).toBeTruthy();
     expect(trackGAEvent).toHaveBeenCalledWith("quota_wall_hit", expect.any(Object));
+  });
+
+  it("aylık hak günlükten önce bitiyorsa aylık sayı gösterilir (üst çubukla aynı hesap)", () => {
+    render(<QuotaMeter language="tr" used={0} limit={3} monthly={{ used: 30, limit: 30 }} />);
+    expect(screen.getByText(/Bu ayki hakkın doldu/)).toBeTruthy();
   });
 
   it("sınırsız planda sayaç çubuğu gösterilmez", () => {

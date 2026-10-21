@@ -164,6 +164,8 @@ type DashboardTopNavProps = {
   onRetryBalance?: () => void;
   /** Günlük hak havuzu (sunucuda işlenen araçların ortak sayacı) — limit yoksa rozet çizilmez. */
   dailyPool?: DailyPool | null;
+  /** Aylık sunucu işlem sayacı — günlük sınırı olmayan planlarda rozet bunu gösterir. */
+  monthlyPool?: { used: number; limit: number | null } | null;
   hasActiveSubscription?: boolean;
   /** Limitsiz Pro (active PRO subscription) — infinity UI, hide upgrade, special copy. */
   limitsizProActive?: boolean;
@@ -191,6 +193,7 @@ export function DashboardTopNav({
   creditBalanceFailed,
   onRetryBalance,
   dailyPool,
+  monthlyPool,
   hasActiveSubscription,
   limitsizProActive,
   onLogoClick,
@@ -451,7 +454,7 @@ export function DashboardTopNav({
         ) : null}
 
         {!isTeamMember && user.role !== "ADMIN" ? (
-          <DailyPoolChip language={language} daily={dailyPool} onUpgrade={upgradeVisible ? onUpgradeClick : undefined} />
+          <DailyPoolChip language={language} daily={dailyPool} monthly={monthlyPool} onUpgrade={upgradeVisible ? onUpgradeClick : undefined} />
         ) : null}
 
         <HeaderInstallButton tr={tr} />

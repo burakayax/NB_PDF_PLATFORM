@@ -7,6 +7,7 @@ import { imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdf";
 import {
   imageFileToCanvas,
   ocrImagesToWords,
+  pdfAlreadyHasText,
   renderPdfToCanvases,
 } from "../../lib/ocr";
 import { canvasToJpegBlob } from "../../lib/documentScan";
@@ -88,6 +89,19 @@ export function SearchablePdfTool({
       return;
     }
     setError(null);
+    // Yalnız PDF verildiyse ve her sayfasında zaten yazı katmanı varsa OCR gereksizdir:
+    // sayfaları resme çevirmek kaliteyi ve dosya boyutunu bozar. Kullanıcıya nedenini söyle.
+    if (files.every((f) => f.type === "application/pdf")) {
+      const checks = await Promise.all(files.map((f) => pdfAlreadyHasText(f)));
+      if (checks.every(Boolean)) {
+        setError(
+          tr
+            ? "Bu PDF zaten aranabilir: tüm sayfalarında seçilebilir yazı katmanı var. OCR gerekmiyor, dosyayı olduğu gibi kullanabilirsin."
+            : "This PDF is already searchable: every page has a selectable text layer. No OCR is needed — you can use the file as it is.",
+        );
+        return;
+      }
+    }
     setOcrPct(0);
     try {
       // Kaynakları sayfa görüntülerine çevir: PDF → render, görsel → canvas.
