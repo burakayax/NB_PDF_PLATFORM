@@ -162,7 +162,7 @@ export function ToolUploadPanel({
         }}
         data-over={dragOver}
         className={`nb-dropzone group relative cursor-pointer overflow-hidden rounded-3xl text-center ${
-          compact ? "p-5" : "px-5 py-8 sm:p-12"
+          compact ? "p-5" : "nb-heartbeat px-5 py-8 sm:p-12"
         } ${disabled ? "pointer-events-none opacity-50" : ""}`}
       >
         <div className={`pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full opacity-40 blur-3xl ${tile}`} />
