@@ -17,6 +17,16 @@ export function isVideoUrl(url: string | null | undefined): boolean {
   return /\.mp4(\?|$)/i.test(url ?? "");
 }
 
+/**
+ * Araç videosunun markalı kapağı (sitenin statik dosyası). Video adı `<araç>-<ms>` ya da
+ * `<araç>-aciklama-<ms>`; araç kimliği oradan çıkar. Araç videosu değilse undefined.
+ */
+export function reelCoverOf(videoUrl: string | null | undefined): string | undefined {
+  const m = /\/tool-reels\/([^/?#]+)\.mp4/i.exec(videoUrl ?? "");
+  const tool = m ? decodeURIComponent(m[1]).replace(/(?:-aciklama)?-\d+$/, "") : "";
+  return tool ? `/reel-covers/${encodeURIComponent(tool)}.jpg` : undefined;
+}
+
 /** Kaydırmalı gönderi mi? (Instagram carousel en az 2 görsel ister.) */
 export function slidesOf(post: Pick<SocialPostRow, "carouselSlides">): string[] {
   return post.carouselSlides && post.carouselSlides.length >= 2 ? post.carouselSlides : [];
@@ -147,6 +157,7 @@ export function PostMediaPreview({
         <>
           <video
             src={`${post.imageUrl}#t=0.5`}
+            poster={reelCoverOf(post.imageUrl)}
             muted
             playsInline
             preload="metadata"

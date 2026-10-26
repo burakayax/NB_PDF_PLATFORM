@@ -3,7 +3,7 @@ import { ExternalLink, Eye, Layers, Loader2, Trash2 } from "lucide-react";
 import type { SocialAccountRow, SocialPlatformId, SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 import { PostFullPreviewModal } from "./PostFullPreviewModal";
-import { isVideoUrl, slidesOf } from "./PostMediaPreview";
+import { isVideoUrl, reelCoverOf, slidesOf } from "./PostMediaPreview";
 
 /**
  * Son paylaşımlar — HER AĞ İÇİN AYRI son 5 gönderi (Instagram'ın son 5'i, Facebook'un
@@ -26,7 +26,7 @@ function Thumb({ post }: { post: SocialPostRow }) {
   if (isVideoUrl(src)) {
     return (
       <span className="relative block h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-950">
-        <video src={`${src}#t=0.5`} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+        <video src={`${src}#t=0.5`} poster={reelCoverOf(src)} muted playsInline preload="metadata" className="h-full w-full object-cover" />
         <span className="absolute bottom-0 left-0 right-0 bg-fuchsia-600/90 text-center text-[8px] font-bold text-white">REELS</span>
       </span>
     );
