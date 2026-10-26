@@ -3785,9 +3785,9 @@ function App() {
    * biliniyorsa gösterilir.
    */
   const compressResultSubtitle = useMemo(() => {
-    if (!resultReady || resultReady.toolId !== "compress") {
     if (resultReady?.toolId === "deskew-pdf") return W.deskewResultNote;
     if (resultReady?.toolId === "repair-pdf") return W.repairResultNote;
+    if (!resultReady || resultReady.toolId !== "compress") {
       return undefined;
     }
     const from = resultReady.sourceBytes ?? 0;
@@ -5040,9 +5040,10 @@ function App() {
               : "Batch processing failed.",
         });
 
-        setBatchFiles([]);
-        setUploads([]);
-        void runGatedDownloadWithFilename(
+        // Dosyalar burada silinmez: sonuç ekranı hazır olana kadar çalışma alanı ve
+        // ilerleme çubuğu görünür kalır (aksi halde boş "yükle" ekranı yanıp söner).
+        // Başarıda applyWorkspaceCleanSlateAfterDownload zaten temizler.
+        await runGatedDownloadWithFilename(
           res.result_id,
           res.filename || "toplu_sonuc.zip",
           res.filename || "toplu_sonuc.zip",
@@ -5097,10 +5098,10 @@ function App() {
               },
             );
 
-        resetForm(true);
-
+        // Form burada sıfırlanmaz: dosya çekilirken boş "yükle" ekranı görünmesin.
+        // Başarıda applyWorkspaceCleanSlateAfterDownload temizler.
         void refreshSubscriptionState();
-        void runGatedDownloadWithFilename(
+        await runGatedDownloadWithFilename(
           res.result_id,
           res.filename || selectedFeature.fallbackFilename,
           res.filename || selectedFeature.fallbackFilename,
