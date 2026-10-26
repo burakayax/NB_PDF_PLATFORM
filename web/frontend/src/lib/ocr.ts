@@ -1,11 +1,26 @@
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { createWorker } from "tesseract.js";
+import { prepareForOcr, type OcrPrepared } from "./ocrPrep";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const MAX_OCR_PAGES = 30; // OCR yavaş — sayfa sınırı (maliyet/süre)
 const MAX_TEXT_CHARS = 180_000;
+
+/**
+ * Self-host dil verisi: tessdata_best (float LSTM). Ölçümde tessdata 4.0.0'a göre belirgin daha az hata
+ * (soluk taramada %1,8 → %0,8), indirme boyutu da küçük (tur 4,8 + eng 12,8 MB sıkıştırılmış).
+ * Klasör adı bilerek değişti: tarayıcıda IndexedDB'de önbelleklenmiş ESKİ model aynı adla kalıp
+ * yeni modelin yerine geçmesin.
+ */
+const TESS_LANG_PATH = "/tesseract/lang-best";
+/** Ön işleme görüntüyü ~300 DPI'a getirir; Tesseract'a bunu söyle (aksi hâlde DPI tahmin edip uyarı basar). */
+const TESS_PARAMS = { user_defined_dpi: "300" } as const;
+
+/** pdf.js ile sayfayı OCR için ~250 DPI'da çizer (en fazla ~12 MP) — 144 DPI'da küçük yazı okunmuyordu. */
+const OCR_RENDER_SCALE = 3.5;
+const OCR_MAX_PIXELS = 12_000_000;
 
 export type OcrProgress = { page: number; totalPages: number; ratio: number };
 
@@ -165,6 +180,22 @@ function extractWords(d: unknown): OcrWord[] {
   return res;
 }
 
+/** İşlenmiş görüntüdeki kutuyu kaynak görüntü pikselindeki (eksen hizalı) kutuya çevirir. */
+function unmapBox(b: { x0: number; y0: number; x1: number; y1: number }, prep: OcrPrepared) {
+  const pts = [prep.unmap(b.x0, b.y0), prep.unmap(b.x1, b.y0), prep.unmap(b.x0, b.y1), prep.unmap(b.x1, b.y1)];
+  return {
+    x0: Math.min(...pts.map((p) => p.x)),
+    y0: Math.min(...pts.map((p) => p.y)),
+    x1: Math.max(...pts.map((p) => p.x)),
+    y1: Math.max(...pts.map((p) => p.y)),
+  };
+}
+
+function unmapWords(words: OcrWord[], prep: OcrPrepared): OcrWord[] {
+  if (prep.scale === 1 && prep.unmap(10, 20).x === 10 && prep.unmap(10, 20).y === 20) return words;
+  return words.map((w) => ({ ...w, ...unmapBox(w, prep) }));
+}
+
 /** OCR satırı — Tesseract'ın KENDİ satır yapısı (kelime sırası + taban çizgisi + satır ölçüleri).
  * Koordinatlar kaynak görüntü pikselinde. */
 export type OcrLineWord = OcrWord & { by: number | null; /** Tesseract güveni (0-100); yoksa 100. */ conf: number };
@@ -214,6 +245,33 @@ function extractLines(d: unknown): OcrLine[] {
   return out;
 }
 
+function unmapLines(lines: OcrLine[], prep: OcrPrepared): OcrLine[] {
+  const k = prep.scale;
+  return lines.map((ln) => {
+    const mid = (a: number, b: number) => (a + b) / 2;
+    const words = ln.words.map((w) => {
+      const bx = unmapBox(w, prep);
+      const by = w.by == null ? null : prep.unmap(mid(w.x0, w.x1), w.by).y;
+      return { ...w, ...bx, by };
+    });
+    let baseline = ln.baseline;
+    if (baseline) {
+      const a = prep.unmap(baseline.x0, baseline.y0);
+      const b = prep.unmap(baseline.x1, baseline.y1);
+      baseline = { ...baseline, x0: a.x, y0: a.y, x1: b.x, y1: b.y };
+    }
+    return {
+      ...ln,
+      words,
+      bbox: unmapBox(ln.bbox, prep),
+      baseline,
+      rowHeight: ln.rowHeight / k,
+      ascenders: ln.ascenders / k,
+      descenders: ln.descenders / k,
+    };
+  });
+}
+
 /**
  * Görüntüleri CİHAZDA OCR'lar; her sayfa için Tesseract'ın satır yapısını döner (kelime sırası
  * satır içinde korunur — kendi gruplamamız inen harfli kelimeleri ayrı satıra düşürüyordu).
@@ -227,7 +285,7 @@ export async function ocrImagesToLines(
   const worker = await createWorker("tur+eng", 1, {
     workerPath: "/tesseract/worker.min.js",
     corePath: "/tesseract/core",
-    langPath: "/tesseract/lang",
+    langPath: TESS_LANG_PATH,
     logger: (m) => {
       if (m.status === "recognizing text" && typeof m.progress === "number") {
         const ratio = Math.min(1, (completed + m.progress) / Math.max(1, totalPages));
@@ -237,13 +295,15 @@ export async function ocrImagesToLines(
   });
   const out: OcrLine[][] = [];
   try {
+    await worker.setParameters(TESS_PARAMS);
     for (let i = 0; i < sources.length; i++) {
+      const prep = await prepareForOcr(sources[i]);
       const ret = (await worker.recognize(
-        sources[i] as Parameters<typeof worker.recognize>[0],
+        prep.canvas as Parameters<typeof worker.recognize>[0],
         {},
         { blocks: true },
       )) as { data: unknown };
-      out.push(extractLines(ret.data));
+      out.push(unmapLines(extractLines(ret.data), prep));
       completed = i + 1;
       onProgress?.({ page: completed, totalPages, ratio: completed / Math.max(1, totalPages) });
     }
@@ -267,7 +327,7 @@ export async function ocrImagesToWords(
   const worker = await createWorker("tur+eng", 1, {
     workerPath: "/tesseract/worker.min.js",
     corePath: "/tesseract/core",
-    langPath: "/tesseract/lang",
+    langPath: TESS_LANG_PATH,
     logger: (m) => {
       if (m.status === "recognizing text" && typeof m.progress === "number") {
         const ratio = Math.min(1, (completed + m.progress) / Math.max(1, totalPages));
@@ -277,14 +337,17 @@ export async function ocrImagesToWords(
   });
   const out: OcrWord[][] = [];
   try {
+    await worker.setParameters(TESS_PARAMS);
     for (let i = 0; i < sources.length; i++) {
+      // Ön işleme (300 DPI'a ölçekle, ışığı düzleştir, eğriliği düzelt) → sonuç kaynak piksele geri çevrilir.
+      const prep = await prepareForOcr(sources[i]);
       // blocks:true → kelime kutuları (bbox) dolar.
       const ret = (await worker.recognize(
-        sources[i] as Parameters<typeof worker.recognize>[0],
+        prep.canvas as Parameters<typeof worker.recognize>[0],
         {},
         { blocks: true },
       )) as { data: unknown };
-      out.push(extractWords(ret.data));
+      out.push(unmapWords(extractWords(ret.data), prep));
       completed = i + 1;
       onProgress?.({ page: completed, totalPages, ratio: completed / Math.max(1, totalPages) });
     }
@@ -314,7 +377,7 @@ export async function ocrPdfToText(
   const worker = await createWorker("tur+eng", 1, {
     workerPath: "/tesseract/worker.min.js",
     corePath: "/tesseract/core",
-    langPath: "/tesseract/lang",
+    langPath: TESS_LANG_PATH,
     // Sayfa-içi ilerlemeyi de yansıt → şerit akıcı ilerler (0'da takılı kalmaz).
     logger: (m) => {
       if (m.status === "recognizing text" && typeof m.progress === "number") {
@@ -326,18 +389,25 @@ export async function ocrPdfToText(
 
   let out = "";
   try {
+    await worker.setParameters(TESS_PARAMS);
     for (let i = 1; i <= totalPages; i++) {
       const page = await doc.getPage(i);
-      const viewport = page.getViewport({ scale: 2 });
+      const base = page.getViewport({ scale: 1 });
+      const viewport = page.getViewport({
+        scale: Math.min(OCR_RENDER_SCALE, Math.sqrt(OCR_MAX_PIXELS / Math.max(1, base.width * base.height))),
+      });
       const canvas = document.createElement("canvas");
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
       const ctx = canvas.getContext("2d");
       if (!ctx) continue;
       await page.render({ canvasContext: ctx, viewport }).promise;
+      const prep = await prepareForOcr(canvas);
       const {
         data: { text },
-      } = await worker.recognize(canvas);
+      } = await worker.recognize(prep.canvas);
+      prep.canvas.width = 0;
+      prep.canvas.height = 0;
       out += (pageMarkers ? `<<<SAYFA ${i}>>>\n` : "") + text + "\n\n";
       completedPages = i;
       onProgress?.({ page: i, totalPages, ratio: i / totalPages });
