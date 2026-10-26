@@ -266,6 +266,7 @@ import {
 } from "./lib/toolSubmissionCheck";
 import { readAccessToken } from "./lib/accessTokenStore";
 import { WorkspaceToolShell } from "./components/common/WorkspaceToolShell";
+import { ToolPageContext } from "./components/common/toolPageContext";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -7072,11 +7073,13 @@ function App() {
             ) : null}
 
             {contentPanel === "editor" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <Suspense fallback={<PageSkeleton />}>
-                  <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} belowHeader={<ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />} />
-                </Suspense>
-              </section>
+              <WorkspaceToolShell id="pdf-duzenle" language={language}>
+                <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                  </Suspense>
+                </ToolPageContext.Provider>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "signrequest" ? (
