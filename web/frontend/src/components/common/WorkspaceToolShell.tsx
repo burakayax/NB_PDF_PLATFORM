@@ -15,6 +15,7 @@ export function WorkspaceToolShell({
   id,
   language,
   wide = false,
+  full = false,
   children,
 }: {
   /** TOOLS kataloğundaki araç id'si (ör. "pdf-imzala") — başlık/açıklama buradan okunur. */
@@ -22,13 +23,15 @@ export function WorkspaceToolShell({
   language: Language;
   /** PDF Kesit Al gibi geniş çalışma alanı gereken araçlar için. */
   wide?: boolean;
+  /** Genişlik sınırı yok — PDF Birleştir gibi jenerik araç kartıyla aynı genişlik. */
+  full?: boolean;
   children: ReactNode;
 }) {
   const found = TOOLS.find((t) => t.id === id);
   const copy = found ? (language === "tr" ? found.tr : found.en) : null;
 
   return (
-    <section className={`mx-auto w-full ${wide ? "max-w-6xl" : "max-w-4xl"} py-2`}>
+    <section className={`mx-auto w-full ${full ? "" : wide ? "max-w-6xl" : "max-w-4xl"} py-2`}>
       <div className="workspace-card relative overflow-x-hidden">
         <div className="workspace-card__header">
           <div>
