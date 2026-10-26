@@ -4739,3 +4739,83 @@ html[data-auth-pending="1"] [data-auth-cta] {
     padding-inline: 6px;
   }
 }
+
+/* ── PDF Düzenle + ortak sonuç ekranı: dikkat çeken ama sakin animasyonlar ── */
+
+/* Yükleme alanı: kalp atışı ritmi (lub-dub) — yumuşak halka, içerik oynamaz. */
+@keyframes nb-heartbeat-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0), 0 0 0 0 rgba(34, 211, 238, 0); }
+  14% { box-shadow: 0 0 0 5px rgba(34, 211, 238, 0.30), 0 0 28px 2px rgba(34, 211, 238, 0.22); }
+  28% { box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.10), 0 0 10px 0 rgba(34, 211, 238, 0.08); }
+  42% { box-shadow: 0 0 0 7px rgba(34, 211, 238, 0.34), 0 0 36px 4px rgba(34, 211, 238, 0.26); }
+  70% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0), 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+.nb-heartbeat {
+  border-radius: 1.5rem;
+  animation: nb-heartbeat-ring 2.6s ease-in-out infinite;
+}
+.nb-heartbeat:hover,
+.nb-heartbeat:focus-within {
+  animation-play-state: paused;
+}
+
+/* OCR hazırlık ekranı: tarama çizgisi + akan ilerleme çubuğu. */
+@keyframes nb-scan-line {
+  0% { top: 6%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 92%; opacity: 0; }
+}
+.nb-scan-line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+  box-shadow: 0 0 14px 2px rgba(34, 211, 238, 0.7);
+  animation: nb-scan-line 2.2s ease-in-out infinite;
+}
+@keyframes nb-bar-flow {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
+.nb-bar-flow {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0.22) 75%, transparent 75%);
+  background-size: 40px 40px;
+  animation: nb-bar-flow 0.9s linear infinite;
+}
+
+/* Sonuç ekranı: "işe yaradı mı?" sorusuna nazik, tekrarlı dikkat çekici nabız. */
+@keyframes nb-rating-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); border-color: rgba(251, 191, 36, 0.28); }
+  50% { box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.18), 0 0 26px 2px rgba(251, 191, 36, 0.20); border-color: rgba(251, 191, 36, 0.6); }
+}
+.nb-rating-glow {
+  animation: nb-rating-glow 2s ease-in-out infinite;
+}
+@keyframes nb-star-wave {
+  0%, 60%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-4px) scale(1.18); }
+}
+.nb-star-wave > * {
+  animation: nb-star-wave 1.8s ease-in-out infinite;
+}
+.nb-star-wave > *:nth-child(2) { animation-delay: 0.12s; }
+.nb-star-wave > *:nth-child(3) { animation-delay: 0.24s; }
+.nb-star-wave > *:nth-child(4) { animation-delay: 0.36s; }
+.nb-star-wave > *:nth-child(5) { animation-delay: 0.48s; }
+.nb-rating-glow:hover .nb-star-wave > *,
+.nb-rating-glow:focus-within .nb-star-wave > * {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-heartbeat,
+  .nb-scan-line,
+  .nb-bar-flow,
+  .nb-rating-glow,
+  .nb-star-wave > * {
+    animation: none;
+  }
+}

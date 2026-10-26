@@ -67,6 +67,8 @@ export type PublicPlanCard = {
 export type PublicCardsConfig = {
   /** Başlangıç kartında listelenecek araçların feature key'leri. */
   starterTools: string[];
+  /** PDF Düzenle günlük hakları (panelden yönetilir). */
+  editorLimits?: { guest: number; free: number; starter: number };
   /** Plan başına iki-dilli kart metni (admin panelinden). Boşsa kod varsayılanı kullanılır. */
   planCards?: Record<string, PublicPlanCard>;
 };

@@ -13,6 +13,7 @@ import {
 } from "../api/admin";
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { GuestCompressSettings } from "./GuestCompressSettings";
+import { EditorLimitsSettings } from "./EditorLimitsSettings";
 import { AdminField, AdminImpactCard, AdminMutedBox, AdminSection, ConfirmModal, adminInputClass } from "./mosaic/adminPrimitives";
 
 const REVISION_SCOPE_OPTIONS = [
@@ -393,6 +394,9 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
 
       {/* Misafir PDF Sıkıştır hakkı + acil kapatma (ayar veritabanında; PDF servisi ~30 sn içinde alır). */}
       <GuestCompressSettings accessToken={accessToken} />
+
+      {/* PDF Düzenle günlük hakları (üyeliksiz / ücretsiz / Başlangıç; Plus ve üzeri sınırsız). */}
+      <EditorLimitsSettings accessToken={accessToken} />
 
       <AdminSection
         title="Sosyal medya hesapları"

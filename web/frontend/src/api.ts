@@ -114,7 +114,8 @@ function appendSaasAccessToken(formData: FormData, accessToken: string | null | 
 }
 
 export type PdfFontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald"
-  | "carlito" | "caladea" | "lsans" | "lserif" | "lmono" | "gelasio";
+  | "carlito" | "caladea" | "lsans" | "lserif" | "lmono" | "gelasio"
+  | "opensans" | "poppins" | "playfair" | "lora" | "ptserif" | "dancing" | "greatvibes" | "pacifico" | "anton";
 
 export type PdfTextEdit = {
   page: number;
@@ -143,6 +144,8 @@ export type PdfTextEdit = {
   bg?: string;
   /** Gerçek taban çizgisi (origin.y, PDF pt) — export'u orijinaliyle hizalar. */
   by?: number;
+  /** Öğe TAŞINDIYSA orijinal taban çizgisi (`by` yeni konumdur) — vektör yazıyı doğru şeritle silmek için. */
+  oby?: number;
   /** VEKTÖR yazı (OCR/görünmez katman değil): sunucu yalnız harfleri taban çizgisi şeridiyle
    * siler — dolgu yok, altındaki görsel/çizgi korunur, komşu satır silinmez. */
   vt?: boolean;
@@ -160,6 +163,13 @@ export type PdfTextEdit = {
   ocs?: number;
   /** Silinen öğe bir GÖRSEL (logo/amblem): sunucu boyamadan çizim komutunu kaldırır (zemin korunur). */
   img?: boolean;
+  /** `img` ile birlikte: öğe VEKTÖR çizimli amblem (piksel görsel değil) — çizim komutları kaldırılır. */
+  vec?: boolean;
+  /** Mevcut görselin xref'i + yeni kutusu → görsel silinip YENİ konuma aynen yerleştirilir (taşıma). */
+  xref?: number;
+  move?: [number, number, number, number];
+  /** Yalnız altı/üstü çizgi: yazı silinip yeniden yazılmaz (orijinal font/ölçü bozulmaz), sadece çizgi çekilir. */
+  deco?: boolean;
   /** Resim EKLEME op'u: base64 data URL. Doluysa bu op bir görsel yerleştirmedir
    * (altındaki içerik silinmez); bbox konum/boyut, rotate serbest açı (derece). */
   image?: string;
@@ -205,6 +215,10 @@ export type PdfElement = {
   ocs?: number;
   /** Görüntüdeki yazının (OCR/görünmez katman) GERÇEK mürekkep sınırı — silme/örtme bunu kapsar. */
   ink?: [number, number, number, number];
+  /** Görsel öğe: VEKTÖR çizimli amblem (taşınamaz; yalnız silinir). */
+  vec?: boolean;
+  /** Görsel öğe: PDF içindeki görsel nesne numarası (taşıma için). */
+  xref?: number;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
@@ -259,13 +273,18 @@ export class EditDailyLimitError extends Error {
 }
 
 /** PDF Düzenle — HAZIRLAMA adımı. Dosya SUNUCUYA yüklenir; sonuç sunucuda saklanır ve
- * `{ resultId, dl }` döner (bytes DÖNMEZ). Bu adım ücretsiz/limitsizdir; günlük limit
- * indirmede (aşağıdaki `downloadEditedPdf`) düşer. */
+ * `{ resultId, dl, quota }` döner (bytes DÖNMEZ). Günlük hak (misafir 1, ücretsiz/Başlangıç 2)
+ * BU adımda düşer; dolmuşsa `EditDailyLimitError` fırlatır. İndirme (`downloadEditedPdf`) hak düşmez. */
+/** Hazırlama yanıtındaki günlük hak durumu (hak bu adımda düşer). */
+export type EditQuota =
+  | { unlimited: true }
+  | { unlimited: false; used: number; limit: number; resetAt: string | null; guest: boolean };
+
 export async function editPdfTextPrepare(
   file: File,
   edits: PdfTextEdit[],
   accessToken?: string | null,
-): Promise<{ resultId: string; dl: string }> {
+): Promise<{ resultId: string; dl: string; quota: EditQuota }> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("edits", JSON.stringify(edits));
@@ -276,6 +295,15 @@ export async function editPdfTextPrepare(
     body: formData,
     headers: saasAuthHeaders(accessToken),
   });
+  if (response.status === 429) {
+    let used = 0, limit = 0, resetAt: string | null = null, guest = true;
+    try {
+      const j = await response.json();
+      used = Number(j.used ?? 0); limit = Number(j.limit ?? 0);
+      resetAt = j.resetAt ? String(j.resetAt) : null; guest = !!j.guest;
+    } catch { /* ignore */ }
+    throw new EditDailyLimitError(used, limit, resetAt, guest);
+  }
   if (!response.ok) {
     let msg = "Düzenleme başarısız oldu.";
     try {
@@ -287,7 +315,11 @@ export async function editPdfTextPrepare(
     throw new Error(msg);
   }
   const j = await response.json();
-  return { resultId: String(j.result_id), dl: String(j.dl) };
+  const q = j?.quota;
+  const quota: EditQuota = q && q.unlimited === false
+    ? { unlimited: false, used: Number(q.used ?? 0), limit: Number(q.limit ?? 0), resetAt: q.resetAt ? String(q.resetAt) : null, guest: !!q.guest }
+    : { unlimited: true };
+  return { resultId: String(j.result_id), dl: String(j.dl), quota };
 }
 
 /** Sunucu tarafı GERÇEK metin düzenleme (bytes döner) — AI çeviri gibi doğrudan blob
@@ -319,8 +351,7 @@ export async function editPdfText(
   return response.blob();
 }
 
-/** PDF Düzenle — İNDİRME adımı. Günlük limit BURADA düşer (misafir 1/gün, FREE 2/gün;
- * PRO/BUSINESS sınırsız). Limit dolarsa `EditDailyLimitError` fırlatır. */
+/** PDF Düzenle — İNDİRME adımı. Hak burada DÜŞMEZ (hazırlamada düştü); hazırlayan jetonuyla indirilir. */
 export async function downloadEditedPdf(
   resultId: string,
   dl: string,

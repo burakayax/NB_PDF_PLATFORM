@@ -1332,3 +1332,29 @@ export async function saveGuestCompressSettings(
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<GuestCompressAdminState>;
 }
+
+// ─── PDF Düzenle günlük hakları (yönetim paneli) ─────────────────────────────────────────────────
+// Plus ve üzeri sınırsızdır; burada yalnız sınırlı gruplar. 0 = o grup için düzenleme kapalı.
+
+export type EditorLimitsSettings = { guest: number; free: number; starter: number };
+
+export type EditorLimitsAdminState = {
+  config: EditorLimitsSettings;
+  defaults: EditorLimitsSettings;
+  bounds: { min: number; max: number };
+};
+
+export async function fetchEditorLimits(accessToken: string): Promise<EditorLimitsAdminState> {
+  const r = await adminFetch(accessToken, "/editor-limits");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<EditorLimitsAdminState>;
+}
+
+export async function saveEditorLimits(
+  accessToken: string,
+  patch: Partial<EditorLimitsSettings>,
+): Promise<EditorLimitsAdminState> {
+  const r = await adminFetch(accessToken, "/editor-limits", { method: "PUT", body: JSON.stringify(patch) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<EditorLimitsAdminState>;
+}
