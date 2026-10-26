@@ -7073,7 +7073,7 @@ function App() {
             ) : null}
 
             {contentPanel === "editor" ? (
-              <WorkspaceToolShell id="pdf-duzenle" language={language}>
+              <WorkspaceToolShell id="pdf-duzenle" language={language} full>
                 <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                   <Suspense fallback={<PageSkeleton />}>
                     <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
