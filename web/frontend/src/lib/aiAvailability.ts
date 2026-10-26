@@ -1,4 +1,4 @@
-import { useSettings } from "../hooks/useSettings";
+import { useOptionalSettings } from "../contexts/SettingsContext";
 import { AI_COMING_SOON_SLUGS } from "../seo/seoContent.mjs";
 
 /**
@@ -7,13 +7,9 @@ import { AI_COMING_SOON_SLUGS } from "../seo/seoContent.mjs";
  * çünkü bu yalnız pazarlama metinlerini (hediye işlem vb.) doğru zamanlı yazmak içindir.
  */
 export function useAiNotOpen(): boolean {
-  try {
-    const { flags } = useSettings();
-    return flags?.featureFlags?.paymentsDisabled !== false;
-  } catch {
-    // SettingsProvider dışında (ör. izole test/önizleme): güvenli varsayım "AI henüz açık değil".
-    return true;
-  }
+  // SettingsProvider dışında (ör. izole test/önizleme) ayar yoktur: güvenli varsayım "AI henüz açık değil".
+  const flags = useOptionalSettings()?.flags;
+  return flags?.featureFlags?.paymentsDisabled !== false;
 }
 
 const GIFT_RE = /hediye|welcome gift|free AI operation/i;

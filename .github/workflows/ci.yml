@@ -87,7 +87,7 @@ jobs:
         working-directory: web/backend
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov pytest-asyncio
+          pip install pytest pytest-cov pytest-asyncio pytest-timeout
           pip install -r requirements.txt
 
       - name: Run pytest
@@ -98,7 +98,10 @@ jobs:
           # Kapsam eşiği regresyon koruması içindir (tüm app/ paketi ölçülür).
           # Mevcut taban ~%14; güvenlik-kritik modüller (pdf_security, result_store,
           # billing) tam test edilir. Hedef: kapsamı kademeli %40+'a çıkarmak.
+          # --timeout: takılan TEK test 2 dk sonra adıyla başarısız olur; bütün iş 15 dk beklenip
+          # adsız "iptal edildi" demesin.
           pytest tests/ \
+            --timeout=120 \
             --tb=short \
             --cov=app \
             --cov-report=term-missing \
