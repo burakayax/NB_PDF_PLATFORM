@@ -30,7 +30,7 @@ import { localizedPath } from "../src/seo/enSlugs.mjs";
 
 /** Beslemede taşınacak en fazla yazı sayısı. Okuyucular geçmişin tamamını istemez;
  *  otomasyon araçları da genelde ilk sayfaya bakar. */
-const MAX_ITEMS = 30;
+const MAX_ITEMS = 100;
 
 /** Yayıncı adı — <dc:creator> ve telif alanında görünür. */
 const AUTHOR_NAME = BRAND;

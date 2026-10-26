@@ -7,6 +7,7 @@
  */
 
 import { env } from "../../../config/env.js";
+import { logger } from "../../../lib/file-log.js";
 import { TOOL_REEL_PREFIX } from "../tool-reels.service.js";
 
 /** Gönderi kimliğinden (`tool-reel:<araç>`) araç kimliği; araç videosu değilse null. */
@@ -35,8 +36,12 @@ export async function availableReelCover(guid: string): Promise<string | null> {
     // indirmeyebilir, bu yüzden NİHAİ adres döner.
     const res = await fetch(url, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(10_000) });
     const type = res.headers.get("content-type") ?? "";
-    return res.ok && type.startsWith("image/") ? res.url || url : null;
-  } catch {
+    if (res.ok && type.startsWith("image/")) return res.url || url;
+    // Sessiz düşüş "kapak neden yok?" sorusunu cevapsız bırakıyordu (ör. FRONTEND_ORIGIN yanlış).
+    logger.warn("social", `Reels kapağı kullanılamadı, kapaksız yayınlanacak: ${url} → HTTP ${res.status} ${type}`);
+    return null;
+  } catch (err) {
+    logger.warn("social", `Reels kapağına erişilemedi, kapaksız yayınlanacak: ${url} (${String(err)})`);
     return null;
   }
 }
