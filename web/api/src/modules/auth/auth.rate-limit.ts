@@ -1,8 +1,9 @@
 import rateLimit from "express-rate-limit";
 
 /**
- * POST /api/auth/login ve /api/auth/register: IP başına 5 dakikada en fazla 10 istek.
- * Kaba kuvvet parola saldırılarını yavaşlatır.
+ * POST /api/auth/login: IP başına 5 dakikada en fazla 10 BAŞARISIZ deneme.
+ * Başarılı girişler sayılmaz: ortak ağdaki (okul, ofis, yurt) meşru kullanıcılar birbirini
+ * kilitlemesin. Parola tahmini yapan saldırgan yanlış denemelerle sınıra takılır.
  */
 export const loginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -10,10 +11,28 @@ export const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  skipSuccessfulRequests: true,
   validate: { default: false },
   keyGenerator: (req) => `login:${req.ip ?? "unknown"}`,
   message: {
     message: "Çok fazla giriş denemesi. Lütfen 5 dakika sonra tekrar deneyin.",
+  },
+});
+
+/**
+ * POST /api/auth/register ve /google/complete: IP başına 5 dakikada en fazla 10 istek
+ * (başarılı kayıtlar dahil — toplu sahte hesap açmayı yavaşlatır).
+ */
+export const registerLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+  validate: { default: false },
+  keyGenerator: (req) => `register:${req.ip ?? "unknown"}`,
+  message: {
+    message: "Çok fazla kayıt denemesi. Lütfen 5 dakika sonra tekrar deneyin.",
   },
 });
 

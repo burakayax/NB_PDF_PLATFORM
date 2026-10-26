@@ -209,11 +209,11 @@ Sonuç: Sınır koymak sektör standardı; kaldırmak sizi korumasız bırakır 
 2. Bu bilgileri alt bilgiye ("İletişim"), Ön Bilgilendirme "Satıcı" bölümüne, Mesafeli Satış "Taraflar"a, KVKK "Veri sorumlusu"na ve e-posta alt bilgisine yerleştir. Yönetim panelindeki "Gönderen kimliği" ayarını doldur.
 3. İYS kaydı (ticari e-posta için zorunlu). ETBİS kaydı. VERBİS muafiyet kontrolü (çalışan ve bilanço eşikleri).
 4. iyzico üye işyeri başvurusu (şahıs işletmesi kabul ediliyor mu sor). Onay sonrası ödemeleri aç.
-5. Fatura entegratörünü (Paraşüt veya BirFatura) gerçek hesapla bağla, deneme fatura kes. Mali müşavirle yurt dışı satış KDV (ihracat istisnası) teyidi.
+5. Fatura entegratörünü (Paraşüt veya BirFatura) gerçek hesapla bağla, deneme fatura kes. Mali müşavirle yurt dışı satış KDV (ihracat istisnası) teyidi. Faturaların 10 yıl saklanması (VUK md. 253, TTK md. 82) sizin sorumluluğunuzda: entegratörün saklama hizmetini sor, yılda bir tüm faturaları toplu indirip kendi yedeğinize al, yanına panelden CSV dökümünü ekle.
 6. Mesafeli Satış Sözleşmesi'ni ödeme adımına ekle, onayı sunucuda zorunlu kıl, satın alma e-postasına sözleşme + ön bilgilendirme kopyası koy.
 7. "Onaylı yenileme" kur: süre bitmeden hatırlatma, "Yenile" düğmesi, onay kaydı (zaman, IP, fiyat, metin sürümü).
 8. Hizmet Şartları'nı avukata yeniden yazdır: tüketici/ticari ayrımı, Türk hukuku, yetkili mahkeme ve tüketici hakem heyeti, 18 yaş şartı.
-9. Anthropic ile veri işleme sözleşmesi; yurt dışı aktarım için standart sözleşme ve Kuruma 5 iş günü içinde bildirim; Google (GA4) ve e-posta sağlayıcısı için aynısı.
+9. Yurt dışı aktarım (KVKK md. 9, 7499 sayılı Kanun sonrası): açık rıza ana yol DEĞİL, yalnızca arızi aktarımlarda geçerli; kayıtta zorunlu "yurt dışı rıza" kutusu EKLEME (serbest irade ilkesine aykırı). Doğru yol: Anthropic ve Render (ayrıca Vercel, Google, Sentry) ile Kurum'un standart sözleşmesini imzala (veri sorumlusu → veri işleyen modeli) ve imzadan sonra 5 iş günü içinde Kuruma bildir (süreyi avukatla teyit et). Sağlayıcıların kendi DPA sayfalarında Türkiye/KVKK maddesi var mı bak; yoksa destekten sor. Standart sözleşme imzalanınca Gizlilik Politikası md. 8 ve KVKK md. 4'ü "güvenceler tesis edilmiştir" diye güncelle. Hesapları şirket adına aç. Not: 5651 sayılı Kanun'daki log tutma yükümlülüğü yer sağlayıcılara aittir, bu site için "hukuki yükümlülük" diye yazma; log dayanağı meşru menfaattir (md. 5/2-f).
 10. Muhasebeci ile aylık CSV dökümü rutini; Render veritabanı planı ve yedek kontrolü.
 11. "PDF Platform" marka tescili (TÜRKPATENT).
 12. Yürürlük tarihlerini yayın gününe çek.

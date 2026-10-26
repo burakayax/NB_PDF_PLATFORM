@@ -26,6 +26,8 @@ export async function extractPdfText(file: File): Promise<PdfTextResult> {
   const pageCount = doc.numPages;
   const pages = Math.min(pageCount, MAX_PAGES);
   let out = "";
+  let pagesWithText = 0;
+  let pagesRead = 0;
   for (let i = 1; i <= pages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
@@ -33,11 +35,15 @@ export async function extractPdfText(file: File): Promise<PdfTextResult> {
       .map((it) => (typeof (it as { str?: unknown }).str === "string" ? (it as { str: string }).str : ""))
       .join(" ");
     out += line + "\n\n";
+    pagesRead++;
+    if (line.replace(/\s+/g, "").length >= 30) pagesWithText++;
     if (out.length > MAX_TEXT_CHARS) break;
   }
   await doc.destroy();
   const text = out.slice(0, MAX_TEXT_CHARS).trim();
-  // Sayfa başına ~250 karakterden az gerçek metin → içerik muhtemelen görüntü (taranmış).
-  const likelyScanned = text.length < Math.max(250, pages * 250);
+  // Taranmış sayılması için metnin neredeyse hiç olmaması ya da sayfaların çoğunun metinsiz olması
+  // gerekir. Eskiden "sayfa başına 250 karakter" kuralı kısa notları ve slayt PDF'lerini yanlışlıkla
+  // "taranmış" sayıyordu.
+  const likelyScanned = text.replace(/\s+/g, "").length < 30 || pagesWithText / Math.max(1, pagesRead) < 0.4;
   return { text, pageCount, likelyScanned };
 }

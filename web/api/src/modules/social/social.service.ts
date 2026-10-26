@@ -20,6 +20,7 @@ import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { logError } from "../../lib/app-logger.js";
 import { logger } from "../../lib/file-log.js";
 import { fetchPairedFeedItems } from "./rss.service.js";
+import { TOPIC_COOLDOWN, topicOf } from "./feed-topic.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
 import { facebookKindFor } from "./facebook-kind.js";
@@ -442,7 +443,7 @@ function pickImage(item: FeedItem, platform: SocialPlatform): string | null {
 /**
  * Bir sonraki paylaşılacak yazıyı seçer.
  *
- * Önce hiç paylaşılmamış en YENİ yazıya bakılır. Hepsi paylaşılmışsa ve geri
+ * Önce hiç paylaşılmamış en YENİ yazıya bakılır (son paylaşımlarla aynı konuda olmayan tercih edilir). Hepsi paylaşılmışsa ve geri
  * dönüşüm açıksa, en uzun süredir paylaşılmayan yazı yeniden gündeme getirilir
  * (yeni içerik olmayan günlerde hesap sessiz kalmasın).
  */
@@ -466,11 +467,24 @@ async function pickNextItem(
     seenMap.set(row.guid, Math.max(seenMap.get(row.guid) ?? 0, at));
   }
 
-  const fresh = items.find((i) => !seenMap.has(i.guid));
+  // Konu çeşitliliği: son paylaşımların konusu cooldown boyunca yeniden seçilmez
+  // (yoksa yeni tarihli bir konu kümesi — örn. 14 meslek CV'si — haftalarca sırayı kilitler).
+  // Başka konu kalmadıysa en iyi aday yine de seçilir; otomasyon susmaz.
+  const recentTopics = new Set(
+    items
+      .filter((i) => seenMap.has(i.guid))
+      .sort((a, b) => (seenMap.get(b.guid) ?? 0) - (seenMap.get(a.guid) ?? 0))
+      .slice(0, TOPIC_COOLDOWN)
+      .map(topicOf),
+  );
+  const pickVaried = (list: FeedItem[]): FeedItem | undefined =>
+    list.find((i) => !recentTopics.has(topicOf(i))) ?? list[0];
+
+  const fresh = pickVaried(items.filter((i) => !seenMap.has(i.guid)));
   if (fresh) return fresh;
   if (!recycle) return null;
 
-  return items.slice().sort((a, b) => (seenMap.get(a.guid) ?? 0) - (seenMap.get(b.guid) ?? 0))[0] ?? null;
+  return pickVaried(items.slice().sort((a, b) => (seenMap.get(a.guid) ?? 0) - (seenMap.get(b.guid) ?? 0))) ?? null;
 }
 
 export type QueueResult = {

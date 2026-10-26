@@ -18,7 +18,7 @@ export const legalDocuments = {
       summary:
         "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding PDF Platform. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "7 October 2026",
+      effectiveDate: "21 October 2026",
       sections: [
         {
           title: "1. Who we are and what you accept",
@@ -57,7 +57,7 @@ export const legalDocuments = {
             "Certain features or higher usage limits may require a paid plan. Plan names, prices, included features, and fair-use rules are those shown in the product, checkout, or order confirmation at the time you subscribe.",
             "Subscriptions do not renew automatically. Before your period ends we send you a reminder; if you wish to continue, you confirm the renewal and pay for the new period. If you do not confirm, paid features end when the period ends and your account returns to the free plan.",
             "We may change plan prices or features for new purchases or renewals with reasonable notice. Changes apply only to a new period, and the current price and terms are shown to you before you confirm a renewal.",
-            "Taxes, if any, are your responsibility unless we state otherwise at checkout.",
+            "Prices in Turkish lira shown to individual users resident in Türkiye include VAT; no VAT applies to users resident abroad. Any other taxes are your responsibility unless we state otherwise at checkout.",
           ],
         },
         {
@@ -87,7 +87,7 @@ export const legalDocuments = {
         {
           title: "9. Governing law and disputes",
           paragraphs: [
-            "These Terms are governed by the laws applicable in the jurisdiction we designate in a separate agreement with you, or otherwise by the laws of the country where NB Global Studio is established, without regard to conflict-of-law rules.",
+            "These Terms are governed by Turkish law. If you act as a consumer, your right to apply to the Consumer Arbitration Committees and Consumer Courts under Law No. 6502 is preserved, and nothing in these Terms limits that right.",
             "For informal resolution of disputes, you may contact us at the email address shown in the product or on our website before initiating formal proceedings.",
           ],
         },
@@ -105,7 +105,7 @@ export const legalDocuments = {
       summary:
         "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use PDF Platform (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "7 October 2026",
+      effectiveDate: "21 October 2026",
       sections: [
         {
           title: "1. Data controller",
@@ -154,7 +154,7 @@ export const legalDocuments = {
         {
           title: "5. Sharing and processors",
           paragraphs: [
-            "We use trusted service providers (for example hosting, email delivery, or analytics) who process data on our instructions and under appropriate safeguards.",
+            "To run the service we use the following groups of providers, who process only the data needed for their task and on our instructions: server, database and web-app hosting (Render, Vercel); file and output storage (cloud storage); email delivery (Google); payments (iyzico — your card details never reach us and are processed directly by iyzico); AI (Anthropic); and, only with your consent, analytics (Google Analytics) and error monitoring (Sentry).",
             "AI processor: our AI-powered features rely on Anthropic (Anthropic PBC, United States). Text extracted from your document is sent to Anthropic solely to generate your result; per Anthropic's API terms it is not used to train models, though the provider may retain it for up to 30 days for safety review only. Only the document text is sent, not the file itself.",
             "We do not sell your personal data. We may disclose information if required by law, to protect rights and safety, or in connection with a merger or asset transfer subject to continued protection of your information.",
           ],
@@ -183,7 +183,7 @@ export const legalDocuments = {
             "Download logs: 90 days from the date of creation (including IP address and browser information); after that the IP address and browser information are erased, and the record is deleted one year after creation.",
             "Output file fingerprints (a SHA-256 hash, size, tool and plan of files produced on our servers; never the file content), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
             "AI request records (tool, time, credits used, outcome and SHA-256 digests of the input and result; never the document text or the result itself), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
-            "Invoices and billing records: 10 years, as required by Turkish Tax Procedure Law (VUK) Article 253 and equivalent accounting regulations.",
+            "Invoices and billing records: 10 years. Turkish Tax Procedure Law (VUK) Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; we apply the longer period.",
             "Analytics data: 13 months (aligned with Google Analytics 4 default retention).",
             "Error and diagnostic logs: 30 days.",
             "Comment text attached to tool ratings: 180 days. After that the comment is deleted; the star rating itself is kept because it forms the average.",
@@ -209,13 +209,13 @@ export const legalDocuments = {
         {
           title: "8. International transfers",
           paragraphs: [
-            "Some processors — notably our AI provider Anthropic (United States) and our analytics/error-monitoring providers — may process data outside your country. Where required we ensure appropriate safeguards (such as standard contractual clauses or equivalent mechanisms), consistent with applicable data protection laws.",
+            "Some of our providers process data outside Türkiye: our AI provider Anthropic (United States), our hosting providers and, only with your consent, our analytics and error-monitoring providers. These transfers fall under Article 9 of Turkish Law No. 6698. For AI tools, a transfer happens only when you choose to use an AI tool and only for the document text; for tools that run on your device, your file never leaves your device. For information about the safeguards behind these transfers, write to info@pdfplatform.app.",
           ],
         },
         {
           title: "9. Your rights",
           paragraphs: [
-            "Depending on where you live, you may have rights to access, rectify, delete, restrict, or object to certain processing of your personal data, and to lodge a complaint with a supervisory authority.",
+            "If you live in Türkiye, your rights under Article 11 of Law No. 6698 (to learn, request information, correct, delete, object and claim compensation) are listed in the KVKK disclosure. We reply to requests within 30 days; if you are not satisfied you may complain to the Turkish Personal Data Protection Authority (www.kvkk.gov.tr). If you live elsewhere, you may also have the right to complain to your local supervisory authority.",
             "To exercise rights, contact info@pdfplatform.app with a clear description of your request. We may need to verify your identity before responding.",
           ],
         },
@@ -242,7 +242,7 @@ export const legalDocuments = {
       summary:
         "This notice summarizes how NB Global Studio processes personal data in PDF Platform checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "24 March 2026",
+      effectiveDate: "21 October 2026",
       sections: [
         {
           title: "1. Processing grounds",
@@ -361,7 +361,7 @@ export const legalDocuments = {
         {
           title: "6. Protection of Personal Data",
           paragraphs: [
-            "The BUYER's personal data is processed within the scope of KVKK and GDPR. Invoice records are retained for 10 years pursuant to VUK Article 253.",
+            "The BUYER's personal data is processed within the scope of KVKK and GDPR. Invoice records are retained for 10 years (VUK Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; the longer period applies).",
             "For detailed information, please review the Privacy Policy and KVKK Disclosure Text.",
           ],
         },
@@ -388,7 +388,7 @@ export const legalDocuments = {
       summary:
         "İşbu Hizmet Şartları (“Şartlar”), PDF Platform’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "7 Ekim 2026",
+      effectiveDate: "21 Ekim 2026",
       sections: [
         {
           title: "1. Taraflar ve kabul",
@@ -400,7 +400,7 @@ export const legalDocuments = {
         {
           title: "2. Hizmetin kapsamı",
           paragraphs: [
-            "PDF Platform; PDF ve ilgili belgeler üzerinde çalışmayı sağlayan yazılım ve web tabanlı araçlar (örneğin birleştirme, ayırma, dönüştürme, sıkıştırma ve şifreleme) ile hesap, kimlik doğrulama ve abonelik özelliklerini sunar.",
+            "PDF Platform; PDF ve ilgili belgeler üzerinde çalışmayı sağlayan yazılım ve web tabanlı araçlar (örneğin birleştirme, ayırma, dönüştürme, sıkıştırma ve şifreleme), yapay zekâ destekli araçlar (özetleme, çeviri, veri çıkarma vb.) ile hesap, kimlik doğrulama ve abonelik özelliklerini sunar. Araçların bir kısmı dosyanızı yalnızca tarayıcınızda işler; hangisinin nerede çalıştığı Gizlilik Politikası’ndaki tabloda gösterilir.",
             "Güvenlik, yasal zorunluluklar, operasyon veya ürün gerekçeleriyle hizmetin bölümlerini değiştirebilir, askıya alabilir veya sonlandırabiliriz. Kesintisiz veya hatasız çalışma garantisi vermeyiz.",
           ],
         },
@@ -427,7 +427,7 @@ export const legalDocuments = {
             "Bazı özellikler veya daha yüksek kullanım limitleri ücretli plan gerektirebilir. Plan adları, fiyatlar, dahil özellikler ve makul kullanım kuralları; abone olduğunuz andaki ürün, ödeme veya sipariş onayındaki hükümlerdir.",
             "Abonelikler kendiliğinden yenilenmez. Dönem sona ermeden önce size bir hatırlatma gönderilir; devam etmek isterseniz yenilemeyi onaylar ve yeni dönemin ücretini ödersiniz. Onay vermezseniz dönem sonunda ücretli özellikler sona erer ve hesabınız ücretsiz plana döner.",
             "Yasal gerekliliklere uygun makul bildirimle plan fiyatlarını veya özelliklerini yeni satın alımlar veya yenilemeler için değiştirebiliriz. Değişiklikler yalnızca yeni dönem için geçerli olur; yenilemeyi onaylamadan önce güncel fiyat ve koşullar size gösterilir.",
-            "Ödeme sırasında aksi belirtilmedikçe vergiler sizin sorumluluğunuzdadır.",
+            "Türkiye’de mukim bireysel kullanıcılara gösterilen TL fiyatlara KDV dahildir; yurt dışında mukim kullanıcılar için KDV uygulanmaz. Bunun dışındaki vergiler (varsa), ödeme sırasında aksi belirtilmedikçe sizin sorumluluğunuzdadır.",
           ],
         },
         {
@@ -457,7 +457,7 @@ export const legalDocuments = {
         {
           title: "9. Uygulanacak hukuk ve uyuşmazlıklar",
           paragraphs: [
-            "Bu Şartlar; sizinle ayrıca yazılı olarak kararlaştırdığımız yargı bölgesinin hukukuna, aksi halde NB Global Studio’nun faaliyet gösterdiği ülkenin kanunlarına tabidir; çatışan hukuk kuralları uygulanmaz.",
+            "Bu Şartlara Türk hukuku uygulanır. Tüketici olarak hareket ediyorsanız, 6502 sayılı Kanun uyarınca Tüketici Hakem Heyetlerine ve Tüketici Mahkemelerine başvuru hakkınız saklıdır; bu Şartlardaki hiçbir hüküm bu hakkı sınırlamaz.",
             "Resmi yollara başvurmadan önce ürün veya web sitemizde belirtilen e-posta üzerinden bizimle iletişime geçerek çözüm arayabilirsiniz.",
           ],
         },
@@ -475,7 +475,7 @@ export const legalDocuments = {
       summary:
         "Bu Gizlilik Politikası, PDF Platform’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "7 Ekim 2026",
+      effectiveDate: "21 Ekim 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",
@@ -524,7 +524,7 @@ export const legalDocuments = {
         {
           title: "5. Paylaşım ve işleyenler",
           paragraphs: [
-            "Barındırma, e-posta gönderimi veya analitik gibi güvenilir hizmet sağlayıcıları, talimatlarımız ve uygun güvenceler çerçevesinde veri işleyebilir.",
+            "Hizmeti çalıştırmak için şu hizmet sağlayıcı gruplarından yararlanırız ve yalnızca görevleri için gerekli veriyi talimatlarımız çerçevesinde işlemelerini sağlarız: sunucu, veritabanı ve web arayüzü barındırma (Render, Vercel); dosya ve çıktı depolama (bulut depolama); e-posta gönderimi (Google); ödeme (iyzico — kart bilgileriniz bize ulaşmaz, doğrudan iyzico’da işlenir); yapay zekâ (Anthropic); yalnızca onayınızla analitik (Google Analytics) ve hata izleme (Sentry).",
             "Yapay zekâ işleyeni: Yapay zekâ destekli özelliklerimiz Anthropic (Anthropic PBC, ABD) altyapısını kullanır. Yapay zekâ araçlarına gönderdiğiniz belge metni yalnızca sonucunuzu üretmek amacıyla Anthropic'e iletilir; Anthropic'in API şartları gereği modellerin eğitiminde kullanılmaz; ancak sağlayıcı bu veriyi yalnızca güvenlik denetimi amacıyla en fazla 30 gün saklayabilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
             "Kişisel verilerinizi satmayız. Yasal zorunluluk, hakların ve güvenliğin korunması veya birleşme veya varlık devri (verilerinizin korunmasının sürmesi koşuluyla) hallerinde bilgi açıklanabilir.",
           ],
@@ -554,7 +554,7 @@ export const legalDocuments = {
             "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün (IP adresi ve tarayıcı bilgisi dahil); sonrasında IP adresi ve tarayıcı bilgisi silinir, kayıt oluşturulmasından 1 yıl sonra tamamen silinir.",
             "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
             "Yapay zekâ istek kayıtları (araç, zaman, düşülen hak, sonuç durumu ile girdi ve sonucun SHA-256 özeti; belge metni ve sonucun kendisi asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
-            "Fatura ve ödeme kayıtları: Vergi Usul Kanunu (VUK) Madde 253 ve ilgili muhasebe mevzuatı gereği 10 yıl.",
+            "Fatura ve ödeme kayıtları: 10 yıl. Vergi Usul Kanunu (VUK) Madde 253 5 yıl, Türk Ticaret Kanunu (TTK) Madde 82 10 yıl saklamayı gerektirir; uzun olan süre uygulanır.",
             "Analitik veriler: 13 ay (Google Analytics 4 varsayılan saklama süresiyle uyumlu).",
             "Hata ve tanı günlükleri: 30 gün.",
             "Araç puanlarındaki açıklama metinleri: 180 gün. Bu sürenin sonunda açıklama silinir; puanın kendisi (yıldız) ortalamayı oluşturduğu için kalır.",
@@ -580,13 +580,13 @@ export const legalDocuments = {
         {
           title: "8. Uluslararası aktarım",
           paragraphs: [
-            "Bazı işleyenler — özellikle yapay zekâ sağlayıcımız Anthropic (ABD) ile analitik/hata izleme sağlayıcılarımız — verileri ülkeniz dışında işleyebilir. Gerektiğinde, geçerli veri koruma kanunlarına uygun olarak standart sözleşme maddeleri veya eşdeğer mekanizmalarla uygun güvenceleri sağlarız.",
+            "Hizmet sağlayıcılarımızın bir kısmı verileri Türkiye dışında işler: yapay zekâ sağlayıcımız Anthropic (ABD), barındırma sağlayıcılarımız ve, yalnızca onayınızla, analitik ve hata izleme sağlayıcılarımız. Bu aktarımlar 6698 sayılı Kanun’un 9. maddesi kapsamındadır. Yapay zekâ araçlarında aktarım yalnızca siz bir yapay zekâ aracını kullanmayı seçtiğinizde ve yalnızca belge metni için gerçekleşir; cihazda çalışan araçlarda dosyanız cihazınızdan çıkmaz. Aktarıma ilişkin güvence mekanizmaları hakkında bilgi almak için info@pdfplatform.app adresine yazabilirsiniz.",
           ],
         },
         {
           title: "9. Haklarınız",
           paragraphs: [
-            "Yaşadığınız yere bağlı olarak kişisel verilerinize erişme, düzeltme, silme, işlemeyi kısıtlama veya itiraz etme ve bir denetim otoritesine şikâyette bulunma haklarınız olabilir.",
+            "Türkiye’de mukimseniz 6698 sayılı Kanun’un 11. maddesindeki haklarınız (öğrenme, bilgi talep etme, düzeltme, silme, itiraz ve zararın giderilmesi) Aydınlatma Metni’nde sıralanmıştır. Başvurunuza 30 gün içinde yanıt veririz; yanıttan memnun kalmazsanız Kişisel Verileri Koruma Kurumu’na (www.kvkk.gov.tr) şikâyet edebilirsiniz. Diğer ülkelerde mukimseniz bulunduğunuz yerdeki denetim otoritesine başvurma hakkınız da olabilir.",
             "Taleplerinizi info@pdfplatform.app adresine net bir açıklamayla iletebilirsiniz. Yanıt vermeden önce kimliğinizi doğrulamamız gerekebilir.",
           ],
         },
@@ -613,7 +613,7 @@ export const legalDocuments = {
       summary:
         "NB Global Studio olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamındaki veri sorumlusu sıfatıyla kişisel verilerinizin güvenliği ve gizliliği konusundaki sorumluluğumuzun bilinciyle hareket etmekteyiz. Bu Aydınlatma Metni, hangi kişisel verilerinizi, hangi amaçlarla, hangi hukuki sebeple işlediğimizi ve KVKK madde 11 kapsamındaki haklarınızı açıklamaktadır.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "24 Mart 2026",
+      effectiveDate: "21 Ekim 2026",
       sections: [
         {
           title: "1. Veri Sorumlusu",
@@ -639,7 +639,7 @@ export const legalDocuments = {
             "Sözleşmenin kurulması ve ifası (KVKK md. 5/2-c): Hesap oluşturma, ödeme işlemi, abonelik yönetimi ve hizmetlerin sunulması.",
             "Meşru menfaat (KVKK md. 5/2-f): Hizmetin güvenliğinin sağlanması, dolandırıcılık ve kötüye kullanımın önlenmesi, sistem performansı.",
             "Hukuki yükümlülüğün yerine getirilmesi (KVKK md. 5/2-ç): Vergi mevzuatı ve diğer kanuni yükümlülükler kapsamında fatura ve kayıt tutma.",
-            "Yapay zekâ destekli araçların sunulması (KVKK md. 5/2-c — sözleşmenin ifası): Bir yapay zekâ aracını kullanmayı seçtiğinizde, talebinizi yerine getirmek üzere belge metninizin yapay zekâ sağlayıcısına aktarılarak sonuç üretilmesi.",
+            "Yapay zekâ destekli araçların sunulması (KVKK md. 5/2-c — sözleşmenin ifası): Bir yapay zekâ aracını kullanmayı seçtiğinizde, talebinizi yerine getirmek üzere belge metninizin yapay zekâ sağlayıcısına aktarılarak sonuç üretilmesi. Bu aktarımın yurt dışına yapılması ayrıca md. 9 kapsamında değerlendirilir (4. bölüm).",
             "Açık rıza (KVKK md. 5/1): Analitik ve pazarlama amaçlı çerezler gibi zorunlu olmayan veri işleme faaliyetleri için ayrıca açık rızanız alınır.",
           ],
         },
@@ -648,9 +648,10 @@ export const legalDocuments = {
           paragraphs: [
             "Kişisel verileriniz; hizmetlerimizin sunulabilmesi için ihtiyaç duyulan ölçüde aşağıdaki alıcı gruplarına aktarılabilir:",
             "Ödeme kuruluşu (İyzico): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
-            "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz (yalnızca güvenlik denetimi için en fazla 30 gün saklanabilir).",
-            "Bulut altyapısı ve barındırma hizmet sağlayıcıları: Hizmetin çalıştırıldığı sunucu altyapısını sunan şirketler; veri işleme sözleşmeleri çerçevesinde sınırlı erişim.",
-            "Analitik hizmet sağlayıcıları (onay halinde): Ürün iyileştirme amacıyla anonimleştirilmiş kullanım verileri.",
+            "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca siz bir yapay zekâ aracını kullanmayı seçtiğinizde gerçekleşir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz (yalnızca güvenlik denetimi için en fazla 30 gün saklanabilir). Aktarıma ilişkin güvence mekanizmaları hakkında bilgi için info@pdfplatform.app adresine başvurabilirsiniz.",
+            "Bulut altyapısı ve barındırma hizmet sağlayıcıları (Render, Vercel ve bulut depolama): Hizmetin çalıştırıldığı sunucu, veritabanı ve depolama altyapısını sunan şirketler; bunların bir kısmı Türkiye dışındadır ve yalnızca hizmeti çalıştırmak için gereken sınırlı erişime sahiptir.",
+            "E-posta hizmeti (Google): Doğrulama, güvenlik ve işlem e-postalarının iletilmesi için e-posta adresiniz.",
+            "Analitik ve hata izleme sağlayıcıları (yalnızca onayınızla — Google Analytics, Sentry): Ürün iyileştirme ve hata giderme amacıyla kullanım ve tanı verileri.",
             "Yasal zorunluluk: Mahkeme kararı veya yetkili kamu kurumu talebi halinde ilgili makamlarla paylaşılabilir.",
           ],
         },
@@ -658,7 +659,7 @@ export const legalDocuments = {
           title: "5. Kişisel Verilerin Saklanma Süresi",
           paragraphs: [
             "Hesap bilgileri: Hesabınız aktif olduğu süre boyunca ve hesap silme talebinin ardından en fazla 30 gün.",
-            "Ödeme ve fatura kayıtları: Vergi mevzuatı gereği en az 5 yıl; ilgili mevzuat uyarınca daha uzun süreler uygulanabilir.",
+            "Ödeme ve fatura kayıtları: 10 yıl (VUK md. 253 uyarınca 5 yıl, TTK md. 82 uyarınca 10 yıl; uzun olan süre uygulanır).",
             "Teknik günlükler (log): IP adresi ve tarayıcı bilgisi en fazla 90 gün; kimliksiz kayıt iskeleti 1 yıl; güvenlik ihlali şüphesi varsa ilgili soruşturma tamamlanana kadar.",
             "Yüklenen belgeler: Yüklediğiniz dosya işlem biter bitmez silinir; çıktı dosyası en fazla 24 saat tutulur ve otomatik olarak silinir (Belge Tarayıcı'daki «Hesabıma kaydet» taramaları ile «İmza İste» belgeleri bu kuralın istisnasıdır; siz silene veya hesabınız silinene kadar saklanır).",
           ],
@@ -784,7 +785,7 @@ export const legalDocuments = {
         {
           title: "6. Kişisel Verilerin Korunması",
           paragraphs: [
-            "ALICI'ya ait kişisel veriler KVKK ve GDPR kapsamında işlenmektedir. Fatura bilgileri VUK Madde 253 uyarınca 10 yıl süreyle saklanmaktadır.",
+            "ALICI'ya ait kişisel veriler KVKK ve GDPR kapsamında işlenmektedir. Fatura bilgileri 10 yıl süreyle saklanmaktadır (VUK Madde 253 uyarınca 5 yıl, TTK Madde 82 uyarınca 10 yıl; uzun olan süre uygulanır).",
             "Ayrıntılı bilgi için Gizlilik Politikası ve KVKK Aydınlatma Metni'ni inceleyiniz.",
           ],
         },
