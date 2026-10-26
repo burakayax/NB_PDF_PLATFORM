@@ -1413,7 +1413,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const resetT = quotaPopup ? resetInfo(quotaPopup.resetAt) : null;
 
   return (
-    <div className="mx-auto w-full max-w-3xl text-left">
+    <div className={`mx-auto w-full text-left ${file || result ? "max-w-3xl" : ""}`}>
       {/* Ad/açıklama zaten anlatılmış bir sayfanın (GuestSeoToolPage) ya da Hero'nun
           kendi tanıtım şeridinin İÇİNDEYSE bu başlık tekrar etmesin. */}
       {!describesTool && (
