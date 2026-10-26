@@ -31,7 +31,6 @@ import { toolReelFactoryRouter, toolReelMediaRouter } from "../modules/social/to
 import { guestCompressAdminRouter } from "../modules/guest-compress/guest-compress.admin.routes.js";
 import { autoHealAdminRouter } from "../modules/autoheal/autoheal.admin.routes.js";
 import { editorLimitsAdminRouter } from "../modules/editor-limits/editor-limits.admin.routes.js";
-import { autoHealAdminRouter } from "../modules/autoheal/autoheal.admin.routes.js";
 import { prisma } from "../lib/prisma.js";
 import {
   abuseBlockMiddleware,
@@ -93,7 +92,6 @@ apiRouter.use("/admin/social", socialRouter);
 apiRouter.use("/admin/guest-compress", guestCompressAdminRouter);
 apiRouter.use("/admin/autoheal", autoHealAdminRouter);
 apiRouter.use("/admin/editor-limits", editorLimitsAdminRouter);
-apiRouter.use("/admin/autoheal", autoHealAdminRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/auth", authRouter);
