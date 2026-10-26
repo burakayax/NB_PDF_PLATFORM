@@ -6,7 +6,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { copyFileSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { makeMusic } from "./music.mjs";
 
@@ -48,13 +48,44 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   const filters = [];
   let n = 0;
   // Metin: [a,b] arasında yumuşak belirip kaybolur.
-  const text = (str, color, size, y, a, b, fade = 0.35) => {
-    if (!str) return;
+  // Roboto'da ok (→) glifi yok: başlıkta boş kutu çıkıyordu. Ok, glifi olan DejaVu ile çizilir; yazı tipi
+  // bulunamazsa (yerel makine) Roboto'da bulunan "›" kullanılır.
+  const arrowFont = [
+    process.env.DEJAVU_FONT,
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "C:/Windows/Fonts/DejaVuSans-Bold.ttf",
+  ].find((p) => p && existsSync(p));
+  if (arrowFont) copyFileSync(arrowFont, `${S}/DejaVuSans-Bold.ttf`);
+
+  const textFile = (str) => {
     const f = `t${n++}.txt`;
     writeFileSync(`${S}/${f}`, str, "utf8");
+    return f;
+  };
+  // Metin: [a,b] arasında yumuşak belirip kaybolur.
+  const text = (str, color, size, y, a, b, fade = 0.35) => {
+    if (!str) return;
     const alpha = `if(between(t,${a},${b}),min(1,min((t-${a})/${fade},(${b}-t)/${fade})),0)`;
+    const parts = str.split("→").map((p) => p.trim());
+    if (parts.length === 2 && parts[0] && parts[1] && arrowFont) {
+      // "PDF → Word": ok tam ortada; sol metin okun soluna, sağ metin okun sağına yaslanır.
+      const [l, r] = parts;
+      const fs = Math.max(30, Math.min(size, Math.floor(470 / (Math.max(l.length, r.length) * 0.53))));
+      const half = Math.round(fs * 0.42) + 20;
+      const common = `fontcolor=${color}:fontsize=${fs}:y=${y}:alpha='${alpha}'`;
+      filters.push(`drawtext=${fontfile}:textfile=${textFile(l)}:${common}:x=(w/2-${half}-text_w)`);
+      // Ok biraz büyük ve aşağıda: DejaVu'nun oku Roboto harflerinin ortasına oturur (gözle ayarlandı).
+      const arrowFs = Math.round(fs * 1.15);
+      const arrowY = Math.round(Number(y) + fs * 0.08);
+      filters.push(
+        `drawtext=fontfile=DejaVuSans-Bold.ttf:expansion=none:textfile=${textFile("→")}:fontcolor=${color}:fontsize=${arrowFs}:y=${arrowY}:alpha='${alpha}':x=(w-text_w)/2`,
+      );
+      filters.push(`drawtext=${fontfile}:textfile=${textFile(r)}:${common}:x=(w/2+${half})`);
+      return;
+    }
+    const plain = str.replace(/\s*→\s*/g, " › ");
     filters.push(
-      `drawtext=${fontfile}:textfile=${f}:fontcolor=${color}:fontsize=${fit(str, size)}:x=(w-text_w)/2:y=${y}:alpha='${alpha}'`,
+      `drawtext=${fontfile}:textfile=${textFile(plain)}:fontcolor=${color}:fontsize=${fit(plain, size)}:x=(w-text_w)/2:y=${y}:alpha='${alpha}'`,
     );
   };
 
