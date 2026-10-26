@@ -5,6 +5,7 @@ import {
   guestCompressConfigController,
   guestCompressUsageController,
 } from "../guest-compress/guest-compress.internal.js";
+import { downloadSettleController } from "./download-settle.controller.js";
 import {
   downloadLogAckController,
   downloadLogCreateController,
@@ -30,6 +31,8 @@ entitlementRouter.post("/check", asyncHandler(entitlementCheckController));
 entitlementRouter.post("/consume", asyncHandler(entitlementConsumeController));
 entitlementRouter.post("/download-log", asyncHandler(downloadLogCreateController));
 entitlementRouter.post("/download-log/:id/ack", asyncHandler(downloadLogAckController));
+// PDF API dosyayı teslim edince kotayı sunucu tarafında da düşürür (tarayıcı onayı gelmese bile).
+entitlementRouter.post("/download-settle", asyncHandler(downloadSettleController));
 // Dahili (FastAPI worker) — X-Internal-Secret ile korunur; JWT bypass'ı için
 // `isPublicApiPath`'e eklendi (kendi secret'ıyla yetkilenir).
 entitlementRouter.post("/internal/editor-download", asyncHandler(editorDownloadConsumeController));

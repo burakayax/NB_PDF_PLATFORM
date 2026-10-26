@@ -20,7 +20,7 @@ export const journeyEventSchema = z.object({
   sessionId: z.string().trim().min(8).max(64),
   name: z.string().trim().min(1).max(60),
   toolId: z.string().trim().min(1).max(60).optional(),
-  extra: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+  extra: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 export type JourneyEventInput = z.infer<typeof journeyEventSchema>;

@@ -12,7 +12,7 @@ function emailWrapper(headerTitle: string, headerSubtitle: string, bodyHtml: str
     <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#0f172a;border-radius:20px;border:1px solid rgba(255,255,255,0.07);overflow:hidden;">
       <!-- HEADER -->
       <tr><td style="background:linear-gradient(135deg,#0c4a6e 0%,#0e7490 50%,#0891b2 100%);padding:40px 48px;">
-        <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(224,242,254,0.7);">NB PDF PLATFORM</p>
+        <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(224,242,254,0.7);">PDF PLATFORM</p>
         <h1 style="margin:0 0 10px;font-size:28px;font-weight:700;color:#ffffff;line-height:1.25;">${headerTitle}</h1>
         <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.6;">${headerSubtitle}</p>
       </td></tr>
@@ -22,7 +22,7 @@ function emailWrapper(headerTitle: string, headerSubtitle: string, bodyHtml: str
       </td></tr>
       <!-- FOOTER -->
       <tr><td style="padding:24px 48px;border-top:1px solid rgba(255,255,255,0.06);">
-        <p style="margin:0;font-size:12px;color:#64748b;line-height:1.7;"><strong style="color:#475569;">NB PDF PLATFORM</strong> by NB Global Studio</p>
+        <p style="margin:0;font-size:12px;color:#64748b;line-height:1.7;"><strong style="color:#475569;">PDF PLATFORM</strong> by NB Global Studio</p>
         <p style="margin:6px 0 0;font-size:11px;color:#475569;">&copy; ${new Date().getFullYear()} NB Global Studio. Tüm hakları saklıdır.</p>
       </td></tr>
     </table>
@@ -101,7 +101,7 @@ export async function sendTeamInviteEmail(params: {
 
   const body = `
     <p style="margin:0 0 16px;font-size:15px;color:#e2e8f0;line-height:1.7;">Merhaba,</p>
-    <p style="margin:0 0 20px;font-size:15px;color:#e2e8f0;line-height:1.7;"><strong style="color:#67e8f9;">${patronName}</strong>, sizi <strong style="color:#f1f5f9;">${teamName}</strong> ekibine NB PDF Platform üzerinden davet etti.</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#e2e8f0;line-height:1.7;"><strong style="color:#67e8f9;">${patronName}</strong>, sizi <strong style="color:#f1f5f9;">${teamName}</strong> ekibine PDF Platform üzerinden davet etti.</p>
     <div style="background:rgba(14,116,144,0.08);border:1px solid rgba(103,232,249,0.18);border-radius:14px;padding:24px;margin:24px 0;">
       <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;">Ekip üyesi olarak şunlara erişeceksiniz:</p>
       <table cellpadding="0" cellspacing="0" border="0" width="100%">${featureGrid}</table>
@@ -116,10 +116,10 @@ export async function sendTeamInviteEmail(params: {
 
   await sendMail({
     to: recipientEmail,
-    subject: `${patronName} sizi ${teamName} ekibine davet etti — NB PDF Platform`,
+    subject: `${patronName} sizi ${teamName} ekibine davet etti — PDF Platform`,
     html: emailWrapper(
       `${teamName} Ekip Daveti`,
-      `${patronName} sizi NB PDF Platform'da ekibine katılmaya davet ediyor.`,
+      `${patronName} sizi PDF Platform'da ekibine katılmaya davet ediyor.`,
       body,
     ),
     text: `${patronName} sizi ${teamName} ekibine davet etti. Kabul etmek için: ${inviteUrl}`,

@@ -9,7 +9,9 @@
  *    `faq` mevcut SSS listesinin SONUNA eklenir (FAQPage şemasına da girer).
  *  - Statik prerender (generate-seo-files.mjs) ve React araç sayfası aynı kaynağı okur.
  */
-export const TOOL_GUIDE = {
+import { TOOL_GUIDE_EXTRA } from "./toolGuidesExtra.mjs";
+
+const TOOL_GUIDE_CORE = {
   "merge-pdf": {
     tr: {
       steps: [
@@ -386,6 +388,9 @@ export const TOOL_GUIDE = {
     },
   },
 };
+
+/** Tüm rehberler: ilk 10 araç (bu dosya) + içeriği kısa kalan araçlar (toolGuidesExtra.mjs). */
+export const TOOL_GUIDE = { ...TOOL_GUIDE_CORE, ...TOOL_GUIDE_EXTRA };
 
 /** Araç slug'ı + dil için rehber içeriği (yoksa null). */
 export function getToolGuide(slug, lang) {

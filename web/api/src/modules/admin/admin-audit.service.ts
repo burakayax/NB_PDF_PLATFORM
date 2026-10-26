@@ -147,7 +147,7 @@ export async function auditedPackagesPartial(
 }
 
 export async function listAdminAuditLogs(limit: number) {
-  const take = Math.min(Math.max(limit, 1), 200);
+  const take = Math.min(Math.max(limit, 1), 500);
   return prisma.adminAuditLog.findMany({
     orderBy: { createdAt: "desc" },
     take,

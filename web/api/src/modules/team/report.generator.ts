@@ -104,7 +104,7 @@ export async function generateExcelReport(
   _endDate?: Date,
 ): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "NB PDF Platform";
+  wb.creator = "PDF Platform";
   (wb as unknown as { company: string }).company = "NB Global Studio";
 
   const statusLabels: Record<string, string> = {
@@ -124,7 +124,7 @@ export async function generateExcelReport(
     { key: "value", width: 25 },
   ];
 
-  const titleRow = sheet1.addRow(["NB PDF PLATFORM — EKİP RAPORU", ""]);
+  const titleRow = sheet1.addRow(["PDF PLATFORM — EKİP RAPORU", ""]);
   titleRow.height = 48;
   sheet1.mergeCells("A1:B1");
   titleRow.getCell(1).font = { bold: true, size: 16, color: { argb: COLORS.white } };
