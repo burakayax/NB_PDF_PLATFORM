@@ -1490,8 +1490,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         </ToolResultPanel>
       ) : !file ? (
         <div className="tool-form">
-          {/* Yükleme alanına kalp atışı ritminde yumuşak halka: dikkat çeker, içerik oynamaz. */}
-          <div className="nb-heartbeat field field--full">
+          <div className="field field--full">
             <WorkspaceUploadField
               toolId="pdf-duzenle"
               language={language}
