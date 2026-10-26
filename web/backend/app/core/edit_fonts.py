@@ -385,6 +385,64 @@ def remove_image_placement(doc: Any, page: Any, rect: Any) -> str | None:
     return None
 
 
+def vector_emblems(page: Any, image_rects: list[Any], max_clusters: int = 40) -> list[tuple[float, float, float, float]]:
+    """Çizim komutlarından (eğri/çokgen) oluşan amblem/logo kümelerini bulur.
+
+    `get_image_info` yalnız piksel görselleri verir; vektör çizilmiş amblemler seçilemiyordu.
+    Yalnız ŞEKİL benzeri çizimler (eğri ya da kapalı çokgen) aday olur — tablo çizgisi, düz
+    dikdörtgen dolgu ve tek çizgiler değil. Aday kutular birbirine yakınsa tek amblemde birleşir.
+    Sayfayı kaplayan, çok küçük ya da bir görselle neredeyse aynı yerde olan kümeler atılır;
+    çok sayıda küme (harita/grafik) çıkarsa hiçbiri döndürülmez (arayüz kalabalıklaşmasın)."""
+    import fitz
+
+    try:
+        draws = page.get_drawings()
+    except Exception:
+        return []
+    pr = page.rect
+    boxes: list[Any] = []
+    for d in draws:
+        items = d.get("items") or []
+        if not items:
+            continue
+        kinds = [it[0] for it in items]
+        has_curve = "c" in kinds
+        poly = kinds.count("l") >= 3 or "qu" in kinds
+        if not (has_curve or poly):
+            continue
+        if d.get("fill") is None and d.get("color") is None:
+            continue
+        r = fitz.Rect(d["rect"])
+        if r.is_empty or r.width > pr.width * 0.7 or r.height > pr.height * 0.7:
+            continue
+        boxes.append(r)
+    if not boxes or len(boxes) > 4000:
+        return []
+    # Yakın/üst üste kutuları birleştir (3 pt tolerans).
+    gap = 3.0
+    changed = True
+    while changed and len(boxes) > 1:
+        changed = False
+        out: list[Any] = []
+        for b in boxes:
+            for i, o in enumerate(out):
+                if fitz.Rect(b.x0 - gap, b.y0 - gap, b.x1 + gap, b.y1 + gap).intersects(o):
+                    out[i] = o | b
+                    changed = True
+                    break
+            else:
+                out.append(fitz.Rect(b))
+        boxes = out
+    res: list[tuple[float, float, float, float]] = []
+    for b in boxes:
+        if b.width < 8 or b.height < 8 or b.width * b.height > pr.width * pr.height * 0.25:
+            continue
+        if any(b.get_area() > 0 and (b & ir).get_area() / b.get_area() > 0.8 for ir in image_rects):
+            continue
+        res.append((b.x0, b.y0, b.x1, b.y1))
+    return res if len(res) <= max_clusters else []
+
+
 _FALLBACK_CSS = {"sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono"}
 
 

@@ -111,7 +111,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
   const askComment = value > 0 && value < COMMENT_ASKED_BELOW && state !== "sending";
 
   return (
-    <div className="relative mt-4 border-t border-white/[0.06] pt-4">
+    <div className="nb-rating-glow relative mt-5 rounded-2xl border border-amber-400/30 bg-amber-500/[0.05] px-4 pb-3 pt-4">
       {/* Soruyu bir daha görmemenin yolu. "Araç başına bir kez" kuralının
           karşılığı: cevap vermek istemeyen de bir kez karar verebilmeli. */}
       <button
@@ -122,13 +122,13 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
           rememberPromptDismissed(toolSlug);
           setAsked(true);
         }}
-        className="absolute right-0 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
+        className="absolute right-1 top-2 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
       >
         <X className="h-3.5 w-3.5" />
       </button>
-      <p className="text-center text-[13px] font-medium text-slate-200">{t.ask}</p>
+      <p className="text-center text-[14px] font-bold text-amber-100">{t.ask}</p>
 
-      <div className="mt-2 flex items-center justify-center gap-1">
+      <div className={`mt-2 flex items-center justify-center gap-1 ${value === 0 ? "nb-star-wave" : ""}`}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}

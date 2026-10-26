@@ -39,7 +39,7 @@ export type XPostData = {
   factCards: string[];
 };
 export type XProduct = { id: string; text: string; link: string; card: string };
-export type XPoll = { id: string; question: string; options: string[] };
+export type XPoll = { id: string; question: string; options: string[]; card?: string };
 export type XContent = { posts: Record<string, XPostData>; products: XProduct[]; polls: XPoll[] };
 
 /** Bir gönderinin yayın biçimi (publisher bunu gövdeden geri okur). */

@@ -6,6 +6,7 @@ import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
 import { pricingSectionCopy } from "../../i18n/pricingSection";
 import { PLANS, STARTER_TOOL_IDS, TOTAL_TOOL_COUNT } from "../../lib/planConfig";
+import { fillEditorTokens, useEditorLimits } from "../../lib/editorLimits";
 import type { Currency, BillingCycle, PlanDefinition, PlanId } from "../../lib/planConfig";
 import { PlanPerksModal } from "../pricing/PlanPerksModal";
 import { sidebarToolLabel } from "../../i18n/workspace";
@@ -725,6 +726,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { cards, flags, pricing } = useSettings();
+  const editorLimits = useEditorLimits();
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
   const comingSoon = flags?.featureFlags?.paymentsDisabled !== false;
@@ -762,8 +764,14 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
     // Fiyat bağlama ödeme özetiyle ve sunucuyla AYNI kuraldır (lib/checkoutQuote.ts):
     // Business yıllığı aylıktan türetilir (~10 ay, 12'nin tam katı); 12 ile çarpılırsa
     // ekranda indirimsiz tutar görünür ama ödemede indirimli tutar çekilir.
-    return applyTryPriceOverrides(PLANS.map(withCard), pricing?.tryPrices);
-  }, [pricing, cards]);
+    // {editorFree} gibi yer tutucular yönetim panelindeki PDF Düzenle haklarıyla doldurulur.
+    const fill = (p: PlanDefinition): PlanDefinition => ({
+      ...p,
+      featuresTr: p.featuresTr.map((f) => fillEditorTokens(f, editorLimits)),
+      featuresEn: p.featuresEn.map((f) => fillEditorTokens(f, editorLimits)),
+    });
+    return applyTryPriceOverrides(PLANS.map(withCard).map(fill), pricing?.tryPrices);
+  }, [pricing, cards, editorLimits]);
   const [free, starter, plus, pro, business] = plansAdjusted;
 
   return (

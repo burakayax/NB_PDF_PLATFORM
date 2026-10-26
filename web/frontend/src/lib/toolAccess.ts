@@ -71,13 +71,13 @@ const SPECIAL: Record<string, Special> = {
       en: "Limited daily allowance without an account (default 1). Free account: shared daily pool (3 operations). Paid plans use their own allowance.",
     },
   },
-  // Kaynak: backend/app/core/editor_daily_limit.py (misafir 1, ücretsiz üye 2; Plus/Pro/Business sınırsız).
+  // Kaynak: backend/app/core/editor_daily_limit.py (misafir 1, ücretsiz üye 2, Başlangıç 10; Plus/Pro/Business sınırsız).
   "pdf-duzenle": {
     tone: "guest",
     suffix: { tr: "sınırlı hak", en: "limited" },
     detail: {
-      tr: "Kaydetme/indirme: üyeliksiz günde 1, ücretsiz üye günde 2, Başlangıç günde 2. Plus ve üzeri sınırsız.",
-      en: "Saving/downloading: 1/day without an account, 2/day for free and Starter members. Unlimited on Plus and above.",
+      tr: "Kaydetme/indirme: üyeliksiz günde 1, ücretsiz üye günde 2, Başlangıç günde 10. Plus ve üzeri sınırsız.",
+      en: "Saving/downloading: 1/day without an account, 2/day for free members, 10/day for Starter. Unlimited on Plus and above.",
     },
   },
   // Kaynak: api/src/modules/signature/signature.service.ts → AYLIK_KONTENJAN.

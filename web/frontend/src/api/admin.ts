@@ -1380,3 +1380,29 @@ export const saveAutoHeal = (t: string, patch: unknown) =>
 export const setAutoHealIncidentStatus = (t: string, id: string, status: AutoHealIncident["status"]) =>
   autoHealCall(t, `/incidents/${encodeURIComponent(id)}/status`, { method: "POST", body: JSON.stringify({ status }) });
 export const runAutoHealNow = (t: string) => autoHealCall(t, "/run", { method: "POST", body: "{}" });
+
+// ─── PDF Düzenle günlük hakları (yönetim paneli) ─────────────────────────────────────────────────
+// Plus ve üzeri sınırsızdır; burada yalnız sınırlı gruplar. 0 = o grup için düzenleme kapalı.
+
+export type EditorLimitsSettings = { guest: number; free: number; starter: number };
+
+export type EditorLimitsAdminState = {
+  config: EditorLimitsSettings;
+  defaults: EditorLimitsSettings;
+  bounds: { min: number; max: number };
+};
+
+export async function fetchEditorLimits(accessToken: string): Promise<EditorLimitsAdminState> {
+  const r = await adminFetch(accessToken, "/editor-limits");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<EditorLimitsAdminState>;
+}
+
+export async function saveEditorLimits(
+  accessToken: string,
+  patch: Partial<EditorLimitsSettings>,
+): Promise<EditorLimitsAdminState> {
+  const r = await adminFetch(accessToken, "/editor-limits", { method: "PUT", body: JSON.stringify(patch) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<EditorLimitsAdminState>;
+}

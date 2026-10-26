@@ -530,8 +530,8 @@ def internal_service_secret() -> str:
     return os.getenv("INTERNAL_SERVICE_SECRET", "").strip()
 
 
-async def consume_editor_download(id_key: str) -> dict[str, Any] | None:
-    """PDF Düzenle günlük indirme sayacı — Node/Postgres'te atomik check+consume.
+async def consume_editor_download(id_key: str, *, peek: bool = False, plan: str | None = None) -> dict[str, Any] | None:
+    """PDF Düzenle günlük hak sayacı — Node/Postgres'te atomik check+consume (peek=True → yalnız oku).
 
     ``INTERNAL_SERVICE_SECRET`` ayarlı DEĞİLSE ya da çağrı başarısızsa ``None`` döner →
     çağıran yerel SQLite sayacına düşer (kesinti olmaz). Başarılıysa
@@ -544,7 +544,7 @@ async def consume_editor_download(id_key: str) -> dict[str, Any] | None:
         r = await _httpx_post_json_with_retry(
             f"{base}/api/entitlement/internal/editor-download",
             headers={"X-Internal-Secret": secret},
-            json_body={"idKey": id_key},
+            json_body={"idKey": id_key, **({"peek": True} if peek else {}), **({"plan": plan} if plan else {})},
             attempts=1,
         )
     except Exception as exc:  # ağ/sunucu hatası → fallback

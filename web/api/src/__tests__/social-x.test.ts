@@ -222,13 +222,16 @@ describe("X yayıncısı (sahte API)", () => {
     expect(tweets[1]?.reply?.in_reply_to_tweet_id).toBe("t1");
   });
 
-  it("anket: soru + seçenekler + 24 saat; görsel ve link yok", async () => {
+  it("anket: soru + seçenekler + 24 saat; görsel anketin ALTINA yanıt, link yok", async () => {
     const tweets = stubApi();
     const body = encodeXPlan({ kind: "poll", question: "PDF'i en çok ne için kullanıyorsunuz?", options: ["Birleştirme", "Sıkıştırma"] });
     await publishToX({ body, imageUrl: "https://x.test/x-cards/a.png", secrets: SECRETS, item: ITEM });
-    expect(tweets).toHaveLength(1);
+    expect(tweets).toHaveLength(2);
     expect(tweets[0]?.poll).toEqual({ options: ["Birleştirme", "Sıkıştırma"], duration_minutes: 1440 });
     expect(tweets[0]?.media).toBeUndefined();
+    expect(tweets[1]?.reply?.in_reply_to_tweet_id).toBe("t1");
+    expect(tweets[1]?.media).toBeTruthy();
+    expect(tweets[1]?.text.includes("http")).toBe(false);
   });
 
   it("link yanıtı başarısız olursa gönderi yine BAŞARILI sayılır (aynı gönderi iki kez çıkmaz)", async () => {

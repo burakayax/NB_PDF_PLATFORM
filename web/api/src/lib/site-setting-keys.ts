@@ -30,6 +30,8 @@ export const SITE_SETTING_KEYS = {
    * { enabled, dailyLimit, globalDailyLimit, maxMB }. PDF servisi bunu dahili uçtan okur.
    */
   GUEST_COMPRESS: "guest.compress",
+  /** PDF Düzenle günlük hakları (yönetim paneli): JSON { guest, free, starter }; Plus ve üzeri sınırsız. */
+  EDITOR_LIMITS: "editor.limits",
   /**
    * Ticari e-postalarda görünen gönderen kimliği: JSON
    * { legalName, entityType, mersisNo, tckn, phone, contactEmail, postalAddress }

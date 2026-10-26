@@ -190,7 +190,7 @@ export async function writeSocialX({ publicDir, baseUrl }) {
   const tipLayouts = assignLayouts(oldestFirst.map((p) => p.slug));
   const factLayouts = assignLayouts(oldestFirst.map((p) => `f:${p.slug}`), { prefer: (k) => hash(k) + 3 });
 
-  const out = { posts: {}, products: [], polls: X_POLLS };
+  const out = { posts: {}, products: [], polls: [] };
   for (const post of oldestFirst) {
     const tips = tipsOf(post);
     if (tips.length < 2) continue;
@@ -236,6 +236,19 @@ export async function writeSocialX({ publicDir, baseUrl }) {
       null,
     );
     out.products.push({ id: p.id, text: p.text, link: `${baseUrl}${p.tool}`, card: cardPath });
+  }
+
+  // Anket görseli: X anketle görseli aynı gönderide kabul etmez; görsel anketin altına yanıt olarak eklenir.
+  const pollHeroKey = { kullanim: "merge", eposta: "compress", cvbicim: "cv-olustur", tarama: "belge-tara" };
+  const pollLayouts = assignLayouts(X_POLLS.map((p) => `poll:${p.id}`), { prefer: (k) => hash(k) + 7 });
+  for (const q of X_POLLS) {
+    const cardPath = await card(
+      "poll",
+      q.id,
+      { layout: pollLayouts.get(`poll:${q.id}`), title: q.question, tag: "Anket", hero: heroFor(pollHeroKey[q.id] ?? q.id), accent: THEMES.pdf.accent, fact: "" },
+      null,
+    );
+    out.polls.push({ ...q, card: cardPath });
   }
 
   mkdirSync(root, { recursive: true });
