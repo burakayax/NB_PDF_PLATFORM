@@ -619,7 +619,8 @@ export async function updateUserForAdmin(
         where: { id: existing.organizationId },
         data: {
           plan: data.plan,
-          dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+          // null = günlük sınır yok; undefined yazılırsa eski plandan kalan limit silinmez.
+          dailyOperationLimit: planConfig.dailyOperationLimit ?? null,
           monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
           fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
           batchLimit: planConfig.batchLimit,
