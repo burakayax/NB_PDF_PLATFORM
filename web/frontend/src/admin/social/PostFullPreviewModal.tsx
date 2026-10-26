@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Download, ExternalLink, Layers, X } from "lucide-react";
 import type { SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
-import { SlideViewer, isVideoUrl, previewRatio, slidesOf } from "./PostMediaPreview";
+import { SlideViewer, isVideoUrl, previewRatio, reelCoverOf, slidesOf } from "./PostMediaPreview";
 
 /**
  * TAM ÖNİZLEME: gönderi, platformda görüneceği düzende — başlık satırı, medya (tüm
@@ -66,7 +66,7 @@ export function PostFullPreviewModal({
           {slides.length > 0 ? (
             <SlideViewer slides={slides} ratio={previewRatio(post)} index={index} onIndex={setIndex} large />
           ) : post.imageUrl && video ? (
-            <video src={post.imageUrl} controls playsInline className="max-h-[70vh] w-full rounded-xl bg-black object-contain" />
+            <video src={post.imageUrl} poster={reelCoverOf(post.imageUrl)} controls playsInline className="max-h-[70vh] w-full rounded-xl bg-black object-contain" />
           ) : post.imageUrl ? (
             <img
               src={post.imageUrl}
