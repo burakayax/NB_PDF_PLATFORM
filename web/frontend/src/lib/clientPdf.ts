@@ -225,16 +225,22 @@ export async function imagesToSearchablePdf(
   for (const pg of pages) {
     const isPng = pg.mime.includes("png");
     const img = isPng ? await out.embedPng(pg.bytes) : await out.embedJpg(pg.bytes);
-    const page = out.addPage([img.width, img.height]);
-    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+    // Sayfa piksel değil punto boyutunda olmalı: aksi halde 2x ölçekle çizilmiş bir A4
+    // sayfa (1190x1684) iki kat büyük, 300 dpi tarama (2480x3508) dört kat büyük çıkar.
+    // En uzun kenar A4'e sığacak kadar küçültülür; küçük görsellere dokunulmaz.
+    const k = Math.min(1, A4_PT.h / Math.max(img.width, img.height));
+    const pageW = img.width * k;
+    const pageH = img.height * k;
+    const page = out.addPage([pageW, pageH]);
+    page.drawImage(img, { x: 0, y: 0, width: pageW, height: pageH });
     for (const w of pg.words) {
-      const h = Math.max(1, w.y1 - w.y0);
+      const h = Math.max(1, w.y1 - w.y0) * k;
       const size = h * 0.8;
       try {
         // opacity 0 → görünmez ama seçilebilir/aranabilir. pdf-lib origin sol-alt.
         page.drawText(w.text, {
-          x: w.x0,
-          y: img.height - w.y1 + h * 0.15,
+          x: w.x0 * k,
+          y: pageH - w.y1 * k + h * 0.15,
           size,
           font,
           color: rgb(0, 0, 0),

@@ -377,6 +377,7 @@ async function sendVerificationEmail(user: User, rawToken: string) {
     verificationUrl,
     productName: "PDF PLATFORM",
     expiresInHours: env.EMAIL_VERIFICATION_TTL_HOURS,
+    locale: user.preferredLanguage === "tr" ? "tr" : "en",
   });
 
   await sendMail({
@@ -673,6 +674,7 @@ export async function registerUser(
         lastName: persistedUser.lastName,
         name: persistedUser.name,
         role: persistedUser.role,
+        preferredLanguage: persistedUser.preferredLanguage,
       }),
     )
     .catch(() => {
@@ -1354,6 +1356,7 @@ export async function signInWithGoogle(params: {
         lastName: persistedGoogleUser.lastName,
         name: persistedGoogleUser.name,
         role: persistedGoogleUser.role,
+        preferredLanguage: persistedGoogleUser.preferredLanguage,
       }),
     )
     .catch(() => {});
