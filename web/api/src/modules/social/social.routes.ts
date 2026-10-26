@@ -127,7 +127,7 @@ const accountSchema = z.object({
   platform: platformSchema,
   displayName: z.string().max(120).optional(),
   enabled: z.boolean().optional(),
-  secrets: z.record(z.string().max(4000)).default({}),
+  secrets: z.record(z.string(), z.string().max(4000)).default({}),
 });
 
 socialRouter.put(

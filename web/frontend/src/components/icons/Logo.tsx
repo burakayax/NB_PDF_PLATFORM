@@ -1,4 +1,4 @@
-/** NB PDF Platform Logo — Modern, Electric Cyan design */
+/** PDF Platform Logo — Modern, Electric Cyan design */
 
 export const LogoIcon = ({ className, size = 32 }: { className?: string; size?: number }) => (
   <svg

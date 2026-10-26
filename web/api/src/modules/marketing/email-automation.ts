@@ -52,6 +52,7 @@ export async function trySendWelcomeAfterRegistration(user: {
   lastName: string | null;
   name: string | null;
   role: string;
+  preferredLanguage?: string | null;
 }) {
   if (user.role === "ADMIN") {
     return;
@@ -62,7 +63,11 @@ export async function trySendWelcomeAfterRegistration(user: {
   }
   const name = displayNameForEmail(user);
   try {
-    await sendWelcomeEmailToUser(user.email, { name, userId: user.id });
+    await sendWelcomeEmailToUser(user.email, {
+      name,
+      userId: user.id,
+      locale: user.preferredLanguage === "en" ? "en" : "tr",
+    });
   } catch (e) {
     console.warn("welcome email failed", e);
   }

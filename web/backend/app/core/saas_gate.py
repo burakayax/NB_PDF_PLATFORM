@@ -504,6 +504,28 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     return _validate_consume(data)
 
 
+async def settle_download(token: str, result_id: str, tool_id: str) -> None:
+    """Dosya teslim edildikten sonra kotayı SUNUCU tarafında da düşürür.
+
+    Tarayıcı "indirdim" onayını hiç göndermese bile hak yanar; onay sonradan gelirse
+    Node tarafı aynı indirmeyi ikinci kez saymaz. Tarayıcının indirme kaydını açması
+    için kısa bir süre beklenir (yoksa aynı indirme için iki satır oluşurdu).
+    Hata teslimatı bozmaz — yalnızca loglanır.
+    """
+    try:
+        await asyncio.sleep(3)
+        r = await _httpx_post_json_with_retry(
+            f"{saas_api_base()}/api/entitlement/download-settle",
+            headers=_user_headers(token),
+            json_body={"resultId": result_id, "toolId": tool_id},
+            attempts=2,
+        )
+        if r.status_code != 200:
+            logger.warning("settle_download non-200: %s %s", r.status_code, r.text[:200])
+    except Exception as exc:
+        logger.warning("settle_download failed result_id=%s: %s", result_id, exc)
+
+
 def internal_service_secret() -> str:
     return os.getenv("INTERNAL_SERVICE_SECRET", "").strip()
 

@@ -40,7 +40,7 @@ export const adminGrantTempPlanSchema = z.object({
 });
 
 export const adminPatchSettingsSchema = z.object({
-  patches: z.record(z.unknown()),
+  patches: z.record(z.string(), z.unknown()),
 });
 
 export const adminUsageExportQuerySchema = z.object({
@@ -76,7 +76,7 @@ export const adminBlockedEmailQuerySchema = z.object({
 });
 
 export const adminAuditQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(200).optional().default(120),
+  limit: z.coerce.number().int().min(1).max(500).optional().default(120),
 });
 
 export const adminRevisionsQuerySchema = z.object({

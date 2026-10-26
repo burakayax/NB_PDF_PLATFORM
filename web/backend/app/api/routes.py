@@ -69,6 +69,7 @@ from app.core.result_store import (
 from app.core.saas_gate import (
     entitlement_check,
     entitlement_consume,
+    settle_download,
     saas_current_user_id,
     saas_session_ok,
     get_user_file_size_limit_bytes,
@@ -349,6 +350,7 @@ async def download_job_output(
     output_path, output_name, _workdir = get_job_download(job_id, _uid)
     background_tasks.add_task(record_output_proof, _uid, "merge", f"job:{job_id}", path=output_path)
     background_tasks.add_task(cleanup_job, job_id)
+    background_tasks.add_task(settle_download, token, job_id, "merge")
     # Content-Disposition'ı RFC 5987 helper ile elle kur (filename* + ASCII fallback).
     # Starlette'in FileResponse(filename=) varsayılanı bazı sürümlerde Türkçe adı
     # ham ``filename="..."`` olarak gömüp tarayıcıda mojibake ("birleÅtirilmiÅ")
@@ -1653,6 +1655,8 @@ async def download_result(
         path=read.payload_path,
     )
     background_tasks.add_task(delete_result, result_id)
+    # Kota: tarayıcı onayına güvenme; teslimden sonra sunucu da düşer (çift sayım yok).
+    background_tasks.add_task(settle_download, token, result_id, tool)
 
     # S3 backend: download from S3 and stream to browser (avoids CORS issues).
     # Local backend: return local file path.
