@@ -22,7 +22,7 @@ export function absolutize(content: XContent, origin: string): XContent {
       Object.entries(content.posts).map(([url, p]) => [url, { ...p, card: absolute(o, p.card), factCards: p.factCards.map((c) => absolute(o, c)) }]),
     ),
     products: content.products.map((p) => ({ ...p, card: absolute(o, p.card) })),
-    polls: content.polls,
+    polls: content.polls.map((q) => ({ ...q, card: q.card ? absolute(o, q.card) : undefined })),
   };
 }
 
