@@ -114,6 +114,7 @@ export function ToolReelsPanel({
                   className="max-h-[420px] rounded-lg"
                   style={{ aspectRatio: "9 / 16" }}
                   src={reel.video.url}
+                  poster={`/reel-covers/${encodeURIComponent(reel.id)}.jpg`}
                   controls
                   preload="metadata"
                   playsInline
