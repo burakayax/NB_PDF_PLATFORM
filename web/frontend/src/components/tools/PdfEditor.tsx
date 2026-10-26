@@ -1408,7 +1408,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       : (tr ? `«Tamam» → «PDF'i Hazırla» → «İndir/Aç/Paylaş». Düzenlemeler ücretsiz denenebilir; «PDF'i Hazırla» dediğinizde günlük ücretsiz hakkınızdan bir düşer (misafir günde ${EL.guest}, üye günde ${EL.free}, Başlangıç günde ${EL.starter}).` : `«Done» → «Prepare PDF» → «Download/Open/Share». Editing is free to try; one of your daily free edits is used when you press «Prepare PDF» (${EL.guest}/day as a guest, ${EL.free}/day with an account, ${EL.starter}/day on Starter).`) },
   ], [tr, unlimitedPlan, EL]);
 
-  const grp = "flex items-center gap-1.5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_8px_20px_-12px_rgba(0,0,0,0.7)]";
+  const grp = "flex items-center gap-1.5 rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] px-1.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_8px_20px_-12px_rgba(0,0,0,0.7)]";
   const grpLabel = "hidden select-none pl-1 pr-0.5 text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-500 xl:inline";
   const resetT = quotaPopup ? resetInfo(quotaPopup.resetAt) : null;
 
@@ -1588,16 +1588,16 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       {editorOpen && doc && createPortal(
         <div className="fixed inset-0 z-[100] flex flex-col bg-[#0b1020]/97 backdrop-blur-sm">
           {/* Üst araç çubuğu — her grup kendi çerçevesinde: EKLE · BİÇİM · GÖRÜNÜM · BİTİR */}
-          <div className="flex flex-wrap items-center gap-2.5 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-2.5">
+          <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-1.5">
             <div className={grp}>
               <span className={grpLabel}>{tr ? "Ekle" : "Add"}</span>
               <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); setMultiSel(new Set()); }} aria-pressed={addMode}
-                className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[12.5px] font-bold ring-1 transition duration-200 hover:scale-[1.03] ${addMode ? "bg-gradient-to-r from-cyan-300 to-sky-400 text-slate-950 shadow-[0_10px_26px_-8px_rgba(34,211,238,0.95)] ring-white/60" : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_10px_24px_-12px_rgba(6,182,212,0.9)] ring-white/15 hover:brightness-110"}`}>
-                <Type className="h-4 w-4" />{tr ? "Metin Ekle" : "Add Text"}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-bold ring-1 transition duration-200 hover:scale-[1.03] ${addMode ? "bg-gradient-to-r from-cyan-300 to-sky-400 text-slate-950 shadow-[0_10px_26px_-8px_rgba(34,211,238,0.95)] ring-white/60" : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_10px_24px_-12px_rgba(6,182,212,0.9)] ring-white/15 hover:brightness-110"}`}>
+                <Type className="h-3.5 w-3.5" />{tr ? "Metin Ekle" : "Add Text"}
               </button>
               <button data-tour="editor-add-image" type="button" onClick={() => imageInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-3.5 py-2 text-[12.5px] font-bold text-white shadow-[0_10px_24px_-12px_rgba(168,85,247,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.03] hover:brightness-110">
-                <ImagePlus className="h-4 w-4" />{tr ? "Görsel / İmza Ekle" : "Add Image / Signature"}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-1 text-[11.5px] font-bold text-white shadow-[0_10px_24px_-12px_rgba(168,85,247,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.03] hover:brightness-110">
+                <ImagePlus className="h-3.5 w-3.5" />{tr ? "Görsel / İmza Ekle" : "Add Image / Signature"}
               </button>
               <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={(e) => { addImageFile(e.target.files?.[0]); e.target.value = ""; }} />
             </div>
@@ -1673,26 +1673,26 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
             <div className={grp}>
               <span className={grpLabel}>{tr ? "Görünüm" : "View"}</span>
               <div data-tour="editor-zoom" className="flex items-center gap-1">
-                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-9 w-9 items-center sm:h-7 sm:w-7 justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-4 w-4" /></button>
-                <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-20 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
-                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-9 w-9 items-center sm:h-7 sm:w-7 justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-4 w-4" /></button>
-                <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
+                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
+                <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-16 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
+                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[11px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
               <span className="mx-0.5 h-6 w-px bg-white/15" />
               <button type="button" onClick={undoDelete} disabled={!delStack.length} title={tr ? "Son silmeyi geri al (Ctrl+Z)" : "Undo last delete (Ctrl+Z)"}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
-                <Undo2 className="h-4 w-4" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
+                <Undo2 className="h-3.5 w-3.5" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
               </button>
             </div>
 
-            <div className={grp}>
+            <div className={`${grp} ml-auto`}>
               <button type="button" onClick={() => setTourOpen(true)} title={tr ? "Hızlı turu başlat" : "Start the quick tour"}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2 text-[12.5px] font-bold text-slate-100 transition duration-200 hover:scale-[1.03] hover:bg-white/[0.1] hover:text-cyan-200">
-                <HelpCircle className="h-4 w-4" />{tr ? "Nasıl Yapılır" : "How To"}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[11.5px] font-bold text-slate-100 transition duration-200 hover:scale-[1.03] hover:bg-white/[0.1] hover:text-cyan-200">
+                <HelpCircle className="h-3.5 w-3.5" />{tr ? "Nasıl Yapılır" : "How To"}
               </button>
-              <button data-tour="editor-done" type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 px-5 py-2 text-[13px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(16,185,129,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.04] hover:brightness-110"><Check className="h-4 w-4" />{tr ? "Tamam" : "Done"}</button>
+              <button data-tour="editor-done" type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-600 px-3.5 py-1 text-[12px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(16,185,129,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.04] hover:brightness-110"><Check className="h-3.5 w-3.5" />{tr ? "Tamam" : "Done"}</button>
             </div>
-            <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="ml-auto flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
+            <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
           </div>
 
           <div className="flex min-h-0 flex-1">
