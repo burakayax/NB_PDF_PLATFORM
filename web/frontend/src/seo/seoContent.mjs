@@ -1896,7 +1896,7 @@ export const LANDING_SEO = {
     intro:
       `PDF Platform ${ARAC_SAYISI} araç sunar: PDF birleştirme, ayırma, küçültme (sıkıştırma), Word/Excel/PowerPoint ve JPG dönüştürme, düzenleme, imzalama, form doldurma, tarama, filigran ve şifreleme. Birleştirme ve görselden PDF gibi araçlar üyelik gerektirmeden, tamamen tarayıcınızda çalışır — dosyalarınız cihazınızdan hiç çıkmaz, anında ve 80 MB'a kadar ücretsizdir. Kurulum gerekmez.`,
     faq: [
-      { q: "PDF birleştirmek için üye olmam gerekiyor mu?", a: "Hayır. Birleştirme, görselden PDF gibi temel araçları üyelik veya kayıt olmadan, ücretsiz ve sınırsız kullanabilirsiniz. Üyelik yalnızca işlem geçmişini kaydetmek, Word/Excel dönüştürme ve OCR gibi gelişmiş araçlar ve daha büyük dosyalar için gerekir." },
+      { q: "PDF birleştirmek için üye olmam gerekiyor mu?", a: "Hayır. Birleştirme, görselden PDF gibi temel araçları üyelik veya kayıt olmadan, ücretsiz ve sınırsız kullanabilirsiniz. Üyelik yalnızca işlem geçmişini kaydetmek, Word/Excel dönüştürme gibi gelişmiş araçlar ve daha büyük dosyalar için gerekir." },
       { q: "Dosyalarım güvende mi? Sunucuya yükleniyor mu?", a: "Birleştirme ve görselden PDF gibi araçlarda dosyalarınız tamamen TARAYICINIZDA (cihazınızda) işlenir — sunucuya hiç gönderilmez, bilgisayarınızdan çıkmaz. Sunucu gerektiren dönüştürme gibi işlemlerde ise içerik saklanmaz ve şifreli bağlantı kullanılır." },
       { q: "PDF dosyaları nasıl ücretsiz birleştirilir?", a: "Dosyalarınızı sürükleyip bırakın, sırayı ayarlayın ve birleştir deyin. Birleştirilmiş PDF saniyeler içinde, cihazınızda hazırlanır ve otomatik indirilir — üyelik yok, kurulum yok, dosyanız sunucuya gitmez." },
       { q: "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?", a: "PDF Platform'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir." },
@@ -1955,7 +1955,7 @@ export const PRICING_SEO = {
       },
       {
         q: "Ücretli planda ne açılıyor?",
-        a: "Sunucuda çalışan işlerde (Word/Excel'e dönüştürme, OCR, sıkıştırma, yapay zekâ ile özetleme, çeviri, veri çıkarma ve karşılaştırma) günlük sınırlar yükselir ya da kalkar. Cihazda çalışan araçlar her planda sınırsızdır.",
+        a: "Sunucuda çalışan işlerde (Word/Excel'e dönüştürme, sıkıştırma, yapay zekâ ile özetleme, çeviri, veri çıkarma ve karşılaştırma) günlük sınırlar yükselir ya da kalkar. Cihazda çalışan araçlar her planda sınırsızdır.",
       },
       {
         q: "Çıktılarda filigran var mı?",
