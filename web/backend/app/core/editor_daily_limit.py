@@ -7,7 +7,8 @@ misafir → IP hash) küçük bir SQLite sayaç tutulur. Gelir kotasına dokunma
 
 Politika (bkz. ürün kararı):
   - Misafir           → 1 / gün (sunucu yükü → ücretsiz deneme, Pro sınırsız)
-  - Oturum açmış FREE ve STARTER → 2 / gün
+  - Oturum açmış FREE → 2 / gün
+  - STARTER → 10 / gün
   - PRO/PLUS/BUSINESS/ADMIN → sınırsız (limiter hiç çağrılmaz)
 
 Gün sınırı, uygulamanın geri kalanıyla tutarlı olması için Europe/Istanbul'a göre.
@@ -32,6 +33,7 @@ except Exception:  # pragma: no cover
 # Limitler — tek yerden yönetilir.
 GUEST_DAILY_LIMIT = int(os.getenv("EDITOR_GUEST_DAILY_LIMIT", "1"))
 FREE_DAILY_LIMIT = int(os.getenv("EDITOR_FREE_DAILY_LIMIT", "2"))
+STARTER_DAILY_LIMIT = int(os.getenv("EDITOR_STARTER_DAILY_LIMIT", "10"))
 
 _SALT = os.getenv("EDITOR_LIMIT_SALT", "nb-pdf-editor-daily-v1")
 

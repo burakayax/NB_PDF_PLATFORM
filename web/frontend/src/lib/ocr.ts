@@ -167,7 +167,7 @@ function extractWords(d: unknown): OcrWord[] {
 
 /** OCR satırı — Tesseract'ın KENDİ satır yapısı (kelime sırası + taban çizgisi + satır ölçüleri).
  * Koordinatlar kaynak görüntü pikselinde. */
-export type OcrLineWord = OcrWord & { by: number | null };
+export type OcrLineWord = OcrWord & { by: number | null; /** Tesseract güveni (0-100); yoksa 100. */ conf: number };
 export type OcrLine = {
   words: OcrLineWord[];
   bbox: { x0: number; y0: number; x1: number; y1: number };
@@ -197,7 +197,7 @@ function extractLines(d: unknown): OcrLine[] {
           const by = b && b.has_baseline !== false && Number.isFinite(b.y0)
             ? (b.x1 !== b.x0 ? b.y0 + ((b.y1 - b.y0) * (mid - b.x0)) / (b.x1 - b.x0) : b.y0)
             : null;
-          words.push({ text: t, x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1, by });
+          words.push({ text: t, x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1, by, conf: typeof w.confidence === "number" ? w.confidence : 100 });
         }
         if (!words.length || !ln.bbox) continue;
         out.push({

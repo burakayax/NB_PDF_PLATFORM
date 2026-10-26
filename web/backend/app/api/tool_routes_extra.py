@@ -378,6 +378,16 @@ _EDIT_FONTS = {
     "montserrat": str(_ASSETS / "Montserrat-Regular.ttf"),
     "merriweather": str(_ASSETS / "Merriweather-Regular.ttf"),
     "oswald": str(_ASSETS / "Oswald-Regular.ttf"),
+    # Ek aileler (hepsi Türkçe destekli; imza/başlık için el yazısı ve gösteri fontları dahil).
+    "opensans": str(_ASSETS / "OpenSans-Regular.ttf"),
+    "poppins": str(_ASSETS / "Poppins-Regular.ttf"),
+    "playfair": str(_ASSETS / "PlayfairDisplay-Regular.ttf"),
+    "lora": str(_ASSETS / "Lora-Regular.ttf"),
+    "ptserif": str(_ASSETS / "PTSerif-Regular.ttf"),
+    "dancing": str(_ASSETS / "DancingScript-Regular.ttf"),
+    "greatvibes": str(_ASSETS / "GreatVibes-Regular.ttf"),
+    "pacifico": str(_ASSETS / "Pacifico-Regular.ttf"),
+    "anton": str(_ASSETS / "Anton-Regular.ttf"),
 }
 
 # Kelime bazlı zengin biçim (insert_htmlbox) için: font-family adlarını (frontend'in
@@ -387,6 +397,9 @@ _EDIT_FONTS = {
 _EDIT_FONT_FAMILY = {
     "sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono",
     "lato": "Lato", "montserrat": "Montserrat", "merriweather": "Merriweather", "oswald": "Oswald",
+    "opensans": "Open Sans", "poppins": "Poppins", "playfair": "Playfair Display", "lora": "Lora",
+    "ptserif": "PT Serif", "dancing": "Dancing Script", "greatvibes": "Great Vibes",
+    "pacifico": "Pacifico", "anton": "Anton",
 }
 _EDIT_FONT_CSS = "".join(
     f'@font-face {{font-family: "{_EDIT_FONT_FAMILY[_k]}"; src: url({Path(_v).name});}}'
@@ -478,6 +491,52 @@ def _hex_to_rgb01(hex_str: str | None) -> tuple[float, float, float]:
     return (0.0, 0.0, 0.0)
 
 
+async def _editor_quota_identity(request: Request, authorization: str | None) -> dict[str, Any]:
+    """PDF Düzenle günlük hak kimliği: {unlimited, key, limit, guest, user_id}.
+
+    Misafir → IP özeti (1/gün); oturum açmış ücretsiz → kullanıcı (2/gün), Başlangıç (10/gün);
+    Plus/Pro/Business/yönetici sınırsız. Geçersiz jeton misafir sayılır."""
+    key = _edl.guest_key(_client_ip(request))
+    limit = _edl.GUEST_DAILY_LIMIT
+    token = authorization[7:].strip() if authorization and authorization.startswith("Bearer ") else ""
+    if token:
+        try:
+            ident = await saas_user_identity(token)
+            if ident["role"] == "ADMIN" or ident["plan"] in ("PLUS", "PRO", "BUSINESS"):
+                return {"unlimited": True, "key": None, "limit": 0, "guest": False, "user_id": ident["user_id"]}
+            _lim = _edl.STARTER_DAILY_LIMIT if ident["plan"] == "STARTER" else _edl.FREE_DAILY_LIMIT
+            return {"unlimited": False, "key": _edl.user_key(ident["user_id"]), "limit": _lim,
+                    "guest": False, "user_id": ident["user_id"], "plan": ident["plan"]}
+        except HTTPException:
+            pass  # geçersiz/eksik jeton → misafir muamelesi
+    return {"unlimited": False, "key": key, "limit": limit, "guest": True, "user_id": None}
+
+
+def _editor_limit_response(dec: dict[str, Any], guest: bool) -> JSONResponse:
+    return JSONResponse(status_code=429, content={
+        "error": "daily_limit", "used": dec.get("used"), "limit": dec.get("limit"),
+        "resetAt": dec.get("resetAt"), "guest": guest,
+    })
+
+
+async def _editor_quota_peek(ident: dict[str, Any]) -> dict[str, Any]:
+    """Hakkı DÜŞMEDEN oku (işlem başlamadan ön kontrol)."""
+    dec = await consume_editor_download(ident["key"], peek=True, plan=ident.get("plan"))
+    if dec is None:
+        used = _edl.peek(ident["key"])
+        dec = {"allowed": used < ident["limit"], "used": used, "limit": ident["limit"], "resetAt": _edl.reset_at_iso(), "guest": ident["guest"]}
+    return dec
+
+
+async def _editor_quota_consume(ident: dict[str, Any]) -> dict[str, Any]:
+    """Hakkı atomik düş (işlem BAŞARIYLA bittiğinde)."""
+    dec = await consume_editor_download(ident["key"], plan=ident.get("plan"))
+    if dec is None:
+        ok, used, lim = _edl.consume(ident["key"], ident["limit"])
+        dec = {"allowed": ok, "used": used, "limit": lim, "resetAt": _edl.reset_at_iso(), "guest": ident["guest"]}
+    return dec
+
+
 @router.post("/edit-text")
 @limiter.limit("15/minute")
 async def tool_edit_text(
@@ -497,6 +556,15 @@ async def tool_edit_text(
     import json as _json
 
     decision = {"fileSizeLimitMB": 50}
+    # store=1 (PDF Düzenle editörü): günlük hak «PDF'i Hazırla» anında düşer (indirmede değil).
+    # İşlem başlamadan ön kontrol; hak BAŞARILI üretimden sonra düşer → hata olursa hak yanmaz.
+    _quota_ident: dict[str, Any] | None = None
+    if str(store).strip().lower() in ("1", "true", "yes"):
+        _quota_ident = await _editor_quota_identity(request, authorization)
+        if not _quota_ident["unlimited"]:
+            _pk = await _editor_quota_peek(_quota_ident)
+            if not _pk.get("allowed"):
+                return _editor_limit_response(_pk, _quota_ident["guest"])
     # store YOKSA PDF doğrudan döner (çeviri aracı yolu) → günlük indirme sınırı atlanmasın:
     # misafir reddedilir; ücretli plan/yönetici sınırsız; ücretsiz üye aynı günlük haktan düşer.
     # (Kontrol dosya işlenmeden ÖNCE — boşuna sunucu işi yapılmaz.)
@@ -509,9 +577,9 @@ async def tool_edit_text(
         # ücretsiz üye günlük hakka tabidir.
         if not (_ident["role"] == "ADMIN" or _ident["plan"] in ("PLUS", "PRO", "BUSINESS")):
             _key = _edl.user_key(_ident["user_id"])
-            _dec = await consume_editor_download(_key)
+            _dec = await consume_editor_download(_key, plan=_ident["plan"])
             if _dec is None:
-                _ok, _used, _lim = _edl.consume(_key, _edl.FREE_DAILY_LIMIT)
+                _ok, _used, _lim = _edl.consume(_key, _edl.STARTER_DAILY_LIMIT if _ident["plan"] == "STARTER" else _edl.FREE_DAILY_LIMIT)
                 _dec = {"allowed": _ok, "used": _used, "limit": _lim, "resetAt": _edl.reset_at_iso(), "guest": False}
             if not _dec.get("allowed"):
                 return JSONResponse(status_code=429, content={
@@ -650,14 +718,36 @@ async def tool_edit_text(
                     page = doc[pi]
                     # Görsel EKLEME op'ları (op.image) altındaki içeriği silmemeli;
                     # metin/silme op'larından ayrılır.
-                    text_ops = [o for o in page_ops if not o.get("image")]
+                    text_ops = [o for o in page_ops if not o.get("image") and not o.get("deco")]
+                    deco_ops = [o for o in page_ops if o.get("deco")]  # yalnız altı/üstü çizgi: yazı silinmez
                     image_ops = [o for o in page_ops if o.get("image")]
+                    image_moves: list[tuple[int, list[float]]] = []  # taşınan MEVCUT görseller (xref, yeni kutu)
                     # 0) Silinen GÖRSEL (logo/amblem): boyamadan gerçekten kaldır — diğer silmeler içerik
                     #    akışını yeniden yazmadan ÖNCE (çizim komutu adıyla bulunur). Olmazsa eski dolgu yolu.
                     for o in [o for o in text_ops if o.get("img") and not (o.get("text") or "").strip()]:
                         try:
-                            if _ef.remove_image_placement(doc, page, o["bbox"]):
+                            if o.get("vec"):
+                                # Vektör amblem: yalnız kutunun TAMAMEN içindeki çizim komutlarını kaldır
+                                # (altındaki yazı/görsel/zemin korunur).
+                                _vb = _fitz.Rect(*[float(v) for v in o["bbox"]])
+                                # MuPDF "tamamen içinde" ölçüsü çizgi kalınlığını ~10 kat şişirir → kutuya
+                                # içindeki en kalın çizgiye göre pay ver (yoksa kontur çizili şekil silinmez).
+                                _pad = 1.0
+                                for _d in page.get_drawings():
+                                    _dr = _fitz.Rect(_d["rect"])
+                                    if _vb.intersects(_dr) and _dr.x0 >= _vb.x0 - 3 and _dr.y0 >= _vb.y0 - 3 and _dr.x1 <= _vb.x1 + 3 and _dr.y1 <= _vb.y1 + 3:
+                                        _pad = max(_pad, 10.0 * float(_d.get("width") or 0.0) + 1.0)
+                                page.add_redact_annot(_fitz.Rect(_vb.x0 - _pad, _vb.y0 - _pad, _vb.x1 + _pad, _vb.y1 + _pad), fill=False)
+                                page.apply_redactions(images=_fitz.PDF_REDACT_IMAGE_NONE,
+                                                      graphics=_fitz.PDF_REDACT_LINE_ART_REMOVE_IF_COVERED,
+                                                      text=_fitz.PDF_REDACT_TEXT_NONE)
                                 text_ops.remove(o)
+                            else:
+                                if _ef.remove_image_placement(doc, page, o["bbox"]):
+                                    text_ops.remove(o)
+                                _mv = o.get("move")
+                                if _mv and o.get("xref"):  # kaldırma başarısızsa eski yer dolguyla örtülür, yeni yere yine konur
+                                    image_moves.append((int(o["xref"]), [float(v) for v in _mv]))
                         except Exception:
                             pass
 
@@ -675,7 +765,7 @@ async def tool_edit_text(
                     for op in vt_ops:
                         cb = op.get("clear") or op["bbox"]
                         x0, y0, x1, y1 = (float(v) for v in cb)
-                        _by = float(op["by"])
+                        _by = float(op["oby"]) if op.get("oby") is not None else float(op["by"])
                         _osz = float(op.get("osz") or op.get("size") or max(1.0, (y1 - y0) / 1.2))
                         _ins = min(0.3, max(0.0, (x1 - x0) / 4))
                         page.add_redact_annot(
@@ -861,6 +951,33 @@ async def tool_edit_text(
                         if op.get("strike"):
                             sy = baseline - fs * 0.30
                             page.draw_line(_fitz.Point(draw_x, sy), _fitz.Point(draw_x + tw, sy), color=col, width=_lw)
+                    # 2a) Yalnız çizgi: orijinal yazı AYNEN kalır (font/ölçü/aralık bozulmaz), üstüne/altına çizgi çekilir.
+                    for op in deco_ops:
+                        try:
+                            dx0, dy0, dx1, _dy1 = (float(v) for v in op["bbox"])
+                            dfs = float(op.get("size") or 11)
+                            dbase = float(op["by"]) if op.get("by") is not None else dy0 + dfs
+                            dcol = _hex_to_rgb01(op.get("color"))
+                            dlw = max(0.5, dfs * 0.05)
+                            if op.get("underline"):
+                                page.draw_line(_fitz.Point(dx0, dbase + dfs * 0.12), _fitz.Point(dx1, dbase + dfs * 0.12), color=dcol, width=dlw)
+                            if op.get("strike"):
+                                page.draw_line(_fitz.Point(dx0, dbase - dfs * 0.30), _fitz.Point(dx1, dbase - dfs * 0.30), color=dcol, width=dlw)
+                        except Exception:
+                            continue
+                    # 2b) Taşınan mevcut görselleri yeni konuma yerleştir (özgün piksel + saydamlık maskesi).
+                    for _xr, _nb in image_moves:
+                        try:
+                            _pix = _fitz.Pixmap(doc, _xr)
+                            _sm = doc.xref_get_key(_xr, "SMask")
+                            if _sm and _sm[0] == "xref":
+                                _mx = int(_sm[1].split()[0])
+                                _pix = _fitz.Pixmap(_pix, _fitz.Pixmap(doc, _mx))
+                            elif _pix.colorspace and _pix.colorspace.n > 3:
+                                _pix = _fitz.Pixmap(_fitz.csRGB, _pix)
+                            page.insert_image(_fitz.Rect(*_nb), pixmap=_pix, keep_proportion=False)
+                        except Exception:
+                            continue
                     # 3) Kullanıcının eklediği resimleri yerleştir (serbest açıyla).
                     for op in image_ops:
                         try:
@@ -909,7 +1026,15 @@ async def tool_edit_text(
         # Aksi halde (AI çeviri vb.) eski davranış: PDF bytes'ını doğrudan döndür (geriye uyumlu).
         if _store_result:
             handle = result_or_bytes
-            return JSONResponse({"result_id": handle.result_id, "dl": dl_token})
+            quota: dict[str, Any] = {"unlimited": True}
+            if _quota_ident and not _quota_ident["unlimited"]:
+                _dec = await _editor_quota_consume(_quota_ident)
+                if not _dec.get("allowed"):  # yarış: ön kontrolden sonra hak doldu
+                    delete_result(handle.result_id)
+                    return _editor_limit_response(_dec, _quota_ident["guest"])
+                quota = {"unlimited": False, "used": _dec.get("used"), "limit": _dec.get("limit"),
+                         "resetAt": _dec.get("resetAt"), "guest": _quota_ident["guest"]}
+            return JSONResponse({"result_id": handle.result_id, "dl": dl_token, "quota": quota})
         return Response(
             content=result_or_bytes,
             media_type="application/pdf",
@@ -937,58 +1062,25 @@ async def edit_text_download(
     dl: Annotated[str, Query()] = "",
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
 ):
-    """PDF Düzenle sonucunun indirilmesi — günlük limit BURADA düşer ("indirmede say").
+    """PDF Düzenle sonucunun indirilmesi — günlük hak BURADA DÜŞMEZ (hazırlama anında düştü).
 
-    Misafir: 1/gün (IP hash), oturum açmış FREE ve STARTER: 2/gün (user_id); PRO/PLUS/BUSINESS/ADMIN
-    sınırsız. `dl` = hazırlamada dönen indirme jetonu (yalnız hazırlayan indirebilir)."""
+    `dl` = hazırlamada dönen indirme jetonu (yalnız hazırlayan indirebilir)."""
     if not dl:
         raise HTTPException(status_code=400, detail="Geçersiz indirme jetonu.")
 
-    # Sonuç var mı + jeton eşleşiyor mu? (limiti düşmeden ÖNCE doğrula → yarım kalan
-    # indirmede hak yanmaz.)
+    # Sonuç var mı + jeton eşleşiyor mu?
     meta = read_meta_only(result_id)
     if meta.get("user_id") != f"ed:{dl}":
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    # Kimlik + plan çöz.
-    token = ""
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization[7:].strip()
-
-    unlimited = False
+    # Kanıt kaydı için kimlik (oturum açmışsa).
     proof_user_id: str | None = None
-    key = _edl.guest_key(_client_ip(request))
-    limit = _edl.GUEST_DAILY_LIMIT
-    if token:
+    if authorization and authorization.startswith("Bearer "):
         try:
-            ident = await saas_user_identity(token)
-            if ident["role"] == "ADMIN" or ident["plan"] in ("PRO", "PLUS", "BUSINESS"):
-                unlimited = True
-            key = _edl.user_key(ident["user_id"])
+            ident = await saas_user_identity(authorization[7:].strip())
             proof_user_id = ident["user_id"]
-            limit = _edl.FREE_DAILY_LIMIT
         except HTTPException:
-            # Token geçersiz/eksik → misafir muamelesi (key/limit misafir kalır).
-            token = ""
-
-    if not unlimited:
-        # Öncelik: Node/Postgres (instance'lar arası paylaşılan, kalıcı sayaç).
-        # INTERNAL_SERVICE_SECRET yoksa/çağrı başarısızsa → yerel SQLite'a düş (kesinti yok).
-        decision = await consume_editor_download(key)
-        if decision is None:
-            allowed, used, lim = _edl.consume(key, limit)
-            decision = {"allowed": allowed, "used": used, "limit": lim, "resetAt": _edl.reset_at_iso(), "guest": not token}
-        if not decision.get("allowed"):
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "error": "daily_limit",
-                    "used": decision.get("used"),
-                    "limit": decision.get("limit"),
-                    "resetAt": decision.get("resetAt"),
-                    "guest": decision.get("guest", not token),
-                },
-            )
+            proof_user_id = None
 
     read = get_result(result_id, f"ed:{dl}")
     if proof_user_id:
@@ -1318,13 +1410,23 @@ async def tool_pdf_analyze(
                                     **({"ofont": _orig[_fname]["key"]} if _fname in _orig else {}),
                                 })
                                 ei += 1
-                    for img in page.get_image_info():
+                    _img_rects: list[Any] = []
+                    for img in page.get_image_info(xrefs=True):
                         x0, y0, x1, y1 = img["bbox"]
                         if (x1 - x0) < 4 or (y1 - y0) < 4:
                             continue
+                        _img_rects.append(_fitz.Rect(x0, y0, x1, y1))
                         els.append({
                             "id": f"i{pi}_{ei}", "type": "image",
                             "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
+                            **({"xref": int(img["xref"])} if img.get("xref") else {}),
+                        })
+                        ei += 1
+                    # VEKTÖR amblem/logo (çizim komutlarından oluşan şekiller): görsel gibi seçilip silinebilsin.
+                    for _vr in _ef.vector_emblems(page, _img_rects):
+                        els.append({
+                            "id": f"i{pi}_{ei}", "type": "image", "vec": True,
+                            "bbox": [round(_vr[0], 1), round(_vr[1], 1), round(_vr[2], 1), round(_vr[3], 1)],
                         })
                         ei += 1
                     pages.append({

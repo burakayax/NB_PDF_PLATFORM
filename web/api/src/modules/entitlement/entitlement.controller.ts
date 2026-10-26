@@ -12,7 +12,7 @@ import {
 } from "../../lib/quota.js";
 import { canExecute } from "./entitlement.engine.js";
 import { notePdfHeartbeat, recordHttpFailure } from "../../lib/service-health.js";
-import { consumeEditorDownload } from "./editor-download.service.js";
+import { consumeEditorDownload, peekEditorDownload } from "./editor-download.service.js";
 import { downloadLogCreateSchema, entitlementBodySchema } from "./entitlement.schema.js";
 
 function clientIpFromRequest(request: Request): string | null {
@@ -334,7 +334,9 @@ export async function editorDownloadConsumeController(
   if (!idKey || !(idKey.startsWith("u:") || idKey.startsWith("g:")) || idKey.length > 80) {
     throw new HttpError(400, "Invalid idKey.");
   }
-  const decision = await consumeEditorDownload(idKey);
+  // peek=true → yalnız oku (düşme): işlem başlamadan önce hak ön kontrolü.
+  const plan = typeof request.body?.plan === "string" ? request.body.plan.toUpperCase() : undefined;
+  const decision = request.body?.peek === true ? await peekEditorDownload(idKey, plan) : await consumeEditorDownload(idKey, plan);
   response.status(200).json(decision);
 }
 

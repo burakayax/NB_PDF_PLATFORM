@@ -4,6 +4,7 @@ import type { Language } from "../../i18n/landing";
 import { PLANS, type PlanId } from "../../lib/planConfig";
 import { AI_MONTHLY_CREDITS_BY_PLAN } from "../../lib/aiCredits";
 import { langAsset } from "../../lib/langAsset";
+import { useEditorLimits, type EditorLimits } from "../../lib/editorLimits";
 
 type Perk = { label: string; detail: string };
 type PerkCategory = { icon: string; title: string; perks: Perk[] };
@@ -13,7 +14,7 @@ type PerkCategory = { icon: string; title: string; perks: Perk[] };
  * (tek gerçek kaynak) türetilir → asla uydurma/tutarsız olmaz. Yalnızca ücretli
  * üst planlar (PLUS/PRO/BUSINESS) için çağrılır.
  */
-function getPerks(planId: PlanId, language: Language): PerkCategory[] {
+function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCategory[] {
   const tr = language === "tr";
   const plan = PLANS.find((p) => p.id === planId);
   if (!plan) return [];
@@ -54,17 +55,24 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
             ? "Sunucuda çalışan her dönüştürme veya sıkıştırma 1 işlem sayılır (bazı ağır dönüşümler daha çok). Cihazında çalışan birleştir, böl, döndür gibi araçlar bu sayıma girmez."
             : "Each server-side conversion or compression counts as 1 operation (a few heavy ones count more). Tools that run on your device, like merge, split and rotate, are not counted.",
         },
-        {
-          label: tr ? "Sınırsız günlük kullanım" : "Unlimited daily usage",
-          detail:
-            plan.monthlyOpsLimit == null
-              ? tr
-                ? "Ne günlük ne aylık işlem limiti yok — dilediğin kadar kullan."
-                : "No daily or monthly cap — use it as much as you want."
-              : tr
-                ? "Gün içinde işlem sayısı kısıtı yok; yalnızca aylık kotan geçerli."
-                : "No daily cap; only your monthly quota applies.",
-        },
+        plan.dailyOpsLimit != null
+          ? {
+              label: tr ? `Günde ${plan.dailyOpsLimit} işlem` : `${plan.dailyOpsLimit} operations a day`,
+              detail: tr
+                ? "Günlük hakkın her gün yenilenir; aylık kotanla birlikte geçerlidir."
+                : "Your daily allowance renews every day and applies alongside the monthly quota.",
+            }
+          : {
+              label: tr ? "Sınırsız günlük kullanım" : "Unlimited daily usage",
+              detail:
+                plan.monthlyOpsLimit == null
+                  ? tr
+                    ? "Ne günlük ne aylık işlem limiti yok — dilediğin kadar kullan."
+                    : "No daily or monthly cap — use it as much as you want."
+                  : tr
+                    ? "Gün içinde işlem sayısı kısıtı yok; yalnızca aylık kotan geçerli."
+                    : "No daily cap; only your monthly quota applies.",
+            },
         {
           label: fileSize,
           detail: tr
@@ -96,6 +104,23 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
             ? "Birleştir, böl, dönüştür, sıkıştır, şifrele, filigran ve daha fazlası."
             : "Merge, split, convert, compress, encrypt, watermark and more.",
         },
+        ...(planId === "STARTER"
+          ? [
+              {
+                label: tr ? "Şifreleme, filigran, sayfa numarası, görsel çıkarma" : "Encryption, watermark, page numbers, image extraction",
+                detail: tr
+                  ? "Ücretsiz planda kapalı olan bu araçlar Başlangıç ile açılır."
+                  : "These tools are locked on the Free plan and unlock with Starter.",
+              },
+            ]
+          : [
+              {
+                label: tr ? "Excel, PowerPoint ve HTML dönüşümleri" : "Excel, PowerPoint and HTML conversions",
+                detail: tr
+                  ? "PDF ↔ Excel, PDF ↔ PowerPoint, HTML → PDF ve gelişmiş PDF araçları (düzleştir, onar, PDF/A, eğriliği düzelt…)."
+                  : "PDF ↔ Excel, PDF ↔ PowerPoint, HTML → PDF and advanced PDF tools (flatten, repair, PDF/A, deskew…).",
+              },
+            ]),
         {
           label: tr ? "Temiz, filigransız çıktı" : "Clean, watermark-free output",
           detail: tr
@@ -106,9 +131,68 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
     },
   ];
 
+  // PDF Düzenle ve belge araçları: planlar arası en belirgin farklar burada.
+  const signatureQuota = { STARTER: 3, PLUS: 10, PRO: 20, BUSINESS: null }[planId as "STARTER" | "PLUS" | "PRO" | "BUSINESS"] ?? 1;
+  categories.push({
+    icon: "✏️",
+    title: tr ? "PDF Düzenle & Belge Araçları" : "Edit PDF & Document Tools",
+    perks: [
+      planId === "STARTER"
+        ? {
+            label: tr ? `PDF Düzenle: günde ${el.starter} düzenleme` : `Edit PDF: ${el.starter} edits a day`,
+            detail: tr
+              ? `Yazıyı silin ya da değiştirin, görsel ve imza ekleyin. Ücretsiz üyede günde ${el.free}, Başlangıç'ta günde ${el.starter}; Plus ve üzerinde sınırsız.`
+              : `Delete or change text, add images and signatures. ${el.free}/day on Free, ${el.starter}/day on Starter; unlimited on Plus and above.`,
+          }
+        : {
+            label: tr ? "PDF Düzenle: sınırsız düzenleme" : "Edit PDF: unlimited edits",
+            detail: tr
+              ? `Günlük düzenleme sınırı yok (ücretsizde günde ${el.free}, Başlangıç'ta günde ${el.starter}).`
+              : `No daily edit cap (${el.free}/day on Free, ${el.starter}/day on Starter).`,
+          },
+      ...(planId === "STARTER"
+        ? []
+        : [
+            {
+              label: tr ? "Taranmış belgelerde otomatik OCR" : "Automatic OCR for scanned documents",
+              detail: tr
+                ? "Taranmış (resim) PDF yüklediğinizde yazılar otomatik okunur ve her satır tıklanıp değiştirilebilir hâle gelir."
+                : "Upload a scanned (image) PDF and its text is read automatically, so every line becomes clickable and editable.",
+            },
+          ]),
+      {
+        label:
+          signatureQuota === null
+            ? tr ? "Sınırsız imza isteği" : "Unlimited signature requests"
+            : tr ? `Ayda ${signatureQuota} imza isteği` : `${signatureQuota} signature requests a month`,
+        detail: tr
+          ? "Başkalarından PDF üzerinde imza isteyin. Ücretsiz üyede ayda 1 istek."
+          : "Request signatures on a PDF from other people. Free members get 1 request a month.",
+      },
+      {
+        label: tr ? "CV Oluştur: 30 şablonun tamamı" : "CV Maker: all 30 templates",
+        detail: tr
+          ? "Ücretsiz üyede 4 şablon açıktır; ücretli planlarda kalan 26 şablon da kullanılır."
+          : "Free members get 4 templates; any paid plan unlocks the other 26.",
+      },
+      {
+        label: tr ? "AI Fotoğraf Stüdyosu" : "AI Photo Studio",
+        detail: tr
+          ? "Vesikalık, biyometrik, CV ve LinkedIn fotoğrafınızı hazırlar, arka planı değiştirir; fotoğraf cihazınızdan çıkmaz. Ücretli planlara özeldir."
+          : "Prepares ID, biometric, CV and LinkedIn photos and swaps the background; the photo never leaves your device. Paid plans only.",
+      },
+      {
+        label: tr ? "Hassas veriyi yapay zekâyla tespit" : "AI detection of sensitive data",
+        detail: tr
+          ? "Kimlik, IBAN ve isimleri yapay zekâ bulsun, siz onaylayıp geri alınamaz şekilde karartın."
+          : "Let AI find IDs, account numbers and names, then approve and black them out for good.",
+      },
+    ],
+  });
+
   // Yapay zekâ araçları: tüm ücretli planlar kullanır, fark aylık hak sayısındadır.
   // Geliştirici API erişimi yalnız Pro ve Business'ta.
-  if (planId === "PLUS" || planId === "PRO" || planId === "BUSINESS") {
+  if (planId === "STARTER" || planId === "PLUS" || planId === "PRO" || planId === "BUSINESS") {
     const aiMonthly = AI_MONTHLY_CREDITS_BY_PLAN[planId];
     categories.push({
       icon: "✨",
@@ -124,7 +208,7 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
         { label: tr ? "Veri Çıkar (fatura → Excel)" : "Extract Data (invoice → Excel)", detail: tr ? "Fatura ve tablolardan Excel'e hazır yapılandırılmış veri." : "Structured data from invoices and tables, ready for Excel." },
         { label: tr ? "Çeviri & Karşılaştırma" : "Translate & Compare", detail: tr ? "Belgeleri çevir; iki sürüm arasındaki farkı bul." : "Translate documents; diff two versions." },
         { label: tr ? "Hassas Veri Gizle + AI Toplu İşlem" : "Redact + AI Batch", detail: tr ? "Kişisel verileri otomatik gizle; onlarca belgeyi toplu işle." : "Auto-redact personal data; process dozens of documents in bulk." },
-        ...(planId === "PLUS"
+        ...(planId === "PLUS" || planId === "STARTER"
           ? []
           : [{ label: tr ? "Geliştirici API erişimi" : "Developer API access", detail: tr ? "AI araçlarını kendi yazılımından çağır." : "Call the AI tools from your own software." }]),
       ],
@@ -188,7 +272,7 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
     perks: [
       {
         label:
-          planId === "PLUS"
+          planId === "PLUS" || planId === "STARTER"
             ? tr
               ? "E-posta desteği"
               : "Email support"
@@ -200,7 +284,7 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
                 ? "Öncelikli destek"
                 : "Priority support",
         detail:
-          planId === "PLUS"
+          planId === "PLUS" || planId === "STARTER"
             ? tr
               ? "Sorularına e-posta ile gerçek bir insandan yanıt."
               : "Real-human answers to your questions by email."
@@ -232,6 +316,7 @@ export function PlanPerksModal({
   onClose,
 }: PlanPerksModalProps) {
   const tr = language === "tr";
+  const editorLimits = useEditorLimits();
 
   useEffect(() => {
     if (!open) return;
@@ -251,7 +336,7 @@ export function PlanPerksModal({
   const plan = PLANS.find((p) => p.id === planId);
   if (!plan) return null;
   const planName = tr ? plan.nameTr : plan.nameEn;
-  const categories = getPerks(planId, language);
+  const categories = getPerks(planId, language, editorLimits);
 
   // Portal: üst öğede backdrop-blur (PlanUpgradeModal) varken `fixed` o öğeye göre konumlanıp
   // ekran dışında kalıyordu; body'ye taşıyınca her zaman görünür pencerede açılır.

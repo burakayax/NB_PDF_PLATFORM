@@ -251,6 +251,9 @@ export async function ocrScannedPagesLocal(
         // Sütun/tablo çizgisi Tesseract'ta "—", "|", "(|" gibi tek başına dar bir işarete dönüşür →
         // metin değil, atla (yoksa editörde tıklanabilir sahte bir öğe olur).
         if (g.length === 1 && /^[\s|—–\-_()[\]©®¦!Il1.,:;'"`]+$/.test(g[0].text) && x1 - x0 < 0.8 * size) continue;
+        // Logo/amblem/süs Tesseract'ta "$", "&", "§", "@" gibi uydurma bir simgeye dönüşür; kullanıcı amblemine
+        // tıklayınca sahte bir yazı çıkmasın. Harf/rakam içermeyen, kısa ve güvensiz tek parça → atla.
+        if (g.length === 1 && /^[^\p{L}\p{N}]{1,3}$/u.test(g[0].text) && g[0].conf < 90) continue;
         const bys = g.map(wordBy).sort((a, b) => a - b);
         const by = bys[Math.floor(bys.length / 2)];
         // Kutu = kelimelerin gerçek mürekkep sınırı (silgi orijinali tam örtsün), en az font ölçüsü kadar.

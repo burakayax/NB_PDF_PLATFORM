@@ -5,6 +5,7 @@ import type { PlanId } from "../../lib/planConfig";
 import { PLANS } from "../../lib/planConfig";
 import { applyTryPriceOverrides, buildCheckoutQuote, EXTRA_SEAT_UNIT } from "../../lib/checkoutQuote";
 import { useSettings } from "../../contexts/SettingsContext";
+import { fillEditorTokens, useEditorLimits } from "../../lib/editorLimits";
 import { confirmFakeCheckout, resolveFakePaymentRedirect } from "../../api/fakePayment";
 import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
@@ -161,6 +162,7 @@ export function PaymentSummaryModal({
 
   // Ana sayfa kartıyla AYNI fiyat: yönetim panelinde girilen TL tutarları uygulanır.
   const { pricing } = useSettings();
+  const editorLimits = useEditorLimits();
   const plan = useMemo(() => {
     const base = PLANS.find((p) => p.id === planId);
     return base ? applyTryPriceOverrides([base], pricing?.tryPrices)[0] : undefined;
@@ -379,7 +381,7 @@ export function PaymentSummaryModal({
     ? (tr
         ? [`${extraSeats} ekstra koltuk`, "Business planı kapsamında", "Hemen aktif", `Koltuk başı ${seatSym}${isTry ? Math.round(seatUnit) : seatUnit}/ay`]
         : [`${extraSeats} extra seat${extraSeats !== 1 ? "s" : ""}`, "Within Business plan", "Active immediately", `${seatSym}${isTry ? Math.round(seatUnit) : seatUnit}/seat/mo`])
-    : (plan ? softenGiftLines(tr ? plan.featuresTr : plan.featuresEn, tr, aiNotOpen).slice(0, 5) : []);
+    : (plan ? softenGiftLines((tr ? plan.featuresTr : plan.featuresEn).map((f) => fillEditorTokens(f, editorLimits)), tr, aiNotOpen).slice(0, 5) : []);
 
   return (
     <>

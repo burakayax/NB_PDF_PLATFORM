@@ -7071,9 +7071,8 @@ function App() {
 
             {contentPanel === "editor" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                  <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} belowHeader={<ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />} />
                 </Suspense>
               </section>
             ) : null}
