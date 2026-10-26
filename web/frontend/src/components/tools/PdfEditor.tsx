@@ -435,6 +435,21 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   // (tek bir "Sayfa 1" yazısı artık tüm taramayı gizlemez).
   const scanned = !!analysis && scannedPageIndexes(analysis).length > 0;
 
+  // Taranmış PDF (Plus ve üzeri plan) → CİHAZDA Tesseract OCR; yükleme ekranı ilerlemeyi gösterir, bitince
+  // belge düzenlemeye hazır. Ücretsiz/Başlangıç/misafirde OCR sunulmaz (uyarı + yükseltme önerisi).
+  async function autoOcr(d: pdfjsLib.PDFDocumentProxy, a: PdfAnalysis) {
+    setOcrBusy(true);
+    setOcrPct(0);
+    setError(null);
+    try {
+      const out = await ocrScannedPagesLocal(d, a, (r) => setOcrPct(Math.round(r * 100)));
+      colorDoneRef.current.clear();
+      setAnalysis(out);
+      setEdits(new Map());
+    } catch { /* OCR başarısız → belge görsel olarak düzenlenebilir; sessiz geç */ }
+    finally { setOcrTried(true); setOcrBusy(false); setOcrPct(100); }
+  }
+
   async function pickFile(f: File | undefined) {
     setError(null);
     setResult(null);
@@ -740,30 +755,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     if (partialSelection() && richExec(cmd)) return; // seçili kelime/parça → yalnız ona uygula
     applyPatch({ [key]: !curFmt(key) } as Fmt); // tüm satır seçili / seçim yok → tüm öğe
   };
-  /** Hizalama SAYFAYA göre: sola → sayfadaki yazının sol kenarına, ortala → sayfa ortasına, sağa → sağ kenarına.
-   * (Eskiden yalnız öğenin kendi dar kutusu içinde hizalanıyordu.) Öğe, kaydırma (dx) ile yeni yere konur. */
-  const applyAlign = (a: AlignKey) => {
-    setAlign(a);
-    const pg = analysis?.pages[current];
-    if (!pg) return;
-    const texts = pg.elements.filter((e) => e.type === "text" && !isDeleted(e.id));
-    const mL = texts.length ? Math.min(...texts.map((e) => e.bbox[0])) : 36;
-    const mR = texts.length ? Math.max(...texts.map((e) => e.bbox[2])) : pg.width - 36;
-    const targetX = (w: number) => (a === "left" ? mL : a === "center" ? (pg.width - w) / 2 : mR - w);
-    for (const id of selTargets()) {
-      const ad = added.find((x) => x.id === id);
-      if (ad) {
-        const w = measureTextPt(ad.text || " ", ad.size, ad.font, !!ad.bold, !!ad.italic);
-        const nx = targetX(w);
-        setAdded((arr) => arr.map((x) => (x.id === id ? { ...x, align: a, bbox: [nx, x.bbox[1], nx + (x.bbox[2] - x.bbox[0]), x.bbox[3]] } : x)));
-        continue;
-      }
-      const el = pg.elements.find((x) => x.id === id);
-      if (!el || el.type !== "text") continue;
-      const w = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el), elSpacing(el), elCss(el));
-      setEdit(id, { align: a, dx: targetX(w) - (el.bbox[0] + (shifts.get(id) ?? 0)) });
-    }
-  };
   function sizeStep(bigger: boolean) {
     if (partialSelection() && richFontStep(bigger)) return; // seçili parça → em oranıyla
     applySize(bigger ? size + 1 : size - 1); // tüm öğe
@@ -796,6 +787,42 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     const [r, g, b] = best.split(",").map(Number);
     return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
   }
+  // ── Madde 3: Komşu metni sağa kaydır ──
+  // Bir metin kutusu düzenlenip genişleyince (yeni metin kutudan taşınca), AYNI SATIRDAKİ
+  // sağındaki metinleri, taşma miktarı kadar sağa öteler. Böylece font küçültülmez ve
+  // komşu yazının üstüne binmez. Dönen harita: element id → kaydırma (PDF pt).
+  const computeShifts = useCallback((pageIndex: number): Map<string, number> => {
+    const out = new Map<string, number>();
+    const els = (analysis?.pages[pageIndex]?.elements ?? []).filter((e) => e.type === "text");
+    if (!els.length) return out;
+    const byLine = new Map<string, PdfElement[]>();
+    for (const el of els) {
+      const key = el.line ?? `~${Math.round(el.by ?? el.bbox[1])}`;
+      const arr = byLine.get(key);
+      if (arr) arr.push(el); else byLine.set(key, [el]);
+    }
+    for (const group of byLine.values()) {
+      group.sort((a, b) => a.bbox[0] - b.bbox[0]);
+      let cum = 0;
+      for (const el of group) {
+        if (cum > 0.5) out.set(el.id, cum);
+        if (edits.get(el.id)?.deleted) continue;
+        const ed = edits.get(el.id);
+        // Yalnız GERÇEKTEN değişen (metin/boyut/font/kalın) öğeler taşma üretir.
+        const changed = ed && (ed.text !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined);
+        if (!changed) continue;
+        const txt = edits.get(el.id)?.text ?? el.text ?? "";
+        const boxW = el.bbox[2] - el.bbox[0];
+        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, elFont(el), edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false, elSpacing(el), elCss(el));
+        const overflow = w - boxW;
+        if (overflow > 1) cum += overflow + 2; // 2pt güvenlik payı
+      }
+    }
+    return out;
+  }, [analysis, edits]);
+
+  const shifts = useMemo(() => computeShifts(current), [computeShifts, current]);
+
   // Çerçeveden tutup taşıma (mevcut/eklenen metin + görsel). Sayfa kenarı/ortası ve diğer öğelerin
   // kenar/orta çizgilerine YAKALAR (hizalama çizgileri görünür); Alt tuşu yakalamayı kapatır.
   const effBoxOf = (el: PdfElement): [number, number, number, number] => {
@@ -1100,41 +1127,30 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     applyPatch({ size: cl });
   }
 
-  // ── Madde 3: Komşu metni sağa kaydır ──
-  // Bir metin kutusu düzenlenip genişleyince (yeni metin kutudan taşınca), AYNI SATIRDAKİ
-  // sağındaki metinleri, taşma miktarı kadar sağa öteler. Böylece font küçültülmez ve
-  // komşu yazının üstüne binmez. Dönen harita: element id → kaydırma (PDF pt).
-  const computeShifts = useCallback((pageIndex: number): Map<string, number> => {
-    const out = new Map<string, number>();
-    const els = (analysis?.pages[pageIndex]?.elements ?? []).filter((e) => e.type === "text");
-    if (!els.length) return out;
-    const byLine = new Map<string, PdfElement[]>();
-    for (const el of els) {
-      const key = el.line ?? `~${Math.round(el.by ?? el.bbox[1])}`;
-      const arr = byLine.get(key);
-      if (arr) arr.push(el); else byLine.set(key, [el]);
-    }
-    for (const group of byLine.values()) {
-      group.sort((a, b) => a.bbox[0] - b.bbox[0]);
-      let cum = 0;
-      for (const el of group) {
-        if (cum > 0.5) out.set(el.id, cum);
-        if (edits.get(el.id)?.deleted) continue;
-        const ed = edits.get(el.id);
-        // Yalnız GERÇEKTEN değişen (metin/boyut/font/kalın) öğeler taşma üretir.
-        const changed = ed && (ed.text !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined);
-        if (!changed) continue;
-        const txt = edits.get(el.id)?.text ?? el.text ?? "";
-        const boxW = el.bbox[2] - el.bbox[0];
-        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, elFont(el), edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false, elSpacing(el), elCss(el));
-        const overflow = w - boxW;
-        if (overflow > 1) cum += overflow + 2; // 2pt güvenlik payı
+  /** Hizalama SAYFAYA göre: sola → sayfadaki yazının sol kenarına, ortala → sayfa ortasına, sağa → sağ kenarına.
+   * (Eskiden yalnız öğenin kendi dar kutusu içinde hizalanıyordu.) Öğe, kaydırma (dx) ile yeni yere konur. */
+  const applyAlign = (a: AlignKey) => {
+    setAlign(a);
+    const pg = analysis?.pages[current];
+    if (!pg) return;
+    const texts = pg.elements.filter((e) => e.type === "text" && !isDeleted(e.id));
+    const mL = texts.length ? Math.min(...texts.map((e) => e.bbox[0])) : 36;
+    const mR = texts.length ? Math.max(...texts.map((e) => e.bbox[2])) : pg.width - 36;
+    const targetX = (w: number) => (a === "left" ? mL : a === "center" ? (pg.width - w) / 2 : mR - w);
+    for (const id of selTargets()) {
+      const ad = added.find((x) => x.id === id);
+      if (ad) {
+        const w = measureTextPt(ad.text || " ", ad.size, ad.font, !!ad.bold, !!ad.italic);
+        const nx = targetX(w);
+        setAdded((arr) => arr.map((x) => (x.id === id ? { ...x, align: a, bbox: [nx, x.bbox[1], nx + (x.bbox[2] - x.bbox[0]), x.bbox[3]] } : x)));
+        continue;
       }
+      const el = pg.elements.find((x) => x.id === id);
+      if (!el || el.type !== "text") continue;
+      const w = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el), elSpacing(el), elCss(el));
+      setEdit(id, { align: a, dx: targetX(w) - (el.bbox[0] + (shifts.get(id) ?? 0)) });
     }
-    return out;
-  }, [analysis, edits]);
-
-  const shifts = useMemo(() => computeShifts(current), [computeShifts, current]);
+  };
 
   // «thumb compose»: düzenleme yapılan sayfaların küçük resmini, düzenlemeler (örtü, yeni/taşınan yazı,
   // silinen/taşınan görsel, eklenen metin/görsel, altı çizgi) üstüne işleyerek yeniler → soldaki liste
@@ -1245,21 +1261,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shifts, current]);
-
-  // Taranmış PDF (Plus ve üzeri plan) → CİHAZDA Tesseract OCR; yükleme ekranı ilerlemeyi gösterir, bitince
-  // belge düzenlemeye hazır. Ücretsiz/Başlangıç/misafirde OCR sunulmaz (uyarı + yükseltme önerisi).
-  async function autoOcr(d: pdfjsLib.PDFDocumentProxy, a: PdfAnalysis) {
-    setOcrBusy(true);
-    setOcrPct(0);
-    setError(null);
-    try {
-      const out = await ocrScannedPagesLocal(d, a, (r) => setOcrPct(Math.round(r * 100)));
-      colorDoneRef.current.clear();
-      setAnalysis(out);
-      setEdits(new Map());
-    } catch { /* OCR başarısız → belge görsel olarak düzenlenebilir; sessiz geç */ }
-    finally { setOcrTried(true); setOcrBusy(false); setOcrPct(100); }
-  }
 
   async function preparePdf() {
     if (!file || !analysis || busy) return;

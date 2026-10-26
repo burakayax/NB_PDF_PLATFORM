@@ -170,6 +170,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
 
+/** Sağlayıcı yoksa null döner (izole test/önizleme); `useSettings` ise hata fırlatır. */
+export function useOptionalSettings(): SettingsContextValue | null {
+  return useContext(SettingsContext);
+}
+
 export function useSettings(): SettingsContextValue {
   const ctx = useContext(SettingsContext);
   if (!ctx) {
