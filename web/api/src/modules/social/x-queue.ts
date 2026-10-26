@@ -73,7 +73,7 @@ export function pickXPost(input: {
     if (!poll) return null;
     const guid = `x-poll:${poll.id}`;
     const plan = composePoll(poll);
-    return { kind, guid, title: poll.question, linkUrl: input.siteOrigin, plan, body: encodeXPlan(plan), imageUrl: null };
+    return { kind, guid, title: poll.question, linkUrl: input.siteOrigin, plan, body: encodeXPlan(plan), imageUrl: poll.card ?? null };
   }
 
   // "Bunu biliyor muydunuz?": yazı × ipucu (ilk ipucu blog gönderisinde kullanılır, 2. ve 3. burada).

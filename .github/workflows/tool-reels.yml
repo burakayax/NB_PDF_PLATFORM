@@ -41,7 +41,7 @@ jobs:
   produce:
     name: Video uret ve yukle
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       API_BASE: ${{ secrets.TOOL_REEL_API_BASE }}
       FACTORY_KEY: ${{ secrets.TOOL_REEL_FACTORY_KEY }}
