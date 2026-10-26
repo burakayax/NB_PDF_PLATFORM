@@ -215,7 +215,7 @@ export async function ocrScannedPagesLocal(
   const canvases: HTMLCanvasElement[] = [];
   const scales: number[] = [];
   for (const pi of targets) {
-    const { canvas, scale } = await renderPage(await doc.getPage(pi + 1), 2.5);
+    const { canvas, scale } = await renderPage(await doc.getPage(pi + 1), 3.5);
     canvases.push(canvas); scales.push(scale);
   }
   const lines = await ocrImagesToLines(canvases, (p) => onProgress?.(p.ratio));
