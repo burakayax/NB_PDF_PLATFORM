@@ -126,10 +126,12 @@ async function postTweet(keys: OAuth1Keys, payload: Record<string, unknown>): Pr
 }
 
 /** Devam gönderisi (thread / link yanıtı). Ana gönderi çıktıktan sonra olduğundan hata yukarı fırlatılmaz. */
-async function replyTo(keys: OAuth1Keys, text: string, toId: string): Promise<string | null> {
+async function replyTo(keys: OAuth1Keys, text: string, toId: string, mediaId?: string): Promise<string | null> {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      return await postTweet(keys, { text, reply: { in_reply_to_tweet_id: toId } });
+      const payload: Record<string, unknown> = { text, reply: { in_reply_to_tweet_id: toId } };
+      if (mediaId) payload.media = { media_ids: [mediaId] };
+      return await postTweet(keys, payload);
     } catch (err) {
       logger.warn("social", `X yanıtı gönderilemedi (deneme ${attempt}/2): ${String(err).slice(0, 200)}`);
       await new Promise((r) => setTimeout(r, 2000));
@@ -140,7 +142,7 @@ async function replyTo(keys: OAuth1Keys, text: string, toId: string): Promise<st
 
 /**
  * Yayın planı (gövdeden okunur, bkz. x-compose.ts):
- *  - anket: soru + 2–4 seçenek (X, anketle görseli birlikte kabul etmez)
+ *  - anket: soru + 2–4 seçenek (X, anketle görseli birlikte kabul etmez; görsel altına yanıt olarak eklenir)
  *  - metin: ana gönderi (+ görsel) → thread parçaları peş peşe yanıt → LİNK EN SON YANITTA
  * Ana gönderi çıktıktan sonra devam gönderileri başarısız olursa gönderi BAŞARILI sayılır (yeniden deneme aynı
  * gönderiyi iki kez çıkarırdı); yalnız kayda uyarı düşer.
@@ -152,6 +154,15 @@ export const publishToX: Publisher = async ({ body, imageUrl, secrets }) => {
   let firstId: string | null;
   if (plan.kind === "poll") {
     firstId = await postTweet(keys, { text: plan.question, poll: { options: plan.options, duration_minutes: 1440 } });
+    // X anketle görseli aynı gönderide kabul etmez: görsel anketin hemen altına yanıt olarak eklenir.
+    if (firstId && imageUrl) {
+      try {
+        const mediaId = await uploadMedia(imageUrl, keys);
+        await replyTo(keys, "Oyunu ver, sonucu birlikte görelim 👆", firstId, mediaId);
+      } catch (err) {
+        logger.warn("social", `X anket görseli eklenemedi: ${String(err).slice(0, 200)}`);
+      }
+    }
   } else {
     const [first = "", ...rest] = plan.parts.length > 0 ? plan.parts : [""];
     const payload: Record<string, unknown> = { text: first };

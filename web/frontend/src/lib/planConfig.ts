@@ -101,6 +101,7 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "Üyeliksiz ve sınırsız (cihazında, dosya yüklenmez): birleştir, böl, döndür, sil, sırala, görsel→PDF",
       "Ücretsiz üyelikle sunucu araçlarında günde 3 işlem (ayda 30): sıkıştır, Word ↔ PDF, PDF→JPG…",
+      "✏️ PDF Düzenle: günde {editorFree} düzenleme (yazıyı silin, değiştirin, görsel/imza ekleyin)",
       "✨ Hoş geldin hediyesi: 3 ücretsiz yapay zekâ işlemi",
       "Filigransız, reklamsız temiz çıktı — her planda",
       "Dosya boyutu ≤ 80 MB",
@@ -108,6 +109,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "No account and unlimited (on your device, no upload): merge, split, rotate, delete, reorder, image→PDF",
       "With a free account, 3 operations a day (30 a month) on server tools: compress, Word ↔ PDF, PDF→JPG…",
+      "✏️ Edit PDF: {editorFree} edits a day (delete or change text, add images/signatures)",
       "✨ Welcome gift: 3 free AI operations",
       "Clean output — no watermark, no ads (every plan)",
       "Files up to 80 MB",
@@ -132,6 +134,7 @@ export const PLANS: PlanDefinition[] = [
     displayMonthlyEquivalent: true,
     featuresTr: [
       "Ücretsiz'deki her şey + PDF şifreleme, filigran, sayfa numarası, görselleri çıkarma",
+      "✏️ PDF Düzenle: günde {editorStarter} düzenleme (Ücretsiz'de {editorFree})",
       "✨ Aylık 5 yapay zekâ işlemi (özetle, veri çıkar…); Sözleşme Denetçisi ek krediyle",
       "Günde 25, ayda en fazla 250 sunucu işlemi (dönüştür/sıkıştır)",
       "Dosya boyutu ≤ 100 MB",
@@ -140,6 +143,7 @@ export const PLANS: PlanDefinition[] = [
     ],
     featuresEn: [
       "Everything in Free + PDF encryption, watermark, page numbers, extract images",
+      "✏️ Edit PDF: {editorStarter} edits a day ({editorFree} on Free)",
       "✨ 5 AI operations/month (summarize, extract…); Contract Auditor with extra credits",
       "25 server operations a day (250 a month): convert/compress",
       "Files up to 100 MB",
@@ -171,6 +175,7 @@ export const PLANS: PlanDefinition[] = [
     displayMonthlyEquivalent: true,
     featuresTr: [
       "Starter'daki her şey + Excel/PowerPoint/HTML dönüşümleri ve gelişmiş PDF araçları",
+      "✏️ PDF Düzenle sınırsız + taranmış belgelerde otomatik yazı tanıma (OCR)",
       "✨ Aylık 15 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
       "Günlük limit yok — ayda 600 sunucu işlemi",
       "Dosya boyutu ≤ 250 MB",
@@ -179,6 +184,7 @@ export const PLANS: PlanDefinition[] = [
     ],
     featuresEn: [
       "Everything in Starter + Excel/PowerPoint/HTML conversions and advanced PDF tools",
+      "✏️ Unlimited Edit PDF + automatic text recognition (OCR) for scanned documents",
       "✨ 15 AI operations/month; Contract Auditor with extra credits",
       "No daily cap — 600 server operations a month",
       "Files up to 250 MB",

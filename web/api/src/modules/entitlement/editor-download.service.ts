@@ -1,10 +1,12 @@
 import { prisma } from "../../lib/prisma.js";
+import { readEditorLimits } from "../editor-limits/editor-limits.config.js";
 
 /**
- * PDF Düzenle aracı — günlük indirme sayacı (Postgres, instance'lar arası paylaşılır).
+ * PDF Düzenle aracı — günlük düzenleme hakkı sayacı (Postgres, instance'lar arası paylaşılır).
+ * Hak, kullanıcı «PDF'i Hazırla» dediği anda düşer (indirmede değil).
  *
  * Kimlik (idKey) Python (FastAPI) tarafında GÜVENİLİR biçimde türetilir:
- *   - "u:<userId>"  → oturum açmış FREE ya da STARTER kullanıcı
+ *   - "u:<userId>"  → oturum açmış FREE ya da STARTER kullanıcı (Başlangıç daha yüksek hak alır)
  *   - "g:<ipHash>"  → misafir (gerçek istemci IP'sinin hash'i)
  * PRO/PLUS/BUSINESS/ADMIN hiç çağrılmaz (Python sınırsız kabul edip atlar).
  *
@@ -14,8 +16,6 @@ import { prisma } from "../../lib/prisma.js";
  */
 
 const TZ = "Europe/Istanbul";
-const GUEST_DAILY_LIMIT = Number(process.env.EDITOR_GUEST_DAILY_LIMIT ?? 1);
-const FREE_DAILY_LIMIT = Number(process.env.EDITOR_FREE_DAILY_LIMIT ?? 2);
 
 function tzOffsetMs(timezone: string, at: Date): number {
   const utc = new Date(at.toLocaleString("en-US", { timeZone: "UTC" })).getTime();
@@ -54,22 +54,38 @@ export type EditorDownloadDecision = {
   guest: boolean;
 };
 
-export function limitForKey(idKey: string): number {
-  return idKey.startsWith("g:") ? GUEST_DAILY_LIMIT : FREE_DAILY_LIMIT;
+/** `plan` verilirse (PDF servisi çağrısı) Başlangıç planı daha yüksek günlük hak alır. */
+export async function limitForKey(idKey: string, plan?: string): Promise<number> {
+  const cfg = await readEditorLimits(); // yönetim panelinden (önbellekli); 0 = o grup için KAPALI
+  if (idKey.startsWith("g:")) return cfg.guest;
+  return plan === "STARTER" ? cfg.starter : cfg.free;
+}
+
+/** Bugünkü kullanımı DÜŞMEDEN okur — işlem başlamadan önce "hak var mı?" ön kontrolü için. */
+export async function peekEditorDownload(idKey: string, plan?: string): Promise<EditorDownloadDecision> {
+  const guest = idKey.startsWith("g:");
+  const limit = await limitForKey(idKey, plan);
+  const resetAt = nextMidnightIstanbulIso();
+  if (limit <= 0) return { allowed: false, used: 0, limit, resetAt, guest }; // 0 = kapalı
+  const row = await prisma.editorDownloadUsage.findUnique({
+    where: { idKey_day: { idKey, day: istanbulDay() } },
+  });
+  const used = row?.count ?? 0;
+  return { allowed: used < limit, used, limit, resetAt, guest };
 }
 
 /**
- * Günlük indirme hakkını atomik olarak kontrol edip düşer.
+ * Günlük düzenleme hakkını atomik olarak kontrol edip düşer.
  * Limit dolmuşsa `allowed:false` (sayaç artmaz).
  */
-export async function consumeEditorDownload(idKey: string): Promise<EditorDownloadDecision> {
+export async function consumeEditorDownload(idKey: string, plan?: string): Promise<EditorDownloadDecision> {
   const guest = idKey.startsWith("g:");
-  const limit = limitForKey(idKey);
+  const limit = await limitForKey(idKey, plan);
   const day = istanbulDay();
   const resetAt = nextMidnightIstanbulIso();
 
-  // Sınırsız (limit<=0) — teorik; normalde çağrılmaz.
-  if (limit <= 0) return { allowed: true, used: 0, limit, resetAt, guest };
+  // 0 = bu grup için düzenleme kapalı (panelden acil kapatma). Sınırsız planlar zaten buraya gelmez.
+  if (limit <= 0) return { allowed: false, used: 0, limit, resetAt, guest };
 
   const decision = await prisma.$transaction(async (tx) => {
     // Satır yoksa 0 ile oluştur (varsa dokunma).

@@ -37,6 +37,8 @@ export type ToolResultPanelProps = {
    * biliyor. Aynı soruyu sayfanın bir köşesinde sormak çok daha az yanıt alıyor.
    */
   ratingToolSlug?: string;
+  /** Standart düğmelerin yanına eklenen araca özel düğmeler (ör. «Düzenlemeye Dön»). */
+  extraActions?: ReactNode;
 };
 
 const L = {
@@ -110,6 +112,7 @@ export function ToolResultPanel({
   children,
   ratingToolSlug,
   hideOpen = false,
+  extraActions,
 }: ToolResultPanelProps) {
   const t = L[language] ?? L.tr;
   const isPdf = /\.pdf$/i.test(filename.trim());
@@ -250,10 +253,12 @@ export function ToolResultPanel({
   }
 
   const btnGhost =
-    "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]";
+    "inline-flex items-center gap-2 rounded-2xl border px-6 py-3 text-sm font-bold transition duration-200 hover:scale-[1.04]";
+  const btnShare = `${btnGhost} border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20`;
+  const btnOpen = `${btnGhost} border-sky-400/40 bg-sky-500/10 text-sky-100 hover:bg-sky-500/20`;
 
   return (
-    <div ref={panelRef} className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-5 text-center sm:p-8">
+    <div ref={panelRef} className="overflow-hidden rounded-3xl border-2 border-emerald-400/60 shadow-[0_0_40px_-12px_rgba(16,185,129,0.55)] bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-5 text-center sm:p-8">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
         <Check className="h-8 w-8" />
       </div>
@@ -275,10 +280,10 @@ export function ToolResultPanel({
           aria-live="polite"
           className={
             downloaded
-              ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
+              ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:scale-[1.04]"
               : everDownloaded
-                ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-70"
-                : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500 disabled:opacity-70"
+                ? "inline-flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-6 py-3 text-sm font-bold text-emerald-100 transition duration-200 hover:scale-[1.04] hover:bg-emerald-500/20 disabled:opacity-70"
+                : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_26px_-10px_rgba(79,70,229,0.8)] transition duration-200 hover:scale-[1.04] hover:from-blue-500 hover:to-indigo-500 disabled:opacity-70"
           }
         >
           {downloaded ? (
@@ -293,23 +298,24 @@ export function ToolResultPanel({
           )}
         </button>
         {isShareSupported(blob, filename) && (
-          <button type="button" onClick={() => void share()} className={btnGhost}>
+          <button type="button" onClick={() => void share()} className={btnShare}>
             <Share2 className="h-4 w-4" /> {t.share}
           </button>
         )}
         {!hideOpen && (
-          <button type="button" onClick={open} className={btnGhost}>
+          <button type="button" onClick={open} className={btnOpen}>
             <ExternalLink className="h-4 w-4" /> {t.open}
           </button>
         )}
+        {extraActions}
         <button
           type="button"
           onClick={handleClose}
           aria-live="polite"
           className={
             closeArmed
-              ? "inline-flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-6 py-3 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/20"
-              : "inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+              ? "inline-flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-6 py-3 text-sm font-semibold text-amber-200 transition duration-200 hover:scale-[1.04] hover:bg-amber-500/20"
+              : "inline-flex items-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/[0.06] px-6 py-3 text-sm font-semibold text-rose-200 transition duration-200 hover:scale-[1.04] hover:bg-rose-500/15"
           }
         >
           <X className="h-4 w-4" /> {closeArmed ? t.closeConfirm : t.close}

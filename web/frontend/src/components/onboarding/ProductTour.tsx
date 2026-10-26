@@ -93,6 +93,12 @@ export function ProductTour({
     [onClose, dontShowAgain],
   );
 
+  // Üst bileşen her çizimde yeni dizi/işlev verebilir; açılış etkisi bunlara bağlanmasın.
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   // İleri/geri gezinirken hedefi olan bir sonraki adımı bul (hedefsiz adımları atla).
   const findStepWithTarget = useCallback(
     (from: number, dir: 1 | -1): number => {
@@ -110,13 +116,15 @@ export function ProductTour({
   useEffect(() => {
     if (!open) return;
     setReady(false);
-    const first = findStepWithTarget(0, 1);
+    const list = stepsRef.current;
+    let first = -1;
+    for (let i = 0; i < list.length; i++) if (resolveVisible(list[i]!.selector)) { first = i; break; }
     if (first < 0) {
-      onClose({ completed: false, shown: false, dontShowAgain: false }); // hedef yok → tekrar denenebilsin
+      onCloseRef.current({ completed: false, shown: false, dontShowAgain: false }); // hedef yok → tekrar denenebilsin
       return;
     }
     setIndex(first);
-  }, [open, findStepWithTarget, onClose]);
+  }, [open]); // YALNIZ açılışta: steps/onClose kimliği değişince tur başa sarmasın
 
   const step = steps[index];
 

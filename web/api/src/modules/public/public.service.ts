@@ -1,3 +1,4 @@
+import { readEditorLimits } from "../editor-limits/editor-limits.config.js";
 import { PLAN_PRICES } from "../../lib/plan-catalogue.js";
 import type { Request } from "express";
 import { env } from "../../config/env.js";
@@ -249,6 +250,8 @@ export type PublicPlanCard = {
 
 export type PublicCardsConfig = {
   starterTools: string[];
+  /** PDF Düzenle günlük hakları (panelden) — kart ve uyarı metinleri bunu gösterir. */
+  editorLimits?: { guest: number; free: number; starter: number };
   planCards?: Record<string, PublicPlanCard>;
 };
 
@@ -271,6 +274,11 @@ function sanitizePlanCards(raw: unknown): Record<string, PublicPlanCard> | undef
 }
 
 export async function getPublicCardsConfig(): Promise<PublicCardsConfig> {
+  const [base, editorLimits] = await Promise.all([getPublicCardsConfigBase(), readEditorLimits()]);
+  return { ...base, editorLimits };
+}
+
+async function getPublicCardsConfigBase(): Promise<PublicCardsConfig> {
   const starterDefault = [...planDefinitions.STARTER.allowedFeatures] as string[];
   try {
     const { marketing } = await getResolvedPackagesConfig();

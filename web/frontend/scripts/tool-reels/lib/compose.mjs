@@ -170,8 +170,10 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
     "-r", "30", "-g", "60", "-keyint_min", "60", "-sc_threshold", "0", "-x264-params", "open-gop=0",
     "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2", "-movflags", "+faststart", OUT,
   ];
+  const t0 = Date.now();
   const run = spawnSync(ffmpeg, args, { cwd: S, encoding: "utf8", maxBuffer: 1 << 27 });
   if (run.status !== 0) throw new Error(run.stderr.slice(0, 3000));
+  console.log(`kodlama ${Math.round((Date.now() - t0) / 1000)} sn`);
   console.log("tamam", OUT, { TOTAL, cw, ch, VH1, VH2, y1, y2, swap, MS, ME });
   return { total: TOTAL };
 }
