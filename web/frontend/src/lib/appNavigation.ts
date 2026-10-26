@@ -221,6 +221,31 @@ export function getInitialViewFromLocation(): AppView {
 }
 
 /**
+ * Uygulamanın tanıdığı adres mi? `false` → genel 404 sayfası gösterilir.
+ *
+ * TUTUCU: liste yalnızca bilinen yolları kapsar; yeni bir üst düzey sayfa eklenirse
+ * buraya da eklenmelidir, yoksa 404 görür. `?view=` parametresi olan adresler ve
+ * `/tools/<slug>` (kendi 404 kontrolü var) her zaman geçerli sayılır.
+ */
+const KNOWN_EXACT_PATHS: ReadonlySet<string> = new Set([
+  "/", "/login", "/register", "/forgot-password", "/about", "/terms", "/privacy", "/kvkk",
+  "/workspace", "/nbadmin", "/admin", "/team-invite", "/pricing", "/contact", "/pdf-api",
+  "/blog", "/taramalarim", "/login-success", "/login-error", "/google-signup", "/index.html",
+  "/reset-password", "/verify-email",
+]);
+const KNOWN_PREFIXES = [
+  "/legal/", "/admin/", "/invite/", "/fake-payment", "/pdf-api/", "/blog/", "/hesap/",
+  "/imzala/", "/tools/", "/api/", "/payment", "/workspace/",
+];
+export function isKnownAppPath(pathname: string): boolean {
+  const p = stripLangPrefix(pathname.replace(/\/+$/, "")) || "/";
+  if (KNOWN_EXACT_PATHS.has(p)) return true;
+  if (KNOWN_PREFIXES.some((k) => p.startsWith(k))) return true;
+  if (accountPanelFromPath(p)) return true;
+  return new URLSearchParams(window.location.search).has("view");
+}
+
+/**
  * TAM SAYFA render edilen özel SEO araç sayfaları (workspace FeatureKey DEĞİL; App.tsx'teki
  * `seoSlug` dalları render eder). Bu yollarda oturum açık kullanıcıda URL /workspace'e
  * YENİDEN YAZILMAMALI (aksi halde sayfa açılıp hemen ana menüye atılır) ve misafir login'e
