@@ -47,6 +47,13 @@ RUN mkdir -p /usr/share/tessdata-best \
       https://github.com/tesseract-ocr/tessdata_best/raw/main/eng.traineddata
 ENV TESSDATA_PREFIX=/usr/share/tessdata-best
 
+# Güvenlik (eMudhra ara sertifika ihlali, 2026-10): sistem sertifika deposunu
+# imaj derlenirken güncelle. Bu satır değişince Docker önbelleği geçersiz olur.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Önce yalnızca requirements — Docker katman cache'i (kod değişince pip tekrar çalışmaz)

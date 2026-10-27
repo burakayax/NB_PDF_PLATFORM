@@ -122,6 +122,9 @@ services:
     plan: starter             # Starter: UYUMAZ → cold-start yok. Site açılışı (public/runtime)
                               # bu servisi beklediği için free plan ~30-50 sn loading'e yol açıyordu.
     rootDir: web/api
+    # Güvenlik: eMudhra sertifika ihlali + Node.js TLS/Brotli açıkları (Render duyurusu,
+    # 2026-10-21). Yamalı sürümler: 22.23.4 / 24.22.1 / 26.12.1 veya sonrası. CI ile aynı major (24).
+    # Yeni yama çıkınca bu sürümü yükseltmeyi unutma.
     # PostgreSQL şeması (schema.postgres.prisma) ile generate + db push.
     # Not: migrations/ klasörü SQLite diyalektinde olduğu için Postgres'e
     # uygulanamaz; bunun yerine db push şemayı doğrudan Neon'a senkronlar.
@@ -129,6 +132,8 @@ services:
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
+      - key: NODE_VERSION
+        value: "24.22.1"
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -221,6 +226,10 @@ services:
     autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     runtime: static
     rootDir: web/frontend
+    # Derleme ortamı da yamalı Node ile çalışsın (çalışma zamanı yok, yalnız build).
+    envVars:
+      - key: NODE_VERSION
+        value: "24.22.1"
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     # SPA fallback: tüm yollar index.html'e döner (React Router için)
