@@ -78,6 +78,19 @@ describe("Cloudflare 404 Worker", () => {
     expect(head.status).toBe(200);
     expect(head.headers.get("x-robots-tag")).toContain("noindex");
   });
+  it("deploy sonrası derleme farkı (hash) olsa da catch-all yine yakalanır", async () => {
+    kabugiSifirla();
+    const eski = KABUK.replace("</head>", '<script src="/assets/index-AAA111.js"></script></head>');
+    const yeni = KABUK.replace("</head>", '<script src="/assets/index-BBB222.js"></script></head>');
+    const getir = async (i: Request | string) => {
+      const yol = new URL(typeof i === "string" ? i : i.url).pathname;
+      if (yol === "/index.html") return new Response(yeni, { status: 200, headers: HTML });
+      if (yol === "/404.html") return new Response("x", { status: 404 });
+      return new Response(eski, { status: 200, headers: HTML });
+    };
+    expect((await iste("/bu-yok-hash", getir)).status).toBe(404);
+    expect((await (await iste("/register", getir)).text())).toContain('content="noindex, nofollow"');
+  });
   it("API, dosya uzantılı adres ve POST dokunulmaz", async () => {
     expect((await iste("/api/yok")).status).toBe(200);
     expect((await iste("/assets/x.js")).status).toBe(200);
