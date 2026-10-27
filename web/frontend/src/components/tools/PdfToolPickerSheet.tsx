@@ -48,12 +48,12 @@ export function PdfToolPickerSheet({
         className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${a.btn}`}
       >
         {locked && (
-          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
+          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[11px] font-bold uppercase text-violet-200">
             <Lock className="h-2.5 w-2.5" />Pro
           </span>
         )}
         <span className={`${a.icon} ${locked ? "opacity-70" : ""}`}>{t.icon}</span>
-        <span className="text-[11px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
+        <span className="text-[12px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
       </button>
     );
   };
@@ -74,7 +74,7 @@ export function PdfToolPickerSheet({
             </span>
             <div className="min-w-0">
               <p className="text-sm font-bold leading-tight text-white">{tr ? "Araçta aç" : "Open in a tool"}</p>
-              {fileName && <p className="truncate text-[11px] leading-tight text-slate-400">{fileName}</p>}
+              {fileName && <p className="truncate text-[12px] leading-tight text-slate-400">{fileName}</p>}
             </div>
           </div>
           <button type="button" onClick={onClose} aria-label={tr ? "Kapat" : "Close"} className="rounded-lg p-1.5 text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
@@ -88,7 +88,7 @@ export function PdfToolPickerSheet({
           </p>
           {TOOL_CATEGORIES.map((cat, ci) => (
             <div key={cat.id} className={ci === 0 ? "" : "mt-5"}>
-              <p className={`mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${CAT_ACCENT[cat.accent].text}`}>
+              <p className={`mb-2 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider ${CAT_ACCENT[cat.accent].text}`}>
                 <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${CAT_ACCENT[cat.accent].dot}`} aria-hidden />
                 {tr ? cat.tr : cat.en}
               </p>

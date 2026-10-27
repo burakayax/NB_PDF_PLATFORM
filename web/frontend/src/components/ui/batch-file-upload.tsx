@@ -172,7 +172,7 @@ export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, langua
           {files.map((f, i) => (
             <div
               key={`${f.name}-${f.size}-${i}`}
-              className="flex items-center justify-between gap-2 rounded-lg bg-blue-500/10 px-2 py-1.5 text-[11px] border border-blue-500/20"
+              className="flex items-center justify-between gap-2 rounded-lg bg-blue-500/10 px-2 py-1.5 text-[12px] border border-blue-500/20"
             >
               <span className="truncate text-blue-200 flex-1 font-medium">{f.name.substring(0, 20)}...</span>
               <button
@@ -189,7 +189,7 @@ export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, langua
       )}
 
       {files.length > 0 && (
-        <p className="text-[10px] text-gray-500 text-center">
+        <p className="text-[11px] text-gray-500 text-center">
           {files.length}/{maxFiles} {tr ? "dosya" : "files"}
         </p>
       )}

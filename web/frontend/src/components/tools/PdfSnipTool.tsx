@@ -670,7 +670,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
         </div>
         {fill ? (
           <div className="flex items-center gap-1">
-            <span className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-400 sm:inline">{t.zoom}</span>
+            <span className="hidden text-[11px] font-medium uppercase tracking-wide text-slate-400 sm:inline">{t.zoom}</span>
             <span className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
               {ZOOM_LEVELS.map((z) => (
                 <button
@@ -678,7 +678,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                   type="button"
                   onClick={() => setZoom(z)}
                   aria-pressed={zoom === z}
-                  className={`rounded px-1.5 py-1 text-[10px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
+                  className={`rounded px-1.5 py-1 text-[11px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
                     zoom === z
                       ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50"
                       : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
@@ -733,14 +733,14 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                 {thumbs[i] ? (
                   <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" />
                 ) : (
-                  <div className="flex h-20 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>
+                  <div className="flex h-20 w-full items-center justify-center bg-white/5 text-[11px] text-slate-400">{i + 1}</div>
                 )}
                 {snips.some((s) => s.page === i + 1) ? (
-                  <span className="absolute right-1 top-1 rounded-md bg-cyan-500/90 px-1 py-px text-[9px] font-bold text-white shadow" aria-hidden>
+                  <span className="absolute right-1 top-1 rounded-md bg-cyan-500/90 px-1 py-px text-[11px] font-bold text-white shadow" aria-hidden>
                     {snips.filter((s) => s.page === i + 1).length}
                   </span>
                 ) : null}
-                <span className={`block py-0.5 text-center text-[10px] ${pageIndex === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
+                <span className={`block py-0.5 text-center text-[11px] ${pageIndex === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
               </button>
             ))}
           </div>
@@ -775,7 +775,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                 }}
                 onPointerDown={onPointerDown("move")}
               >
-                <div className="pointer-events-none absolute -top-7 left-0 rounded-md bg-slate-900/85 px-2 py-0.5 text-[11px] font-semibold text-cyan-200 ring-1 ring-white/10">
+                <div className="pointer-events-none absolute -top-7 left-0 rounded-md bg-slate-900/85 px-2 py-0.5 text-[12px] font-semibold text-cyan-200 ring-1 ring-white/10">
                   {pct(rect.w)}% × {pct(rect.h)}%
                 </div>
                 <div className={`${bracket} rounded-tl-md border-l-[3px] border-t-[3px]`} style={{ left: -2, top: -2, cursor: "nwse-resize" }} onPointerDown={onPointerDown("nw")} />
@@ -798,10 +798,10 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
         {/* Sağ panel: ayarlar · sepet · çıktı */}
         <aside className="w-full shrink-0 space-y-3 lg:sticky lg:top-2 lg:max-h-[86vh] lg:w-[320px] lg:self-start lg:overflow-y-auto lg:pr-1">
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{t.settings}</p>
+            <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-slate-400">{t.settings}</p>
             <div className="grid grid-cols-1 gap-2">
               <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-slate-400">{t.quality}</span>
+                <span className="text-[12px] font-medium text-slate-400">{t.quality}</span>
                 <select
                   value={scaleMul}
                   onChange={(e) => setScaleMul(Number(e.target.value))}
@@ -813,7 +813,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                 </select>
               </label>
             </div>
-            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{t.qualityHint}</p>
+            <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">{t.qualityHint}</p>
             <button
               type="button"
               onClick={() => void addSnip()}
@@ -828,14 +828,14 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
           {/* Sepet */}
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-slate-400">
                 {t.basket} {snips.length > 0 ? `(${snips.length})` : ""}
               </span>
               {snips.length > 0 && (
                 <button
                   type="button"
                   onClick={clearSnips}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   {t.clear}
@@ -849,13 +849,13 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
               <ul className="space-y-1.5">
                 {snips.map((s, i) => (
                   <li key={s.id} className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2 py-1.5">
-                    <span className="w-4 shrink-0 text-center text-[11px] font-bold text-slate-400">{i + 1}</span>
+                    <span className="w-4 shrink-0 text-center text-[12px] font-bold text-slate-400">{i + 1}</span>
                     <img src={s.url} alt="" className="h-9 w-12 shrink-0 rounded bg-white object-contain" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[11px] font-medium text-slate-200">
+                      <p className="truncate text-[12px] font-medium text-slate-200">
                         {t.page} {s.page}
                       </p>
-                      <p className="text-[10px] text-slate-400">{s.width}×{s.height} · {humanSize(s.blob.size)}</p>
+                      <p className="text-[11px] text-slate-400">{s.width}×{s.height} · {humanSize(s.blob.size)}</p>
                     </div>
                     <div className="flex shrink-0 flex-col">
                       <button type="button" onClick={() => moveSnip(i, -1)} disabled={i === 0} aria-label={t.up} title={t.up}
@@ -896,9 +896,9 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
               ürettiği anlaşılmıyordu. */}
           {snips.length > 0 && (
             <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] p-3">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-cyan-300/90">{t.output}</p>
+              <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-cyan-300/90">{t.output}</p>
 
-              <span className="mb-1.5 block text-[11px] font-medium text-slate-400">{t.saveAs}</span>
+              <span className="mb-1.5 block text-[12px] font-medium text-slate-400">{t.saveAs}</span>
               <div className="grid grid-cols-3 gap-1.5">
                 {(["pdf", "png", "jpeg"] as const).map((f) => (
                   <button
@@ -915,7 +915,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                   </button>
                 ))}
               </div>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
                 {saveAs === "png"
                   ? t.fmtPngNote
                   : saveAs === "jpeg"
@@ -927,7 +927,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
 
               {saveAs === "pdf" ? (
                 <>
-                  <span className="mb-1.5 mt-3 block text-[11px] font-medium text-slate-400">{t.layout}</span>
+                  <span className="mb-1.5 mt-3 block text-[12px] font-medium text-slate-400">{t.layout}</span>
                   <div className="grid grid-cols-1 gap-1.5">
                     {(["sheet", "perPage", "separate"] as const).map((m) => (
                       <button
@@ -941,7 +941,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                         }`}
                       >
                         {m === "sheet" ? t.sheet : m === "perPage" ? t.perPage : t.separate}
-                        <span className="mt-0.5 block text-[10px] font-normal leading-relaxed text-slate-400">
+                        <span className="mt-0.5 block text-[11px] font-normal leading-relaxed text-slate-400">
                           {m === "sheet"
                             ? t.sheetHint
                             : m === "perPage"
@@ -958,14 +958,14 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                   {pdfLayout === "sheet" && (
                     <div className="mt-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-slate-400">{t.columns}</span>
+                        <span className="text-[12px] font-medium text-slate-400">{t.columns}</span>
                         <div className="flex items-center gap-1 rounded-lg bg-slate-950/40 p-0.5 ring-1 ring-white/[0.06]">
                           {([1, 2] as const).map((c) => (
                             <button
                               key={c}
                               type="button"
                               onClick={() => setColumns(c)}
-                              className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                              className={`rounded-md px-2.5 py-1 text-[12px] font-semibold transition ${
                                 columns === c ? "bg-cyan-500/25 text-cyan-100" : "text-slate-400 hover:text-white"
                               }`}
                             >
@@ -974,12 +974,12 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                           ))}
                         </div>
                       </div>
-                      <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{t.colHint}</p>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">{t.colHint}</p>
                     </div>
                   )}
                 </>
               ) : (
-                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+                <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
                   {snips.length === 1 ? t.imgOneHint : t.imgManyHint}
                 </p>
               )}
@@ -1012,7 +1012,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       {snips.length > 0 && <ToolRating toolSlug="pdf-kesit-al" language={language} />}
       {snips.length > 0 && <ValueMomentNudge language={language} source="snip_success" />}
 
-      <p className="text-center text-[11px] text-slate-400">
+      <p className="text-center text-[12px] text-slate-400">
         <Crop className="mr-1 inline h-3 w-3" aria-hidden />
         {tr
           ? "Kesitler yalnızca seçtiğiniz bölge çizilerek alınır — belgeniz cihazınızdan çıkmaz."

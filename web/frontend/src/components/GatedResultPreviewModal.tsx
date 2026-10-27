@@ -299,7 +299,7 @@ function WatermarkedPdfJsPreview({
         ) : null}
         {Array.from({ length: shown }, (_, i) => i + 1).map((pn) => (
           <div key={pn} className="relative flex flex-col items-center gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               {language === "tr" ? `Sayfa ${pn}` : `Page ${pn}`}
             </span>
             <PdfPageCanvas pdf={pdf} pageNumber={pn} widthCssPx={viewW} />
@@ -470,7 +470,7 @@ export function GatedResultPreviewModal({
                 </svg>
               </div>
               <div className="min-w-0 pt-0.5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-300/90">
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-300/90">
                   {language === "tr" ? "Filigranlı önizleme" : "Watermarked preview"}
                 </p>
                 <p className="mt-1 truncate text-[15px] font-semibold text-slate-50">{filename}</p>

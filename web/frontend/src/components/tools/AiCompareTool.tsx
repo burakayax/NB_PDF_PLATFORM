@@ -117,7 +117,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
         onClick={() => ref.current?.click()}
         className="nb-dropzone cursor-pointer rounded-2xl p-5 text-center">
         <input ref={ref} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pick(which, e.target.files?.[0]); e.target.value = ""; }} />
-        <span className="inline-block rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-0.5 text-[11px] font-bold text-fuchsia-200">{badge}</span>
+        <span className="inline-block rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-0.5 text-[12px] font-bold text-fuchsia-200">{badge}</span>
         <div className="mx-auto mt-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200">
           {slot.status === "reading" ? <Loader2 className="h-5 w-5 animate-spin" /> : slot.status === "ready" ? <FileText className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
         </div>
@@ -141,7 +141,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF Karşılaştır" : "Compare PDFs"}</h1>
-            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
+            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
             {quota && !comingSoon ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{tr ? "İki belgeyi (ör. sözleşmenin iki sürümü) yükleyin; yapay zekâ eklenen, çıkarılan ve değişen maddeleri çıkarsın." : "Upload two documents (e.g. two versions of a contract); AI extracts added, removed and changed clauses."}</p>
@@ -194,7 +194,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
                       return (
                         <div key={i} className={`rounded-2xl border ${s.ring} ${s.bg} p-4`}>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex h-6 items-center gap-1 rounded-md bg-black/20 px-2 text-[11px] font-bold ${s.text}`}><s.icon className="h-3.5 w-3.5" />{s.label}</span>
+                            <span className={`inline-flex h-6 items-center gap-1 rounded-md bg-black/20 px-2 text-[12px] font-bold ${s.text}`}><s.icon className="h-3.5 w-3.5" />{s.label}</span>
                             <p className="text-[14px] font-bold text-white">{c.title}</p>
                           </div>
                           <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">{c.detail}</p>

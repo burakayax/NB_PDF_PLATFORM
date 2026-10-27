@@ -162,7 +162,7 @@ export function AiCreditBadge({
   if (quota.unlimited) {
     return (
       <span className="inline-flex items-center gap-1.5">
-        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">{tr ? "Sınırsız" : "Unlimited"}</span>
+        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">{tr ? "Sınırsız" : "Unlimited"}</span>
         <AiCreditHelp language={language} quota={quota} />
       </span>
     );
@@ -176,7 +176,7 @@ export function AiCreditBadge({
         <>
           <span
             title={tr ? "Aylık hak: paketinizle gelir, her ay yenilenir" : "Monthly allowance: comes with your plan, renews monthly"}
-            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${monthlyEmpty ? "border-red-400/35 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.04] text-slate-300"}`}
+            className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${monthlyEmpty ? "border-red-400/35 bg-red-500/10 text-red-300" : "border-white/10 bg-white/[0.04] text-slate-300"}`}
           >
             {tr ? "Aylık" : "Monthly"}: {monthly}/{quota.limit ?? 0}
           </span>
@@ -185,7 +185,7 @@ export function AiCreditBadge({
       )}
       <span
         title={tr ? "Kredi: satın aldığınız, süresi dolmayan bakiye" : "Credits: purchased balance, never expires"}
-        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${credits > 0 ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-white/[0.04] text-slate-400"}`}
+        className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${credits > 0 ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-white/[0.04] text-slate-400"}`}
       >
         {tr ? "Kredi" : "Credits"}: {credits}
       </span>
@@ -195,7 +195,7 @@ export function AiCreditBadge({
           type="button"
           onClick={onTopUp}
           title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
-          className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20"
+          className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20"
         >
           + {tr ? "Kredi" : "Credits"}
         </button>

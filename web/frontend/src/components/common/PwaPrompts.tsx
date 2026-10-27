@@ -182,7 +182,7 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
               { n: 3, label: t.iosStep3, icon: null },
             ].map((step) => (
               <li key={step.n} className="flex items-center gap-2.5">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-nb-primary/15 text-[11px] font-bold text-nb-accent">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-nb-primary/15 text-[12px] font-bold text-nb-accent">
                   {step.n}
                 </span>
                 <span className="flex items-center gap-1.5 text-[13px] leading-snug text-nb-text">
@@ -197,7 +197,7 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
             {benefits.map(({ icon: Icon, label }) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-nb-muted"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[12px] font-medium text-nb-muted"
               >
                 <Icon className="h-3.5 w-3.5 text-nb-primary/80" aria-hidden />
                 {label}

@@ -106,7 +106,7 @@ export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegiste
 
         {/* Kod örneği */}
         <div className="mx-auto mt-12 max-w-2xl overflow-hidden rounded-2xl border border-white/[0.1] bg-black/50">
-          <div className="flex items-center gap-1.5 border-b border-white/[0.06] px-4 py-2.5"><span className="h-2.5 w-2.5 rounded-full bg-red-400/60" /><span className="h-2.5 w-2.5 rounded-full bg-amber-400/60" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" /><span className="ml-2 text-[11px] text-slate-400">POST /v1/extract</span></div>
+          <div className="flex items-center gap-1.5 border-b border-white/[0.06] px-4 py-2.5"><span className="h-2.5 w-2.5 rounded-full bg-red-400/60" /><span className="h-2.5 w-2.5 rounded-full bg-amber-400/60" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" /><span className="ml-2 text-[12px] text-slate-400">POST /v1/extract</span></div>
           <pre className="overflow-x-auto p-4 text-[12.5px] leading-relaxed text-slate-200"><code>{curl}</code></pre>
         </div>
 

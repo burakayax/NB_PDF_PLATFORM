@@ -49,7 +49,7 @@ export function GoogleSignupPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-[#05080f] px-4 py-10 text-slate-100">
       <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-2xl">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-300">PDF Platform</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-cyan-300">PDF Platform</p>
         <h1 className="mt-2 text-xl font-semibold text-white">{tr ? "Hesabınızı tamamlayın" : "Complete your account"}</h1>
         <p className="mt-2 text-[13px] leading-relaxed text-slate-400">
           {tr

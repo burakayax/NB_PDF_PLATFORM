@@ -253,17 +253,17 @@ export function ImageResizeTool({ language }: { language: Language }) {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-                    <p className="mt-0.5 text-[11px] text-slate-400">
+                    <p className="mt-0.5 text-[12px] text-slate-400">
                       {srcDims ? `${srcDims.w} × ${srcDims.h} px · ` : ""}
                       {humanSize(file.size)}
                     </p>
-                    <p className="mt-2 text-[11px] text-slate-400">
+                    <p className="mt-2 text-[12px] text-slate-400">
                       {tr ? "Çıkacak ölçü" : "Output size"}:{" "}
                       <span className="font-semibold text-nb-accent">
                         {width} × {height} px
                       </span>
                     </p>
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-[12px] text-slate-500">
                       {tr
                         ? "Önizleme seçtiğiniz oranda gösterilir."
                         : "The preview is shown at the ratio you selected."}

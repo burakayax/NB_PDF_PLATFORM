@@ -74,7 +74,7 @@ export function PhoneField({ label, value, onChange, city, tr, error, disabled }
           aria-label={tr ? `Ülke kodu: ${country.tr} +${country.dial}. Değiştirmek için tıklayın` : `Country code: ${country.en} +${country.dial}. Click to change`}
           className="flex shrink-0 items-center gap-1.5 rounded-l-xl border-r border-white/10 px-2.5 text-[13px] font-semibold text-slate-100 hover:bg-white/[0.06]"
         >
-          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10.5px] font-bold tracking-wide text-slate-300">{country.iso}</span>
+          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-slate-300">{country.iso}</span>
           <span>+{country.dial}</span>
           <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
         </button>
@@ -91,7 +91,7 @@ export function PhoneField({ label, value, onChange, city, tr, error, disabled }
           className="min-w-0 flex-1 rounded-r-xl bg-transparent px-3 py-2.5 text-[14px] text-white placeholder:text-slate-500 focus:outline-none"
         />
       </div>
-      {error ? <span className="mt-1 flex items-start gap-1 text-[11.5px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
+      {error ? <span className="mt-1 flex items-start gap-1 text-[12px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
       <CvPopover anchor={btn} open={open} onClose={() => setOpen(false)} width={320} label={tr ? "Ülke kodu seçin" : "Choose a country code"}>
         <div className="relative mb-2">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -101,7 +101,7 @@ export function PhoneField({ label, value, onChange, city, tr, error, disabled }
           {list.map((c) => (
             <li key={c.iso} role="option" aria-selected={c.iso === country.iso}>
               <button type="button" onClick={() => pick(c)} className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] hover:bg-white/10 ${c.iso === country.iso ? "bg-sky-500/15 text-white" : "text-slate-200"}`}>
-                <span className="w-7 shrink-0 rounded bg-white/10 px-1 py-0.5 text-center text-[10px] font-bold text-slate-300">{c.iso}</span>
+                <span className="w-7 shrink-0 rounded bg-white/10 px-1 py-0.5 text-center text-[11px] font-bold text-slate-300">{c.iso}</span>
                 <span className="min-w-0 flex-1 truncate">{tr ? c.tr : c.en}</span>
                 <span className="shrink-0 text-slate-400">+{c.dial}</span>
                 {c.iso === country.iso ? <Check className="h-4 w-4 shrink-0 text-sky-300" /> : null}
@@ -187,7 +187,7 @@ export function MonthField({ label, value, onChange, tr, disabled, error, hint }
           </span>
         ) : null}
       </button>
-      {error ? <span className="mt-1 flex items-start gap-1 text-[11.5px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : hint ? <span className="mt-1 block text-[11px] text-slate-500">{hint}</span> : null}
+      {error ? <span className="mt-1 flex items-start gap-1 text-[12px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : hint ? <span className="mt-1 block text-[12px] text-slate-500">{hint}</span> : null}
 
       <CvPopover anchor={btn} open={open} onClose={close} width={296} label={tr ? "Ay ve yıl seçin" : "Pick month and year"}>
         <div className="mb-3 flex items-center justify-between gap-2">

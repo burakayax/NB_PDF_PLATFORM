@@ -946,7 +946,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           </span>
           <div className="leading-tight">
             <p className="text-sm font-bold">{tr ? "Belge Tara" : "Scan document"}</p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[12px] text-slate-400">
               {tr ? "Cihazında işlenir · gizli" : "Processed on-device · private"}
             </p>
           </div>
@@ -1122,7 +1122,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex w-16 flex-col items-center gap-1 text-[11px] text-slate-300 transition hover:text-white"
+                      className="flex w-16 flex-col items-center gap-1 text-[12px] text-slate-300 transition hover:text-white"
                       aria-label={tr ? "Galeriden seç" : "Pick from gallery"}
                     >
                       <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04]">
@@ -1140,7 +1140,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       <span className="rounded-full bg-cyan-500" style={{ height: 56, width: 56 }} />
                     </button>
                     {isPro ? (
-                      <div className="flex w-16 flex-col items-center gap-1 text-center text-[11px] text-slate-400">
+                      <div className="flex w-16 flex-col items-center gap-1 text-center text-[12px] text-slate-400">
                         <Zap className={`h-4 w-4 ${autoCapture ? "text-emerald-400" : "text-slate-400"}`} />
                         {autoCapture ? (tr ? "Otomatik" : "Auto") : (tr ? "Manuel" : "Manual")}
                       </div>
@@ -1148,7 +1148,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       <button
                         type="button"
                         onClick={() => setUpsell("autoshot")}
-                        className="flex w-16 flex-col items-center gap-1 text-center text-[11px] text-violet-300 transition hover:text-violet-200"
+                        className="flex w-16 flex-col items-center gap-1 text-center text-[12px] text-violet-300 transition hover:text-violet-200"
                       >
                         <Sparkles className="h-4 w-4" />
                         {tr ? "Otomatik" : "Auto"}
@@ -1429,7 +1429,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     >
                       <img src={p.url} alt="" className="aspect-[3/4] w-full object-cover" />
                     </button>
-                    <span className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[11px] font-bold">
+                    <span className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[12px] font-bold">
                       {i + 1}
                     </span>
                     <button
@@ -1478,7 +1478,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-violet-400/30 bg-violet-500/[0.06] text-violet-300 transition hover:border-violet-400/50"
                   >
                     <Lock className="h-5 w-5" />
-                    <span className="px-1 text-center text-[11px] font-semibold">
+                    <span className="px-1 text-center text-[12px] font-semibold">
                       {tr ? "Sınırsız için Pro" : "Pro for unlimited"}
                     </span>
                   </button>
@@ -1518,12 +1518,12 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${format === f ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
                     >
                       <span className="text-[13px] font-bold">{lbl}</span>
-                      <span className={`text-[10px] ${format === f ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
+                      <span className={`text-[11px] ${format === f ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
                     </button>
                   ))}
                 </div>
                 {format !== "pdf" && pages.length > 1 && (
-                  <p className="mt-1.5 text-[11px] text-slate-400">
+                  <p className="mt-1.5 text-[12px] text-slate-400">
                     {tr ? `${pages.length} sayfa → her sayfa ayrı görsel, tek ZIP olarak.` : `${pages.length} pages → one image per page, in a single ZIP.`}
                   </p>
                 )}
@@ -1548,7 +1548,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                         className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${quality === qk ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
                       >
                         <span className="text-[13px] font-bold">{lbl}</span>
-                        <span className={`text-[10px] ${quality === qk ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
+                        <span className={`text-[11px] ${quality === qk ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
                       </button>
                     ))}
                   </div>

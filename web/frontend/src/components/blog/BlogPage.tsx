@@ -160,11 +160,11 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mb-2 flex flex-wrap gap-1.5">
-                    {tags.map((t) => <span key={t} className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${a.chip}`}>{t}</span>)}
+                    {tags.map((t) => <span key={t} className={`rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${a.chip}`}>{t}</span>)}
                   </div>
                   <h2 className="text-[17px] font-extrabold leading-snug text-white transition group-hover:text-white">{c.title}</h2>
                   <p className="mt-2 line-clamp-2 flex-1 text-[13px] leading-relaxed text-slate-400">{c.excerpt}</p>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-400">
+                  <div className="mt-3 flex items-center gap-3 text-[12px] text-slate-400">
                     <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{fmtDate(p.date, tr)}</span>
                     <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{p.readMinutes} {tr ? "dk okuma" : "min read"}</span>
                   </div>
@@ -218,7 +218,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
         {/* Başlık bloğu */}
         <div className="mt-6">
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {tags.map((t) => <span key={t} className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${a.chip}`}>{t}</span>)}
+            {tags.map((t) => <span key={t} className={`rounded-full border px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-wide ${a.chip}`}>{t}</span>)}
           </div>
           <h1 className="text-[30px] font-black leading-tight tracking-tight text-white sm:text-[38px]">{c.title}</h1>
           <div className="mt-4 flex flex-wrap items-center gap-4 text-[12px] text-slate-400">
@@ -270,7 +270,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
                 const ra = accentOf(p.accent);
                 return (
                   <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
-                    <p className={`text-[11px] font-bold uppercase tracking-wide ${ra.text}`}>{p.tags[tr ? "tr" : "en"][0]}</p>
+                    <p className={`text-[12px] font-bold uppercase tracking-wide ${ra.text}`}>{p.tags[tr ? "tr" : "en"][0]}</p>
                     <p className="mt-1.5 text-[15px] font-bold leading-snug text-white">{rc.title}</p>
                     <p className="mt-1.5 line-clamp-2 text-[12px] text-slate-400">{rc.excerpt}</p>
                   </a>

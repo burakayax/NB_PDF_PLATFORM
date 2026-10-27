@@ -706,7 +706,7 @@ function Hero({
             />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-blue-300">
+          <span className="text-[12px] font-bold uppercase tracking-[0.25em] text-blue-300">
             {tr
               ? "Web PDF Araçları Platformu"
               : "Web PDF Tools Platform"}
@@ -828,7 +828,7 @@ function Hero({
                 Izgarada üç tür kutu var: burada çalışanlar, kendi sayfasında
                 açılanlar ve ücretsiz üyelikle açılan kilitli olanlar. */}
             {!accessToken && !aiTool && (
-              <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-1 text-[11.5px] font-medium">
+              <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-1 text-[12px] font-medium">
                 <span className="flex items-center gap-1.5 text-slate-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                   {tr ? "Üyeliksiz kullan" : "Use without an account"}
@@ -1077,7 +1077,7 @@ function Hero({
                     <p className="truncate text-[12.5px] text-slate-400">{tr ? meta.trDesc : meta.enDesc}</p>
                   </div>
                   {onDevice && (
-                    <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-bold text-emerald-300 sm:inline-flex">
+                    <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[12px] font-bold text-emerald-300 sm:inline-flex">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       {tr ? "Cihazında çalışır" : "Runs on your device"}
                     </span>
@@ -1268,7 +1268,7 @@ function Hero({
           {copy.hero.audience.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-300"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-300"
             >
               <span
                 className="w-1 h-1 rounded-full bg-blue-400"
@@ -1432,7 +1432,7 @@ function Features({ language }: { language: Language }) {
 
                 {isSession && (
                   <div className="absolute top-4 right-4 z-10">
-                    <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <span className="text-[11px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
                       {tr ? "Özel" : "Exclusive"}
                     </span>
                   </div>
@@ -2221,7 +2221,7 @@ function Footer({
           <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 md:flex md:gap-x-16">
             {cols.map((col) => (
               <div key={col.heading} className="min-w-[7rem]">
-                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-400">
+                <p className="mb-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-gray-400">
                   {col.heading}
                 </p>
                 <ul className="space-y-2.5">

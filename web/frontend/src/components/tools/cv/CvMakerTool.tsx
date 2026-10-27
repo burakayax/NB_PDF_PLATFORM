@@ -290,9 +290,9 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
             <span className="pointer-events-none absolute left-0 top-0 block origin-top-left" style={{ width: PAGE_W, transform: `scale(${52 / PAGE_W})` }}><CvPage m={buildModel({ ...SAMPLE[data.settings.lang], photo: null }, "export")} tpl={tpl} size="m" accent={null} /></span>
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-300">{tr ? `${CV_TEMPLATES.length} şablon arasından seçin` : `Choose from ${CV_TEMPLATES.length} templates`}</span>
+            <span className="block text-[12px] font-bold uppercase tracking-wider text-sky-300">{tr ? `${CV_TEMPLATES.length} şablon arasından seçin` : `Choose from ${CV_TEMPLATES.length} templates`}</span>
             <span className="mt-0.5 block truncate text-[15px] font-bold text-white">{tr ? tpl.tr : tpl.en}</span>
-            {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="mt-0.5 block text-[11.5px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : <span className="mt-0.5 block truncate text-[12px] text-slate-400">{tr ? tpl.descTr : tpl.descEn}</span>}
+            {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="mt-0.5 block text-[12px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : <span className="mt-0.5 block truncate text-[12px] text-slate-400">{tr ? tpl.descTr : tpl.descEn}</span>}
           </span>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-[13.5px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(59,130,246,0.85)] transition group-hover:brightness-110">
             <LayoutTemplate className="h-4 w-4" />
@@ -324,8 +324,8 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 return (
                   <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => { setTemplateId(t.id); setTab("preview"); setTplOpen(false); window.setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }} className={`group relative shrink-0 rounded-xl p-1.5 text-left transition ${on ? "bg-sky-500/20 ring-2 ring-sky-400" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.08]"}`} style={{ width: THUMB_W + 12 }}>
                     <div className="overflow-hidden rounded-lg"><TemplateThumb tpl={t} lang={data.settings.lang} /></div>
-                    {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-amber-300"><Lock className="h-3 w-3" />{tr ? "ÜCRETLİ" : "PAID"}</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">{tr ? "ÜCRETLİ" : "PAID"}</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
-                    <div className="mt-1.5 flex items-center gap-1.5 truncate px-0.5 text-[12px] font-semibold text-white"><span className="truncate">{tr ? t.tr : t.en}</span>{t.isNew ? <span className="shrink-0 rounded bg-fuchsia-500/90 px-1 py-px text-[9px] font-bold text-white">{tr ? "YENİ" : "NEW"}</span> : null}</div>
+                    {lockedT ? <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[11px] font-bold text-amber-300"><Lock className="h-3 w-3" />{tr ? "ÜCRETLİ" : "PAID"}</span> : !t.free ? <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-1.5 py-0.5 text-[11px] font-bold text-sky-300">{tr ? "ÜCRETLİ" : "PAID"}</span> : <span className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[11px] font-bold text-white">{tr ? "ÜCRETSİZ" : "FREE"}</span>}
+                    <div className="mt-1.5 flex items-center gap-1.5 truncate px-0.5 text-[12px] font-semibold text-white"><span className="truncate">{tr ? t.tr : t.en}</span>{t.isNew ? <span className="shrink-0 rounded bg-fuchsia-500/90 px-1 py-px text-[11px] font-bold text-white">{tr ? "YENİ" : "NEW"}</span> : null}</div>
                   </button>
                 );
               })}
@@ -394,7 +394,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                     {/* Sayfa sınırları */}
                     {Array.from({ length: pages - 1 }, (_, i) => (
                       <div key={i} className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-sky-500/70" style={{ top: (i + 1) * PAGE_H * scale }}>
-                        <span className="absolute right-2 top-1 rounded bg-sky-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{tr ? `Sayfa ${i + 2}` : `Page ${i + 2}`}</span>
+                        <span className="absolute right-2 top-1 rounded bg-sky-500/90 px-1.5 py-0.5 text-[11px] font-bold text-white">{tr ? `Sayfa ${i + 2}` : `Page ${i + 2}`}</span>
                       </div>
                     ))}
                     {locked ? (
@@ -443,7 +443,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                     </div>
                   </div>
                 ) : null}
-                {emptyCv && !locked ? <p className="mt-2 text-[11.5px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; solda canlı olarak oluşur." : "Your CV is still empty. Fill in the fields below; it builds live on the left."}</p> : null}
+                {emptyCv && !locked ? <p className="mt-2 text-[12px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; solda canlı olarak oluşur." : "Your CV is still empty. Fill in the fields below; it builds live on the left."}</p> : null}
                 {error ? <p className="mt-2 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3 py-2 text-[12.5px] text-red-300">{error}</p> : null}
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
               </div>
@@ -498,7 +498,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                   <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => store.duplicate()} aria-label={tr ? "Kopyala" : "Duplicate"} title={tr ? "Bu CV'yi kopyala (ilana göre uyarlamak için)" : "Duplicate (to tailor for a job)"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10 disabled:opacity-40"><Copy className="h-4 w-4" /></button>
                   <button type="button" onClick={() => { if (window.confirm(tr ? `“${store.current.name}” silinsin mi?` : `Delete “${store.current.name}”?`)) store.remove(); }} aria-label={tr ? "Sil" : "Delete"} title={tr ? "Bu CV'yi sil" : "Delete this CV"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-red-300 hover:bg-red-500/10"><Trash2 className="h-4 w-4" /></button>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-slate-400">
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-slate-400">
                   <span>{tr ? `${store.cvs.length} CV · her ilan için ayrı sürüm tutabilirsiniz` : `${store.cvs.length} CV(s) · keep a version per job`}</span>
                   <button type="button" onClick={exportBackup} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileDown className="h-3.5 w-3.5" />{tr ? "Yedek indir" : "Back up"}</button>
                   <button type="button" onClick={() => importRef.current?.click()} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileUp className="h-3.5 w-3.5" />{tr ? "Yedekten yükle" : "Restore"}</button>
@@ -508,7 +508,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
               </div>
 
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}
-              <p className="flex items-start gap-2 text-[11.5px] leading-relaxed text-slate-500"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "İpucu: Başvuru sistemleri (ATS) düz metni sever. Bu araçla ürettiğiniz PDF'te yazılar seçilebilir metin olarak gömülüdür; “Analiz” sekmesindeki ATS röntgeniyle makinenin gördüğünü kendiniz kontrol edebilirsiniz." : "Tip: hiring systems (ATS) love plain text. In the PDF made here all text is selectable; use the ATS X-ray under “Analysis” to check what a machine sees."}</p>
+              <p className="flex items-start gap-2 text-[12px] leading-relaxed text-slate-500"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "İpucu: Başvuru sistemleri (ATS) düz metni sever. Bu araçla ürettiğiniz PDF'te yazılar seçilebilir metin olarak gömülüdür; “Analiz” sekmesindeki ATS röntgeniyle makinenin gördüğünü kendiniz kontrol edebilirsiniz." : "Tip: hiring systems (ATS) love plain text. In the PDF made here all text is selectable; use the ATS X-ray under “Analysis” to check what a machine sees."}</p>
             </div>
           </div>
         </>

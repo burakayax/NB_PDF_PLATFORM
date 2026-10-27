@@ -52,13 +52,13 @@ export function CvFormCopy({ data, tr, onClose }: { data: CvData; tr: boolean; o
             if (!items.length) return null;
             return (
               <section key={gi}>
-                <h4 className="mb-1.5 text-[11.5px] font-bold uppercase tracking-wider text-sky-300/90">{g.title}</h4>
+                <h4 className="mb-1.5 text-[12px] font-bold uppercase tracking-wider text-sky-300/90">{g.title}</h4>
                 <ul className="space-y-1.5">
                   {items.map((it, ii) => {
                     const key = `${gi}-${ii}`;
                     return (
                       <li key={key} className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                        <div className="min-w-0 flex-1"><p className="text-[11px] text-slate-500">{it.label}</p><p className="whitespace-pre-wrap break-words text-[13px] text-slate-100">{it.value}</p></div>
+                        <div className="min-w-0 flex-1"><p className="text-[12px] text-slate-500">{it.label}</p><p className="whitespace-pre-wrap break-words text-[13px] text-slate-100">{it.value}</p></div>
                         <button type="button" onClick={() => void copy(key, it.value)} aria-label={tr ? `${it.label} kopyala` : `Copy ${it.label}`} className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-white/15">
                           {done === key ? <><Check className="h-3.5 w-3.5 text-emerald-300" />{tr ? "Kopyalandı" : "Copied"}</> : <><Copy className="h-3.5 w-3.5" />{tr ? "Kopyala" : "Copy"}</>}
                         </button>

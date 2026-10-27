@@ -57,18 +57,18 @@ export function PdfApiOfflineBanner() {
 
   return (
     <div
-      className="border-b border-amber-500/40 bg-amber-950/80 px-3 py-2 text-center text-[11px] leading-snug font-medium text-amber-50 md:text-xs"
+      className="border-b border-amber-500/40 bg-amber-950/80 px-3 py-2 text-center text-[12px] leading-snug font-medium text-amber-50 md:text-xs"
       role="alert"
     >
       <strong className="font-semibold text-amber-100">PDF API kapalı görünüyor.</strong>{" "}
-      Tarayıcı <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[10px]">/api</code> isteklerini{" "}
-      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[10px]">127.0.0.1:8000</code>
+      Tarayıcı <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">/api</code> isteklerini{" "}
+      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">127.0.0.1:8000</code>
       adresine iletir; FastAPI çalışmıyorsa yükleme &quot;PDF kontrol ediliyor&quot;da takılı kalır. Çözüm: proje kökünde{" "}
-      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[10px]">npm run dev</code>{" "}
+      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">npm run dev</code>{" "}
       veya{" "}
-      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[10px]">npm run dev:with-pdf-api</code>{" "}
+      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">npm run dev:with-pdf-api</code>{" "}
       (<span className="text-amber-200/90">web/frontend</span>), ya da ayrı terminalde{" "}
-      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[10px]">node scripts/run-pdf-api.mjs</code>.
+      <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">node scripts/run-pdf-api.mjs</code>.
     </div>
   );
 }

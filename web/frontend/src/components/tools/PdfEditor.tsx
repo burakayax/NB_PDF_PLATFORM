@@ -1409,7 +1409,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   ], [tr, unlimitedPlan, EL]);
 
   const grp = "flex items-center gap-1.5 rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] px-1.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_8px_20px_-12px_rgba(0,0,0,0.7)]";
-  const grpLabel = "hidden select-none pl-1 pr-0.5 text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-500 xl:inline";
+  const grpLabel = "hidden select-none pl-1 pr-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 xl:inline";
   const resetT = quotaPopup ? resetInfo(quotaPopup.resetAt) : null;
 
   return (
@@ -1422,7 +1422,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF Düzenle" : "Edit PDF"}</h1>
-              <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-300">{tr ? "Tam düzenleme" : "Full editing"}</span>
+              <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-cyan-300">{tr ? "Tam düzenleme" : "Full editing"}</span>
             </div>
             <p className="mt-1 text-sm text-slate-400">{tr ? "Her yazıya ve görsele tıklayıp düzenleyin, silin, renk/boyut ve daha fazlasını değiştirin — gerçek düzenleme." : "Click any text or image to edit, delete, and change color, size and more — real editing."}</p>
           </div>
@@ -1506,7 +1506,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         <div>
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/12 text-cyan-300"><FileText className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-100">{file.name}</p><p className="text-[11px] text-slate-400">{editCount > 0 ? (tr ? `${editCount} düzenleme · hazır` : `${editCount} edits · ready`) : (tr ? "Henüz düzenleme yok" : "No edits yet")}</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-100">{file.name}</p><p className="text-[12px] text-slate-400">{editCount > 0 ? (tr ? `${editCount} düzenleme · hazır` : `${editCount} edits · ready`) : (tr ? "Henüz düzenleme yok" : "No edits yet")}</p></div>
             <button type="button" onClick={() => setEditorOpen(true)} className="shrink-0 rounded-lg border border-cyan-400/30 px-3 py-1.5 text-[12px] font-semibold text-cyan-200 transition hover:bg-cyan-500/10">{tr ? "Düzenle" : "Edit"}</button>
             <button type="button" onClick={reset} className="shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">{tr ? "Yeni" : "New"}</button>
           </div>
@@ -1592,11 +1592,11 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
             <div className={grp}>
               <span className={grpLabel}>{tr ? "Ekle" : "Add"}</span>
               <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); setMultiSel(new Set()); }} aria-pressed={addMode}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-bold ring-1 transition duration-200 hover:scale-[1.03] ${addMode ? "bg-gradient-to-r from-cyan-300 to-sky-400 text-slate-950 shadow-[0_10px_26px_-8px_rgba(34,211,238,0.95)] ring-white/60" : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_10px_24px_-12px_rgba(6,182,212,0.9)] ring-white/15 hover:brightness-110"}`}>
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-bold ring-1 transition duration-200 hover:scale-[1.03] ${addMode ? "bg-gradient-to-r from-cyan-300 to-sky-400 text-slate-950 shadow-[0_10px_26px_-8px_rgba(34,211,238,0.95)] ring-white/60" : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_10px_24px_-12px_rgba(6,182,212,0.9)] ring-white/15 hover:brightness-110"}`}>
                 <Type className="h-3.5 w-3.5" />{tr ? "Metin Ekle" : "Add Text"}
               </button>
               <button data-tour="editor-add-image" type="button" onClick={() => imageInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-1 text-[11.5px] font-bold text-white shadow-[0_10px_24px_-12px_rgba(168,85,247,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.03] hover:brightness-110">
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-1 text-[12px] font-bold text-white shadow-[0_10px_24px_-12px_rgba(168,85,247,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.03] hover:brightness-110">
                 <ImagePlus className="h-3.5 w-3.5" />{tr ? "Görsel / İmza Ekle" : "Add Image / Signature"}
               </button>
               <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={(e) => { addImageFile(e.target.files?.[0]); e.target.value = ""; }} />
@@ -1676,18 +1676,18 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-16 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
                 <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
-                <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[11px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
+                <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
               <span className="mx-0.5 h-6 w-px bg-white/15" />
               <button type="button" onClick={undoDelete} disabled={!delStack.length} title={tr ? "Son silmeyi geri al (Ctrl+Z)" : "Undo last delete (Ctrl+Z)"}
-                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
                 <Undo2 className="h-3.5 w-3.5" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
               </button>
             </div>
 
             <div className={`${grp} ml-auto`}>
               <button type="button" onClick={() => setTourOpen(true)} title={tr ? "Hızlı turu başlat" : "Start the quick tour"}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[11.5px] font-bold text-slate-100 transition duration-200 hover:scale-[1.03] hover:bg-white/[0.1] hover:text-cyan-200">
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[12px] font-bold text-slate-100 transition duration-200 hover:scale-[1.03] hover:bg-white/[0.1] hover:text-cyan-200">
                 <HelpCircle className="h-3.5 w-3.5" />{tr ? "Nasıl Yapılır" : "How To"}
               </button>
               <button data-tour="editor-done" type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-600 px-3.5 py-1 text-[12px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(16,185,129,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.04] hover:brightness-110"><Check className="h-3.5 w-3.5" />{tr ? "Tamam" : "Done"}</button>
@@ -1703,9 +1703,9 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 return (
                   <button key={i} type="button" onClick={() => { setCurrent(i); setSelected(null); setMultiSel(new Set()); }}
                     className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-cyan-400" : "border-transparent hover:border-white/20"}`}>
-                    {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
+                    {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[11px] text-slate-400">{i + 1}</div>}
                     {pgEdited && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-cyan-400 ring-2 ring-slate-900" title={tr ? "Düzenlendi" : "Edited"} />}
-                    <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
+                    <span className={`block py-0.5 text-center text-[11px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
                   </button>
                 );
               })}
@@ -1837,7 +1837,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                       <div key={el.id} className="absolute" style={{ left: containerLeft, top: containerTop }}>
                         {single && (
                           <>
-                            <span onPointerDown={downFrame} style={{ touchAction: "none", top: textTop - 30 }} className="absolute left-0 z-10 inline-flex cursor-move touch-none select-none items-center gap-1 rounded-md bg-cyan-600 px-2 py-1 text-[11px] font-bold text-white shadow-lg" title={tr ? "Sürükleyerek taşı" : "Drag to move"}>
+                            <span onPointerDown={downFrame} style={{ touchAction: "none", top: textTop - 30 }} className="absolute left-0 z-10 inline-flex cursor-move touch-none select-none items-center gap-1 rounded-md bg-cyan-600 px-2 py-1 text-[12px] font-bold text-white shadow-lg" title={tr ? "Sürükleyerek taşı" : "Drag to move"}>
                               <Move className="h-3.5 w-3.5" />{tr ? "Taşı" : "Move"}
                             </span>
                             <FrameStrips w={frameW} h={fsPx} top={textTop} onDown={downFrame} />
@@ -1868,7 +1868,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                         {sel && (
                           <>
                             <span onPointerDown={downFrame} style={{ touchAction: "none" }}
-                              className="absolute -top-7 left-0 z-10 inline-flex cursor-move touch-none items-center gap-1 rounded-md bg-cyan-600 px-2 py-1 text-[11px] font-bold text-white shadow-lg select-none"
+                              className="absolute -top-7 left-0 z-10 inline-flex cursor-move touch-none items-center gap-1 rounded-md bg-cyan-600 px-2 py-1 text-[12px] font-bold text-white shadow-lg select-none"
                               title={tr ? "Sürükleyerek taşı" : "Drag to move"}>
                               <Move className="h-3.5 w-3.5" />{tr ? "Taşı" : "Move"}
                             </span>

@@ -380,7 +380,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "Sözleşme Denetçisi" : "Contract Auditor"}</h1>
-            <span title={tr ? "Hızlı tarama aylık hakkınızdan (bitince krediden), detaylı denetim yalnızca satın alınan krediden düşer" : "Quick scan uses your monthly allowance (then credits); the detailed audit uses purchased credits only"} className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">{tr ? "Hak · Kredi" : "Allowance · Credits"}</span>
+            <span title={tr ? "Hızlı tarama aylık hakkınızdan (bitince krediden), detaylı denetim yalnızca satın alınan krediden düşer" : "Quick scan uses your monthly allowance (then credits); the detailed audit uses purchased credits only"} className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">{tr ? "Hak · Kredi" : "Allowance · Credits"}</span>
             {quota && !comingSoon ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">
@@ -465,7 +465,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                           return (
                             <div key={q.id} className="rounded-2xl border border-white/10 bg-black/20 p-3.5">
                               <p className="text-[13.5px] font-semibold text-white">{q.question}</p>
-                              {q.why && <p className="mt-0.5 text-[11.5px] text-slate-500">{q.why}</p>}
+                              {q.why && <p className="mt-0.5 text-[12px] text-slate-500">{q.why}</p>}
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {[...q.options, "Bilmiyorum"].map((o) => (
                                   <button key={o} type="button" onClick={() => set(o)} className={`rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition ${cur === o ? "border-fuchsia-400/60 bg-fuchsia-500/20 text-white" : "border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]"}`}>{o}</button>
@@ -513,7 +513,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                     <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-slate-400">Sizin standartlarınız / kırmızı çizgileriniz <span className="font-normal normal-case text-slate-500">(isteğe bağlı ama en değerli kısım)</span></p>
                     <textarea value={playbook} onChange={(e) => setPlaybook(e.target.value)} rows={4} maxLength={6000} className={inputCls}
                       placeholder={"Her satıra bir kural yazın. Örn.\nÖdeme vadesi en fazla 60 gün olmalı.\nGecikme cezası günlük %0,1’i ve toplamda %10’u geçmemeli.\nSorumluluk sözleşme bedeliyle sınırlı olmalı.\nFikri mülkiyet bizde kalmalı."} />
-                    <p className="mt-1 text-[11px] text-slate-500">Yazmazsanız genel iyi uygulamaya göre değerlendirilir ve bu raporda belirtilir.</p>
+                    <p className="mt-1 text-[12px] text-slate-500">Yazmazsanız genel iyi uygulamaya göre değerlendirilir ve bu raporda belirtilir.</p>
                   </div>
 
                   <div>
@@ -532,7 +532,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                           <li className="flex gap-1.5"><span className="mt-0.5 w-3.5 shrink-0 text-center font-bold text-slate-500">✕</span><span className="text-slate-400">Önerilen yeni madde metni yok</span></li>
                           <li className="flex gap-1.5"><span className="mt-0.5 w-3.5 shrink-0 text-center font-bold text-slate-500">✕</span><span className="text-slate-400">Notlarınıza tek tek yanıt yazmaz (notlar analizde yine dikkate alınır)</span></li>
                         </ul>
-                        <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">Önce aylık hakkınızdan, hakkınız bitince krediden düşer.{quota && !quota.unlimited ? <> Şu an: aylık {monthlyLeft(quota)}, kredi {creditBalance(quota)}.</> : null}</p>
+                        <p className="mt-2 text-[12px] leading-relaxed text-slate-400">Önce aylık hakkınızdan, hakkınız bitince krediden düşer.{quota && !quota.unlimited ? <> Şu an: aylık {monthlyLeft(quota)}, kredi {creditBalance(quota)}.</> : null}</p>
                         {insufficientQuick ? (
                           <button type="button" onClick={() => setTopUpOpen(true)} className="mt-3 w-full rounded-xl bg-gradient-to-r from-amber-500 to-fuchsia-600 px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:brightness-110">Hakkınız yetmiyor — kredi paketlerini gör</button>
                         ) : (
@@ -549,7 +549,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                           <li className="flex gap-1.5"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />Her bulgu için önerilen yeni madde metni</li>
                           <li className="flex gap-1.5"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />Notlarınıza tek tek yanıt ve müzakere öncelikleri</li>
                         </ul>
-                        <p className="mt-2 text-[11.5px] leading-relaxed text-slate-300">En güçlü yapay zekâ modeli belgeyi birkaç kez okur, rakamları hesaplar, hukuki noktaları resmî kaynaklarda arar; bu yüzden daha pahalıdır. <b className="text-white">Yalnızca satın alınan krediden düşer</b> (aylık hak geçmez).{quota && !quota.unlimited ? <> Krediniz: <b className={insufficientCredits ? "text-red-300" : "text-emerald-300"}>{creditBalance(quota)}</b>.</> : null}</p>
+                        <p className="mt-2 text-[12px] leading-relaxed text-slate-300">En güçlü yapay zekâ modeli belgeyi birkaç kez okur, rakamları hesaplar, hukuki noktaları resmî kaynaklarda arar; bu yüzden daha pahalıdır. <b className="text-white">Yalnızca satın alınan krediden düşer</b> (aylık hak geçmez).{quota && !quota.unlimited ? <> Krediniz: <b className={insufficientCredits ? "text-red-300" : "text-emerald-300"}>{creditBalance(quota)}</b>.</> : null}</p>
                         {insufficientCredits ? (
                           <button type="button" onClick={() => setTopUpOpen(true)} className="mt-3 w-full rounded-xl bg-gradient-to-r from-amber-500 to-fuchsia-600 px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:brightness-110">Krediniz yetmiyor — kredi paketlerini gör</button>
                         ) : (
@@ -557,7 +557,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                         )}
                       </div>
                     </div>
-                    <ul className="mt-3 space-y-1 text-[11.5px] leading-relaxed text-slate-500">
+                    <ul className="mt-3 space-y-1 text-[12px] leading-relaxed text-slate-500">
                       <li>• Analiz başarısız olursa harcanan hak/kredi iade edilir.</li>
                       <li>• Sonuç yalnızca bu sayfada gösterilir: bitince raporu indirin, sayfayı kapatırsanız sonuç kaybolur ve yeniden çalıştırmak yeniden hak/kredi harcar.</li>
                       <li>• Bu bir yapay zekâ ön değerlendirmesidir; hukuki danışmanlık değildir. Kritik maddeler için imzadan önce bir avukata danışın.</li>
@@ -584,7 +584,7 @@ const credits = useMemo(() => (scan?.units ?? (text ? estimateContractCredits(te
                   const active = i === job.stageIndex;
                   return (
                     <li key={l} className="flex items-start gap-3">
-                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${done ? "bg-emerald-500/25 text-emerald-300" : active ? "bg-fuchsia-500/25 text-fuchsia-200" : "bg-white/[0.05] text-slate-500"}`}>
+                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${done ? "bg-emerald-500/25 text-emerald-300" : active ? "bg-fuchsia-500/25 text-fuchsia-200" : "bg-white/[0.05] text-slate-500"}`}>
                         {done ? <Check className="h-3 w-3" /> : active ? <Loader2 className="h-3 w-3 animate-spin" /> : i + 1}
                       </span>
                       <div>
@@ -698,11 +698,11 @@ function ReportView(props: {
           </button>
         </div>
       ) : null}
-      {props.proof && <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-[11px] leading-relaxed text-slate-500">{proofFooter(props.proof)} — anlaşmazlık halinde bu numarayı destek ekibine iletin; indirdiğiniz PDF’lere doğrulanabilir kayıt gömülür.</p>}
+      {props.proof && <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-[12px] leading-relaxed text-slate-500">{proofFooter(props.proof)} — anlaşmazlık halinde bu numarayı destek ekibine iletin; indirdiğiniz PDF’lere doğrulanabilir kayıt gömülür.</p>}
       <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-[12px] leading-relaxed text-slate-300"><b className="text-white">Raporu şimdi indirin.</b> Sonuç yalnızca bu sayfada durur; sayfayı kapatır ya da yenilerseniz kaybolur ve yeniden çalıştırmak yeniden hak/kredi harcar.</p>
       <div className={`overflow-hidden rounded-3xl border ${sev.ring} ${sev.bg} p-5 sm:p-6`}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${sev.chip}`}>Genel risk: {sev.label}</span>
+          <span className={`rounded-full border px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-wide ${sev.chip}`}>Genel risk: {sev.label}</span>
           <span className="text-[12px] text-slate-400">{r.meta.docType} · {r.meta.pageCount} sayfa</span>
         </div>
         <p className="mt-3 text-[17px] font-black leading-snug text-white">{r.headline}</p>
@@ -725,7 +725,7 @@ function ReportView(props: {
                 <p className="text-[12.5px] italic text-slate-400">“{c.note}”</p>
                 <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-100">{c.response}</p>
                 {c.findingIds.length > 0 && (
-                  <p className="mt-1.5 text-[11.5px] text-fuchsia-300">İlgili bulgular: {c.findingIds.map((id) => codeOf(id)).filter(Boolean).join(", ")}</p>
+                  <p className="mt-1.5 text-[12px] text-fuchsia-300">İlgili bulgular: {c.findingIds.map((id) => codeOf(id)).filter(Boolean).join(", ")}</p>
                 )}
               </div>
             ))}
@@ -787,9 +787,9 @@ function ReportView(props: {
                 <p className="mt-1 text-[13px] leading-relaxed text-slate-300">{m.why}</p>
                 {m.suggestedText && (
                   <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-500/[0.05] p-2.5">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-300">Eklemenizi öneririz</p>
+                    <p className="text-[12px] font-bold uppercase tracking-wide text-emerald-300">Eklemenizi öneririz</p>
                     <p className="mt-1 text-[13px] leading-relaxed text-slate-200">{m.suggestedText}</p>
-                    <button type="button" onClick={() => onCopy(`m${i}`, m.suggestedText)} className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 hover:text-emerald-200">{copied === `m${i}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}Kopyala</button>
+                    <button type="button" onClick={() => onCopy(`m${i}`, m.suggestedText)} className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-300 hover:text-emerald-200">{copied === `m${i}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}Kopyala</button>
                   </div>
                 )}
               </div>
@@ -835,12 +835,12 @@ function FindingCard({ f, n, isOpen, onToggle, copied, onCopy }: { f: Finding; n
   return (
     <div className={`overflow-hidden rounded-2xl border ${s.ring} ${s.bg}`}>
       <button type="button" onClick={onToggle} className="flex w-full items-start gap-3 p-4 text-left">
-        <span className={`mt-0.5 flex h-6 min-w-[1.6rem] shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-black text-white ${s.dot}`}>{n}</span>
+        <span className={`mt-0.5 flex h-6 min-w-[1.6rem] shrink-0 items-center justify-center rounded-full px-1.5 text-[12px] font-black text-white ${s.dot}`}>{n}</span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase ${s.chip}`}>{s.label}</span>
-            {legal && f.legalStatus !== "dogrulanamadi" && <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${legal.cls}`}>{legal.label}</span>}
-            <span className="text-[11px] text-slate-500">{f.clause}{f.page ? ` · sayfa ${f.page}` : ""}</span>
+            <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-bold uppercase ${s.chip}`}>{s.label}</span>
+            {legal && f.legalStatus !== "dogrulanamadi" && <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold ${legal.cls}`}>{legal.label}</span>}
+            <span className="text-[12px] text-slate-500">{f.clause}{f.page ? ` · sayfa ${f.page}` : ""}</span>
           </div>
           <p className="mt-1.5 text-[14px] font-bold leading-snug text-white">{f.title}</p>
         </div>
@@ -849,21 +849,21 @@ function FindingCard({ f, n, isOpen, onToggle, copied, onCopy }: { f: Finding; n
       {isOpen && (
         <div className="space-y-3 border-t border-white/[0.06] px-4 pb-4 pt-3">
           {f.quote && (
-            <blockquote className="rounded-lg border-l-2 border-red-400/60 bg-black/25 px-3 py-2 text-[13px] italic leading-relaxed text-slate-200">“{f.quote}”{f.quoteMatch === "partial" && <span className="not-italic text-[11px] text-slate-500"> (alıntı kısmen eşleşti)</span>}</blockquote>
+            <blockquote className="rounded-lg border-l-2 border-red-400/60 bg-black/25 px-3 py-2 text-[13px] italic leading-relaxed text-slate-200">“{f.quote}”{f.quoteMatch === "partial" && <span className="not-italic text-[12px] text-slate-500"> (alıntı kısmen eşleşti)</span>}</blockquote>
           )}
-          <div><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Neden riskli</p><p className="mt-0.5 text-[13px] leading-relaxed text-slate-200">{f.whyRisky}</p></div>
-          {f.impact && <div><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Sizin için etkisi</p><p className="mt-0.5 text-[13px] leading-relaxed text-slate-200">{f.impact}</p></div>}
-          <div><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Ne yapmalı</p><p className="mt-0.5 text-[13px] leading-relaxed text-slate-200">{f.recommendation}</p></div>
+          <div><p className="text-[12px] font-bold uppercase tracking-wide text-slate-400">Neden riskli</p><p className="mt-0.5 text-[13px] leading-relaxed text-slate-200">{f.whyRisky}</p></div>
+          {f.impact && <div><p className="text-[12px] font-bold uppercase tracking-wide text-slate-400">Sizin için etkisi</p><p className="mt-0.5 text-[13px] leading-relaxed text-slate-200">{f.impact}</p></div>}
+          <div><p className="text-[12px] font-bold uppercase tracking-wide text-slate-400">Ne yapmalı</p><p className="mt-0.5 text-[13px] leading-relaxed text-slate-200">{f.recommendation}</p></div>
           {f.suggestedText && (
             <div className="rounded-lg border border-emerald-400/20 bg-emerald-500/[0.05] p-3">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-300">Önerilen madde metni</p>
+              <p className="text-[12px] font-bold uppercase tracking-wide text-emerald-300">Önerilen madde metni</p>
               <p className="mt-1 text-[13px] leading-relaxed text-slate-100">{f.suggestedText}</p>
-              <button type="button" onClick={() => onCopy(`s${f.id}`, f.suggestedText)} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 hover:text-emerald-200">{copied === `s${f.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}Kopyala</button>
+              <button type="button" onClick={() => onCopy(`s${f.id}`, f.suggestedText)} className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-300 hover:text-emerald-200">{copied === `s${f.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}Kopyala</button>
             </div>
           )}
           {f.legalReferences.length > 0 && (
             <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400"><Scale className="h-3 w-3" />Güncel mevzuat (resmî kaynaktan okundu)</p>
+              <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-slate-400"><Scale className="h-3 w-3" />Güncel mevzuat (resmî kaynaktan okundu)</p>
               <ul className="mt-1.5 space-y-2">
                 {f.legalReferences.map((ref, i) => (
                   <li key={i} className="text-[12.5px] leading-relaxed text-slate-300">
@@ -874,7 +874,7 @@ function FindingCard({ f, n, isOpen, onToggle, copied, onCopy }: { f: Finding; n
               </ul>
             </div>
           )}
-          {f.confidence === "dusuk" && <p className="text-[11px] text-amber-300/80">Bu bulgu için güven düşük: belgedeki ifade farklı yorumlanabilir; imzadan önce teyit edin.</p>}
+          {f.confidence === "dusuk" && <p className="text-[12px] text-amber-300/80">Bu bulgu için güven düşük: belgedeki ifade farklı yorumlanabilir; imzadan önce teyit edin.</p>}
         </div>
       )}
     </div>

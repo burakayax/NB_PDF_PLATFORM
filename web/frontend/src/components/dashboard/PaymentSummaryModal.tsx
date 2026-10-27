@@ -403,12 +403,12 @@ export function PaymentSummaryModal({
               ×
             </button>
             {seatsOnly ? (
-              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${accent.badge}`}>
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${accent.badge}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
                 {tr ? "Ekip Genişletme" : "Team Expansion"}
               </span>
             ) : plan?.badge ? (
-              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${accent.badge}`}>
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${accent.badge}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
                 {tr ? plan.badge.textTr : plan.badge.textEn}
               </span>
@@ -460,7 +460,7 @@ export function PaymentSummaryModal({
                     </p>
                     <button
                       type="button"
-                      className="mt-2 text-[11px] font-medium text-emerald-200/60 underline underline-offset-2 transition hover:text-emerald-100"
+                      className="mt-2 text-[12px] font-medium text-emerald-200/60 underline underline-offset-2 transition hover:text-emerald-100"
                       onClick={onClose}
                     >
                       {tr ? "Yine de çık" : "Leave anyway"}
@@ -507,7 +507,7 @@ export function PaymentSummaryModal({
                     </div>
                   ) : (
                     <div className="text-center">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
                         {tr ? "Ödenecek tutar" : "Total due today"}
                       </p>
                       <p className="mt-2 text-[3rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[3.4rem]">
@@ -517,7 +517,7 @@ export function PaymentSummaryModal({
                         ) : planPrice}
                       </p>
                       {!isTry && (
-                        <p className="mt-1 text-[11px] text-slate-400">
+                        <p className="mt-1 text-[12px] text-slate-400">
                           {tr ? "KDV Muafiyeti: İhracat İstisnası" : "VAT Exemption: Export Exception"}
                         </p>
                       )}
@@ -532,7 +532,7 @@ export function PaymentSummaryModal({
 
                 {/* Promo code */}
                 <div className="mt-4">
-                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                  <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.15em] text-slate-400">
                     {tr ? "Promosyon kodu" : "Promo code"}
                   </label>
                   <div className="flex gap-2">
@@ -564,7 +564,7 @@ export function PaymentSummaryModal({
                 </div>
 
                 {/* Trust row */}
-                <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[11px] text-slate-400">
+                <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[12px] text-slate-400">
                   {tr
                     ? "iyzico güvenceli ödeme — kart bilgileriniz sitemizde saklanmaz"
                     : "Secured by iyzico — your card details are never stored on our servers"}
@@ -596,7 +596,7 @@ export function PaymentSummaryModal({
                         KVKK metnini
                       </button>{" "}
                       okudum, kabul ediyorum.
-                      <span className="mt-1.5 block text-[10px] text-slate-400">
+                      <span className="mt-1.5 block text-[11px] text-slate-400">
                         Ön Bilgilendirme Formu ve cayma hakkı beyanınız bir önceki adımda kaydedilmiştir.
                       </span>
                     </>
@@ -610,7 +610,7 @@ export function PaymentSummaryModal({
                       <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("kvkk")}>
                         KVKK disclosure
                       </button>.
-                      <span className="mt-1.5 block text-[10px] text-slate-400">
+                      <span className="mt-1.5 block text-[11px] text-slate-400">
                         Your Pre-Purchase Information Form and withdrawal waiver were recorded in the previous step.
                       </span>
                     </>
@@ -631,7 +631,7 @@ export function PaymentSummaryModal({
                 )}
               </button>
               {isViteDev ? (
-                <p className="mt-2 text-center text-[10px] text-nb-muted">
+                <p className="mt-2 text-center text-[11px] text-nb-muted">
                   {tr ? "Dev: iyzico kapalıyken sahte ödeme" : "Dev build: fake payment when PSP off"}
                 </p>
               ) : null}

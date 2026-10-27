@@ -338,7 +338,7 @@ export function ProductTour({
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[11px] font-bold tracking-wide text-cyan-300 ring-1 ring-cyan-400/25">
+          <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[12px] font-bold tracking-wide text-cyan-300 ring-1 ring-cyan-400/25">
             {posInVisible + 1} / {totalVisible}
           </span>
         </div>

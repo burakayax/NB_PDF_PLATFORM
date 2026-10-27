@@ -56,7 +56,7 @@ export function MaintenancePage() {
             />
           </div>
 
-          <p className="mt-9 text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
+          <p className="mt-9 text-[12px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
             PDF Platform
           </p>
 

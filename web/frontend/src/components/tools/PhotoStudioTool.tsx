@@ -84,7 +84,7 @@ const Check_ = ({ checked, onChange, label, hint }: { checked: boolean; onChange
     <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-fuchsia-500" />
     <span className="text-[13px] text-slate-200">
       {label}
-      {hint ? <span className="block text-[11.5px] text-slate-400">{hint}</span> : null}
+      {hint ? <span className="block text-[12px] text-slate-400">{hint}</span> : null}
     </span>
   </label>
 );
@@ -343,7 +343,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "AI Fotoğraf Stüdyosu" : "AI Photo Studio"}</h1>
-            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
+            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
           </div>
           <p className="mt-1 text-sm text-slate-400">
             {tr
@@ -419,8 +419,8 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                       ) : null}
                       {showGuides && guides ? (
                         <div className="pointer-events-none absolute inset-0">
-                          <div className="absolute left-0 right-0 border-t border-dashed border-sky-300/90" style={{ top: `${(guides.crownY / px.h) * 100}%` }}><span className="absolute right-1 -translate-y-full rounded bg-sky-500/80 px-1 text-[9px] font-bold text-white">{tr ? "baş üstü" : "crown"}</span></div>
-                          <div className="absolute left-0 right-0 border-t border-dashed border-sky-300/90" style={{ top: `${(guides.chinY / px.h) * 100}%` }}><span className="absolute right-1 rounded bg-sky-500/80 px-1 text-[9px] font-bold text-white">{tr ? "çene" : "chin"}</span></div>
+                          <div className="absolute left-0 right-0 border-t border-dashed border-sky-300/90" style={{ top: `${(guides.crownY / px.h) * 100}%` }}><span className="absolute right-1 -translate-y-full rounded bg-sky-500/80 px-1 text-[11px] font-bold text-white">{tr ? "baş üstü" : "crown"}</span></div>
+                          <div className="absolute left-0 right-0 border-t border-dashed border-sky-300/90" style={{ top: `${(guides.chinY / px.h) * 100}%` }}><span className="absolute right-1 rounded bg-sky-500/80 px-1 text-[11px] font-bold text-white">{tr ? "çene" : "chin"}</span></div>
                           {guides.eyeY !== null ? <div className="absolute left-0 right-0 border-t border-dashed border-emerald-300/80" style={{ top: `${(guides.eyeY / px.h) * 100}%` }} /> : null}
                           <div className="absolute bottom-0 left-1/2 top-0 border-l border-dashed border-white/60" />
                         </div>
@@ -433,7 +433,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                     <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08]"><UploadCloud className="h-3.5 w-3.5" />{tr ? "Başka fotoğraf" : "Another photo"}</button>
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ""; }} />
                   </div>
-                  <p className="mt-3 text-center text-[11.5px] text-slate-400">
+                  <p className="mt-3 text-center text-[12px] text-slate-400">
                     {preset.mmW ? `${preset.mmW}×${preset.mmH} mm · ` : ""}{px.w}×{px.h} px · {dpi} dpi
                   </p>
                 </div>
@@ -445,7 +445,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                       <li key={c.id} className="flex items-start gap-2 text-[13px] text-slate-200">{lvlIcon(c.level)}<span>{tr ? c.tr : c.en}</span></li>
                     ))}
                   </ul>
-                  {preset.strict ? <p className="mt-3 text-[11.5px] leading-relaxed text-slate-500">{tr ? "Bu denetim yardımcıdır; başvuracağınız kurumun güncel fotoğraf şartını ayrıca kontrol edin." : "This check is a guide; also verify the current photo rules of the institution you apply to."}</p> : null}
+                  {preset.strict ? <p className="mt-3 text-[12px] leading-relaxed text-slate-500">{tr ? "Bu denetim yardımcıdır; başvuracağınız kurumun güncel fotoğraf şartını ayrıca kontrol edin." : "This check is a guide; also verify the current photo rules of the institution you apply to."}</p> : null}
                 </section>
               </>
             ) : null}
@@ -473,7 +473,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                         <input type="radio" name="photo-preset" checked={on} onChange={() => pickPreset(p)} className="mt-1 h-4 w-4 shrink-0 accent-fuchsia-500" />
                         <span className="min-w-0 text-[13px]">
                           <span className="block font-semibold text-white">{tr ? p.tr.name : p.en.name}</span>
-                          <span className="block text-[11.5px] leading-snug text-slate-400">{tr ? p.tr.desc : p.en.desc}</span>
+                          <span className="block text-[12px] leading-snug text-slate-400">{tr ? p.tr.desc : p.en.desc}</span>
                         </span>
                       </label>
                     );
@@ -490,7 +490,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                     <label key={b.id} title={tr ? b.tr : b.en} className="group relative flex cursor-pointer flex-col items-center gap-1">
                       <input type="radio" name="photo-bg" checked={on} onChange={() => { setBg(b.id); if (b.id === "transparent") setFormat("png"); else if (format === "png" && !circle) setFormat("jpg"); }} className="peer sr-only" />
                       <span className={`h-10 w-10 rounded-full ring-2 transition ${on ? "ring-fuchsia-400 ring-offset-2 ring-offset-slate-900" : "ring-white/15 group-hover:ring-white/40"}`} style={{ background: b.id === "custom" ? b.swatch : b.swatch }} />
-                      <span className={`text-center text-[10px] leading-tight ${on ? "font-bold text-fuchsia-100" : "text-slate-400"}`}>{tr ? b.tr : b.en}</span>
+                      <span className={`text-center text-[11px] leading-tight ${on ? "font-bold text-fuchsia-100" : "text-slate-400"}`}>{tr ? b.tr : b.en}</span>
                       {on ? <Check className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full bg-fuchsia-500 p-0.5 text-white" /> : null}
                     </label>
                   );
@@ -499,7 +499,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
               {bg === "custom" ? (
                 <label className="mt-3 flex items-center gap-3 text-[12px] text-slate-300"><input type="color" value={customColor} onChange={(e) => setCustomColor(e.target.value)} className="h-9 w-14 cursor-pointer rounded border border-white/10 bg-transparent" />{customColor.toUpperCase()}</label>
               ) : null}
-              {preset.strict && bg !== "white" && bg !== "lightgray" ? <p className="mt-3 text-[11.5px] text-amber-300/90">{tr ? "Resmî başvurularda genellikle beyaz ya da açık gri düz fon istenir." : "Official applications usually require a plain white or light grey background."}</p> : null}
+              {preset.strict && bg !== "white" && bg !== "lightgray" ? <p className="mt-3 text-[12px] text-amber-300/90">{tr ? "Resmî başvurularda genellikle beyaz ya da açık gri düz fon istenir." : "Official applications usually require a plain white or light grey background."}</p> : null}
             </Section>
 
             <Section title={tr ? "3 · Kadraj ve düzeltmeler" : "3 · Framing & fixes"}>
@@ -524,7 +524,7 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
                   </label>
                 ))}
               </div>
-              {format === "jpg" && bg === "transparent" ? <p className="mt-2 text-[11.5px] text-amber-300/90">{tr ? "JPG şeffaflığı desteklemez; beyaz zemin eklenir. Şeffaflık için PNG seçin." : "JPG can't be transparent; a white background is added. Choose PNG to keep transparency."}</p> : null}
+              {format === "jpg" && bg === "transparent" ? <p className="mt-2 text-[12px] text-amber-300/90">{tr ? "JPG şeffaflığı desteklemez; beyaz zemin eklenir. Şeffaflık için PNG seçin." : "JPG can't be transparent; a white background is added. Choose PNG to keep transparency."}</p> : null}
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <label className="text-[12px] text-slate-300">{tr ? "Çözünürlük (dpi)" : "Resolution (dpi)"}
                   <select value={dpi} onChange={(e) => setDpi(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-white">
@@ -537,10 +537,10 @@ export function PhotoStudioTool({ language, accessToken, onLogin, onUpgrade, com
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {[50, 100, 250, 500].map((k) => (
-                  <button key={k} type="button" disabled={format === "png"} onClick={() => setMaxKb(String(k))} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:bg-white/[0.12] disabled:opacity-40">{k} KB</button>
+                  <button key={k} type="button" disabled={format === "png"} onClick={() => setMaxKb(String(k))} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] font-semibold text-slate-300 hover:bg-white/[0.12] disabled:opacity-40">{k} KB</button>
                 ))}
               </div>
-              <p className="mt-1.5 text-[11px] text-slate-500">{tr ? "e-Devlet, kurum ve başvuru formları genellikle dosya boyutu sınırı koyar." : "Portals and application forms often cap the file size."}</p>
+              <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "e-Devlet, kurum ve başvuru formları genellikle dosya boyutu sınırı koyar." : "Portals and application forms often cap the file size."}</p>
 
               {preset.mmW ? (
                 <div className="mt-4 border-t border-white/10 pt-3">

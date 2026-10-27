@@ -480,7 +480,7 @@ export function DashboardSidebar({
           <span className="flex shrink-0 items-center gap-1.5">
             {locked ? (
               <span
-                className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95 shadow-[0_0_12px_-4px_rgba(251,191,36,0.45)]"
+                className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-300/95 shadow-[0_0_12px_-4px_rgba(251,191,36,0.45)]"
                 aria-hidden
               >
                 {L.featureLockedBadge}
@@ -578,7 +578,7 @@ export function DashboardSidebar({
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
           <span className="truncate" title={label}>{label}</span>
           <span className="flex shrink-0 items-center gap-1.5">
-            <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
+            <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
             <FavoriteStar alwaysVisible active={isFavorite(aiFavId(t.mode))} label={label} onToggle={() => toggleFavorite(aiFavId(t.mode))} />
           </span>
         </span>
@@ -670,7 +670,7 @@ export function DashboardSidebar({
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
             <path d="M4 7h16M4 12h16M4 17h16" />
           </svg>
-          <span className="text-[10px] font-bold uppercase tracking-wider [writing-mode:vertical-rl]">
+          <span className="text-[11px] font-bold uppercase tracking-wider [writing-mode:vertical-rl]">
             {tr ? "Araçlar" : "Tools"}
           </span>
         </button>
@@ -751,12 +751,12 @@ export function DashboardSidebar({
                   </span>
                   <span className="min-w-0 flex-1 truncate" title={h.label}>{highlight(h.label)}</span>
                   {h.locked ? (
-                    <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95" aria-hidden>
+                    <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-300/95" aria-hidden>
                       {L.featureLockedBadge}
                     </span>
                   ) : null}
                   {h.pro ? (
-                    <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300" aria-hidden>Pro</span>
+                    <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300" aria-hidden>Pro</span>
                   ) : null}
                   <ChevronRight className="h-4 w-4 shrink-0 text-nb-muted/50 transition group-hover:translate-x-0.5 group-hover:text-nb-text" aria-hidden />
                 </button>
@@ -782,7 +782,7 @@ export function DashboardSidebar({
                 className={`h-1.5 w-1.5 shrink-0 rounded-full ${CATEGORY_ACCENT.ai.dot} ${CATEGORY_ACCENT.ai.glow}`}
                 aria-hidden
               />
-              <h3 className={`text-[10px] font-bold uppercase tracking-wider ${CATEGORY_ACCENT.ai.text}`}>
+              <h3 className={`text-[11px] font-bold uppercase tracking-wider ${CATEGORY_ACCENT.ai.text}`}>
                 {tr ? "✨ Yapay Zekâ" : "✨ AI"}
               </h3>
               <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
@@ -824,7 +824,7 @@ export function DashboardSidebar({
                   className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent.dot} ${accent.glow}`}
                   aria-hidden
                 />
-                <h3 className={`text-[10px] font-bold uppercase tracking-wider ${accent.text}`}>
+                <h3 className={`text-[11px] font-bold uppercase tracking-wider ${accent.text}`}>
                   {heading}
                 </h3>
                 <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
@@ -866,7 +866,7 @@ export function DashboardSidebar({
             <p className="text-lg font-black tracking-tight text-amber-200">
               {L.unlimitedSidebarBadge}
             </p>
-            <p className="mt-1 text-[11px] font-medium leading-snug text-emerald-100/90">
+            <p className="mt-1 text-[12px] font-medium leading-snug text-emerald-100/90">
               {L.unlimitedAccessActive}
             </p>
           </div>
@@ -1158,7 +1158,7 @@ export function DashboardSidebarMobileLauncher({
           </svg>
         </span>
         <span className="flex min-w-0 flex-col">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-nb-muted">
             {tr ? "Araçlar" : "Tools"}
           </span>
           <span className="truncate text-sm font-bold text-nb-text">
@@ -1253,7 +1253,7 @@ export function DashboardSidebarMobileLauncher({
                           className={`h-2 w-2 shrink-0 rounded-full ${CATEGORY_ACCENT.ai.dot} ${CATEGORY_ACCENT.ai.glow}`}
                           aria-hidden
                         />
-                        <h3 className={`text-[11px] font-bold uppercase tracking-wider ${CATEGORY_ACCENT.ai.text}`}>
+                        <h3 className={`text-[12px] font-bold uppercase tracking-wider ${CATEGORY_ACCENT.ai.text}`}>
                           {tr ? "✨ Yapay Zekâ" : "✨ AI"}
                         </h3>
                         <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
@@ -1272,10 +1272,10 @@ export function DashboardSidebarMobileLauncher({
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-500/10 text-lg" aria-hidden>
                               ✨
                             </span>
-                            <span className="line-clamp-2 text-[10px] font-bold leading-tight text-fuchsia-100">
+                            <span className="line-clamp-2 text-[11px] font-bold leading-tight text-fuchsia-100">
                               {tr ? t.tr : t.en}
                             </span>
-                            <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[8px] font-bold uppercase text-fuchsia-300">
+                            <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[11px] font-bold uppercase text-fuchsia-300">
                               Pro
                             </span>
                             <span className="absolute left-1 top-1">
@@ -1312,11 +1312,11 @@ export function DashboardSidebarMobileLauncher({
                             aria-hidden
                           />
                           <h3
-                            className={`text-[11px] font-bold uppercase tracking-wider ${accent.text}`}
+                            className={`text-[12px] font-bold uppercase tracking-wider ${accent.text}`}
                           >
                             {heading}
                           </h3>
-                          <span className="text-[10px] font-semibold text-nb-muted/70">
+                          <span className="text-[11px] font-semibold text-nb-muted/70">
                             {group.tools.length}
                           </span>
                           <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
@@ -1336,7 +1336,7 @@ export function DashboardSidebarMobileLauncher({
                               className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-cyan-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>📸</span>
-                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                              <span className="line-clamp-2 text-[11px] font-bold leading-tight text-nb-text/90">
                                 {tr ? "Belge Tara" : "Scan document"}
                               </span>
                               <span className="absolute left-1 top-1">
@@ -1360,7 +1360,7 @@ export function DashboardSidebarMobileLauncher({
                               className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] p-2 text-center hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.97]"
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-lg" aria-hidden>☁️</span>
-                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-cyan-100">
+                              <span className="line-clamp-2 text-[11px] font-bold leading-tight text-cyan-100">
                                 {tr ? "Taramalarım" : "My scans"}
                               </span>
                             </button>
@@ -1377,7 +1377,7 @@ export function DashboardSidebarMobileLauncher({
                               className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-cyan-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>✏️</span>
-                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                              <span className="line-clamp-2 text-[11px] font-bold leading-tight text-nb-text/90">
                                 {tr ? "PDF Düzenle" : "Edit PDF"}
                               </span>
                               <span className="absolute left-1 top-1">
@@ -1402,7 +1402,7 @@ export function DashboardSidebarMobileLauncher({
                               className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-amber-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>✍️</span>
-                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                              <span className="line-clamp-2 text-[11px] font-bold leading-tight text-nb-text/90">
                                 {tr ? "PDF İmzala" : "Sign PDF"}
                               </span>
                               <span className="absolute left-1 top-1">
@@ -1427,7 +1427,7 @@ export function DashboardSidebarMobileLauncher({
                               className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-orange-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>🖍️</span>
-                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                              <span className="line-clamp-2 text-[11px] font-bold leading-tight text-nb-text/90">
                                 {tr ? "PDF İşaretle" : "Markup PDF"}
                               </span>
                               <span className="absolute left-1 top-1">
@@ -1453,10 +1453,10 @@ export function DashboardSidebarMobileLauncher({
                                   className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/[0.06] p-2 text-center hover:border-fuchsia-400/45 hover:bg-fuchsia-500/[0.12] active:scale-[0.97]"
                                 >
                                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-500/10 text-lg" aria-hidden>✨</span>
-                                  <span className="line-clamp-2 text-[10px] font-bold leading-tight text-fuchsia-100">
+                                  <span className="line-clamp-2 text-[11px] font-bold leading-tight text-fuchsia-100">
                                     {tr ? t.tr : t.en}
                                   </span>
-                                  <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[8px] font-bold uppercase text-fuchsia-300">
+                                  <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[11px] font-bold uppercase text-fuchsia-300">
                                     Pro
                                   </span>
                                   <span className="absolute left-1 top-1">
@@ -1491,7 +1491,7 @@ export function DashboardSidebarMobileLauncher({
                                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04]" aria-hidden>
                                       <t.Icon className={`h-5 w-5 ${t.iconClass}`} />
                                     </span>
-                                    <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">{label}</span>
+                                    <span className="line-clamp-2 text-[11px] font-bold leading-tight text-nb-text/90">{label}</span>
                                     <span className="absolute left-1 top-1">
                                       <FavoriteStar
                                         alwaysVisible
@@ -1559,7 +1559,7 @@ export function DashboardSidebarMobileLauncher({
                                   )}
                                 </span>
                                 <span
-                                  className={`line-clamp-2 text-[10px] font-bold leading-tight ${
+                                  className={`line-clamp-2 text-[11px] font-bold leading-tight ${
                                     isActive ? "text-nb-accent" : "text-nb-text/90"
                                   }`}
                                 >
@@ -1567,7 +1567,7 @@ export function DashboardSidebarMobileLauncher({
                                 </span>
                                 {locked ? (
                                   <span
-                                    className="absolute right-1 top-1 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-300/95"
+                                    className="absolute right-1 top-1 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-300/95"
                                     aria-hidden
                                   >
                                     {L.featureLockedBadge}

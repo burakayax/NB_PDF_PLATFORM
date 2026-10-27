@@ -363,7 +363,7 @@ export function PlanPerksModal({
           >
             ×
           </button>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300/80">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-blue-300/80">
             {tr ? "Paket ayrıcalıkları" : "Plan perks"}
           </p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
@@ -393,7 +393,7 @@ export function PlanPerksModal({
                   if (box) box.style.display = "none";
                 }}
               />
-              <p className="px-4 py-2 text-center text-[11px] text-violet-200/70">
+              <p className="px-4 py-2 text-center text-[12px] text-violet-200/70">
                 {tr
                   ? "Kurumsal müşterilere özel yönetim paneli"
                   : "Admin panel exclusive to enterprise customers"}
@@ -411,7 +411,7 @@ export function PlanPerksModal({
                 {cat.perks.map((perk) => (
                   <li key={perk.label} className="flex gap-3">
                     <span
-                      className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[11px] text-emerald-400"
+                      className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[12px] text-emerald-400"
                       aria-hidden
                     >
                       ✓

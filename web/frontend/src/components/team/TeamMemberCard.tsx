@@ -127,7 +127,7 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
             <div className="flex items-center gap-2">
               <p className="truncate text-sm font-semibold text-white">{displayName}</p>
               {member.role === "MANAGER" && (
-                <span className="shrink-0 rounded-full bg-violet-500/15 border border-violet-500/30 px-2 py-0.5 text-[10px] font-semibold text-violet-300">
+                <span className="shrink-0 rounded-full bg-violet-500/15 border border-violet-500/30 px-2 py-0.5 text-[11px] font-semibold text-violet-300">
                   Yönetici
                 </span>
               )}
@@ -136,7 +136,7 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 flex-wrap justify-end">
-          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${status.bg} ${status.text}`}>
+          <span className={`rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${status.bg} ${status.text}`}>
             {status.label}
           </span>
           {isOwner && member.inviteStatus === "ACCEPTED" && (
@@ -144,7 +144,7 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
               type="button"
               disabled={roleLoading}
               onClick={() => void handleRoleToggle()}
-              className={`rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-all disabled:opacity-50 ${
+              className={`rounded-lg border px-2.5 py-1 text-[12px] font-medium transition-all disabled:opacity-50 ${
                 member.role === "MANAGER"
                   ? "border-violet-500/25 bg-violet-500/8 text-violet-400 hover:bg-violet-500/16"
                   : "border-slate-600/40 bg-slate-800/50 text-slate-400 hover:bg-slate-700/60"
@@ -157,7 +157,7 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
             <button
               type="button"
               onClick={() => onRevoke(member.id)}
-              className="rounded-lg border border-red-500/20 bg-red-500/8 px-2.5 py-1 text-[11px] font-medium text-red-400 transition-all hover:bg-red-500/16 hover:text-red-300"
+              className="rounded-lg border border-red-500/20 bg-red-500/8 px-2.5 py-1 text-[12px] font-medium text-red-400 transition-all hover:bg-red-500/16 hover:text-red-300"
             >
               Üyeyi Kaldır
             </button>
@@ -169,21 +169,21 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
         <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/[0.04] pt-4">
           <div className="text-center">
             <p className="text-lg font-bold text-cyan-400">{member.stats.totalOps}</p>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Toplam İşlem</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Toplam İşlem</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-cyan-400">{member.stats.thisMonthOps}</p>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Bu Ay</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Bu Ay</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-cyan-400">{member.stats.totalPagesProcessed}</p>
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Toplam Sayfa</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Toplam Sayfa</p>
           </div>
         </div>
       )}
 
       {member.inviteStatus === "ACCEPTED" && (
-        <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-slate-400">
+        <div className="mt-3 flex flex-wrap gap-4 text-[12px] text-slate-400">
           {lastLoginDate && (
             <span>🔑 Son giriş: <span className="text-slate-400">{lastLoginDate}</span></span>
           )}
@@ -201,14 +201,14 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
           <button
             type="button"
             onClick={() => setShowTools((v) => !v)}
-            className="text-[11px] text-slate-400 hover:text-slate-300 transition-colors"
+            className="text-[12px] text-slate-400 hover:text-slate-300 transition-colors"
           >
             🔧 Araç kullanımı ({toolBreakdown.length} araç) {showTools ? "▲" : "▼"}
           </button>
           {showTools && (
             <div className="mt-2 space-y-1">
               {toolBreakdown.slice(0, 8).map((t) => (
-                <div key={t.toolId} className="flex items-center justify-between text-[11px]">
+                <div key={t.toolId} className="flex items-center justify-between text-[12px]">
                   <span className="text-slate-400 truncate max-w-[70%]">{t.toolName}</span>
                   <span className="text-cyan-400 font-semibold">{t.count}×</span>
                 </div>

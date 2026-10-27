@@ -51,7 +51,7 @@ export function CvSectionManager({ data, onChange, tr, graduateOrder }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => commit(null)} className="rounded-xl bg-white/[0.06] px-3 py-2 text-[12.5px] font-semibold text-slate-100 hover:bg-white/10">{tr ? "Deneyimli düzeni" : "Experienced layout"}</button>
         <button type="button" onClick={() => commit(graduateOrder)} className="rounded-xl bg-sky-500/15 px-3 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:bg-sky-500/25">{tr ? "Yeni mezun düzeni" : "Graduate layout"}</button>
-        <span className="ml-auto text-[11.5px] text-slate-500">{tr ? `${visibleCount}/${order.length} bölüm görünür` : `${visibleCount}/${order.length} sections shown`}</span>
+        <span className="ml-auto text-[12px] text-slate-500">{tr ? `${visibleCount}/${order.length} bölüm görünür` : `${visibleCount}/${order.length} sections shown`}</span>
       </div>
       <ul className="select-none space-y-1.5" aria-label={tr ? "Bölümler" : "Sections"}>
         {shown.map((k, i) => {
@@ -92,7 +92,7 @@ export function CvSectionManager({ data, onChange, tr, graduateOrder }: Props) {
                 <GripVertical className="h-4 w-4" />
               </button>
               <span className={`min-w-0 flex-1 truncate text-[13.5px] font-semibold ${hidden ? "text-slate-500 line-through decoration-slate-600" : "text-slate-100"}`}>{nameOf(k)}</span>
-              <span className={`hidden text-[11px] font-semibold sm:inline ${hidden ? "text-slate-500" : "text-emerald-300/80"}`}>{hidden ? (tr ? "Gizli" : "Hidden") : (tr ? "Görünür" : "Shown")}</span>
+              <span className={`hidden text-[12px] font-semibold sm:inline ${hidden ? "text-slate-500" : "text-emerald-300/80"}`}>{hidden ? (tr ? "Gizli" : "Hidden") : (tr ? "Görünür" : "Shown")}</span>
               <Switch on={!hidden} onToggle={() => toggle(k)} label={hidden ? (tr ? `${nameOf(k)}: göster` : `Show ${nameOf(k)}`) : (tr ? `${nameOf(k)}: gizle` : `Hide ${nameOf(k)}`)} />
             </li>
           );

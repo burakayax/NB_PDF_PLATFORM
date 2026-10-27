@@ -221,7 +221,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
 
         {/* Ücretli araçlar ücretsiz vaadin İÇİNE karıştırılmaz — ayrı satırda ve
             hangi planın açtığı yazılı. Kayıt olan kullanıcı bulamadığına kızmasın. */}
-        <p className="mt-3 text-center text-[11.5px] leading-snug text-slate-400">
+        <p className="mt-3 text-center text-[12px] leading-snug text-slate-400">
           {tr
             ? "Excel · PowerPoint dönüşümleri ve ek yapay zekâ hakkı ücretli planlarda."
             : "Excel · PowerPoint conversions and extra AI allowance are on the paid plans."}
@@ -235,7 +235,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
           <Zap className="h-4 w-4" />
           {tr ? "Ücretsiz hesap aç" : "Create free account"}
         </a>
-        <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400">
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-[12px] text-slate-400">
           <CreditCard className="h-3.5 w-3.5" />
           {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
         </p>

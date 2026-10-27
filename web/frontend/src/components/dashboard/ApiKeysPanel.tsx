@@ -125,7 +125,7 @@ export function ApiKeysPanel({
               <KeyRound className="h-4 w-4 shrink-0 text-cyan-300" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold text-slate-100">{k.name} {k.revokedAt && <span className="text-red-300">· {tr ? "iptal" : "revoked"}</span>}</p>
-                <p className="font-mono text-[11px] text-slate-400">{k.prefix}••••{k.last4} · {tr ? "son kullanım" : "last used"}: {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : "—"}</p>
+                <p className="font-mono text-[12px] text-slate-400">{k.prefix}••••{k.last4} · {tr ? "son kullanım" : "last used"}: {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : "—"}</p>
               </div>
               {!k.revokedAt && (
                 <button type="button" onClick={() => void revoke(k.id)} title={tr ? "İptal et" : "Revoke"} className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>

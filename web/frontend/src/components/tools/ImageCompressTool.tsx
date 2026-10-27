@@ -342,7 +342,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
                     <img src={f.previewUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                      <p className="text-[11px] text-slate-400">{humanSize(f.file.size)}</p>
+                      <p className="text-[12px] text-slate-400">{humanSize(f.file.size)}</p>
                     </div>
                     <button
                       type="button"

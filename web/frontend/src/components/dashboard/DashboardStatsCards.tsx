@@ -76,7 +76,7 @@ export function DashboardStatsCards({
             <p className="mt-1.5 text-base font-bold tabular-nums text-nb-heading">
               {stat.value.toLocaleString(tr ? "tr-TR" : "en-US")}
             </p>
-            <p className="mt-0.5 text-[10px] font-medium text-nb-muted">
+            <p className="mt-0.5 text-[11px] font-medium text-nb-muted">
               {stat.label}
             </p>
           </div>
@@ -93,10 +93,10 @@ export function DashboardStatsCards({
         <p className="mt-2 sm:mt-3 text-base sm:text-lg font-bold tabular-nums text-nb-heading md:text-xl lg:text-3xl 2xl:text-4xl">
           {totalUsed.toLocaleString(tr ? "tr-TR" : "en-US")}
         </p>
-        <p className="mt-1 sm:mt-0.5 text-[10px] sm:text-[11px] font-medium text-nb-muted sm:text-xs lg:text-sm">
+        <p className="mt-1 sm:mt-0.5 text-[11px] sm:text-[12px] font-medium text-nb-muted sm:text-xs lg:text-sm">
           {tr ? "Toplam İşlem" : "Total Operations"}
         </p>
-        <p className="mt-0.5 hidden text-[9px] text-nb-muted/70 sm:block sm:text-[10px] md:text-xs">
+        <p className="mt-0.5 hidden text-[11px] text-nb-muted/70 sm:block sm:text-[11px] md:text-xs">
           {tr ? "Tüm zamanlar" : "All time"}
         </p>
       </div>
@@ -109,10 +109,10 @@ export function DashboardStatsCards({
         <p className="mt-2 sm:mt-3 text-base sm:text-lg font-bold tabular-nums text-nb-heading md:text-xl lg:text-3xl 2xl:text-4xl">
           {remainingOps.toLocaleString(tr ? "tr-TR" : "en-US")}
         </p>
-        <p className="mt-1 sm:mt-0.5 text-[10px] sm:text-[11px] font-medium text-nb-muted sm:text-xs lg:text-sm">
+        <p className="mt-1 sm:mt-0.5 text-[11px] sm:text-[12px] font-medium text-nb-muted sm:text-xs lg:text-sm">
           {tr ? "Kalan İşlem" : "Remaining Ops"}
         </p>
-        <p className="mt-0.5 hidden text-[9px] text-nb-muted/70 sm:block sm:text-[10px] md:text-xs">
+        <p className="mt-0.5 hidden text-[11px] text-nb-muted/70 sm:block sm:text-[11px] md:text-xs">
           {tr ? "Bu dönem" : "This period"}
         </p>
       </div>
@@ -127,7 +127,7 @@ export function DashboardStatsCards({
             <button
               type="button"
               onClick={onUpgrade}
-              className="nb-transition shrink-0 rounded border border-nb-primary/40 bg-nb-primary/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-semibold text-nb-primary-mid hover:bg-nb-primary/20 lg:px-2.5 lg:text-xs hidden sm:block"
+              className="nb-transition shrink-0 rounded border border-nb-primary/40 bg-nb-primary/10 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[11px] sm:text-[11px] font-semibold text-nb-primary-mid hover:bg-nb-primary/20 lg:px-2.5 lg:text-xs hidden sm:block"
             >
               {tr ? "Yükselt" : "Upgrade"}
             </button>
@@ -136,10 +136,10 @@ export function DashboardStatsCards({
         <p className="mt-2 sm:mt-3 text-base sm:text-lg font-bold tabular-nums text-nb-heading md:text-xl lg:text-3xl 2xl:text-4xl">
           {planLabel()}
         </p>
-        <p className="mt-1 sm:mt-0.5 text-[10px] sm:text-[11px] font-medium text-nb-muted sm:text-xs lg:text-sm">
+        <p className="mt-1 sm:mt-0.5 text-[11px] sm:text-[12px] font-medium text-nb-muted sm:text-xs lg:text-sm">
           {tr ? "Abonelik" : "Subscription"}
         </p>
-        <p className="mt-0.5 hidden text-[9px] text-nb-muted/70 sm:block sm:text-[10px] md:text-xs">
+        <p className="mt-0.5 hidden text-[11px] text-nb-muted/70 sm:block sm:text-[11px] md:text-xs">
           {plan && plan !== "FREE" ? (tr ? "Aktif" : "Active") : (tr ? "Ücretsiz Plan" : "Free Plan")}
         </p>
       </div>
@@ -152,10 +152,10 @@ export function DashboardStatsCards({
         <p className="mt-2 sm:mt-3 text-base sm:text-lg font-bold tabular-nums text-nb-heading md:text-xl lg:text-3xl 2xl:text-4xl">
           {tr ? "Bugün" : "Today"}
         </p>
-        <p className="mt-1 sm:mt-0.5 text-[10px] sm:text-[11px] font-medium text-nb-muted sm:text-xs lg:text-sm">
+        <p className="mt-1 sm:mt-0.5 text-[11px] sm:text-[12px] font-medium text-nb-muted sm:text-xs lg:text-sm">
           {tr ? "Son Aktivite" : "Last Activity"}
         </p>
-        <p className="mt-0.5 hidden text-[9px] text-nb-muted/70 sm:block sm:text-[10px] md:text-xs">
+        <p className="mt-0.5 hidden text-[11px] text-nb-muted/70 sm:block sm:text-[11px] md:text-xs">
           {new Date().toLocaleTimeString(tr ? "tr-TR" : "en-US", {
             hour: "2-digit",
             minute: "2-digit",

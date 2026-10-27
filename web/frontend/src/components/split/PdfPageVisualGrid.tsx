@@ -1756,7 +1756,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 className="inline-block h-6 w-6 shrink-0 animate-spin rounded-full border-2 border-cyan-400/30 border-t-cyan-300"
                 aria-hidden
               />
-              <p className="shrink-0 text-center text-[11px] font-medium text-slate-300">
+              <p className="shrink-0 text-center text-[12px] font-medium text-slate-300">
                 {effectiveLang === "tr" ? "Yükleniyor…" : "Loading…"}
               </p>
               <div className="h-0.5 w-[88%] max-w-[140px] shrink-0 overflow-hidden rounded-full bg-white/[0.08]">
@@ -1774,7 +1774,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center bg-slate-950/55"
                 aria-hidden
               >
-                <span className="rounded border border-white/20 bg-black/55 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-100 shadow-sm">
+                <span className="rounded border border-white/20 bg-black/55 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-100 shadow-sm">
                   {strictTurkishUi || effectiveLang === "tr" ? "SİLİNDİ" : "REMOVED"}
                 </span>
               </div>
@@ -1793,7 +1793,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
           {hidePageNumbers ? null : (
           <div
-            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-[2] py-0.5 text-center text-[10px] font-bold tabular-nums leading-tight ${
+            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-[2] py-0.5 text-center text-[11px] font-bold tabular-nums leading-tight ${
               selectionMode && isOn
                 ? mode === "delete"
                   ? "bg-rose-950/93 text-rose-50"
@@ -1875,7 +1875,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               </button>
             </div>
             {rot !== 0 ? (
-              <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 rounded bg-cyan-500/90 px-1 py-0.5 text-[9px] font-bold text-white">
+              <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 rounded bg-cyan-500/90 px-1 py-0.5 text-[11px] font-bold text-white">
                 {rot}°
               </div>
             ) : null}
@@ -1932,7 +1932,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     return (
       <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="hidden min-w-0 flex-1 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-[11px] leading-relaxed text-slate-300 sm:block">
+          <div className="hidden min-w-0 flex-1 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-[12px] leading-relaxed text-slate-300 sm:block">
             <span className="font-bold text-cyan-400">
               {effectiveLang === "tr" ? "Nasıl kullanılır: " : "How to use: "}
             </span>
@@ -1942,7 +1942,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             <button
               type="button"
               onClick={() => applySelection(new Set())}
-              className="shrink-0 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold text-slate-200 transition hover:border-cyan-500/45 hover:bg-cyan-500/10 hover:text-cyan-100"
+              className="shrink-0 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-[12px] font-semibold text-slate-200 transition hover:border-cyan-500/45 hover:bg-cyan-500/10 hover:text-cyan-100"
             >
               {effectiveLang === "tr" ? "Seçimi temizle" : "Clear selection"}
             </button>
@@ -2107,7 +2107,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                                   kullanıcı hangi sayfayı taşıdığını göremiyordu.
                                   Belgedeki asıl numara burada sabit durur. */}
                               <div className="pointer-events-none absolute left-1 top-1 z-[15]">
-                                <span className="rounded bg-slate-950/85 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 ring-1 ring-white/10">
+                                <span className="rounded bg-slate-950/85 px-1.5 py-0.5 text-[11px] font-medium text-slate-300 ring-1 ring-white/10">
                                   {language === "tr" ? `s.${page1}` : `p.${page1}`}
                                 </span>
                               </div>
@@ -2138,7 +2138,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                                       (e.target as HTMLInputElement).blur();
                                     }
                                   }}
-                                  className="w-10 rounded bg-slate-950/90 px-1 py-0.5 text-center text-[10px] font-semibold text-slate-300 shadow-sm outline-none ring-0 focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                  className="w-10 rounded bg-slate-950/90 px-1 py-0.5 text-center text-[11px] font-semibold text-slate-300 shadow-sm outline-none ring-0 focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 />
                               </div>
                             </>

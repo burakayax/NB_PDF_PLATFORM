@@ -289,7 +289,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
     <div className="space-y-8">
       {/* ── Kişisel bilgiler ─────────────────────────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionProfile", lang)}</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionProfile", lang)}</p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">{p("headPersonal", lang)}</h2>
 
         <form className="mt-6 space-y-4" onSubmit={(e) => void handleProfileSubmit(e)}>
@@ -348,7 +348,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
       {/* ── Plan ve yenileme / Ekip üyeliği ─────────────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionSubscription", lang)}</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionSubscription", lang)}</p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">{p("headPlanRenewal", lang)}</h2>
 
         {user.isTeamMember ? (
@@ -458,7 +458,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
       {/* ── Yapay Zekâ kullanımı (kalan hak + ek AI) ─────────── */}
       {hasAiAccess && (
         <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-fuchsia-300/70">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-fuchsia-300/70">
             {lang === "tr" ? "Yapay Zekâ" : "Artificial Intelligence"}
           </p>
           <div className="mt-1 flex items-center gap-2">
@@ -521,7 +521,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
       {/* ── GDPR Madde 20: Verileri Dışa Aktar ──────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/40 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-nb-primary/70">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-nb-primary/70">
           {lang === "tr" ? "Veri Taşınabilirliği (GDPR Madde 20)" : "Data Portability (GDPR Article 20)"}
         </p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
@@ -550,7 +550,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
         className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm"
         aria-labelledby="danger-zone-heading"
       >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-400">{p("sectionDangerZone", lang)}</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-red-400">{p("sectionDangerZone", lang)}</p>
         <h2 id="danger-zone-heading" className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
           {p("headDeleteAccount", lang)}
         </h2>
@@ -627,7 +627,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
         id="profile-password-section"
         className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm"
       >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionSecurity", lang)}</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionSecurity", lang)}</p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
           {hasPassword ? p("headChangePassword", lang) : p("headSetPassword", lang)}
         </h2>

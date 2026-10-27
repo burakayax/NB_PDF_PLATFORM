@@ -42,19 +42,19 @@ export function CvImportModal({ tr, base, onNew, onReplace, onClose, canAdd }: P
           {(tr
             ? ["LinkedIn profilinizi açın → “Kaynaklar” (ya da “Diğer”) → “PDF olarak kaydet”.", "İnen PDF dosyasını aşağıdan seçin (Word ve metin dosyası da olur).", "Okunan bilgileri kontrol edip CV'nize alın."]
             : ["Open your LinkedIn profile → “Resources” (or “More”) → “Save to PDF”.", "Pick the downloaded PDF below (Word and text files work too).", "Check what was read and bring it into your CV."]
-          ).map((t, i) => <li key={i} className="flex gap-2.5"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-[11px] font-bold text-sky-200">{i + 1}</span>{t}</li>)}
+          ).map((t, i) => <li key={i} className="flex gap-2.5"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-[12px] font-bold text-sky-200">{i + 1}</span>{t}</li>)}
         </ol>
         <input ref={ref} type="file" accept=".pdf,.docx,.txt,application/pdf,text/plain" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
         <button type="button" disabled={busy} onClick={() => ref.current?.click()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[14px] font-bold text-white hover:brightness-110 disabled:opacity-50">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}{tr ? "Dosya seç" : "Choose file"}
         </button>
-        <p className="mt-2 text-center text-[11.5px] text-slate-500">{tr ? "Dosya cihazınızda okunur; sunucuya gönderilmez. Ücretsizdir." : "The file is read on your device and never uploaded. Free."}</p>
+        <p className="mt-2 text-center text-[12px] text-slate-500">{tr ? "Dosya cihazınızda okunur; sunucuya gönderilmez. Ücretsizdir." : "The file is read on your device and never uploaded. Free."}</p>
         {err ? <p className="mt-3 rounded-xl bg-red-500/10 p-3 text-[12.5px] text-red-200">{err}</p> : null}
         {res ? (
           <div className="mt-4 space-y-3 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] p-4">
             <p className="text-[14px] font-bold text-white">{res.data.name || res.name}</p>
             <p className="text-[12.5px] text-emerald-100">{tr ? `${res.found.experience} iş deneyimi · ${res.found.education} okul · ${res.found.skills} beceri · ${res.found.languages} dil bulundu.` : `Found ${res.found.experience} jobs · ${res.found.education} schools · ${res.found.skills} skills · ${res.found.languages} languages.`}</p>
-            <p className="text-[11.5px] text-slate-400">{tr ? "Otomatik okuma kusursuz değildir; aktardıktan sonra şirket/pozisyon ve tarihleri kontrol edin." : "Automatic reading isn't perfect; after importing, check companies, titles and dates."}</p>
+            <p className="text-[12px] text-slate-400">{tr ? "Otomatik okuma kusursuz değildir; aktardıktan sonra şirket/pozisyon ve tarihleri kontrol edin." : "Automatic reading isn't perfect; after importing, check companies, titles and dates."}</p>
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={!canAdd} onClick={() => { onNew(res.data, res.name); onClose(); }} className="rounded-xl bg-sky-500 px-4 py-2.5 text-[13px] font-bold text-white hover:bg-sky-400 disabled:opacity-40">{tr ? "Yeni CV olarak aç" : "Open as a new CV"}</button>
               <button type="button" onClick={() => { if (window.confirm(tr ? "Şu anki CV'nizin içeriği bununla değişecek. Devam edilsin mi?" : "This will replace the contents of the current CV. Continue?")) { onReplace(res.data); onClose(); } }} className="rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10">{tr ? "Mevcut CV'nin yerine koy" : "Replace current CV"}</button>

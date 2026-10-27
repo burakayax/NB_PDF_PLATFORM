@@ -48,7 +48,7 @@ export const IconShowcase = () => {
             </div>
             <div className="text-center">
               <p className="text-xs font-semibold text-nb-text">{name}</p>
-              <p className="text-[10px] text-nb-muted">{description}</p>
+              <p className="text-[11px] text-nb-muted">{description}</p>
             </div>
           </div>
         ))}

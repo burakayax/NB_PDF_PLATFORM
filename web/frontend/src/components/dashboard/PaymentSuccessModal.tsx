@@ -115,7 +115,7 @@ export function PaymentSuccessModal({
                 ]
             ).map((item) => (
               <li key={item} className="flex items-center gap-2.5 text-sm text-nb-text/80">
-                <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[9px] font-black text-emerald-400">✓</span>
+                <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[11px] font-black text-emerald-400">✓</span>
                 {item}
               </li>
             ))}

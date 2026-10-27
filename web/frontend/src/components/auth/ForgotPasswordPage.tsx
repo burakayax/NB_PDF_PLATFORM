@@ -119,7 +119,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
         </button>
 
         <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">NB Global Studio</p>
+          <p className="text-center text-[12px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">NB Global Studio</p>
           <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">{copy.title}</h1>
           <h2 className="mt-6 text-center text-lg font-semibold text-white/95">{stepTitle}</h2>
           <p className="mx-auto mt-2 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">{stepHint}</p>

@@ -75,7 +75,7 @@ function CardBillingToggle({
           <span className="relative flex items-center justify-center gap-1.5">
             {c === "MONTHLY" ? (tr ? "Aylık" : "Monthly") : (tr ? "Yıllık" : "Yearly")}
             {c === "YEARLY" && savePct > 0 && (
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded-full">
                 -{savePct}%
               </span>
             )}
@@ -104,7 +104,7 @@ function Feature({
           highlight ? "bg-blue-500/25" : "bg-white/8"
         }`}
       >
-        <span className={`text-[9px] font-bold ${highlight ? "text-blue-300" : "text-gray-400"}`}>
+        <span className={`text-[11px] font-bold ${highlight ? "text-blue-300" : "text-gray-400"}`}>
           ✓
         </span>
       </div>
@@ -172,7 +172,7 @@ function StarterToolsModal({
         <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {tools.map((id) => (
             <li key={id} className="flex items-center gap-2 text-sm text-gray-300">
-              <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[9px] font-bold text-emerald-300">
+              <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[11px] font-bold text-emerald-300">
                 ✓
               </span>
               {sidebarToolLabel(id, lang)}
@@ -254,7 +254,7 @@ function FreeCard({
         </button>
       )}
       {isCurrent ? null : (
-        <p className="mt-3 text-center text-[11px] text-gray-400">
+        <p className="mt-3 text-center text-[12px] text-gray-400">
           {tr ? "Kart bilgisi istenmez · 30 saniyede hazır" : "No card required · ready in 30 seconds"}
         </p>
       )}
@@ -327,7 +327,7 @@ function MonthlyOnlyCard({
       )}
       {/* Tek öne çıkan plan: yalnızca Plus "En Popüler" rozeti taşır (Başlangıç rozeti kaldırıldı). */}
       {comingSoon && (
-        <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-200">
+        <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[12px] font-semibold text-amber-200">
           {tr ? "Çok yakında" : "Coming very soon"}
         </span>
       )}
@@ -367,7 +367,7 @@ function MonthlyOnlyCard({
                 <button
                   type="button"
                   onClick={() => setShowTools(true)}
-                  className="inline-flex items-center gap-1 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold text-blue-300 hover:bg-blue-500/20 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[12px] font-semibold text-blue-300 hover:bg-blue-500/20 transition-colors"
                 >
                   {tr ? "Hangileri?" : "Which?"}
                 </button>
@@ -489,7 +489,7 @@ function CycleAwareCard({
       }`}
     >
       {comingSoon && (
-        <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-200">
+        <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-[12px] font-semibold text-amber-200">
           {tr ? "Çok yakında" : "Coming very soon"}
         </span>
       )}
@@ -541,7 +541,7 @@ function CycleAwareCard({
               <p className="text-xs font-semibold text-slate-300">
                 {tr ? "Ekstra Kişi" : "Extra Seats"}
               </p>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[11px] text-slate-400">
                 {tr
                   ? `5 kişi dahil · +${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
                   : `5 seats included · +${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
@@ -566,7 +566,7 @@ function CycleAwareCard({
             </div>
           </div>
           {extraSeats > 0 && (
-            <p className="mt-1.5 text-[10px] text-violet-400">
+            <p className="mt-1.5 text-[11px] text-violet-400">
               {tr
                 ? `${5 + extraSeats} kişi · ${fmt(extraSeatTotal, currency)}/ay ekstra`
                 : `${5 + extraSeats} seats · ${fmt(extraSeatTotal, currency)}/mo extra`}
@@ -701,7 +701,7 @@ function GuvenSatiri({ language }: { language: Language }) {
   return (
     <ul className="mt-3 space-y-1">
       {maddeler.map((m) => (
-        <li key={m} className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+        <li key={m} className="flex items-center justify-center gap-1.5 text-[12px] text-gray-400">
           <span className="text-emerald-400">✓</span>
           {m}
         </li>

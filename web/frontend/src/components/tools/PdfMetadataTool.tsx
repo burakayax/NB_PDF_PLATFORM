@@ -248,7 +248,7 @@ export function PdfMetadataTool({
         </div>
       )}
 
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">
         {t.found}
       </p>
 
@@ -306,7 +306,7 @@ export function PdfMetadataTool({
             ] as const
           ).map(([anahtar, etiket]) => (
             <label key={anahtar} className="block">
-              <span className="mb-1 block text-[11.5px] text-slate-400">{etiket}</span>
+              <span className="mb-1 block text-[12px] text-slate-400">{etiket}</span>
               <input
                 type="text"
                 maxLength={300}

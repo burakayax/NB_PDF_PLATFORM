@@ -160,7 +160,7 @@ export function QuotaMeter({
       </div>
 
       {(azKaldi || bitti) && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+        <p className="mt-1.5 text-[12px] leading-relaxed text-slate-400">
           {bitti
             ? tr
               ? `Hakkın ${yenilenme ?? (aylik ? "ay başında yenilenir" : "gece yarısı yenilenir")}. Beklemek istemiyorsan ${
