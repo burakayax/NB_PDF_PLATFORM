@@ -88,7 +88,7 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     updateData.distanceSalesConsentedAt = now;
     // Yalnızca güvenli biçimli bir etiket saklanır (örn. "2026-10-27").
     const version = typeof input.documentVersion === "string" ? input.documentVersion.trim() : "";
-    updateData.distanceSalesVersion = /^[\w.\-]{1,40}$/.test(version) ? version : null;
+    updateData.distanceSalesVersion = /^[\w.-]{1,40}$/.test(version) ? version : null;
   }
   if (input.withdrawalWaived) {
     updateData.withdrawalWaivedAt = now;

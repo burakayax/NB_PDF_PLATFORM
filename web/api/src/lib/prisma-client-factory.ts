@@ -16,7 +16,7 @@ const prismaDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 /** Prisma 6'da göreli "file:./dev.db" şema klasörüne göre çözülürdü; aynı dosyayı bulmak için bunu koruyoruz. */
 function resolveSqliteUrl(url: string): string {
   const rest = url.slice("file:".length);
-  if (path.isAbsolute(rest) || /^[A-Za-z]:[\/]/.test(rest)) {
+  if (path.isAbsolute(rest) || /^[A-Za-z]:[/]/.test(rest)) {
     return url;
   }
   return `file:${path.resolve(prismaDir, rest)}`;
