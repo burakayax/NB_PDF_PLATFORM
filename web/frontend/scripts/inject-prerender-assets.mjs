@@ -63,7 +63,7 @@ const AUTH_PENDING_SNIPPET =
   '<script>try{if(localStorage.getItem("nb_session_hint")==="1"){var d=document.documentElement;d.setAttribute("data-auth-pending","1");if(/^(\\/en)?\\/tools\\//.test(location.pathname))d.setAttribute("data-auth-hide","1");setTimeout(function(){d.removeAttribute("data-auth-pending");d.removeAttribute("data-auth-hide")},10000)}}catch(e){}</script>';
 // Açık tema tercihi (lib/theme.ts anahtarı "nb-theme"): sayfa çizilmeden uygulanır; index.html'deki betikle aynı.
 const THEME_SNIPPET =
-  String.raw`<script>try{if(localStorage.getItem("nb-theme")==="light"&&!/^(\/en)?\/admin/.test(location.pathname)){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f8fafc")}}catch(e){}</script>`;
+  String.raw`<script>try{if(localStorage.getItem("nb-theme")==="light"&&!/^(\/en)?\/(admin|nbadmin)/.test(location.pathname)){document.documentElement.setAttribute("data-theme","light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f8fafc")}}catch(e){}</script>`;
 const headInjection = [THEME_SNIPPET, AUTH_PENDING_SNIPPET, ...stylesheetTags, ...modulePreloadTags].join("\n    ");
 const bodyInjection = [...modulePreloadTags, entryScript].join("\n    ");
 

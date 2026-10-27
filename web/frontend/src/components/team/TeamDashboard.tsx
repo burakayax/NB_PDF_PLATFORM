@@ -252,7 +252,7 @@ export function TeamDashboard({ language: _language, accessToken, isOwner = true
           <button
             type="button"
             onClick={() => setRevokeInfoMsg(null)}
-            className="ml-auto shrink-0 text-amber-500/60 hover:text-amber-400"
+            className="ml-auto shrink-0 text-amber-300 hover:text-amber-400"
           >
             ✕
           </button>

@@ -46,7 +46,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
         </button>
 
         <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-emerald-500/70">
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
             EKİBİ BÜYÜT
           </p>
           <h2 className="mt-1 text-xl font-bold text-white">Ekstra Koltuk Ekle</h2>

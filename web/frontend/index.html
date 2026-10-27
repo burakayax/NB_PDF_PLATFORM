@@ -63,7 +63,7 @@
     <!-- Açık tema tercihi: sayfa çizilmeden uygulanır (koyu zeminde yanıp sönmeyi önler). lib/theme.ts ile aynı anahtar. -->
     <script>
       try {
-        if (localStorage.getItem("nb-theme") === "light" && !/^(\/en)?\/admin/.test(location.pathname)) {
+        if (localStorage.getItem("nb-theme") === "light" && !/^(\/en)?\/(admin|nbadmin)/.test(location.pathname)) {
           document.documentElement.setAttribute("data-theme", "light");
           var m = document.querySelector('meta[name="theme-color"]');
           if (m) m.setAttribute("content", "#f8fafc");
