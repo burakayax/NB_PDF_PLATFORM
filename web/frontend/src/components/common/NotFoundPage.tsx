@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ArrowLeft, FileQuestion } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 
@@ -22,6 +23,37 @@ export function NotFoundPage({
 }) {
   const tr = language === "tr";
   const page = kind === "page";
+
+  // Bu ekran, sunucunun "200 + ana sayfa HTML'i" döndürdüğü adreslerde açılıyor:
+  // baş etiketleri hâlâ ana sayfanın (canonical = ana sayfa, robots = index).
+  // Google bunu "soft 404 / ana sayfanın kopyası" diye raporluyordu. Burada
+  // sayfa kendisi "dizine alma" der ve ana sayfayı gösteren canonical/hreflang kalkar.
+  useEffect(() => {
+    const bas = document.head;
+    const eskiBaslik = document.title;
+    const eskiDil = document.documentElement.lang;
+    document.title = tr ? "Sayfa bulunamadı | PDF Platform" : "Page not found | PDF Platform";
+    document.documentElement.lang = tr ? "tr" : "en";
+    let robots = bas.querySelector('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.setAttribute("name", "robots");
+      bas.appendChild(robots);
+    }
+    const eskiRobots = robots.getAttribute("content");
+    robots.setAttribute("content", "noindex, nofollow");
+    const kaldirilan = Array.from(
+      bas.querySelectorAll('link[rel="canonical"], link[rel="alternate"][hreflang]'),
+    );
+    kaldirilan.forEach((n) => n.remove());
+    return () => {
+      document.title = eskiBaslik;
+      document.documentElement.lang = eskiDil;
+      robots.setAttribute("content", eskiRobots ?? "index, follow");
+      kaldirilan.forEach((n) => bas.appendChild(n));
+    };
+  }, [tr]);
+
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-slate-950 px-6 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-800/60 text-slate-300 ring-1 ring-white/10">
