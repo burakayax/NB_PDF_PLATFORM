@@ -9,11 +9,11 @@ const ANA = "<!doctype html><html><body>gerçek prerender sayfası</body></html>
 const HTML = { "content-type": "text/html; charset=utf-8" };
 
 /** Render'ı taklit eder: sadece belirli adresler gerçek, gerisi catch-all / boş 200. */
-function render(kural: (yol: string) => Response) {
-  return async (istek: Request | string) => {
+function render(kural: (yol: string) => Response): (istek: Request | string) => Promise<Response> {
+  const getir = async (istek: Request | string): Promise<Response> => {
     const yol = new URL(typeof istek === "string" ? istek : istek.url).pathname;
     if (typeof istek !== "string" && istek.method === "HEAD") {
-      const r = await render(kural)(new Request(istek.url));
+      const r: Response = await getir(new Request(istek.url));
       return new Response(null, { status: r.status, headers: r.headers });
     }
     if (yol === "/index.html") return new Response(KABUK, { status: 200, headers: HTML });
@@ -21,6 +21,7 @@ function render(kural: (yol: string) => Response) {
       return new Response('<html lang="tr"><meta name="robots" content="noindex">404</html>', { status: 200, headers: HTML });
     return kural(yol);
   };
+  return getir;
 }
 const kural = (yol: string) => {
   if (yol === "/tools/merge-pdf" || yol === "/en/blog/convert-pdf-to-word") return new Response(ANA, { status: 200, headers: HTML });
