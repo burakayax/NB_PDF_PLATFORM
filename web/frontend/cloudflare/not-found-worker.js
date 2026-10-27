@@ -38,7 +38,7 @@ const KENDI_KANONIK_SAYFALAR = ["/about"];
 /** Prerender edilmiş statik sayfası olan, ama Render'da yönlendirme kuralı henüz olmayabilecek adresler. */
 const PRERENDER_SAYFALAR = ["/about"];
 
-const KABUK_OMRU_MS = 5 * 60 * 1000;
+const KABUK_OMRU_MS = 60 * 1000;
 const YEDEK_404 = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sayfa bulunamadı | PDF Platform</title><meta name="robots" content="noindex, nofollow"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px"><h1>Sayfa bulunamadı</h1><p><a href="/">Ana sayfaya dön</a></p></body></html>`;
 const YEDEK_404_EN = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | PDF Platform</title><meta name="robots" content="noindex, nofollow"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px"><h1>Page not found</h1><p><a href="/en">Back to home</a></p></body></html>`;
 
@@ -61,6 +61,15 @@ export function incelenmezMi(yol) {
   if (yol.startsWith("/api/")) return true;
   const son = yol.split("/").pop() || "";
   return /\.[a-z0-9]{1,8}$/i.test(son) && son !== "index.html";
+}
+
+/**
+ * İki HTML'in "aynı kabuk" olup olmadığını karşılaştırırken derleme farkını yok sayar:
+ * deploy sonrası eski ve yeni derlemenin yalnızca dosya adlarındaki karma (hash) değişir.
+ */
+export function kabukaBenzer(a, b) {
+  const sade = (t) => t.replace(/\/assets\/[^"'\s)<>]+/g, "/assets/X").replace(/\s+/g, " ").trim();
+  return a.length > 0 && b.length > 0 && sade(a) === sade(b);
 }
 
 /** Testler için önbelleği boşaltır. */
@@ -88,7 +97,8 @@ export function kabukSeoDuzelt(metin, origin, yol, noindex) {
 
 async function kabukMetni(kok, getir) {
   if (kabuk.metin !== null && Date.now() - kabuk.zaman < KABUK_OMRU_MS) return kabuk.metin;
-  const r = await getir(new URL("/index.html", kok).toString(), { cf: { cacheTtl: 300 } });
+  // Dakikalık sorgu parametresi: Cloudflare önbelleği deploy sonrası eski kabuğu 5 dk tutmasın.
+  const r = await getir(new URL("/index.html?k=" + Math.floor(Date.now() / 60000), kok).toString());
   if (!r.ok) return null;
   const metin = await r.text();
   kabuk = { metin, zaman: Date.now() };
@@ -139,7 +149,7 @@ export async function isle(request, getir = fetch) {
       const govdeCevabi =
         request.method === "HEAD" ? await getir(new Request(request.url, { method: "GET" })) : orijinal.clone();
       const [metin, kabukIcerigi] = await Promise.all([govdeCevabi.text(), kabukMetni(url.origin, getir)]);
-      if (kabukIcerigi !== null && metin.length > 0 && metin === kabukIcerigi) {
+      if (kabukIcerigi !== null && kabukaBenzer(metin, kabukIcerigi)) {
         // Önce gerçek prerender dosyasını (/about/index.html) dene: sayfanın kendi başlığı,
         // H1'i ve metni olsun. Olmazsa kabuğun etiketlerini düzeltmeye düş (fail-open).
         if (PRERENDER_SAYFALAR.includes(bare)) {
@@ -147,7 +157,7 @@ export async function isle(request, getir = fetch) {
             const dosya = (/^\/en(\/|$)/.test(url.pathname) ? "/en" : "") + bare + "/index.html";
             const pr = await getir(new Request(new URL(dosya, url.origin).toString()));
             const prMetin = pr.ok ? await pr.text() : "";
-            if (prMetin.length > 0 && prMetin !== kabukIcerigi && prMetin.includes("<h1>")) {
+            if (prMetin.length > 0 && !kabukaBenzer(prMetin, kabukIcerigi) && prMetin.includes("<h1>")) {
               const h = new Headers(pr.headers);
               ["content-length", "content-encoding", "etag"].forEach((x) => h.delete(x));
               return new Response(request.method === "HEAD" ? null : prMetin, { status: 200, headers: h });
@@ -174,7 +184,7 @@ export async function isle(request, getir = fetch) {
         govdeCevabi.text(),
         kabukMetni(url.origin, getir),
       ]);
-      if (kabukIcerigi !== null && metin.length > 0 && metin === kabukIcerigi) {
+      if (kabukIcerigi !== null && kabukaBenzer(metin, kabukIcerigi)) {
         return await bulunamadiCevabi(url.origin, url.pathname, getir);
       }
     }
