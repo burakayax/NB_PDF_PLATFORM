@@ -167,6 +167,8 @@ import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import {
   usePreferredLanguage,
+  resolveLanguageAfterLogin,
+  isEnglishPath,
   stripLangPrefix,
   withLangPrefix,
 } from "./hooks/usePreferredLanguage";
@@ -483,7 +485,7 @@ const pdfInspectionFeatures: FeatureId[] = [
 
 
 function App() {
-  const { language, setLanguage, detectInitialLanguage } =
+  const { language, setLanguage, setLanguageAuto, detectInitialLanguage } =
     usePreferredLanguage();
   const {
     user,
@@ -501,6 +503,22 @@ function App() {
     clearSession,
     refreshSession,
   } = useAuthSession();
+
+  // Oturum (e-posta, Google, geri yükleme) kurulunca dil kuralı: elle seçim > tarayıcı dili > hesap.
+  // Hesaptaki kayıt (çoğu hesapta varsayılan "en") sayfa dilini ezmez; aksine hesap bu dile eşitlenir.
+  const languageSyncedForUser = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isAuthenticated || !user || !accessToken) return;
+    if (languageSyncedForUser.current === user.id) return;
+    languageSyncedForUser.current = user.id;
+    if (isEnglishPath(window.location.pathname)) return;
+    const target = resolveLanguageAfterLogin(user.preferredLanguage);
+    if (target !== language) setLanguageAuto(target);
+    if (target !== user.preferredLanguage) {
+      void updatePreferredLanguage(target).catch(() => undefined);
+    }
+  }, [isAuthenticated, user, accessToken, language, setLanguageAuto, updatePreferredLanguage]);
+
   const {
     hasConsent,
     isReady: isCookieConsentReady,
@@ -4040,9 +4058,6 @@ function App() {
     setActiveSidebar("split");
     setContentPanel("tool");
     setAuthError("");
-    if (isAuthenticated && user?.preferredLanguage) {
-      setLanguage(user.preferredLanguage);
-    }
     setView(isAuthenticated ? "web" : "login");
   }
 
@@ -4083,9 +4098,6 @@ function App() {
       setContentPanel(special ?? "tool");
     }
     setAuthError("");
-    if (isAuthenticated && user?.preferredLanguage) {
-      setLanguage(user.preferredLanguage);
-    }
     window.history.pushState({}, "", `/tools/${toolSlugForFeature(featureId)}`);
     setView("web");
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -4493,11 +4505,10 @@ function App() {
       }
 
       const loggedInUser = await login(payload.email, payload.password, view === "admin_login", payload.rememberMe);
-      if (
-        loggedInUser.preferredLanguage &&
-        loggedInUser.preferredLanguage !== language
-      ) {
-        setLanguage(loggedInUser.preferredLanguage);
+      // Dil: elle seçim > tarayıcı dili > hesap (ayrıntı: oturum kurulunca çalışan dil eşitleme etkisi).
+      const nextLoginLanguage = resolveLanguageAfterLogin(loggedInUser.preferredLanguage);
+      if (nextLoginLanguage !== language) {
+        setLanguageAuto(nextLoginLanguage);
       }
 
       if (view === "admin_login") {
@@ -4628,11 +4639,9 @@ function App() {
       }
 
       const loggedInUser = await login(payload.email, payload.password, false, payload.rememberMe);
-      if (
-        loggedInUser.preferredLanguage &&
-        loggedInUser.preferredLanguage !== language
-      ) {
-        setLanguage(loggedInUser.preferredLanguage);
+      const nextLoginLanguage = resolveLanguageAfterLogin(loggedInUser.preferredLanguage);
+      if (nextLoginLanguage !== language) {
+        setLanguageAuto(nextLoginLanguage);
       }
 
       // Giriş başarılı → overlay + tarayıcıyı kapat, doğrudan abonelik sayfasına götür.
@@ -4692,7 +4701,7 @@ function App() {
     await logout();
     setAuthError("");
     const nextLanguage = detectInitialLanguage();
-    setLanguage(nextLanguage);
+    setLanguageAuto(nextLanguage);
     // Özel tam-sayfa araç adresleri (CV Oluştur, Belge Tara, PDF Düzenle…) URL'i otomatik
     // ana sayfaya çevirmez; çıkışta adresi açıkça ana sayfaya al, aksi halde kullanıcı aynı araçta kalır.
     try {
@@ -7027,7 +7036,7 @@ function App() {
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
-          className={`w-full flex-1 bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-72"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
+          className={`flex w-full flex-auto shrink-0 flex-col bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-72"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
           {/* Dar pencerede (768–1279px) araç gezgini overlay sidebar'a devredilir —
               iki menü birden görünmesin. */}
@@ -9429,9 +9438,7 @@ function App() {
           ) : null}
         </div>
 
-        <div className="mx-auto w-[min(1180px,calc(100%-32px))] pb-6">
-          <WorkspaceFooter language={language} onOpenLegal={openLegalPage} onContact={openContactModal} />
-        </div>
+        <WorkspaceFooter language={language} onOpenLegal={openLegalPage} onContact={openContactModal} />
         </div>
 
         {contactModalEl}
