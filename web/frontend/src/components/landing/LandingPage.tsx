@@ -1518,7 +1518,7 @@ function HowItWorks({ language }: { language: Language }) {
         {
           icon: "⬇️", title: "Sonucu İndir",
           desc: "Dosyan hazır. Güvenli, gizli bir şekilde indir.",
-          r: "6,182,212", badge: "from-cyan-600 to-blue-600",
+          r: "6,182,212", badge: "from-cyan-700 to-blue-700",
           iconGrad: "from-cyan-500/20 to-blue-600/20",
         },
       ]
@@ -1538,7 +1538,7 @@ function HowItWorks({ language }: { language: Language }) {
         {
           icon: "⬇️", title: "Download Result",
           desc: "Your file is ready instantly. Download it securely and privately.",
-          r: "6,182,212", badge: "from-cyan-600 to-blue-600",
+          r: "6,182,212", badge: "from-cyan-700 to-blue-700",
           iconGrad: "from-cyan-500/20 to-blue-600/20",
         },
       ];

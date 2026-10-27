@@ -769,11 +769,12 @@ export function ProductGallery({
                           />
                         )}
                         <span
+                          data-theme="dark"
                           className={`relative flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-extrabold text-white ring-2 transition-transform duration-200 ${
                             hot ? "scale-125 ring-white" : "ring-white/80"
                           }`}
                           style={{
-                            background: `linear-gradient(140deg, rgb(${shot.accent}), rgba(${shot.accent},0.72))`,
+                            background: `linear-gradient(rgba(2,6,23,0.3), rgba(2,6,23,0.3)), linear-gradient(140deg, rgb(${shot.accent}), rgba(${shot.accent},0.72))`,
                             boxShadow: `0 6px 18px -4px rgba(${shot.accent},0.9), 0 0 0 4px rgba(${shot.accent},0.22)`,
                           }}
                         >
@@ -824,9 +825,10 @@ export function ProductGallery({
                       className="flex items-start gap-3"
                     >
                       <span
+                        data-theme="dark"
                         className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold text-white"
                         style={{
-                          background: `linear-gradient(140deg, rgb(${shot.accent}), rgba(${shot.accent},0.72))`,
+                          background: `linear-gradient(rgba(2,6,23,0.3), rgba(2,6,23,0.3)), linear-gradient(140deg, rgb(${shot.accent}), rgba(${shot.accent},0.72))`,
                         }}
                       >
                         {i + 1}
