@@ -17,6 +17,7 @@ import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/use
 import { getSaasApiBase } from "./api/saasBase";
 import { isKnownAppPath } from "./lib/appNavigation";
 import "./styles/app.css";
+import "./styles/readability.css";
 
 // Eski e-postalardaki doğrulama bağlantısı SPA'nın kendi alanına (/api/auth/verify-email) düşüyordu
 // ve ana sayfaya atıyordu. API adresi biliniyorsa isteği API'ye ilet; API doğrular ve

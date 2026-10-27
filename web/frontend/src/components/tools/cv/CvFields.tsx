@@ -88,7 +88,7 @@ export function PhoneField({ label, value, onChange, city, tr, error, disabled }
           placeholder={applyMask("5321234567890", country.mask)}
           aria-label={label}
           aria-invalid={error ? true : undefined}
-          className="min-w-0 flex-1 rounded-r-xl bg-transparent px-3 py-2.5 text-[14px] text-white placeholder:text-slate-600 focus:outline-none"
+          className="min-w-0 flex-1 rounded-r-xl bg-transparent px-3 py-2.5 text-[14px] text-white placeholder:text-slate-500 focus:outline-none"
         />
       </div>
       {error ? <span className="mt-1 flex items-start gap-1 text-[11.5px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
