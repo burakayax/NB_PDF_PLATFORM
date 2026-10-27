@@ -261,6 +261,35 @@ function escapeHtml(s) {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * Yasal metin paragraflarını HTML'e çevirir: "| a | b |" ile başlayan ardışık satırlar gerçek
+ * <table> olur (araç bazında işleme tablosu), diğerleri <p> kalır. React tarafıyla (LegalPage) aynı kural.
+ */
+function yasalBloklar(paragraflar) {
+  let html = "";
+  let satirlar = [];
+  const tabloyuKapat = () => {
+    if (!satirlar.length) return;
+    const [baslik, ...govde] = satirlar;
+    html +=
+      `<table><thead><tr>${baslik.map((h) => `<th scope="col">${escapeHtml(h)}</th>`).join("")}</tr></thead>` +
+      `<tbody>${govde
+        .map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join("")}</tr>`)
+        .join("")}</tbody></table>`;
+    satirlar = [];
+  };
+  for (const p of paragraflar) {
+    if (p.startsWith("|") && p.endsWith("|")) {
+      satirlar.push(p.slice(1, -1).split("|").map((c) => c.trim()));
+    } else {
+      tabloyuKapat();
+      html += `<p>${escapeHtml(p)}</p>`;
+    }
+  }
+  tabloyuKapat();
+  return html;
+}
+
 const todayIso = new Date().toISOString().slice(0, 10);
 
 /** Bir routePath'in belirtilen dilde içeriği var mı? (EN'de eksik blog atlanır) */
@@ -807,9 +836,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
       const bolumler = belge.sections
         .map(
           (b) =>
-            `<section><h2>${escapeHtml(b.title)}</h2>${b.paragraphs
-              .map((p) => `<p>${escapeHtml(p)}</p>`)
-              .join("")}</section>`,
+            `<section><h2>${escapeHtml(b.title)}</h2>${yasalBloklar(b.paragraphs)}</section>`,
         )
         .join("");
       parts.push(
