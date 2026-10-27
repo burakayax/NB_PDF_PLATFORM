@@ -31,7 +31,7 @@ function Shell({ tr, title, sub, children }: { tr: boolean; title: string; sub: 
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-300/15 text-amber-200"><Lightbulb className="h-4 w-4" /></span>
         <span className="min-w-0 flex-1"><span className="block text-[13px] font-bold text-amber-50">{title}</span><span className="block truncate text-[12px] text-amber-100/60">{sub}</span></span>
-        <ChevronDown className={`h-4 w-4 text-amber-200/70 transition ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-amber-200/90 transition ${open ? "rotate-180" : ""}`} />
       </button>
       {open ? <div className="space-y-2.5 border-t border-amber-300/15 px-3 pb-3 pt-2.5">{children}</div> : null}
       <span className="sr-only">{tr ? "Öneriler" : "Suggestions"}</span>

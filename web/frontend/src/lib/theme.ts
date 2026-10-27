@@ -48,7 +48,7 @@ export function useThemePreference(): [ThemePreference, (p: ThemePreference) => 
 }
 
 /** Açık temada denetlenmiş üst düzey ekranlar. */
-const LIGHT_VIEWS = new Set<AppView>(["landing", "login", "register", "forgot_password", "about", "terms", "privacy", "kvkk", "on-bilgilendirme", "mesafeli-satis"]);
+const LIGHT_VIEWS = new Set<AppView>(["landing", "login", "register", "forgot_password", "web", "about", "terms", "privacy", "kvkk", "on-bilgilendirme", "mesafeli-satis"]);
 
 /**
  * "landing" görünümü araç sayfalarını (/tools/…) ve blogu da kapsar; bunlar henüz denetlenmedi.
@@ -56,11 +56,14 @@ const LIGHT_VIEWS = new Set<AppView>(["landing", "login", "register", "forgot_pa
  */
 const LIGHT_PATHS = new Set(["/", "/pricing", "/fiyatlandirma", "/about", "/hakkimizda"]);
 
+/** Araç sayfaları (/tools/…), blog (/blog/…) ve geliştirici API sayfaları (/pdf-api/…): tümü taranıp temiz çıktı. */
+const LIGHT_PREFIXES = ["/tools", "/blog", "/pdf-api"];
+
 export function isLightReady(view: AppView, pathname: string): boolean {
   if (!LIGHT_VIEWS.has(view)) return false;
   if (view !== "landing") return true;
   const path = pathname.replace(/^\/en(?=\/|$)/, "").replace(/\/+$/, "") || "/";
-  return LIGHT_PATHS.has(path);
+  return LIGHT_PATHS.has(path) || LIGHT_PREFIXES.some((x) => path === x || path.startsWith(x + "/"));
 }
 
 export function applyTheme(effective: EffectiveTheme) {

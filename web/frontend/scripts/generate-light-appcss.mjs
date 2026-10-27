@@ -85,6 +85,18 @@ function convertSurface(c) {
 }
 
 const COLOR_TOKEN = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|\bwhite\b|\bblack\b/g;
+
+/** Gradyan durağı: beyaz saydam → koyu saydam; koyu yüzey → açık; renkli saydam/orta tonlar dokunulmaz. */
+function convertGradientStop(c) {
+  const hsl = toHsl(c);
+  if (hsl.s > 0.35 && hsl.l > 0.2 && hsl.l < 0.8) return null;
+  if (hsl.l > 0.9 && c.a < 0.9) return fmt({ r: 15, g: 23, b: 42 }, c.a);
+  if (hsl.l < 0.3) {
+    const l = Math.max(0.9, Math.min(0.97, 1 - hsl.l * 0.6));
+    return fmt(fromHsl({ h: hsl.h, s: Math.min(hsl.s, 0.3), l }), Math.min(1, Math.max(c.a, 0.8)));
+  }
+  return null;
+}
 const PROPS = {
   color: convertText,
   "background-color": convertSurface,
@@ -115,6 +127,17 @@ function parseBlocks(text, atPath = []) {
   return out;
 }
 
+
+function coloredGradientBg(body) {
+  const m = body.match(/background(?:-image)?\s*:\s*([^;]*gradient\([^;]*)/);
+  if (!m) return false;
+  return (m[1].match(COLOR_TOKEN) || []).some((tok) => {
+    const c = parseColor(tok);
+    if (!c || c.a < 0.9) return false;
+    const h = toHsl(c);
+    return h.s > 0.35 && h.l > 0.15 && h.l < 0.55;
+  });
+}
 const SKIP_SEL = /^(html|body|:root|\*|#root)\b/;
 const rules = parseBlocks(src);
 const emitted = new Map(); // at-yolu → css parçaları
@@ -131,14 +154,21 @@ for (const { sel, body, at } of rules) {
     let value = d.slice(idx + 1).trim();
     const fn = PROPS[prop];
     if (!fn) continue;
-    if (/gradient\(|url\(|var\(/.test(value)) { if (/gradient\(/.test(value)) skippedGradients++; continue; }
+    // Renkli (doygun, orta koyulukta) gradyan zeminli düğmede beyaz yazı kalır: zemin iki temada da aynı.
+    if (prop === "color" && coloredGradientBg(body)) continue;
+    if (/url\(|var\(/.test(value)) continue;
+    let fnUse = fn;
+    if (/gradient\(/.test(value)) {
+      if (prop !== "background" && prop !== "background-image") { skippedGradients++; continue; }
+      fnUse = convertGradientStop;
+    }
     const important = /!important/.test(value);
     value = value.replace(/!important/, "").trim();
     let changed = false;
     const next = value.replace(COLOR_TOKEN, (tok) => {
       const c = parseColor(tok);
       if (!c) return tok;
-      const r = fn(c);
+      const r = fnUse(c);
       if (r) { changed = true; return r; }
       return tok;
     });

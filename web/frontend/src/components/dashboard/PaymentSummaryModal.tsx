@@ -441,7 +441,7 @@ export function PaymentSummaryModal({
               <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-6 text-center" role="status">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-2xl">✓</div>
                 <p className="text-lg font-bold text-emerald-200">{successMessage}</p>
-                <p className="mt-1.5 text-xs text-emerald-200/70">{tr ? "Pencere kapanıyor…" : "Closing…"}</p>
+                <p className="mt-1.5 text-xs text-emerald-200/90">{tr ? "Pencere kapanıyor…" : "Closing…"}</p>
               </div>
             ) : (
               <>
@@ -460,7 +460,7 @@ export function PaymentSummaryModal({
                     </p>
                     <button
                       type="button"
-                      className="mt-2 text-[12px] font-medium text-emerald-200/60 underline underline-offset-2 transition hover:text-emerald-100"
+                      className="mt-2 text-[12px] font-medium text-emerald-200/90 underline underline-offset-2 transition hover:text-emerald-100"
                       onClick={onClose}
                     >
                       {tr ? "Yine de çık" : "Leave anyway"}

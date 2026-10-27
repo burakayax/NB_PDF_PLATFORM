@@ -199,7 +199,7 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
                 key={label}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[12px] font-medium text-nb-muted"
               >
-                <Icon className="h-3.5 w-3.5 text-nb-primary/80" aria-hidden />
+                <Icon className="h-3.5 w-3.5 text-nb-primary" aria-hidden />
                 {label}
               </span>
             ))}

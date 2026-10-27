@@ -368,7 +368,39 @@
 [data-theme="light"] [class~="bg-amber-600"],
 [data-theme="light"] [class~="from-amber-600"],
 [data-theme="light"] [class~="bg-amber-700"],
-[data-theme="light"] [class~="from-amber-700"] {
+[data-theme="light"] [class~="from-amber-700"],
+[data-theme="light"] [class~="bg-fuchsia-400"],
+[data-theme="light"] [class~="from-fuchsia-400"],
+[data-theme="light"] [class~="bg-fuchsia-500"],
+[data-theme="light"] [class~="from-fuchsia-500"],
+[data-theme="light"] [class~="bg-fuchsia-600"],
+[data-theme="light"] [class~="from-fuchsia-600"],
+[data-theme="light"] [class~="bg-fuchsia-700"],
+[data-theme="light"] [class~="from-fuchsia-700"],
+[data-theme="light"] [class~="bg-pink-400"],
+[data-theme="light"] [class~="from-pink-400"],
+[data-theme="light"] [class~="bg-pink-500"],
+[data-theme="light"] [class~="from-pink-500"],
+[data-theme="light"] [class~="bg-pink-600"],
+[data-theme="light"] [class~="from-pink-600"],
+[data-theme="light"] [class~="bg-pink-700"],
+[data-theme="light"] [class~="from-pink-700"],
+[data-theme="light"] [class~="bg-lime-400"],
+[data-theme="light"] [class~="from-lime-400"],
+[data-theme="light"] [class~="bg-lime-500"],
+[data-theme="light"] [class~="from-lime-500"],
+[data-theme="light"] [class~="bg-lime-600"],
+[data-theme="light"] [class~="from-lime-600"],
+[data-theme="light"] [class~="bg-lime-700"],
+[data-theme="light"] [class~="from-lime-700"],
+[data-theme="light"] [class~="bg-yellow-400"],
+[data-theme="light"] [class~="from-yellow-400"],
+[data-theme="light"] [class~="bg-yellow-500"],
+[data-theme="light"] [class~="from-yellow-500"],
+[data-theme="light"] [class~="bg-yellow-600"],
+[data-theme="light"] [class~="from-yellow-600"],
+[data-theme="light"] [class~="bg-yellow-700"],
+[data-theme="light"] [class~="from-yellow-700"] {
   --color-red-50: oklch(97.1% 0.013 17.38);
   --color-red-100: oklch(93.6% 0.032 17.717);
   --color-red-200: oklch(88.5% 0.062 18.334);
@@ -656,4 +688,211 @@
   --color-taupe-900: oklch(21.4% 0.009 43.1);
   --color-taupe-950: oklch(14.7% 0.004 49.3);
   --color-white: #ffffff;
+}
+
+/* Dolgulu zeminler açık temada koyulaşır (beyaz yazı kontrastı) */
+[data-theme="light"] [class~="bg-cyan-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-cyan-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-cyan-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-cyan-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-cyan-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-cyan-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-cyan-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-cyan-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-blue-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-blue-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-blue-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-blue-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-blue-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-blue-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-blue-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-blue-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-indigo-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-indigo-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-indigo-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-indigo-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-indigo-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-indigo-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-indigo-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-indigo-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-violet-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-violet-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-violet-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-violet-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-violet-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-violet-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-violet-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-violet-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-purple-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-purple-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-purple-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-purple-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-purple-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-purple-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-purple-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-purple-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-emerald-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-emerald-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-emerald-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-emerald-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-emerald-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-emerald-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-emerald-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-emerald-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-rose-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-rose-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-rose-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-rose-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-rose-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-rose-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-rose-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-rose-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-red-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-red-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-red-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-red-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-red-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-red-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-red-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-red-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-sky-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-sky-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-sky-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-sky-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-sky-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-sky-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-sky-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-sky-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-teal-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-teal-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-teal-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-teal-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-teal-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-teal-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-teal-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-teal-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-green-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-green-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-green-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-green-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-green-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-green-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-green-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-green-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-orange-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-orange-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-orange-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-orange-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-orange-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-orange-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-orange-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-orange-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-amber-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-amber-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-amber-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-amber-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-amber-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-amber-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-amber-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-amber-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-fuchsia-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-fuchsia-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-fuchsia-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-fuchsia-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-fuchsia-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-fuchsia-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-fuchsia-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-fuchsia-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-pink-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-pink-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-pink-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-pink-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-pink-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-pink-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-pink-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-pink-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-lime-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-lime-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-lime-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-lime-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-lime-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-lime-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-lime-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-lime-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-yellow-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-yellow-400"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-yellow-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-yellow-500"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-yellow-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-yellow-600"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="bg-yellow-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]),
+[data-theme="light"] [class~="from-yellow-700"]:not([class~="text-slate-950"]):not([class~="text-slate-900"]) {
+  --color-cyan-400: oklch(60.9% 0.126 221.723);
+  --color-cyan-500: oklch(52% 0.105 223.128);
+  --color-cyan-600: oklch(45% 0.085 224.283);
+  --color-cyan-700: oklch(45% 0.085 224.283);
+  --color-blue-400: oklch(54.6% 0.245 262.881);
+  --color-blue-500: oklch(48.8% 0.243 264.376);
+  --color-blue-600: oklch(42.4% 0.199 265.638);
+  --color-blue-700: oklch(42.4% 0.199 265.638);
+  --color-indigo-400: oklch(51.1% 0.262 276.966);
+  --color-indigo-500: oklch(45.7% 0.24 277.023);
+  --color-indigo-600: oklch(39.8% 0.195 277.366);
+  --color-indigo-700: oklch(39.8% 0.195 277.366);
+  --color-violet-400: oklch(54.1% 0.281 293.009);
+  --color-violet-500: oklch(49.1% 0.27 292.581);
+  --color-violet-600: oklch(43.2% 0.232 292.759);
+  --color-violet-700: oklch(43.2% 0.232 292.759);
+  --color-purple-400: oklch(55.8% 0.288 302.321);
+  --color-purple-500: oklch(49.6% 0.265 301.924);
+  --color-purple-600: oklch(43.8% 0.218 303.724);
+  --color-purple-700: oklch(43.8% 0.218 303.724);
+  --color-emerald-400: oklch(59.6% 0.145 163.225);
+  --color-emerald-500: oklch(50.8% 0.118 165.612);
+  --color-emerald-600: oklch(43.2% 0.095 166.913);
+  --color-emerald-700: oklch(43.2% 0.095 166.913);
+  --color-rose-400: oklch(58.6% 0.253 17.585);
+  --color-rose-500: oklch(51.4% 0.222 16.935);
+  --color-rose-600: oklch(45.5% 0.188 13.697);
+  --color-rose-700: oklch(45.5% 0.188 13.697);
+  --color-red-400: oklch(57.7% 0.245 27.325);
+  --color-red-500: oklch(50.5% 0.213 27.518);
+  --color-red-600: oklch(44.4% 0.177 26.899);
+  --color-red-700: oklch(44.4% 0.177 26.899);
+  --color-sky-400: oklch(58.8% 0.158 241.966);
+  --color-sky-500: oklch(50% 0.134 242.749);
+  --color-sky-600: oklch(44.3% 0.11 240.79);
+  --color-sky-700: oklch(44.3% 0.11 240.79);
+  --color-teal-400: oklch(60% 0.118 184.704);
+  --color-teal-500: oklch(51.1% 0.096 186.391);
+  --color-teal-600: oklch(43.7% 0.078 188.216);
+  --color-teal-700: oklch(43.7% 0.078 188.216);
+  --color-green-400: oklch(62.7% 0.194 149.214);
+  --color-green-500: oklch(52.7% 0.154 150.069);
+  --color-green-600: oklch(44.8% 0.119 151.328);
+  --color-green-700: oklch(44.8% 0.119 151.328);
+  --color-orange-400: oklch(64.6% 0.222 41.116);
+  --color-orange-500: oklch(55.3% 0.195 38.402);
+  --color-orange-600: oklch(47% 0.157 37.304);
+  --color-orange-700: oklch(47% 0.157 37.304);
+  --color-amber-400: oklch(66.6% 0.179 58.318);
+  --color-amber-500: oklch(55.5% 0.163 48.998);
+  --color-amber-600: oklch(47.3% 0.137 46.201);
+  --color-amber-700: oklch(47.3% 0.137 46.201);
+  --color-fuchsia-400: oklch(59.1% 0.293 322.896);
+  --color-fuchsia-500: oklch(51.8% 0.253 323.949);
+  --color-fuchsia-600: oklch(45.2% 0.211 324.591);
+  --color-fuchsia-700: oklch(45.2% 0.211 324.591);
+  --color-pink-400: oklch(59.2% 0.249 0.584);
+  --color-pink-500: oklch(52.5% 0.223 3.958);
+  --color-pink-600: oklch(45.9% 0.187 3.815);
+  --color-pink-700: oklch(45.9% 0.187 3.815);
+  --color-lime-400: oklch(64.8% 0.2 131.684);
+  --color-lime-500: oklch(53.2% 0.157 131.589);
+  --color-lime-600: oklch(45.3% 0.124 130.933);
+  --color-lime-700: oklch(45.3% 0.124 130.933);
+  --color-yellow-400: oklch(68.1% 0.162 75.834);
+  --color-yellow-500: oklch(55.4% 0.135 66.442);
+  --color-yellow-600: oklch(47.6% 0.114 61.907);
+  --color-yellow-700: oklch(47.6% 0.114 61.907);
 }

@@ -60,6 +60,16 @@
     <meta name="msapplication-config" content="/browserconfig.xml" />
 
     <title>PDF Birleştir, Dönüştür, Sıkıştır | PDF PLATFORM</title>
+    <!-- Açık tema tercihi: sayfa çizilmeden uygulanır (koyu zeminde yanıp sönmeyi önler). lib/theme.ts ile aynı anahtar. -->
+    <script>
+      try {
+        if (localStorage.getItem("nb-theme") === "light" && !/^(\/en)?\/admin/.test(location.pathname)) {
+          document.documentElement.setAttribute("data-theme", "light");
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", "#f8fafc");
+        }
+      } catch (e) {}
+    </script>
     <!-- Oturum ipucu varsa oturum doğrulanana kadar "Giriş yap / Üye Ol" yerine yükleniyor görünümü
          (güncelleme sonrası yenilemede çıkışlı görünüp sonra tanınma titremesini önler). -->
     <script>

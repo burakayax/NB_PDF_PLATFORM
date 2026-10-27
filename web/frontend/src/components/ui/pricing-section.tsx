@@ -334,7 +334,7 @@ function MonthlyOnlyCard({
 
       <div className="text-2xl mb-3 mt-2">{isPlus ? "🚀" : "⚡"}</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
-      <p className={`text-sm mb-5 ${isPlus ? "text-blue-300/70" : "text-gray-400"}`}>
+      <p className={`text-sm mb-5 ${isPlus ? "text-blue-300/90" : "text-gray-400"}`}>
         {(tr ? plan.taglineTr : plan.taglineEn) || (isPlus
           ? (tr ? "Bireyler için akıllı seçim." : "The smart choice for individuals.")
           : (tr ? "PDF işine yeni başlayanlar için." : "Perfect for getting started."))}

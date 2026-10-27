@@ -48,7 +48,7 @@ css += `\n/* Açık tema içinde koyu kalan bölüm: palet varsayılana döner *
 // Aynı blok, OPAK renkli zemini olan öğelerde de geçerli: düğme/rozetin zemini iki temada da aynı renk,
 // dolayısıyla içindeki yazı da koyu temadaki gibi kalmalı (beyaz ya da koyu). class~= TAM sınıf adı:
 // "from-cyan-500" eşleşir; "from-cyan-500/20" (saydam) ve "from-white/[0.06]" (cam kart) eşleşmez.
-const SOLID = ["cyan", "blue", "indigo", "violet", "purple", "emerald", "rose", "red", "sky", "teal", "green", "orange", "amber"];
+const SOLID = ["cyan", "blue", "indigo", "violet", "purple", "emerald", "rose", "red", "sky", "teal", "green", "orange", "amber", "fuchsia", "pink", "lime", "yellow"];
 const solidSel = [];
 for (const fam of SOLID) {
   for (const sh of [400, 500, 600, 700]) {
@@ -63,5 +63,16 @@ for (const f of families) {
   }
 }
 css += `  --color-white: #ffffff;\n}\n`;
+// Dolgulu düğme/rozetlerde beyaz yazı: 500'lük zeminde kontrast 2,7–3,7 (AA altı). Açık temada bu öğelerin
+// KENDİ kapsamında zemin bir kademe koyulaşır (400→600, 500→700, 600→800); beyaz yazı ≥4,5 olur.
+// text-slate-950/900 (koyu yazı) taşıyan parlak düğmeler dokunulmaz: koyu yazı parlak zeminde okunur.
+const solidOnly = solidSel.filter((x) => !x.includes('data-theme="dark"')).map((x) => x + ':not([class~="text-slate-950"]):not([class~="text-slate-900"])');
+css += "\n/* Dolgulu zeminler açık temada koyulaşır (beyaz yazı kontrastı) */\n" + solidOnly.join(",\n") + " {\n";
+for (const fam of SOLID) {
+  for (const [from, to] of [[400, 600], [500, 700], [600, 800], [700, 800]]) {
+    const v = vars.get(`${fam}-${to}`);
+    if (v) css += `  --color-${fam}-${from}: ${v};\n`;
+  }
+}
+css += "}\n";
 writeFileSync("src/styles/theme-light.palette.css", css);
-console.log(`${families.length} renk ailesi yazıldı:`, families.join(", "));

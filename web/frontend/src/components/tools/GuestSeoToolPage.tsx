@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../common/ThemeToggle";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
@@ -91,6 +92,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
           </a>
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
+              <ThemeToggle tr={tr} />
               <span className="hidden items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-300 sm:inline-flex">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {userName
@@ -104,6 +106,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <ThemeToggle tr={tr} />
               <button type="button" data-auth-cta onClick={onLogin}
                 className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/[0.03] px-5 text-sm font-semibold text-slate-200 transition duration-200 hover:border-white/30 hover:bg-white/[0.08] hover:text-white active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {tr ? "Giriş yap" : "Log in"}

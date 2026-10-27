@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../common/ThemeToggle";
 import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getToolSeo } from "../../seo/seoContent.mjs";
@@ -39,6 +40,7 @@ export function GuestPdfTool({
             <span className="text-sm font-bold tracking-tight">PDF Platform</span>
           </a>
           <div className="flex items-center gap-2">
+            <ThemeToggle tr={tr} />
             <button
               type="button"
               data-auth-cta onClick={onLogin}

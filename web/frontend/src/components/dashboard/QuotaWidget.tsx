@@ -86,7 +86,7 @@ export function QuotaWidget({
               ? `Bugünkü ${FREE_OPS.daily} ücretsiz sunucu işlem hakkın doldu.`
               : `You've used today's ${FREE_OPS.daily} free server operations.`}
           </p>
-          <p className="text-amber-300/70 text-xs">
+          <p className="text-amber-300/90 text-xs">
             {tr
               ? "Birleştir, böl, döndür gibi temel araçlar sınırsız. Dönüştürme/OCR için Plus'a geç."
               : "Basic tools (merge, split, rotate…) stay unlimited. Upgrade to Plus for conversions/OCR."}

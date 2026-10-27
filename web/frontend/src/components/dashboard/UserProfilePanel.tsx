@@ -396,7 +396,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                     ? `Geçici ${localizedPlanDisplayName(planName, language)} planındasın`
                     : `You're on a temporary ${localizedPlanDisplayName(planName, language)} plan`}
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-fuchsia-200/70">
+                <p className="mt-1 text-xs leading-relaxed text-fuchsia-200/90">
                   {lang === "tr"
                     ? `${formatDate(overrideExpiresAt, language)} tarihine kadar geçerli; sonra ${localizedPlanDisplayName(planNameFromUser(basePlan ?? "FREE"), language)} planına dönersin. Mevcut aboneliğinin süresi bu sürede işlemeye devam eder.`
                     : `Valid until ${formatDate(overrideExpiresAt, language)}; then you return to ${localizedPlanDisplayName(planNameFromUser(basePlan ?? "FREE"), language)}. Your existing subscription keeps counting down meanwhile.`}
@@ -458,7 +458,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
       {/* ── Yapay Zekâ kullanımı (kalan hak + ek AI) ─────────── */}
       {hasAiAccess && (
         <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-fuchsia-300/70">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-fuchsia-300/90">
             {lang === "tr" ? "Yapay Zekâ" : "Artificial Intelligence"}
           </p>
           <div className="mt-1 flex items-center gap-2">
@@ -521,7 +521,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
       {/* ── GDPR Madde 20: Verileri Dışa Aktar ──────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/40 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-nb-primary/70">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-nb-primary">
           {lang === "tr" ? "Veri Taşınabilirliği (GDPR Madde 20)" : "Data Portability (GDPR Article 20)"}
         </p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
