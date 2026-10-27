@@ -91,7 +91,7 @@ export function ShrinkTeamModal({
         </button>
 
         <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-300">
             EKİBİ KÜÇÜLT
           </p>
           <h2 className="mt-1 text-xl font-bold text-white">Koltuk Azalt</h2>

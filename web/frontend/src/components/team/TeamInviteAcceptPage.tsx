@@ -325,7 +325,7 @@ function InvitePageWrapper({
     <div className="flex min-h-dvh items-center justify-center bg-[#05080f] px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-cyan-500/70">
+          <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">
             PDF Platform
           </p>
           <h1 className="mt-2 text-2xl font-bold text-white">{title}</h1>
