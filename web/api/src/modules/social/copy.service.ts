@@ -38,7 +38,7 @@ NEDEN TEK METİN: Aynı yazı için her ağa farklı metin yazmak tutarsızlık 
 aynı markayı birden çok ağda takip ediyor. Uzun metin Facebook, Instagram ve LinkedIn'de
 AYNEN kullanılır; kısa metin X'te.
 
-PINTEREST AYRI YAZILIR: Pinterest bir sosyal ağ değil, görsel arama motorudur. Orada sıralamayı
+PINTEREST AYRI YAZILIR (PIN_TR): Pinterest bir sosyal ağ değil, görsel arama motorudur. Orada sıralamayı
 etiketler değil AÇIKLAMADAKİ KELİMELER belirler. PIN metinleri bu yüzden bilerek arama terimi
 yüklüdür — aşağıdaki "Konu terimleri" listesindeki ifadeleri olabildiğince çok, ama okunabilir
 bir cümle akışı içinde kullan. Anahtar kelime yığını yazma; insanın okuyabileceği 2-3 cümle
@@ -60,6 +60,16 @@ Kurallar:
 - ETİKET YAZMA, BAĞLANTI YAZMA. "#" ve adres koyma — ikisini de sistem ekleyecek.
 - Karakter sınırlarını ASLA aşma.
 
+YORUM SORUSU (TÜM METİNLER): LONG, SHORT, PIN, LI ve FB metinlerinin SON cümlesi okuyucuyu yoruma
+çağıran, cevabı tek kelimeyle verilebilecek gerçek bir soru olsun (örn. "Sen CV'nde hangisini yazıyorsun? 👇").
+"Düşüncelerini yaz" gibi genel çağrı değil; konuya özgü somut soru. SHORT metinde soru da 220 karakter
+sınırının içinde kalmalı.
+
+LINKEDIN AYRI YAZILIR (LI_TR, yalnız Türkçe): Profesyonel, sakin ve somut bir ton. CV, iş başvurusu,
+belge yönetimi ve verimlilik açısından yaz; 4-6 kısa satır, emoji yok ya da en fazla bir tane.
+İlk satır kanca (en fazla 110 karakter). Son satır meslek hayatından bir soru olsun
+(örn. "İşe alım sürecinde CV'lerde en sık hangi hatayı görüyorsunuz?"). Siz/sen karışımı yapma: "siz" kullan.
+
 FACEBOOK AYRI YAZILIR (FB_TR, yalnız Türkçe): Facebook sayfasında Türk okuyucuyla konuşur gibi yaz.
 - İLK SATIR kanca: en fazla 10-12 kelime; bir sorunu söyleyen ya da merak uyandıran cümle (örn. "CV'n 5 MB olunca e-postan geri mi dönüyor?").
 - Toplam 60-120 kelime, kısa paragraflar, en fazla 2-3 emoji.
@@ -69,7 +79,7 @@ FACEBOOK AYRI YAZILIR (FB_TR, yalnız Türkçe): Facebook sayfasında Türk okuy
 - Bağlantı, "link ilk yorumda" cümlesi ve etiket YAZMA; sistem ekler.
 
 Yanıtı YALNIZCA şu JSON biçiminde ver, başka hiçbir şey yazma:
-{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"...","FB_TR":"..."}`;
+{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"...","LI_TR":"...","FB_TR":"..."}`;
 
 /** Modelin bazen eklediği ```json çitlerini ve ön/arka gevezeliği ayıklar. */
 function parseJsonObject(raw: string): Record<string, unknown> | null {
@@ -330,6 +340,53 @@ const FB_QUESTIONS = [
   "Sence bu iş neden hâlâ bu kadar zor?",
 ];
 
+/** Her ağın metni yoruma çağıran bir soruyla biter; model yazmadıysa buradan eklenir. */
+const COMMENT_QUESTIONS: Record<"general" | "professional", string[]> = {
+  general: [
+    "Sen bu işi nasıl hallediyorsun? 👇",
+    "Sende en çok hangi PDF işi vakit alıyor? 👇",
+    "Sen şimdiye kadar bunu nasıl yaptın? Yorumlara yaz 👇",
+    "Bu sorunu sen de yaşadın mı? 👇",
+    "Sende bu iş en çok nerede takılıyor? 👇",
+  ],
+  professional: [
+    "Siz bu süreci nasıl yönetiyorsunuz?",
+    "İşe alım sürecinde en sık hangi hatayı görüyorsunuz?",
+    "Sizin ekibinizde belge işleri en çok nerede zaman alıyor?",
+    "Bu konuda sizin önerdiğiniz yöntem nedir?",
+  ],
+};
+
+function stableHash(side: LangSide): number {
+  let hash = 0;
+  const stable = side.link.split("?")[0] ?? side.link;
+  for (let i = 0; i < stable.length; i++) hash = (hash * 31 + stable.charCodeAt(i)) >>> 0;
+  return hash;
+}
+
+/** Metnin gövdesinin son cümlesi soru mu? (Soru işareti ya da sonda emoji ile biten soru.) */
+function endsWithQuestion(text: string): boolean {
+  const lastLine = text.trim().split("\n").pop() ?? "";
+  return /\?[\s\p{Extended_Pictographic}️]*$/u.test(lastLine);
+}
+
+/** Gövde soruyla bitmiyorsa yeterli yer varsa sonuna bir soru ekler. */
+export function ensureQuestion(
+  body: string,
+  side: LangSide,
+  room: number,
+  tone: "general" | "professional" = "general",
+): string {
+  const clean = body.trim();
+  if (endsWithQuestion(clean)) return clean;
+  const pool = COMMENT_QUESTIONS[tone];
+  const q = pool[stableHash(side) % pool.length] ?? "";
+  if (!q) return clean;
+  // Yer yoksa gövdeyi kısalt: soru, gövdenin son cümlesinden daha değerli.
+  const trimmed = truncateWords(clean, Math.max(30, room - q.length - 2));
+  return `${trimmed}\n${q}`;
+}
+
 /** Facebook'ta bağlantı metne değil ilk yoruma gider; metinde yalnızca yönlendirme satırı durur. */
 const FB_LINK_HINT = "Link ilk yorumda 👇";
 
@@ -428,11 +485,9 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
   // Facebook içeriği SADECE Türkçe: karışık dil Facebook'un kitle seçimini bozuyor.
   if (platform === "FACEBOOK") return [sideOf("tr")];
 
-  const bilingualPossible = req.bilingual && Boolean(item.alt) && PLATFORM_SPECS[platform].bilingual;
-  // Çift dilde Türkçe üstte: asıl kitle Türkiye, İngilizce altta tam
-  // karşılığıyla durur.
-  if (bilingualPossible) return [sideOf("tr"), sideOf("en")];
-  return [sideOf(req.singleLang)];
+  // Tüm ağlarda gönderi dili Türkçe: iki dilli blok kitleyi ve ağın dil sinyalini bölüyordu
+  // (Pinterest'te Türkçe + İngilizce karışık pinler dağınık görünüyordu).
+  return [sideOf("tr")];
 }
 
 /**
@@ -440,12 +495,13 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
  * Dönen kayıtta HER platform için bir metin bulunur (model başarısızsa şablon).
  */
 /** Uzun metni kullanan ağlar — üçünde de AYNI metin görünür. */
-const LONG_FORM: SocialPlatform[] = ["INSTAGRAM", "LINKEDIN", "YOUTUBE"];
+const LONG_FORM: SocialPlatform[] = ["INSTAGRAM", "YOUTUBE"];
 
 /** Bir ağ hangi metni kullanır? */
-type BodyKind = "long" | "short" | "pin" | "fb";
+type BodyKind = "long" | "short" | "pin" | "fb" | "li";
 function bodyKind(platform: SocialPlatform): BodyKind {
   if (platform === "FACEBOOK") return "fb";
+  if (platform === "LINKEDIN") return "li";
   if (LONG_FORM.includes(platform)) return "long";
   return platform === "PINTEREST" ? "pin" : "short";
 }
@@ -535,6 +591,11 @@ export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPl
     400,
   );
 
+  const liRoom = Math.min(
+    ...wanted.filter((p) => bodyKind(p) === "li").map((p) => bodyRoom(req, p)),
+    1200,
+  );
+
   const { item, keywords } = req;
   const prompt = `Blog yazısı — Türkçe hâli:
 Başlık: ${item.lang === "tr" ? item.title : (item.alt?.title ?? "(yok)")}
@@ -552,6 +613,7 @@ Uzunluklar:
 - LONG_EN ve LONG_TR: en fazla ${Number.isFinite(longRoom) ? longRoom : 900} karakter.
 - SHORT_EN ve SHORT_TR: en fazla ${Number.isFinite(shortRoom) ? shortRoom : 220} karakter.
 - PIN_EN ve PIN_TR: en fazla ${Number.isFinite(pinRoom) ? pinRoom : 400} karakter (arama terimi yüklü).
+- LI_TR: en fazla ${Number.isFinite(liRoom) ? liRoom : 1200} karakter (profesyonel ton).
 - FB_TR: en fazla 800 karakter (60-120 kelime).
 ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
 
@@ -568,6 +630,8 @@ ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
   const pick = (key: string): string =>
     typeof parsed[key] === "string" ? (parsed[key] as string).trim() : "";
   const bodies: Record<BodyKind, { en: string; tr: string }> = {
+    // LinkedIn yalnız Türkçe; model yazmadıysa uzun metne düşülür (şablon değil).
+    li: { en: "", tr: pick("LI_TR") || pick("LONG_TR") },
     // Facebook yalnız Türkçe; model yazmadıysa şablon kalır.
     fb: { en: "", tr: pick("FB_TR") },
     long: { en: pick("LONG_EN"), tr: pick("LONG_TR") },
@@ -581,7 +645,10 @@ ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
     const kind = bodyKind(p);
     const blocks = sides.map((side, i) => {
       const body = bodies[kind][side.lang];
-      return body ? buildBlock(body, side, p, tagCountFor(p, sides.length, i), req.avoidTags, p === "FACEBOOK" && req.fbKind === "engage") : "";
+      if (!body) return "";
+      // Facebook'un metni zaten soruyla biter (istem + şablon); diğerlerinde soru zorunlu.
+      const withQ = p === "FACEBOOK" ? body : ensureQuestion(body, side, bodyRoom(req, p), kind === "li" ? "professional" : "general");
+      return buildBlock(withQ, side, p, tagCountFor(p, sides.length, i), req.avoidTags, p === "FACEBOOK" && req.fbKind === "engage");
     });
     // Bir dil için metin gelmediyse o platformda şablon korunur.
     if (blocks.some((b) => !b)) continue;

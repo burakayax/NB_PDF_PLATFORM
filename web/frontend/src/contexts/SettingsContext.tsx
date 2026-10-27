@@ -9,6 +9,7 @@ import { isCmsPreviewActive, readCmsPreviewDraft } from "../lib/cmsPreview";
 import { persistMaintenanceHint } from "../lib/maintenanceHint";
 import { RUNTIME_REFRESH_BROADCAST, RUNTIME_REFRESH_EVENT } from "../lib/runtimeRefreshEvents";
 import { STARTER_TOOL_IDS } from "../lib/planConfig";
+import { BRAND_SOCIAL_LINKS, resolveSocialLinks } from "../lib/socialLinks";
 
 const defaultNotifications: SystemNotificationsPayload = {
   enabled: false,
@@ -46,7 +47,7 @@ const defaultPayload: PublicRuntimePayload = {
     betaFeatures: {},
     featureFlags: {},
     notifications: defaultNotifications,
-    socialLinks: [],
+    socialLinks: [...BRAND_SOCIAL_LINKS],
   },
   plans: [],
   TOOLSPublic: { disabledFeatures: [], displayFreeDailyLimit: null },
@@ -89,6 +90,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         site: {
           ...raw.site,
           maintenanceMode: viteMaintenance || raw.site.maintenanceMode === true,
+          socialLinks: resolveSocialLinks(raw.site.socialLinks),
         },
         flags: {
           ...raw.flags,

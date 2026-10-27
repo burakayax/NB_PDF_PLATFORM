@@ -109,3 +109,6 @@ web/frontend/public/social/
 web/frontend/public/photo-ai/
 web/frontend/public/x-cards/
 web/frontend/public/social-x.json
+
+# Elle yükleme paketleri (videolar büyük; depoya girmez)
+sosyal medya/yayin-paketi/*/
