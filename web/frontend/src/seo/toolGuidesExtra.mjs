@@ -784,4 +784,92 @@ export const TOOL_GUIDE_EXTRA = {
       ],
     },
   },
+  "aranabilir-pdf": {
+    tr: {
+      steps: [
+        { title: "Taranmış PDF'i ya da görselleri ekleyin", x: "«Dosya Seç» ile taranmış PDF'i ya da JPG/PNG belge görsellerini seçin; birden çok görsel tek PDF'te birleşir." },
+        { title: "Dili seçin", x: "Belgenin diline göre Türkçe ve İngilizce tanımayı kullanın; ş, ğ, ı, İ gibi karakterler doğru tanınır." },
+        { title: "Metni tanıtın", x: "OCR cihazınızda çalışır ve görüntünün üzerine görünmez bir metin katmanı ekler; belgeniz internete yüklenmez." },
+        { title: "Aranabilir PDF'i indirin", x: "Sayfalar göze aynı görünür ama artık Ctrl+F ile aranabilir ve metin kopyalanabilir." },
+      ],
+      useCases: [
+        { title: "Taranmış arşivde arama", x: "Yıllarca taranmış sözleşme, fatura ve dilekçeleri açmadan tek tek bakmak yerine içinde kelime arayın." },
+        { title: "Telefonla çekilen belgeler", x: "Belge fotoğraflarını aranabilir ve kopyalanabilir tek bir PDF'e çevirin." },
+        { title: "Metni başka yere aktarma", x: "Taranmış sayfadaki bir paragrafı yeniden yazmadan seçip kopyalayın." },
+      ],
+      faq: [],
+    },
+    en: {
+      steps: [
+        { title: "Add the scanned PDF or images", x: "Choose a scanned PDF or JPG/PNG document images with «Choose file»; several images are combined into one PDF." },
+        { title: "Pick the language", x: "Use Turkish and English recognition for your document; characters such as ş, ğ, ı and İ are read correctly." },
+        { title: "Run the OCR", x: "OCR runs on your device and adds an invisible text layer over the image; your document is not uploaded." },
+        { title: "Download the searchable PDF", x: "The pages look the same, but you can now search with Ctrl+F and copy the text." },
+      ],
+      useCases: [
+        { title: "Searching a scanned archive", x: "Search for a word across years of scanned contracts, invoices and petitions instead of opening each one." },
+        { title: "Documents shot with a phone", x: "Turn document photos into one searchable, copyable PDF." },
+        { title: "Reusing text", x: "Select and copy a paragraph from a scanned page instead of retyping it." },
+      ],
+      faq: [],
+    },
+  },
+  "udf-to-pdf": {
+    tr: {
+      steps: [
+        { title: "UDF dosyasını bırakın", x: "UYAP'tan indirdiğiniz .udf dosyasını alana sürükleyin ya da «Dosya Seç» ile seçin." },
+        { title: "Dönüştürmeyi başlatın", x: "Dönüştürme tarayıcınızda yapılır; UYAP Doküman Editörü ya da Java kurmanız gerekmez." },
+        { title: "PDF'i indirin", x: "Yazı tipleri, kalın ve altı çizili metin, tablolar ve gömülü görseller PDF'e aktarılır; metin seçilebilir ve aranabilirdir." },
+      ],
+      useCases: [
+        { title: "Karar ve dilekçeyi paylaşma", x: "UDF açamayan müvekkile ya da muhasebeciye belgenin okunabilir PDF kopyasını gönderin." },
+        { title: "Telefonda UDF açma", x: "Bilgisayarınız yokken UYAP'tan inen belgeyi telefondan PDF olarak görüntüleyin." },
+        { title: "Arşivleme", x: "UDF dosyalarını her cihazda açılan PDF'e çevirerek arşivleyin; imzalı aslı ayrıca saklayın." },
+      ],
+      faq: [],
+    },
+    en: {
+      steps: [
+        { title: "Drop in the UDF file", x: "Drag the .udf file you downloaded from UYAP onto the area, or pick it with «Choose file»." },
+        { title: "Start the conversion", x: "Conversion runs in your browser; you don't need the UYAP Document Editor or Java." },
+        { title: "Download the PDF", x: "Fonts, bold and underlined text, tables and embedded images carry over; the text is selectable and searchable." },
+      ],
+      useCases: [
+        { title: "Sharing a decision or petition", x: "Send a readable PDF copy to a client or accountant who can't open UDF files." },
+        { title: "Opening a UDF on a phone", x: "View a document downloaded from UYAP as a PDF on your phone when you have no computer at hand." },
+        { title: "Archiving", x: "Convert UDF files to a PDF that opens on any device, and keep the signed original separately." },
+      ],
+      faq: [],
+    },
+  },
+  "pdf-kesit-al": {
+    tr: {
+      steps: [
+        { title: "PDF'i yükleyin", x: "Kesit almak istediğiniz PDF'i «Dosya Seç» ile açın ve sayfayı bulun." },
+        { title: "Alanı seçin", x: "Sayfada kırpmak istediğiniz bölgeyi sürükleyerek seçin; tablo, grafik, şema ya da tek bir soru olabilir." },
+        { title: "Kesiti sepete ekleyin", x: "«Kesiti Ekle» deyin; kesit seçtiğiniz çözünürlükte (1x, 2x, 3x) doğrudan belgeden çizilir. İstediğiniz kadar kesit ekleyebilirsiniz." },
+        { title: "Biçimi seçip kaydedin", x: "PDF, PNG ya da JPEG olarak kaydedin. İşlem tarayıcınızda yapılır; belgeniz yüklenmez." },
+      ],
+      useCases: [
+        { title: "Tablo ve grafik alma", x: "Raporun içindeki bir tabloyu ya da grafiği sunumunuza net bir görsel olarak alın." },
+        { title: "Sınav sorusu kırpma", x: "Soru kitabından tek bir soruyu kesip çalışma kâğıdına ekleyin." },
+        { title: "Belgenin bir bölümünü paylaşma", x: "Tüm PDF'i göndermeden yalnızca ilgili bölgeyi paylaşın." },
+      ],
+      faq: [],
+    },
+    en: {
+      steps: [
+        { title: "Upload the PDF", x: "Open the PDF with «Choose file» and go to the page you need." },
+        { title: "Select the area", x: "Drag over the region you want to crop; it can be a table, chart, diagram or a single question." },
+        { title: "Add the snip to the basket", x: "Click «Add snip»; it is rendered straight from the document at the resolution you choose (1x, 2x, 3x). Add as many snips as you like." },
+        { title: "Pick a format and save", x: "Save as PDF, PNG or JPEG. Everything runs in your browser; your document is not uploaded." },
+      ],
+      useCases: [
+        { title: "Grabbing a table or chart", x: "Pull a table or chart out of a report as a sharp image for your presentation." },
+        { title: "Cropping an exam question", x: "Cut one question out of a question book and add it to a worksheet." },
+        { title: "Sharing part of a document", x: "Share only the relevant region instead of sending the whole PDF." },
+      ],
+      faq: [],
+    },
+  },
 };

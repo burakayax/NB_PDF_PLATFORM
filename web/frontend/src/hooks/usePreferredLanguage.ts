@@ -94,6 +94,20 @@ export function detectInitialLanguage(): Language {
   return "en";
 }
 
+/**
+ * Giriş sonrası dil kuralı: dil düğmesiyle yapılan elle seçim > tarayıcı dili > hesapta kayıtlı dil.
+ * Hesaptaki değer (çoğu hesapta varsayılan "en") tarayıcı dilini EZMEZ; yalnızca tarayıcı dili
+ * Türkçe/İngilizce dışındaysa devreye girer.
+ */
+export function resolveLanguageAfterLogin(accountLanguage?: Language | null): Language {
+  const explicit = getExplicitLanguage();
+  if (explicit) return explicit;
+  const nav = (typeof navigator !== "undefined" ? navigator.language : "")?.toLowerCase() ?? "";
+  if (nav.startsWith("tr")) return "tr";
+  if (nav.startsWith("en")) return "en";
+  return accountLanguage === "tr" || accountLanguage === "en" ? accountLanguage : "en";
+}
+
 export function usePreferredLanguage() {
   const [language, setLanguageState] = useState<Language>(() => detectInitialLanguage());
 
@@ -107,11 +121,14 @@ export function usePreferredLanguage() {
     setLanguageState(next);
   };
 
+  /** Otomatik (giriş/çıkış) dil değişikliği: "elle seçim" işareti KOYMAZ. */
+  const setLanguageAuto = (next: Language) => setLanguageState(next);
+
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
   }, [language]);
 
-  return { language, setLanguage, detectInitialLanguage };
+  return { language, setLanguage, setLanguageAuto, detectInitialLanguage };
 }
 
