@@ -500,7 +500,7 @@ function CycleAwareCard({
             ⭐ {tr ? "En Popüler" : "Most Popular"}
           </span>
         ) : isPro ? (
-          <span className="relative overflow-hidden bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold px-4 py-1.5 rounded-full">
+          <span className="relative overflow-hidden bg-gradient-to-r from-amber-700 to-orange-700 text-white text-xs font-bold px-4 py-1.5 rounded-full">
             <span
               className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
               style={{ animation: "shimmer 2.5s ease-in-out infinite" }}
@@ -794,7 +794,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
           viewport={{ once: true, margin: "0px 0px 240px 0px" }}
           className="text-center mb-10"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm font-medium mb-6">
             ✦ {tr ? "Fiyatlandırma" : "Pricing"}
           </span>
           <h2
@@ -820,7 +820,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             <span className="text-xl">💰</span>
             <div className="text-left">
               <p className="text-emerald-300 font-bold text-sm">{copy.refundHeading}</p>
-              <p className="text-emerald-400/70 text-xs mt-0.5 max-w-xs">{copy.refundBody}</p>
+              <p className="text-emerald-400 text-xs mt-0.5 max-w-xs">{copy.refundBody}</p>
             </div>
           </motion.div>
         </motion.div>

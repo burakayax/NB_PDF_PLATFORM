@@ -694,7 +694,7 @@ function Hero({
 
   return (
     <section className="relative min-h-dvh flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
-      <div className="relative z-10 max-w-5xl mx-auto">
+      <div className="relative z-10 max-w-7xl mx-auto">
         {/* Badge */}
         <motion.div
           {...stagger(0)}
@@ -756,13 +756,13 @@ function Hero({
             AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
         <motion.div
           {...stagger(3)}
-          className="mt-10 mx-auto w-full max-w-4xl"
+          className="mt-10 mx-auto w-full max-w-7xl"
         >
           {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
               çipleri, ortada seçili aracın tanıtım şeridi, altında aracın kendisi.
               Eskiden 16 çip tek bir yığın hâlinde sarılıyor, araç alanı ayrı
               duruyordu; hepsi tek kartta toplandı. */}
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-2.5 shadow-[0_40px_90px_-40px_rgba(2,6,23,0.95)] backdrop-blur-xl sm:p-3.5">
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-3 shadow-[0_40px_90px_-40px_rgba(2,6,23,0.95)] backdrop-blur-xl sm:p-5">
             {/* Üst şerit: grup seçimi + (mobil) kamerayla tara */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-3">
               {/* Kategori sekmeleri — 20 araç tek ızgarada altı satır kaplıyordu.
@@ -783,7 +783,7 @@ function Hero({
                         setEditorOn(next.editor);
                         if (next.free) setFreeTool(next.free);
                       }}
-                      className={`rounded-xl px-3 py-1.5 text-[13px] font-bold transition ${
+                      className={`rounded-xl px-4 py-2 text-[15px] font-bold transition ${
                         active ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
@@ -798,7 +798,7 @@ function Hero({
                     setEditorOn(false);
                     setPageTool(null);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[13px] font-bold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[15px] font-bold transition ${
                     aiTool
                       ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-sm"
                       : "text-slate-400 hover:text-slate-200"
@@ -852,7 +852,7 @@ function Hero({
                 ) : null}
               </div>
             )}
-            <div className="grid grid-cols-3 gap-2 px-1 sm:grid-cols-5 lg:grid-cols-6">
+            <div className="grid grid-cols-3 gap-3 px-1 sm:grid-cols-5 lg:grid-cols-6">
               {!aiTool
                 ? (HERO_CATS.find((c) => c.id === heroCat) ?? HERO_CATS[0]).items.map((it) => {
                     if (it.k === "free") {
@@ -870,18 +870,18 @@ function Hero({
                             setEditorOn(false);
                             setPageTool(null);
                           }}
-                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
                             active
                               ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
                               : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
                           }`}
                         >
                           <span
-                            className={`flex h-9 w-9 items-center justify-center rounded-xl ring-1 ${A.tile} ${A.icon} transition group-hover:scale-105`}
+                            className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${A.tile} ${A.icon} transition group-hover:scale-105`}
                           >
-                            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                            <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
                           </span>
-                          <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                          <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
                             {tr ? t.tr : t.en}
                           </span>
                         </button>
@@ -898,16 +898,16 @@ function Hero({
                             setAiTool(null);
                             setPageTool(null);
                           }}
-                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
                             editorOn
                               ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
                               : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
                           }`}
                         >
-                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
-                            <Pencil className="h-[18px] w-[18px]" strokeWidth={2} />
+                          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <Pencil className="h-[22px] w-[22px]" strokeWidth={2} />
                           </span>
-                          <span className={`text-[12px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
+                          <span className={`text-[13px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
                             {tr ? EDITOR_META.tr : EDITOR_META.en}
                           </span>
                         </button>
@@ -937,16 +937,16 @@ function Hero({
                               setPageTool(it.slug);
                             }
                           }}
-                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
                             active
                               ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
                               : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
                           }`}
                         >
-                          <span className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 ring-1 ring-white/10 transition group-hover:scale-105 ${active ? "text-white" : "text-slate-200"}`}>
-                            <PageIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          <span className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 ring-1 ring-white/10 transition group-hover:scale-105 ${active ? "text-white" : "text-slate-200"}`}>
+                            <PageIcon className="h-[22px] w-[22px]" strokeWidth={2} />
                           </span>
-                          <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                          <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
                             {tr ? it.tr : it.en}
                           </span>
                         </button>
@@ -969,12 +969,12 @@ function Hero({
                               onOpenTool(it.slug as FeatureKey);
                             }
                           }}
-                          className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
+                          className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
                         >
-                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
-                            <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <MemberIcon className="h-[22px] w-[22px]" strokeWidth={2} />
                           </span>
-                          <span className="text-[12px] font-semibold leading-tight text-slate-300">
+                          <span className="text-[13px] font-semibold leading-tight text-slate-300">
                             {tr ? it.tr : it.en}
                           </span>
                         </button>
@@ -986,15 +986,15 @@ function Hero({
                         type="button"
                         onClick={onRegister}
                         title={tr ? "Ücretsiz üyelikle açılır" : "Unlocks with a free account"}
-                        className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-3.5 text-center transition hover:border-emerald-400/50 hover:bg-emerald-500/[0.12]"
+                        className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-5 text-center transition hover:border-emerald-400/50 hover:bg-emerald-500/[0.12]"
                       >
                         <span className="absolute right-1.5 top-1.5">
                           <Lock className="h-3 w-3 text-emerald-400/70" />
                         </span>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
-                          <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
+                          <MemberIcon className="h-[22px] w-[22px]" strokeWidth={2} />
                         </span>
-                        <span className="text-[12px] font-semibold leading-tight text-emerald-100/90">
+                        <span className="text-[13px] font-semibold leading-tight text-emerald-100/90">
                           {tr ? it.tr : it.en}
                         </span>
                       </button>
@@ -1012,16 +1012,16 @@ function Hero({
                           setEditorOn(false);
                           setPageTool(null);
                         }}
-                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
                           active
                             ? "border-violet-400/45 bg-violet-500/15 shadow-[0_10px_30px_-16px_rgba(139,92,246,0.7)]"
                             : "border-white/[0.07] bg-white/[0.02] hover:border-violet-400/30 hover:bg-white/[0.05]"
                         }`}
                       >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
-                          <ChipIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                          <ChipIcon className="h-[22px] w-[22px]" strokeWidth={2} />
                         </span>
-                        <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                        <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
                           {tr ? meta.tr : meta.en}
                         </span>
                       </button>
@@ -1076,8 +1076,8 @@ function Hero({
                     <HeadIcon className="h-5 w-5" strokeWidth={2} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-bold text-white">{tr ? meta.tr : meta.en}</p>
-                    <p className="truncate text-[12.5px] text-slate-400">{tr ? meta.trDesc : meta.enDesc}</p>
+                    <p className="text-[17px] font-bold text-white">{tr ? meta.tr : meta.en}</p>
+                    <p className="truncate text-[14px] text-slate-400">{tr ? meta.trDesc : meta.enDesc}</p>
                   </div>
                   {onDevice && (
                     <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[12px] font-bold text-emerald-300 sm:inline-flex">
@@ -1091,7 +1091,7 @@ function Hero({
 
           {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
-            <div className="mt-3 text-left">
+            <div className="mt-4 min-h-[320px] text-left lg:min-h-[400px]">
             {editorOn ? (
               // ToolPageContext: yukarıdaki tanıtım şeridi aracı zaten anlattığı için
               // WorkspaceUploadField'ın kendi başlığı TEKRAR çizilmesin (describesTool
@@ -1235,9 +1235,32 @@ function Hero({
             })}
           </div>
 
-          <p className="mt-5 text-center text-[13px] text-slate-400">
-            {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
-          </p>
+          {/* Vitrin notu: ilk gelen "araçlar bu kadar mı?" diye düşünmesin. Sayılar katalogdan
+              gelir (elle yazılmaz), böylece yeni araç eklenince not kendiliğinden güncellenir. */}
+          <a
+            href="#tools"
+            className="group mx-auto mt-5 flex max-w-2xl items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
+          >
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-slate-300">
+              {tr ? (
+                <>
+                  <strong className="font-bold text-white">Burada yalnızca bir bölümü var.</strong>{" "}
+                  Platformda toplam {TOOLS.length} araç bulunuyor; yukarıdakiler üyeliksiz hemen kullanabileceklerin.
+                </>
+              ) : (
+                <>
+                  <strong className="font-bold text-white">This is only part of it.</strong>{" "}
+                  The platform has {TOOLS.length} tools in total; the ones above are those you can use right away without an account.
+                </>
+              )}
+            </span>
+            <span className="flex-shrink-0 text-[13px] font-bold text-cyan-300 transition group-hover:translate-y-0.5">
+              {tr ? "Tümünü gör ↓" : "See all ↓"}
+            </span>
+          </a>
         </motion.div>
 
         {/* Belge Tarayıcı (mobil) — tam ekran, cihazda işlenir */}
