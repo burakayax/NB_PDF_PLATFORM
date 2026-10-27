@@ -12,6 +12,10 @@ const HTML = { "content-type": "text/html; charset=utf-8" };
 function render(kural: (yol: string) => Response) {
   return async (istek: Request | string) => {
     const yol = new URL(typeof istek === "string" ? istek : istek.url).pathname;
+    if (typeof istek !== "string" && istek.method === "HEAD") {
+      const r = await render(kural)(new Request(istek.url));
+      return new Response(null, { status: r.status, headers: r.headers });
+    }
     if (yol === "/index.html") return new Response(KABUK, { status: 200, headers: HTML });
     if (yol === "/404.html")
       return new Response('<html lang="tr"><meta name="robots" content="noindex">404</html>', { status: 200, headers: HTML });
@@ -39,6 +43,11 @@ describe("Cloudflare 404 Worker", () => {
     for (const yol of ["/", "/tools/merge-pdf", "/en/blog/convert-pdf-to-word", "/login", "/register", "/en/register", "/about", "/workspace/x", "/hesap/profil", "/?view=login"]) {
       expect((await iste(yol)).status, yol).toBe(200);
     }
+  });
+  it("HEAD isteği (curl -I) de aynı sonucu verir", async () => {
+    expect((await iste("/bu-sayfa-yok-xyz", render(kural), "HEAD")).status).toBe(404);
+    expect((await iste("/tools/merge-pdf", render(kural), "HEAD")).status).toBe(200);
+    expect((await iste("/login", render(kural), "HEAD")).status).toBe(200);
   });
   it("API, dosya uzantılı adres ve POST dokunulmaz", async () => {
     expect((await iste("/api/yok")).status).toBe(200);

@@ -102,8 +102,11 @@ export async function isle(request, getir = fetch) {
 
     // (b) Catch-all: gövde /index.html ile birebir aynı ve bilinen istemci rotası değil.
     if (tur.includes("text/html") && !bilinenIstemciRotasiMi(url.pathname, url.search)) {
+      // HEAD cevabında gövde yok: karşılaştırma için aynı adresi GET ile çek.
+      const govdeCevabi =
+        request.method === "HEAD" ? await getir(new Request(request.url, { method: "GET" })) : orijinal.clone();
       const [metin, kabukIcerigi] = await Promise.all([
-        orijinal.clone().text(),
+        govdeCevabi.text(),
         kabukMetni(url.origin, getir),
       ]);
       if (kabukIcerigi !== null && metin.length > 0 && metin === kabukIcerigi) {
