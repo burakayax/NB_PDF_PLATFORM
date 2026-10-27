@@ -252,6 +252,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
         ? [
             sentryVitePlugin({
               org: "nb-global-studio-cv",
+              url: "https://de.sentry.io", // AB (EU) bölgesi
               project: "nb-pdf-frontend",
               authToken: process.env.SENTRY_AUTH_TOKEN,
               release: {

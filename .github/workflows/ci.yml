@@ -537,6 +537,7 @@ jobs:
         uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_URL: https://de.sentry.io   # AB (EU) bölgesi
           SENTRY_ORG: nb-global-studio-cv
           SENTRY_PROJECT: nb-auth-api
         with:
@@ -550,6 +551,7 @@ jobs:
         uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_URL: https://de.sentry.io   # AB (EU) bölgesi
           SENTRY_ORG: nb-global-studio-cv
           SENTRY_PROJECT: nb-pdf-api
         with:
