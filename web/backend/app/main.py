@@ -30,7 +30,14 @@ if _sentry_dsn:
     from sentry_sdk.integrations.starlette import StarletteIntegration
     sentry_sdk.init(
         dsn=_sentry_dsn,
-        environment=os.getenv("ENVIRONMENT", "production"),
+        # Render'da ENVIRONMENT=production ayarlı; yerelde boşsa "development".
+        environment=os.getenv("ENVIRONMENT", "development"),
+        # CI'daki deploy kaydıyla (nb-pdf-api@<sha>) birebir eşleşmeli.
+        release=(
+            f"nb-pdf-api@{os.environ['RENDER_GIT_COMMIT']}"
+            if os.getenv("RENDER_GIT_COMMIT")
+            else None
+        ),
         traces_sample_rate=0.2,
         integrations=[StarletteIntegration(), FastApiIntegration()],
     )

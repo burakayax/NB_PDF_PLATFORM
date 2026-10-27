@@ -479,6 +479,9 @@ jobs:
     name: Deploy to Render (main, CI green)
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Adımların `if` koşulu için iş düzeyinde (adım düzeyindeki env `if` içinde görünmez).
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
     needs:
       - python-security
       - python-tests
@@ -515,3 +518,36 @@ jobs:
           trigger "pdf-api"   "$HOOK_PDF"      || rc=1
           trigger "frontend"  "$HOOK_FRONTEND" || rc=1
           exit $rc
+
+      # ─── Sentry: release + commit bağlama + "production" deploy işareti ─────────
+      # SENTRY_AUTH_TOKEN yoksa adımlar atlanır (deploy'u asla bozmaz).
+      # Frontend'in release/deploy kaydını Render build'indeki Sentry eklentisi yapar.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # commit geçmişi Sentry'ye bağlanabilsin
+
+      - name: Sentry deploy kaydı (nb-auth-api)
+        if: env.SENTRY_AUTH_TOKEN != ''
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: nb-global-studio-cv
+          SENTRY_PROJECT: nb-auth-api
+        with:
+          environment: production
+          release: nb-auth-api@${{ github.sha }}
+          ignore_missing: true
+          ignore_empty: true
+
+      - name: Sentry deploy kaydı (nb-pdf-api)
+        if: env.SENTRY_AUTH_TOKEN != ''
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: nb-global-studio-cv
+          SENTRY_PROJECT: nb-pdf-api
+        with:
+          environment: production
+          release: nb-pdf-api@${{ github.sha }}
+          ignore_missing: true
+          ignore_empty: true

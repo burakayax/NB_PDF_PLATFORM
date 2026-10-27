@@ -6,6 +6,7 @@ import JavaScriptObfuscator from "javascript-obfuscator";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 const MISSING_ENV_MSG =
   ".env dosyası bulunamadı. Lütfen SETUP.md dosyasını kontrol edin.";
@@ -225,6 +226,8 @@ export default defineConfig(({ command, mode, isPreview }) => {
   // Obfuscation removed: caused ~30% bundle size increase, broke source maps, provided zero real security
   // To opt-in to obfuscation set VITE_DISABLE_OBFUSCATION=false
   const disableObfuscation = env.VITE_DISABLE_OBFUSCATION !== "false";
+  // Render her deploy'da RENDER_GIT_COMMIT verir; yerelde "dev" kalır.
+  const sentryRelease = `nb-pdf-frontend@${process.env.RENDER_GIT_COMMIT || "dev"}`;
 
   return {
     envPrefix: ["VITE_", "NEXT_PUBLIC_"],
@@ -243,7 +246,32 @@ export default defineConfig(({ command, mode, isPreview }) => {
           ]
         : []),
       ...(isProd && !disableObfuscation ? [productionObfuscatePlugin()] : []),
+      // Sentry: kaynak haritalarını yükler, release oluşturur, "production" deploy'unu işaretler.
+      // SENTRY_AUTH_TOKEN yoksa (yerel, CI testleri) hiç çalışmaz → build'i etkilemez.
+      ...(isProd && process.env.SENTRY_AUTH_TOKEN
+        ? [
+            sentryVitePlugin({
+              org: "nb-global-studio-cv",
+              project: "nb-pdf-frontend",
+              authToken: process.env.SENTRY_AUTH_TOKEN,
+              release: {
+                name: sentryRelease,
+                setCommits: { auto: true, ignoreMissing: true, ignoreEmpty: true },
+                deploy: { env: "production" },
+              },
+              // Yüklemeden sonra .map dosyaları yayından silinir (kaynak kod ifşa olmasın).
+              sourcemaps: { filesToDeleteAfterUpload: ["./dist/**/*.map"] },
+              // Sentry'ye ulaşılamazsa site yayını bozulmasın; sadece uyarı yaz.
+              errorHandler: (err) => console.warn("[sentry] yükleme atlandı:", err.message),
+              telemetry: false,
+            }),
+          ]
+        : []),
     ],
+    define: {
+      // Tarayıcıdaki Sentry bu değeri "release" olarak kullanır (kaynak haritasıyla eşleşir).
+      "import.meta.env.VITE_SENTRY_RELEASE": JSON.stringify(sentryRelease),
+    },
     server: {
       port: 5173,
       proxy: {
