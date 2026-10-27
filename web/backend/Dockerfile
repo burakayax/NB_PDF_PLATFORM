@@ -5,7 +5,7 @@
 
 # Debian 12 (bookworm)'a sabitlendi: yeni "trixie" tabanından wkhtmltopdf
 # kaldırıldı (upstream arşivlendi). bookworm'da tüm sistem paketleri mevcut.
-FROM python:3.12-slim-bookworm
+FROM python:3.12.16-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
