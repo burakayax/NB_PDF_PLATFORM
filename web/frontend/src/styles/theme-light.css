@@ -8,6 +8,7 @@
  * kalıtımla akar, o sayfa tema düğmesinden bağımsız koyu kalır. Sayfa hazır oldukça sarmalayıcı kaldırılır.
  */
 @import "./theme-light.palette.css";
+@import "./theme-light.appcss.css";
 
 :root[data-theme="light"],
 [data-theme="light"] {
@@ -46,34 +47,30 @@
    */
   --color-white: #0f172a;
 
+  /*
+   * bg-black/30 gibi sınıflar koyu temada "iç çukur" (yazı alanı, önizleme zemini) demek. Açık temada aynı
+   * yüzde saf siyahtan çok ağır bir gri leke verir; slate-500 tonundan aynı yüzde yumuşak bir çukur verir.
+   * (Tam ekran perde için dosya sonunda istisna var.)
+   */
+  --color-black: #94a3b8;
+
+  /* Soluk gri yazı: koyu temada #8a99b0 (readability.css); açık zeminde 2,9:1 olurdu → koyulaştırılır (#f1f5f9 üzerinde 5,0:1). */
+  --color-slate-500: #586880;
+  --color-gray-500: #586880;
+  --color-gray-600: #475569;
+
   background: var(--nb-bg);
   color: var(--nb-text);
 }
 
 /*
- * Dolgulu (opak) renkli zeminler beyaz yazıyı KORUR: bu öğelerde --color-white tekrar beyaz olur ve
- * alt öğelere kalıtımla geçer. Saydam (bg-cyan-500/15) etiketlerde işlem yok, orada yazı koyulaşmalı.
+ * Elle yazılmış koyu zeminler (bg-[#0b1020] vb.): açık temada beyaz yüzey. Üstündeki "text-white"
+ * değişkenle zaten koyulaşır. Özellikle koyu kalması gereken bir yüzey (önizleme, kod bloğu) için
+ * öğeye data-theme="dark" verilir: aşağıdaki kural ona uygulanmaz ve değişkenler koyu döner.
  */
-[data-theme="light"] [class*="bg-gradient-to-"],
-[data-theme="light"] [class~="bg-cyan-500"],
-[data-theme="light"] [class~="bg-cyan-600"],
-[data-theme="light"] [class~="bg-indigo-500"],
-[data-theme="light"] [class~="bg-indigo-600"],
-[data-theme="light"] [class~="bg-blue-500"],
-[data-theme="light"] [class~="bg-blue-600"],
-[data-theme="light"] [class~="bg-emerald-500"],
-[data-theme="light"] [class~="bg-emerald-600"],
-[data-theme="light"] [class~="bg-red-500"],
-[data-theme="light"] [class~="bg-red-600"],
-[data-theme="light"] [class~="bg-rose-500"],
-[data-theme="light"] [class~="bg-rose-600"],
-[data-theme="light"] [class~="bg-violet-500"],
-[data-theme="light"] [class~="bg-violet-600"],
-[data-theme="light"] [class~="bg-purple-500"],
-[data-theme="light"] [class~="bg-purple-600"],
-[data-theme="light"] [class~="bg-sky-500"],
-[data-theme="light"] [class~="bg-sky-600"] {
-  --color-white: #ffffff;
+[data-theme="light"] [class*="bg-[#0"]:not([data-theme="dark"]),
+[data-theme="light"] [class*="bg-[#1"]:not([data-theme="dark"]) {
+  background-color: var(--nb-panel);
 }
 
 /* ── Ana sayfa / giriş sayfası hero arka planı (components/landing/HeroBackground.tsx) ───────────────
@@ -85,7 +82,45 @@
 [data-theme="light"] .hb-root .hb-anim {
   opacity: 0.3;
 }
+[data-theme="light"] .hb-root .hb-fade,
 [data-theme="light"] .hb-root .hb-particle,
 [data-theme="light"] .hb-root .hb-beam {
   display: none !important;
+}
+
+/* Açık temanın içindeki koyu bölüm: yüzey/metin değişkenleri koyu temaya döner (palet theme-light.palette.css'te). */
+[data-theme="light"] [data-theme="dark"] {
+  color-scheme: dark;
+  --nb-bg: #0f172a;
+  --nb-bg-soft: #0b1220;
+  --nb-bg-elevated: #111c2e;
+  --nb-panel: #1e293b;
+  --nb-panel-alt: #243047;
+  --nb-border: rgba(148, 163, 184, 0.14);
+  --nb-border-subtle: rgba(255, 255, 255, 0.06);
+  --nb-text: #e2e8f0;
+  --nb-muted: #94a3b8;
+  --nb-heading: #f8fafc;
+  --nb-primary: #22d3ee;
+  --nb-primary-mid: #67e8f9;
+  --nb-primary-hover: #06b6d4;
+  --nb-secondary: #818cf8;
+  --nb-secondary-hover: #6366f1;
+  --nb-accent: #a5f3fc;
+  --color-white: #ffffff;
+  --color-slate-500: #8a99b0;
+  --color-gray-500: #8a99b0;
+  --color-gray-600: #7d8ca5;
+  color: var(--nb-text);
+}
+
+/* Tam ekran perde (modal arka planı): açık temada da koyu kalmalı. */
+[data-theme="light"] [class*="fixed"][class*="inset-0"][class*="bg-black"] {
+  --color-black: #0f172a;
+}
+
+/* Sabit üst çubuk: koyu temada bg-black/20 cam; açık temada gri leke yerine beyaz buzlu cam. */
+[data-theme="light"] header[class*="bg-black"] {
+  background-color: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 23, 42, 0.08);
 }

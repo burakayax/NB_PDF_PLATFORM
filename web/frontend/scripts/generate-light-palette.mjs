@@ -29,9 +29,39 @@ for (const f of families) {
     }
   }
   // 400 (koyu zeminde parlak vurgu) açık zeminde 600 olur; 600 dolgulu düğme/gradyan zaten koyu, yerinde kalır.
-  const v600 = vars.get(`${f}-600`);
-  if (v600 && vars.has(`${f}-400`)) css += `  --color-${f}-400: ${v600};\n`;
+  // Ölçüm (açık zemin #f1f5f9 üzerinde 600'ün kontrastı): cyan/sky/emerald/teal/green/lime/amber/yellow/orange 2,7–3,7;
+  // red/rose/pink/fuchsia 4,1–4,3 → WCAG AA (4,5) altı. Bu ailelerde 400 yerine 700 verilir (≥4,5).
+  const KOYU_GEREKEN = new Set(["cyan", "sky", "emerald", "teal", "green", "lime", "amber", "yellow", "orange", "red", "rose", "pink", "fuchsia"]);
+  const kaynak = vars.get(`${f}-${KOYU_GEREKEN.has(f) ? 800 : 600}`);
+  if (kaynak && vars.has(`${f}-400`)) css += `  --color-${f}-400: ${kaynak};\n`;
+  // Parlak ailelerde renkli açık etiketlerin (bg-emerald-500/15) içindeki yazı da okunmalı: 300 → 800, 200 → 900.
+  // (Etiket zemini yazının arkasında koyulaşmış olur; 700 orada ~4,5'te kalıyordu.)
+  if (KOYU_GEREKEN.has(f)) {
+    if (vars.get(`${f}-800`)) css += `  --color-${f}-300: ${vars.get(`${f}-800`)};\n`;
+    if (vars.get(`${f}-900`)) css += `  --color-${f}-200: ${vars.get(`${f}-900`)};\n`;
+  }
 }
 css += `}\n`;
+
+// Açık temanın İÇİNDE koyu bırakılan bölüm (data-theme="dark") için: paleti Tailwind varsayılanına döndürür.
+css += `\n/* Açık tema içinde koyu kalan bölüm: palet varsayılana döner */\n`;
+// Aynı blok, OPAK renkli zemini olan öğelerde de geçerli: düğme/rozetin zemini iki temada da aynı renk,
+// dolayısıyla içindeki yazı da koyu temadaki gibi kalmalı (beyaz ya da koyu). class~= TAM sınıf adı:
+// "from-cyan-500" eşleşir; "from-cyan-500/20" (saydam) ve "from-white/[0.06]" (cam kart) eşleşmez.
+const SOLID = ["cyan", "blue", "indigo", "violet", "purple", "emerald", "rose", "red", "sky", "teal", "green", "orange", "amber"];
+const solidSel = [];
+for (const fam of SOLID) {
+  for (const sh of [400, 500, 600, 700]) {
+    solidSel.push(`[data-theme="light"] [class~="bg-${fam}-${sh}"]`, `[data-theme="light"] [class~="from-${fam}-${sh}"]`);
+  }
+}
+css += `[data-theme="light"] [data-theme="dark"],\n${solidSel.join(",\n")} {\n`;
+for (const f of families) {
+  for (const s of [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]) {
+    const v = vars.get(`${f}-${s}`);
+    if (v) css += `  --color-${f}-${s}: ${v};\n`;
+  }
+}
+css += `  --color-white: #ffffff;\n}\n`;
 writeFileSync("src/styles/theme-light.palette.css", css);
 console.log(`${families.length} renk ailesi yazıldı:`, families.join(", "));

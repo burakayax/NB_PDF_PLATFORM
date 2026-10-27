@@ -1,6 +1,7 @@
 // Web uygulamasının kök bileşeni: karşılama, kimlik, yasal sayfalar ve PDF araçları görünümlerini tek state ile yönetir.
 // Oturum, abonelik ve dosya yükleme durumunun modüller arasında paylaşılması için tek React ağacında toplanır.
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
+import { applyTheme, isLightReady, setLightReady, useThemePreference } from "./lib/theme";
 import { ACCOUNT_PANEL_PATHS, accountPanelFromPath } from "./lib/accountPaths";
 import {
   Suspense,
@@ -511,6 +512,13 @@ function App() {
   } = useCookieConsent();
   const { cms, site, TOOLSPublic, flags, runtimeHydrated } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
+  // Açık/koyu tema: tercih yalnız açık temanın hazır olduğu ekranlarda uygulanır (bkz. lib/theme.ts).
+  const [themePref] = useThemePreference();
+  useEffect(() => {
+    const ready = isLightReady(view, window.location.pathname);
+    setLightReady(ready);
+    applyTheme(themePref === "light" && ready ? "light" : "dark");
+  });
   // Oturum açık kullanıcıyı ilk açılışta landing yerine dashboard'a yönlendirme guard'ı
   // (yalnız bir kez; oturum içi ana sayfaya dönüşü bozmaz).
   const didBootRedirectRef = useRef(false);
