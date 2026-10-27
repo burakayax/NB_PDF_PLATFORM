@@ -77,6 +77,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       kvkkConsentedAt: iso(user.kvkkConsentedAt),
       distanceSalesConsentedAt: iso(user.distanceSalesConsentedAt),
       withdrawalWaivedAt: iso(user.withdrawalWaivedAt),
+      distanceSalesVersion: user.distanceSalesVersion,
       totalRefunds: user.totalRefunds,
       firstRefundedAt: iso(user.firstRefundedAt),
       lastRefundedAt: iso(user.lastRefundedAt),
@@ -108,6 +109,9 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       refundedAt: iso(p.refundedAt),
       refundReason: p.refundReason,
       iyzicoPaymentId: p.iyzicoPaymentId,
+      contractVersion: p.contractVersion,
+      distanceSalesConsentedAt: iso(p.distanceSalesConsentedAt),
+      withdrawalWaivedAt: iso(p.withdrawalWaivedAt),
     })),
     invoices: invoices.map((i) => ({
       invoiceNo: i.invoiceNo,
@@ -198,7 +202,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push(`  Kayıt anı onayları (zaman | tür | sürüm | yol | IP): ${dossier.legalAcceptances.length === 0 ? "kayıt yok (bu özellikten önce açılmış hesap)" : ""}`);
   dossier.legalAcceptances.forEach((a) => row(a.at, a.kind, a.version, a.via, a.ip));
   L.push(`  KVKK aydınlatma metni ödeme öncesi adımda gösterildi (onay değil, bilgilendirme): ${u.kvkkConsentedAt ?? "gösterilmedi (kullanıcı henüz ödeme adımına gelmemiş)"}`);
-  L.push(`  Mesafeli satış sözleşmesi onayı (ödeme öncesi adım): ${u.distanceSalesConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
+  L.push(`  Mesafeli satış sözleşmesi onayı (ödeme öncesi adım): ${u.distanceSalesConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}${u.distanceSalesVersion ? ` (metin sürümü ${u.distanceSalesVersion})` : ""}`);
   L.push(`  Cayma hakkından feragat onayı (ödeme öncesi adım): ${u.withdrawalWaivedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Toplam iade: ${u.totalRefunds}   İlk iade: ${u.firstRefundedAt ?? "-"}   Son iade: ${u.lastRefundedAt ?? "-"}`);
   L.push(`  İşlem kaydı sayısı: ${u.operationLogCount}   İndirme kaydı sayısı: ${u.downloadLogCount}   Sayaç (kota işlemleri): ${u.totalOperationsCount}${u.isAdminAccount ? "   (yönetici hesaplarında kota sayacı işlemez)" : ""}`);
@@ -214,6 +218,10 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push(`[3] ÖDEMELER (${dossier.payments.length})  — tarih | durum | plan | dönem | tutar(TL) | tamamlanma | iade | iade nedeni | iyzico no`);
   dossier.payments.forEach((p) =>
     row(p.createdAt, p.status, p.plan, p.billingCycle, p.priceTry, p.completedAt, p.refundedAt, p.refundReason, p.iyzicoPaymentId),
+  );
+  L.push("    Her ödemenin başlatıldığı andaki onay kaydı (ödeme | sözleşme metin sürümü | sözleşme onayı | cayma feragati):");
+  dossier.payments.forEach((p) =>
+    row(p.createdAt, p.contractVersion ?? "sürüm kaydı yok", p.distanceSalesConsentedAt ?? "onay kaydı yok", p.withdrawalWaivedAt ?? "feragat kaydı yok"),
   );
   L.push("");
   L.push(`[4] FATURALAR (${dossier.invoices.length})  — fatura no | durum | brüt | tarih | iade faturası`);

@@ -597,7 +597,7 @@ export function PaymentSummaryModal({
                       </button>{" "}
                       okudum, kabul ediyorum.
                       <span className="mt-1.5 block text-[11px] text-slate-400">
-                        Ön Bilgilendirme Formu ve cayma hakkı beyanınız bir önceki adımda kaydedilmiştir.
+                        Ön Bilgilendirme Formu, Mesafeli Satış Sözleşmesi ve cayma hakkı beyanınız bir önceki adımda kaydedilmiştir.
                       </span>
                     </>
                   ) : (
@@ -611,7 +611,7 @@ export function PaymentSummaryModal({
                         KVKK disclosure
                       </button>.
                       <span className="mt-1.5 block text-[11px] text-slate-400">
-                        Your Pre-Purchase Information Form and withdrawal waiver were recorded in the previous step.
+                        Your Pre-Purchase Information Form, Distance Sales Agreement and withdrawal waiver were recorded in the previous step.
                       </span>
                     </>
                   )}

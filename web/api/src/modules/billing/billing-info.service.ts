@@ -16,6 +16,8 @@ export interface BillingInfoInput {
   phone?: string;
   distanceSalesConsented: boolean;
   withdrawalWaived: boolean;
+  /** Ekranda gösterilen sözleşme/ön bilgilendirme metninin sürümü (tarih etiketi). */
+  documentVersion?: string;
 }
 
 export interface BillingInfoOutput {
@@ -84,6 +86,9 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
 
   if (input.distanceSalesConsented) {
     updateData.distanceSalesConsentedAt = now;
+    // Yalnızca güvenli biçimli bir etiket saklanır (örn. "2026-10-27").
+    const version = typeof input.documentVersion === "string" ? input.documentVersion.trim() : "";
+    updateData.distanceSalesVersion = /^[\w.\-]{1,40}$/.test(version) ? version : null;
   }
   if (input.withdrawalWaived) {
     updateData.withdrawalWaivedAt = now;

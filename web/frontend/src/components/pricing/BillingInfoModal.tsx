@@ -3,6 +3,7 @@ import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { NbPhoneInput } from "../common/NbPhoneInput";
+import { DISTANCE_SALES_DOCS_VERSION } from "../../content/legalVersion";
 import { readAccessToken } from "../../lib/accessTokenStore";
 
 interface BillingFormState {
@@ -19,6 +20,7 @@ interface BillingFormState {
   billingPostalCode: string;
   phone: string;
   onBilgilendirmeAccepted: boolean;
+  contractAccepted: boolean;
   withdrawalWaived: boolean;
 }
 
@@ -238,6 +240,7 @@ const EMPTY_FORM: BillingFormState = {
   billingPostalCode: "",
   phone: "",
   onBilgilendirmeAccepted: false,
+  contractAccepted: false,
   withdrawalWaived: false,
 };
 
@@ -296,10 +299,11 @@ async function saveBillingInfoApi(
   token: string,
   data: Omit<
     BillingFormState,
-    "onBilgilendirmeAccepted" | "withdrawalWaived"
+    "onBilgilendirmeAccepted" | "contractAccepted" | "withdrawalWaived"
   > & {
     distanceSalesConsented: boolean;
     withdrawalWaived: boolean;
+    documentVersion: string;
   },
   tr: boolean,
 ): Promise<void> {
@@ -359,6 +363,7 @@ export function BillingInfoModal({
             // tcKimlikNo sunucudan asla plaintext gelmez, kullanıcı her seferinde girer
             tcKimlikNo: "",
             onBilgilendirmeAccepted: false,
+            contractAccepted: false,
             withdrawalWaived: false,
           }));
         }
@@ -380,7 +385,7 @@ export function BillingInfoModal({
     if (!form.billingAddressLine.trim()) return false;
     if (!form.city.trim()) return false;
     if (!form.billingCountryCode) return false;
-    if (!form.onBilgilendirmeAccepted || !form.withdrawalWaived) return false;
+    if (!form.onBilgilendirmeAccepted || !form.contractAccepted || !form.withdrawalWaived) return false;
     if (isTurkish && form.invoiceType === "corporate") {
       if (
         !form.companyName.trim() ||
@@ -428,8 +433,10 @@ export function BillingInfoModal({
           billingCountryCode: form.billingCountryCode,
           billingPostalCode: form.billingPostalCode,
           phone: form.phone,
-          distanceSalesConsented: form.onBilgilendirmeAccepted,
+          // Hem ön bilgilendirme hem sözleşme ayrı ayrı onaylanmadan kayıt oluşmaz.
+          distanceSalesConsented: form.onBilgilendirmeAccepted && form.contractAccepted,
           withdrawalWaived: form.withdrawalWaived,
+          documentVersion: DISTANCE_SALES_DOCS_VERSION,
         },
         tr,
       );
@@ -786,8 +793,8 @@ export function BillingInfoModal({
                       : "⚠ Legal Withdrawal Notice"}
                   </p>
                   {tr
-                    ? "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca, dijital içerik ve abonelik hizmetlerinde ifaya başlandıktan sonra cayma hakkı kullanılamaz."
-                    : "Under Distance Contracts Regulation Art. 15/1-ğ, the right of withdrawal cannot be exercised once performance of a digital content or subscription service has begun."}
+                    ? "Mesafeli Sözleşmeler Yönetmeliği uyarınca 14 gün içinde cayma hakkınız vardır. Ancak abonelik hizmeti ödemeyle birlikte hemen başladığı için, elektronik ortamda anında ifa edilen hizmetler ile onayınızla ifasına başlanan hizmetlerde cayma hakkı kullanılamaz (Yönetmelik madde 15/1-ğ ve 15/1-h). Aşağıdaki onayı vererek bu durumu kabul etmiş olursunuz."
+                    : "Under the Distance Contracts Regulation you have a 14-day right of withdrawal. However, because the subscription starts immediately upon payment, the right cannot be exercised for services performed instantly in electronic form or services started with your consent (Regulation Art. 15/1-ğ and 15/1-h). By giving the approval below you accept this."}
                 </div>
 
                 {/* Blok B: Gönüllü iade garantisi (bilgi) */}
@@ -839,6 +846,50 @@ export function BillingInfoModal({
                           className="text-nb-accent underline underline-offset-2"
                         >
                           Pre-Purchase Information Form
+                        </a>
+                        . <span className="text-red-400">*</span>
+                      </>
+                    )}
+                  </span>
+                </label>
+
+                {/* Mesafeli Satış Sözleşmesi — ön bilgilendirmeden AYRI onay (Yönetmelik: sözleşme ayrıca onaya sunulur) */}
+                <label className="flex cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                    checked={form.contractAccepted}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        contractAccepted: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span>
+                    {tr ? (
+                      <>
+                        <a
+                          href="/legal/mesafeli-satis"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-nb-accent underline underline-offset-2"
+                        >
+                          Mesafeli Satış Sözleşmesi
+                        </a>
+                        'ni okudum ve onaylıyorum.{" "}
+                        <span className="text-red-400">*</span>
+                      </>
+                    ) : (
+                      <>
+                        I have read and accept the{" "}
+                        <a
+                          href="/legal/mesafeli-satis"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-nb-accent underline underline-offset-2"
+                        >
+                          Distance Sales Agreement
                         </a>
                         . <span className="text-red-400">*</span>
                       </>
