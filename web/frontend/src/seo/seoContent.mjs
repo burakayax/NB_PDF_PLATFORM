@@ -217,11 +217,11 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Snip PDF to Image — crop any area of a page, free",
-      "Select any area of a PDF page and save it as PDF, PNG or JPEG. Grab a table, chart or diagram — your document never leaves your device.",
+      "How to Crop a PDF — Snip Any Area to PDF or Image",
+      "Learn how to crop a PDF: select any area of a page and save it as PDF, PNG or JPEG. Free — your document never leaves your device.",
       "Snip PDF to Image",
       "Export any region of a PDF page as a high-resolution image: a table, chart, diagram, logo or a single question. Unlike a screenshot, the snip is rendered straight from the document at the resolution you choose (1x/2x/3x), so it is far sharper. Your snips collect in a basket and you can reorder them. You pick the format when you save: PDF (the default) collects them into one document — either a print-ready A4 worksheet with the snips laid out in order (one or two columns), or one snip per page. Choose PNG or JPEG instead and the snips download as images, in a ZIP when there is more than one. Everything runs in your browser; your document is never uploaded, and no signup or installation is needed.",
-      ["snip pdf", "crop image from pdf", "extract part of pdf as image", "save pdf table as image", "pdf screenshot tool", "crop pdf region", "pdf to png region"],
+      ["how to crop a pdf", "crop pdf online", "snip pdf", "crop image from pdf", "extract part of pdf as image", "save pdf table as image", "pdf screenshot tool", "crop pdf region", "pdf to png region"],
       [
         { q: "How do I snip an area from a PDF?", a: "Upload your PDF, drag to select the area you want on the page, and click 'Add snip'. The snip is captured as a high-resolution image and added to your basket, ready to download one by one or all at once." },
         { q: "How is this different from a screenshot?", a: "A screenshot is limited to your screen resolution. A snip is rendered straight from the PDF at the resolution you pick (2x or 3x), so text and lines stay sharp enough to print." },
@@ -265,8 +265,8 @@ export const TOOL_SEO = {
 
   "split-pdf": {
     tr: T(
-      "PDF Ayırma ve Bölme — sayfaları online ayırın",
-      "PDF ayırma ve PDF bölme: sayfaları ayrı dosyalara veya özel aralıklara bölün, istediğiniz sayfaları çıkarın — tarayıcıda ücretsiz.",
+      "PDF Ayırma — PDF Sayfalarını Ayır ve Böl (Online)",
+      "PDF ayırma aracıyla PDF'i sayfalarına ayırın, aralıklara bölün ya da istediğiniz sayfaları çıkarın — tarayıcıda, ücretsiz.",
       "PDF Ayırma ve Bölme",
       "Bir PDF'i sayfa sayfa ayırın veya özel sayfa aralıkları seçerek bölün. İhtiyacınız olan sayfaları çıkarın, tek veya çoklu dosya olarak indirin.",
       ["pdf ayırma", "pdf bölme", "pdf sayfa ayırma", "pdf split", "pdf'ten sayfa çıkarma", "pdf boyuta göre bölme", "pdf her n sayfada böl", "pdf yer imine göre bölme"],
@@ -736,8 +736,8 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Searchable PDF — Make a PDF Searchable with OCR",
-      "Turn scanned PDFs or images into searchable PDFs with OCR. Search text with Ctrl+F and copy it — Turkish supported, on your device.",
+      "Searchable PDF — Make a Scanned PDF Searchable (Free OCR)",
+      "Make a searchable PDF from scans or images with OCR. Search with Ctrl+F and copy the text — Turkish and English supported, on your device.",
       "Create a Searchable PDF with OCR",
       "A scanned PDF or a document photo is really an image; you can't search inside it. This tool recognizes the text with OCR and adds an invisible text layer over the image — the document looks the same but is now searchable with Ctrl+F and copyable. Turkish + English are supported and processing happens on your device.",
       ["searchable pdf", "ocr pdf", "make pdf searchable", "pdf ocr online", "scanned pdf to searchable", "pdf text recognition", "convert scan to searchable pdf"],
@@ -1056,8 +1056,8 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Flip PDF — mirror horizontally or vertically",
-      "Flip PDF pages like a mirror, horizontally or vertically. Optionally flip only specific pages — online.",
+      "Flip PDF Online — Mirror Pages Horizontally or Vertically",
+      "Flip PDF pages online like a mirror, horizontally or vertically — all pages or only the ones you pick. Fast, free and simple.",
       "Flip PDF Pages (Mirror)",
       "Flip PDF pages left-to-right (horizontal) or upside-down (vertical). Use it to fix pages scanned the wrong way or to prepare mirror prints.",
       ["flip pdf", "mirror pdf", "flip pdf pages", "reverse pdf horizontally"],
@@ -1306,8 +1306,8 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Sign PDF — Add Your Signature Online (No Sign-up, On-device)",
-      "Add an electronic signature to a PDF: draw, type or upload it and place it anywhere. Your signature never leaves your device — free, no sign-up.",
+      "Sign PDF Online — Sign Documents Free, No Sign-up",
+      "Sign documents online: add an electronic signature to any PDF — draw, type or upload it. Free, no sign-up, and your file stays on your device.",
       "Add a Signature to PDF — On Your Device, Private",
       "Sign contracts, forms and documents in seconds. Draw your signature with the mouse/finger, type your name in a handwriting font, or upload a signature image; then drag and resize it anywhere on the PDF page. Everything happens in your browser (on your device) — your file and signature are NEVER uploaded. Download the signed PDF.",
       ["sign pdf", "add signature to pdf", "online pdf signing", "electronic signature pdf", "esign pdf", "sign document online", "free pdf signature"],
@@ -1846,7 +1846,7 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "UDF to PDF — Convert UYAP Documents Free",
+      "UDF to PDF — Convert UYAP UDF Files Free",
       "Convert the .udf files you downloaded from UYAP into PDF. No software to install, no signup, free — your document never leaves your browser.",
       "Convert UDF to PDF",
       "UDF is the document format of UYAP, Turkey's national judiciary information system: petitions, writs and court decisions are downloaded with this extension. Normally you need to install the UYAP Document Editor to open one. Here you drop the file in and get a PDF, keeping fonts, bold and underlined text, tables and embedded images. Everything runs in your browser — the document is NEVER uploaded. You can also download the plain text as a .txt file.",
