@@ -226,10 +226,6 @@ services:
     autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     runtime: static
     rootDir: web/frontend
-    # Derleme ortamı da yamalı Node ile çalışsın (çalışma zamanı yok, yalnız build).
-    envVars:
-      - key: NODE_VERSION
-        value: "24.22.1"
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     # SPA fallback: tüm yollar index.html'e döner (React Router için)
@@ -604,6 +600,9 @@ services:
         name: Cache-Control
         value: "public, max-age=3600"
     envVars:
+      # Derleme ortamı da yamalı Node ile çalışsın (çalışma zamanı yok, yalnız build).
+      - key: NODE_VERSION
+        value: "24.22.1"
       - key: VITE_API_BASE
         sync: false   # PDF API kökü, örn. https://nb-pdf-api.onrender.com
       # ÜRETİMDE GEREKEN auth API kökü — SPA login/ödeme/bakım bunu kullanır.
