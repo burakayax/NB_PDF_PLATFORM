@@ -557,6 +557,10 @@ export async function createPaymentCheckoutSession(params: {
       seatsOnly: params.seatsOnly ?? false,
       bonusAiCredits: params.topupCredits ?? null,
       cvPassHours: params.cvPassHours ?? null,
+      // Ödeme anındaki onay kopyası: sonradan kullanıcı kaydı değişse de bu işlemin kanıtı kalır.
+      contractVersion: user.distanceSalesVersion ?? null,
+      distanceSalesConsentedAt: user.distanceSalesConsentedAt ?? null,
+      withdrawalWaivedAt: user.withdrawalWaivedAt ?? null,
     },
   });
 

@@ -208,6 +208,8 @@ model User {
   marketingUnsubscribedAt DateTime? @map("marketing_unsubscribed_at")
   distanceSalesConsentedAt DateTime? @map("distance_sales_consented_at")
   withdrawalWaivedAt  DateTime? @map("withdrawal_waived_at")
+  // Onay verilen sözleşme/ön bilgilendirme metin sürümü (itiraz halinde "hangi metni onayladı" kanıtı).
+  distanceSalesVersion String? @map("distance_sales_version")
   // Hesap açılırken yürürlükte olan Hizmet Şartları/Gizlilik sürümü ve kabul zamanı (kayıt anı).
   termsAcceptedAt     DateTime? @map("terms_accepted_at")
   termsVersion        String?   @map("terms_version")
@@ -332,6 +334,10 @@ model PaymentCheckout {
   bonusAiCredits              Int?      @map("bonus_ai_credits")
   // CV Geçişi satın alması (saat). Doluysa plan aktive edilmez, User.cvPassUntil uzatılır.
   cvPassHours                 Int?      @map("cv_pass_hours")
+  // Ödeme başlatıldığı andaki sözleşme onayı kopyası (Mesafeli Sözleşmeler Yönetmeliği m.5/6: ispat yükü satıcıda).
+  contractVersion             String?   @map("contract_version")
+  distanceSalesConsentedAt    DateTime? @map("distance_sales_consented_at")
+  withdrawalWaivedAt          DateTime? @map("withdrawal_waived_at")
   createdAt        DateTime  @default(now())
   completedAt      DateTime?
   refundedAt       DateTime? @map("refunded_at")

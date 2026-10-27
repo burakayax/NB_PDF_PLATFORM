@@ -111,6 +111,9 @@ function isValidTckn(tckn: string): boolean {
   return d10 === d[9] && (d[0]+d[1]+d[2]+d[3]+d[4]+d[5]+d[6]+d[7]+d[8]+d[9]) % 10 === d[10];
 }
 
+/** Onayın ödeme başlatmaya kadar geçerli sayıldığı süre (fatura adımı ödemenin hemen öncesindedir). */
+const PAYMENT_CONSENT_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+
 export async function initializePaymentsController(request: Request, response: Response): Promise<void> {
   const userId = request.authUser?.id;
   if (!userId) {
@@ -123,6 +126,22 @@ export async function initializePaymentsController(request: Request, response: R
   }
 
   const { planId, billingCycle, couponCode, extraSeats, seatsOnly, applyExitIntentDiscount } = parsed.data;
+
+  // Mesafeli Sözleşmeler Yönetmeliği m.7/1: ön bilgilerin edinildiği teyit edilmeden sözleşme
+  // kurulmuş sayılmaz. Ekrandaki kontrol atlatılabildiği için onay kaydı SUNUCUDA da aranır.
+  const consent = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { distanceSalesConsentedAt: true, withdrawalWaivedAt: true },
+  });
+  const consentAgeMs = consent?.distanceSalesConsentedAt
+    ? Date.now() - consent.distanceSalesConsentedAt.getTime()
+    : Number.POSITIVE_INFINITY;
+  if (!consent?.withdrawalWaivedAt || consentAgeMs > PAYMENT_CONSENT_MAX_AGE_MS) {
+    throw new HttpError(
+      403,
+      "Ödemeden önce Ön Bilgilendirme Formu, Mesafeli Satış Sözleşmesi ve cayma hakkı onaylarının verilmesi gerekir. Lütfen fatura bilgileri adımını tamamlayın.",
+    );
+  }
   const rawCurrency = parsed.data.currency;
   // EUR: iyzico USD fiyat bandıyla işler; kullanıcıya fiyat ekranda EUR olarak gösterilir
   // ama ödeme teknik olarak USD üzerinden gerçekleşir. Bu durum checkout sayfasında
