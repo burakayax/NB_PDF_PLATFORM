@@ -18,7 +18,9 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { legalDocuments } from "../src/content/legalContent.mjs";
+import { aboutCopy } from "../src/content/aboutContent.mjs";
 import {
+  ABOUT_SEO,
   BRAND,
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_WIDTH,
@@ -105,6 +107,7 @@ const UI = {
       ["/pricing", "Fiyatlandırma ve Planlar"],
       ["/pdf-api", "PDF ve Yapay Zekâ API"],
       ["/pdf-api/docs", "API Dokümantasyonu"],
+      ["/about", "Hakkımızda"],
       ["/terms", "Hizmet Şartları"],
       ["/privacy", "Gizlilik Politikası"],
       ["/kvkk", "KVKK Aydınlatma Metni"],
@@ -159,6 +162,7 @@ const UI = {
       ["/pricing", "Pricing and Plans"],
       ["/pdf-api", "PDF & AI API"],
       ["/pdf-api/docs", "API Documentation"],
+      ["/about", "About"],
       ["/terms", "Terms of Service"],
       ["/privacy", "Privacy Policy"],
       ["/kvkk", "KVKK Notice"],
@@ -357,6 +361,10 @@ function pageMetaForRoute(routePath, lang) {
   if (routePath === "/pricing") {
     const c = PRICING_SEO[lang];
     return { ...c, kind: "pricing", index: true, follow: true, includePricing: true, includeFaq: true };
+  }
+
+  if (routePath === "/about") {
+    return { ...ABOUT_SEO[lang], kind: "about", index: true, follow: true };
   }
 
   if (routePath === "/pdf-api") {
@@ -689,6 +697,7 @@ function breadcrumbTrail(meta, lang) {
     case "blogindex":
       return [kok, { name: blogAdi, url: null }];
     case "pricing":
+    case "about":
       return [kok, { name: meta.h1, url: null }];
     case "apilanding":
       return [kok, { name: apiAdi, url: null }];
@@ -845,6 +854,23 @@ function renderVisibleBody(baseUrl, meta, lang) {
           `${bolumler}</article>`,
       );
     }
+  }
+
+  // Hakkımızda — TAM metin (React sayfasıyla aynı kaynak: aboutContent.mjs).
+  if (meta.kind === "about") {
+    const a = aboutCopy[lang];
+    const liste = (ogeler) =>
+      `<ul>${ogeler.map((o) => `<li><strong>${escapeHtml(o.name || o.label)}</strong> ${escapeHtml(o.description || o.text)}</li>`).join("")}</ul>`;
+    parts.push(
+      `<article class="seo-about">` +
+        `<section><h2>${escapeHtml(a.story.title)}</h2>${a.story.paragraphs.map((x) => `<p>${escapeHtml(x)}</p>`).join("")}</section>` +
+        `<section><h2>${escapeHtml(a.purpose.title)}</h2>${liste(a.purpose.items)}</section>` +
+        `<section><h2>${escapeHtml(a.principles.title)}</h2>${liste(a.principles.items)}</section>` +
+        `<section><h2>${escapeHtml(a.offer.title)}</h2>${liste(a.offer.items)}</section>` +
+        `<section><h2>${escapeHtml(a.contact.title)}</h2><p>${escapeHtml(a.contact.description)} ${escapeHtml(a.contact.email)}</p>` +
+        `<p>${escapeHtml(a.contact.legalLead)} ${a.contact.links.map((l) => `<a href="${href(l.href, lang)}">${escapeHtml(l.label)}</a>`).join(" · ")}</p></section>` +
+        `</article>`,
+    );
   }
 
   // SSS bölümü (görünür) — FAQPage schema ile birebir aynı metin
@@ -1030,6 +1056,7 @@ Sitemap: ${base}/sitemap.xml
 const LOGICAL_ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/pricing", changefreq: "weekly", priority: "0.8" },
+  { path: "/about", changefreq: "monthly", priority: "0.5" },
   { path: "/terms", changefreq: "monthly", priority: "0.4" },
   { path: "/privacy", changefreq: "monthly", priority: "0.4" },
   { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
@@ -1084,6 +1111,7 @@ writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
 const prerenderRoutes = [
   "/",
   "/pricing",
+  "/about",
   "/terms",
   "/privacy",
   "/kvkk",
@@ -1168,7 +1196,7 @@ function pruneOrphanPrerenders(dir) {
     }
   }
 }
-for (const sub of ["en", "blog", "tools", "pricing", "terms", "privacy", "kvkk", "pdf-api"]) {
+for (const sub of ["en", "blog", "tools", "pricing", "about", "terms", "privacy", "kvkk", "pdf-api"]) {
   pruneOrphanPrerenders(join(publicDir, sub));
 }
 

@@ -2325,3 +2325,25 @@ export function getRelatedToolLinks(slug, language = "tr") {
 export function getGuideSlugsForTool(slug) {
   return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(slug));
 }
+
+// ─── Hakkımızda ──────────────────────────────────────────────────────────────
+// Gövde metni src/content/aboutContent.mjs'ten gelir (React sayfasıyla aynı kaynak);
+// burada yalnızca başlık / açıklama / H1 / giriş vardır.
+export const ABOUT_SEO = {
+  tr: {
+    title: markaEkle(`Hakkımızda: Misyon ve Çalışma İlkelerimiz`),
+    description: "PDF Platform kim tarafından, neden geliştiriliyor? Dosyaların cihazda kalması, yapay zekânın yalnızca seçildiğinde çalışması ve filigransız sonuçlar: çalışma ilkelerimiz.",
+    h1: "Hakkımızda",
+    intro: "Belgeleriniz üzerinde çalışmak hızlı, anlaşılır ve güvenli olmalı. PDF Platform'u bunun için geliştiriyoruz.",
+    keywords: [],
+    faq: [],
+  },
+  en: {
+    title: markaEkle(`About Us: Our Mission and How We Work`),
+    description: "Who builds PDF Platform and why? Files that stay on your device, AI that only runs when you choose it, and results without watermarks: how we work.",
+    h1: "About",
+    intro: "Working on your documents should be fast, clear and safe. That is why we build PDF Platform.",
+    keywords: [],
+    faq: [],
+  },
+};

@@ -30,6 +30,8 @@ function render(kural: (yol: string) => Response): (istek: Request | string) => 
   return getir;
 }
 const kural = (yol: string) => {
+  if (yol === "/about/index.html" || yol === "/en/about/index.html")
+    return new Response('<html lang="x"><title>Hakkımızda</title><h1>Hakkımızda</h1></html>', { status: 200, headers: HTML });
   if (yol === "/tools/merge-pdf" || yol === "/en/blog/convert-pdf-to-word") return new Response(ANA, { status: 200, headers: HTML });
   if (yol.startsWith("/en/blog/")) return new Response(null, { status: 200, headers: { "content-length": "0" } });
   return new Response(KABUK, { status: 200, headers: HTML }); // catch-all
@@ -66,9 +68,12 @@ describe("Cloudflare 404 Worker", () => {
     expect(rm).toContain('hreflang="tr" href="https://www.pdfplatform.app/register"');
     const ab = await iste("/about");
     const am = await ab.text();
+    expect(ab.status).toBe(200);
     expect(ab.headers.get("x-robots-tag")).toBeNull();
-    expect(am).toContain('rel="canonical" href="https://www.pdfplatform.app/about"');
-    expect(am).toContain('content="index, follow"');
+    expect(am).toContain("<h1>Hakkımızda</h1>"); // prerender dosyası sunulur
+    expect((await (await iste("/en/about")).text())).toContain("<h1>Hakkımızda</h1>");
+    const ct = await iste("/contact");
+    expect(ct.headers.get("x-robots-tag")).toContain("noindex");
     const head = await iste("/register", render(kural), "HEAD");
     expect(head.status).toBe(200);
     expect(head.headers.get("x-robots-tag")).toContain("noindex");

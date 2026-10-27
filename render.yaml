@@ -461,6 +461,9 @@ services:
         source: "/pricing"
         destination: "/pricing/index.html"
       - type: rewrite
+        source: "/about"
+        destination: "/about/index.html"
+      - type: rewrite
         source: "/terms"
         destination: "/terms/index.html"
       - type: rewrite
@@ -482,6 +485,9 @@ services:
       - type: rewrite
         source: "/en/pricing"
         destination: "/en/pricing/index.html"
+      - type: rewrite
+        source: "/en/about"
+        destination: "/en/about/index.html"
       - type: rewrite
         source: "/en/terms"
         destination: "/en/terms/index.html"
