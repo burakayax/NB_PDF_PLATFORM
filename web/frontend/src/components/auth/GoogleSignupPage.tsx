@@ -23,7 +23,9 @@ export function GoogleSignupPage() {
         /* adres temizlenemezse akış bozulmasın */
       }
     }
-    setToken(t);
+    // Geliştirmede React.StrictMode efekti iki kez çalıştırır: ikinci çalışmada jeton adresten
+    // zaten silinmiş olur ve null ile ezmek geçerli jetonu kaybettirirdi (yalnız yerelde görülür).
+    if (t) setToken(t);
   }, []);
 
   const ok = terms && notice;

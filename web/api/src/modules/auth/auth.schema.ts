@@ -28,6 +28,8 @@ export const strongNewPasswordField = z
 export const authCredentialsSchema = z.object({
   email: emailField,
   password: passwordField,
+  /** "Beni hatırla": true → 30 gün, false → tarayıcı kapanınca biter, verilmezse eski davranış (web dışı istemciler). */
+  rememberMe: z.boolean().optional(),
 });
 
 const firstNameField = z

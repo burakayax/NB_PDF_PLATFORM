@@ -200,8 +200,10 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   return response;
 }
 
-export async function loginAuthUser(email: string, password: string, isAdmin = false) {
-  const payload: Record<string, string> = { email: email.trim().toLowerCase(), password };
+export async function loginAuthUser(email: string, password: string, isAdmin = false, rememberMe?: boolean) {
+  const payload: Record<string, string | boolean> = { email: email.trim().toLowerCase(), password };
+  // "Beni hatırla": yalnız normal girişte gönderilir; verilmezse sunucu eski davranışı uygular.
+  if (!isAdmin && typeof rememberMe === "boolean") payload.rememberMe = rememberMe;
   // Bot doğrulaması istendiyse (Turnstile) tek kullanımlık jeton isteğe eklenir.
   const captcha = takeCaptchaToken();
   if (captcha) payload.turnstileToken = captcha;

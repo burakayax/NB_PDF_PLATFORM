@@ -118,7 +118,7 @@ function cookieDomainForApiHost(): string | undefined {
   }
 }
 
-function getCookieOptions(): CookieOptions {
+function getCookieOptions(session?: { persistent: boolean; expiresAt: Date }): CookieOptions {
   const crossSiteSplit = hostsDifferentProduction();
   const opts: CookieOptions = {
     httpOnly: true,
@@ -127,6 +127,15 @@ function getCookieOptions(): CookieOptions {
     sameSite: crossSiteSplit ? "none" : "lax",
     maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
   };
+  if (session) {
+    // "Beni hatırla": işaretsizse maxAge YOK → tarayıcı kapanınca çerez silinir;
+    // işaretliyse çerez, sunucudaki kayıtla AYNI anda biter.
+    if (session.persistent) {
+      opts.maxAge = Math.max(0, session.expiresAt.getTime() - Date.now());
+    } else {
+      delete opts.maxAge;
+    }
+  }
   const domain = cookieDomainForApiHost();
   if (domain) {
     opts.domain = domain;
@@ -250,7 +259,7 @@ function writeSession(response: Response, session: AuthSessionResult) {
   response.cookie(
     REFRESH_COOKIE_NAME,
     session.refreshToken,
-    getCookieOptions(),
+    getCookieOptions(session.cookie),
   );
   response.json({
     accessToken: session.accessToken,
@@ -979,7 +988,7 @@ export async function googleOAuthCallbackController(
     response.cookie(
       REFRESH_COOKIE_NAME,
       session.refreshToken,
-      getCookieOptions(),
+      getCookieOptions(session.cookie),
     );
     authLog.info("GET /auth/google/callback: session issued", {
       userId: session.user.id,
@@ -1215,6 +1224,6 @@ export async function googleSignupCompleteController(request: Request, response:
       userAgent: ctx.userAgent,
     });
   }
-  response.cookie(REFRESH_COOKIE_NAME, session.refreshToken, getCookieOptions());
+  response.cookie(REFRESH_COOKIE_NAME, session.refreshToken, getCookieOptions(session.cookie));
   response.status(200).json({ accessToken: session.accessToken });
 }

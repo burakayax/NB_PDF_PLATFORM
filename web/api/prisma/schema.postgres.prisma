@@ -419,6 +419,11 @@ model RefreshToken {
   // açmak yerine bu bağ izlenip aynı yeni anahtar tekrar verilir. Çıkış / uzaktan
   // kapatma / cihaz sınırı iptallerinde BOŞ kalır → onlar kesin kapanır.
   replacedById String?  @map("replaced_by_id")
+  // "Beni hatırla" politikası. persistent=false → tarayıcı kapanınca biten oturum çerezi.
+  // absoluteExpiresAt dolu → yenilemeyle UZAMAYAN mutlak son (NIST: en çok 30 gün).
+  // Boşsa eski davranış: her yenilemede REFRESH_TOKEN_TTL_DAYS kadar uzar.
+  persistent        Boolean   @default(true)
+  absoluteExpiresAt DateTime? @map("absolute_expires_at")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

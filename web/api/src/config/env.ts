@@ -75,6 +75,10 @@ const rawEnvSchema = z
     EDITOR_FREE_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(2),
     ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(15),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  /** "Beni hatırla" işaretliyse oturumun MUTLAK ömrü (gün). NIST 800-63B tavanı 30. */
+  REMEMBER_ME_TTL_DAYS: z.coerce.number().int().positive().max(30).default(30),
+  /** "Beni hatırla" işaretli DEĞİLse oturum bu kadar saat işlemsiz kalırsa kapanır. */
+  SESSION_IDLE_HOURS: z.coerce.number().int().positive().default(24),
     DESKTOP_ACCESS_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(4),
     EMAIL_VERIFICATION_TTL_HOURS: z.coerce
       .number()

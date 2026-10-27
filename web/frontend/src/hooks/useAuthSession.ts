@@ -216,8 +216,8 @@ export function useAuthSession() {
   }, [clearSession, persistSession, restoreSession]);
 
   const login = useCallback(
-    async (email: string, password: string, isAdmin = false) => {
-      const session = await loginAuthUser(email, password, isAdmin);
+    async (email: string, password: string, isAdmin = false, rememberMe?: boolean) => {
+      const session = await loginAuthUser(email, password, isAdmin, rememberMe);
       persistSession(session.accessToken, session.user);
       return session.user;
     },
