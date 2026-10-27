@@ -2777,102 +2777,6 @@ textarea {
   font-size: 13px;
 }
 
-.footer-bar {
-  width: 100%;
-  padding: 0 16px;
-  margin: 22px 0 0;
-  min-height: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--nb-radius-lg);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
-    rgba(30, 41, 59, 0.82);
-  backdrop-filter: blur(14px) saturate(1.1);
-  -webkit-backdrop-filter: blur(14px) saturate(1.1);
-  color: var(--nb-muted);
-  font-size: 13px;
-  box-shadow:
-    0 16px 40px -16px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition:
-    border-color var(--nb-transition-premium),
-    box-shadow var(--nb-transition-premium);
-}
-
-@media (min-width: 768px) {
-  .footer-bar {
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 0 20px;
-    min-height: 48px;
-  }
-}
-
-.footer-bar__right {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-@media (min-width: 768px) {
-  .footer-bar__right {
-    justify-content: flex-end;
-    gap: 12px;
-  }
-}
-
-.footer-bar__right a,
-.footer-bar__right button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 80px;
-  min-height: 28px;
-  padding: 0 10px;
-  font-size: 12px;
-  border-radius: var(--nb-radius-sm);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--nb-text);
-  text-decoration: none;
-  border: 0;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-
-/* Telefonda altbilgi bağlantıları 2×2 ızgara: alt alta dizilince ekranın dibinde yer kaplıyordu. */
-@media (max-width: 767px) {
-  .footer-bar { padding: 12px 16px; }
-  .footer-bar__right { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 8px; }
-  .footer-bar__right > span { grid-column: 1 / -1; text-align: center; }
-  .footer-bar__right a, .footer-bar__right button { min-height: 40px; min-width: 0; }
-}
-
-.footer-bar__right a:hover,
-.footer-bar__right button:hover {
-  background: rgba(34, 211, 238, 0.2);
-  color: var(--nb-accent);
-}
-
-@media (min-width: 768px) {
-  .footer-bar__right a,
-  .footer-bar__right button {
-    min-width: 92px;
-    min-height: 30px;
-    padding: 0 12px;
-    font-size: 13px;
-  }
-}
-
 /* ---------------------------------------------------------------------------
  * Toasts — Sonner / Vercel style: neutral elevated surface, leading type icon,
  * title + detail, a quiet close button, and an auto-dismiss progress line.
@@ -4425,29 +4329,6 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  @media (max-width: 640px) {
-    .footer-bar {
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-    }
-
-    .footer-bar__right {
-      flex-direction: column;
-      width: 100%;
-      align-items: center;
-    }
-
-    .footer-bar__right a,
-    .footer-bar__right button {
-      width: 100%;
-      min-width: unset;
-      font-size: 11px;
-      min-height: 36px;
-    }
-  }
-
   .subscription-stats,
   .subscription-plan-grid {
     grid-template-columns: 1fr;
@@ -4469,14 +4350,12 @@ textarea {
   }
 
   .progress-panel__top,
-  .progress-panel__meta,
-  .footer-bar {
+  .progress-panel__meta {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .file-picker-row,
-  .footer-bar__right {
+  .file-picker-row {
     max-width: none;
   }
 }
@@ -4741,8 +4620,7 @@ html[data-auth-hide="1"] #root {
 /* Dokunmatik cihazlarda alt bilgi bağlantıları en az 44px yüksekliğinde dokunma alanı alsın. */
 @media (pointer: coarse) {
   footer a,
-  footer button,
-  .footer-bar button {
+  footer button {
     min-height: 44px;
     display: inline-flex;
     align-items: center;

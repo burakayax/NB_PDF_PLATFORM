@@ -64,7 +64,8 @@ export function SiteFooter({ language }: { language: Language }) {
   ];
 
   return (
-    <footer className="border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
+    <footer className="relative border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
       <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8 sm:py-14">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-12">
           {/* Brand */}
@@ -133,8 +134,11 @@ export function SiteFooter({ language }: { language: Language }) {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/[0.05] pt-6 text-[12px] text-gray-400">
-          © {new Date().getFullYear()} PDF Platform. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
+        <div className="mt-10 flex flex-col items-center gap-2 border-t border-white/[0.06] pt-6 text-center text-[12px] text-gray-400 sm:flex-row sm:justify-between sm:text-left">
+          <p>
+            © {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
+          </p>
+          <p>{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
         </div>
       </div>
     </footer>

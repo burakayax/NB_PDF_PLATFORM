@@ -10,6 +10,7 @@ import {
 } from "../../seo/seoContent.mjs";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolScore } from "../common/ToolScore";
+import { SiteFooter } from "../common/SiteFooter";
 
 type Props = {
   slug: string;
@@ -97,18 +98,18 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
                   : tr ? "Oturum açık" : "Signed in"}
               </span>
               <button type="button" onClick={onOpenApp}
-                className="rounded-lg bg-cyan-500/15 px-3.5 py-1.5 text-sm font-semibold text-cyan-200 ring-1 ring-cyan-400/30 transition hover:bg-cyan-500/25">
+                className="inline-flex h-9 items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 text-sm font-semibold text-white shadow-[0_8px_22px_-8px_rgba(6,182,212,0.65)] ring-1 ring-white/10 transition duration-200 hover:brightness-110 hover:shadow-[0_10px_26px_-8px_rgba(6,182,212,0.8)] active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {tr ? "Panele git" : "Go to app"}
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <button type="button" data-auth-cta onClick={onLogin}
-                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">
+                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/[0.03] px-5 text-sm font-semibold text-slate-200 transition duration-200 hover:border-white/30 hover:bg-white/[0.08] hover:text-white active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {tr ? "Giriş yap" : "Log in"}
               </button>
               <button type="button" data-auth-cta onClick={onRegister}
-                className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">
+                className="inline-flex h-9 items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 text-sm font-semibold text-white shadow-[0_8px_22px_-8px_rgba(6,182,212,0.65)] ring-1 ring-white/10 transition duration-200 hover:brightness-110 hover:shadow-[0_10px_26px_-8px_rgba(6,182,212,0.8)] active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {tr ? "Üye Ol" : "Sign up"}
               </button>
             </div>
@@ -291,6 +292,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
           </section>
         )}
       </main>
+      <SiteFooter language={language} />
       {overlay}
     </div>
   );
