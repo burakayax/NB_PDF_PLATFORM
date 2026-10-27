@@ -54,6 +54,11 @@ sendgrid>=6.10.0
 # >=2.32.0: CVE-2024-35195 (Session doğrulama atlatma) düzeltmesi.
 requests>=2.32.0
 
+# requests/httpx kendi sertifika paketini (certifi) kullanır, sistem deposunu değil.
+# eMudhra ara sertifika ihlali (2026-10) sonrası güncel paket gelsin diye beyan edildi;
+# sürüm sabitlenmedi → her temiz derlemede en son sertifika listesi alınır.
+certifi
+
 # Test
 pytest>=8.0.0
 pytest-asyncio>=0.23.0
