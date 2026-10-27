@@ -97,7 +97,7 @@ export function HeroBackground({
 
       <div
         aria-hidden="true"
-        className={`pointer-events-none -z-10 overflow-hidden ${className}`}
+        className={`hb-root pointer-events-none -z-10 overflow-hidden ${className}`}
         style={{ background: "#070a12", contain: "layout paint" }}
       >
         {/* 1 — Ufuk parıltısı: sayfanın tepesinden inen ışık */}
