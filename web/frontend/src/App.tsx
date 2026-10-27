@@ -115,6 +115,7 @@ const ToolFilePreview = lazyWithRetry(() =>
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
+import { WorkspaceFooter } from "./components/common/WorkspaceFooter";
 import { clearScannedPdf, peekScannedPdf, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
 import { getToolSeo } from "./seo/seoContent.mjs";
@@ -524,6 +525,8 @@ function App() {
   );
   // Dashboard içerik bölgesi kaydırma kabı (sayfa değil, bu bölge kayar).
   const dashboardScrollRef = useRef<HTMLDivElement>(null);
+  // Yasal sayfa / Hakkımızda'ya gitmeden önceki kaydırma konumu (geri dönüşte geri yüklenir).
+  const savedScrollRef = useRef<{ page: number; shell: number } | null>(null);
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>(() =>
     typeof window !== "undefined"
       ? readInitialWorkspaceToolSelection(window.location.pathname)
@@ -3877,6 +3880,35 @@ function App() {
     !previewItem.inspecting &&
     selectedFeature.id !== "compress";
 
+  /**
+   * Yasal sayfa / Hakkımızda: açılırken en üstten başlar; "Geri dön"de kullanıcı ayrıldığı noktaya
+   * (ör. alt bilgideki bağlantı) döner. Tarayıcı geri tuşunun varsayılan davranışıyla aynı.
+   */
+  function rememberScrollPosition() {
+    savedScrollRef.current = {
+      page: window.scrollY,
+      shell: dashboardScrollRef.current?.scrollTop ?? 0,
+    };
+  }
+
+  function restoreScrollPosition() {
+    const saved = savedScrollRef.current;
+    savedScrollRef.current = null;
+    if (!saved || (!saved.page && !saved.shell)) return;
+    // Sayfa tembel yüklenir (Suspense); yükseklik oluşana kadar kısa aralıklarla tekrar dene.
+    let tries = 0;
+    const apply = () => {
+      const shellEl = dashboardScrollRef.current;
+      if (saved.page) window.scrollTo({ top: saved.page, behavior: "instant" });
+      if (saved.shell && shellEl) shellEl.scrollTo({ top: saved.shell, behavior: "instant" });
+      tries += 1;
+      const pageOk = !saved.page || Math.abs(window.scrollY - saved.page) < 2;
+      const shellOk = !saved.shell || (shellEl !== null && Math.abs(shellEl.scrollTop - saved.shell) < 2);
+      if (!(pageOk && shellOk) && tries < 20) window.setTimeout(apply, 50);
+    };
+    window.requestAnimationFrame(apply);
+  }
+
   function openLegalPage(target: LegalView) {
     if (
       view === "landing" ||
@@ -3887,6 +3919,7 @@ function App() {
       view === "web"
     ) {
       setLegalBackView(view);
+      rememberScrollPosition();
     }
     setView(target);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -3991,6 +4024,7 @@ function App() {
 
   function closeLegalPage() {
     setView(legalBackView);
+    restoreScrollPosition();
   }
 
   function openWorkspace() {
@@ -4412,8 +4446,8 @@ function App() {
     marketingConsent?: boolean;
     termsAccepted?: boolean;
     privacyNoticeRead?: boolean;
-  }) {
     rememberMe?: boolean;
+  }) {
     try {
       setAuthSubmitting(true);
       setAuthError("");
@@ -4485,6 +4519,8 @@ function App() {
         "",
         pendingTool ? workspacePathForFeature(pendingTool) : "/workspace",
       );
+      // FeatureKey olmayan panel araçları (CV Oluştur, PDF Düzenle…) için doğru paneli aç.
+      if (pendingTool) syncPanelFromSeoToolPath();
 
       const pendingPlan = sessionStorage.getItem("nb_pending_plan");
       if (pendingPlan) {
@@ -4544,10 +4580,10 @@ function App() {
     marketingConsent?: boolean;
     termsAccepted?: boolean;
     privacyNoticeRead?: boolean;
+    rememberMe?: boolean;
   }) {
     try {
       setAuthSubmitting(true);
-    rememberMe?: boolean;
       setAuthError("");
 
       if (scannerAuthMode === "register") {
@@ -4647,7 +4683,18 @@ function App() {
     clearPendingTool();
     await logout();
     setAuthError("");
-    setLanguage(detectInitialLanguage());
+    const nextLanguage = detectInitialLanguage();
+    setLanguage(nextLanguage);
+    // Özel tam-sayfa araç adresleri (CV Oluştur, Belge Tara, PDF Düzenle…) URL'i otomatik
+    // ana sayfaya çevirmez; çıkışta adresi açıkça ana sayfaya al, aksi halde kullanıcı aynı araçta kalır.
+    try {
+      window.history.replaceState({}, "", withLangPrefix("/", nextLanguage));
+    } catch {
+      /* yoksay */
+    }
+    setSelectedFeatureId("split");
+    setActiveSidebar("split");
+    setContentPanel("tool");
     setView("landing");
     showToast(
       "success",
@@ -5631,8 +5678,16 @@ function App() {
     !(isAuthenticated && hasInAppPanelForSeoSlug(pathname.split("/tools/")[1] ?? ""))
   ) {
     const seoSlug = pathname.split("/tools/")[1] ?? "";
-    const goLogin = () => setView("login");
-    const goRegister = () => setView("register");
+    // Adres /tools/<araç> kaldığı sürece bu tam-sayfa blok yeniden çizilir ve giriş/kayıt ekranı
+    // hiç görünmezdi → gerçekten /login /register adresine git; girişten sonra aynı araca dön.
+    const goAuthFromTool = (mode: "login" | "register") => {
+      if (seoSlug) savePendingTool(seoSlug as FeatureId);
+      window.history.pushState({}, "", withLangPrefix(`/${mode}`, language));
+      setAuthError("");
+      setView(mode);
+    };
+    const goLogin = () => goAuthFromTool("login");
+    const goRegister = () => goAuthFromTool("register");
     if (seoSlug === "belge-tara") {
       return (
         <>
@@ -6266,6 +6321,7 @@ function App() {
               }
             }}
             onOpenAbout={() => {
+              rememberScrollPosition();
               setView("about");
               window.scrollTo({ top: 0, behavior: "instant" });
             }}
@@ -6319,7 +6375,13 @@ function App() {
         />
         <SystemNotificationBanner language={language} />
         <Suspense fallback={<PageSkeleton />}>
-          <AboutPage language={language} onClose={() => setView("landing")} />
+          <AboutPage
+            language={language}
+            onClose={() => {
+              setView("landing");
+              restoreScrollPosition();
+            }}
+          />
         </Suspense>
       </>
     );
@@ -9359,25 +9421,9 @@ function App() {
           ) : null}
         </div>
 
-        <footer className="footer-bar">
-          <span>PDF Platform</span>
-          <span>by NB Global Studio</span>
-          <div className="footer-bar__right">
-            <span>Web Edition</span>
-            <button type="button" onClick={() => openLegalPage("terms")}>
-              {language === "tr" ? "HİZMET ŞARTLARI" : "TERMS OF SERVICE"}
-            </button>
-            <button type="button" onClick={() => openLegalPage("privacy")}>
-              {language === "tr" ? "GİZLİLİK POLİTİKASI" : "PRIVACY POLICY"}
-            </button>
-            <button type="button" onClick={() => openLegalPage("kvkk")}>
-              {language === "tr" ? "KVKK" : "KVKK DISCLOSURE"}
-            </button>
-            <button type="button" onClick={openContactModal}>
-              {language === "tr" ? "İLETİŞİM" : "CONTACT"}
-            </button>
-          </div>
-        </footer>
+        <div className="mx-auto w-[min(1180px,calc(100%-32px))] pb-6">
+          <WorkspaceFooter language={language} onOpenLegal={openLegalPage} onContact={openContactModal} />
+        </div>
         </div>
 
         {contactModalEl}
