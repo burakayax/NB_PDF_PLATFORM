@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest";
 // @ts-expect-error — düz JS Worker dosyası, tipi yok
 import { isle, bilinenIstemciRotasiMi, kabugiSifirla } from "../../cloudflare/not-found-worker.js";
 
-const KABUK = "<!doctype html><html><body>SPA kabuğu</body></html>";
+const KABUK =
+  '<!doctype html><html><head><meta name="robots" content="index, follow" />' +
+  '<link rel="canonical" href="https://www.pdfplatform.app" />' +
+  '<link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app" />' +
+  '<link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en" />' +
+  '<link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app" />' +
+  '<meta property="og:url" content="https://www.pdfplatform.app" /></head><body>SPA kabuğu</body></html>';
 const ANA = "<!doctype html><html><body>gerçek prerender sayfası</body></html>";
 const HTML = { "content-type": "text/html; charset=utf-8" };
 
@@ -49,6 +55,23 @@ describe("Cloudflare 404 Worker", () => {
     expect((await iste("/bu-sayfa-yok-xyz", render(kural), "HEAD")).status).toBe(404);
     expect((await iste("/tools/merge-pdf", render(kural), "HEAD")).status).toBe(200);
     expect((await iste("/login", render(kural), "HEAD")).status).toBe(200);
+  });
+  it("giriş/kayıt sayfaları noindex + kendi canonical'ı; /about kendi canonical'ı", async () => {
+    const reg = await iste("/en/register");
+    const rm = await reg.text();
+    expect(reg.status).toBe(200);
+    expect(reg.headers.get("x-robots-tag")).toContain("noindex");
+    expect(rm).toContain('content="noindex, nofollow"');
+    expect(rm).toContain('rel="canonical" href="https://www.pdfplatform.app/en/register"');
+    expect(rm).toContain('hreflang="tr" href="https://www.pdfplatform.app/register"');
+    const ab = await iste("/about");
+    const am = await ab.text();
+    expect(ab.headers.get("x-robots-tag")).toBeNull();
+    expect(am).toContain('rel="canonical" href="https://www.pdfplatform.app/about"');
+    expect(am).toContain('content="index, follow"');
+    const head = await iste("/register", render(kural), "HEAD");
+    expect(head.status).toBe(200);
+    expect(head.headers.get("x-robots-tag")).toContain("noindex");
   });
   it("API, dosya uzantılı adres ve POST dokunulmaz", async () => {
     expect((await iste("/api/yok")).status).toBe(200);

@@ -24,6 +24,17 @@ const BILINEN_TAM = ["/","/login","/register","/forgot-password","/about","/term
 const BILINEN_ONEK = ["/legal/","/admin/","/invite/","/fake-payment","/pdf-api/","/blog/","/hesap/","/imzala/","/tools/","/api/","/payment","/workspace/"];
 /*ROTALAR:BITIS*/
 
+/**
+ * Gerçek istemci sayfaları ama statik dosyaları yok: Render bunlara ana sayfa kabuğunu
+ * (canonical = ana sayfa, robots = index) verir. Worker kabuğun SEO etiketlerini düzeltir.
+ * Giriş/kayıt gibi sayfalar dizine girmemeli; /about kendi adresini göstermeli.
+ */
+const NOINDEX_SAYFALAR = [
+  "/login", "/register", "/forgot-password", "/reset-password", "/verify-email",
+  "/login-success", "/login-error", "/google-signup", "/team-invite", "/nbadmin",
+];
+const KENDI_KANONIK_SAYFALAR = ["/about"];
+
 const KABUK_OMRU_MS = 5 * 60 * 1000;
 const YEDEK_404 = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sayfa bulunamadı | PDF Platform</title><meta name="robots" content="noindex, nofollow"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px"><h1>Sayfa bulunamadı</h1><p><a href="/">Ana sayfaya dön</a></p></body></html>`;
 const YEDEK_404_EN = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found | PDF Platform</title><meta name="robots" content="noindex, nofollow"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px"><h1>Page not found</h1><p><a href="/en">Back to home</a></p></body></html>`;
@@ -52,6 +63,24 @@ export function incelenmezMi(yol) {
 /** Testler için önbelleği boşaltır. */
 export function kabugiSifirla() {
   kabuk = { metin: null, zaman: 0 };
+}
+
+/** Kabuk HTML'inin canonical/hreflang/og:url/robots etiketlerini bu sayfaya göre yazar. */
+export function kabukSeoDuzelt(metin, origin, yol, noindex) {
+  const bare = yalinYol(yol);
+  const tr = origin + bare;
+  const en = origin + "/en" + bare;
+  const kendi = /^\/en(\/|$)/.test(yol) ? en : tr;
+  let m = metin
+    .replace(/(<link rel="canonical" href=")[^"]*(")/, (_, a, b) => a + kendi + b)
+    .replace(/(<meta property="og:url" content=")[^"]*(")/, (_, a, b) => a + kendi + b)
+    .replace(/(<link rel="alternate" hreflang="tr" href=")[^"]*(")/, (_, a, b) => a + tr + b)
+    .replace(/(<link rel="alternate" hreflang="en" href=")[^"]*(")/, (_, a, b) => a + en + b)
+    .replace(/(<link rel="alternate" hreflang="x-default" href=")[^"]*(")/, (_, a, b) => a + tr + b);
+  if (noindex) {
+    m = m.replace(/(<meta name="robots" content=")[^"]*(")/, (_, a, b) => a + "noindex, nofollow" + b);
+  }
+  return m;
 }
 
 async function kabukMetni(kok, getir) {
@@ -98,6 +127,23 @@ export async function isle(request, getir = fetch) {
     // (a) Blog kuralının boş 200'ü: gövde 0 bayt (dosya uzantılı adresler zaten dışarıda).
     if (uzunluk === "0") {
       return await bulunamadiCevabi(url.origin, url.pathname, getir);
+    }
+
+    // (c) Bilinen istemci sayfaları (giriş/kayıt/hakkımızda): kabuğun SEO etiketlerini düzelt.
+    const bare = yalinYol(url.pathname);
+    const noindex = NOINDEX_SAYFALAR.includes(bare);
+    if ((noindex || KENDI_KANONIK_SAYFALAR.includes(bare)) && tur.includes("text/html")) {
+      const govdeCevabi =
+        request.method === "HEAD" ? await getir(new Request(request.url, { method: "GET" })) : orijinal.clone();
+      const [metin, kabukIcerigi] = await Promise.all([govdeCevabi.text(), kabukMetni(url.origin, getir)]);
+      if (kabukIcerigi !== null && metin.length > 0 && metin === kabukIcerigi) {
+        const basliklar = new Headers(orijinal.headers);
+        ["content-length", "content-encoding", "etag"].forEach((h) => basliklar.delete(h));
+        if (noindex) basliklar.set("x-robots-tag", "noindex, nofollow");
+        const yeni = kabukSeoDuzelt(metin, url.origin, url.pathname, noindex);
+        return new Response(request.method === "HEAD" ? null : yeni, { status: 200, headers: basliklar });
+      }
+      return orijinal;
     }
 
     // (b) Catch-all: gövde /index.html ile birebir aynı ve bilinen istemci rotası değil.
