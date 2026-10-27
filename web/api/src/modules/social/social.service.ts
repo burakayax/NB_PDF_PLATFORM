@@ -434,6 +434,16 @@ export function calendarDayKey(at: Date, timeZone: string): string {
   }
 }
 
+/** Kampanya etiketi (?utm_…), parça ve sondaki eğik çizgi olmadan adres: kopya karşılaştırması için. */
+export function canonicalLink(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.host.replace(/^www\./, "")}${u.pathname.replace(/\/+$/, "")}`.toLowerCase();
+  } catch {
+    return url.split(/[?#]/)[0]?.replace(/\/+$/, "").toLowerCase() ?? url;
+  }
+}
+
 /** Görsel seçimi: platformun istediği kesim yoksa elde olana düşülür. */
 function pickImage(item: FeedItem, platform: SocialPlatform): string | null {
   const preferred = PLATFORM_SPECS[platform].imageFormat;
@@ -454,10 +464,26 @@ async function pickNextItem(
 ): Promise<FeedItem | null> {
   if (items.length === 0) return null;
 
-  const seen = await prisma.socialPost.findMany({
-    where: { platform, guid: { in: items.map((i) => i.guid) } },
-    select: { guid: true, createdAt: true },
+  // Kopya kontrolü yalnız kimliğe (guid) değil ADRESE de bakar: aynı yazı Türkçe ve İngilizce
+  // besleme kaydıyla farklı kimlik taşıyabiliyor (Pinterest'te aynı pinin iki kez çıkmasının sebebi).
+  const past = await prisma.socialPost.findMany({
+    where: { platform },
+    select: { guid: true, linkUrl: true, createdAt: true },
   });
+  const pastByLink = new Map<string, Date>();
+  for (const row of past) {
+    const key = canonicalLink(row.linkUrl);
+    const prev = pastByLink.get(key);
+    if (!prev || prev < row.createdAt) pastByLink.set(key, row.createdAt);
+  }
+  const wantedGuids = new Set(items.map((i) => i.guid));
+  const seen: { guid: string; createdAt: Date }[] = past.filter((r) => wantedGuids.has(r.guid));
+  for (const item of items) {
+    for (const link of [item.link, item.alt?.link]) {
+      const at = link ? pastByLink.get(canonicalLink(link)) : undefined;
+      if (at) seen.push({ guid: item.guid, createdAt: at });
+    }
+  }
   // Bir yazı birden çok kez paylaşılmış olabilir; sıralama için EN SON paylaşım
   // anı geçerlidir. İlk kaydı tutmak, aylar önce bir kez paylaşılıp dün tekrar
   // paylaşılmış bir yazıyı "en eski" sayıp başa almaya yol açardı.
