@@ -219,7 +219,6 @@ textarea {
   box-shadow:
     var(--nb-shadow-card),
     0 20px 48px -20px rgba(34, 211, 238, 0.12);
-  transform: translateY(-1px) scale(1.002);
 }
 
 .hero-card {
