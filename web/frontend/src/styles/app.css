@@ -212,13 +212,18 @@ textarea {
 }
 
 .hero-card:hover,
-.workspace-card:hover,
 .notes-card:hover,
 .choice-card:hover {
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
     var(--nb-shadow-card),
     0 20px 48px -20px rgba(34, 211, 238, 0.12);
+}
+
+/* Çalışma alanı kartı tüm aracı kapsayan büyük bir cam yüzey: üzerine gelince gölge/kenar
+   geçişi bütün alanı yeniden boyatıp takılma yaratıyordu → hover efekti ve geçişi yok. */
+.workspace-card {
+  transition: none;
 }
 
 .hero-card {
@@ -4725,6 +4730,12 @@ html[data-auth-pending="1"] [data-auth-cta] {
   border-color: transparent !important;
   pointer-events: none;
   animation: nb-auth-pulse 1.1s ease-in-out infinite;
+}
+
+/* Oturum ipucu olan kullanıcı bir araç adresinde F5 yaptığında, hazır (statik) tanıtım sayfası
+   oturum doğrulanana kadar gizlenir; böylece tanıtım sayfası saniyelik yanıp dashboard'a dönmez. */
+html[data-auth-hide="1"] #root {
+  visibility: hidden;
 }
 
 /* Dokunmatik cihazlarda alt bilgi bağlantıları en az 44px yüksekliğinde dokunma alanı alsın. */

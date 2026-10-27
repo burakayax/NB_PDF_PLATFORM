@@ -66,7 +66,12 @@
       try {
         if (localStorage.getItem("nb_session_hint") === "1") {
           document.documentElement.setAttribute("data-auth-pending", "1");
-          setTimeout(function () { document.documentElement.removeAttribute("data-auth-pending"); }, 10000);
+          // Araç adresinde hazır tanıtım sayfası, oturum doğrulanana kadar gizli kalsın (F5'te yanıp sönmesin).
+          if (/^(\/en)?\/tools\//.test(location.pathname)) document.documentElement.setAttribute("data-auth-hide", "1");
+          setTimeout(function () {
+            document.documentElement.removeAttribute("data-auth-pending");
+            document.documentElement.removeAttribute("data-auth-hide");
+          }, 10000);
         }
       } catch (e) {}
     </script>

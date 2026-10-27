@@ -2075,7 +2075,10 @@ function App() {
 
   // Oturum doğrulaması bitince "yükleniyor" görünümünü (giriş/kayıt düğmeleri) kaldır.
   useEffect(() => {
-    if (!isRestoring) document.documentElement.removeAttribute("data-auth-pending");
+    if (!isRestoring) {
+      document.documentElement.removeAttribute("data-auth-pending");
+      document.documentElement.removeAttribute("data-auth-hide");
+    }
   }, [isRestoring]);
 
   const refreshSubscriptionState = useCallback(async () => {
