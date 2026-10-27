@@ -2169,7 +2169,8 @@ function Footer({
   ];
 
   return (
-    <footer className="border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
+    <footer className="relative border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
       <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8 sm:py-14">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-12">
           {/* Brand */}
