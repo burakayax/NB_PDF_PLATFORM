@@ -223,7 +223,7 @@ export function HeroBackground({
 
         {/* Alt karartma: sayfanın gövdesine yumuşak geçiş */}
         <div
-          className="absolute inset-x-0 bottom-0 h-[42vh]"
+          className="hb-fade absolute inset-x-0 bottom-0 h-[42vh]"
           style={{
             background:
               "linear-gradient(to bottom, transparent, rgba(7,10,18,0.72) 70%, #070a12)",

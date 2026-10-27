@@ -129,6 +129,7 @@ import { HERO_CATS, catOfFreeTool, firstRunnable, type HeroCatId } from "./heroT
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { HeroBackground } from "./HeroBackground";
+import { ThemeToggle } from "../common/ThemeToggle";
 import { ProductGallery } from "./ProductGallery";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
@@ -428,6 +429,7 @@ function Navbar({
               )}
             </svg>
           </button>
+          <ThemeToggle tr={tr} className="hidden lg:inline-flex" />
           {/* Language */}
           <div className="relative hidden lg:block" ref={langRef}>
             <button
@@ -548,6 +550,7 @@ function Navbar({
                 {l === "tr" ? "🇹🇷 Türkçe" : "🇬🇧 English"}
               </button>
             ))}
+            <ThemeToggle tr={tr} className="h-9 w-9 shrink-0" />
           </div>
           {isAuthenticated ? (
             <button

@@ -1,0 +1,586 @@
+/* OTOMATİK ÜRETİLDİ — elle düzenleme. scripts/generate-light-appcss.mjs çalıştırın (kaynak: app.css). */
+[data-theme="light"] .hero-card:hover,
+[data-theme="light"] .notes-card:hover,
+[data-theme="light"] .choice-card:hover {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .back-link {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .back-link:hover {
+  border-color: rgba(15, 23, 42, 0.18);
+  background: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .subscription-card:hover {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .subscription-badge--active {
+  color: rgb(20, 65, 70);
+}
+
+[data-theme="light"] .subscription-plan:hover {
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .pro-value-card__kicker {
+  color: rgba(30, 96, 104, 0.95);
+}
+
+[data-theme="light"] .pro-value-card__intro {
+  color: rgba(45, 60, 78, 0.92);
+}
+
+[data-theme="light"] .pro-value-card__check {
+  color: rgb(34, 119, 65);
+}
+
+[data-theme="light"] .pro-value-card__tag {
+  color: rgb(119, 102, 34);
+}
+
+[data-theme="light"] .pro-value-card__tag--speed {
+  color: rgb(30, 96, 104);
+}
+
+[data-theme="light"] .pro-value-card__tag--quality {
+  color: rgb(58, 26, 91);
+}
+
+[data-theme="light"] .pro-value-card__tag--unlimited {
+  color: rgb(34, 119, 85);
+}
+
+[data-theme="light"] .pro-value-card__text {
+  color: rgba(29, 40, 56, 0.9);
+}
+
+[data-theme="light"] .subscription-plan__action {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .subscription-plan__action--upgrade {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .subscription-warning {
+  color: rgb(68, 25, 20);
+}
+
+[data-theme="light"] .nb-dropzone {
+  background-color: rgba(15, 23, 42, 0.055);
+}
+
+[data-theme="light"] .nb-dropzone__title {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .nb-dropzone__hint {
+  color: rgb(45, 60, 78);
+}
+
+[data-theme="light"] .field input:hover,
+[data-theme="light"] .field select:hover,
+[data-theme="light"] .field textarea:hover {
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .field-error {
+  color: rgb(68, 25, 20);
+}
+
+[data-theme="light"] .merge-progress-fixed__phase {
+  color: rgba(30, 96, 104, 0.92);
+}
+
+[data-theme="light"] .merge-progress-fixed__eta {
+  color: rgba(30, 96, 104, 0.95);
+}
+
+[data-theme="light"] .merge-progress-fixed--generic .merge-progress-fixed__title {
+  color: rgba(29, 40, 56, 0.95);
+}
+
+[data-theme="light"] .merge-hint-banner__text {
+  color: rgba(29, 40, 56, 0.92);
+}
+
+[data-theme="light"] .merge-progress-fixed__err {
+  color: rgb(73, 21, 21);
+}
+
+[data-theme="light"] .progress-bar--indeterminate {
+  background: rgba(247, 247, 247, 0.85);
+}
+
+[data-theme="light"] .merge-progress-fixed__title--success {
+  color: rgb(21, 71, 45);
+}
+
+[data-theme="light"] .merge-progress-fixed__phase--success {
+  color: rgba(32, 109, 73, 0.95);
+}
+
+[data-theme="light"] .merge-progress-fixed__pct--success {
+  color: rgb(34, 119, 85);
+}
+
+[data-theme="light"] .tool-success-shell__title {
+  color: rgb(16, 55, 37);
+}
+
+[data-theme="light"] .tool-success-shell__subtitle {
+  color: rgba(32, 109, 73, 0.92);
+}
+
+[data-theme="light"] .tool-success-shell__pill {
+  color: rgb(26, 91, 49);
+  background: rgba(222, 237, 233, 0.85);
+}
+
+[data-theme="light"] .tool-success-shell__meter {
+  background: rgba(245, 246, 250, 0.85);
+}
+
+[data-theme="light"] .progress-bar--success {
+  background: rgba(243, 249, 247, 0.85);
+}
+
+[data-theme="light"] .merge-progress-fixed__download {
+  color: rgb(16, 55, 37);
+}
+
+[data-theme="light"] .merge-progress-fixed__download--secondary {
+  color: rgb(16, 53, 55);
+}
+
+[data-theme="light"] .merge-progress-fixed__dismiss {
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(29, 40, 56, 0.9);
+}
+
+[data-theme="light"] .merge-progress-fixed__dismiss:hover {
+  background: rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.22);
+}
+
+[data-theme="light"] .merge-toast__close {
+  color: rgba(61, 74, 92, 0.85);
+}
+
+[data-theme="light"] .merge-toast__close:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .merge-toast__icon {
+  color: rgb(34, 119, 85);
+}
+
+[data-theme="light"] .merge-share-btn--share {
+  color: rgb(16, 40, 55);
+}
+
+[data-theme="light"] .merge-share-btn--open {
+  color: rgb(16, 55, 37);
+}
+
+[data-theme="light"] .merge-toast__chain-label {
+  color: rgba(45, 60, 78, 0.9);
+}
+
+[data-theme="light"] .merge-share-chip {
+  color: rgba(21, 71, 45, 0.96);
+}
+
+[data-theme="light"] .merge-share-chip--locked {
+  color: rgba(119, 102, 34, 0.92);
+}
+
+[data-theme="light"] .saas-gated-preview__status--unlocked {
+  color: rgba(32, 109, 73, 0.95);
+}
+
+[data-theme="light"] .saas-gated-preview__status--locked {
+  color: rgba(119, 99, 34, 0.95);
+}
+
+[data-theme="light"] .saas-credit-pill {
+  color: rgba(29, 40, 56, 0.92);
+}
+
+[data-theme="light"] .saas-credit-pill__label {
+  color: rgba(61, 74, 92, 0.9);
+}
+
+[data-theme="light"] .saas-gated-preview__lock-overlay {
+  color: rgba(21, 36, 50, 0.95);
+}
+
+[data-theme="light"] .saas-gated-preview__watermark-hero-frame {
+  background: rgba(233, 236, 243, 0.85);
+}
+
+[data-theme="light"] .saas-gated-preview__watermark-ribbon {
+  color: rgba(36, 36, 36, 0.42);
+}
+
+[data-theme="light"] .saas-gated-preview__body-copy {
+  color: rgba(29, 40, 56, 0.92);
+}
+
+[data-theme="light"] .saas-gated-preview__meta {
+  color: rgba(61, 74, 92, 0.9);
+}
+
+[data-theme="light"] .selected-files__count {
+  color: rgba(30, 96, 104, 0.78);
+}
+
+[data-theme="light"] .selected-file-card__icon {
+  color: rgb(73, 21, 21);
+}
+
+[data-theme="light"] .selected-file-card__size {
+  color: rgba(29, 40, 56, 0.88);
+}
+
+[data-theme="light"] .selected-file-card__compress-note {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .warning-text {
+  color: rgb(119, 87, 34);
+}
+
+[data-theme="light"] .remove-button {
+  color: rgb(73, 21, 21);
+}
+
+[data-theme="light"] .primary-action {
+  color: rgb(36, 36, 36);
+}
+
+[data-theme="light"] .toast__detail {
+  color: rgba(45, 60, 78, 0.82);
+}
+
+[data-theme="light"] .toast__close:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .toast--success .toast__icon {
+  color: rgb(34, 119, 85);
+}
+
+[data-theme="light"] .toast--error .toast__icon {
+  color: rgb(104, 30, 30);
+}
+
+[data-theme="light"] .toast--info .toast__icon {
+  color: rgb(34, 91, 119);
+}
+
+[data-theme="light"] .payment-summary-modal__title {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .payment-summary-modal__close {
+  background: rgba(15, 23, 42, 0.06);
+  color: rgb(61, 74, 92);
+}
+
+[data-theme="light"] .payment-summary-modal__close:hover {
+  background: rgba(15, 23, 42, 0.1);
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .payment-summary-modal__row {
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .payment-summary-modal__exit-offer {
+  color: rgb(76, 65, 22);
+}
+
+[data-theme="light"] .payment-summary-modal__loading {
+  color: rgb(61, 74, 92);
+}
+
+[data-theme="light"] .payment-summary-modal__input {
+  background: rgba(247, 247, 247, 0.85);
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .payment-summary-modal__apply {
+  color: rgb(16, 53, 55);
+}
+
+[data-theme="light"] .payment-summary-modal__err {
+  color: rgb(119, 34, 34);
+}
+
+[data-theme="light"] .upgrade-modal__brand-mark {
+  color: rgb(16, 53, 55);
+}
+
+[data-theme="light"] .upgrade-modal__brand-text {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .upgrade-modal__close {
+  background: rgba(15, 23, 42, 0.05);
+  color: rgba(29, 40, 56, 0.9);
+}
+
+[data-theme="light"] .upgrade-modal__close:hover {
+  background: rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+[data-theme="light"] .upgrade-modal__title {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .upgrade-modal__subtitle {
+  color: rgba(54, 73, 95, 0.95);
+}
+
+[data-theme="light"] .upgrade-modal__region-hint {
+  color: rgba(61, 74, 92, 0.9);
+}
+
+[data-theme="light"] .upgrade-modal__intl-note {
+  color: rgba(119, 82, 34, 0.95);
+}
+
+[data-theme="light"] .nb-pricing-stack__strike {
+  color: rgba(61, 74, 92, 0.72);
+}
+
+[data-theme="light"] .nb-pricing-stack__price {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .nb-pricing-stack__daily {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .nb-pricing-stack--landing .nb-pricing-stack__daily {
+  color: rgba(25, 66, 87, 0.88);
+}
+
+[data-theme="light"] .upgrade-modal__trust {
+  color: rgba(61, 74, 92, 0.92);
+}
+
+[data-theme="light"] .upgrade-modal__plan-price {
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .upgrade-modal__cta--annual {
+  color: rgb(16, 25, 55);
+}
+
+[data-theme="light"] .upgrade-modal__compare-title {
+  color: rgba(45, 60, 78, 0.9);
+}
+
+[data-theme="light"] .upgrade-modal__compare-scroll {
+  background: rgba(247, 247, 247, 0.85);
+}
+
+[data-theme="light"] .upgrade-modal__compare-table th,
+[data-theme="light"] .upgrade-modal__compare-table td {
+  color: rgba(29, 40, 56, 0.92);
+}
+
+[data-theme="light"] .upgrade-modal__compare-table th {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .upgrade-modal__ribbon--popular {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .upgrade-modal__list {
+  color: rgba(45, 60, 78, 0.95);
+}
+
+[data-theme="light"] .upgrade-modal__list li::marker {
+  color: rgba(34, 109, 119, 0.85);
+}
+
+[data-theme="light"] .upgrade-modal__plan--pro .upgrade-modal__list li::marker {
+  color: rgba(34, 43, 119, 0.9);
+}
+
+[data-theme="light"] .upgrade-modal__cta--business {
+  color: rgb(16, 53, 55);
+}
+
+[data-theme="light"] .conv-upgrade-modal-backdrop {
+  background: rgba(245, 246, 250, 0.85);
+}
+
+[data-theme="light"] .conv-upgrade-modal__eyebrow {
+  color: rgba(32, 109, 73, 0.95);
+}
+
+[data-theme="light"] .conv-upgrade-modal__close {
+  color: rgba(29, 40, 56, 0.85);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .conv-upgrade-modal__close:hover {
+  background: rgba(15, 23, 42, 0.12);
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .conv-upgrade-modal__title {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .conv-upgrade-modal__subtitle {
+  color: rgba(45, 60, 78, 0.92);
+}
+
+[data-theme="light"] .conv-upgrade-modal__speed {
+  color: rgba(16, 55, 28, 0.95);
+}
+
+[data-theme="light"] .conv-upgrade-modal__features li {
+  color: rgba(29, 40, 56, 0.95);
+}
+
+[data-theme="light"] .conv-upgrade-modal__usage {
+  color: rgba(61, 74, 92, 0.98);
+}
+
+[data-theme="light"] .conv-upgrade-modal__guarantee {
+  color: rgba(34, 119, 65, 0.96);
+}
+
+[data-theme="light"] .conv-upgrade-modal__cta-secondary {
+  color: rgba(45, 60, 78, 0.95);
+}
+
+[data-theme="light"] .conv-upgrade-modal__cta-secondary:hover {
+  color: rgba(16, 25, 56, 0.98);
+}
+
+[data-theme="light"] .conversion-popup__eyebrow {
+  color: rgba(61, 74, 92, 0.85);
+}
+
+[data-theme="light"] .conversion-popup__close {
+  color: rgba(29, 40, 56, 0.85);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .conversion-popup__close:hover {
+  background: rgba(15, 23, 42, 0.12);
+  color: rgb(36, 36, 36);
+}
+
+[data-theme="light"] .conversion-popup__title {
+  color: rgba(21, 36, 50, 0.98);
+}
+
+[data-theme="light"] .conversion-popup__subtitle {
+  color: rgba(45, 60, 78, 0.88);
+}
+
+[data-theme="light"] .conversion-popup__cta-secondary {
+  color: rgba(45, 60, 78, 0.95);
+}
+
+[data-theme="light"] .conversion-popup__cta-secondary:hover {
+  color: rgba(16, 25, 56, 0.98);
+}
+
+[data-theme="light"] .admin-dashboard__btn {
+  background: rgba(15, 23, 42, 0.06);
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .admin-dashboard__btn--ghost:hover:not(:disabled) {
+  color: rgb(36, 36, 36);
+}
+
+[data-theme="light"] .admin-dashboard__btn--danger {
+  color: rgb(73, 21, 21);
+}
+
+[data-theme="light"] .admin-dashboard__error {
+  color: rgb(104, 30, 30);
+}
+
+[data-theme="light"] .admin-dashboard__muted {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .admin-dashboard__card {
+  background: rgba(233, 236, 243, 0.85);
+}
+
+[data-theme="light"] .admin-dashboard__card-title {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .admin-dashboard__stat {
+  color: rgb(21, 36, 50);
+}
+
+[data-theme="light"] .admin-dashboard__list li {
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .admin-dashboard__count {
+  color: rgb(34, 73, 117);
+}
+
+[data-theme="light"] .admin-dashboard__tool-list li {
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .admin-dashboard__tool-meta {
+  color: rgba(61, 74, 92, 0.95);
+}
+
+[data-theme="light"] .contact-modal-backdrop {
+  background: rgba(233, 236, 243, 0.85);
+}
+
+[data-theme="light"] .contact-modal__close {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .contact-modal__close:hover {
+  background: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .contact-modal__success {
+  color: rgb(27, 94, 54);
+}
+
+[data-theme="light"] .masonic-table thead th {
+  color: rgb(61, 74, 92);
+  background: rgba(233, 236, 243, 0.85);
+}
+
+[data-theme="light"] .masonic-table tbody tr:hover {
+  background: rgba(223, 228, 236, 0.85);
+}
+
+[data-theme="light"] .masonic-table tbody td {
+  color: rgb(29, 40, 56);
+}
+
+[data-theme="light"] .logo-container {
+  background: rgba(222, 228, 237, 0.85);
+}
+
