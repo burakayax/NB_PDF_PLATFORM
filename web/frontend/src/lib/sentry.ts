@@ -17,7 +17,11 @@ export function initSentry(hasErrorMonitoringConsent: boolean): Promise<void> {
     .then((Sentry) => {
       Sentry.init({
         dsn,
+        // Canlıda "production", yerelde "development" (Vite modu).
         environment: import.meta.env.MODE,
+        // Deploy'a özel sürüm; Release Health (oturum takibi) bu değer olmadan çalışmaz.
+        // Tarayıcı oturum takibi Sentry SDK'da varsayılan olarak açıktır.
+        release: import.meta.env.VITE_SENTRY_RELEASE,
         tracesSampleRate: 0.2,
         replaysOnErrorSampleRate: 1.0,
         replaysSessionSampleRate: 0.05,

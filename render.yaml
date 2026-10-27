@@ -613,5 +613,7 @@ services:
         sync: false   # Örn. https://pdfplatform.app (canonical + hreflang için)
       - key: VITE_SENTRY_DSN
         sync: false
+      - key: SENTRY_AUTH_TOKEN
+        sync: false   # Sentry kaynak haritası yükleme + deploy kaydı (yalnız build sırasında kullanılır)
       - key: VITE_GA_MEASUREMENT_ID
         sync: false   # Google Analytics 4 ID (G-XXXXXXXXXX)
