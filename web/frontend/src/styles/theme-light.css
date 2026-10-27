@@ -138,3 +138,8 @@
   --tw-gradient-via: #f8fafc;
   --tw-gradient-to: #f1f5f9;
 }
+
+/* text-black (parlak düğme üstünde koyu yazı): --color-black açık temada "iç çukur" grisi olduğundan yazı rengi ayrıca sabitlenir. */
+[data-theme="light"] [class~="text-black"]:not([data-theme="dark"]) {
+  color: #020617;
+}

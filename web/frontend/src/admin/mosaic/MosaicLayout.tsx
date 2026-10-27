@@ -22,6 +22,7 @@ import {
   Share2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { ThemeToggle } from "../../components/common/ThemeToggle";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 export type MosaicNavItem = { id: string; label: string; icon: LucideIcon };
@@ -218,6 +219,7 @@ export function MosaicLayout({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle tr />
             <button
               type="button"
               onClick={onExit}

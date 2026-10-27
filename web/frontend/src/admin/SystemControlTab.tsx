@@ -583,7 +583,7 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
         type="button"
         disabled={busy}
         onClick={() => void saveFlagsAndNotifications()}
-        className="rounded-xl bg-violet-600/75 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+        className="rounded-xl bg-violet-700 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
       >
         {busy ? "Kaydediliyor…" : "Bayrakları ve bildirimi kaydet"}
       </button>

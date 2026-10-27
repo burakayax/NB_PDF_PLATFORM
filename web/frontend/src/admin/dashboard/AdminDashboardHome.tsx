@@ -23,7 +23,14 @@ import { pdfToolLabelTr, guestToolLabelTr } from "../lib/pdfToolLabels";
 const countryDisplay = (() => {
   try {
     const dn = new Intl.DisplayNames(["tr"], { type: "region" });
-    return (code: string) => dn.of(code) ?? code;
+    return (code: string) => {
+      try {
+        return dn.of(code) ?? code;
+      } catch {
+        // Biçimsiz kod ("LOCAL", "XX1" …) of() içinde RangeError atar; panel çökmesin.
+        return code;
+      }
+    };
   } catch {
     return (code: string) => code;
   }
@@ -233,7 +240,7 @@ export function AdminDashboardHome({ overview }: Props) {
               ))}
             </ul>
           )}
-          {overview.mostUsedTOOLSAllTimeFallback ? <p className="mt-3 text-xs text-amber-200/70">Tüm zaman verisi (son 30 gün boş)</p> : null}
+          {overview.mostUsedTOOLSAllTimeFallback ? <p className="mt-3 text-xs text-amber-200/90">Tüm zaman verisi (son 30 gün boş)</p> : null}
         </Panel>
       </div>
 

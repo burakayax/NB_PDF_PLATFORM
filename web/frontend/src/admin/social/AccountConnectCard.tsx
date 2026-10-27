@@ -195,7 +195,7 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
             >
               {testResult.message}
               {testResult.ok ? (
-                <span className="mt-1 block text-emerald-300/70">
+                <span className="mt-1 block text-emerald-300/90">
                   Bu, anahtarların geçerli olduğunu gösterir. Paylaşım yetkisinin kesin kanıtı
                   gerçek bir gönderidir — bir taslağı “Şimdi paylaş” ile deneyebilirsin.
                 </span>

@@ -141,7 +141,7 @@ export function PostMediaPreview({
   if (!post.imageUrl) {
     return (
       <div
-        className="flex w-36 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 text-amber-300/70"
+        className="flex w-36 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 text-amber-300/90"
         style={{ aspectRatio: brand.ratio, maxHeight: 190 }}
       >
         <ImageOff className="h-4 w-4" />
@@ -164,7 +164,7 @@ export function PostMediaPreview({
             className="w-full rounded-xl border border-slate-700/60 bg-slate-950 object-cover transition group-hover:border-slate-500"
             style={{ aspectRatio: "9 / 16", maxHeight: 190 }}
           />
-          <span className="absolute left-1.5 top-1.5 rounded-md bg-fuchsia-600/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+          <span className="absolute left-1.5 top-1.5 rounded-md bg-fuchsia-700 px-1.5 py-0.5 text-[10px] font-semibold text-white">
             REELS
           </span>
         </>

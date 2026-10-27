@@ -438,7 +438,7 @@ export function BosDurum({ metin }: { metin: string }) {
 export function BolumBasligi({ ustBaslik, baslik }: { ustBaslik: string; baslik: string }) {
   return (
     <div className="mb-3">
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70">{ustBaslik}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/90">{ustBaslik}</p>
       <h2 className="mt-0.5 text-lg font-bold tracking-tight text-white">{baslik}</h2>
     </div>
   );
