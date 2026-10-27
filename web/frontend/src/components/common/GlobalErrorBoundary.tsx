@@ -45,16 +45,20 @@ interface Props {
 interface State {
   hasError: boolean;
   eventId: string | null;
+  /** Kısa teknik ayrıntı (hata adı + mesaj): eski cihazlardaki sorunu telefondan okuyup teşhis edebilmek için. */
+  detail: string;
 }
 
 export class GlobalErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, eventId: null };
+  state: State = { hasError: false, eventId: null, detail: "" };
 
   /** Hata kapsayıcısına odaklanmak için ref — ekran okuyucular için erişilebilirlik. */
   private containerRef = createRef<HTMLDivElement>();
 
-  static getDerivedStateFromError(): Partial<State> {
-    return { hasError: true };
+  static getDerivedStateFromError(error: unknown): Partial<State> {
+    const e = error as { name?: string; message?: string } | null;
+    const detail = `${e?.name ?? "Error"}: ${e?.message ?? String(error)}`.slice(0, 200);
+    return { hasError: true, detail };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -127,6 +131,9 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             {copy.title}
           </h1>
           <p className="mt-3 text-sm leading-7 text-nb-muted">{copy.body}</p>
+          {this.state.detail ? (
+            <p className="mt-4 break-words text-[11px] leading-5 text-nb-muted/70">{this.state.detail}</p>
+          ) : null}
           <button
             type="button"
             onClick={() => window.location.reload()}
