@@ -5,10 +5,10 @@
  * Çalıştırma (web/api dizininde): npm run backfill:gmail-emails
  */
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/prisma-client-factory.js";
 import { normalizeEmailForStorage } from "../src/lib/email-identity-normalize.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   const users = await prisma.user.findMany({ select: { id: true, email: true } });

@@ -128,7 +128,7 @@ services:
     # PostgreSQL şeması (schema.postgres.prisma) ile generate + db push.
     # Not: migrations/ klasörü SQLite diyalektinde olduğu için Postgres'e
     # uygulanamaz; bunun yerine db push şemayı doğrudan Neon'a senkronlar.
-    buildCommand: npm ci && npx prisma generate --schema prisma/schema.postgres.prisma && npm run build && npx prisma db push --schema prisma/schema.postgres.prisma --skip-generate --accept-data-loss && npm run prisma:seed
+    buildCommand: npm ci && npx prisma generate --schema prisma/schema.postgres.prisma && npm run build && npx prisma db push --schema prisma/schema.postgres.prisma --accept-data-loss && npm run prisma:seed
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
