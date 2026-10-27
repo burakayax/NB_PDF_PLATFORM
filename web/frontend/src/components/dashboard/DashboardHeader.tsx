@@ -55,7 +55,7 @@ export function DashboardHeader({
             <p className="truncate text-xs font-bold text-nb-heading">
               {user.name?.split(" ")[0] || "User"}
             </p>
-            <p className="text-[9px] text-nb-muted">{new Date().toLocaleDateString(tr ? "tr-TR" : "en-US", { month: "short", day: "numeric" })}</p>
+            <p className="text-[11px] text-nb-muted">{new Date().toLocaleDateString(tr ? "tr-TR" : "en-US", { month: "short", day: "numeric" })}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -87,7 +87,7 @@ export function DashboardHeader({
             <p className="truncate text-sm font-bold text-nb-heading sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
               {greeting}
             </p>
-            <p className="mt-0.5 truncate text-[10px] text-nb-muted sm:text-xs md:text-sm lg:text-base">
+            <p className="mt-0.5 truncate text-[11px] text-nb-muted sm:text-xs md:text-sm lg:text-base">
               {date}
             </p>
           </div>

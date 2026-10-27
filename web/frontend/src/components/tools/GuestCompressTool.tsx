@@ -429,7 +429,7 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
               <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-                  <p className="text-[11px] text-slate-400">{humanSize(file.size)}</p>
+                  <p className="text-[12px] text-slate-400">{humanSize(file.size)}</p>
                 </div>
                 <button
                   type="button"
@@ -535,7 +535,7 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
             t.go
           )}
         </button>
-        <p className="field--full mt-1 text-center text-[11.5px] text-slate-400">{t.privacy}</p>
+        <p className="field--full mt-1 text-center text-[12px] text-slate-400">{t.privacy}</p>
       </div>
     </div>
   );

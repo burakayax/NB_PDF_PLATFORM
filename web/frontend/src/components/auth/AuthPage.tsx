@@ -445,7 +445,7 @@ export function AuthPage({
 
         <div className="rounded-[28px] border border-white/[0.08] bg-[#0d1424]/80 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-xl sm:p-10">
           {/* Marka satiri: genis ekranda sol panel zaten markayi tasiyor, tekrar olmasin */}
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90 lg:hidden">
+          <p className="text-center text-[12px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90 lg:hidden">
             PDF Platform
           </p>
           {adminPortal ? (
@@ -521,7 +521,7 @@ export function AuthPage({
             {copy.shared.continueWithGoogle}
           </a>
           {!adminPortal ? (
-            <p className="mt-2 text-center text-[11px] leading-relaxed text-nb-muted">
+            <p className="mt-2 text-center text-[12px] leading-relaxed text-nb-muted">
               {tr
                 ? "Google ile ilk kez devam ediyorsanız hesabınızı açmadan önce Hizmet Şartları, Gizlilik ve KVKK onaylarınız ayrıca istenir."
                 : "If this is your first time with Google, you will be asked to confirm the Terms, Privacy and KVKK notices before your account is created."}
@@ -758,7 +758,7 @@ export function AuthPage({
                 />
                 <span className="text-[12px] leading-relaxed text-slate-300">
                   {tr ? "Beni hatırla" : "Remember me"}
-                  <span className="block text-[11px] text-slate-500">
+                  <span className="block text-[12px] text-slate-500">
                     {tr ? "30 gün boyunca bu cihazda oturumum açık kalsın. Ortak bilgisayarlarda işaretlemeyin." : "Keep me signed in on this device for 30 days. Don't tick this on shared computers."}
                   </span>
                 </span>
@@ -839,7 +839,7 @@ export function AuthPage({
                       : "I'd like to receive emails about campaigns, tips and updates. (Optional — you can unsubscribe anytime with one click.)"}
                   </span>
                 </label>
-                <p className="mt-1.5 pl-[26px] text-[11px] leading-relaxed text-slate-500">
+                <p className="mt-1.5 pl-[26px] text-[12px] leading-relaxed text-slate-500">
                   {language === "tr" ? "Verilerinizin nasıl işlendiği: " : "How your data is handled: "}
                   <button
                     type="button"
@@ -923,7 +923,7 @@ export function AuthPage({
 
         {/* Dar ekranda sol panel gizli olduğu için güven maddeleri formun altında */}
         <div className="mt-10 lg:hidden">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-nb-muted">
+          <p className="text-center text-[12px] font-semibold uppercase tracking-[0.28em] text-nb-muted">
             {copy.shared.trustTitle}
           </p>
           <ul className="mx-auto mt-5 max-w-md space-y-3">

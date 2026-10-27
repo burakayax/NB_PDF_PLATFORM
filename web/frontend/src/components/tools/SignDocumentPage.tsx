@@ -204,7 +204,7 @@ export function SignDocumentPage({ token }: { token: string }) {
     <div className="min-h-dvh bg-[#070b14] px-4 py-6 text-slate-200">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-300">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-cyan-300">
             PDF Platform
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">{sayfa.title}</h1>
@@ -322,7 +322,7 @@ export function SignDocumentPage({ token }: { token: string }) {
               </span>
             </label>
 
-            <p className="mt-3 text-[11.5px] leading-relaxed text-slate-400">
+            <p className="mt-3 text-[12px] leading-relaxed text-slate-400">
               İmzanızla birlikte adınız, imza zamanı ve bağlantı bilgisinin özeti, imzanın size ait olduğunu ve belgenin değişmediğini
               kanıtlamak için saklanır. Ayrıntı: Gizlilik Politikası ve KVKK Aydınlatma Metni (pdfplatform.app).
             </p>
@@ -378,7 +378,7 @@ export function SignDocumentPage({ token }: { token: string }) {
           </div>
         )}
 
-        <p className="mt-5 flex items-start gap-2 text-[11px] leading-relaxed text-slate-400">
+        <p className="mt-5 flex items-start gap-2 text-[12px] leading-relaxed text-slate-400">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           Bu bağlantı yalnızca sizin için üretilmiştir. İmzanız, sunucuda saklanan özgün belgeye
           uygulanır ve belgeye imzalama sürecinin zaman damgalı kaydı eklenir. Ağ adresiniz açık

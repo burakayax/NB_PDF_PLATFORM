@@ -693,7 +693,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{title}</h1>
-            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
+            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">
               Pro
             </span>
             {quota ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
@@ -788,7 +788,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           <p className="nb-dropzone__hint relative mt-1.5 text-sm">
             {tr ? "Metin cihazında çıkarılır — dosyan sunucuya yüklenmez." : "Text is extracted on your device — the file is never uploaded."}
           </p>
-          <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
+          <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[12px] font-medium text-slate-400">
             {[
               tr ? "⚡ Saniyeler içinde" : "⚡ In seconds",
               tr ? "🔒 Gizli" : "🔒 Private",
@@ -821,7 +821,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-100">{fileName}</p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[12px] text-slate-400">
                 {tr
                   ? `~${(charCount / 1000).toFixed(1)}K karakter · ~${readTime} dk okuma`
                   : `~${(charCount / 1000).toFixed(1)}K chars · ~${readTime} min read`}
@@ -887,7 +887,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                   <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300">
                     <Table2 className="h-4 w-4" />
                     {tr ? "Çıkarılan Veri" : "Extracted Data"}
-                    {extracted.docType && <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">{extracted.docType}</span>}
+                    {extracted.docType && <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[12px] font-bold text-fuchsia-200">{extracted.docType}</span>}
                   </span>
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={copyExtracted} title="JSON"

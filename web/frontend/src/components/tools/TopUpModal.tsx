@@ -103,11 +103,11 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
               <div>
                 <p className="flex items-center gap-2 text-[15px] font-bold text-white">
                   {p.credits} {tr ? "AI kredisi" : "AI credits"}
-                  {p.popular && <span className="rounded-full bg-fuchsia-500/20 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200">{tr ? "Popüler" : "Popular"}</span>}
+                  {p.popular && <span className="rounded-full bg-fuchsia-500/20 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">{tr ? "Popüler" : "Popular"}</span>}
                 </p>
                 <p className="text-[12px] text-slate-400">{price(p)}</p>
-                <p className="mt-1 text-[11.5px] text-slate-300">{tr ? "Tüm AI araçlarında kullanılır" : "Works in every AI tool"}</p>
-                <p className="mt-0.5 text-[11.5px] text-fuchsia-300/90">{packExample(p.credits, tr)}</p>
+                <p className="mt-1 text-[12px] text-slate-300">{tr ? "Tüm AI araçlarında kullanılır" : "Works in every AI tool"}</p>
+                <p className="mt-0.5 text-[12px] text-fuchsia-300/90">{packExample(p.credits, tr)}</p>
               </div>
               {paymentsDisabled ? (
                 isAdmin ? (

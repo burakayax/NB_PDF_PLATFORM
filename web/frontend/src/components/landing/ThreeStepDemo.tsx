@@ -164,7 +164,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
             <p className="text-[13px] font-bold leading-tight text-white sm:text-sm">
               {step.title}
             </p>
-            <p className="text-[10px] leading-snug text-slate-300 sm:text-[11px]">
+            <p className="text-[11px] leading-snug text-slate-300 sm:text-[12px]">
               {step.caption}
             </p>
           </div>
@@ -193,7 +193,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
             >
               <span className="flex items-center gap-2">
                 <span
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
                   style={{
                     background: isActive
                       ? `rgb(${s.accent})`

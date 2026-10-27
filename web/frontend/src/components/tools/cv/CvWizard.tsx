@@ -85,7 +85,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
     <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_30px_80px_-40px_rgba(56,189,248,0.35)]">
       {/* İlerleme */}
       <div className="border-b border-white/10 px-5 pb-4 pt-5">
-        <div className="flex items-center justify-between text-[11.5px] font-semibold uppercase tracking-wider text-sky-300/90">
+        <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-wider text-sky-300/90">
           <span>{tr ? `Adım ${i + 1} / ${STEPS.length}` : `Step ${i + 1} of ${STEPS.length}`} · {labels[step]}</span>
           <button type="button" onClick={onFullForm} className="normal-case tracking-normal text-slate-400 underline-offset-2 hover:text-white hover:underline">{tr ? "Tüm formu göster" : "Show full form"}</button>
         </div>
@@ -95,7 +95,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
           ))}
         </div>
         {step !== "start" && step !== "done" ? (
-          <p className="mt-3 text-[11.5px] leading-relaxed text-slate-400">{tr ? "CV önizlemesinde soluk görünen alanlar henüz doldurmadıklarınızdır. Boş bıraktığınız her şey indirdiğiniz PDF'ten otomatik silinir." : "Faded areas in the CV preview are ones you haven't filled in yet. Anything you leave empty is removed from the PDF you download."}</p>
+          <p className="mt-3 text-[12px] leading-relaxed text-slate-400">{tr ? "CV önizlemesinde soluk görünen alanlar henüz doldurmadıklarınızdır. Boş bıraktığınız her şey indirdiğiniz PDF'ten otomatik silinir." : "Faded areas in the CV preview are ones you haven't filled in yet. Anything you leave empty is removed from the PDF you download."}</p>
         ) : null}
       </div>
 
@@ -107,7 +107,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
               <p className="mb-2 text-[13px] font-bold text-white">{tr ? "Mesleğinizi yazın" : "Type your role"}</p>
               <SuggestInput value={ownRole} onChange={setOwnRole} suggest={(q) => suggestTitles(q, lang)} placeholder={tr ? "Ör. Pilot, Veteriner, Mobilyacı…" : "E.g. Pilot, Veterinarian, Carpenter…"} ariaLabel={tr ? "Meslek" : "Role"} tr={tr} className={inputCls} />
               <button type="button" disabled={!ownRole.trim()} onClick={useOwnRole} className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-sky-500/20 px-4 py-2.5 text-[13px] font-bold text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30 disabled:opacity-40">{tr ? "Bu mesleği kullan" : "Use this role"}<ArrowRight className="h-4 w-4" /></button>
-              <p className="mt-1.5 text-[11.5px] text-slate-500">{tr ? "Listeden de seçebilirsiniz. Yakın bir meslek bulursak oradan öneriler getiririz; bulamazsak genel öneriler gelir. Unvanınız yazdığınız gibi kalır." : "You can also pick from the list below. If we find a close match we'll bring its suggestions; otherwise you get general ones. Your title stays exactly as typed."}</p>
+              <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "Listeden de seçebilirsiniz. Yakın bir meslek bulursak oradan öneriler getiririz; bulamazsak genel öneriler gelir. Unvanınız yazdığınız gibi kalır." : "You can also pick from the list below. If we find a close match we'll bring its suggestions; otherwise you get general ones. Your title stays exactly as typed."}</p>
             </div>
             <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-500">{tr ? "ya da listeden seçin" : "or pick from the list"}</p>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -122,8 +122,8 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
               <span className="text-[13px] text-slate-200"><span className="inline-flex items-center gap-1.5 font-bold text-white"><GraduationCap className="h-4 w-4 text-sky-300" />{tr ? "Yeni mezunum / deneyimim az" : "I'm a recent graduate / little experience"}</span><span className="mt-0.5 block text-[12px] text-slate-400">{tr ? "Eğitim ve projeleriniz CV'de deneyimden önce gelir." : "Education and projects come before work experience."}</span></span>
             </label>
             <div className="grid gap-2 sm:grid-cols-2">
-              <button type="button" disabled={!prof} onClick={loadSample} className="flex items-center gap-2.5 rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-fuchsia-100 hover:bg-fuchsia-500/15 disabled:opacity-40"><Wand2 className="h-4 w-4 shrink-0" /><span>{tr ? "Bu mesleğin örnek CV'sini aç" : "Open a sample CV for this field"}<span className="block text-[11.5px] font-normal text-fuchsia-200/70">{tr ? "Hazır doldurulmuş; üzerine kendi bilgilerinizi yazın" : "Pre-filled; type your own details over it"}</span></span></button>
-              <button type="button" onClick={onOpenLinkedin} className="flex items-center gap-2.5 rounded-xl border border-sky-400/25 bg-sky-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-sky-100 hover:bg-sky-500/15"><Linkedin className="h-4 w-4 shrink-0" /><span>{tr ? "LinkedIn / eski CV'den aktar" : "Import from LinkedIn / old CV"}<span className="block text-[11.5px] font-normal text-sky-200/70">{tr ? "Dosyadan cihazınızda okunur, ücretsiz" : "Read on your device, free"}</span></span></button>
+              <button type="button" disabled={!prof} onClick={loadSample} className="flex items-center gap-2.5 rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-fuchsia-100 hover:bg-fuchsia-500/15 disabled:opacity-40"><Wand2 className="h-4 w-4 shrink-0" /><span>{tr ? "Bu mesleğin örnek CV'sini aç" : "Open a sample CV for this field"}<span className="block text-[12px] font-normal text-fuchsia-200/70">{tr ? "Hazır doldurulmuş; üzerine kendi bilgilerinizi yazın" : "Pre-filled; type your own details over it"}</span></span></button>
+              <button type="button" onClick={onOpenLinkedin} className="flex items-center gap-2.5 rounded-xl border border-sky-400/25 bg-sky-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-sky-100 hover:bg-sky-500/15"><Linkedin className="h-4 w-4 shrink-0" /><span>{tr ? "LinkedIn / eski CV'den aktar" : "Import from LinkedIn / old CV"}<span className="block text-[12px] font-normal text-sky-200/70">{tr ? "Dosyadan cihazınızda okunur, ücretsiz" : "Read on your device, free"}</span></span></button>
             </div>
           </>
         ) : null}

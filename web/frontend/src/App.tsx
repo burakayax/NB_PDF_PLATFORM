@@ -8048,7 +8048,7 @@ function App() {
                               </span>
                               <div className="relative mx-auto flex h-32 w-24 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-white shadow-inner">
                                 <span
-                                  className="pointer-events-none select-none break-all text-center text-[11px] font-bold leading-tight"
+                                  className="pointer-events-none select-none break-all text-center text-[12px] font-bold leading-tight"
                                   style={{
                                     color: watermarkColor,
                                     opacity: parseFloat(watermarkOpacity),
@@ -9202,7 +9202,7 @@ function App() {
 
                                       {item.encrypted ? (
                                         <div className="mt-3 rounded-xl border border-white/[0.1] bg-nb-panel/50 px-4 py-3">
-                                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-nb-muted">
+                                          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-nb-muted">
                                             {language === "tr"
                                               ? "Şifre gerekli"
                                               : "Password required"}

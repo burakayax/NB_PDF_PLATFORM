@@ -75,23 +75,23 @@ export function ToolsGrid({
         </span>
 
         <span className="flex min-w-0 w-full flex-col items-center gap-0.5">
-          <span className="w-full truncate text-[11px] sm:text-xs font-semibold leading-tight text-nb-text group-hover:text-nb-heading md:text-[12px] lg:text-[13px] 2xl:text-sm">
+          <span className="w-full truncate text-[12px] sm:text-xs font-semibold leading-tight text-nb-text group-hover:text-nb-heading md:text-[12px] lg:text-[13px] 2xl:text-sm">
             {tool.label}
           </span>
           {tool.description && (
-            <span className="hidden w-full truncate text-[9px] leading-tight text-nb-muted sm:block sm:text-[10px] lg:text-[11px]">
+            <span className="hidden w-full truncate text-[11px] leading-tight text-nb-muted sm:block sm:text-[11px] lg:text-[12px]">
               {tool.description}
             </span>
           )}
         </span>
 
         {locked && (
-          <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide text-amber-300/95 lg:text-[10px]">
+          <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[11px] sm:text-[11px] font-semibold uppercase tracking-wide text-amber-300/95 lg:text-[11px]">
             {tr ? "Kilit" : "Locked"}
           </span>
         )}
         {!locked && tool.isPro && (
-          <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide text-nb-primary-mid lg:text-[10px]">
+          <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1 py-0.5 text-[11px] sm:text-[11px] font-semibold uppercase tracking-wide text-nb-primary-mid lg:text-[11px]">
             Pro
           </span>
         )}

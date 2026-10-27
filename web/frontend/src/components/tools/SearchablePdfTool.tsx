@@ -211,7 +211,7 @@ export function SearchablePdfTool({
   return (
     <div>
       <p className="mb-3 flex justify-end">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[11.5px] font-bold text-emerald-300">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[12px] font-bold text-emerald-300">
           <ShieldCheck className="h-3.5 w-3.5" />
           {tr ? "Cihazında çalışır" : "Runs on your device"}
         </span>

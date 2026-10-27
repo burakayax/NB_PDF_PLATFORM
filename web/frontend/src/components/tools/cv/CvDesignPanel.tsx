@@ -10,7 +10,7 @@ function Group({ title, hint, children }: { title: string; hint?: string; childr
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <h3 className="text-[12.5px] font-bold uppercase tracking-wide text-slate-300">{title}</h3>
-      {hint ? <p className="mt-1 text-[11.5px] leading-relaxed text-slate-400">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-[12px] leading-relaxed text-slate-400">{hint}</p> : null}
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -62,17 +62,17 @@ export function CvDesignPanel({ data, onChange, disabled, tr, tpl }: Props) {
           </div>
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
             <input type="checkbox" checked={st.showDuration} onChange={(e) => set("showDuration", e.target.checked)} className="mt-0.5 h-4 w-4 accent-sky-400" />
-            <span className="text-[13px] text-slate-100">{tr ? "Tarihin yanında süreyi göster" : "Show the duration next to dates"}<span className="block text-[11.5px] text-slate-400">{tr ? "Örn. Mar 2020 – Şub 2023 (3 yıl)" : "E.g. Mar 2020 – Feb 2023 (3 yrs)"}</span></span>
+            <span className="text-[13px] text-slate-100">{tr ? "Tarihin yanında süreyi göster" : "Show the duration next to dates"}<span className="block text-[12px] text-slate-400">{tr ? "Örn. Mar 2020 – Şub 2023 (3 yıl)" : "E.g. Mar 2020 – Feb 2023 (3 yrs)"}</span></span>
           </label>
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
             <input type="checkbox" checked={st.showTotalExp} onChange={(e) => set("showTotalExp", e.target.checked)} className="mt-0.5 h-4 w-4 accent-sky-400" />
-            <span className="text-[13px] text-slate-100">{tr ? "Toplam deneyim süresini göster" : "Show total experience"}<span className="block text-[11.5px] text-slate-400">{tr ? "İş Deneyimi başlığının altına, tüm işlerinizin toplamı yazılır." : "Shown under the Work Experience heading, summing all your jobs."}</span></span>
+            <span className="text-[13px] text-slate-100">{tr ? "Toplam deneyim süresini göster" : "Show total experience"}<span className="block text-[12px] text-slate-400">{tr ? "İş Deneyimi başlığının altına, tüm işlerinizin toplamı yazılır." : "Shown under the Work Experience heading, summing all your jobs."}</span></span>
           </label>
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.05] px-3 py-3">
             <input type="checkbox" checked={st.fitOnePage} onChange={(e) => set("fitOnePage", e.target.checked)} className="mt-0.5 h-4 w-4 accent-sky-400" />
             <span className="text-[13px] text-slate-100">
               {tr ? "Tek sayfaya sığdır" : "Fit on one page"}
-              <span className="block text-[11.5px] text-slate-400">{tr ? "İçerik taşarsa yazı ve boşluklar, okunaklılığı bozmayacak sınıra kadar kademeli küçülür. Hâlâ sığmıyorsa eski işlerinizin son satırları yalnızca PDF'te gösterilmez (yazdığınız metin silinmez)." : "If the content overflows, type and spacing shrink step by step down to a readable limit. If it still doesn't fit, the last lines of your oldest jobs are left out of the PDF only (your text is never deleted)."}</span>
+              <span className="block text-[12px] text-slate-400">{tr ? "İçerik taşarsa yazı ve boşluklar, okunaklılığı bozmayacak sınıra kadar kademeli küçülür. Hâlâ sığmıyorsa eski işlerinizin son satırları yalnızca PDF'te gösterilmez (yazdığınız metin silinmez)." : "If the content overflows, type and spacing shrink step by step down to a readable limit. If it still doesn't fit, the last lines of your oldest jobs are left out of the PDF only (your text is never deleted)."}</span>
             </span>
           </label>
         </div>
@@ -83,7 +83,7 @@ export function CvDesignPanel({ data, onChange, disabled, tr, tpl }: Props) {
           {swatches.map((c) => (
             <button key={c} type="button" aria-label={c} aria-pressed={activeAccent === c.toLowerCase()} onClick={() => set("accent", c.toLowerCase() === tplAccent.toLowerCase() ? null : c)} className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ${activeAccent === c.toLowerCase() ? "ring-sky-300" : "ring-transparent"}`} style={{ background: c }} />
           ))}
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/[0.08] px-3 py-1 text-[11px] font-semibold text-slate-300">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/[0.08] px-3 py-1 text-[12px] font-semibold text-slate-300">
             {tr ? "Özel" : "Custom"}
             <input type="color" value={st.accent ?? tplAccent} onChange={(e) => set("accent", e.target.value)} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0" />
           </label>

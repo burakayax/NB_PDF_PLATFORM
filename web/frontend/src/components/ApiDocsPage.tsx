@@ -37,7 +37,7 @@ function P({ children }: { children: React.ReactNode }) {
 function EndpointHead({ method, path }: { method: "GET" | "POST"; path: string }) {
   return (
     <p className="mt-3 font-mono text-[13px]">
-      <span className={`mr-2 rounded px-1.5 py-0.5 text-[11px] font-bold ${method === "GET" ? "bg-emerald-500/15 text-emerald-300" : "bg-cyan-500/15 text-cyan-300"}`}>{method}</span>
+      <span className={`mr-2 rounded px-1.5 py-0.5 text-[12px] font-bold ${method === "GET" ? "bg-emerald-500/15 text-emerald-300" : "bg-cyan-500/15 text-cyan-300"}`}>{method}</span>
       <span className="text-white">{path}</span>
     </p>
   );
@@ -183,7 +183,7 @@ export function ApiDocsPage({ language, isAuthenticated, onLogin, onRegister, on
           <nav className="sticky top-24 max-h-[calc(100dvh-7rem)] space-y-6 overflow-y-auto pr-2">
             {groups.map((g) => (
               <div key={g.title}>
-                <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">{g.title}</p>
+                <p className="px-3 pb-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-400">{g.title}</p>
                 <div className="space-y-0.5">
                   {g.items.map(([id, label]) => (
                     <a
@@ -422,13 +422,13 @@ Link: <https://www.pdfplatform.app/pdf-api/docs#changelog>; rel="deprecation"; t
           <nav className="mt-14 grid gap-3 border-t border-white/[0.06] pt-6 sm:grid-cols-2">
             {prev ? (
               <a href={`#${prev[0]}`} className="group rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition hover:border-cyan-400/30 hover:bg-white/[0.04]">
-                <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">{tr ? "Önceki" : "Previous"}</span>
+                <span className="block text-[12px] font-semibold uppercase tracking-wider text-slate-400">{tr ? "Önceki" : "Previous"}</span>
                 <span className="mt-0.5 block text-[14px] font-semibold text-slate-200 group-hover:text-white">← {prev[1]}</span>
               </a>
             ) : <span />}
             {next ? (
               <a href={`#${next[0]}`} className="group rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-right transition hover:border-cyan-400/30 hover:bg-white/[0.04] sm:col-start-2">
-                <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">{tr ? "Sonraki" : "Next"}</span>
+                <span className="block text-[12px] font-semibold uppercase tracking-wider text-slate-400">{tr ? "Sonraki" : "Next"}</span>
                 <span className="mt-0.5 block text-[14px] font-semibold text-slate-200 group-hover:text-white">{next[1]} →</span>
               </a>
             ) : null}

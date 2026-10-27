@@ -136,7 +136,7 @@ function FileRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-        <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-400"}`}>
+        <p className={`text-[12px] ${bad ? "text-amber-300 font-medium" : "text-slate-400"}`}>
           {f.status === "locked" ? (
             <>
               {tr ? "Şifre korumalı — " : "Password-protected — "}
@@ -155,7 +155,7 @@ function FileRow({
               </button>
               {/* Tıklamadan önce nereye gideceğini netleştirir: "üyelik gerekir" tek
                   başına ücretli izlenimi verebiliyordu; yanına "ücretsiz" eklendi. */}
-              <span className="ml-1.5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-[1px] align-middle text-[10px] font-semibold text-slate-400">
+              <span className="ml-1.5 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-[1px] align-middle text-[11px] font-semibold text-slate-400">
                 {tr ? "Ücretsiz · Hesap gerekir" : "Free · Account required"}
               </span>
             </>

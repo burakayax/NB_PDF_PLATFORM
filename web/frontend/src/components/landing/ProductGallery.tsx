@@ -553,7 +553,7 @@ export function ProductGallery({
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-[0.25em] text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
             {tr ? "Ürün Turu" : "Product Tour"}
           </span>
@@ -634,7 +634,7 @@ export function ProductGallery({
                     {c.desc}
                   </span>
                   <span
-                    className={`mt-3 items-center gap-1.5 text-[11.5px] font-semibold text-slate-300 ${on ? "hidden lg:inline-flex" : "hidden"}`}
+                    className={`mt-3 items-center gap-1.5 text-[12px] font-semibold text-slate-300 ${on ? "hidden lg:inline-flex" : "hidden"}`}
                   >
                     <CircleCheck
                       className="h-3.5 w-3.5"
@@ -712,7 +712,7 @@ export function ProductGallery({
                       />
                     ))}
                   </span>
-                  <span className="mx-auto flex max-w-[340px] flex-1 items-center justify-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-3 py-1 text-[11px] text-slate-400">
+                  <span className="mx-auto flex max-w-[340px] flex-1 items-center justify-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-3 py-1 text-[12px] text-slate-400">
                     <Lock
                       className="h-3 w-3 text-emerald-400/80"
                       aria-hidden="true"
@@ -786,7 +786,7 @@ export function ProductGallery({
                   <button
                     type="button"
                     onClick={() => setZoomed(true)}
-                    className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/60 px-2.5 py-1.5 text-[11.5px] font-semibold text-white opacity-90 backdrop-blur transition hover:bg-black/80 hover:opacity-100"
+                    className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-semibold text-white opacity-90 backdrop-blur transition hover:bg-black/80 hover:opacity-100"
                   >
                     <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
                     {tr ? "Büyüt" : "Enlarge"}
@@ -800,7 +800,7 @@ export function ProductGallery({
               <p className="text-[13px] leading-relaxed text-slate-400">
                 {copy.desc}
               </p>
-              <p className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-300">
+              <p className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-300">
                 <CircleCheck
                   className="h-3.5 w-3.5 text-slate-400"
                   aria-hidden="true"
@@ -812,7 +812,7 @@ export function ProductGallery({
             {/* Ekranda neler var: numaralı açıklamalar (noktalarla eşleşir) */}
             {!phone && (
               <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-slate-400">
                   {tr ? "Bu ekranda neler var" : "What you are looking at"}
                 </p>
                 <ol className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">

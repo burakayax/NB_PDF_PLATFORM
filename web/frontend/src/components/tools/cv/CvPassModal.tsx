@@ -81,7 +81,7 @@ export function CvPassModal({ language, accessToken, onClose, onUpgrade }: Props
               <div>
                 <p className="flex items-center gap-2 text-[15px] font-bold text-white">
                   {passLabel(p.hours, tr)}
-                  {p.popular ? <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold text-sky-200">{tr ? "Avantajlı" : "Best value"}</span> : null}
+                  {p.popular ? <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] font-bold text-sky-200">{tr ? "Avantajlı" : "Best value"}</span> : null}
                 </p>
                 <p className="text-[12px] text-slate-400">{price(p)} · {(p.chargeCurrency ?? (tr ? "TRY" : "USD")) === "TRY" ? (tr ? "KDV dahil" : "VAT incl.") : (tr ? "KDV yok (yurt dışı)" : "No VAT (export)")}</p>
               </div>

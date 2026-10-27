@@ -245,7 +245,7 @@ export default function PdfToolsSection({
                   }`}
                 >
                   {label}
-                  <span className={`ml-1.5 text-[11px] ${active ? "text-violet-200/80" : "text-slate-400"}`}>
+                  <span className={`ml-1.5 text-[12px] ${active ? "text-violet-200/80" : "text-slate-400"}`}>
                     {count}
                   </span>
                 </button>
@@ -342,7 +342,7 @@ export default function PdfToolsSection({
                               return (
                                 <span
                                   title={rozet.detail}
-                                  className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${renk.text}`}
+                                  className={`mt-1 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide ${renk.text}`}
                                 >
                                   <span className={`h-1 w-1 rounded-full ${renk.dot}`} />
                                   {rozet.label}

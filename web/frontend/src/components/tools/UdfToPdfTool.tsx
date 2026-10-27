@@ -319,7 +319,7 @@ export function UdfToPdfTool({ language }: { language: Language }) {
                   <FileText className="h-5 w-5 shrink-0 text-nb-accent" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-slate-100">{p.file.name}</p>
-                    <p className="text-[11px] text-slate-400">{humanSize(p.file.size)}</p>
+                    <p className="text-[12px] text-slate-400">{humanSize(p.file.size)}</p>
                   </div>
                   <button
                     type="button"

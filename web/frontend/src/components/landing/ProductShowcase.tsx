@@ -182,7 +182,7 @@ function BrowserChrome({ screenshot }: { screenshot?: string }) {
                 fill="none"
               />
             </svg>
-            <span className="text-[11px] text-slate-300 whitespace-nowrap">
+            <span className="text-[12px] text-slate-300 whitespace-nowrap">
               PDF Platform
             </span>
           </div>
@@ -202,7 +202,7 @@ function BrowserChrome({ screenshot }: { screenshot?: string }) {
               clipRule="evenodd"
             />
           </svg>
-          <span className="truncate text-[11px] text-slate-400">
+          <span className="truncate text-[12px] text-slate-400">
             app.nbpdfplatform.com
           </span>
         </div>
@@ -341,7 +341,7 @@ function FeaturePills({
               }}
               aria-hidden="true"
             />
-            <span className="whitespace-nowrap text-[11px] font-medium tracking-wide text-slate-200">
+            <span className="whitespace-nowrap text-[12px] font-medium tracking-wide text-slate-200">
               {text}
             </span>
           </div>
@@ -477,7 +477,7 @@ export default function ProductShowcase({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-400" />
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-indigo-300">
+            <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-indigo-300">
               Product Preview
             </span>
           </div>
@@ -623,7 +623,7 @@ export default function ProductShowcase({
                   transition: { delay: i * 0.06 + 0.1 },
                 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-300 backdrop-blur-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-slate-900/70 px-3 py-1.5 text-[12px] font-medium text-slate-300 backdrop-blur-sm"
               >
                 <span
                   className="h-1 w-1 rounded-full"

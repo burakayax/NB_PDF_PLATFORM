@@ -21,7 +21,7 @@ function CheckList({ checks, tr }: { checks: Check[]; tr: boolean }) {
           {icon(c.level)}
           <span className="min-w-0">
             {tr ? c.tr : c.en}
-            {c.kind === "heuristic" ? <span className="ml-1.5 rounded bg-white/[0.07] px-1.5 py-px align-middle text-[10px] font-semibold text-slate-400">{tr ? "rehber" : "guide"}</span> : null}
+            {c.kind === "heuristic" ? <span className="ml-1.5 rounded bg-white/[0.07] px-1.5 py-px align-middle text-[11px] font-semibold text-slate-400">{tr ? "rehber" : "guide"}</span> : null}
             {(tr ? c.fixTr : c.fixEn) && c.level !== "ok" ? <span className="mt-0.5 block text-[12px] leading-relaxed text-slate-400">{tr ? c.fixTr : c.fixEn}</span> : null}
           </span>
         </li>
@@ -37,7 +37,7 @@ function Card({ title, sub, children, open: o = true }: { title: string; sub?: s
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.03]">
         <span className="flex-1">
           <span className="block text-[14px] font-bold text-white">{title}</span>
-          {sub ? <span className="block text-[11.5px] text-slate-400">{sub}</span> : null}
+          {sub ? <span className="block text-[12px] text-slate-400">{sub}</span> : null}
         </span>
         <ChevronDown className={`h-4 w-4 text-slate-400 transition ${open ? "rotate-180" : ""}`} />
       </button>
@@ -86,17 +86,17 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
           <div className={`text-3xl font-black tabular-nums ${scoreColor}`}>{score.value}</div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-white">{tr ? score.label.tr : score.label.en}</p>
-            <p className="text-[11.5px] leading-relaxed text-slate-400">{tr ? "Puan bir rehberdir; gerçek bir başvuru sisteminin ya da işe alımcının puanı değildir. Her bulgu sabit puan düşer: kritik −12, uyarı −6, bilgi −1." : "The score is a guide, not a real hiring system's or recruiter's rating. Each finding deducts a fixed amount: critical −12, warning −6, info −1."}</p>
+            <p className="text-[12px] leading-relaxed text-slate-400">{tr ? "Puan bir rehberdir; gerçek bir başvuru sisteminin ya da işe alımcının puanı değildir. Her bulgu sabit puan düşer: kritik −12, uyarı −6, bilgi −1." : "The score is a guide, not a real hiring system's or recruiter's rating. Each finding deducts a fixed amount: critical −12, warning −6, info −1."}</p>
           </div>
         </div>
         {years > 0 ? <p className="mb-3 text-[12px] text-slate-400">{tr ? `Toplam deneyim (örtüşmeler tek sayılır): ${years} yıl.` : `Total experience (overlaps counted once): ${years} years.`}</p> : null}
         <CheckList checks={checks} tr={tr} />
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">{tr ? "“rehber” etiketli maddeler kural/sezgi tabanlıdır; diğerleri hesapla kesin bulunur." : "Items tagged “guide” are rule/heuristic based; the others are computed exactly."}</p>
+        <p className="mt-3 text-[12px] leading-relaxed text-slate-500">{tr ? "“rehber” etiketli maddeler kural/sezgi tabanlıdır; diğerleri hesapla kesin bulunur." : "Items tagged “guide” are rule/heuristic based; the others are computed exactly."}</p>
       </Card>
 
       <Card title={tr ? "İlana göre eşleştir" : "Match to a job ad"} sub={tr ? "İlanın yazısını yapıştırın; CV'nizde neyin eksik olduğunu görün" : "Paste the ad; see what's missing from your CV"}>
         <textarea value={ad} onChange={(e) => setAd(e.target.value)} rows={6} placeholder={tr ? "İlan sayfasındaki yazıyı kopyalayıp buraya yapıştırın (bağlantıyı değil, ilanın metnini)…" : "Copy the ad text from the page and paste it here (the text, not the link)…"} className="w-full resize-y rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-[13px] leading-relaxed text-white placeholder:text-slate-500 focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-400/20" />
-        <p className="mt-1.5 text-[11px] text-slate-500">{tr ? "İlan metni bu cihazda işlenir; hiçbir yere gönderilmez." : "The ad is processed on this device and sent nowhere."}</p>
+        <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "İlan metni bu cihazda işlenir; hiçbir yere gönderilmez." : "The ad is processed on this device and sent nowhere."}</p>
         {isLink ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] leading-relaxed text-amber-100 ring-1 ring-amber-400/20">{tr ? "Bu bir internet adresi. Adresi açıp ilanı okumuyoruz; yalnızca buraya yapıştırdığınız yazıya bakarız. İlan sayfasını açın, ilanın metnini (özellikle “Aranan nitelikler” bölümünü) kopyalayıp buraya yapıştırın." : "This is a web address. We don't open the page to read the ad; we only look at the text you paste here. Open the ad, copy its text (especially the “Requirements” section) and paste it here."}</p> : null}
         {!isLink && !match && ad.trim().length > 0 ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] text-amber-100 ring-1 ring-amber-400/20">{tr ? "İlan metni çok kısa. İlanın tamamını, özellikle “Aranan nitelikler” bölümünü yapıştırın." : "The ad is too short. Paste the whole ad, especially the “Requirements” section."}</p> : null}
         {match && match.keywords.length === 0 ? <p className="mt-3 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12.5px] text-amber-100 ring-1 ring-amber-400/20">{tr ? "Bu metinden anahtar kelime çıkarılamadı. İlanın görev ve aranan nitelikler bölümlerini de yapıştırmayı deneyin." : "No keywords could be extracted from this text. Try pasting the duties and requirements sections too."}</p> : null}
@@ -116,7 +116,7 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
               <div>
                 <p className="mb-1.5 text-[12px] font-semibold text-amber-300">{tr ? `CV'nizde bulunamayanlar (${match.missing.length})` : `Not found in your CV (${match.missing.length})`}</p>
                 <div className="flex flex-wrap gap-1.5">{match.missing.map((k) => <span key={k.term} className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${k.hard ? "bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/30" : "bg-white/[0.07] text-slate-200"}`}>{k.term}</span>)}</div>
-                <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">{tr ? "Yalnızca gerçekten sahip olduğunuz beceri ve deneyimleri ekleyin: Beceriler bölümüne ya da ilgili iş maddesine. Sahip olmadığınız bir şeyi yazmak mülakatta geri döner." : "Only add skills and experience you really have: in Skills or the relevant job bullet. Claiming something you don't have comes back at the interview."}</p>
+                <p className="mt-2 text-[12px] leading-relaxed text-slate-400">{tr ? "Yalnızca gerçekten sahip olduğunuz beceri ve deneyimleri ekleyin: Beceriler bölümüne ya da ilgili iş maddesine. Sahip olmadığınız bir şeyi yazmak mülakatta geri döner." : "Only add skills and experience you really have: in Skills or the relevant job bullet. Claiming something you don't have comes back at the interview."}</p>
               </div>
             ) : (
               <p className="text-[12.5px] font-semibold text-emerald-300">{tr ? "İlandaki önemli anahtar kelimelerin hepsi CV'nizde var." : "Every key term from the ad appears in your CV."}</p>
@@ -127,7 +127,7 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
                 <div className="flex flex-wrap gap-1.5">{match.matched.map((k) => <span key={k.term} className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[12px] font-semibold text-emerald-100 ring-1 ring-emerald-400/25">{k.term}</span>)}</div>
               </div>
             ) : null}
-            <p className="text-[11px] leading-relaxed text-slate-500">{tr ? "Eşleştirme yaklaşıktır: Türkçe eklerden dolayı kelimeler gövdeye göre karşılaştırılır. Sonuçlar, bir başvuru sisteminin gerçek puanı değildir." : "Matching is approximate: Turkish suffixes mean words are compared by stem. Results are not a real hiring-system score."}</p>
+            <p className="text-[12px] leading-relaxed text-slate-500">{tr ? "Eşleştirme yaklaşıktır: Türkçe eklerden dolayı kelimeler gövdeye göre karşılaştırılır. Sonuçlar, bir başvuru sisteminin gerçek puanı değildir." : "Matching is approximate: Turkish suffixes mean words are compared by stem. Results are not a real hiring-system score."}</p>
           </div>
         ) : null}
       </Card>
@@ -149,13 +149,13 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
                   <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)} className={`rounded-lg px-3 py-1.5 text-[12px] font-semibold ${view === v ? "bg-sky-500 text-white" : "bg-white/[0.07] text-slate-300"}`}>{v === "stream" ? (tr ? "Akış sırası (çoğu sistem)" : "Stream order (most systems)") : (tr ? "Satır satır (bazı sistemler)" : "Row by row (some systems)")}</button>
                 ))}
               </div>
-              <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950/70 p-3 font-mono text-[11.5px] leading-relaxed text-slate-300">{(view === "stream" ? xray.streamLines : xray.rowLines).map((l, i) => `${String(i + 1).padStart(2, "0")}  ${l}`).join("\n")}</pre>
-              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{tr ? "Bu, PDF'in metin katmanından okunan ham veridir (pdf.js). Gerçek bir başvuru sistemi değildir; sistemler kendi kurallarıyla ayrıştırır. Sayfa sayısı: " : "This is the raw data read from the PDF's text layer (pdf.js). It is not a real hiring system; systems apply their own rules. Pages: "}{xray.pages}</p>
+              <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950/70 p-3 font-mono text-[12px] leading-relaxed text-slate-300">{(view === "stream" ? xray.streamLines : xray.rowLines).map((l, i) => `${String(i + 1).padStart(2, "0")}  ${l}`).join("\n")}</pre>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">{tr ? "Bu, PDF'in metin katmanından okunan ham veridir (pdf.js). Gerçek bir başvuru sistemi değildir; sistemler kendi kurallarıyla ayrıştırır. Sayfa sayısı: " : "This is the raw data read from the PDF's text layer (pdf.js). It is not a real hiring system; systems apply their own rules. Pages: "}{xray.pages}</p>
             </div>
           </div>
         ) : null}
       </Card>
-      <div className="flex items-center gap-2 text-[11px] text-slate-500"><Target className="h-3.5 w-3.5" />{tr ? "Analizler tamamen cihazınızda çalışır; CV'niz hiçbir yere gönderilmez." : "All analysis runs on your device; your CV is sent nowhere."}</div>
+      <div className="flex items-center gap-2 text-[12px] text-slate-500"><Target className="h-3.5 w-3.5" />{tr ? "Analizler tamamen cihazınızda çalışır; CV'niz hiçbir yere gönderilmez." : "All analysis runs on your device; your CV is sent nowhere."}</div>
     </fieldset>
   );
 }

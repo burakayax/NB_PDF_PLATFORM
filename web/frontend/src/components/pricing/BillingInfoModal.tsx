@@ -452,7 +452,7 @@ export function BillingInfoModal({
   const inp =
     "w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/15";
   const lbl =
-    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1";
+    "block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1";
   const req = <span className="text-red-400 ml-0.5">*</span>;
 
   return (
@@ -614,7 +614,7 @@ export function BillingInfoModal({
                     placeholder={tr ? "11 haneli TC Kimlik No (boş bırakabilirsiniz)" : "11-digit national ID (optional)"}
                     autoComplete="off"
                   />
-                  <p className="mt-1 text-[11px] text-slate-400">
+                  <p className="mt-1 text-[12px] text-slate-400">
                     {tr
                       ? "İsteğe bağlıdır — boş bırakırsanız faturanız yasal olarak nihai tüketici (11111111111) adına düzenlenir. Girerseniz AES-256-GCM ile şifrelenir ve yalnızca e-arşiv fatura için kullanılır."
                       : "Optional — if left blank, your invoice is issued to a final consumer (11111111111) as permitted by law. If provided, it is encrypted with AES-256-GCM and used solely for e-invoice generation."}
@@ -747,7 +747,7 @@ export function BillingInfoModal({
               </div>
 
               {/* FIX 4: Geliştirilmiş KVKK bilgi metni */}
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] leading-relaxed text-slate-400">
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[12px] leading-relaxed text-slate-400">
                 {tr ? (
                   <>
                     Kişisel verileriniz,{" "}
@@ -779,7 +779,7 @@ export function BillingInfoModal({
               {/* FIX 3: Cayma hakkı — 3 blok yapısı */}
               <div className="space-y-3">
                 {/* Blok A: Yasal uyarı (bilgi) */}
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3 text-[11px] leading-relaxed text-slate-400">
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3 text-[12px] leading-relaxed text-slate-400">
                   <p className="mb-1 font-semibold text-amber-400/80">
                     {tr
                       ? "⚠ Yasal Cayma Hakkı Bildirimi"
@@ -791,7 +791,7 @@ export function BillingInfoModal({
                 </div>
 
                 {/* Blok B: Gönüllü iade garantisi (bilgi) */}
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[11px] leading-relaxed text-slate-400">
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[12px] leading-relaxed text-slate-400">
                   <p className="mb-1 font-semibold text-emerald-400/80">
                     {tr
                       ? "✓ 7 Günlük İade Garantisi"

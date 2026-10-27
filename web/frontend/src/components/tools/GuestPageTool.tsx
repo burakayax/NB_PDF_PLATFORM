@@ -348,7 +348,7 @@ export function GuestPageToolCore({
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[12px] text-slate-400">
               {pageCount} {tr ? "sayfa" : "pages"}
               {hasSelection ? (tr ? " · düzenlendi ✓" : " · edited ✓") : ""}
             </p>
@@ -402,7 +402,7 @@ export function GuestPageToolCore({
               <span className={`block text-[13.5px] font-semibold ${splitMode === "single" ? "text-white" : "text-slate-200"}`}>
                 {tr ? "Tek PDF" : "Single PDF"}
               </span>
-              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "single" ? "text-white/85" : "text-slate-400"}`}>
+              <span className={`mt-0.5 block text-[12px] leading-snug ${splitMode === "single" ? "text-white/85" : "text-slate-400"}`}>
                 {tr ? "Seçili sayfalar tek bir PDF dosyasında birleşir." : "Selected pages are merged into one PDF file."}
               </span>
             </button>
@@ -418,7 +418,7 @@ export function GuestPageToolCore({
               <span className={`block text-[13.5px] font-semibold ${splitMode === "separate" ? "text-white" : "text-slate-200"}`}>
                 {tr ? "Ayrı Dosyalar (ZIP)" : "Separate files (ZIP)"}
               </span>
-              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "separate" ? "text-white/85" : "text-slate-400"}`}>
+              <span className={`mt-0.5 block text-[12px] leading-snug ${splitMode === "separate" ? "text-white/85" : "text-slate-400"}`}>
                 {tr ? "Her sayfa kendi PDF'i olur, hepsi bir ZIP içinde iner." : "Each page becomes its own PDF, all delivered inside one ZIP."}
               </span>
             </button>
@@ -434,7 +434,7 @@ export function GuestPageToolCore({
               <span className={`block text-[13.5px] font-semibold ${splitMode === "every" ? "text-white" : "text-slate-200"}`}>
                 {tr ? "Her N sayfada bir" : "Every N pages"}
               </span>
-              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "every" ? "text-white/85" : "text-slate-400"}`}>
+              <span className={`mt-0.5 block text-[12px] leading-snug ${splitMode === "every" ? "text-white/85" : "text-slate-400"}`}>
                 {tr ? "Belge eşit sayfalı dosyalara bölünür (ör. 10'ar sayfa), ZIP olarak iner." : "The document is cut into equal-length files (e.g. 10 pages each), delivered as a ZIP."}
               </span>
             </button>
@@ -450,7 +450,7 @@ export function GuestPageToolCore({
               <span className={`block text-[13.5px] font-semibold ${splitMode === "size" ? "text-white" : "text-slate-200"}`}>
                 {tr ? "Boyuta göre (MB)" : "By size (MB)"}
               </span>
-              <span className={`mt-0.5 block text-[11.5px] leading-snug ${splitMode === "size" ? "text-white/85" : "text-slate-400"}`}>
+              <span className={`mt-0.5 block text-[12px] leading-snug ${splitMode === "size" ? "text-white/85" : "text-slate-400"}`}>
                 {tr ? "Her parça verdiğiniz MB sınırını aşmaz; yükleme limitlerine uymak için." : "Each part stays under the MB limit you give; handy for upload limits."}
               </span>
             </button>

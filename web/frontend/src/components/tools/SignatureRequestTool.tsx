@@ -330,10 +330,10 @@ export function SignatureRequestTool({
         </p>
       )}
 
-      <p className="mt-4 text-[11px] leading-relaxed text-slate-400">{t.legalNote}</p>
+      <p className="mt-4 text-[12px] leading-relaxed text-slate-400">{t.legalNote}</p>
 
       <div className="mt-7">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">
           {t.requests}
         </p>
         {istekler === null ? (
@@ -357,7 +357,7 @@ export function SignatureRequestTool({
                   </p>
                 </div>
                 <span
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${DURUM_RENGI[r.status]}`}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-semibold ${DURUM_RENGI[r.status]}`}
                 >
                   <DurumSimgesi durum={r.status} />
                   {t.durumlar[r.status]}
@@ -375,7 +375,7 @@ export function SignatureRequestTool({
                     <button
                       type="button"
                       onClick={() => void iptal(r.id)}
-                      className="rounded-lg border border-white/[0.1] px-2.5 py-2 text-[11px] font-semibold text-slate-300 transition hover:border-rose-400/40 hover:text-rose-200"
+                      className="rounded-lg border border-white/[0.1] px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:border-rose-400/40 hover:text-rose-200"
                     >
                       {t.cancel}
                     </button>

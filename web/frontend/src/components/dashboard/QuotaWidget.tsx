@@ -117,7 +117,7 @@ export function QuotaWidget({
           </div>
           <ProgressBar value={quota.daily.used} max={quota.daily.limit} warn={dailyPct >= 80} />
           {quota.plan === "FREE" && (
-            <p className="mt-2 text-[11px] leading-snug text-emerald-300/80">
+            <p className="mt-2 text-[12px] leading-snug text-emerald-300/80">
               ✓{" "}
               {tr
                 ? "Temel araçlar sınırsız: birleştir, böl, döndür, sayfa sil/düzenle, görsel→PDF. Bu kota yalnız dönüştürme/OCR gibi araçlar içindir."
@@ -137,7 +137,7 @@ export function QuotaWidget({
                 {Math.max(0, quota.monthly.limit - quota.monthly.used)}/{quota.monthly.limit}
               </span>
             </span>
-            <span className="text-gray-600 text-[10px]">
+            <span className="text-gray-600 text-[11px]">
               {quota.plan}
             </span>
           </div>
@@ -165,22 +165,22 @@ export function QuotaWidget({
       {/* Metadata chips */}
       <div className="flex flex-wrap gap-1.5 pt-1">
         {quota.isAdmin && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-medium">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-medium">
             Admin
           </span>
         )}
         {quota.batchLimit > 0 && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
             {tr ? `Toplu: ${quota.batchLimit} dosya` : `Batch: ${quota.batchLimit} files`}
           </span>
         )}
         {quota.fileSizeLimitMB > 0 && quota.fileSizeLimitMB < 999999 && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
             {tr ? `Maks. ${quota.fileSizeLimitMB} MB` : `Max ${quota.fileSizeLimitMB} MB`}
           </span>
         )}
         {quota.watermarkEnabled && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
             {tr ? "Filigran aktif" : "Watermark on"}
           </span>
         )}

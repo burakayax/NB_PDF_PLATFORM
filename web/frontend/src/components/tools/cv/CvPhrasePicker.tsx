@@ -14,7 +14,7 @@ function useProfession(hint: string) {
 
 function ProfSelect({ tr, value, auto, onChange }: { tr: boolean; value: string; auto: Profession | null; onChange: (v: string) => void }) {
   return (
-    <label className="flex items-center gap-2 text-[11.5px] text-slate-400">
+    <label className="flex items-center gap-2 text-[12px] text-slate-400">
       <span>{tr ? "Meslek:" : "Field:"}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900/70 px-2 py-1.5 text-[12px] text-white">
         <option value="">{auto ? (tr ? `Otomatik: ${auto.label.tr}` : `Auto: ${auto.label.en}`) : (tr ? "Otomatik (genel)" : "Auto (general)")}</option>
@@ -30,7 +30,7 @@ function Shell({ tr, title, sub, children }: { tr: boolean; title: string; sub: 
     <div className="overflow-hidden rounded-xl border border-amber-300/20 bg-gradient-to-br from-amber-400/[0.07] to-transparent">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-300/15 text-amber-200"><Lightbulb className="h-4 w-4" /></span>
-        <span className="min-w-0 flex-1"><span className="block text-[13px] font-bold text-amber-50">{title}</span><span className="block truncate text-[11px] text-amber-100/60">{sub}</span></span>
+        <span className="min-w-0 flex-1"><span className="block text-[13px] font-bold text-amber-50">{title}</span><span className="block truncate text-[12px] text-amber-100/60">{sub}</span></span>
         <ChevronDown className={`h-4 w-4 text-amber-200/70 transition ${open ? "rotate-180" : ""}`} />
       </button>
       {open ? <div className="space-y-2.5 border-t border-amber-300/15 px-3 pb-3 pt-2.5">{children}</div> : null}
@@ -61,7 +61,7 @@ export function BulletPicker({ tr, lang, hint, current, onAdd }: Common & { curr
           );
         })}
       </ul>
-      <p className="text-[11px] text-amber-100/60">{tr ? "Yalnızca gerçekten yaptığınız işleri ekleyin. [X] yerine kendi sayınızı yazın (ör. 50); bilmiyorsanız o kısmı silin. Hâlâ çalıştığınız bir işse cümleleri şimdiki zamana çevirin (“hazırladım” yerine “hazırlıyorum”)." : "Only add what you actually did. Replace [X] with your own number (e.g. 50), or delete that part if you don't know it. For a current job, switch the verbs to present tense."}</p>
+      <p className="text-[12px] text-amber-100/60">{tr ? "Yalnızca gerçekten yaptığınız işleri ekleyin. [X] yerine kendi sayınızı yazın (ör. 50); bilmiyorsanız o kısmı silin. Hâlâ çalıştığınız bir işse cümleleri şimdiki zamana çevirin (“hazırladım” yerine “hazırlıyorum”)." : "Only add what you actually did. Replace [X] with your own number (e.g. 50), or delete that part if you don't know it. For a current job, switch the verbs to present tense."}</p>
     </Shell>
   );
 }

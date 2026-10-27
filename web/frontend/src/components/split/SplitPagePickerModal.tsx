@@ -165,7 +165,7 @@ export function SplitPagePickerModal({
               </h2>
 
               <div className="flex flex-wrap items-center gap-1">
-                <span className="hidden whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-slate-400 sm:inline">
+                <span className="hidden whitespace-nowrap text-[11px] font-medium uppercase tracking-wide text-slate-400 sm:inline">
                   {effectiveModalLang === "tr" ? "Yakınlaştır" : "Zoom"}
                 </span>
                 <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
@@ -189,7 +189,7 @@ export function SplitPagePickerModal({
                                 : `Medium size (${z}%)`
                         }
                         onClick={() => setZoomPercent(z)}
-                        className={`min-h-[36px] rounded px-2 py-1 text-[11px] font-semibold tabular-nums transition sm:min-h-0 sm:px-2 sm:text-xs ${
+                        className={`min-h-[36px] rounded px-2 py-1 text-[12px] font-semibold tabular-nums transition sm:min-h-0 sm:px-2 sm:text-xs ${
                           zoomPercent === z
                             ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50 shadow-[0_0_12px_-6px_rgba(34,211,238,0.55)]"
                             : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
@@ -203,7 +203,7 @@ export function SplitPagePickerModal({
               </div>
 
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="whitespace-nowrap text-[11px] font-semibold text-slate-300">
+                <span className="whitespace-nowrap text-[12px] font-semibold text-slate-300">
                   {effectiveModalLang === "tr" ? "Sayfaya git:" : "Go to page:"}
                 </span>
                 <input
@@ -221,7 +221,7 @@ export function SplitPagePickerModal({
                   }}
                   className="w-12 rounded border border-cyan-500/40 bg-slate-900/90 px-1.5 py-0.5 text-center font-mono text-[12px] font-semibold text-cyan-100 tabular-nums outline-none ring-0 focus:border-cyan-400/70 focus:ring-1 focus:ring-cyan-400/30 sm:w-14 sm:py-1"
                 />
-                <span className="tabular-nums text-[11px] font-medium text-slate-400">
+                <span className="tabular-nums text-[12px] font-medium text-slate-400">
                   / {totalPages > 0 ? totalPages : "—"}
                 </span>
                 <button
@@ -234,7 +234,7 @@ export function SplitPagePickerModal({
               </div>
 
               <div className="min-w-0 shrink whitespace-nowrap tabular-nums">
-                <span className="rounded border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-semibold text-cyan-200 tabular-nums">
+                <span className="rounded border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 text-[12px] font-semibold text-cyan-200 tabular-nums">
                   {strictTurkishForDeleteUi && mode === "delete"
                     ? `Silinecek: ${stats.selectedCount}`
                     : effectiveModalLang === "tr"

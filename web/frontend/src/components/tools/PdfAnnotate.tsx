@@ -883,9 +883,9 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                       }}
                       className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-amber-400" : "border-transparent hover:border-white/20"}`}
                     >
-                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
+                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[11px] text-slate-400">{i + 1}</div>}
                       {has && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-black/40" />}
-                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-amber-300" : "text-slate-400"}`}>{i + 1}</span>
+                      <span className={`block py-0.5 text-center text-[11px] ${current === i ? "text-amber-300" : "text-slate-400"}`}>{i + 1}</span>
                     </button>
                   );
                 })}

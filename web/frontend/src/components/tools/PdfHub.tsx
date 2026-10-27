@@ -253,12 +253,12 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
         className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${a.btn}`}
       >
         {locked && (
-          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
+          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[11px] font-bold uppercase text-violet-200">
             <Lock className="h-2.5 w-2.5" />Pro
           </span>
         )}
         <span className={`${a.icon} ${locked ? "opacity-70" : ""}`}>{t.icon}</span>
-        <span className="text-[11px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
+        <span className="text-[12px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
       </button>
     );
   };
@@ -282,7 +282,7 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
           <div className="min-w-0">
             <p className="truncate text-sm font-bold leading-tight">{file.name || (tr ? "Belge" : "Document")}</p>
             {totalPages > 0 && (
-              <p className="text-[11px] leading-tight text-slate-400">
+              <p className="text-[12px] leading-tight text-slate-400">
                 {totalPages} {tr ? "sayfa" : totalPages === 1 ? "page" : "pages"}
               </p>
             )}
@@ -363,7 +363,7 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
                   <Maximize2 className="h-3.5 w-3.5" />
                   {tr ? "Sığdır" : "Fit"}
                 </button>
-                <span className="ml-1 hidden items-center gap-1 pl-1 pr-1.5 text-[11px] text-slate-400 md:flex">
+                <span className="ml-1 hidden items-center gap-1 pl-1 pr-1.5 text-[12px] text-slate-400 md:flex">
                   <MousePointerClick className="h-3 w-3" />
                   {tr ? "Ctrl + tekerlek" : "Ctrl + wheel"}
                 </span>
@@ -379,7 +379,7 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
           </p>
           {TOOL_CATEGORIES.map((cat, ci) => (
             <div key={cat.id} className={ci === 0 ? "" : "mt-5"}>
-              <p className={`mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${CAT_ACCENT[cat.accent].text}`}>
+              <p className={`mb-2 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider ${CAT_ACCENT[cat.accent].text}`}>
                 <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${CAT_ACCENT[cat.accent].dot}`} aria-hidden />
                 {tr ? cat.tr : cat.en}
               </p>
@@ -389,7 +389,7 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
             </div>
           ))}
           {!isPro && (
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
+            <p className="mt-4 text-center text-[12px] leading-relaxed text-slate-400">
               {tr
                 ? "Dönüştürme & bazı araçlar ücretsiz hesapla açılır — belgen korunur, giriş sonrası orada devam eder."
                 : "Conversion & some tools unlock with a free account — your file is kept and continues there after sign-in."}
@@ -413,7 +413,7 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
                 <p className="flex items-center gap-1.5 text-sm font-bold text-white">
                   <span className="truncate">{tr ? pending.tool.tr : pending.tool.en}</span>
                   {pending.locked && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[11px] font-bold uppercase text-violet-200">
                       <Lock className="h-2.5 w-2.5" />Pro
                     </span>
                   )}

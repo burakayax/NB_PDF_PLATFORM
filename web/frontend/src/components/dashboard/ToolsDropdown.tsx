@@ -156,12 +156,12 @@ export function ToolsDropdown({
                 </span>
                 <span className="min-w-0 flex-1 truncate font-medium">{tool.label}</span>
                 {locked && (
-                  <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-semibold uppercase tracking-wide text-amber-300/95">
+                  <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 sm:px-1.5 py-0.5 text-[11px] sm:text-[11px] font-semibold uppercase tracking-wide text-amber-300/95">
                     {tr ? "Kilit" : "Pro"}
                   </span>
                 )}
                 {!locked && tool.isPro && !isSelected && (
-                  <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-semibold uppercase tracking-wide text-nb-primary-mid">
+                  <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1 sm:px-1.5 py-0.5 text-[11px] sm:text-[11px] font-semibold uppercase tracking-wide text-nb-primary-mid">
                     Pro
                   </span>
                 )}

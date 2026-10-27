@@ -264,7 +264,7 @@ function LayoutModal(p: ModalProps) {
                       <m.Icon className="h-4 w-4 shrink-0 text-cyan-300" />
                       {m.ad}
                     </span>
-                    <span className="mt-1 hidden text-[11px] leading-snug text-slate-400 sm:block">{m.not}</span>
+                    <span className="mt-1 hidden text-[12px] leading-snug text-slate-400 sm:block">{m.not}</span>
                   </button>
                 ))}
               </div>
@@ -310,7 +310,7 @@ function LayoutModal(p: ModalProps) {
                   />
                   <span>
                     <span className="block text-[13px] text-slate-200">{t.hideNums}</span>
-                    <span className="mt-0.5 hidden text-[11px] leading-snug text-slate-400 sm:block">{t.hideNumsNote}</span>
+                    <span className="mt-0.5 hidden text-[12px] leading-snug text-slate-400 sm:block">{t.hideNumsNote}</span>
                   </span>
                 </label>
                 </div>
@@ -330,7 +330,7 @@ function LayoutModal(p: ModalProps) {
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-300" aria-label={t.previewBusy} />
               ) : null}
               <span className="ml-auto flex items-center gap-1">
-                <span className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-400 sm:inline">
+                <span className="hidden text-[11px] font-medium uppercase tracking-wide text-slate-400 sm:inline">
                   {t.zoom}
                 </span>
                 <span className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
@@ -340,7 +340,7 @@ function LayoutModal(p: ModalProps) {
                       type="button"
                       onClick={() => setZoom(z)}
                       aria-pressed={zoom === z}
-                      className={`min-h-[36px] rounded px-2 py-1 text-[11px] font-semibold tabular-nums transition sm:min-h-0 sm:px-2 sm:text-xs ${
+                      className={`min-h-[36px] rounded px-2 py-1 text-[12px] font-semibold tabular-nums transition sm:min-h-0 sm:px-2 sm:text-xs ${
                         zoom === z
                           ? "border border-cyan-400/45 bg-cyan-500/25 text-cyan-50"
                           : "border border-transparent text-slate-400 hover:border-cyan-500/25 hover:bg-white/5 hover:text-slate-200"
@@ -537,7 +537,7 @@ export function PdfLayoutTool({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-slate-100">{fileName}</p>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[12px] text-slate-400">
             {pageCount} {t.pageCount}
           </p>
         </div>
@@ -553,7 +553,7 @@ export function PdfLayoutTool({
 
       {secildi && (
         <div className="mt-3 rounded-xl border border-cyan-400/25 bg-cyan-500/[0.07] px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan-300/80">{t.layoutLabel}</p>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-cyan-300/80">{t.layoutLabel}</p>
           <p className="mt-0.5 text-sm font-semibold text-cyan-50">
             {kip === "kitapcik" ? t.bookletShort : t.nupShort(adet)}
           </p>

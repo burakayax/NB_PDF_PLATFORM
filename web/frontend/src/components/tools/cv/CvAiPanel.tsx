@@ -48,7 +48,7 @@ function Card({ icon, title, sub, children, open: o = false }: { icon: ReactNode
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.03]">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-fuchsia-500/15 text-fuchsia-200">{icon}</span>
-        <span className="flex-1"><span className="block text-[14px] font-bold text-white">{title}</span><span className="block text-[11.5px] text-slate-400">{sub}</span></span>
+        <span className="flex-1"><span className="block text-[14px] font-bold text-white">{title}</span><span className="block text-[12px] text-slate-400">{sub}</span></span>
         <ChevronDown className={`h-4 w-4 text-slate-400 transition ${open ? "rotate-180" : ""}`} />
       </button>
       {open ? <div className="space-y-3 border-t border-white/10 px-4 pb-4 pt-3">{children}</div> : null}
@@ -62,7 +62,7 @@ const ghost = "inline-flex items-center justify-center gap-1.5 rounded-xl border
 function Added({ words, tr }: { words: string[]; tr: boolean }) {
   if (!words.length) return null;
   return (
-    <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-amber-200">
+    <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12px] text-amber-200">
       <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
       <span>{tr ? "Yeni eklenen kelimeler — doğruluğunu siz onaylayın:" : "Newly added words — please confirm they're true:"}</span>
       {words.map((w) => <span key={w} className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold ring-1 ring-amber-400/25">{w}</span>)}
@@ -205,7 +205,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
   if (comingSoon) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-fuchsia-400/30 bg-fuchsia-500/[0.05] p-6 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-fuchsia-200"><Sparkles className="h-3.5 w-3.5" />{tr ? "Çok Yakında" : "Coming Soon"}</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-fuchsia-200"><Sparkles className="h-3.5 w-3.5" />{tr ? "Çok Yakında" : "Coming Soon"}</span>
         <p className="mt-3 text-[15px] font-black text-white">{tr ? "CV Yapay Zekâ Asistanı" : "CV AI Assistant"}</p>
         <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-slate-300">{tr ? "Profil özeti yazma, deneyim maddelerini güçlendirme, ilana uyarlama, ön yazı ve mevcut CV'nizi belgeden içe aktarma. Hiçbir şey uydurmaz: eksik bilgiyi size sorar." : "Profile summary writing, stronger bullets, tailoring to a job ad, cover letters and importing your existing CV. It never makes things up: it asks you for what's missing."}</p>
       </div>
@@ -221,8 +221,8 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
 
       <details className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12px] text-slate-300">
         <summary className="cursor-pointer font-semibold text-slate-200">{tr ? "Yapay zekâya tam olarak ne gidiyor?" : "Exactly what is sent to the AI?"}</summary>
-        <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950/70 p-2.5 font-mono text-[11px] leading-relaxed text-slate-300">{aiText || (tr ? "(CV'niz henüz boş)" : "(your CV is still empty)")}</pre>
-        <p className="mt-1.5 text-[11px] text-slate-500">{tr ? "İlan metni ve (ön yazıda) adınız ayrıca gider. Sağlayıcı verilerinizi model eğitiminde kullanmaz; sonuçlar sunucuda saklanmaz." : "The job ad and (for cover letters) your name are sent separately. The provider doesn't train on your data; results aren't stored on our server."}</p>
+        <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950/70 p-2.5 font-mono text-[12px] leading-relaxed text-slate-300">{aiText || (tr ? "(CV'niz henüz boş)" : "(your CV is still empty)")}</pre>
+        <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "İlan metni ve (ön yazıda) adınız ayrıca gider. Sağlayıcı verilerinizi model eğitiminde kullanmaz; sonuçlar sunucuda saklanmaz." : "The job ad and (for cover letters) your name are sent separately. The provider doesn't train on your data; results aren't stored on our server."}</p>
       </details>
 
       {err ? (
@@ -236,7 +236,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
 
       <Card open icon={<Wand2 className="h-4 w-4" />} title={tr ? "Profil özeti yaz" : "Write a profile summary"} sub={tr ? "3 farklı öneri; yalnızca verdiğiniz bilgilerden" : "3 options, built only from what you've entered"}>
         <button type="button" className={btn} disabled={!!busy || (!data.title.trim() && !exps.length)} onClick={() => void doSummary()}>{busy === "summary" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{tr ? "Özet öner (1 hak)" : "Suggest summaries (1 credit)"}</button>
-        {!data.title.trim() && !exps.length ? <p className="text-[11.5px] text-slate-500">{tr ? "Önce unvanınızı ve en az bir deneyim açıklamanızı girin." : "Enter your title and at least one job description first."}</p> : null}
+        {!data.title.trim() && !exps.length ? <p className="text-[12px] text-slate-500">{tr ? "Önce unvanınızı ve en az bir deneyim açıklamanızı girin." : "Enter your title and at least one job description first."}</p> : null}
         {summaries?.map((s, i) => (
           <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
             <p className="text-[13px] leading-relaxed text-slate-100">{s.text}</p>
@@ -259,14 +259,14 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
           <div className="space-y-2.5">
             {bullets.items.map((it, i) => (
               <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                <p className="text-[11.5px] text-slate-500 line-through">{it.original}</p>
+                <p className="text-[12px] text-slate-500 line-through">{it.original}</p>
                 <p className="mt-1 text-[13px] font-semibold text-slate-100">{it.improved}</p>
-                {it.rejectedNumber ? <p className="mt-1 text-[11.5px] text-amber-200">{tr ? "Yapay zekâ olmayan bir rakam eklemişti; reddedildi, özgün metin korundu." : "The AI had added a number you didn't give; it was rejected and your original kept."}</p> : null}
+                {it.rejectedNumber ? <p className="mt-1 text-[12px] text-amber-200">{tr ? "Yapay zekâ olmayan bir rakam eklemişti; reddedildi, özgün metin korundu." : "The AI had added a number you didn't give; it was rejected and your original kept."}</p> : null}
                 <Added words={it.added} tr={tr} />
-                {it.askMetric ? <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] text-sky-200"><Target className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "Rakam ekleyebilirsiniz: " : "You could add a measure: "}{it.askMetric}</p> : null}
+                {it.askMetric ? <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-sky-200"><Target className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "Rakam ekleyebilirsiniz: " : "You could add a measure: "}{it.askMetric}</p> : null}
                 {it.improved !== it.original ? (
                   <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" className="h-4 w-4 accent-fuchsia-500" checked={bullets.pick[i]} onChange={(e) => setBullets({ ...bullets, pick: bullets.pick.map((v, j) => (j === i ? e.target.checked : v)) })} />{tr ? "Bu değişikliği uygula" : "Apply this change"}</label>
-                ) : <p className="mt-1.5 text-[11.5px] text-slate-500">{tr ? "Değişiklik önerilmedi." : "No change suggested."}</p>}
+                ) : <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "Değişiklik önerilmedi." : "No change suggested."}</p>}
               </div>
             ))}
             <div className="flex gap-2"><button type="button" className={btn} onClick={applyBullets}><Check className="h-4 w-4" />{tr ? "Seçilenleri uygula" : "Apply selected"}</button><button type="button" className={ghost} onClick={() => setBullets(null)}>{tr ? "Vazgeç" : "Dismiss"}</button></div>
@@ -277,12 +277,12 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
       <Card icon={<Target className="h-4 w-4" />} title={tr ? "İlana göre uyarla" : "Tailor to a job ad"} sub={tr ? "Mevcut CV'nizi bozmadan, ilana göre bir KOPYA hazırlar" : "Prepares a COPY for the ad without touching your CV"}>
         <textarea value={ad} onChange={(e) => setAd(e.target.value)} rows={5} placeholder={tr ? "İş ilanının metnini yapıştırın (Analiz sekmesiyle ortaktır)…" : "Paste the job ad (shared with the Analysis tab)…"} className="w-full resize-y rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-fuchsia-400/60 focus:outline-none" />
         <button type="button" className={btn} disabled={!!busy || ad.trim().length < 80 || aiText.length < 80} onClick={() => void doTailor()}>{busy === "tailor" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}{tr ? "İlana uyarla (1 hak)" : "Tailor (1 credit)"}</button>
-        {ad.trim().length < 80 ? <p className="text-[11.5px] text-slate-500">{tr ? "İlanın tamamını yapıştırın (en az birkaç cümle)." : "Paste the whole ad (at least a few sentences)."}</p> : null}
+        {ad.trim().length < 80 ? <p className="text-[12px] text-slate-500">{tr ? "İlanın tamamını yapıştırın (en az birkaç cümle)." : "Paste the whole ad (at least a few sentences)."}</p> : null}
         {tailor ? (
           <div className="space-y-3">
             {tailor.summary ? (
               <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                <p className="text-[11.5px] font-semibold uppercase tracking-wide text-slate-400">{tr ? "Önerilen özet" : "Suggested summary"}</p>
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">{tr ? "Önerilen özet" : "Suggested summary"}</p>
                 <p className="mt-1 text-[13px] leading-relaxed text-slate-100">{tailor.summary}</p>
                 <Added words={tailor.summaryAdded} tr={tr} />
                 <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" className="h-4 w-4 accent-fuchsia-500" checked={tailor.pickSummary} onChange={(e) => setTailor({ ...tailor, pickSummary: e.target.checked })} />{tr ? "Kopyaya uygula" : "Apply to the copy"}</label>
@@ -290,10 +290,10 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
             ) : null}
             {tailor.bullets.map((b, i) => (
               <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                <p className="text-[11px] text-slate-500">{b.where}</p>
-                <p className="mt-0.5 text-[11.5px] text-slate-500 line-through">{b.original}</p>
+                <p className="text-[12px] text-slate-500">{b.where}</p>
+                <p className="mt-0.5 text-[12px] text-slate-500 line-through">{b.original}</p>
                 <p className="mt-1 text-[13px] font-semibold text-slate-100">{b.improved}</p>
-                <p className="mt-1 text-[11.5px] text-slate-400">{b.why}</p>
+                <p className="mt-1 text-[12px] text-slate-400">{b.why}</p>
                 <Added words={b.added} tr={tr} />
                 <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" className="h-4 w-4 accent-fuchsia-500" checked={tailor.pickBullets[i]} onChange={(e) => setTailor({ ...tailor, pickBullets: tailor.pickBullets.map((v, j) => (j === i ? e.target.checked : v)) })} />{tr ? "Kopyaya uygula" : "Apply to the copy"}</label>
               </div>
@@ -303,7 +303,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
               <div className="rounded-xl border border-sky-400/20 bg-sky-500/[0.06] p-3">
                 <p className="text-[12px] font-bold text-sky-200">{tr ? "Size sorular (ilanda var, CV'nizde görünmüyor)" : "Questions for you (in the ad, not visible in your CV)"}</p>
                 <ul className="mt-1.5 list-disc space-y-1 pl-4 text-[12.5px] leading-relaxed text-slate-200">{tailor.askUser.map((q, i) => <li key={i}>{q}</li>)}</ul>
-                <p className="mt-1.5 text-[11.5px] text-slate-400">{tr ? "Yanıtınız “evet” ise ilgili deneyimi CV'nize kendiniz ekleyin; yapay zekâ sizin yerinize bir şey eklemez." : "If the answer is “yes”, add the experience yourself; the AI never adds things for you."}</p>
+                <p className="mt-1.5 text-[12px] text-slate-400">{tr ? "Yanıtınız “evet” ise ilgili deneyimi CV'nize kendiniz ekleyin; yapay zekâ sizin yerinize bir şey eklemez." : "If the answer is “yes”, add the experience yourself; the AI never adds things for you."}</p>
               </div>
             ) : null}
             <div className="flex flex-wrap gap-2">
@@ -328,8 +328,8 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
         {cover ? (
           <div className="space-y-2.5">
             <textarea value={cover.text} onChange={(e) => setCover({ ...cover, text: e.target.value })} rows={14} className="w-full resize-y rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2.5 text-[13px] leading-relaxed text-slate-100" aria-label={tr ? "Ön yazı metni (düzenleyebilirsiniz)" : "Letter text (editable)"} />
-            {cover.unsupported.length ? <p className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-amber-200"><AlertTriangle className="h-3.5 w-3.5" />{tr ? "CV'nizde bulunmayan şunlar geçiyor, kontrol edin:" : "These aren't in your CV, please check:"}{cover.unsupported.map((w) => <span key={w} className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold ring-1 ring-amber-400/25">{w}</span>)}</p> : null}
-            <p className="text-[11.5px] text-slate-500">{tr ? "Bu bir taslaktır: göndermeden önce her cümlenin doğru olduğunu kontrol edin." : "This is a draft: check that every sentence is true before sending."}</p>
+            {cover.unsupported.length ? <p className="flex flex-wrap items-center gap-1.5 text-[12px] text-amber-200"><AlertTriangle className="h-3.5 w-3.5" />{tr ? "CV'nizde bulunmayan şunlar geçiyor, kontrol edin:" : "These aren't in your CV, please check:"}{cover.unsupported.map((w) => <span key={w} className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold ring-1 ring-amber-400/25">{w}</span>)}</p> : null}
+            <p className="text-[12px] text-slate-500">{tr ? "Bu bir taslaktır: göndermeden önce her cümlenin doğru olduğunu kontrol edin." : "This is a draft: check that every sentence is true before sending."}</p>
             <div className="flex flex-wrap gap-2"><button type="button" className={ghost} onClick={() => void copyCover()}>{copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}{copied ? (tr ? "Kopyalandı" : "Copied") : (tr ? "Kopyala" : "Copy")}</button><button type="button" className={ghost} onClick={() => void coverPdf()}><FileDown className="h-3.5 w-3.5" />{tr ? "PDF indir (CV tasarımıyla)" : "Download PDF (matching your CV)"}</button></div>
           </div>
         ) : null}
@@ -344,13 +344,13 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
           <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/[0.06] p-3 text-[12.5px] text-slate-100">
             <p className="font-bold text-emerald-200">{tr ? "Okundu:" : "Read:"} {imp.parsed.name || (tr ? "(ad bulunamadı)" : "(no name found)")}{imp.parsed.title ? ` — ${imp.parsed.title}` : ""}</p>
             <p className="mt-1 text-slate-300">{tr ? `${imp.parsed.experience.length} deneyim, ${imp.parsed.education.length} eğitim, ${imp.parsed.skills.length} beceri, ${imp.parsed.languages.length} dil${imp.parsed.other.length ? `, ${imp.parsed.other.length} ek bölüm` : ""}.` : `${imp.parsed.experience.length} jobs, ${imp.parsed.education.length} education, ${imp.parsed.skills.length} skills, ${imp.parsed.languages.length} languages${imp.parsed.other.length ? `, ${imp.parsed.other.length} extra section(s)` : ""}.`}</p>
-            <p className="mt-1 text-[11.5px] text-slate-400">{tr ? "Eklemeden önce alanları gözden geçirin; yapay zekâ belgedeki bir bilgiyi yanlış okumuş olabilir." : "Review the fields after adding; the AI may have misread something."}</p>
+            <p className="mt-1 text-[12px] text-slate-400">{tr ? "Eklemeden önce alanları gözden geçirin; yapay zekâ belgedeki bir bilgiyi yanlış okumuş olabilir." : "Review the fields after adding; the AI may have misread something."}</p>
             <div className="mt-2 flex gap-2"><button type="button" className={btn} onClick={() => { onNewCv(parsedToCv(imp.parsed, data), imp.name || (tr ? "İçe aktarılan CV" : "Imported CV")); setImp(null); }}><Check className="h-4 w-4" />{tr ? "Yeni CV olarak ekle" : "Add as a new CV"}</button><button type="button" className={ghost} onClick={() => setImp(null)}>{tr ? "Vazgeç" : "Dismiss"}</button></div>
           </div>
         ) : null}
       </Card>
 
-      <p className="text-[11px] leading-relaxed text-slate-500">{tr ? "Yapay zekâ sonuçları hata içerebilir; kullanmadan önce kontrol edin. Hiçbir şey otomatik uygulanmaz: her öneriyi siz onaylarsınız." : "AI results can contain errors; check before using. Nothing is applied automatically: you approve every suggestion."}</p>
+      <p className="text-[12px] leading-relaxed text-slate-500">{tr ? "Yapay zekâ sonuçları hata içerebilir; kullanmadan önce kontrol edin. Hiçbir şey otomatik uygulanmaz: her öneriyi siz onaylarsınız." : "AI results can contain errors; check before using. Nothing is applied automatically: you approve every suggestion."}</p>
       {topUpOpen ? <TopUpModal language={language} accessToken={accessToken} isAdmin={isAdmin} bonus={quota?.bonus} onClose={() => setTopUpOpen(false)} onGranted={() => void fetchAiQuota(accessToken).then((q) => q && setQuota(q))} /> : null}
     </fieldset>
   );

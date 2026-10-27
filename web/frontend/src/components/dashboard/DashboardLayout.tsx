@@ -81,7 +81,7 @@ function MobileDrawerNav({
           <span className="truncate">{label}</span>
           <span className="flex shrink-0 items-center gap-1.5">
             {locked && (
-              <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95">
+              <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-300/95">
                 {L.featureLockedBadge}
               </span>
             )}
@@ -96,7 +96,7 @@ function MobileDrawerNav({
     <nav className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-4" aria-label="Tools">
       {favTools.length > 0 ? (
         <div className="mb-1">
-          <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">
+          <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-amber-300/70">
             ★ {tr ? "Favoriler" : "Favorites"}
           </p>
           {favTools.map((id) => renderTool(id, "fav-"))}

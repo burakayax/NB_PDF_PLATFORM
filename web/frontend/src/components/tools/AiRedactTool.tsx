@@ -164,7 +164,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "Hassas Veri Gizle" : "Redact Sensitive Data"}</h1>
-            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
+            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
             {quota && !comingSoon ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{tr ? "TC, IBAN, telefon ve e-postayı cihazda bulur; isim/adresi yapay zekâ ile tespit eder; onayladıklarınızı PDF'ten GERÇEKTEN kaldırır (örtme değil)." : "Finds ID, IBAN, phone and email on your device; detects names/addresses with AI; truly removes what you confirm (not just covers)."}</p>
@@ -248,8 +248,8 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
                             }}
                             className="h-4 w-4 accent-fuchsia-500"
                           />
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">{g.label}</span>
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[12px] font-bold uppercase tracking-wide text-fuchsia-300">{g.label}</span>
+                          <span className="text-[12px] text-slate-400">
                             {g.items.filter((i) => i.checked).length}/{g.items.length}
                           </span>
                         </label>

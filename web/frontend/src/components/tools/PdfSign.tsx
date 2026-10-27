@@ -570,10 +570,10 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                   />
                 </label>
               </span>
-              <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-medium text-slate-300 lg:inline-flex">
+              <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[12px] font-medium text-slate-300 lg:inline-flex">
                 {tr ? "Kopyala/Yapıştır:" : "Copy/paste:"}
-                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-100">Ctrl+C</kbd>
-                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-100">Ctrl+V</kbd>
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-slate-100">Ctrl+C</kbd>
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-slate-100">Ctrl+V</kbd>
               </span>
               {selectedPlacement?.text !== undefined && (
                 <input
@@ -624,7 +624,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                     className="w-12 rounded-md border border-white/15 bg-white/[0.06] px-1 py-1 text-center text-[12px] tabular-nums text-white outline-none"
                   />
                   <button type="button" onClick={() => setFontSize(selectedPlacement.id, Math.round(fontPtOf(selectedPlacement)) + 1)} title={tr ? "Yazı boyutunu büyüt" : "Larger"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">+</button>
-                  <span className="text-[11px] text-slate-400">pt</span>
+                  <span className="text-[12px] text-slate-400">pt</span>
                 </span>
               )}
               {selectedPlacement && (
@@ -640,7 +640,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                     className="w-20 accent-cyan-400"
                     title={tr ? "Saydamlık" : "Opacity"}
                   />
-                  <span className="w-9 text-right text-[11px] font-semibold tabular-nums text-slate-200">{Math.round((selectedPlacement.opacity ?? 1) * 100)}%</span>
+                  <span className="w-9 text-right text-[12px] font-semibold tabular-nums text-slate-200">{Math.round((selectedPlacement.opacity ?? 1) * 100)}%</span>
                 </span>
               )}
               {pagePlacements.length > 0 && pageCount > 1 && (
@@ -709,9 +709,9 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                       }}
                       className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-cyan-400" : "border-transparent hover:border-white/20"}`}
                     >
-                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
+                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[11px] text-slate-400">{i + 1}</div>}
                       {has && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-black/40" />}
-                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
+                      <span className={`block py-0.5 text-center text-[11px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
                     </button>
                   );
                 })}

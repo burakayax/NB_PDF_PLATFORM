@@ -86,7 +86,7 @@ export function AnimatedCardOptions({ options, columns = 4, onSelect }: Animated
                 <motion.div variants={hoverVariants}>
                   <Card className="relative h-24 w-full border border-white/10 hover:border-white/25 transition-colors duration-200 bg-white/[0.04] backdrop-blur-sm">
                     {option.badge && (
-                      <span className="absolute top-1.5 right-1.5 z-10 rounded-full border border-emerald-500/25 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">
+                      <span className="absolute top-1.5 right-1.5 z-10 rounded-full border border-emerald-500/25 bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-300">
                         {option.badge}
                       </span>
                     )}

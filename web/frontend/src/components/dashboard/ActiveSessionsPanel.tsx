@@ -91,7 +91,7 @@ export function ActiveSessionsPanel({ accessToken, language }: Props) {
 
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">
         {tr ? "GÜVENLİK" : "SECURITY"}
       </p>
       <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
@@ -133,7 +133,7 @@ export function ActiveSessionsPanel({ accessToken, language }: Props) {
                   <p className="truncate text-sm font-semibold text-nb-text">
                     {o.cihaz}
                     {o.suAnki && (
-                      <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                      <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[12px] font-semibold text-emerald-300">
                         {tr ? "bu cihaz" : "this device"}
                       </span>
                     )}

@@ -80,7 +80,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
     <label className="block">
       <span className="mb-1 block text-[12px] font-semibold text-slate-300">{label}</span>
       {children}
-      {hint ? <span className="mt-1 block text-[11px] text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[12px] text-slate-500">{hint}</span> : null}
     </label>
   );
 }
@@ -94,7 +94,7 @@ export function Text({ label, value, onChange, placeholder, type = "text", disab
       ) : (
         <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} autoComplete={autoComplete} aria-invalid={error ? true : undefined} className={`${inputCls} ${error ? "!border-amber-400/60 !ring-2 !ring-amber-400/20" : ""}`} />
       )}
-      {error ? <span className="mt-1 flex items-start gap-1 text-[11.5px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
+      {error ? <span className="mt-1 flex items-start gap-1 text-[12px] font-medium text-amber-300"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</span> : null}
     </Field>
   );
 }
@@ -114,7 +114,7 @@ export function Accordion({ title, icon, defaultOpen, count, children }: { title
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.03]">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300">{icon}</span>
         <span className="flex-1 text-[14px] font-bold text-white">{title}</span>
-        {count ? <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-slate-300">{count}</span> : null}
+        {count ? <span className="rounded-full bg-white/10 px-2 py-0.5 text-[12px] font-semibold text-slate-300">{count}</span> : null}
         <ChevronDown className={`h-4 w-4 text-slate-400 transition ${open ? "rotate-180" : ""}`} />
       </button>
       {open ? <div className="space-y-3 border-t border-white/10 px-4 pb-4 pt-3">{children}</div> : null}
@@ -207,7 +207,7 @@ function PhotoCropper({ photo, tpl, onChange, disabled, tr }: { photo: CvPhoto; 
         {url ? <img src={url} alt="" draggable={false} className="h-full w-full select-none" /> : null}
       </div>
       <div className="min-w-0 flex-1 space-y-3">
-        <p className="text-[11.5px] leading-relaxed text-slate-400">{tr ? "Fotoğrafı sürükleyerek kaydırın, yakınlaştırmak için çubuğu kullanın." : "Drag the photo to reposition and use the slider to zoom."}</p>
+        <p className="text-[12px] leading-relaxed text-slate-400">{tr ? "Fotoğrafı sürükleyerek kaydırın, yakınlaştırmak için çubuğu kullanın." : "Drag the photo to reposition and use the slider to zoom."}</p>
         <label className="block text-[12px] text-slate-300">{tr ? "Yakınlaştır" : "Zoom"}
           <input type="range" min={1} max={3} step={0.02} value={photo.zoom} disabled={disabled} onChange={(e) => onChange({ ...photo, zoom: Number(e.target.value) })} className="mt-1 w-full accent-sky-400" />
         </label>
@@ -254,7 +254,7 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon, ai
             <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>
             {aiLocked || !aiComingSoon ? (
               aiLocked ? (
-                <button type="button" onClick={onAiLocked} title={tr ? "Ücretli plan gerekir (Başlangıç ve üzeri)" : "Needs a paid plan (Starter or higher)"} className="inline-flex items-center gap-2 rounded-xl bg-amber-400/10 px-3.5 py-2 text-[13px] font-semibold text-amber-100 ring-1 ring-amber-300/30 hover:bg-amber-400/20"><Lock className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}<span className="rounded-full bg-amber-300/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">PRO</span></button>
+                <button type="button" onClick={onAiLocked} title={tr ? "Ücretli plan gerekir (Başlangıç ve üzeri)" : "Needs a paid plan (Starter or higher)"} className="inline-flex items-center gap-2 rounded-xl bg-amber-400/10 px-3.5 py-2 text-[13px] font-semibold text-amber-100 ring-1 ring-amber-300/30 hover:bg-amber-400/20"><Lock className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}<span className="rounded-full bg-amber-300/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-200">PRO</span></button>
               ) : (
                 <button type="button" onClick={() => setPrepOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-fuchsia-500/15 px-3.5 py-2 text-[13px] font-semibold text-fuchsia-100 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"><Sparkles className="h-4 w-4" />{tr ? "AI ile hazırla" : "Prepare with AI"}</button>
               )
@@ -268,7 +268,7 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon, ai
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-200"><Camera className="h-5 w-5" /></span>
             <span className="min-w-0">
               <span className="block text-[14px] font-bold text-white">{tr ? "Fotoğraf ekle" : "Add a photo"} <span className="font-normal text-slate-400">{tr ? "(isteğe bağlı)" : "(optional)"}</span></span>
-              <span className="block text-[11.5px] text-slate-400">{tr ? "Tıklayın, cihazınızdan seçin. Fotoğraf sunucuya yüklenmez." : "Click and pick one from your device. It is never uploaded."}</span>
+              <span className="block text-[12px] text-slate-400">{tr ? "Tıklayın, cihazınızdan seçin. Fotoğraf sunucuya yüklenmez." : "Click and pick one from your device. It is never uploaded."}</span>
             </span>
           </button>
           <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>
@@ -355,7 +355,7 @@ export function EducationEditor({ e, data, set, tr }: { e: CvEducation; data: Cv
           })}
         </div>
         <textarea value={e.honors ?? ""} onChange={(ev) => upd({ honors: ev.target.value })} rows={2} placeholder={tr ? "Kendi başarınızı da yazabilirsiniz; her satır ayrı madde olur." : "Add your own too; each line becomes a bullet."} className={`${inputCls} resize-y leading-relaxed`} />
-        <span className="mt-1 block text-[11px] text-slate-500">{tr ? "Yalnızca gerçekten aldığınız dereceleri işaretleyin." : "Only tick what you actually earned."}</span>
+        <span className="mt-1 block text-[12px] text-slate-500">{tr ? "Yalnızca gerçekten aldığınız dereceleri işaretleyin." : "Only tick what you actually earned."}</span>
       </div>
       <Area label={tr ? "Ek bilgi (isteğe bağlı)" : "Details (optional)"} rows={2} value={e.desc} onChange={(v) => upd({ desc: v })} hint={tr ? "Bitirme projesi, önemli dersler, kulüp çalışmaları…" : "Thesis, key courses, clubs…"} />
     </>
@@ -516,7 +516,7 @@ ${line}` : line }))} />
         ))}
         <SkillPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} have={data.skills.map((x) => x.name)} onAdd={(name) => set("skills", [...data.skills.filter((x) => x.name.trim()), { id: uid(), name, level: 0 }])} />
         <AddButton label={tr ? "Beceri ekle" : "Add skill"} onClick={() => set("skills", [...data.skills, { id: uid(), name: "", level: 0 }])} />
-        <p className="text-[11px] text-slate-500">{tr ? "Seviye yalnızca çubuklu şablonlarda görünür." : "Levels show only in templates with skill bars."}</p>
+        <p className="text-[12px] text-slate-500">{tr ? "Seviye yalnızca çubuklu şablonlarda görünür." : "Levels show only in templates with skill bars."}</p>
       </Accordion>
 
       <Accordion title={tr ? "Yabancı diller" : "Languages"} icon={<Languages className="h-4 w-4" />} count={data.languages.length}>
@@ -533,7 +533,7 @@ ${line}` : line }))} />
         <AddButton label={tr ? "Dil ekle" : "Add language"} onClick={() => set("languages", [...data.languages, { id: uid(), name: "", level: "" }])} />
       </Accordion>
 
-      <p className="px-1 pt-2 text-[11.5px] font-bold uppercase tracking-wide text-slate-500">{tr ? "Ek bölümler (isteğe bağlı)" : "Extra sections (optional)"}</p>
+      <p className="px-1 pt-2 text-[12px] font-bold uppercase tracking-wide text-slate-500">{tr ? "Ek bölümler (isteğe bağlı)" : "Extra sections (optional)"}</p>
 
       <Accordion title={tr ? "Sertifikalar" : "Certifications"} icon={<Award className="h-4 w-4" />} count={data.certs.length}>
         <CertsEditor data={data} set={set} tr={tr} />
@@ -549,7 +549,7 @@ ${line}` : line }))} />
 
       <Accordion title={tr ? "Referanslar" : "References"} icon={<Users className="h-4 w-4" />} count={data.references.length}>
         <ReferencesEditor data={data} set={set} tr={tr} />
-        <p className="text-[11px] text-slate-500">{tr ? "İsterseniz “Referanslar istek üzerine sunulur” yazmak yerine bu bölümü boş bırakın; PDF'e eklenmez." : "Leave this empty if you'd rather not list references; it won't appear in the PDF."}</p>
+        <p className="text-[12px] text-slate-500">{tr ? "İsterseniz “Referanslar istek üzerine sunulur” yazmak yerine bu bölümü boş bırakın; PDF'e eklenmez." : "Leave this empty if you'd rather not list references; it won't appear in the PDF."}</p>
       </Accordion>
 
       {data.customSections.map((c: CvCustomSection) => {
@@ -572,7 +572,7 @@ ${line}` : line }))} />
                   <button key={o.v} type="button" role="radio" aria-checked={style === o.v} onClick={() => upd({ style: o.v })} title={o.hint} className={`flex flex-col items-start gap-1 rounded-xl border px-2.5 py-2 text-left transition ${style === o.v ? "border-sky-400 bg-sky-500/15 text-white ring-1 ring-sky-400/40" : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/25 hover:bg-white/[0.06]"}`}>
                     <span className={style === o.v ? "text-sky-300" : "text-slate-400"}>{o.icon}</span>
                     <span className="text-[12.5px] font-bold">{o.label}</span>
-                    <span className="text-[10.5px] leading-tight text-slate-400">{o.hint}</span>
+                    <span className="text-[11px] leading-tight text-slate-400">{o.hint}</span>
                   </button>
                 ))}
               </div>
@@ -599,7 +599,7 @@ ${line}` : line }))} />
       })}
       <div className="rounded-2xl border border-dashed border-sky-400/35 bg-sky-500/[0.04] p-3.5">
         <p className="text-[13px] font-bold text-white">{tr ? "Kendi bölümünüzü ekleyin" : "Add your own section"}</p>
-        <p className="mb-2.5 text-[11.5px] text-slate-400">{tr ? "Bir başlık seçin; uygun görünümle hazır gelir, istediğinizi sonradan değiştirebilirsiniz." : "Pick a title; it comes ready with a fitting look, which you can change later."}</p>
+        <p className="mb-2.5 text-[12px] text-slate-400">{tr ? "Bir başlık seçin; uygun görünümle hazır gelir, istediğinizi sonradan değiştirebilirsiniz." : "Pick a title; it comes ready with a fitting look, which you can change later."}</p>
         <div className="flex flex-wrap gap-1.5">
           {CUSTOM_PRESETS.map((p) => (
             <button key={p.id} type="button" onClick={() => set("customSections", [...data.customSections, { id: uid(), title: tr ? p.tr : p.en, style: p.style, items: [{ id: uid(), title: "", subtitle: "", date: "", desc: "" }] }])} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1.5 text-[12.5px] font-medium text-slate-100 hover:border-sky-400/50 hover:bg-sky-500/10"><Plus className="h-3.5 w-3.5 text-sky-300" />{tr ? p.tr : p.en}</button>

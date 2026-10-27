@@ -54,7 +54,7 @@ function LegalTable({ rows }: { rows: string[][] }) {
         <thead>
           <tr className="bg-white/[0.06]">
             {head.map((h) => (
-              <th key={h} scope="col" className="px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide text-nb-text">
+              <th key={h} scope="col" className="px-3 py-2.5 text-[12px] font-bold uppercase tracking-wide text-nb-text">
                 {h}
               </th>
             ))}
@@ -66,7 +66,7 @@ function LegalTable({ rows }: { rows: string[][] }) {
               {row.map((cell, j) => (
                 <td key={j} className={`px-3 py-2.5 ${j === 0 ? "font-semibold text-nb-text" : ""}`}>
                   {j === 1 ? (
-                    <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-snug ${whereBadgeClass(cell)}`}>
+                    <span className={`inline-block rounded-full border px-2 py-0.5 text-[12px] font-semibold leading-snug ${whereBadgeClass(cell)}`}>
                       {cell}
                     </span>
                   ) : (

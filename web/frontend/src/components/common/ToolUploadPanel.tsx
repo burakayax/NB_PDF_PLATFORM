@@ -120,7 +120,7 @@ export function ToolUploadPanel({
             <p className="mt-0.5 hidden text-[12.5px] leading-snug text-slate-400 sm:block">{copy.desc}</p>
           </div>
           <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-bold ${
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-bold ${
               onDevice
                 ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
                 : "border-sky-400/30 bg-sky-500/10 text-sky-300"
@@ -209,7 +209,7 @@ export function ToolUploadPanel({
             <p className="nb-dropzone__hint relative mt-1.5 text-sm">
               {hint ?? (tr ? "ya da tıklayıp seç" : "or click to choose")}
             </p>
-            <div className="relative mt-6 hidden flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-slate-300 sm:flex">
+            <div className="relative mt-6 hidden flex-wrap items-center justify-center gap-2 text-[12px] font-semibold text-slate-300 sm:flex">
               {chips.map((c) => {
                 const ChipIcon = c.Icon;
                 return (

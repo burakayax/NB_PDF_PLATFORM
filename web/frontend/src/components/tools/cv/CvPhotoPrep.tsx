@@ -109,8 +109,8 @@ export function CvPhotoPrep({ photo, tpl, tr, onApply, onClose }: Props) {
         {leveled ? (
           <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1.1fr]">
             <div className="grid grid-cols-2 gap-2">
-              <figure className="space-y-1"><img src={photo.src} alt="" className="w-full rounded-xl object-cover opacity-80" style={{ aspectRatio: `${bw}/${bh}` }} /><figcaption className="text-center text-[11px] text-slate-500">{tr ? "Önce" : "Before"}</figcaption></figure>
-              <figure className="space-y-1">{preview ? <img src={preview} alt={tr ? "Hazırlanan fotoğraf" : "Prepared photo"} className="w-full rounded-xl" style={{ aspectRatio: `${bw}/${bh}` }} /> : null}<figcaption className="text-center text-[11px] text-slate-300">{tr ? "Sonra" : "After"}</figcaption></figure>
+              <figure className="space-y-1"><img src={photo.src} alt="" className="w-full rounded-xl object-cover opacity-80" style={{ aspectRatio: `${bw}/${bh}` }} /><figcaption className="text-center text-[12px] text-slate-500">{tr ? "Önce" : "Before"}</figcaption></figure>
+              <figure className="space-y-1">{preview ? <img src={preview} alt={tr ? "Hazırlanan fotoğraf" : "Prepared photo"} className="w-full rounded-xl" style={{ aspectRatio: `${bw}/${bh}` }} /> : null}<figcaption className="text-center text-[12px] text-slate-300">{tr ? "Sonra" : "After"}</figcaption></figure>
             </div>
             <div className="space-y-3">
               <div>
@@ -121,7 +121,7 @@ export function CvPhotoPrep({ photo, tpl, tr, onApply, onClose }: Props) {
                     return (
                       <button key={l.id} type="button" role="radio" aria-checked={look === l.id} onClick={() => { setLook(l.id); setBg(l.bg); setEnhance(l.enhance); setEdge(l.edge); }} className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 text-left transition ${look === l.id ? "border-sky-400 bg-sky-500/15" : "border-white/10 bg-white/[0.03] hover:border-white/25"}`}>
                         <span className="h-7 w-7 shrink-0 rounded-full ring-1 ring-white/20" style={{ background: o.swatch }} />
-                        <span className="min-w-0"><span className="block truncate text-[12px] font-bold text-white">{tr ? l.tr : l.en}</span><span className="block truncate text-[10px] text-slate-400">{tr ? l.descTr : l.descEn}</span></span>
+                        <span className="min-w-0"><span className="block truncate text-[12px] font-bold text-white">{tr ? l.tr : l.en}</span><span className="block truncate text-[11px] text-slate-400">{tr ? l.descTr : l.descEn}</span></span>
                       </button>
                     );
                   })}
@@ -135,31 +135,31 @@ export function CvPhotoPrep({ photo, tpl, tr, onApply, onClose }: Props) {
                     return (
                       <button key={id} type="button" role="radio" aria-checked={bg === id} aria-label={tr ? o.tr : o.en} title={tr ? o.tr : o.en} onClick={() => { setBg(id); setLook(""); }} className="flex flex-col items-center gap-1">
                         <span className={`h-9 w-9 rounded-full ring-2 ${bg === id ? "ring-sky-400" : "ring-white/15"}`} style={{ background: o.swatch }} />
-                        <span className="w-full truncate text-center text-[9.5px] leading-tight text-slate-400">{tr ? o.tr : o.en}</span>
+                        <span className="w-full truncate text-center text-[11px] leading-tight text-slate-400">{tr ? o.tr : o.en}</span>
                       </button>
                     );
                   })}
                   <button type="button" role="radio" aria-checked={bg === "custom" && customColor === tint(tpl.theme.accent)} onClick={() => { setBg("custom"); setCustomColor(tint(tpl.theme.accent)); setLook(""); }} className="flex flex-col items-center gap-1" title={tr ? "CV'nizin vurgu rengine uyumlu açık zemin" : "A light backdrop matching your CV accent colour"}>
                     <span className={`h-9 w-9 rounded-full ring-2 ${bg === "custom" && customColor === tint(tpl.theme.accent) ? "ring-sky-400" : "ring-white/15"}`} style={{ background: tint(tpl.theme.accent) }} />
-                    <span className="w-full truncate text-center text-[9.5px] leading-tight text-slate-400">{tr ? "CV rengi" : "CV colour"}</span>
+                    <span className="w-full truncate text-center text-[11px] leading-tight text-slate-400">{tr ? "CV rengi" : "CV colour"}</span>
                   </button>
                   <label className="flex cursor-pointer flex-col items-center gap-1" title={tr ? "Kendi rengini seç" : "Pick your own colour"}>
                     <span className={`relative h-9 w-9 overflow-hidden rounded-full ring-2 ${bg === "custom" && customColor !== tint(tpl.theme.accent) ? "ring-sky-400" : "ring-white/15"}`} style={{ background: "conic-gradient(red,yellow,lime,aqua,blue,magenta,red)" }}>
                       <input type="color" value={customColor} onChange={(e) => { setBg("custom"); setCustomColor(e.target.value); setLook(""); }} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label={tr ? "Özel renk" : "Custom colour"} />
                     </span>
-                    <span className="w-full truncate text-center text-[9.5px] leading-tight text-slate-400">{tr ? "Özel renk" : "Custom"}</span>
+                    <span className="w-full truncate text-center text-[11px] leading-tight text-slate-400">{tr ? "Özel renk" : "Custom"}</span>
                   </label>
                 </div>
               </div>
               <label className="block text-[12px] text-slate-200"><span className="font-semibold">{tr ? "Kenar temizliği" : "Edge cleanup"}</span>
-                <span className="ml-1 text-[10.5px] text-slate-500">{tr ? "(saç çevresinde eski arka plan kalıyorsa artırın)" : "(raise if old background remains around the hair)"}</span>
+                <span className="ml-1 text-[11px] text-slate-500">{tr ? "(saç çevresinde eski arka plan kalıyorsa artırın)" : "(raise if old background remains around the hair)"}</span>
                 <input type="range" min={0} max={100} value={Math.round(edge * 100)} onChange={(e) => { setEdge(Number(e.target.value) / 100); setLook(""); }} className="mt-1 w-full accent-sky-400" />
               </label>
               <label className="block text-[12px] text-slate-200"><span className="font-semibold">{tr ? "Baş boyutu" : "Head size"}</span>
                 <input type="range" min={Math.round(preset.head[0] * 100) - 8} max={Math.round(preset.head[1] * 100) + 10} value={Math.round(headRatio * 100)} onChange={(e) => setHeadRatio(Number(e.target.value) / 100)} className="mt-1 w-full accent-sky-400" />
               </label>
               <label className="flex items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" checked={enhance} onChange={(e) => setEnhance(e.target.checked)} className="accent-sky-400" />{tr ? "Işığı otomatik dengele" : "Auto-balance lighting"}</label>
-              {notes.length ? <ul className="space-y-1 rounded-xl bg-amber-500/10 p-2.5 text-[11.5px] text-amber-100">{notes.slice(0, 3).map((n) => <li key={n}>• {n}</li>)}</ul> : <p className="text-[11.5px] text-emerald-300">{tr ? "Kadraj ve ışık uygun görünüyor." : "Framing and lighting look good."}</p>}
+              {notes.length ? <ul className="space-y-1 rounded-xl bg-amber-500/10 p-2.5 text-[12px] text-amber-100">{notes.slice(0, 3).map((n) => <li key={n}>• {n}</li>)}</ul> : <p className="text-[12px] text-emerald-300">{tr ? "Kadraj ve ışık uygun görünüyor." : "Framing and lighting look good."}</p>}
             </div>
           </div>
         ) : null}

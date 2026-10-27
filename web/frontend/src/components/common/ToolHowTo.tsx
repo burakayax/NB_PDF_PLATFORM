@@ -55,7 +55,7 @@ export function ToolHowTo({
           <li key={i} className={compact ? "flex gap-2.5" : "flex gap-2.5 rounded-xl bg-white/[0.02] p-2.5"}>
             <span
               className={`mt-px flex shrink-0 items-center justify-center rounded-full bg-cyan-500/20 font-bold text-cyan-200 ${
-                compact ? "h-4 w-4 text-[10px]" : "h-5 w-5 text-[11px]"
+                compact ? "h-4 w-4 text-[11px]" : "h-5 w-5 text-[12px]"
               }`}
             >
               {i + 1}
@@ -64,7 +64,7 @@ export function ToolHowTo({
               <span className={`block font-semibold text-slate-100 ${compact ? "text-[12px]" : "text-[13px]"}`}>
                 {step.title}
               </span>
-              <span className={`block leading-relaxed text-slate-400 ${compact ? "text-[11px]" : "text-[12px]"}`}>
+              <span className={`block leading-relaxed text-slate-400 ${compact ? "text-[12px]" : "text-[12px]"}`}>
                 {step.detail}
               </span>
             </span>

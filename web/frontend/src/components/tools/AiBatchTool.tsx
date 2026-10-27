@@ -235,7 +235,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "AI Toplu İşlem" : "AI Batch"}</h1>
-            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
+            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
             {quota && !comingSoon ? <AiCreditBadge quota={quota} language={language} onTopUp={() => setTopUpOpen(true)} /> : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">
@@ -332,7 +332,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                        <p className="text-[11px]">{statusChip(f)}</p>
+                        <p className="text-[12px]">{statusChip(f)}</p>
                       </div>
                       {!running && (
                         <button type="button" onClick={() => remove(f.id)} className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"><X className="h-4 w-4" /></button>
@@ -341,11 +341,11 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                     {/* Extract sonucu — kompakt önizleme */}
                     {f.status === "done" && f.extract && (f.extract.fields.length > 0) && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        {f.extract.docType && <span className="rounded-md border border-fuchsia-400/20 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] text-fuchsia-200">{f.extract.docType}</span>}
+                        {f.extract.docType && <span className="rounded-md border border-fuchsia-400/20 bg-fuchsia-500/10 px-2 py-0.5 text-[12px] text-fuchsia-200">{f.extract.docType}</span>}
                         {f.extract.fields.slice(0, 5).map((fl, i) => (
-                          <span key={i} className="rounded-md bg-white/[0.05] px-2 py-0.5 text-[11px] text-slate-300"><b className="text-slate-400">{fl.label}:</b> {fl.value}</span>
+                          <span key={i} className="rounded-md bg-white/[0.05] px-2 py-0.5 text-[12px] text-slate-300"><b className="text-slate-400">{fl.label}:</b> {fl.value}</span>
                         ))}
-                        {f.extract.fields.length > 5 && <span className="text-[11px] text-slate-400">+{f.extract.fields.length - 5}</span>}
+                        {f.extract.fields.length > 5 && <span className="text-[12px] text-slate-400">+{f.extract.fields.length - 5}</span>}
                       </div>
                     )}
                     {/* Özet/çeviri — kısa önizleme */}

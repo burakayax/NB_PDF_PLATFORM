@@ -247,7 +247,7 @@ function ScanCard({
     }
   }
 
-  const actionBtn = "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition disabled:opacity-50";
+  const actionBtn = "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-2 text-[12px] font-semibold transition disabled:opacity-50";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
@@ -266,7 +266,7 @@ function ScanCard({
             {busy || !blobRef.current ? <Loader2 className="h-6 w-6 animate-spin text-slate-400" /> : <FileText className="h-8 w-8 text-slate-400" />}
           </span>
         )}
-        <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 backdrop-blur">
+        <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/90 backdrop-blur">
           {(scan.filename.split(".").pop() || "pdf").toUpperCase()}
         </span>
       </button>
@@ -274,7 +274,7 @@ function ScanCard({
       {/* Bilgi */}
       <div className="min-w-0 px-2 pt-2">
         <p className="truncate text-[12px] font-semibold text-slate-100" title={scan.filename}>{scan.filename}</p>
-        <p className="text-[10px] text-slate-400">{fmtSize(scan.sizeBytes)} · {fmtDate(scan.createdAt)}</p>
+        <p className="text-[11px] text-slate-400">{fmtSize(scan.sizeBytes)} · {fmtDate(scan.createdAt)}</p>
       </div>
 
       {/* Aksiyonlar — renkli */}

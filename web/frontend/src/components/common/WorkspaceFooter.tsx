@@ -55,7 +55,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
               >
                 PDF Platform
               </p>
-              <p className="text-[11.5px] text-slate-400">by NB Global Studio</p>
+              <p className="text-[12px] text-slate-400">by NB Global Studio</p>
             </div>
           </div>
           <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-slate-400">
@@ -88,7 +88,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
         {/* Bağlantı sütunları */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3">
           <div>
-            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-300">
+            <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.18em] text-slate-300">
               {tr ? "Keşfet" : "Explore"}
             </p>
             <ul className="space-y-1">
@@ -98,7 +98,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
             </ul>
           </div>
           <div>
-            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-300">
+            <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.18em] text-slate-300">
               {tr ? "Destek" : "Support"}
             </p>
             <ul className="space-y-1">
@@ -114,7 +114,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
             </ul>
           </div>
           <div className="col-span-2 sm:col-span-1">
-            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-300">
+            <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.18em] text-slate-300">
               {tr ? "Yasal" : "Legal"}
             </p>
             <ul className="space-y-1">
@@ -135,7 +135,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
           {trust.map((b) => (
             <li
               key={b.text}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-slate-300"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[12px] font-medium text-slate-300"
             >
               <span className="text-cyan-300">{b.icon}</span>
               {b.text}

@@ -114,7 +114,7 @@ export function SiteFooter({ language }: { language: Language }) {
           <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 md:flex md:gap-x-16">
             {cols.map((col) => (
               <div key={col.heading} className="min-w-[7rem]">
-                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-400">
+                <p className="mb-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-gray-400">
                   {col.heading}
                 </p>
                 <ul className="space-y-2.5">

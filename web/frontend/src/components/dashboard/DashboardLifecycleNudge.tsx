@@ -184,7 +184,7 @@ export function DashboardLifecycleNudge({
               snooze(variant);
               setDismissed(true);
             }}
-            className="text-[11px] font-medium text-slate-400 underline-offset-2 transition hover:text-slate-200 hover:underline"
+            className="text-[12px] font-medium text-slate-400 underline-offset-2 transition hover:text-slate-200 hover:underline"
           >
             {tr ? "Şimdi değil" : "Not now"}
           </button>

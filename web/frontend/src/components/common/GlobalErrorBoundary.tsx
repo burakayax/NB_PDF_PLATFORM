@@ -132,7 +132,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           </h1>
           <p className="mt-3 text-sm leading-7 text-nb-muted">{copy.body}</p>
           {this.state.detail ? (
-            <p className="mt-4 break-words text-[11px] leading-5 text-nb-muted/70">{this.state.detail}</p>
+            <p className="mt-4 break-words text-[12px] leading-5 text-nb-muted/70">{this.state.detail}</p>
           ) : null}
           <button
             type="button"

@@ -120,14 +120,14 @@ export function UpgradeNudgeInline({
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="nb-transition rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-1.5 text-[11px] font-semibold text-nb-muted hover:border-cyan-500/35 hover:bg-cyan-500/10 hover:text-cyan-100"
+          className="nb-transition rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-1.5 text-[12px] font-semibold text-nb-muted hover:border-cyan-500/35 hover:bg-cyan-500/10 hover:text-cyan-100"
           onClick={onContinueFree}
         >
           {W.upgradeNudgeContinueFree}
         </button>
         <button
           type="button"
-          className="nb-transition rounded-lg border border-cyan-400/40 bg-cyan-500/12 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-cyan-50 hover:bg-cyan-500/22"
+          className="nb-transition rounded-lg border border-cyan-400/40 bg-cyan-500/12 px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wide text-cyan-50 hover:bg-cyan-500/22"
           onClick={onUpgrade}
         >
           {W.upgradeNudgeUpgradeInstant}
