@@ -4413,6 +4413,7 @@ function App() {
     termsAccepted?: boolean;
     privacyNoticeRead?: boolean;
   }) {
+    rememberMe?: boolean;
     try {
       setAuthSubmitting(true);
       setAuthError("");
@@ -4449,7 +4450,7 @@ function App() {
         return;
       }
 
-      const loggedInUser = await login(payload.email, payload.password, view === "admin_login");
+      const loggedInUser = await login(payload.email, payload.password, view === "admin_login", payload.rememberMe);
       if (
         loggedInUser.preferredLanguage &&
         loggedInUser.preferredLanguage !== language
@@ -4546,6 +4547,7 @@ function App() {
   }) {
     try {
       setAuthSubmitting(true);
+    rememberMe?: boolean;
       setAuthError("");
 
       if (scannerAuthMode === "register") {
@@ -4581,7 +4583,7 @@ function App() {
         return;
       }
 
-      const loggedInUser = await login(payload.email, payload.password, false);
+      const loggedInUser = await login(payload.email, payload.password, false, payload.rememberMe);
       if (
         loggedInUser.preferredLanguage &&
         loggedInUser.preferredLanguage !== language

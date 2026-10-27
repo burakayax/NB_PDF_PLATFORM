@@ -90,7 +90,45 @@ export type AuthSessionResult = {
   accessToken: string;
   refreshToken: string;
   user: PublicUser;
+  /** Yenileme çerezinin nasıl yazılacağı: persistent=false → tarayıcı kapanınca biten çerez. */
+  cookie: { persistent: boolean; expiresAt: Date };
 };
+
+/**
+ * Oturum politikası ("Beni hatırla").
+ *  - eski:        persistent, mutlak son yok → her yenilemede REFRESH_TOKEN_TTL_DAYS uzar
+ *                 (Google girişi, masaüstü, "rememberMe" göndermeyen istemciler)
+ *  - hatırla:     persistent, mutlak son = giriş + REMEMBER_ME_TTL_DAYS; yenilemeyle UZAMAZ
+ *  - hatırlama:   persistent=false (oturum çerezi), boşta SESSION_IDLE_HOURS, mutlak son =
+ *                 giriş + REFRESH_TOKEN_TTL_DAYS
+ * Yenilemede politika eski kayıttan AYNEN devralınır; böylece kimse süreyi yenileyerek
+ * seçtiği sınırın ötesine geçemez.
+ */
+export type OturumPolitikasi = { persistent: boolean; absoluteExpiresAt: Date | null };
+
+const GUN_MS = 24 * 60 * 60 * 1000;
+
+function yeniPolitika(rememberMe: boolean | undefined, simdi: Date): OturumPolitikasi {
+  if (rememberMe === true) {
+    return { persistent: true, absoluteExpiresAt: new Date(simdi.getTime() + env.REMEMBER_ME_TTL_DAYS * GUN_MS) };
+  }
+  if (rememberMe === false) {
+    return { persistent: false, absoluteExpiresAt: new Date(simdi.getTime() + env.REFRESH_TOKEN_TTL_DAYS * GUN_MS) };
+  }
+  return { persistent: true, absoluteExpiresAt: null };
+}
+
+/** Politikaya göre bu andan itibaren oturumun biteceği an. */
+export function oturumBitisi(p: OturumPolitikasi, simdi: Date): Date {
+  const bosta = p.persistent
+    ? p.absoluteExpiresAt
+      ? Number.POSITIVE_INFINITY // hatırla: yalnız mutlak son geçerli
+      : env.REFRESH_TOKEN_TTL_DAYS * GUN_MS
+    : env.SESSION_IDLE_HOURS * 60 * 60 * 1000;
+  const sinir = simdi.getTime() + bosta;
+  const mutlak = p.absoluteExpiresAt ? p.absoluteExpiresAt.getTime() : Number.POSITIVE_INFINITY;
+  return new Date(Math.min(sinir, mutlak));
+}
 
 export type RegistrationResult = {
   message: string;
@@ -216,7 +254,8 @@ async function issueSession(
   user: User,
   isDesktop: boolean,
   bilgi: OturumBilgisi,
-  rotateFrom?: { id: string },
+  rotateFrom?: { id: string; persistent: boolean; absoluteExpiresAt: Date | null },
+  rememberMe?: boolean,
 ): Promise<AuthSessionResult | null> {
   // Yenileme oturum SAYISINI değiştirmez; yalnız yeni giriş sınırı zorlar.
   if (!rotateFrom) await eskiOturumlariBudaOturum(user.id);
@@ -236,9 +275,10 @@ async function issueSession(
 
   // Saniye hassasiyeti: anahtar bu değerlerden yeniden üretilebilsin (bkz. signStableRefreshToken).
   const createdAt = new Date(Math.floor(Date.now() / 1000) * 1000);
-  const expiresAt = new Date(
-    createdAt.getTime() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
-  );
+  const politika: OturumPolitikasi = rotateFrom
+    ? { persistent: rotateFrom.persistent, absoluteExpiresAt: rotateFrom.absoluteExpiresAt }
+    : yeniPolitika(rememberMe, createdAt);
+  const expiresAt = new Date(Math.floor(oturumBitisi(politika, createdAt).getTime() / 1000) * 1000);
   const sessionId = randomUUID();
   const refreshToken = signStableRefreshToken({
     userId: user.id,
@@ -253,6 +293,8 @@ async function issueSession(
       tokenHash: hashToken(refreshToken),
       createdAt,
       expiresAt,
+      persistent: politika.persistent,
+      absoluteExpiresAt: politika.absoluteExpiresAt,
       userId: user.id,
       userAgent: bilgi.userAgent ? bilgi.userAgent.slice(0, 500) : null,
       ipHash: ipOzeti(bilgi.ip),
@@ -272,21 +314,23 @@ async function issueSession(
     }
   }
 
-  return sessionResult(user, accessToken, refreshToken);
+  return sessionResult(user, accessToken, refreshToken, { persistent: politika.persistent, expiresAt });
 }
 
 async function createSession(
   user: User,
   isDesktop = false,
   bilgi: OturumBilgisi = {},
+  rememberMe?: boolean,
 ): Promise<AuthSessionResult> {
-  return (await issueSession(user, isDesktop, bilgi))!;
+  return (await issueSession(user, isDesktop, bilgi, undefined, rememberMe))!;
 }
 
 async function sessionResult(
   user: User,
   accessToken: string,
   refreshToken: string,
+  cookie: { persistent: boolean; expiresAt: Date },
 ): Promise<AuthSessionResult> {
   const publicUser = toPublicUser(user);
 
@@ -315,6 +359,7 @@ async function sessionResult(
     accessToken,
     refreshToken,
     user: publicUser,
+    cookie,
   };
 }
 
@@ -759,7 +804,7 @@ export async function loginUser(
 
   user = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   authLog.info("login: success", { userId: user.id, email: user.email });
-  return createSession(user, Boolean(deviceId), bilgi);
+  return createSession(user, Boolean(deviceId), bilgi, deviceId ? undefined : input.rememberMe);
 }
 
 const REFRESH_REUSE_GRACE_MS = 30_000;
@@ -865,6 +910,8 @@ type OturumKaydi = {
   revokedAt: Date | null;
   replacedById: string | null;
   isDesktop: boolean;
+  persistent: boolean;
+  absoluteExpiresAt: Date | null;
 };
 
 /**
@@ -906,7 +953,7 @@ async function tekrarVer(ardil: OturumKaydi): Promise<AuthSessionResult> {
     createdAt: ardil.createdAt,
     expiresAt: ardil.expiresAt,
   });
-  return sessionResult(user, accessToken, refreshToken);
+  return sessionResult(user, accessToken, refreshToken, { persistent: ardil.persistent, expiresAt: ardil.expiresAt });
 }
 
 export async function logoutUser(refreshToken: string | undefined) {

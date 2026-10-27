@@ -131,6 +131,8 @@ type AuthMode = "login" | "register";
 type AuthSubmitPayload = {
   email: string;
   password: string;
+  /** Yalnız girişte: "Beni hatırla" kutusu (işaretsiz = tarayıcı kapanınca oturum biter). */
+  rememberMe?: boolean;
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -256,6 +258,7 @@ export function AuthPage({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [registerCity, setRegisterCity] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -404,7 +407,7 @@ export function AuthPage({
         setTermsAccepted(false);
         setPrivacyNoticeRead(false);
       } else {
-        await onSubmit({ email, password });
+        await onSubmit({ email, password, rememberMe });
       }
     } catch {
       /* Hata üst bileşende serverError prop olarak gelir; serverEmailErr/serverPasswordErr ile alanlara yönlendirilir */
@@ -744,6 +747,23 @@ export function AuthPage({
               </div>
               <FieldError msg={passwordErr || serverPasswordErr} />
             </div>
+
+            {mode === "login" ? (
+              <label className="flex cursor-pointer items-start gap-2.5 text-left">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500"
+                />
+                <span className="text-[12px] leading-relaxed text-slate-300">
+                  {tr ? "Beni hatırla" : "Remember me"}
+                  <span className="block text-[11px] text-slate-500">
+                    {tr ? "30 gün boyunca bu cihazda oturumum açık kalsın. Ortak bilgisayarlarda işaretlemeyin." : "Keep me signed in on this device for 30 days. Don't tick this on shared computers."}
+                  </span>
+                </span>
+              </label>
+            ) : null}
 
             {generalDisplayError ? (
               <p className="text-xs leading-snug text-rose-400" role="alert">
