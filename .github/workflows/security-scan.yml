@@ -1,0 +1,53 @@
+name: Weekly Security Scan
+
+# Push olmasa da yeni çıkan bağımlılık açıklarını yakalar (ci.yml yalnızca push'ta tarar).
+# Açık bulunursa iş kırmızı olur ve GitHub hesabına bildirim/e-posta gelir.
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Her pazartesi 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  python-audit:
+    name: Python bağımlılık taraması
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcairo2-dev pkg-config
+
+      - name: pip-audit (açık varsa kırmızı)
+        working-directory: web/backend
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip install -r requirements.txt
+          pip-audit
+
+  node-audit:
+    name: Node bağımlılık taraması (bilgi amaçlı)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # ci.yml ile aynı mantık: bilinen, düzeltilemeyen geçişli açıklar yüzünden BLOKLAMAZ;
+      # sonuç iş günlüğünde okunur.
+      - name: npm audit (web/api)
+        working-directory: web/api
+        continue-on-error: true
+        run: npm ci && npm audit --omit=dev --audit-level=high
+
+      - name: npm audit (web/frontend)
+        working-directory: web/frontend
+        continue-on-error: true
+        run: npm ci && npm audit --omit=dev --audit-level=high

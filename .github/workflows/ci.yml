@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, master, calismaAlani]
 
+# Aynı dalda üst üste push gelince eski (artık önemsiz) çalışma iptal edilir → dakika tasarrufu.
+# `main` HARİÇ: deploy'u taşıyan çalışma yarıda kesilmesin.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   # ─── Python Güvenlik Taraması ────────────────────────────────────────────────
   python-security:
