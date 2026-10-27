@@ -498,12 +498,12 @@ export function AdminPanel({
               </div>
               <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/40 to-slate-900/30 p-5 shadow-[inset_0_1px_0_rgba(252,211,77,0.12)]">
                 <h2 className="text-sm font-semibold text-amber-100">Kampanya yayını</h2>
-                <p className="mt-1 text-xs text-amber-200/50">Sizin elle yazıp gönderdiğiniz, tek seferlik toplu e-posta — dikkatli kullanın, tüm üyelere gider.</p>
+                <p className="mt-1 text-xs text-amber-200/90">Sizin elle yazıp gönderdiğiniz, tek seferlik toplu e-posta — dikkatli kullanın, tüm üyelere gider.</p>
                 <div className="mt-4">
                   <CampaignEditor subject={bSubj} onSubjectChange={setBSubj} html={bHtml} onHtmlChange={setBHtml} />
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-xs text-amber-200/60">Parti boyutu</span>
+                  <span className="text-xs text-amber-200/90">Parti boyutu</span>
                   <input
                     className={`${adminInputClass} w-24`}
                     type="number"
@@ -1593,7 +1593,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
         <div className="space-y-4">
           {groupFeatureKeysByCategory(catalog).map((group) => (
             <div key={group.cat}>
-              <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-amber-300/80">{group.label}</p>
+              <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-amber-200/80">{group.label}</p>
               <div className="flex flex-wrap gap-2">
                 {group.keys.map((fk) => {
                   const dis = Array.isArray(full.disabledFeatures) ? full.disabledFeatures : [];
@@ -2722,7 +2722,7 @@ function SettingsTab({
             setBusy(false);
           }
         }}
-        className="rounded-xl bg-violet-600/75 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+        className="rounded-xl bg-violet-700 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
       >
         {busy ? "Kaydediliyor…" : "Ayarları kaydet"}
       </button>

@@ -284,6 +284,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
     <div className="space-y-5">
       {/* ── Durum başlığı ─────────────────────────────────────────────────── */}
       <section
+        data-theme="dark"
         className="relative overflow-hidden rounded-3xl border border-slate-700/50 p-6"
         style={{
           background:
