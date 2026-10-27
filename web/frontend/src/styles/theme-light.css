@@ -1,0 +1,91 @@
+/*
+ * AÇIK TEMA — html[data-theme="light"] (ya da herhangi bir alt öğede data-theme="light").
+ *
+ * Yöntem: site koyu için yazıldı ve renkleri Tailwind değişkenleriyle okuyor; açık temada değişkenler
+ * yeniden tanımlanır. Palet theme-light.palette.css'te (üretilmiş), geri kalan ayarlar burada.
+ *
+ * KADEMELİ AÇILIŞ: açık tema henüz tamamlanmamış sayfalar `data-theme="dark"` ile sarılır; değişkenler
+ * kalıtımla akar, o sayfa tema düğmesinden bağımsız koyu kalır. Sayfa hazır oldukça sarmalayıcı kaldırılır.
+ */
+@import "./theme-light.palette.css";
+
+:root[data-theme="light"],
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Yüzeyler */
+  --nb-bg: #f8fafc;
+  --nb-bg-soft: #f1f5f9;
+  --nb-bg-elevated: #ffffff;
+  --nb-panel: #ffffff;
+  --nb-panel-alt: #f1f5f9;
+  --nb-border: rgba(15, 23, 42, 0.14);
+  --nb-border-subtle: rgba(15, 23, 42, 0.08);
+
+  /* Metin (kontrastlar #f8fafc üzerinde: metin 14,6 · ikincil 7,2 · başlık 17,1) */
+  --nb-text: #1e293b;
+  --nb-muted: #475569;
+  --nb-heading: #0f172a;
+
+  /* Vurgu: koyu temadaki parlak camgöbeği açık zeminde okunmaz → bir kademe koyu */
+  --nb-primary: #0891b2;
+  --nb-primary-mid: #0e7490;
+  --nb-primary-hover: #0e7490;
+  --nb-secondary: #4f46e5;
+  --nb-secondary-hover: #4338ca;
+  --nb-accent: #155e75;
+  --nb-ring: rgba(8, 145, 178, 0.4);
+
+  --nb-glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(241, 245, 249, 0.96) 100%);
+  --nb-shadow-card: 0 18px 40px -18px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  --nb-shadow-nav: 0 1px 0 rgba(15, 23, 42, 0.08);
+
+  /*
+   * "text-white", "bg-white/[0.06]", "border-white/10" gibi sınıflar koyu temada beyaz yazı / hafif
+   * aydınlatılmış yüzey demek. Açık temada karşılığı koyu yazı / hafif koyulaştırılmış yüzey.
+   */
+  --color-white: #0f172a;
+
+  background: var(--nb-bg);
+  color: var(--nb-text);
+}
+
+/*
+ * Dolgulu (opak) renkli zeminler beyaz yazıyı KORUR: bu öğelerde --color-white tekrar beyaz olur ve
+ * alt öğelere kalıtımla geçer. Saydam (bg-cyan-500/15) etiketlerde işlem yok, orada yazı koyulaşmalı.
+ */
+[data-theme="light"] [class*="bg-gradient-to-"],
+[data-theme="light"] [class~="bg-cyan-500"],
+[data-theme="light"] [class~="bg-cyan-600"],
+[data-theme="light"] [class~="bg-indigo-500"],
+[data-theme="light"] [class~="bg-indigo-600"],
+[data-theme="light"] [class~="bg-blue-500"],
+[data-theme="light"] [class~="bg-blue-600"],
+[data-theme="light"] [class~="bg-emerald-500"],
+[data-theme="light"] [class~="bg-emerald-600"],
+[data-theme="light"] [class~="bg-red-500"],
+[data-theme="light"] [class~="bg-red-600"],
+[data-theme="light"] [class~="bg-rose-500"],
+[data-theme="light"] [class~="bg-rose-600"],
+[data-theme="light"] [class~="bg-violet-500"],
+[data-theme="light"] [class~="bg-violet-600"],
+[data-theme="light"] [class~="bg-purple-500"],
+[data-theme="light"] [class~="bg-purple-600"],
+[data-theme="light"] [class~="bg-sky-500"],
+[data-theme="light"] [class~="bg-sky-600"] {
+  --color-white: #ffffff;
+}
+
+/* ── Ana sayfa / giriş sayfası hero arka planı (components/landing/HeroBackground.tsx) ───────────────
+   Koyu temada #070a12 zemin + parlayan aurora. Açık temada: açık zemin, aurora silik, parçacık ve
+   huzme kapalı (koyu efektler açık zeminde kirli görünür). !important: zemin satır içi stildir. */
+[data-theme="light"] .hb-root {
+  background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 45%, #f1f5f9 100%) !important;
+}
+[data-theme="light"] .hb-root .hb-anim {
+  opacity: 0.3;
+}
+[data-theme="light"] .hb-root .hb-particle,
+[data-theme="light"] .hb-root .hb-beam {
+  display: none !important;
+}
