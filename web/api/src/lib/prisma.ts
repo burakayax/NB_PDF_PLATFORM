@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./prisma-client-factory.js";
 
 /**
  * Single Prisma client for the entire process.
@@ -29,7 +30,7 @@ function resolveSqliteAbsolutePath(urlValue: string | undefined): string | null 
   return null;
 }
 
-export const prisma = globalForPrisma.__nbPrisma ?? new PrismaClient();
+export const prisma = globalForPrisma.__nbPrisma ?? createPrismaClient();
 
 if (!globalForPrisma.__nbPrisma) {
   globalForPrisma.__nbPrisma = prisma;

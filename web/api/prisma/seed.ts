@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/lib/prisma-client-factory.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const PLAN_CONFIGS = [
   {
