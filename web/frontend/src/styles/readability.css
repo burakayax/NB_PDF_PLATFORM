@@ -1,0 +1,21 @@
+/*
+ * OKUNABİLİRLİK — koyu zeminde soluk kalan gri yazıların kontrastı.
+ *
+ * Ölçüm (koyu zemin #0b1020 / #0f172a / kart #1e293b):
+ *   slate-400 #94a3b8 → 7,4 / 7,0 / 5,7  (yeterli)
+ *   slate-500 #62748e → ~3,9 / 3,7 / 3,0 (WCAG AA'nın 4,5 şartının ALTINDA)
+ * Sitede ~100 yerde text-slate-500, ~8 yerde text-gray-500/600 küçük puntoyla kullanılıyor.
+ *
+ * Tailwind bu renkleri CSS değişkeni olarak okur; değişkeni burada yükseltmek
+ * hover:/md: gibi varyantları bozmaz (sınıf kuralı ezmek gibi bir yan etkisi yok).
+ * Hiyerarşi korunur: slate-500 hâlâ slate-400'ten bir kademe soluk (6,5 : 1 vs 7,4 : 1).
+ *
+ * slate-600 BİLEREK dokunulmadı: yönetim panelinde yaygın bir kenarlık rengi.
+ *
+ * Geri almak için: main.tsx'teki bu dosyanın import satırını silmek yeterli.
+ */
+:root {
+  --color-slate-500: #8a99b0; /* 6,5 : 1 (#0b1020) · 5,1 : 1 (kart #1e293b) */
+  --color-gray-500: #8a99b0;
+  --color-gray-600: #7d8ca5; /* 5,5 : 1 (#0b1020) */
+}

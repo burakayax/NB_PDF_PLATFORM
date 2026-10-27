@@ -92,7 +92,7 @@ export function CvSectionManager({ data, onChange, tr, graduateOrder }: Props) {
                 <GripVertical className="h-4 w-4" />
               </button>
               <span className={`min-w-0 flex-1 truncate text-[13.5px] font-semibold ${hidden ? "text-slate-500 line-through decoration-slate-600" : "text-slate-100"}`}>{nameOf(k)}</span>
-              <span className={`hidden text-[11px] font-semibold sm:inline ${hidden ? "text-slate-600" : "text-emerald-300/80"}`}>{hidden ? (tr ? "Gizli" : "Hidden") : (tr ? "Görünür" : "Shown")}</span>
+              <span className={`hidden text-[11px] font-semibold sm:inline ${hidden ? "text-slate-500" : "text-emerald-300/80"}`}>{hidden ? (tr ? "Gizli" : "Hidden") : (tr ? "Görünür" : "Shown")}</span>
               <Switch on={!hidden} onToggle={() => toggle(k)} label={hidden ? (tr ? `${nameOf(k)}: göster` : `Show ${nameOf(k)}`) : (tr ? `${nameOf(k)}: gizle` : `Hide ${nameOf(k)}`)} />
             </li>
           );
