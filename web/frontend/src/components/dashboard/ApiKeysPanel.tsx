@@ -78,7 +78,7 @@ export function ApiKeysPanel({
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? (tr ? "Kopyalandı" : "Copied") : tr ? "Kopyala" : "Copy"}
             </button>
           </div>
-          <button type="button" onClick={() => setCreated(null)} className="mt-2 text-[12px] text-emerald-300/70 hover:text-emerald-200">{tr ? "Kaydettim, kapat" : "Saved it, close"}</button>
+          <button type="button" onClick={() => setCreated(null)} className="mt-2 text-[12px] text-emerald-300/90 hover:text-emerald-200">{tr ? "Kaydettim, kapat" : "Saved it, close"}</button>
         </div>
       )}
 

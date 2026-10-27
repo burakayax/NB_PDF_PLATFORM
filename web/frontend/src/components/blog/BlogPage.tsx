@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../common/ThemeToggle";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock, Lightbulb, Newspaper, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -53,6 +54,7 @@ function Header({
         <div className="flex items-center gap-1.5 sm:gap-2">
           <a href={tr ? "/blog" : "/en/blog"} className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white sm:inline-block">Blog</a>
           {/* Dil değiştirici — doğrudan girişte (Google'dan gelen) kullanıcı dili değiştirebilsin */}
+          <ThemeToggle tr={tr} />
           <div className="flex items-center rounded-lg border border-white/10 p-0.5 text-xs font-bold">
             <button type="button" onClick={() => onSwitchLanguage("tr")} aria-pressed={tr} className={`min-h-[36px] rounded-md px-2.5 py-1 transition ${tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>TR</button>
             <button type="button" onClick={() => onSwitchLanguage("en")} aria-pressed={!tr} className={`min-h-[36px] rounded-md px-2.5 py-1 transition ${!tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>EN</button>

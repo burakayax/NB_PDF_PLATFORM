@@ -393,7 +393,7 @@ export function PlanPerksModal({
                   if (box) box.style.display = "none";
                 }}
               />
-              <p className="px-4 py-2 text-center text-[12px] text-violet-200/70">
+              <p className="px-4 py-2 text-center text-[12px] text-violet-200/90">
                 {tr
                   ? "Kurumsal müşterilere özel yönetim paneli"
                   : "Admin panel exclusive to enterprise customers"}

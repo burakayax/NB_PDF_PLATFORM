@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType }
 import { UserMenu } from "./UserMenu";
 import { DailyPoolChip, type DailyPool } from "./DailyPoolChip";
 import { TopUpModal } from "../tools/TopUpModal";
+import { ThemeToggle } from "../common/ThemeToggle";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 import rawFlags from "react-phone-number-input/flags";
 
@@ -457,6 +458,8 @@ export function DashboardTopNav({
         {!isTeamMember && user.role !== "ADMIN" ? (
           <DailyPoolChip language={language} daily={dailyPool} monthly={monthlyPool} onUpgrade={upgradeVisible ? onUpgradeClick : undefined} />
         ) : null}
+
+        <ThemeToggle tr={tr} />
 
         <HeaderInstallButton tr={tr} />
 

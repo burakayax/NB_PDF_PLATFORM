@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../common/ThemeToggle";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
@@ -379,7 +380,7 @@ export function GuestPageToolCore({
             <p className="text-[13.5px] font-semibold text-cyan-100">
               {tr ? "Bu PDF tek sayfalık" : "This PDF has a single page"}
             </p>
-            <p className="mt-0.5 text-[12.5px] leading-relaxed text-cyan-200/70">{notice}</p>
+            <p className="mt-0.5 text-[12.5px] leading-relaxed text-cyan-200/90">{notice}</p>
           </div>
         </div>
       )}
@@ -566,6 +567,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initi
             <span className="text-sm font-bold tracking-tight">PDF Platform</span>
           </a>
           <div className="flex items-center gap-2">
+            <ThemeToggle tr={tr} />
             <button
               type="button"
               data-auth-cta onClick={onLogin}

@@ -14,6 +14,31 @@
   background: rgba(15, 23, 42, 0.08);
 }
 
+[data-theme="light"] .back-link--primary {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.22) 0%,
+    rgba(233, 236, 243, 0.9) 100%
+  );
+}
+
+[data-theme="light"] .back-link--primary:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.28) 0%,
+    rgba(233, 236, 243, 0.92) 100%
+  );
+}
+
+[data-theme="light"] .subscription-card {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.05) 0%, transparent 40%),
+    linear-gradient(
+      165deg,
+      rgba(222, 228, 237, 0.92) 0%,
+      rgba(233, 236, 243, 0.96) 100%
+    );
+}
+
 [data-theme="light"] .subscription-card:hover {
   border-color: rgba(15, 23, 42, 0.12);
 }
@@ -22,8 +47,20 @@
   color: rgb(20, 65, 70);
 }
 
+[data-theme="light"] .subscription-stat,
+[data-theme="light"] .subscription-plan {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, transparent 42%),
+    rgba(233, 236, 243, 0.8);
+}
+
 [data-theme="light"] .subscription-plan:hover {
   border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .pro-value-card {
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.14) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.05) 0%, transparent 55%),
+    rgba(233, 236, 243, 0.8);
 }
 
 [data-theme="light"] .pro-value-card__kicker {
@@ -92,6 +129,16 @@
   color: rgb(68, 25, 20);
 }
 
+[data-theme="light"] .progress-panel {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.05) 0%, transparent 55%),
+    rgba(233, 236, 243, 0.8);
+}
+
+[data-theme="light"] .merge-progress-fixed {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, transparent 28%),
+    rgba(233, 236, 243, 0.82);
+}
+
 [data-theme="light"] .merge-progress-fixed__phase {
   color: rgba(30, 96, 104, 0.92);
 }
@@ -102,6 +149,14 @@
 
 [data-theme="light"] .merge-progress-fixed--generic .merge-progress-fixed__title {
   color: rgba(29, 40, 56, 0.95);
+}
+
+[data-theme="light"] .merge-hint-banner {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 58, 138, 0.32),
+    rgba(233, 236, 243, 0.8)
+  );
 }
 
 [data-theme="light"] .merge-hint-banner__text {
@@ -116,6 +171,16 @@
   background: rgba(247, 247, 247, 0.85);
 }
 
+[data-theme="light"] .merge-progress-fixed--success {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.12) 0%, transparent 32%),
+    rgba(233, 236, 243, 0.9);
+}
+
+[data-theme="light"] .merge-progress-fixed--success .merge-progress-fixed__inner {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.05) 0%, transparent 42%),
+    rgba(245, 246, 250, 0.8);
+}
+
 [data-theme="light"] .merge-progress-fixed__title--success {
   color: rgb(21, 71, 45);
 }
@@ -126,6 +191,29 @@
 
 [data-theme="light"] .merge-progress-fixed__pct--success {
   color: rgb(34, 119, 85);
+}
+
+[data-theme="light"] .tool-success-shell.merge-progress-fixed--success {
+  background: linear-gradient(
+      180deg,
+      rgba(233, 236, 243, 0.96) 0%,
+      rgba(233, 236, 243, 0.88) 100%
+    ),
+    radial-gradient(
+      120% 80% at 10% 0%,
+      rgba(52, 211, 153, 0.14),
+      transparent 55%
+    ),
+    radial-gradient(
+      90% 70% at 95% 30%,
+      rgba(99, 102, 241, 0.12),
+      transparent 50%
+    );
+}
+
+[data-theme="light"] .tool-success-shell .tool-success-shell__card.merge-progress-fixed__inner {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.06) 0%, transparent 48%),
+    rgba(233, 236, 243, 0.8);
 }
 
 [data-theme="light"] .tool-success-shell__title {
@@ -149,6 +237,16 @@
   background: rgba(243, 249, 247, 0.85);
 }
 
+[data-theme="light"] .progress-bar__fill--success {
+  background: linear-gradient(
+      95deg,
+      rgba(15, 23, 42, 0.2) 0%,
+      rgba(15, 23, 42, 0.06) 40%,
+      rgba(15, 23, 42, 0.18) 100%
+    ),
+    linear-gradient(180deg, #34d399 0%, #059669 48%, #047857 100%);
+}
+
 [data-theme="light"] .merge-progress-fixed__download {
   color: rgb(16, 55, 37);
 }
@@ -165,6 +263,12 @@
 [data-theme="light"] .merge-progress-fixed__dismiss:hover {
   background: rgba(15, 23, 42, 0.1);
   border-color: rgba(15, 23, 42, 0.22);
+}
+
+[data-theme="light"] .merge-toast {
+  background: radial-gradient(130% 130% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.05) 0%, transparent 26%),
+    rgba(238, 241, 246, 0.98);
 }
 
 [data-theme="light"] .merge-toast__close {
@@ -217,6 +321,11 @@
 }
 
 [data-theme="light"] .saas-gated-preview__lock-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(233, 236, 243, 0.8) 0%,
+    rgba(233, 236, 243, 0.8) 100%
+  );
   color: rgba(21, 36, 50, 0.95);
 }
 
@@ -236,11 +345,30 @@
   color: rgba(61, 74, 92, 0.9);
 }
 
+[data-theme="light"] .nb-empty-state {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.08) 0%,
+    rgba(222, 228, 237, 0.8) 55%,
+    rgba(233, 236, 243, 0.8) 100%
+  );
+}
+
+[data-theme="light"] .selected-files {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.04) 0%, transparent 42%),
+    rgba(222, 228, 237, 0.8);
+}
+
 [data-theme="light"] .selected-files__count {
   color: rgba(30, 96, 104, 0.78);
 }
 
 [data-theme="light"] .selected-file-card__icon {
+  background: linear-gradient(
+    145deg,
+    rgba(239, 68, 68, 0.18) 0%,
+    rgba(233, 236, 243, 0.85) 55%
+  );
   color: rgb(73, 21, 21);
 }
 
@@ -257,11 +385,16 @@
 }
 
 [data-theme="light"] .remove-button {
-  color: rgb(73, 21, 21);
+  background: linear-gradient(
+    165deg,
+    rgba(185, 28, 28, 0.55) 0%,
+    rgba(238, 224, 224, 0.92) 100%
+  );
 }
 
-[data-theme="light"] .primary-action {
-  color: rgb(36, 36, 36);
+[data-theme="light"] .toast {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, transparent 40%),
+    rgba(233, 236, 243, 0.96);
 }
 
 [data-theme="light"] .toast__detail {
@@ -323,6 +456,16 @@
   color: rgb(119, 34, 34);
 }
 
+[data-theme="light"] .payment-summary-legal-panel {
+  background: linear-gradient(180deg, rgb(235, 237, 244) 0%, rgb(245, 247, 250) 100%);
+}
+
+[data-theme="light"] .upgrade-modal {
+  background: linear-gradient(165deg, rgba(34, 211, 238, 0.12) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.06) 0%, transparent 38%),
+    linear-gradient(180deg, rgb(237, 240, 246) 0%, rgb(244, 246, 249) 100%);
+}
+
 [data-theme="light"] .upgrade-modal__brand-mark {
   color: rgb(16, 53, 55);
 }
@@ -381,6 +524,12 @@
   color: rgb(29, 40, 56);
 }
 
+[data-theme="light"] .upgrade-modal__plan--annual {
+  background: linear-gradient(160deg, rgba(129, 140, 232, 0.1) 0%, transparent 45%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, transparent 45%),
+    rgba(233, 236, 243, 0.8);
+}
+
 [data-theme="light"] .upgrade-modal__cta--annual {
   color: rgb(16, 25, 55);
 }
@@ -402,8 +551,18 @@
   color: rgba(61, 74, 92, 0.95);
 }
 
-[data-theme="light"] .upgrade-modal__ribbon--popular {
-  color: rgb(21, 36, 50);
+[data-theme="light"] .upgrade-modal__plan {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, transparent 45%),
+    rgba(233, 236, 243, 0.8);
+}
+
+[data-theme="light"] .upgrade-modal__plan--pro {
+  background: linear-gradient(155deg, rgba(129, 140, 232, 0.12) 0%, transparent 42%),
+    linear-gradient(
+      180deg,
+      rgba(34, 211, 238, 0.1) 0%,
+      rgba(233, 236, 243, 0.92) 100%
+    );
 }
 
 [data-theme="light"] .upgrade-modal__list {
@@ -420,10 +579,21 @@
 
 [data-theme="light"] .upgrade-modal__cta--business {
   color: rgb(16, 53, 55);
+  background: linear-gradient(
+    180deg,
+    rgba(129, 140, 232, 0.35) 0%,
+    rgba(222, 228, 237, 0.95) 100%
+  );
 }
 
 [data-theme="light"] .conv-upgrade-modal-backdrop {
   background: rgba(245, 246, 250, 0.85);
+}
+
+[data-theme="light"] .conv-upgrade-modal {
+  background: linear-gradient(155deg, rgba(34, 197, 94, 0.1) 0%, transparent 38%),
+    linear-gradient(180deg, rgba(34, 211, 238, 0.08) 0%, transparent 42%),
+    linear-gradient(180deg, rgb(236, 239, 245) 0%, rgb(243, 245, 249) 100%);
 }
 
 [data-theme="light"] .conv-upgrade-modal__eyebrow {
@@ -470,6 +640,14 @@
 
 [data-theme="light"] .conv-upgrade-modal__cta-secondary:hover {
   color: rgba(16, 25, 56, 0.98);
+}
+
+[data-theme="light"] .conversion-popup {
+  background: linear-gradient(
+    165deg,
+    rgba(224, 226, 237, 0.98) 0%,
+    rgba(236, 237, 244, 0.99) 100%
+  );
 }
 
 [data-theme="light"] .conversion-popup__eyebrow {
