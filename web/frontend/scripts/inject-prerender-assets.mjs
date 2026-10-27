@@ -60,7 +60,7 @@ const entryScript = entryScriptMatch[0];
 // Oturum ipucu varsa oturum doğrulanana kadar giriş/kayıt düğmeleri "yükleniyor" görünür (titreme önlemi).
 // index.html'deki aynı betik prerender sayfalara da taşınır (onlar index.html'den üretilmez).
 const AUTH_PENDING_SNIPPET =
-  '<script>try{if(localStorage.getItem("nb_session_hint")==="1"){document.documentElement.setAttribute("data-auth-pending","1");setTimeout(function(){document.documentElement.removeAttribute("data-auth-pending")},10000)}}catch(e){}</script>';
+  '<script>try{if(localStorage.getItem("nb_session_hint")==="1"){var d=document.documentElement;d.setAttribute("data-auth-pending","1");if(/^(\\/en)?\\/tools\\//.test(location.pathname))d.setAttribute("data-auth-hide","1");setTimeout(function(){d.removeAttribute("data-auth-pending");d.removeAttribute("data-auth-hide")},10000)}}catch(e){}</script>';
 const headInjection = [AUTH_PENDING_SNIPPET, ...stylesheetTags, ...modulePreloadTags].join("\n    ");
 const bodyInjection = [...modulePreloadTags, entryScript].join("\n    ");
 
