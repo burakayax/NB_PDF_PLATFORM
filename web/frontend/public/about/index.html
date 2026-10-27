@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Hakkımızda: Misyon ve Çalışma İlkelerimiz | PDF Platform</title>
+    <meta name="description" content="PDF Platform kim tarafından, neden geliştiriliyor? Dosyaların cihazda kalması, yapay zekânın yalnızca seçildiğinde çalışması ve filigransız sonuçlar: çalışma ilkelerimiz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/about" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/about" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/about" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/about" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Hakkımızda: Misyon ve Çalışma İlkelerimiz | PDF Platform" />
+    <meta property="og:description" content="PDF Platform kim tarafından, neden geliştiriliyor? Dosyaların cihazda kalması, yapay zekânın yalnızca seçildiğinde çalışması ve filigransız sonuçlar: çalışma ilkelerimiz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hakkımızda: Misyon ve Çalışma İlkelerimiz | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/about" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Hakkımızda: Misyon ve Çalışma İlkelerimiz | PDF Platform" />
+    <meta name="twitter:description" content="PDF Platform kim tarafından, neden geliştiriliyor? Dosyaların cihazda kalması, yapay zekânın yalnızca seçildiğinde çalışması ve filigransız sonuçlar: çalışma ilkelerimiz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Hakkımızda: Misyon ve Çalışma İlkelerimiz | PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve toplam 44 araç. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Hakkımızda","item":"https://www.pdfplatform.app/about"}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Hakkımızda</h1><p class="seo-intro">Belgeleriniz üzerinde çalışmak hızlı, anlaşılır ve güvenli olmalı. PDF Platform&#39;u bunun için geliştiriyoruz.</p><article class="seo-about"><section><h2>Neden varız</h2><p>PDF ile her gün karşılaşırız: bir belgeyi birleştirmek, sıkıştırmak, imzalamak, Word&#39;e çevirmek, bir sözleşmeyi hızlıca anlamak. Çoğu zaman bu işler için dosyanızı tanımadığınız bir sunucuya yüklemeniz, ücretsiz denerken kırpılmış ya da filigranlı sonuç almanız ve sonunda abonelik duvarına çarpmanız gerekir.</p><p>PDF Platform, bu deneyimi tersine çevirmek için NB Global Studio tarafından geliştirilen bir web platformudur. Amacımız; PDF araçlarını Türkçe ve İngilizce, sade bir arayüzle, ne yaptığını açıkça söyleyen bir ürünle sunmak.</p></section><section><h2>Misyon ve vizyon</h2><ul><li><strong>Misyonumuz</strong> Belge işlemlerini herkes için hızlı, anlaşılır ve güvenli hale getirmek. Kullanıcılarımızın dosyalarını gereksiz yere sunuculara taşımadan, ne yaptığını açıkça söyleyen şeffaf araçlarla zamandan tasarruf etmelerini sağlıyoruz.</li><li><strong>Vizyonumuz</strong> Belge çözümlerinde gizliliği, sadeliği ve şeffaflığı standart haline getiren, güvenle tercih edilen platform olmak.</li></ul></section><section><h2>Nasıl çalışıyoruz</h2><ul><li><strong>Dosyanız mümkün olduğunca cihazınızda kalır</strong> Birleştirme, bölme, döndürme, sayfa silme ve sıralama, görselden PDF ve belge tarama gibi araçlar dosyanızı tarayıcınızdan çıkarmadan çalışır. Sunucuya ihtiyaç duyan araçlarda dosya işlem biter bitmez silinir. Hangi araçta ne olduğunu Gizlilik Politikası&#39;ndaki tabloda araç araç görebilirsiniz.</li><li><strong>Yapay zekâ yalnızca siz seçtiğinizde devreye girer</strong> Özetleme, çeviri, veri çıkarma ve benzeri yapay zekâ araçlarında yalnızca belgenizden çıkarılan metin, sonucu üretmek için gönderilir; dosyanın kendisi gönderilmez ve metin modellerin eğitiminde kullanılmaz. Yapay zekâ çıktıları hata içerebilir; önemli kararlardan önce kontrol etmenizi öneririz.</li><li><strong>Sonuç ekranında sürpriz yok</strong> Çıktı dosyalarınıza görünür filigran eklemeyiz. Neyin ücretsiz, neyin üyelik gerektirdiği önceden gösterilir. Abonelikler kendiliğinden yenilenmez: süre bitmeden size haber verir, devam edip etmemeyi siz seçersiniz.</li><li><strong>Kullanıcıyı dinleriz</strong> Araçları puanlayabilir, eksik gördüğünüz şeyi bize yazabilirsiniz. Yeni araçlar ve iyileştirmeler büyük ölçüde bu geri bildirimlerle şekillenir.</li></ul></section><section><h2>Neler sunuyoruz</h2><ul><li><strong>PDF araçları</strong> Birleştirme, bölme, sıkıştırma, döndürme, sayfa düzenleme, dönüştürme, şifreleme, imza ve daha fazlası.</li><li><strong>Yapay zekâ destekli araçlar</strong> Belge özeti, belge ile sohbet, çeviri, veri çıkarma ve sözleşme denetimi.</li><li><strong>Belge Tarayıcı</strong> Telefon kamerasıyla çektiğiniz belgeyi kenarlarını bularak düzeltir ve PDF&#39;e çevirir.</li><li><strong>CV ve fotoğraf araçları</strong> Şablonlarla CV hazırlama, ön yazı ve başvuru fotoğrafı düzenleme.</li></ul></section><section><h2>İletişim</h2><p>Soru, öneri ve geri bildirimleriniz için bize yazın: info@pdfplatform.app</p><p>Verilerinizin nasıl işlendiğini ve kullanım koşullarını okumak için: <a href="/privacy">Gizlilik Politikası</a> · <a href="/kvkk">KVKK Aydınlatma Metni</a> · <a href="/terms">Hizmet Şartları</a></p></section></article><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

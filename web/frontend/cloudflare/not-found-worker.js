@@ -32,8 +32,11 @@ const BILINEN_ONEK = ["/legal/","/admin/","/invite/","/fake-payment","/pdf-api/"
 const NOINDEX_SAYFALAR = [
   "/login", "/register", "/forgot-password", "/reset-password", "/verify-email",
   "/login-success", "/login-error", "/google-signup", "/team-invite", "/nbadmin",
+  "/contact", // sayfa değil: ana sayfa üstünde açılan iletişim penceresi
 ];
 const KENDI_KANONIK_SAYFALAR = ["/about"];
+/** Prerender edilmiş statik sayfası olan, ama Render'da yönlendirme kuralı henüz olmayabilecek adresler. */
+const PRERENDER_SAYFALAR = ["/about"];
 
 const KABUK_OMRU_MS = 5 * 60 * 1000;
 const YEDEK_404 = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sayfa bulunamadı | PDF Platform</title><meta name="robots" content="noindex, nofollow"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px"><h1>Sayfa bulunamadı</h1><p><a href="/">Ana sayfaya dön</a></p></body></html>`;
@@ -137,6 +140,22 @@ export async function isle(request, getir = fetch) {
         request.method === "HEAD" ? await getir(new Request(request.url, { method: "GET" })) : orijinal.clone();
       const [metin, kabukIcerigi] = await Promise.all([govdeCevabi.text(), kabukMetni(url.origin, getir)]);
       if (kabukIcerigi !== null && metin.length > 0 && metin === kabukIcerigi) {
+        // Önce gerçek prerender dosyasını (/about/index.html) dene: sayfanın kendi başlığı,
+        // H1'i ve metni olsun. Olmazsa kabuğun etiketlerini düzeltmeye düş (fail-open).
+        if (PRERENDER_SAYFALAR.includes(bare)) {
+          try {
+            const dosya = (/^\/en(\/|$)/.test(url.pathname) ? "/en" : "") + bare + "/index.html";
+            const pr = await getir(new Request(new URL(dosya, url.origin).toString()));
+            const prMetin = pr.ok ? await pr.text() : "";
+            if (prMetin.length > 0 && prMetin !== kabukIcerigi && prMetin.includes("<h1>")) {
+              const h = new Headers(pr.headers);
+              ["content-length", "content-encoding", "etag"].forEach((x) => h.delete(x));
+              return new Response(request.method === "HEAD" ? null : prMetin, { status: 200, headers: h });
+            }
+          } catch {
+            /* kabuk düzeltmesine düş */
+          }
+        }
         const basliklar = new Headers(orijinal.headers);
         ["content-length", "content-encoding", "etag"].forEach((h) => basliklar.delete(h));
         if (noindex) basliklar.set("x-robots-tag", "noindex, nofollow");
