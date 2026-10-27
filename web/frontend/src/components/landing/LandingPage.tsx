@@ -759,6 +759,36 @@ function Hero({
           className="mt-10 mx-auto w-full max-w-7xl"
         >
           {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
+          {/* Vitrin notu: araç alanının ÜSTÜNDE, ziyaretçi ilk bunu görsün ("araçlar bu kadar mı?"
+              diye düşünmesin). Sayı katalogdan gelir (elle yazılmaz), yeni araç eklenince
+              not kendiliğinden güncellenir. */}
+          <a
+            href="#tools"
+            className="group mx-auto mb-4 flex max-w-2xl items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
+          >
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-slate-300">
+              {tr ? (
+                <>
+                  <strong className="font-bold text-white">Burada yalnızca bir bölümü var.</strong>{" "}
+                  Platformda toplam {TOOLS.length} araç bulunuyor; aşağıdakiler üyeliksiz hemen kullanabileceklerin.{" "}
+                  Üyelik açarak diğer araçlara da ulaşabilirsiniz.
+                </>
+              ) : (
+                <>
+                  <strong className="font-bold text-white">This is only part of it.</strong>{" "}
+                  The platform has {TOOLS.length} tools in total; the ones below are those you can use right away without an account.{" "}
+                  You can reach the other tools by creating an account.
+                </>
+              )}
+            </span>
+            <span className="flex-shrink-0 text-[13px] font-bold text-cyan-300 transition group-hover:translate-y-0.5">
+              {tr ? "Tümünü gör ↓" : "See all ↓"}
+            </span>
+          </a>
+
               çipleri, ortada seçili aracın tanıtım şeridi, altında aracın kendisi.
               Eskiden 16 çip tek bir yığın hâlinde sarılıyor, araç alanı ayrı
               duruyordu; hepsi tek kartta toplandı. */}
@@ -1234,33 +1264,6 @@ function Hero({
               );
             })}
           </div>
-
-          {/* Vitrin notu: ilk gelen "araçlar bu kadar mı?" diye düşünmesin. Sayılar katalogdan
-              gelir (elle yazılmaz), böylece yeni araç eklenince not kendiliğinden güncellenir. */}
-          <a
-            href="#tools"
-            className="group mx-auto mt-5 flex max-w-2xl items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
-          >
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-slate-300">
-              {tr ? (
-                <>
-                  <strong className="font-bold text-white">Burada yalnızca bir bölümü var.</strong>{" "}
-                  Platformda toplam {TOOLS.length} araç bulunuyor; yukarıdakiler üyeliksiz hemen kullanabileceklerin.
-                </>
-              ) : (
-                <>
-                  <strong className="font-bold text-white">This is only part of it.</strong>{" "}
-                  The platform has {TOOLS.length} tools in total; the ones above are those you can use right away without an account.
-                </>
-              )}
-            </span>
-            <span className="flex-shrink-0 text-[13px] font-bold text-cyan-300 transition group-hover:translate-y-0.5">
-              {tr ? "Tümünü gör ↓" : "See all ↓"}
-            </span>
-          </a>
         </motion.div>
 
         {/* Belge Tarayıcı (mobil) — tam ekran, cihazda işlenir */}
