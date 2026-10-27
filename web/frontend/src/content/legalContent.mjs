@@ -323,53 +323,92 @@ export const legalDocuments = {
         {
           title: "1. Parties",
           paragraphs: [
-            "SELLER: NB Global Studio, Email: info@pdfplatform.app",
-            "BUYER: The user identified by the name, surname, and email address provided at the payment step.",
+            "SELLER: NB Global Studio, Email: info@pdfplatform.app, Website: pdfplatform.app",
+            "BUYER: The user identified by the name (or title), billing address, phone and email provided at the payment step; for taxpayers, the tax number and tax office are also part of this information.",
+            "In this agreement the BUYER and the SELLER are each a “Party” and together the “Parties”. The BUYER confirms that the information given at the payment step is accurate and current and that the invoice details are complete. If the order is placed on behalf of another person, the person placing the order is responsible for the accuracy of that person's information and for obligations under personal data protection law.",
           ],
         },
         {
-          title: "2. Subject of the Agreement",
+          title: "2. Subject, Scope and Definitions",
           paragraphs: [
-            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF Platform digital service subscription for the plan selected by the BUYER at pdfplatform.app.",
-            "Service content and features vary by the selected plan.",
+            "The subject of this agreement is to regulate the rights and obligations of the Parties, under Law No. 6502 on the Protection of Consumers and related legislation, regarding the sale and provision of the PDF Platform digital service subscription ordered electronically by the BUYER at pdfplatform.app, whose basic characteristics and price are stated at the payment screen and in the order summary. Service content and features vary by the selected plan.",
+            "The terms Service, Digital Content, Consumer and Distance Contract in this agreement have the meanings given in Article 4 of the Distance Sales Regulation published in Official Gazette No. 29188 of 27 November 2014. Other documents the BUYER approves while ordering (including the Pre-Purchase Information Form) form an integral part of this agreement.",
+            "This agreement and the Pre-Purchase Information Form apply only to sales to persons who are consumers within the meaning of Law No. 6502. Consumer legislation does not apply to purchases made for commercial or professional purposes, or orders found to be made directly or indirectly for resale; the SELLER may cancel such orders and refund the amount paid.",
           ],
         },
         {
-          title: "3. Price and Payment",
+          title: "3. Order Details, Price and Payment",
           paragraphs: [
-            "The sales price including VAT is displayed to the BUYER at the payment screen.",
-            "20% VAT applies to individual users residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
-            "Payment is made securely through the iyzico infrastructure. Card details are not stored by the SELLER.",
+            "The name and basic characteristics of the Service (plan), subscription period (monthly/yearly), quantity, total price including VAT, payment method and order date are shown to the BUYER at the payment screen and in the order summary and form an integral part of this agreement. Because the Service is delivered electronically, there is no shipping or delivery fee.",
+            "The sales price is shown including VAT. 20% VAT applies to individual users residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
+            "Payment is made securely by credit or debit card through the iyzico infrastructure. Card details are not stored by the SELLER. Payment of the price is a precondition for performance of the order.",
+            "Prices published on the website are valid until updated or changed; time-limited prices are valid until the stated end. The SELLER may change prices and plan contents going forward; such a change is not applied to the BUYER's disadvantage for the period of an order already paid for.",
+            "The SELLER reserves the right to cancel an order where a price is clearly incorrect because of a system or internet error (for example zero or an extremely low amount); in that case the BUYER is refunded what was paid.",
+            "If the BUYER's card is found to have been used without authorisation, or the bank or financial institution does not pay the price to the SELLER, the SELLER's obligation to provide the Service ends and access may be closed. For instalment number, instalment amount, interest and default interest, the legal counterparty is the cardholder's bank; the SELLER has no responsibility in these matters. The BUYER must protect the card and its security codes.",
           ],
         },
         {
-          title: "4. Subscription and Renewal",
+          title: "4. Provision of the Service, Account Security and Interruptions",
           paragraphs: [
-            "The subscription is activated immediately upon payment confirmation. The subscription term is determined by the selected plan (monthly/yearly).",
+            "The subscription is activated immediately upon payment confirmation and made available in the BUYER's account. There is no physical delivery; the Service is performed when the subscription becomes active in the account. The SELLER must provide the Service in line with the selected plan.",
+            "The BUYER is responsible for the confidentiality and security of account credentials (password, verification codes, email access). The BUYER is liable for damage resulting from use of the account by third parties and must notify the SELLER immediately if unauthorised use is suspected.",
+            "The Service may slow down or be interrupted temporarily because of planned maintenance, updates, intervention by infrastructure providers, heavy traffic or force majeure (natural disasters, cyberattacks, power or internet outages, global service outages, access blocks and similar). The SELLER will make reasonable efforts to limit the impact; the SELLER is not liable for damage arising from such events where it is not at fault. If an interruption is prolonged the BUYER may contact support, and compensation (for example extra time or a refund) will be assessed by the SELLER.",
+            "The BUYER must provide the device, browser and internet connection needed to use the Service and must not damage its infrastructure. If, because of force majeure or unavoidable circumstances, the SELLER cannot provide the Service in time, it will notify the BUYER within 3 days of learning of it.",
+          ],
+        },
+        {
+          title: "5. Subscription and Renewal",
+          paragraphs: [
+            "The subscription term is determined by the selected plan (monthly/yearly).",
             "Subscriptions do not renew automatically. A reminder is sent before the period ends; renewal requires your confirmation and a new payment. No charge is made without your confirmation.",
             "When the subscription term expires, paid features are deactivated and the account automatically reverts to the free plan.",
           ],
         },
         {
-          title: "5. Right of Withdrawal",
+          title: "6. Right of Withdrawal",
           paragraphs: [
-            "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal cannot be exercised for digital content services whose performance has begun with the BUYER's express consent.",
-            "The BUYER has expressly declared at the payment step that they waive the statutory right of withdrawal. Nevertheless, under its commercial guarantee the SELLER honours refund requests made within 7 days of the first payment, with no reason required. After those 7 days there is no refund obligation; if the subscription is cancelled, access continues until the end of the paid period.",
-            "In case the service is completely unavailable, the situation will be evaluated upon contact with the SELLER.",
+            "Under the Distance Sales Regulation a consumer may withdraw within 14 days without giving a reason. However, under the exceptions in Article 15 of the Regulation, this right cannot be exercised for services performed instantly in electronic form, or for services whose performance has begun with the consumer's consent before the withdrawal period ends (Article 15/1(ğ) and 15/1(h)).",
+            "At the payment step the BUYER has expressly declared that they request performance of the Service to begin immediately upon payment, that they were informed in advance that they lose the statutory right of withdrawal once performance begins, and that they waive that right.",
+            "Nevertheless, under its commercial guarantee the SELLER honours refund requests made within 7 days of the first payment, with no reason required. After those 7 days there is no statutory refund obligation; if the subscription is cancelled, access continues until the end of the paid period.",
+            "If the Service is completely unavailable, the situation will be evaluated upon contact with the SELLER. Refunds may be refused where the BUYER has deliberately abused the Service.",
           ],
         },
         {
-          title: "6. Protection of Personal Data",
+          title: "7. Refund Procedure",
+          paragraphs: [
+            "In every case that requires a refund (commercial refund guarantee, inability to provide the Service, cancellation of the order, arbitration committee decision, etc.) the refund is made by the method used for payment. After the request reaches the SELLER, the amount is returned to the payment institution within 14 days at the latest; in practice the SELLER usually starts the refund within 3–5 business days.",
+            "For credit card payments the refund goes to the bank the card is linked to; no cash payment is made. For instalment purchases the bank reflects the refund to the card account in line with the number of instalments. When the refund appears on the card statement, and how it appears relative to statement dates, is determined by the bank.",
+            "Because the Service contains no physical goods, no product return or return invoice is needed; invoices and documents are issued by the SELLER as required by tax law.",
+          ],
+        },
+        {
+          title: "8. Protection of Personal Data",
           paragraphs: [
             "The BUYER's personal data is processed within the scope of KVKK and GDPR. Invoice records are retained for 10 years (VUK Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; the longer period applies).",
-            "For detailed information, please review the Privacy Policy and KVKK Disclosure Text.",
+            "The disclosure text for personal data processed in the course of purchases is available on the website, and the BUYER may review it at any time. For detailed information, please review the Privacy Policy and KVKK Disclosure Text.",
           ],
         },
         {
-          title: "7. Dispute Resolution",
+          title: "9. Dispute Resolution and Competent Authority",
           paragraphs: [
-            "Turkish law applies to disputes arising from this agreement.",
-            "Under consumer rights, you may apply to the Consumer Arbitration Committee or Consumer Courts.",
+            "The BUYER may send complaints about the order to info@pdfplatform.app or through the contact channels on the website.",
+            "Turkish law applies to disputes arising from this agreement. Where the BUYER is a consumer, the Consumer Arbitration Committee or Consumer Court at the BUYER's place of residence or where the consumer transaction took place is competent. Applying to the Consumer Arbitration Committee is mandatory for disputes below the monetary limit announced each year by the Ministry of Trade; the current limit is set by the communiqué published in the Official Gazette.",
+            "For disputes that are not consumer transactions, the courts and enforcement offices at the SELLER's place of business are competent.",
+          ],
+        },
+        {
+          title: "10. Evidence Agreement",
+          paragraphs: [
+            "The BUYER agrees that, in disputes arising from this agreement, the SELLER's commercial books and records, the electronic records held on its servers (including order, payment, approval and access records) and computer records constitute valid evidence. This article is an evidence agreement within the meaning of Article 193 of Law No. 6100 on Civil Procedure.",
+            "Service descriptions on the website, the Pre-Purchase Information Form, invoices and bank records are accepted as valid evidence and as integral annexes of this agreement.",
+          ],
+        },
+        {
+          title: "11. Approval and Entry into Force",
+          paragraphs: [
+            "The BUYER declares that they have read and electronically approved all preliminary information, including the basic characteristics of the Service, its price, payment method, and the right of withdrawal and its exceptions, the Pre-Purchase Information Form and this agreement.",
+            "If either the Pre-Purchase Information Form or this agreement is not approved, the order is not completed and the SELLER enters into no commitment.",
+            "This agreement is formed and enters into force when the BUYER approves it electronically at the payment step. The agreement date is recorded in the SELLER's records as the time of approval.",
           ],
         },
       ],
@@ -747,53 +786,92 @@ export const legalDocuments = {
         {
           title: "1. Taraflar",
           paragraphs: [
-            "SATICI: NB Global Studio, E-posta: info@pdfplatform.app",
-            "ALICI: Ödeme adımında belirtilen ad-soyad ve e-posta adresiyle tanımlanan kullanıcı.",
+            "SATICI: NB Global Studio, E-posta: info@pdfplatform.app, Web sitesi: pdfplatform.app",
+            "ALICI: Ödeme adımında beyan edilen ad-soyad (veya unvan), fatura adresi, telefon ve e-posta bilgileriyle tanımlanan kullanıcıdır; vergi mükellefiyse vergi numarası ve vergi dairesi de bu bilgilere dahildir.",
+            "İşbu sözleşmede ALICI ve SATICI ayrı ayrı “Taraf”, birlikte “Taraflar” olarak anılır. ALICI, ödeme adımında verdiği bilgilerin doğru ve güncel olduğunu, fatura bilgilerinin eksiksiz olduğunu kabul eder. Siparişi başka bir kişi adına veriyorsa, o kişinin bilgilerinin doğruluğundan ve kişisel verilerin korunması mevzuatı kapsamındaki yükümlülüklerden siparişi veren sorumludur.",
           ],
         },
         {
-          title: "2. Sözleşme Konusu",
+          title: "2. Sözleşmenin Konusu, Kapsamı ve Tanımlar",
           paragraphs: [
-            "Bu sözleşmenin konusu; ALICI'nın pdfplatform.app adresinden seçtiği abonelik planına ait PDF Platform dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
-            "Hizmet içeriği ve özellikleri seçilen plana göre değişmektedir.",
+            "Bu sözleşmenin konusu; ALICI'nın pdfplatform.app adresinden elektronik ortamda sipariş verdiği, ödeme ekranında ve sipariş özetinde temel nitelikleri ile fiyatı belirtilen PDF Platform dijital hizmet aboneliğinin satışı ve sunulmasına ilişkin olarak 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve ilgili mevzuat uyarınca Tarafların hak ve yükümlülüklerini düzenlemektir. Hizmet içeriği ve özellikleri seçilen plana göre değişir.",
+            "Bu sözleşmede geçen Hizmet, Dijital İçerik, Tüketici, Mesafeli Sözleşme kavramları; 27 Kasım 2014 tarihli ve 29188 sayılı Resmi Gazete'de yayımlanan Mesafeli Sözleşmeler Yönetmeliği'nin 4. maddesindeki anlamları taşır. ALICI'nın sipariş verirken niteliğine göre onay verdiği diğer belgeler (Ön Bilgilendirme Formu dahil) bu sözleşmenin ayrılmaz parçasıdır.",
+            "Bu sözleşme ve Ön Bilgilendirme Formu yalnızca 6502 sayılı Kanun anlamında tüketici sıfatını taşıyan kişilerle yapılan satışlar için geçerlidir. Ticari veya mesleki amaçla yapılan alımlarda, ya da doğrudan veya dolaylı olarak yeniden satış amacı taşıdığı anlaşılan siparişlerde tüketici mevzuatı uygulanmaz; SATICI bu tür siparişleri iptal edip ödenen bedeli iade edebilir.",
           ],
         },
         {
-          title: "3. Fiyat ve Ödeme",
+          title: "3. Sipariş Bilgileri, Fiyat ve Ödeme",
           paragraphs: [
-            "Satış fiyatı, ödeme ekranında KDV dahil olarak ALICI'ya gösterilmektedir.",
-            "Türkiye'de mukim bireysel kullanıcılar için %20 KDV uygulanmaktadır. Yurt dışında mukim kullanıcılar için KDV uygulanmamaktadır (ihracat istisnası).",
-            "Ödeme, iyzico altyapısı üzerinden güvenli biçimde gerçekleştirilmektedir. Kart bilgileri SATICI tarafından saklanmamaktadır.",
+            "Hizmetin adı ve temel nitelikleri (plan), abonelik dönemi (aylık/yıllık), adedi, KDV dahil toplam bedeli, ödeme şekli ve sipariş tarihi; ödeme ekranında ve sipariş özetinde ALICI'ya gösterilir ve bu sözleşmenin ayrılmaz parçasıdır. Hizmet elektronik ortamda sunulduğundan teslimat ve kargo bedeli yoktur.",
+            "Satış fiyatı KDV dahil olarak gösterilir. Türkiye'de mukim bireysel kullanıcılar için %20 KDV uygulanır. Yurt dışında mukim kullanıcılar için KDV uygulanmaz (ihracat istisnası).",
+            "Ödeme, iyzico altyapısı üzerinden kredi kartı veya banka kartı ile güvenli biçimde yapılır. Kart bilgileri SATICI tarafından saklanmaz. Siparişin ifası için bedelin ödenmiş olması şarttır.",
+            "Web sitesinde ilan edilen fiyatlar, güncellenip değiştirilene kadar; süreli ilan edilenler ise belirtilen süre sonuna kadar geçerlidir. SATICI fiyatları ve plan içeriklerini ileriye dönük değiştirebilir; bu değişiklik, ödemesi tamamlanmış sipariş için seçilen dönem boyunca ALICI aleyhine uygulanmaz.",
+            "Sistem veya internet kaynaklı teknik hatalar nedeniyle açıkça hatalı yansıyan fiyatlar (ör. sıfır veya aşırı düşük tutar) için SATICI siparişi iptal etme hakkını saklı tutar; bu durumda ALICI'ya ödediği bedel iade edilir.",
+            "ALICI'nın kartının yetkisiz kişilerce kullanıldığının tespit edilmesi veya banka ya da finans kuruluşunun bedeli SATICI'ya ödememesi halinde SATICI'nın hizmeti sunma yükümlülüğü sona erer ve hizmete erişim kapatılabilir. Taksit sayısı, taksit tutarı, faiz ve temerrüt faizi konularında yasal muhatap kart sahibinin bankasıdır; SATICI'nın bu konularda sorumluluğu yoktur. ALICI, kartını ve kart şifrelerini korumakla yükümlüdür.",
           ],
         },
         {
-          title: "4. Abonelik ve Yenileme",
+          title: "4. Hizmetin Sunulması, Hesap Güvenliği ve Kesintiler",
           paragraphs: [
-            "Abonelik, ödeme onayının ardından derhal aktive edilir. Abonelik süresi seçilen plana göre belirlenir (aylık/yıllık).",
+            "Abonelik, ödeme onayının ardından derhal aktive edilir ve ALICI'nın hesabında kullanıma açılır. Fiziksel teslimat yoktur; hizmetin ifası, aboneliğin hesapta aktif hale gelmesi ile gerçekleşir. SATICI, hizmeti seçilen plana uygun şekilde sunmakla yükümlüdür.",
+            "ALICI, hesap bilgilerinin (şifre, doğrulama kodları, e-posta erişimi) gizliliğinden ve güvenliğinden sorumludur. Üçüncü kişilerin hesabı kullanması halinde ortaya çıkan zararlardan ALICI sorumludur; hesabında yetkisiz kullanım şüphesi olan ALICI bunu derhal SATICI'ya bildirmelidir.",
+            "Hizmet; planlı bakım, güncelleme, altyapı sağlayıcılarının müdahalesi, yoğun trafik veya mücbir sebepler (doğal afet, siber saldırı, elektrik ve internet kesintisi, global servis kesintileri, erişim engelleri gibi) nedeniyle geçici olarak yavaşlayabilir veya kesilebilir. SATICI bu tür kesintilerin etkisini makul ölçüde azaltmaya çalışır; SATICI'nın kusuru bulunmayan bu hallerden doğan zararlardan sorumlu tutulamaz. Kesinti uzun sürerse ALICI destek ekibine başvurabilir; telafi (ör. ek süre veya iade) SATICI tarafından değerlendirilir.",
+            "ALICI, hizmeti kullanabilmesi için gerekli cihaz, tarayıcı ve internet bağlantısını sağlamakla ve hizmetin altyapısına zarar vermemekle yükümlüdür. SATICI, mücbir sebep veya zorunlu hallerde hizmeti süresi içinde sunamayacak olursa bunu öğrendiği tarihten itibaren en geç 3 gün içinde ALICI'ya bildirir.",
+          ],
+        },
+        {
+          title: "5. Abonelik ve Yenileme",
+          paragraphs: [
+            "Abonelik süresi seçilen plana göre belirlenir (aylık/yıllık).",
             "Abonelik otomatik olarak yenilenmez. Dönem sona ermeden önce size hatırlatma gönderilir; yenileme için onayınızın alınması ve yeni bir ödeme yapılması gerekmektedir. Onayınız olmadan ücret tahsil edilmez.",
             "Abonelik süresi dolduğunda ücretli özellikler devre dışı kalır, ücretsiz plana geçiş otomatik olarak gerçekleşir.",
           ],
         },
         {
-          title: "5. Cayma Hakkı",
+          title: "6. Cayma Hakkı",
           paragraphs: [
-            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; ALICI'nın açık onayı ile ifasına başlanan dijital içerik hizmetlerinde cayma hakkı kullanılamaz.",
-            "ALICI, ödeme adımında kanuni cayma hakkından feragat ettiğini açıkça beyan etmiştir. Bununla birlikte SATICI, ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar. 7 günlük süre dolduktan sonra kanuni bir iade yükümlülüğü doğmaz; abonelik iptal edilse dahi ödenmiş dönem sonuna kadar hizmete erişim sürer.",
-            "Hizmetin tamamen kullanılamaması durumunda SATICI ile iletişime geçilmesi halinde değerlendirme yapılacaktır.",
+            "Mesafeli Sözleşmeler Yönetmeliği uyarınca tüketici, 14 gün içinde gerekçe göstermeden cayma hakkına sahiptir. Ancak bu hak; Yönetmeliğin 15. maddesindeki istisnalar kapsamında, elektronik ortamda anında ifa edilen hizmetler ile cayma süresi sona ermeden tüketicinin onayıyla ifasına başlanan hizmetler için kullanılamaz (15/1-ğ ve 15/1-h).",
+            "ALICI, ödeme adımında; hizmetin ödeme anında derhal ifasına başlanmasını talep ettiğini, ifaya başlanması halinde kanuni cayma hakkını kaybedeceği konusunda önceden bilgilendirildiğini ve bu hakkından feragat ettiğini açıkça beyan etmiştir.",
+            "Bununla birlikte SATICI, ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar. 7 günlük süre dolduktan sonra kanuni bir iade yükümlülüğü doğmaz; abonelik iptal edilse dahi ödenmiş dönem sonuna kadar hizmete erişim sürer.",
+            "Hizmetin tamamen kullanılamaması durumunda SATICI ile iletişime geçilmesi halinde değerlendirme yapılacaktır. ALICI'nın hizmeti kasten kötüye kullanması halinde iade yapılmayabilir.",
           ],
         },
         {
-          title: "6. Kişisel Verilerin Korunması",
+          title: "7. İade Prosedürü",
+          paragraphs: [
+            "İade gerektiren her durumda (ticari iade garantisi, hizmetin sunulamaması, siparişin iptali, hakem heyeti kararı vb.) iade, ödemenin yapıldığı yöntemle yapılır. İade talebi SATICI'ya ulaştıktan sonra bedel en geç 14 gün içinde ödeme kuruluşuna iade edilir; SATICI uygulamada genellikle 3–5 iş günü içinde iade işlemini başlatır.",
+            "Kredi kartı ile yapılan ödemelerde iade, kartın bağlı olduğu bankaya yapılır; nakit olarak ödeme yapılmaz. Taksitli yapılan alışverişlerde banka, iadeyi alışverişteki taksit sayısıyla uyumlu olarak kart hesabına yansıtır. İadenin kart ekstresine yansıma zamanı ve hesap kesim tarihlerine bağlı görünümü bankanın işlemidir.",
+            "Hizmet bir fiziksel mal içermediğinden ürün geri gönderimi ve iade faturası gönderimi gerekmez; vergi mevzuatı gereği fatura ve belgeler SATICI tarafından düzenlenir.",
+          ],
+        },
+        {
+          title: "8. Kişisel Verilerin Korunması",
           paragraphs: [
             "ALICI'ya ait kişisel veriler KVKK ve GDPR kapsamında işlenmektedir. Fatura bilgileri 10 yıl süreyle saklanmaktadır (VUK Madde 253 uyarınca 5 yıl, TTK Madde 82 uyarınca 10 yıl; uzun olan süre uygulanır).",
-            "Ayrıntılı bilgi için Gizlilik Politikası ve KVKK Aydınlatma Metni'ni inceleyiniz.",
+            "Alışveriş işlemleri kapsamında işlenen kişisel verilere ilişkin aydınlatma metni web sitesinde yer alır; ALICI dilediği zaman inceleyebilir. Ayrıntılı bilgi için Gizlilik Politikası ve KVKK Aydınlatma Metni'ni inceleyiniz.",
           ],
         },
         {
-          title: "7. Uyuşmazlık Çözümü",
+          title: "9. Uyuşmazlıkların Çözümü ve Yetkili Merci",
           paragraphs: [
-            "Bu sözleşmeden doğan uyuşmazlıklarda Türk hukuku uygulanır.",
-            "Tüketici hakları kapsamında Tüketici Hakem Heyeti veya Tüketici Mahkemelerine başvurabilirsiniz.",
+            "ALICI, siparişe ilişkin şikâyetlerini info@pdfplatform.app adresine veya web sitesindeki iletişim kanallarına iletebilir.",
+            "Bu sözleşmeden doğan uyuşmazlıklarda Türk hukuku uygulanır. ALICI'nın tüketici sıfatını taşıdığı hallerde, ALICI'nın yerleşim yerindeki veya tüketici işleminin yapıldığı yerdeki Tüketici Hakem Heyeti ya da Tüketici Mahkemesi görevli ve yetkilidir. Her yıl Ticaret Bakanlığı tarafından ilan edilen parasal sınırın altındaki uyuşmazlıklarda Tüketici Hakem Heyetine başvuru zorunludur; güncel sınır Resmi Gazete'de yayımlanan tebliğle belirlenir.",
+            "Tüketici işlemi niteliği taşımayan uyuşmazlıklarda, SATICI'nın bulunduğu yerdeki mahkemeler ve icra daireleri yetkilidir.",
+          ],
+        },
+        {
+          title: "10. Delil Sözleşmesi",
+          paragraphs: [
+            "ALICI, bu sözleşmeden doğabilecek uyuşmazlıklarda SATICI'nın ticari defter ve kayıtlarının, sunucularında tuttuğu elektronik kayıtların (sipariş, ödeme, onay ve erişim kayıtları dahil) ve bilgisayar kayıtlarının geçerli delil teşkil edeceğini kabul eder. Bu madde 6100 sayılı Hukuk Muhakemeleri Kanunu'nun 193. maddesi anlamında delil sözleşmesi niteliğindedir.",
+            "Web sitesindeki hizmet açıklamaları, Ön Bilgilendirme Formu, fatura ve banka kayıtları geçerli delil ve bu sözleşmenin ayrılmaz ekleri kabul edilir.",
+          ],
+        },
+        {
+          title: "11. Onay ve Yürürlük",
+          paragraphs: [
+            "ALICI, hizmetin temel nitelikleri, fiyatı, ödeme şekli, cayma hakkı ve istisnaları dahil tüm ön bilgileri, Ön Bilgilendirme Formu'nu ve bu sözleşmeyi okuduğunu ve elektronik ortamda onayladığını kabul ve beyan eder.",
+            "Ön Bilgilendirme Formu ve bu sözleşmenin herhangi biri onaylanmazsa sipariş tamamlanmaz ve SATICI herhangi bir taahhüt altına girmez.",
+            "Bu sözleşme, ALICI tarafından ödeme adımında elektronik ortamda onaylandığı anda kurulur ve yürürlüğe girer. Sözleşme tarihi, onay anı olarak SATICI'nın kayıtlarına işlenir.",
           ],
         },
       ],
