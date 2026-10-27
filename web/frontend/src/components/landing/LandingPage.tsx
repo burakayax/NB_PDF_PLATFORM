@@ -1786,7 +1786,7 @@ function Faq({ language }: { language: Language }) {
           {
             question: "PDF'lerimi yüklediğimde verilerim güvende mi?",
             answer:
-              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir ve 1 saat sonra otomatik olarak silinir. Yakında çıkacak masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek.",
+              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir işlem biter bitmez silinir; çıktı dosyası en fazla 24 saat saklanır. Birleştir, böl, döndür gibi yaklaşık 20 araç ise dosyanı hiç yüklemeden tarayıcında çalışır.",
           },
           {
             question: "Masaüstü uygulaması çevrimdışı çalışacak mı?",
@@ -1796,12 +1796,12 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Dosyalarım sunucularda ne kadar süre saklanıyor?",
             answer:
-              "Web işlemlerinde dosyalar 1 saat sonra kalıcı olarak silinir. Yakında çıkacak masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek.",
+              "Sunucuda işlenen dosyalar işlem biter bitmez silinir; çıktı dosyası indirebilmen için en fazla 24 saat saklanır. Cihazda çalışan araçlarda dosya sunucuya hiç gitmez.",
           },
           {
             question: "Planımı istediğim zaman değiştirebilir miyim?",
             answer:
-              "Evet. Kredi paketleri tek seferlik alımdır; aboneliği ise istediğiniz zaman iptal edebilirsiniz.",
+              "Evet. Abonelik kendiliğinden yenilenmez; yenilemeyi siz onaylarsınız. Kredi paketleri tek seferlik alımdır.",
           },
           {
             question: "Dosya boyutu sınırı var mı?",
@@ -1811,14 +1811,14 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Ücretsiz deneme sunuyor musunuz?",
             answer:
-              "Evet. Kayıt olmadan birkaç işlemi ücretsiz deneyebilirsiniz. Kredi paketi satın almadan önce platformu keşfedin.",
+              "Süreli deneme yok, ama ücretsiz plan var: kayıt olmadan birçok aracı kullanabilir, ücretsiz hesapla günlük işlem hakkı kazanırsınız. Ödeme yapmadan platformu keşfedin.",
           },
         ]
       : [
           {
             question: "Is my data secure when I upload PDFs?",
             answer:
-              "Yes. Files are transferred over encrypted connections and permanently deleted after 1 hour. With the upcoming desktop app, files will never leave your device.",
+              "Yes. Files are transferred over encrypted connections and deleted as soon as processing ends; output files are kept for 24 hours at most. About 20 tools, such as merge, split and rotate, run in your browser without uploading your file at all.",
           },
           {
             question: "Will the desktop app work offline?",
@@ -1828,12 +1828,12 @@ function Faq({ language }: { language: Language }) {
           {
             question: "How long are my files stored on your servers?",
             answer:
-              "Web-processed files are permanently deleted after 1 hour. The upcoming desktop app will process files without sending them to a server.",
+              "Files processed on our server are deleted as soon as processing ends; output files are kept for up to 24 hours so you can download them. On-device tools never send your file to a server.",
           },
           {
             question: "Can I switch plans at any time?",
             answer:
-              "Yes. Credit packs are one-time purchases; subscriptions can be cancelled any time from your dashboard.",
+              "Yes. Subscriptions do not renew automatically; you confirm each renewal. Credit packs are one-time purchases.",
           },
           {
             question: "Is there a file size limit?",
@@ -1843,7 +1843,7 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Do you offer a free trial?",
             answer:
-              "Yes. You can try several operations without signing up. Explore the platform before purchasing any credits.",
+              "There is no timed trial, but there is a free plan: use many tools without signing up, and a free account adds a daily operation allowance. Explore the platform before paying anything.",
           },
         ];
 
