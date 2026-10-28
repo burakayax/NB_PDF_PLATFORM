@@ -54,7 +54,7 @@ const MUTED = "#64748b";
 const LINE = "#D9E2EC";
 
 /** Kutuya sığana kadar punto düşürür; sığmazsa son satırı kısaltır. */
-function fitBlock(font, text, maxWidth, maxLines, sizeMax, sizeMin) {
+export function fitBlock(font, text, maxWidth, maxLines, sizeMax, sizeMin) {
   for (let size = sizeMax; size >= sizeMin; size -= 2) {
     const lines = wrap(font, text, size, maxWidth);
     if (lines.length <= maxLines) return { size, lines };
@@ -64,7 +64,7 @@ function fitBlock(font, text, maxWidth, maxLines, sizeMax, sizeMin) {
   return { size: sizeMin, lines };
 }
 
-function linesToPath(font, lines, size, x, firstBaseline, lineHeight) {
+export function linesToPath(font, lines, size, x, firstBaseline, lineHeight) {
   return lines
     .map((l, i) => textPath(font, l, size, x, firstBaseline + i * lineHeight))
     .filter(Boolean)
@@ -72,7 +72,7 @@ function linesToPath(font, lines, size, x, firstBaseline, lineHeight) {
 }
 
 /** Harf aralıklı büyük harf etiketi (yola çevrilmiş). */
-function spaced(font, text, size, x, y, gap) {
+export function spaced(font, text, size, x, y, gap) {
   let pen = x;
   const parts = [];
   for (const ch of text) {

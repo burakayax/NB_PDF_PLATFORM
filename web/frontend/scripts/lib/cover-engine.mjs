@@ -363,8 +363,24 @@ export function hash(s) {
   return h;
 }
 
+/**
+ * Sağ üst köşe çıkartması ("6 ADIM"): kaydırmalı kapağı daha zengin gösterir ve içerik hakkında somut bilgi verir.
+ * { big: "6", small: "ADIM" } — yalnızca gerçek sayılar (slayt sayısı) verilmelidir.
+ */
+function stickerBadge({ big, small }, w, h, g) {
+  // Sağ ALT köşe: başlık üstte, "Kaydırın" düğmesi solda olduğundan hiçbir düzende yazıyla çakışmaz (hero'nun köşesine
+  // binebilir; çıkartma gibi durur).
+  const r = Math.round(w * 0.082);
+  const cx = w - g.m - r + 4;
+  const cy = h - Math.round(w * 0.05) - r;
+  return `<g transform="rotate(10 ${cx} ${cy})"><circle cx="${cx}" cy="${cy + 8}" r="${r}" fill="#000" fill-opacity="0.2"/>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#amber)"/><circle cx="${cx}" cy="${cy}" r="${r - 9}" fill="none" stroke="${C.navy}" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round" stroke-opacity="0.55"/>
+  ${T(big, Math.round(r * 0.9), cx, cy + r * 0.18, C.navy, { center: true })}
+  ${T(small, Math.round(r * 0.27), cx, cy + r * 0.56, C.navy, { center: true })}</g>`;
+}
+
 /** Kapak SVG'si. */
-export function coverSvg({ layout, title, tag = "", hero, heroOpts, accent, w, h, key, cta = "pdfplatform.app", forceCaps = false, fact = "" }) {
+export function coverSvg({ layout, title, tag = "", hero, heroOpts, accent, w, h, key, cta = "pdfplatform.app", forceCaps = false, fact = "", badge = null }) {
   const g = geometry(w, h, key);
   const pal = palFor(accent);
   // 1920 piksellik uzun tuvalde (Reels/Shorts) başlık, genişlikten türeyen punto yüzünden küçük kalıyordu.
@@ -384,7 +400,7 @@ export function coverSvg({ layout, title, tag = "", hero, heroOpts, accent, w, h
   };
   const fn = LAYOUT_FNS[layout] ?? LAYOUT_FNS.classic;
   const r = fn(ctx);
-  const svg = `${svgOpen(w, h, r.defs)}${r.bg}${r.body}</svg>`;
+  const svg = `${svgOpen(w, h, r.defs)}${r.bg}${r.body}${badge ? stickerBadge(badge, w, h, g) : ""}</svg>`;
   return { svg, logo: { width: g.logoW, left: g.reel ? 64 : g.m, top: g.logoTop } };
 }
 
