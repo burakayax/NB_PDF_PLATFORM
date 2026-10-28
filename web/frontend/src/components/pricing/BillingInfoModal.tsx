@@ -5,6 +5,7 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { NbPhoneInput } from "../common/NbPhoneInput";
 import { DISTANCE_SALES_DOCS_VERSION } from "../../content/legalVersion";
 import { readAccessToken } from "../../lib/accessTokenStore";
+import { getCountryCode } from "../../lib/geoCountry";
 
 interface BillingFormState {
   invoiceType: "individual" | "corporate";
@@ -15,6 +16,7 @@ interface BillingFormState {
   taxId: string;
   taxOffice: string;
   billingAddressLine: string;
+  billingDistrict: string;
   city: string;
   billingCountryCode: string;
   billingPostalCode: string;
@@ -235,6 +237,7 @@ const EMPTY_FORM: BillingFormState = {
   taxId: "",
   taxOffice: "",
   billingAddressLine: "",
+  billingDistrict: "",
   city: "",
   billingCountryCode: "TR",
   billingPostalCode: "",
@@ -356,7 +359,9 @@ export function BillingInfoModal({
             taxId: saved.taxId ?? "",
             taxOffice: saved.taxOffice ?? "",
             billingAddressLine: saved.billingAddressLine ?? "",
+            billingDistrict: saved.billingDistrict ?? "",
             city: saved.city ?? "",
+            // Kayıtlı ülke yoksa aşağıda IP'den tahmin edilir (yurt dışından gelen "Türkiye" ile başlamasın).
             billingCountryCode: saved.billingCountryCode ?? "TR",
             billingPostalCode: saved.billingPostalCode ?? "",
             phone: saved.phone ?? "",
@@ -366,6 +371,15 @@ export function BillingInfoModal({
             contractAccepted: false,
             withdrawalWaived: false,
           }));
+        }
+        return saved;
+      })
+      .then(async (saved) => {
+        if (saved?.billingCountryCode) return;
+        // İlk kez dolduran: ülkeyi bağlantı konumundan öner (kullanıcı değiştirebilir).
+        const cc = (await getCountryCode().catch(() => null))?.toUpperCase();
+        if (cc && COUNTRIES.some((c) => c.code === cc)) {
+          setForm((p) => (p.billingCountryCode === "TR" && !p.billingAddressLine ? { ...p, billingCountryCode: cc } : p));
         }
       })
       .catch(() => {})
@@ -384,6 +398,8 @@ export function BillingInfoModal({
     if (!form.firstName.trim() || !form.lastName.trim()) return false;
     if (!form.billingAddressLine.trim()) return false;
     if (!form.city.trim()) return false;
+    // Yurt içi alıcıda ilçe zorunlu (VUK md. 230: eksiksiz adres). Yurt dışında ilçe kavramı ülkeye göre değişir.
+    if (isTurkish && !form.billingDistrict.trim()) return false;
     if (!form.billingCountryCode) return false;
     if (!form.onBilgilendirmeAccepted || !form.contractAccepted || !form.withdrawalWaived) return false;
     if (isTurkish && form.invoiceType === "corporate") {
@@ -429,6 +445,7 @@ export function BillingInfoModal({
           taxId: form.taxId,
           taxOffice: form.taxOffice,
           billingAddressLine: form.billingAddressLine,
+          billingDistrict: form.billingDistrict,
           city: form.city,
           billingCountryCode: form.billingCountryCode,
           billingPostalCode: form.billingPostalCode,
@@ -708,7 +725,25 @@ export function BillingInfoModal({
                   }
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid gap-3 ${isTurkish ? "grid-cols-3" : "grid-cols-2"}`}>
+                {isTurkish && (
+                  <div>
+                    <label className={lbl}>
+                      {tr ? "İlçe" : "District"}
+                      {req}
+                    </label>
+                    <input
+                      className={inp}
+                      type="text"
+                      value={form.billingDistrict}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, billingDistrict: e.target.value }))
+                      }
+                      placeholder={tr ? "Örn. Çankaya" : "District"}
+                      autoComplete="address-level2"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className={lbl}>
                     {tr ? "Şehir" : "City"}
@@ -742,6 +777,15 @@ export function BillingInfoModal({
                   />
                 </div>
               </div>
+              <p className="-mt-1 text-[12px] leading-relaxed text-slate-400">
+                {tr
+                  ? isTurkish
+                    ? "Neden istiyoruz? Vergi Usul Kanunu (md. 230) gereği faturada alıcının adı-soyadı ve adresi bulunmak zorundadır. Adresinizi ilçe ve il bilgisiyle birlikte eksiksiz yazmanız faturanızın geçerli olmasını sağlar. Bu bilgi yalnızca fatura düzenlemek için kullanılır, şifreli saklanır ve üçüncü kişilerle pazarlama amacıyla paylaşılmaz."
+                    : "Neden istiyoruz? Hizmeti Türkiye'den sattığımız için Türk vergi mevzuatı gereği faturada alıcının adı-soyadı ve adresi bulunmak zorundadır. Bu bilgi yalnızca fatura düzenlemek için kullanılır, şifreli saklanır ve pazarlama amacıyla paylaşılmaz."
+                  : isTurkish
+                    ? "Why we ask: Turkish tax law (VUK art. 230) requires the buyer's name and address, including district and city, on every invoice. It is used only to issue your invoice, stored encrypted, and never shared for marketing."
+                    : "Why we ask: because we sell from Turkey, Turkish tax law requires the buyer's name and address on every invoice. It is used only to issue your invoice, stored encrypted, and never shared for marketing."}
+              </p>
 
               {/* Telefon — ülke kodu bayraklı açılır menüden seçilir, IP'den otomatik tespit edilir */}
               <div>

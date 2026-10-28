@@ -131,6 +131,7 @@ import { LandingIcon } from "./LandingIcon";
 import { HeroBackground } from "./HeroBackground";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { ProductGallery } from "./ProductGallery";
+import { PaytrBadge } from "../common/PaytrBadge";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 
@@ -758,7 +759,6 @@ function Hero({
           {...stagger(3)}
           className="mt-10 mx-auto w-full max-w-7xl"
         >
-          {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
           {/* Vitrin notu: araç alanının ÜSTÜNDE, ziyaretçi ilk bunu görsün ("araçlar bu kadar mı?"
               diye düşünmesin). Sayı katalogdan gelir (elle yazılmaz), yeni araç eklenince
               not kendiliğinden güncellenir. */}
@@ -789,6 +789,7 @@ function Hero({
             </span>
           </a>
 
+          {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
               çipleri, ortada seçili aracın tanıtım şeridi, altında aracın kendisi.
               Eskiden 16 çip tek bir yığın hâlinde sarılıyor, araç alanı ayrı
               duruyordu; hepsi tek kartta toplandı. */}
@@ -2286,9 +2287,10 @@ function Footer({
             © {new Date().getFullYear()} NB Global Studio.{" "}
             {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
           </p>
-          <p className="text-xs text-gray-400">
-            {tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}
-          </p>
+          <div className="flex items-center gap-3 text-xs text-gray-400">
+            <PaytrBadge height={16} tr={tr} />
+            <p>{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
+          </div>
         </div>
       </div>
     </footer>

@@ -15,6 +15,7 @@ class CustomerInfo:
     tax_office: str | None = None     # Vergi dairesi
     address: str | None = None
     city: str | None = None
+    district: str | None = None      # İlçe (BirFatura billingTown)
     country: str = "Turkey"
     contact_type: str = "person"      # "person" | "company"
     country_code: str = "TR"          # ISO 3166-1 alpha-2

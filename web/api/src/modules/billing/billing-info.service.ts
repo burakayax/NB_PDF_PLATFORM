@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { encryptField, decryptField, maskTcNo } from "../../lib/encryption.js";
+import { missingInvoiceAddressFields } from "./invoice-address.js";
 
 export interface BillingInfoInput {
   invoiceType: "individual" | "corporate";
@@ -13,6 +14,7 @@ export interface BillingInfoInput {
   city?: string;
   billingCountryCode?: string;
   billingPostalCode?: string;
+  billingDistrict?: string;
   phone?: string;
   distanceSalesConsented: boolean;
   withdrawalWaived: boolean;
@@ -32,6 +34,7 @@ export interface BillingInfoOutput {
   city: string | null;
   billingCountryCode: string | null;
   billingPostalCode: string | null;
+  billingDistrict: string | null;
   phone: string | null;
   distanceSalesConsentedAt: Date | null;
   withdrawalWaivedAt: Date | null;
@@ -51,6 +54,18 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     }
   }
 
+  const missingAddress = missingInvoiceAddressFields(
+    {
+      addressLine: input.billingAddressLine,
+      district: input.billingDistrict,
+      city: input.city,
+    },
+    input.billingCountryCode?.trim() || "TR",
+  );
+  if (missingAddress.length > 0) {
+    throw new Error("Fatura için açık adres, ilçe ve şehir bilgisi zorunludur.");
+  }
+
   const now = new Date();
   const updateData: Record<string, unknown> = {
     invoiceType: input.invoiceType,
@@ -60,6 +75,7 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     city: input.city?.trim() || null,
     billingCountryCode: input.billingCountryCode?.trim().toUpperCase() || "TR",
     billingPostalCode: input.billingPostalCode?.trim() || null,
+    billingDistrict: input.billingDistrict?.trim() || null,
     phone: input.phone?.trim() ? encryptField(input.phone.trim()) : null,
     isKvkkConsented: true,
     kvkkConsentedAt: now,
@@ -115,6 +131,7 @@ export async function getBillingInfo(userId: string): Promise<BillingInfoOutput>
       city: true,
       billingCountryCode: true,
       billingPostalCode: true,
+      billingDistrict: true,
       phone: true,
       distanceSalesConsentedAt: true,
       withdrawalWaivedAt: true,
@@ -150,6 +167,7 @@ export async function getBillingInfo(userId: string): Promise<BillingInfoOutput>
     city: user.city,
     billingCountryCode: user.billingCountryCode,
     billingPostalCode: user.billingPostalCode,
+    billingDistrict: user.billingDistrict,
     phone: safeDecrypt(user.phone),
     distanceSalesConsentedAt: user.distanceSalesConsentedAt,
     withdrawalWaivedAt: user.withdrawalWaivedAt,

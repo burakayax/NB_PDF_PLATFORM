@@ -7,6 +7,7 @@ import type { PlanId } from "../../lib/planConfig";
 import { getMissingBillingFields } from "../../lib/billingProfile";
 import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { NbPhoneInput } from "../common/NbPhoneInput";
+import { PaytrBadge } from "../common/PaytrBadge";
 
 type ProfileCompletionModalProps = {
   open: boolean;
@@ -398,7 +399,7 @@ export function ProfileCompletionModal({
               className="flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-4 opacity-90 sm:border-t-0 sm:pt-0"
               aria-label={tr ? "Kabul edilen ödeme yöntemleri" : "Accepted payment methods"}
             >
-              <span className="text-sm font-bold tracking-tight text-[#00A7E0]">iyzico</span>
+              <PaytrBadge height={18} tr={tr} />
               <span className="text-sm font-black italic tracking-tight text-[#1434CB]">VISA</span>
               <svg className="h-7 w-10 shrink-0" viewBox="0 0 32 20" aria-hidden>
                 <circle cx="12" cy="10" r="8" fill="#EB001B" />
@@ -437,8 +438,8 @@ export function ProfileCompletionModal({
             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/90" aria-hidden />
             <p>
               {tr
-                ? "Ödemeleriniz İyzico güvencesiyle 256-bit SSL ile şifrelenir. Kart bilgileriniz asla sistemimizde saklanmaz."
-                : "Your payments are encrypted with 256-bit SSL via iyzico. Card data is never stored on our systems."}
+                ? "Ödemeleriniz PayTR güvencesiyle 256-bit SSL ile şifrelenir. Kart bilgileriniz asla sistemimizde saklanmaz."
+                : "Your payments are encrypted with 256-bit SSL via PayTR. Card data is never stored on our systems."}
             </p>
           </div>
         </form>

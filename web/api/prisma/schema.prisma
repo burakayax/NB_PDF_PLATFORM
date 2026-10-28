@@ -192,6 +192,8 @@ model User {
   phone                String?  @map("phone")
   billingAddressLine   String?  @map("billing_address_line")
   billingPostalCode    String?  @map("billing_postal_code")
+  // İlçe: e-arşiv fatura alıcı adresinin parçası (VUK md. 230). Yurt içi alıcıda zorunlu tutulur.
+  billingDistrict      String?  @map("billing_district")
   tcKimlikNo          String?   @map("tc_kimlik_no")
   taxId               String?   @map("tax_id")
   taxOffice           String?   @map("tax_office")

@@ -111,6 +111,7 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
             tax_office=tax_office if (is_corporate and tax_office) else None,
             address=buyer.get("registrationAddress"),
             city=buyer.get("city"),
+            district=buyer.get("district") or None,
             country=buyer_country,
             contact_type="company" if is_corporate else "person",
             is_export=is_export,

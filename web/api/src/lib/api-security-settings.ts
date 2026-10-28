@@ -200,6 +200,9 @@ export function rateLimitCountsTowardAbuseBlock(request: Request): boolean {
   if (p === "/payment/callback") {
     return false;
   }
+  if (p === "/payment/paytr-notify") {
+    return false;
+  }
   if (p === "/payments/callback") {
     return false;
   }

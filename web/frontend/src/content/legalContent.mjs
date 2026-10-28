@@ -154,7 +154,7 @@ export const legalDocuments = {
         {
           title: "5. Sharing and processors",
           paragraphs: [
-            "To run the service we use the following groups of providers, who process only the data needed for their task and on our instructions: server, database and web-app hosting (Render, Vercel); file and output storage (cloud storage); email delivery (Google); payments (iyzico — your card details never reach us and are processed directly by iyzico); AI (Anthropic); and, only with your consent, analytics (Google Analytics) and error monitoring (Sentry).",
+            "To run the service we use the following groups of providers, who process only the data needed for their task and on our instructions: server, database and web-app hosting (Render, Vercel); file and output storage (cloud storage); email delivery (Google); payments (PayTR — your card details never reach us and are processed directly by PayTR); AI (Anthropic); and, only with your consent, analytics (Google Analytics) and error monitoring (Sentry).",
             "AI processor: our AI-powered features rely on Anthropic (Anthropic PBC, United States). Text extracted from your document is sent to Anthropic solely to generate your result; per Anthropic's API terms it is not used to train models, though the provider may retain it for up to 30 days for safety review only. Only the document text is sent, not the file itself.",
             "We do not sell your personal data. We may disclose information if required by law, to protect rights and safety, or in connection with a merger or asset transfer subject to continued protection of your information.",
           ],
@@ -292,7 +292,7 @@ export const legalDocuments = {
           title: "3. Price and Payment",
           paragraphs: [
             "Prices are determined by the plan you select and the billing period (monthly/yearly). For users residing in Turkey, 20% VAT is included in the total amount charged.",
-            "Payment is made via credit card or debit card through the iyzico infrastructure.",
+            "Payment is made via credit card or debit card through the PayTR infrastructure.",
             "While there is no statutory refund obligation for the remaining period once the subscription term has commenced, the SELLER honours, under its own commercial guarantee, any refund request made within 7 days of the first payment, with no reason required. Outside that window, access continues until the end of the paid period.",
           ],
         },
@@ -341,7 +341,7 @@ export const legalDocuments = {
           paragraphs: [
             "The name and basic characteristics of the Service (plan), subscription period (monthly/yearly), quantity, total price including VAT, payment method and order date are shown to the BUYER at the payment screen and in the order summary and form an integral part of this agreement. Because the Service is delivered electronically, there is no shipping or delivery fee.",
             "The sales price is shown including VAT. 20% VAT applies to individual users residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
-            "Payment is made securely by credit or debit card through the iyzico infrastructure. Card details are not stored by the SELLER. Payment of the price is a precondition for performance of the order.",
+            "Payment is made securely by credit or debit card through the PayTR infrastructure. Card details are not stored by the SELLER. Payment of the price is a precondition for performance of the order.",
             "Prices published on the website are valid until updated or changed; time-limited prices are valid until the stated end. The SELLER may change prices and plan contents going forward; such a change is not applied to the BUYER's disadvantage for the period of an order already paid for.",
             "The SELLER reserves the right to cancel an order where a price is clearly incorrect because of a system or internet error (for example zero or an extremely low amount); in that case the BUYER is refunded what was paid.",
             "If the BUYER's card is found to have been used without authorisation, or the bank or financial institution does not pay the price to the SELLER, the SELLER's obligation to provide the Service ends and access may be closed. For instalment number, instalment amount, interest and default interest, the legal counterparty is the cardholder's bank; the SELLER has no responsibility in these matters. The BUYER must protect the card and its security codes.",
@@ -563,7 +563,7 @@ export const legalDocuments = {
         {
           title: "5. Paylaşım ve işleyenler",
           paragraphs: [
-            "Hizmeti çalıştırmak için şu hizmet sağlayıcı gruplarından yararlanırız ve yalnızca görevleri için gerekli veriyi talimatlarımız çerçevesinde işlemelerini sağlarız: sunucu, veritabanı ve web arayüzü barındırma (Render, Vercel); dosya ve çıktı depolama (bulut depolama); e-posta gönderimi (Google); ödeme (iyzico — kart bilgileriniz bize ulaşmaz, doğrudan iyzico’da işlenir); yapay zekâ (Anthropic); yalnızca onayınızla analitik (Google Analytics) ve hata izleme (Sentry).",
+            "Hizmeti çalıştırmak için şu hizmet sağlayıcı gruplarından yararlanırız ve yalnızca görevleri için gerekli veriyi talimatlarımız çerçevesinde işlemelerini sağlarız: sunucu, veritabanı ve web arayüzü barındırma (Render, Vercel); dosya ve çıktı depolama (bulut depolama); e-posta gönderimi (Google); ödeme (PayTR — kart bilgileriniz bize ulaşmaz, doğrudan PayTR’de işlenir); yapay zekâ (Anthropic); yalnızca onayınızla analitik (Google Analytics) ve hata izleme (Sentry).",
             "Yapay zekâ işleyeni: Yapay zekâ destekli özelliklerimiz Anthropic (Anthropic PBC, ABD) altyapısını kullanır. Yapay zekâ araçlarına gönderdiğiniz belge metni yalnızca sonucunuzu üretmek amacıyla Anthropic'e iletilir; Anthropic'in API şartları gereği modellerin eğitiminde kullanılmaz; ancak sağlayıcı bu veriyi yalnızca güvenlik denetimi amacıyla en fazla 30 gün saklayabilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
             "Kişisel verilerinizi satmayız. Yasal zorunluluk, hakların ve güvenliğin korunması veya birleşme veya varlık devri (verilerinizin korunmasının sürmesi koşuluyla) hallerinde bilgi açıklanabilir.",
           ],
@@ -754,7 +754,7 @@ export const legalDocuments = {
           title: "3. Fiyat ve Ödeme",
           paragraphs: [
             "Fiyatlar, seçtiğiniz plana ve ödeme dönemine (aylık/yıllık) göre belirlenmektedir. Türkiye'de mukim kullanıcılar için %20 KDV dahil toplam tutar tahsil edilmektedir.",
-            "Ödeme iyzico altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
+            "Ödeme PayTR altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
             "Abonelik süresi başladıktan sonra kalan süre için kanuni bir iade yükümlülüğü bulunmamakla birlikte, SATICI kendi ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde yapılan iade taleplerini gerekçe aranmaksızın karşılar (tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar saklıdır) (aşağıda «Ticari İade Garantisi»). Bu süre dışındaki iptallerde, ödenmiş dönem sonuna kadar hizmete erişim devam eder.",
           ],
         },
@@ -804,7 +804,7 @@ export const legalDocuments = {
           paragraphs: [
             "Hizmetin adı ve temel nitelikleri (plan), abonelik dönemi (aylık/yıllık), adedi, KDV dahil toplam bedeli, ödeme şekli ve sipariş tarihi; ödeme ekranında ve sipariş özetinde ALICI'ya gösterilir ve bu sözleşmenin ayrılmaz parçasıdır. Hizmet elektronik ortamda sunulduğundan teslimat ve kargo bedeli yoktur.",
             "Satış fiyatı KDV dahil olarak gösterilir. Türkiye'de mukim bireysel kullanıcılar için %20 KDV uygulanır. Yurt dışında mukim kullanıcılar için KDV uygulanmaz (ihracat istisnası).",
-            "Ödeme, iyzico altyapısı üzerinden kredi kartı veya banka kartı ile güvenli biçimde yapılır. Kart bilgileri SATICI tarafından saklanmaz. Siparişin ifası için bedelin ödenmiş olması şarttır.",
+            "Ödeme, PayTR altyapısı üzerinden kredi kartı veya banka kartı ile güvenli biçimde yapılır. Kart bilgileri SATICI tarafından saklanmaz. Siparişin ifası için bedelin ödenmiş olması şarttır.",
             "Web sitesinde ilan edilen fiyatlar, güncellenip değiştirilene kadar; süreli ilan edilenler ise belirtilen süre sonuna kadar geçerlidir. SATICI fiyatları ve plan içeriklerini ileriye dönük değiştirebilir; bu değişiklik, ödemesi tamamlanmış sipariş için seçilen dönem boyunca ALICI aleyhine uygulanmaz.",
             "Sistem veya internet kaynaklı teknik hatalar nedeniyle açıkça hatalı yansıyan fiyatlar (ör. sıfır veya aşırı düşük tutar) için SATICI siparişi iptal etme hakkını saklı tutar; bu durumda ALICI'ya ödediği bedel iade edilir.",
             "ALICI'nın kartının yetkisiz kişilerce kullanıldığının tespit edilmesi veya banka ya da finans kuruluşunun bedeli SATICI'ya ödememesi halinde SATICI'nın hizmeti sunma yükümlülüğü sona erer ve hizmete erişim kapatılabilir. Taksit sayısı, taksit tutarı, faiz ve temerrüt faizi konularında yasal muhatap kart sahibinin bankasıdır; SATICI'nın bu konularda sorumluluğu yoktur. ALICI, kartını ve kart şifrelerini korumakla yükümlüdür.",

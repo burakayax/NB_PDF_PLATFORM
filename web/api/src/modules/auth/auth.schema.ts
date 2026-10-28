@@ -85,6 +85,7 @@ export const updateProfileSchema = z.object({
   phone: z.string().trim().max(20, "Phone is too long.").optional(),
   billingAddressLine: z.string().trim().max(300, "Address is too long.").optional(),
   billingPostalCode: z.string().trim().max(16, "Postal code is too long.").optional(),
+  billingDistrict: z.string().trim().max(80, "District is too long.").optional(),
   city: z.string().trim().max(80, "City is too long.").optional(),
   country: z.string().trim().max(80, "Country is too long.").optional(),
 });

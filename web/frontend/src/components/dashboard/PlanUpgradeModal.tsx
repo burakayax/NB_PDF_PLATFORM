@@ -193,7 +193,7 @@ export function PlanUpgradeModal({
                 </p>
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[12px] text-slate-400">
                   <span className="inline-flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-fuchsia-300" />{tr ? "Anında erişim" : "Instant access"}</span>
-                  <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />{tr ? "Güvenli ödeme (iyzico)" : "Secure payment (iyzico)"}</span>
+                  <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />{tr ? "Güvenli ödeme (PayTR)" : "Secure payment (PayTR)"}</span>
                   <span className="inline-flex items-center gap-1.5"><RotateCcw className="h-3.5 w-3.5 text-sky-300" />{tr ? "Otomatik yenileme yok" : "No auto-renewal"}</span>
                 </div>
               </div>

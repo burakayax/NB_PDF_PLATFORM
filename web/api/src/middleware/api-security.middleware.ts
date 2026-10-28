@@ -383,6 +383,7 @@ export function isPublicApiPath(method: string, path: string): boolean {
     if (p.startsWith("/auth/forgot-password/") && method === "POST") return true;
   }
   if (p === "/payment/callback" && method === "POST") return true;
+  if (p === "/payment/paytr-notify" && method === "POST") return true;
   if (p === "/payments/callback" && method === "POST") return true;
   if (p === "/payments/pricing" && method === "GET") return true;
   if (p === "/team/invite/preview" && method === "GET") return true;

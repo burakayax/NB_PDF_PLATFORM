@@ -1108,7 +1108,7 @@ export async function exportMyDataController(request: Request, response: Respons
         plan: true, preferredLanguage: true, timezone: true, country: true,
         city: true, authProvider: true, isVerified: true,
         createdAt: true, lastLoginAt: true,
-        invoiceType: true, billingCountryCode: true, billingPostalCode: true,
+        invoiceType: true, billingCountryCode: true, billingPostalCode: true, billingDistrict: true,
         companyName: true, taxOffice: true, isKvkkConsented: true,
         kvkkConsentedAt: true,
       },
