@@ -19,13 +19,14 @@ name: Arac videosu uretimi
 #   REELS_DEMO_PASSWORD    O hesabın şifresi
 # Biri yoksa iş sessizce atlanır (hata vermez).
 #
-# SAAT: Her 30 dakikada bir API'ye sorulur; API yalnızca normal gönderilerle AYNI paylaşım
-# saatine göre (hazırlık anından ~2,5 saat önce) "üret" der. Paylaşım saatini panelden
-# değiştirsen bu dosyada bir şey değiştirmen gerekmez.
+# SAAT: Günde BİR kez, her sabah 08:30'da (Türkiye saati = 05:30 UTC) API'ye "video lazım mı?"
+# diye sorulur. Lazımsa o anda üretilir; değilse iş birkaç saniyede biter. Saati değiştirmek için
+# aşağıdaki cron'un UTC saatini ayarla (TR saati − 3). Paylaşım saati sabah 08:30'dan ÖNCE ise
+# o günün videosu geç gelen video olarak eklenir.
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "30 5 * * *"
   workflow_dispatch:
     inputs:
       tool:
