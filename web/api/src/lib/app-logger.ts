@@ -1,4 +1,5 @@
 import { appendLogLine } from "./file-log.js";
+import { noteSecurityEvent } from "./security-alerts.js";
 
 // Olayları tek satırlık JSON (NDJSON) olarak dosyaya yazar; üretimde hata ayıklama ve denetim içindir.
 // kind alanı tüketicilerin satırı sınıflandırmasını sağlar; şema değişince arama panelleri güncellenmelidir.
@@ -29,6 +30,7 @@ export function logLoginAttempt(payload: {
   desktop?: boolean;
 }): void {
   write("login_attempt", payload as Record<string, unknown>);
+  if (payload.outcome === "failure") noteSecurityEvent("login_failure", { ip: payload.ip });
 }
 
 export function logRegisterAttempt(payload: {
@@ -92,6 +94,7 @@ export function logSuspiciousActivity(payload: {
   userAgent?: string;
 }): void {
   write("security", payload as Record<string, unknown>);
+  noteSecurityEvent(payload.type, { ip: payload.ip, detail: payload.detail });
 }
 
 /** Mock checkout / confirm — no external PSP; complements NDJSON audit. */
