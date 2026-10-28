@@ -7,6 +7,8 @@
  * Yazılar aracın gerçek ekranına/davranışına dayanmalıdır; uydurma iddia yazma.
  */
 
+import { makeResultCard } from "./result-card.mjs";
+
 /** Dosya seçme penceresini açıp dosyaları verir (yavaş makinede sayfa yüklenirken tıklama boşa gidebilir: yeniden dener). */
 export async function chooseFiles(st, dropzone, paths) {
   const { pg, center, moveTo, wait } = st;
@@ -185,13 +187,16 @@ export function simpleTool(cfg) {
       // 1) Dosya
       if (upload) {
         say(lab(), "Dosyanı seç ya da alana sürükle", cfg.pick?.l1 ?? "Saniyeler içinde", cfg.pick?.l2 ?? "", "");
-        await wait(700);
+        await wait(350);
         const dz = dropzoneOf();
         await hl(dz, 6).catch(() => {});
-        await wait(900);
+        await wait(650);
         await hlOff();
         await chooseFiles(st, dz, cfg.files.map((f) => fixtures(f)));
+        // Yükleme/önizleme süresi sunucuya bağlı: videoda boş "sürükleyin" ekranı beklemesin diye bu aralık kesilir.
+        st.cutOpen(0.5);
         await (cfg.loaded ? cfg.loaded(pg) : pg.getByText(cfg.files[0]).first()).waitFor({ timeout: 60000 });
+        st.cutClose();
         await wait(900);
         if (cfg.afterLoad) await cfg.afterLoad(st);
       }
@@ -240,7 +245,19 @@ export function simpleTool(cfg) {
       await moveTo(700, 330);
       await wait(2300);
       await st.showResultButtons();
-      return { formBox, loadedBox: formBox, resultBox, swapAt, btnBoxFinal, estText: "" };
+      // Sonuç sahnesi: sonucu videoya SONRADAN eklemek için dosyayı indirip küçük resim kartı üretir (video süresi dondurulur).
+      let resultCard = null;
+      if (cfg.resultScene !== false) {
+        st.freeze();
+        try {
+          const file = await st.captureResult();
+          resultCard = makeResultCard({ file, workDir: st.workDir });
+        } catch (e) {
+          console.log("SONUC-SAHNESI atlandı:", e.message);
+        }
+      }
+      return {
+        resultCard, formBox, loadedBox: formBox, resultBox, swapAt, btnBoxFinal, estText: "" };
     },
   };
 }

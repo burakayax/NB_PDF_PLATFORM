@@ -36,7 +36,12 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     events.push({ t: +(now() - startT).toFixed(2), label, title, l1, l2, accent });
     console.log("SAY", events.at(-1).t, label, "|", title, "|", l1, "|", l2);
   };
-  pg.on("download", (d) => d.cancel().catch(() => {}));
+  // İndirmeler normalde iptal edilir (diske dosya yazılmaz). Sonuç sahnesi için `captureResult` tek bir indirmeyi yakalar.
+  let onDownload = null;
+  pg.on("download", (d) => {
+    if (onDownload) onDownload(d);
+    else d.cancel().catch(() => {});
+  });
   pg.on("pageerror", (e) => console.log("PAGEERR", e.message));
   // Tanı: başarısız/hatalı istekler ve tarayıcı hataları kayda geçer (CI'da takılmaların nedeni buradan okunur).
   pg.on("requestfailed", (r) => console.log("REQFAIL", r.method(), r.url().slice(0, 140), r.failure()?.errorText ?? ""));
@@ -238,6 +243,45 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     return { x: rb.x, y: rb.y };
   }
 
+  // ---- Ölü bekleme kesintileri ----
+  // Dosya yüklenip önizleme çıkana kadar geçen süre (sunucu hızına bağlı, bazen onlarca sn) videoda GÖRÜNMEZ:
+  // kurgu bu aralığı keser. `keep` sn kadarı (dosyanın seçildiği an) gösterilir.
+  const cuts = [];
+  let cutA = null;
+  const cutOpen = (keep = 0.5) => {
+    if (startT) cutA = +(now() - startT + keep).toFixed(2);
+  };
+  const cutClose = (lead = 0.15) => {
+    if (cutA === null) return;
+    const b = +(now() - startT - lead).toFixed(2);
+    if (b - cutA >= 0.6) cuts.push({ a: cutA, b });
+    cutA = null;
+  };
+
+  // ---- Sonuç dosyasını yakala (videoya girmez: süre `freeze` ile dondurulur) ----
+  let frozenEnd = null;
+  const freeze = () => {
+    zoomOff();
+    frozenEnd = +(now() - startT).toFixed(2);
+  };
+  /** "İndir" düğmesine basıp inen dosyayı `${workDir}/result/` altına kaydeder; yolunu döndürür. */
+  async function captureResult() {
+    const btn = pg.locator("button", { hasText: /^\s*İndir\s*$/ }).first();
+    rmSync(`${workDir}/result`, { recursive: true, force: true });
+    mkdirSync(`${workDir}/result`, { recursive: true });
+    const got = new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error("indirme başlamadı")), 30000);
+      onDownload = (d) => {
+        clearTimeout(t);
+        onDownload = null;
+        const p = `${workDir}/result/${d.suggestedFilename()}`;
+        d.saveAs(p).then(() => resolve(p), reject);
+      };
+    });
+    await btn.click({ timeout: 8000 });
+    return got;
+  }
+
   /** Videoya girecek kısmın başlangıcı. */
   const begin = () => {
     startT = now();
@@ -247,8 +291,8 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   /** Zaman çizelgesini yazar, tarayıcıyı kapatır. */
   async function finish(extra) {
     zoomOff();
-    const end = +(now() - startT).toFixed(2);
-    writeFileSync(`${workDir}/timeline.json`, JSON.stringify({ events, end, start: startT, zooms, VW, VH, ...extra }));
+    const end = frozenEnd ?? +(now() - startT).toFixed(2);
+    writeFileSync(`${workDir}/timeline.json`, JSON.stringify({ events, end, start: startT, zooms, cuts, VW, VH, ...extra }));
     await ctx.close();
     await browser.close();
     return end;
@@ -257,5 +301,6 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   return {
     pg, VW, VH, wait, box, center, say, hl, hlText, hlOff, moveTo, zoomOn, zoomOff, openMenu, closeMenu,
     showResultButtons, resultTop, loginAndOpenTool, begin, finish, now, startAt: () => startT, events,
+    cutOpen, cutClose, freeze, captureResult, workDir,
   };
 }
