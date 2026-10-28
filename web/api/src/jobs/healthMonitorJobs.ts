@@ -4,6 +4,7 @@ import { checkPdfHeartbeatMissing, notePdfHeartbeat, pdfHeartbeatAgeMs, recordHe
 import { evaluateAlerts } from "../lib/service-alerts.js";
 import { sendMail } from "../lib/mailer.js";
 import { env } from "../config/env.js";
+import { setSecurityAlertSender } from "../lib/security-alerts.js";
 
 /**
  * Her dakika: veritabanı ve bu servis için sağlık kaydı; PDF API'den kalp atışı gelmiyorsa "kapalı" kaydı.
@@ -54,6 +55,10 @@ async function probePdfApi(): Promise<void> {
 }
 
 export function registerHealthMonitorJobs() {
+  // Güvenlik uyarıları (saldırı belirtileri) aynı yönetici adresine gider.
+  setSecurityAlertSender(async (subject, text, html) => {
+    await sendMail({ to: env.ADMIN_EMAIL, subject, text, html });
+  });
   cron.schedule("* * * * *", () => {
     void runHealthChecks().catch(() => {
       /* sağlık kaydı asla uygulamayı etkilemez */
