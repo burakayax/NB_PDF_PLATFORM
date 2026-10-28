@@ -157,13 +157,41 @@ export async function pickDueToolReel(
   return rotationOrder(rows)[0] ?? null;
 }
 
-/** Katalog sırası: hiç hazırlanmamış önce, sonra en eski hazırlanan. */
+/**
+ * Karışık sıra, tekrarsız: her araç bir tur boyunca YALNIZ BİR kez gelir (hepsi paylaşılmadan hiçbiri tekrar etmez).
+ *  - Hiç paylaşılmamış araçlar varsa onlar aday; yoksa (tur bitti) en eski paylaşılan yarı aday olur.
+ *  - Adaylar rastgele sıralanır ama AYNI durumda hep aynı sırayla (tohum = o ana kadarki gönderi sayısı):
+ *    "üretim gerekli mi?", "video üret" ve "gönderi hazırla" adımları aynı aracı seçer.
+ *  - Adaylar dışındakiler en eski paylaşılan önce gelecek şekilde arkadan eklenir.
+ */
 function rotationOrder(rows: { guid: string; createdAt: Date }[]): ToolReelCatalogEntry[] {
   const lastByGuid = new Map<string, number>();
   for (const r of rows) lastByGuid.set(r.guid, Math.max(lastByGuid.get(r.guid) ?? 0, r.createdAt.getTime()));
-  return TOOL_REEL_CATALOG.slice().sort(
-    (a, b) => (lastByGuid.get(toolReelGuid(a.id)) ?? 0) - (lastByGuid.get(toolReelGuid(b.id)) ?? 0),
-  );
+  const lastOf = (t: ToolReelCatalogEntry) => lastByGuid.get(toolReelGuid(t.id)) ?? 0;
+
+  const byAge = TOOL_REEL_CATALOG.slice().sort((a, b) => lastOf(a) - lastOf(b) || a.id.localeCompare(b.id));
+  const never = byAge.filter((t) => lastOf(t) === 0);
+  const candidates = never.length > 0 ? never : byAge.slice(0, Math.max(1, Math.ceil(byAge.length / 2)));
+  const rest = byAge.filter((t) => !candidates.includes(t));
+  return [...seededShuffle(candidates, rows.length), ...rest];
+}
+
+/** Aynı tohumla hep aynı karışım (mulberry32). */
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const out = items.slice();
+  let a = (seed + 0x6d2b79f5) >>> 0;
+  const rnd = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [out[i], out[j]] = [out[j] as T, out[i] as T];
+  }
+  return out;
 }
 
 /** Sırası gelen araç (video var mı yok mu bakmadan) — panelden üretim başlatılırken kullanılır. */

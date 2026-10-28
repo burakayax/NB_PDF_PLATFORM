@@ -159,9 +159,11 @@ describe("sıradaki araç", () => {
     expect(await pickDueToolReel(NOW, 0)).toBeNull();
   });
 
-  it("hiç paylaşılmamışken katalogdaki ilk araç", async () => {
+  it("hiç paylaşılmamışken bir araç seçer ve aynı durumda hep aynısını seçer", async () => {
     const { pickDueToolReel } = await import("../modules/social/tool-reels.service.js");
-    expect((await pickDueToolReel(NOW, 3))?.id).toBe("compress");
+    const first = (await pickDueToolReel(NOW, 3))?.id;
+    expect(first).toBeTruthy();
+    expect((await pickDueToolReel(NOW, 3))?.id).toBe(first);
   });
 
   it("son araç videosu sıklıktan yakınsa bugün araç günü değil", async () => {
@@ -170,19 +172,26 @@ describe("sıradaki araç", () => {
     expect(await pickDueToolReel(NOW, 3)).toBeNull();
   });
 
-  it("süre dolduysa en uzun süredir paylaşılmayan araç seçilir", async () => {
-    // Katalog büyüdükçe test bozulmasın: tüm araçlar paylaşılmış sayılır, "compress" en eski.
+  it("tur bitmeden aynı araç tekrar gelmez: paylaşılanlar elenir", async () => {
     const { TOOL_REEL_CATALOG } = await import("../modules/social/tool-reel-catalog.js");
-    posts = TOOL_REEL_CATALOG.map((e, i) =>
-      post(null, "PUBLISHED", e.id === "compress" ? 10 * DAY : (4 + (i % 5) * 0.1) * DAY, `tool-reel:${e.id}`),
-    );
     const { pickDueToolReel } = await import("../modules/social/tool-reels.service.js");
-    expect((await pickDueToolReel(NOW, 3))?.id).toBe("compress");
+    posts = [];
+    const seen: string[] = [];
+    for (let i = 0; i < TOOL_REEL_CATALOG.length; i++) {
+      const due = await pickDueToolReel(NOW, 3);
+      expect(due).toBeTruthy();
+      expect(seen).not.toContain(due!.id); // tekrar yok
+      seen.push(due!.id);
+      posts.push(post(null, "PUBLISHED", (TOOL_REEL_CATALOG.length - i + 4) * DAY, `tool-reel:${due!.id}`));
+    }
+    expect(new Set(seen).size).toBe(TOOL_REEL_CATALOG.length);
   });
 
-  it("birini paylaştıysa sıra diğerine geçer", async () => {
-    posts = [post(null, "PUBLISHED", 4 * DAY, "tool-reel:compress")];
+  it("tüm araçlar paylaşıldıysa en son paylaşılan hemen tekrar gelmez", async () => {
+    const { TOOL_REEL_CATALOG } = await import("../modules/social/tool-reel-catalog.js");
+    posts = TOOL_REEL_CATALOG.map((e, i) => post(null, "PUBLISHED", (5 + i) * DAY, `tool-reel:${e.id}`));
+    const newest = TOOL_REEL_CATALOG[0]!.id; // i=0 → en yeni
     const { pickDueToolReel } = await import("../modules/social/tool-reels.service.js");
-    expect((await pickDueToolReel(NOW, 3))?.id).toBe("merge");
+    expect((await pickDueToolReel(NOW, 3))?.id).not.toBe(newest);
   });
 });
