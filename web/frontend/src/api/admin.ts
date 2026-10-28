@@ -1204,6 +1204,13 @@ export async function fetchSocialToolReels(accessToken: string): Promise<{ reels
   return r.json() as Promise<{ reels: SocialToolReel[] }>;
 }
 
+/** Sırası gelen, videosu hazır aracın Reels taslağını hazırlar. */
+export async function queueNextSocialToolReel(accessToken: string): Promise<SocialQueueResult> {
+  const r = await adminFetch(accessToken, "/social/tool-reels/queue-next", { method: "POST", body: JSON.stringify({}) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<SocialQueueResult>;
+}
+
 export async function queueSocialToolReel(
   accessToken: string,
   id: string,

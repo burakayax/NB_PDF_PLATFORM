@@ -3,6 +3,7 @@ import {
   CalendarClock,
   CheckCircle2,
   FileText,
+  Film,
   Hand,
   Inbox,
   Loader2,
@@ -24,6 +25,7 @@ import {
   fetchSocialPosts,
   markSocialPostShared,
   publishSocialPost,
+  queueNextSocialToolReel,
   queueSocialPosts,
   saveSocialAccount,
   saveSocialConfig,
@@ -444,6 +446,26 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
             Taslak hazırla
+          </button>
+          <button
+            type="button"
+            className={primaryButton}
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                const r = await queueNextSocialToolReel(accessToken);
+                await refresh();
+                setTab("flow");
+                setNote(
+                  r.queued.length > 0
+                    ? `${r.queued.length} Reels gönderisi taslak olarak hazırlandı. Okuyup onaylayana kadar hiçbir yere gitmez.`
+                    : `Reels hazırlanmadı — ${r.skipped[0]?.reason ?? "uygun video bulunamadı"}.`,
+                );
+              })
+            }
+          >
+            <Film className="h-3.5 w-3.5" />
+            Reels hazırla
           </button>
           <button type="button" className={ghostButton} disabled={busy} onClick={() => void run(refresh)}>
             <RefreshCw className="h-3.5 w-3.5" />
