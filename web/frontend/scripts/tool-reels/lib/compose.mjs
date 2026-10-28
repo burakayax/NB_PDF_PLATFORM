@@ -20,11 +20,27 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   copyFileSync(`${publicDir}/logo.png`, `${S}/logo.png`);
   copyFileSync(`${publicDir}/fonts/Roboto-Bold.ttf`, `${S}/Roboto-Bold.ttf`);
 
+  // Kesilen ölü bekleme aralıkları (kayıt zamanı): sonraki tüm zamanlar o kadar öne çekilir.
+  const cuts = (T.cuts ?? []).slice().sort((x, y) => x.a - y.a);
+  const adj = (t) => +(t - cuts.reduce((s, c) => s + Math.min(Math.max(t - c.a, 0), c.b - c.a), 0)).toFixed(2);
+  const rawEnd = T.end;
+  T.events.forEach((e) => (e.t = adj(e.t)));
+  T.zooms.forEach((z) => {
+    z.a = adj(z.a);
+    if (z.b != null) z.b = adj(z.b);
+  });
+  T.swapAt = adj(T.swapAt);
+  T.end = adj(T.end);
+  // Kayıttan kesilecek kareler: kayıt-zamanında [a,b] aralıkları atılır, kalanlar yeniden numaralanır.
+  const dropExpr = cuts.length ? cuts.map((c) => `between(t,${c.a},${c.b})`).join("+") : "";
+  const sonuc = T.resultCard && existsSync(T.resultCard.png) ? T.resultCard : null;
+
   const even = (n) => Math.round(n / 2) * 2;
   const D = T.end;
   const I = 3.2; // giriş kartı
   const O = 5.0; // kapanış kartı
-  const TOTAL = +(I + D + O).toFixed(2);
+  const R = sonuc ? 4.2 : 0; // sonuç sahnesi (indirilen dosyanın gerçek görünümü)
+  const TOTAL = +(I + D + R + O).toFixed(2);
 
   // ---- Kesim (araç bölümü) ----
   const cx = even(T.formBox.x - 14);
@@ -97,7 +113,7 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   // alan adı (sağ üst, logonun yanında)
   writeFileSync(`${S}/domain.txt`, "pdfplatform.app", "utf8");
   filters.push(
-    `drawtext=${fontfile}:textfile=domain.txt:fontcolor=${ACC}:fontsize=44:x=1020-text_w:y=186:enable='between(t,${MS},${ME})'`,
+    `drawtext=${fontfile}:textfile=domain.txt:fontcolor=${ACC}:fontsize=44:x=1020-text_w:y=186:enable='between(t,${MS},${(ME + R).toFixed(2)})'`,
   );
 
   T.events.forEach((e, i) => {
@@ -114,7 +130,13 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   text("pdfplatform.app", ACC, 66, 1075, 0, I, 0.6);
   text(intro.sub, SOFT, 46, 1175, 0, I, 0.6);
   // ---- Kapanış kartı ----
-  const OS = +ME.toFixed(2), OE = TOTAL;
+  const RS = +ME.toFixed(2), RE = +(ME + R).toFixed(2);
+  if (sonuc) {
+    text("İşte sonuç", "white", 88, 330, RS, RE, 0.4);
+    text("Dosyanı indirince bunu alırsın", "0x7dd3fc", 40, 440, RS, RE, 0.4);
+    text("pdfplatform.app", ACC, 56, 1400, RS, RE, 0.4);
+  }
+  const OS = RE, OE = TOTAL;
   text("pdfplatform.app", ACC, 84, 1000, OS, OE, 0.6);
   text("PDF Sıkıştır · Birleştir · Böl · Dönüştür", SOFT, 44, 1115, OS, OE, 0.6);
   text(linkLine, "white", 58, 1220, OS, OE, 0.6);
@@ -168,7 +190,7 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
 
   const filter = [
     // ana video akışı
-    `[1:v]trim=start=${T.start}:end=${(T.start + D + 0.1).toFixed(2)},setpts=PTS-STARTPTS,fps=30,split=2[s1][s2]`,
+    `[1:v]trim=start=${T.start}:end=${(T.start + rawEnd + 0.1).toFixed(2)},setpts=PTS-STARTPTS,fps=30${dropExpr ? `,select='not(${dropExpr})',setpts=N/(30*TB)` : ""},split=2[s1][s2]`,
     `[s1]crop=w=${cw}:h=${ch}:x=${cx}:y=${y1},${zf1},scale=w='trunc(${VW1}*(${bs1})/2)*2':h='trunc(${VH1}*(${bs1})/2)*2':eval=frame:flags=bilinear,setpts=PTS+${MS}/TB[v1]`,
     `[s2]crop=w=${cw}:h=${ch2}:x=${cx}:y=${y2},${zf2},scale=w='trunc(${VW2}*(${bs2})/2)*2':h='trunc(${VH2}*(${bs2})/2)*2':eval=frame:flags=bilinear,setpts=PTS+${MS}/TB[v2]`,
     // logolar
@@ -179,10 +201,14 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
     `[0:v][v1]overlay=x='${VX1}+(${VW1}-overlay_w)/2':y='${VY1}+(${VH1}-overlay_h)/2':enable='between(t,${MS},${(swap + MS).toFixed(2)})':eof_action=pass[b1]`,
     `[b1][v2]overlay=x='${VX2}+(${VW2}-overlay_w)/2':y='${VY2}+(${VH2}-overlay_h)/2':enable='between(t,${(swap + MS).toFixed(2)},${ME})':eof_action=pass[b2]`,
     `[b2][lgi]overlay=140:640:enable='between(t,0,${I})':eof_action=pass[b3]`,
-    `[b3][lgt]overlay=60:150:enable='between(t,${MS},${ME})':eof_action=pass[b4]`,
-    `[b4][lgo]overlay=140:640:enable='between(t,${OS},${OE})':eof_action=pass[b5]`,
+    `[b3][lgt]overlay=60:150:enable='between(t,${MS},${RE})':eof_action=pass[b4]`,
+    sonuc ? `[6:v]scale=980:-1,format=rgba,setpts=PTS+${RS}/TB,fade=t=in:st=${RS}:d=0.5:alpha=1,fade=t=out:st=${(RE - 0.5).toFixed(2)}:d=0.5:alpha=1[rc]` : "",
+    sonuc ? `[b4][rc]overlay=x=(W-w)/2:y=500:enable='between(t,${RS},${RE})':eof_action=pass[b4r]` : "",
+    `[${sonuc ? "b4r" : "b4"}][lgo]overlay=140:640:enable='between(t,${OS},${OE})':eof_action=pass[b5]`,
     `[b5]${filters.join(",")}[o]`,
-  ].join(";");
+  ]
+    .filter(Boolean)
+    .join(";");
 
   const music = makeMusic(ffmpeg, S, TOTAL);
   const args = [
@@ -193,6 +219,7 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
     "-loop", "1", "-t", String(TOTAL), "-i", "logo.png",
+    ...(sonuc ? ["-loop", "1", "-t", String(TOTAL), "-i", sonuc.png] : []),
     "-filter_complex", filter,
     "-map", "[o]", "-map", "2:a", "-t", String(TOTAL),
     // Meta Reels şartları: sabit 30 fps, kapalı GOP (2 sn'de bir anahtar kare), 4:2:0,
