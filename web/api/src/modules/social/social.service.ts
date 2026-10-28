@@ -31,6 +31,7 @@ import {
   findCatalogEntry,
   latestVideoFor,
   loadToolReels,
+  nextToolInRotation,
   pickDueToolReel,
   readyToolReelsInRotation,
   toolReelFeedItem,
@@ -39,6 +40,7 @@ import {
   variantForPlatform,
 } from "./tool-reels.service.js";
 import type { ToolReel, ToolReelVideoInfo } from "./tool-reels.service.js";
+import { dispatchReelProduction } from "./reel-dispatch.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { parseTags } from "./instagram-tags.js";
 import { isTooSimilar } from "./facebook-similarity.js";
@@ -821,10 +823,16 @@ export async function queueNextToolReel(now: Date = new Date()): Promise<QueueRe
   const result: QueueResult & { toolId: string | null } = { queued: [], skipped: [], toolId: null };
   const candidates = await readyToolReelsInRotation(now);
   if (candidates.length === 0) {
+    // Video yok: üretimi GitHub'da kendimiz başlatırız (anahtar tanımlıysa).
+    const next = await nextToolInRotation();
+    const started = next ? await dispatchReelProduction(next.id) : ({ ok: false, reason: "failed" } as const);
     result.skipped.push({
       platform: null,
-      reason:
-        "Şu an hazır araç videosu yok. Videolar GitHub iş akışıyla üretilir (Actions → tool-reels → Run workflow); üretilince tekrar dene",
+      reason: started.ok
+        ? `Hazır video yoktu; "${next?.id}" videosunun üretimi başlatıldı. Yaklaşık 5 dakika sonra "Reels hazırla"ya tekrar bas`
+        : started.reason === "not-configured"
+          ? "Şu an hazır araç videosu yok. Panelden üretimi başlatmak için sunucuya GITHUB_DISPATCH_TOKEN eklenmeli; şimdilik GitHub → Actions → tool-reels → Run workflow ile üret"
+          : "Şu an hazır araç videosu yok ve üretim başlatılamadı (GitHub'a ulaşılamadı ya da anahtar geçersiz). GitHub → Actions → tool-reels → Run workflow ile üretebilirsin",
     });
     return result;
   }

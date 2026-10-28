@@ -166,6 +166,15 @@ function rotationOrder(rows: { guid: string; createdAt: Date }[]): ToolReelCatal
   );
 }
 
+/** Sırası gelen araç (video var mı yok mu bakmadan) — panelden üretim başlatılırken kullanılır. */
+export async function nextToolInRotation(): Promise<ToolReelCatalogEntry | null> {
+  const rows = await prisma.socialPost.findMany({
+    where: { guid: { startsWith: TOOL_REEL_PREFIX } },
+    select: { guid: true, createdAt: true },
+  });
+  return rotationOrder(rows)[0] ?? null;
+}
+
 /**
  * Elle "Reels hazırla" için adaylar: sıklık kuralı OLMADAN, sıra düzeninde; yalnız şu an videosu
  * hazır olanlar. Silinen taslaklar kayıttan düştüğü için sırayı etkilemez.
