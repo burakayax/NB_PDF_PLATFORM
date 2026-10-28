@@ -12,7 +12,7 @@ import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
 import { blogLayoutMap, fitHook, renderBlogCover } from "./lib/blog-cover.mjs";
 import { fitBlock, linesToPath, spaced } from "./generate-carousels.mjs";
-import { planIcons, visualCtaSvg, visualStepSvg } from "./lib/slide-visuals.mjs";
+import { planIcons, planTemplates, visualCtaSvg, visualStepSvg } from "./lib/slide-visuals.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const [out, ...slugs] = process.argv.slice(2);
@@ -37,13 +37,14 @@ for (const slug of slugs) {
   const total = slides.length + 2;
   const tools = { fitBlock, linesToPath, spaced, measure, textPath, wrap, swipe: copy.swipe };
   const icons = planIcons(slides);
+  const templates = planTemplates(slides);
   const fonts = { bold, regular };
   const dir = join(out, slug);
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "1.jpg"), await renderBlogCover({ title: fitHook(hook), post, layout: layouts.get(slug), w: 1080, h: 1350, key: "carousel", cta: copy.swipe, format: "jpeg", publicDir, badge: { big: String(slides.length), small: kind === "steps" ? "ADIM" : "İPUCU" } }));
   for (let i = 0; i < slides.length; i++) {
     const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(i + 1, slides.length);
-    const svg = visualStepSvg({ slide: slides[i], index: i + 1, count: slides.length, total, accent: post.accent, label, fonts, tools, icons: icons[i] });
+    const svg = visualStepSvg({ slide: slides[i], index: i + 1, count: slides.length, total, accent: post.accent, label, fonts, tools, icons: icons[i], template: templates[i] });
     await sharp(Buffer.from(svg)).composite([{ input: logo, top: 34, left: 84 }]).jpeg({ quality: 90 }).toFile(join(dir, `${i + 2}.jpg`));
   }
   const cta = visualCtaSvg({ accent: post.accent, total, fonts, tools, copy, target: tool ? `pdfplatform.app${tool}` : "pdfplatform.app" });
