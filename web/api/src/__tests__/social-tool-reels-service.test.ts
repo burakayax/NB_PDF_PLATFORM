@@ -85,8 +85,8 @@ describe("paylaşıldıktan sonra silme", () => {
     expect(deleted).toEqual([]);
   });
 
-  it("henüz gönderiye bağlanmamış taze video (sabah üretildi, tur sonra) silinmez; bayatlayınca silinir", async () => {
-    videos = [video("merge-1000000000002", "merge", 10 * HOUR), video("compress-1000000000001", "compress", 40 * HOUR)];
+  it("henüz gönderiye bağlanmamış video 14 gün saklanır (elle Reels hazırla için); sonra silinir", async () => {
+    videos = [video("merge-1000000000002", "merge", 40 * HOUR), video("compress-1000000000001", "compress", 15 * DAY)];
     const { cleanupToolVideos } = await import("../modules/social/tool-reels.service.js");
 
     expect(await cleanupToolVideos(NOW)).toBe(1);

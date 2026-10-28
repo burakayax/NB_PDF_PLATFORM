@@ -192,8 +192,10 @@ export async function readyToolReelsInRotation(now = new Date()): Promise<ToolRe
 }
 
 /**
- * Videoyu siler: bekleyen gönderisi kalmadıysa. Hiç gönderiye bağlanmamış video taze süresi
- * dolunca, bekleyen gönderisi olan video ise 14 gün sonra (unutulmuş taslak) silinir.
+ * Videoyu siler: bekleyen gönderisi kalmadıysa. Hiç gönderiye bağlanmamış video 14 gün (elle
+ * "Reels hazırla" penceresi), bekleyen gönderisi olan video da 14 gün sonra (unutulmuş taslak) silinir.
+ * Bağlanmamış videoyu 36 saatte silmek, elle üretilen videonun kullanılamadan yok olmasına ve aynı
+ * aracın tekrar tekrar üretilmesine yol açıyordu; otomatik tur zaten yalnız taze (36 sa) videoyu kullanır.
  */
 export async function cleanupToolVideos(now = new Date()): Promise<number> {
   const videos = await prisma.socialToolVideo.findMany({ select: { id: true, createdAt: true } });
@@ -205,7 +207,7 @@ export async function cleanupToolVideos(now = new Date()): Promise<number> {
       select: { status: true },
     });
     const pending = posts.some((p) => PENDING_STATUSES.includes(p.status));
-    const keep = posts.length === 0 ? age < FRESH_MS : pending && age < MANUAL_MAX_AGE_MS;
+    const keep = posts.length === 0 ? age < MANUAL_MAX_AGE_MS : pending && age < MANUAL_MAX_AGE_MS;
     if (keep) continue;
     await prisma.socialToolVideo.delete({ where: { id: v.id } });
     removed += 1;
