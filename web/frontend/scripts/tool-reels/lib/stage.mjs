@@ -211,7 +211,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
 
   /** Sonuç ekranı: İndir · Paylaş · Aç TEK adımda, üçü birden vurgulanır. */
   async function showResultButtons() {
-    const locs = ["İndir", "Paylaş", "Aç"].map((n) => pg.locator("button", { hasText: new RegExp(`^\\s*${n}\\s*$`) }).first());
+    const locs = ["İndir", "Paylaş", "Aç", "Kapat"].map((n) => pg.locator("button", { hasText: new RegExp(`^\\s*${n}\\s*$`) }).first());
     const bbs = [];
     for (const l of locs) if (await l.count()) bbs.push(await box(l));
     const ux = Math.min(...bbs.map((q) => q.x));
@@ -222,7 +222,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     zoomOn(ub);
     await pg.evaluate(([x, y, w, h]) => window.__hl(x, y, w, h), [ub.x - 10, ub.y - 10, ub.width + 20, ub.height + 20]);
     await moveTo(ub.x + ub.width / 2, ub.y + ub.height / 2);
-    say("SONUÇ", "Sonucu al", "İndir · Paylaş · Aç", "cihazına indir, uygulamayla paylaş ya da yeni sekmede aç", "");
+    say("SONUÇ", "Sonucu al", "İndir · Paylaş · Aç · Kapat", "cihazına indir, uygulamayla paylaş, yeni sekmede aç ya da kapat", "");
     await wait(2340);
     await hlOff();
     await wait(214);
