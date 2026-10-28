@@ -12,7 +12,7 @@ import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
 import { blogLayoutMap, fitHook, renderBlogCover } from "./lib/blog-cover.mjs";
 import { fitBlock, linesToPath, spaced } from "./generate-carousels.mjs";
-import { planIcons, planTemplates, visualCtaSvg, visualStepSvg } from "./lib/slide-visuals.mjs";
+import { askFor, planIcons, planTemplates, visualAskSvg, visualCtaSvg, visualStepSvg } from "./lib/slide-visuals.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const [out, ...slugs] = process.argv.slice(2);
@@ -34,7 +34,8 @@ for (const slug of slugs) {
   const kind = curated ? "points" : auto.kind;
   const hook = curated ? curated.hook : tr.title;
   const tool = (tr.blocks.find((b) => b?.t === "cta" && typeof b.tool === "string") ?? {}).tool ?? null;
-  const total = slides.length + 2;
+  const withAsk = slides.length + 3 <= 10;
+  const total = slides.length + 2 + (withAsk ? 1 : 0);
   const tools = { fitBlock, linesToPath, spaced, measure, textPath, wrap, swipe: copy.swipe };
   const icons = planIcons(slides);
   const templates = planTemplates(slides);
@@ -46,6 +47,11 @@ for (const slug of slugs) {
     const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(i + 1, slides.length);
     const svg = visualStepSvg({ slide: slides[i], index: i + 1, count: slides.length, total, accent: post.accent, label, fonts, tools, icons: icons[i], template: templates[i] });
     await sharp(Buffer.from(svg)).composite([{ input: logo, top: 34, left: 84 }]).jpeg({ quality: 90 }).toFile(join(dir, `${i + 2}.jpg`));
+  }
+  if (withAsk) {
+    const question = askFor(icons.map((i) => i.hero), slug);
+    const ask = visualAskSvg({ accent: post.accent, total, index: total - 2, fonts, tools, question, hero: icons[0].hero });
+    await sharp(Buffer.from(ask)).composite([{ input: logo, top: 34, left: 84 }]).jpeg({ quality: 90 }).toFile(join(dir, `${total - 1}.jpg`));
   }
   const cta = visualCtaSvg({ accent: post.accent, total, fonts, tools, copy, target: tool ? `pdfplatform.app${tool}` : "pdfplatform.app" });
   await sharp(Buffer.from(cta)).composite([{ input: logo, top: 34, left: 84 }]).jpeg({ quality: 90 }).toFile(join(dir, `${total}.jpg`));

@@ -10,8 +10,8 @@
  * RİTİM: tek sıralı slaytlar açık, çift sıralılar koyu zeminde; kapanış her zaman koyu. Vurgu rengi yazının kendi rengidir.
  */
 
-import { ICON, icon } from "./cover-designs.mjs";
-import { palFor } from "./heroes.mjs";
+import { ICON, icon, svgOpen } from "./cover-designs.mjs";
+import { palFor, placeHero } from "./heroes.mjs";
 
 export const W = 1080;
 export const H = 1350;
@@ -71,13 +71,73 @@ export function iconsFor(slide, avoid = new Set()) {
   return { main, side: [rest[0], rest[1]] };
 }
 
+/* ───────────── KONU ÇİZİMLERİ (v4) ─────────────
+ * Çizgi simge yerine kapaktaki zengin çizimler (PDF rozetli belge, kilit, sıkıştırma okları, makas…). Seçim slayt
+ * metninden; başlıktaki kelime önce gelir; aynı gönderide aynı çizim tekrar edilmez. */
+const HERO_RULES = [
+  [/şifre|parola|kilit/, "lock"],
+  [/sıkıştır|küçült|boyut|\bmb\b|\bkb\b|kalite/, "compress"],
+  [/birleştir|tek pdf|toplu/, "merge"],
+  [/bölerek|bölün|bölme|ayır|parçala|sayfaları ayır/, "split"],
+  [/ocr|aranabilir|taranmış|okunab|seçilebil|metin tanı/, "ocr"],
+  [/tara|kamera|ışık|gölge|kenar|belge fotoğraf/, "scan"],
+  [/excel|tablo|sütun|hücre/, "excel"],
+  [/word|düzenlenebilir|docx/, "word"],
+  [/powerpoint|sunum|slayt/, "ppt"],
+  [/imza|ıslak|onay/, "sign"],
+  [/form|doldur|başvuru formu/, "form"],
+  [/filigran|damga/, "watermark"],
+  [/sayfa numara|numaralandır/, "numbers"],
+  [/döndür|sırala|sayfa sırası|sil\b|silme|sayfa düzen/, "pages"],
+  [/çeviri|çevir|yabancı|ingilizce|dil\b|uluslararası/, "translate"],
+  [/özet|özetle|yapay zek|sohbet/, "summary"],
+  [/bozuk|açılmıyor|onar|hata/, "repair"],
+  [/fatura|makbuz|fiş|bordro|dekont/, "invoice"],
+  [/sözleşme|kira|kontrat|madde/, "contract"],
+  [/cv|özgeçmiş|iş ilanı|mülakat/, "cv"],
+  [/fotoğraf|resim|görsel|jpg|png|logo|ekran görüntüsü/, "image"],
+  [/gizli|güven|koru|kişisel|kvkk|hassas|sızdır|paylaşım/, "shield"],
+  [/telefon|mobil|cihaz/, "phone"],
+  [/karşılaştır|fark\b|farkı/, "compare"],
+  [/dönüştür|biçim|format/, "convert"],
+  [/kontrol|liste|eksiksiz|unutma|sıra/, "checklist"],
+  [/klasör|arşiv|dosya|evrak|sakla|yedek/, "folder"],
+  [/en iyi|seç|öneri|puan/, "stars"],
+];
+for (const r of HERO_RULES) r[0] = new RegExp(`(?<![\\p{L}])(?:${r[0].source})`, "u");
+const HERO_FALLBACK = ["pdfdoc", "checklist", "folder", "stars", "shield", "pages", "phone", "summary"];
+
+/** Slayt için çizim adı adayları (başlık önce), tekrar edenleri `avoid` ile eler. */
+export function heroPick(slide, avoid = new Set()) {
+  const found = [];
+  for (const src of [String(slide.title), `${slide.title} ${slide.text}`].map((s) => s.toLocaleLowerCase("tr")))
+    for (const [re, name] of HERO_RULES) if (re.test(src) && !found.includes(name)) found.push(name);
+  const h = hash(`${slide.title}${slide.text}`);
+  for (let i = 0; i < HERO_FALLBACK.length; i++) {
+    const n = HERO_FALLBACK[(h + i) % HERO_FALLBACK.length];
+    if (!found.includes(n)) found.push(n);
+  }
+  return found.find((n) => !avoid.has(n)) ?? found[0];
+}
+
+/** Gönderinin tüm slaytları için çizim planı (aynı çizim ikinci kez kullanılmaz). */
+export function planHeroes(slides) {
+  const used = new Set();
+  return slides.map((s) => {
+    const n = heroPick(s, used);
+    used.add(n);
+    return n;
+  });
+}
+
 /** Bir gönderinin tüm içerik slaytları için simge planı (ardışık tekrar yok). */
 export function planIcons(slides) {
   const used = new Set();
-  return slides.map((s) => {
+  const heroes = planHeroes(slides);
+  return slides.map((s, i) => {
     const ic = iconsFor(s, used);
     used.add(ic.main);
-    return ic;
+    return { ...ic, hero: heroes[i] };
   });
 }
 
@@ -96,12 +156,8 @@ function scene({ pal, dark, number, ic, index, bold, measure, textPath }) {
   <path d="${textPath(bold, number, 400, W - M + 10 - measure(bold, number, 400), 470)}" fill="${ghost}" fill-opacity="${dark ? 0.07 : 0.09}"/>
   <circle cx="${cx}" cy="${cy}" r="236" fill="${dark ? pal.a : pal.t}" fill-opacity="${dark ? 0.35 : 1}"/>
   <circle cx="${cx}" cy="${cy}" r="236" fill="none" stroke="${pal.m}" stroke-width="3" stroke-dasharray="4 16" stroke-linecap="round" stroke-opacity="0.9"/>
-  <circle cx="${cx}" cy="${cy}" r="168" fill="${dark ? pal.d : "#ffffff"}" fill-opacity="${dark ? 0.9 : 0.85}"/>
-  <g transform="rotate(${rot} ${cx} ${cy})">
-    <rect x="${cx - 124}" y="${cy - 124}" width="248" height="248" rx="56" fill="#000" fill-opacity="0.16" transform="translate(0 14)"/>
-    <rect x="${cx - 124}" y="${cy - 124}" width="248" height="248" rx="56" fill="${dark ? "#ffffff" : pal.a}"/>
-    ${icon(ic.main, cx - 80, cy - 80, 160, dark ? pal.d : "#ffffff", 2)}
-  </g>
+  <circle cx="${cx}" cy="${cy}" r="196" fill="${dark ? pal.d : "#ffffff"}" fill-opacity="${dark ? 0.9 : 0.9}"/>
+  <g transform="rotate(${rot} ${cx} ${cy})">${placeHero(ic.hero ?? "pdfdoc", pal, cx - 190, cy - 190, 380)}</g>
   <g>
     <circle cx="${cx - 214}" cy="${cy + 140}" r="58" fill="${AMBER}"/>
     ${icon(s1, cx - 214 - 30, cy + 140 - 30, 60, NAVY, 2.2)}
@@ -172,8 +228,7 @@ function heroSlide({ slide, index, count, total, accent, label, fonts, tools, ic
   const blh = body.size * blh0;
   const bodyFirst = bodyTop - 30 + body.size * 0.85;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <defs><linearGradient id="bgDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12376f"/><stop offset="1" stop-color="#081a3a"/></linearGradient></defs>
+  return `${svgOpen(W, H, `<linearGradient id="bgDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12376f"/><stop offset="1" stop-color="#081a3a"/></linearGradient>`)}
   <rect width="${W}" height="${H}" fill="${bg}"/>
   <rect width="${W}" height="12" fill="${dark ? AMBER : pal.a}"/>
   ${scene({ pal, dark, number, ic, index, bold, measure, textPath })}
@@ -359,10 +414,10 @@ function posterSlide({ slide, index, total, accent, label, fonts, tools, icons }
   const bodyTop = first + (t.lines.length - 1) * lh + 110;
   const body = fitBody(wrap, regular, slide.text, W - M * 2, bodyTop, 1200, 44, 34);
   const bodyPath = body.lines.map((l, i) => textPath(regular, l, body.size, M, bodyTop + body.size * 0.85 + i * body.size * 1.42)).join(" ");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${GRAD("g", "#12376f", "#081a3a")}</defs>
+  return `${svgOpen(W, H, GRAD("g", "#12376f", "#081a3a"))}
   <rect width="${W}" height="${H}" fill="url(#g)"/><rect width="${W}" height="12" fill="${AMBER}"/>
   <circle cx="${W - 40}" cy="${H - 140}" r="300" fill="${pal.a}" fill-opacity="0.22"/>
-  <g transform="rotate(8 ${W - 190} 300)"><rect x="${W - 310}" y="190" width="220" height="220" rx="50" fill="${pal.m}"/>${icon(icons.main, W - 310 + 45, 190 + 45, 130, NAVY, 2.2)}</g>
+  <g transform="rotate(8 ${W - 190} 300)">${placeHero(icons.hero ?? "pdfdoc", pal, W - 400, 250, 300)}</g>
   ${plus(150, 290, 18, AMBER)}${dot(520, 240, 8, "#fff", 0.35)}${dot(960, 620, 9, AMBER)}
   ${head({ labelText: label.toUpperCase(), bold, spaced, fill: AMBER, textFill: NAVY, y: 148 })}
   ${bands}
@@ -392,7 +447,7 @@ function quoteSlide({ slide, index, total, accent, label, fonts, tools, icons })
   }
   const textH = body.lines.length * body.size * 1.36;
   const textTop = cardTop + 120 + Math.max(0, (cardBottom - cardTop - 170 - textH) / 2);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${GRAD("g", top, bot)}</defs>
+  return `${svgOpen(W, H, GRAD("g", top, bot))}
   <rect width="${W}" height="${H}" fill="url(#g)"/><rect width="${W}" height="12" fill="${AMBER}"/>
   <circle cx="120" cy="${H - 120}" r="280" fill="#fff" fill-opacity="0.06"/>${plus(900, 330, 18, AMBER)}${dot(200, 330, 9, "#fff", 0.5)}
   ${head({ labelText: label.toUpperCase(), bold, spaced, fill: "#ffffff", textFill: pal.d, y: 148 })}
@@ -401,7 +456,7 @@ function quoteSlide({ slide, index, total, accent, label, fonts, tools, icons })
   <rect x="${M}" y="${cardTop}" width="${W - M * 2}" height="${cardBottom - cardTop}" rx="40" fill="#ffffff"/>
   <path d="${textPath(bold, "“", 260, M + 40, cardTop + 230)}" fill="${pal.t}"/>
   <path d="${linesToPath(bold, body.lines, body.size, M + 45, textTop + body.size * 0.9, body.size * 1.36)}" fill="${NAVY}"/>
-  <g transform="rotate(-8 ${W - M - 40} ${cardBottom})"><circle cx="${W - M - 40}" cy="${cardBottom}" r="66" fill="${AMBER}"/>${icon(icons.main, W - M - 40 - 34, cardBottom - 34, 68, NAVY, 2.4)}</g>
+  <g transform="rotate(-8 ${W - M - 40} ${cardBottom})">${placeHero(icons.hero ?? "pdfdoc", pal, W - M - 230, cardBottom - 130, 230)}</g>
   ${footer({ total, index, pal, dark: true, swipe: tools.swipe, measure, bold, textPath, last: false })}
 </svg>`;
 }
@@ -450,5 +505,84 @@ export function visualCtaSvg({ accent, total, fonts, tools, copy, target }) {
   <path d="${textPath(regular, copy.ctaTry, 30, M + 46, boxY + 66)}" fill="#64748b"/>
   <path d="${textPath(bold, target, linkSize, M + 46, boxY + 148)}" fill="${NAVY}"/>
   ${footer({ total, index: total - 1, pal, dark: true, swipe: "", measure, bold, textPath, last: true })}
+</svg>`;
+}
+
+/* ───────────── YORUM SORUSU SLAYTI ─────────────
+ * Kapanıştan önce okura kısa bir soru: yorum yazmayı kolaylaştırır. Soru konuya göre seçilir, iddia içermez. */
+const ASK_BY_HERO = {
+  lock: ["Şifreli bir PDF yüzünden hiç işin aksadı mı?", "Bir belgenin şifresini unuttuğun oldu mu?"],
+  compress: ["PDF çok büyük olduğu için gönderemediğin bir dosya oldu mu?", "Bir yüklemede boyut sınırına takıldın mı?"],
+  merge: ["Birden çok PDF'i tek dosyada toplaman gerektiği oldu mu?", "Evrakları tek dosya yapmak için ne kullanıyorsun?"],
+  split: ["Büyük bir PDF'ten yalnız birkaç sayfa lazım olduğu oldu mu?", "Bir PDF'i parçalara ayırman gerekti mi?"],
+  ocr: ["Metni kopyalayamadığın bir taranmış PDF ile karşılaştın mı?", "Bir belgede aramak istedin ama yazı seçilemedi mi?"],
+  scan: ["Telefonla belge taradığında en çok neye takılıyorsun?", "Taranan belgenin çıkmadığı oldu mu?"],
+  excel: ["Bir PDF'teki tabloyu Excel'e aktarman gerekti mi?", "Tabloyu elle yeniden yazmak zorunda kaldığın oldu mu?"],
+  word: ["Bir PDF'in metnini düzenlemen gerektiği oldu mu?", "PDF'i Word'e çevirdiğinde düzen bozuldu mu?"],
+  ppt: ["Bir sunumu PDF olarak göndermen gerekti mi?", "Sunumun düzeni dosya değişince bozuldu mu?"],
+  sign: ["Belgeyi imzalamak için yazdırıp taradığın oldu mu?", "Bir PDF'i dijital imzalamak zorunda kaldın mı?"],
+  form: ["Bir PDF formunu doldurmak için uğraştığın oldu mu?", "Form doldururken en çok neye takılıyorsun?"],
+  watermark: ["Belgene filigran eklemen gerektiği oldu mu?", "Paylaştığın dosyayı işaretlemek istedin mi?"],
+  numbers: ["Sayfa numarasız bir PDF seni zorladı mı?", "Uzun bir belgede sayfa bulmakta zorlandın mı?"],
+  pages: ["Ters ya da yanlış sıradaki sayfalarla karşılaştın mı?", "Bir PDF'in sayfalarını düzenlemen gerekti mi?"],
+  translate: ["Yabancı dilde bir PDF ile uğraştığın oldu mu?", "Bir belgeyi çevirmek için ne yapıyorsun?"],
+  summary: ["Uzun bir belgeyi baştan sona okumaya vaktin yetmedi mi?", "Sana bir PDF'in özeti lazım oldu mu?"],
+  repair: ["Açılmayan ya da bozuk bir PDF ile karşılaştın mı?", "Önemli bir dosyan açılmadığında ne yaptın?"],
+  invoice: ["Fatura ve makbuzları düzenli saklamakta zorlandın mı?", "Bir belgeyi muhasebeye göndermen gerekti mi?"],
+  contract: ["Bir sözleşmeyi imzalamadan önce baştan sona okudun mu?", "Sözleşmede anlamadığın bir madde oldu mu?"],
+  cv: ["CV hazırlarken en çok neye takılıyorsun?", "CV'ni PDF yaparken düzenin bozulduğu oldu mu?"],
+  image: ["Fotoğrafları PDF yapman ya da PDF'ten görsel çıkarman gerekti mi?", "Görsel ile PDF arasında dönüştürme ihtiyacın oldu mu?"],
+  shield: ["Bir belgeyi paylaşırken gizliliğini düşündüğün oldu mu?", "Kişisel bilgilerin olan bir dosyayı nasıl gönderiyorsun?"],
+  phone: ["PDF işlerini telefondan yapmak zorunda kaldın mı?", "Telefonda PDF ile uğraşırken ne zorluyor?"],
+  compare: ["İki belge arasındaki farkı bulmak zorunda kaldın mı?", "Bir belgenin iki sürümünü karşılaştırdığın oldu mu?"],
+  convert: ["Bir dosyayı başka biçime çevirmen gerektiği oldu mu?", "Dönüştürme sırasında düzenin bozulduğu oldu mu?"],
+  checklist: ["Önemli bir evrağı son anda aradığın oldu mu?", "Belgelerini nasıl düzenli tutuyorsun?"],
+  folder: ["Dosyalarını düzenli tutmakta zorlanıyor musun?", "Aradığın belgeyi bulamadığın oldu mu?"],
+  stars: ["Bu konuda sen hangi yöntemi kullanıyorsun?", "Sence en önemli ipucu hangisiydi?"],
+};
+const ASK_DEFAULT = ["Sen bu durumla hiç karşılaştın mı?", "Senin de böyle bir şeye ihtiyacın oldu mu?"];
+const REPLY_HINTS = ["Evet, çok", "Bir iki kez", "Hiç olmadı"];
+
+/** Konuya ve slug'a göre soru (aynı yazıda hep aynı soru). */
+export function askFor(heroes, seed) {
+  const h = hash(seed);
+  const name = heroes.find((n) => ASK_BY_HERO[n]);
+  const list = name ? ASK_BY_HERO[name] : ASK_DEFAULT;
+  return list[h % list.length];
+}
+
+export function visualAskSvg({ accent, total, index, fonts, tools, question, hero }) {
+  const { bold } = fonts;
+  const { fitBlock, linesToPath, measure, textPath, spaced } = tools;
+  const pal = palFor(accent);
+  const q = fitBlock(bold, question, W - M * 2, 4, 78, 52);
+  const qlh = q.size * 1.18;
+  const qFirst = 760 + q.size * 0.85;
+  const chipY = Math.min(1100, Math.round(qFirst + (q.lines.length - 1) * qlh + 70));
+  let x = M;
+  const chips = REPLY_HINTS.map((c, i) => {
+    const w = measure(bold, c, 32) + 64;
+    const out = `<rect x="${x}" y="${chipY}" width="${w}" height="76" rx="38" fill="${i === 0 ? AMBER : "#ffffff"}" fill-opacity="${i === 0 ? 1 : 0.14}"/>
+  <path d="${textPath(bold, c, 32, x + 32, chipY + 50)}" fill="${i === 0 ? NAVY : "#ffffff"}"/>`;
+    x += w + 16;
+    return out;
+  }).join("\n  ");
+  const lab = "SENCE?";
+  const labW = spaced(bold, lab, 24, 0, 0, 4).width + 56;
+  const cx = 540, cy = 410;
+  return `${svgOpen(W, H, `<linearGradient id="bgDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12376f"/><stop offset="1" stop-color="#081a3a"/></linearGradient>`)}
+  <rect width="${W}" height="${H}" fill="url(#bgDark)"/><rect width="${W}" height="12" fill="${AMBER}"/>
+  <circle cx="${cx}" cy="${cy}" r="236" fill="${pal.a}" fill-opacity="0.35"/>
+  <circle cx="${cx}" cy="${cy}" r="236" fill="none" stroke="${pal.m}" stroke-width="3" stroke-dasharray="4 16" stroke-linecap="round"/>
+  <circle cx="${cx}" cy="${cy}" r="196" fill="${pal.d}" fill-opacity="0.9"/>
+  ${placeHero(hero ?? "pdfdoc", pal, cx - 190, cy - 190, 380)}
+  <g transform="rotate(-8 ${W - 200} 230)"><path d="M${W - 330} 150h250a30 30 0 0 1 30 30v100a30 30 0 0 1-30 30h-170l-50 44v-44a30 30 0 0 1-30-30v-100a30 30 0 0 1 30-30z" fill="${AMBER}"/>
+  <path d="${textPath(bold, "?", 120, W - 250, 270)}" fill="${NAVY}"/></g>
+  ${plus(150, 210, 20, pal.m)}${plus(930, 640, 18, AMBER)}${dot(120, 330, 10, AMBER)}${dot(960, 250, 9, pal.m)}
+  <rect x="${M}" y="660" width="${labW}" height="58" rx="29" fill="${AMBER}"/>
+  <path d="${spaced(bold, lab, 24, M + 28, 698, 4).d}" fill="${NAVY}"/>
+  <path d="${linesToPath(bold, q.lines, q.size, M, qFirst, qlh)}" fill="#ffffff"/>
+  ${chips}
+  ${footer({ total, index, pal, dark: true, swipe: tools.swipe, measure, bold, textPath, last: false })}
 </svg>`;
 }
