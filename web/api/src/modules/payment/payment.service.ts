@@ -20,6 +20,9 @@ import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js"
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import { cvPassInvoiceLabel, cvPassNewExpiry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
+import { missingInvoiceAddressFields } from "../billing/invoice-address.js";
+import { getPaytrCredentials, isPaytrSelected, startPaytrSession } from "./paytr/paytr.service.js";
+import { requestPaytrRefund } from "./paytr/paytr.client.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
 
@@ -525,6 +528,18 @@ export async function createPaymentCheckoutSession(params: {
     settlementCurrency,
     user.billingCountryCode,
   );
+  // Fatura adresi eksikse ödeme sağlayıcısına gitmeden dur (VUK md. 230). Ekran da aynı denetimi yapar;
+  // bu satır ekranı atlatan isteklere karşı sunucu tarafı güvencesidir.
+  const missingAddress = missingInvoiceAddressFields(
+    { addressLine: decryptBillingField(user.billingAddressLine), district: user.billingDistrict, city: user.city },
+    customerCountry,
+  );
+  if (missingAddress.length > 0) {
+    throw new HttpError(
+      400,
+      "Fatura düzenlenebilmesi için açık adres, ilçe ve şehir bilgisi gereklidir. Lütfen fatura bilgilerinizi tamamlayın.",
+    );
+  }
   const vatPricing = buildCheckoutPricing(netPrice, customerCountry, settlementCurrency);
   // iyzico'ya KDV-dahil gross gonderilir
   const grossPrice = normalizeCheckoutPrice(vatPricing.grossAmount);
@@ -536,6 +551,22 @@ export async function createPaymentCheckoutSession(params: {
   const fmtIyziDate = (d: Date) =>
     d.toISOString().slice(0, 19).replace("T", " ");
   const callbackUrl = getCheckoutFormCallbackUrl();
+
+  const basketLabel = (() => {
+    if (params.basketItemName) return params.basketItemName;
+    if (params.seatsOnly && (params.extraSeats ?? 0) > 0) {
+      const seats = params.extraSeats!;
+      const period = params.billing === "annual" ? "1 yıl" : "1 ay";
+      return `PDF PLATFORM ${seats} Ekstra Koltuk (${period})`;
+    }
+    return params.plan === "BUSINESS"
+      ? "PDF PLATFORM Business (1 ay)"
+      : params.plan === "PLUS"
+        ? "PDF PLATFORM Plus (1 ay)"
+        : isAnnualPro
+          ? "PDF PLATFORM PRO (1 yıl)"
+          : "PDF PLATFORM PRO (1 ay)";
+  })();
 
   await prisma.paymentCheckout.create({
     data: {
@@ -563,6 +594,34 @@ export async function createPaymentCheckoutSession(params: {
       withdrawalWaivedAt: user.withdrawalWaivedAt ?? null,
     },
   });
+
+  // PayTR seçiliyse ödeme oturumunu PayTR başlatır; iyzico kodu aşağıda yedek olarak durur.
+  if (isPaytrSelected()) {
+    try {
+      const gsm = venue.gsmNumber.replace(/D/g, "");
+      const session = await startPaytrSession({
+        conversationId,
+        grossPrice,
+        currency: settlementCurrency,
+        email: user.email,
+        userName: `${name} ${surname}`.trim(),
+        userAddress: [venue.street, user.billingDistrict?.trim(), venue.city].filter(Boolean).join(" "),
+        userPhone: gsm.startsWith("90") ? `0${gsm.slice(2)}` : gsm,
+        clientIp: params.clientIp,
+        basketName: basketLabel,
+        okUrl: paymentWorkspaceRedirectUrl(true, params.plan, params.extraSeats, params.seatsOnly, params.cvPassHours),
+        failUrl: paymentWorkspaceRedirectUrl(false),
+        lang: user.preferredLanguage === "en" ? "en" : "tr",
+      });
+      return { token: session.token, checkoutFormContent: "", paymentPageUrl: session.paymentPageUrl, conversationId };
+    } catch (e) {
+      await prisma.paymentCheckout.updateMany({
+        where: { conversationId, status: "pending" },
+        data: { status: "failed" },
+      });
+      throw e instanceof HttpError ? e : new HttpError(502, "Payment provider request failed.");
+    }
+  }
 
   const iyzipay = getIyzipay();
   const buyerId = user.id.slice(0, 20);
@@ -609,21 +668,7 @@ export async function createPaymentCheckoutSession(params: {
     basketItems: [
       {
         id: params.plan,
-        name: (() => {
-          if (params.basketItemName) return params.basketItemName;
-          if (params.seatsOnly && (params.extraSeats ?? 0) > 0) {
-            const seats = params.extraSeats!;
-            const period = params.billing === "annual" ? "1 yıl" : "1 ay";
-            return `PDF PLATFORM ${seats} Ekstra Koltuk (${period})`;
-          }
-          return params.plan === "BUSINESS"
-            ? "PDF PLATFORM Business (1 ay)"
-            : params.plan === "PLUS"
-              ? "PDF PLATFORM Plus (1 ay)"
-              : isAnnualPro
-                ? "PDF PLATFORM PRO (1 yıl)"
-                : "PDF PLATFORM PRO (1 ay)";
-        })(),
+        name: basketLabel,
         category1: params.cvPassHours != null ? "CV Pass" : params.topupCredits != null ? "AI Credits" : "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
@@ -818,6 +863,7 @@ async function triggerInvoiceGeneration(
         email: true,
         phone: true,
         billingAddressLine: true,
+        billingDistrict: true,
         city: true,
         billingCountryCode: true,
         tcKimlikNo: true,
@@ -909,6 +955,7 @@ async function triggerInvoiceGeneration(
         identityNumber: nationalId ?? "",
         registrationAddress: decryptBillingField(user.billingAddressLine),
         city: user.city ?? "",
+        district: user.billingDistrict ?? "",
         country: countryCode === "TR" ? "Turkey" : countryCode,
         invoiceType: user.invoiceType ?? "individual",
         taxId: decryptBillingField(user.taxId),
@@ -1027,6 +1074,259 @@ function round2(n: number): number {
 }
 
 /**
+ * Ödemesi DOĞRULANMIŞ bir checkout'u tamamlar: plan/kredi/CV geçişi verir, kuponu işler, fatura keser.
+ * Sağlayıcıdan bağımsızdır (iyzico retrieve sonucu veya PayTR bildirimi). Idempotenttir.
+ * DB yazımı başarısız olursa PaymentFulfillmentDbError fırlatır (çağıran sağlayıcıya yeniden deneme yaptırmalı).
+ * Dönüş: SPA yönlendirme adresi (`payment=success|failed`).
+ */
+export async function fulfillPaidCheckout(
+  conversationId: string,
+  result: IyzicoRetrieveResult,
+): Promise<string> {
+  const cardCountryRaw = (result.cardCountry ?? "").toUpperCase().trim();
+  const isTurkishCard = cardCountryRaw === "TURKEY" || cardCountryRaw === "TR";
+  const pending = await prisma.paymentCheckout.findUnique({
+    where: { conversationId: String(conversationId) },
+  });
+
+  if (!pending) {
+    logSuspiciousActivity({
+      type: "iyzico_unknown_conversation",
+      detail: conversationId,
+    });
+    logger.warn("payment",
+      `${PC_LOG} no paymentCheckout for conversationId`,
+      conversationId,
+    );
+    return paymentWorkspaceRedirectUrl(false);
+  }
+
+  logger.info("payment",`${PC_LOG} matched paymentCheckout (subscription)`, {
+    conversationId: pending.conversationId,
+    status: pending.status,
+    plan: pending.plan,
+    userId: pending.userId,
+  });
+
+  if (pending.status === "completed") {
+    logger.info("payment",
+      `${PC_LOG} subscription checkout already completed — idempotent success`,
+    );
+    return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly, pending.cvPassHours);
+  }
+
+  const expectedPrice = pending.priceTry;
+  if (
+    result.paidPrice != null &&
+    !eqIyzicoMoney(result.paidPrice, expectedPrice)
+  ) {
+    logSuspiciousActivity({
+      type: "iyzico_price_mismatch",
+      detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
+    });
+    logger.warn("payment",`${PC_LOG} subscription price mismatch`);
+    return paymentWorkspaceRedirectUrl(false);
+  }
+
+  const subscriptionDays = pending.subscriptionDays ?? 30;
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + subscriptionDays);
+
+  // Plan limitlerini DB'den veya varsayılanlardan al
+  const planLimits = await resolvePlanLimits(pending.plan);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.paymentCheckout.findUnique({
+        where: { conversationId },
+      });
+      if (!current || current.status === "completed") {
+        return;
+      }
+
+      if (current.cvPassHours != null) {
+        // CV GEÇİŞİ: plan/org değişmez — süre, mevcut geçişin (varsa) ÜSTÜNE eklenir.
+        const holder = await tx.user.findUnique({
+          where: { id: current.userId },
+          select: { cvPassUntil: true },
+        });
+        await tx.user.update({
+          where: { id: current.userId },
+          data: { cvPassUntil: cvPassNewExpiry(holder?.cvPassUntil, current.cvPassHours) },
+        });
+      } else if (current.bonusAiCredits != null) {
+        // TOP-UP: plan/org değişmez — kullanıcıya ek AI kredisi eklenir.
+        await tx.user.update({
+          where: { id: current.userId },
+          data: { bonusAiCredits: { increment: current.bonusAiCredits } },
+        });
+      } else {
+        // ABONELİK: seatsOnly ise sadece koltuk; değilse planı aktive et.
+        const updatedUser = await tx.user.update({
+          where: { id: current.userId },
+          data: current.seatsOnly ? {} : { plan: current.plan },
+          select: { organizationId: true },
+        });
+
+        // Kullanıcının organizasyonunu güncelle (getQuotaSummary org.plan okur)
+        const orgId = current.organizationId ?? updatedUser.organizationId;
+        if (orgId && !current.seatsOnly) {
+          await tx.organization.update({
+            where: { id: orgId },
+            data: {
+              plan: current.plan,
+              subscriptionStatus: "active",
+              subscriptionExpiry: expiry,
+              ...planLimits,
+            },
+          });
+        }
+      }
+
+      await tx.paymentCheckout.update({
+        where: { conversationId },
+        data: {
+          status: "completed",
+          completedAt: new Date(),
+          cardCountry: result.cardCountry ?? null,
+          cardBin: result.binNumber ? result.binNumber.slice(0, 6) : null,
+          iyzicoPaymentId: result.paymentId ?? null,
+          iyzicoPaymentTransactionId: result.paymentItems?.[0]?.paymentTransactionId ?? null,
+        },
+      });
+
+      // Kupon kullanım kaydı — admin panelinde kullanım sayısını günceller
+      if (current.couponId) {
+        await tx.couponUse.create({
+          data: {
+            userId: current.userId,
+            couponId: current.couponId,
+          },
+        });
+        // NOT: Kupon burada otomatik PASİFLEŞTİRİLMEZ. Eski kod kuponun toplam
+        // kullanımını "kullanıcı başına limit" ile kıyasladığı için (varsayılan 1)
+        // her kampanya kuponu ilk satıştan sonra kapanıyordu. Limitler artık
+        // yalnızca kupon doğrulamasında uygulanır.
+        logger.info("payment",`${PC_LOG} coupon use recorded couponId=${current.couponId} userId=${current.userId}`);
+      }
+    });
+
+    // Auto-create team for new BUSINESS subscribers (idempotent — returns existing if already created).
+    // Top-up satın almasında (bonusAiCredits) plan değişmediği için ekip oluşturulmaz.
+    if (pending.plan === "BUSINESS" && pending.bonusAiCredits == null && pending.cvPassHours == null) {
+      try {
+        const owner = await prisma.user.findUnique({
+          where: { id: pending.userId },
+          select: { firstName: true, lastName: true, email: true },
+        });
+        const ownerName =
+          [owner?.firstName, owner?.lastName].filter(Boolean).join(" ") ||
+          owner?.email?.split("@")[0] ||
+          "Business";
+        const team = await createTeamForOwner(pending.userId, ownerName);
+        // Update extraSeats if purchaser requested additional seats.
+        // Atomic transaction: iki eşzamanlı seatsOnly ödemesi race condition yaratamaz.
+        if ((pending.extraSeats ?? 0) > 0) {
+          await prisma.$transaction(async (tx) => {
+            if (pending.seatsOnly) {
+              // seatsOnly: kümülatif güncelleme — yeni toplam = mevcut + satın alınan
+              await tx.team.update({
+                where: { id: team.id },
+                data: { extraSeats: { increment: pending.extraSeats } },
+              });
+            } else {
+              await tx.team.update({
+                where: { id: team.id },
+                data: { extraSeats: pending.extraSeats },
+              });
+            }
+          });
+        }
+      } catch (teamErr) {
+        // Non-fatal: payment succeeded; team creation failure is recoverable.
+        logger.error("payment",`${PC_LOG} team auto-create failed (non-fatal)`, teamErr instanceof Error ? teamErr.message : teamErr);
+      }
+    }
+  } catch (dbErr) {
+    // Payment was verified by iyzico but our DB write failed. Throw so the
+    // controller returns HTTP 500 — iyzico will retry the webhook automatically.
+    logger.error("payment",
+      `${PC_LOG} DB fulfillment FAILED for conversationId=${conversationId}; will throw so caller returns 500 for iyzico retry`,
+      dbErr instanceof Error ? (dbErr.stack ?? dbErr.message) : dbErr,
+    );
+    throw new PaymentFulfillmentDbError(dbErr);
+  }
+
+  logger.info("payment",`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
+
+  // Ödeme başarısı / abonelik aktif e-postası (non-fatal). Top-up satın almasında
+  // abonelik e-postası gönderilmez (plan değişmedi; fatura + kredi yeterli).
+  void (async () => {
+    try {
+      if (pending.bonusAiCredits != null || pending.cvPassHours != null) return;
+      const buyer = await prisma.user.findUnique({
+        where: { id: pending.userId },
+        select: { email: true, preferredLanguage: true },
+      });
+      if (buyer?.email) {
+        const { createPaymentSuccessEmailTemplate } = await import("../subscription/subscription.email.js");
+        const lang = buyer.preferredLanguage === "tr" ? "tr" : "en";
+        const expiryDate = new Date(Date.now() + (pending.subscriptionDays ?? 30) * 86400000);
+        const tpl = createPaymentSuccessEmailTemplate({
+          planName: pending.plan,
+          amount: pending.priceTry,
+          currency: pending.paymentCurrency ?? "TRY",
+          periodEnd: expiryDate.toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { dateStyle: "long" }),
+          lang,
+        });
+        const { sendMail } = await import("../../lib/mailer.js");
+        await sendMail({ to: buyer.email, ...tpl });
+      }
+    } catch (mailErr) {
+      logger.error("payment", `${PC_LOG} payment success email failed (non-fatal)`, { detail: String(mailErr) });
+    }
+  })();
+
+  // KDV uyum denetimi: TR kart + KDV'siz fatura → compliance uyarısı logla
+  if (isTurkishCard && (pending.kdvRate === 0 || pending.paymentCurrency !== "TRY")) {
+    logSuspiciousActivity({
+      type: "vat_compliance_warning",
+      detail: JSON.stringify({
+        conversationId,
+        paymentCurrency: pending.paymentCurrency,
+        kdvRate: pending.kdvRate,
+        customerCountry: pending.customerCountry,
+        cardCountry: result.cardCountry,
+        binPrefix: result.binNumber?.slice(0, 6),
+        note: "TR kart + KDV muaf fatura — manuel inceleme gerekebilir",
+      }),
+    });
+    logger.warn("payment",
+      `${PC_LOG} VAT COMPLIANCE WARNING: Turkish card used on non-KDV invoice`,
+      { conversationId, cardCountry: result.cardCountry },
+    );
+  }
+
+  // Fire-and-forget fatura üretimi — abonelik aktivasyonunu asla engellemez
+  void triggerInvoiceGeneration(pending, result).catch((err) => {
+    logger.error("payment",
+      `${PC_LOG} invoice trigger başarısız (kritik değil)`,
+      err instanceof Error ? err.message : err,
+    );
+  });
+
+  return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly, pending.cvPassHours);
+}
+
+export function isSuccessRedirect(url: string): boolean {
+  try {
+    return new URL(url).searchParams.get("payment") === "success";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * iyzico Checkout Form callback — posted `token`, then server calls `checkoutForm.retrieve` (NOT `threedsPayment.create`,
  * which is for direct `/payment/3dsecure/*` APIs). On success we grant credits or extend subscription.
  */
@@ -1104,11 +1404,6 @@ export async function processPaymentCallback(
       binNumber: result.binNumber ? `${result.binNumber.slice(0, 3)}***` : undefined,
     });
 
-    // KDV uyum denetimi: TR kart + KDV'siz fatura → compliance uyarısı
-    const cardCountryRaw = (result.cardCountry ?? "").toUpperCase().trim();
-    const isTurkishCard = cardCountryRaw === "TURKEY" || cardCountryRaw === "TR";
-    // (Bu noktada pending henüz yüklenmemiş; loglama callback doğrulandıktan sonra yapılır)
-
     if (result.status !== "success") {
       logger.warn("payment",`${PC_LOG} retrieve status !== success`);
       return paymentWorkspaceRedirectUrl(false);
@@ -1143,237 +1438,7 @@ export async function processPaymentCallback(
       conversationId,
     });
 
-    const pending = await prisma.paymentCheckout.findUnique({
-      where: { conversationId: String(conversationId) },
-    });
-
-    if (!pending) {
-      logSuspiciousActivity({
-        type: "iyzico_unknown_conversation",
-        detail: conversationId,
-      });
-      logger.warn("payment",
-        `${PC_LOG} no paymentCheckout for conversationId`,
-        conversationId,
-      );
-      return paymentWorkspaceRedirectUrl(false);
-    }
-
-    logger.info("payment",`${PC_LOG} matched paymentCheckout (subscription)`, {
-      conversationId: pending.conversationId,
-      status: pending.status,
-      plan: pending.plan,
-      userId: pending.userId,
-    });
-
-    if (pending.status === "completed") {
-      logger.info("payment",
-        `${PC_LOG} subscription checkout already completed — idempotent success`,
-      );
-      return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly, pending.cvPassHours);
-    }
-
-    const expectedPrice = pending.priceTry;
-    if (
-      result.paidPrice != null &&
-      !eqIyzicoMoney(result.paidPrice, expectedPrice)
-    ) {
-      logSuspiciousActivity({
-        type: "iyzico_price_mismatch",
-        detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
-      });
-      logger.warn("payment",`${PC_LOG} subscription price mismatch`);
-      return paymentWorkspaceRedirectUrl(false);
-    }
-
-    const subscriptionDays = pending.subscriptionDays ?? 30;
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + subscriptionDays);
-
-    // Plan limitlerini DB'den veya varsayılanlardan al
-    const planLimits = await resolvePlanLimits(pending.plan);
-
-    try {
-      await prisma.$transaction(async (tx) => {
-        const current = await tx.paymentCheckout.findUnique({
-          where: { conversationId },
-        });
-        if (!current || current.status === "completed") {
-          return;
-        }
-
-        if (current.cvPassHours != null) {
-          // CV GEÇİŞİ: plan/org değişmez — süre, mevcut geçişin (varsa) ÜSTÜNE eklenir.
-          const holder = await tx.user.findUnique({
-            where: { id: current.userId },
-            select: { cvPassUntil: true },
-          });
-          await tx.user.update({
-            where: { id: current.userId },
-            data: { cvPassUntil: cvPassNewExpiry(holder?.cvPassUntil, current.cvPassHours) },
-          });
-        } else if (current.bonusAiCredits != null) {
-          // TOP-UP: plan/org değişmez — kullanıcıya ek AI kredisi eklenir.
-          await tx.user.update({
-            where: { id: current.userId },
-            data: { bonusAiCredits: { increment: current.bonusAiCredits } },
-          });
-        } else {
-          // ABONELİK: seatsOnly ise sadece koltuk; değilse planı aktive et.
-          const updatedUser = await tx.user.update({
-            where: { id: current.userId },
-            data: current.seatsOnly ? {} : { plan: current.plan },
-            select: { organizationId: true },
-          });
-
-          // Kullanıcının organizasyonunu güncelle (getQuotaSummary org.plan okur)
-          const orgId = current.organizationId ?? updatedUser.organizationId;
-          if (orgId && !current.seatsOnly) {
-            await tx.organization.update({
-              where: { id: orgId },
-              data: {
-                plan: current.plan,
-                subscriptionStatus: "active",
-                subscriptionExpiry: expiry,
-                ...planLimits,
-              },
-            });
-          }
-        }
-
-        await tx.paymentCheckout.update({
-          where: { conversationId },
-          data: {
-            status: "completed",
-            completedAt: new Date(),
-            cardCountry: result.cardCountry ?? null,
-            cardBin: result.binNumber ? result.binNumber.slice(0, 6) : null,
-            iyzicoPaymentId: result.paymentId ?? null,
-            iyzicoPaymentTransactionId: result.paymentItems?.[0]?.paymentTransactionId ?? null,
-          },
-        });
-
-        // Kupon kullanım kaydı — admin panelinde kullanım sayısını günceller
-        if (current.couponId) {
-          await tx.couponUse.create({
-            data: {
-              userId: current.userId,
-              couponId: current.couponId,
-            },
-          });
-          // NOT: Kupon burada otomatik PASİFLEŞTİRİLMEZ. Eski kod kuponun toplam
-          // kullanımını "kullanıcı başına limit" ile kıyasladığı için (varsayılan 1)
-          // her kampanya kuponu ilk satıştan sonra kapanıyordu. Limitler artık
-          // yalnızca kupon doğrulamasında uygulanır.
-          logger.info("payment",`${PC_LOG} coupon use recorded couponId=${current.couponId} userId=${current.userId}`);
-        }
-      });
-
-      // Auto-create team for new BUSINESS subscribers (idempotent — returns existing if already created).
-      // Top-up satın almasında (bonusAiCredits) plan değişmediği için ekip oluşturulmaz.
-      if (pending.plan === "BUSINESS" && pending.bonusAiCredits == null && pending.cvPassHours == null) {
-        try {
-          const owner = await prisma.user.findUnique({
-            where: { id: pending.userId },
-            select: { firstName: true, lastName: true, email: true },
-          });
-          const ownerName =
-            [owner?.firstName, owner?.lastName].filter(Boolean).join(" ") ||
-            owner?.email?.split("@")[0] ||
-            "Business";
-          const team = await createTeamForOwner(pending.userId, ownerName);
-          // Update extraSeats if purchaser requested additional seats.
-          // Atomic transaction: iki eşzamanlı seatsOnly ödemesi race condition yaratamaz.
-          if ((pending.extraSeats ?? 0) > 0) {
-            await prisma.$transaction(async (tx) => {
-              if (pending.seatsOnly) {
-                // seatsOnly: kümülatif güncelleme — yeni toplam = mevcut + satın alınan
-                await tx.team.update({
-                  where: { id: team.id },
-                  data: { extraSeats: { increment: pending.extraSeats } },
-                });
-              } else {
-                await tx.team.update({
-                  where: { id: team.id },
-                  data: { extraSeats: pending.extraSeats },
-                });
-              }
-            });
-          }
-        } catch (teamErr) {
-          // Non-fatal: payment succeeded; team creation failure is recoverable.
-          logger.error("payment",`${PC_LOG} team auto-create failed (non-fatal)`, teamErr instanceof Error ? teamErr.message : teamErr);
-        }
-      }
-    } catch (dbErr) {
-      // Payment was verified by iyzico but our DB write failed. Throw so the
-      // controller returns HTTP 500 — iyzico will retry the webhook automatically.
-      logger.error("payment",
-        `${PC_LOG} DB fulfillment FAILED for conversationId=${conversationId}; will throw so caller returns 500 for iyzico retry`,
-        dbErr instanceof Error ? (dbErr.stack ?? dbErr.message) : dbErr,
-      );
-      throw new PaymentFulfillmentDbError(dbErr);
-    }
-
-    logger.info("payment",`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
-
-    // Ödeme başarısı / abonelik aktif e-postası (non-fatal). Top-up satın almasında
-    // abonelik e-postası gönderilmez (plan değişmedi; fatura + kredi yeterli).
-    void (async () => {
-      try {
-        if (pending.bonusAiCredits != null || pending.cvPassHours != null) return;
-        const buyer = await prisma.user.findUnique({
-          where: { id: pending.userId },
-          select: { email: true, preferredLanguage: true },
-        });
-        if (buyer?.email) {
-          const { createPaymentSuccessEmailTemplate } = await import("../subscription/subscription.email.js");
-          const lang = buyer.preferredLanguage === "tr" ? "tr" : "en";
-          const expiryDate = new Date(Date.now() + (pending.subscriptionDays ?? 30) * 86400000);
-          const tpl = createPaymentSuccessEmailTemplate({
-            planName: pending.plan,
-            amount: pending.priceTry,
-            currency: pending.paymentCurrency ?? "TRY",
-            periodEnd: expiryDate.toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { dateStyle: "long" }),
-            lang,
-          });
-          const { sendMail } = await import("../../lib/mailer.js");
-          await sendMail({ to: buyer.email, ...tpl });
-        }
-      } catch (mailErr) {
-        logger.error("payment", `${PC_LOG} payment success email failed (non-fatal)`, { detail: String(mailErr) });
-      }
-    })();
-
-    // KDV uyum denetimi: TR kart + KDV'siz fatura → compliance uyarısı logla
-    if (isTurkishCard && (pending.kdvRate === 0 || pending.paymentCurrency !== "TRY")) {
-      logSuspiciousActivity({
-        type: "vat_compliance_warning",
-        detail: JSON.stringify({
-          conversationId,
-          paymentCurrency: pending.paymentCurrency,
-          kdvRate: pending.kdvRate,
-          customerCountry: pending.customerCountry,
-          cardCountry: result.cardCountry,
-          binPrefix: result.binNumber?.slice(0, 6),
-          note: "TR kart + KDV muaf fatura — manuel inceleme gerekebilir",
-        }),
-      });
-      logger.warn("payment",
-        `${PC_LOG} VAT COMPLIANCE WARNING: Turkish card used on non-KDV invoice`,
-        { conversationId, cardCountry: result.cardCountry },
-      );
-    }
-
-    // Fire-and-forget fatura üretimi — abonelik aktivasyonunu asla engellemez
-    void triggerInvoiceGeneration(pending, result).catch((err) => {
-      logger.error("payment",
-        `${PC_LOG} invoice trigger başarısız (kritik değil)`,
-        err instanceof Error ? err.message : err,
-      );
-    });
-
-    return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly, pending.cvPassHours);
+    return fulfillPaidCheckout(String(conversationId), result);
   } catch (unexpected) {
     // Re-throw DB fulfillment errors — the controller must return 500 for these.
     if (unexpected instanceof PaymentFulfillmentDbError) {
@@ -1434,6 +1499,30 @@ export async function checkRefundAbuse(userId: string): Promise<RefundAbuseCheck
   return { allowed: true, requiresAdminReview: refundCount12m >= 1 };
 }
 
+/** PayTR İade API — tam iade (kısmi iade bu üründe yok). Sonuç, iyzico iadesiyle aynı biçimdedir. */
+async function issuePaytrRefund(
+  merchantOid: string,
+  grossPrice: string,
+  conversationId: string,
+): Promise<{ ok: boolean; requiresManualReview?: boolean; error?: string }> {
+  if (!env.paytrEnabled) {
+    return { ok: false, error: "paytr_not_configured" };
+  }
+  try {
+    const r = await requestPaytrRefund(merchantOid, grossPrice, getPaytrCredentials(), conversationId);
+    if (r.ok) {
+      logger.info("payment", "[paytr/refund] iade kabul edildi", { conversationId, test: r.isTest });
+      return { ok: true };
+    }
+    logger.warn("payment", "[paytr/refund] iade reddedildi", { conversationId, errNo: r.errNo, errMsg: r.errMsg });
+    return { ok: false, error: `paytr_${r.errNo}: ${r.errMsg}` };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error("payment", "[paytr/refund] iade isteği hata verdi", msg);
+    return { ok: false, error: msg };
+  }
+}
+
 export async function issueIyzicoRefund(
   checkout: {
     conversationId: string;
@@ -1445,6 +1534,11 @@ export async function issueIyzicoRefund(
   },
   clientIp = "127.0.0.1",
 ): Promise<{ ok: boolean; requiresManualReview?: boolean; error?: string }> {
+  // PayTR ile alınmış ödeme ("paytr:" işaretli) → iade PayTR İade API'sinden yapılır.
+  if (checkout.iyzicoPaymentId?.startsWith("paytr:")) {
+    return issuePaytrRefund(checkout.iyzicoPaymentId.slice("paytr:".length), checkout.priceTry, checkout.conversationId);
+  }
+
   // Legacy ödeme: iyzicoPaymentId kaydedilmemiş → iyzico çağrısı yapılamaz
   if (!checkout.iyzicoPaymentId) {
     logger.warn("payment",

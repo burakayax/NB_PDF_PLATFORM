@@ -116,6 +116,7 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
         tax_office=tax_office if (is_corporate and tax_office) else None,
         address=buyer.get("registrationAddress"),
         city=buyer.get("city"),
+        district=buyer.get("district") or None,
         country="Turkey" if country_code == "TR" else country_code,
         contact_type="company" if is_corporate else "person",
         country_code=country_code,

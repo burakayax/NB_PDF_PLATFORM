@@ -55,6 +55,25 @@ _POLL_INTERVAL = 10
 _POLL_MAX = 30
 
 
+_TR_ASCII = str.maketrans("çÇğĞıİöÖşŞüÜ", "cCgGiIoOsSuU")
+
+
+def _product_code(name: str) -> str:
+    """Ürün adından okunur, kararlı stok kodu: "PDF PLATFORM Pro (1 ay)" → "PDF-PLATFORM-PRO-1-AY"."""
+    import re
+
+    code = re.sub(r"[^A-Z0-9]+", "-", name.translate(_TR_ASCII).upper()).strip("-")
+    return (code or "HIZMET")[:40]
+
+
+def _split_payment_id(payment_id: str) -> tuple[str, str]:
+    """(sağlayıcı adı, sipariş kodu). "paytr:<oid>" → ("PayTR", oid); diğerleri iyzico ödeme numarasıdır."""
+    pid = (payment_id or "").strip()
+    if pid.lower().startswith("paytr:"):
+        return "PayTR", pid.split(":", 1)[1]
+    return "iyzico", pid
+
+
 class BirFaturaProvider(BillingProviderBase):
     """BirFatura OutEBelgeV2 API entegrasyonu."""
 
@@ -241,6 +260,15 @@ class BirFaturaProvider(BillingProviderBase):
         # İhracat istisnası açıklaması
         export_note = "İhracat İstisnası (KDV K. Mad. 12)" if ci.is_export else ""
 
+        # Ödeme sağlayıcısı: Node tarafı PayTR ödemelerinde paymentId'yi "paytr:<sipariş no>" gönderir.
+        # Faturada sağlayıcı adı ve gerçek sipariş numarası görünsün diye ikisi ayrıştırılır.
+        payment_provider, order_code = _split_payment_id(pi.payment_id)
+        payment_note = f"Sipariş No: {order_code} | Ödeme: {payment_provider}"
+        invoice_explanation = (
+            "PDF Platform - " + ", ".join(i.name for i in items)
+            + f" | Ödeme: Kredi Kartı ({payment_provider}) | Sipariş: {order_code}"
+        )[:500]
+
         order_details = []
         for item in items:
             has_discount = item.discount_percent > 0 and item.original_unit_price is not None
@@ -259,10 +287,12 @@ class BirFaturaProvider(BillingProviderBase):
                     f"İskonto %{item.discount_percent} uygulandı. "
                     f"Liste fiyatı: {orig:.2f} TL | "
                     f"İskonto: {disc_per_unit:.2f} TL | "
-                    f"Matrah: {item.unit_price:.2f} TL"
+                    f"Matrah: {item.unit_price:.2f} TL | "
+                    f"{payment_note}"
                 )
                 order_details.append({
-                    "ProductCode": item.name.replace(" ", "_")[:20],
+                    "ProductCode": _product_code(item.name),
+                    "ProductBrand": "PDF PLATFORM",
                     "ProductName": item.name,
                     "ProductNote": note,
                     "ProductQuantityType": item.unit,
@@ -276,13 +306,14 @@ class BirFaturaProvider(BillingProviderBase):
                     "DiscountUnitTaxIncluding": disc_incl,
                 })
             else:
-                note = item.description or export_note
+                note = " | ".join(x for x in (item.description or export_note, payment_note) if x)
                 price_excl = round(float(item.unit_price), 4)
                 price_incl = round(item.unit_price * (1 + item.vat_rate / 100), 4)
                 total_excl_line = round(item.unit_price * item.quantity, 2)
                 total_incl_line = round(total_excl_line * (1 + item.vat_rate / 100), 2)
                 order_details.append({
-                    "ProductCode": item.name.replace(" ", "_")[:20],
+                    "ProductCode": _product_code(item.name),
+                    "ProductBrand": "PDF PLATFORM",
                     "ProductName": item.name,
                     "ProductNote": note,
                     "ProductQuantityType": item.unit,
@@ -302,15 +333,17 @@ class BirFaturaProvider(BillingProviderBase):
             "Ettn": doc_uuid,
             "InvoiceDate": invoice_datetime,
             "OrderDate": today,
-            "OrderCode": pi.payment_id,
+            "OrderCode": order_code,
             "IsDocumentNoAuto": True,
-            "InvoiceExplanation": "PDF Platform",
+            "InvoiceExplanation": invoice_explanation,
             "BillingName": ci.name,
             "BillingAddress": ci.address or "",
             "BillingCity": ci.city or "",
+            "BillingTown": ci.district or "",
             "BillingMobilePhone": ci.phone or "",
             "Email": ci.email,
-            "PaymentType": "iyzico",
+            # Belgeye göre serbest metin ödeme türü (örn. Kredi Kartı, Havale); sağlayıcı adı açıklamada.
+            "PaymentType": "Kredi Kartı",
             "Currency": currency_code,
             "CurrencyRate": currency_rate,
             # Fatura özet tablosu — UBL-TR LegalMonetaryTotal karşılığı
@@ -341,6 +374,11 @@ class BirFaturaProvider(BillingProviderBase):
             # Bireysel yurt içi, TC girilmemiş — GİB standart placeholder (11 hane)
             invoice_payload["TaxNo"] = "11111111111"
             logger.info("birfatura: TC girilmedi, GİB standart 11111111111 kullanılıyor")
+        else:
+            # Yurt dışı alıcı: BirFatura taxNo alanını ZORUNLU tutar (belge: SendBasicInvoiceFromModel).
+            # Yaygın uygulama: yurt dışı gerçek kişi → 11111111111, yurt dışı firma (VKN yok) → 2222222222.
+            invoice_payload["TaxNo"] = "2222222222" if ci.contact_type == "company" else "11111111111"
+            logger.info("birfatura: yurt dışı alıcı, vergi no yer tutucusu kullanıldı tip=%s", ci.contact_type)
 
         if is_e_invoice and receiver_tag:
             invoice_payload["ReceiverTag"] = receiver_tag

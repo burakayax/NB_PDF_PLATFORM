@@ -15,6 +15,7 @@ import { saasAuthorizedFetch } from "../../api/subscription";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { LegalDocumentBody } from "../legal/LegalPage";
 import { readAccessToken } from "../../lib/accessTokenStore";
+import { PaytrBadge } from "../common/PaytrBadge";
 
 type IyzicoCheckoutResponse = {
   mode: "iyzico";
@@ -565,9 +566,10 @@ export function PaymentSummaryModal({
 
                 {/* Trust row */}
                 <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[12px] text-slate-400">
+                  <PaytrBadge height={16} tr={tr} className="mr-2 align-middle" />
                   {tr
-                    ? "iyzico güvenceli ödeme — kart bilgileriniz sitemizde saklanmaz"
-                    : "Secured by iyzico — your card details are never stored on our servers"}
+                    ? "güvenceli ödeme — kart bilgileriniz sitemizde saklanmaz"
+                    : "secured payment — your card details are never stored on our servers"}
                 </div>
               </>
             )}

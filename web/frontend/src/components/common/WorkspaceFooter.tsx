@@ -3,6 +3,7 @@ import { ArrowUpRight, ChevronDown, Lock, ShieldCheck, Zap } from "lucide-react"
 import type { Language } from "../../i18n/landing";
 import { useSettings } from "../../hooks/useSettings";
 import { localizedPath } from "../../seo/enSlugs.mjs";
+import { PaytrBadge } from "./PaytrBadge";
 import { SocialIcon, socialLabelFromUrl, socialPlatformFromUrl } from "./socialIcons";
 
 type LegalKind = "terms" | "privacy" | "kvkk";
@@ -162,6 +163,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
           <div className="text-[12px] text-slate-400 md:order-1">
             <p>© {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}</p>
             <p className="mt-0.5">{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
+            <PaytrBadge height={16} tr={tr} className="mt-2" />
           </div>
         </div>
       </div>

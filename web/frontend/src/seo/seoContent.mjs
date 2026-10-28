@@ -1963,7 +1963,7 @@ export const PRICING_SEO = {
       },
       {
         q: "Ödeme nasıl alınıyor, fatura kesiliyor mu?",
-        a: "Ödemeler iyzico altyapısıyla alınır; kart bilgileriniz bizde saklanmaz. Türkiye'de ikamet eden bireysel kullanıcılar için %20 KDV uygulanır, yurt dışı kullanıcılarda ihracat istisnası nedeniyle KDV uygulanmaz.",
+        a: "Ödemeler PayTR altyapısıyla alınır; kart bilgileriniz bizde saklanmaz. Türkiye'deki müşteriler için TL fiyatların tamamına %20 KDV dahildir; ayrıca ekleme yapılmaz. Yurt dışından yapılan alışverişlerde ihracat istisnası nedeniyle KDV uygulanmaz.",
       },
     ],
   },
@@ -2001,7 +2001,7 @@ export const PRICING_SEO = {
       },
       {
         q: "How are payments handled and is an invoice issued?",
-        a: "Payments run through iyzico and your card details are never stored by us. Individual users resident in Turkey are charged 20% VAT; users outside Turkey are exempt under the export exemption.",
+        a: "Payments run through PayTR and your card details are never stored by us. For customers in Turkey, all prices in Turkish lira already include 20% VAT, with nothing added on top. Purchases made from outside Turkey carry no VAT under the export exemption.",
       },
     ],
   },

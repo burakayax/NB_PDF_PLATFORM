@@ -46,6 +46,7 @@ import {
 import { createOrganizationForUser } from "../organization/organization.service.js";
 import { TERMS_VERSION, legalAcceptanceRows } from "../../lib/legal-version.js";
 import { archiveFinancialRecordsBeforeDelete } from "../../lib/financial-archive.js";
+import { purgeUserDataBeforeDelete } from "../../lib/account-purge.js";
 import {
   SIGNUP_CONSENT_TEXT,
   recordMarketingConsent,
@@ -72,6 +73,7 @@ type PublicUser = {
   phone: string | null;
   billingAddressLine: string | null;
   billingPostalCode: string | null;
+  billingDistrict: string | null;
   city: string | null;
   country: string | null;
   refundEligible?: boolean;
@@ -174,6 +176,7 @@ function toPublicUser(user: User): PublicUser {
     phone: user.phone ?? null,
     billingAddressLine: user.billingAddressLine ?? null,
     billingPostalCode: user.billingPostalCode ?? null,
+    billingDistrict: user.billingDistrict ?? null,
     city: user.city ?? null,
     country: user.country ?? null,
     isTeamMember: user.isTeamMember,
@@ -992,6 +995,9 @@ export async function deleteUserAccount(userId: string, password?: string): Prom
   // Kopya başarısız olursa hesap SİLİNMEZ (kayıt kaybı kabul edilemez).
   await archiveFinancialRecordsBeforeDelete(userId, "account_deleted");
 
+  // Kullanıcıya ilişkiyle bağlı olmayan kişisel veriler (taranan belgeler, ekip üyeliği) cascade ile silinmez.
+  await purgeUserDataBeforeDelete(userId);
+
   // Deleting the user cascades to: RefreshToken, DailyUsage, PaymentCheckout,
   // CreditTransaction, EmailVerificationToken, DeviceToken, CouponUsage,
   // UserEntitlement per schema onDelete: Cascade rules.
@@ -1059,6 +1065,7 @@ export async function updateUserProfile(
     phone?: string | null;
     billingAddressLine?: string | null;
     billingPostalCode?: string | null;
+    billingDistrict?: string | null;
     city?: string | null;
     country?: string | null;
   } = {
@@ -1089,6 +1096,10 @@ export async function updateUserProfile(
   if (input.billingPostalCode !== undefined) {
     const v = input.billingPostalCode.trim();
     data.billingPostalCode = v.length > 0 ? v : null;
+  }
+  if (input.billingDistrict !== undefined) {
+    const v = input.billingDistrict.trim();
+    data.billingDistrict = v.length > 0 ? v : null;
   }
   if (input.city !== undefined) {
     const v = input.city.trim();

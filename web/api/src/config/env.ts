@@ -191,7 +191,17 @@ const rawEnvSchema = z
      * eksikse ödeme oluşturma işlemleri 503 döner (servis katmanında).
      * Stripe Phase 3'e ertelenmiş; router'ı mount edilmez.
      */
-    PAYMENTS_PROVIDER: z.enum(["iyzico", "stripe"]).default("iyzico"),
+    PAYMENTS_PROVIDER: z.enum(["iyzico", "stripe", "paytr"]).default("iyzico"),
+    /**
+     * PayTR (iFrame API) — Mağaza Paneli > Bilgi > Entegrasyon Bilgileri.
+     * PAYMENTS_PROVIDER=paytr iken ödeme PayTR'den alınır; iyzico kodu yedek olarak durur.
+     * Üçü de doluysa paytrEnabled=true olur; eksikse PayTR ödemesi 503 döner.
+     */
+    PAYTR_MERCHANT_ID: z.string().optional().default(""),
+    PAYTR_MERCHANT_KEY: z.string().optional().default(""),
+    PAYTR_MERCHANT_SALT: z.string().optional().default(""),
+    /** "true" → get-token isteğine test_mode=1 (canlı mağazada test ödemesi). Mağaza test modundaysa gerekmez. */
+    PAYTR_TEST_MODE: z.string().optional().default(""),
     /** iyzico API (boşsa POST /api/payment/create 503 döner). */
     IYZICO_API_KEY: z.string().optional().default(""),
     IYZICO_SECRET_KEY: z.string().optional().default(""),
@@ -301,6 +311,12 @@ const welcomeCreditsMax = Math.max(
 const iyzicoUriMerged =
   raw.IYZICO_URI?.trim() || raw.IYZICO_BASE_URL?.trim() || "";
 
+const paytrKeysOk = Boolean(
+  raw.PAYTR_MERCHANT_ID?.trim() &&
+  raw.PAYTR_MERCHANT_KEY?.trim() &&
+  raw.PAYTR_MERCHANT_SALT?.trim(),
+);
+
 const iyzicoKeysOk = Boolean(
   raw.IYZICO_API_KEY?.trim() &&
   raw.IYZICO_SECRET_KEY?.trim() &&
@@ -363,6 +379,10 @@ export const env = {
   HTTPS_KEY_PATH: raw.HTTPS_KEY_PATH?.trim() ?? "",
   HTTPS_CERT_PATH: raw.HTTPS_CERT_PATH?.trim() ?? "",
   iyzicoEnabled: iyzicoKeysOk,
+  /** PayTR anahtarları (merchant id/key/salt) tam mı? */
+  paytrEnabled: paytrKeysOk,
+  /** Ödemeyi PayTR başlatır mı: sağlayıcı seçili VE anahtarlar tam. */
+  paytrActive: raw.PAYMENTS_PROVIDER === "paytr" && paytrKeysOk,
   creditCheckoutUseFake,
   SMTP_USER: smtpUser,
   SMTP_PASS: smtpPass,

@@ -14,6 +14,7 @@ import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { useSettings } from "../../contexts/SettingsContext";
 import { applyTryPriceOverrides } from "../../lib/checkoutQuote";
+import { PaytrBadge } from "../common/PaytrBadge";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -696,8 +697,8 @@ function CycleAwareCard({
 function GuvenSatiri({ language }: { language: Language }) {
   const tr = language === "tr";
   const maddeler = tr
-    ? ["7 gün iade garantisi", "Otomatik yenileme yok", "Güvenli ödeme (iyzico)"]
-    : ["7-day money-back", "No auto-renewal", "Secure payment (iyzico)"];
+    ? ["7 gün iade garantisi", "Otomatik yenileme yok", "Güvenli ödeme (PayTR)"]
+    : ["7-day money-back", "No auto-renewal", "Secure payment (PayTR)"];
   return (
     <ul className="mt-3 space-y-1">
       {maddeler.map((m) => (
@@ -882,11 +883,15 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
           />
         </div>
 
-        {/* VAT info note */}
+        {/* VAT info note — kullanıcıya yalnız KENDİ durumu gösterilir (TL = Türkiye, KDV dahil; döviz = yurt dışı, KDV yok) */}
         <p className="text-center text-gray-400 text-xs mt-4">
-          {tr
-            ? "Türkiye'deki kullanıcılar için %20 KDV uygulanmaktadır. Yurt dışı kullanıcılar KDV'den muaftır."
-            : "20% VAT applies for users in Turkey. International users are VAT exempt."}
+          {currency === "TRY"
+            ? tr
+              ? "Gösterilen tüm fiyatlara %20 KDV dahildir."
+              : "All prices shown include 20% VAT."
+            : tr
+              ? "Gösterilen fiyatlara KDV uygulanmaz (yurt dışı satışlarda ihracat istisnası)."
+              : "No VAT is charged on the prices shown (export exemption for customers outside Turkey)."}
         </p>
 
         {/* Trust line */}
@@ -895,7 +900,10 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             ? "SSL şifreli · Otomatik yenileme yok"
             : "SSL encryption · No auto-renewal"}
           <span className="block mt-2 font-semibold">
-            🔒 {tr ? "iyzico ile güvenli ödeme" : "Secure payments via iyzico"}
+            <span className="inline-flex items-center gap-2">
+              🔒 {tr ? "Güvenli ödeme:" : "Secure payments:"}
+              <PaytrBadge height={18} tr={tr} />
+            </span>
           </span>
           {isEurDisplay && (
             <span className="block mt-1 text-xs text-amber-400/80">

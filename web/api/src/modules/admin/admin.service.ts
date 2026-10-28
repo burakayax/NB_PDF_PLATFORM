@@ -1,4 +1,5 @@
 import { archiveFinancialRecordsBeforeDelete } from "../../lib/financial-archive.js";
+import { purgeUserDataBeforeDelete } from "../../lib/account-purge.js";
 import type { Plan, Prisma, UserRole } from "@prisma/client";
 import { listBlockedEmails, removeBlockedEmail, upsertBlockedEmail } from "../../lib/blocked-email.js";
 import { env } from "../../config/env.js";
@@ -758,6 +759,7 @@ export async function deleteUserForAdmin(userId: string, actor: AdminActor, bloc
   }
 
   await archiveFinancialRecordsBeforeDelete(userId, "admin_deleted");
+  await purgeUserDataBeforeDelete(userId);
   await prisma.user.delete({ where: { id: userId } });
   await logAdminAudit(actor, "user.delete", userId, `Kullanıcı silindi: ${target.email}`, { blockEmail });
 }

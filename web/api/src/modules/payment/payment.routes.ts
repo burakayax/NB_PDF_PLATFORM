@@ -11,6 +11,7 @@ import {
   paymentRefundWebhookController,
 } from "./payment.controller.js";
 import { paymentCallbackLimiter } from "../../middleware/api-security.middleware.js";
+import { paytrNotifyController, paytrNotifyUrlencoded } from "./paytr/paytr.notify.js";
 import { requirePaymentsEnabled } from "./payments-gate.middleware.js";
 
 export const paymentRouter = Router();
@@ -20,5 +21,7 @@ paymentRouter.post("/create", requirePaymentsEnabled, asyncHandler(createPayment
 paymentRouter.post("/topup", requirePaymentsEnabled, asyncHandler(createTopupCheckoutController));
 paymentRouter.get("/cv-passes", asyncHandler(listCvPassesController));
 paymentRouter.post("/cv-pass", requirePaymentsEnabled, asyncHandler(createCvPassCheckoutController));
+// PayTR bildirim URL (iFrame API 2. adım) — JWT yok, hash ile doğrulanır; yanıt düz metin OK.
+paymentRouter.post("/paytr-notify", paymentCallbackLimiter, paytrNotifyUrlencoded, asyncHandler(paytrNotifyController));
 // iyzico iade bildirimi — JSON body kabul eder
 paymentRouter.post("/refund-notify", express.json(), asyncHandler(paymentRefundWebhookController));

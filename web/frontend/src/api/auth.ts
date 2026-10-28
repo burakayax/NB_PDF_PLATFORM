@@ -32,6 +32,7 @@ export type AuthUser = {
   phone?: string | null;
   billingAddressLine?: string | null;
   billingPostalCode?: string | null;
+  billingDistrict?: string | null;
   city?: string | null;
   country?: string | null;
   /** True when user is part of a Business team (patron-managed). */
@@ -51,6 +52,7 @@ export type UpdateProfileInput = {
   phone?: string;
   billingAddressLine?: string;
   billingPostalCode?: string;
+  billingDistrict?: string;
   city?: string;
   country?: string;
 };
@@ -440,6 +442,9 @@ export async function updateAuthProfile(accessToken: string, body: UpdateProfile
   }
   if (body.billingPostalCode !== undefined) {
     payloadBody.billingPostalCode = body.billingPostalCode.trim();
+  }
+  if (body.billingDistrict !== undefined) {
+    payloadBody.billingDistrict = body.billingDistrict.trim();
   }
   if (body.city !== undefined) {
     payloadBody.city = body.city.trim();

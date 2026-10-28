@@ -2,6 +2,7 @@ import type { Language } from "../../i18n/landing";
 import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import { ThemeToggle } from "./ThemeToggle";
+import { PaytrBadge } from "./PaytrBadge";
 import { SocialIcon, socialLabelFromUrl, socialPlatformFromUrl } from "./socialIcons";
 import { localizedPath } from "../../seo/enSlugs.mjs";
 
@@ -140,6 +141,7 @@ export function SiteFooter({ language }: { language: Language }) {
             © {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
           </p>
           <div className="flex items-center gap-3">
+            <PaytrBadge height={16} tr={tr} />
             <ThemeToggle tr={tr} />
             <p>{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
           </div>
