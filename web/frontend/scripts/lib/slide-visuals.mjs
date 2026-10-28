@@ -541,7 +541,6 @@ const ASK_BY_HERO = {
   stars: ["Bu konuda sen hangi yöntemi kullanıyorsun?", "Sence en önemli ipucu hangisiydi?"],
 };
 const ASK_DEFAULT = ["Sen bu durumla hiç karşılaştın mı?", "Senin de böyle bir şeye ihtiyacın oldu mu?"];
-const REPLY_HINTS = ["Evet, çok", "Bir iki kez", "Hiç olmadı"];
 
 /** Konuya ve slug'a göre soru (aynı yazıda hep aynı soru). */
 export function askFor(heroes, seed) {
@@ -559,14 +558,11 @@ export function visualAskSvg({ accent, total, index, fonts, tools, question, her
   const qlh = q.size * 1.18;
   const qFirst = 760 + q.size * 0.85;
   const chipY = Math.min(1100, Math.round(qFirst + (q.lines.length - 1) * qlh + 70));
-  let x = M;
-  const chips = REPLY_HINTS.map((c, i) => {
-    const w = measure(bold, c, 32) + 64;
-    const out = `<rect x="${x}" y="${chipY}" width="${w}" height="76" rx="38" fill="${i === 0 ? AMBER : "#ffffff"}" fill-opacity="${i === 0 ? 1 : 0.14}"/>
-  <path d="${textPath(bold, c, 32, x + 32, chipY + 50)}" fill="${i === 0 ? NAVY : "#ffffff"}"/>`;
-    x += w + 16;
-    return out;
-  }).join("\n  ");
+  const hint = "Cevabını yorumlara yaz";
+  const hw = measure(bold, hint, 32) + 64 + 50;
+  const chips = `<rect x="${M}" y="${chipY}" width="${hw}" height="76" rx="38" fill="${AMBER}"/>
+  <path d="${textPath(bold, hint, 32, M + 32, chipY + 50)}" fill="${NAVY}"/>
+  <path d="M${M + hw - 52} ${chipY + 38}h30m-12 -12l12 12l-12 12" fill="none" stroke="${NAVY}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" transform="rotate(90 ${M + hw - 37} ${chipY + 38})"/>`;
   const lab = "SENCE?";
   const labW = spaced(bold, lab, 24, 0, 0, 4).width + 56;
   const cx = 540, cy = 410;
