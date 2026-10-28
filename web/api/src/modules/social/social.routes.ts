@@ -34,6 +34,7 @@ import {
   postStats,
   publishNow,
   queueDailyPosts,
+  queueNextToolReel,
   queueToolReel,
   saveAccount,
   testAccount,
@@ -256,6 +257,21 @@ socialRouter.get(
   "/tool-reels",
   asyncHandler(async (_request, response) => {
     response.json({ reels: await listToolReelsWithStatus() });
+  }),
+);
+
+/** Sırası gelen, videosu hazır aracın Reels TASLAĞINI hazırlar ("Reels hazırla" düğmesi). */
+socialRouter.post(
+  "/tool-reels/queue-next",
+  asyncHandler(async (request, response) => {
+    const result = await queueNextToolReel();
+    await logAdminAudit(
+      actorOf(request),
+      "social.tool-reel",
+      result.toolId,
+      `Reels hazırla: ${result.queued.length} taslak hazırlandı${result.toolId ? ` (${result.toolId})` : ""}`,
+    );
+    response.json(result);
   }),
 );
 

@@ -32,6 +32,7 @@ import {
   latestVideoFor,
   loadToolReels,
   pickDueToolReel,
+  readyToolReelsInRotation,
   toolReelFeedItem,
   toolReelGuid,
   unusedFreshVideoFor,
@@ -808,6 +809,34 @@ export async function queueToolReel(
         throw err;
       }
     }
+  }
+  return result;
+}
+
+/**
+ * Panelin "Reels hazırla" düğmesi: sırası gelen ve videosu hazır olan araç için TASLAK açar.
+ * Sıklık ayarına bakmaz (elle istendi). Videosu hazır araç yoksa nedenini söyler.
+ */
+export async function queueNextToolReel(now: Date = new Date()): Promise<QueueResult & { toolId: string | null }> {
+  const result: QueueResult & { toolId: string | null } = { queued: [], skipped: [], toolId: null };
+  const candidates = await readyToolReelsInRotation(now);
+  if (candidates.length === 0) {
+    result.skipped.push({
+      platform: null,
+      reason:
+        "Şu an hazır araç videosu yok. Videolar GitHub iş akışıyla üretilir (Actions → tool-reels → Run workflow); üretilince tekrar dene",
+    });
+    return result;
+  }
+  for (const entry of candidates) {
+    const queued = await queueToolReel(entry.id, now, true, undefined, { repeat: true });
+    if (queued.queued.length > 0) {
+      result.toolId = entry.id;
+      result.queued.push(...queued.queued);
+      result.skipped.push(...queued.skipped);
+      return result;
+    }
+    result.skipped.push(...queued.skipped);
   }
   return result;
 }

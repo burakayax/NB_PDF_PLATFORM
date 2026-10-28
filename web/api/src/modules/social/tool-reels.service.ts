@@ -154,13 +154,32 @@ export async function pickDueToolReel(
   // 6 saat pay: tur her gün aynı saatte çalışır, milisaniye farkı bir günü kaçırmasın.
   if (lastAt && now.getTime() - lastAt < everyDays * 24 * 3600_000 - 6 * 3600_000) return null;
 
+  return rotationOrder(rows)[0] ?? null;
+}
+
+/** Katalog sırası: hiç hazırlanmamış önce, sonra en eski hazırlanan. */
+function rotationOrder(rows: { guid: string; createdAt: Date }[]): ToolReelCatalogEntry[] {
   const lastByGuid = new Map<string, number>();
   for (const r of rows) lastByGuid.set(r.guid, Math.max(lastByGuid.get(r.guid) ?? 0, r.createdAt.getTime()));
-  return (
-    TOOL_REEL_CATALOG.slice().sort(
-      (a, b) => (lastByGuid.get(toolReelGuid(a.id)) ?? 0) - (lastByGuid.get(toolReelGuid(b.id)) ?? 0),
-    )[0] ?? null
+  return TOOL_REEL_CATALOG.slice().sort(
+    (a, b) => (lastByGuid.get(toolReelGuid(a.id)) ?? 0) - (lastByGuid.get(toolReelGuid(b.id)) ?? 0),
   );
+}
+
+/**
+ * Elle "Reels hazırla" için adaylar: sıklık kuralı OLMADAN, sıra düzeninde; yalnız şu an videosu
+ * hazır olanlar. Silinen taslaklar kayıttan düştüğü için sırayı etkilemez.
+ */
+export async function readyToolReelsInRotation(now = new Date()): Promise<ToolReelCatalogEntry[]> {
+  const rows = await prisma.socialPost.findMany({
+    where: { guid: { startsWith: TOOL_REEL_PREFIX } },
+    select: { guid: true, createdAt: true },
+  });
+  const ready: ToolReelCatalogEntry[] = [];
+  for (const entry of rotationOrder(rows)) {
+    if (await latestVideoFor(entry.id, MANUAL_MAX_AGE_MS, now)) ready.push(entry);
+  }
+  return ready;
 }
 
 /**
