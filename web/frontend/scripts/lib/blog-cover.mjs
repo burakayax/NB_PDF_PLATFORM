@@ -78,7 +78,7 @@ export function blogLayoutMap(posts) {
 }
 
 /** Bir yazının kapağı. `post`: { slug, accent, tool }. */
-export function renderBlogCover({ title, post, layout, w, h, key, cta, format = "png", publicDir, quality = 88 }) {
+export function renderBlogCover({ title, post, layout, w, h, key, cta, format = "png", publicDir, quality = 88, badge = null }) {
   const { head, tag } = splitTitle(title);
   return renderCover({
     layout,
@@ -93,5 +93,6 @@ export function renderBlogCover({ title, post, layout, w, h, key, cta, format = 
     format,
     publicDir,
     quality,
+    badge,
   });
 }
