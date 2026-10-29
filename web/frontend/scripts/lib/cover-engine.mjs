@@ -134,10 +134,12 @@ function geometry(w, h, key) {
   const logoW = reel ? 340 : Math.round(w * (isH ? 0.19 : 0.23));
   const logoH = Math.round(logoW * 0.335);
   const logoTop = reel ? 256 : Math.round(m * 0.75);
+  // Reels: yerleşim logo 256 hizasına göre kurulu kalır; logonun kendisi en üst sol köşeye çizilir.
+  const logoY = reel ? 72 : logoTop;
   const y0 = logoTop + logoH + (reel ? 44 : Math.round(h * (isH ? 0.07 : 0.04)));
   const yb = reel ? 1670 : h - Math.round(m * 0.8);
   const ph = reel ? 104 : Math.round(h * (isH ? 0.125 : 0.07));
-  return { w, h, isH, reel, m, logoW, logoH, logoTop, y0, yb, ph, fh: Math.round(ph * (isH ? 1.9 : 1.7)) };
+  return { w, h, isH, reel, m, logoW, logoH, logoTop, logoY, y0, yb, ph, fh: Math.round(ph * (isH ? 1.9 : 1.7)) };
 }
 
 /* ─────────────────────────── Düzenler ─────────────────────────── */
@@ -401,7 +403,7 @@ export function coverSvg({ layout, title, tag = "", hero, heroOpts, accent, w, h
   const fn = LAYOUT_FNS[layout] ?? LAYOUT_FNS.classic;
   const r = fn(ctx);
   const svg = `${svgOpen(w, h, r.defs)}${r.bg}${r.body}${badge ? stickerBadge(badge, w, h, g) : ""}</svg>`;
-  return { svg, logo: { width: g.logoW, left: g.reel ? 64 : g.m, top: g.logoTop } };
+  return { svg, logo: { width: g.logoW, left: g.reel ? 64 : g.m, top: g.logoY } };
 }
 
 const logoCache = new Map();

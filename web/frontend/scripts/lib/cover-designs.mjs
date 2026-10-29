@@ -311,7 +311,7 @@ export async function renderReelCover(spec) {
   if (!make) throw new Error(`Bilinmeyen kapak tasarımı: ${spec.design}`);
   logoBuf ??= await sharp(join(ROOT, "public", "logo.png")).resize({ width: 340 }).png().toBuffer();
   return sharp(Buffer.from(make(spec)))
-    .composite([{ input: logoBuf, left: 64, top: 256 }])
+    .composite([{ input: logoBuf, left: 64, top: 72 }])
     .jpeg({ quality: 90, mozjpeg: true })
     .toBuffer();
 }
