@@ -22,7 +22,7 @@ export const COVER_SPECS = {
   "flip-pdf": { design: "poster", lines: ["SAYFAYI", "ÇEVİR"], word: "ayna gibi", icon: "flip", sub: "Sayfaları ayna gibi çevir" },
   encrypt: { design: "poster", lines: ["GİZLİ", "BELGE"], word: "parolayla koru", icon: "lock", sub: "Belgeyi parolayla koru" },
   "repair-pdf": { design: "poster", lines: ["AÇILMAYAN", "PDF"], word: "kurtar", icon: "tool", sub: "Açılmayan dosyayı kurtar" },
-  "extract-images": { design: "poster", lines: ["PDF'TEKİ", "GÖRSEL"], word: "çıkar", icon: "image", sub: "Belgedeki fotoğrafları ayrı dosya yap" },
+  "extract-images": { design: "poster", lines: ["PDF'TEKİ", "GÖRSELİ"], word: "çıkar", icon: "image", sub: "Belgedeki fotoğrafları ayrı dosya yap" },
   "html-to-pdf": { design: "poster", lines: ["WEB", "SAYFASI"], word: "PDF'e al", icon: "globe", sub: "Web sayfasını olduğu gibi PDF'e al" },
   "gorsel-boyutlandir": { design: "poster", lines: ["FOTOĞRAF", "BOYUTU"], word: "ölçüye getir", icon: "resize", sub: "Fotoğrafı istediğin ölçüye getir" },
 
