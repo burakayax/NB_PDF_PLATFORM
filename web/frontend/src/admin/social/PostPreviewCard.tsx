@@ -4,6 +4,7 @@ import type { SocialPlatformSpec, SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 import { PostFullPreviewModal } from "./PostFullPreviewModal";
 import { PostMediaPreview } from "./PostMediaPreview";
+import { downloadMedia } from "./downloadMedia";
 
 /**
  * Bir gönderinin panel içindeki hâli: yayına gideceği biçimde önizleme.
@@ -221,15 +222,14 @@ export function PostPreviewCard({
             Tam önizleme
           </button>
           {post.imageUrl ? (
-            <a
+            <button
+              type="button"
               className={iconButton}
-              href={post.imageUrl}
-              download={imageFileName()}
-              // Görsel kendi alan adımızdan geliyor; indirme dosya olarak iner.
+              onClick={() => void downloadMedia(post.imageUrl!, imageFileName())}
             >
               <Download className="h-3.5 w-3.5" />
               {isVideo ? "Videoyu indir" : "Görseli indir"}
-            </a>
+            </button>
           ) : null}
 
           {manual ? (
