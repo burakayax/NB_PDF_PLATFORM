@@ -192,12 +192,12 @@ export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, b
       const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(i + 1, content.length);
       svgs.push(visualStepSvg({ slide, index: i + 1, count: content.length, total, accent, label, fonts, tools, icons: icons[i], template: templates[i] }));
     });
+    const question = askFor(icons.map((x) => x.hero), slug ?? title);
     if (withAsk) {
-      const question = askFor(icons.map((x) => x.hero), slug ?? title);
       svgs.push(visualAskSvg({ accent, total, index: total - 2, fonts, tools, question, hero: icons[0].hero }));
     }
     svgs.push(visualCtaSvg({ accent, total, fonts, tools, copy, target: link || host }));
-    return { svgs, kind, hook, count: content.length };
+    return { svgs, kind, hook, count: content.length, question };
   }
   const total = content.length + 2;
   const svgs = [coverSvg({ title: hook, bold, regular, host, total, copy })];
@@ -241,7 +241,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       const slug = localizedPath(`/blog/${post.slug}`, lang).split("/").pop();
       const url = `${baseUrl}${localizedPath(`/blog/${post.slug}`, lang)}`;
 
-      const { svgs, hook, kind, count } = buildCarouselSvgs({
+      const { svgs, hook, kind, count, question } = buildCarouselSvgs({
         copyBlocks: copy.blocks,
         title: copy.title,
         slug: post.slug,
@@ -255,10 +255,10 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       if (svgs.length === 0) continue;
 
       const signature = createHash("sha1")
-        .update(JSON.stringify([DESIGN_VERSION, svgs, fitHook(hook), layouts.get(post.slug)]))
+        .update(JSON.stringify([DESIGN_VERSION, svgs, fitHook(hook), layouts.get(post.slug), question ?? null]))
         .digest("hex");
       const urls = svgs.map((_, i) => `${baseUrl}/social/carousel/${lang}/${slug}/${i + 1}.jpg`);
-      manifest[url] = { signature, count: svgs.length, urls };
+      manifest[url] = { signature, count: svgs.length, urls, ...(question ? { question } : {}) };
 
       const dir = join(root, lang, slug);
       const allThere = svgs.every((_, i) => existsSync(join(dir, `${i + 1}.jpg`)));

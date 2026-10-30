@@ -44,6 +44,7 @@ import { dispatchReelProduction } from "./reel-dispatch.js";
 import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { parseTags } from "./instagram-tags.js";
 import { isTooSimilar } from "./facebook-similarity.js";
+import { carouselQuestionFor, withCarouselQuestion } from "./carousel.service.js";
 import { loadXContent } from "./x-content.service.js";
 import { kindForCount, pickXPost } from "./x-queue.js";
 import type { XUsage } from "./x-queue.js";
@@ -593,6 +594,11 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
     const recentFb = platforms.includes("FACEBOOK")
       ? (await prisma.socialPost.findMany({ where: { platform: "FACEBOOK" }, orderBy: { createdAt: "desc" }, take: 30, select: { body: true } })).map((r) => r.body)
       : [];
+    // Instagram kaydırmalı gönderisinin yorum sorusu açıklamaya da yazılır (kaydırmayanlar da yanıtlasın).
+    if (bodies["INSTAGRAM"]) {
+      const question = await carouselQuestionFor(item).catch(() => null);
+      bodies["INSTAGRAM"] = withCarouselQuestion(bodies["INSTAGRAM"], question);
+    }
     for (const platform of platforms) {
       // Blog gönderileri Reels olmaz (yalnız araç videoları Reels olur): carousel/tek görsel.
       const imageUrl = pickImage(item, platform);
