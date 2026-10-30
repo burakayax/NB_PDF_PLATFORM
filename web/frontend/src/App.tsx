@@ -6523,7 +6523,9 @@ function App() {
     view === "privacy" ||
     view === "kvkk" ||
     view === "on-bilgilendirme" ||
-    view === "mesafeli-satis"
+    view === "mesafeli-satis" ||
+    view === "iptal-iade" ||
+    view === "cerez-politikasi"
   ) {
     return (
       <>

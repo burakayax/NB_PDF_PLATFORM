@@ -1,7 +1,7 @@
 import { legalDocuments } from "../../content/legal";
 import type { Language } from "../../i18n/landing";
 
-type LegalDocKey = "terms" | "privacy" | "kvkk" | "on-bilgilendirme" | "mesafeli-satis";
+type LegalDocKey = "terms" | "privacy" | "kvkk" | "on-bilgilendirme" | "mesafeli-satis" | "iptal-iade" | "cerez-politikasi";
 
 export type { LegalDocKey };
 

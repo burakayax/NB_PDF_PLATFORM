@@ -68,6 +68,10 @@ export function getTrackedViewName(view: AppView) {
       return "legal-on-bilgilendirme";
     case "mesafeli-satis":
       return "legal-mesafeli-satis";
+    case "iptal-iade":
+      return "legal-iptal-iade";
+    case "cerez-politikasi":
+      return "legal-cerez-politikasi";
     case "web":
       return "workspace";
     case "admin":
@@ -99,6 +103,10 @@ export function getTrackedPath(view: AppView) {
       return "/legal/on-bilgilendirme";
     case "mesafeli-satis":
       return "/legal/mesafeli-satis";
+    case "iptal-iade":
+      return "/legal/iptal-iade";
+    case "cerez-politikasi":
+      return "/legal/cerez-politikasi";
     case "web":
       return "/workspace";
     case "admin_login":
@@ -187,6 +195,10 @@ export function getInitialViewFromLocation(): AppView {
       return "on-bilgilendirme";
     case "/legal/mesafeli-satis":
       return "mesafeli-satis";
+    case "/legal/iptal-iade":
+      return "iptal-iade";
+    case "/legal/cerez-politikasi":
+      return "cerez-politikasi";
     case "/workspace":
       return "web";
     case "/nbadmin":
@@ -213,7 +225,9 @@ export function getInitialViewFromLocation(): AppView {
     requestedView === "privacy" ||
     requestedView === "kvkk" ||
     requestedView === "on-bilgilendirme" ||
-    requestedView === "mesafeli-satis"
+    requestedView === "mesafeli-satis" ||
+    requestedView === "iptal-iade" ||
+    requestedView === "cerez-politikasi"
   ) {
     return requestedView;
   }

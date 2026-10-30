@@ -140,6 +140,8 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
               <>
                 <li><a className={linkClass} href={yol("/legal/on-bilgilendirme")}>Ön Bilgilendirme</a></li>
                 <li><a className={linkClass} href={yol("/legal/mesafeli-satis")}>Mesafeli Satış</a></li>
+                <li><a className={linkClass} href={yol("/legal/iptal-iade")}>İptal ve İade</a></li>
+                <li><a className={linkClass} href={yol("/legal/cerez-politikasi")}>Çerez Politikası</a></li>
               </>
             ) : null}
           </FooterGroup>

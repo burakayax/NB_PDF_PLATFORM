@@ -48,7 +48,7 @@ export function useThemePreference(): [ThemePreference, (p: ThemePreference) => 
 }
 
 /** Açık temada denetlenmiş üst düzey ekranlar. */
-const LIGHT_VIEWS = new Set<AppView>(["landing", "login", "register", "forgot_password", "admin_login", "admin", "team_invite", "web", "about", "terms", "privacy", "kvkk", "on-bilgilendirme", "mesafeli-satis"]);
+const LIGHT_VIEWS = new Set<AppView>(["landing", "login", "register", "forgot_password", "admin_login", "admin", "team_invite", "web", "about", "terms", "privacy", "kvkk", "on-bilgilendirme", "mesafeli-satis", "iptal-iade", "cerez-politikasi"]);
 
 /**
  * "landing" görünümü araç sayfalarını (/tools/…) ve blogu da kapsar; bunlar henüz denetlenmedi.

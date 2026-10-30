@@ -26,6 +26,8 @@ export interface LegalDocumentsByLang {
   privacy: LegalDocumentData;
   kvkk: LegalDocumentData;
   "on-bilgilendirme": LegalDocumentData;
+  "iptal-iade": LegalDocumentData;
+  "cerez-politikasi": LegalDocumentData;
   "mesafeli-satis": LegalDocumentData;
   cookieNotice: CookieNoticeData;
 }

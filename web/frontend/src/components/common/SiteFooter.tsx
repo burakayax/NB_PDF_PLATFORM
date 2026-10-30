@@ -59,6 +59,8 @@ export function SiteFooter({ language }: { language: Language }) {
               { label: "KVKK", href: yol("/kvkk") },
               { label: "Ön Bilgilendirme", href: yol("/legal/on-bilgilendirme") },
               { label: "Mesafeli Satış", href: yol("/legal/mesafeli-satis") },
+              { label: "İptal ve İade", href: yol("/legal/iptal-iade") },
+              { label: "Çerez Politikası", href: yol("/legal/cerez-politikasi") },
             ]
           : []),
       ],

@@ -30,6 +30,8 @@ export const legalDocuments: Record<
     kvkk: LegalDocument;
     "on-bilgilendirme": LegalDocument;
     "mesafeli-satis": LegalDocument;
+    "iptal-iade": LegalDocument;
+    "cerez-politikasi": LegalDocument;
     cookieNotice: CookieNoticeCopy;
   }
 > = ham;

@@ -25,7 +25,9 @@ export type LegalView =
   | "privacy"
   | "kvkk"
   | "on-bilgilendirme"
-  | "mesafeli-satis";
+  | "mesafeli-satis"
+  | "iptal-iade"
+  | "cerez-politikasi";
 
 export type AppView = NonLegalView | LegalView;
 
