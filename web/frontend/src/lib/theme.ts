@@ -71,7 +71,7 @@ export function applyTheme(effective: EffectiveTheme) {
   if (root.getAttribute("data-theme") !== effective) root.setAttribute("data-theme", effective);
   // Tarayıcı çubuğu rengi (mobil) sayfayla uyumlu olsun
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", effective === "light" ? "#f8fafc" : "#0f172a");
+  if (meta) meta.setAttribute("content", effective === "light" ? "#e9edf3" : "#0f172a");
 }
 
 // ── "Bu ekran açık temaya hazır mı?" — düğme yalnız hazır ekranlarda görünsün ──────────────────────
