@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Download, ExternalLink, Layers, X } from "lucide-react";
 import type { SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
+import { downloadMedia } from "./downloadMedia";
 import { SlideViewer, isVideoUrl, previewRatio, reelCoverOf, slidesOf } from "./PostMediaPreview";
 
 /**
@@ -98,14 +99,14 @@ export function PostFullPreviewModal({
 
         <div className="flex flex-wrap items-center gap-2 border-t border-slate-700/50 px-4 py-3">
           {current ? (
-            <a
-              href={current}
-              download
+            <button
+              type="button"
+              onClick={() => void downloadMedia(current, `${post.platform.toLowerCase()}-${slides.length > 0 ? `slayt-${index + 1}` : "gonderi"}.${(current.split("?")[0].split(".").pop() ?? "jpg").slice(0, 4)}`)}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-700/60 bg-slate-900/60 px-2.5 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
             >
               <Download className="h-3.5 w-3.5" />
               {slides.length > 0 ? `Slayt ${index + 1}'i indir` : video ? "Videoyu indir" : "Görseli indir"}
-            </a>
+            </button>
           ) : null}
           {post.externalUrl ? (
             <a
