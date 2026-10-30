@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, Eye, Layers, Loader2, Trash2 } from "lucide-react";
+import { ExternalLink, Eye, Layers, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import type { SocialAccountRow, SocialPlatformId, SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 import { PostFullPreviewModal } from "./PostFullPreviewModal";
@@ -49,12 +49,15 @@ export function RecentPostsPanel({
   accounts,
   busyId,
   onRemove,
+  onUnshare,
 }: {
   recent: Partial<Record<SocialPlatformId, SocialPostRow[]>>;
   accounts: SocialAccountRow[];
   busyId: string | null;
   /** Kaydı panelden kaldırır (ağdaki gerçek gönderiye dokunmaz). */
   onRemove: (id: string) => void;
+  /** Kaydı tamamen siler; yazı bu ağda yeniden paylaşım sırasına girer (gönderi ağda zaten silinmişse). */
+  onUnshare: (id: string) => void;
 }) {
   const [open, setOpen] = useState<SocialPostRow | null>(null);
   const accountOf = (p: SocialPlatformId) => accounts.find((a) => a.platform === p);
@@ -113,6 +116,16 @@ export function RecentPostsPanel({
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       ) : null}
+                      <button
+                        type="button"
+                        disabled={busyId === post.id}
+                        onClick={() => onUnshare(post.id)}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-700/60 bg-slate-900/60 px-2.5 text-xs font-medium text-amber-300 transition hover:border-amber-500/50 hover:text-amber-200 disabled:opacity-40"
+                        title="Bu gönderi aslında paylaşılmadı: kaydı sil, yazı yeniden sıraya girsin"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Paylaşılmadı
+                      </button>
                       <button
                         type="button"
                         disabled={busyId === post.id}

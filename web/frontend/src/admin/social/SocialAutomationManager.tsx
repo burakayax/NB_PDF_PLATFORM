@@ -19,6 +19,7 @@ import {
   checkSocialFeed,
   clearSocialHistory,
   deleteSocialPost,
+  unshareSocialPost,
   disconnectSocialAccount,
   testSocialAccount,
   fetchSocialOverview,
@@ -637,6 +638,13 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                     await deleteSocialPost(accessToken, id);
                     await refresh();
                   }, "Kayıt panelden kaldırıldı.");
+                }}
+                onUnshare={(id) => {
+                  setBusyPostId(id);
+                  void run(async () => {
+                    await unshareSocialPost(accessToken, id);
+                    await refresh();
+                  }, "Kayıt silindi; yazı bu ağda yeniden paylaşım sırasına girdi.");
                 }}
               />
             </div>

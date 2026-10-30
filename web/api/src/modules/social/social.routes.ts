@@ -26,6 +26,7 @@ import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
   deletePost,
+  unsharePost,
   disconnectAccount,
   listAccounts,
   markPostShared,
@@ -318,6 +319,17 @@ socialRouter.post(
       String(request.params.id),
       "Gönderi elle paylaşıldı olarak işaretlendi",
     );
+    response.json({ ok: true });
+  }),
+);
+
+/** Geçmişteki kaydı "paylaşılmadı" sayar: yazı bu ağda yeniden sıraya girer. */
+socialRouter.post(
+  "/posts/:id/unshare",
+  asyncHandler(async (request, response) => {
+    const removed = await unsharePost(String(request.params.id));
+    if (!removed) throw new HttpError(404, "Geçmişte böyle bir paylaşım kaydı yok");
+    await logAdminAudit(actorOf(request), "social.unshare", String(request.params.id), "Paylaşım kaydı geri alındı (paylaşılmadı sayıldı)");
     response.json({ ok: true });
   }),
 );

@@ -1243,6 +1243,12 @@ export async function updateSocialPostBody(accessToken: string, id: string, body
   if (!r.ok) throw new Error(await r.text());
 }
 
+/** Geçmiş kaydı "paylaşılmadı" sayar: yazı bu ağda yeniden paylaşım sırasına girer. */
+export async function unshareSocialPost(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/unshare`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+}
+
 export async function deleteSocialPost(accessToken: string, id: string): Promise<void> {
   const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
   if (!r.ok) throw new Error(await r.text());

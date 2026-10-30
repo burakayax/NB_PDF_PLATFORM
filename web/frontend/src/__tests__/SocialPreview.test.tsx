@@ -94,6 +94,7 @@ describe("her ağın son 5 paylaşımı", () => {
         accounts={accounts}
         busyId={null}
         onRemove={() => undefined}
+        onUnshare={() => undefined}
       />,
     );
 
@@ -113,6 +114,7 @@ describe("her ağın son 5 paylaşımı", () => {
         accounts={accounts}
         busyId={null}
         onRemove={onRemove}
+        onUnshare={() => undefined}
       />,
     );
 
