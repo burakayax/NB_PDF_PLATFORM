@@ -240,7 +240,7 @@ export const legalDocuments = {
     kvkk: {
       title: "Privacy disclosure per Turkish Law No. 6698 (KVKK)",
       summary:
-        "This notice summarizes how NB Global Studio processes personal data in PDF Platform checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
+        "This notice summarizes how NB Global Studio processes personal data in PDF Platform checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via PayTR). It complements—not replaces—the Privacy Policy and Terms.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "21 October 2026",
       sections: [
@@ -248,7 +248,7 @@ export const legalDocuments = {
           title: "1. Processing grounds",
           paragraphs: [
             "Purchasing bundles/subscriptions requires identity-ish fields (name, address, mobile) for fraud prevention, statutory invoicing obligations where applicable, and to satisfy payment-provider contractual controls.",
-            "We store such fields with your account profile and transmit only what İyzico requires to render its hosted checkout form; card credentials never touch our servers.",
+            "We store such fields with your account profile and transmit only what PayTR requires to render its hosted checkout form; card credentials never touch our servers.",
           ],
         },
         {
@@ -270,7 +270,7 @@ export const legalDocuments = {
       summary:
         "Mandatory consumer information form required before payment, pursuant to the Distance Sales Regulation.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "2024 and onwards",
+      effectiveDate: "30 October 2026",
       sections: [
         {
           title: "1. Seller Information",
@@ -413,10 +413,110 @@ export const legalDocuments = {
         },
       ],
     },
+    "iptal-iade": {
+      title: "Cancellation and Refund Terms",
+      summary:
+        "How subscriptions are cancelled, when refunds are available and how refunds are paid. This page summarizes the refund rules in the Distance Sales Agreement and the Pre-Purchase Information Form in one place.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "30 October 2026",
+      sections: [
+        {
+          title: "1. Cancelling your subscription",
+          paragraphs: [
+            "Subscriptions do not renew automatically. You are reminded before the period ends, and a new payment is taken only after you confirm the renewal.",
+            "If you do not renew, paid features switch off when the paid period ends and your account moves to the free plan automatically. No cancellation fee applies.",
+          ],
+        },
+        {
+          title: "2. Statutory right of withdrawal",
+          paragraphs: [
+            "Under the Distance Sales Regulation, consumers normally have 14 days to withdraw without giving a reason. This right does not apply to services performed instantly in electronic form, or whose performance starts with the consumer's approval before the withdrawal period ends (Article 15/1-ğ and 15/1-h).",
+            "At checkout you are asked to confirm that you want the service to start immediately and that you give up the statutory withdrawal right once it has started. The payment step cannot be completed without this confirmation.",
+          ],
+        },
+        {
+          title: "3. 7-day commercial refund guarantee",
+          paragraphs: [
+            "Independently of the statutory rule, the SELLER honours refund requests made within 7 days of the first payment, with no reason required. Reasonable limits apply to repeated or abusive requests.",
+            "After the 7 days there is no statutory refund obligation. If you cancel, you keep full access until the end of the period you paid for.",
+          ],
+        },
+        {
+          title: "4. How to request a refund",
+          paragraphs: [
+            "Send your request from your account, or by email to info@pdfplatform.app from the address registered on your account. Please include the date of the payment.",
+          ],
+        },
+        {
+          title: "5. How refunds are paid",
+          paragraphs: [
+            "Refunds are made to the payment method used for the purchase; no cash payments are made. After your request reaches us, the amount is returned to the payment institution within 14 days at the latest; in practice the refund is usually started within 3–5 business days.",
+            "For card payments the refund goes to the bank that issued the card. For instalment purchases the bank reflects the refund in line with the number of instalments. When the refund appears on the statement depends on the bank.",
+            "The service contains no physical goods, so nothing needs to be returned.",
+          ],
+        },
+        {
+          title: "6. Service problems and complaints",
+          paragraphs: [
+            "If the service cannot be used at all, contact our support team; compensation (extra time or a refund) is assessed case by case. Wilful misuse of the service may exclude a refund.",
+            "For complaints write to info@pdfplatform.app. As a consumer you may also apply to the Consumer Arbitration Committee or the Consumer Court.",
+          ],
+        },
+      ],
+    },
+    "cerez-politikasi": {
+      title: "Cookie Policy",
+      summary:
+        "Which cookies and similar storage items PDF Platform uses, why, and how you can control them.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "30 October 2026",
+      sections: [
+        {
+          title: "1. What are cookies?",
+          paragraphs: [
+            "Cookies and similar technologies (such as your browser's local storage) are small pieces of data stored on your device. They keep you signed in, remember your choices and, if you allow it, help us measure how the service is used.",
+          ],
+        },
+        {
+          title: "2. Categories and your consent",
+          paragraphs: [
+            "Essential (always on): keeps your login session, language preference and cookie choice. The service cannot work without them, so they need no consent.",
+            "Payment processing (always on): needed to process subscription payments securely through our payment provider PayTR.",
+            "Analytics (Google Analytics 4): page views and feature usage to improve the product. Active only if you accept.",
+            "Error monitoring (Sentry): diagnostic reports to fix bugs faster. Active only if you accept.",
+            "Each optional category needs your separate consent. Rejecting them does not limit the service.",
+          ],
+        },
+        {
+          title: "3. Cookies and storage items in use",
+          paragraphs: [
+            "| Cookie / Key | Purpose | Set by | Retention |",
+            "| nbpdf-access-token | Authentication (JWT) | PDF Platform (first-party) | Session |",
+            "| nbpdf-refresh-token | Persistent session | PDF Platform (first-party) | 7 days (HttpOnly cookie) |",
+            "| nbpdf-language | Language preference | PDF Platform (first-party) | Indefinite (localStorage) |",
+            "| nbpdf-cookie-consent-v2 | Records your consent choices | PDF Platform (first-party) | Indefinite (localStorage) |",
+            "| _ga, _ga_* | Google Analytics 4 — anonymous usage statistics | Google LLC | 13 months |",
+            "| sentry-* | Error monitoring and diagnostic reports (only with your consent) | Functional Software Inc. (Sentry) | Session |",
+          ],
+        },
+        {
+          title: "4. Changing or withdrawing your choice",
+          paragraphs: [
+            "You can change or withdraw your choice at any time by clicking 'Cookie Settings' in the footer and selecting 'Necessary Only'. You can also delete cookies and local storage in your browser settings; essential items will then be created again when you next sign in.",
+          ],
+        },
+        {
+          title: "5. More information",
+          paragraphs: [
+            "For how we process personal data, see the Privacy Policy and the KVKK Disclosure. Questions: info@pdfplatform.app.",
+          ],
+        },
+      ],
+    },
     cookieNotice: {
       title: "Cookie Notice",
       description:
-        "We use cookies and similar technologies. Under GDPR Article 7, we require your separate consent for each category. Essential and Payment Processing cookies are mandatory for the service to function. Analytics and Error Monitoring are optional — you can accept or reject each independently.\n\n• Essential (always on): login session, language preference, consent record.\n• Analytics (Google Analytics GA4): page views and feature usage to improve the product.\n• Error Monitoring (Sentry): diagnostic reports to fix bugs faster — only active with your consent.\n• Payment Processing (İyzico, always on): required to process subscription payments securely.",
+        "We use cookies and similar technologies. Under GDPR Article 7, we require your separate consent for each category. Essential and Payment Processing cookies are mandatory for the service to function. Analytics and Error Monitoring are optional — you can accept or reject each independently.\n\n• Essential (always on): login session, language preference, consent record.\n• Analytics (Google Analytics GA4): page views and feature usage to improve the product.\n• Error Monitoring (Sentry): diagnostic reports to fix bugs faster — only active with your consent.\n• Payment Processing (PayTR, always on): required to process subscription payments securely.",
       accept: "Accept All",
       learnMore: "Privacy Policy",
     },
@@ -665,7 +765,7 @@ export const legalDocuments = {
           title: "2. İşlenen Kişisel Veriler",
           paragraphs: [
             "Kimlik ve iletişim bilgileri: Ad, soyad, e-posta adresi; hesap oluşturma ve kimlik doğrulama süreçlerinde işlenir.",
-            "Ödeme ve fatura bilgileri: Ad, soyad, adres, posta kodu, şehir, ülke, cep telefonu; ödeme altyapısı sağlayıcısına (İyzico) iletilerek güvenli tahsilat ve fatura düzenlenmesi amacıyla işlenir. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan İyzico’nun PCI DSS uyumlu altyapısında işlenir.",
+            "Ödeme ve fatura bilgileri: Ad, soyad, adres, posta kodu, şehir, ülke, cep telefonu; ödeme altyapısı sağlayıcısına (PayTR) iletilerek güvenli tahsilat ve fatura düzenlenmesi amacıyla işlenir. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan PayTR’nin PCI DSS uyumlu altyapısında işlenir.",
             "Teknik ve kullanım verileri: IP adresi, tarayıcı/cihaz bilgisi, oturum bilgileri; güvenlik, sahteciliğin önlenmesi ve sistem performansı amaçlarıyla işlenir.",
             "Yüklenen belgeler: PDF ve diğer dosyalar işlem için geçici olarak sunucularımızda tutulur; işlem tamamlandıktan kısa süre sonra otomatik olarak silinir. Yapısal araçlarda (birleştirme, dönüştürme vb.) belge içeriğine anlamsal analiz uygulanmaz.",
             "Dosya işleme (cihazda ve sunucuda): Cihazda çalışan araçlarda (ör. birleştirme, bölme, döndürme, sayfa silme ve sıralama, görselden PDF, belge tarama ve OCR) dosyanız tarayıcınızdan çıkmaz, sunucumuza yüklenmez. Word/Excel/PowerPoint dönüştürme, sıkıştırma ve PDF Düzenle gibi sunucuda çalışan araçlarda dosya işlem için sunucumuza yüklenir ve bu metindeki saklama sürelerine göre silinir.",
@@ -686,7 +786,7 @@ export const legalDocuments = {
           title: "4. Kişisel Verilerin Aktarılması",
           paragraphs: [
             "Kişisel verileriniz; hizmetlerimizin sunulabilmesi için ihtiyaç duyulan ölçüde aşağıdaki alıcı gruplarına aktarılabilir:",
-            "Ödeme kuruluşu (İyzico): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
+            "Ödeme kuruluşu (PayTR): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
             "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca siz bir yapay zekâ aracını kullanmayı seçtiğinizde gerçekleşir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz (yalnızca güvenlik denetimi için en fazla 30 gün saklanabilir). Aktarıma ilişkin güvence mekanizmaları hakkında bilgi için info@pdfplatform.app adresine başvurabilirsiniz.",
             "Bulut altyapısı ve barındırma hizmet sağlayıcıları (Render, Vercel ve bulut depolama): Hizmetin çalıştırıldığı sunucu, veritabanı ve depolama altyapısını sunan şirketler; bunların bir kısmı Türkiye dışındadır ve yalnızca hizmeti çalıştırmak için gereken sınırlı erişime sahiptir.",
             "E-posta hizmeti (Google): Doğrulama, güvenlik ve işlem e-postalarının iletilmesi için e-posta adresiniz.",
@@ -732,7 +832,7 @@ export const legalDocuments = {
       summary:
         "Mesafeli Sözleşmeler Yönetmeliği kapsamında, ödeme öncesinde tüketiciye sunulması zorunlu bilgilendirme formu.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "2024 yılı ve sonrası",
+      effectiveDate: "30 Ekim 2026",
       sections: [
         {
           title: "1. Satıcı Bilgileri",
@@ -876,10 +976,111 @@ export const legalDocuments = {
         },
       ],
     },
+    "iptal-iade": {
+      title: "İptal ve İade Koşulları",
+      summary:
+        "Aboneliğin nasıl iptal edildiği, iadenin hangi durumlarda yapıldığı ve iadenin nasıl ödendiği. Bu sayfa, Mesafeli Satış Sözleşmesi ile Ön Bilgilendirme Formu'ndaki iade kurallarını tek yerde özetler.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "30 Ekim 2026",
+      sections: [
+        {
+          title: "1. Aboneliği iptal etme",
+          paragraphs: [
+            "Abonelik otomatik olarak yenilenmez. Dönem sona ermeden önce size hatırlatma gönderilir; yeni ödeme yalnızca yenilemeyi onayladıktan sonra alınır.",
+            "Yenilemezseniz ücretli özellikler ödenmiş dönemin sonunda devre dışı kalır ve hesabınız otomatik olarak ücretsiz plana geçer. İptal için herhangi bir ücret alınmaz.",
+          ],
+        },
+        {
+          title: "2. Kanuni cayma hakkı",
+          paragraphs: [
+            "Mesafeli Sözleşmeler Yönetmeliği uyarınca tüketici normalde 14 gün içinde gerekçe göstermeden cayabilir. Bu hak; elektronik ortamda anında ifa edilen hizmetler ile cayma süresi dolmadan tüketicinin onayıyla ifasına başlanan hizmetler için uygulanmaz (md. 15/1-ğ ve 15/1-h).",
+            "Ödeme adımında, hizmetin hemen başlamasını istediğinizi ve başladıktan sonra kanuni cayma hakkından feragat ettiğinizi onaylamanız istenir. Bu onay olmadan ödeme adımı tamamlanamaz.",
+          ],
+        },
+        {
+          title: "3. 7 günlük ticari iade garantisi",
+          paragraphs: [
+            "Kanuni kuraldan bağımsız olarak SATICI, ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar. Tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar uygulanır.",
+            "7 günün ardından kanuni bir iade yükümlülüğü doğmaz. İptal etseniz de ödediğiniz dönemin sonuna kadar tüm özelliklere erişiminiz sürer.",
+          ],
+        },
+        {
+          title: "4. İade nasıl talep edilir?",
+          paragraphs: [
+            "Talebinizi hesabınızdan veya hesabınıza kayıtlı e-posta adresinden info@pdfplatform.app adresine iletebilirsiniz. Lütfen ödeme tarihini belirtin.",
+          ],
+        },
+        {
+          title: "5. İade nasıl ödenir?",
+          paragraphs: [
+            "İade, satın almada kullanılan ödeme yöntemine yapılır; nakit ödeme yapılmaz. Talebiniz ulaştıktan sonra tutar en geç 14 gün içinde ödeme kuruluşuna iade edilir; uygulamada iade işlemi genellikle 3–5 iş günü içinde başlatılır.",
+            "Kartla yapılan ödemelerde iade, kartı veren bankaya yapılır. Taksitli alışverişlerde banka, iadeyi taksit sayısına uygun olarak yansıtır. İadenin ekstreye ne zaman yansıyacağı bankaya bağlıdır.",
+            "Hizmet fiziksel mal içermediğinden geri gönderilecek bir ürün yoktur.",
+          ],
+        },
+        {
+          title: "6. Hizmet sorunları ve şikâyet",
+          paragraphs: [
+            "Hizmetin tamamen kullanılamaması halinde destek ekibimizle iletişime geçebilirsiniz; telafi (ek süre veya iade) duruma göre değerlendirilir. Hizmetin kasten kötüye kullanılması halinde iade yapılmayabilir.",
+            "Şikâyetleriniz için info@pdfplatform.app adresine yazabilirsiniz. Tüketici olarak Tüketici Hakem Heyeti'ne ve Tüketici Mahkemesi'ne başvurma hakkınız saklıdır.",
+          ],
+        },
+      ],
+    },
+    "cerez-politikasi": {
+      title: "Çerez Politikası",
+      summary:
+        "PDF Platform'un hangi çerezleri ve benzeri depolama öğelerini neden kullandığı ve bunları nasıl yönetebileceğiniz.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "30 Ekim 2026",
+      sections: [
+        {
+          title: "1. Çerez nedir?",
+          paragraphs: [
+            "Çerezler ve benzeri teknolojiler (ör. tarayıcınızın yerel depolaması), cihazınızda saklanan küçük veri parçalarıdır. Oturumunuzu açık tutar, tercihlerinizi hatırlar ve izin verirseniz hizmetin nasıl kullanıldığını ölçmemize yardımcı olur.",
+          ],
+        },
+        {
+          title: "2. Kategoriler ve onayınız",
+          paragraphs: [
+            "Zorunlu (her zaman aktif): giriş oturumunuzu, dil tercihinizi ve çerez tercihinizi saklar. Hizmet bunlar olmadan çalışamaz; bu yüzden onay gerektirmez.",
+            "Ödeme işleme (her zaman aktif): abonelik ödemelerinin ödeme sağlayıcımız PayTR üzerinden güvenle işlenmesi için gereklidir.",
+            "Analitik (Google Analytics 4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri. Yalnızca kabul ederseniz çalışır.",
+            "Hata izleme (Sentry): hataları daha hızlı çözmek için tanı raporları. Yalnızca kabul ederseniz çalışır.",
+            "İsteğe bağlı her kategori için ayrı onayınız gerekir. Bunları reddetmeniz hizmeti kısıtlamaz.",
+          ],
+        },
+        {
+          title: "3. Kullanılan çerezler ve depolama öğeleri",
+          paragraphs: [
+            "| Çerez / Anahtar | Amaç | Yerleştiren | Saklama Süresi |",
+            "| nbpdf-access-token | Kimlik doğrulama (JWT) | PDF Platform (birinci taraf) | Oturum |",
+            "| nbpdf-refresh-token | Kalıcı oturum | PDF Platform (birinci taraf) | 7 gün (HttpOnly çerez) |",
+            "| nbpdf-language | Dil tercihi | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| nbpdf-cookie-consent-v2 | Çerez onay tercihlerinizi kaydeder | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| nb_tool_ratings_v1 | Hangi araca puan verdiğinizi hatırlar (aynı soruyu tekrar sormamak için) | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| _ga, _ga_* | Google Analytics 4 — anonim kullanım istatistikleri | Google LLC | 13 ay |",
+            "| sentry-* | Hata izleme ve tanı raporları (yalnızca onayınızla aktif) | Functional Software Inc. (Sentry) | Oturum |",
+          ],
+        },
+        {
+          title: "4. Tercihinizi değiştirme veya geri alma",
+          paragraphs: [
+            "Tercihinizi istediğiniz zaman alt kısımdaki 'Çerez Ayarları'ndan 'Yalnızca Zorunlu' seçeneğini belirleyerek değiştirebilir veya geri alabilirsiniz. Tarayıcı ayarlarından çerezleri ve yerel depolamayı da silebilirsiniz; zorunlu öğeler bir sonraki girişinizde yeniden oluşturulur.",
+          ],
+        },
+        {
+          title: "5. Daha fazla bilgi",
+          paragraphs: [
+            "Kişisel verileri nasıl işlediğimiz için Gizlilik Politikası'na ve KVKK Aydınlatma Metni'ne bakabilirsiniz. Sorularınız için: info@pdfplatform.app.",
+          ],
+        },
+      ],
+    },
     cookieNotice: {
       title: "Çerez Bildirimi",
       description:
-        "Çerezler ve benzer teknolojiler kullanıyoruz. Her kategori için ayrı onayınız gereklidir. Zorunlu ve Ödeme İşleme çerezleri hizmetin çalışması için zorunludur. Analitik ve Hata İzleme isteğe bağlıdır — her birini bağımsız olarak kabul veya reddedebilirsiniz.\n\n• Zorunlu (her zaman aktif): giriş oturumu, dil tercihi, onay kaydı.\n• Analitik (Google Analytics GA4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri.\n• Hata İzleme (Sentry): hataları daha hızlı çözmek için tanı raporları — yalnızca onayınızla aktif olur.\n• Ödeme İşleme (İyzico, her zaman aktif): abonelik ödemelerini güvenli şekilde işlemek için zorunludur.",
+        "Çerezler ve benzer teknolojiler kullanıyoruz. Her kategori için ayrı onayınız gereklidir. Zorunlu ve Ödeme İşleme çerezleri hizmetin çalışması için zorunludur. Analitik ve Hata İzleme isteğe bağlıdır — her birini bağımsız olarak kabul veya reddedebilirsiniz.\n\n• Zorunlu (her zaman aktif): giriş oturumu, dil tercihi, onay kaydı.\n• Analitik (Google Analytics GA4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri.\n• Hata İzleme (Sentry): hataları daha hızlı çözmek için tanı raporları — yalnızca onayınızla aktif olur.\n• Ödeme İşleme (PayTR, her zaman aktif): abonelik ödemelerini güvenli şekilde işlemek için zorunludur.",
       accept: "Tümünü kabul et",
       learnMore: "Gizlilik Politikası",
     },
