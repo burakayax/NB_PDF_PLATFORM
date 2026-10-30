@@ -18,7 +18,7 @@ import type { Publisher, Verifier } from "./common.js";
 import { isReelUrl } from "../reels.service.js";
 import { toolVideoKeywords } from "../keywords.service.js";
 import { findCatalogEntry } from "../tool-reels.service.js";
-import { availableReelCover, toolIdFromGuid } from "./reel-cover.js";
+import { reelCoverUrl, toolIdFromGuid } from "./reel-cover.js";
 import { socialUtm, withUtm } from "../../../lib/utm.js";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -107,30 +107,44 @@ function toTags(terms: Terms | null): string[] {
 }
 
 /**
- * Markalı küçük resmi yükler. EN İYİ ÇABA: video bu noktada zaten yayında; küçük resim yüklenemezse
- * (kanal telefonla doğrulanmamış olabilir, görsel kabul edilmemiş olabilir) paylaşım başarısız sayılmaz.
+ * Markalı küçük resmi yükler. EN İYİ ÇABA: video bu noktada zaten yayında; küçük resim yüklenemezse paylaşım başarısız
+ * sayılmaz. Nedeni döner (panelde gösterilir), başarıda null.
+ *
+ * Kapak adresi HEAD ile önceden SINANMAZ (bazı sunucular HEAD'e farklı yanıt verir ve kapak sessizce atlanıyordu):
+ * doğrudan GET ile indirilir. Yükleme, video işlenirken gelen geçici hatalarda (404/429/5xx) birkaç kez denenir.
  */
-async function setThumbnail(accessToken: string, videoId: string, guid: string): Promise<void> {
+async function setThumbnail(accessToken: string, videoId: string, guid: string): Promise<string | null> {
+  const toolId = toolIdFromGuid(guid);
+  if (!toolId) return null;
+  const coverUrl = reelCoverUrl(toolId);
   try {
-    const coverUrl = await availableReelCover(guid);
-    if (!coverUrl) return;
-    const img = await fetch(coverUrl, { signal: AbortSignal.timeout(30_000) });
-    if (!img.ok) return;
-    const bytes = Buffer.from(await img.arrayBuffer());
-    const res = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${accessToken}`, "content-type": "image/jpeg" },
-      body: new Uint8Array(bytes),
-      signal: AbortSignal.timeout(60_000),
-    });
-    if (!res.ok) {
-      logger.warn(
-        "social",
-        `YouTube küçük resmi yüklenemedi (HTTP ${res.status}): ${(await res.text()).slice(0, 200)} — özel küçük resim için kanalın telefonla doğrulanmış olması gerekir.`,
-      );
+    const img = await fetch(coverUrl, { redirect: "follow", signal: AbortSignal.timeout(30_000) });
+    const type = img.headers.get("content-type") ?? "";
+    if (!img.ok || !type.startsWith("image/")) {
+      const why = `Kapak görseli indirilemedi (${coverUrl} → HTTP ${img.status} ${type}). FRONTEND_ORIGIN doğru mu / kapak sitede yayında mı?`;
+      logger.warn("social", `YouTube küçük resmi: ${why}`);
+      return why;
     }
+    const bytes = Buffer.from(await img.arrayBuffer());
+    let last = "";
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const res = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${accessToken}`, "content-type": "image/jpeg" },
+        body: new Uint8Array(bytes),
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (res.ok) return null;
+      last = `HTTP ${res.status}: ${(await res.text()).slice(0, 240)}`;
+      logger.warn("social", `YouTube küçük resmi yüklenemedi (deneme ${attempt}/4, ${last})`);
+      if (![404, 429, 500, 502, 503].includes(res.status)) break; // 403/400: bekleyip denemek işe yaramaz
+      await new Promise((r) => setTimeout(r, 8_000 * attempt));
+    }
+    return `YouTube küçük resmi yüklenemedi: ${last}`;
   } catch (err) {
-    logger.warn("social", `YouTube küçük resmi yüklenemedi: ${String(err)}`);
+    const why = `YouTube küçük resmi yüklenemedi: ${String(err)}`;
+    logger.warn("social", why);
+    return why;
   }
 }
 
@@ -275,8 +289,8 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
       );
     }
     logger.info("social", `YouTube Shorts yüklendi: ${item.title}`);
-    await setThumbnail(accessToken, json.id, item.guid);
-    return { externalId: json.id, externalUrl: `https://www.youtube.com/shorts/${json.id}` };
+    const warning = await setThumbnail(accessToken, json.id, item.guid);
+    return { externalId: json.id, externalUrl: `https://www.youtube.com/shorts/${json.id}`, ...(warning ? { warning } : {}) };
   } catch (err) {
     throw new PublishStageError(err instanceof Error ? err.message : String(err));
   }

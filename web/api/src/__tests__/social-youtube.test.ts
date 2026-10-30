@@ -28,7 +28,7 @@ describe("YouTube Shorts yayıncısı", () => {
 
     const out = await publishToYouTube({ body: "Açıklama metni", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
 
-    expect(out).toEqual({ externalId: "vid123", externalUrl: "https://www.youtube.com/shorts/vid123" });
+    expect(out).toMatchObject({ externalId: "vid123", externalUrl: "https://www.youtube.com/shorts/vid123" });
     const start = calls.find((c) => c.url.includes("uploadType=resumable"));
     const meta = JSON.parse(String(start?.init?.body));
     expect(meta.snippet.title).toBe("PDF Sıkıştır");
@@ -89,5 +89,38 @@ describe("YouTube Shorts yayıncısı", () => {
       url.includes("oauth2") ? json({ access_token: "AT" }) : json({ items: [{ snippet: { title: "PDF Platform" } }] }),
     );
     expect(await verifyYouTube(SECRETS)).toBe("PDF Platform");
+  });
+
+  it("küçük resim yüklenemezse paylaşım sürer ve nedeni uyarı olarak döner (403 tekrar denenmez)", async () => {
+    let thumbCalls = 0;
+    vi.stubGlobal("fetch", async (url: string) => {
+      if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
+      if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
+      if (url === "https://upload.test/s1") return json({ id: "vid7", status: { privacyStatus: "public" } });
+      if (url.endsWith("/reel-covers/compress.jpg")) return new Response(new Uint8Array([9, 9]), { status: 200, headers: { "content-type": "image/jpeg" } });
+      if (url.includes("thumbnails/set")) {
+        thumbCalls++;
+        return new Response("forbidden", { status: 403 });
+      }
+      throw new Error(`beklenmeyen: ${url}`);
+    });
+    const out = await publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
+    expect(out.externalId).toBe("vid7");
+    expect(out.warning).toContain("403");
+    expect(thumbCalls).toBe(1);
+  });
+
+  it("kapak görseli indirilemezse nedeni uyarı olarak döner", async () => {
+    vi.stubGlobal("fetch", async (url: string) => {
+      if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
+      if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
+      if (url === "https://upload.test/s1") return json({ id: "vid8", status: { privacyStatus: "public" } });
+      if (url.endsWith("/reel-covers/compress.jpg")) return new Response("yok", { status: 404 });
+      throw new Error(`beklenmeyen: ${url}`);
+    });
+    const out = await publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
+    expect(out.warning).toContain("HTTP 404");
   });
 });

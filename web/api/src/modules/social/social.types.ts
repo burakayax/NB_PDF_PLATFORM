@@ -60,6 +60,8 @@ export type PublishResult = {
   externalUrl: string | null;
   /** Kaydırmalı gönderide yayınlanan slayt adresleri (panelde gerçek hâli göstermek için). */
   slides?: string[];
+  /** Yayın başarılı ama yan adım (ör. kapak) tamamlanamadı: panelde gönderinin yanında gösterilir. */
+  warning?: string;
 };
 
 export type PlatformSpec = {

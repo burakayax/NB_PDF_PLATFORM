@@ -1075,7 +1075,7 @@ async function publishOne(postId: string, secrets: Record<string, string>): Prom
         externalId: outcome.externalId,
         externalUrl: outcome.externalUrl,
         slidesJson: outcome.slides?.length ? JSON.stringify(outcome.slides) : null,
-        lastError: null,
+        lastError: outcome.warning ? outcome.warning.slice(0, 900) : null,
       },
     });
     await prisma.socialAccount.updateMany({
