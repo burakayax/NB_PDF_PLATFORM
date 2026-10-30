@@ -543,10 +543,17 @@ const ASK_BY_HERO = {
 const ASK_DEFAULT = ["Sen bu durumla hiç karşılaştın mı?", "Senin de böyle bir şeye ihtiyacın oldu mu?"];
 
 /** Konuya ve slug'a göre soru (aynı yazıda hep aynı soru). */
-export function askFor(heroes, seed) {
+export function askFor({ title, slides }, seed) {
   const h = hash(seed);
-  // Genel çizimler (klasör, liste, yıldız) konuyu belirtmez; soru yalnız belirgin bir konudan seçilir.
-  const name = heroes.find((n) => ASK_BY_HERO[n] && !["folder", "checklist", "stars"].includes(n));
+  // Soru konusu yalnız metindeki gerçek eşleşmelerden seçilir (başlık önce); slaytlara dağıtılan yedek çizimler konu değildir.
+  const generic = ["folder", "checklist", "stars"];
+  const match = (src) => HERO_RULES.filter(([re]) => re.test(src)).map(([, n]) => n).filter((n) => ASK_BY_HERO[n] && !generic.includes(n));
+  let name = match(String(title).toLocaleLowerCase("tr"))[0];
+  if (!name) {
+    const votes = new Map();
+    for (const s of slides) for (const n of match(`${s.title} ${s.text}`.toLocaleLowerCase("tr"))) votes.set(n, (votes.get(n) ?? 0) + 1);
+    name = [...votes].sort((a, b) => b[1] - a[1])[0]?.[0];
+  }
   const list = name ? ASK_BY_HERO[name] : ASK_DEFAULT;
   return list[h % list.length];
 }

@@ -192,7 +192,7 @@ export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, b
       const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(i + 1, content.length);
       svgs.push(visualStepSvg({ slide, index: i + 1, count: content.length, total, accent, label, fonts, tools, icons: icons[i], template: templates[i] }));
     });
-    const question = askFor(icons.map((x) => x.hero), slug ?? title);
+    const question = askFor({ title, slides: content }, slug ?? title);
     if (withAsk) {
       svgs.push(visualAskSvg({ accent, total, index: total - 2, fonts, tools, question, hero: icons[0].hero }));
     }
