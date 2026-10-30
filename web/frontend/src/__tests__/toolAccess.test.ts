@@ -96,9 +96,12 @@ describe("ana sayfadaki sayı iddiaları katalogla uyumlu", () => {
   it("hero ve kapanış metinleri üyeliksiz araç sayısını doğru söylüyor", async () => {
     const { landingTranslations } = await import("../i18n/landing");
     const uyeliksiz = TOOLS.filter((t) => t.free).length;
-    const metin = JSON.stringify(landingTranslations);
+    const { fillToolCount } = await import("../lib/useToolCount");
+    // Sayı metinde elle yazılmaz: {freeCount} yer tutucusu ekranda katalogdan doldurulur.
+    const metin = fillToolCount(JSON.stringify(landingTranslations), 0, uyeliksiz);
     expect(metin).toContain(`${uyeliksiz} tools work without an account`);
     expect(metin).toContain(`${uyeliksiz} araç üyeliksiz çalışır`);
+    expect(JSON.stringify(landingTranslations)).toContain("{freeCount} araç üyeliksiz çalışır");
     expect(metin).not.toContain("everything runs in your browser");
     // Pro'da aylık işlem sınırı var: "sınırsız işlem" sözü verilmez (yalnız "günlük sınır yok").
     expect(metin).not.toContain("Sınırsız kullanım");

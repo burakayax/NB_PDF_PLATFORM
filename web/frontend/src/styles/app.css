@@ -4647,6 +4647,72 @@ html[data-auth-hide="1"] #root {
   animation-play-state: paused;
 }
 
+/* Yükleme alanı: kesik çizgili çerçevede SAAT YÖNÜNDE dönen renk (kalp atışının yerine; ToolUploadPanel → OrbitBorder).
+   Kesik çizgiyi SVG çizer; CSS kenarlığı yalnız yer tutar (şeffaf). */
+.nb-dropzone--orbit {
+  border-color: transparent;
+}
+.nb-dropzone--orbit:not([aria-disabled="true"]):hover,
+.nb-dropzone--orbit[data-over="true"] {
+  border-color: transparent;
+}
+.nb-orbit {
+  /* Kutu overflow-hidden: taşan kırpılır. Çizgi tamamen İÇERİDE kalsın diye svg padding kutusunu doldurur. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.nb-orbit-rect {
+  x: 1.5px;
+  y: 1.5px;
+  width: calc(100% - 3px);
+  height: calc(100% - 3px);
+  rx: 19.5px;
+  fill: none;
+  stroke-width: 3px;
+}
+.nb-orbit-dashes {
+  stroke-dasharray: 10 7;
+}
+.nb-orbit-base {
+  stroke: rgba(148, 163, 184, 0.85);
+  transition: stroke var(--nb-duration) ease;
+}
+.nb-dropzone--orbit:not([aria-disabled="true"]):hover .nb-orbit-base { stroke: #a5b4fc; }
+.nb-dropzone--orbit[data-over="true"] .nb-orbit-base { stroke: #c7d2fe; }
+.nb-orbit mask .nb-orbit-rect {
+  stroke-width: 7px;
+}
+.nb-orbit-glow {
+  stroke: #67e8f9;
+  stroke-width: 3.5px;
+  stroke-dasharray: 30 70;
+  filter: drop-shadow(0 0 4px rgba(34, 211, 238, 1)) drop-shadow(0 0 12px rgba(34, 211, 238, 0.7));
+  animation: nb-orbit-spin 10s linear infinite;
+}
+.nb-dropzone--orbit:hover .nb-orbit-glow,
+.nb-dropzone--orbit:focus-within .nb-orbit-glow {
+  animation-play-state: paused;
+}
+@keyframes nb-orbit-spin {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -100; }
+}
+/* Gündüz (açık) tema: açık zeminde gri/açık camgöbeği silikti → koyu tonlar, hafif gölge. */
+[data-theme="light"] .nb-orbit-base { stroke: #475569; }
+[data-theme="light"] .nb-dropzone--orbit:not([aria-disabled="true"]):hover .nb-orbit-base { stroke: #4f46e5; }
+[data-theme="light"] .nb-dropzone--orbit[data-over="true"] .nb-orbit-base { stroke: #4338ca; }
+[data-theme="light"] .nb-orbit-glow {
+  stroke: #0e7490;
+  filter: drop-shadow(0 0 3px rgba(14, 116, 144, 0.6));
+}
+@media (prefers-reduced-motion: reduce) {
+  .nb-orbit-glow { animation: none; opacity: 0; }
+}
+
 /* OCR hazırlık ekranı: tarama çizgisi + akan ilerleme çubuğu. */
 @keyframes nb-scan-line {
   0% { top: 6%; opacity: 0; }

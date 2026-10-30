@@ -356,6 +356,9 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       }
       const blob = pdfBytesToBlob(bytes);
       setResult({ blob, filename: outName });
+      // Dosya listesi ana sayfada araçlar arası geçişte korunuyor (toolFiles); sonuç hazır olunca
+      // eklenenler artık işe yaramaz — başka araca gidip dönünce eski dosyalar karşıya çıkmasın.
+      setFiles([]);
     } catch (e) {
       setError(
         e instanceof PdfEncryptedError
@@ -403,6 +406,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
         accept={accept}
         multiple
         busy={busy}
+        quietBusy
         compact={files.length > 0}
         showHeader={false}
         showBenefits={files.length === 0}

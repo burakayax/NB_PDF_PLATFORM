@@ -184,7 +184,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // On-screen subheading. (The meta description does NOT come from here —
       // it lives in seo/seoContent.mjs → LANDING_SEO.)
       description:
-        `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total, all in one place. No install, no watermark. 14 tools work without an account.`,
+        `PDF to Word, merge, compress, PDF to JPG, edit and {toolCount} tools in total, all in one place. No install, no watermark. 14 tools work without an account.`,
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -341,7 +341,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       kicker: "The right PDF workflow for your team",
       title: "Start right in your browser.",
       description:
-        "No installation. 14 tools work without an account. Open the workspace and handle your first document in seconds.",
+        "No installation. {freeCount} tools work without an account. Open the workspace and handle your first document in seconds.",
       primaryCta: "Open the Workspace",
       secondaryCta: "Create a Free Account",
     },
@@ -500,7 +500,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // kullanılıyor (arama verisinde ikisi de üst sıralarda), o yüzden biri
       // başlıkta biri burada geçiyor.
       description:
-        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Kurulum gerekmez, filigran yok. 14 araç üyeliksiz çalışır.`,
+        `PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve toplam {toolCount} araç. Kurulum gerekmez, filigran yok. {freeCount} araç üyeliksiz çalışır.`,
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",
@@ -668,7 +668,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       kicker: "Ekibiniz için doğru PDF iş akışı",
       title: "Hemen tarayıcıdan başlayın.",
       description:
-        "Kurulum yok. 14 araç üyelik istemez. Çalışma alanını açın ve ilk belgenizi saniyeler içinde işleyin.",
+        "Kurulum yok. {freeCount} araç üyelik istemez. Çalışma alanını açın ve ilk belgenizi saniyeler içinde işleyin.",
       primaryCta: "Çalışma Alanını Aç",
       secondaryCta: "Ücretsiz Üye Ol",
     },

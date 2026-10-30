@@ -489,8 +489,8 @@ export function AuthPage({
                   ? "Word · Excel · PPT'ye çevir, sıkıştır, OCR, AI özetle"
                   : "Convert to Word · Excel · PPT, compress, OCR, AI",
                 language === "tr"
-                  ? "Kart gerekmez · 30 saniyede hazır · dilediğin an iptal"
-                  : "No card · ready in 30 seconds · cancel anytime",
+                  ? "Kart gerekmez · 30 saniyede hazır"
+                  : "No card · ready in 30 seconds",
                 language === "tr"
                   ? "Yapısal araçlar cihazında çalışır, dosya yüklenmez"
                   : "Structural tools run on your device — no upload",

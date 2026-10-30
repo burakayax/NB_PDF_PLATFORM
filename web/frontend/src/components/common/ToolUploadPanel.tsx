@@ -1,5 +1,5 @@
 import { touchifyDropText } from "../../lib/touchCopy";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Lock, Loader2, ShieldCheck, Trash2, UploadCloud, Zap, type LucideIcon } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { TOOLS, TOOL_HUE, HUES } from "../../lib/toolCatalog";
@@ -33,6 +33,8 @@ type Props = {
   accept: string;
   multiple?: boolean;
   busy?: boolean;
+  /** true: işlem sürerken bu alanda "İşleniyor…" yazılmaz (durum başka yerde, ör. ana düğmede, gösteriliyor); tıklama yine kilitli. */
+  quietBusy?: boolean;
   disabled?: boolean;
   /** Dosya zaten seçili → alan ince bir "dosya ekle / değiştir" şeridine iner. */
   compact?: boolean;
@@ -64,6 +66,7 @@ export function ToolUploadPanel({
   accept,
   multiple,
   busy,
+  quietBusy,
   disabled,
   compact,
   showHeader = true,
@@ -137,7 +140,7 @@ export function ToolUploadPanel({
       <div
         role="button"
         tabIndex={0}
-        aria-disabled={disabled}
+        aria-disabled={disabled || (busy && quietBusy)}
         onDragOver={(e) => {
           if (disabled) return;
           e.preventDefault();
@@ -162,9 +165,10 @@ export function ToolUploadPanel({
         }}
         data-over={dragOver}
         className={`nb-dropzone group relative cursor-pointer overflow-hidden rounded-3xl text-center ${
-          compact ? "p-5" : "nb-heartbeat px-5 py-8 sm:p-12"
-        } ${disabled ? "pointer-events-none opacity-50" : ""}`}
+          compact ? "p-5" : "nb-dropzone--orbit px-5 py-8 sm:p-12"
+        } ${disabled || (busy && quietBusy) ? "pointer-events-none opacity-50" : ""}`}
       >
+        {!compact && <OrbitBorder />}
         <div className={`pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full opacity-40 blur-3xl ${tile}`} />
 
         <input
@@ -183,10 +187,10 @@ export function ToolUploadPanel({
         {compact ? (
           <div className="relative flex items-center justify-center gap-2.5 text-slate-300">
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ${tile} ${icon}`}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+              {busy && !quietBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
             </span>
             <span className="text-[13px] font-semibold text-white">
-              {busy
+              {busy && !quietBusy
                 ? tr ? "İşleniyor…" : "Processing…"
                 : multiple
                   ? tr ? "+ Dosya ekle" : "+ Add file"
@@ -196,10 +200,10 @@ export function ToolUploadPanel({
         ) : (
           <>
             <div className={`nb-dropzone__icon relative mx-auto flex h-16 w-16 items-center justify-center rounded-3xl sm:h-20 sm:w-20 ring-1 transition group-hover:scale-105 ${tile} ${icon}`}>
-              {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-10 w-10" strokeWidth={2.25} />}
+              {busy && !quietBusy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-10 w-10" strokeWidth={2.25} />}
             </div>
             <p className="nb-dropzone__title relative mt-4 text-lg sm:mt-5 sm:text-xl">
-              {busy
+              {busy && !quietBusy
                 ? tr ? "İşleniyor…" : "Processing…"
                 : touchifyDropText(title ??
                   (multiple
@@ -247,5 +251,28 @@ export function ToolUploadPanel({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Büyük yükleme alanının kesik çizgili çerçevesi: gri kesik çizgilerin üstünden SAAT YÖNÜNDE
+ * ilerleyen parlak bir dilim geçer (eski "kalp atışı" halkasının yerine).
+ * Kesik çizgiyi CSS kenarlığı değil bu SVG çizer (kenarlık şeffaf), böylece çizgi ve ışık hizalı kalır.
+ * Geri almak: ToolUploadPanel'de "nb-dropzone--orbit" → "nb-heartbeat" yap ve <OrbitBorder /> satırını sil.
+ */
+function OrbitBorder() {
+  const maskId = useId().replace(/:/g, "");
+  return (
+    <svg className="nb-orbit" aria-hidden focusable="false">
+      <defs>
+        <mask id={maskId}>
+          <rect className="nb-orbit-rect nb-orbit-dashes" stroke="#fff" />
+        </mask>
+      </defs>
+      <rect className="nb-orbit-rect nb-orbit-dashes nb-orbit-base" />
+      <g mask={`url(#${maskId})`}>
+        <rect className="nb-orbit-rect nb-orbit-glow" pathLength={100} />
+      </g>
+    </svg>
   );
 }
