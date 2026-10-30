@@ -49,7 +49,7 @@ for (const slug of slugs) {
     await sharp(Buffer.from(svg)).composite([{ input: logo, top: 34, left: 84 }]).jpeg({ quality: 90 }).toFile(join(dir, `${i + 2}.jpg`));
   }
   if (withAsk) {
-    const question = askFor(icons.map((i) => i.hero), slug);
+    const question = askFor({ title: tr.title, slides }, slug);
     const ask = visualAskSvg({ accent: post.accent, total, index: total - 2, fonts, tools, question, hero: icons[0].hero });
     await sharp(Buffer.from(ask)).composite([{ input: logo, top: 34, left: 84 }]).jpeg({ quality: 90 }).toFile(join(dir, `${total - 1}.jpg`));
   }
