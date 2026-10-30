@@ -1211,6 +1211,18 @@ export async function deletePost(postId: string): Promise<void> {
   await cleanupToolVideosSafely();
 }
 
+/**
+ * "Bu aslında paylaşılmadı": kaydı geçmişten tamamen siler, yazı yeniden paylaşım sırasına girer.
+ *
+ * NEDEN: Paylaşım sırası (pickNextItem) PUBLISHED/SKIPPED kayıtlara bakar; gönderi ağda silinse bile kayıt duruyorsa o yazı
+ * "paylaşıldı" sayılır ve diğer ağlarda çıkan yazı bu ağda atlanır. Yalnız geçmiş kayıtlar silinir; bekleyenler deletePost ile gider.
+ */
+export async function unsharePost(postId: string): Promise<boolean> {
+  const r = await prisma.socialPost.deleteMany({ where: { id: postId, status: { in: ["PUBLISHED", "SKIPPED"] } } });
+  await cleanupToolVideosSafely();
+  return r.count > 0;
+}
+
 export async function updatePostBody(postId: string, body: string): Promise<void> {
   await prisma.socialPost.updateMany({
     where: { id: postId, status: { in: ["DRAFT", "QUEUED", "FAILED", "MANUAL"] } },
