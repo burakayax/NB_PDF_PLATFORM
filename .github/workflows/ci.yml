@@ -68,7 +68,8 @@ jobs:
   # ─── Python Unit Testleri ─────────────────────────────────────────────────
   python-tests:
     name: Python Unit Tests
-    runs-on: ubuntu-latest
+    # ubuntu-latest 26.04'e geçti ve o sürümde wkhtmltopdf paketi yok; testler tanıdık 24.04 ortamında koşar.
+    runs-on: ubuntu-24.04
     # Takılan test (ör. fork kilitlenmesi) deploy'u 40 dk bekletmesin — net hata ile dur.
     timeout-minutes: 15
     steps:
@@ -86,8 +87,9 @@ jobs:
             libcairo2-dev pkg-config \
             poppler-utils \
             tesseract-ocr \
-            wkhtmltopdf \
             libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation
+          # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
+          sudo apt-get install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
 
       - name: Install dependencies
         working-directory: web/backend
