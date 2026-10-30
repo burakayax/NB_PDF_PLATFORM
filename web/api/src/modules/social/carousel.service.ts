@@ -14,7 +14,7 @@ import { env } from "../../config/env.js";
 import { logger } from "../../lib/file-log.js";
 import type { FeedItem } from "./social.types.js";
 
-type Manifest = Record<string, { count?: number; urls?: string[] }>;
+type Manifest = Record<string, { count?: number; urls?: string[]; question?: string }>;
 
 /** Instagram carousel'de en fazla 10 görsel olur. */
 export const CAROUSEL_MIN = 2;
@@ -56,4 +56,25 @@ export async function carouselSlidesFor(item: FeedItem): Promise<string[]> {
   const urls = Array.isArray(entry?.urls) ? entry.urls.filter((u) => typeof u === "string" && /^https?:\/\//.test(u)) : [];
   if (urls.length < CAROUSEL_MIN) return [];
   return urls.slice(0, CAROUSEL_MAX);
+}
+
+/** Kaydırmalı gönderinin yorum sorusu (manifestte yazılıdır); yoksa null. */
+export async function carouselQuestionFor(item: FeedItem): Promise<string | null> {
+  const manifest = await loadManifest();
+  const q = (manifest[item.guid] ?? manifest[item.link])?.question;
+  return typeof q === "string" && q.trim() ? q.trim() : null;
+}
+
+/**
+ * Soruyu açıklamaya ekler: etiket bloğu (#...) varsa ONDAN ÖNCE, yoksa sona. Aynı soru zaten varsa ya da
+ * Instagram'ın 2200 karakter sınırı aşılacaksa metne dokunulmaz.
+ */
+export function withCarouselQuestion(body: string, question: string | null, limit = 2200): string {
+  if (!question || body.includes(question)) return body;
+  const block = `${question}\nCevabını yorumlara yaz.`;
+  const paras = body.split("\n\n");
+  const last = paras[paras.length - 1] ?? "";
+  const hasTags = paras.length > 1 && /^(#\S+\s*)+$/.test(last.trim());
+  const out = hasTags ? [...paras.slice(0, -1), block, last].join("\n\n") : `${body}\n\n${block}`;
+  return out.length <= limit ? out : body;
 }
