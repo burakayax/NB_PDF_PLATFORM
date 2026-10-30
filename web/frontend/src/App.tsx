@@ -3513,8 +3513,8 @@ function App() {
   const splitModeDescription =
     splitMode === "every"
       ? language === "tr"
-        ? "Belge, her N sayfada bir yeni dosyaya bölünür; hepsi ZIP olarak iner. Sayfa seçmeniz gerekmez."
-        : "The document is cut into a new file every N pages; all come as a ZIP. No page selection needed."
+        ? `Belgeyi eşit parçalara böler. Her dosyada kaç sayfa olsun, siz yazın. Örnek: 10 sayfalık PDF için ${Math.max(1, Number(splitEveryN) || 1)} yazarsanız ${Math.max(1, Number(splitEveryN) || 1)} sayfalık dosyalar çıkar; kalan sayfalar daha kısa son bir dosya olur. Hepsi tek ZIP olarak iner, sayfa seçmeniz gerekmez.`
+        : `Cuts the document into equal parts. Type how many pages each file should have. Example: for a 10-page PDF, ${Math.max(1, Number(splitEveryN) || 1)} gives files of ${Math.max(1, Number(splitEveryN) || 1)} pages; the leftover pages make a shorter last file. Everything downloads as one ZIP, no page selection needed.`
       : splitMode === "size"
         ? language === "tr"
           ? "Her parça verdiğiniz boyutu (MB) aşmayacak şekilde bölünür; gerçek dosya boyutuna göre hesaplanır. Tek sayfası bile sınırı aşıyorsa o sayfa kendi başına bir dosya olur."
@@ -7805,7 +7805,7 @@ function App() {
                                 </button>
                                 {(
                                   [
-                                    ["every", language === "tr" ? "Her N sayfada bir" : "Every N pages"],
+                                    ["every", language === "tr" ? "Eşit parçalara (sayfa sayısıyla)" : "Equal parts (by page count)"],
                                     ["size", language === "tr" ? "Boyuta göre (MB)" : "By size (MB)"],
                                     ["outline", language === "tr" ? "Yer imine göre" : "By bookmarks"],
                                   ] as const
@@ -7831,7 +7831,7 @@ function App() {
                               </span>
                               {splitMode === "every" ? (
                                 <label className="field">
-                                  <span>{language === "tr" ? "Her kaç sayfada bir dosya" : "Pages per file"}</span>
+                                  <span>{language === "tr" ? "Her dosyada kaç sayfa olsun?" : "How many pages per file?"}</span>
                                   <input
                                     type="number"
                                     min={1}

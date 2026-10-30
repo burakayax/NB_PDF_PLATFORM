@@ -268,7 +268,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
                 {tr ? "Ücretsiz hesap aç" : "Create a free account"}
               </button>
               <p className="mt-2.5 text-[12px] text-slate-400">
-                {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
+                {tr ? "Kart gerekmez · 30 saniyede" : "No card · 30 seconds"}
               </p>
             </div>
           </section>

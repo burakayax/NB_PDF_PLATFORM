@@ -433,10 +433,10 @@ export function GuestPageToolCore({
               }`}
             >
               <span className={`block text-[13.5px] font-semibold ${splitMode === "every" ? "text-white" : "text-slate-200"}`}>
-                {tr ? "Her N sayfada bir" : "Every N pages"}
+                {tr ? "Eşit parçalara (sayfa sayısıyla)" : "Equal parts (by page count)"}
               </span>
               <span className={`mt-0.5 block text-[12px] leading-snug ${splitMode === "every" ? "text-white/85" : "text-slate-400"}`}>
-                {tr ? "Belge eşit sayfalı dosyalara bölünür (ör. 10'ar sayfa), ZIP olarak iner." : "The document is cut into equal-length files (e.g. 10 pages each), delivered as a ZIP."}
+                {tr ? "Her dosyada kaç sayfa olacağını siz yazarsınız (ör. 3 yazarsanız 3'er sayfalık dosyalar). Hepsi tek ZIP olarak iner." : "You type how many pages each file gets (e.g. 3 gives files of 3 pages). Everything downloads as one ZIP."}
               </span>
             </button>
             <button
@@ -461,7 +461,7 @@ export function GuestPageToolCore({
               <label className="flex items-center gap-2 text-[13px] text-slate-200">
                 <span>
                   {splitMode === "every"
-                    ? tr ? "Her kaç sayfada bir dosya:" : "Pages per file:"
+                    ? tr ? "Her dosyada kaç sayfa olsun?" : "How many pages per file?"
                     : tr ? "En çok kaç MB:" : "Maximum MB:"}
                 </span>
                 <input
@@ -474,6 +474,16 @@ export function GuestPageToolCore({
                 />
               </label>
             </div>
+          )}
+          {splitMode === "every" && (
+            <p className="px-2 pb-2 text-[12px] leading-snug text-slate-400">
+              {(() => {
+                const k = Math.max(1, Math.floor(Number(everyN)) || 1);
+                return tr
+                  ? `Örnek: 10 sayfalık PDF için ${k} yazarsanız ${k} sayfalık dosyalar çıkar; kalan sayfalar daha kısa son bir dosya olur.`
+                  : `Example: for a 10-page PDF, ${k} gives files of ${k} pages; the leftover pages make a shorter last file.`;
+              })()}
+            </p>
           )}
         </div>
       )}

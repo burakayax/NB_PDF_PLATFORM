@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
+import { useToolCount } from "../../lib/useToolCount";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,10 +46,10 @@ const PILL_VARIANTS: Variants = {
   exit: { opacity: 0, scale: 0.9, y: -6, transition: { duration: 0.18 } },
 };
 
-const WEB_FEATURES = [
+const webFeatures = (toolCount: number) => [
   "Real-time preview",
   "Cloud sync",
-  `${ARAC_SAYISI} PDF tools`,
+  `${toolCount} PDF tools`,
   "Browser-based",
 ];
 const DESK_FEATURES = [
@@ -388,12 +388,13 @@ export default function ProductShowcase({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const toolCount = useToolCount();
   const activePills =
-    features ?? (activeTab === "web" ? WEB_FEATURES : DESK_FEATURES);
+    features ?? (activeTab === "web" ? webFeatures(toolCount) : DESK_FEATURES);
   const resolvedPills = features
     ? features
     : activeTab === "web"
-      ? WEB_FEATURES
+      ? webFeatures(toolCount)
       : DESK_FEATURES;
 
   return (

@@ -1,6 +1,7 @@
 import { useAiNotOpen } from "../../lib/aiAvailability";
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Unlock, Zap } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Unlock, Zap, Plus } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { trackFunnelEvent } from "../../lib/analytics";
 import { useCurrentPlan } from "../../lib/currentPlan";
@@ -154,7 +155,9 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
 
   if (!gosterilir || !visible) return null;
 
-  return (
+  // Sayfanın en üstüne (body) çizilir: ana sayfadaki araç kartı backdrop-blur kullandığı için
+  // içine konan fixed perde yalnız kartı kaplıyor, kategori sekmesi perdenin dışında parlak kalıyordu.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -218,14 +221,12 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
             );
           })}
         </div>
-
-        {/* Ücretli araçlar ücretsiz vaadin İÇİNE karıştırılmaz — ayrı satırda ve
-            hangi planın açtığı yazılı. Kayıt olan kullanıcı bulamadığına kızmasın. */}
-        <p className="mt-3 text-center text-[12px] leading-snug text-slate-400">
-          {tr
-            ? "Excel · PowerPoint dönüşümleri ve ek yapay zekâ hakkı ücretli planlarda."
-            : "Excel · PowerPoint conversions and extra AI allowance are on the paid plans."}
-        </p>
+        <div className="mt-2.5 flex justify-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/25 bg-fuchsia-500/[0.08] px-3 py-1 text-[12px] font-semibold text-fuchsia-200">
+            <Plus className="h-3 w-3" aria-hidden />
+            {tr ? "ve daha fazlası" : "and much more"}
+          </span>
+        </div>
 
         <a
           href="/register"
@@ -237,9 +238,10 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         </a>
         <p className="mt-2 flex items-center justify-center gap-1.5 text-[12px] text-slate-400">
           <CreditCard className="h-3.5 w-3.5" />
-          {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
+          {tr ? "Kart gerekmez · 30 saniyede" : "No card · 30 seconds"}
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -1,6 +1,6 @@
 import { softenGiftLines, useAiNotOpen } from "../../lib/aiAvailability";
 import { useMemo, useState } from "react";
-import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
+import { useToolCount } from "../../lib/useToolCount";
 import { motion, AnimatePresence } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
@@ -727,6 +727,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { cards, flags, pricing } = useSettings();
+  const toolCount = useToolCount();
   const editorLimits = useEditorLimits();
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
@@ -928,12 +929,12 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
         <div className="mt-10 grid max-w-3xl mx-auto grid-cols-1 gap-3 sm:grid-cols-3">
           {(language === "tr"
             ? [
-                { b: `${ARAC_SAYISI} araç`, a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
+                { b: `${toolCount} araç`, a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
                 { b: "Dosyan sende kalır", a: "Birleştirme, imzalama, kırpma gibi araçlar tarayıcında çalışır; dosya sunucuya gitmez." },
                 { b: "Otomatik yenileme yok", a: "Dönem bitince hesabın Ücretsiz plana döner; kartından senin onayın olmadan çekim yapılmaz." },
               ]
             : [
-                { b: `${ARAC_SAYISI} tools`, a: "All included in one subscription — no separate products to buy." },
+                { b: `${toolCount} tools`, a: "All included in one subscription — no separate products to buy." },
                 { b: "Your file stays with you", a: "Merging, signing and cropping run in your browser; the file is never uploaded." },
                 { b: "No auto-renewal", a: "When the period ends your account returns to Free; your card is never charged without your confirmation." },
               ]

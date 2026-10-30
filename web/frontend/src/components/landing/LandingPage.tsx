@@ -30,7 +30,7 @@ import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolVisual } from "../common/ToolUploadPanel";
 import { TOOLS } from "../../lib/toolCatalog";
-import { ARAC_SAYISI } from "../../seo/seoContent.mjs";
+import { fillToolCount, useGuestToolCount, useToolCount } from "../../lib/useToolCount";
 import { ToolPageContext } from "../common/toolPageContext";
 import {
   ArrowRightLeft,
@@ -624,6 +624,8 @@ function Hero({
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
+  const toolCount = useToolCount();
+  const freeCount = useGuestToolCount();
 
   const stagger = (i: number) => ({
     initial: { opacity: 0, y: 28 },
@@ -695,7 +697,10 @@ function Hero({
 
   return (
     <section className="relative min-h-dvh flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
-      <div className="relative z-10 max-w-7xl mx-auto">
+      {/* w-full: bölüm flex+items-center olduğu için bu kutu içeriğine göre daralıyor, araç değiştikçe
+          alanın genişliği sıçrıyordu (PDF Böl 1238px, Birleştir 881px). Tam genişlik + max-w-7xl: varsayılan
+          PDF Böl boyutu, ekran daraldıkça kendiliğinden küçülür. */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto">
         {/* Badge */}
         <motion.div
           {...stagger(0)}
@@ -750,7 +755,7 @@ function Hero({
           className="mt-6 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed"
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
-          {copy.hero.description}
+          {fillToolCount(copy.hero.description, toolCount, freeCount)}
         </motion.p>
 
         {/* Hızlı araç seçici + ÇALIŞAN araç — ANA SAYFADA, login YOK, sayfadan
@@ -773,13 +778,13 @@ function Hero({
               {tr ? (
                 <>
                   <strong className="font-bold text-white">Burada yalnızca bir bölümü var.</strong>{" "}
-                  Platformda toplam {TOOLS.length} araç bulunuyor; aşağıdakiler üyeliksiz hemen kullanabileceklerin.{" "}
+                  Platformda toplam {toolCount} araç bulunuyor; aşağıdakiler üyeliksiz hemen kullanabileceklerin.{" "}
                   Üyelik açarak diğer araçlara da ulaşabilirsiniz.
                 </>
               ) : (
                 <>
                   <strong className="font-bold text-white">This is only part of it.</strong>{" "}
-                  The platform has {TOOLS.length} tools in total; the ones below are those you can use right away without an account.{" "}
+                  The platform has {toolCount} tools in total; the ones below are those you can use right away without an account.{" "}
                   You can reach the other tools by creating an account.
                 </>
               )}
@@ -795,7 +800,7 @@ function Hero({
               duruyordu; hepsi tek kartta toplandı. */}
           <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-3 shadow-[0_40px_90px_-40px_rgba(2,6,23,0.95)] backdrop-blur-xl sm:p-5">
             {/* Üst şerit: grup seçimi + (mobil) kamerayla tara */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-3">
+            <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-2 px-1 pb-3">
               {/* Kategori sekmeleri — 20 araç tek ızgarada altı satır kaplıyordu.
                   Her sekme geniş ekranda tek satır; dosya bırakma alanı ekranda
                   kalır. Son sekme yapay zekâ araçlarıdır. */}
@@ -850,9 +855,9 @@ function Hero({
                   {tr ? "Kamerayla tara" : "Scan with camera"}
                 </button>
               ) : (
-                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-400 sm:inline-flex">
+                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-400 lg:absolute lg:right-1 lg:top-1/2 lg:inline-flex lg:-translate-y-1/2">
                   <Lock className="h-3.5 w-3.5" />
-                  {tr ? "14 araç üyeliksiz" : "14 tools need no account"}
+                  {tr ? `${freeCount} araç üyeliksiz` : `${freeCount} tools need no account`}
                 </span>
               )}
             </div>
@@ -883,7 +888,7 @@ function Hero({
                 ) : null}
               </div>
             )}
-            <div className="grid grid-cols-3 gap-3 px-1 sm:grid-cols-5 lg:grid-cols-6">
+            <div className="flex flex-wrap justify-center gap-2 px-1 sm:gap-2.5">
               {!aiTool
                 ? (HERO_CATS.find((c) => c.id === heroCat) ?? HERO_CATS[0]).items.map((it) => {
                     if (it.k === "free") {
@@ -901,18 +906,18 @@ function Hero({
                             setEditorOn(false);
                             setPageTool(null);
                           }}
-                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
+                          className={`group flex flex-col items-center justify-center aspect-square w-[calc((100%-1rem)/3)] gap-2 rounded-2xl border p-2 sm:w-[112px] text-center transition ${
                             active
-                              ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
-                              : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                              ? "border-white/50 bg-white/[0.2] shadow-[0_10px_30px_-14px_rgba(255,255,255,0.55)] ring-1 ring-white/25"
+                              : "border-white/20 bg-white/[0.08] hover:border-white/40 hover:bg-white/[0.14]"
                           }`}
                         >
                           <span
-                            className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${A.tile} ${A.icon} transition group-hover:scale-105`}
+                            className={`flex h-9 w-9 items-center justify-center rounded-xl ring-1 ${A.tile} ${A.icon} transition group-hover:scale-105`}
                           >
-                            <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
+                            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
                           </span>
-                          <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                          <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-100"}`}>
                             {tr ? t.tr : t.en}
                           </span>
                         </button>
@@ -929,16 +934,16 @@ function Hero({
                             setAiTool(null);
                             setPageTool(null);
                           }}
-                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
+                          className={`group flex flex-col items-center justify-center aspect-square w-[calc((100%-1rem)/3)] gap-2 rounded-2xl border p-2 sm:w-[112px] text-center transition ${
                             editorOn
-                              ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
-                              : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                              ? "border-white/50 bg-white/[0.2] shadow-[0_10px_30px_-14px_rgba(255,255,255,0.55)] ring-1 ring-white/25"
+                              : "border-white/20 bg-white/[0.08] hover:border-white/40 hover:bg-white/[0.14]"
                           }`}
                         >
-                          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
-                            <Pencil className="h-[22px] w-[22px]" strokeWidth={2} />
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <Pencil className="h-[18px] w-[18px]" strokeWidth={2} />
                           </span>
-                          <span className={`text-[13px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
+                          <span className={`text-[13px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-100"}`}>
                             {tr ? EDITOR_META.tr : EDITOR_META.en}
                           </span>
                         </button>
@@ -968,16 +973,16 @@ function Hero({
                               setPageTool(it.slug);
                             }
                           }}
-                          className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
+                          className={`group flex flex-col items-center justify-center aspect-square w-[calc((100%-1rem)/3)] gap-2 rounded-2xl border p-2 sm:w-[112px] text-center transition ${
                             active
-                              ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
-                              : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                              ? "border-white/50 bg-white/[0.2] shadow-[0_10px_30px_-14px_rgba(255,255,255,0.55)] ring-1 ring-white/25"
+                              : "border-white/20 bg-white/[0.08] hover:border-white/40 hover:bg-white/[0.14]"
                           }`}
                         >
-                          <span className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 ring-1 ring-white/10 transition group-hover:scale-105 ${active ? "text-white" : "text-slate-200"}`}>
-                            <PageIcon className="h-[22px] w-[22px]" strokeWidth={2} />
+                          <span className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 ring-1 ring-white/10 transition group-hover:scale-105 ${active ? "text-white" : "text-slate-200"}`}>
+                            <PageIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                           </span>
-                          <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                          <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-100"}`}>
                             {tr ? it.tr : it.en}
                           </span>
                         </button>
@@ -1002,10 +1007,10 @@ function Hero({
                           }}
                           className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
                         >
-                          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
-                            <MemberIcon className="h-[22px] w-[22px]" strokeWidth={2} />
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                            <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                           </span>
-                          <span className="text-[13px] font-semibold leading-tight text-slate-300">
+                          <span className="text-[13px] font-semibold leading-tight text-slate-100">
                             {tr ? it.tr : it.en}
                           </span>
                         </button>
@@ -1022,8 +1027,8 @@ function Hero({
                         <span className="absolute right-1.5 top-1.5">
                           <Lock className="h-3 w-3 text-emerald-400/70" />
                         </span>
-                        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
-                          <MemberIcon className="h-[22px] w-[22px]" strokeWidth={2} />
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
+                          <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                         </span>
                         <span className="text-[13px] font-semibold leading-tight text-emerald-100/90">
                           {tr ? it.tr : it.en}
@@ -1043,16 +1048,16 @@ function Hero({
                           setEditorOn(false);
                           setPageTool(null);
                         }}
-                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-5 text-center transition ${
+                        className={`group flex flex-col items-center justify-center aspect-square w-[calc((100%-1rem)/3)] gap-2 rounded-2xl border p-2 sm:w-[112px] text-center transition ${
                           active
                             ? "border-violet-400/45 bg-violet-500/15 shadow-[0_10px_30px_-16px_rgba(139,92,246,0.7)]"
-                            : "border-white/[0.07] bg-white/[0.02] hover:border-violet-400/30 hover:bg-white/[0.05]"
+                            : "border-white/20 bg-white/[0.08] hover:border-violet-400/50 hover:bg-white/[0.14]"
                         }`}
                       >
-                        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
-                          <ChipIcon className="h-[22px] w-[22px]" strokeWidth={2} />
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                          <ChipIcon className="h-[18px] w-[18px]" strokeWidth={2} />
                         </span>
-                        <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                        <span className={`text-[13px] font-semibold leading-tight ${active ? "text-white" : "text-slate-100"}`}>
                           {tr ? meta.tr : meta.en}
                         </span>
                       </button>
@@ -1252,7 +1257,7 @@ function Hero({
           {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] font-medium text-slate-400">
             {[
-              { Icon: Lock, tr: "14 araç üyeliksiz", en: "14 tools need no account" },
+              { Icon: Lock, tr: `${freeCount} araç üyeliksiz`, en: `${freeCount} tools need no account` },
               { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı", en: "No watermark, no ads" },
               { Icon: Zap, tr: "Kurulum yok — tarayıcıda çalışır", en: "No install — runs in your browser" },
             ].map((item) => {
@@ -1317,12 +1322,14 @@ function Hero({
 
 function StatsBar({ language }: { language: Language }) {
   const tr = language === "tr";
+  const toolCount = useToolCount();
+  const freeCount = useGuestToolCount();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInViewOnce(ref as React.RefObject<Element>);
 
   const stats = [
     // Sayı araç kataloğundan gelir; elle yazılan "20+" araç eklendikçe eskiyordu.
-    { value: ARAC_SAYISI, suffix: "", label: tr ? "PDF Aracı" : "PDF Tools" },
+    { value: toolCount, suffix: "", label: tr ? "PDF Aracı" : "PDF Tools" },
     {
       value: 80,
       suffix: " MB",
@@ -1336,7 +1343,7 @@ function StatsBar({ language }: { language: Language }) {
     },
     // Üyeliksiz araç sayısı katalogdan gelir (elle yazılan "0₺" yanlış anlaşılıyordu).
     {
-      value: TOOLS.filter((t) => t.free).length,
+      value: freeCount,
       suffix: "",
       label: tr ? "Üyeliksiz Araç" : "No-Signup Tools",
     },
@@ -1504,12 +1511,13 @@ function Features({ language }: { language: Language }) {
 
 function HowItWorks({ language }: { language: Language }) {
   const tr = language === "tr";
+  const toolCount = useToolCount();
 
   const steps = tr
     ? [
         {
           icon: "⚙️", title: "Aracı Seç",
-          desc: `${ARAC_SAYISI} profesyonel araç arasından seç. İşlem saniyeler içinde tamamlanır.`,
+          desc: `${toolCount} profesyonel araç arasından seç. İşlem saniyeler içinde tamamlanır.`,
           r: "59,130,246", badge: "from-blue-600 to-indigo-600",
           iconGrad: "from-blue-500/20 to-indigo-600/20",
         },
@@ -1535,7 +1543,7 @@ function HowItWorks({ language }: { language: Language }) {
         },
         {
           icon: "⚙️", title: "Choose Your Tool",
-          desc: `Select from ${ARAC_SAYISI} professional tools. Processing completes in seconds.`,
+          desc: `Select from ${toolCount} professional tools. Processing completes in seconds.`,
           r: "139,92,246", badge: "from-violet-600 to-purple-600",
           iconGrad: "from-violet-500/20 to-purple-600/20",
         },
@@ -1954,6 +1962,8 @@ function FinalCta({
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
+  const toolCount = useToolCount();
+  const freeCount = useGuestToolCount();
 
   return (
     <section className="relative py-12 sm:py-16 overflow-hidden">
@@ -1973,7 +1983,7 @@ function FinalCta({
             {copy.finalCta.title}
           </h2>
           <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
-            {copy.finalCta.description}
+            {fillToolCount(copy.finalCta.description, toolCount, freeCount)}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button

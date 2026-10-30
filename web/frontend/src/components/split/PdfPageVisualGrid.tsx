@@ -1519,9 +1519,13 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const mergeRubberSelection = useCallback(
       (hits: Set<number>, additive: boolean, initial: Set<number>) => {
         if (additive) {
+          // Çerçevenin üstünden geçilen sayfalar TERS çevrilir: seçili olan kalkar, olmayan seçilir.
+          // Böylece daha önce seçilmiş sayfaların üstünden tekrar geçmek seçimi kaldırır.
+          // Hesap her zaman ilk seçime göre yapılır; çerçeve küçülürse sayfalar eski hâline döner.
           const next = new Set(initial);
           for (const p of hits) {
-            next.add(p);
+            if (next.has(p)) next.delete(p);
+            else next.add(p);
           }
           return next;
         }
@@ -1727,7 +1731,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
       const cardInner = (
         <div
-          className={`relative flex min-h-0 w-full flex-col overflow-hidden rounded-md border bg-gradient-to-b from-slate-900/95 to-slate-950/95 text-left shadow-[0_4px_18px_-8px_rgba(0,0,0,0.75)] transition-[border-color,box-shadow] duration-75 ${
+          className={`relative flex min-h-0 w-full flex-col overflow-hidden rounded-md border bg-gradient-to-b from-slate-900/95 to-slate-950/95 text-left shadow-[0_4px_18px_-8px_rgba(0,0,0,0.75)] transition-[border-color,box-shadow] duration-200 ${
             selectionMode && isOn
               ? mode === "delete"
                 ? "border-rose-400/80 shadow-[0_0_0_1px_rgba(244,63,94,0.42),0_8px_24px_-10px_rgba(244,63,94,0.22)]"
@@ -1768,23 +1772,27 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             </div>
           )}
 
-          {selectionMode && isOn ? (
+          {/* Katman HER ZAMAN çizilir; görünürlüğü geçişle değişir. Eskiden seçilince eklenip
+              kaldırılınca bir anda siliniyordu: seçim animasyonlu, seçimi kaldırma animasyonsuzdu. */}
+          {selectionMode ? (
             mode === "delete" ? (
               <div
-                className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center bg-slate-950/55"
+                className={`pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center bg-slate-950/55 transition-opacity duration-200 ease-out ${isOn ? "opacity-100" : "opacity-0"}`}
                 aria-hidden
               >
-                <span className="rounded border border-white/20 bg-black/55 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-100 shadow-sm">
+                <span
+                  className={`rounded border border-white/20 bg-black/55 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-100 shadow-sm transition-transform duration-200 ease-out ${isOn ? "scale-100" : "scale-90"}`}
+                >
                   {strictTurkishUi || effectiveLang === "tr" ? "SİLİNDİ" : "REMOVED"}
                 </span>
               </div>
             ) : (
               <div
-                className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-cyan-500/[0.12]"
+                className={`pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-cyan-500/[0.12] transition-opacity duration-200 ease-out ${isOn ? "opacity-100" : "opacity-0"}`}
                 aria-hidden
               >
                 <Check
-                  className="h-8 w-8 text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.65)] sm:h-9 sm:w-9"
+                  className={`h-8 w-8 text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.65)] transition-transform duration-200 ease-out sm:h-9 sm:w-9 ${isOn ? "scale-100" : "scale-75"}`}
                   strokeWidth={2.1}
                 />
               </div>
@@ -1889,10 +1897,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const hint =
       mode === "delete"
         ? strictTurkishUi
-          ? "Boş alanda sürükleyerek çoklu seçim yapın; Ctrl+tıklama ile tek tek seçin, Shift+tıklama ile aralık seçin. Delete veya Geri Tuşu çöp simgesi ile aynı şekilde işaretler veya geri alır. «Seçimi temizle», Ctrl+D ya da Ctrl+A sonrası gerekirse seçimi sıfırlayın."
+          ? "Boş alanda sürükleyerek çoklu seçim yapın (seçili sayfaların üstünden tekrar geçerseniz seçim kalkar); Ctrl+tıklama ile tek tek seçin, Shift+tıklama ile aralık seçin. Delete veya Geri Tuşu çöp simgesi ile aynı şekilde işaretler veya geri alır. «Seçimi temizle», Ctrl+D ya da Ctrl+A sonrası gerekirse seçimi sıfırlayın."
           : language === "tr"
             ? "Çöp simgesine basarak sayfayı silin veya geri alın; kart veya sürükleyerek seçebilirsiniz; Ctrl ile tekil çoklu, Shift ile aralık. Delete/Backspace çöple aynı. Ctrl+D seçimi temizler; Ctrl+A tümünü seçer."
-            : "Multi-select by dragging on empty space; Ctrl+click toggles pages, Shift+click selects a range. Delete/Backspace mirrors the trash icon. Ctrl+D clears selection; Ctrl+A selects all."
+            : "Multi-select by dragging on empty space (dragging over selected pages again deselects them); Ctrl+click toggles pages, Shift+click selects a range. Delete/Backspace mirrors the trash icon. Ctrl+D clears selection; Ctrl+A selects all."
         : mode === "rotate"
           ? effectiveLang === "tr"
             ? "Önizleme; döndürme ana ekrandan yapılır. Ok tuşları kaydırır."
@@ -1906,8 +1914,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 ? "Belgenin önizlemesi. Doğru dosyayı seçtiğinizden emin olun; işlem tüm sayfalara uygulanır."
                 : "A preview of your document. Check it is the right file — the operation applies to every page."
               : effectiveLang === "tr"
-                ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
-                : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
+                ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin; seçili sayfaların üstünden tekrar geçmek seçimi kaldırır. Hepsini kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
+                : "Click pages or drag on empty space to select; drag over selected pages again to deselect. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
 
     if (loadError) {
       return (
