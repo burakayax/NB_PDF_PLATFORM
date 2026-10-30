@@ -30,11 +30,12 @@ import { CAROUSEL_COPY, extractCarousel } from "../src/blog/carouselSlides.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { loadFont, measure, textPath, wrap } from "./generate-covers.mjs";
 import { blogLayoutMap, fitHook, renderBlogCover } from "./lib/blog-cover.mjs";
+import { askFor, planIcons, planTemplates, visualAskSvg, visualCtaSvg, visualStepSvg } from "./lib/slide-visuals.mjs";
 
 const W = 1080;
 const H = 1350;
 const M = 84; // kenar boşluğu
-const DESIGN_VERSION = 11;
+const DESIGN_VERSION = 12; // 12: konu çizimli çeşitli şablonlar + yorum sorusu slaytı (Türkçe)
 /**
  * Hangi dillerde carousel üretilir? Otomasyon yalnızca besleme dilinde
  * (PRIMARY_FEED_LANG = "tr") paylaşıyor; İngilizce slaytlar kullanılmayacak, boşuna
@@ -168,21 +169,43 @@ function ctaSvg({ bold, regular, host, total, copy, link }) {
  * `slug` verilirse ve yazı için elle yazılmış metin varsa o kullanılır (carouselCopy.mjs);
  * yoksa yazının kendi bloklarından otomatik çıkarılır.
  */
-export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, bold, regular }) {
+export function buildCarouselSvgs({ copyBlocks, title, slug, tool, lang, host, bold, regular, accent }) {
   const curated = lang === "tr" && slug ? curatedCarousel(slug) : null;
   const auto = curated ? null : extractCarousel(copyBlocks);
   const content = curated ? curated.slides : auto.slides;
   const kind = curated ? "points" : auto.kind;
-  if (content.length === 0) return { svgs: [], kind: "steps", hook: title };
+  if (content.length === 0) return { svgs: [], kind: "steps", hook: title, count: 0 };
   const copy = CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr;
-  const total = content.length + 2;
   const link = tool ? `${host}${tool}` : null;
-  const svgs = [coverSvg({ title: curated ? curated.hook : title, bold, regular, host, total, copy })];
+  const hook = curated ? curated.hook : title;
+  // Görselli tasarım Türkçe metinlere göre kurulu (konu eşlemesi, soru slaytı); diğer diller eski akışta kalır.
+  if (lang === "tr") {
+    // Instagram en çok 10 görsel alır: kapak + içerik + soru + kapanış sığmıyorsa soru slaytı atlanır.
+    const withAsk = content.length + 3 <= 10;
+    const total = content.length + 2 + (withAsk ? 1 : 0);
+    const fonts = { bold, regular };
+    const tools = { fitBlock, linesToPath, spaced, measure, textPath, wrap, swipe: copy.swipe };
+    const icons = planIcons(content);
+    const templates = planTemplates(content);
+    const svgs = [coverSvg({ title: hook, bold, regular, host, total, copy })];
+    content.forEach((slide, i) => {
+      const label = (kind === "steps" ? copy.stepLabel : copy.pointLabel)(i + 1, content.length);
+      svgs.push(visualStepSvg({ slide, index: i + 1, count: content.length, total, accent, label, fonts, tools, icons: icons[i], template: templates[i] }));
+    });
+    if (withAsk) {
+      const question = askFor(icons.map((x) => x.hero), slug ?? title);
+      svgs.push(visualAskSvg({ accent, total, index: total - 2, fonts, tools, question, hero: icons[0].hero }));
+    }
+    svgs.push(visualCtaSvg({ accent, total, fonts, tools, copy, target: link || host }));
+    return { svgs, kind, hook, count: content.length };
+  }
+  const total = content.length + 2;
+  const svgs = [coverSvg({ title: hook, bold, regular, host, total, copy })];
   content.forEach((slide, i) => {
     svgs.push(stepSvg({ slide, index: i + 1, count: content.length, bold, regular, host, total, copy, kind }));
   });
   svgs.push(ctaSvg({ bold, regular, host, total, copy, link }));
-  return { svgs, kind, hook: curated ? curated.hook : title };
+  return { svgs, kind, hook, count: content.length };
 }
 
 /**
@@ -218,7 +241,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
       const slug = localizedPath(`/blog/${post.slug}`, lang).split("/").pop();
       const url = `${baseUrl}${localizedPath(`/blog/${post.slug}`, lang)}`;
 
-      const { svgs, hook } = buildCarouselSvgs({
+      const { svgs, hook, kind, count } = buildCarouselSvgs({
         copyBlocks: copy.blocks,
         title: copy.title,
         slug: post.slug,
@@ -258,6 +281,7 @@ export async function writeCarousels({ frontendRoot, publicDir, baseUrl }) {
             cta: (CAROUSEL_COPY[lang] ?? CAROUSEL_COPY.tr).swipe,
             format: "jpeg",
             publicDir,
+            ...(lang === "tr" ? { badge: { big: String(count), small: kind === "steps" ? "ADIM" : "İPUCU" } } : {}),
           });
           writeFileSync(join(dir, `${i + 1}.jpg`), cover);
           written++;
