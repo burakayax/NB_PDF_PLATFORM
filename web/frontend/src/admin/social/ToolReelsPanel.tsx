@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, RefreshCw, Wand2 } from "lucide-react";
+import { Download, Loader2, RefreshCw, Wand2 } from "lucide-react";
 import {
   fetchSocialToolReels,
   queueSocialToolReel,
@@ -32,6 +32,40 @@ const ghostButton =
 const primaryButton =
   "inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-xs font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:bg-cyan-500 disabled:opacity-40";
 
+type VariantKey = "profile" | "caption";
+
+const VARIANT_INFO: Record<VariantKey, { label: string; platforms: string; note: string }> = {
+  profile: {
+    label: "Instagram · TikTok",
+    platforms: "Instagram ve TikTok",
+    note: "Son karede “Bağlantı profilde” yazar. TikTok açıklamasında bağlantı tıklanmaz; bu sürüm TikTok için uygundur.",
+  },
+  caption: {
+    label: "YouTube · Facebook",
+    platforms: "YouTube ve Facebook",
+    note: "Son karede “Bağlantı açıklamada” yazar; açıklamadaki adres tıklanır.",
+  },
+};
+
+/** Videoyu dosya olarak indirir; sunucu farklı adreste olduğundan önce içeriği çekip yerelden kaydeder. */
+async function downloadVideo(url: string, filename: string): Promise<void> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(String(res.status));
+    const blobUrl = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+  } catch {
+    // Çekilemezse (ör. tarayıcı kısıtı) videoyu yeni sekmede açar; oradan "Farklı kaydet" yapılır.
+    window.open(url, "_blank", "noopener");
+  }
+}
+
 export function ToolReelsPanel({
   accessToken,
   onQueued,
@@ -43,6 +77,7 @@ export function ToolReelsPanel({
   const [reels, setReels] = useState<SocialToolReel[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [variantById, setVariantById] = useState<Record<string, VariantKey>>({});
 
   const load = useCallback(async () => {
     try {
@@ -108,19 +143,73 @@ export function ToolReelsPanel({
       <div className="grid gap-4 md:grid-cols-2">
         {readyReels.map((reel) => (
           <article key={reel.id} className="overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/40">
-            <div className="flex justify-center bg-black/60 p-3">
-              {reel.video ? (
-                <video
-                  className="max-h-[420px] rounded-lg"
-                  style={{ aspectRatio: "9 / 16" }}
-                  src={reel.video.url}
-                  poster={`/reel-covers/${encodeURIComponent(reel.id)}.jpg`}
-                  controls
-                  preload="metadata"
-                  playsInline
-                />
-              ) : null}
-            </div>
+            {(() => {
+              const variant: VariantKey = variantById[reel.id] === "caption" && reel.captionVideo ? "caption" : "profile";
+              const shown = variant === "caption" ? reel.captionVideo : reel.video;
+              const info = VARIANT_INFO[variant];
+              return (
+                <>
+                  {reel.captionVideo ? (
+                    <div className="flex gap-1 bg-slate-950/60 p-2">
+                      {(Object.keys(VARIANT_INFO) as VariantKey[]).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setVariantById((m) => ({ ...m, [reel.id]: k }))}
+                          className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold transition ${
+                            variant === k ? "bg-cyan-600 text-white" : "bg-slate-800/60 text-slate-300 hover:text-white"
+                          }`}
+                        >
+                          {VARIANT_INFO[k].label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="flex justify-center bg-black/60 p-3">
+                    {shown ? (
+                      <video
+                        key={shown.id}
+                        className="max-h-[420px] rounded-lg"
+                        style={{ aspectRatio: "9 / 16" }}
+                        src={shown.url}
+                        poster={`/reel-covers/${encodeURIComponent(reel.id)}.jpg`}
+                        controls
+                        preload="metadata"
+                        playsInline
+                      />
+                    ) : null}
+                  </div>
+                  {shown ? (
+                    <div className="space-y-2 border-t border-slate-800/70 bg-slate-950/40 px-4 py-3">
+                      <p className="text-[11px] leading-snug text-slate-400">
+                        <span className="font-semibold text-slate-200">{info.platforms}.</span> {info.note}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {variant === "profile" ? (
+                          <button
+                            type="button"
+                            className={ghostButton}
+                            onClick={() => void downloadVideo(shown.url, `${reel.id}-tiktok.mp4`)}
+                            title="TikTok'a elle yüklemek için videoyu indir"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            TikTok için indir
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className={ghostButton}
+                          onClick={() => void downloadVideo(shown.url, `${reel.id}-${variant === "caption" ? "aciklama" : "profil"}.mp4`)}
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          {variant === "caption" ? "YouTube / Facebook için indir" : "Instagram için indir"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
             <div className="space-y-3 p-4">
               <div>
                 <h3 className="text-sm font-semibold text-white">{reel.tr.title}</h3>
