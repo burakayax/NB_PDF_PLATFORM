@@ -95,6 +95,7 @@ export function RecentPostsPanel({
                             {formatWhen(post.publishedAt ?? post.scheduledAt)}
                             {slides.length > 0 ? ` · ${slides.length} slayt` : isVideoUrl(post.imageUrl) ? " · Reels" : ""}
                           </span>
+                          {post.lastError ? <span className="block truncate text-[11px] text-amber-300" title={post.lastError}>⚠ {post.lastError}</span> : null}
                         </span>
                       </button>
                       <button
