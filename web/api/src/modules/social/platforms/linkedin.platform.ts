@@ -1,11 +1,18 @@
 /**
  * LinkedIn şirket sayfası yayıncısı.
  *
+ * Kaydırmalı gönderi: LinkedIn'de kaydırma yalnız PDF belgesiyle olur. Yazının slaytları tek
+ * PDF'e dizilip belge olarak yüklenir (yoksa ya da hazırlanamazsa tek görsele düşülür).
+ *
  * Görsel üç adımda gider: yükleme izni al → ikili veriyi PUT et → gönderiyi
  * o görsel kimliğiyle oluştur. Metin `commentary` alanında, yani gerçek gönderi
  * metni olarak yayınlanır.
  */
 
+import { PDFDocument } from "pdf-lib";
+import { logger } from "../../../lib/file-log.js";
+import { carouselSlidesFor } from "../carousel.service.js";
+import { isReelUrl } from "../reels.service.js";
 import { PlatformError, coverAltText, downloadImage, requestJson, requireSecret } from "./common.js";
 import type { Publisher } from "./common.js";
 
@@ -44,6 +51,37 @@ async function uploadImage(token: string, owner: string, imageUrl: string): Prom
   return value.image;
 }
 
+/** Slaytları sayfa sayfa tek PDF'e dizer (her sayfa görselin kendi boyutunda). */
+async function slidesToPdf(slideUrls: string[]): Promise<Uint8Array> {
+  const pdf = await PDFDocument.create();
+  for (const url of slideUrls) {
+    const { bytes, mime } = await downloadImage(url);
+    const img = /png/i.test(mime) || /\.png(\?|$)/i.test(url) ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+    pdf.addPage([img.width, img.height]).drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+  }
+  return pdf.save();
+}
+
+async function uploadDocument(token: string, owner: string, slideUrls: string[]): Promise<string> {
+  const bytes = await slidesToPdf(slideUrls);
+  const init = await requestJson("LinkedIn", `${API}/documents?action=initializeUpload`, {
+    method: "POST",
+    headers: headers(token),
+    body: JSON.stringify({ initializeUploadRequest: { owner } }),
+  });
+  const value = init.value as { uploadUrl?: string; document?: string } | undefined;
+  if (!value?.uploadUrl || !value.document) throw new Error("LinkedIn belge yükleme adresi dönmedi");
+
+  const put = await fetch(value.uploadUrl, {
+    method: "PUT",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/pdf" },
+    body: bytes,
+    signal: AbortSignal.timeout(90_000),
+  });
+  if (!put.ok) throw new PlatformError("LinkedIn belge yükleme", put.status, await put.text());
+  return value.document;
+}
+
 export const publishToLinkedIn: Publisher = async ({ body, imageUrl, item, secrets }) => {
   const token = requireSecret(secrets, "accessToken", "LinkedIn Access Token");
   const orgId = requireSecret(secrets, "organizationId", "LinkedIn Şirket Sayfası ID").replace(/\D/g, "");
@@ -59,7 +97,23 @@ export const publishToLinkedIn: Publisher = async ({ body, imageUrl, item, secre
     isReshareDisabledByAuthor: false,
   };
 
-  if (imageUrl) {
+  let slides: string[] = [];
+  if (imageUrl && !isReelUrl(imageUrl)) {
+    slides = await carouselSlidesFor(item).catch(() => [] as string[]);
+  }
+  let documentId: string | null = null;
+  if (slides.length >= 2) {
+    try {
+      documentId = await uploadDocument(token, author, slides);
+    } catch (err) {
+      logger.warn("social", `LinkedIn kaydırmalı belge hazırlanamadı, tek görsele düşülüyor: ${String(err)}`);
+      slides = [];
+    }
+  }
+
+  if (documentId) {
+    payload.content = { media: { id: documentId, title: item.title.slice(0, 200) } };
+  } else if (imageUrl) {
     payload.content = {
       media: {
         id: await uploadImage(token, author, imageUrl),
@@ -83,5 +137,6 @@ export const publishToLinkedIn: Publisher = async ({ body, imageUrl, item, secre
   return {
     externalId: id,
     externalUrl: id ? `https://www.linkedin.com/feed/update/${id}` : null,
+    ...(documentId ? { slides } : {}),
   };
 };
