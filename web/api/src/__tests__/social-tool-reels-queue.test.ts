@@ -126,7 +126,7 @@ describe("araç videosu otomatik sırası", () => {
     expect(created.some((c) => c.guid === ITEM.guid)).toBe(true);
   });
 
-  it("video hazırsa: Instagram + Facebook + YouTube için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
+  it("video hazırsa: Instagram + Facebook + YouTube + TikTok için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
@@ -135,6 +135,7 @@ describe("araç videosu otomatik sırası", () => {
     expect(toolPosts().map((p) => `${p.platform}:${p.guid}`).sort()).toEqual([
       "FACEBOOK:tool-reel:compress",
       "INSTAGRAM:tool-reel:compress",
+      "TIKTOK:tool-reel:compress",
       "YOUTUBE:tool-reel:compress",
     ]);
     // YouTube yalnız video kabul eder: blog (görsel) gönderisi hiçbir zaman YouTube'a hazırlanmaz.
@@ -144,6 +145,8 @@ describe("araç videosu otomatik sırası", () => {
     expect(ig?.imageUrl).toBe(VIDEO_URL);
     // Facebook hesabı bağlı değil → elle paylaşılacak.
     expect(toolPosts().find((p) => p.platform === "FACEBOOK")?.status).toBe("MANUAL");
+    // TikTok hesabı bağlı değil → elle paylaşılacak; bağlanınca aynı hat taslak açar.
+    expect(toolPosts().find((p) => p.platform === "TIKTOK")?.status).toBe("MANUAL");
   });
 
   it("iki sürüm hazırsa: Instagram 'profilde' videosunu, Facebook + YouTube 'açıklamada' videosunu alır", async () => {
@@ -154,6 +157,8 @@ describe("araç videosu otomatik sırası", () => {
 
     const urlOf = (platform: string) => toolPosts().find((p) => p.platform === platform)?.imageUrl;
     expect(urlOf("INSTAGRAM")).toBe(VIDEO_URL);
+    // TikTok da Instagram gibi "Bağlantı profilde" sürümünü kullanır (açıklamadaki adres tıklanmaz).
+    expect(urlOf("TIKTOK")).toBe(VIDEO_URL);
     expect(urlOf("FACEBOOK")).toBe(CAPTION_URL);
     expect(urlOf("YOUTUBE")).toBe(CAPTION_URL);
   });

@@ -32,7 +32,7 @@ const PENDING_STATUSES = ["DRAFT", "QUEUED", "PUBLISHING", "MANUAL", "FAILED"];
 export type ToolReelVideoInfo = { id: string; url: string; seconds: number; createdAt: Date };
 export type ToolReel = ToolReelCatalogEntry & {
   guid: string;
-  /** Instagram sürümü (son karede "Bağlantı profilde"). */
+  /** Instagram + TikTok sürümü (son karede "Bağlantı profilde"). */
   video: ToolReelVideoInfo | null;
   /** YouTube + Facebook sürümü (son karede "Bağlantı açıklamada"). */
   captionVideo: ToolReelVideoInfo | null;
@@ -51,7 +51,8 @@ const CAPTION_MARK = "-aciklama-";
 export const variantOfId = (videoId: string): ReelVariant => (videoId.includes(CAPTION_MARK) ? "caption" : "profile");
 
 /** Gönderinin hangi ağı hangi sürümü kullanır? */
-export const variantForPlatform = (platform: string): ReelVariant => (platform === "INSTAGRAM" ? "profile" : "caption");
+export const variantForPlatform = (platform: string): ReelVariant =>
+  platform === "INSTAGRAM" || platform === "TIKTOK" ? "profile" : "caption";
 
 const variantWhere = (variant: ReelVariant) =>
   variant === "caption" ? { id: { contains: CAPTION_MARK } } : { id: { not: { contains: CAPTION_MARK } } };

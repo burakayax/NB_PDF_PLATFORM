@@ -303,7 +303,7 @@ socialRouter.post(
   }),
 );
 
-/** Bir araç videosunu Instagram + Facebook Reels ve YouTube Shorts TASLAĞI olarak hazırlar (onay beklenir). */
+/** Bir araç videosunu Instagram + Facebook Reels, YouTube Shorts ve TikTok TASLAĞI olarak hazırlar (onay beklenir). */
 socialRouter.post(
   "/tool-reels/:id/queue",
   asyncHandler(async (request, response) => {
@@ -311,7 +311,7 @@ socialRouter.post(
     // İsteğe bağlı: { platforms: ["FACEBOOK"] } yalnız o ağ için hazırlar. Elle istendiğinde aynı gün
     // ikinci kez de hazırlanabilir (ilk gönderi hatalıysa yeniden yayınlamak için).
     const parsed = z
-      .object({ platforms: z.array(z.enum(["INSTAGRAM", "FACEBOOK", "YOUTUBE"])).max(3).optional() })
+      .object({ platforms: z.array(z.enum(["INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK"])).max(4).optional() })
       .safeParse(request.body ?? {});
     const platforms = parsed.success ? parsed.data.platforms : undefined;
     const result = await queueToolReel(toolId, new Date(), true, undefined, { platforms, repeat: true });

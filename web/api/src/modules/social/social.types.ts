@@ -221,7 +221,8 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageRequired: false,
     imageFormat: "tall",
     hashtagCount: 3,
-    linkStyle: "none",
+    // Açıklamadaki adres TikTok'ta tıklanmaz: Instagram gibi "Bağlantı profilde" (videonun son karesiyle aynı).
+    linkStyle: "bio",
     bilingual: false,
     videoOnly: true,
     // Bağlantı OAuth ile kurulur (panelde "TikTok ile bağlan"); yalnız ilk iki alan elle girilir.

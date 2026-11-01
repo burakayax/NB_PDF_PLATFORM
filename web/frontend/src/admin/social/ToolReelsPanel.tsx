@@ -38,7 +38,7 @@ const VARIANT_INFO: Record<VariantKey, { label: string; platforms: string; note:
   profile: {
     label: "Instagram · TikTok",
     platforms: "Instagram ve TikTok",
-    note: "Son karede “Bağlantı profilde” yazar. TikTok açıklamasında bağlantı tıklanmaz; bu sürüm TikTok için uygundur.",
+    note: "Son karede “Bağlantı profilde” yazar. İkisinde de açıklamadaki bağlantı tıklanmaz; bu sürüm Instagram ve TikTok taslaklarına otomatik eklenir.",
   },
   caption: {
     label: "YouTube · Facebook",
@@ -115,7 +115,7 @@ export function ToolReelsPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-xs leading-relaxed text-slate-400">
           Araç videoları önceden hazır tutulmaz: paylaşım zamanı yaklaşınca aracın gerçek kullanımı kaydedilerek
-          üretilir, paylaşıldıktan sonra silinir. Video hazırsa burada izleyip taslağını hazırlayabilirsin; “Gönderi
+          üretilir, paylaşıldıktan sonra silinir. Video hazırsa burada izleyip taslağını hazırlayabilirsin (Instagram, Facebook, YouTube ve TikTok); “Gönderi
           akışı”nda onaylamadan hiçbir yere gitmez.
         </p>
         <button type="button" className={ghostButton} onClick={() => void load()}>
@@ -190,7 +190,7 @@ export function ToolReelsPanel({
                             type="button"
                             className={ghostButton}
                             onClick={() => void downloadVideo(shown.url, `${reel.id}-tiktok.mp4`)}
-                            title="TikTok'a elle yüklemek için videoyu indir"
+                            title="Videoyu indir (TikTok bağlı değilse elle yüklemek için)"
                           >
                             <Download className="h-3.5 w-3.5" />
                             TikTok için indir
@@ -268,6 +268,14 @@ export function ToolReelsPanel({
                   onClick={() => void queue(reel, ["YOUTUBE"])}
                 >
                   Yalnızca YouTube
+                </button>
+                <button
+                  type="button"
+                  className={ghostButton}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void queue(reel, ["TIKTOK"])}
+                >
+                  Yalnızca TikTok
                 </button>
               </div>
               <p className="text-[11px] leading-snug text-slate-500">
