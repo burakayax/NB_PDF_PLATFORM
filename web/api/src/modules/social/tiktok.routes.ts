@@ -20,6 +20,7 @@ import {
   fetchTiktokDisplayName,
   verifyTiktokState,
 } from "./platforms/tiktok.platform.js";
+import { resolveOAuthSpaRedirectBase } from "../../lib/oauth-frontend-origin.js";
 import { readAccountSecrets, saveAccount } from "./social.service.js";
 
 export const tiktokCallbackRouter = Router();
@@ -28,15 +29,21 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 }
 
+/** Yönetim paneli adresi (Google girişinin dönüş kökü ile aynı güvenilir kök). */
+function adminUrl(): string {
+  return `${resolveOAuthSpaRedirectBase(null)}/admin`;
+}
+
 function page(response: Response, status: number, title: string, message: string): void {
+  const back = adminUrl();
   response
     .status(status)
     .set({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" })
     .send(
       `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title>` +
-        `<style>body{font-family:system-ui,sans-serif;background:#f8fafc;color:#0f172a;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}` +
+        `<meta http-equiv="refresh" content="${status === 200 ? 4 : 12};url=${escapeHtml(back)}"><style>body{font-family:system-ui,sans-serif;background:#f8fafc;color:#0f172a;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}` +
         `main{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px;max-width:440px;text-align:center}h1{font-size:20px;margin:0 0 12px}p{margin:0;color:#475569;line-height:1.5}</style></head>` +
-        `<body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p></main></body></html>`,
+        `<body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p><p style="margin-top:16px"><a href="${escapeHtml(back)}">Yönetim paneline dön</a></p></main></body></html>`,
     );
 }
 
@@ -44,6 +51,12 @@ tiktokCallbackRouter.get(
   "/callback",
   asyncHandler(async (request, response) => {
     const { code, state, error, error_description: errorDescription } = request.query;
+
+    // Teşhis kaydı: gizli değer YOK — yalnızca hangi alanların geldiği. Render günlüğünde "TikTok geri dönüş" ara.
+    logger.info(
+      "social",
+      `TikTok geri dönüş alındı: code=${typeof code === "string" && code ? "var" : "yok"}, state=${verifyTiktokState(state) ? "geçerli" : "geçersiz/eksik"}, error=${typeof error === "string" ? error : "yok"}, scopes=${typeof request.query.scopes === "string" ? request.query.scopes : "yok"}`,
+    );
 
     if (!verifyTiktokState(state)) {
       page(response, 400, "Bağlantı doğrulanamadı", "Bu adres yalnızca yönetim panelindeki “TikTok ile bağlan” düğmesiyle açılır. Paneli açıp tekrar deneyin.");
@@ -78,7 +91,7 @@ tiktokCallbackRouter.get(
         secrets: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
         tokenExpiresAt: tokens.refreshExpiresAt ? new Date(tokens.refreshExpiresAt) : undefined,
       });
-      logger.info("social", `TikTok hesabı bağlandı${name ? `: ${name}` : ""}`);
+      logger.info("social", `TikTok hesabı bağlandı${name ? `: ${name}` : ""} (anahtarlar şifreli kaydedildi)`);
       page(
         response,
         200,

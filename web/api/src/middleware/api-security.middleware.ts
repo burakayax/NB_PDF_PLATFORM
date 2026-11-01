@@ -379,6 +379,9 @@ export function isPublicApiPath(method: string, path: string): boolean {
     if (p === "/auth/google" && method === "GET") return true;
     if (p === "/auth/google/callback" && method === "GET") return true;
     if (p === "/auth/google/complete" && method === "POST") return true;
+    // TikTok bağlantısının geri dönüşü: tarayıcı TikTok'tan yönetici anahtarı olmadan gelir.
+    // Koruma imzalı, 10 dakikalık `state` ile yapılır (bkz. tiktok.routes.ts).
+    if (p === "/auth/tiktok/callback" && method === "GET") return true;
     if (p === "/auth/verify-email" && method === "GET") return true;
     if (p.startsWith("/auth/forgot-password/") && method === "POST") return true;
   }

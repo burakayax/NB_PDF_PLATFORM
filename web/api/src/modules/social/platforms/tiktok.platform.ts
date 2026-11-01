@@ -26,7 +26,7 @@ const TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 const USER_INFO_URL = "https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name";
 
 /** İstenen izinler; TikTok uygulamasında "Login Kit" ve "Content Posting API" ürünleri ekli olmalı. */
-export const TIKTOK_SCOPES = "user.info.basic,video.publish";
+export const TIKTOK_SCOPES = "user.info.basic,video.upload,video.publish";
 
 /** TikTok'a kayıtlı geri dönüş adresiyle BİREBİR aynı olmalı (harf, eğik çizgi dâhil). */
 export function tiktokRedirectUri(): string {
