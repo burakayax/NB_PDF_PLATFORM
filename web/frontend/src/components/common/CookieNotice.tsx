@@ -62,7 +62,7 @@ export function CookieNotice({
   onAccept,
 }: CookieNoticeProps) {
   const [showCustomize, setShowCustomize] = useState(false);
-  const [analytics, setAnalytics] = useState(true);
+  const [analytics, setAnalytics] = useState(false);
   const [errorMonitoring, setErrorMonitoring] = useState(false);
   const [marketing, setMarketing] = useState(false);
 

@@ -248,16 +248,6 @@ type LandingPageProps = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function injectFonts() {
-  if (document.getElementById("nb-lp-fonts")) return;
-  const link = document.createElement("link");
-  link.id = "nb-lp-fonts";
-  link.rel = "stylesheet";
-  link.href =
-    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
-  document.head.appendChild(link);
-}
-
 function useScrolled(threshold = 20) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -2336,7 +2326,6 @@ export function LandingPage({
 
   // Google Fonts inject
   useEffect(() => {
-    injectFonts();
   }, []);
 
   // /pricing (ve /en/pricing) doğrudan açılınca fiyat bölümüne kaydır — aksi halde

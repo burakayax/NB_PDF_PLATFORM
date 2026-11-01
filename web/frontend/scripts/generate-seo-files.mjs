@@ -1012,10 +1012,9 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${ogImage}" />
     <meta name="twitter:image:alt" content="${title}" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
     <style>
       /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
       html,body{margin:0;background:#0f172a}
