@@ -716,8 +716,8 @@ async function lastInstagramTags(): Promise<string[]> {
 
 // ─── Araç tanıtım videoları ───────────────────────────────────────────────────
 
-/** Araç videolarının gideceği ağlar (Instagram/Facebook Reels + YouTube Shorts). */
-const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK", "YOUTUBE"];
+/** Araç videolarının gideceği ağlar (Instagram/Facebook Reels + YouTube Shorts + TikTok). */
+const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK"];
 
 /**
  * Bir araç videosunu Instagram + Facebook Reels ve YouTube Shorts gönderisi olarak kuyruğa alır.
@@ -786,7 +786,7 @@ export async function queueToolReel(
   for (const platform of targets) {
     const manual = !accounts.has(platform);
     const status = manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED";
-    // Instagram "profilde" sürümünü, YouTube + Facebook "açıklamada" sürümünü paylaşır.
+    // Instagram + TikTok "profilde" sürümünü, YouTube + Facebook "açıklamada" sürümünü paylaşır.
     const media = variantForPlatform(platform) === "caption" ? (captionVideo ?? usable) : usable;
     // Tekrar hazırlıkta: bu video için bu ağda zaten bekleyen bir gönderi varsa ikincisi açılmaz.
     if (options?.repeat) {

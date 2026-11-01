@@ -1,19 +1,24 @@
 /**
  * TikTok bağdaştırıcısı (TikTok API v2, Login Kit).
  *
- * KAPSAM (bilerek dar): bu dosya yalnızca BAĞLANTIYI kurar ve sınar — yetkilendirme adresi,
- * kod→anahtar değişimi, anahtar yenileme, hesap sınaması. Video paylaşımı (Content Posting API)
- * YOKTUR: TikTok, denetimden geçmemiş uygulamada paylaşımı yalnızca "yalnız ben" gizliliğiyle
- * kabul ediyor ve paylaşım öncesi onay ekranı istiyor. O iş yapılana kadar yayıncı, hiçbir
- * gönderiyi sessizce kaybetmesin diye açık bir hatayla durur; ayrıca TikTok hiçbir kuyruğa
- * girmez (`videoOnly`, araç videosu listesinde de yok).
+ * İKİ İŞ: (1) BAĞLANTI — yetkilendirme adresi, kod→anahtar değişimi, anahtar yenileme, sınama;
+ * (2) YAYIN — araç videosunu Content Posting API (Direct Post, FILE_UPLOAD) ile yükler.
+ *
+ * DENETİM DURUMU: TikTok, denetimden geçmemiş uygulamanın paylaşımlarını yalnızca "yalnız ben"
+ * (SELF_ONLY) gizliliğiyle kabul eder. Yayıncı önce hesabın izin verdiği gizlilik seçeneklerini
+ * sorar; herkese açık seçenek varsa onu dener, TikTok "denetimsiz uygulama" diye reddederse
+ * "yalnız ben" ile yeniden dener ve bunu panelde uyarı olarak gösterir. Denetim geçince hiçbir
+ * kod değişikliği gerekmez. Paylaşım yalnızca yönetici taslağı onaylayınca (ya da otomatik mod
+ * açıksa) çalışır.
  *
  * Anahtarlar: erişim anahtarı ~24 saat, yenileme anahtarı ~1 yıl yaşar.
  */
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { env } from "../../../config/env.js";
-import { requestJson, requireSecret } from "./common.js";
+import { PlatformError, PublishStageError, requestJson, requireSecret } from "./common.js";
+import { isReelUrl } from "../reels.service.js";
+import { logger } from "../../../lib/file-log.js";
 import type { Publisher, Verifier } from "./common.js";
 
 const AUTHORIZE_URL = "https://www.tiktok.com/v2/auth/authorize/";
@@ -175,9 +180,203 @@ export const verifyTiktok: Verifier = async (secrets) => {
   return name;
 };
 
-/** Paylaşım henüz yok: sessizce "başarılı" saymak yerine açık hata. */
-export const publishToTiktok: Publisher = async () => {
-  throw new Error(
-    "TikTok'a otomatik paylaşım henüz etkin değil: bağlantı kuruldu, ancak video yayını TikTok uygulama denetimi ve paylaşım onay ekranı tamamlandıktan sonra eklenecek.",
-  );
+// ───────────────────────── yayın ─────────────────────────
+
+const API = "https://open.tiktokapis.com/v2";
+/** TikTok tek parça yüklemede en çok 64 MB kabul eder (kısa Reels videosu bunun çok altında). */
+const MAX_SINGLE_CHUNK = 64 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 5 * 60_000;
+/** Başlık (açıklama) sınırı: TikTok 2.200 karakter. */
+const MAX_TITLE = 2200;
+
+/** Her yayında yenileme anahtarıyla taze erişim anahtarı alır; dönen yeni yenileme anahtarını saklar. */
+async function freshAccessToken(secrets: Record<string, string>): Promise<string> {
+  const clientKey = requireSecret(secrets, "clientKey", "TikTok Client Key");
+  const clientSecret = requireSecret(secrets, "clientSecret", "TikTok Client Secret");
+  const refreshToken = requireSecret(secrets, "refreshToken", "TikTok Refresh Token");
+  let fresh: TiktokTokens;
+  try {
+    fresh = await refreshTiktokTokens(clientKey, clientSecret, refreshToken);
+  } catch (err) {
+    throw new Error(
+      `TikTok yenileme anahtarı geçersiz ya da süresi dolmuş: panelde “TikTok ile bağlan”ı yeniden yapın. (${err instanceof Error ? err.message : String(err)})`,
+    );
+  }
+  const { saveAccount } = await import("../social.service.js");
+  await saveAccount({
+    platform: "TIKTOK",
+    secrets: { accessToken: fresh.accessToken, refreshToken: fresh.refreshToken },
+    tokenExpiresAt: fresh.refreshExpiresAt ? new Date(fresh.refreshExpiresAt) : undefined,
+  }).catch((err) => logger.warn("social", `TikTok yeni anahtarlar kaydedilemedi: ${String(err)}`));
+  return fresh.accessToken;
+}
+
+type TiktokEnvelope = { data?: Record<string, unknown>; error?: { code?: string; message?: string } };
+
+function envelopeError(what: string, env: TiktokEnvelope, status: number): PlatformError {
+  return new PlatformError("TikTok", status, `${what}: ${env.error?.code}${env.error?.message ? ` — ${env.error.message}` : ""}`);
+}
+
+/** TikTok hataları çoğu zaman 200 + `error.code` ile gelir; "ok" dışındakini hataya çevirir. */
+function unwrap(json: Record<string, unknown>, what: string): Record<string, unknown> {
+  const env = json as TiktokEnvelope;
+  const code = env.error?.code;
+  if (code && code !== "ok") throw envelopeError(what, env, 400);
+  return env.data ?? {};
+}
+
+async function tiktokPost(path: string, accessToken: string, body: unknown, what: string): Promise<Record<string, unknown>> {
+  let json: Record<string, unknown>;
+  try {
+    json = await requestJson("TikTok", `${API}${path}`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json; charset=UTF-8" },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    // HTTP 4xx gövdesinde de `error.code` olur; okunur hâle getir.
+    if (err instanceof PlatformError) {
+      let parsed: TiktokEnvelope | null = null;
+      try {
+        parsed = JSON.parse(err.detail) as TiktokEnvelope;
+      } catch {
+        /* JSON değil */
+      }
+      if (parsed?.error?.code) throw envelopeError(what, parsed, err.status);
+    }
+    throw err;
+  }
+  return unwrap(json, what);
+}
+
+/** Hesabın seçebileceği gizlilik düzeyleri (denetimsiz uygulamada genelde yalnız SELF_ONLY). */
+async function privacyOptions(accessToken: string): Promise<string[]> {
+  try {
+    const data = await tiktokPost("/post/publish/creator_info/query/", accessToken, {}, "Hesap bilgisi");
+    const options = data.privacy_level_options;
+    return Array.isArray(options) ? options.filter((o): o is string => typeof o === "string") : [];
+  } catch (err) {
+    logger.warn("social", `TikTok gizlilik seçenekleri okunamadı, "yalnız ben" ile denenecek: ${String(err)}`);
+    return [];
+  }
+}
+
+/** Açıklama: TikTok başlığı en çok 2.200 karakter; satır sonları korunur. */
+export function toTiktokTitle(body: string): string {
+  const clean = body.replace(/\r/g, "").trim();
+  return clean.length <= MAX_TITLE ? clean : `${clean.slice(0, MAX_TITLE - 1).trimEnd()}…`;
+}
+
+const UNAUDITED = /unaudited_client|private accounts|SELF_ONLY/i;
+
+/** Başlatma isteği; herkese açık reddedilirse bir kez "yalnız ben" ile yeniden dener. */
+async function initUpload(
+  accessToken: string,
+  title: string,
+  size: number,
+  options: string[],
+): Promise<{ publishId: string; uploadUrl: string; privacy: string; downgraded: boolean }> {
+  const wanted = options.includes("PUBLIC_TO_EVERYONE") ? "PUBLIC_TO_EVERYONE" : "SELF_ONLY";
+  const attempt = async (privacy: string) => {
+    const data = await tiktokPost(
+      "/post/publish/video/init/",
+      accessToken,
+      {
+        post_info: { title, privacy_level: privacy, disable_duet: false, disable_comment: false, disable_stitch: false },
+        source_info: { source: "FILE_UPLOAD", video_size: size, chunk_size: size, total_chunk_count: 1 },
+      },
+      "Yükleme başlatılamadı",
+    );
+    const publishId = data.publish_id;
+    const uploadUrl = data.upload_url;
+    if (typeof publishId !== "string" || typeof uploadUrl !== "string") throw new Error("TikTok yükleme adresi dönmedi");
+    return { publishId, uploadUrl, privacy };
+  };
+  try {
+    return { ...(await attempt(wanted)), downgraded: false };
+  } catch (err) {
+    if (wanted !== "SELF_ONLY" && err instanceof PlatformError && UNAUDITED.test(err.detail)) {
+      return { ...(await attempt("SELF_ONLY")), downgraded: true };
+    }
+    throw err;
+  }
+}
+
+/** Yüklemeden sonra TikTok'un işlemesini bekler (en çok ~60 sn); sonucu döndürür. */
+async function waitForPublish(
+  accessToken: string,
+  publishId: string,
+  pauseMs = 5_000,
+): Promise<{ status: string; postId: string | null; reason: string }> {
+  let status = "PROCESSING_UPLOAD";
+  let reason = "";
+  let postId: string | null = null;
+  for (let i = 0; i < 12; i++) {
+    await new Promise((r) => setTimeout(r, pauseMs));
+    try {
+      const data = await tiktokPost("/post/publish/status/fetch/", accessToken, { publish_id: publishId }, "Durum");
+      status = typeof data.status === "string" ? data.status : status;
+      reason = typeof data.fail_reason === "string" ? data.fail_reason : "";
+      const ids = data.publicaly_available_post_id;
+      if (Array.isArray(ids) && ids.length > 0) postId = String(ids[0]);
+      if (status === "PUBLISH_COMPLETE" || status === "FAILED") break;
+    } catch (err) {
+      logger.warn("social", `TikTok durum sorgusu başarısız: ${String(err)}`);
+    }
+  }
+  return { status, postId, reason };
+}
+
+/** Testlerde bekleme süresini kısaltmak için. */
+export const tiktokPollPauseMs = { value: 5_000 };
+
+export const publishToTiktok: Publisher = async ({ body, imageUrl, item, secrets }) => {
+  if (!isReelUrl(imageUrl)) throw new Error("TikTok yalnızca video paylaşır; bu gönderide video yok");
+
+  const accessToken = await freshAccessToken(secrets);
+  const res = await fetch(imageUrl, { signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS) });
+  if (!res.ok) throw new Error(`Video indirilemedi (${res.status}): ${imageUrl}`);
+  const video = Buffer.from(await res.arrayBuffer());
+  if (video.byteLength > MAX_SINGLE_CHUNK) throw new Error("Video 64 MB'ı aşıyor; TikTok tek parça yüklemesi bunu kabul etmez");
+
+  const options = await privacyOptions(accessToken);
+  const init = await initUpload(accessToken, toTiktokTitle(body), video.byteLength, options);
+
+  // Bu noktadan sonra TikTok'ta bir yayın kaydı var: hata olursa yeniden denemek çift gönderi riski taşır.
+  try {
+    const up = await fetch(init.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "content-type": "video/mp4",
+        "content-length": String(video.byteLength),
+        "content-range": `bytes 0-${video.byteLength - 1}/${video.byteLength}`,
+      },
+      body: new Uint8Array(video),
+      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+    });
+    if (!up.ok) throw new PlatformError("TikTok", up.status, await up.text());
+
+    const outcome = await waitForPublish(accessToken, init.publishId, tiktokPollPauseMs.value);
+    if (outcome.status === "FAILED") throw new Error(`TikTok videoyu reddetti: ${outcome.reason || "neden bildirilmedi"}`);
+
+    logger.info("social", `TikTok videosu gönderildi (${outcome.status}): ${item.title}`);
+    const warnings: string[] = [];
+    if (init.privacy === "SELF_ONLY") {
+      warnings.push(
+        init.downgraded
+          ? "TikTok uygulaması henüz denetimden geçmediği için video “yalnız ben” gizliliğiyle yüklendi; TikTok'ta Profil → Gizli videolardan açabilirsin."
+          : "Video “yalnız ben” gizliliğiyle yüklendi (hesap yalnız bu seçeneğe izin veriyor).",
+      );
+    }
+    if (outcome.status !== "PUBLISH_COMPLETE") {
+      warnings.push(`TikTok videoyu hâlâ işliyor (durum: ${outcome.status}); birkaç dakika sonra profilde görünür.`);
+    }
+    return {
+      externalId: outcome.postId ?? init.publishId,
+      externalUrl: outcome.postId ? `https://www.tiktok.com/video/${outcome.postId}` : null,
+      ...(warnings.length ? { warning: warnings.join(" ") } : {}),
+    };
+  } catch (err) {
+    throw new PublishStageError(err instanceof Error ? err.message : String(err));
+  }
 };

@@ -61,7 +61,7 @@ Kodun her yüklemede kendiliğinden yaptıkları: kategori Bilim ve Teknoloji; d
 
 ## Bizim yapacaklarımız (denetim öncesi)
 - Gizlilik politikasına YouTube API Hizmetleri ve Google gizlilik politikası bağlantısı, TikTok veri kullanımı ifadesi.
-- TikTok bağdaştırıcısı: bağlantı (OAuth + geri dönüş + sınama + panel düğmesi) TAMAM (`platforms/tiktok.platform.ts`, `tiktok.routes.ts`). **Video paylaşımı YOK**: yayıncı bilerek hata verir; Content Posting API + onay ekranı denetimle birlikte yazılacak. TikTok hiçbir kuyruğa girmez. (YouTube tamamen TAMAMLANDI: `platforms/youtube.platform.ts`.)
+- TikTok bağdaştırıcısı: bağlantı (OAuth + geri dönüş + sınama + panel düğmesi) VE video yayını TAMAM (`platforms/tiktok.platform.ts`, `tiktok.routes.ts`). Araç videoları Instagram/Facebook/YouTube ile aynı hattan TikTok taslağı olarak hazırlanır (Instagram'ın "Bağlantı profilde" sürümü); onaylayınca (ya da Reels "Otomatik" modunda saati gelince) yüklenir. **Denetim öncesi** TikTok yalnızca "yalnız ben" gizliliğini kabul eder: video TikTok'ta Profil → Gizli videolar'da görünür, panelde uyarı yazar. Denetim geçince kod değişmeden herkese açık gider. Denetimin istediği paylaşım öncesi onay ekranı (yazı/gizlilik/etkileşim seçimi) HENÜZ yok, denetim başvurusu öncesi yazılacak. (YouTube tamamen TAMAMLANDI: `platforms/youtube.platform.ts`.)
 - TikTok için paylaşım öncesi onay ekranı (yazı, gizlilik, etkileşim ayarı) — denetim şartı.
 
 ## Not
