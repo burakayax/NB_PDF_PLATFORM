@@ -377,6 +377,16 @@ export async function saveAccount(input: {
     update: data,
   });
 
+  // Hesap artık yayına hazırsa, bağlanmadan önce "elle paylaşılacak" diye açılmış araç videosu
+  // gönderileri taslağa çevrilir: "Şimdi paylaş" / Otomatik mod bu kayıtlar için de çalışsın.
+  const ready = data.enabled && spec.secretFields.every((f) => Boolean(merged[f.key]?.trim()));
+  if (ready) {
+    await prisma.socialPost.updateMany({
+      where: { platform: input.platform, status: "MANUAL", guid: { startsWith: TOOL_REEL_PREFIX } },
+      data: { status: "DRAFT" },
+    });
+  }
+
   return listAccounts();
 }
 

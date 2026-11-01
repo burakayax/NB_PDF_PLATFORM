@@ -579,9 +579,9 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <span className="text-[11px] text-slate-400">{manualPosts.length} gönderi</span>
               </div>
               <p className="rounded-xl border border-violet-500/25 bg-violet-500/5 px-4 py-3 text-xs leading-relaxed text-violet-100/80">
-                Bu ağların hesabı bağlı değil. Metin ve görsel yine de o ağın ölçülerine göre hazırlandı: metni
-                kopyala, görseli indir, kendi hesabından paylaş. Paylaştıktan sonra “Paylaştım” de ki liste
-                temizlensin.
+                Hesabı bağlı olmayan ağlar için hazırlandı: metni kopyala, görseli indir, kendi hesabından paylaş;
+                sonra “Paylaştım” de ki liste temizlensin. Hesabı sonradan bağladıysan kartta “Şimdi paylaş” görünür
+                ve gönderi doğrudan o ağa gider.
               </p>
               {manualPosts.map((post) => (
                 <PostPreviewCard
@@ -589,8 +589,15 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   post={post}
                   spec={specByPlatform.get(post.platform)}
                   accountLabel={accountByPlatform.get(post.platform)?.displayName ?? null}
+                  accountReady={Boolean(accountByPlatform.get(post.platform)?.connected && accountByPlatform.get(post.platform)?.enabled)}
                   busyId={busyPostId}
-                  onPublish={() => undefined}
+                  onPublish={(id) => {
+                    setBusyPostId(id);
+                    void run(async () => {
+                      await publishSocialPost(accessToken, id);
+                      await refresh();
+                    }, "Gönderi yayınlandı.");
+                  }}
                   onDelete={(id) => {
                     setBusyPostId(id);
                     void run(async () => {
