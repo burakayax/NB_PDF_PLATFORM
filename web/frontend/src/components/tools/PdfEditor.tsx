@@ -385,7 +385,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Serif:wght@400;600&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Merriweather:wght@400;700&family=Oswald:wght@400;500;600&family=Open+Sans:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&family=Lora:wght@400;700&family=PT+Serif:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Anton&display=swap";
+    link.href = "/fonts/editor/editor-fonts.css";
     document.head.appendChild(link);
     if (!document.getElementById("pdf-editor-metric-fonts")) {
       const st = document.createElement("style");

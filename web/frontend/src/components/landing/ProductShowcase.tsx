@@ -364,17 +364,6 @@ export default function ProductShowcase({
   const [activeTab, setActiveTab] = useState<Tab>("web");
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Inject Google Fonts once
-  useEffect(() => {
-    if (document.getElementById("nb-showcase-fonts")) return;
-    const link = document.createElement("link");
-    link.id = "nb-showcase-fonts";
-    link.rel = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap";
-    document.head.appendChild(link);
-  }, []);
-
   // Subtle parallax on scroll
   useEffect(() => {
     const el = sectionRef.current;
