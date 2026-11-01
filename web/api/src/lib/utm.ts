@@ -20,6 +20,7 @@ const SOCIAL_SOURCE: Record<string, string> = {
   X: "x",
   PINTEREST: "pinterest",
   YOUTUBE: "youtube",
+  TIKTOK: "tiktok",
 };
 
 export function socialUtm(platform: string, campaign: string): UtmTags {

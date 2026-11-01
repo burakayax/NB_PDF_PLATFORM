@@ -72,6 +72,14 @@ export const BRANDS: Record<SocialPlatformId, BrandInfo> = {
     label: "YouTube",
     where: "console.cloud.google.com → YouTube Data API v3",
   },
+  TIKTOK: {
+    background: "linear-gradient(145deg,#25f4ee,#010101 45%,#fe2c55)",
+    foreground: "#ffffff",
+    accent: "rgba(254,44,85,0.45)",
+    ratio: "9 / 16",
+    label: "TikTok",
+    where: "developers.tiktok.com → Login Kit",
+  },
 };
 
 function Glyph({ platform, color }: { platform: SocialPlatformId; color: string }) {
@@ -132,6 +140,15 @@ function Glyph({ platform, color }: { platform: SocialPlatformId; color: string 
           <path
             {...common}
             d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.27 5 12 5 12 5s-6.27 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2C2 8.78 2 12 2 12s0 3.22.4 4.8a2.5 2.5 0 0 0 1.76 1.77C5.73 19 12 19 12 19s6.27 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77C22 15.22 22 12 22 12s0-3.22-.4-4.8ZM10 15V9l5.2 3L10 15Z"
+          />
+        </svg>
+      );
+    case "TIKTOK":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden className="h-[58%] w-[58%]">
+          <path
+            {...common}
+            d="M16.6 3c.3 2.4 1.7 3.9 4 4v3.1a7.3 7.3 0 0 1-4-1.2v6.2a5.6 5.6 0 1 1-5.6-5.6h.6v3.2a2.5 2.5 0 1 0 1.9 2.4V3h3.1Z"
           />
         </svg>
       );

@@ -54,11 +54,14 @@ Kodun her yüklemede kendiliğinden yaptıkları: kategori Bilim ve Teknoloji; d
 2. developers.tiktok.com → uygulama kaydı → "Content Posting API" ürünü + "Direct Post" ayarı.
 3. Kapsam: `video.publish`. Gizlilik ve şartlar bağlantıları gerekir.
 4. Client Key ve Client Secret'ı panelden gireceğiz.
-5. Denetim için demo videosu hazırlanır: giriş → izin ekranı → yazı/gizlilik seçimi (creator_info'dan) → paylaşım. Bunu uygulama tarafında ben kodlayacağım.
+5. **Login Kit → Redirect URI** alanına şu adres yazılır (yönetim paneli → Sosyal medya → Hesaplar → TikTok kartı aynı adresi gösterir; panelde görüneni esas al):
+   `{APP_BASE_URL}/api/auth/tiktok/callback` — canlıda büyük olasılıkla `https://api.pdfplatform.app/api/auth/tiktok/callback`. Harfi harfine aynı olmalı.
+6. Panelde Client Key + Client Secret kaydedilir, sonra "TikTok ile bağlan" ile izin verilir; anahtarlar kendiliğinden yazılır (erişim anahtarı ~24 saat, yenileme anahtarı ~1 yıl; "Bağlantıyı sına" erişimi gerekirse yeniler).
+7. Denetim için demo videosu hazırlanır: giriş → izin ekranı → yazı/gizlilik seçimi (creator_info'dan) → paylaşım. Bunu uygulama tarafında ben kodlayacağım.
 
 ## Bizim yapacaklarımız (denetim öncesi)
 - Gizlilik politikasına YouTube API Hizmetleri ve Google gizlilik politikası bağlantısı, TikTok veri kullanımı ifadesi.
-- TikTok bağdaştırıcısı (`platforms/` altında yeni dosya), veri tabanında yeni ağ değeri, panelde bağlantı ekranı. (YouTube bunların hepsiyle TAMAMLANDI: `platforms/youtube.platform.ts`.)
+- TikTok bağdaştırıcısı: bağlantı (OAuth + geri dönüş + sınama + panel düğmesi) TAMAM (`platforms/tiktok.platform.ts`, `tiktok.routes.ts`). **Video paylaşımı YOK**: yayıncı bilerek hata verir; Content Posting API + onay ekranı denetimle birlikte yazılacak. TikTok hiçbir kuyruğa girmez. (YouTube tamamen TAMAMLANDI: `platforms/youtube.platform.ts`.)
 - TikTok için paylaşım öncesi onay ekranı (yazı, gizlilik, etkileşim ayarı) — denetim şartı.
 
 ## Not

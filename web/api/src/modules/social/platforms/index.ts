@@ -5,6 +5,7 @@ import { publishToLinkedIn } from "./linkedin.platform.js";
 import { publishToFacebook, publishToInstagram, verifyFacebook, verifyInstagram } from "./meta.platform.js";
 import { publishToPinterest, verifyPinterest } from "./pinterest.platform.js";
 import { publishToYouTube, verifyYouTube } from "./youtube.platform.js";
+import { publishToTiktok, verifyTiktok } from "./tiktok.platform.js";
 
 /** Platform → yayıncı eşlemesi. Yeni ağ eklerken tek dokunulacak yer burası. */
 export const PUBLISHERS: Record<SocialPlatform, Publisher> = {
@@ -14,6 +15,7 @@ export const PUBLISHERS: Record<SocialPlatform, Publisher> = {
   INSTAGRAM: publishToInstagram,
   PINTEREST: publishToPinterest,
   YOUTUBE: publishToYouTube,
+  TIKTOK: publishToTiktok,
 };
 
 /**
@@ -26,6 +28,7 @@ export const VERIFIERS: Partial<Record<SocialPlatform, Verifier>> = {
   INSTAGRAM: verifyInstagram,
   PINTEREST: verifyPinterest,
   YOUTUBE: verifyYouTube,
+  TIKTOK: verifyTiktok,
 };
 
 export type { Publisher, PublishInput, Verifier } from "./common.js";

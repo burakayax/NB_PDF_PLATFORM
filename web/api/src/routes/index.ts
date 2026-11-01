@@ -27,6 +27,7 @@ import { toolRatingAdminRouter } from "../modules/tool-rating/tool-rating.admin.
 import { emailComplianceAdminRouter } from "../modules/email/email-compliance.admin.routes.js";
 import { toolRatingRouter } from "../modules/tool-rating/tool-rating.routes.js";
 import { socialRouter } from "../modules/social/social.routes.js";
+import { tiktokCallbackRouter } from "../modules/social/tiktok.routes.js";
 import { toolReelFactoryRouter, toolReelMediaRouter } from "../modules/social/tool-reel-factory.routes.js";
 import { guestCompressAdminRouter } from "../modules/guest-compress/guest-compress.admin.routes.js";
 import { autoHealAdminRouter } from "../modules/autoheal/autoheal.admin.routes.js";
@@ -94,6 +95,8 @@ apiRouter.use("/admin/autoheal", autoHealAdminRouter);
 apiRouter.use("/admin/editor-limits", editorLimitsAdminRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
+// TikTok geri dönüşü girişsizdir (imzalı state ile korunur); genel /auth'tan ÖNCE bağlanmalı.
+apiRouter.use("/auth/tiktok", tiktokCallbackRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/contact", contactRouter);
 apiRouter.use("/email", emailRouter);
