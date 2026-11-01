@@ -22,7 +22,13 @@ import {
   rejectReplyDraft,
 } from "./facebook-engagement.service.js";
 import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
-import { buildTiktokAuthorizeUrl, createTiktokState, tiktokRedirectUri } from "./platforms/tiktok.platform.js";
+import {
+  buildTiktokAuthorizeUrl,
+  createTiktokState,
+  loadTiktokCreator,
+  postTiktokVideo,
+  tiktokRedirectUri,
+} from "./platforms/tiktok.platform.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
@@ -115,6 +121,8 @@ const configSchema = z.object({
   researchKeywords: z.boolean().optional(),
   reelsAutoPublish: z.boolean().optional(),
   toolReelEveryDays: z.number().int().min(0).max(30).optional(),
+  tiktokPublic: z.boolean().optional(),
+  tiktokBrandOrganic: z.boolean().optional(),
 });
 
 socialRouter.put(
@@ -172,6 +180,65 @@ socialRouter.get(
       throw new HttpError(400, "Önce TikTok Client Key ve Client Secret değerlerini kaydedin.");
     }
     response.json({ url: buildTiktokAuthorizeUrl(clientKey, createTiktokState()), redirectUri });
+  }),
+);
+
+/** Demo/önizleme ekranı: bağlı hesabın adı, fotoğrafı ve TikTok'un izin verdiği gizlilik seçenekleri. */
+socialRouter.get(
+  "/tiktok/creator",
+  asyncHandler(async (_request, response) => {
+    const secrets = await readAccountSecrets("TIKTOK");
+    if (!secrets?.refreshToken) throw new HttpError(400, "TikTok bağlı değil. Önce “TikTok ile bağlan”ı tamamlayın.");
+    try {
+      const creator = await loadTiktokCreator(secrets);
+      const config = await readSocialConfig();
+      response.json({ creator, brandOrganic: config.tiktokBrandOrganic, publicAllowed: config.tiktokPublic });
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "TikTok hesabı okunamadı");
+    }
+  }),
+);
+
+const tiktokShareSchema = z.object({
+  videoUrl: z.string().url().max(500),
+  title: z.string().min(1).max(2200),
+  privacy: z.string().min(1).max(40),
+  brandOrganic: z.boolean(),
+  allowComment: z.boolean(),
+  allowDuet: z.boolean(),
+  allowStitch: z.boolean(),
+});
+
+/**
+ * Elle paylaşım (kullanıcı videoyu izler, açıklamayı yazar, gizliliği KENDİ seçer, "Paylaş"a basar).
+ * TikTok'un Direct Post kuralı: gizlilik varsayılanla verilmez, kullanıcı seçer.
+ */
+socialRouter.post(
+  "/tiktok/share",
+  asyncHandler(async (request, response) => {
+    const body = tiktokShareSchema.parse(request.body);
+    const secrets = await readAccountSecrets("TIKTOK");
+    if (!secrets?.refreshToken) throw new HttpError(400, "TikTok bağlı değil.");
+    try {
+      const result = await postTiktokVideo(secrets, {
+        videoUrl: body.videoUrl,
+        title: body.title,
+        privacy: body.privacy,
+        brandOrganic: body.brandOrganic,
+        disableComment: !body.allowComment,
+        disableDuet: !body.allowDuet,
+        disableStitch: !body.allowStitch,
+      });
+      await logAdminAudit(
+        actorOf(request),
+        "social.tiktok.share",
+        "TIKTOK",
+        `TikTok'a elle paylaşıldı (${result.privacy}, ${result.status})`,
+      );
+      response.json(result);
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "TikTok paylaşımı başarısız");
+    }
   }),
 );
 

@@ -39,6 +39,7 @@ import {
   type SocialPostRow,
 } from "../../api/admin";
 import { AccountConnectCard } from "./AccountConnectCard";
+import { TiktokShareCard } from "./TiktokShareCard";
 import { PostPreviewCard } from "./PostPreviewCard";
 import { RecentPostsPanel } from "./RecentPostsPanel";
 import { ToolReelsPanel } from "./ToolReelsPanel";
@@ -667,8 +668,8 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             saklanır, bir daha ekranda gösterilmez ve kayıtlara yazılmaz.
           </p>
           {overview.platforms.map((spec) => (
+            <div key={spec.platform} className="space-y-3">
             <AccountConnectCard
-              key={spec.platform}
               spec={spec}
               account={accountByPlatform.get(spec.platform)}
               busy={busy}
@@ -710,6 +711,10 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 })
               }
             />
+            {spec.platform === "TIKTOK" && accountByPlatform.get("TIKTOK")?.connected ? (
+              <TiktokShareCard accessToken={accessToken} />
+            ) : null}
+            </div>
           ))}
         </div>
       ) : null}
@@ -862,6 +867,38 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   Otomatik mod açık: Reels’ler yayınlanmadan önce kontrol edilmez.
                 </p>
               ) : null}
+            </div>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <p className="text-sm font-medium text-slate-200">TikTok gizlilik ve işaretleme</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                Otomatik ve onaylı TikTok paylaşımları için. TikTok uygulaması denetimden geçene kadar “herkese açık”ı
+                KAPALI tut: tüm videolar “yalnız ben” gizliliğiyle yüklenir. Onay gelince yalnızca bunu aç.
+              </p>
+              <label className="mt-3 flex items-start gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={config.tiktokPublic}
+                  onChange={(e) => patchConfig({ tiktokPublic: e.target.checked })}
+                />
+                <span>
+                  TikTok videoları herkese açık yüklensin
+                  <span className="block text-[11px] text-amber-300/90">Yalnızca TikTok uygulaman onaylandıktan sonra aç.</span>
+                </span>
+              </label>
+              <label className="mt-2 flex items-start gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={config.tiktokBrandOrganic}
+                  onChange={(e) => patchConfig({ tiktokBrandOrganic: e.target.checked })}
+                />
+                <span>
+                  Videolara “kendi markamızı tanıtıyor” işareti koy
+                  <span className="block text-[11px] text-slate-500">TikTok videoda “Tanıtım içeriği” etiketi gösterir.</span>
+                </span>
+              </label>
             </div>
 
             <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">

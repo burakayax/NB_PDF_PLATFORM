@@ -5,9 +5,11 @@ import type { AddressInfo } from "node:net";
 
 const saved: unknown[] = [];
 let storedSecrets: Record<string, string> | null = null;
+let socialConfig = { tiktokPublic: false, tiktokBrandOrganic: true };
 
 vi.mock("../modules/social/social.service.js", () => ({
   readAccountSecrets: vi.fn(async () => storedSecrets),
+  readSocialConfig: vi.fn(async () => socialConfig),
   saveAccount: vi.fn(async (input: unknown) => {
     saved.push(input);
     return [];
@@ -132,7 +134,7 @@ describe("TikTok geri dönüş adresi", () => {
   });
 });
 
-import { publishToTiktok, tiktokPollPauseMs, toTiktokTitle } from "../modules/social/platforms/tiktok.platform.js";
+import { describeTiktokError, publishToTiktok, tiktokPollPauseMs, toTiktokTitle } from "../modules/social/platforms/tiktok.platform.js";
 
 describe("TikTok video yayını", () => {
   const realFetch = globalThis.fetch;
@@ -140,6 +142,7 @@ describe("TikTok video yayını", () => {
   const secrets = { clientKey: "ck", clientSecret: "cs", accessToken: "old", refreshToken: "RT0" };
   const item = { guid: "tool-reel:compress", title: "PDF Sıkıştır" } as never;
   let initPrivacies: string[] = [];
+  let initBodies: { post_info: Record<string, unknown> }[] = [];
   let publicRejected = false;
   let creatorOptions: string[] = ["PUBLIC_TO_EVERYONE", "SELF_ONLY"];
   let statuses: string[] = [];
@@ -148,6 +151,8 @@ describe("TikTok video yayını", () => {
   beforeEach(() => {
     saved.length = 0;
     initPrivacies = [];
+    initBodies = [];
+    socialConfig = { tiktokPublic: true, tiktokBrandOrganic: true };
     publicRejected = true;
     creatorOptions = ["PUBLIC_TO_EVERYONE", "SELF_ONLY"];
     statuses = ["PROCESSING_UPLOAD", "PUBLISH_COMPLETE"];
@@ -164,6 +169,7 @@ describe("TikTok video yayını", () => {
       if (url.endsWith("/video/init/")) {
         const body = JSON.parse(String(init?.body)) as { post_info: { privacy_level: string }; source_info: { video_size: number } };
         initPrivacies.push(body.post_info.privacy_level);
+        initBodies.push(body);
         expect(body.source_info.video_size).toBe(4);
         if (body.post_info.privacy_level === "PUBLIC_TO_EVERYONE" && publicRejected) {
           return json({ error: { code: "unaudited_client_can_only_post_to_private_accounts", message: "x" } }, 403);
@@ -200,6 +206,25 @@ describe("TikTok video yayını", () => {
     const result = await publishToTiktok({ body: "Açıklama", imageUrl: VIDEO, item, secrets });
     expect(initPrivacies).toEqual(["PUBLIC_TO_EVERYONE"]);
     expect(result.warning).toBeUndefined();
+  });
+
+  it("ayar kapalıyken (varsayılan) hesap herkese açığa izin verse bile 'yalnız ben' ile yükler; marka işareti gönderilir", async () => {
+    socialConfig = { tiktokPublic: false, tiktokBrandOrganic: true };
+    await publishToTiktok({ body: "Açıklama", imageUrl: VIDEO, item, secrets });
+    expect(initPrivacies).toEqual(["SELF_ONLY"]);
+    expect(initBodies[0]?.post_info).toMatchObject({ brand_organic_toggle: true, brand_content_toggle: false });
+  });
+
+  it("marka işareti ayardan kapatılabilir", async () => {
+    socialConfig = { tiktokPublic: false, tiktokBrandOrganic: false };
+    await publishToTiktok({ body: "Açıklama", imageUrl: VIDEO, item, secrets });
+    expect(initBodies[0]?.post_info).toMatchObject({ brand_organic_toggle: false });
+  });
+
+  it("TikTok hata kodları Türkçe anlatılır", () => {
+    expect(describeTiktokError("spam_risk_too_many_posts")).toContain("günlük");
+    expect(describeTiktokError("unaudited_client_can_only_post_to_private_accounts")).toContain("denetim");
+    expect(describeTiktokError("bilinmeyen_kod")).toBeNull();
   });
 
   it("hesap yalnız 'yalnız ben' sunuyorsa doğrudan onu seçer", async () => {
