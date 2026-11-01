@@ -20,7 +20,7 @@ const SITE = "https://pdfplatform.app";
 export function firstCommentText(link: string, guid: string): string {
   const target = /^https?:\/\//.test(link) ? link : SITE;
   const url = withUtm(target, socialUtm("FACEBOOK", toolIdFromGuid(guid) ? "arac-videosu" : "blog"));
-  return `Ücretsiz denemek için 👉 ${url}`;
+  return `Adım adım anlatımı burada bulabilirsin 👉 ${url}`;
 }
 
 export async function postFirstComment(
@@ -30,16 +30,24 @@ export async function postFirstComment(
   guid: string,
 ): Promise<void> {
   if (!objectId) return;
-  try {
-    const params = new URLSearchParams();
-    params.set("access_token", token);
-    params.set("message", firstCommentText(link, guid));
-    await requestJson("Facebook", `${GRAPH}/${objectId}/comments`, {
-      method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
-    });
-  } catch (err) {
-    logger.warn("social", `Facebook ilk yorum eklenemedi (${objectId}): ${String(err)}`);
+  // Metinde "Link ilk yorumda" yazıyor; yorum eksik kalırsa okuyucu bağlantısız kalır.
+  // Bu yüzden geçici hatalarda bir kez daha denenir (gönderi tekrarlanmaz, yalnız yorum).
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const params = new URLSearchParams();
+      params.set("access_token", token);
+      params.set("message", firstCommentText(link, guid));
+      await requestJson("Facebook", `${GRAPH}/${objectId}/comments`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: params.toString(),
+      });
+      return;
+    } catch (err) {
+      lastErr = err;
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 3000));
+    }
   }
+  logger.warn("social", `Facebook ilk yorum eklenemedi (${objectId}): ${String(lastErr)}`);
 }

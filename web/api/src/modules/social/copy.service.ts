@@ -45,7 +45,7 @@ bir cümle akışı içinde kullan. Anahtar kelime yığını yazma; insanın ok
 olsun, içinde terimler geçsin.
 
 Kurallar:
-- Tıklama isteği uyandır: yazının somut faydasını söyle, başlığı olduğu gibi kopyalama.
+- Satış dili değil FAYDA dili: okuyucunun öğreneceği ya da çözeceği somut şeyi söyle, başlığı olduğu gibi kopyalama.
 - Abartı ve tıklama tuzağı yok. Emoji en fazla bir tane, gerekliyse.
 - TÜRKÇE, Türk bir metin yazarının elinden çıkmış gibi olmalı. En sık hata, İngilizce cümle
   yapısını Türkçe kelimelerle kurmaktır. Zorlama deyim ve kalıp arama.
@@ -60,10 +60,24 @@ Kurallar:
 - ETİKET YAZMA, BAĞLANTI YAZMA. "#" ve adres koyma — ikisini de sistem ekleyecek.
 - Karakter sınırlarını ASLA aşma.
 
-YORUM SORUSU (TÜM METİNLER): LONG, SHORT, PIN, LI ve FB metinlerinin SON cümlesi okuyucuyu yoruma
+YORUM SORUSU (IG_TR HARİÇ): LONG, SHORT, PIN, LI ve FB metinlerinin SON cümlesi okuyucuyu yoruma
 çağıran, cevabı tek kelimeyle verilebilecek gerçek bir soru olsun (örn. "Sen CV'nde hangisini yazıyorsun? 👇").
 "Düşüncelerini yaz" gibi genel çağrı değil; konuya özgü somut soru. SHORT metinde soru da 220 karakter
 sınırının içinde kalmalı.
+
+INSTAGRAM AYRI YAZILIR (IG_TR, yalnız Türkçe): Instagram'da en çok KAYDETME ve PAYLAŞMA işe yarar; bu yüzden
+metin, blog yazısının tanıtımı değil, tek başına işe yarayan KAYDEDİLECEK bir ipucu listesi olsun.
+- İLK SATIR kanca (en fazla 110 karakter): insanların arattığı bir anahtar kelimeyi ("pdf birleştirme",
+  "cv hazırlama" gibi "Konu terimleri"nden biri) mutlaka içersin ve somut bir fayda ya da sayı söylesin
+  (örn. "CV hazırlarken yapılan 3 hata"). Soru ile başlama.
+- Ardından 3 (en fazla 5) KISA madde: her biri "1." "2." "3." ile başlar, tek satır, somut ve uygulanabilir.
+  Maddeler yazının gerçek içeriğinden gelsin; özette olmayan iddia, sayı ya da vaat uydurma.
+- Anahtar kelimeler metinde doğal biçimde 2-3 kez geçsin; kelime yığını yazma.
+- Satış dili YASAK: "hemen dene", "kaçırma", "ücretsiz", "en iyi", "tıkla" gibi ifadeler kullanma.
+- Sondan bir önceki satır UYGULAMAYI TEK cümleyle anar (örn. "Bu işleri PDF Platform'da yapabilirsin.");
+  ikinci bir tanıtım cümlesi yazma. SON SATIR kaydetme çağrısı olsun ("Kaydet, lazım olacak 📌" ya da
+  "Birine lazımsa gönder 📌"). Yorum sorusu YAZMA.
+- Emoji en fazla iki tane.
 
 LINKEDIN AYRI YAZILIR (LI_TR, yalnız Türkçe): Profesyonel, sakin ve somut bir ton. CV, iş başvurusu,
 belge yönetimi ve verimlilik açısından yaz; 4-6 kısa satır, emoji yok ya da en fazla bir tane.
@@ -79,7 +93,7 @@ FACEBOOK AYRI YAZILIR (FB_TR, yalnız Türkçe): Facebook sayfasında Türk okuy
 - Bağlantı, "link ilk yorumda" cümlesi ve etiket YAZMA; sistem ekler.
 
 Yanıtı YALNIZCA şu JSON biçiminde ver, başka hiçbir şey yazma:
-{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"...","LI_TR":"...","FB_TR":"..."}`;
+{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"...","LI_TR":"...","FB_TR":"...","IG_TR":"..."}`;
 
 /** Modelin bazen eklediği ```json çitlerini ve ön/arka gevezeliği ayıklar. */
 function parseJsonObject(raw: string): Record<string, unknown> | null {
@@ -387,6 +401,22 @@ export function ensureQuestion(
   return `${trimmed}\n${q}`;
 }
 
+/** Instagram'ın uygulama cümlesi: metnin sonunda tek satır, satış dili yok. */
+const IG_APP_LINE = "Bu işleri PDF Platform'da yapabilirsin.";
+const IG_SAVE_LINE = "Kaydet, lazım olacak 📌";
+
+/**
+ * Instagram metni kaydetme çağrısıyla bitmeli (en önemli sinyal: kaydetme/paylaşma).
+ * Model yazmadıysa buradan eklenir; yer yoksa gövde kısaltılır.
+ */
+export function ensureSaveLine(body: string, room: number): string {
+  const clean = body.trim();
+  const lastLines = clean.split("\n").slice(-2).join("\n");
+  if (/kaydet|gönder(?![\p{L}])/iu.test(lastLines)) return clean;
+  const trimmed = truncateWords(clean, Math.max(30, room - IG_SAVE_LINE.length - 2));
+  return `${trimmed}\n${IG_SAVE_LINE}`;
+}
+
 /** Facebook'ta bağlantı metne değil ilk yoruma gider; metinde yalnızca yönlendirme satırı durur. */
 const FB_LINK_HINT = "Link ilk yorumda 👇";
 
@@ -416,7 +446,7 @@ function fallbackBlock(
   // Instagram: kanca ilk satır (≤125 karakter), sonda harekete çağrı.
   const lead =
     igTagText !== undefined
-      ? `${truncateWords(side.title, 125)}${side.summary ? `\n\n${side.summary}` : ""}\n\nKaydet, lazım olacak 📌`
+      ? `${truncateWords(side.title, 125)}${side.summary ? `\n\n${side.summary}` : ""}\n\n${IG_APP_LINE}\n${IG_SAVE_LINE}`
       : side.summary
         ? `${side.title}\n\n${side.summary}`
         : side.title;
@@ -495,11 +525,12 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
  * Dönen kayıtta HER platform için bir metin bulunur (model başarısızsa şablon).
  */
 /** Uzun metni kullanan ağlar — üçünde de AYNI metin görünür. */
-const LONG_FORM: SocialPlatform[] = ["INSTAGRAM", "YOUTUBE"];
+const LONG_FORM: SocialPlatform[] = ["YOUTUBE"];
 
 /** Bir ağ hangi metni kullanır? */
-type BodyKind = "long" | "short" | "pin" | "fb" | "li";
+type BodyKind = "long" | "short" | "pin" | "fb" | "li" | "ig";
 function bodyKind(platform: SocialPlatform): BodyKind {
+  if (platform === "INSTAGRAM") return "ig";
   if (platform === "FACEBOOK") return "fb";
   if (platform === "LINKEDIN") return "li";
   if (LONG_FORM.includes(platform)) return "long";
@@ -596,8 +627,13 @@ export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPl
     1200,
   );
 
+  const igRoom = Math.min(
+    ...wanted.filter((p) => bodyKind(p) === "ig").map((p) => bodyRoom(req, p)),
+    900,
+  );
+
   const { item, keywords } = req;
-  const prompt = `Blog yazısı — Türkçe hâli:
+  const prompt =`Blog yazısı — Türkçe hâli:
 Başlık: ${item.lang === "tr" ? item.title : (item.alt?.title ?? "(yok)")}
 Özet: ${item.lang === "tr" ? item.summary : (item.alt?.summary ?? "(yok)")}
 
@@ -615,6 +651,7 @@ Uzunluklar:
 - PIN_EN ve PIN_TR: en fazla ${Number.isFinite(pinRoom) ? pinRoom : 400} karakter (arama terimi yüklü).
 - LI_TR: en fazla ${Number.isFinite(liRoom) ? liRoom : 1200} karakter (profesyonel ton).
 - FB_TR: en fazla 800 karakter (60-120 kelime).
+- IG_TR: en fazla ${Number.isFinite(igRoom) ? igRoom : 900} karakter (kaydedilecek ipucu listesi).
 ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
 
   let raw: string;
@@ -634,6 +671,8 @@ ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
     li: { en: "", tr: pick("LI_TR") || pick("LONG_TR") },
     // Facebook yalnız Türkçe; model yazmadıysa şablon kalır.
     fb: { en: "", tr: pick("FB_TR") },
+    // Instagram yalnız Türkçe; model yazmadıysa şablon kalır (LONG yorum sorusuyla biter, kaydetme çağrısı değil).
+    ig: { en: "", tr: pick("IG_TR") },
     long: { en: pick("LONG_EN"), tr: pick("LONG_TR") },
     short: { en: pick("SHORT_EN"), tr: pick("SHORT_TR") },
     // Pin metni gelmediyse kısa metne düşülür: Pinterest metinsiz kalmasın.
@@ -647,6 +686,8 @@ ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
       const body = bodies[kind][side.lang];
       if (!body) return "";
       // Facebook'un metni zaten soruyla biter (istem + şablon); diğerlerinde soru zorunlu.
+      // Instagram'da yorum sorusu yerine kaydetme çağrısı zorunlu.
+      if (p === "INSTAGRAM") return buildBlock(ensureSaveLine(body, bodyRoom(req, p)), side, p, tagCountFor(p, sides.length, i), req.avoidTags);
       const withQ = p === "FACEBOOK" ? body : ensureQuestion(body, side, bodyRoom(req, p), kind === "li" ? "professional" : "general");
       return buildBlock(withQ, side, p, tagCountFor(p, sides.length, i), req.avoidTags, p === "FACEBOOK" && req.fbKind === "engage");
     });

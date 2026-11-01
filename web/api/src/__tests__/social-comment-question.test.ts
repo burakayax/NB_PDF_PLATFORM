@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ensureQuestion, writePostBodies } from "../modules/social/copy.service.js";
+import { ensureQuestion, ensureSaveLine, writePostBodies } from "../modules/social/copy.service.js";
 import { ALL_PLATFORMS } from "../modules/social/social.types.js";
 
 const side = { lang: "tr" as const, title: "t", summary: "s", link: "https://www.pdfplatform.app/blog/x", terms: [], tags: [] };
@@ -18,6 +18,32 @@ describe("yorum sorusu", () => {
   });
   it("LinkedIn için profesyonel (siz) soru seçer", () => {
     expect(ensureQuestion("Bir tespit.", side, 400, "professional")).toMatch(/[Ss]iz|[Ii]şe alım/);
+  });
+});
+
+describe("Instagram kaydetme çağrısı", () => {
+  it("kaydetme çağrısı olmayan metne ekler", () => {
+    const out = ensureSaveLine("CV'de 3 hata\n1. Uzun giriş", 400);
+    expect(out.split("\n").pop()).toContain("Kaydet");
+  });
+  it("zaten kaydet ile biten metne dokunmaz", () => {
+    const text = "CV'de 3 hata\nKaydet, lazım olacak 📌";
+    expect(ensureSaveLine(text, 400)).toBe(text);
+  });
+  it("sınırı aşmaz", () => {
+    expect(ensureSaveLine("kelime ".repeat(200), 200).length).toBeLessThanOrEqual(200);
+  });
+  it("şablon Instagram metni yorum sorusu değil kaydetme çağrısıyla biter, uygulamayı bir cümleyle anar", async () => {
+    const bodies = await writePostBodies({
+      item: { guid: "g", title: "Başlık", summary: "Özet", link: "https://www.pdfplatform.app/blog/a", lang: "tr" } as never,
+      platforms: ["INSTAGRAM"],
+      keywords: { tr: [], en: [], tagsTr: [], tagsEn: [] } as never,
+      bilingual: false,
+      singleLang: "tr",
+      templateOnly: true,
+    });
+    expect(bodies.INSTAGRAM).toContain("Kaydet, lazım olacak");
+    expect(bodies.INSTAGRAM.match(/PDF Platform/g)?.length).toBe(1);
   });
 });
 

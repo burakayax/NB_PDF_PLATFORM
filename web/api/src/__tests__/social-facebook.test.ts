@@ -27,7 +27,7 @@ describe("Facebook paylaşım saatleri", () => {
 
 describe("Facebook ilk yorum", () => {
   it("kampanya etiketli sayfa bağlantısını kalıpla verir; bağlantı yoksa ana siteye düşer", () => {
-    expect(firstCommentText("https://pdfplatform.app/tr/blog/x", "g")).toMatch(/^Ücretsiz denemek için 👉 https:\/\/pdfplatform\.app\/tr\/blog\/x\?utm_source=facebook/);
+    expect(firstCommentText("https://pdfplatform.app/tr/blog/x", "g")).toMatch(/^Adım adım anlatımı burada bulabilirsin 👉 https:\/\/pdfplatform\.app\/tr\/blog\/x\?utm_source=facebook/);
     expect(firstCommentText("", "g")).toContain("https://pdfplatform.app");
   });
 });
