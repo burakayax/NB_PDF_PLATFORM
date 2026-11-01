@@ -104,6 +104,13 @@ export type SocialAutomationConfig = {
    * `reelsAutoPublish` ayarına bağlıdır.
    */
   toolReelEveryDays: number;
+  /**
+   * TikTok videoları herkese açık mı yüklensin? KAPALI (varsayılan) = her zaman "yalnız ben".
+   * TikTok uygulaması denetimden geçene kadar kapalı kalmalı; onay gelince yalnız bu ayar açılır.
+   */
+  tiktokPublic: boolean;
+  /** TikTok'ta "kendi markamızı tanıtıyor" (brand_organic_toggle) işareti; araç videoları kendi ürünümüz. */
+  tiktokBrandOrganic: boolean;
 };
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
@@ -120,6 +127,8 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   researchKeywords: true,
   reelsAutoPublish: false,
   toolReelEveryDays: 0,
+  tiktokPublic: false,
+  tiktokBrandOrganic: true,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -144,6 +153,9 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     // Yalnızca açıkça `true` ise otomatik: eksik/bozuk ayar onaylı moda düşer.
     reelsAutoPublish: raw.reelsAutoPublish === true,
     toolReelEveryDays: clampInt(raw.toolReelEveryDays, 0, 30, DEFAULT_CONFIG.toolReelEveryDays),
+    // Yalnızca açıkça `true` ise herkese açık: eksik/bozuk ayar "yalnız ben"e düşer.
+    tiktokPublic: raw.tiktokPublic === true,
+    tiktokBrandOrganic: raw.tiktokBrandOrganic !== false,
   };
 }
 

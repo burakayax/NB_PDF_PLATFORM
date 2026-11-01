@@ -1014,6 +1014,10 @@ export type SocialConfig = {
   reelsAutoPublish: boolean;
   /** Araç tanıtım videosu kaç günde bir sıraya katılsın (0 = kapalı). */
   toolReelEveryDays: number;
+  /** TikTok videoları herkese açık mı? Kapalıyken (varsayılan) her zaman “yalnız ben”. */
+  tiktokPublic: boolean;
+  /** TikTok’ta “kendi markamızı tanıtıyor” işareti. */
+  tiktokBrandOrganic: boolean;
 };
 
 export type SocialAccountRow = {
@@ -1133,6 +1137,56 @@ export async function testSocialAccount(
   const r = await adminFetch(accessToken, `/social/accounts/${platform}/test`, { method: "POST" });
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }>;
+}
+
+/** Sunucunun JSON hata gövdesinden okunur mesajı çıkarır. */
+async function errorMessageOf(r: Response, fallback: string): Promise<string> {
+  const text = await r.text();
+  try {
+    const parsed = JSON.parse(text) as { message?: string; error?: string };
+    return parsed.message ?? parsed.error ?? fallback;
+  } catch {
+    return text || fallback;
+  }
+}
+
+export type TiktokCreator = {
+  nickname: string;
+  avatarUrl: string;
+  privacyOptions: string[];
+  commentDisabled: boolean;
+  duetDisabled: boolean;
+  stitchDisabled: boolean;
+  maxVideoSeconds: number;
+};
+
+/** Paylaşım ekranı için: bağlı TikTok hesabı + TikTok’un izin verdiği gizlilik seçenekleri. */
+export async function fetchTiktokCreator(
+  accessToken: string,
+): Promise<{ creator: TiktokCreator; brandOrganic: boolean; publicAllowed: boolean }> {
+  const r = await adminFetch(accessToken, "/social/tiktok/creator");
+  if (!r.ok) throw new Error(await errorMessageOf(r, "TikTok hesabı okunamadı."));
+  return r.json() as Promise<{ creator: TiktokCreator; brandOrganic: boolean; publicAllowed: boolean }>;
+}
+
+export type TiktokShareBody = {
+  videoUrl: string;
+  title: string;
+  privacy: string;
+  brandOrganic: boolean;
+  allowComment: boolean;
+  allowDuet: boolean;
+  allowStitch: boolean;
+};
+
+/** Videoyu kullanıcının seçtikleriyle TikTok’a gönderir (yüklenip işlenene kadar ~1 dk sürebilir). */
+export async function shareToTiktok(
+  accessToken: string,
+  body: TiktokShareBody,
+): Promise<{ publishId: string; postId: string | null; status: string; privacy: string; warning: string | null }> {
+  const r = await adminFetch(accessToken, "/social/tiktok/share", { method: "POST", body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await errorMessageOf(r, "TikTok paylaşımı başarısız."));
+  return r.json() as Promise<{ publishId: string; postId: string | null; status: string; privacy: string; warning: string | null }>;
 }
 
 /** TikTok geliştirici sayfasına yazılacak geri dönüş adresi (sunucunun gerçekten kullandığı). */
