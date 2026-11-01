@@ -95,11 +95,11 @@ describe("CookieNotice — özelleştirme ekranı", () => {
     expect(screen.getByLabelText(/Pazarlama/i)).toBeInTheDocument();
   });
 
-  it("Analitik varsayılan olarak işaretli gelir", () => {
+  it("Analitik varsayılan olarak işaretsiz gelir (rıza önceden verilmiş sayılmaz)", () => {
     render(<CookieNotice {...defaultProps} />);
     fireEvent.click(screen.getByRole("button", { name: /Tercihleri Özelleştir/i }));
     const analyticsCheckbox = screen.getByLabelText(/Analitik/i) as HTMLInputElement;
-    expect(analyticsCheckbox.checked).toBe(true);
+    expect(analyticsCheckbox.checked).toBe(false);
   });
 
   it("Pazarlama varsayılan olarak işaretsiz gelir", () => {
@@ -114,13 +114,13 @@ describe("CookieNotice — özelleştirme ekranı", () => {
     render(<CookieNotice {...defaultProps} onSavePreferences={onSavePreferences} />);
     fireEvent.click(screen.getByRole("button", { name: /Tercihleri Özelleştir/i }));
 
-    // Pazarlama'yı işaretle (analytics varsayılan true, errorMonitoring varsayılan false)
+    // Pazarlama'yı işaretle (analytics ve errorMonitoring varsayılan false)
     fireEvent.click(screen.getByLabelText(/Pazarlama/i));
     fireEvent.click(screen.getByRole("button", { name: /Tercihleri Kaydet/i }));
 
     // Bileşen artık errorMonitoring alanını da gönderiyor
     expect(onSavePreferences).toHaveBeenCalledWith(
-      expect.objectContaining({ analytics: true, marketing: true }),
+      expect.objectContaining({ analytics: false, marketing: true }),
     );
   });
 
