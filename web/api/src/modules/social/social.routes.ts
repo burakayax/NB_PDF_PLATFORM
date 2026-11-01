@@ -22,6 +22,7 @@ import {
   rejectReplyDraft,
 } from "./facebook-engagement.service.js";
 import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
+import { buildTiktokAuthorizeUrl, createTiktokState, tiktokRedirectUri } from "./platforms/tiktok.platform.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
@@ -37,6 +38,7 @@ import {
   queueDailyPosts,
   queueNextToolReel,
   queueToolReel,
+  readAccountSecrets,
   saveAccount,
   testAccount,
   readSocialConfig,
@@ -152,6 +154,31 @@ socialRouter.put(
       { fields: Object.keys(body.secrets) },
     );
     response.json({ accounts });
+  }),
+);
+
+/**
+ * TikTok: "TikTok ile bağlan". Kayıtlı Client Key ile TikTok izin ekranı adresini ve TikTok
+ * geliştirici sayfasına yazılacak geri dönüş adresini verir. Panel adresi yeni sekmede açar;
+ * dönüşü girişsiz `/api/auth/tiktok/callback` karşılar (bkz. tiktok.routes.ts).
+ */
+socialRouter.get(
+  "/tiktok/connect",
+  asyncHandler(async (_request, response) => {
+    const redirectUri = tiktokRedirectUri();
+    const secrets = await readAccountSecrets("TIKTOK");
+    const clientKey = secrets?.clientKey?.trim();
+    if (!clientKey || !secrets?.clientSecret?.trim()) {
+      throw new HttpError(400, "Önce TikTok Client Key ve Client Secret değerlerini kaydedin.");
+    }
+    response.json({ url: buildTiktokAuthorizeUrl(clientKey, createTiktokState()), redirectUri });
+  }),
+);
+
+socialRouter.get(
+  "/tiktok/redirect-uri",
+  asyncHandler(async (_request, response) => {
+    response.json({ redirectUri: tiktokRedirectUri() });
   }),
 );
 

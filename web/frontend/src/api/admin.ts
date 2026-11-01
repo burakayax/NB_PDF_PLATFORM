@@ -992,7 +992,7 @@ export async function adminResetUserRateLimit(
 
 // ─── Sosyal medya otomasyonu ─────────────────────────────────────────────────
 
-export type SocialPlatformId = "X" | "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "PINTEREST" | "YOUTUBE";
+export type SocialPlatformId = "X" | "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "PINTEREST" | "YOUTUBE" | "TIKTOK";
 
 export type SocialConfig = {
   enabled: boolean;
@@ -1133,6 +1133,28 @@ export async function testSocialAccount(
   const r = await adminFetch(accessToken, `/social/accounts/${platform}/test`, { method: "POST" });
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }>;
+}
+
+/** TikTok geliştirici sayfasına yazılacak geri dönüş adresi (sunucunun gerçekten kullandığı). */
+export async function fetchTiktokRedirectUri(accessToken: string): Promise<string> {
+  const r = await adminFetch(accessToken, "/social/tiktok/redirect-uri");
+  if (!r.ok) throw new Error(await r.text());
+  return ((await r.json()) as { redirectUri: string }).redirectUri;
+}
+
+/** "TikTok ile bağlan": TikTok izin ekranının adresini verir (Client Key kayıtlı olmalı). */
+export async function fetchTiktokConnectUrl(accessToken: string): Promise<string> {
+  const r = await adminFetch(accessToken, "/social/tiktok/connect");
+  if (!r.ok) {
+    let message = "TikTok bağlantısı başlatılamadı.";
+    try {
+      message = ((await r.json()) as { message?: string; error?: string }).message ?? message;
+    } catch {
+      /* yanıt JSON değil */
+    }
+    throw new Error(message);
+  }
+  return ((await r.json()) as { url: string }).url;
 }
 
 export type SocialPostsResponse = {

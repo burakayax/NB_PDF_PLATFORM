@@ -293,6 +293,12 @@ function encryptSecrets(secrets: Record<string, string>): string {
   }
 }
 
+/** Kayıtlı anahtarları (çözülmüş) okur; kayıt yoksa ya da çözülemezse null. Yalnız sunucu içi kullanım. */
+export async function readAccountSecrets(platform: SocialPlatform): Promise<Record<string, string> | null> {
+  const row = await prisma.socialAccount.findUnique({ where: { platform } });
+  return row ? decodeSecrets(row) : null;
+}
+
 export async function listAccounts(): Promise<AccountView[]> {
   const rows = await prisma.socialAccount.findMany();
   const byPlatform = new Map(rows.map((r) => [r.platform, r]));
@@ -331,6 +337,8 @@ export async function saveAccount(input: {
   displayName?: string;
   enabled?: boolean;
   secrets: Record<string, string>;
+  /** Anahtarın bitiş tarihi (OAuth ile alınan ağlarda); verilmezse mevcut değer korunur. */
+  tokenExpiresAt?: Date;
 }): Promise<AccountView[]> {
   const spec = PLATFORM_SPECS[input.platform];
   const existing = await prisma.socialAccount.findUnique({ where: { platform: input.platform } });
@@ -348,6 +356,7 @@ export async function saveAccount(input: {
     secretsJson: encryptSecrets(merged),
     enabled: input.enabled ?? existing?.enabled ?? true,
     lastError: null,
+    ...(input.tokenExpiresAt ? { tokenExpiresAt: input.tokenExpiresAt } : {}),
   };
 
   await prisma.socialAccount.upsert({

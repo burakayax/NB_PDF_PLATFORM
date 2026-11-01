@@ -875,6 +875,7 @@ enum SocialPlatform {
   INSTAGRAM
   PINTEREST
   YOUTUBE
+  TIKTOK
 }
 
 enum SocialPostStatus {

@@ -214,6 +214,24 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
       { key: "refreshToken", label: "Refresh Token", help: "youtube.upload + youtube.readonly izniyle alınan yenileme anahtarı (OAuth Playground)" },
     ],
   },
+  TIKTOK: {
+    platform: "TIKTOK",
+    label: "TikTok",
+    maxChars: 2200,
+    imageRequired: false,
+    imageFormat: "tall",
+    hashtagCount: 3,
+    linkStyle: "none",
+    bilingual: false,
+    videoOnly: true,
+    // Bağlantı OAuth ile kurulur (panelde "TikTok ile bağlan"); yalnız ilk iki alan elle girilir.
+    secretFields: [
+      { key: "clientKey", label: "Client Key", help: "TikTok geliştirici uygulamasının Client Key değeri" },
+      { key: "clientSecret", label: "Client Secret", help: "Aynı uygulamanın Client Secret değeri" },
+      { key: "accessToken", label: "Access Token", help: "\"TikTok ile bağlan\" sonrası otomatik yazılır (elle girilmez)" },
+      { key: "refreshToken", label: "Refresh Token", help: "\"TikTok ile bağlan\" sonrası otomatik yazılır (elle girilmez)" },
+    ],
+  },
 };
 
 export const ALL_PLATFORMS = Object.keys(PLATFORM_SPECS) as SocialPlatform[];

@@ -22,6 +22,8 @@ import {
   unshareSocialPost,
   disconnectSocialAccount,
   testSocialAccount,
+  fetchTiktokConnectUrl,
+  fetchTiktokRedirectUri,
   fetchSocialOverview,
   fetchSocialPosts,
   markSocialPostShared,
@@ -186,6 +188,11 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
   const [clearOpen, setClearOpen] = useState(false);
   const [resetRotation, setResetRotation] = useState(false);
   const [tab, setTab] = useState<TabId>("flow");
+  const [tiktokRedirectUri, setTiktokRedirectUri] = useState("");
+  useEffect(() => {
+    if (tab !== "accounts" || tiktokRedirectUri) return;
+    fetchTiktokRedirectUri(accessToken).then(setTiktokRedirectUri).catch(() => undefined);
+  }, [tab, accessToken, tiktokRedirectUri]);
   const [busy, setBusy] = useState(false);
   const [busyPostId, setBusyPostId] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -681,6 +688,18 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   });
                   await refresh();
                 }, "Bağlantı kaldırıldı.")
+              }
+              oauth={
+                spec.platform === "TIKTOK" && tiktokRedirectUri
+                  ? {
+                      redirectUri: tiktokRedirectUri,
+                      onConnect: () =>
+                        void run(async () => {
+                          const url = await fetchTiktokConnectUrl(accessToken);
+                          window.open(url, "_blank", "noopener");
+                        }, "TikTok izin ekranı yeni sekmede açıldı. İzin verince bu sayfaya dönüp “Bağlantıyı sına”ya bas."),
+                    }
+                  : undefined
               }
               testResult={testResults[spec.platform]}
               onTest={(platform: SocialPlatformId) =>
