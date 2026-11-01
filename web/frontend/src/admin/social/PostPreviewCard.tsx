@@ -63,6 +63,7 @@ export function PostPreviewCard({
   onSaveBody,
   onMarkShared,
   accountLabel,
+  accountReady = false,
 }: {
   post: SocialPostRow;
   spec: SocialPlatformSpec | undefined;
@@ -70,6 +71,8 @@ export function PostPreviewCard({
   onPublish: (id: string) => void;
   onDelete: (id: string) => void;
   onSaveBody: (id: string, body: string) => void;
+  /** Bu ağın hesabı bağlı ve açık mı? Öyleyse “Elle paylaş” kaydı da panelden doğrudan yayınlanabilir. */
+  accountReady?: boolean;
   /** Elle paylaşılan gönderiyi "paylaşıldı" saymak için (yalnızca MANUAL). */
   onMarkShared?: (id: string) => void;
   /** Tam önizlemede başlık satırında gösterilen hesap adı. */
@@ -234,6 +237,17 @@ export function PostPreviewCard({
 
           {manual ? (
             <>
+              {accountReady ? (
+                <button
+                  type="button"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-cyan-600/90 px-3 text-xs font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-40"
+                  disabled={busy}
+                  onClick={() => onPublish(post.id)}
+                >
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  Şimdi paylaş
+                </button>
+              ) : null}
               <button type="button" className={iconButton} disabled={busy} onClick={() => setEditing(true)}>
                 <Pencil className="h-3.5 w-3.5" />
                 Metni düzenle
