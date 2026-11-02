@@ -1,3 +1,4 @@
+import { PRICES_HIDDEN, priceComingSoonLabel } from "../../../lib/priceVisibility";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Clock, Loader2, Lock, X } from "lucide-react";
@@ -59,7 +60,7 @@ export function CvPassModal({ language, accessToken, onClose, onUpgrade }: Props
   }
 
   // Para birimi: sunucunun gerçekte tahsil edeceği (fatura ülkesine göre). Gelmezse dile göre.
-  const price = (p: CvPass) => ((p.chargeCurrency ?? (tr ? "TRY" : "USD")) === "TRY" ? `${p.priceTRY.toLocaleString("tr-TR")} ₺` : `$${p.priceUSD}`);
+  const price = (p: CvPass) => PRICES_HIDDEN ? priceComingSoonLabel(tr) : ((p.chargeCurrency ?? (tr ? "TRY" : "USD")) === "TRY" ? `${p.priceTRY.toLocaleString("tr-TR")} ₺` : `$${p.priceUSD}`);
 
   return createPortal(
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -83,7 +84,7 @@ export function CvPassModal({ language, accessToken, onClose, onUpgrade }: Props
                   {passLabel(p.hours, tr)}
                   {p.popular ? <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[11px] font-bold text-sky-200">{tr ? "Avantajlı" : "Best value"}</span> : null}
                 </p>
-                <p className="text-[12px] text-slate-400">{price(p)} · {(p.chargeCurrency ?? (tr ? "TRY" : "USD")) === "TRY" ? (tr ? "KDV dahil" : "VAT incl.") : (tr ? "KDV yok (yurt dışı)" : "No VAT (export)")}</p>
+                <p className="text-[12px] text-slate-400">{price(p)}{PRICES_HIDDEN ? "" : ` · ${(p.chargeCurrency ?? (tr ? "TRY" : "USD")) === "TRY" ? (tr ? "KDV dahil" : "VAT incl.") : (tr ? "KDV yok (yurt dışı)" : "No VAT (export)")}`}</p>
               </div>
               {paymentsDisabled ? (
                 <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[13px] font-bold text-slate-400">{tr ? "Yakında" : "Coming soon"}</span>

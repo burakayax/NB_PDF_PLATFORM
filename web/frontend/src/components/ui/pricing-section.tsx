@@ -14,6 +14,7 @@ import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { useSettings } from "../../contexts/SettingsContext";
 import { applyTryPriceOverrides } from "../../lib/checkoutQuote";
+import { PRICES_HIDDEN, priceComingSoonLabel } from "../../lib/priceVisibility";
 import { PaytrBadge } from "../common/PaytrBadge";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -341,6 +342,11 @@ function MonthlyOnlyCard({
           : (tr ? "PDF işine yeni başlayanlar için." : "Perfect for getting started."))}
       </p>
 
+      {PRICES_HIDDEN ? (
+        <div className="mb-6 flex items-baseline gap-1.5">
+          <span className="text-3xl lg:text-4xl font-black text-white">{priceComingSoonLabel(tr)}</span>
+        </div>
+      ) : (
       <div className="mb-6 flex items-baseline gap-1.5">
         <span className="text-gray-400 text-lg font-semibold">{sym}</span>
         <NumberFlow
@@ -352,6 +358,7 @@ function MonthlyOnlyCard({
         />
         <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>
       </div>
+      )}
 
       <ul className="space-y-2.5 flex-1 mb-7">
         {features.map((f) =>
@@ -524,7 +531,7 @@ function CycleAwareCard({
       </p>
 
       {/* Per-card billing toggle — sadece yıllık seçeneği olan planlarda (Business aylık) */}
-      {!plan.monthlyOnlyBilling && (
+      {!PRICES_HIDDEN && !plan.monthlyOnlyBilling && (
         <CardBillingToggle
           cycle={cycle}
           onChange={setCycle}
@@ -543,7 +550,9 @@ function CycleAwareCard({
                 {tr ? "Ekstra Kişi" : "Extra Seats"}
               </p>
               <p className="text-[11px] text-slate-400">
-                {tr
+                {PRICES_HIDDEN
+                  ? (tr ? "5 kişi dahil · ek kişi eklenebilir" : "5 seats included · more seats can be added")
+                  : tr
                   ? `5 kişi dahil · +${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
                   : `5 seats included · +${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
               </p>
@@ -566,7 +575,7 @@ function CycleAwareCard({
               </button>
             </div>
           </div>
-          {extraSeats > 0 && (
+          {!PRICES_HIDDEN && extraSeats > 0 && (
             <p className="mt-1.5 text-[11px] text-violet-400">
               {tr
                 ? `${5 + extraSeats} kişi · ${fmt(extraSeatTotal, currency)}/ay ekstra`
@@ -578,7 +587,7 @@ function CycleAwareCard({
 
       {/* Yearly savings badge */}
       <AnimatePresence>
-        {isYearly && savePct > 0 && (
+        {!PRICES_HIDDEN && isYearly && savePct > 0 && (
           <motion.div
             key="save-badge"
             initial={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -593,6 +602,12 @@ function CycleAwareCard({
         )}
       </AnimatePresence>
 
+      {PRICES_HIDDEN ? (
+        <div className="mb-6 flex items-baseline gap-1.5">
+          <span className="text-3xl lg:text-4xl font-black text-white">{priceComingSoonLabel(tr)}</span>
+        </div>
+      ) : (
+      <>
       {/* Price — counter-style animation */}
       <div className="mb-1 flex items-baseline gap-1.5">
         <span className="text-gray-400 text-lg font-semibold">{sym}</span>
@@ -636,12 +651,14 @@ function CycleAwareCard({
           )}
         </AnimatePresence>
       </div>
+      </>
+      )}
 
       <ul className="space-y-2.5 flex-1 mb-7">
         {features.map((f) => <Feature key={f} text={f} highlight={false} />)}
       </ul>
 
-      <p className="text-gray-400 text-xs mb-3 text-center">
+      <p className={`text-gray-400 text-xs mb-3 text-center ${PRICES_HIDDEN ? "hidden" : ""}`}>
         {isPlus || isPro
           ? (tr ? "Yıllık taahhüt en iyi fiyat-değer dengesini sunar" : "Yearly commitment offers the best value")
           : (tr ? "Kurumsal lisanslama · organizasyonunuzla ölçeklenir" : "Enterprise licensing built to scale with your organization")}
@@ -731,7 +748,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
   const editorLimits = useEditorLimits();
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
-  const comingSoon = flags?.featureFlags?.paymentsDisabled !== false;
+  const comingSoon = PRICES_HIDDEN || flags?.featureFlags?.paymentsDisabled !== false;
   // "Tüm ayrıcalıkları gör" popup'ı — hangi planın detayı açık.
   const [perksPlan, setPerksPlan] = useState<PlanId | null>(null);
   const starterTools: FeatureKey[] = (
@@ -885,6 +902,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
         </div>
 
         {/* VAT info note — kullanıcıya yalnız KENDİ durumu gösterilir (TL = Türkiye, KDV dahil; döviz = yurt dışı, KDV yok) */}
+        {PRICES_HIDDEN ? null : (
         <p className="text-center text-gray-400 text-xs mt-4">
           {currency === "TRY"
             ? tr
@@ -894,6 +912,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
               ? "Gösterilen fiyatlara KDV uygulanmaz (yurt dışı satışlarda ihracat istisnası)."
               : "No VAT is charged on the prices shown (export exemption for customers outside Turkey)."}
         </p>
+        )}
 
         {/* Trust line */}
         <p className="text-center text-gray-400 text-sm mt-3">
@@ -906,7 +925,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
               <PaytrBadge height={18} tr={tr} />
             </span>
           </span>
-          {isEurDisplay && (
+          {!PRICES_HIDDEN && isEurDisplay && (
             <span className="block mt-1 text-xs text-amber-400/80">
               {tr
                 ? "EUR fiyatlar gösterim amaçlıdır; ödeme USD bant fiyatıyla işlenir."
