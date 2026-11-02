@@ -164,13 +164,37 @@ describe("Video pin", () => {
     expect(pin).toEqual({ id: "99", url: "https://www.pinterest.com/pin/99/", sandbox: true });
   });
 
-  it("kapak yoksa videonun 1. saniyesindeki kare istenir (kapaksız istek gönderilmez)", async () => {
+  it("kapak dosyası yoksa videonun başlık karesi (JPEG) kapak olarak gönderilir; not düşer", async () => {
     wireHappyPath(["succeeded"]);
-    await createPinterestVideoPin(stored, { ...input, coverImageUrl: null }, async () => {});
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    const pin = await createPinterestVideoPin(
+      stored,
+      { ...input, coverImageUrl: null },
+      async () => {},
+      async () => ({ jpeg, second: 2.5, black: false }),
+    );
     const last = (fetchMock.mock.calls as Array<[string, RequestInit]>).at(-1)!;
     const media = JSON.parse(String(last[1].body)).media_source;
     expect(media.cover_image_url).toBeUndefined();
-    expect(media.cover_image_key_frame_time).toBe(1);
+    expect(media.cover_image_data).toBe(jpeg.toString("base64"));
+    expect(media.cover_image_content_type).toBe("image/jpeg");
+    expect(pin.coverNote).toContain("2,5. saniyesindeki başlık karesi");
+  });
+
+  it("kare de okunamazsa Pinterest'in 3. saniye anahtar karesine düşer (kapaksız istek asla gitmez)", async () => {
+    wireHappyPath(["succeeded"]);
+    const pin = await createPinterestVideoPin(stored, { ...input, coverImageUrl: null }, async () => {}, async () => null);
+    const last = (fetchMock.mock.calls as Array<[string, RequestInit]>).at(-1)!;
+    const media = JSON.parse(String(last[1].body)).media_source;
+    expect(media.cover_image_key_frame_time).toBe(3);
+    expect(media.cover_image_data).toBeUndefined();
+    expect(pin.coverNote).toContain("3. saniye");
+  });
+
+  it("kapak dosyası varsa not düşmez", async () => {
+    wireHappyPath(["succeeded"]);
+    const pin = await createPinterestVideoPin(stored, input, async () => {});
+    expect(pin.coverNote).toBeUndefined();
   });
 
   it("Pinterest videoyu işleyemezse (failed) okunur hata verir ve pin oluşturmaz", async () => {

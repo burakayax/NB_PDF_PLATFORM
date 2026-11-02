@@ -921,6 +921,44 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             </div>
 
             <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <p className="text-sm font-medium text-slate-200">Pinterest ve TikTok: onaysız otomatik paylaşım</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                Bu iki ağın video gönderileri de diğerleri gibi önce <strong>taslak</strong> olarak bekler, sen “Şimdi paylaş” dersin.
+                Hesabın onaylandığında ilgili anahtarı aç: o ağın videoları, sen onaylamadan saati gelince kendiliğinden paylaşılır.
+                Her ağın anahtarı ayrıdır ve yukarıdaki genel Reels ayarından bağımsızdır.
+              </p>
+              <label className="mt-3 flex items-start gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={config.pinterestAutoPublish}
+                  onChange={(e) => patchConfig({ pinterestAutoPublish: e.target.checked })}
+                />
+                <span>
+                  Pinterest video pinleri onaysız otomatik paylaşılsın
+                  <span className="block text-[11px] text-amber-300/90">Pinterest hesabın onaylandıktan sonra aç.</span>
+                </span>
+              </label>
+              <label className="mt-2 flex items-start gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={config.tiktokAutoPublish}
+                  onChange={(e) => patchConfig({ tiktokAutoPublish: e.target.checked })}
+                />
+                <span>
+                  TikTok videoları onaysız otomatik paylaşılsın
+                  <span className="block text-[11px] text-amber-300/90">TikTok uygulaman onaylandıktan sonra aç.</span>
+                </span>
+              </label>
+              {config.pinterestAutoPublish || config.tiktokAutoPublish ? (
+                <p className="mt-2 text-[11px] leading-relaxed text-amber-300/90">
+                  Açık olan ağın videoları yayınlanmadan önce kontrol edilmez.
+                </p>
+              ) : null}
+            </div>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
               <p className="text-sm font-medium text-slate-200">TikTok gizlilik ve işaretleme</p>
               <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
                 Otomatik ve onaylı TikTok paylaşımları için. TikTok uygulaması denetimden geçene kadar “herkese açık”ı

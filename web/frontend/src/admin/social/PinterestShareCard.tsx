@@ -4,6 +4,7 @@ import {
   createPinterestBoard,
   createPinterestPin,
   fetchPinterestBoardRules,
+  fetchMissingReelCovers,
   fetchPinterestBoardSetup,
   fetchPinterestKeywords,
   fetchPinterestOverview,
@@ -13,6 +14,7 @@ import {
   selectPinterestBoard,
   setPinterestBoardMap,
   syncPinterestBoards,
+  type MissingReelCover,
   type PinterestBoardChoice,
   type PinterestBoardRules,
   type PinterestBoardSetup,
@@ -70,6 +72,9 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   const [rules, setRules] = useState<PinterestBoardRules | null>(null);
   const [showRules, setShowRules] = useState(false);
   const [previewBoard, setPreviewBoard] = useState<PinterestBoardChoice | null>(null);
+  // Kapak dosyası eksik olan araçlar (video pininde bunların kapağı videodan alınır).
+  const [missingCovers, setMissingCovers] = useState<MissingReelCover[] | null>(null);
+  const [coversErr, setCoversErr] = useState<string | null>(null);
   // Anahtar kelimeler.
   const [toolKeywords, setToolKeywords] = useState<PinterestToolKeywords[]>([]);
   const [kwMain, setKwMain] = useState("");
@@ -104,6 +109,17 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Ağır olmayan ama yavaş olabilen kontrol: ana ekranı bekletmeden ayrı yüklenir.
+  useEffect(() => {
+    let live = true;
+    fetchMissingReelCovers(accessToken)
+      .then((r) => live && setMissingCovers(r.missing))
+      .catch((e) => live && setCoversErr(e instanceof Error ? e.message : "Kapak durumu okunamadı"));
+    return () => {
+      live = false;
+    };
+  }, [accessToken]);
 
   const reel = reels.find((r) => r.id === reelId) ?? null;
   // Pin, konusuna ayrılmış panoya ya da (eşleşme yoksa) seçili tek panoya gider.
@@ -643,6 +659,35 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
           </div>
         </div>
       )}
+
+      <div className="space-y-1.5 rounded-xl border border-slate-700/50 bg-slate-950/30 p-3">
+        <p className="text-xs font-medium text-slate-300">Kapak dosyası eksik videolar</p>
+        {coversErr ? (
+          <p className="text-[11px] text-rose-300">{coversErr}</p>
+        ) : missingCovers === null ? (
+          <p className="flex items-center gap-2 text-[11px] text-slate-500">
+            <Loader2 className="h-3 w-3 animate-spin" /> Kapaklar kontrol ediliyor…
+          </p>
+        ) : missingCovers.length === 0 ? (
+          <p className="text-[11px] text-emerald-300">Tüm araçların kapak dosyası var.</p>
+        ) : (
+          <>
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              Bu araçların kapağı sitede yok. Video pininde kapak yerine videonun başlık karesi (≈2–3. saniye; siyahsa ileri) kullanılır.
+              Doğru kapak için aşağıdaki dosyayı ekle (1080×1920 JPG).
+            </p>
+            <ul className="space-y-1">
+              {missingCovers.map((c) => (
+                <li key={c.id} className="rounded-md bg-slate-900/60 px-2 py-1.5 text-[11px] text-slate-300">
+                  <span className="font-medium text-slate-100">{c.title}</span>
+                  <span className={c.hasVideo ? "text-emerald-300" : "text-slate-500"}> · {c.hasVideo ? "videosu hazır" : "videosu yok"}</span>
+                  <code className="mt-0.5 block break-all text-[10px] text-slate-400">{c.file}</code>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
 
       <p className="flex items-start gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />

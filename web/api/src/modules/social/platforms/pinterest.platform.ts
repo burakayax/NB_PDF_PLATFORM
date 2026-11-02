@@ -21,6 +21,7 @@ import { logger } from "../../../lib/file-log.js";
 import { PlatformError, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 import { availableReelCover } from "./reel-cover.js";
+import { extractCoverFrame, type CoverFrame } from "./video-frame.js";
 import { isReelUrl } from "../reels.service.js";
 import { linkKindOf, socialLink } from "../social-link.js";
 import { resolvePinKeywords } from "../pinterest-keywords.js";
@@ -367,7 +368,13 @@ export type PinterestPinInput = {
   altText?: string;
 };
 
-export type PinterestPinOutcome = { id: string | null; url: string | null; sandbox: boolean };
+export type PinterestPinOutcome = {
+  id: string | null;
+  url: string | null;
+  sandbox: boolean;
+  /** Video pin kapağı dosyadan gelmediyse nereden alındığı (panelde uyarı olarak gösterilir). */
+  coverNote?: string;
+};
 
 /** Alan sınırları Pinterest'in resmî tanımından (bkz. pinterest-content.ts). */
 function pinBase(input: { boardId: string; title: string; description: string; link: string; altText?: string }) {
@@ -405,7 +412,7 @@ const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
 
 export type PinterestVideoPinInput = Omit<PinterestPinInput, "imageUrl"> & {
   videoUrl: string;
-  /** Kapak görseli adresi. Yoksa videonun 1. saniyesindeki kare kullanılır (kapaksız istek Pinterest'te yanıltıcı 401 verir). */
+  /** Kapak görseli adresi. Yoksa videonun başlık karesi (≈2–3. sn, siyahsa ileri) kullanılır; o da olmazsa Pinterest'in anahtar karesi. */
   coverImageUrl?: string | null;
 };
 
@@ -450,6 +457,7 @@ export async function createPinterestVideoPin(
   secrets: Record<string, string>,
   input: PinterestVideoPinInput,
   sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+  extractCover: (video: Buffer) => Promise<CoverFrame | null> = extractCoverFrame,
 ): Promise<PinterestPinOutcome> {
   const res = await fetch(input.videoUrl, { signal: AbortSignal.timeout(MEDIA_UPLOAD_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`Video indirilemedi (${res.status}): ${input.videoUrl}`);
@@ -459,19 +467,27 @@ export async function createPinterestVideoPin(
   const mediaId = await uploadPinterestVideo(secrets, video);
   await waitForPinterestMedia(secrets, mediaId, sleep);
 
+  // Kapak HER ZAMAN gönderilir (kapaksız istek Pinterest'te yanıltıcı 401 verir).
+  let cover: Record<string, unknown>;
+  let coverNote: string | undefined;
+  if (input.coverImageUrl) {
+    cover = { cover_image_url: input.coverImageUrl };
+  } else {
+    const frame = await extractCover(video).catch(() => null);
+    if (frame) {
+      cover = { cover_image_data: frame.jpeg.toString("base64"), cover_image_content_type: "image/jpeg" };
+      coverNote = `Kapak dosyası bulunamadı; videonun ${String(frame.second).replace(".", ",")}. saniyesindeki başlık karesi kapak yapıldı${frame.black ? " (tüm denenen kareler koyuydu, en parlağı seçildi)" : ""}.`;
+    } else {
+      cover = { cover_image_key_frame_time: 3 };
+      coverNote = "Kapak dosyası bulunamadı ve videodan kare okunamadı; Pinterest’in 3. saniye karesi kapak yapıldı.";
+    }
+  }
+
   const json = await pinterestCall(secrets, "/pins", {
     method: "POST",
-    body: {
-      ...pinBase(input),
-      media_source: {
-        source_type: "video_id",
-        media_id: mediaId,
-        // Kapak zorunlu sayılır: yoksa videonun 1. saniyesindeki kare kullanılır.
-        ...(input.coverImageUrl ? { cover_image_url: input.coverImageUrl } : { cover_image_key_frame_time: 1 }),
-      },
-    },
+    body: { ...pinBase(input), media_source: { source_type: "video_id", media_id: mediaId, ...cover } },
   });
-  return pinOutcome(json);
+  return { ...(await pinOutcome(json)), ...(coverNote ? { coverNote } : {}) };
 }
 
 export const SANDBOX_NOTE =
@@ -502,16 +518,14 @@ export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secr
     altText: buildPinAltText(item.title, keywords, lang),
   };
 
-  let warning: string | undefined;
   let pin: PinterestPinOutcome;
   if (isReelUrl(imageUrl)) {
     const cover = await availableReelCover(item.guid);
-    if (!cover) warning = "Kapak görseli bulunamadı; videonun 1. saniyesindeki kare kapak yapıldı.";
     pin = await createPinterestVideoPin(secrets, { ...content, videoUrl: imageUrl, coverImageUrl: cover });
   } else {
     pin = await createPinterestPin(secrets, { ...content, imageUrl });
   }
-  const notes = [warning, boardWarning, pin.sandbox ? SANDBOX_NOTE : undefined].filter(Boolean).join(" ");
+  const notes = [pin.coverNote, boardWarning, pin.sandbox ? SANDBOX_NOTE : undefined].filter(Boolean).join(" ");
   return { externalId: pin.id, externalUrl: pin.url, ...(notes ? { warning: notes } : {}) };
 };
 

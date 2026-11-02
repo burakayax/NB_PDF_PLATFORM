@@ -126,7 +126,7 @@ describe("araç videosu otomatik sırası", () => {
     expect(created.some((c) => c.guid === ITEM.guid)).toBe(true);
   });
 
-  it("video hazırsa: Instagram + Facebook + YouTube + TikTok için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
+  it("video hazırsa: Instagram + Facebook + YouTube + TikTok + Pinterest için hazırlanır; onaylı modda TASLAK, medya video adresi", async () => {
     await connectInstagram();
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
@@ -135,6 +135,7 @@ describe("araç videosu otomatik sırası", () => {
     expect(toolPosts().map((p) => `${p.platform}:${p.guid}`).sort()).toEqual([
       "FACEBOOK:tool-reel:compress",
       "INSTAGRAM:tool-reel:compress",
+      "PINTEREST:tool-reel:compress",
       "TIKTOK:tool-reel:compress",
       "YOUTUBE:tool-reel:compress",
     ]);
@@ -147,6 +148,10 @@ describe("araç videosu otomatik sırası", () => {
     expect(toolPosts().find((p) => p.platform === "FACEBOOK")?.status).toBe("MANUAL");
     // TikTok hesabı bağlı değil → elle paylaşılacak; bağlanınca aynı hat taslak açar.
     expect(toolPosts().find((p) => p.platform === "TIKTOK")?.status).toBe("MANUAL");
+    // Pinterest hesabı bağlı değil → elle paylaşılacak; video pin olarak mp4 adresini taşır.
+    const pin = toolPosts().find((p) => p.platform === "PINTEREST");
+    expect(pin?.status).toBe("MANUAL");
+    expect(pin?.imageUrl).toBe(VIDEO_URL);
   });
 
   it("iki sürüm hazırsa: Instagram 'profilde' videosunu, Facebook + YouTube 'açıklamada' videosunu alır", async () => {
@@ -183,6 +188,78 @@ describe("araç videosu otomatik sırası", () => {
     created.length = 0;
     await queueDailyPosts(new Date(), true);
     expect(toolPosts().find((p) => p.platform === "INSTAGRAM")?.status).toBe("DRAFT");
+  });
+
+  describe("Pinterest ve TikTok: ağ başına 'onaysız otomatik paylaş'", () => {
+    async function connectPinterestAndTiktok() {
+      const { prisma } = await import("../lib/prisma.js");
+      const { decryptField } = await import("../lib/encryption.js");
+      vi.mocked(decryptField).mockReturnValue(
+        JSON.stringify({
+          igUserId: "IG1",
+          pageAccessToken: "T",
+          appId: "a",
+          appSecret: "s",
+          accessToken: "t",
+          refreshToken: "r",
+          boardId: "b",
+          clientKey: "ck",
+          clientSecret: "cs",
+        }),
+      );
+      vi.mocked(prisma.socialAccount.findMany).mockResolvedValue([
+        { platform: "INSTAGRAM", secretsJson: "x", enabled: true },
+        { platform: "PINTEREST", secretsJson: "x", enabled: true },
+        { platform: "TIKTOK", secretsJson: "x", enabled: true },
+      ] as never);
+    }
+    const statusOf = (platform: string) => toolPosts().find((p) => p.platform === platform)?.status;
+
+    it("anahtarlar kapalıyken (varsayılan) ikisi de TASLAK: onayın gerekir", async () => {
+      await connectPinterestAndTiktok();
+      const { queueDailyPosts } = await import("../modules/social/social.service.js");
+      await queueDailyPosts(new Date(), false);
+      expect(statusOf("PINTEREST")).toBe("DRAFT");
+      expect(statusOf("TIKTOK")).toBe("DRAFT");
+    });
+
+    it("yalnız Pinterest anahtarı açık: Pinterest onaysız KUYRUĞA girer, TikTok ve Instagram taslak kalır", async () => {
+      config = { ...config, pinterestAutoPublish: true };
+      await connectPinterestAndTiktok();
+      const { queueDailyPosts } = await import("../modules/social/social.service.js");
+      await queueDailyPosts(new Date(), false);
+      expect(statusOf("PINTEREST")).toBe("QUEUED");
+      expect(statusOf("TIKTOK")).toBe("DRAFT");
+      expect(statusOf("INSTAGRAM")).toBe("DRAFT");
+    });
+
+    it("yalnız TikTok anahtarı açık: TikTok kuyruğa girer, genel Reels modu kapalı olsa bile", async () => {
+      config = { ...config, tiktokAutoPublish: true, reelsAutoPublish: false };
+      await connectPinterestAndTiktok();
+      const { queueDailyPosts } = await import("../modules/social/social.service.js");
+      await queueDailyPosts(new Date(), false);
+      expect(statusOf("TIKTOK")).toBe("QUEUED");
+      expect(statusOf("PINTEREST")).toBe("DRAFT");
+    });
+
+    it("elle hazırlıkta (hold) anahtar açık olsa da hepsi taslak kalır", async () => {
+      config = { ...config, tiktokAutoPublish: true, pinterestAutoPublish: true };
+      await connectPinterestAndTiktok();
+      const { queueDailyPosts } = await import("../modules/social/social.service.js");
+      await queueDailyPosts(new Date(), true);
+      expect(statusOf("PINTEREST")).toBe("DRAFT");
+      expect(statusOf("TIKTOK")).toBe("DRAFT");
+    });
+
+    it("hesap bağlı değilse anahtar açık olsa da MANUAL kalır (yayınlanacak hesap yok)", async () => {
+      config = { ...config, tiktokAutoPublish: true, pinterestAutoPublish: true };
+      const { prisma } = await import("../lib/prisma.js");
+      vi.mocked(prisma.socialAccount.findMany).mockResolvedValue([] as never);
+      const { queueDailyPosts } = await import("../modules/social/social.service.js");
+      await queueDailyPosts(new Date(), false);
+      expect(statusOf("PINTEREST")).toBe("MANUAL");
+      expect(statusOf("TIKTOK")).toBe("MANUAL");
+    });
   });
 
   it("her günlük turun sonunda paylaşılmış videolar temizlenir", async () => {

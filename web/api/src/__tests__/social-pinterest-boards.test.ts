@@ -58,6 +58,13 @@ describe("Seçim sırası", () => {
     expect(toolSlugFromLink("https://www.pdfplatform.app/tools/cv-olustur?a=1")).toBe("cv-olustur");
     expect(toolSlugFromLink("https://www.pdfplatform.app/tr/blog/cv")).toBeNull();
   });
+  it("pdf-ozetle aracı öğrenci panosuna gider", () => {
+    expect(chooseBoard({ guid: "x", title: "PDF Özetle", link: "https://www.pdfplatform.app/tools/pdf-ozetle" })).toEqual({
+      key: "ogrenci",
+      reason: "araç eşleştirmesi: pdf-ozetle",
+    });
+    expect(TOOL_BOARD["pdf-ozetle"]).toBe("ogrenci");
+  });
   it("3) blog kategorisi/etiketi, başlıktaki kelimeden önce gelir", () => {
     const c = blog("Yeni başlayanlar için rehber", { categories: ["CV", "Kariyer"] });
     expect(c).toEqual({ key: "cv", reason: "blog kategorisi/etiketi: cv" });
