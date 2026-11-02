@@ -890,6 +890,14 @@ function App() {
     () => typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1280,
   );
   const [toolsPanelOpen, setToolsPanelOpen] = useState(false);
+  // Masaüstünde araç çubuğunu gizleyip içeriği genişletme (yalnızca arayüz tercihi; tarayıcıda tutulur).
+  const [toolsCollapsed, setToolsCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem("nb_tools_collapsed") === "1"; } catch { return false; }
+  });
+  const changeToolsCollapsed = (v: boolean) => {
+    setToolsCollapsed(v);
+    try { localStorage.setItem("nb_tools_collapsed", v ? "1" : "0"); } catch { /* kapalı olabilir */ }
+  };
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px) and (max-width: 1279.98px)");
     const onChange = (e: MediaQueryListEvent) => setNarrowShell(e.matches);
@@ -7035,10 +7043,12 @@ function App() {
           overlay={narrowShell}
           overlayOpen={toolsPanelOpen}
           onOverlayOpenChange={setToolsPanelOpen}
+          collapsed={toolsCollapsed}
+          onCollapsedChange={changeToolsCollapsed}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
-          className={`flex w-full flex-auto shrink-0 flex-col bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-72"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
+          className={`flex w-full flex-auto shrink-0 flex-col bg-nb-bg pt-14 ${narrowShell ? "" : toolsCollapsed ? "lg:pl-0" : "lg:pl-72"} transition-[padding] duration-200 ease-out ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
           {/* Dar pencerede (768–1279px) araç gezgini overlay sidebar'a devredilir —
               iki menü birden görünmesin. */}
@@ -7085,7 +7095,7 @@ function App() {
               accessToken={accessToken}
             />
           </Suspense>
-          <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
+          <div className={`mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl ${toolsCollapsed && !narrowShell ? "xl:max-w-[1760px]" : contentPanel === "cv" ? "xl:max-w-[1500px] 2xl:max-w-[1700px]" : "xl:max-w-7xl"}`}>
             {isAuthenticated &&
             contentPanel !== "tool" &&
             contentPanel !== "ai" &&
@@ -7246,7 +7256,7 @@ function App() {
 
             {/* CV Oluştur — canlı önizlemeli CV hazırlayıcı (üyelik ister, cihazda çalışır). */}
             {contentPanel === "cv" ? (
-              <section className="mx-auto w-full max-w-[1500px] py-2">
+              <section className={`mx-auto w-full py-2 ${toolsCollapsed ? "max-w-[1760px]" : "max-w-[1500px]"}`}>
                 <Suspense fallback={<PageSkeleton />}>
                   <CvMakerTool language={language} accessToken={accessToken} onLogin={() => setView("login")} onRegister={() => setView("register")} onUpgrade={() => setUpgradeModalOpen(true)} isAdmin={aiIsAdmin} aiComingSoon={aiComingSoon} />
                 </Suspense>

@@ -2,7 +2,7 @@ import { ACCOUNT_PANEL_TITLES } from "../../lib/accountPaths";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { ChevronRight, Crop, Eraser, FileSearch, FileUser, Highlighter, ImageDown, LayoutGrid, Pencil, PenLine, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crop, Eraser, FileSearch, FileUser, Highlighter, ImageDown, LayoutGrid, Pencil, PenLine, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -226,6 +226,10 @@ type DashboardSidebarProps = {
   overlayOpen?: boolean;
   /** Overlay panelin açık/kapalı durumunu değiştirir. */
   onOverlayOpenChange?: (open: boolean) => void;
+  /** Masaüstü (sabit) modda araç çubuğu gizli mi — gizliyken içerik tüm genişliği kullanır. */
+  collapsed?: boolean;
+  /** Masaüstü modda araç çubuğunu gizler/açar. */
+  onCollapsedChange?: (collapsed: boolean) => void;
 };
 
 /**
@@ -268,6 +272,8 @@ export function DashboardSidebar({
   overlay = false,
   overlayOpen = false,
   onOverlayOpenChange,
+  collapsed = false,
+  onCollapsedChange,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -675,6 +681,19 @@ export function DashboardSidebar({
           </span>
         </button>
       ) : null}
+      {/* Masaüstü: kenarın tam ortasında gizle/aç oku (araç çubuğunun yanında ya da ekranın sol kenarında) */}
+      {!overlay && onCollapsedChange ? (
+        <button
+          type="button"
+          onClick={() => onCollapsedChange(!collapsed)}
+          data-tour={collapsed ? "tools" : undefined}
+          aria-label={collapsed ? (tr ? "Araç çubuğunu aç" : "Show tools panel") : (tr ? "Araç çubuğunu gizle" : "Hide tools panel")}
+          title={collapsed ? (tr ? "Araçları göster" : "Show tools") : (tr ? "Araçları gizle" : "Hide tools")}
+          className={`fixed top-1/2 z-50 hidden h-14 w-5 -translate-y-1/2 items-center justify-center rounded-r-xl border border-l-0 border-white/[0.12] bg-nb-bg-elevated/95 text-nb-muted shadow-[4px_0_16px_-6px_rgba(0,0,0,0.6)] transition-[left,color,background-color] duration-200 ease-out hover:bg-white/10 hover:text-nb-text lg:flex ${collapsed ? "left-0" : "left-72"}`}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" aria-hidden /> : <ChevronLeft className="h-4 w-4" aria-hidden />}
+        </button>
+      ) : null}
       {overlay && overlayOpen ? (
         <button
           type="button"
@@ -690,11 +709,25 @@ export function DashboardSidebar({
       className={
         overlay
           ? `fixed bottom-0 left-0 top-14 z-50 flex ${asideVisuals} transition-transform duration-200 ease-out ${overlayOpen ? "translate-x-0" : "-translate-x-full"}`
-          : `fixed bottom-0 left-0 top-14 z-40 hidden ${asideVisuals} lg:flex`
+          : `fixed bottom-0 left-0 top-14 z-40 hidden ${asideVisuals} transition-[transform,visibility] duration-200 ease-out lg:flex ${collapsed ? "invisible -translate-x-full" : "visible translate-x-0"}`
       }
+      aria-hidden={!overlay && collapsed ? true : undefined}
     >
+      {/* Sağ üst: araç çubuğunu gizle (masaüstü) */}
+      {!overlay && onCollapsedChange ? (
+        <button
+          type="button"
+          onClick={() => onCollapsedChange(true)}
+          data-nb-keep-sidebar
+          aria-label={tr ? "Araç çubuğunu gizle" : "Hide tools panel"}
+          title={tr ? "Araç çubuğunu gizle" : "Hide tools panel"}
+          className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-nb-muted transition hover:bg-white/10 hover:text-nb-text"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </button>
+      ) : null}
       {/* Araç arama — en üstte sabit; büyük/küçük harf ve aksan fark etmez ("donu" → Dönüştür) */}
-      <div className="px-3 pt-4" data-nb-keep-sidebar>
+      <div className={`px-3 ${!overlay && onCollapsedChange ? "pt-11" : "pt-4"}`} data-nb-keep-sidebar>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nb-muted/80" aria-hidden />
           <input
