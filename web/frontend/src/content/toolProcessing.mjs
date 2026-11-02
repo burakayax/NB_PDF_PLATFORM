@@ -39,6 +39,8 @@ const ROWS = [
   ["taranmis-pdf-ocr", "Taranmış PDF → Metin (OCR)", "Scanned PDF to Text (OCR)", "device", "", ""],
   ["form-doldur", "Form Doldur", "Fill Form", "device", "", ""],
   ["ustveri-temizle", "Üstveri Temizle", "Clean Metadata", "device", "", ""],
+  ["pdf-qr-ekle", "PDF'ye QR Kod Ekle", "Add QR Code to PDF", "device", "", ""],
+  ["pdf-birlestir-icindekiler", "Birleştir + İçindekiler", "Merge + Table of Contents", "device", "", ""],
   ["sayfa-duzeni", "Sayfa Düzeni", "Page Layout", "device", "", ""],
   ["udf-to-pdf", "UDF → PDF", "UDF to PDF", "device", "", ""],
   ["ai-fotograf-studyosu", "Fotoğraf Stüdyosu", "Photo Studio", "device", "Yapay zekâ modelleri tarayıcıda çalışır; fotoğraf cihazdan çıkmaz", "AI models run in the browser; the photo never leaves your device"],

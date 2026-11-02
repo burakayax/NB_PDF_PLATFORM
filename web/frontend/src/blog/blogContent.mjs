@@ -8,6 +8,7 @@
 import { CV_PHOTO_POSTS } from "./blogContentCv.mjs";
 import { CV_TOOL_POSTS } from "./blogContentCv2.mjs";
 import { CV_PROFESSION_POSTS } from "./blogContentCv3.mjs";
+import { QR_TOC_POSTS } from "./blogContentQrToc.mjs";
 
 export const BLOG_BASE = "/blog";
 
@@ -18,6 +19,7 @@ export const BLOG_POSTS = [
   ...CV_PHOTO_POSTS,
   ...CV_TOOL_POSTS,
   ...CV_PROFESSION_POSTS,
+  ...QR_TOC_POSTS,
   post(
     {
       slug: "sozlesme-imzalamadan-once-kontrol-listesi",

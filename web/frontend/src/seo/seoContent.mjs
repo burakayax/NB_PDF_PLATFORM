@@ -72,6 +72,8 @@ export const TOOL_SLUGS = [
   "pdf-imzala",
   "form-doldur",
   "ustveri-temizle",
+  "pdf-qr-ekle",
+  "pdf-birlestir-icindekiler",
   "pdf-to-pdfa",
   "sayfa-duzeni",
   "imza-iste",
@@ -1420,6 +1422,70 @@ export const TOOL_SEO = {
     ),
   },
 
+  "pdf-qr-ekle": {
+    tr: T(
+      "PDF'ye QR Kod Ekle — Ücretsiz, Cihazda (Link, vCard, Wi-Fi)",
+      "PDF'inize QR kod ekleyin: web sitesi, kişi kartı, WhatsApp, Wi-Fi. İstediğiniz yere sürükleyin, boyutu ayarlayın. Dosyanız cihazınızdan çıkmaz.",
+      "PDF'ye QR Kod Ekle — İstediğin Yere Yerleştir",
+      "Kartvizit, fatura, menü, broşür, sertifika ya da davetiyenize QR kod koymak için tasarım programına gerek yok. PDF'inizi seçin, QR'ın içeriğini girin (web sitesi, kişi kartı, telefon, e-posta, WhatsApp, Wi-Fi ya da düz metin) ve kodu sayfa önizlemesinde tutup istediğiniz yere sürükleyin. Boyutu, rengi, kenar boşluğunu ve altına yazılacak kısa açıklamayı ayarlayın; isterseniz ortaya logonuzu ekleyin. QR kod PDF'ye VEKTÖR olarak çizilir — baskıda bulanıklaşmaz — ve içerik bir web adresiyse PDF içinde tıklanabilir bağlantı olur. Belgenizin metni, bağlantıları ve formları olduğu gibi kalır. Tüm işlem tarayıcınızda yapılır; dosyanız SUNUCUYA GİTMEZ.",
+      ["pdf'ye qr kod ekle", "pdf qr kod ekleme", "pdf üzerine qr kod koyma", "kartvizit qr kod", "vcard qr kod pdf", "wifi qr kod oluştur", "whatsapp qr kod pdf", "ücretsiz qr kod ekle"],
+      [
+        { q: "PDF'ye QR kodu nasıl eklerim?", a: "PDF'i seçin, QR'ın içeriğini girin, kodu önizlemede istediğiniz yere sürükleyin ve «QR'ı PDF'ye ekle» düğmesine basın. Hazır dosya «orijinal-ad_qr.pdf» adıyla iner." },
+        { q: "Dosyam sunucuya yükleniyor mu?", a: "Hayır. QR üretimi ve PDF'ye yerleştirme tamamen tarayıcınızda yapılır; belgeniz cihazınızdan çıkmaz." },
+        { q: "Hangi türde QR kod oluşturabilirim?", a: "Web sitesi (link), kişi kartı (vCard — okutunca telefon rehberine kaydedilir), telefon, e-posta, WhatsApp, Wi-Fi ve düz metin. Türkçe karakterler (ç, ğ, ı, İ, ö, ş, ü) bozulmadan kodlanır." },
+        { q: "QR kod baskıda bulanık çıkar mı?", a: "Hayır. QR, PDF'ye resim olarak değil vektör olarak çizilir; istediğiniz boyutta keskin basılır. Ayrıca QR'ı PNG ya da SVG olarak ayrıca indirebilirsiniz." },
+        { q: "QR en az ne kadar büyük olmalı?", a: "Okunabilirlik için en az 15 mm öneriyoruz. Daha küçük boyutlarda araç sizi uyarır. Logo eklerseniz hata düzeltme otomatik en yüksek düzeye alınır." },
+        { q: "Hangi sayfalara eklenir?", a: "İlk sayfaya, son sayfaya, tüm sayfalara ya da «1,3,5-7» gibi belirlediğiniz sayfalara ekleyebilirsiniz." },
+      ],
+    ),
+    en: T(
+      "Add a QR Code to a PDF — Free, On-device",
+      "Add a QR code to your PDF: website, contact card, WhatsApp, Wi-Fi and more. Drag it anywhere on the page and set its size. Your file never leaves your device.",
+      "Add a QR Code to a PDF — Place It Anywhere",
+      "You don't need a design program to put a QR code on a business card, invoice, menu, brochure, certificate or invitation. Pick your PDF, enter the QR content (website, contact card, phone, email, WhatsApp, Wi-Fi or plain text) and drag the code to the spot you want on the page preview. Set its size, colour, margin and a short caption under it; add your logo in the middle if you like. The QR is drawn into the PDF as a VECTOR — it stays sharp in print — and when the content is a web address it becomes a clickable link inside the PDF. Your document's text, links and forms stay exactly as they were. Everything happens in your browser; your file is NEVER uploaded.",
+      ["add qr code to pdf", "insert qr code in pdf", "pdf qr code generator", "business card qr code pdf", "vcard qr code", "wifi qr code generator", "whatsapp qr code"],
+      [
+        { q: "How do I add a QR code to a PDF?", a: "Pick the PDF, enter the QR content, drag the code to where you want it on the preview and press 'Add QR to PDF'. The result downloads as 'original-name_qr.pdf'." },
+        { q: "Is my file uploaded?", a: "No. QR generation and placement happen entirely in your browser; your document never leaves your device." },
+        { q: "What kinds of QR codes can I make?", a: "Website link, contact card (vCard — saves to the phone's contacts when scanned), phone, email, WhatsApp, Wi-Fi and plain text. Accented characters are encoded correctly." },
+        { q: "Will the QR look blurry in print?", a: "No. It is drawn into the PDF as vector shapes, not an image, so it prints sharp at any size. You can also download the QR separately as PNG or SVG." },
+        { q: "How small can the QR be?", a: "We recommend at least 15 mm for reliable scanning; the tool warns you below that. If you add a logo, error correction is raised to the highest level automatically." },
+        { q: "Which pages get the QR?", a: "The first page, the last page, all pages, or specific pages such as '1,3,5-7'." },
+      ],
+    ),
+  },
+  "pdf-birlestir-icindekiler": {
+    tr: T(
+      "PDF Birleştir + Tıklanabilir İçindekiler — Yer İmli, Cihazda",
+      "Birden çok PDF'i birleştirin; başa tıklanabilir içindekiler sayfası ve PDF yer imleri eklensin. Dava dosyası, ihale, tez için. Dosyalarınız cihazınızdan çıkmaz.",
+      "PDF'leri Birleştir, İçindekiler Sayfası Otomatik Gelsin",
+      "Dava dosyası, ihale teklifi, muhasebe klasörü ya da tez ekleri gibi çok parçalı belgelerde okuyucu aradığı bölüme hemen ulaşabilmeli. Bu araç PDF'lerinizi seçtiğiniz sırayla tek dosyada birleştirir, en başa bir içindekiler (fihrist) sayfası ekler ve listedeki her başlığı ilgili bölümün ilk sayfasına bağlar. Aynı bölümler PDF okuyucunun kenar panelinde yer imi olarak da görünür. Her dosyanın başlığını düzenleyebilir, numaralandırmayı açıp kapatabilir, tüm sayfalara «Sayfa 3 / 42» alt bilgisi ekleyebilirsiniz. Farklı boyutlardaki sayfalar (A4, Letter, yatay) olduğu gibi korunur. Tüm işlem tarayıcınızda yapılır; dosyalarınız SUNUCUYA GİTMEZ.",
+      ["pdf birleştir içindekiler", "pdf içindekiler sayfası ekle", "pdf yer imi ekle", "dava dosyası birleştirme", "ihale dosyası pdf birleştirme", "tıklanabilir içindekiler pdf", "pdf fihrist oluştur"],
+      [
+        { q: "İçindekiler sayfası nasıl oluşuyor?", a: "Her dosyanın başlığı (varsayılan dosya adı, dilediğiniz gibi düzenleyebilirsiniz) ve bölümün başladığı sayfa numarası listelenir. Satırlara tıklayınca ilgili bölüme gidilir." },
+        { q: "Dosyalarım sunucuya yükleniyor mu?", a: "Hayır. Birleştirme ve içindekiler oluşturma tamamen tarayıcınızda yapılır." },
+        { q: "PDF yer imleri de ekleniyor mu?", a: "Evet. Her bölüm için bir yer imi eklenir; PDF okuyucunun kenar panelinden gezinebilirsiniz." },
+        { q: "İçindekiler birden fazla sayfaya taşarsa ne olur?", a: "Liste otomatik olarak sonraki sayfaya devam eder ve bölüm sayfa numaraları buna göre hesaplanır." },
+        { q: "Şifreli PDF'leri birleştirebilir miyim?", a: "Şifreli dosyalar tarayıcıda işlenemez; araç hangi dosyanın şifreli olduğunu söyler. Şifreyi kaldırıp yeniden yükleyin." },
+        { q: "Sayfa boyutları farklıysa ne olur?", a: "Her dosyanın sayfaları kendi boyutunda kalır. İçindekiler sayfası A4 dikey olarak eklenir." },
+      ],
+    ),
+    en: T(
+      "Merge PDFs + Clickable Table of Contents (On-device)",
+      "Merge several PDFs and get a clickable table of contents page plus PDF bookmarks. For case files, tenders, theses. Your files never leave your device.",
+      "Merge PDFs and Get a Table of Contents Automatically",
+      "In multi-part documents such as case files, tender bids, accounting folders or thesis appendices, the reader has to reach the right section fast. This tool merges your PDFs in the order you choose, adds a table of contents page at the very front and links every entry to the first page of its section. The same sections also appear as bookmarks in the PDF reader's side panel. You can edit each file's title, switch numbering on or off and add a 'Page 3 / 42' footer to every page. Pages of different sizes (A4, Letter, landscape) are kept as they are. Everything happens in your browser; your files are NEVER uploaded.",
+      ["merge pdf with table of contents", "add table of contents to pdf", "pdf bookmarks", "combine pdf with index", "clickable table of contents pdf"],
+      [
+        { q: "How is the table of contents built?", a: "Each file's title (the file name by default, editable) and the page where its section starts are listed. Clicking a line jumps to that section." },
+        { q: "Are my files uploaded?", a: "No. Merging and building the contents page happen entirely in your browser." },
+        { q: "Are PDF bookmarks added too?", a: "Yes. A bookmark is added per section so you can navigate from the reader's side panel." },
+        { q: "What if the contents list is longer than one page?", a: "It continues onto the next page automatically and the section page numbers are calculated accordingly." },
+        { q: "Can I merge password-protected PDFs?", a: "They can't be processed in the browser; the tool tells you which file is protected. Remove the password and upload it again." },
+        { q: "What about different page sizes?", a: "Each file's pages keep their own size. The contents page is added as portrait A4." },
+      ],
+    ),
+  },
   "ustveri-temizle": {
     tr: T(
       "PDF Üstveri Temizleme — Gizli Bilgileri Sil (Cihazda)",
@@ -2177,8 +2243,10 @@ export function getToolSeo(slug, language) {
 
 /** Araç slug → tematik ilgili araçlar (curated iç link). */
 export const RELATED_TOOLS = {
+  "pdf-qr-ekle": ["pdf-yorumla", "page-numbers", "watermark", "compress"],
+  "pdf-birlestir-icindekiler": ["merge-pdf", "page-numbers", "organize-pdf", "compress"],
   "split-pdf": ["merge-pdf", "organize-pdf", "delete-pages", "rotate-pdf"],
-  "merge-pdf": ["split-pdf", "organize-pdf", "compress", "page-numbers"],
+  "merge-pdf": ["pdf-birlestir-icindekiler", "split-pdf", "organize-pdf", "compress", "page-numbers"],
   "delete-pages": ["organize-pdf", "split-pdf", "rotate-pdf", "merge-pdf"],
   "rotate-pdf": ["organize-pdf", "delete-pages", "split-pdf"],
   "organize-pdf": ["delete-pages", "rotate-pdf", "split-pdf"],
@@ -2271,7 +2339,10 @@ export const BLOG_RELATED_TOOLS = {
   "faturadan-excele-veri-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
   "banka-ekstresi-excele-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
   "faturalari-toplu-muhasebeye-hazirlama": ["pdf-veri-cikar", "ai-toplu-islem", "pdf-to-excel"],
-  "iki-pdf-birlestirme-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
+  "iki-pdf-birlestirme-ucretsiz": ["merge-pdf", "pdf-birlestir-icindekiler", "split-pdf", "compress"],
+  "pdf-ye-qr-kod-ekleme-rehberi": ["pdf-qr-ekle", "pdf-yorumla", "compress"],
+  "kartvizit-qr-kod-vcard-nasil-yapilir": ["pdf-qr-ekle", "compress"],
+  "dava-dosyasi-ihale-icindekiler-yer-imi": ["pdf-birlestir-icindekiler", "page-numbers", "compress"],
   "pdf-bolme-sayfalara-ayirma": ["split-pdf", "merge-pdf", "organize-pdf"],
   "pdf-sayfa-silme": ["delete-pages", "organize-pdf", "split-pdf"],
   "pdf-dondurme-kaydetme": ["rotate-pdf", "organize-pdf"],

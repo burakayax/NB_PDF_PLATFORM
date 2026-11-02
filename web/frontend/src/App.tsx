@@ -359,6 +359,12 @@ const PdfEditor = lazyWithRetry(() =>
 const PdfFormFill = lazyWithRetry(() =>
   import("./components/tools/PdfFormFill").then((m) => ({ default: m.PdfFormFill })),
 );
+const PdfMergeTocTool = lazyWithRetry(() =>
+  import("./components/tools/PdfMergeTocTool").then((m) => ({ default: m.PdfMergeTocTool })),
+);
+const PdfQrTool = lazyWithRetry(() =>
+  import("./components/tools/PdfQrTool").then((m) => ({ default: m.PdfQrTool })),
+);
 const PdfMetadataTool = lazyWithRetry(() =>
   import("./components/tools/PdfMetadataTool").then((m) => ({ default: m.PdfMetadataTool })),
 );
@@ -2311,6 +2317,8 @@ function App() {
             "form-doldur": "PDF Form Doldur",
             "ustveri-temizle": "PDF Üstveri Temizle",
             "sayfa-duzeni": "Sayfa Düzeni",
+            "pdf-qr-ekle": "PDF'ye QR Kod Ekle",
+            "pdf-birlestir-icindekiler": "Birleştir + İçindekiler",
             "imza-iste": "İmza İste",
             "extract-images": "PDF'ten Görsel Çıkar",
           };
@@ -3206,6 +3214,8 @@ function App() {
         p === "/tools/pdf-imzala" ||
         p === "/tools/form-doldur" ||
         p === "/tools/ustveri-temizle" ||
+        p === "/tools/pdf-qr-ekle" ||
+        p === "/tools/pdf-birlestir-icindekiler" ||
         p === "/tools/sayfa-duzeni" ||
         p === "/tools/imza-iste" ||
         p === "/tools/pdf-yorumla" ||
@@ -5814,6 +5824,24 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "pdf-birlestir-icindekiler") {
+      return (
+        <GuestSeoToolPage slug="pdf-birlestir-icindekiler" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} onLogin={goRegister} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "pdf-qr-ekle") {
+      return (
+        <GuestSeoToolPage slug="pdf-qr-ekle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfQrTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} onLogin={goRegister} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "ustveri-temizle") {
       return (
         <GuestSeoToolPage slug="ustveri-temizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -7037,6 +7065,8 @@ function App() {
           onOpenFormFill={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("form-doldur"); setContentPanel("formfill"); }}
           onOpenSignRequest={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("imza-iste"); setContentPanel("signrequest"); }}
           onOpenMetadata={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("ustveri-temizle"); setContentPanel("metadata"); }}
+          onOpenQr={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("pdf-qr-ekle"); setContentPanel("qr"); }}
+          onOpenToc={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("pdf-birlestir-icindekiler"); setContentPanel("toc"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -7077,6 +7107,8 @@ function App() {
           onOpenFormFill={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("form-doldur"); setContentPanel("formfill"); }}
           onOpenSignRequest={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("imza-iste"); setContentPanel("signrequest"); }}
           onOpenMetadata={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("ustveri-temizle"); setContentPanel("metadata"); }}
+          onOpenQr={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("pdf-qr-ekle"); setContentPanel("qr"); }}
+          onOpenToc={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("pdf-birlestir-icindekiler"); setContentPanel("toc"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
@@ -7192,6 +7224,24 @@ function App() {
                 <ToolHowTo slug="sayfa-duzeni" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfLayoutTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "toc" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-birlestir-icindekiler" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "qr" ? (
+              <section className="mx-auto w-full max-w-5xl py-2">
+                <ToolHowTo slug="pdf-qr-ekle" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfQrTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
               </section>
             ) : null}

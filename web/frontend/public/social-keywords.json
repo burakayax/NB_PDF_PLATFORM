@@ -1,4 +1,162 @@
 {
+  "https://www.pdfplatform.app/blog/dava-dosyasi-ihale-icindekiler-yer-imi": {
+    "tr": [
+      "İçindekiler",
+      "PDF Birleştirme",
+      "Yer İmi",
+      "pdf birleştir içindekiler",
+      "pdf içindekiler sayfası ekle",
+      "pdf yer imi ekle",
+      "dava dosyası birleştirme",
+      "ihale dosyası pdf birleştirme",
+      "tıklanabilir içindekiler pdf",
+      "pdf fihrist oluştur"
+    ],
+    "en": [
+      "Table of Contents",
+      "Merge PDF",
+      "Bookmarks",
+      "merge pdf with table of contents",
+      "add table of contents to pdf",
+      "pdf bookmarks",
+      "combine pdf with index",
+      "clickable table of contents pdf"
+    ],
+    "tool": "/tools/pdf-birlestir-icindekiler"
+  },
+  "https://www.pdfplatform.app/en/blog/case-file-tender-table-of-contents-bookmarks": {
+    "tr": [
+      "İçindekiler",
+      "PDF Birleştirme",
+      "Yer İmi",
+      "pdf birleştir içindekiler",
+      "pdf içindekiler sayfası ekle",
+      "pdf yer imi ekle",
+      "dava dosyası birleştirme",
+      "ihale dosyası pdf birleştirme",
+      "tıklanabilir içindekiler pdf",
+      "pdf fihrist oluştur"
+    ],
+    "en": [
+      "Table of Contents",
+      "Merge PDF",
+      "Bookmarks",
+      "merge pdf with table of contents",
+      "add table of contents to pdf",
+      "pdf bookmarks",
+      "combine pdf with index",
+      "clickable table of contents pdf"
+    ],
+    "tool": "/tools/pdf-birlestir-icindekiler"
+  },
+  "https://www.pdfplatform.app/blog/kartvizit-qr-kod-vcard-nasil-yapilir": {
+    "tr": [
+      "QR Kod",
+      "Kartvizit",
+      "vCard",
+      "pdf'ye qr kod ekle",
+      "pdf qr kod ekleme",
+      "pdf üzerine qr kod koyma",
+      "kartvizit qr kod",
+      "vcard qr kod pdf",
+      "wifi qr kod oluştur",
+      "whatsapp qr kod pdf",
+      "ücretsiz qr kod ekle"
+    ],
+    "en": [
+      "QR Code",
+      "Business Card",
+      "vCard",
+      "add qr code to pdf",
+      "insert qr code in pdf",
+      "pdf qr code generator",
+      "business card qr code pdf",
+      "vcard qr code",
+      "wifi qr code generator",
+      "whatsapp qr code"
+    ],
+    "tool": "/tools/pdf-qr-ekle"
+  },
+  "https://www.pdfplatform.app/en/blog/business-card-vcard-qr-code": {
+    "tr": [
+      "QR Kod",
+      "Kartvizit",
+      "vCard",
+      "pdf'ye qr kod ekle",
+      "pdf qr kod ekleme",
+      "pdf üzerine qr kod koyma",
+      "kartvizit qr kod",
+      "vcard qr kod pdf",
+      "wifi qr kod oluştur",
+      "whatsapp qr kod pdf",
+      "ücretsiz qr kod ekle"
+    ],
+    "en": [
+      "QR Code",
+      "Business Card",
+      "vCard",
+      "add qr code to pdf",
+      "insert qr code in pdf",
+      "pdf qr code generator",
+      "business card qr code pdf",
+      "vcard qr code",
+      "wifi qr code generator",
+      "whatsapp qr code"
+    ],
+    "tool": "/tools/pdf-qr-ekle"
+  },
+  "https://www.pdfplatform.app/blog/pdf-ye-qr-kod-ekleme-rehberi": {
+    "tr": [
+      "QR Kod",
+      "PDF Araçları",
+      "pdf'ye qr kod ekle",
+      "pdf qr kod ekleme",
+      "pdf üzerine qr kod koyma",
+      "kartvizit qr kod",
+      "vcard qr kod pdf",
+      "wifi qr kod oluştur",
+      "whatsapp qr kod pdf",
+      "ücretsiz qr kod ekle"
+    ],
+    "en": [
+      "QR Code",
+      "PDF Tools",
+      "add qr code to pdf",
+      "insert qr code in pdf",
+      "pdf qr code generator",
+      "business card qr code pdf",
+      "vcard qr code",
+      "wifi qr code generator",
+      "whatsapp qr code"
+    ],
+    "tool": "/tools/pdf-qr-ekle"
+  },
+  "https://www.pdfplatform.app/en/blog/add-qr-code-to-pdf-guide": {
+    "tr": [
+      "QR Kod",
+      "PDF Araçları",
+      "pdf'ye qr kod ekle",
+      "pdf qr kod ekleme",
+      "pdf üzerine qr kod koyma",
+      "kartvizit qr kod",
+      "vcard qr kod pdf",
+      "wifi qr kod oluştur",
+      "whatsapp qr kod pdf",
+      "ücretsiz qr kod ekle"
+    ],
+    "en": [
+      "QR Code",
+      "PDF Tools",
+      "add qr code to pdf",
+      "insert qr code in pdf",
+      "pdf qr code generator",
+      "business card qr code pdf",
+      "vcard qr code",
+      "wifi qr code generator",
+      "whatsapp qr code"
+    ],
+    "tool": "/tools/pdf-qr-ekle"
+  },
   "https://www.pdfplatform.app/blog/ofis-asistani-cv-ornegi": {
     "tr": [
       "CV Örneği",
@@ -2428,6 +2586,8 @@
       "PDF Tools",
       "Images",
       "Snipping",
+      "how to crop a pdf",
+      "crop pdf online",
       "snip pdf",
       "crop image from pdf",
       "extract part of pdf as image",
@@ -2455,6 +2615,8 @@
       "PDF Tools",
       "Images",
       "Snipping",
+      "how to crop a pdf",
+      "crop pdf online",
       "snip pdf",
       "crop image from pdf",
       "extract part of pdf as image",
@@ -2722,6 +2884,8 @@
     "en": [
       "How-to",
       "Crop",
+      "how to crop a pdf",
+      "crop pdf online",
       "snip pdf",
       "crop image from pdf",
       "extract part of pdf as image",
@@ -2747,6 +2911,8 @@
     "en": [
       "How-to",
       "Crop",
+      "how to crop a pdf",
+      "crop pdf online",
       "snip pdf",
       "crop image from pdf",
       "extract part of pdf as image",
@@ -4890,6 +5056,8 @@
       "pdf alan seçip kaydetme"
     ],
     "en": [
+      "how to crop a pdf",
+      "crop pdf online",
       "snip pdf",
       "crop image from pdf",
       "extract part of pdf as image",
@@ -4911,6 +5079,8 @@
       "pdf alan seçip kaydetme"
     ],
     "en": [
+      "how to crop a pdf",
+      "crop pdf online",
       "snip pdf",
       "crop image from pdf",
       "extract part of pdf as image",
@@ -6164,6 +6334,88 @@
       "long term pdf archive"
     ],
     "tool": "/tools/pdf-to-pdfa"
+  },
+  "https://www.pdfplatform.app/tools/pdf-qr-ekle": {
+    "tr": [
+      "pdf'ye qr kod ekle",
+      "pdf qr kod ekleme",
+      "pdf üzerine qr kod koyma",
+      "kartvizit qr kod",
+      "vcard qr kod pdf",
+      "wifi qr kod oluştur",
+      "whatsapp qr kod pdf",
+      "ücretsiz qr kod ekle"
+    ],
+    "en": [
+      "add qr code to pdf",
+      "insert qr code in pdf",
+      "pdf qr code generator",
+      "business card qr code pdf",
+      "vcard qr code",
+      "wifi qr code generator",
+      "whatsapp qr code"
+    ],
+    "tool": "/tools/pdf-qr-ekle"
+  },
+  "https://www.pdfplatform.app/en/tools/add-qr-code-to-pdf": {
+    "tr": [
+      "pdf'ye qr kod ekle",
+      "pdf qr kod ekleme",
+      "pdf üzerine qr kod koyma",
+      "kartvizit qr kod",
+      "vcard qr kod pdf",
+      "wifi qr kod oluştur",
+      "whatsapp qr kod pdf",
+      "ücretsiz qr kod ekle"
+    ],
+    "en": [
+      "add qr code to pdf",
+      "insert qr code in pdf",
+      "pdf qr code generator",
+      "business card qr code pdf",
+      "vcard qr code",
+      "wifi qr code generator",
+      "whatsapp qr code"
+    ],
+    "tool": "/tools/pdf-qr-ekle"
+  },
+  "https://www.pdfplatform.app/tools/pdf-birlestir-icindekiler": {
+    "tr": [
+      "pdf birleştir içindekiler",
+      "pdf içindekiler sayfası ekle",
+      "pdf yer imi ekle",
+      "dava dosyası birleştirme",
+      "ihale dosyası pdf birleştirme",
+      "tıklanabilir içindekiler pdf",
+      "pdf fihrist oluştur"
+    ],
+    "en": [
+      "merge pdf with table of contents",
+      "add table of contents to pdf",
+      "pdf bookmarks",
+      "combine pdf with index",
+      "clickable table of contents pdf"
+    ],
+    "tool": "/tools/pdf-birlestir-icindekiler"
+  },
+  "https://www.pdfplatform.app/en/tools/merge-pdf-table-of-contents": {
+    "tr": [
+      "pdf birleştir içindekiler",
+      "pdf içindekiler sayfası ekle",
+      "pdf yer imi ekle",
+      "dava dosyası birleştirme",
+      "ihale dosyası pdf birleştirme",
+      "tıklanabilir içindekiler pdf",
+      "pdf fihrist oluştur"
+    ],
+    "en": [
+      "merge pdf with table of contents",
+      "add table of contents to pdf",
+      "pdf bookmarks",
+      "combine pdf with index",
+      "clickable table of contents pdf"
+    ],
+    "tool": "/tools/pdf-birlestir-icindekiler"
   },
   "https://www.pdfplatform.app/tools/ustveri-temizle": {
     "tr": [

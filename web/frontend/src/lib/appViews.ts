@@ -46,6 +46,8 @@ export type ContentPanel =
   | "sign"
   | "formfill"
   | "metadata"
+  | "qr"
+  | "toc"
   | "layout"
   | "signrequest"
   | "annotate"

@@ -1,4 +1,5 @@
 import { CV_PROFESSION_EN_SLUGS } from "../blog/blogContentCv3.mjs";
+import { QR_TOC_EN_SLUGS } from "../blog/blogContentQrToc.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 //  İNGİLİZCE URL SLUG'LARI — TEK GERÇEK KAYNAK
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +39,8 @@ export const EN_TOOL_SLUGS = {
   "cv-olustur": "cv-maker",
   "form-doldur": "fill-pdf-form",
   "ustveri-temizle": "remove-pdf-metadata",
+  "pdf-qr-ekle": "add-qr-code-to-pdf",
+  "pdf-birlestir-icindekiler": "merge-pdf-table-of-contents",
   "sayfa-duzeni": "pdf-page-layout",
   "imza-iste": "request-signature",
 };
@@ -45,6 +48,7 @@ export const EN_TOOL_SLUGS = {
 /** TR blog slug'ı → EN blog slug'ı. */
 export const EN_BLOG_SLUGS = {
   ...CV_PROFESSION_EN_SLUGS,
+  ...QR_TOC_EN_SLUGS,
   "cv-nasil-hazirlanir": "how-to-write-a-cv",
   "ats-uyumlu-cv-nasil-yazilir": "ats-friendly-cv",
   "cv-is-ilanina-gore-nasil-uyarlanir": "tailor-cv-to-job-ad",
