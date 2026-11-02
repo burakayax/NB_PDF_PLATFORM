@@ -36,6 +36,7 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   const [boardId, setBoardId] = useState("");
   const [newBoard, setNewBoard] = useState("");
   const [boardBusy, setBoardBusy] = useState(false);
+  const [boardMsg, setBoardMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const [reelId, setReelId] = useState("");
   const [title, setTitle] = useState("");
@@ -78,11 +79,12 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
     setBoardId(id);
     if (!id) return;
     setBoardBusy(true);
+    setBoardMsg(null);
     try {
       await selectPinterestBoard(accessToken, id);
       await onChanged?.();
     } catch (e) {
-      setResult({ ok: false, message: e instanceof Error ? e.message : "Pano seçilemedi" });
+      setBoardMsg({ ok: false, text: e instanceof Error ? e.message : "Pano seçilemedi" });
     } finally {
       setBoardBusy(false);
     }
@@ -91,14 +93,17 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   async function addBoard() {
     if (!newBoard.trim()) return;
     setBoardBusy(true);
+    setBoardMsg(null);
     try {
       const board = await createPinterestBoard(accessToken, newBoard.trim());
       setNewBoard("");
-      await load();
+      // Yeni pano listede hemen görünür (Pinterest listeyi geç güncelleyebilir); sunucu da seçili yaptı.
+      setOverview((o) => (o ? { ...o, boards: [...o.boards.filter((b) => b.id !== board.id), board], boardId: board.id } : o));
       setBoardId(board.id);
+      setBoardMsg({ ok: true, text: `“${board.name}” panosu oluşturuldu ve seçildi.` });
       await onChanged?.();
     } catch (e) {
-      setResult({ ok: false, message: e instanceof Error ? e.message : "Pano oluşturulamadı" });
+      setBoardMsg({ ok: false, text: e instanceof Error ? e.message : "Pano oluşturulamadı" });
     } finally {
       setBoardBusy(false);
     }
@@ -206,6 +211,9 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
             Pano oluştur
           </button>
         </div>
+        {boardMsg ? (
+          <p className={`text-[11px] leading-relaxed ${boardMsg.ok ? "text-emerald-300" : "text-rose-300"}`}>{boardMsg.text}</p>
+        ) : null}
       </div>
 
       {reels.length === 0 ? (
