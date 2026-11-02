@@ -1,12 +1,13 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ClipboardList, LayoutTemplate, Link2, Linkedin, ListRestart, Copy, Download, Eye, FileDown, FilePlus2, FileUp, Loader2, Lock, PencilLine, Palette, Pencil, ScanSearch, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
+import { ChevronDown, ClipboardList, HelpCircle, LayoutTemplate, Link2, ListRestart, Download, Eye, FileDown, Loader2, Lock, PencilLine, Palette, ScanSearch, Upload, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
 import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
 import { CvForm } from "./CvForm";
 import { CvWizard } from "./CvWizard";
 import { CvLiveScore } from "./CvLiveScore";
-import { CvImportModal } from "./CvImportModal";
+import { CvPopover } from "./CvPopover";
+import { readCvFromPdf } from "./cvEmbed";
 import { CvFormCopy } from "./CvFormCopy";
 import { decodeCvLink, encodeCvLink, hasCvLink } from "./cvShare";
 import { isSingleColumnLayout } from "./cvAnalysis";
@@ -14,11 +15,12 @@ import { CvDesignPanel } from "./CvDesignPanel";
 import { CvAnalysisPanel } from "./CvAnalysisPanel";
 import { CvAiPanel } from "./CvAiPanel";
 import { CvPassModal, remainingLabel } from "./CvPassModal";
+import { CvPreviewModal } from "./CvPreviewModal";
 import { buildCvDocx, cvToText } from "./cvExport";
 import { buildModel, EMPTY_CV, isCvEmpty, normalizeCv, sampleCv, type CvData } from "./cvModel";
 import { buildCvPdf, measureFit, paginate } from "./cvPdf";
 import { MAX_FIT_STEP, MAX_TRIM, styleFromSettings, trimForFit } from "./cvStyle";
-import { MAX_CVS, useCvStore } from "./useCvStore";
+import { useCvDraft } from "./useCvDraft";
 import { CV_TEMPLATES, CvPage, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type CvTemplate } from "./cvTemplates";
 
 type Props = {
@@ -85,30 +87,26 @@ export function CvMakerTool(props: Props) {
   return <CvMakerInner key={userKey} {...props} userKey={userKey} />;
 }
 
-function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin, aiComingSoon, userKey }: Props & { userKey: string }) {
+function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, isAdmin, aiComingSoon }: Props & { userKey: string }) {
   const tr = language === "tr";
   const signedIn = !!accessToken;
-  const store = useCvStore(language, signedIn, userKey);
+  const store = useCvDraft(language);
   const { data, templateId, setData, setTemplateId } = store;
-  const [view, setView] = useState<"draft" | "export">("draft");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [rightTab, setRightTab] = useState<RightTab>("content");
   const [tplOpen, setTplOpen] = useState(false);
-  const [cvMenuOpen, setCvMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [tplFilter, setTplFilter] = useState<"all" | "new" | "free" | "ats" | "side" | "classic">("all");
-  const [importOpen, setImportOpen] = useState(false);
+  const uploadRef = useRef<HTMLInputElement>(null);
+  const helpRef = useRef<HTMLButtonElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const savedRef = useRef<string>("");
   const [copyOpen, setCopyOpen] = useState(false);
   const [incoming, setIncoming] = useState<CvData | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const [formMode, setFormMode] = useState<"wizard" | "full">(() => {
-    try { const v = localStorage.getItem("cv-form-mode"); if (v === "wizard" || v === "full") return v; } catch { /* kapalı */ }
-    return isCvEmpty(data) ? "wizard" : "full";
-  });
-  const pickFormMode = (m: "wizard" | "full") => {
-    setFormMode(m);
-    try { localStorage.setItem("cv-form-mode", m); } catch { /* kapalı */ }
-  };
+  const [formMode, setFormMode] = useState<"wizard" | "full">(() => (isCvEmpty(data) ? "wizard" : "full"));
+  const pickFormMode = (m: "wizard" | "full") => setFormMode(m);
   const [ad, setAd] = useState("");
   const [busy, setBusy] = useState<null | "pdf" | "blank">(null);
   const [error, setError] = useState<string | null>(null);
@@ -151,7 +149,9 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
   const fitStep = fitOn ? fitRes?.step ?? 0 : 0;
   const fitTrim = fitOn ? fitRes?.trim ?? 0 : 0;
   const modelData = useMemo(() => (fitTrim ? trimForFit(shownData, fitTrim).data : shownData), [shownData, fitTrim]);
-  const model = useMemo(() => buildModel(modelData, locked ? "export" : view), [modelData, locked, view]);
+  const model = useMemo(() => buildModel(modelData, locked ? "export" : "draft"), [modelData, locked]);
+  // Tam ekran önizleme: indirilecek PDF'in birebir görünümü (boş bölümler çıkarılmış)
+  const exportModel = useMemo(() => (previewOpen ? buildModel(modelData, "export") : model), [previewOpen, modelData, model]);
 
   const styleOpts = useMemo(() => (locked ? undefined : styleFromSettings({ ...shownData.settings, fitOnePage: fitOn }, fitStep)), [locked, shownData.settings, fitOn, fitStep]);
 
@@ -163,7 +163,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
   useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const fitW = () => setScale(Math.min(1, Math.max(0.3, (el.clientWidth - 2) / PAGE_W)));
+    const fitW = () => setScale(Math.min(1.3, Math.max(0.3, (el.clientWidth - 2) / PAGE_W)));
     fitW();
     const ro = new ResizeObserver(fitW);
     ro.observe(el);
@@ -195,10 +195,11 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
       const { bytes, pages: n } = await buildCvPdf(data, templateId, mode);
       const base = mode === "blank" ? `cv-sablon-${tpl.id}` : `${slugify(data.name) || "cv"}-cv`;
       download(new Blob([bytes as BlobPart], { type: "application/pdf" }), `${base}.pdf`);
+      if (mode === "export") savedRef.current = JSON.stringify(data);
       setDone(
         mode === "blank"
           ? tr ? "Boş şablon indirildi. Dilerseniz “PDF Düzenle” aracıyla üzerine yazabilirsiniz." : "Blank template downloaded. You can type over it with the Edit PDF tool."
-          : tr ? `CV'niz indirildi (${n} sayfa). Boş bıraktığınız alanlar dosyaya eklenmedi.` : `Your CV was downloaded (${n} page${n > 1 ? "s" : ""}). Fields you left empty were not included.`,
+          : tr ? `CV'niz indirildi (${n} sayfa). Boş bıraktığınız alanlar dosyaya eklenmedi. Bu PDF'i saklayın: daha sonra sayfanın üstündeki “Önceki CV'mi yükle” ile yükleyip düzenlemeye devam edebilirsiniz. Biz bilgilerinizi saklamıyoruz.` : `Your CV was downloaded (${n} page${n > 1 ? "s" : ""}). Fields you left empty were not included. Keep this PDF: later use “Upload my earlier CV” at the top to load it and keep editing. We don't store your details.`,
       );
     } catch {
       setError(tr ? "PDF oluşturulamadı. Sayfayı yenileyip tekrar deneyin." : "Couldn't build the PDF. Refresh the page and try again.");
@@ -249,38 +250,69 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
     if (isCvEmpty(data) || window.confirm(tr ? "Girdiğiniz tüm bilgiler silinsin mi?" : "Delete everything you entered?")) setData(normalizeCv({ ...EMPTY_CV, settings: data.settings }));
   };
 
-  // ── CV'lerim (çoklu sürüm) + yedek ──
-  const importRef = useRef<HTMLInputElement>(null);
-  const [renaming, setRenaming] = useState(false);
-  const exportBackup = () => {
-    download(new Blob([store.exportJson()], { type: "application/json" }), `cv-yedek-${new Date().toISOString().slice(0, 10)}.json`);
-    setDone(tr ? "Tüm CV'lerinizin yedeği indirildi (fotoğraflar dahil)." : "A backup of all your CVs was downloaded (photos included).");
+  // ── Hiçbir şey saklanmaz: içeriği değiştirmeden önce (doluysa) onay al ──
+  const adopt = (d: CvData, t?: string | null): boolean => {
+    if (!isCvEmpty(data) && !window.confirm(tr ? "Şu anki CV'nizin içeriği değişecek. Devam edilsin mi?" : "The contents of your current CV will be replaced. Continue?")) return false;
+    store.replace(d, t);
+    savedRef.current = JSON.stringify(normalizeCv(d));
+    return true;
   };
-  const importBackup = async (f: File | undefined) => {
+
+  // Yalnızca bizim araçla hazırlanmış PDF yüklenir; diğer dosyalar reddedilir.
+  async function uploadPdf(f: File | undefined) {
     if (!f) return;
-    setError(null);
-    try {
-      const n = store.importJson(await f.text());
-      setDone(tr ? `${n} CV içe aktarıldı.` : `${n} CV(s) imported.`);
-      if (!n) setError(tr ? `CV sayısı sınırına (${MAX_CVS}) ulaşıldı; önce birini silin.` : `CV limit (${MAX_CVS}) reached; delete one first.`);
-    } catch {
-      setError(tr ? "Bu dosya geçerli bir CV yedeği değil." : "This file isn't a valid CV backup.");
+    setError(null); setDone(null);
+    if (!f.name.toLowerCase().endsWith(".pdf") && f.type !== "application/pdf") {
+      setError(tr ? "Yalnızca PDF yüklenebilir." : "Only PDF files can be uploaded.");
+      return;
     }
-  };
+    if (f.size > 25 * 1024 * 1024) { setError(tr ? "Dosya çok büyük." : "The file is too large."); return; }
+    const own = await readCvFromPdf(new Uint8Array(await f.arrayBuffer()));
+    if (!own) {
+      setError(tr ? "Bu PDF bizim uygulamamızla hazırlanmış bir CV değil, bu yüzden yüklenemedi. Yalnızca CV Oluştur ile indirdiğiniz PDF'ler yüklenebilir." : "This PDF wasn't made with this tool, so it can't be loaded. Only PDFs downloaded from CV Maker can be uploaded.");
+      return;
+    }
+    if (adopt(own.data, own.templateId)) {
+      setRightTab("content");
+      setDone(tr ? "CV yüklendi. Kaldığınız yerden düzenlemeye devam edebilirsiniz." : "CV loaded. You can keep editing where you left off.");
+    }
+  }
+
+  // İndirilmemiş değişiklik varken sayfa kapanırsa uyar (hiçbir yerde saklanmadığı için)
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => {
+      if (isCvEmpty(data) || JSON.stringify(data) === savedRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [data]);
 
   const pagesH = pages * PAGE_H;
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] text-left">
-      <div className="mb-5 flex items-start gap-4">
+    <div className="mx-auto w-full max-w-[1760px] text-left">
+      <div className="mb-5 flex flex-wrap items-start gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500/25 to-indigo-600/20 text-sky-200 ring-1 ring-sky-400/30">
           <FileUser className="h-7 w-7" />
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "CV Oluştur" : "CV Maker"}</h1>
           <p className="mt-1 text-sm text-slate-400">{tr ? "Bir şablon seçin, bilgilerinizi sağa girin; CV'niz solda canlı olarak oluşsun. Hazır olunca PDF olarak indirin." : "Pick a template, enter your details on the right and watch your CV build live on the left. Download it as a PDF when ready."}</p>
-          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-1 text-[12px] font-semibold text-emerald-200">{tr ? "Bilgileriniz yalnızca bu tarayıcıda kalır; sunucuya gönderilmez." : "Your details stay in this browser; nothing is sent to a server."}</p>
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-1 text-[12px] font-semibold text-emerald-200">{tr ? "Bilgileriniz hiçbir yere kaydedilmez: sunucuya gitmez, tarayıcıda da saklanmaz. Sayfayı kapatmadan önce PDF'i indirin." : "Nothing is saved anywhere: it never reaches a server and isn't kept in the browser. Download your PDF before closing the page."}</p>
         </div>
+        {signedIn ? (
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            <input ref={uploadRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => { void uploadPdf(e.target.files?.[0]); e.target.value = ""; }} />
+            <button type="button" onClick={() => uploadRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Upload className="h-4 w-4" />{tr ? "Önceki CV'mi yükle" : "Upload my earlier CV"}</button>
+            <button ref={helpRef} type="button" onClick={() => setHelpOpen((o) => !o)} aria-expanded={helpOpen} aria-label={tr ? "Bu düğme ne işe yarar?" : "What does this button do?"} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-slate-200 hover:bg-white/10"><HelpCircle className="h-4 w-4" /></button>
+            <CvPopover anchor={helpRef} open={helpOpen} onClose={() => setHelpOpen(false)} width={330} label={tr ? "Önceki CV'mi yükle hakkında" : "About uploading your earlier CV"}>
+              <p className="text-[13px] leading-relaxed text-slate-100">{tr ? "Daha önce bizim uygulamamızla CV hazırlayıp PDF olarak indirdiyseniz, o PDF'i buraya yükleyerek bilgilerinizi geri getirebilir ve kaldığınız yerden düzenlemeye devam edebilirsiniz." : "If you've already made a CV with our app and downloaded it as a PDF, upload that PDF here to bring your details back and keep editing where you left off."}</p>
+              <p className="mt-2 text-[12px] leading-relaxed text-slate-400">{tr ? "Yalnızca bu uygulamayla hazırlanmış PDF'ler yüklenir. Dosya cihazınızda okunur, sunucuya gönderilmez." : "Only PDFs made with this app can be uploaded. The file is read on your device and never sent to a server."}</p>
+            </CvPopover>
+          </div>
+        ) : null}
       </div>
 
       {/* Şablon seçici */}
@@ -337,7 +369,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
       {!signedIn ? (
         <div className="rounded-3xl border border-sky-400/25 bg-sky-500/[0.06] p-8 text-center">
           <p className="text-lg font-bold text-white">{tr ? "CV oluşturmak için ücretsiz üye olun" : "Create a free account to build your CV"}</p>
-          <p className="mx-auto mt-2 max-w-lg text-[14px] text-slate-300">{tr ? "Üyelik ücretsiz. CV'niz tarayıcınızda hazırlanır, taslağınız bu cihazda saklanır ve istediğiniz zaman kaldığınız yerden devam edersiniz." : "Membership is free. Your CV is built in your browser, the draft is kept on this device and you can pick up where you left off."}</p>
+          <p className="mx-auto mt-2 max-w-lg text-[14px] text-slate-300">{tr ? "Üyelik ücretsiz. CV'niz tarayıcınızda hazırlanır, sunucuya gönderilmez ve hiçbir yerde saklanmaz. Hazır olunca PDF'i indirir, istediğiniz zaman o PDF'i yükleyip düzenlemeye devam edersiniz." : "Membership is free. Your CV is built in your browser, the draft is kept on this device and you can pick up where you left off."}</p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <button type="button" onClick={onRegister} className="rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white hover:brightness-110">{tr ? "Ücretsiz üye ol" : "Sign up free"}</button>
             <button type="button" onClick={onLogin} className="rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white hover:bg-white/10">{tr ? "Giriş yap" : "Log in"}</button>
@@ -348,8 +380,8 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
           {incoming ? (
             <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-sky-400/30 bg-gradient-to-r from-sky-500/[0.12] to-indigo-500/[0.06] p-4">
               <Link2 className="h-5 w-5 shrink-0 text-sky-300" />
-              <p className="min-w-0 flex-1 text-[13px] text-sky-50"><b>{incoming.name || (tr ? "Paylaşılan bir CV" : "A shared CV")}</b> {tr ? "bağlantıyla paylaşıldı. Kendi kopyanız olarak açılsın mı?" : "was shared by link. Open it as your own copy?"}</p>
-              <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => { store.add({ data: incoming, name: incoming.name || (tr ? "Paylaşılan CV" : "Shared CV") }); setIncoming(null); clearHash(); }} className="rounded-xl bg-sky-500 px-4 py-2 text-[13px] font-bold text-white hover:bg-sky-400 disabled:opacity-40">{tr ? "Kopya olarak aç" : "Open as copy"}</button>
+              <p className="min-w-0 flex-1 text-[13px] text-sky-50"><b>{incoming.name || (tr ? "Paylaşılan bir CV" : "A shared CV")}</b> {tr ? "bağlantıyla paylaşıldı. Açılsın mı?" : "was shared by link. Open it?"}</p>
+              <button type="button" onClick={() => { if (adopt(incoming)) { setIncoming(null); clearHash(); } }} className="rounded-xl bg-sky-500 px-4 py-2 text-[13px] font-bold text-white hover:bg-sky-400">{tr ? "CV'yi aç" : "Open CV"}</button>
               <button type="button" onClick={() => { setIncoming(null); clearHash(); }} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Vazgeç" : "Dismiss"}</button>
             </div>
           ) : null}
@@ -360,22 +392,19 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
             ))}
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,480px)] xl:grid-cols-[minmax(0,1fr)_520px]">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] xl:grid-cols-[minmax(0,1fr)_430px]">
             {/* SOL: canlı önizleme */}
             <div ref={previewRef} className={`${tab === "preview" ? "block" : "hidden"} min-w-0 scroll-mt-3 lg:block`}>
-              <div className="lg:sticky lg:top-3">
+              <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1 [scrollbar-width:thin]">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <div className="inline-flex rounded-xl bg-white/[0.06] p-1" role="tablist" aria-label={tr ? "Önizleme türü" : "Preview type"}>
-                    <button type="button" role="tab" aria-selected={view === "draft"} onClick={() => setView("draft")} className={`rounded-lg px-3.5 py-1.5 text-[12.5px] font-semibold ${view === "draft" ? "bg-sky-500 text-white" : "text-slate-300"}`}>{tr ? "Taslak görünüm" : "Draft view"}</button>
-                    <button type="button" role="tab" aria-selected={view === "export"} onClick={() => setView("export")} className={`rounded-lg px-3.5 py-1.5 text-[12.5px] font-semibold ${view === "export" ? "bg-sky-500 text-white" : "text-slate-300"}`}>{tr ? "PDF görünümü" : "PDF view"}</button>
-                  </div>
-                  <span className="text-[12px] text-slate-400">{fitOn && fitRes && view === "draft" ? `${fitRes.pages} ${tr ? "sayfa (PDF)" : "page(s) (PDF)"}` : `${pages} ${tr ? "sayfa" : pages > 1 ? "pages" : "page"}`}</span>
+                  <button type="button" onClick={() => setPreviewOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2 text-[13px] font-bold text-white shadow-[0_10px_26px_-12px_rgba(59,130,246,0.85)] hover:brightness-110"><Eye className="h-4 w-4" />{tr ? "Önizle (tam ekran)" : "Preview (full screen)"}</button>
+                  <span className="text-[12px] text-slate-400">{fitOn && fitRes ? `${fitRes.pages} ${tr ? "sayfa (PDF)" : "page(s) (PDF)"}` : `${pages} ${tr ? "sayfa" : pages > 1 ? "pages" : "page"}`}</span>
                 </div>
-                {view === "draft" && !locked ? (
+                {!locked ? (
                   <p className="mb-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-sky-100">
                     {tr ? "Soluk ve kesik çizgili alanlar henüz doldurmadığınız yerlerdir. " : "Faded, dashed areas are the ones you haven't filled in. "}
                     <b>{tr ? "Boş bıraktığınız bölümler indirdiğiniz PDF'ten silinir." : "Anything you leave empty is removed from the PDF you download."}</b>
-                    {tr ? " Sonucu görmek için “PDF görünümü”ne geçin." : " Switch to “PDF view” to see the result."}
+                    {tr ? " Son hâlini görmek için “Önizle”ye tıklayın." : " Click “Preview” to see the final result."}
                   </p>
                 ) : null}
                 {fitTrimmed && !fitFailed ? (
@@ -433,7 +462,6 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                     <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileType2 className="h-4 w-4" />{tr ? "Düz metin (.txt)" : "Plain text (.txt)"}</button>
                     <button type="button" disabled={locked} onClick={() => setCopyOpen(true)} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><ClipboardList className="h-4 w-4" />{tr ? "Başvuru formuna kopyala" : "Copy to application form"}</button>
                     <button type="button" disabled={locked} onClick={() => void shareLink()} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Link2 className="h-4 w-4" />{tr ? "Bağlantıyla paylaş" : "Share by link"}</button>
-                    <button type="button" disabled={locked} onClick={() => setImportOpen(true)} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Linkedin className="h-4 w-4" />{tr ? "LinkedIn / eski CV'den aktar" : "Import LinkedIn / old CV"}</button>
                     <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("blank")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40">
                       {busy === "blank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{tr ? "Boş şablon (PDF)" : "Blank template (PDF)"}
                     </button>
@@ -464,7 +492,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 ) : null}
                 {rightTab === "content" ? (
                   formMode === "wizard" ? (
-                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} aiLocked={!paid} onAiLocked={onUpgrade} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => setImportOpen(true)} onOpenDesign={() => setRightTab("design")} />
+                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} aiLocked={!paid} onAiLocked={onUpgrade} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => uploadRef.current?.click()} onOpenDesign={() => setRightTab("design")} />
                   ) : (
                     <div className="space-y-3">
                       <button type="button" onClick={() => pickFormMode("wizard")} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500/20 to-indigo-500/20 px-3.5 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:from-sky-500/30"><ListRestart className="h-4 w-4" />{tr ? "Adım adım sihirbaza dön" : "Back to the step-by-step guide"}</button>
@@ -474,37 +502,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 ) : null}
                 {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} tpl={tpl} /> : null}
                 {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
-                {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d, name) => store.add({ data: d, name })} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
-              </div>
-
-              {/* CV'lerim (çoklu sürüm) + yedek: kapalı gelir */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03]">
-                <button type="button" onClick={() => setCvMenuOpen((o) => !o)} aria-expanded={cvMenuOpen} className="flex w-full items-center gap-2 px-4 py-3 text-left">
-                  <span className="flex-1 text-[13px] font-bold text-white">{tr ? "CV'lerim ve yedek" : "My CVs & backup"} <span className="font-normal text-slate-400">· {store.current.name}</span></span>
-                  <ChevronDown className={`h-4 w-4 text-slate-400 transition ${cvMenuOpen ? "rotate-180" : ""}`} />
-                </button>
-                {cvMenuOpen ? <div className="border-t border-white/10 p-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="sr-only" htmlFor="cv-switch">{tr ? "CV seç" : "Choose CV"}</label>
-                  {renaming ? (
-                    <input autoFocus defaultValue={store.current.name} onBlur={(e) => { store.rename(e.target.value.trim() || store.current.name); setRenaming(false); }} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} className="min-w-0 flex-1 rounded-xl border border-sky-400/50 bg-slate-900/70 px-3 py-2 text-[13px] font-semibold text-white focus:outline-none" />
-                  ) : (
-                    <select id="cv-switch" value={store.current.id} onChange={(e) => store.switchTo(e.target.value)} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-[13px] font-semibold text-white">
-                      {store.cvs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )}
-                  <button type="button" onClick={() => setRenaming(true)} aria-label={tr ? "Adını değiştir" : "Rename"} title={tr ? "Adını değiştir" : "Rename"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10"><Pencil className="h-4 w-4" /></button>
-                  <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => store.add()} aria-label={tr ? "Yeni CV" : "New CV"} title={tr ? "Yeni boş CV" : "New blank CV"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10 disabled:opacity-40"><FilePlus2 className="h-4 w-4" /></button>
-                  <button type="button" disabled={store.cvs.length >= MAX_CVS} onClick={() => store.duplicate()} aria-label={tr ? "Kopyala" : "Duplicate"} title={tr ? "Bu CV'yi kopyala (ilana göre uyarlamak için)" : "Duplicate (to tailor for a job)"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-200 hover:bg-white/10 disabled:opacity-40"><Copy className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => { if (window.confirm(tr ? `“${store.current.name}” silinsin mi?` : `Delete “${store.current.name}”?`)) store.remove(); }} aria-label={tr ? "Sil" : "Delete"} title={tr ? "Bu CV'yi sil" : "Delete this CV"} className="rounded-xl border border-white/10 bg-white/[0.05] p-2 text-red-300 hover:bg-red-500/10"><Trash2 className="h-4 w-4" /></button>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-slate-400">
-                  <span>{tr ? `${store.cvs.length} CV · her ilan için ayrı sürüm tutabilirsiniz` : `${store.cvs.length} CV(s) · keep a version per job`}</span>
-                  <button type="button" onClick={exportBackup} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileDown className="h-3.5 w-3.5" />{tr ? "Yedek indir" : "Back up"}</button>
-                  <button type="button" onClick={() => importRef.current?.click()} className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"><FileUp className="h-3.5 w-3.5" />{tr ? "Yedekten yükle" : "Restore"}</button>
-                  <input ref={importRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { void importBackup(e.target.files?.[0]); e.target.value = ""; }} />
-                </div>
-                </div> : null}
+                {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d) => { adopt(d); }} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
               </div>
 
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}
@@ -513,8 +511,8 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
           </div>
         </>
       )}
-      {importOpen ? <CvImportModal tr={tr} base={data} canAdd={store.cvs.length < MAX_CVS} onNew={(d, name) => store.add({ data: d, name })} onReplace={(d) => setData(d)} onClose={() => setImportOpen(false)} /> : null}
       {copyOpen ? <CvFormCopy data={data} tr={tr} onClose={() => setCopyOpen(false)} /> : null}
+      {previewOpen ? <CvPreviewModal model={exportModel} tpl={tpl} size={shownData.settings.size} accent={locked ? null : shownData.settings.accent} style={styleOpts} tr={tr} locked={locked} empty={emptyCv} busy={busy === "pdf"} onDownload={() => void makePdf("export")} onClose={() => setPreviewOpen(false)} /> : null}
       {passOpen ? <CvPassModal language={language} accessToken={accessToken} onClose={() => setPassOpen(false)} onUpgrade={onUpgrade} /> : null}
     </div>
   );
