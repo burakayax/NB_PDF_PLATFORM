@@ -86,7 +86,7 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   "unlock-pdf": "pdf-duzenleme",
   "form-doldur": "pdf-duzenleme",
   "pdf-ceviri": "pdf-duzenleme",
-  "pdf-ozetle": "pdf-duzenleme",
+  "pdf-ozetle": "ogrenci",
   "pdf-sohbet": "pdf-duzenleme",
   "pdf-yorumla": "pdf-duzenleme",
   "pdf-veri-cikar": "pdf-duzenleme",

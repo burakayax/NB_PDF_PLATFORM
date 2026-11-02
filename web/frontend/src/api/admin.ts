@@ -1018,6 +1018,10 @@ export type SocialConfig = {
   tiktokPublic: boolean;
   /** TikTok’ta “kendi markamızı tanıtıyor” işareti. */
   tiktokBrandOrganic: boolean;
+  /** TikTok araç videoları onay beklemeden doğrudan paylaşılsın mı? Kapalıyken taslak olarak bekler. */
+  tiktokAutoPublish: boolean;
+  /** Pinterest video pinleri için aynısı (Pinterest hesabı onaylanınca açılır). */
+  pinterestAutoPublish: boolean;
   /** Pinterest istekleri kum havuzuna mı gitsin? Trial’da açık, Standard onayında kapatılır. */
   pinterestSandbox: boolean;
 };
@@ -1318,6 +1322,14 @@ export async function syncPinterestBoards(accessToken: string, createMissing: bo
 export async function setPinterestBoardMap(accessToken: string, key: string, boardId: string): Promise<void> {
   const r = await adminFetch(accessToken, "/social/pinterest/board-map", { method: "PUT", body: JSON.stringify({ key, boardId }) });
   await jsonOrThrow<{ ok: boolean }>(r, "Pano değiştirilemedi.");
+}
+
+export type MissingReelCover = { id: string; title: string; hasVideo: boolean; file: string };
+
+/** Kapak dosyası (reel-covers/<araç>.jpg) sitede bulunamayan araçlar. */
+export async function fetchMissingReelCovers(accessToken: string): Promise<{ missing: MissingReelCover[]; checked: number }> {
+  const r = await adminFetch(accessToken, "/social/pinterest/missing-covers");
+  return jsonOrThrow<{ missing: MissingReelCover[]; checked: number }>(r, "Kapak durumu okunamadı.");
 }
 
 export async function fetchPinterestBoardRules(accessToken: string): Promise<PinterestBoardRules> {

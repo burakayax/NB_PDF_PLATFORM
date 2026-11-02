@@ -294,6 +294,14 @@ export function ToolReelsPanel({
                 </button>
                 <button
                   type="button"
+                  className={ghostButton}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void queue(reel, ["PINTEREST"])}
+                >
+                  Yalnızca Pinterest
+                </button>
+                <button
+                  type="button"
                   className={`${ghostButton} border-rose-500/40 text-rose-300 hover:border-rose-400 hover:text-rose-200`}
                   disabled={busyId !== null || !reel.video}
                   onClick={() => void discard(reel)}

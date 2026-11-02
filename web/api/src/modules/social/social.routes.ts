@@ -154,6 +154,8 @@ const configSchema = z.object({
   toolReelEveryDays: z.number().int().min(0).max(30).optional(),
   tiktokPublic: z.boolean().optional(),
   tiktokBrandOrganic: z.boolean().optional(),
+  tiktokAutoPublish: z.boolean().optional(),
+  pinterestAutoPublish: z.boolean().optional(),
   pinterestSandbox: z.boolean().optional(),
 });
 
@@ -436,6 +438,31 @@ socialRouter.get(
       tools: Object.entries(TOOL_BOARD).map(([slug, board]) => ({ slug, board })),
       categoryRules: CATEGORY_RULES,
       keywordRules: KEYWORD_RULES,
+    });
+  }),
+);
+
+/**
+ * Kapak dosyası (reel-covers/<araç>.jpg) sitede bulunamayan araçlar. Bunların video pininde kapak olarak
+ * videonun başlık karesi kullanılır; doğru kapak için dosya elle eklenmeli.
+ */
+socialRouter.get(
+  "/pinterest/missing-covers",
+  asyncHandler(async (_request, response) => {
+    const reels = await listToolReelsWithStatus();
+    const checked = await Promise.all(
+      reels.map(async (reel) => ({
+        id: reel.id,
+        title: reel.tr.title,
+        hasVideo: Boolean(reel.video),
+        covered: Boolean(await availableReelCover(reel.guid)),
+      })),
+    );
+    response.json({
+      missing: checked
+        .filter((c) => !c.covered)
+        .map((c) => ({ id: c.id, title: c.title, hasVideo: c.hasVideo, file: `web/frontend/public/reel-covers/${c.id}.jpg` })),
+      checked: checked.length,
     });
   }),
 );

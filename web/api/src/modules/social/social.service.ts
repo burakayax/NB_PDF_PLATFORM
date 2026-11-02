@@ -114,6 +114,13 @@ export type SocialAutomationConfig = {
   /** TikTok'ta "kendi markamızı tanıtıyor" (brand_organic_toggle) işareti; araç videoları kendi ürünümüz. */
   tiktokBrandOrganic: boolean;
   /**
+   * TikTok araç videoları onay beklemeden doğrudan paylaşılsın mı? KAPALI (varsayılan) = taslak olarak
+   * bekler, "Şimdi paylaş" ile sen onaylarsın. Genel "Reels otomatik" ayarından BAĞIMSIZDIR.
+   */
+  tiktokAutoPublish: boolean;
+  /** Pinterest video pinleri için aynısı (Pinterest hesabı onaylanınca açılır). */
+  pinterestAutoPublish: boolean;
+  /**
    * Pinterest kum havuzu (sandbox): uygulama "Trial" erişimdeyken AÇIK olmalı. Standard onayı gelince
    * yalnız bu ayar kapatılır; pinler gerçek ortama gider.
    */
@@ -188,6 +195,8 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   toolReelEveryDays: 0,
   tiktokPublic: false,
   tiktokBrandOrganic: true,
+  tiktokAutoPublish: false,
+  pinterestAutoPublish: false,
   pinterestSandbox: true,
   pinterestToken: null,
   pinterestBoards: {},
@@ -220,6 +229,9 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     // Yalnızca açıkça `true` ise herkese açık: eksik/bozuk ayar "yalnız ben"e düşer.
     tiktokPublic: raw.tiktokPublic === true,
     tiktokBrandOrganic: raw.tiktokBrandOrganic !== false,
+    // Yalnızca açıkça `true` ise onaysız: eksik/bozuk ayar onaylı moda düşer.
+    tiktokAutoPublish: raw.tiktokAutoPublish === true,
+    pinterestAutoPublish: raw.pinterestAutoPublish === true,
     // Trial'da kum havuzu şart: yalnızca açıkça `false` ise gerçek ortam.
     pinterestSandbox: raw.pinterestSandbox !== false,
     pinterestToken: parsePinterestToken(raw.pinterestToken),
@@ -820,7 +832,19 @@ async function lastInstagramTags(): Promise<string[]> {
 // ─── Araç tanıtım videoları ───────────────────────────────────────────────────
 
 /** Araç videolarının gideceği ağlar (Instagram/Facebook Reels + YouTube Shorts + TikTok). */
-const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK"];
+const TOOL_REEL_PLATFORMS: SocialPlatform[] = ["INSTAGRAM", "FACEBOOK", "YOUTUBE", "TIKTOK", "PINTEREST"];
+
+/**
+ * Onay beklemeden doğrudan paylaşılacak ağlar (ağ başına ayrı anahtar). Genel `hold` (ör. elle "hazırla"
+ * düğmesi) varsa hiçbiri atlanmaz: her şey taslak olur.
+ */
+function directPublishPlatforms(config: SocialAutomationConfig, hold: boolean): SocialPlatform[] {
+  if (hold) return [];
+  const out: SocialPlatform[] = [];
+  if (config.tiktokAutoPublish) out.push("TIKTOK");
+  if (config.pinterestAutoPublish) out.push("PINTEREST");
+  return out;
+}
 
 /**
  * Bir araç videosunu Instagram + Facebook Reels ve YouTube Shorts gönderisi olarak kuyruğa alır.
@@ -847,6 +871,8 @@ export async function queueToolReel(
      * (otomatik turda sürüm henüz hazır değil) ya da hiç bulunmazsa Instagram sürümü kullanılır.
      */
     captionVideo?: ToolReelVideoInfo | null;
+    /** Genel onay bekleme (`hold`) açık olsa bile bu ağların gönderisi taslak kalmaz, kuyruğa girer. */
+    directPlatforms?: SocialPlatform[];
   },
 ): Promise<QueueResult> {
   const result: QueueResult = { queued: [], skipped: [] };
@@ -888,7 +914,8 @@ export async function queueToolReel(
     : TOOL_REEL_PLATFORMS;
   for (const platform of targets) {
     const manual = !accounts.has(platform);
-    const status = manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED";
+    const direct = options?.directPlatforms?.includes(platform) === true;
+    const status = manual ? "MANUAL" : hold && !direct ? "DRAFT" : "QUEUED";
     // Instagram + TikTok "profilde" sürümünü, YouTube + Facebook "açıklamada" sürümünü paylaşır.
     const media = variantForPlatform(platform) === "caption" ? (captionVideo ?? usable) : usable;
     // Tekrar hazırlıkta: bu video için bu ağda zaten bekleyen bir gönderi varsa ikincisi açılmaz.
@@ -1002,7 +1029,10 @@ async function maybeQueueToolReel(scheduledAt: Date, hold: boolean, result: Queu
     return;
   }
   const captionVideo = await unusedFreshVideoFor(due.id, scheduledAt, "caption");
-  const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video, { captionVideo });
+  const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video, {
+    captionVideo,
+    directPlatforms: directPublishPlatforms(config, hold),
+  });
   result.queued.push(...queued.queued);
   result.skipped.push(...queued.skipped);
 }
@@ -1038,7 +1068,10 @@ export async function catchUpToolReel(now: Date = new Date()): Promise<QueueResu
   if (!video) return result;
 
   const captionVideo = await unusedFreshVideoFor(due.id, scheduledAt, "caption");
-  const queued = await queueToolReel(due.id, scheduledAt, !config.reelsAutoPublish, video, { captionVideo });
+  const queued = await queueToolReel(due.id, scheduledAt, !config.reelsAutoPublish, video, {
+    captionVideo,
+    directPlatforms: directPublishPlatforms(config, false),
+  });
   result.queued.push(...queued.queued);
   result.skipped.push(...queued.skipped);
   if (queued.queued.length > 0) {
