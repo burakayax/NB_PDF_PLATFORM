@@ -12,6 +12,7 @@ import cron from "node-cron";
 import { logError } from "../lib/app-logger.js";
 import { logger } from "../lib/file-log.js";
 import { prisma } from "../lib/prisma.js";
+import { renewPinterestIfDue } from "../modules/social/platforms/pinterest.platform.js";
 import { collectReplyDrafts, maybeGenerateWeeklyReport } from "../modules/social/facebook-engagement.service.js";
 import {
   calendarDayKey,
@@ -119,7 +120,13 @@ async function reportTick(): Promise<void> {
   if (await maybeGenerateWeeklyReport(now)) logger.info("social", "Facebook haftalık raporu hazırlandı");
 }
 
+/** Pinterest anahtarı süresi dolmadan yenilensin (pin atılmasa bile): günde bir kez. */
+async function pinterestTokenTick(): Promise<void> {
+  if (await renewPinterestIfDue()) logger.info("social", "Pinterest anahtarı süresi dolmadan yenilendi");
+}
+
 export function registerSocialPostJobs() {
+  cron.schedule("23 4 * * *", () => safeRun("pinterestTokenRefresh", pinterestTokenTick));
   cron.schedule("7 */2 * * *", () => safeRun("facebookReplyDrafts", replyTick));
   // Pazartesi günleri yarım saatte bir bakar; hafta başına yalnız bir kez üretir.
   cron.schedule("*/30 * * * 1", () => safeRun("facebookWeeklyReport", reportTick));

@@ -24,9 +24,13 @@ import type { Publisher, Verifier } from "./common.js";
 import { toolIdFromGuid } from "./reel-cover.js";
 
 const AUTHORIZE_URL = "https://www.pinterest.com/oauth/";
-const TOKEN_URL = "https://api.pinterest.com/v5/oauth/token";
 const API_PRODUCTION = "https://api.pinterest.com/v5";
 const API_SANDBOX = "https://api-sandbox.pinterest.com/v5";
+
+/** Kum havuzu (Trial) anahtarı yalnız sandbox adresinde, gerçek anahtar yalnız gerçek adreste geçer; ikisi de aynı kökten alınır. */
+function apiRoot(sandbox: boolean): string {
+  return sandbox ? API_SANDBOX : API_PRODUCTION;
+}
 
 /** İstenen izinler (Pinterest uygulamasında da tanımlı olmalı). */
 export const PINTEREST_SCOPES = "boards:read,boards:write,pins:read,pins:write,user_accounts:read";
@@ -115,7 +119,9 @@ function translated(err: unknown): Error {
 export type PinterestTokens = {
   accessToken: string;
   refreshToken: string;
-  /** Yenileme anahtarının bitiş anı (ms); bilinmiyorsa null. */
+  /** Erişim anahtarının bitiş anı (ms) — yanıttaki expires_in'den; bilinmiyorsa null. */
+  accessExpiresAt: number | null;
+  /** Yenileme anahtarının bitiş anı (ms) — refresh_token_expires_in / refresh_token_expires_at'tan; bilinmiyorsa null. */
   refreshExpiresAt: number | null;
 };
 
@@ -123,10 +129,35 @@ function basicAuth(appId: string, appSecret: string): string {
   return `Basic ${Buffer.from(`${appId}:${appSecret}`).toString("base64")}`;
 }
 
-async function postToken(appId: string, appSecret: string, params: Record<string, string>): Promise<PinterestTokens> {
+/** Yanıttaki süreleri okur. Süreler sabit varsayılmaz; Pinterest ne verdiyse o. */
+export function parsePinterestTokenResponse(json: Record<string, unknown>, now = Date.now()): PinterestTokens {
+  const accessToken = json.access_token;
+  const refreshToken = json.refresh_token;
+  if (typeof accessToken !== "string" || !accessToken || typeof refreshToken !== "string" || !refreshToken) {
+    throw new Error("Pinterest anahtar yanıtı eksik (access_token/refresh_token yok).");
+  }
+  const positive = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
+  const accessIn = positive(json.expires_in);
+  const refreshIn = positive(json.refresh_token_expires_in);
+  const refreshAtSec = positive(json.refresh_token_expires_at); // yenileme yanıtında Unix saniyesi
+  return {
+    accessToken,
+    refreshToken,
+    accessExpiresAt: accessIn ? now + accessIn * 1000 : null,
+    refreshExpiresAt: refreshIn ? now + refreshIn * 1000 : refreshAtSec ? refreshAtSec * 1000 : null,
+  };
+}
+
+/** Basic auth (client_id:client_secret) + application/x-www-form-urlencoded; adres kum havuzu ayarına göre. */
+async function postToken(
+  sandbox: boolean,
+  appId: string,
+  appSecret: string,
+  params: Record<string, string>,
+): Promise<PinterestTokens> {
   let json: Record<string, unknown>;
   try {
-    json = await requestJson("Pinterest", TOKEN_URL, {
+    json = await requestJson("Pinterest", `${apiRoot(sandbox)}/oauth/token`, {
       method: "POST",
       headers: {
         authorization: basicAuth(appId, appSecret),
@@ -137,31 +168,27 @@ async function postToken(appId: string, appSecret: string, params: Record<string
   } catch (err) {
     throw translated(err);
   }
-  const accessToken = json.access_token;
-  const refreshToken = json.refresh_token;
-  if (typeof accessToken !== "string" || !accessToken || typeof refreshToken !== "string" || !refreshToken) {
-    throw new Error("Pinterest anahtar yanıtı eksik (access_token/refresh_token yok).");
-  }
-  const refreshIn = Number(json.refresh_token_expires_in);
-  return {
-    accessToken,
-    refreshToken,
-    refreshExpiresAt: Number.isFinite(refreshIn) && refreshIn > 0 ? Date.now() + refreshIn * 1000 : null,
-  };
+  return parsePinterestTokenResponse(json);
 }
 
-/** Geri dönüşte gelen tek kullanımlık kodu anahtarlara çevirir. */
-export function exchangePinterestCode(appId: string, appSecret: string, code: string): Promise<PinterestTokens> {
-  return postToken(appId, appSecret, {
+/** Geri dönüşte gelen tek kullanımlık kodu anahtarlara çevirir (sürekli yenileme açık). */
+export function exchangePinterestCode(sandbox: boolean, appId: string, appSecret: string, code: string): Promise<PinterestTokens> {
+  return postToken(sandbox, appId, appSecret, {
     grant_type: "authorization_code",
     code,
     redirect_uri: pinterestRedirectUri(),
+    continuous_refresh: "true",
   });
 }
 
-/** Erişim anahtarı bitince yenileme anahtarıyla yenisini alır. */
-export function refreshPinterestTokens(appId: string, appSecret: string, refreshToken: string): Promise<PinterestTokens> {
-  return postToken(appId, appSecret, { grant_type: "refresh_token", refresh_token: refreshToken });
+/** Erişim anahtarı bitmeden yenileme anahtarıyla yenisini alır. */
+export function refreshPinterestTokens(
+  sandbox: boolean,
+  appId: string,
+  appSecret: string,
+  refreshToken: string,
+): Promise<PinterestTokens> {
+  return postToken(sandbox, appId, appSecret, { grant_type: "refresh_token", refresh_token: refreshToken });
 }
 
 // ───────────────────────── API çağrısı (otomatik yenilemeli) ─────────────────────────
@@ -169,16 +196,81 @@ export function refreshPinterestTokens(appId: string, appSecret: string, refresh
 /** Kum havuzu ayarına göre API kökü (Trial → sandbox, Standard → gerçek). */
 async function apiBase(): Promise<string> {
   const { readSocialConfig } = await import("../social.service.js");
-  return (await readSocialConfig()).pinterestSandbox ? API_SANDBOX : API_PRODUCTION;
+  return apiRoot((await readSocialConfig()).pinterestSandbox);
 }
 
-async function persistTokens(tokens: PinterestTokens): Promise<void> {
-  const { saveAccount } = await import("../social.service.js");
-  await saveAccount({
-    platform: "PINTEREST",
-    secrets: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
-    tokenExpiresAt: tokens.refreshExpiresAt ? new Date(tokens.refreshExpiresAt) : undefined,
-  }).catch((err) => logger.warn("social", `Pinterest yeni anahtarlar kaydedilemedi: ${String(err)}`));
+export const RECONNECT_AFTER_TOGGLE =
+  "Pinterest anahtarı başka ortamda (kum havuzu / gerçek) alınmış: “Pinterest ile bağlan”ı yeniden yap.";
+
+/** Anahtar, şu anki kum havuzu ayarıyla aynı ortamda mı alınmış? Bilinmiyorsa (eski kayıt) uyumsuz sayılır. */
+export function pinterestTokenMatches(info: { env: string } | null, sandbox: boolean): boolean {
+  return info?.env === (sandbox ? "sandbox" : "production");
+}
+
+/** Yeni anahtarları + ortam/süre bilgisini şifreli kaydeder. Yenileme anahtarı döndüğü için kayıt iki kez denenir. */
+export async function persistPinterestTokens(tokens: PinterestTokens, sandbox: boolean): Promise<void> {
+  const { saveAccount, writeSocialConfig } = await import("../social.service.js");
+  const save = async () => {
+    await saveAccount({
+      platform: "PINTEREST",
+      secrets: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+      tokenExpiresAt: tokens.refreshExpiresAt ? new Date(tokens.refreshExpiresAt) : undefined,
+    });
+    await writeSocialConfig({
+      pinterestToken: {
+        env: sandbox ? "sandbox" : "production",
+        accessExpiresAt: tokens.accessExpiresAt,
+        refreshExpiresAt: tokens.refreshExpiresAt,
+      },
+    });
+  };
+  try {
+    await save();
+  } catch {
+    await save().catch((err) => logger.error("social", `Pinterest yeni anahtarlar KAYDEDİLEMEDİ: ${String(err)}`));
+  }
+}
+
+/** Erişim anahtarını yenileme anahtarıyla yeniler ve kaydeder (aynı anda tek yenileme). */
+let refreshQueue: Promise<unknown> = Promise.resolve();
+export function renewPinterestTokens(secrets: Record<string, string>, sandbox: boolean): Promise<PinterestTokens> {
+  const run = async () => {
+    const appId = requireSecret(secrets, "appId", "Pinterest App ID");
+    const appSecret = requireSecret(secrets, "appSecret", "Pinterest App Secret");
+    const refreshToken = secrets.refreshToken?.trim();
+    if (!refreshToken) throw new Error("Pinterest bağlı değil: panelde “Pinterest ile bağlan”ı yapın.");
+    let fresh: PinterestTokens;
+    try {
+      fresh = await refreshPinterestTokens(sandbox, appId, appSecret, refreshToken);
+    } catch (err) {
+      throw new Error(
+        `Pinterest bağlantısı yenilenemedi: panelde “Pinterest ile bağlan”ı yeniden yapın. (${err instanceof Error ? err.message : String(err)})`,
+      );
+    }
+    await persistPinterestTokens(fresh, sandbox);
+    return fresh;
+  };
+  const result = refreshQueue.then(run, run);
+  refreshQueue = result.catch(() => undefined);
+  return result;
+}
+
+/** Günlük kontrol: süresi yaklaşan anahtarı pin atılmasa bile yeniler. Yenilendiyse true. */
+export async function renewPinterestIfDue(now = Date.now()): Promise<boolean> {
+  const { readAccountSecrets, readSocialConfig } = await import("../social.service.js");
+  const secrets = await readAccountSecrets("PINTEREST");
+  if (!secrets?.refreshToken || !secrets.appId || !secrets.appSecret) return false;
+  const config = await readSocialConfig();
+  // Ortam uyumsuzsa yenileme anlamsız (yeni ortamda geçmez); yeniden bağlanmak gerekir.
+  if (!pinterestTokenMatches(config.pinterestToken, config.pinterestSandbox)) return false;
+  const info = config.pinterestToken;
+  const DAY = 86_400_000;
+  // Erişim anahtarı 10 günden az kaldıysa ya da yenileme anahtarı 30 günden az kaldıysa (ya da süre bilinmiyorsa) yenile.
+  const accessSoon = !info?.accessExpiresAt || info.accessExpiresAt - now < 10 * DAY;
+  const refreshSoon = !info?.refreshExpiresAt || info.refreshExpiresAt - now < 30 * DAY;
+  if (!accessSoon && !refreshSoon) return false;
+  await renewPinterestTokens(secrets, config.pinterestSandbox);
+  return true;
 }
 
 /**
@@ -190,7 +282,11 @@ async function pinterestCall(
   path: string,
   init: { method: "GET" | "POST"; body?: unknown },
 ): Promise<Record<string, unknown>> {
-  const base = await apiBase();
+  const { readSocialConfig } = await import("../social.service.js");
+  const config = await readSocialConfig();
+  // Kutu değiştiyse eldeki anahtar yeni ortamda geçmez: boşuna istek atmadan yeniden bağlanmayı söyle.
+  if (!pinterestTokenMatches(config.pinterestToken, config.pinterestSandbox)) throw new Error(RECONNECT_AFTER_TOGGLE);
+  const base = apiRoot(config.pinterestSandbox);
   const send = (token: string) =>
     requestJson("Pinterest", `${base}${path}`, {
       method: init.method,
@@ -208,19 +304,7 @@ async function pinterestCall(
     if (!(err instanceof PlatformError) || err.status !== 401) throw translated(err);
   }
 
-  const appId = requireSecret(secrets, "appId", "Pinterest App ID");
-  const appSecret = requireSecret(secrets, "appSecret", "Pinterest App Secret");
-  const refreshToken = secrets.refreshToken?.trim();
-  if (!refreshToken) throw new Error("Pinterest bağlı değil: panelde “Pinterest ile bağlan”ı yapın.");
-  let fresh: PinterestTokens;
-  try {
-    fresh = await refreshPinterestTokens(appId, appSecret, refreshToken);
-  } catch (err) {
-    throw new Error(
-      `Pinterest bağlantısı yenilenemedi: panelde “Pinterest ile bağlan”ı yeniden yapın. (${err instanceof Error ? err.message : String(err)})`,
-    );
-  }
-  await persistTokens(fresh);
+  const fresh = await renewPinterestTokens(secrets, config.pinterestSandbox);
   try {
     return await send(fresh.accessToken);
   } catch (err) {

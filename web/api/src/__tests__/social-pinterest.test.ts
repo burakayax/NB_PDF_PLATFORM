@@ -2,11 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let stored: Record<string, string> = {};
 let sandbox = true;
+let tokenInfo: { env: "sandbox" | "production"; accessExpiresAt: number | null; refreshExpiresAt: number | null } | null = null;
 const saved: Array<{ secrets: Record<string, string> }> = [];
+const configWrites: unknown[] = [];
 
 vi.mock("../modules/social/social.service.js", () => ({
   readAccountSecrets: vi.fn(async () => stored),
-  readSocialConfig: vi.fn(async () => ({ pinterestSandbox: sandbox })),
+  readSocialConfig: vi.fn(async () => ({ pinterestSandbox: sandbox, pinterestToken: tokenInfo })),
+  writeSocialConfig: vi.fn(async (patch: { pinterestToken?: typeof tokenInfo }) => {
+    configWrites.push(patch);
+    if (patch.pinterestToken) tokenInfo = patch.pinterestToken;
+    return {};
+  }),
   saveAccount: vi.fn(async (input: { secrets: Record<string, string> }) => {
     saved.push(input);
     return [];
@@ -19,8 +26,11 @@ import {
   createPinterestPin,
   createPinterestState,
   describePinterestError,
+  exchangePinterestCode,
   listPinterestBoards,
+  parsePinterestTokenResponse,
   pinterestRedirectUri,
+  renewPinterestIfDue,
   verifyPinterestState,
 } from "../modules/social/platforms/pinterest.platform.js";
 import { PlatformError } from "../modules/social/platforms/common.js";
@@ -33,7 +43,9 @@ function reply(status: number, body: unknown): Response {
 
 beforeEach(() => {
   saved.length = 0;
+  configWrites.length = 0;
   sandbox = true;
+  tokenInfo = { env: "sandbox", accessExpiresAt: Date.now() + 25 * 86_400_000, refreshExpiresAt: Date.now() + 55 * 86_400_000 };
   stored = { appId: "app1", appSecret: "sec1", accessToken: "old", refreshToken: "ref", boardId: "b1" };
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
@@ -84,6 +96,7 @@ describe("Pinterest istekleri", () => {
     await listPinterestBoards(stored);
     expect(String(fetchMock.mock.calls[0]?.[0])).toBe("https://api-sandbox.pinterest.com/v5/boards?page_size=100");
     sandbox = false;
+    tokenInfo = { env: "production", accessExpiresAt: null, refreshExpiresAt: null };
     await listPinterestBoards(stored);
     expect(String(fetchMock.mock.calls[1]?.[0])).toBe("https://api.pinterest.com/v5/boards?page_size=100");
   });
@@ -95,7 +108,8 @@ describe("Pinterest istekleri", () => {
       .mockResolvedValueOnce(reply(200, { items: [] }));
     await listPinterestBoards(stored);
     const refreshCall = fetchMock.mock.calls[1]!;
-    expect(String(refreshCall[0])).toBe("https://api.pinterest.com/v5/oauth/token");
+    // Kum havuzu açıkken yenileme de sandbox adresinden yapılır.
+    expect(String(refreshCall[0])).toBe("https://api-sandbox.pinterest.com/v5/oauth/token");
     expect((refreshCall[1] as RequestInit).headers).toMatchObject({
       authorization: `Basic ${Buffer.from("app1:sec1").toString("base64")}`,
     });
@@ -130,5 +144,68 @@ describe("Pinterest istekleri", () => {
       media_source: { source_type: "image_url", url: "https://pdfplatform.app/reel-covers/merge.jpg" },
     });
     expect(pin).toEqual({ id: "123", url: "https://www.pinterest.com/pin/123/", sandbox: true });
+  });
+});
+
+describe("Pinterest anahtar alma ve süreler", () => {
+  it("kod değişimi: Basic auth, form gövdesi, continuous_refresh ve ortama göre adres", async () => {
+    fetchMock.mockImplementation(async () => reply(200, { access_token: "pina_x", refresh_token: "pinr_y", expires_in: 2592000, refresh_token_expires_in: 5184000 }));
+    await exchangePinterestCode(true, "app1", "sec1", "kod");
+    await exchangePinterestCode(false, "app1", "sec1", "kod");
+    const [sb, prod] = fetchMock.mock.calls as Array<[string, RequestInit]>;
+    expect(sb[0]).toBe("https://api-sandbox.pinterest.com/v5/oauth/token");
+    expect(prod[0]).toBe("https://api.pinterest.com/v5/oauth/token");
+    expect(sb[1].headers).toMatchObject({
+      authorization: `Basic ${Buffer.from("app1:sec1").toString("base64")}`,
+      "content-type": "application/x-www-form-urlencoded",
+    });
+    const body = new URLSearchParams(String(sb[1].body));
+    expect(body.get("grant_type")).toBe("authorization_code");
+    expect(body.get("code")).toBe("kod");
+    expect(body.get("continuous_refresh")).toBe("true");
+    expect(body.get("redirect_uri")).toBe(pinterestRedirectUri());
+  });
+
+  it("süreler yanıttaki değerlerden hesaplanır", () => {
+    const now = 1_000_000;
+    const a = parsePinterestTokenResponse({ access_token: "a", refresh_token: "r", expires_in: 100, refresh_token_expires_in: 200 }, now);
+    expect(a.accessExpiresAt).toBe(now + 100_000);
+    expect(a.refreshExpiresAt).toBe(now + 200_000);
+    // Yenileme yanıtı bitişi Unix saniyesi olarak verir.
+    const b = parsePinterestTokenResponse({ access_token: "a", refresh_token: "r", expires_in: 50, refresh_token_expires_at: 5000 }, now);
+    expect(b.refreshExpiresAt).toBe(5_000_000);
+    const c = parsePinterestTokenResponse({ access_token: "a", refresh_token: "r" }, now);
+    expect(c.accessExpiresAt).toBeNull();
+  });
+});
+
+describe("Kum havuzu kutusu değişince", () => {
+  it("anahtar başka ortamda alındıysa istek atmadan 'yeniden bağlan' der", async () => {
+    sandbox = false; // anahtar sandbox'ta alınmıştı
+    await expect(listPinterestBoards(stored)).rejects.toThrow(/yeniden yap/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("ortam bilgisi olmayan eski kayıt da yeniden bağlanma ister", async () => {
+    tokenInfo = null;
+    await expect(listPinterestBoards(stored)).rejects.toThrow(/yeniden yap/);
+  });
+});
+
+describe("Günlük Pinterest anahtar kontrolü", () => {
+  it("süresi uzaksa dokunmaz", async () => {
+    expect(await renewPinterestIfDue()).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("erişim anahtarı 10 günden az kaldıysa pin atılmasa da yeniler ve süreleri kaydeder", async () => {
+    tokenInfo = { env: "sandbox", accessExpiresAt: Date.now() + 3 * 86_400_000, refreshExpiresAt: Date.now() + 55 * 86_400_000 };
+    fetchMock.mockResolvedValueOnce(reply(200, { access_token: "n", refresh_token: "r9", expires_in: 2592000, refresh_token_expires_in: 5184000 }));
+    expect(await renewPinterestIfDue()).toBe(true);
+    expect(saved[0]?.secrets).toEqual({ accessToken: "n", refreshToken: "r9" });
+    expect(tokenInfo?.accessExpiresAt).toBeGreaterThan(Date.now() + 29 * 86_400_000);
+  });
+  it("ortam uyumsuzsa yenilemeye çalışmaz", async () => {
+    sandbox = false;
+    expect(await renewPinterestIfDue()).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

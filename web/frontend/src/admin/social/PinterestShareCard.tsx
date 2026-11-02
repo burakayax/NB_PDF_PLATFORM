@@ -144,6 +144,23 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
     );
   }
 
+  if (overview.needsReconnect) {
+    return (
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-200">
+        <p className="flex items-start gap-1.5">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            Pinterest bağlantısı yeniden kurulmalı: anahtar {overview.sandbox ? "gerçek Pinterest’te" : "kum havuzunda"} alınmış ya da
+            “kum havuzu” kutusu değişmiş. Yukarıdaki <strong>Pinterest ile bağlan</strong> düğmesine bas, izin ver, sonra bir pano seç.
+          </span>
+        </p>
+        <button type="button" className="mt-2 inline-flex items-center gap-1.5 text-amber-100 underline" onClick={() => void load()}>
+          <RefreshCw className="h-3 w-3" /> Yeniden kontrol et
+        </button>
+      </div>
+    );
+  }
+
   return (
     <section className="space-y-4 rounded-2xl border border-slate-700/50 bg-slate-900/40 p-4">
       <header>

@@ -1231,7 +1231,14 @@ export async function fetchPinterestConnectUrl(accessToken: string): Promise<str
 }
 
 export type PinterestBoard = { id: string; name: string; privacy: string };
-export type PinterestOverview = { username: string; boards: PinterestBoard[]; boardId: string; sandbox: boolean };
+export type PinterestOverview = {
+  username: string;
+  boards: PinterestBoard[];
+  boardId: string;
+  sandbox: boolean;
+  /** Kum havuzu kutusu değişti (ya da eski kayıt): anahtar yeni ortamda geçmez, yeniden bağlanılmalı. */
+  needsReconnect: boolean;
+};
 
 export async function fetchPinterestOverview(accessToken: string): Promise<PinterestOverview> {
   const r = await adminFetch(accessToken, "/social/pinterest/overview");
