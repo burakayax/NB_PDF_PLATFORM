@@ -6,19 +6,21 @@
  * içeriği (metin, bağlantılar, formlar) değiştirilmez; QR üstüne eklenir.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ImagePlus, Loader2, QrCode, X } from "lucide-react";
+import { AlertTriangle, ImagePlus, Loader2, QrCode, Wand2, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { MemberGateModal } from "../common/MemberGateModal";
+import { findFreeSpot } from "../../lib/pdfFreeSpot";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { PdfThumbError, renderPdfPage, type PdfThumb } from "../../lib/pdfThumbs";
 import {
   BOS_ALANLAR, MIN_SAFE_MM, MM, buildPayload, captionHeightPt, contrastRatio, isInverted,
-  makeMatrix, qrOutputName, qrToSvg, resolvePages, stampQr,
-  type PageSelection, type QrEcl, type QrFields, type QrKind,
+  QR_TEMPLATES, makeMatrix, parseBatchLines, qrOutputName, qrToSvg, resolvePages, stampQr, stampQrBatch,
+  type PageSelection, type PayloadResult, type QrEcl, type QrFields, type QrKind,
 } from "../../lib/pdfQr";
 
-/** Kayıt gerekli mi? Karar verilince tek yerden değişir (katalogdaki free/account bayrağıyla birlikte). */
-const KAYIT_GEREKLI = false;
+/** Yalnızca üyelere açık mı? Ücret kararı verilince tek yerden değişir (katalogdaki account/free bayrağıyla birlikte). */
+const KAYIT_GEREKLI = true;
 
 const T = {
   tr: {
@@ -56,6 +58,13 @@ const T = {
     linkNote: "Bu QR, PDF'te tıklanabilir bağlantı olarak da eklenir.",
     onDevice: "Dosyan cihazından çıkmaz.",
     addedTo: "sayfaya QR eklendi",
+    templates: "Hazır şablon", tplNames: { card: "Kartvizit", menu: "Menü", invoice: "Fatura" },
+    suggest: "Boş yer öner", suggestNone: "Bu sayfada QR için yeterince boş yer bulunamadı; kendin yerleştir.",
+    bulk: "Her sayfaya farklı QR", bulkHelp: "Her satıra «sayfalar | içerik» yaz. Örnek: 1 | ornek.com/a — 2,4-6 | ornek.com/b",
+    bulkUrl: "Web adresi", bulkText: "Metin",
+    bulkErrFormat: "{n}. satır: «sayfalar | içerik» biçiminde yaz.", bulkErrPages: "{n}. satır: sayfa listesi geçersiz (belge {p} sayfa).",
+    bulkErrContent: "{n}. satır: içerik boş ya da geçerli bir web adresi değil.", bulkErrEmpty: "En az bir satır yaz.",
+    bulkPlaceholder: "1 | ornek.com/ilk\n2,3 | ornek.com/ikinci",
   },
   en: {
     hint: "Choose the PDF — you'll place the QR code in the next step.",
@@ -92,6 +101,13 @@ const T = {
     linkNote: "This QR is also added as a clickable link in the PDF.",
     onDevice: "Your file never leaves your device.",
     addedTo: "pages got a QR",
+    templates: "Ready-made template", tplNames: { card: "Business card", menu: "Menu", invoice: "Invoice" },
+    suggest: "Suggest free spot", suggestNone: "No spot on this page is empty enough for the QR; place it yourself.",
+    bulk: "A different QR on each page", bulkHelp: "Write «pages | content» on each line. Example: 1 | example.com/a — 2,4-6 | example.com/b",
+    bulkUrl: "Web address", bulkText: "Text",
+    bulkErrFormat: "Line {n}: use the form «pages | content».", bulkErrPages: "Line {n}: invalid page list (the document has {p} pages).",
+    bulkErrContent: "Line {n}: the content is empty or not a valid web address.", bulkErrEmpty: "Write at least one line.",
+    bulkPlaceholder: "1 | example.com/first\n2,3 | example.com/second",
   },
 } as const;
 
@@ -197,6 +213,11 @@ export function PdfQrTool({
   const [logoBytes, setLogoBytes] = useState<Uint8Array | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoHata, setLogoHata] = useState(false);
+  const [toplu, setToplu] = useState(false);
+  const [topluTur, setTopluTur] = useState<"url" | "text">("url");
+  const [topluMetin, setTopluMetin] = useState("");
+  const [kapi, setKapi] = useState(false);
+  const [oneriNot, setOneriNot] = useState<string | null>(null);
 
   const [calisiyor, setCalisiyor] = useState(false);
   const [sonuc, setSonuc] = useState<{ blob: Blob; ad: string; sayfa: number } | null>(null);
@@ -235,7 +256,20 @@ export function PdfQrTool({
     };
   }, [bytes, previewPage]);
 
-  const payload = useMemo(() => buildPayload(kind, alan), [kind, alan]);
+  const batch = useMemo(
+    () => (toplu && thumb ? parseBatchLines(topluMetin, thumb.pageCount, topluTur) : null),
+    [toplu, thumb, topluMetin, topluTur],
+  );
+  const payload: PayloadResult = useMemo(() => {
+    if (toplu) {
+      if (batch?.ok) {
+        const r = batch.rules.find((x) => x.pages.includes(previewPage)) ?? batch.rules[0]!;
+        return { ok: true, text: r.text, link: r.link };
+      }
+      return { ok: false, error: "empty" };
+    }
+    return buildPayload(kind, alan);
+  }, [toplu, batch, previewPage, kind, alan]);
   const etkinEcl: QrEcl = logoBytes ? "H" : ecl;
 
   const svg = useMemo(() => {
@@ -343,10 +377,42 @@ export function PdfQrTool({
     setLogoUrl(await dataUrlOku(f));
   };
 
+  const sablonUygula = (id: (typeof QR_TEMPLATES)[number]["id"]) => {
+    const s = QR_TEMPLATES.find((x) => x.id === id)!;
+    setToplu(false);
+    setKind(s.kind);
+    setSizeMm(s.sizeMm);
+    setPos({ fx: s.fx, fy: s.fy });
+    setCaption(s.caption[dil]);
+    setSecim("first");
+    setMargin(2);
+  };
+
+  const bosYerOner = async () => {
+    if (!thumb) return;
+    setOneriNot(null);
+    const img = new Image();
+    await new Promise<void>((res, rej) => {
+      img.onload = () => res();
+      img.onerror = () => rej(new Error("img"));
+      img.src = thumb.dataUrl;
+    });
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0);
+    const spot = findFreeSpot(ctx.getImageData(0, 0, c.width, c.height), bw, bh);
+    if (spot) setPos(spot);
+    else setOneriNot(t.suggestNone);
+  };
+
   const ekle = async () => {
-    if (!bytes || !payload.ok || !sayfalar) return;
+    if (!bytes || !payload.ok) return;
+    if (!toplu && !sayfalar) return;
     if (KAYIT_GEREKLI && !isSignedIn) {
-      onLogin?.();
+      setKapi(true);
       return;
     }
     setCalisiyor(true);
@@ -356,14 +422,20 @@ export function PdfQrTool({
       if (caption.trim()) {
         fontBytes = new Uint8Array(await (await fetch("/fonts/Roboto-Regular.ttf")).arrayBuffer());
       }
-      const out = await stampQr(bytes, {
-        text: payload.text, link: payload.link, ecl, pages: sayfalar, sizeMm, marginModules: margin,
-        fg, bg, fx: pos.fx, fy: pos.fy, caption, logoBytes, fontBytes,
-      });
+      const ortak = { ecl, sizeMm, marginModules: margin, fg, bg, fx: pos.fx, fy: pos.fy, caption, logoBytes, fontBytes };
+      let out: Uint8Array;
+      let adet: number;
+      if (toplu && batch?.ok) {
+        out = await stampQrBatch(bytes, batch.rules, ortak);
+        adet = new Set(batch.rules.flatMap((r) => r.pages)).size;
+      } else {
+        out = await stampQr(bytes, { ...ortak, text: payload.text, link: payload.link, pages: sayfalar! });
+        adet = sayfalar!.length;
+      }
       setSonuc({
         blob: new Blob([out as unknown as BlobPart], { type: "application/pdf" }),
         ad: qrOutputName(fileName),
-        sayfa: sayfalar.length,
+        sayfa: adet,
       });
     } catch {
       setHata(t.failed);
@@ -431,15 +503,50 @@ export function PdfQrTool({
   }
 
   const kinds: QrKind[] = ["url", "vcard", "phone", "email", "whatsapp", "wifi", "text"];
-  const hazir = payload.ok && !!svg && !!sayfalar;
+  const hazir = payload.ok && !!svg && (toplu ? !!batch?.ok : !!sayfalar);
+  const batchHata =
+    toplu && batch && !batch.ok && topluMetin.trim()
+      ? (batch.error === "format" ? t.bulkErrFormat
+        : batch.error === "pages" ? t.bulkErrPages
+        : batch.error === "content" ? t.bulkErrContent
+        : t.bulkErrEmpty)
+          .replace("{n}", String(batch.line))
+          .replace("{p}", String(thumb.pageCount))
+      : null;
 
   return (
     <div className="mx-auto grid w-full max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
       {/* ── Ayarlar ── */}
       <div className="order-2 space-y-5 lg:order-1">
+        <section aria-label={t.templates}>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{t.templates}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {QR_TEMPLATES.map((s) => (
+              <button key={s.id} type="button" onClick={() => sablonUygula(s.id)}
+                className="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.09]">
+                {t.tplNames[s.id]}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <section aria-label={t.content}>
           <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{t.content}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5" role="tablist">
+          <label className="mt-2 flex items-center gap-2 text-[13px] text-slate-200">
+            <input type="checkbox" checked={toplu} onChange={(e) => setToplu(e.target.checked)} /> {t.bulk}
+          </label>
+          {toplu && (
+            <div className="mt-2">
+              <div className="flex gap-3 text-[13px] text-slate-200">
+                <label className="flex items-center gap-1.5"><input type="radio" name="qr-toplu-tur" checked={topluTur === "url"} onChange={() => setTopluTur("url")} /> {t.bulkUrl}</label>
+                <label className="flex items-center gap-1.5"><input type="radio" name="qr-toplu-tur" checked={topluTur === "text"} onChange={() => setTopluTur("text")} /> {t.bulkText}</label>
+              </div>
+              <textarea className={`${girdi} mt-2 font-mono`} rows={5} value={topluMetin} placeholder={t.bulkPlaceholder} aria-label={t.bulk} onChange={(e) => setTopluMetin(e.target.value)} />
+              <p className="mt-1 text-[12px] text-slate-400">{t.bulkHelp}</p>
+              {batchHata && <p className="mt-1 text-[12px] text-amber-300" role="alert">{batchHata}</p>}
+            </div>
+          )}
+          <div className={`mt-2 flex flex-wrap gap-1.5 ${toplu ? "hidden" : ""}`} role="tablist">
             {kinds.map((k) => (
               <button
                 key={k}
@@ -456,7 +563,7 @@ export function PdfQrTool({
             ))}
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className={`mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 ${toplu ? "hidden" : ""}`}>
             {kind === "url" && (
               <label className="sm:col-span-2"><span className={etiket}>{t.url}</span>
                 <input className={girdi} inputMode="url" value={alan.url} placeholder={t.urlPh} onChange={(e) => set("url", e.target.value)} /></label>
@@ -513,11 +620,11 @@ export function PdfQrTool({
                 <textarea className={girdi} rows={3} value={alan.text} onChange={(e) => set("text", e.target.value)} /></label>
             )}
           </div>
-          {icerikHata && alanDokunuldu(alan) && <p className="mt-2 text-[12px] text-amber-300" role="alert">{icerikHata}</p>}
+          {!toplu && icerikHata && alanDokunuldu(alan) && <p className="mt-2 text-[12px] text-amber-300" role="alert">{icerikHata}</p>}
           {payload.ok && payload.link && <p className="mt-2 text-[12px] text-slate-400">{t.linkNote}</p>}
         </section>
 
-        <section aria-label={t.pages}>
+        <section aria-label={t.pages} className={toplu ? "hidden" : ""}>
           <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{t.pages}</p>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
             {(["first", "last", "all", "custom"] as const).map((m) => (
@@ -543,6 +650,10 @@ export function PdfQrTool({
             ))}
           </div>
           <p className="mt-2 text-[12px] text-slate-400">{t.dragHint}</p>
+          <button type="button" onClick={() => void bosYerOner()} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-1.5 text-[12px] font-semibold text-cyan-100 hover:bg-cyan-500/20">
+            <Wand2 className="h-3.5 w-3.5" /> {t.suggest}
+          </button>
+          {oneriNot && <p className="mt-1 text-[12px] text-amber-300" role="status">{oneriNot}</p>}
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label>
@@ -675,6 +786,9 @@ export function PdfQrTool({
           </label>
         )}
       </div>
+      {kapi && !isSignedIn && (
+        <MemberGateModal language={language} icon={<QrCode className="h-7 w-7" />} toolName={dil === "tr" ? "PDF'ye QR Kod Ekle" : "Add QR Code to PDF"} onClose={() => setKapi(false)} onLogin={onLogin} />
+      )}
     </div>
   );
 }

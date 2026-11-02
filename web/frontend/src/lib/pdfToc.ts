@@ -11,6 +11,8 @@
  */
 import {
   PDFArray,
+  PDFDict,
+  PDFString,
   PDFDocument,
   PDFHexString,
   PDFName,
@@ -54,7 +56,14 @@ export async function inspectPdf(bytes: Uint8Array, index = 0): Promise<{ pageCo
   }
 }
 
-export type TocFile = { name: string; title: string; bytes: Uint8Array };
+/** Bölümün altında görünecek alt başlık. `page`: dosya içindeki sayfa (1 tabanlı). */
+export type TocSub = { title: string; page: number };
+export type TocFile = { name: string; title: string; bytes: Uint8Array; subs?: TocSub[] };
+export const MAX_SUBS = 60;
+const SUB_PT = 10;
+const SUB_LINE = 14;
+const SUB_GAP = 4;
+const SUB_INDENT = 20;
 
 export type TocOptions = {
   heading: string;
@@ -89,7 +98,6 @@ const HEAD_BLOCK = 46;
 const HEAD_BLOCK_CONT = 34;
 const MAX_LINES = 2;
 
-type EntryLayout = { lines: string[]; height: number };
 
 /** Başlığı en çok iki satıra böler; sığmazsa son satırı «…» ile keser. */
 export function wrapTitle(text: string, font: PDFFont, size: number, maxW: number): string[] {
@@ -184,15 +192,28 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   const font = await out.embedFont(o.fontBytes, { subset: true });
   const bold = await out.embedFont(o.boldBytes, { subset: true });
 
-  // 2) İçindekiler yerleşimi (sayfa sayısı yazı ölçüsüne bağlı)
+  // 2) Girdiler: her bölüm + (varsa) alt başlıkları. Sayfa sayısı yazı ölçüsüne bağlıdır.
+  type Item = { file: number; sub: number | null; lines: string[]; height: number; size: number; lineH: number; indent: number };
   const numColW = font.widthOfTextAtSize("999", ENTRY_PT);
   const labelW = A4_W - MARGIN_X * 2 - numColW - 10;
-  const layouts: EntryLayout[] = files.map((f, i) => {
+  const cleanSubs: TocSub[][] = files.map((f, i) =>
+    (f.subs ?? [])
+      .filter((s) => s.title.trim() && s.page >= 1 && s.page <= srcs[i]!.getPageCount())
+      .sort((a, b) => a.page - b.page)
+      .slice(0, MAX_SUBS),
+  );
+  const items: Item[] = [];
+  files.forEach((f, i) => {
     const prefix = o.numbering ? `${i + 1}. ` : "";
     const lines = wrapTitle(prefix + safeText(f.title || defaultTitle(f.name), font), font, ENTRY_PT, labelW);
-    return { lines, height: lines.length * LINE_H + ENTRY_GAP };
+    items.push({ file: i, sub: null, lines, height: lines.length * LINE_H + ENTRY_GAP, size: ENTRY_PT, lineH: LINE_H, indent: 0 });
+    cleanSubs[i]!.forEach((s, k) => {
+      const pre = o.numbering ? `${i + 1}.${k + 1} ` : "– ";
+      const sl = wrapTitle(pre + safeText(s.title, font), font, SUB_PT, labelW - SUB_INDENT);
+      items.push({ file: i, sub: k, lines: sl, height: sl.length * SUB_LINE + SUB_GAP, size: SUB_PT, lineH: SUB_LINE, indent: SUB_INDENT });
+    });
   });
-  const pageOf = paginate(layouts.map((l) => l.height));
+  const pageOf = paginate(items.map((l) => l.height));
   const tocPages = (pageOf.length ? pageOf[pageOf.length - 1]! : 0) + 1;
 
   // 3) Bölüm başlangıç sayfaları
@@ -207,6 +228,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   // 4) Sayfaları ekle: önce içindekiler, sonra kaynaklar
   const tocPageObjs: PDFPage[] = [];
   for (let i = 0; i < tocPages; i++) tocPageObjs.push(out.addPage([A4_W, A4_H]));
+  const filePages: PDFPage[][] = [];
   const sectionFirstPage: PDFPage[] = [];
   for (const s of srcs) {
     const copied = await out.copyPages(s, s.getPageIndices());
@@ -214,6 +236,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
       out.addPage(p);
       if (k === 0) sectionFirstPage.push(p);
     });
+    filePages.push(copied);
   }
 
   const ink = rgb(0.1, 0.1, 0.12);
@@ -254,55 +277,69 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
     else page.node.set(PDFName.of("Annots"), out.context.obj([ref]));
   };
 
-  files.forEach((_, i) => {
-    const p = pageOf[i]!;
+  items.forEach((it, n) => {
+    const p = pageOf[n]!;
     const pg = tocPageObjs[p]!;
-    const lay = layouts[i]!;
     const yTop = ys[p]!;
-    const numStr = String(sections[i]!.startPage);
-    const numWidth = font.widthOfTextAtSize(numStr, ENTRY_PT);
+    const isSub = it.sub !== null;
+    const startPage = isSub
+      ? sections[it.file]!.startPage + cleanSubs[it.file]![it.sub!]!.page - 1
+      : sections[it.file]!.startPage;
+    const target = isSub ? filePages[it.file]![cleanSubs[it.file]![it.sub!]!.page - 1]! : sectionFirstPage[it.file]!;
+    const numStr = String(startPage);
+    const numWidth = font.widthOfTextAtSize(numStr, it.size);
     const xNum = A4_W - MARGIN_X - numWidth;
+    const x0 = MARGIN_X + it.indent;
 
-    lay.lines.forEach((ln, k) => {
-      pg.drawText(ln, { x: MARGIN_X, y: yTop - (k + 1) * LINE_H + 4, size: ENTRY_PT, font, color: ink });
+    it.lines.forEach((ln, k) => {
+      pg.drawText(ln, { x: x0, y: yTop - (k + 1) * it.lineH + 4, size: it.size, font, color: isSub ? muted : ink });
     });
     // Noktalı çizgi: son satırın bitişi ile sayfa numarası arasını doldurur
-    const lastY = yTop - lay.lines.length * LINE_H + 4;
-    const lastW = font.widthOfTextAtSize(lay.lines[lay.lines.length - 1]!, ENTRY_PT);
-    const dotW = font.widthOfTextAtSize(". ", ENTRY_PT);
-    const gap = xNum - 8 - (MARGIN_X + lastW + 6);
+    const lastY = yTop - it.lines.length * it.lineH + 4;
+    const lastW = font.widthOfTextAtSize(it.lines[it.lines.length - 1]!, it.size);
+    const dotW = font.widthOfTextAtSize(". ", it.size);
+    const gap = xNum - 8 - (x0 + lastW + 6);
     if (gap > dotW * 2) {
-      const n = Math.floor(gap / dotW);
-      pg.drawText(". ".repeat(n).trimEnd(), {
-        x: xNum - 6 - font.widthOfTextAtSize(". ".repeat(n).trimEnd(), ENTRY_PT),
-        y: lastY,
-        size: ENTRY_PT,
-        font,
-        color: muted,
-      });
+      const cnt = Math.floor(gap / dotW);
+      const dots = ". ".repeat(cnt).trimEnd();
+      pg.drawText(dots, { x: xNum - 6 - font.widthOfTextAtSize(dots, it.size), y: lastY, size: it.size, font, color: muted });
     }
-    pg.drawText(numStr, { x: xNum, y: lastY, size: ENTRY_PT, font: bold, color: accent });
+    pg.drawText(numStr, { x: xNum, y: lastY, size: it.size, font: isSub ? font : bold, color: accent });
 
-    linkTo(
-      pg,
-      [MARGIN_X - 2, yTop - lay.lines.length * LINE_H - 1, A4_W - MARGIN_X + 2, yTop + 2],
-      sectionFirstPage[i]!,
-    );
-    ys[p] = yTop - lay.height;
+    linkTo(pg, [x0 - 2, yTop - it.lines.length * it.lineH - 1, A4_W - MARGIN_X + 2, yTop + 2], target);
+    ys[p] = yTop - it.height;
   });
 
-  // 6) Yer imleri (outline)
+  // 6) Yer imleri (outline): bölümler, altlarında alt başlıklar
   const outlineRef = out.context.nextRef();
   const itemRefs = sections.map(() => out.context.nextRef());
+  const subRefs = cleanSubs.map((l) => l.map(() => out.context.nextRef()));
+  const dest = (pg: PDFPage) => [pg.ref, "XYZ", 0, pg.getSize().height, null];
   sections.forEach((s, i) => {
     const dict: Record<string, unknown> = {
       Title: PDFHexString.fromText(s.title),
       Parent: outlineRef,
-      Dest: [sectionFirstPage[i]!.ref, "XYZ", 0, sectionFirstPage[i]!.getSize().height, null],
+      Dest: dest(sectionFirstPage[i]!),
     };
     if (i > 0) dict.Prev = itemRefs[i - 1];
     if (i < sections.length - 1) dict.Next = itemRefs[i + 1];
+    const kids = subRefs[i]!;
+    if (kids.length) {
+      dict.First = kids[0];
+      dict.Last = kids[kids.length - 1];
+      dict.Count = kids.length;
+    }
     out.context.assign(itemRefs[i]!, out.context.obj(dict as never));
+    cleanSubs[i]!.forEach((sb, k) => {
+      const d: Record<string, unknown> = {
+        Title: PDFHexString.fromText(sb.title),
+        Parent: itemRefs[i],
+        Dest: dest(filePages[i]![sb.page - 1]!),
+      };
+      if (k > 0) d.Prev = kids[k - 1];
+      if (k < kids.length - 1) d.Next = kids[k + 1];
+      out.context.assign(kids[k]!, out.context.obj(d as never));
+    });
   });
   out.context.assign(
     outlineRef,
@@ -310,7 +347,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
       Type: "Outlines",
       First: itemRefs[0],
       Last: itemRefs[itemRefs.length - 1],
-      Count: sections.length,
+      Count: sections.length + cleanSubs.reduce((n, l) => n + l.length, 0),
     } as never),
   );
   out.catalog.set(PDFName.of("Outlines"), outlineRef as PDFRef);
@@ -354,3 +391,39 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
 export const TOC_MAX_FILES = 20;
 export const TOC_MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const TOC_DEFAULT_OUTPUT = "birlestirilmis_icindekiler.pdf";
+
+/**
+ * Kaynak PDF'in kendi (en üst düzey) yer imlerini okur → alt başlık önerisi.
+ * Yalnızca doğrudan sayfaya giden yer imleri alınır; adlandırılmış hedefler atlanır.
+ */
+export async function readOutline(bytes: Uint8Array): Promise<TocSub[]> {
+  try {
+    const doc = await PDFDocument.load(bytes, { updateMetadata: false });
+    const pages = doc.getPages().map((p) => p.ref.tag);
+    const root = doc.catalog.lookupMaybe(PDFName.of("Outlines"), PDFDict);
+    if (!root) return [];
+    const res: TocSub[] = [];
+    let ref = root.get(PDFName.of("First"));
+    let guard = 0;
+    while (ref instanceof PDFRef && guard++ < 500 && res.length < MAX_SUBS) {
+      const item = doc.context.lookup(ref, PDFDict);
+      const t = item.lookup(PDFName.of("Title"));
+      const title =
+        t instanceof PDFHexString || t instanceof PDFString ? t.decodeText().trim() : "";
+      let dest = item.lookup(PDFName.of("Dest"));
+      if (!dest) {
+        const a = item.lookupMaybe(PDFName.of("A"), PDFDict);
+        dest = a?.lookup(PDFName.of("D"));
+      }
+      if (title && dest instanceof PDFArray) {
+        const pr = dest.get(0);
+        const idx = pr instanceof PDFRef ? pages.indexOf(pr.tag) : -1;
+        if (idx >= 0) res.push({ title: title.slice(0, 120), page: idx + 1 });
+      }
+      ref = item.get(PDFName.of("Next"));
+    }
+    return res;
+  } catch {
+    return [];
+  }
+}

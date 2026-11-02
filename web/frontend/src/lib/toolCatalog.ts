@@ -234,12 +234,12 @@ export const TOOLS: Tool[] = [
     en: { name: "PDF to PDF/A (Archive)", desc: "The ISO archival format institutions ask for; fonts embedded." },
   },
   {
-    id: "pdf-qr-ekle", cat: "edit", Icon: QrCode, free: true,
+    id: "pdf-qr-ekle", cat: "edit", Icon: QrCode, account: true,
     tr: { name: "PDF'ye QR Kod Ekle", desc: "Link, kişi kartı, WhatsApp, Wi-Fi QR kodunu sayfada istediğin yere koy." },
     en: { name: "Add QR Code to PDF", desc: "Place a link, contact card, WhatsApp or Wi-Fi QR code anywhere on the page." },
   },
   {
-    id: "pdf-birlestir-icindekiler", cat: "edit", Icon: ListTree, free: true,
+    id: "pdf-birlestir-icindekiler", cat: "edit", Icon: ListTree, account: true,
     tr: { name: "Birleştir + İçindekiler", desc: "PDF'leri birleştirir; tıklanabilir içindekiler sayfası ve yer imleri ekler." },
     en: { name: "Merge + Table of Contents", desc: "Merges PDFs and adds a clickable contents page and bookmarks." },
   },

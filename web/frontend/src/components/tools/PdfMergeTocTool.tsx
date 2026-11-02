@@ -6,17 +6,19 @@
  * Birleştirme zaten en az 2 dosya ister; bu yüzden tek dosyada düğme kapalıdır.
  */
 import { useRef, useState } from "react";
-import { AlertTriangle, ArrowDown, ArrowUp, FileText, GripVertical, ListTree, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, FileText, GripVertical, ListTree, Loader2, Plus, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { MemberGateModal } from "../common/MemberGateModal";
 import { PdfThumbError, renderPdfPage } from "../../lib/pdfThumbs";
 import {
+  type TocSub, MAX_SUBS, readOutline,
   TOC_DEFAULT_OUTPUT, TOC_MAX_FILES, TOC_MAX_FILE_BYTES, TocFileError, defaultTitle, mergeWithToc,
 } from "../../lib/pdfToc";
 
 /** Kayıt gerekli mi? Karar verilince tek yerden değişir (katalogdaki free/account bayrağıyla birlikte). */
-const KAYIT_GEREKLI = false;
+const KAYIT_GEREKLI = true;
 
 const T = {
   tr: {
@@ -27,6 +29,7 @@ const T = {
     broken: "Bu dosya okunamadı (bozuk olabilir). Birleştirmeye dahil edilmeyecek.",
     tooBig: "Bu dosya 50 MB'dan büyük, eklenmedi.",
     tooMany: "En fazla 20 dosya ekleyebilirsin; fazlası eklenmedi.",
+    subsTitle: "Alt başlıklar", subsAdd: "Alt başlık ekle", subsTitleLabel: "Alt başlık", subsPage: "Sayfa", subsImport: "Dosyanın kendi yer imlerini al", subsNone: "Henüz alt başlık yok.", subsHint: "Alt başlıklar içindekilerde bölümün altında girintili görünür; tıklanınca o sayfaya gider.",
     needTwo: "Birleştirmek için en az 2 geçerli PDF gerekli.",
     settings: "İçindekiler ayarları", heading: "Sayfa başlığı", headingDefault: "İçindekiler",
     numbering: "Bölümleri numaralandır (1., 2., 3. …)", footer: "Tüm sayfalara «Sayfa 3 / 42» alt bilgisi ekle",
@@ -44,6 +47,7 @@ const T = {
     broken: "This file could not be read (it may be corrupt). It will not be merged.",
     tooBig: "This file is larger than 50 MB and was not added.",
     tooMany: "You can add at most 20 files; the rest were not added.",
+    subsTitle: "Sub-headings", subsAdd: "Add sub-heading", subsTitleLabel: "Sub-heading", subsPage: "Page", subsImport: "Use the file's own bookmarks", subsNone: "No sub-headings yet.", subsHint: "Sub-headings appear indented under the section in the contents; a click jumps to that page.",
     needTwo: "At least 2 valid PDFs are needed to merge.",
     settings: "Contents settings", heading: "Page heading", headingDefault: "Contents",
     numbering: "Number the sections (1., 2., 3. …)", footer: "Add a “Page 3 / 42” footer to every page",
@@ -63,6 +67,9 @@ type Item = {
   thumb: string | null;
   title: string;
   error: "encrypted" | "broken" | null;
+  subs: TocSub[];
+  outline: TocSub[];
+  open: boolean;
 };
 
 let sayac = 0;
@@ -89,6 +96,7 @@ export function PdfMergeTocTool({
   const [backLinks, setBackLinks] = useState(false);
   const [outName, setOutName] = useState(TOC_DEFAULT_OUTPUT.replace(/\.pdf$/, ""));
   const [calisiyor, setCalisiyor] = useState(false);
+  const [kapi, setKapi] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [sonuc, setSonuc] = useState<{ blob: Blob; ad: string; bolum: number; sayfa: number } | null>(null);
   const surukleniyor = useRef<number | null>(null);
@@ -109,11 +117,12 @@ export function PdfMergeTocTool({
       }
       kalan--;
       const bytes = new Uint8Array(await f.arrayBuffer());
-      const item: Item = { id: ++sayac, name: f.name, bytes, pageCount: 0, thumb: null, title: defaultTitle(f.name), error: null };
+      const item: Item = { id: ++sayac, name: f.name, bytes, pageCount: 0, thumb: null, title: defaultTitle(f.name), error: null, subs: [], outline: [], open: false };
       try {
         const th = await renderPdfPage(bytes, 0, 140);
         item.pageCount = th.pageCount;
         item.thumb = th.dataUrl;
+        item.outline = await readOutline(bytes);
       } catch (e) {
         item.error = e instanceof PdfThumbError && e.kind === "encrypted" ? "encrypted" : "broken";
       }
@@ -139,7 +148,7 @@ export function PdfMergeTocTool({
   const birlestir = async () => {
     if (gecerli.length < 2) return;
     if (KAYIT_GEREKLI && !isSignedIn) {
-      onLogin?.();
+      setKapi(true);
       return;
     }
     setCalisiyor(true);
@@ -150,7 +159,7 @@ export function PdfMergeTocTool({
         fetch("/fonts/Roboto-Bold.ttf").then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)),
       ]);
       const r = await mergeWithToc(
-        gecerli.map((i) => ({ name: i.name, title: i.title.trim() || defaultTitle(i.name), bytes: i.bytes })),
+        gecerli.map((i) => ({ name: i.name, title: i.title.trim() || defaultTitle(i.name), bytes: i.bytes, subs: i.subs })),
         {
           heading: heading.trim() || t.headingDefault, continued: t.continued, numbering, pageFooter: footer,
           pageWord: t.pageWord, backLinks, backLabel: t.backLabel, fontBytes, boldBytes,
@@ -245,7 +254,7 @@ export function PdfMergeTocTool({
                 return c;
               });
             }}
-            className={`flex items-center gap-3 rounded-xl border p-2.5 ${it.error ? "border-rose-400/40 bg-rose-500/[0.07]" : "border-white/[0.08] bg-white/[0.03]"}`}
+            className={`flex flex-wrap items-center gap-3 rounded-xl border p-2.5 ${it.error ? "border-rose-400/40 bg-rose-500/[0.07]" : "border-white/[0.08] bg-white/[0.03]"}`}
           >
             <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-slate-500 sm:block" aria-hidden />
             <span className="w-5 shrink-0 text-center text-[12px] font-semibold tabular-nums text-slate-400">{i + 1}</span>
@@ -272,6 +281,47 @@ export function PdfMergeTocTool({
               <button type="button" onClick={() => tasi(i, 1)} disabled={i === items.length - 1} aria-label={t.down} className="rounded-md border border-white/15 p-1.5 text-slate-300 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
               <button type="button" onClick={() => setItems((m) => m.filter((x) => x.id !== it.id))} aria-label={t.remove} className="rounded-md border border-white/15 p-1.5 text-rose-300"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
+            {!it.error && (
+              <div className="basis-full border-t border-white/[0.06] pt-2">
+                <button type="button" onClick={() => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, open: !x.open } : x)))}
+                  aria-expanded={it.open} className="text-[12px] font-semibold text-cyan-300 hover:text-cyan-200">
+                  {t.subsTitle}{it.subs.length ? ` (${it.subs.length})` : ""} {it.open ? "▴" : "▾"}
+                </button>
+                {it.open && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-[11px] text-slate-500">{t.subsHint}</p>
+                    {it.subs.length === 0 && <p className="text-[12px] text-slate-400">{t.subsNone}</p>}
+                    {it.subs.map((s, k) => (
+                      <div key={k} className="flex items-center gap-2">
+                        <input className={girdi} value={s.title} maxLength={120} aria-label={t.subsTitleLabel}
+                          onChange={(e) => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, subs: x.subs.map((y, j) => (j === k ? { ...y, title: e.target.value } : y)) } : x)))} />
+                        <label className="flex shrink-0 items-center gap-1 text-[12px] text-slate-400">{t.subsPage}
+                          <input type="number" min={1} max={it.pageCount} value={s.page} aria-label={`${t.subsPage} (${s.title})`}
+                            className="w-16 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-2 text-[13px] text-white"
+                            onChange={(e) => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, subs: x.subs.map((y, j) => (j === k ? { ...y, page: Math.min(it.pageCount, Math.max(1, Number(e.target.value) || 1)) } : y)) } : x)))} />
+                        </label>
+                        <button type="button" aria-label={t.remove} onClick={() => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, subs: x.subs.filter((_, j) => j !== k) } : x)))}
+                          className="rounded-md border border-white/15 p-1.5 text-rose-300"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ))}
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" disabled={it.subs.length >= MAX_SUBS}
+                        onClick={() => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, subs: [...x.subs, { title: "", page: 1 }] } : x)))}
+                        className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-2.5 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08] disabled:opacity-40">
+                        <Plus className="h-3.5 w-3.5" /> {t.subsAdd}
+                      </button>
+                      {it.outline.length > 0 && (
+                        <button type="button"
+                          onClick={() => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, subs: x.outline.slice(0, MAX_SUBS) } : x)))}
+                          className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-2.5 py-1.5 text-[12px] font-semibold text-cyan-100 hover:bg-cyan-500/20">
+                          {t.subsImport} ({it.outline.length})
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -311,6 +361,9 @@ export function PdfMergeTocTool({
         </button>
       </div>
       <p className="mt-2 text-center text-[12px] text-slate-500">{t.onDevice}</p>
+      {kapi && !isSignedIn && (
+        <MemberGateModal language={language} icon={<ListTree className="h-7 w-7" />} toolName={dil === "tr" ? "Birleştir + İçindekiler" : "Merge + Table of Contents"} onClose={() => setKapi(false)} onLogin={onLogin} />
+      )}
     </div>
   );
 }
