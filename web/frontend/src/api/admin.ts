@@ -1255,7 +1255,54 @@ export async function createPinterestBoard(accessToken: string, name: string): P
   return (await jsonOrThrow<{ board: PinterestBoard }>(r, "Pano oluşturulamadı.")).board;
 }
 
-export type PinterestPinBody = { imageUrl: string; title: string; description: string; link: string };
+export type PinterestPinBody = {
+  /** Görsel pin için görsel; video pinde verilmez. */
+  imageUrl?: string;
+  /** Video pin: araç videosunun adresi (yalnız kendi sunucumuz). */
+  videoUrl?: string;
+  /** Video pinin kapağı için araç kimliği. */
+  toolId?: string;
+  title: string;
+  description: string;
+  link: string;
+  altText?: string;
+  /** Bağlantının kampanya adı: araç sayfası ("arac") ya da blog ("blog"). */
+  kind?: "arac" | "blog";
+  /** Pano konusu; verilirse o konuya ayrılmış pano kullanılır. */
+  topic?: PinterestBoardTopic;
+};
+
+export type PinterestBoardTopic = "cv" | "pdf" | "sozlesme";
+export type PinterestBoardMap = Partial<Record<PinterestBoardTopic, string>>;
+export type PinterestKeywords = { main: string; extra: string[] };
+export type PinterestToolKeywords = { id: string; title: string; saved: PinterestKeywords | null; suggested: PinterestKeywords | null };
+export type PinterestPreview = { title: string; description: string; altText: string; link: string; topic: PinterestBoardTopic };
+
+export async function fetchPinterestBoardMap(accessToken: string): Promise<PinterestBoardMap> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board-map");
+  return (await jsonOrThrow<{ boards: PinterestBoardMap }>(r, "Pano eşlemesi okunamadı.")).boards;
+}
+
+export async function savePinterestBoardMap(accessToken: string, map: PinterestBoardMap): Promise<PinterestBoardMap> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board-map", { method: "PUT", body: JSON.stringify(map) });
+  return (await jsonOrThrow<{ boards: PinterestBoardMap }>(r, "Pano eşlemesi kaydedilemedi.")).boards;
+}
+
+export async function fetchPinterestKeywords(accessToken: string): Promise<PinterestToolKeywords[]> {
+  const r = await adminFetch(accessToken, "/social/pinterest/keywords");
+  return (await jsonOrThrow<{ tools: PinterestToolKeywords[] }>(r, "Anahtar kelimeler okunamadı.")).tools;
+}
+
+/** `main` boş gönderilirse kayıt silinir (otomatik öneriye dönülür). */
+export async function savePinterestKeywords(accessToken: string, key: string, main: string, extra: string[]): Promise<void> {
+  const r = await adminFetch(accessToken, "/social/pinterest/keywords", { method: "PUT", body: JSON.stringify({ key, main, extra }) });
+  await jsonOrThrow<{ ok: boolean }>(r, "Anahtar kelimeler kaydedilemedi.");
+}
+
+export async function fetchPinterestPreview(accessToken: string, toolId: string): Promise<PinterestPreview> {
+  const r = await adminFetch(accessToken, `/social/pinterest/preview/${encodeURIComponent(toolId)}`);
+  return jsonOrThrow<PinterestPreview>(r, "Pin önizlemesi okunamadı.");
+}
 export type PinterestPinResult = { id: string | null; url: string | null; sandbox: boolean; warning: string | null };
 
 export async function createPinterestPin(accessToken: string, body: PinterestPinBody): Promise<PinterestPinResult> {
