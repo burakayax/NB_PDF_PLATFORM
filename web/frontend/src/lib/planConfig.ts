@@ -259,7 +259,7 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "Pro'daki her şey — aylık 100 yapay zekâ işlemi; Sözleşme Denetçisi ek krediyle",
       "Ekip yönetimi: 5 kişi dahil, istediğin kadar ek kişi",
-      "Tek fatura ve ortak yönetim paneli",
+      "Ortak yönetim paneli: kişi başı kullanım raporu, tek fatura",
       "Sunucu işlem sınırı yok",
       "Sınırsız toplu işlem ve sınırsız imza isteği",
       "Çok yüksek dosya boyutu sınırı",
@@ -268,7 +268,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "Everything in Pro — 100 AI operations/month; Contract Auditor with extra credits",
       "Team management: 5 seats included, add as many more as you need",
-      "One invoice and a shared admin panel",
+      "Shared admin panel: per-member usage report, one invoice",
       "No server operation limit",
       "Unlimited batch processing and unlimited signature requests",
       "Very high file size limit",

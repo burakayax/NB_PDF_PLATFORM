@@ -243,6 +243,12 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
             : "Invite team members, add/remove seats, manage under one invoice.",
         },
         {
+          label: tr ? "Ekip kullanım raporu" : "Team usage report",
+          detail: tr
+            ? "Her ekip üyesinin işlem sayısı, en çok kullandığı araç, işlediği sayfa ve dosya hacmi, son etkinliği; ekip toplamı tek ekranda."
+            : "Each member's operations, most-used tool, pages and file volume processed and last activity; team totals on one screen.",
+        },
+        {
           label: tr ? "Yönetim paneli (Admin dashboard)" : "Admin dashboard",
           detail: tr
             ? "Organizasyon genelinde kullanım, kullanıcı ve fatura yönetimi tek ekranda."
