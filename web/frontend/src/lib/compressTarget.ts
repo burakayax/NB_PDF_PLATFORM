@@ -11,7 +11,7 @@
  */
 
 /** Seçilebilir hedefler (KB). 0 = hedef yok, kalite menüsü kullanılır. */
-export const COMPRESS_TARGET_PRESETS_KB = [0, 100, 200, 500, 1024, 2048, 5120, 10240] as const;
+export const COMPRESS_TARGET_PRESETS_KB = [0, 100, 200, 500, 1024, 2048, 5120, 10240, 20480] as const;
 
 /** Sunucu sınırlarıyla aynı (20 KB … 200 MB). */
 export const COMPRESS_TARGET_MIN_KB = 20;
