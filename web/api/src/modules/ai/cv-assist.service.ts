@@ -64,7 +64,7 @@ export function extractJson(raw: string): unknown {
 }
 
 const STOPS = new Set("ve ile için bir bu şu da de ki mi gibi olarak olan daha çok en her ama ise the and for with that this from into over under your our their was were been being have has had not but are".split(" "));
-const words = (t: string, lang: Lang): string[] => (t.toLocaleLowerCase(lang).match(/[a-zçğıöşü]{4,}/g) ?? []).filter((w) => !STOPS.has(w));
+const words = (t: string, lang: Lang): string[] => (t.toLocaleLowerCase(lang).replace(/\d+(?:[.,]\d+)?['’][a-zçğıöşü]+/g, " ").match(/[a-zçğıöşü]{4,}/g) ?? []).filter((w) => !STOPS.has(w));
 
 /** Her CV metninde doğal geçen, "yeni bilgi" sayılmaması gereken sıradan sözcükler. */
 const FILLER = new Set("aşarak aşan yana mevcut aşkın yılı yıl yıllık sahip sahibim deneyim deneyimli alanında alanda konusunda yaklaşık çalıştım çalıştı bulundum yürüttüm sağladım güçlü güçlüyüm başarıyla etkin etkili düzenli sürekli doğru hızlı kalıcı ilişki ilişkiler çözüm sunan odaklı temelli yönelik göre kadar ayrıca özellikle önemli tüm birlikte sayesinde dayalı yaklaşım about experience years year strong strongly across within including using focused skilled proven".split(" "));

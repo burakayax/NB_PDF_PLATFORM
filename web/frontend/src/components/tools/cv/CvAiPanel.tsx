@@ -138,6 +138,21 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
       ad: ad.trim().length > 80 ? ad : undefined,
     }, accessToken, lang), (r) => setBullets({ ...r, expId: e.id, pick: r.items.map((i) => i.improved !== i.original) }));
   };
+  // Yapay zekânın sorduğu ölçüye kişi cevap verir; cevap "kullanıcının verdiği olgu" olarak maddeye eklenip tekrar yazdırılır.
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const rewriteWith = async (i: number) => {
+    if (!bullets) return;
+    const a = (answers[i] ?? "").trim();
+    const e = data.experience.find((x) => x.id === bullets.expId);
+    const it = bullets.items[i];
+    if (!a || !e || !it) return;
+    await run<Bullets>("bullets", () => callCvAi("bullets", { role: e.role, company: e.company, bullets: [`${it.original} (${a})`], ad: ad.trim().length > 80 ? ad : undefined }, accessToken, lang), (r) => {
+      const n = r.items[0];
+      if (!n) return;
+      setBullets((b) => (b ? { ...b, items: b.items.map((x, j) => (j === i ? { ...n, original: it.original, askMetric: "" } : x)), pick: b.pick.map((v, j) => (j === i ? true : v)) } : b));
+      setAnswers((o) => ({ ...o, [i]: "" }));
+    });
+  };
   const applyBullets = () => {
     if (!bullets) return;
     onChange({
@@ -269,7 +284,15 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
                 <p className="mt-1 text-[13px] font-semibold text-slate-100">{it.improved}</p>
                 {it.rejectedNumber ? <p className="mt-1 text-[12px] text-amber-200">{tr ? "Yapay zekâ olmayan bir rakam eklemişti; reddedildi, özgün metin korundu." : "The AI had added a number you didn't give; it was rejected and your original kept."}</p> : null}
                 <Added words={it.added} tr={tr} />
-                {it.askMetric ? <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-sky-200"><Target className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "Rakam ekleyebilirsiniz: " : "You could add a measure: "}{it.askMetric}</p> : null}
+                {it.askMetric ? (
+                  <div className="mt-2 rounded-lg bg-sky-500/[0.07] p-2.5 ring-1 ring-sky-400/20">
+                    <p className="flex items-start gap-1.5 text-[12px] text-sky-200"><Target className="mt-0.5 h-3.5 w-3.5 shrink-0" />{it.askMetric}</p>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                      <input value={answers[i] ?? ""} onChange={(e) => setAnswers((o) => ({ ...o, [i]: e.target.value }))} placeholder={tr ? "Cevabınızı yazın (örn. günde yaklaşık 120 müşteri)" : "Type your answer (e.g. about 120 customers a day)"} className="min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900/70 px-3 py-2 text-[12.5px] text-white outline-none placeholder:text-slate-500 focus:border-sky-400" />
+                      <button type="button" className={ghost} disabled={!!busy || !(answers[i] ?? "").trim()} onClick={() => void rewriteWith(i)}>{busy === "bullets" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}{tr ? "Cevabımla yeniden yaz (1 hak)" : "Rewrite with my answer (1 credit)"}</button>
+                    </div>
+                  </div>
+                ) : null}
                 {it.improved !== it.original ? (
                   <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" className="h-4 w-4 accent-fuchsia-500" checked={bullets.pick[i]} onChange={(e) => setBullets({ ...bullets, pick: bullets.pick.map((v, j) => (j === i ? e.target.checked : v)) })} />{tr ? "Bu değişikliği uygula" : "Apply this change"}</label>
                 ) : <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "Değişiklik önerilmedi." : "No change suggested."}</p>}
