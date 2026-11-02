@@ -330,6 +330,9 @@ export function ws(lang: Language) {
           (rasterAllowed
             ? "Going smaller would make the pages unreadable. Try a higher target, delete pages you do not need, or split the document in two."
             : "To go further you can tick \"turn pages into images\" and run again, raise the target, or delete pages you do not need."),
+    compressSignatureNote: tr
+      ? "Küçülttükten sonra imza, kaşe ve küçük yazıların okunaklı kaldığını kontrol edin."
+      : "After shrinking, check that signatures, stamps and small print are still legible.",
     compressRasterNote: tr
       ? "Sayfalar görüntüye çevrildi: yazı artık seçilemez, kopyalanamaz ve aranamaz."
       : "Pages were turned into images: the text can no longer be selected, copied or searched.",

@@ -3863,13 +3863,14 @@ function App() {
         o.kind === "reached"
           ? W.compressTargetReached(formatFileSize(from), formatFileSize(to), tgt)
           : W.compressTargetMissed(formatFileSize(to), tgt, !!resultReady.compressRasterAllowed);
-      return o.rasterized ? `${base} ${W.compressRasterNote}` : base;
+      const withRaster = o.rasterized ? `${base} ${W.compressRasterNote}` : base;
+      return `${withRaster} ${W.compressSignatureNote}`;
     }
     const pct = Math.round((1 - to / from) * 100);
     if (pct <= 0) {
       return W.compressResultNoGain;
     }
-    return W.compressResultGain(formatFileSize(from), formatFileSize(to), pct);
+    return `${W.compressResultGain(formatFileSize(from), formatFileSize(to), pct)} ${W.compressSignatureNote}`;
   }, [resultReady, W]);
   const submitDisabled =
     submitting ||
