@@ -39,7 +39,7 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   const D = T.end;
   const I = 3.2; // giriş kartı
   const O = 5.0; // kapanış kartı
-  const R = sonuc ? 4.2 : 0; // sonuç sahnesi (indirilen dosyanın gerçek görünümü)
+  const R = sonuc ? 6.5 : 0; // sonuç sahnesi (indirilen dosyanın gerçek görünümü)
   const TOTAL = +(I + D + R + O).toFixed(2);
 
   // ---- Kesim (araç bölümü) ----
@@ -47,7 +47,10 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   const cw = even(T.formBox.w + 28);
   const y1 = even(T.formBox.y - 14);
   const btnBottom = T.btnBoxFinal.y + T.btnBoxFinal.height;
-  const ch = even(btnBottom + 14 - y1);
+  // Kesit çok kısaysa (ör. OCR: yalnız yükleme alanı + düğme) video ince bir şeride düşer, altında geniş siyah boşluk kalır.
+  // Sayfanın devamı da kesite katılır (en az ~760 px yüksekliğinde görünsün).
+  const minCh = even((760 * cw) / 960);
+  const ch = Math.min(even(T.VH - y1), Math.max(even(btnBottom + 14 - y1), minCh));
   const y2 = Math.max(0, even(T.resultBox.y - 135));
   const ch2 = even(640);
   const swap = +(T.swapAt - 0.05).toFixed(2);
