@@ -1354,6 +1354,13 @@ export async function queueSocialToolReel(
   return r.json() as Promise<SocialQueueResult>;
 }
 
+/** Beğenilmeyen araç videosunu kaldırır (iki sürümü); bağlı taslaklar silinir, araç paylaşıldı sayılmaz. */
+export async function discardSocialToolReel(accessToken: string, id: string): Promise<{ videos: number; removedPosts: number }> {
+  const r = await adminFetch(accessToken, `/social/tool-reels/${encodeURIComponent(id)}/video`, { method: "DELETE" });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ videos: number; removedPosts: number }>;
+}
+
 export async function publishSocialPost(accessToken: string, id: string): Promise<void> {
   const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/publish`, { method: "POST" });
   if (!r.ok) throw new Error(await r.text());

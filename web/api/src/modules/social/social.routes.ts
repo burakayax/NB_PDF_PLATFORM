@@ -62,6 +62,7 @@ import {
   updatePostBody,
   writeSocialConfig,
 } from "./social.service.js";
+import { discardToolVideos, findCatalogEntry } from "./tool-reels.service.js";
 
 export const socialRouter = Router();
 socialRouter.use(requireAdmin);
@@ -497,6 +498,23 @@ socialRouter.post(
       "social.tool-reel",
       result.toolId,
       `Reels hazırla: ${result.queued.length} taslak hazırlandı${result.toolId ? ` (${result.toolId})` : ""}`,
+    );
+    response.json(result);
+  }),
+);
+
+/** Beğenilmeyen araç videosunu kaldırır; sonra aynı araç yeniden üretilebilir. */
+socialRouter.delete(
+  "/tool-reels/:id/video",
+  asyncHandler(async (request, response) => {
+    const toolId = String(request.params.id);
+    if (!findCatalogEntry(toolId)) throw new HttpError(404, "Bilinmeyen araç.");
+    const result = await discardToolVideos(toolId);
+    await logAdminAudit(
+      actorOf(request),
+      "social.tool-reel",
+      toolId,
+      `Araç videosu kaldırıldı (${toolId}): ${result.videos} video, ${result.removedPosts} taslak silindi`,
     );
     response.json(result);
   }),

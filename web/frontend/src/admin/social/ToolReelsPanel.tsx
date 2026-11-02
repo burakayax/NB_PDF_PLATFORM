@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Download, Loader2, RefreshCw, Wand2 } from "lucide-react";
+import { Download, Loader2, RefreshCw, Trash2, Wand2 } from "lucide-react";
 import {
+  discardSocialToolReel,
   fetchSocialToolReels,
   queueSocialToolReel,
   type SocialPlatformId,
@@ -105,6 +106,20 @@ export function ToolReelsPanel({
       await onQueued(result, reel.tr.title);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Taslak hazırlanamadı");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function discard(reel: SocialToolReel) {
+    if (!window.confirm(`“${reel.tr.title}” videosu kaldırılsın mı? Bu videoya bağlı yayınlanmamış taslaklar silinir; araç “paylaşıldı” sayılmaz, yeniden üretilebilir.`)) return;
+    setBusyId(reel.id);
+    setErr(null);
+    try {
+      await discardSocialToolReel(accessToken, reel.id);
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Video kaldırılamadı");
     } finally {
       setBusyId(null);
     }
@@ -276,6 +291,16 @@ export function ToolReelsPanel({
                   onClick={() => void queue(reel, ["TIKTOK"])}
                 >
                   Yalnızca TikTok
+                </button>
+                <button
+                  type="button"
+                  className={`${ghostButton} border-rose-500/40 text-rose-300 hover:border-rose-400 hover:text-rose-200`}
+                  disabled={busyId !== null || !reel.video}
+                  onClick={() => void discard(reel)}
+                  title="Beğenmediysen videoyu kaldır; yeni video üretilebilir"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Videoyu kaldır
                 </button>
               </div>
               <p className="text-[11px] leading-snug text-slate-500">
