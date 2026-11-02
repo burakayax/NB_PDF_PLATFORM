@@ -26,7 +26,7 @@ function Thumb({ post }: { post: SocialPostRow }) {
   if (isVideoUrl(src)) {
     return (
       <span className="relative block h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-950">
-        <video src={`${src}#t=0.5`} poster={reelCoverOf(src)} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+        <video src={src} poster={reelCoverOf(src)} muted playsInline preload="none" className="h-full w-full object-cover" />
         <span className="absolute bottom-0 left-0 right-0 bg-fuchsia-700 text-center text-[8px] font-bold text-white">REELS</span>
       </span>
     );

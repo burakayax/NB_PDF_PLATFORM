@@ -67,7 +67,7 @@ export function PostFullPreviewModal({
           {slides.length > 0 ? (
             <SlideViewer slides={slides} ratio={previewRatio(post)} index={index} onIndex={setIndex} large />
           ) : post.imageUrl && video ? (
-            <video src={post.imageUrl} poster={reelCoverOf(post.imageUrl)} controls playsInline className="max-h-[70vh] w-full rounded-xl bg-black object-contain" />
+            <video src={post.imageUrl} poster={reelCoverOf(post.imageUrl)} preload="none" controls playsInline className="max-h-[70vh] w-full rounded-xl bg-black object-contain" />
           ) : post.imageUrl ? (
             <img
               src={post.imageUrl}

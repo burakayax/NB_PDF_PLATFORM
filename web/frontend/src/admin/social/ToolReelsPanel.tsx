@@ -189,7 +189,7 @@ export function ToolReelsPanel({
                         src={shown.url}
                         poster={`/reel-covers/${encodeURIComponent(reel.id)}.jpg`}
                         controls
-                        preload="metadata"
+                        preload="none"
                         playsInline
                       />
                     ) : null}
