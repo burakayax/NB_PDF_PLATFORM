@@ -265,12 +265,12 @@ export function PhotoField({ data, onChange, tpl, disabled, tr, aiComingSoon, ai
           </div>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button type="button" onClick={() => fileRef.current?.click()} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-dashed border-sky-400/40 bg-sky-500/[0.05] px-4 py-3.5 text-left hover:bg-sky-500/10">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-200"><Camera className="h-5 w-5" /></span>
             <span className="min-w-0">
               <span className="block text-[14px] font-bold text-white">{tr ? "Fotoğraf ekle" : "Add a photo"} <span className="font-normal text-slate-400">{tr ? "(isteğe bağlı)" : "(optional)"}</span></span>
-              <span className="block text-[12px] text-slate-400">{tr ? "Tıklayın, cihazınızdan seçin. Fotoğraf sunucuya yüklenmez." : "Click and pick one from your device. It is never uploaded."}</span>
+              <span className="block text-[12px] text-slate-400">{tr ? "Cihazınızdan seçin. Sunucuya yüklenmez." : "Pick one from your device. Never uploaded."}</span>
             </span>
           </button>
           <button type="button" onClick={() => camRef.current?.click()} className={camBtn}><Camera className="h-4 w-4" />{tr ? "Kamerayla çek" : "Take a photo"}</button>

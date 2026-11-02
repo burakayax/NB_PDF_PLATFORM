@@ -96,6 +96,9 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
   const [rightTab, setRightTab] = useState<RightTab>("content");
   const [tplOpen, setTplOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  // Telefon/tablet: ikincil bloklar kapalı gelir (masaüstünde her zaman açık)
+  const [dlOpen, setDlOpen] = useState(false);
+  const [sampleOpen, setSampleOpen] = useState(false);
   const [tplFilter, setTplFilter] = useState<"all" | "new" | "free" | "ats" | "side" | "classic">("all");
   const uploadRef = useRef<HTMLInputElement>(null);
   const helpRef = useRef<HTMLButtonElement>(null);
@@ -278,20 +281,21 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
   const pagesH = pages * PAGE_H;
 
   return (
-    <div className="mx-auto w-full max-w-[1760px] text-left">
-      <div className="mb-5 flex flex-wrap items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500/25 to-indigo-600/20 text-sky-200 ring-1 ring-sky-400/30">
-          <FileUser className="h-7 w-7" />
+    <div className="mx-auto w-full max-w-[1760px] pb-24 text-left lg:pb-0">
+      <div className="mb-4 flex flex-wrap items-start gap-x-4 gap-y-3 sm:mb-5">
+        <div className="flex h-11 w-11 shrink-0 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500/25 to-indigo-600/20 text-sky-200 ring-1 ring-sky-400/30">
+          <FileUser className="h-6 w-6 sm:h-7 sm:w-7" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "CV Oluştur" : "CV Maker"}</h1>
-          <p className="mt-1 text-sm text-slate-400">{tr ? "Bir şablon seçin, bilgilerinizi sağa girin; CV'niz solda canlı olarak oluşsun. Hazır olunca PDF olarak indirin." : "Pick a template, enter your details on the right and watch your CV build live on the left. Download it as a PDF when ready."}</p>
-          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-1 text-[12px] font-semibold text-emerald-200">{tr ? "Bilgileriniz hiçbir yere kaydedilmez: sunucuya gitmez, tarayıcıda da saklanmaz. Sayfayı kapatmadan önce PDF'i indirin." : "Nothing is saved anywhere: it never reaches a server and isn't kept in the browser. Download your PDF before closing the page."}</p>
+          <h1 className="text-xl font-black tracking-tight text-white sm:text-2xl">{tr ? "CV Oluştur" : "CV Maker"}</h1>
+          <p className="mt-1 hidden text-sm text-slate-400 lg:block">{tr ? "Bir şablon seçin, bilgilerinizi sağa girin; CV'niz solda canlı olarak oluşsun. Hazır olunca PDF olarak indirin." : "Pick a template, enter your details on the right and watch your CV build live on the left. Download it as a PDF when ready."}</p>
+          <p className="mt-0.5 text-[13px] text-slate-400 lg:hidden">{tr ? "Şablon seçin, bilgilerinizi girin, PDF indirin." : "Pick a template, enter your details, download the PDF."}</p>
+          <p className="mt-2 hidden items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-1 text-[12px] font-semibold text-emerald-200 sm:inline-flex">{tr ? "Bilgileriniz hiçbir yere kaydedilmez: sunucuya gitmez, tarayıcıda da saklanmaz. Sayfayı kapatmadan önce PDF'i indirin." : "Nothing is saved anywhere: it never reaches a server and isn't kept in the browser. Download your PDF before closing the page."}</p>
         </div>
         {signedIn ? (
-          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <div className="flex w-full shrink-0 items-center gap-1.5 sm:ml-auto sm:w-auto">
             <input ref={uploadRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => { void uploadPdf(e.target.files?.[0]); e.target.value = ""; }} />
-            <button type="button" onClick={() => uploadRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Upload className="h-4 w-4" />{tr ? "Önceki CV'mi yükle" : "Upload my earlier CV"}</button>
+            <button type="button" onClick={() => uploadRef.current?.click()} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10 sm:flex-none"><Upload className="h-4 w-4" />{tr ? "Önceki CV'mi yükle" : "Upload my earlier CV"}</button>
             <button ref={helpRef} type="button" onClick={() => setHelpOpen((o) => !o)} aria-expanded={helpOpen} aria-label={tr ? "Bu düğme ne işe yarar?" : "What does this button do?"} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-slate-200 hover:bg-white/10"><HelpCircle className="h-4 w-4" /></button>
             <CvPopover anchor={helpRef} open={helpOpen} onClose={() => setHelpOpen(false)} width={330} label={tr ? "Önceki CV'mi yükle hakkında" : "About uploading your earlier CV"}>
               <p className="text-[13px] leading-relaxed text-slate-100">{tr ? "Daha önce bizim uygulamamızla CV hazırlayıp PDF olarak indirdiyseniz, o PDF'i buraya yükleyerek bilgilerinizi geri getirebilir ve kaldığınız yerden düzenlemeye devam edebilirsiniz." : "If you've already made a CV with our app and downloaded it as a PDF, upload that PDF here to bring your details back and keep editing where you left off."}</p>
@@ -301,21 +305,22 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
         ) : null}
       </div>
 
+      <p className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12px] leading-snug text-emerald-200 sm:hidden"><span aria-hidden>🔒</span>{tr ? "Bilgileriniz hiçbir yere kaydedilmez. Sayfayı kapatmadan önce PDF'i indirin." : "Nothing is saved anywhere. Download your PDF before closing the page."}</p>
+
       {/* Şablon seçici */}
       <section aria-label={tr ? "Şablonlar" : "Templates"} className="mb-5 rounded-2xl border border-sky-400/30 bg-gradient-to-r from-sky-500/[0.09] to-indigo-500/[0.05] shadow-[0_18px_50px_-30px_rgba(56,189,248,0.6)]">
-        <button type="button" onClick={() => setTplOpen((o) => !o)} aria-expanded={tplOpen} className="group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition hover:bg-white/[0.03]">
+        <button type="button" onClick={() => setTplOpen((o) => !o)} aria-expanded={tplOpen} className="group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-white/[0.03] sm:gap-3.5 sm:px-4 sm:py-3.5">
           <span className="relative shrink-0 overflow-hidden rounded-lg bg-white shadow-[0_8px_24px_-10px_rgba(0,0,0,0.8)] ring-1 ring-white/20" style={{ width: 52, height: 68 }} aria-hidden>
             <span className="pointer-events-none absolute left-0 top-0 block origin-top-left" style={{ width: PAGE_W, transform: `scale(${52 / PAGE_W})` }}><CvPage m={buildModel({ ...SAMPLE[data.settings.lang], photo: null }, "export")} tpl={tpl} size="m" accent={null} /></span>
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[12px] font-bold uppercase tracking-wider text-sky-300">{tr ? `${CV_TEMPLATES.length} şablon arasından seçin` : `Choose from ${CV_TEMPLATES.length} templates`}</span>
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-300 sm:text-[12px]">{tr ? `${CV_TEMPLATES.length} şablon` : `${CV_TEMPLATES.length} templates`}<span className="hidden sm:inline">{tr ? " arasından seçin" : " to choose from"}</span></span>
             <span className="mt-0.5 block truncate text-[15px] font-bold text-white">{tr ? tpl.tr : tpl.en}</span>
-            {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="mt-0.5 block text-[12px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : <span className="mt-0.5 block truncate text-[12px] text-slate-400">{tr ? tpl.descTr : tpl.descEn}</span>}
+            {passActive && !isPaidPlan(planState) && planState.cvPassUntil ? <span className="mt-0.5 block text-[12px] font-semibold text-sky-200">{tr ? `CV Geçişi: ${remainingLabel(planState.cvPassUntil, true)} kaldı` : `CV pass: ${remainingLabel(planState.cvPassUntil, false)} left`}</span> : <span className="mt-0.5 hidden truncate text-[12px] text-slate-400 sm:block">{tr ? tpl.descTr : tpl.descEn}</span>}
           </span>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-[13.5px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(59,130,246,0.85)] transition group-hover:brightness-110">
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-3 py-2.5 text-[13.5px] sm:px-4 font-bold text-white shadow-[0_10px_26px_-10px_rgba(59,130,246,0.85)] transition group-hover:brightness-110">
             <LayoutTemplate className="h-4 w-4" />
             <span className="hidden sm:inline">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonu değiştir" : "Change template")}</span>
-            <span className="sm:hidden">{tplOpen ? (tr ? "Kapat" : "Close") : (tr ? "Şablonlar" : "Templates")}</span>
             <ChevronDown className={`h-4 w-4 transition ${tplOpen ? "rotate-180" : ""}`} />
           </span>
         </button>
@@ -364,7 +369,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
       ) : (
         <>
           {/* Mobil sekmeler */}
-          <div className="mb-3 flex gap-2 lg:hidden" role="tablist">
+          <div className="sticky top-0 z-30 -mx-1 mb-3 flex gap-2 bg-nb-bg/95 px-1 py-2 backdrop-blur lg:hidden" role="tablist">
             {([["edit", tr ? "Bilgilerim" : "My details", PencilLine], ["preview", tr ? "Önizleme" : "Preview", Eye]] as const).map(([k, label, Ico]) => (
               <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold ${tab === k ? "bg-sky-500 text-white" : "bg-white/[0.06] text-slate-300"}`}><Ico className="h-4 w-4" />{label}</button>
             ))}
@@ -379,7 +384,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                   <span className="text-[12px] text-slate-400">{fitOn && fitRes ? `${fitRes.pages} ${tr ? "sayfa (PDF)" : "page(s) (PDF)"}` : `${pages} ${tr ? "sayfa" : pages > 1 ? "pages" : "page"}`}</span>
                 </div>
                 {!locked ? (
-                  <p className="mb-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-sky-100">
+                  <p className="mb-3 hidden rounded-xl border border-sky-400/20 bg-sky-500/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-sky-100 sm:block">
                     {tr ? "Soluk ve kesik çizgili alanlar henüz doldurmadığınız yerlerdir. " : "Faded, dashed areas are the ones you haven't filled in. "}
                     <b>{tr ? "Boş bıraktığınız bölümler indirdiğiniz PDF'ten silinir." : "Anything you leave empty is removed from the PDF you download."}</b>
                     {tr ? " Son hâlini görmek için “Önizle”ye tıklayın." : " Click “Preview” to see the final result."}
@@ -429,11 +434,14 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
               {/* İndirme: tek büyük düğme; diğer seçenekler açılır */}
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                 <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40">
-                  <span className="inline-flex w-[15rem] items-center gap-3">{busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}</span>
+                  <span className="inline-flex w-[15rem] max-w-full items-center gap-3">{busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}</span>
                 </button>
-                <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="mt-2 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40"><span className="inline-flex w-[15rem] items-center gap-3"><FileText className="h-4 w-4" />{tr ? "CV'yi Word olarak kaydet" : "Save CV as Word"}</span></button>
-                <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="mt-2 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40"><span className="inline-flex w-[15rem] items-center gap-3"><FileType2 className="h-4 w-4" />{tr ? "CV'yi TXT olarak kaydet" : "Save CV as TXT"}</span></button>
+                <button type="button" onClick={() => setDlOpen((o) => !o)} aria-expanded={dlOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 py-1 text-[12.5px] font-semibold text-slate-300 hover:text-white sm:hidden">{tr ? "Word / TXT olarak indir" : "Download as Word / TXT"}<ChevronDown className={`h-3.5 w-3.5 transition ${dlOpen ? "rotate-180" : ""}`} /></button>
+                <div className={`${dlOpen ? "block" : "hidden"} sm:block`}>
+                <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="mt-2 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40"><span className="inline-flex w-[15rem] max-w-full items-center gap-3"><FileText className="h-4 w-4" />{tr ? "CV'yi Word olarak kaydet" : "Save CV as Word"}</span></button>
+                <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="mt-2 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40"><span className="inline-flex w-[15rem] max-w-full items-center gap-3"><FileType2 className="h-4 w-4" />{tr ? "CV'yi TXT olarak kaydet" : "Save CV as TXT"}</span></button>
                 <p className="mt-2 text-center text-[12px] leading-snug text-slate-400">{tr ? "Word ve TXT, başvuru sistemlerinin en güvenli okuduğu sade biçimdir (tek sütun, süssüz). Görsel tasarım için PDF'i kullanın." : "Word and TXT are the plain format hiring systems read most reliably (single column, no decoration). Use the PDF for the visual design."}</p>
+                </div>
                 <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 text-[12.5px] font-semibold text-slate-300 hover:text-white">
                   {tr ? "Diğer seçenekler (boş şablon)" : "More options (blank template)"}<ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -444,14 +452,15 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                     </button>
                   </div>
                 ) : null}
-                {emptyCv && !locked ? <p className="mt-2 text-[12px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; solda canlı olarak oluşur." : "Your CV is still empty. Fill in the fields below; it builds live on the left."}</p> : null}
+                {emptyCv && !locked ? <p className="mt-2 text-[12px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; CV'niz canlı oluşur." : "Your CV is still empty. Fill in the fields below; it builds live."}</p> : null}
                 {error ? <p className="mt-2 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3 py-2 text-[12.5px] text-red-300">{error}</p> : null}
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="flex items-center gap-1.5 text-[13px] font-bold text-white"><Wand2 className="h-4 w-4 text-amber-300" />{tr ? "Örnekle doldur" : "Fill with a sample"}</p>
-                <p className="mt-0.5 text-[12px] text-slate-400">{tr ? "Bir meslek seçin; CV'niz o mesleğe uygun örnek bilgilerle dolsun. Sonra üzerine kendi bilgilerinizi yazarsınız." : "Pick a profession and your CV fills with matching sample details. Then overwrite them with your own."}</p>
+                <button type="button" onClick={() => setSampleOpen((o) => !o)} aria-expanded={sampleOpen} className="flex w-full items-center gap-1.5 text-left text-[13px] font-bold text-white sm:pointer-events-none"><Wand2 className="h-4 w-4 text-amber-300" />{tr ? "Örnekle doldur" : "Fill with a sample"}<ChevronDown className={`ml-auto h-4 w-4 text-slate-400 transition sm:hidden ${sampleOpen ? "rotate-180" : ""}`} /></button>
+                <div className={`${sampleOpen ? "block" : "hidden"} sm:block`}>
+                <p className="mt-1 text-[12px] text-slate-400">{tr ? "Bir meslek seçin; CV'niz o mesleğe uygun örnek bilgilerle dolsun. Sonra üzerine kendi bilgilerinizi yazarsınız." : "Pick a profession and your CV fills with matching sample details. Then overwrite them with your own."}</p>
                 <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                   <select value={sampleProf} onChange={(e) => setSampleProf(e.target.value)} disabled={locked} aria-label={tr ? "Meslek seçin" : "Choose a profession"} className="min-w-0 flex-1 rounded-xl border border-white/15 bg-slate-900 px-3 py-2.5 text-[13px] text-white outline-none focus:border-sky-400 disabled:opacity-40">
                     <option value="">{tr ? "Genel örnek (Proje Yöneticisi)" : "General sample (Project Manager)"}</option>
@@ -459,13 +468,14 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                   </select>
                   <button type="button" disabled={locked} onClick={fillSample} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-300/40 bg-amber-400/15 px-4 py-2.5 text-[13px] font-bold text-amber-100 hover:bg-amber-400/25 disabled:opacity-40"><Wand2 className="h-4 w-4" />{tr ? "Örnekle doldur" : "Fill sample"}</button>
                 </div>
+                </div>
               </div>
 
               <CvLiveScore data={shownData} tr={tr} onDetails={() => setRightTab("analysis")} />
 
-              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1">
+              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1 [&>button]:whitespace-nowrap">
                 {([["content", tr ? "Bilgilerim" : "My details", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch], ["ai", tr ? "Yapay Zekâ" : "AI", Sparkles]] as const).map(([k, label, Ico]) => (
-                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-1 py-2.5 text-[12.5px] font-semibold transition ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="hidden h-4 w-4 sm:block" />{label}</button>
+                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-0.5 py-2.5 text-[12px] font-semibold transition sm:px-1 sm:text-[12.5px] ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="hidden h-4 w-4 sm:block" />{label}</button>
                 ))}
               </div>
 
@@ -500,6 +510,11 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
           </div>
         </>
       )}
+      {signedIn ? (
+        <button type="button" onClick={() => { setTab(tab === "edit" ? "preview" : "edit"); window.scrollTo(0, 0); document.querySelector(".app-shell__scroll")?.scrollTo({ top: 0 }); }} className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-3 text-[14px] font-bold text-white shadow-[0_14px_34px_-8px_rgba(59,130,246,0.9)] ring-1 ring-white/20 lg:hidden">
+          {tab === "edit" ? <><Eye className="h-4 w-4" />{tr ? "CV'mi gör" : "See my CV"}</> : <><PencilLine className="h-4 w-4" />{tr ? "Düzenlemeye dön" : "Back to editing"}</>}
+        </button>
+      ) : null}
       {previewOpen ? <CvPreviewModal model={exportModel} tpl={tpl} size={shownData.settings.size} accent={locked ? null : shownData.settings.accent} style={styleOpts} tr={tr} locked={locked} empty={emptyCv} busy={busy === "pdf"} onDownload={() => void makePdf("export")} onClose={() => setPreviewOpen(false)} /> : null}
       {passOpen ? <CvPassModal language={language} accessToken={accessToken} onClose={() => setPassOpen(false)} onUpgrade={onUpgrade} /> : null}
     </div>
