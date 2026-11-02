@@ -14,7 +14,7 @@ import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { useSettings } from "../../contexts/SettingsContext";
 import { applyTryPriceOverrides } from "../../lib/checkoutQuote";
-import { PRICES_HIDDEN, priceComingSoonLabel } from "../../lib/priceVisibility";
+import { POPULAR_BADGE_HIDDEN, PRICES_HIDDEN, priceComingSoonLabel } from "../../lib/priceVisibility";
 import { PaytrBadge } from "../common/PaytrBadge";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -320,11 +320,13 @@ function MonthlyOnlyCard({
               }}
             />
           </div>
+          {POPULAR_BADGE_HIDDEN ? null : (
           <div className="absolute -top-3.5 inset-x-0 flex justify-center">
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30">
               ⭐ {tr ? "En Popüler" : "Most Popular"}
             </span>
           </div>
+          )}
         </>
       )}
       {/* Tek öne çıkan plan: yalnızca Plus "En Popüler" rozeti taşır (Başlangıç rozeti kaldırıldı). */}
@@ -504,9 +506,11 @@ function CycleAwareCard({
       {/* Badge */}
       <div className="absolute -top-3.5 inset-x-0 flex justify-center">
         {isPlus ? (
+          POPULAR_BADGE_HIDDEN ? null : (
           <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg shadow-blue-500/30">
             ⭐ {tr ? "En Popüler" : "Most Popular"}
           </span>
+          )
         ) : isPro ? (
           <span className="relative overflow-hidden bg-gradient-to-r from-amber-700 to-orange-700 text-white text-xs font-bold px-4 py-1.5 rounded-full">
             <span

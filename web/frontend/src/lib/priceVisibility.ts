@@ -11,3 +11,9 @@ export const PRICES_HIDDEN = true;
 export function priceComingSoonLabel(tr: boolean): string {
   return tr ? "Yakında" : "Coming soon";
 }
+
+/**
+ * Plus kartındaki "En Popüler" rozeti gizli: henüz satış yok, kanıtsız iddia olur.
+ * İlk satışlar ve gerçek veri gelince `false` yapılır (şirket kurulunca yapılacaklar listesinde).
+ */
+export const POPULAR_BADGE_HIDDEN = true;
