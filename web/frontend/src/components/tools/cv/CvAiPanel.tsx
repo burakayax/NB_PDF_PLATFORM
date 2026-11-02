@@ -62,11 +62,11 @@ const ghost = "inline-flex items-center justify-center gap-1.5 rounded-xl border
 function Added({ words, tr }: { words: string[]; tr: boolean }) {
   if (!words.length) return null;
   return (
-    <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12px] text-amber-200">
-      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-      <span>{tr ? "Yeni eklenen kelimeler — doğruluğunu siz onaylayın:" : "Newly added words — please confirm they're true:"}</span>
-      {words.map((w) => <span key={w} className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold ring-1 ring-amber-400/25">{w}</span>)}
-    </p>
+    <div className="mt-2 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12px] leading-relaxed text-amber-100 ring-1 ring-amber-400/25">
+      <p className="flex items-start gap-1.5 font-semibold"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "Bu metinde sizin yazmadığınız ifadeler var:" : "This text contains wording you didn't write:"}</p>
+      <p className="mt-1.5 flex flex-wrap gap-1.5">{words.map((w) => <span key={w} className="rounded-full bg-amber-500/20 px-2 py-0.5 font-semibold ring-1 ring-amber-400/30">{w}</span>)}</p>
+      <p className="mt-1.5 text-amber-100/80">{tr ? "Yapay zekâ bunları kendi eklemiş olabilir. Doğruysa kullanın; size ait değilse bu öneriyi seçmeyin ya da metni kendiniz düzenleyin." : "The AI may have added these itself. Use the text if they're true; if they don't apply to you, skip this suggestion or edit the text yourself."}</p>
+    </div>
   );
 }
 
