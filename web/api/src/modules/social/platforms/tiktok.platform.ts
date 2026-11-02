@@ -167,16 +167,7 @@ export const verifyTiktok: Verifier = async (secrets) => {
   } catch {
     // Erişim anahtarı süresi dolmuş olabilir: yenile ve bir kez daha dene.
   }
-  const refreshToken = requireSecret(secrets, "refreshToken", "TikTok Refresh Token");
-  const fresh = await refreshTiktokTokens(clientKey, clientSecret, refreshToken);
-  const name = await fetchTiktokDisplayName(fresh.accessToken);
-  // Döngüsel içe aktarmayı önlemek için geç yüklenir (social.service bu dosyayı zaten içe aktarıyor).
-  const { saveAccount } = await import("../social.service.js");
-  await saveAccount({
-    platform: "TIKTOK",
-    secrets: { accessToken: fresh.accessToken, refreshToken: fresh.refreshToken },
-    tokenExpiresAt: fresh.refreshExpiresAt ? new Date(fresh.refreshExpiresAt) : undefined,
-  }).catch(() => undefined);
+  const name = await fetchTiktokDisplayName(await freshAccessToken(secrets));
   return name;
 };
 
@@ -189,26 +180,66 @@ const UPLOAD_TIMEOUT_MS = 5 * 60_000;
 /** Başlık (açıklama) sınırı: TikTok 2.200 karakter. */
 const MAX_TITLE = 2200;
 
-/** Her yayında yenileme anahtarıyla taze erişim anahtarı alır; dönen yeni yenileme anahtarını saklar. */
-async function freshAccessToken(secrets: Record<string, string>): Promise<string> {
-  const clientKey = requireSecret(secrets, "clientKey", "TikTok Client Key");
-  const clientSecret = requireSecret(secrets, "clientSecret", "TikTok Client Secret");
-  const refreshToken = requireSecret(secrets, "refreshToken", "TikTok Refresh Token");
-  let fresh: TiktokTokens;
-  try {
-    fresh = await refreshTiktokTokens(clientKey, clientSecret, refreshToken);
-  } catch (err) {
-    throw new Error(
-      `TikTok yenileme anahtarı geçersiz ya da süresi dolmuş: panelde “TikTok ile bağlan”ı yeniden yapın. (${err instanceof Error ? err.message : String(err)})`,
-    );
-  }
+/**
+ * Yenileme anahtarı DÖNER: her başarılı yenileme yeni bir yenileme anahtarı verir ve eskisini hemen
+ * geçersiz kılar (TikTok, 1 Aralık 2026'dan itibaren; erişim anahtarı 2 saat, yenileme 180 gün).
+ * Bu yüzden: (1) yenilemeler tek sıraya dizilir (aynı anda iki yenileme ikincisini patlatırdı),
+ * (2) en güncel yenileme anahtarı her seferinde kayıttan okunur, (3) taze erişim anahtarı bellekte
+ * tutulup süresi dolana kadar yeniden kullanılır (gereksiz yenileme = gereksiz dönüş riski),
+ * (4) yeni anahtar kaydedilemezse bir kez daha denenir ve hata açıkça günlüğe yazılır.
+ */
+const ACCESS_REUSE_MS = 100 * 60_000; // 2 saatlik anahtarı 100 dakika kullan
+let tokenCache: { refreshToken: string; accessToken: string; until: number } | null = null;
+let refreshQueue: Promise<unknown> = Promise.resolve();
+
+async function persistTiktokTokens(fresh: TiktokTokens): Promise<void> {
   const { saveAccount } = await import("../social.service.js");
-  await saveAccount({
-    platform: "TIKTOK",
-    secrets: { accessToken: fresh.accessToken, refreshToken: fresh.refreshToken },
-    tokenExpiresAt: fresh.refreshExpiresAt ? new Date(fresh.refreshExpiresAt) : undefined,
-  }).catch((err) => logger.warn("social", `TikTok yeni anahtarlar kaydedilemedi: ${String(err)}`));
-  return fresh.accessToken;
+  const save = () =>
+    saveAccount({
+      platform: "TIKTOK",
+      secrets: { accessToken: fresh.accessToken, refreshToken: fresh.refreshToken },
+      tokenExpiresAt: fresh.refreshExpiresAt ? new Date(fresh.refreshExpiresAt) : undefined,
+    });
+  try {
+    await save();
+  } catch (first) {
+    try {
+      await save();
+    } catch (second) {
+      logger.error("social", `TikTok yeni yenileme anahtarı KAYDEDİLEMEDİ (eskisi geçersiz; yeniden bağlanmak gerekebilir): ${String(second ?? first)}`);
+    }
+  }
+}
+
+/** Taze erişim anahtarı verir; gerekiyorsa yenilemeyi sıraya alır. */
+async function freshAccessToken(secrets: Record<string, string>): Promise<string> {
+  const run = async (): Promise<string> => {
+    const { readAccountSecrets } = await import("../social.service.js");
+    // Sıra beklerken başka bir çağrı anahtarı döndürmüş olabilir: kayıttaki en günceli kullan.
+    const stored = await readAccountSecrets("TIKTOK").catch(() => null);
+    const latest = stored?.refreshToken && stored.clientKey && stored.clientSecret ? stored : secrets;
+    const refreshToken = requireSecret(latest, "refreshToken", "TikTok Refresh Token");
+    if (tokenCache && tokenCache.refreshToken === refreshToken && tokenCache.until > Date.now()) {
+      return tokenCache.accessToken;
+    }
+    const clientKey = requireSecret(latest, "clientKey", "TikTok Client Key");
+    const clientSecret = requireSecret(latest, "clientSecret", "TikTok Client Secret");
+    let fresh: TiktokTokens;
+    try {
+      fresh = await refreshTiktokTokens(clientKey, clientSecret, refreshToken);
+    } catch (err) {
+      tokenCache = null;
+      throw new Error(
+        `TikTok yenileme anahtarı geçersiz ya da süresi dolmuş: panelde “TikTok ile bağlan”ı yeniden yapın. (${err instanceof Error ? err.message : String(err)})`,
+      );
+    }
+    tokenCache = { refreshToken: fresh.refreshToken, accessToken: fresh.accessToken, until: Date.now() + ACCESS_REUSE_MS };
+    await persistTiktokTokens(fresh);
+    return fresh.accessToken;
+  };
+  const result = refreshQueue.then(run, run);
+  refreshQueue = result.catch(() => undefined);
+  return result;
 }
 
 type TiktokEnvelope = { data?: Record<string, unknown>; error?: { code?: string; message?: string } };
