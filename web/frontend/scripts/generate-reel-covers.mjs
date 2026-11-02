@@ -17,7 +17,7 @@
  * çalıştır, çıkan dosyayı commitle. Satır eklenmezse başlıktan sade bir poster üretilir.
  */
 
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -85,6 +85,14 @@ async function main() {
   // Senaryosu (video) olmayan araçlar da COVER_SPECS'te satırı varsa kapak alır: video eklendiği gün kapak hazır olsun.
   const known = new Set(scenarios.map((x) => x.id));
   for (const id of Object.keys(COVER_SPECS)) if (!known.has(id)) scenarios.push({ id, title: id, sub: "" });
+  // Derleme sunucusunda (Render/CI) kapaklar zaten depoda hazır: hepsi varsa yeniden üretmeyip ~15-40 sn kazanılır.
+  // Kapak tasarımını değiştirdiysen yerelde `node scripts/generate-reel-covers.mjs` çalıştırıp dosyayı commitle
+  // (ya da sunucuda zorlamak için FORCE_COVERS=1).
+  const onBuildServer = Boolean(process.env.RENDER || process.env.CI);
+  if (onBuildServer && process.env.FORCE_COVERS !== "1" && scenarios.every((x) => existsSync(join(OUT_DIR, `${x.id}.jpg`)))) {
+    console.log(`reel-covers: ${scenarios.length} kapak depoda hazır, yeniden üretilmedi.`);
+    return;
+  }
   const specs = new Map(scenarios.map((x) => [x.id, COVER_SPECS[x.id] ?? fallbackSpec(x)]));
   // Gerçek içerik taşıyan yedi özel tasarım dışındaki her araç düzen motoruna girer; düzenler yan yana tekrar etmesin diye atanır.
   const engineIds = [...specs.keys()].filter((id) => !CUSTOM_DESIGN.has(id));
