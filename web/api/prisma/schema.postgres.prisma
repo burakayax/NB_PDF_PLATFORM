@@ -941,6 +941,9 @@ model SocialPost {
   clearedAt   DateTime?        @map("cleared_at")
   /// Yayınlanırken kullanılan carousel slayt adresleri (JSON dizi). Boşsa tek görsel/video.
   slidesJson  String?          @map("slides_json")
+  /// Pinterest panosu (pano anahtarı, ör. "cv") ve nedeni ("araç eşleştirmesi: compress"). Yalnız Pinterest kayıtlarında dolu.
+  boardKey    String?          @map("board_key")
+  boardReason String?          @map("board_reason")
   createdAt   DateTime         @default(now()) @map("created_at")
   updatedAt   DateTime         @updatedAt @map("updated_at")
 
