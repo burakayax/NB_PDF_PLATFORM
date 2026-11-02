@@ -38,6 +38,7 @@ import {
   fetchPinterestUsername,
   listPinterestBoards,
   pinterestRedirectUri,
+  pinterestTokenMatches,
 } from "./platforms/pinterest.platform.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
@@ -281,13 +282,19 @@ socialRouter.get(
   asyncHandler(async (_request, response) => {
     const secrets = await readAccountSecrets("PINTEREST");
     if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil. Önce “Pinterest ile bağlan”ı tamamlayın.");
+    const cfg = await readSocialConfig();
+    if (!pinterestTokenMatches(cfg.pinterestToken, cfg.pinterestSandbox)) {
+      // Kutu değişti (ya da eski kayıt): kimlik bilgisi geçmez; panel “yeniden bağlan” uyarısı gösterir.
+      response.json({ username: "", boards: [], boardId: "", sandbox: cfg.pinterestSandbox, needsReconnect: true });
+      return;
+    }
     try {
       const [username, boards, config] = await Promise.all([
         fetchPinterestUsername(secrets),
         listPinterestBoards(secrets),
         readSocialConfig(),
       ]);
-      response.json({ username, boards, boardId: secrets.boardId ?? "", sandbox: config.pinterestSandbox });
+      response.json({ username, boards, boardId: secrets.boardId ?? "", sandbox: config.pinterestSandbox, needsReconnect: false });
     } catch (err) {
       throw new HttpError(502, err instanceof Error ? err.message : "Pinterest hesabı okunamadı");
     }

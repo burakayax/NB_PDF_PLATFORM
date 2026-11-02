@@ -116,7 +116,26 @@ export type SocialAutomationConfig = {
    * yalnız bu ayar kapatılır; pinler gerçek ortama gider.
    */
   pinterestSandbox: boolean;
+  /**
+   * Pinterest anahtarının hangi ortamda alındığı ve bitiş anları (yanıttaki expires_in / refresh_token_expires_in'den
+   * hesaplanır). Kum havuzu kutusu değişirse eski anahtar yeni ortamda geçmez: panel "yeniden bağlan" der.
+   */
+  pinterestToken: PinterestTokenInfo | null;
 };
+
+export type PinterestTokenInfo = {
+  env: "sandbox" | "production";
+  accessExpiresAt: number | null;
+  refreshExpiresAt: number | null;
+};
+
+function parsePinterestToken(raw: unknown): PinterestTokenInfo | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (r.env !== "sandbox" && r.env !== "production") return null;
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  return { env: r.env, accessExpiresAt: num(r.accessExpiresAt), refreshExpiresAt: num(r.refreshExpiresAt) };
+}
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
   enabled: false,
@@ -135,6 +154,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   tiktokPublic: false,
   tiktokBrandOrganic: true,
   pinterestSandbox: true,
+  pinterestToken: null,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -164,6 +184,7 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     tiktokBrandOrganic: raw.tiktokBrandOrganic !== false,
     // Trial'da kum havuzu şart: yalnızca açıkça `false` ise gerçek ortam.
     pinterestSandbox: raw.pinterestSandbox !== false,
+    pinterestToken: parsePinterestToken(raw.pinterestToken),
   };
 }
 

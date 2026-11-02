@@ -12,10 +12,11 @@ import { logger } from "../../lib/file-log.js";
 import {
   exchangePinterestCode,
   fetchPinterestUsername,
+  persistPinterestTokens,
   verifyPinterestState,
 } from "./platforms/pinterest.platform.js";
 import { resolveOAuthSpaRedirectBase } from "../../lib/oauth-frontend-origin.js";
-import { readAccountSecrets, saveAccount } from "./social.service.js";
+import { readAccountSecrets, readSocialConfig, saveAccount } from "./social.service.js";
 
 export const pinterestCallbackRouter = Router();
 
@@ -76,12 +77,9 @@ pinterestCallbackRouter.get(
     }
 
     try {
-      const tokens = await exchangePinterestCode(appId, appSecret, code);
-      await saveAccount({
-        platform: "PINTEREST",
-        secrets: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
-        tokenExpiresAt: tokens.refreshExpiresAt ? new Date(tokens.refreshExpiresAt) : undefined,
-      });
+      const { pinterestSandbox } = await readSocialConfig();
+      const tokens = await exchangePinterestCode(pinterestSandbox, appId, appSecret, code);
+      await persistPinterestTokens(tokens, pinterestSandbox);
       const fresh = await readAccountSecrets("PINTEREST");
       const name = fresh ? await fetchPinterestUsername(fresh).catch(() => "") : "";
       if (name) await saveAccount({ platform: "PINTEREST", displayName: `@${name}`, secrets: {} });

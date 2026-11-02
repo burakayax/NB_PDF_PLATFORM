@@ -948,9 +948,17 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   type="checkbox"
                   className="mt-0.5"
                   checked={config.pinterestSandbox}
-                  onChange={(e) => patchConfig({ pinterestSandbox: e.target.checked })}
+                  onChange={(e) => {
+                    patchConfig({ pinterestSandbox: e.target.checked });
+                    setNote("Pinterest ortamı değişti: Hesaplar sekmesinde “Pinterest ile bağlan”ı yeniden yap.");
+                  }}
                 />
-                <span>Pinterest isteklerini kum havuzuna gönder</span>
+                <span>
+                  Pinterest isteklerini kum havuzuna gönder
+                  <span className="block text-[11px] text-amber-300/90">
+                    Bu kutuyu değiştirirsen Pinterest bağlantısı geçersiz olur: Hesaplar sekmesinde “Pinterest ile bağlan”ı yeniden yapmalısın.
+                  </span>
+                </span>
               </label>
             </div>
 
