@@ -156,11 +156,11 @@ export function PostMediaPreview({
       {video ? (
         <>
           <video
-            src={`${post.imageUrl}#t=0.5`}
+            src={post.imageUrl}
             poster={reelCoverOf(post.imageUrl)}
             muted
             playsInline
-            preload="metadata"
+            preload="none"
             className="w-full rounded-xl border border-slate-700/60 bg-slate-950 object-cover transition group-hover:border-slate-500"
             style={{ aspectRatio: "9 / 16", maxHeight: 190 }}
           />
