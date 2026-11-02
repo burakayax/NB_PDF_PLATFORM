@@ -100,7 +100,7 @@ describe("meslek kütüphanesi", () => {
   it("her mesleğin örnek CV'si dolu", () => {
     for (const p of PROFESSIONS) for (const l of ["tr", "en"] as const) {
       const s = professionSample(p.id, l);
-      expect(s.experience.length).toBe(2);
+      expect(s.experience.length).toBe(3);
       expect(p.bullets[l].length).toBeGreaterThanOrEqual(6);
       expect(p.skills[l].length).toBeGreaterThanOrEqual(6);
     }

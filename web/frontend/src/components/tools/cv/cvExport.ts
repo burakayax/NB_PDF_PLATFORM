@@ -62,7 +62,7 @@ export function cvToText(d: CvData): string {
   const out: string[] = [];
   for (const l of lines) {
     if (l.kind === "title") { out.push(l.text.toLocaleUpperCase(d.settings.lang)); if (l.sub) out.push(l.sub); out.push(""); }
-    else if (l.kind === "h") { out.push("", l.text.toLocaleUpperCase(d.settings.lang), "-".repeat(Math.min(40, l.text.length + 6))); }
+    else if (l.kind === "h") { { const head = l.text.toLocaleUpperCase(d.settings.lang); out.push("", head, "-".repeat(Math.min(40, head.length))); } }
     else if (l.kind === "b") out.push(`- ${l.text}`);
     else { out.push([l.text, l.right].filter(Boolean).join("  —  ")); if (l.sub) out.push(l.sub); }
   }
