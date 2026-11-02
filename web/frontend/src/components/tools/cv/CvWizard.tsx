@@ -14,6 +14,7 @@ import { SuggestInput } from "./CvSuggestInput";
 import { suggestLanguages, suggestSkills, suggestTitles } from "./cvVocabulary";
 import { cvStrength } from "./cvScore";
 import type { CvTemplate } from "./cvTemplates";
+import { CvAiNudge } from "./CvAiNudge";
 
 type Props = {
   data: CvData;
@@ -28,6 +29,8 @@ type Props = {
   onDownload: () => void;
   onOpenLinkedin: () => void;
   onOpenDesign: () => void;
+  /** Yapay zekâ sekmesini açar (değer kartlarındaki düğme). */
+  onOpenAi?: () => void;
 };
 
 /** Tüm adımlar (hepsi isteğe bağlı). Sıra sabit değildir: CV şablonundaki bölüm sırasını izler. */
@@ -51,7 +54,7 @@ export function wizardSteps(order: SectionKey[]): Step[] {
   return steps;
 }
 
-export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAiLocked, disabled, onFullForm, onDownload, onOpenLinkedin, onOpenDesign }: Props) {
+export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAiLocked, disabled, onFullForm, onDownload, onOpenLinkedin, onOpenDesign, onOpenAi }: Props) {
   const lang = data.settings.lang;
   const [cur, setCur] = useState<Step>("you");
   const [profId, setProfId] = useState<string>("");
@@ -265,6 +268,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
           <>
             <Head title={tr ? "Kendinizi anlatın" : "Tell us about yourself"} sub={tr ? "CV'nin en üstünde okunan kısım. İstediğiniz uzunlukta yazabilir ya da bir taslağı seçip kendinize göre düzenleyebilirsiniz." : "The first thing people read. Write as much as you like, or pick a draft and make it yours."} />
             <SummaryPicker tr={tr} lang={lang} hint={`${data.title} ${data.experience[0]?.role ?? ""}`} onPick={(t) => set("summary", t)} />
+            {onOpenAi && !aiComingSoon ? <CvAiNudge compact title={tr ? "Özeti yapay zekâ yazsın" : "Let AI write your summary"} text={tr ? "Unvanınıza ve deneyimlerinize bakıp 3 farklı taslak yazar. Hiçbir şey uydurmaz." : "Reads your title and experience and drafts 3 options. It never makes things up."} cta={tr ? "Dene" : "Try it"} onClick={onOpenAi} /> : null}
             <Area label={tr ? "Profil özeti" : "Profile summary"} rows={5} value={data.summary} onChange={(v) => set("summary", v)} hint={tr ? "Köşeli [X] yerine kendi bilginizi yazın." : "Replace [X] with your own details."} />
           </>
         ) : null}
@@ -281,6 +285,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
               <button type="button" onClick={onOpenDesign} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Sparkles className="h-4 w-4" />{tr ? "Renk ve yazı tipini ayarla" : "Adjust colour & font"}</button>
               <button type="button" onClick={onFullForm} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"><Plus className="h-4 w-4" />{tr ? "Her şeyi tek formda düzenle" : "Edit everything in one form"}</button>
             </div>
+            {onOpenAi && !aiComingSoon ? <CvAiNudge title={tr ? "Başvuracağınız ilana göre uyarlayın" : "Tailor it to the job you're applying for"} text={tr ? "İlanı yapıştırın; yapay zekâ CV'nizi o ilana göre düzenlesin ve ilana özel ön yazıyı yazsın." : "Paste the job ad: AI adapts your CV to it and writes a cover letter for that job."} cta={tr ? "İlana uyarla" : "Tailor to a job"} onClick={onOpenAi} /> : null}
             <p className="text-[12px] text-slate-400"><FileUp className="mr-1 inline h-3.5 w-3.5" />{tr ? "Boş bıraktığınız alanlar PDF'e eklenmez." : "Anything left empty is left out of the PDF."}</p>
           </div>
         ) : null}

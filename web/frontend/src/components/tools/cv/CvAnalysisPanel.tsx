@@ -5,8 +5,9 @@ import { atsXray, consistencyChecks, isSingleColumnLayout, matchJob, qualityChec
 import { buildCvPdf } from "./cvPdf";
 import { extractTextItems } from "./cvXray";
 import type { CvTemplate } from "./cvTemplates";
+import { CvAiNudge } from "./CvAiNudge";
 
-type Props = { data: CvData; tpl: CvTemplate; tr: boolean; disabled: boolean; ad: string; setAd: (s: string) => void };
+type Props = { data: CvData; tpl: CvTemplate; tr: boolean; disabled: boolean; ad: string; setAd: (s: string) => void; onOpenAi?: () => void };
 
 const icon = (l: Level) =>
   l === "ok" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> : l === "warn" ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" /> : l === "bad" ? <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" /> : <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-300" />;
@@ -46,7 +47,7 @@ function Card({ title, sub, children, open: o = true }: { title: string; sub?: s
   );
 }
 
-export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
+export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd, onOpenAi }: Props) {
   const checks = useMemo(() => [...consistencyChecks(data), ...qualityChecks(data)], [data]);
   const score = scoreOf(checks);
   const years = totalExperienceYears(data);
@@ -127,6 +128,7 @@ export function CvAnalysisPanel({ data, tpl, tr, disabled, ad, setAd }: Props) {
                 <div className="flex flex-wrap gap-1.5">{match.matched.map((k) => <span key={k.term} className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[12px] font-semibold text-emerald-100 ring-1 ring-emerald-400/25">{k.term}</span>)}</div>
               </div>
             ) : null}
+            {match.missing.length && onOpenAi ? <CvAiNudge title={tr ? `Bu ${match.missing.length} eksiği yapay zekâ sizin için kapatsın` : `Let AI close these ${match.missing.length} gaps for you`} text={tr ? "CV'nizi bu ilana göre yeniden yazar, yalnızca sizde gerçekten olan deneyimleri öne çıkarır; olmayan bir şeyi eklemez." : "Rewrites your CV for this ad, bringing forward only what you really have; it never adds things you don't."} cta={tr ? "İlana uyarla" : "Tailor to this ad"} onClick={onOpenAi} /> : null}
             <p className="text-[12px] leading-relaxed text-slate-500">{tr ? "Eşleştirme yaklaşıktır: Türkçe eklerden dolayı kelimeler gövdeye göre karşılaştırılır. Sonuçlar, bir başvuru sisteminin gerçek puanı değildir." : "Matching is approximate: Turkish suffixes mean words are compared by stem. Results are not a real hiring-system score."}</p>
           </div>
         ) : null}

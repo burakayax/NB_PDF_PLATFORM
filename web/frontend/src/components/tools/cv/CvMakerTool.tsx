@@ -12,6 +12,7 @@ import { PROFESSIONS, professionSample } from "./cvPhrases";
 import { isSingleColumnLayout } from "./cvAnalysis";
 import { CvDesignPanel } from "./CvDesignPanel";
 import { CvAnalysisPanel } from "./CvAnalysisPanel";
+import { CvAiNudge } from "./CvAiNudge";
 import { CvAiPanel } from "./CvAiPanel";
 import { CvPassModal, remainingLabel } from "./CvPassModal";
 import { CvPreviewModal } from "./CvPreviewModal";
@@ -455,6 +456,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 {emptyCv && !locked ? <p className="mt-2 text-[12px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; CV'niz canlı oluşur." : "Your CV is still empty. Fill in the fields below; it builds live."}</p> : null}
                 {error ? <p className="mt-2 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3 py-2 text-[12.5px] text-red-300">{error}</p> : null}
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
+                {done && !aiComingSoon && rightTab !== "ai" ? <div className="mt-2"><CvAiNudge compact title={tr ? "CV'niz hazır. Peki ilana özel mi?" : "Your CV is ready. Tailored to the job?"} text={tr ? "İlanı yapıştırın; yapay zekâ CV'nizi o ilana göre uyarlasın ve ön yazıyı da yazsın." : "Paste the job ad: AI tailors your CV to it and writes the cover letter too."} cta={tr ? "Dene" : "Try it"} onClick={() => setRightTab("ai")} /></div> : null}
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
@@ -473,9 +475,9 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
 
               <CvLiveScore data={shownData} tr={tr} onDetails={() => setRightTab("analysis")} />
 
-              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-4 gap-1 rounded-2xl bg-white/[0.05] p-1 [&>button]:whitespace-nowrap">
+              <div role="tablist" aria-label={tr ? "Bölümler" : "Sections"} className="grid grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,1.3fr)] gap-1 rounded-2xl bg-white/[0.05] p-1 [&>button]:whitespace-nowrap">
                 {([["content", tr ? "Bilgilerim" : "My details", ListChecks], ["design", tr ? "Tasarım" : "Design", Palette], ["analysis", tr ? "Analiz" : "Analysis", ScanSearch], ["ai", tr ? "Yapay Zekâ" : "AI", Sparkles]] as const).map(([k, label, Ico]) => (
-                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`flex items-center justify-center gap-1.5 rounded-xl px-0.5 py-2.5 text-[12px] font-semibold transition sm:px-1 sm:text-[12.5px] ${rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className="hidden h-4 w-4 sm:block" />{label}</button>
+                  <button key={k} type="button" role="tab" aria-selected={rightTab === k} onClick={() => setRightTab(k)} className={`relative flex items-center justify-center gap-1.5 rounded-xl px-0.5 py-2.5 text-[12px] font-semibold transition sm:px-1 sm:text-[12.5px] ${k === "ai" ? (rightTab === k ? "bg-gradient-to-r from-fuchsia-500 to-amber-500 text-slate-950 shadow-[0_8px_22px_-8px_rgba(217,70,239,0.9)]" : "bg-gradient-to-r from-fuchsia-500/25 to-amber-400/20 text-amber-100 ring-1 ring-fuchsia-300/40 hover:from-fuchsia-500/35") : rightTab === k ? "bg-sky-500 text-white" : "text-slate-300 hover:text-white"}`}><Ico className={`h-4 w-4 ${k === "ai" ? "hidden sm:block" : "hidden sm:block"}`} />{label}{k === "ai" && rightTab !== "ai" && !aiComingSoon ? <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-300" /></span> : null}</button>
                 ))}
               </div>
 
@@ -487,7 +489,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 ) : null}
                 {rightTab === "content" ? (
                   formMode === "wizard" ? (
-                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} aiLocked={!paid} onAiLocked={onUpgrade} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => uploadRef.current?.click()} onOpenDesign={() => setRightTab("design")} />
+                    <CvWizard data={data} onChange={setData} tpl={tpl} tr={tr} aiComingSoon={aiComingSoon} aiLocked={!paid} onAiLocked={onUpgrade} disabled={locked} onFullForm={() => pickFormMode("full")} onDownload={() => void makePdf("export")} onOpenLinkedin={() => uploadRef.current?.click()} onOpenDesign={() => setRightTab("design")} onOpenAi={() => setRightTab("ai")} />
                   ) : (
                     <div className="space-y-3">
                       <button type="button" onClick={() => pickFormMode("wizard")} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500/20 to-indigo-500/20 px-3.5 py-2 text-[12.5px] font-semibold text-sky-100 ring-1 ring-sky-400/30 hover:from-sky-500/30"><ListRestart className="h-4 w-4" />{tr ? "Adım adım sihirbaza dön" : "Back to the step-by-step guide"}</button>
@@ -496,7 +498,7 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                   )
                 ) : null}
                 {rightTab === "design" ? <CvDesignPanel data={data} onChange={setData} disabled={locked} tr={tr} tpl={tpl} /> : null}
-                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} /> : null}
+                {rightTab === "analysis" ? <CvAnalysisPanel data={data} tpl={tpl} tr={tr} disabled={locked} ad={ad} setAd={setAd} onOpenAi={() => setRightTab("ai")} /> : null}
                 {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d) => { adopt(d); }} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
               </div>
 
