@@ -6,7 +6,7 @@ import { useToolPageContext } from "../common/toolPageContext";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ProBatchNotice } from "./ProBatchNotice";
-import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
+import { canBatchProcess, useCurrentPlan } from "../../lib/currentPlan";
 import { zipStore } from "../../lib/zipStore";
 import { parseUdf, udfPlainText, UdfParseError, type UdfDocument } from "../../lib/udf";
 import { udfToPdf } from "../../lib/udfPdf";
@@ -76,7 +76,7 @@ export function UdfToPdfTool({ language }: { language: Language }) {
   // tanıtım şeridinin İÇİNDEYSE, yükleme panelinin kendi başlığı tekrar etmesin.
   const { describesTool } = useToolPageContext();
   // Toplu çevirme Pro kazanımıdır; tek dosya herkese açık kalır.
-  const paid = isPaidPlan(useCurrentPlan());
+  const paid = canBatchProcess(useCurrentPlan());
   const [files, setFiles] = useState<Picked[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -1,6 +1,8 @@
 import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import { sendMail } from "../../lib/mailer.js";
+import { prisma } from "../../lib/prisma.js";
+import { normalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
 import { createContactEmailTemplate } from "./contact.email.js";
 import type { ContactRequestInput } from "./contact.schema.js";
 
@@ -20,6 +22,22 @@ function looksLikeSpam(input: ContactRequestInput) {
   return spamPhrases.some((phrase) => normalized.includes(phrase));
 }
 
+/**
+ * Mesajı yazanın e-posta adresi Pro/Business üyeyle eşleşiyorsa o planı döner (öncelikli destek etiketi için).
+ * Etiket yalnızca bize gelen e-postadadır; arama başarısız olursa mesaj yine normal gider.
+ */
+export async function priorityPlanForEmail(email: string): Promise<"PRO" | "BUSINESS" | null> {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { email: normalizeEmailForStorage(email) }, // kayıtta saklanan biçimle aynı (Gmail noktaları vb.)
+      select: { plan: true },
+    });
+    return user?.plan === "PRO" || user?.plan === "BUSINESS" ? user.plan : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function submitContactMessage(input: ContactRequestInput) {
   if (looksLikeSpam(input)) {
     throw new HttpError(400, "Your message was flagged by spam protection. Please revise it and try again.");
@@ -29,6 +47,7 @@ export async function submitContactMessage(input: ContactRequestInput) {
     name: input.name,
     email: input.email,
     message: input.message,
+    priorityPlan: await priorityPlanForEmail(input.email),
   });
 
   try {

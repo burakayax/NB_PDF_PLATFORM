@@ -4,16 +4,22 @@ type ContactEmailTemplateInput = {
   name: string;
   email: string;
   message: string;
+  /** Mesajı yazan kişinin Pro/Business üyeliği varsa: konuya "ÖNCELİKLİ" etiketi eklenir. */
+  priorityPlan?: "PRO" | "BUSINESS" | null;
 };
 
 /**
  * İletişim formu e-postası: konu ve düz metin gövdesi ürün gereksinimlerine göre sabit şablondur.
  * HTML sürümü aynı içeriği güvenli kaçışla sunar.
  */
-export function createContactEmailTemplate({ name, email, message }: ContactEmailTemplateInput) {
-  const subject = `Yeni İletişim Mesajı - ${name}`;
+export function createContactEmailTemplate({ name, email, message, priorityPlan }: ContactEmailTemplateInput) {
+  const planLabel = priorityPlan === "BUSINESS" ? "Business" : "Pro";
+  const subject = priorityPlan
+    ? `[ÖNCELİKLİ · ${planLabel}] Yeni İletişim Mesajı - ${name}`
+    : `Yeni İletişim Mesajı - ${name}`;
 
   const text = [
+    ...(priorityPlan ? [`ÖNCELİKLİ — ${planLabel} üyesi (e-posta adresi kayıtlı üyeyle eşleşti)`, ""] : []),
     `Ad: ${name}`,
     `Email: ${email}`,
     `Tarih: ${new Date().toLocaleString('tr-TR')}`,
@@ -37,6 +43,11 @@ export function createContactEmailTemplate({ name, email, message }: ContactEmai
     <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 32px 24px; text-align: center;">
       <h1 style="margin: 0; font-size: 24px; font-weight: 600;">✉️ Yeni İletişim Mesajı</h1>
     </div>
+    ${
+      priorityPlan
+        ? `<div style="background: #f59e0b; color: #1f2937; padding: 10px 24px; text-align: center; font-size: 14px; font-weight: 700;">ÖNCELİKLİ · ${planLabel} üyesi (e-posta adresi kayıtlı üyeyle eşleşti)</div>`
+        : ""
+    }
     <div style="padding: 32px 24px; background: white;">
       <div style="margin-bottom: 24px;">
         <span style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 8px;">Gönderen Adı</span>

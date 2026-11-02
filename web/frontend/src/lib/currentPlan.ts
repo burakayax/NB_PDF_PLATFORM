@@ -44,6 +44,13 @@ export function isPaidPlan(s: PlanState = state): boolean {
   return p !== "" && p !== "FREE";
 }
 
+/** Toplu işlem (çok dosyayı tek seferde) yalnız Pro ve Business'ta (ekip üyeleri dâhil). */
+export function canBatchProcess(s: PlanState = state): boolean {
+  if (s.teamMember) return true;
+  const p = (s.plan ?? "").toUpperCase();
+  return p === "PRO" || p === "BUSINESS";
+}
+
 /** CV Geçişi hâlâ geçerli mi? (süre dolduysa false — şablonlar yeniden kilitlenir) */
 export function hasCvPass(s: PlanState = state, now: number = Date.now()): boolean {
   if (!s.cvPassUntil) return false;
