@@ -22,6 +22,8 @@ import {
   unshareSocialPost,
   disconnectSocialAccount,
   testSocialAccount,
+  fetchPinterestConnectUrl,
+  fetchPinterestRedirectUri,
   fetchTiktokConnectUrl,
   fetchTiktokRedirectUri,
   fetchSocialOverview,
@@ -40,6 +42,7 @@ import {
 } from "../../api/admin";
 import { AccountConnectCard } from "./AccountConnectCard";
 import { TiktokShareCard } from "./TiktokShareCard";
+import { PinterestShareCard } from "./PinterestShareCard";
 import { PostPreviewCard } from "./PostPreviewCard";
 import { RecentPostsPanel } from "./RecentPostsPanel";
 import { ToolReelsPanel } from "./ToolReelsPanel";
@@ -194,6 +197,11 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
     if (tab !== "accounts" || tiktokRedirectUri) return;
     fetchTiktokRedirectUri(accessToken).then(setTiktokRedirectUri).catch(() => undefined);
   }, [tab, accessToken, tiktokRedirectUri]);
+  const [pinterestRedirectUri, setPinterestRedirectUri] = useState("");
+  useEffect(() => {
+    if (tab !== "accounts" || pinterestRedirectUri) return;
+    fetchPinterestRedirectUri(accessToken).then(setPinterestRedirectUri).catch(() => undefined);
+  }, [tab, accessToken, pinterestRedirectUri]);
   const [busy, setBusy] = useState(false);
   const [busyPostId, setBusyPostId] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -701,13 +709,31 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 spec.platform === "TIKTOK" && tiktokRedirectUri
                   ? {
                       redirectUri: tiktokRedirectUri,
+                      provider: "TikTok",
+                      redirectHint: "TikTok geliştirici sayfasında Login Kit → Redirect URI alanına",
+                      requiredKeys: ["clientKey", "clientSecret"],
+                      requiredLabels: "Client Key ve Client Secret",
                       onConnect: () =>
                         void run(async () => {
                           const url = await fetchTiktokConnectUrl(accessToken);
                           window.open(url, "_blank", "noopener");
                         }, "TikTok izin ekranı yeni sekmede açıldı. İzin verince bu sayfaya dönüp “Bağlantıyı sına”ya bas."),
                     }
-                  : undefined
+                  : spec.platform === "PINTEREST" && pinterestRedirectUri
+                    ? {
+                        redirectUri: pinterestRedirectUri,
+                        provider: "Pinterest",
+                        redirectHint: "Pinterest geliştirici sayfasında uygulamanın Redirect URIs alanına",
+                        requiredKeys: ["appId", "appSecret"],
+                        requiredLabels: "App ID ve App Secret",
+                        hiddenFields: ["accessToken", "refreshToken", "boardId"],
+                        onConnect: () =>
+                          void run(async () => {
+                            const url = await fetchPinterestConnectUrl(accessToken);
+                            window.open(url, "_blank", "noopener");
+                          }, "Pinterest izin ekranı yeni sekmede açıldı. İzin verince bu sayfaya dönüp “Bağlantıyı sına”ya bas."),
+                      }
+                    : undefined
               }
               testResult={testResults[spec.platform]}
               onTest={(platform: SocialPlatformId) =>
@@ -720,6 +746,9 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             />
             {spec.platform === "TIKTOK" && accountByPlatform.get("TIKTOK")?.connected ? (
               <TiktokShareCard accessToken={accessToken} />
+            ) : null}
+            {spec.platform === "PINTEREST" && accountByPlatform.get("PINTEREST")?.filledFields.includes("refreshToken") ? (
+              <PinterestShareCard accessToken={accessToken} onChanged={refresh} />
             ) : null}
             </div>
           ))}
@@ -905,6 +934,23 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   Videolara “kendi markamızı tanıtıyor” işareti koy
                   <span className="block text-[11px] text-slate-500">TikTok videoda “Tanıtım içeriği” etiketi gösterir.</span>
                 </span>
+              </label>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <p className="text-sm font-medium text-slate-200">Pinterest kum havuzu (Trial)</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                Pinterest uygulaman “Trial” erişimdeyken AÇIK kalmalı: pinler kum havuzuna gider ve yalnızca sen görürsün.
+                Standard onayı gelince yalnızca bunu kapat; pinler gerçek Pinterest’e gider.
+              </p>
+              <label className="mt-3 flex items-start gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={config.pinterestSandbox}
+                  onChange={(e) => patchConfig({ pinterestSandbox: e.target.checked })}
+                />
+                <span>Pinterest isteklerini kum havuzuna gönder</span>
               </label>
             </div>
 

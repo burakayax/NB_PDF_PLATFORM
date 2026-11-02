@@ -72,3 +72,10 @@ Kodun her yüklemede kendiliğinden yaptıkları: kategori Bilim ve Teknoloji; d
 
 ## Not
 Şirket henüz kurulmadı. Başvuruda şirket/kişi bilgisi istenip istenmediği kaynaklarda net değil; formlar açılınca görülecek.
+
+### Pinterest — "Pinterest ile bağlan" (2026-11-02)
+1. Pinterest geliştirici sayfasında uygulamanın **Redirect URIs** alanına şunu aynen ekle: `https://api.pdfplatform.app/api/auth/pinterest/callback` (panelde Hesaplar → Pinterest kartı aynı adresi gösterir).
+2. Panel → Sosyal medya → Hesaplar → Pinterest: **App ID** ve **App Secret**'ı kaydet → **Pinterest ile bağlan** → izin ver. Erişim/yenileme anahtarları kendiliğinden şifreli yazılır; erişim anahtarı süresi dolunca otomatik yenilenir (yenilenemezse panel "yeniden bağlan" der).
+3. Kartın altında hesap adı + **pano seçimi** çıkar (kum havuzunda pano yoksa "Pano oluştur"), pin önizlemesi ve **Pinle** düğmesi vardır.
+4. **Trial → Standard:** Trial'dayken Ayarlar'daki "Pinterest isteklerini kum havuzuna gönder" AÇIK kalır (pinler yalnız sana görünür, panolar gerçek panolardan ayrıdır). Standard onayı gelince yalnız bu kutuyu kapat, sonra bir pano seç.
+5. Render günlüğünde ara: `Pinterest geri dönüş alındı`, `Pinterest hesabı bağlandı`, `Pinterest bağlantısı kurulamadı`.

@@ -1,47 +1,317 @@
 /**
- * Pinterest yayıncısı.
+ * Pinterest bağdaştırıcısı (Pinterest API v5).
+ *
+ * İKİ İŞ: (1) BAĞLANTI — izin ekranı adresi, kod→anahtar değişimi, anahtar yenileme, pano listesi;
+ * (2) YAYIN — görselli pin oluşturma.
  *
  * Pin'de metin üç ayrı alana bölünür: başlık, açıklama ve TIKLANABİLİR bağlantı.
  * Bu yüzden gönderi metnine adres yazılmaz (bkz. PLATFORM_SPECS.linkStyle).
+ *
+ * TRIAL / STANDARD: Pinterest uygulaması "Trial" erişimdeyken istekler kum havuzu (sandbox)
+ * adresine gitmelidir; pinler yalnız hesap sahibine görünür ve kum havuzunun panoları
+ * gerçek panolardan ayrıdır. Standard onayı gelince panelde “Pinterest kum havuzu” ayarı kapatılır.
+ *
+ * Anahtarlar: erişim anahtarı ~30 gün, yenileme anahtarı daha uzun yaşar. Erişim anahtarı
+ * reddedilirse (401) yenileme anahtarıyla otomatik yenilenir ve yeni anahtarlar şifreli saklanır.
  */
 
-import { coverAltText, requestJson, requireSecret } from "./common.js";
-import type { Publisher, Verifier } from "./common.js";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { env } from "../../../config/env.js";
+import { logger } from "../../../lib/file-log.js";
 import { socialUtm, withUtm } from "../../../lib/utm.js";
+import { PlatformError, coverAltText, requestJson, requireSecret } from "./common.js";
+import type { Publisher, Verifier } from "./common.js";
 import { toolIdFromGuid } from "./reel-cover.js";
 
-const API = "https://api.pinterest.com/v5/pins";
+const AUTHORIZE_URL = "https://www.pinterest.com/oauth/";
+const TOKEN_URL = "https://api.pinterest.com/v5/oauth/token";
+const API_PRODUCTION = "https://api.pinterest.com/v5";
+const API_SANDBOX = "https://api-sandbox.pinterest.com/v5";
 
-export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secrets }) => {
-  const token = requireSecret(secrets, "accessToken", "Pinterest Access Token");
-  const boardId = requireSecret(secrets, "boardId", "Pinterest Pano ID");
-  if (!imageUrl) throw new Error("Pinterest görselsiz pin kabul etmiyor");
+/** İstenen izinler (Pinterest uygulamasında da tanımlı olmalı). */
+export const PINTEREST_SCOPES = "boards:read,boards:write,pins:read,pins:write,user_accounts:read";
 
-  const json = await requestJson("Pinterest", API, {
-    method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      board_id: boardId,
-      title: item.title.slice(0, 100),
-      description: body,
-      link: withUtm(item.link, socialUtm("PINTEREST", toolIdFromGuid(item.guid) ? "arac-videosu" : "blog")),
-      alt_text: coverAltText(item, 500),
-      media_source: { source_type: "image_url", url: imageUrl },
-    }),
+/** Pinterest'e kayıtlı geri dönüş adresiyle BİREBİR aynı olmalı. */
+export function pinterestRedirectUri(): string {
+  return new URL("/api/auth/pinterest/callback", env.APP_BASE_URL).toString();
+}
+
+// ───────────────────────── state (CSRF koruması) ─────────────────────────
+
+const STATE_TTL_MS = 10 * 60_000;
+
+/** İmzalı, 10 dakikalık "state": `<nonce>.<bitiş ms>.<HMAC-SHA256 imza>`. */
+export function createPinterestState(now = Date.now()): string {
+  const body = `${randomBytes(12).toString("hex")}.${now + STATE_TTL_MS}`;
+  const sig = createHmac("sha256", env.JWT_ACCESS_SECRET).update(`pinterest:${body}`).digest("hex");
+  return `${body}.${sig}`;
+}
+
+export function verifyPinterestState(state: unknown, now = Date.now()): boolean {
+  if (typeof state !== "string") return false;
+  const parts = state.split(".");
+  if (parts.length !== 3) return false;
+  const [nonce, expRaw, sig] = parts as [string, string, string];
+  const expires = Number(expRaw);
+  if (!nonce || !Number.isFinite(expires) || expires < now) return false;
+  const expected = createHmac("sha256", env.JWT_ACCESS_SECRET).update(`pinterest:${nonce}.${expRaw}`).digest("hex");
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** Yönetici "Pinterest ile bağlan"a basınca tarayıcının gideceği izin ekranı adresi. */
+export function buildPinterestAuthorizeUrl(appId: string, state: string): string {
+  const params = new URLSearchParams({
+    client_id: appId,
+    redirect_uri: pinterestRedirectUri(),
+    response_type: "code",
+    scope: PINTEREST_SCOPES,
+    state,
   });
+  return `${AUTHORIZE_URL}?${params.toString()}`;
+}
 
-  const id = (json.id as string | undefined) ?? null;
-  return { externalId: id, externalUrl: id ? `https://www.pinterest.com/pin/${id}/` : null };
+// ───────────────────────── Türkçe hata açıklamaları ─────────────────────────
+
+const CODE_TR: Record<number, string> = {
+  1: "Pinterest gönderilen bilgilerden birini geçersiz buldu.",
+  2: "Pinterest kimlik doğrulaması başarısız: erişim anahtarı geçersiz ya da süresi dolmuş. Panelde “Pinterest ile bağlan”ı yeniden yapın.",
+  29: "Pinterest istek sınırı aşıldı; biraz bekleyip tekrar deneyin.",
 };
 
-/** Pinterest anahtarının geçerli olduğunu ve hangi hesaba ait olduğunu söyler. */
-export const verifyPinterest: Verifier = async (secrets) => {
-  const token = requireSecret(secrets, "accessToken", "Pinterest Access Token");
-  const json = await requestJson("Pinterest", "https://api.pinterest.com/v5/user_account", {
-    method: "GET",
-    headers: { authorization: `Bearer ${token}` },
+const STATUS_TR: Record<number, string> = {
+  400: "Pinterest gönderilen bilgileri kabul etmedi.",
+  401: "Pinterest erişim anahtarını kabul etmedi; panelde “Pinterest ile bağlan”ı yeniden yapın.",
+  403: "Pinterest bu işleme izin vermedi: uygulama Trial erişimde olabilir, izinler (scope) eksik olabilir ya da bu pano size ait olmayabilir.",
+  404: "Pinterest istenen pano ya da pini bulamadı (pano silinmiş ya da kum havuzu/gerçek ortam karışmış olabilir).",
+  429: "Pinterest istek sınırı aşıldı; biraz bekleyip tekrar deneyin.",
+  500: "Pinterest tarafında geçici bir sorun var; biraz sonra tekrar deneyin.",
+  503: "Pinterest şu an yanıt vermiyor; biraz sonra tekrar deneyin.",
+};
+
+/** Pinterest hatasını (HTTP durumu + {code,message} gövdesi) okunur Türkçe cümleye çevirir. */
+export function describePinterestError(err: PlatformError): string {
+  let code: number | undefined;
+  let message = "";
+  try {
+    const parsed = JSON.parse(err.detail) as { code?: unknown; message?: unknown };
+    if (typeof parsed.code === "number") code = parsed.code;
+    if (typeof parsed.message === "string") message = parsed.message;
+  } catch {
+    message = err.detail.slice(0, 200);
+  }
+  const tr = (code !== undefined ? CODE_TR[code] : undefined) ?? STATUS_TR[err.status] ?? "Pinterest isteği reddetti.";
+  const raw = [code !== undefined ? `kod ${code}` : "", message].filter(Boolean).join(": ");
+  return `${tr} (HTTP ${err.status}${raw ? `, ${raw}` : ""})`;
+}
+
+function translated(err: unknown): Error {
+  return err instanceof PlatformError ? new Error(describePinterestError(err)) : err instanceof Error ? err : new Error(String(err));
+}
+
+// ───────────────────────── anahtar alışverişi ─────────────────────────
+
+export type PinterestTokens = {
+  accessToken: string;
+  refreshToken: string;
+  /** Yenileme anahtarının bitiş anı (ms); bilinmiyorsa null. */
+  refreshExpiresAt: number | null;
+};
+
+function basicAuth(appId: string, appSecret: string): string {
+  return `Basic ${Buffer.from(`${appId}:${appSecret}`).toString("base64")}`;
+}
+
+async function postToken(appId: string, appSecret: string, params: Record<string, string>): Promise<PinterestTokens> {
+  let json: Record<string, unknown>;
+  try {
+    json = await requestJson("Pinterest", TOKEN_URL, {
+      method: "POST",
+      headers: {
+        authorization: basicAuth(appId, appSecret),
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(params).toString(),
+    });
+  } catch (err) {
+    throw translated(err);
+  }
+  const accessToken = json.access_token;
+  const refreshToken = json.refresh_token;
+  if (typeof accessToken !== "string" || !accessToken || typeof refreshToken !== "string" || !refreshToken) {
+    throw new Error("Pinterest anahtar yanıtı eksik (access_token/refresh_token yok).");
+  }
+  const refreshIn = Number(json.refresh_token_expires_in);
+  return {
+    accessToken,
+    refreshToken,
+    refreshExpiresAt: Number.isFinite(refreshIn) && refreshIn > 0 ? Date.now() + refreshIn * 1000 : null,
+  };
+}
+
+/** Geri dönüşte gelen tek kullanımlık kodu anahtarlara çevirir. */
+export function exchangePinterestCode(appId: string, appSecret: string, code: string): Promise<PinterestTokens> {
+  return postToken(appId, appSecret, {
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: pinterestRedirectUri(),
   });
+}
+
+/** Erişim anahtarı bitince yenileme anahtarıyla yenisini alır. */
+export function refreshPinterestTokens(appId: string, appSecret: string, refreshToken: string): Promise<PinterestTokens> {
+  return postToken(appId, appSecret, { grant_type: "refresh_token", refresh_token: refreshToken });
+}
+
+// ───────────────────────── API çağrısı (otomatik yenilemeli) ─────────────────────────
+
+/** Kum havuzu ayarına göre API kökü (Trial → sandbox, Standard → gerçek). */
+async function apiBase(): Promise<string> {
+  const { readSocialConfig } = await import("../social.service.js");
+  return (await readSocialConfig()).pinterestSandbox ? API_SANDBOX : API_PRODUCTION;
+}
+
+async function persistTokens(tokens: PinterestTokens): Promise<void> {
+  const { saveAccount } = await import("../social.service.js");
+  await saveAccount({
+    platform: "PINTEREST",
+    secrets: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+    tokenExpiresAt: tokens.refreshExpiresAt ? new Date(tokens.refreshExpiresAt) : undefined,
+  }).catch((err) => logger.warn("social", `Pinterest yeni anahtarlar kaydedilemedi: ${String(err)}`));
+}
+
+/**
+ * Pinterest'e kimlikli istek atar. Erişim anahtarı reddedilirse (401) yenileme anahtarıyla bir kez
+ * yenileyip tekrar dener; yenileme de olmazsa “yeniden bağlan” uyarısı verir.
+ */
+async function pinterestCall(
+  secrets: Record<string, string>,
+  path: string,
+  init: { method: "GET" | "POST"; body?: unknown },
+): Promise<Record<string, unknown>> {
+  const base = await apiBase();
+  const send = (token: string) =>
+    requestJson("Pinterest", `${base}${path}`, {
+      method: init.method,
+      headers: {
+        authorization: `Bearer ${token}`,
+        ...(init.body !== undefined ? { "content-type": "application/json" } : {}),
+      },
+      ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
+    });
+
+  const accessToken = requireSecret(secrets, "accessToken", "Pinterest Access Token");
+  try {
+    return await send(accessToken);
+  } catch (err) {
+    if (!(err instanceof PlatformError) || err.status !== 401) throw translated(err);
+  }
+
+  const appId = requireSecret(secrets, "appId", "Pinterest App ID");
+  const appSecret = requireSecret(secrets, "appSecret", "Pinterest App Secret");
+  const refreshToken = secrets.refreshToken?.trim();
+  if (!refreshToken) throw new Error("Pinterest bağlı değil: panelde “Pinterest ile bağlan”ı yapın.");
+  let fresh: PinterestTokens;
+  try {
+    fresh = await refreshPinterestTokens(appId, appSecret, refreshToken);
+  } catch (err) {
+    throw new Error(
+      `Pinterest bağlantısı yenilenemedi: panelde “Pinterest ile bağlan”ı yeniden yapın. (${err instanceof Error ? err.message : String(err)})`,
+    );
+  }
+  await persistTokens(fresh);
+  try {
+    return await send(fresh.accessToken);
+  } catch (err) {
+    throw translated(err);
+  }
+}
+
+// ───────────────────────── hesap + panolar ─────────────────────────
+
+/** Bağlı hesabın kullanıcı adı. */
+export async function fetchPinterestUsername(secrets: Record<string, string>): Promise<string> {
+  const json = await pinterestCall(secrets, "/user_account", { method: "GET" });
   const username = typeof json.username === "string" ? json.username : null;
   if (!username) throw new Error("Pinterest hesabı okunamadı");
-  return `@${username}`;
+  return username;
+}
+
+export type PinterestBoard = { id: string; name: string; privacy: string };
+
+/** Hesaptaki panolar (en çok 100). */
+export async function listPinterestBoards(secrets: Record<string, string>): Promise<PinterestBoard[]> {
+  const json = await pinterestCall(secrets, "/boards?page_size=100", { method: "GET" });
+  const items = Array.isArray(json.items) ? (json.items as Array<Record<string, unknown>>) : [];
+  return items
+    .filter((b) => typeof b.id === "string")
+    .map((b) => ({
+      id: b.id as string,
+      name: typeof b.name === "string" ? b.name : String(b.id),
+      privacy: typeof b.privacy === "string" ? b.privacy : "",
+    }));
+}
+
+/** Yeni pano açar (kum havuzunda hazır pano olmadığı için gerekli). */
+export async function createPinterestBoard(secrets: Record<string, string>, name: string): Promise<PinterestBoard> {
+  const json = await pinterestCall(secrets, "/boards", { method: "POST", body: { name: name.slice(0, 180), privacy: "PUBLIC" } });
+  if (typeof json.id !== "string") throw new Error("Pinterest pano oluşturmadı");
+  return { id: json.id, name: typeof json.name === "string" ? json.name : name, privacy: "PUBLIC" };
+}
+
+// ───────────────────────── pin ─────────────────────────
+
+export type PinterestPinInput = {
+  boardId: string;
+  title: string;
+  description: string;
+  link: string;
+  imageUrl: string;
+  altText?: string;
 };
+
+export type PinterestPinOutcome = { id: string | null; url: string | null; sandbox: boolean };
+
+/** Görselli pin oluşturur. */
+export async function createPinterestPin(secrets: Record<string, string>, input: PinterestPinInput): Promise<PinterestPinOutcome> {
+  const json = await pinterestCall(secrets, "/pins", {
+    method: "POST",
+    body: {
+      board_id: input.boardId,
+      title: input.title.slice(0, 100),
+      description: input.description.slice(0, 500),
+      link: input.link,
+      ...(input.altText ? { alt_text: input.altText.slice(0, 500) } : {}),
+      media_source: { source_type: "image_url", url: input.imageUrl },
+    },
+  });
+  const id = typeof json.id === "string" ? json.id : null;
+  const sandbox = (await apiBase()) === API_SANDBOX;
+  return { id, url: id ? `https://www.pinterest.com/pin/${id}/` : null, sandbox };
+}
+
+export const SANDBOX_NOTE =
+  "Pin Pinterest kum havuzuna (Trial) gönderildi: yalnızca hesap sahibi görür ve bağlantı normal Pinterest'te açılmayabilir. Standard onayı gelince panelde “Pinterest kum havuzu”nu kapat.";
+
+export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secrets }) => {
+  const boardId = requireSecret(secrets, "boardId", "Pinterest Pano (panelden seçilir)");
+  if (!imageUrl) throw new Error("Pinterest görselsiz pin kabul etmiyor");
+
+  const pin = await createPinterestPin(secrets, {
+    boardId,
+    title: item.title,
+    description: body,
+    link: withUtm(item.link, socialUtm("PINTEREST", toolIdFromGuid(item.guid) ? "arac-videosu" : "blog")),
+    imageUrl,
+    altText: coverAltText(item, 500),
+  });
+  return {
+    externalId: pin.id,
+    externalUrl: pin.url,
+    ...(pin.sandbox ? { warning: SANDBOX_NOTE } : {}),
+  };
+};
+
+/** Pinterest bağlantısının geçerli olduğunu ve hangi hesaba ait olduğunu söyler. */
+export const verifyPinterest: Verifier = async (secrets) => `@${await fetchPinterestUsername(secrets)}`;

@@ -111,6 +111,11 @@ export type SocialAutomationConfig = {
   tiktokPublic: boolean;
   /** TikTok'ta "kendi markamızı tanıtıyor" (brand_organic_toggle) işareti; araç videoları kendi ürünümüz. */
   tiktokBrandOrganic: boolean;
+  /**
+   * Pinterest kum havuzu (sandbox): uygulama "Trial" erişimdeyken AÇIK olmalı. Standard onayı gelince
+   * yalnız bu ayar kapatılır; pinler gerçek ortama gider.
+   */
+  pinterestSandbox: boolean;
 };
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
@@ -129,6 +134,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   toolReelEveryDays: 0,
   tiktokPublic: false,
   tiktokBrandOrganic: true,
+  pinterestSandbox: true,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -156,6 +162,8 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     // Yalnızca açıkça `true` ise herkese açık: eksik/bozuk ayar "yalnız ben"e düşer.
     tiktokPublic: raw.tiktokPublic === true,
     tiktokBrandOrganic: raw.tiktokBrandOrganic !== false,
+    // Trial'da kum havuzu şart: yalnızca açıkça `false` ise gerçek ortam.
+    pinterestSandbox: raw.pinterestSandbox !== false,
   };
 }
 

@@ -25,7 +25,19 @@ type Props = {
   /** Son sınamanın sonucu — kart yeniden çizilse de kaybolmasın diye dışarıda tutulur. */
   testResult?: { ok: boolean; message: string };
   /** Yalnız TikTok: OAuth ile bağlanma (geri dönüş adresi + "TikTok ile bağlan" düğmesi). */
-  oauth?: { redirectUri: string; onConnect: () => void };
+  oauth?: {
+    redirectUri: string;
+    onConnect: () => void;
+    /** Ağ adı ("TikTok" / "Pinterest"). */
+    provider: string;
+    /** Geliştirici sayfasında adresin yazılacağı yer. */
+    redirectHint: string;
+    /** Elle girilen iki alanın anahtarları (düğme bunlar kayıtlıyken açılır) ve adları. */
+    requiredKeys: [string, string];
+    requiredLabels: string;
+    /** Bağlantıyla otomatik dolan alanlar (kutu olarak gösterilmez). */
+    hiddenFields?: string[];
+  };
 };
 
 export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, onTest, testResult, oauth }: Props) {
@@ -103,7 +115,7 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
 
       {open ? (
         <div className="space-y-3 border-t border-slate-700/40 bg-slate-950/30 p-4">
-          {spec.fields.map((field) => {
+          {spec.fields.filter((f) => !oauth?.hiddenFields?.includes(f.key)).map((field) => {
             const saved = account?.filledFields.includes(field.key) ?? false;
             const show = visible[field.key] ?? false;
             return (
@@ -144,15 +156,14 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
           {oauth ? (
             <div className="space-y-2 rounded-xl border border-slate-700/50 bg-slate-900/50 p-3 text-[11px] leading-relaxed text-slate-300">
               <p>
-                <strong className="text-slate-100">1.</strong> TikTok geliştirici sayfasında Login Kit → Redirect URI alanına
-                şu adresi aynen yaz:
+                <strong className="text-slate-100">1.</strong> {oauth.redirectHint} şu adresi aynen yaz:
               </p>
               <code className="block break-all rounded-lg bg-slate-950/70 px-2.5 py-2 font-mono text-[11px] text-cyan-200 select-all">
                 {oauth.redirectUri}
               </code>
               <p>
-                <strong className="text-slate-100">2.</strong> Yukarıya Client Key ve Client Secret değerlerini yazıp
-                kaydet. <strong className="text-slate-100">3.</strong> Sonra aşağıdaki düğmeyle TikTok hesabına izin ver
+                <strong className="text-slate-100">2.</strong> Yukarıya {oauth.requiredLabels} değerlerini yazıp
+                kaydet. <strong className="text-slate-100">3.</strong> Sonra aşağıdaki düğmeyle {oauth.provider} hesabına izin ver
                 (anahtarlar otomatik kaydedilir).
               </p>
               <button
@@ -160,12 +171,12 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-rose-600 px-4 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:opacity-40"
                 disabled={
                   busy ||
-                  !(account?.filledFields.includes("clientKey") && account?.filledFields.includes("clientSecret"))
+                  !(account?.filledFields.includes(oauth.requiredKeys[0]) && account?.filledFields.includes(oauth.requiredKeys[1]))
                 }
                 onClick={oauth.onConnect}
               >
                 <PlugZap className="h-3.5 w-3.5" />
-                TikTok ile bağlan
+                {oauth.provider} ile bağlan
               </button>
             </div>
           ) : null}

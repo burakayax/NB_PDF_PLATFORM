@@ -191,9 +191,13 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     // Pinterest'te bağlantı ayrı bir alanda (link) taşınır; metne yazmaya gerek yok.
     linkStyle: "none",
     bilingual: true,
+    // Bağlantı OAuth ile kurulur (panelde "Pinterest ile bağlan"); yalnız ilk iki alan elle girilir.
     secretFields: [
-      { key: "accessToken", label: "Access Token", help: "pins:write yetkili erişim anahtarı" },
-      { key: "boardId", label: "Pano ID", help: "Pinlerin ekleneceği panonun kimliği" },
+      { key: "appId", label: "App ID", help: "Pinterest geliştirici uygulamasının App ID değeri" },
+      { key: "appSecret", label: "App Secret", help: "Aynı uygulamanın App Secret değeri" },
+      { key: "accessToken", label: "Access Token", help: "\"Pinterest ile bağlan\" sonrası otomatik yazılır (elle girilmez)" },
+      { key: "refreshToken", label: "Refresh Token", help: "\"Pinterest ile bağlan\" sonrası otomatik yazılır (elle girilmez)" },
+      { key: "boardId", label: "Pano", help: "Bağlandıktan sonra listeden seçilir (ID elle yazılmaz)" },
     ],
   },
   YOUTUBE: {
