@@ -244,6 +244,25 @@ export async function cleanupToolVideos(now = new Date()): Promise<number> {
   return removed;
 }
 
+/**
+ * Beğenilmeyen araç videosunu kaldırır (iki sürümü birden). Bu videoya bağlı, henüz yayınlanmamış
+ * taslaklar SİLİNİR: "Atlandı" olarak bırakılsaydı araç sıra/sıklık hesabında "paylaşıldı" sayılır,
+ * yeniden üretim bir sonraki tura ertelenirdi. Silinen taslak kayıttan düştüğü için araç sırada kalır
+ * ve yeniden üretilebilir. Yayınlanmış gönderilere dokunulmaz (gerçekten paylaşıldılar; ağın kendisinden silinir).
+ */
+export async function discardToolVideos(toolId: string): Promise<{ videos: number; removedPosts: number }> {
+  const videos = await prisma.socialToolVideo.findMany({ where: { toolId }, select: { id: true } });
+  let removedPosts = 0;
+  for (const v of videos) {
+    const r = await prisma.socialPost.deleteMany({
+      where: { imageUrl: { contains: v.id }, status: { in: ["DRAFT", "QUEUED", "MANUAL", "FAILED"] } },
+    });
+    removedPosts += r.count;
+    await prisma.socialToolVideo.delete({ where: { id: v.id } });
+  }
+  return { videos: videos.length, removedPosts };
+}
+
 /** Videoyu blog yazısı biçimine çevirir (metin yazımı ve kuyruk aynı hattan geçsin). */
 export function toolReelFeedItem(entry: ToolReelCatalogEntry): FeedItem {
   return {
