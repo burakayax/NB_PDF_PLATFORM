@@ -544,20 +544,20 @@ function CycleAwareCard({
       {/* Extra seats stepper — Business only */}
       {isBusiness && (
         <div className="mb-4 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2.5">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-xs font-semibold text-slate-300">
                 {tr ? "Ekstra Kişi" : "Extra Seats"}
               </p>
               <p className="text-[11px] text-slate-400">
                 {PRICES_HIDDEN
-                  ? (tr ? "5 kişi dahil · ek kişi eklenebilir" : "5 seats included · more seats can be added")
+                  ? (tr ? "5 kişi dahil" : "5 seats included")
                   : tr
                   ? `5 kişi dahil · +${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
                   : `5 seats included · +${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={() => setExtraSeats((n) => Math.max(0, n - 1))}
