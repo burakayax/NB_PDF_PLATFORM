@@ -16,6 +16,7 @@ import {
   Wand2,
 } from "lucide-react";
 import {
+  setPostPinterestBoard,
   checkSocialFeed,
   clearSocialHistory,
   deleteSocialPost,
@@ -568,6 +569,13 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                       await refresh();
                     });
                   }}
+                  onChangeBoard={(id, boardKey) => {
+                    setBusyPostId(id);
+                    void run(async () => {
+                      await setPostPinterestBoard(accessToken, id, boardKey);
+                      await refresh();
+                    }, "Pano değiştirildi.");
+                  }}
                   onSaveBody={(id, body) => {
                     setBusyPostId(id);
                     void run(async () => {
@@ -612,6 +620,13 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                       await deleteSocialPost(accessToken, id);
                       await refresh();
                     });
+                  }}
+                  onChangeBoard={(id, boardKey) => {
+                    setBusyPostId(id);
+                    void run(async () => {
+                      await setPostPinterestBoard(accessToken, id, boardKey);
+                      await refresh();
+                    }, "Pano değiştirildi.");
                   }}
                   onSaveBody={(id, body) => {
                     setBusyPostId(id);

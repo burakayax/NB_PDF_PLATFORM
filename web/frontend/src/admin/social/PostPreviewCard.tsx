@@ -5,6 +5,7 @@ import { BRANDS, PlatformBadge } from "./platformBrand";
 import { PostFullPreviewModal } from "./PostFullPreviewModal";
 import { PostMediaPreview } from "./PostMediaPreview";
 import { downloadMedia } from "./downloadMedia";
+import { PINTEREST_BOARDS, pinterestBoardName } from "./pinterestBoards";
 
 /**
  * Bir gönderinin panel içindeki hâli: yayına gideceği biçimde önizleme.
@@ -62,6 +63,7 @@ export function PostPreviewCard({
   onDelete,
   onSaveBody,
   onMarkShared,
+  onChangeBoard,
   accountLabel,
   accountReady = false,
 }: {
@@ -75,6 +77,8 @@ export function PostPreviewCard({
   accountReady?: boolean;
   /** Elle paylaşılan gönderiyi "paylaşıldı" saymak için (yalnızca MANUAL). */
   onMarkShared?: (id: string) => void;
+  /** Pinterest gönderisinin panosunu elle değiştirir (neden "elle seçim" olur). */
+  onChangeBoard?: (id: string, boardKey: string) => void;
   /** Tam önizlemede başlık satırında gösterilen hesap adı. */
   accountLabel?: string | null;
 }) {
@@ -200,6 +204,30 @@ export function PostPreviewCard({
             Tıklayınca platformdaki düzeniyle tam önizleme açılır. */}
         <PostMediaPreview post={post} onOpen={() => setZoomed(true)} />
       </div>
+
+      {post.platform === "PINTEREST" && post.boardKey ? (
+        <div className="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-950/30 px-3 py-2 text-[11px] text-slate-300">
+          <span>
+            Pano: <strong className="text-slate-100">{pinterestBoardName(post.boardKey)}</strong>
+            {post.boardReason ? <span className="text-slate-500"> · neden: {post.boardReason}</span> : null}
+          </span>
+          {onChangeBoard && post.status !== "PUBLISHED" && post.status !== "PUBLISHING" ? (
+            <select
+              className="ml-auto rounded-lg border border-slate-700/60 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-200"
+              value={post.boardKey}
+              disabled={busy}
+              onChange={(e) => onChangeBoard(post.id, e.target.value)}
+              aria-label="Pano değiştir"
+            >
+              {PINTEREST_BOARDS.map((b) => (
+                <option key={b.key} value={b.key}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          ) : null}
+        </div>
+      ) : null}
 
       {post.lastError ? (
         <p className="mx-4 mb-3 flex items-start gap-1.5 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-[11px] leading-relaxed text-rose-200">
