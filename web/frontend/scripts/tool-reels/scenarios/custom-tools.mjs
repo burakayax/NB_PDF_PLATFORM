@@ -135,14 +135,14 @@ export const CUSTOM = {
   "taranmis-pdf-ocr": simpleTool({
     id: "taranmis-pdf-ocr",
     toolPath: "/tools/taranmis-pdf-ocr",
-    intro: { title: "Taranmış PDF (OCR)", sub: "Taranmış sayfadaki yazıyı metne çevir" },
+    intro: { title: "Taranmış PDF (OCR)", sub: "Taranmış belgeyi aranabilir, kopyalanabilir yap" },
     files: ["Taranmis-Belge.pdf"],
     pick: { l1: "Taranmış PDF'ini yükle", l2: "fotoğraf da olabilir" },
     button: btn(/Aranabilir PDF Yap/),
     press: { title: "Başlat'a bas", l1: "Sayfadaki yazılar tanınır" },
     timeout: 300000,
     resultText: /^Aranabilir PDF hazır/,
-    resultLine: "Yazı artık okunabilir metin",
+    resultLine: "Ctrl+F ile arayıp metni kopyalayabilirsin",
   }),
 
   "aranabilir-pdf": simpleTool({

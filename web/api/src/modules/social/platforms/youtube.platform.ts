@@ -17,7 +17,7 @@ import { PlatformError, PublishStageError, requestJson, requireSecret } from "./
 import type { Publisher, Verifier } from "./common.js";
 import { isReelUrl } from "../reels.service.js";
 import { toolVideoKeywords } from "../keywords.service.js";
-import { findCatalogEntry } from "../tool-reels.service.js";
+import { findCatalogEntry, toolReelBody } from "../tool-reels.service.js";
 import { reelCoverUrl, toolIdFromGuid } from "./reel-cover.js";
 import { socialUtm, withUtm } from "../../../lib/utm.js";
 
@@ -194,11 +194,11 @@ function buildDescription(guid: string, fallbackBody: string, terms: Terms | nul
 
   const text = [
     entry.tr.title,
-    entry.tr.summary,
+    toolReelBody(entry, "tr"),
     `▶ Aracı dene: ${withUtm(entry.tr.link, socialUtm("YOUTUBE", "arac-videosu"))}`,
     "—",
     entry.en.title,
-    entry.en.summary,
+    toolReelBody(entry, "en"),
     `▶ Try it: ${withUtm(entry.en.link, socialUtm("YOUTUBE", "arac-videosu"))}`,
     "—",
     `Konular: ${topicsTr.join(", ")}`,

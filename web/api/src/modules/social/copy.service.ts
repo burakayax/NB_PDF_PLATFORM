@@ -559,13 +559,9 @@ function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
 function linkLine(side: LangSide, style: "url" | "bio" | "none"): string {
   if (style === "none") return "";
   if (style === "url") return side.link;
-  let host = "";
-  try {
-    host = new URL(side.link).host.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-  return side.lang === "tr" ? `Bağlantı profilde: ${host}` : `Link in bio: ${host}`;
+  // Adres yazılmaz: videonun son karesi de yalnız "Bağlantı profilde" der; tıklanmayan bir alan adı yazıp
+  // "bağlantı profilde" demek çelişkili görünüyordu.
+  return side.lang === "tr" ? "Bağlantı profilde" : "Link in bio";
 }
 
 /** Bir dil bloğunu kurar: gövde + (varsa) bağlantı + etiketler. */
