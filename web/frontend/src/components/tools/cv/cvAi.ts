@@ -42,16 +42,19 @@ const dateText = (a: string, b: string, cur: boolean, lang: "tr" | "en") => {
  * ve fotoğraf ASLA dahil edilmez; yalnızca deneyim/eğitim/beceri içeriği. Kullanıcıya olduğu
  * gibi gösterilir (arayüzde "Yapay zekâya ne gidiyor?").
  */
+/** Doldurulmamış [X] / [Teknoloji] yer tutucusu içeren satır yapay zekâya GİTMEZ (yoksa model onu özete aynen kopyalar). */
+export const hasPh = (t: string): boolean => /\[[^\]\n]{1,24}\]/.test(t);
+
 export function cvTextForAi(d: CvData): string {
   const out: string[] = [];
   if (d.title.trim()) out.push(`Unvan: ${d.title.trim()}`);
-  if (d.summary.trim()) out.push(`Özet: ${d.summary.trim()}`);
+  if (d.summary.trim() && !hasPh(d.summary)) out.push(`Özet: ${d.summary.trim()}`);
   const lang = d.settings.lang;
   for (const e of d.experience) {
     const head = [e.role, e.company].filter(Boolean).join(" · ");
     if (!head && !e.desc.trim()) continue;
     out.push(`\nDeneyim: ${head}${dateText(e.start, e.end, e.current, lang) ? ` (${dateText(e.start, e.end, e.current, lang)})` : ""}`);
-    for (const l of e.desc.split(/\r?\n/).map((x) => x.replace(/^[\s•\-–*]+/, "").trim()).filter(Boolean)) out.push(`- ${l}`);
+    for (const l of e.desc.split(/\r?\n/).map((x) => x.replace(/^[\s•\-–*]+/, "").trim()).filter((x) => x && !hasPh(x))) out.push(`- ${l}`);
   }
   for (const e of d.education) if (e.school || e.degree) out.push(`\nEğitim: ${[e.degree, e.school].filter(Boolean).join(", ")}`);
   const skills = d.skills.map((s) => s.name.trim()).filter(Boolean);

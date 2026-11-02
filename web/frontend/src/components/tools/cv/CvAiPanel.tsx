@@ -5,6 +5,7 @@ import { fetchAiQuota, type AiError, type AiQuota } from "../../../api/ai";
 import { ocrPdfToText } from "../../../lib/ocr";
 import { pdfBytesToBlob } from "../../../lib/summaryPdf";
 import { buildCoverLetterPdf } from "./cvPdf";
+import { hasPlaceholders } from "./cvPhrases";
 import { AiCreditBadge } from "../AiCreditBadge";
 import { TopUpModal } from "../TopUpModal";
 import type { CvData } from "./cvModel";
@@ -13,6 +14,7 @@ import {
   applyTailor,
   callCvAi,
   cvTextForAi,
+  hasPh,
   parsedToCv,
   readCvFile,
   replaceBullet,
@@ -122,7 +124,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
       years: aiYears(data),
       skills: data.skills.map((s) => s.name).filter(Boolean),
       roles: data.experience.slice(0, 6).map((e) => [e.role, e.company].filter(Boolean).join(" · ")).filter(Boolean),
-      bullets: data.experience.flatMap((e) => e.desc.split(/\r?\n/).map((x) => x.trim()).filter(Boolean)).slice(0, 14),
+      bullets: data.experience.flatMap((e) => e.desc.split(/\r?\n/).map((x) => x.trim()).filter((x) => x && !hasPh(x))).slice(0, 14),
       ad: ad.trim().length > 80 ? ad : undefined,
     }, accessToken, lang), setSummaries);
 
@@ -132,7 +134,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
     if (!e) return;
     void run<Bullets>("bullets", () => callCvAi("bullets", {
       role: e.role, company: e.company,
-      bullets: e.desc.split(/\r?\n/).map((x) => x.replace(/^[\s•\-–*]+/, "").trim()).filter(Boolean),
+      bullets: e.desc.split(/\r?\n/).map((x) => x.replace(/^[\s•\-–*]+/, "").trim()).filter((x) => x && !hasPh(x)),
       ad: ad.trim().length > 80 ? ad : undefined,
     }, accessToken, lang), (r) => setBullets({ ...r, expId: e.id, pick: r.items.map((i) => i.improved !== i.original) }));
   };
@@ -224,6 +226,10 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
         <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950/70 p-2.5 font-mono text-[12px] leading-relaxed text-slate-300">{aiText || (tr ? "(CV'niz henüz boş)" : "(your CV is still empty)")}</pre>
         <p className="mt-1.5 text-[12px] text-slate-500">{tr ? "İlan metni ve (ön yazıda) adınız ayrıca gider. Sağlayıcı verilerinizi model eğitiminde kullanmaz; sonuçlar sunucuda saklanmaz." : "The job ad and (for cover letters) your name are sent separately. The provider doesn't train on your data; results aren't stored on our server."}</p>
       </details>
+
+      {hasPlaceholders(data) ? (
+        <p className="rounded-xl border border-amber-400/25 bg-amber-500/[0.08] px-3.5 py-2.5 text-[12.5px] leading-snug text-amber-100">{tr ? "CV'nizde köşeli parantezli, henüz doldurmadığınız yerler var ([X] gibi). Yapay zekâ bu satırları görmez; önce gerçek bilginizi yazarsanız daha doğru sonuç verir." : "Your CV has unfilled bracketed spots (like [X]). The AI doesn't see those lines; fill them with your real details for better results."}</p>
+      ) : null}
 
       {err ? (
         <div role="alert" className="rounded-xl border border-red-500/25 bg-red-500/[0.07] px-3.5 py-3 text-[12.5px] text-red-200">

@@ -64,15 +64,29 @@ export function extractJson(raw: string): unknown {
 }
 
 const STOPS = new Set("ve ile için bir bu şu da de ki mi gibi olarak olan daha çok en her ama ise the and for with that this from into over under your our their was were been being have has had not but are".split(" "));
-const stemOf = (w: string, lang: Lang): string => (lang === "tr" ? (w.length >= 6 ? w.slice(0, 5) : w) : w.replace(/(ings|ing|ed|es|s)$/, ""));
 const words = (t: string, lang: Lang): string[] => (t.toLocaleLowerCase(lang).match(/[a-zçğıöşü]{4,}/g) ?? []).filter((w) => !STOPS.has(w));
 
+/** Her CV metninde doğal geçen, "yeni bilgi" sayılmaması gereken sıradan sözcükler. */
+const FILLER = new Set("aşkın yılı yıl yıllık sahip sahibim deneyim deneyimli alanında alanda konusunda yaklaşık çalıştım çalıştı bulundum yürüttüm sağladım güçlü güçlüyüm başarıyla etkin etkili düzenli sürekli doğru hızlı kalıcı ilişki ilişkiler çözüm sunan odaklı temelli yönelik göre kadar ayrıca özellikle önemli tüm birlikte sayesinde dayalı yaklaşım about experience years year strong strongly across within including using focused skilled proven".split(" "));
+
+/** Bu köklerle başlayan sözcükler (her ek biçimiyle) de sıradan sayılır: "çalışıyorum", "kazandım", "araçlarını"… */
+const FILLER_ROOTS = ["yıl", "deneyim", "sahip", "alan", "konu", "süre", "süreç", "araç", "takip", "kazan", "hazırla", "hazırl", "kullan", "çalış", "güçlü", "sağla", "bilgi", "beceri", "experienc", "worked", "working", "skill"];
+
+/** Ortak ön ek yeterince uzunsa iki sözcük aynı kökten sayılır (Türkçe ekler: yıl/yıllık, deneyim/deneyimim). */
+const sameRoot = (a: string, b: string): boolean => {
+  const n = Math.min(a.length, b.length);
+  let k = 0;
+  while (k < n && a[k] === b[k]) k++;
+  return k >= Math.max(3, Math.ceil(0.7 * n));
+};
+
 /** `improved` metninde `source`ta KARŞILIĞI OLMAYAN içerik kelimeleri (kullanıcı doğrulasın diye gösterilir). */
-export function addedTerms(source: string, improved: string, lang: Lang, max = 8): string[] {
-  const have = new Set(words(source, lang).map((w) => stemOf(w, lang)));
+export function addedTerms(source: string, improved: string, lang: Lang, max = 6): string[] {
+  const have = words(source, lang);
   const out: string[] = [];
   for (const w of words(improved, lang)) {
-    if (!have.has(stemOf(w, lang)) && !out.includes(w)) out.push(w);
+    if (FILLER.has(w) || FILLER_ROOTS.some((r) => w.startsWith(r)) || out.includes(w)) continue;
+    if (!have.some((h) => sameRoot(h, w))) out.push(w);
     if (out.length >= max) break;
   }
   return out;
