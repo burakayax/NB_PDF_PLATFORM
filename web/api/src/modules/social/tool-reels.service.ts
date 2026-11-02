@@ -16,6 +16,7 @@ import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
 import { TOOL_REEL_CATALOG } from "./tool-reel-catalog.js";
 import type { ToolReelCatalogEntry } from "./tool-reel-catalog.js";
+import { TOOL_REEL_ABOUT } from "./tool-reel-about.js";
 import type { FeedItem } from "./social.types.js";
 
 /** Araç videosu gönderilerinin `guid` öneki: blog yazılarıyla karışmasın. */
@@ -263,17 +264,33 @@ export async function discardToolVideos(toolId: string): Promise<{ videos: numbe
   return { videos: videos.length, removedPosts };
 }
 
+/**
+ * Gönderi metni: başlık + (başlıkta zaten geçmeyen) özet cümleleri + "ne işe yarar" açıklaması.
+ * Özetin gizlilik cümlesi ("Dosyaların cihazında işlenir…") korunur; başlıkla aynı olan cümle tekrarlanmaz.
+ */
+export function toolReelBody(entry: ToolReelCatalogEntry, lang: "tr" | "en"): string {
+  const side = entry[lang];
+  const about = TOOL_REEL_ABOUT[entry.id]?.[lang] ?? "";
+  const kept = side.summary
+    .split(/(?<=[.!?])\s+/)
+    .map((x) => x.trim())
+    .filter((x) => x && !side.title.includes(x.replace(/[.!?]$/, "")));
+  const summaryPart = kept.join(" ");
+  // Özet açıklamada zaten anlatılıyorsa (kısa araç özeti) yalnız gizlilik gibi ek cümleler kalır.
+  return [about, summaryPart].filter(Boolean).join("\n\n");
+}
+
 /** Videoyu blog yazısı biçimine çevirir (metin yazımı ve kuyruk aynı hattan geçsin). */
 export function toolReelFeedItem(entry: ToolReelCatalogEntry): FeedItem {
   return {
     guid: toolReelGuid(entry.id),
     lang: "tr",
     title: entry.tr.title,
-    summary: entry.tr.summary,
+    summary: toolReelBody(entry, "tr"),
     link: entry.tr.link,
     publishedAt: Date.now(),
     categories: [],
     images: {},
-    alt: { lang: "en", title: entry.en.title, summary: entry.en.summary, link: entry.en.link },
+    alt: { lang: "en", title: entry.en.title, summary: toolReelBody(entry, "en"), link: entry.en.link },
   };
 }
