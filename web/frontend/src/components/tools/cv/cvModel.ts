@@ -195,9 +195,16 @@ export function sampleCv(lang: CvLang): CvData {
       { id: "l1", name: tr ? "Türkçe" : "English", level: tr ? "Ana dil" : "Native" },
       { id: "l2", name: tr ? "İngilizce" : "Spanish", level: tr ? "İleri (C1)" : "Intermediate (B1)" },
     ],
-    certs: [{ id: "c1", name: "PMP", issuer: "PMI", date: "2019-05" }],
-    projects: [],
-    references: [],
+    certs: [
+      { id: "c1", name: "PMP", issuer: "PMI", date: "2019-05" },
+      { id: "c2", name: tr ? "Scrum Master Sertifikası" : "Certified Scrum Master", issuer: "Scrum Alliance", date: "2018-03" },
+    ],
+    projects: [
+      { id: "p1", name: tr ? "Dijital Dönüşüm Programı" : "Digital Transformation Programme", link: "", desc: tr ? "5 departmanı tek bir proje yönetim platformunda birleştirerek raporlama süresini haftalık 2 günden 2 saate indirdi." : "Brought 5 departments onto a single project platform, cutting weekly reporting time from 2 days to 2 hours." },
+    ],
+    references: [
+      { id: "r1", name: tr ? "Ahmet Kaya" : "Daniel Brooks", role: tr ? "Genel Müdür, Anadolu Teknoloji A.Ş." : "Managing Director, Northwind Technologies", contact: tr ? "ahmet.kaya@ornek.com" : "daniel.brooks@example.com" },
+    ],
     interests: tr ? "Fotoğrafçılık, Yürüyüş, Satranç" : "Photography, Hiking, Chess",
     customSections: [],
     settings: { ...DEFAULT_SETTINGS, lang },

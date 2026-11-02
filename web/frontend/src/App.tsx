@@ -890,13 +890,13 @@ function App() {
     () => typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1280,
   );
   const [toolsPanelOpen, setToolsPanelOpen] = useState(false);
-  // Masaüstünde araç çubuğunu gizleyip içeriği genişletme (yalnızca arayüz tercihi; tarayıcıda tutulur).
+  // Masaüstünde araç çubuğunu gizleyip içeriği genişletme (yalnızca arayüz tercihi; sayfa yenilenince korunur, site kapatılıp açılınca varsayılan olarak açık gelir).
   const [toolsCollapsed, setToolsCollapsed] = useState<boolean>(() => {
-    try { return localStorage.getItem("nb_tools_collapsed") === "1"; } catch { return false; }
+    try { return sessionStorage.getItem("nb_tools_collapsed") === "1"; } catch { return false; }
   });
   const changeToolsCollapsed = (v: boolean) => {
     setToolsCollapsed(v);
-    try { localStorage.setItem("nb_tools_collapsed", v ? "1" : "0"); } catch { /* kapalı olabilir */ }
+    try { sessionStorage.setItem("nb_tools_collapsed", v ? "1" : "0"); } catch { /* kapalı olabilir */ }
   };
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px) and (max-width: 1279.98px)");

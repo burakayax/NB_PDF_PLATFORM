@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ClipboardList, HelpCircle, LayoutTemplate, Link2, ListRestart, Download, Eye, FileDown, Loader2, Lock, PencilLine, Palette, ScanSearch, Upload, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
+import { ChevronDown, HelpCircle, LayoutTemplate, ListRestart, Download, Eye, FileDown, Loader2, Lock, PencilLine, Palette, ScanSearch, Upload, Sparkles, Trash2, Wand2, FileUser, FileText, FileType2, ListChecks } from "lucide-react";
 import type { Language } from "../../../i18n/landing";
 import { ToolRating } from "../../common/ToolRating";
 import { hasCvPass, isPaidPlan, useCurrentPlan } from "../../../lib/currentPlan";
@@ -8,8 +8,7 @@ import { CvWizard } from "./CvWizard";
 import { CvLiveScore } from "./CvLiveScore";
 import { CvPopover } from "./CvPopover";
 import { readCvFromPdf } from "./cvEmbed";
-import { CvFormCopy } from "./CvFormCopy";
-import { decodeCvLink, encodeCvLink, hasCvLink } from "./cvShare";
+import { PROFESSIONS, professionSample } from "./cvPhrases";
 import { isSingleColumnLayout } from "./cvAnalysis";
 import { CvDesignPanel } from "./CvDesignPanel";
 import { CvAnalysisPanel } from "./CvAnalysisPanel";
@@ -102,8 +101,6 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
   const helpRef = useRef<HTMLButtonElement>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const savedRef = useRef<string>("");
-  const [copyOpen, setCopyOpen] = useState(false);
-  const [incoming, setIncoming] = useState<CvData | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const [formMode, setFormMode] = useState<"wizard" | "full">(() => (isCvEmpty(data) ? "wizard" : "full"));
   const pickFormMode = (m: "wizard" | "full") => setFormMode(m);
@@ -225,29 +222,18 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
     }
   }
 
-  // Bağlantıyla paylaşılan CV geldiyse (adresin # kısmı) kullanıcıya sor
-  useEffect(() => {
-    if (!signedIn || !hasCvLink(window.location.hash)) return;
-    void decodeCvLink(window.location.hash).then((d) => d && setIncoming(d));
-  }, [signedIn]);
-  const clearHash = () => window.history.replaceState(null, "", window.location.pathname + window.location.search);
 
-  async function shareLink() {
-    setError(null); setDone(null);
-    try {
-      const { url, length } = await encodeCvLink(data, window.location.origin, window.location.pathname);
-      if (length > 7500) { setError(tr ? "CV'niz bağlantıya sığmayacak kadar uzun. Birkaç maddeyi kısaltın ya da PDF olarak paylaşın." : "Your CV is too long to fit in a link. Shorten a few bullets or share the PDF instead."); return; }
-      try { await navigator.clipboard.writeText(url); } catch { window.prompt(tr ? "Bağlantıyı kopyalayın:" : "Copy the link:", url); }
-      setDone(tr ? "Bağlantı kopyalandı. Bilgiler adresin içinde taşınır, sunucumuza gitmez; bağlantıyı alan kişi CV'nin kendi kopyasını açar. Fotoğraf bağlantıya eklenmez." : "Link copied. Your details travel inside the address and never reach our server; whoever opens it gets their own copy of the CV. The photo isn't included.");
-    } catch {
-      setError(tr ? "Bağlantı oluşturulamadı." : "Couldn't create the link.");
-    }
-  }
 
   const emptyCv = isCvEmpty(data);
-  const fillSample = () => setData({ ...sampleCv(data.settings.lang), photo: data.photo, showPhoto: data.showPhoto, settings: data.settings });
+  const [sampleProf, setSampleProf] = useState("");
+  const fillSample = () => {
+    if (!emptyCv && !window.confirm(tr ? "Girdiğiniz bilgilerin yerine örnek içerik gelecek. Devam edilsin mi?" : "Sample content will replace what you entered. Continue?")) return;
+    const lang = data.settings.lang;
+    const base = sampleProf ? professionSample(sampleProf, lang) : sampleCv(lang);
+    setData({ ...base, photo: data.photo, showPhoto: data.showPhoto, settings: data.settings });
+  };
   const clearAll = () => {
-    if (isCvEmpty(data) || window.confirm(tr ? "Girdiğiniz tüm bilgiler silinsin mi?" : "Delete everything you entered?")) setData(normalizeCv({ ...EMPTY_CV, settings: data.settings }));
+    if (isCvEmpty(data) || window.confirm(tr ? "Girdiğiniz tüm veriler silinecek. Bu işlem geri alınamaz. Emin misiniz?" : "Everything you entered will be deleted. This cannot be undone. Are you sure?")) setData(normalizeCv({ ...EMPTY_CV, settings: data.settings }));
   };
 
   // ── Hiçbir şey saklanmaz: içeriği değiştirmeden önce (doluysa) onay al ──
@@ -377,14 +363,6 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
         </div>
       ) : (
         <>
-          {incoming ? (
-            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-sky-400/30 bg-gradient-to-r from-sky-500/[0.12] to-indigo-500/[0.06] p-4">
-              <Link2 className="h-5 w-5 shrink-0 text-sky-300" />
-              <p className="min-w-0 flex-1 text-[13px] text-sky-50"><b>{incoming.name || (tr ? "Paylaşılan bir CV" : "A shared CV")}</b> {tr ? "bağlantıyla paylaşıldı. Açılsın mı?" : "was shared by link. Open it?"}</p>
-              <button type="button" onClick={() => { if (adopt(incoming)) { setIncoming(null); clearHash(); } }} className="rounded-xl bg-sky-500 px-4 py-2 text-[13px] font-bold text-white hover:bg-sky-400">{tr ? "CV'yi aç" : "Open CV"}</button>
-              <button type="button" onClick={() => { setIncoming(null); clearHash(); }} className="rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Vazgeç" : "Dismiss"}</button>
-            </div>
-          ) : null}
           {/* Mobil sekmeler */}
           <div className="mb-3 flex gap-2 lg:hidden" role="tablist">
             {([["edit", tr ? "Bilgilerim" : "My details", PencilLine], ["preview", tr ? "Önizleme" : "Preview", Eye]] as const).map(([k, label, Ico]) => (
@@ -450,30 +428,37 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
             <div className={`${tab === "edit" ? "block" : "hidden"} min-w-0 space-y-4 lg:block`}>
               {/* İndirme: tek büyük düğme; diğer seçenekler açılır */}
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40">
-                  {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}
+                <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("export")} className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40">
+                  <span className="inline-flex w-[15rem] items-center gap-3">{busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "CV'yi PDF olarak indir" : "Download CV as PDF"}</span>
                 </button>
+                <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="mt-2 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40"><span className="inline-flex w-[15rem] items-center gap-3"><FileText className="h-4 w-4" />{tr ? "CV'yi Word olarak kaydet" : "Save CV as Word"}</span></button>
+                <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="mt-2 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-left text-[15px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(59,130,246,0.7)] hover:brightness-110 disabled:opacity-40"><span className="inline-flex w-[15rem] items-center gap-3"><FileType2 className="h-4 w-4" />{tr ? "CV'yi TXT olarak kaydet" : "Save CV as TXT"}</span></button>
+                <p className="mt-2 text-center text-[12px] leading-snug text-slate-400">{tr ? "Word ve TXT, başvuru sistemlerinin en güvenli okuduğu sade biçimdir (tek sütun, süssüz). Görsel tasarım için PDF'i kullanın." : "Word and TXT are the plain format hiring systems read most reliably (single column, no decoration). Use the PDF for the visual design."}</p>
                 <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} className="mt-2 flex w-full items-center justify-center gap-1.5 text-[12.5px] font-semibold text-slate-300 hover:text-white">
-                  {tr ? "Diğer seçenekler (Word, paylaş, aktar, forma kopyala…)" : "More options (Word, share, import, copy to form…)"}<ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />
+                  {tr ? "Diğer seçenekler (boş şablon)" : "More options (blank template)"}<ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />
                 </button>
                 {moreOpen ? (
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("docx")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileText className="h-4 w-4" />{tr ? "Word (.docx)" : "Word (.docx)"}</button>
-                    <button type="button" disabled={locked || !!busy} onClick={() => void makeOther("txt")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><FileType2 className="h-4 w-4" />{tr ? "Düz metin (.txt)" : "Plain text (.txt)"}</button>
-                    <button type="button" disabled={locked} onClick={() => setCopyOpen(true)} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><ClipboardList className="h-4 w-4" />{tr ? "Başvuru formuna kopyala" : "Copy to application form"}</button>
-                    <button type="button" disabled={locked} onClick={() => void shareLink()} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Link2 className="h-4 w-4" />{tr ? "Bağlantıyla paylaş" : "Share by link"}</button>
+                  <div className="mt-2 grid gap-2">
                     <button type="button" disabled={locked || !!busy} onClick={() => void makePdf("blank")} className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40">
                       {busy === "blank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}{tr ? "Boş şablon (PDF)" : "Blank template (PDF)"}
                     </button>
-                    <div className="flex gap-2">
-                      <button type="button" disabled={locked} onClick={fillSample} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.05] px-2 py-2.5 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40"><Wand2 className="h-3.5 w-3.5" />{tr ? "Örnekle doldur" : "Fill sample"}</button>
-                      <button type="button" disabled={locked || emptyCv} onClick={clearAll} aria-label={tr ? "Tümünü temizle" : "Clear all"} className="rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2.5 text-red-300 hover:bg-red-500/10 disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
-                    </div>
                   </div>
                 ) : null}
                 {emptyCv && !locked ? <p className="mt-2 text-[12px] text-amber-300/90">{tr ? "CV'niz henüz boş. Aşağıdaki alanları doldurun; solda canlı olarak oluşur." : "Your CV is still empty. Fill in the fields below; it builds live on the left."}</p> : null}
                 {error ? <p className="mt-2 rounded-lg border border-red-500/25 bg-red-500/[0.07] px-3 py-2 text-[12.5px] text-red-300">{error}</p> : null}
                 {done ? <p className="mt-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.07] px-3 py-2 text-[12.5px] text-emerald-200">{done}</p> : null}
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <p className="flex items-center gap-1.5 text-[13px] font-bold text-white"><Wand2 className="h-4 w-4 text-amber-300" />{tr ? "Örnekle doldur" : "Fill with a sample"}</p>
+                <p className="mt-0.5 text-[12px] text-slate-400">{tr ? "Bir meslek seçin; CV'niz o mesleğe uygun örnek bilgilerle dolsun. Sonra üzerine kendi bilgilerinizi yazarsınız." : "Pick a profession and your CV fills with matching sample details. Then overwrite them with your own."}</p>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <select value={sampleProf} onChange={(e) => setSampleProf(e.target.value)} disabled={locked} aria-label={tr ? "Meslek seçin" : "Choose a profession"} className="min-w-0 flex-1 rounded-xl border border-white/15 bg-slate-900 px-3 py-2.5 text-[13px] text-white outline-none focus:border-sky-400 disabled:opacity-40">
+                    <option value="">{tr ? "Genel örnek (Proje Yöneticisi)" : "General sample (Project Manager)"}</option>
+                    {PROFESSIONS.map((pr) => <option key={pr.id} value={pr.id}>{pr.label[data.settings.lang]}</option>)}
+                  </select>
+                  <button type="button" disabled={locked} onClick={fillSample} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-300/40 bg-amber-400/15 px-4 py-2.5 text-[13px] font-bold text-amber-100 hover:bg-amber-400/25 disabled:opacity-40"><Wand2 className="h-4 w-4" />{tr ? "Örnekle doldur" : "Fill sample"}</button>
+                </div>
               </div>
 
               <CvLiveScore data={shownData} tr={tr} onDetails={() => setRightTab("analysis")} />
@@ -505,13 +490,16 @@ function CvMakerInner({ language, accessToken, onLogin, onRegister, onUpgrade, i
                 {rightTab === "ai" ? <CvAiPanel data={data} templateId={templateId} onChange={setData} onNewCv={(d) => { adopt(d); }} tr={tr} language={language} accessToken={accessToken} onLogin={onLogin} onUpgrade={onUpgrade} comingSoon={aiComingSoon} isAdmin={isAdmin} ad={ad} setAd={setAd} disabled={locked} /> : null}
               </div>
 
+              <div className="flex justify-end">
+                <button type="button" disabled={locked || emptyCv} onClick={clearAll} className="inline-flex items-center gap-1.5 rounded-xl border border-red-400/30 px-3.5 py-2 text-[12.5px] font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-40"><Trash2 className="h-3.5 w-3.5" />{tr ? "Tüm verileri temizle" : "Clear all data"}</button>
+              </div>
+
               {done ? <ToolRating toolSlug="cv-olustur" language={language} /> : null}
               <p className="flex items-start gap-2 text-[12px] leading-relaxed text-slate-500"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "İpucu: Başvuru sistemleri (ATS) düz metni sever. Bu araçla ürettiğiniz PDF'te yazılar seçilebilir metin olarak gömülüdür; “Analiz” sekmesindeki ATS röntgeniyle makinenin gördüğünü kendiniz kontrol edebilirsiniz." : "Tip: hiring systems (ATS) love plain text. In the PDF made here all text is selectable; use the ATS X-ray under “Analysis” to check what a machine sees."}</p>
             </div>
           </div>
         </>
       )}
-      {copyOpen ? <CvFormCopy data={data} tr={tr} onClose={() => setCopyOpen(false)} /> : null}
       {previewOpen ? <CvPreviewModal model={exportModel} tpl={tpl} size={shownData.settings.size} accent={locked ? null : shownData.settings.accent} style={styleOpts} tr={tr} locked={locked} empty={emptyCv} busy={busy === "pdf"} onDownload={() => void makePdf("export")} onClose={() => setPreviewOpen(false)} /> : null}
       {passOpen ? <CvPassModal language={language} accessToken={accessToken} onClose={() => setPassOpen(false)} onUpgrade={onUpgrade} /> : null}
     </div>
