@@ -9,8 +9,7 @@
  */
 
 import { logger } from "../../../lib/file-log.js";
-import { socialUtm, withUtm } from "../../../lib/utm.js";
-import { toolIdFromGuid } from "./reel-cover.js";
+import { linkKindOf, socialLink } from "../social-link.js";
 import { requestJson } from "./common.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
@@ -19,7 +18,7 @@ const SITE = "https://pdfplatform.app";
 /** Yorum metni: gönderinin kendi sayfasına (yoksa ana siteye) kampanya etiketli bağlantı. */
 export function firstCommentText(link: string, guid: string): string {
   const target = /^https?:\/\//.test(link) ? link : SITE;
-  const url = withUtm(target, socialUtm("FACEBOOK", toolIdFromGuid(guid) ? "arac-videosu" : "blog"));
+  const url = socialLink("FACEBOOK", target, linkKindOf(guid));
   return `Adım adım anlatımı burada bulabilirsin 👉 ${url}`;
 }
 

@@ -121,7 +121,40 @@ export type SocialAutomationConfig = {
    * hesaplanır). Kum havuzu kutusu değişirse eski anahtar yeni ortamda geçmez: panel "yeniden bağlan" der.
    */
   pinterestToken: PinterestTokenInfo | null;
+  /** İçerik türüne göre pano: cv / pdf / sozlesme → pano kimliği. Boşsa seçili tek pano kullanılır. */
+  pinterestBoards: Partial<Record<PinBoardTopic, string>>;
+  /** Araç/yazı başına Pinterest anahtar kelimeleri (anahtar: araç kimliği ya da yazı guid'i). */
+  pinterestKeywords: Record<string, PinKeywords>;
 };
+
+export type PinBoardTopic = "cv" | "pdf" | "sozlesme";
+export const PIN_BOARD_TOPICS: PinBoardTopic[] = ["cv", "pdf", "sozlesme"];
+export type PinKeywords = { main: string; extra: string[] };
+
+function parsePinBoards(raw: unknown): Partial<Record<PinBoardTopic, string>> {
+  const out: Partial<Record<PinBoardTopic, string>> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const topic of PIN_BOARD_TOPICS) {
+    const v = (raw as Record<string, unknown>)[topic];
+    if (typeof v === "string" && v.trim() && v.length <= 64) out[topic] = v.trim();
+  }
+  return out;
+}
+
+function parsePinKeywords(raw: unknown): Record<string, PinKeywords> {
+  const out: Record<string, PinKeywords> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>).slice(0, 500)) {
+    if (!value || typeof value !== "object") continue;
+    const v = value as Record<string, unknown>;
+    const main = typeof v.main === "string" ? v.main.trim().slice(0, 80) : "";
+    const extra = Array.isArray(v.extra)
+      ? v.extra.filter((x): x is string => typeof x === "string").map((x) => x.trim().slice(0, 80)).filter(Boolean).slice(0, 4)
+      : [];
+    if (main) out[key.slice(0, 200)] = { main, extra };
+  }
+  return out;
+}
 
 export type PinterestTokenInfo = {
   env: "sandbox" | "production";
@@ -155,6 +188,8 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   tiktokBrandOrganic: true,
   pinterestSandbox: true,
   pinterestToken: null,
+  pinterestBoards: {},
+  pinterestKeywords: {},
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -185,6 +220,8 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     // Trial'da kum havuzu şart: yalnızca açıkça `false` ise gerçek ortam.
     pinterestSandbox: raw.pinterestSandbox !== false,
     pinterestToken: parsePinterestToken(raw.pinterestToken),
+    pinterestBoards: parsePinBoards(raw.pinterestBoards),
+    pinterestKeywords: parsePinKeywords(raw.pinterestKeywords),
   };
 }
 

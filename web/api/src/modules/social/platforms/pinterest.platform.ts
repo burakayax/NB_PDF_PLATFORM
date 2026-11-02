@@ -2,7 +2,7 @@
  * Pinterest bağdaştırıcısı (Pinterest API v5).
  *
  * İKİ İŞ: (1) BAĞLANTI — izin ekranı adresi, kod→anahtar değişimi, anahtar yenileme, pano listesi;
- * (2) YAYIN — görselli pin oluşturma.
+ * (2) YAYIN — görselli ve video pin oluşturma.
  *
  * Pin'de metin üç ayrı alana bölünür: başlık, açıklama ve TIKLANABİLİR bağlantı.
  * Bu yüzden gönderi metnine adres yazılmaz (bkz. PLATFORM_SPECS.linkStyle).
@@ -18,10 +18,20 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { env } from "../../../config/env.js";
 import { logger } from "../../../lib/file-log.js";
-import { socialUtm, withUtm } from "../../../lib/utm.js";
-import { PlatformError, coverAltText, requestJson, requireSecret } from "./common.js";
+import { PlatformError, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
-import { toolIdFromGuid } from "./reel-cover.js";
+import { availableReelCover } from "./reel-cover.js";
+import { isReelUrl } from "../reels.service.js";
+import { linkKindOf, socialLink } from "../social-link.js";
+import { resolvePinKeywords } from "../pinterest-keywords.js";
+import {
+  PIN_LIMITS,
+  boardTopicOf,
+  buildPinAltText,
+  buildPinDescription,
+  buildPinTitle,
+  pickBoardId,
+} from "../pinterest-content.js";
 
 const AUTHORIZE_URL = "https://www.pinterest.com/oauth/";
 const API_PRODUCTION = "https://api.pinterest.com/v5";
@@ -357,44 +367,145 @@ export type PinterestPinInput = {
 
 export type PinterestPinOutcome = { id: string | null; url: string | null; sandbox: boolean };
 
+/** Alan sınırları Pinterest'in resmî tanımından (bkz. pinterest-content.ts). */
+function pinBase(input: { boardId: string; title: string; description: string; link: string; altText?: string }) {
+  return {
+    board_id: input.boardId,
+    title: input.title.slice(0, PIN_LIMITS.title),
+    description: input.description.slice(0, PIN_LIMITS.description),
+    link: input.link.slice(0, PIN_LIMITS.link),
+    ...(input.altText ? { alt_text: input.altText.slice(0, PIN_LIMITS.altText) } : {}),
+  };
+}
+
+async function pinOutcome(json: Record<string, unknown>): Promise<PinterestPinOutcome> {
+  const id = typeof json.id === "string" ? json.id : null;
+  const sandbox = (await apiBase()) === API_SANDBOX;
+  return { id, url: id ? `https://www.pinterest.com/pin/${id}/` : null, sandbox };
+}
+
 /** Görselli pin oluşturur. */
 export async function createPinterestPin(secrets: Record<string, string>, input: PinterestPinInput): Promise<PinterestPinOutcome> {
   const json = await pinterestCall(secrets, "/pins", {
     method: "POST",
+    body: { ...pinBase(input), media_source: { source_type: "image_url", url: input.imageUrl } },
+  });
+  return pinOutcome(json);
+}
+
+// ───────────────────────── video pin ─────────────────────────
+
+const MEDIA_POLL_MS = 4_000;
+const MEDIA_WAIT_MS = 5 * 60_000;
+const MEDIA_UPLOAD_TIMEOUT_MS = 3 * 60_000;
+/** Bellek için makul tavan (araç videoları bundan çok küçük). */
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+
+export type PinterestVideoPinInput = Omit<PinterestPinInput, "imageUrl"> & {
+  videoUrl: string;
+  /** Kapak görseli adresi. Yoksa videonun 1. saniyesindeki kare kullanılır (kapaksız istek Pinterest'te yanıltıcı 401 verir). */
+  coverImageUrl?: string | null;
+};
+
+/** Adım 1: medya kaydı. Adım 2: dosya yükleme (Pinterest'in S3 adresine; Bearer anahtarı GÖNDERİLMEZ). */
+async function uploadPinterestVideo(secrets: Record<string, string>, video: Buffer): Promise<string> {
+  const reg = await pinterestCall(secrets, "/media", { method: "POST", body: { media_type: "video" } });
+  const mediaId = typeof reg.media_id === "string" ? reg.media_id : null;
+  const uploadUrl = typeof reg.upload_url === "string" ? reg.upload_url : null;
+  const params = reg.upload_parameters;
+  if (!mediaId || !uploadUrl || !params || typeof params !== "object") throw new Error("Pinterest video yükleme adresi vermedi");
+
+  const form = new FormData();
+  // Pinterest'in verdiği parametreler AYNEN ve DOSYADAN ÖNCE eklenir (S3 sırayı şart koşar).
+  for (const [key, value] of Object.entries(params as Record<string, unknown>)) form.append(key, String(value));
+  form.append("file", new Blob([new Uint8Array(video)], { type: "video/mp4" }), "video.mp4");
+
+  const res = await fetch(uploadUrl, { method: "POST", body: form, signal: AbortSignal.timeout(MEDIA_UPLOAD_TIMEOUT_MS) });
+  // Başarılı yükleme 204 döner.
+  if (res.status !== 204 && !res.ok) throw new PlatformError("Pinterest video yükleme", res.status, await res.text());
+  return mediaId;
+}
+
+/** Adım 3: işlenmesini bekler (registered/processing → succeeded). */
+async function waitForPinterestMedia(
+  secrets: Record<string, string>,
+  mediaId: string,
+  sleep: (ms: number) => Promise<void>,
+): Promise<void> {
+  const deadline = Date.now() + MEDIA_WAIT_MS;
+  for (;;) {
+    const info = await pinterestCall(secrets, `/media/${encodeURIComponent(mediaId)}`, { method: "GET" });
+    const status = typeof info.status === "string" ? info.status : "";
+    if (status === "succeeded") return;
+    if (status === "failed") throw new Error("Pinterest videoyu işleyemedi (durum: failed). Video biçimini kontrol edin.");
+    if (Date.now() > deadline) throw new Error("Pinterest videoyu zamanında işlemedi; birkaç dakika sonra yeniden deneyin.");
+    await sleep(MEDIA_POLL_MS);
+  }
+}
+
+/** Dört adımlı video pin: kayıt → yükleme → bekleme → pin. */
+export async function createPinterestVideoPin(
+  secrets: Record<string, string>,
+  input: PinterestVideoPinInput,
+  sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+): Promise<PinterestPinOutcome> {
+  const res = await fetch(input.videoUrl, { signal: AbortSignal.timeout(MEDIA_UPLOAD_TIMEOUT_MS) });
+  if (!res.ok) throw new Error(`Video indirilemedi (${res.status}): ${input.videoUrl}`);
+  const video = Buffer.from(await res.arrayBuffer());
+  if (video.byteLength > MAX_VIDEO_BYTES) throw new Error("Video çok büyük; Pinterest'e gönderilmedi");
+
+  const mediaId = await uploadPinterestVideo(secrets, video);
+  await waitForPinterestMedia(secrets, mediaId, sleep);
+
+  const json = await pinterestCall(secrets, "/pins", {
+    method: "POST",
     body: {
-      board_id: input.boardId,
-      title: input.title.slice(0, 100),
-      description: input.description.slice(0, 500),
-      link: input.link,
-      ...(input.altText ? { alt_text: input.altText.slice(0, 500) } : {}),
-      media_source: { source_type: "image_url", url: input.imageUrl },
+      ...pinBase(input),
+      media_source: {
+        source_type: "video_id",
+        media_id: mediaId,
+        // Kapak zorunlu sayılır: yoksa videonun 1. saniyesindeki kare kullanılır.
+        ...(input.coverImageUrl ? { cover_image_url: input.coverImageUrl } : { cover_image_key_frame_time: 1 }),
+      },
     },
   });
-  const id = typeof json.id === "string" ? json.id : null;
-  const sandbox = (await apiBase()) === API_SANDBOX;
-  return { id, url: id ? `https://www.pinterest.com/pin/${id}/` : null, sandbox };
+  return pinOutcome(json);
 }
 
 export const SANDBOX_NOTE =
   "Pin Pinterest kum havuzuna (Trial) gönderildi: yalnızca hesap sahibi görür ve bağlantı normal Pinterest'te açılmayabilir. Standard onayı gelince panelde “Pinterest kum havuzu”nu kapat.";
 
 export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secrets }) => {
-  const boardId = requireSecret(secrets, "boardId", "Pinterest Pano (panelden seçilir)");
   if (!imageUrl) throw new Error("Pinterest görselsiz pin kabul etmiyor");
+  // Döngüsel içe aktarmayı önlemek için geç yüklenir.
+  const { readSocialConfig } = await import("../social.service.js");
+  const config = await readSocialConfig();
 
-  const pin = await createPinterestPin(secrets, {
+  // Konuya ayrılmış pano (CV / PDF / Sözleşme) varsa o, yoksa seçili tek pano.
+  const boardId = pickBoardId(boardTopicOf(item), config.pinterestBoards, secrets.boardId);
+  if (!boardId) throw new Error("Pinterest Pano seçilmemiş (panelden seçilir)");
+
+  const lang = item.lang === "en" ? "en" : "tr";
+  const keywords = await resolvePinKeywords(item, config.pinterestKeywords);
+  const content = {
     boardId,
-    title: item.title,
-    description: body,
-    link: withUtm(item.link, socialUtm("PINTEREST", toolIdFromGuid(item.guid) ? "arac-videosu" : "blog")),
-    imageUrl,
-    altText: coverAltText(item, 500),
-  });
-  return {
-    externalId: pin.id,
-    externalUrl: pin.url,
-    ...(pin.sandbox ? { warning: SANDBOX_NOTE } : {}),
+    title: buildPinTitle(item.title, keywords, lang),
+    description: buildPinDescription(body, lang),
+    link: socialLink("PINTEREST", item.link, linkKindOf(item.guid)),
+    altText: buildPinAltText(item.title, keywords, lang),
   };
+
+  let warning: string | undefined;
+  let pin: PinterestPinOutcome;
+  if (isReelUrl(imageUrl)) {
+    const cover = await availableReelCover(item.guid);
+    if (!cover) warning = "Kapak görseli bulunamadı; videonun 1. saniyesindeki kare kapak yapıldı.";
+    pin = await createPinterestVideoPin(secrets, { ...content, videoUrl: imageUrl, coverImageUrl: cover });
+  } else {
+    pin = await createPinterestPin(secrets, { ...content, imageUrl });
+  }
+  const notes = [warning, pin.sandbox ? SANDBOX_NOTE : undefined].filter(Boolean).join(" ");
+  return { externalId: pin.id, externalUrl: pin.url, ...(notes ? { warning: notes } : {}) };
 };
 
 /** Pinterest bağlantısının geçerli olduğunu ve hangi hesaba ait olduğunu söyler. */

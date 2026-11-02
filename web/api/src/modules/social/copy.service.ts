@@ -23,8 +23,7 @@ import { ALL_PLATFORMS, PLATFORM_SPECS } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 import type { KeywordSet } from "./keywords.service.js";
 import type { SocialPlatform } from "@prisma/client";
-import { socialUtm, withUtm } from "../../lib/utm.js";
-import { toolIdFromGuid } from "./platforms/reel-cover.js";
+import { linkKindOf, socialLink } from "./social-link.js";
 import { instagramHashtags } from "./instagram-tags.js";
 import type { FacebookKind } from "./facebook-kind.js";
 
@@ -501,10 +500,7 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
       lang,
       title: isPrimary ? item.title : (item.alt?.title ?? item.title),
       summary: isPrimary ? item.summary : (item.alt?.summary ?? item.summary),
-      link: withUtm(
-        isPrimary ? item.link : (item.alt?.link ?? item.link),
-        socialUtm(platform, toolIdFromGuid(item.guid) ? "arac-videosu" : "blog"),
-      ),
+      link: socialLink(platform, isPrimary ? item.link : (item.alt?.link ?? item.link), linkKindOf(item.guid)),
       terms: lang === "tr" ? keywords.tr : keywords.en,
       tags: lang === "tr" ? keywords.tagsTr : keywords.tagsEn,
     };

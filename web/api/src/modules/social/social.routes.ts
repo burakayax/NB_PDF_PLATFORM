@@ -35,14 +35,24 @@ import {
   createPinterestBoard,
   createPinterestPin,
   createPinterestState,
+  createPinterestVideoPin,
   fetchPinterestUsername,
   listPinterestBoards,
   pinterestRedirectUri,
   pinterestTokenMatches,
 } from "./platforms/pinterest.platform.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
+import { socialLink } from "./social-link.js";
+import { buildPinAltText, buildPinDescription, buildPinTitle, pickBoardId } from "./pinterest-content.js";
+import { pinKeywordKey, resolvePinKeywords, suggestPinKeywords } from "./pinterest-keywords.js";
+import { availableReelCover } from "./platforms/reel-cover.js";
+import { isReelUrl } from "./reels.service.js";
+import { TOOL_REEL_CATALOG } from "./tool-reel-catalog.js";
+import { toolReelGuid } from "./tool-reels.service.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
+  PIN_BOARD_TOPICS,
+  type PinBoardTopic,
   deletePost,
   unsharePost,
   disconnectAccount,
@@ -337,11 +347,119 @@ socialRouter.post(
   }),
 );
 
+/** Konuya göre pano eşlemesi (CV / PDF / Sözleşme) ve panolar. */
+socialRouter.get(
+  "/pinterest/board-map",
+  asyncHandler(async (_request, response) => {
+    const config = await readSocialConfig();
+    response.json({ boards: config.pinterestBoards });
+  }),
+);
+
+socialRouter.put(
+  "/pinterest/board-map",
+  asyncHandler(async (request, response) => {
+    const body = z
+      .object({ cv: z.string().max(64).optional(), pdf: z.string().max(64).optional(), sozlesme: z.string().max(64).optional() })
+      .parse(request.body);
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
+    const known = await listPinterestBoards(secrets).catch((err) => {
+      throw new HttpError(502, err instanceof Error ? err.message : "Panolar okunamadı");
+    });
+    const boards: Partial<Record<PinBoardTopic, string>> = {};
+    for (const topic of PIN_BOARD_TOPICS) {
+      const id = body[topic]?.trim();
+      if (!id) continue; // boş = bu konu için ayrı pano yok (seçili tek pano kullanılır)
+      if (!known.some((b) => b.id === id)) throw new HttpError(400, "Seçilen pano hesabında bulunamadı.");
+      boards[topic] = id;
+    }
+    await writeSocialConfig({ pinterestBoards: boards });
+    await logAdminAudit(actorOf(request), "social.pinterest.board-map", "PINTEREST", "Pinterest pano eşlemesi güncellendi");
+    response.json({ boards });
+  }),
+);
+
+/** Araç başına Pinterest anahtar kelimeleri: kayıtlı olan + otomatik öneri. */
+socialRouter.get(
+  "/pinterest/keywords",
+  asyncHandler(async (_request, response) => {
+    const config = await readSocialConfig();
+    const tools = await Promise.all(
+      TOOL_REEL_CATALOG.map(async (entry) => {
+        const guid = toolReelGuid(entry.id);
+        return {
+          id: entry.id,
+          title: entry.tr.title,
+          saved: config.pinterestKeywords[pinKeywordKey(guid)] ?? null,
+          suggested: await suggestPinKeywords({ guid, lang: "tr" }),
+        };
+      }),
+    );
+    response.json({ tools });
+  }),
+);
+
+/**
+ * Pin önizlemesi: bir aracın başlık / açıklama / alt metin / bağlantısını OTOMATİK yayıncının kullandığı
+ * kurallarla (ana kelime başta, çağrı, en çok 3 etiket, Pinterest UTM'i) üretir.
+ */
+socialRouter.get(
+  "/pinterest/preview/:toolId",
+  asyncHandler(async (request, response) => {
+    const toolId = z.string().trim().min(1).max(80).parse(request.params.toolId);
+    const entry = TOOL_REEL_CATALOG.find((e) => e.id === toolId);
+    if (!entry) throw new HttpError(404, "Araç bulunamadı.");
+    const config = await readSocialConfig();
+    const guid = toolReelGuid(toolId);
+    const keywords = await resolvePinKeywords({ guid, lang: "tr" }, config.pinterestKeywords);
+    response.json({
+      title: buildPinTitle(entry.tr.title, keywords),
+      description: buildPinDescription(entry.tr.summary),
+      altText: buildPinAltText(entry.tr.title, keywords),
+      link: socialLink("PINTEREST", entry.tr.link, "arac"),
+      topic: "pdf",
+    });
+  }),
+);
+
+const pinKeywordsSchema = z.object({
+  /** Araç kimliği ya da yazı guid'i. */
+  key: z.string().trim().min(1).max(200),
+  /** Boş ana kelime = kaydı sil (otomatik öneriye dön). */
+  main: z.string().trim().max(80),
+  extra: z.array(z.string().trim().max(80)).max(4).default([]),
+});
+
+socialRouter.put(
+  "/pinterest/keywords",
+  asyncHandler(async (request, response) => {
+    const body = pinKeywordsSchema.parse(request.body);
+    const config = await readSocialConfig();
+    const next = { ...config.pinterestKeywords };
+    if (!body.main) delete next[body.key];
+    else next[body.key] = { main: body.main, extra: body.extra.filter(Boolean) };
+    await writeSocialConfig({ pinterestKeywords: next });
+    await logAdminAudit(actorOf(request), "social.pinterest.keywords", "PINTEREST", "Pinterest anahtar kelimeleri güncellendi");
+    response.json({ ok: true });
+  }),
+);
+
 const pinterestPinSchema = z.object({
-  imageUrl: z.string().url().max(500),
+  /** Görsel pin için görsel; video pinde kapak görseli sunucuda bulunur. */
+  imageUrl: z.string().url().max(500).optional(),
+  /** Video pin: yalnız kendi sunucumuzdaki araç videosu (.mp4). */
+  videoUrl: z.string().url().max(500).optional(),
+  /** Video pinin kapağı için araç kimliği. */
+  toolId: z.string().trim().max(80).optional(),
   title: z.string().trim().min(1).max(100),
-  description: z.string().trim().min(1).max(500),
-  link: z.string().url().max(500),
+  description: z.string().trim().min(1).max(800),
+  link: z.string().url().max(2048),
+  altText: z.string().trim().max(500).optional(),
+  /** Bağlantının kampanya adı için: araç sayfası mı, blog yazısı mı. */
+  kind: z.enum(["blog", "arac"]).default("arac"),
+  /** Pano konusu (cv / pdf / sozlesme); verilirse o konuya ayrılmış pano kullanılır. */
+  topic: z.enum(["cv", "pdf", "sozlesme"]).optional(),
 });
 
 /** Aynı pinin kısa sürede iki kez gönderilmesini önler (çift tıklama / yeniden deneme). */
@@ -353,19 +471,42 @@ socialRouter.post(
   "/pinterest/pin",
   asyncHandler(async (request, response) => {
     const body = pinterestPinSchema.parse(request.body);
+    if (!body.imageUrl && !body.videoUrl) throw new HttpError(400, "Pin için görsel ya da video gerekli.");
+    if (body.videoUrl) {
+      // SSRF koruması: sunucu bu adresi indirir; yalnız kendi API'mizin araç videosu kabul edilir.
+      const ours = new URL(env.APP_BASE_URL).origin;
+      if (!isReelUrl(body.videoUrl) || new URL(body.videoUrl).origin !== ours) {
+        throw new HttpError(400, "Video adresi bu sitenin araç videosu olmalı.");
+      }
+    }
     const secrets = await readAccountSecrets("PINTEREST");
     if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
-    const boardId = secrets.boardId?.trim();
+    const config = await readSocialConfig();
+    const boardId = body.topic ? pickBoardId(body.topic, config.pinterestBoards, secrets.boardId) : secrets.boardId?.trim();
     if (!boardId) throw new HttpError(400, "Önce bir pano seçin.");
 
     const now = Date.now();
     for (const [k, t] of recentPins) if (now - t > PIN_DEDUPE_MS) recentPins.delete(k);
-    const key = JSON.stringify([boardId, body.imageUrl, body.title, body.description, body.link]);
+    const key = JSON.stringify([boardId, body.videoUrl ?? body.imageUrl, body.title, body.description, body.link]);
     if (recentPins.has(key)) throw new HttpError(409, "Bu pin az önce zaten gönderildi; aynı pin iki kez gönderilmez.");
     recentPins.set(key, now);
 
     try {
-      const pin = await createPinterestPin(secrets, { boardId, ...body });
+      // Bağlantıya her zaman Pinterest'in UTM etiketi eklenir (başka ağın etiketi varsa düzeltilir).
+      const common = {
+        boardId,
+        title: body.title,
+        description: body.description,
+        link: socialLink("PINTEREST", body.link, body.kind),
+        ...(body.altText ? { altText: body.altText } : {}),
+      };
+      const pin = body.videoUrl
+        ? await createPinterestVideoPin(secrets, {
+            ...common,
+            videoUrl: body.videoUrl,
+            coverImageUrl: body.toolId ? await availableReelCover(toolReelGuid(body.toolId)) : null,
+          })
+        : await createPinterestPin(secrets, { ...common, imageUrl: body.imageUrl as string });
       await logAdminAudit(actorOf(request), "social.pinterest.pin", "PINTEREST", `Pinterest'e elle pin gönderildi${pin.sandbox ? " (kum havuzu)" : ""}`);
       response.json({ ...pin, warning: pin.sandbox ? SANDBOX_NOTE : null });
     } catch (err) {
