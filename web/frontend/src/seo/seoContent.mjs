@@ -653,7 +653,7 @@ export const TOOL_SEO = {
   "image-to-pdf": {
     tr: T(
       "JPG'den PDF'e Dönüştürme — görselleri ekle",
-      "JPG, PNG ve WebP görsellerini tek bir PDF dosyasında toplayın. Fotoğraf ve taramaları PDF'e çevirin — online ve ücretsiz.",
+      "JPG, PNG, WebP ve çok sayfalı TIFF görsellerini tek bir PDF dosyasında toplayın. Fotoğraf ve taramaları PDF'e çevirin — online ve ücretsiz.",
       "Görüntüden (JPG/PNG) PDF'e Dönüştürme",
       "Birden fazla JPG, PNG veya WebP görselini tek bir PDF'te birleştirin — üyelik gerekmez. Görselleriniz sunucuya gitmeden tarayıcınızda işlenir (gizli); fotoğraf, tarama ve ekran görüntülerini saniyeler içinde ücretsiz PDF yapın.",
       ["jpg'den pdf'e", "görüntüden pdf'e", "image to pdf", "kayıt olmadan jpg pdf", "fotoğraf pdf yapma"],
@@ -661,7 +661,8 @@ export const TOOL_SEO = {
         { q: "Görselleri üye olmadan tek PDF'te nasıl birleştiririm?", a: "JPG/PNG/WebP dosyalarınızı sürükleyip bırakın, sırayı düzenleyin ve PDF olarak indirin. Görselleriniz cihazınızda işlenir, sunucuya gitmez — üyelik yok, ücretsiz." },
         { q: "PDF'e çevirince görsel kalitesi düşer mi?", a: "Hayır. JPG dosyanız yeniden sıkıştırılmadan, özgün baytlarıyla PDF'in içine yerleştirilir; fotoğrafın kalitesi dönüşümde bozulmaz. Küçültmek isterseniz bunu ayrıca, kendi seçiminizle yapabilirsiniz." },
         { q: "Görsel sırasını değiştirebilir miyim?", a: "Evet. Yüklediğiniz görselleri sürükleyerek istediğiniz sıraya dizebilirsiniz." },
-        { q: "Hangi görsel formatlarını PDF'e çevirebilirim?", a: "JPG, PNG ve WebP desteklenir. Farklı formatları aynı anda yükleyip tek bir PDF'te birleştirebilirsiniz." },
+        { q: "Hangi görsel formatlarını PDF'e çevirebilirim?", a: "JPG, PNG, WebP ve TIFF desteklenir. Farklı formatları aynı anda yükleyip tek bir PDF'te birleştirebilirsiniz." },
+        { q: "Görsel → PDF aracınız çok sayfalı TIFF dosyalarını destekliyor mu?", a: "Evet. Çok sayfalı bir TIFF yüklediğinizde her sayfa PDF'te ayrı bir sayfa olur ve sayfa sırası korunur. TIFF'i diğer görsellerle birlikte yükleyip tek PDF'te birleştirebilirsiniz; dosya cihazınızda işlenir." },
         { q: "Telefonla çektiğim fotoğrafları PDF yapabilir miyim?", a: "Evet. Telefonunuzdaki fotoğrafları yükleyin; cihazınızda tek PDF'e dönüştürülür, sunucuya gitmez." },
         { q: "Görseller sunucuya yüklenir mi?", a: "Hayır. Dönüştürme tamamen tarayıcınızda yapılır; görselleriniz cihazınızdan çıkmaz." },
       ],
@@ -676,7 +677,8 @@ export const TOOL_SEO = {
         { q: "How do I combine images into one PDF?", a: "Upload your JPG/PNG/WebP files, arrange the order, and download a single PDF." },
         { q: "Does image quality drop when converting to PDF?", a: "No. Your JPG is placed into the PDF as-is, without being recompressed, so the photo quality is not degraded by the conversion. If you want a smaller file you can do that separately, by your own choice." },
         { q: "Can I change the image order?", a: "Yes. Drag the uploaded images into any order you like." },
-        { q: "Which image formats can I convert to PDF?", a: "JPG, PNG, and WebP are supported. Upload different formats at once and combine them into a single PDF." },
+        { q: "Which image formats can I convert to PDF?", a: "JPG, PNG, WebP and TIFF are supported. Upload different formats at once and combine them into a single PDF." },
+        { q: "Does your Image to PDF tool support multi-page TIFF files?", a: "Yes. When you upload a multi-page TIFF, each page becomes its own page in the PDF and the page order is kept. You can combine a TIFF with other images in a single PDF; the file is processed on your device." },
         { q: "Can I turn photos from my phone into a PDF?", a: "Yes. Upload photos from your phone and they're combined into one PDF on your device — never sent to a server." },
         { q: "Are my images uploaded to a server?", a: "No. Conversion happens entirely in your browser — your images never leave your device and stay 100% private." },
       ],

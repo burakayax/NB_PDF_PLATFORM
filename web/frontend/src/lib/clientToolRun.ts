@@ -11,6 +11,7 @@
  * hemen ardından, herhangi bir bekleme başlamadan sorulmak zorunda (tarayıcı
  * kuralı), bu yüzden çağıranda kalır.
  */
+import { isTiffFile, tiffToPngPages } from "./tiffPages";
 import type { FeatureKey } from "../api/subscription";
 import type { Language } from "../i18n/landing";
 import {
@@ -86,9 +87,16 @@ export async function runClientPdfTool(
   }
 
   if (toolId === "image-to-pdf") {
-    const images = await Promise.all(
-      files.map(async (f) => ({ bytes: await f.arrayBuffer(), mime: f.type })),
-    );
+    // Çok sayfalı TIFF her sayfası ayrı görsel olarak, dosya sırasıyla açılır.
+    const images: { bytes: ArrayBuffer; mime: string }[] = [];
+    for (const f of files) {
+      const bytes = await f.arrayBuffer();
+      if (isTiffFile(f)) {
+        for (const page of await tiffToPngPages(bytes)) images.push({ bytes: page, mime: "image/png" });
+      } else {
+        images.push({ bytes, mime: f.type });
+      }
+    }
     return {
       blob: pdfBytesToBlob(await imagesToPdf(images)),
       filename: fallbackFilename,

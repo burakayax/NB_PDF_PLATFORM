@@ -1559,23 +1559,25 @@ def images_to_pdf(
                 if page_size == "original":
                     merged.insert_pdf(m)
                     continue
-                kaynak = m[0].rect
-                yatay = kaynak.width > kaynak.height
-                sayfa_w, sayfa_h = (A4_H, A4_W) if yatay else (A4_W, A4_H)
-                sayfa = merged.new_page(width=sayfa_w, height=sayfa_h)
-                olcek = min(
-                    (sayfa_w - 2 * BOSLUK) / kaynak.width,
-                    (sayfa_h - 2 * BOSLUK) / kaynak.height,
-                )
-                w = kaynak.width * olcek
-                h = kaynak.height * olcek
-                hedef = fitz.Rect(
-                    (sayfa_w - w) / 2,
-                    (sayfa_h - h) / 2,
-                    (sayfa_w + w) / 2,
-                    (sayfa_h + h) / 2,
-                )
-                sayfa.show_pdf_page(hedef, m, 0)
+                # Çok sayfalı TIFF: her sayfa ayrı A4 sayfası olur (eskiden yalnız ilk sayfa alınıyordu).
+                for sira in range(m.page_count):
+                    kaynak = m[sira].rect
+                    yatay = kaynak.width > kaynak.height
+                    sayfa_w, sayfa_h = (A4_H, A4_W) if yatay else (A4_W, A4_H)
+                    sayfa = merged.new_page(width=sayfa_w, height=sayfa_h)
+                    olcek = min(
+                        (sayfa_w - 2 * BOSLUK) / kaynak.width,
+                        (sayfa_h - 2 * BOSLUK) / kaynak.height,
+                    )
+                    w = kaynak.width * olcek
+                    h = kaynak.height * olcek
+                    hedef = fitz.Rect(
+                        (sayfa_w - w) / 2,
+                        (sayfa_h - h) / 2,
+                        (sayfa_w + w) / 2,
+                        (sayfa_h + h) / 2,
+                    )
+                    sayfa.show_pdf_page(hedef, m, sira)
             finally:
                 m.close()
         merged.save(output_path, garbage=1, deflate=False)

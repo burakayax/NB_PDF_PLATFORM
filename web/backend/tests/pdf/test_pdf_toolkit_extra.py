@@ -198,3 +198,28 @@ class TestImagesToPdf:
         result = ptx.images_to_pdf([str(img_path)], str(out))
         assert result is True
         assert out.stat().st_size > 0
+
+    @pytest.mark.parametrize("page_size", ["a4", "original"])
+    def test_multipage_tiff_keeps_every_page(self, tmp_dir: Path, page_size: str):
+        """Çok sayfalı TIFF'in TÜM sayfaları PDF'e girmeli (eskiden A4 kipinde yalnız ilki alınıyordu)."""
+        try:
+            from PIL import Image
+        except ImportError:
+            pytest.skip("Pillow gerekli")
+        import fitz
+
+        tif = tmp_dir / "cok_sayfali.tiff"
+        sayfalar = [
+            Image.new("RGB", (300, 200), (220, 40, 40)),
+            Image.new("RGB", (200, 300), (40, 40, 220)),
+            Image.new("L", (250, 250), 128),
+        ]
+        sayfalar[0].save(str(tif), save_all=True, append_images=sayfalar[1:], compression="tiff_lzw")
+
+        out = tmp_dir / "tiff.pdf"
+        assert ptx.images_to_pdf([str(tif)], str(out), page_size=page_size) is True
+        doc = fitz.open(str(out))
+        try:
+            assert doc.page_count == 3
+        finally:
+            doc.close()
