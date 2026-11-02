@@ -30,13 +30,17 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
   const fileSize =
     plan.fileSizeMB == null
       ? tr
-        ? "Sınırsız dosya boyutu"
-        : "Unlimited file size"
+        ? "Çok yüksek dosya boyutu sınırı"
+        : "Very high file size limit"
       : tr
         ? `${plan.fileSizeMB} MB'a kadar dosya`
         : `Files up to ${plan.fileSizeMB} MB`;
   const batch =
-    plan.batchLimit >= 999
+    plan.batchLimit === 0
+      ? tr
+        ? "Tek dosya işleme (toplu işlem Pro'da)"
+        : "Single-file processing (batch is on Pro)"
+      : plan.batchLimit >= 999
       ? tr
         ? "Sınırsız toplu işlem"
         : "Unlimited batch processing"
@@ -81,9 +85,14 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
         },
         {
           label: batch,
-          detail: tr
-            ? "Birden fazla dosyayı tek seferde yükleyip topluca işle."
-            : "Upload and process multiple files in a single run.",
+          detail:
+            plan.batchLimit === 0
+              ? tr
+                ? "Her dosyayı tek tek işlersin. Birden fazla dosyayı tek seferde işlemek Pro ve Business'tadır."
+                : "You process files one at a time. Handling several files in one run is on Pro and Business."
+              : tr
+                ? "Birden fazla dosyayı tek seferde yükleyip topluca işle."
+                : "Upload and process multiple files in a single run.",
         },
       ],
     },
@@ -117,8 +126,14 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
               {
                 label: tr ? "Excel, PowerPoint ve HTML dönüşümleri" : "Excel, PowerPoint and HTML conversions",
                 detail: tr
-                  ? "PDF ↔ Excel, PDF ↔ PowerPoint, HTML → PDF ve gelişmiş PDF araçları (düzleştir, onar, PDF/A, eğriliği düzelt…)."
-                  : "PDF ↔ Excel, PDF ↔ PowerPoint, HTML → PDF and advanced PDF tools (flatten, repair, PDF/A, deskew…).",
+                  ? "PDF → Excel, Excel → PDF, PDF → PowerPoint, PowerPoint → PDF ve HTML → PDF."
+                  : "PDF → Excel, Excel → PDF, PDF → PowerPoint, PowerPoint → PDF and HTML → PDF.",
+              },
+              {
+                label: tr ? "Gelişmiş PDF araçları" : "Advanced PDF tools",
+                detail: tr
+                  ? "PDF Onar, PDF/A'ya dönüştür, PDF Düzleştir, Gri Tonlama, Eğriliği Düzelt, Sayfa Boyutlandır, PDF Çevir (Ayna) ve PDF Dönüşümlü Birleştir."
+                  : "Repair PDF, convert to PDF/A, flatten, grayscale, deskew, resize pages, Flip PDF (mirror) and Alternate & Mix PDF.",
               },
             ]),
         {
@@ -215,22 +230,6 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
     });
   }
 
-  // Pro & Business: analitik
-  if (planId === "PRO" || planId === "BUSINESS") {
-    categories.push({
-      icon: "📈",
-      title: tr ? "Analitik & Raporlama" : "Analytics & Reporting",
-      perks: [
-        {
-          label: tr ? "Kullanım analitiği" : "Usage analytics",
-          detail: tr
-            ? "Hangi araçları ne sıklıkta kullandığını gösteren raporlar."
-            : "Reports showing which tools you use and how often.",
-        },
-      ],
-    });
-  }
-
   // Business: ekip & yönetim
   if (planId === "BUSINESS") {
     categories.push({
@@ -248,18 +247,6 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
           detail: tr
             ? "Organizasyon genelinde kullanım, kullanıcı ve fatura yönetimi tek ekranda."
             : "Org-wide usage, user and billing management in one place.",
-        },
-        {
-          label: tr ? "Özel entegrasyon" : "Custom integration",
-          detail: tr
-            ? "İş akışına özel entegrasyon ve kurumsal onay süreçleri."
-            : "Workflow-specific integrations and enterprise approval flows.",
-        },
-        {
-          label: tr ? "Ticari kullanım hakkı" : "Commercial usage rights",
-          detail: tr
-            ? "Çıktıları ticari işlerinde sınırsızca kullanma hakkı."
-            : "Right to use outputs in your commercial work without limits.",
         },
       ],
     });
@@ -290,11 +277,11 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
               : "Real-human answers to your questions by email."
             : planId === "PRO"
               ? tr
-                ? "E-postaların öncelikli sırada, daha hızlı yanıtlanır."
-                : "Your emails are prioritized for faster replies."
+                ? "Mesajların bize “Öncelikli” etiketiyle ulaşır ve diğerlerinden önce yanıtlanır."
+                : "Your messages reach us tagged “Priority” and are answered before others."
               : tr
-                ? "Talepleriniz en üst öncelikte ele alınır."
-                : "Your requests are handled at the highest priority.",
+                ? "Mesajların bize “Öncelikli” etiketiyle ulaşır ve diğerlerinden önce yanıtlanır."
+                : "Your messages reach us tagged “Priority” and are answered before others.",
       },
     ],
   });

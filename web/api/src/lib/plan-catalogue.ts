@@ -155,8 +155,8 @@ export type PlanLimits = {
  */
 export const PLAN_LIMITS: Record<CataloguePlanId, PlanLimits> = {
   FREE: { dailyOperationLimit: 3, monthlyOperationLimit: 30, fileSizeLimitMB: 80, batchLimit: 0 },
-  STARTER: { dailyOperationLimit: 25, monthlyOperationLimit: 250, fileSizeLimitMB: 100, batchLimit: 2 },
-  PLUS: { dailyOperationLimit: null, monthlyOperationLimit: 600, fileSizeLimitMB: 250, batchLimit: 5 },
+  STARTER: { dailyOperationLimit: 25, monthlyOperationLimit: 250, fileSizeLimitMB: 100, batchLimit: 0 },
+  PLUS: { dailyOperationLimit: null, monthlyOperationLimit: 600, fileSizeLimitMB: 250, batchLimit: 0 },
   PRO: { dailyOperationLimit: null, monthlyOperationLimit: 1000, fileSizeLimitMB: 500, batchLimit: 25 },
   BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: UNLIMITED_MONTHLY_OPS, fileSizeLimitMB: 999999, batchLimit: 999 },
 };
