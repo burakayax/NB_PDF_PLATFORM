@@ -6,6 +6,7 @@ import { ocrPdfToText } from "../../../lib/ocr";
 import { pdfBytesToBlob } from "../../../lib/summaryPdf";
 import { buildCoverLetterPdf } from "./cvPdf";
 import { hasPlaceholders } from "./cvPhrases";
+import { CvAiShowcase } from "./CvAiShowcase";
 import { AiCreditBadge } from "../AiCreditBadge";
 import { TopUpModal } from "../TopUpModal";
 import type { CvData } from "./cvModel";
@@ -263,6 +264,8 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
           {err.gate === "quota" ? <button type="button" onClick={() => setTopUpOpen(true)} className="ml-2 font-bold underline">{tr ? "Kredi al" : "Get credits"}</button> : null}
         </div>
       ) : null}
+
+      {!summaries && !bullets && !tailor && !cover ? <CvAiShowcase tr={tr} /> : null}
 
       <Card open icon={<Wand2 className="h-4 w-4" />} title={tr ? "Profil özeti yaz" : "Write a profile summary"} sub={tr ? "3 farklı öneri; yalnızca verdiğiniz bilgilerden" : "3 options, built only from what you've entered"}>
         <button type="button" className={btn} disabled={!!busy || (!data.title.trim() && !exps.length)} onClick={() => void doSummary()}>{busy === "summary" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{tr ? "Özet öner (1 hak)" : "Suggest summaries (1 credit)"}</button>
