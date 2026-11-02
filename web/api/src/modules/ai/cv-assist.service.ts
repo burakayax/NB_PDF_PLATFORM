@@ -67,10 +67,10 @@ const STOPS = new Set("ve ile için bir bu şu da de ki mi gibi olarak olan daha
 const words = (t: string, lang: Lang): string[] => (t.toLocaleLowerCase(lang).match(/[a-zçğıöşü]{4,}/g) ?? []).filter((w) => !STOPS.has(w));
 
 /** Her CV metninde doğal geçen, "yeni bilgi" sayılmaması gereken sıradan sözcükler. */
-const FILLER = new Set("aşkın yılı yıl yıllık sahip sahibim deneyim deneyimli alanında alanda konusunda yaklaşık çalıştım çalıştı bulundum yürüttüm sağladım güçlü güçlüyüm başarıyla etkin etkili düzenli sürekli doğru hızlı kalıcı ilişki ilişkiler çözüm sunan odaklı temelli yönelik göre kadar ayrıca özellikle önemli tüm birlikte sayesinde dayalı yaklaşım about experience years year strong strongly across within including using focused skilled proven".split(" "));
+const FILLER = new Set("aşarak aşan yana mevcut aşkın yılı yıl yıllık sahip sahibim deneyim deneyimli alanında alanda konusunda yaklaşık çalıştım çalıştı bulundum yürüttüm sağladım güçlü güçlüyüm başarıyla etkin etkili düzenli sürekli doğru hızlı kalıcı ilişki ilişkiler çözüm sunan odaklı temelli yönelik göre kadar ayrıca özellikle önemli tüm birlikte sayesinde dayalı yaklaşım about experience years year strong strongly across within including using focused skilled proven".split(" "));
 
 /** Bu köklerle başlayan sözcükler (her ek biçimiyle) de sıradan sayılır: "çalışıyorum", "kazandım", "araçlarını"… */
-const FILLER_ROOTS = ["yıl", "deneyim", "sahip", "alan", "konu", "süre", "süreç", "araç", "takip", "kazan", "hazırla", "hazırl", "kullan", "çalış", "güçlü", "sağla", "bilgi", "beceri", "experienc", "worked", "working", "skill"];
+const FILLER_ROOTS = ["yıl", "seviye", "deneyim", "sahip", "alan", "konu", "süre", "süreç", "araç", "takip", "kazan", "hazırla", "hazırl", "kullan", "çalış", "güçlü", "sağla", "bilgi", "beceri", "experienc", "worked", "working", "skill"];
 
 /** Ortak ön ek yeterince uzunsa iki sözcük aynı kökten sayılır (Türkçe ekler: yıl/yıllık, deneyim/deneyimim). */
 const sameRoot = (a: string, b: string): boolean => {
