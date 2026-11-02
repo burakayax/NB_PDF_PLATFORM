@@ -17,6 +17,7 @@ import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { savePendingTool } from "../../lib/appNavigation";
+import { localizedPath } from "../../seo/enSlugs.mjs";
 import {
   mergePdfs,
   imagesToPdf,
@@ -422,6 +423,15 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             : `or click to choose · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · up to 80 MB`
         }
       />
+
+      {activeTool === "merge" && !isImages && (
+        <p className="mt-2 text-center text-[12.5px] text-slate-400">
+          {tr ? "İçindekiler sayfası da eklemek ister misiniz? " : "Want a contents page too? "}
+          <a href={localizedPath("/tools/pdf-birlestir-icindekiler", tr ? "tr" : "en")} className="font-semibold text-cyan-300 underline-offset-2 hover:underline">
+            {tr ? "Birleştir + İçindekiler aracını dene →" : "Try Merge + Table of Contents →"}
+          </a>
+        </p>
+      )}
 
       {files.length > 0 && (
         <>

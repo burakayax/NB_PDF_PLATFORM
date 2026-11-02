@@ -1,0 +1,316 @@
+/**
+ * PDF BİRLEŞTİR + TIKLANABİLİR İÇİNDEKİLER — dosyaları sırala, başlıklarını düzenle,
+ * tek PDF'de içindekiler sayfası + yer imleriyle indir.
+ *
+ * Her şey cihazda yapılır (pdf-lib + pdf.js); dosyalar sunucuya gitmez.
+ * Birleştirme zaten en az 2 dosya ister; bu yüzden tek dosyada düğme kapalıdır.
+ */
+import { useRef, useState } from "react";
+import { AlertTriangle, ArrowDown, ArrowUp, FileText, GripVertical, ListTree, Loader2, Trash2 } from "lucide-react";
+import type { Language } from "../../i18n/landing";
+import { ToolResultPanel } from "../common/ToolResultPanel";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { PdfThumbError, renderPdfPage } from "../../lib/pdfThumbs";
+import {
+  TOC_DEFAULT_OUTPUT, TOC_MAX_FILES, TOC_MAX_FILE_BYTES, TocFileError, defaultTitle, mergeWithToc,
+} from "../../lib/pdfToc";
+
+/** Kayıt gerekli mi? Karar verilince tek yerden değişir (katalogdaki free/account bayrağıyla birlikte). */
+const KAYIT_GEREKLI = false;
+
+const T = {
+  tr: {
+    hint: "Birleştirmek istediğin PDF'leri seç (en az 2, en çok 20).",
+    files: "Dosyalar", order: "Sırayı sürükleyerek ya da oklarla değiştir; başlığa tıklayıp içindekilerde görünecek adı düzenle.",
+    az: "A-Z sırala", pages: "sayfa", up: "Yukarı taşı", down: "Aşağı taşı", remove: "Kaldır", titleLabel: "Bölüm başlığı",
+    encrypted: "Bu dosya şifreli. Lütfen şifresini kaldırıp tekrar yükleyin.",
+    broken: "Bu dosya okunamadı (bozuk olabilir). Birleştirmeye dahil edilmeyecek.",
+    tooBig: "Bu dosya 50 MB'dan büyük, eklenmedi.",
+    tooMany: "En fazla 20 dosya ekleyebilirsin; fazlası eklenmedi.",
+    needTwo: "Birleştirmek için en az 2 geçerli PDF gerekli.",
+    settings: "İçindekiler ayarları", heading: "Sayfa başlığı", headingDefault: "İçindekiler",
+    numbering: "Bölümleri numaralandır (1., 2., 3. …)", footer: "Tüm sayfalara «Sayfa 3 / 42» alt bilgisi ekle",
+    back: "Her bölümün başına «İçindekilere dön» bağlantısı ekle", outName: "Dosya adı",
+    build: "Birleştir ve içindekiler ekle", working: "Hazırlanıyor…", failed: "Birleştirme başarısız oldu. Dosyalardan biri korumalı ya da bozuk olabilir.",
+    fileErr: "Hata:", another: "Dosyaları temizle", addMore: "Dosya ekle",
+    onDevice: "Dosyaların cihazından çıkmaz.", sub: "bölüm", pageWord: "Sayfa", continued: "(devam)", backLabel: "İçindekilere dön",
+    reading: "Okunuyor…",
+  },
+  en: {
+    hint: "Choose the PDFs to merge (at least 2, at most 20).",
+    files: "Files", order: "Drag or use the arrows to reorder; click a title to edit the name shown in the contents.",
+    az: "Sort A-Z", pages: "pages", up: "Move up", down: "Move down", remove: "Remove", titleLabel: "Section title",
+    encrypted: "This file is password-protected. Remove the password and upload it again.",
+    broken: "This file could not be read (it may be corrupt). It will not be merged.",
+    tooBig: "This file is larger than 50 MB and was not added.",
+    tooMany: "You can add at most 20 files; the rest were not added.",
+    needTwo: "At least 2 valid PDFs are needed to merge.",
+    settings: "Contents settings", heading: "Page heading", headingDefault: "Contents",
+    numbering: "Number the sections (1., 2., 3. …)", footer: "Add a “Page 3 / 42” footer to every page",
+    back: "Add a “Back to contents” link at the start of each section", outName: "File name",
+    build: "Merge and add contents", working: "Working…", failed: "Merge failed. One of the files may be protected or corrupt.",
+    fileErr: "Error:", another: "Clear files", addMore: "Add files",
+    onDevice: "Your files never leave your device.", sub: "sections", pageWord: "Page", continued: "(cont.)", backLabel: "Back to contents",
+    reading: "Reading…",
+  },
+} as const;
+
+type Item = {
+  id: number;
+  name: string;
+  bytes: Uint8Array;
+  pageCount: number;
+  thumb: string | null;
+  title: string;
+  error: "encrypted" | "broken" | null;
+};
+
+let sayac = 0;
+
+export function PdfMergeTocTool({
+  language,
+  isSignedIn,
+  onLogin,
+}: {
+  language: Language;
+  accessToken?: string | null;
+  initialFile?: File | null;
+  isSignedIn?: boolean;
+  onLogin?: () => void;
+}) {
+  const dil = language === "tr" ? "tr" : "en";
+  const t = T[dil];
+  const [items, setItems] = useState<Item[]>([]);
+  const [notlar, setNotlar] = useState<string[]>([]);
+  const [okuyor, setOkuyor] = useState(false);
+  const [heading, setHeading] = useState<string>(t.headingDefault);
+  const [numbering, setNumbering] = useState(true);
+  const [footer, setFooter] = useState(false);
+  const [backLinks, setBackLinks] = useState(false);
+  const [outName, setOutName] = useState(TOC_DEFAULT_OUTPUT.replace(/\.pdf$/, ""));
+  const [calisiyor, setCalisiyor] = useState(false);
+  const [hata, setHata] = useState<string | null>(null);
+  const [sonuc, setSonuc] = useState<{ blob: Blob; ad: string; bolum: number; sayfa: number } | null>(null);
+  const surukleniyor = useRef<number | null>(null);
+
+  const ekle = async (files: File[]) => {
+    setOkuyor(true);
+    const yeniNotlar: string[] = [];
+    const eklenecek: Item[] = [];
+    let kalan = TOC_MAX_FILES - items.length;
+    for (const f of files) {
+      if (kalan <= 0) {
+        yeniNotlar.push(t.tooMany);
+        break;
+      }
+      if (f.size > TOC_MAX_FILE_BYTES) {
+        yeniNotlar.push(`${f.name}: ${t.tooBig}`);
+        continue;
+      }
+      kalan--;
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      const item: Item = { id: ++sayac, name: f.name, bytes, pageCount: 0, thumb: null, title: defaultTitle(f.name), error: null };
+      try {
+        const th = await renderPdfPage(bytes, 0, 140);
+        item.pageCount = th.pageCount;
+        item.thumb = th.dataUrl;
+      } catch (e) {
+        item.error = e instanceof PdfThumbError && e.kind === "encrypted" ? "encrypted" : "broken";
+      }
+      eklenecek.push(item);
+    }
+    setItems((m) => [...m, ...eklenecek]);
+    setNotlar(yeniNotlar);
+    setOkuyor(false);
+  };
+
+  const tasi = (i: number, d: -1 | 1) =>
+    setItems((m) => {
+      const j = i + d;
+      if (j < 0 || j >= m.length) return m;
+      const c = [...m];
+      [c[i], c[j]] = [c[j]!, c[i]!];
+      return c;
+    });
+
+  const gecerli = items.filter((i) => !i.error);
+  const toplamSayfa = gecerli.reduce((n, i) => n + i.pageCount, 0);
+
+  const birlestir = async () => {
+    if (gecerli.length < 2) return;
+    if (KAYIT_GEREKLI && !isSignedIn) {
+      onLogin?.();
+      return;
+    }
+    setCalisiyor(true);
+    setHata(null);
+    try {
+      const [fontBytes, boldBytes] = await Promise.all([
+        fetch("/fonts/Roboto-Regular.ttf").then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)),
+        fetch("/fonts/Roboto-Bold.ttf").then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)),
+      ]);
+      const r = await mergeWithToc(
+        gecerli.map((i) => ({ name: i.name, title: i.title.trim() || defaultTitle(i.name), bytes: i.bytes })),
+        {
+          heading: heading.trim() || t.headingDefault, continued: t.continued, numbering, pageFooter: footer,
+          pageWord: t.pageWord, backLinks, backLabel: t.backLabel, fontBytes, boldBytes,
+        },
+      );
+      const ad = (outName.trim().replace(/[\\/:*?"<>|]+/g, "") || TOC_DEFAULT_OUTPUT.replace(/\.pdf$/, "")) + ".pdf";
+      setSonuc({
+        blob: new Blob([r.bytes as unknown as BlobPart], { type: "application/pdf" }),
+        ad,
+        bolum: r.sections.length,
+        sayfa: r.tocPages + toplamSayfa,
+      });
+    } catch (e) {
+      if (e instanceof TocFileError) {
+        const dosya = gecerli[e.index]?.name ?? "";
+        setHata(`${t.fileErr} ${dosya} — ${e.kind === "encrypted" ? t.encrypted : t.broken}`);
+      } else setHata(t.failed);
+    } finally {
+      setCalisiyor(false);
+    }
+  };
+
+  if (sonuc) {
+    return (
+      <ToolResultPanel
+        ratingToolSlug="pdf-birlestir-icindekiler"
+        blob={sonuc.blob}
+        filename={sonuc.ad}
+        language={language}
+        processedOnDevice
+        subtitle={`${sonuc.bolum} ${t.sub} · ${sonuc.sayfa} ${t.pages}${dil === "tr" ? " (içindekiler dahil)" : " (contents included)"}`}
+        onClose={() => setSonuc(null)}
+      />
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="tool-form">
+          <WorkspaceUploadField
+            toolId="pdf-birlestir-icindekiler"
+            language={language}
+            accept="application/pdf,.pdf"
+            multiple
+            note={t.hint}
+            onFiles={(f) => void ekle(f)}
+          />
+        </div>
+        {okuyor && (
+          <p className="mt-3 flex items-center gap-2 text-[13px] text-slate-300" role="status">
+            <Loader2 className="h-4 w-4 animate-spin" /> {t.reading}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const girdi = "w-full rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-2 text-[13px] text-white placeholder:text-slate-500";
+
+  return (
+    <div className="mx-auto w-full max-w-3xl">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{t.files} ({items.length}/{TOC_MAX_FILES})</p>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setItems((m) => [...m].sort((a, b) => a.title.localeCompare(b.title, dil, { numeric: true })))}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08]">{t.az}</button>
+          <label className="cursor-pointer rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08]">
+            {t.addMore}
+            <input type="file" accept="application/pdf,.pdf" multiple className="sr-only"
+              onChange={(e) => { void ekle(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
+          </label>
+        </div>
+      </div>
+      <p className="mt-1 text-[12px] text-slate-400">{t.order}</p>
+
+      <ul className="mt-3 space-y-2">
+        {items.map((it, i) => (
+          <li
+            key={it.id}
+            draggable
+            onDragStart={() => { surukleniyor.current = i; }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              const k = surukleniyor.current;
+              surukleniyor.current = null;
+              if (k === null || k === i) return;
+              setItems((m) => {
+                const c = [...m];
+                const [x] = c.splice(k, 1);
+                c.splice(i, 0, x!);
+                return c;
+              });
+            }}
+            className={`flex items-center gap-3 rounded-xl border p-2.5 ${it.error ? "border-rose-400/40 bg-rose-500/[0.07]" : "border-white/[0.08] bg-white/[0.03]"}`}
+          >
+            <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-slate-500 sm:block" aria-hidden />
+            <span className="w-5 shrink-0 text-center text-[12px] font-semibold tabular-nums text-slate-400">{i + 1}</span>
+            {it.thumb ? (
+              <img src={it.thumb} alt="" className="h-14 w-10 shrink-0 rounded border border-white/15 bg-white object-cover" />
+            ) : (
+              <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded border border-white/15 bg-white/[0.05]"><FileText className="h-5 w-5 text-slate-500" /></div>
+            )}
+            <div className="min-w-0 flex-1">
+              <input className={girdi} value={it.title} aria-label={`${t.titleLabel}: ${it.name}`} maxLength={120}
+                onChange={(e) => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, title: e.target.value } : x)))} />
+              <p className="mt-1 truncate text-[11px] text-slate-500">
+                {it.name}{it.pageCount ? ` · ${it.pageCount} ${t.pages}` : ""}
+              </p>
+              {it.error && (
+                <p className="mt-0.5 flex items-start gap-1 text-[12px] text-rose-300" role="alert">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {it.error === "encrypted" ? t.encrypted : t.broken}
+                </p>
+              )}
+            </div>
+            <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
+              <button type="button" onClick={() => tasi(i, -1)} disabled={i === 0} aria-label={t.up} className="rounded-md border border-white/15 p-1.5 text-slate-300 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+              <button type="button" onClick={() => tasi(i, 1)} disabled={i === items.length - 1} aria-label={t.down} className="rounded-md border border-white/15 p-1.5 text-slate-300 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+              <button type="button" onClick={() => setItems((m) => m.filter((x) => x.id !== it.id))} aria-label={t.remove} className="rounded-md border border-white/15 p-1.5 text-rose-300"><Trash2 className="h-3.5 w-3.5" /></button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {okuyor && <p className="mt-2 flex items-center gap-2 text-[13px] text-slate-300" role="status"><Loader2 className="h-4 w-4 animate-spin" /> {t.reading}</p>}
+      {notlar.map((n, k) => <p key={k} className="mt-1 text-[12px] text-amber-300" role="alert">{n}</p>)}
+
+      <div className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+        <p className="text-[13px] font-semibold text-slate-100">{t.settings}</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label><span className="mb-1 block text-[12px] text-slate-400">{t.heading}</span>
+            <input className={girdi} value={heading} maxLength={60} onChange={(e) => setHeading(e.target.value)} /></label>
+          <label><span className="mb-1 block text-[12px] text-slate-400">{t.outName}</span>
+            <span className="flex items-center gap-1">
+              <input className={girdi} value={outName} maxLength={80} onChange={(e) => setOutName(e.target.value)} />
+              <span className="text-[13px] text-slate-400">.pdf</span>
+            </span></label>
+        </div>
+        <div className="mt-3 space-y-2">
+          {([[numbering, setNumbering, t.numbering], [footer, setFooter, t.footer], [backLinks, setBackLinks, t.back]] as const).map(([v, set, l]) => (
+            <label key={l} className="flex items-start gap-2.5 text-sm text-slate-200">
+              <input type="checkbox" className="mt-0.5 h-4 w-4" checked={v} onChange={(e) => set(e.target.checked)} /> {l}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {gecerli.length < 2 && <p className="mt-3 text-[13px] text-amber-300" role="status">{t.needTwo}</p>}
+      {hata && <p className="mt-3 text-[13px] text-rose-300" role="alert">{hata}</p>}
+
+      <div className="mt-5 flex gap-2.5">
+        <button type="button" onClick={() => { setItems([]); setNotlar([]); setHata(null); }}
+          className="shrink-0 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200">{t.another}</button>
+        <button type="button" onClick={() => void birlestir()} disabled={gecerli.length < 2 || calisiyor}
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-50">
+          {calisiyor ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListTree className="h-4 w-4" />}
+          {calisiyor ? t.working : t.build}
+        </button>
+      </div>
+      <p className="mt-2 text-center text-[12px] text-slate-500">{t.onDevice}</p>
+    </div>
+  );
+}

@@ -165,6 +165,8 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/sayfa-duzeni" ||
     rawPath === "/tools/form-doldur" ||
     rawPath === "/tools/ustveri-temizle" ||
+    rawPath === "/tools/pdf-qr-ekle" ||
+    rawPath === "/tools/pdf-birlestir-icindekiler" ||
     rawPath === "/tools/imza-iste" ||
     rawPath === "/pdf-api" ||
     rawPath.startsWith("/pdf-api/") ||
@@ -272,6 +274,7 @@ export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
   "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
+  "/tools/pdf-qr-ekle", "/tools/pdf-birlestir-icindekiler",
   "/tools/imza-iste",
 ]);
 export function isFullPageSeoToolPath(p: string): boolean {
@@ -288,6 +291,8 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "pdf-imzala": "sign",
   "form-doldur": "formfill",
   "ustveri-temizle": "metadata",
+  "pdf-qr-ekle": "qr",
+  "pdf-birlestir-icindekiler": "toc",
   "sayfa-duzeni": "layout",
   "imza-iste": "signrequest",
   "pdf-yorumla": "annotate",

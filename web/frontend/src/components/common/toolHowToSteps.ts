@@ -334,6 +334,34 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "pdf-qr-ekle": S(
+    [
+      PICK_TR(),
+      { title: "QR'ın içeriğini gir", detail: "Web sitesi, kişi kartı, telefon, e-posta, WhatsApp, Wi-Fi ya da düz metin seç ve bilgileri yaz." },
+      { title: "Yerleştir ve boyutlandır", detail: "QR'ı sayfa önizlemesinde tutup istediğin yere sürükle; köşesinden ya da kaydırıcıdan boyutunu ayarla. Hangi sayfalara ekleneceğini seç." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Enter the QR content", detail: "Choose website, contact card, phone, email, WhatsApp, Wi-Fi or plain text and fill it in." },
+      { title: "Place and resize", detail: "Drag the QR on the page preview to where you want it; resize with its corner or the slider. Choose which pages get it." },
+      EN_DOWNLOAD,
+    ],
+  ),
+  "pdf-birlestir-icindekiler": S(
+    [
+      { title: "PDF'leri ekle", detail: "Birleştirmek istediğin dosyaları (en az 2) bırak ya da seç." },
+      { title: "Sırala ve başlıkları düzenle", detail: "Dosyaları sürükleyerek sırala; her bölümün içindekilerde görünecek başlığını istediğin gibi değiştir." },
+      { title: "İçindekileri oluştur", detail: "Tıklanabilir içindekiler sayfası ve PDF yer imleri otomatik eklenir. İstersen sayfa numarası alt bilgisi de eklenir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Add your PDFs", detail: "Drop or pick the files you want to merge (at least 2)." },
+      { title: "Order them and edit titles", detail: "Drag the files into order and change the title each section will have in the contents." },
+      { title: "Build the contents", detail: "A clickable table of contents page and PDF bookmarks are added automatically, plus an optional page-number footer." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "ustveri-temizle": S(
     [
       PICK_TR(),

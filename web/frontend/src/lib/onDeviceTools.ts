@@ -24,6 +24,8 @@ export const ON_DEVICE_SEO_TOOLS: ReadonlySet<string> = new Set([
   "taranmis-pdf-ocr",
   "form-doldur",
   "ustveri-temizle",
+  "pdf-qr-ekle",
+  "pdf-birlestir-icindekiler",
   "sayfa-duzeni",
   "udf-to-pdf",
   // Fotoğraf ve CV bilgisi tarayıcıdan çıkmaz: modeller cihazda (WASM) çalışır, CV tarayıcıda çizilir.

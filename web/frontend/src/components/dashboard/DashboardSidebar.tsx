@@ -2,7 +2,7 @@ import { ACCOUNT_PANEL_TITLES } from "../../lib/accountPaths";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { ChevronLeft, ChevronRight, Crop, Eraser, FileSearch, FileUser, Highlighter, ImageDown, LayoutGrid, Pencil, PenLine, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crop, Eraser, FileSearch, FileUser, Highlighter, ImageDown, LayoutGrid, ListTree, Pencil, PenLine, QrCode, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -145,7 +145,7 @@ const SCAN_FAV_ID = "scan-doc";
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 /** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
-type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest";
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
 const CUSTOM_TOOLS: {
   key: CustomToolKey;
   favId: string;
@@ -165,6 +165,8 @@ const CUSTOM_TOOLS: {
   { key: "formfill", favId: "form-fill", group: "annotate", tr: "Form Doldur", en: "Fill Form", Icon: TextCursorInput, iconClass: "text-cyan-300" },
   { key: "signrequest", favId: "sign-request", group: "annotate", tr: "İmza İste", en: "Request Signature", Icon: Send, iconClass: "text-cyan-300" },
   { key: "metadata", favId: "metadata-clean", group: "secure", tr: "Üstveri Temizle", en: "Clean Metadata", Icon: Eraser, iconClass: "text-cyan-300" },
+  { key: "qr", favId: "pdf-qr-ekle", group: "annotate", tr: "PDF'ye QR Kod Ekle", en: "Add QR Code to PDF", Icon: QrCode, iconClass: "text-cyan-300" },
+  { key: "toc", favId: "pdf-birlestir-icindekiler", group: "organize", tr: "Birleştir + İçindekiler", en: "Merge + Table of Contents", Icon: ListTree, iconClass: "text-cyan-300" },
 ];
 
 export type SidebarToolId = FeatureKey | "subscription";
@@ -210,6 +212,8 @@ type DashboardSidebarProps = {
   onOpenFormFill?: () => void;
   onOpenSignRequest?: () => void;
   onOpenMetadata?: () => void;
+  onOpenQr?: () => void;
+  onOpenToc?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -268,6 +272,8 @@ export function DashboardSidebar({
   onOpenFormFill,
   onOpenSignRequest,
   onOpenMetadata,
+  onOpenQr,
+  onOpenToc,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -310,6 +316,8 @@ export function DashboardSidebar({
     formfill: onOpenFormFill,
     signrequest: onOpenSignRequest,
     metadata: onOpenMetadata,
+    qr: onOpenQr,
+    toc: onOpenToc,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const sidebarGroups = useMemo(() => {
@@ -996,6 +1004,8 @@ export function DashboardSidebarMobileLauncher({
   onOpenFormFill,
   onOpenSignRequest,
   onOpenMetadata,
+  onOpenQr,
+  onOpenToc,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -1020,6 +1030,10 @@ export function DashboardSidebarMobileLauncher({
       ? tr ? "Form Doldur" : "Fill Form"
       : contentPanel === "signrequest"
       ? tr ? "İmza İste" : "Request Signature"
+      : contentPanel === "qr"
+      ? tr ? "PDF'ye QR Kod Ekle" : "Add QR Code to PDF"
+      : contentPanel === "toc"
+      ? tr ? "Birleştir + İçindekiler" : "Merge + Table of Contents"
       : contentPanel === "metadata"
       ? tr ? "Üstveri Temizle" : "Clean Metadata"
       : contentPanel === "editor"
@@ -1068,6 +1082,8 @@ export function DashboardSidebarMobileLauncher({
     formfill: onOpenFormFill,
     signrequest: onOpenSignRequest,
     metadata: onOpenMetadata,
+    qr: onOpenQr,
+    toc: onOpenToc,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const groups = useMemo(() => {
