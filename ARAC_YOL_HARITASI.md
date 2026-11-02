@@ -12,7 +12,7 @@ Oturum kesilirse bu dosya okunup kalınan yerden devam edilir.
 |---|---|---|---|---|---|---|
 | 0 | [x] | Proje incelemesi | — | — | — | Bulgular aşağıda ("Proje bulguları") |
 | 1a | [x] | PDF Sıkıştır: hedef boyut + imza/kaşe uyarısı | /tools/compress | Düzenle | Sunucu | Hedef boyut VAR (100 KB…10 MB, kullanıcı değeri 20 KB–200 MB). 20 MB seçeneği ve imza/kaşe uyarısı eklendi (dal calisma/is1-sikistir-tiff) |
-| 1b | [~] | Görsel → PDF: çok sayfalı TIFF (CCITT dahil) | /tools/image-to-pdf | Dönüştür | Tarayıcı (cihazda) | Çok sayfalı TIFF desteği eklendi (`ad56793`); CCITT Group 4 çözümü denendi, doğru. Eksik: ayrı "TIFF → PDF" SEO sayfası |
+| 1b | [x] | Görsel → PDF: çok sayfalı TIFF (CCITT dahil) | /tools/image-to-pdf | Dönüştür | Tarayıcı (cihazda) | Çok sayfalı TIFF desteği eklendi (`ad56793`); CCITT Group 4 çözümü denendi, doğru. Ayrı "TIFF → PDF" SEO sayfası İş 11'e (SEO) ertelendi: adres takma adı (alias) yönlendirmesi gerektiriyor; yazılacak blog 4 (UYAP TIF) bunu da karşılar |
 | 2 | [ ] | UDF paketi: PDF→UDF, Word→UDF, UDF→Word, UDF Görüntüleyici, Görsel/TIFF→UDF | /tools/… | Dönüştür (ya da yeni "Hukuk / UYAP") | Tarayıcı (öneri) | Örnekler `udfornek/` klasöründe (6 dosya; düz metin, tablo, resim hepsi var). Format çözümlendi: ZIP içinde content.xml (+documentproperties.xml) |
 | 3 | [ ] | UYAP / e-başvuru uyumluluk kontrolü + "Düzelt" | /tools/… | Düzenle (ya da Hukuk / UYAP) | Tarayıcı + gerekirse sunucu | Sınır kullanıcı seçer, sabit "UYAP sınırı" yok |
 | 4 | [ ] | Dilekçe ve form şablonları (PDF/UDF) | /tools/… | Düzenle | Tarayıcı | Metinleri kullanıcı onaylar; ayrı dosyada listelenecek |
