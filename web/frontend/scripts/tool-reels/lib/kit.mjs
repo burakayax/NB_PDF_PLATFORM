@@ -243,7 +243,7 @@ export function simpleTool(cfg) {
         : ["İşlem tamam", cfg.resultLine ?? "", `${processing[0]} · ${processing[1]}`];
       say("SONUÇ", t1, l1, l2, "green");
       await moveTo(700, 330);
-      await wait(2300);
+      await wait(4200);
       await st.showResultButtons();
       // Sonuç sahnesi: sonucu videoya SONRADAN eklemek için dosyayı indirip küçük resim kartı üretir (video süresi dondurulur).
       let resultCard = null;
