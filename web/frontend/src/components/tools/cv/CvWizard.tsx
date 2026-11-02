@@ -2,7 +2,7 @@
  * Adım adım CV sihirbazı — hiç bilmeyen biri için: her ekranda tek soru, bir sonraki adım tek tuş.
  * Aynı veri modelini düzenler (tam form ile birebir paylaşır); istenirse "Tüm formu göster"e geçilir.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Download, FileUp, GraduationCap, Upload, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { Area, AddButton, CertsEditor, EducationEditor, PhotoField, ProjectsEditor, ReferencesEditor, SocialsEditor, GRADUATE_ORDER, Text, inputCls, patch } from "./CvForm";
 import { PhoneField } from "./CvFields";
@@ -103,8 +103,16 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
 
   const score = useMemo(() => cvStrength(data), [data]);
 
+  // Adım değişince (Devam / Geri / nokta) yeni adımın başına dön; uzun sayfada altta kalmasın.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) { firstStep.current = false; return; }
+    rootRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  }, [step]);
+
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_30px_80px_-40px_rgba(56,189,248,0.35)]">
+    <div ref={rootRef} className="scroll-mt-28 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[0_30px_80px_-40px_rgba(56,189,248,0.35)]">
       {/* İlerleme */}
       <div className="border-b border-white/10 px-5 pb-4 pt-5">
         <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-wider text-sky-300/90">
