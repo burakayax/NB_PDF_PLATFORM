@@ -389,6 +389,66 @@ export async function stampQr(pdfBytes: Uint8Array, o: StampOptions): Promise<Ui
   return pdf.save();
 }
 
+// ─── Toplu QR (sayfa başına farklı kod) ─────────────────────────────────────
+
+export type BatchRule = { pages: number[]; text: string; link: string | null };
+export type BatchParse =
+  | { ok: true; rules: BatchRule[] }
+  | { ok: false; line: number; error: "format" | "pages" | "content" | "empty" };
+
+/**
+ * Her satır: «sayfalar | içerik» — ör. «1 | pdfplatform.app» ya da «2,4-6 | Merhaba».
+ * `mode` url ise içerik web adresi olarak doğrulanır ve PDF'te tıklanabilir olur.
+ */
+export function parseBatchLines(text: string, pageCount: number, mode: "url" | "text"): BatchParse {
+  const rules: BatchRule[] = [];
+  const lines = text.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i]!.trim();
+    if (!raw) continue;
+    const bar = raw.indexOf("|");
+    if (bar < 1) return { ok: false, line: i + 1, error: "format" };
+    const pages = parsePageList(raw.slice(0, bar), pageCount);
+    if (!pages) return { ok: false, line: i + 1, error: "pages" };
+    const content = raw.slice(bar + 1).trim();
+    if (!content) return { ok: false, line: i + 1, error: "content" };
+    if (mode === "url") {
+      const u = normalizeUrl(content);
+      if (!u) return { ok: false, line: i + 1, error: "content" };
+      rules.push({ pages, text: u, link: u });
+    } else rules.push({ pages, text: content, link: null });
+  }
+  return rules.length ? { ok: true, rules } : { ok: false, line: 0, error: "empty" };
+}
+
+/** Her kural için ayrı QR üretip ilgili sayfalara koyar. */
+export async function stampQrBatch(
+  pdfBytes: Uint8Array,
+  rules: BatchRule[],
+  base: Omit<StampOptions, "text" | "link" | "pages">,
+): Promise<Uint8Array> {
+  let cur = pdfBytes;
+  for (const r of rules) cur = await stampQr(cur, { ...base, text: r.text, link: r.link, pages: r.pages });
+  return cur;
+}
+
+// ─── Hazır şablonlar ────────────────────────────────────────────────────────
+
+export type QrTemplate = {
+  id: "card" | "menu" | "invoice";
+  kind: QrKind;
+  sizeMm: number;
+  fx: number;
+  fy: number;
+  caption: { tr: string; en: string };
+};
+
+export const QR_TEMPLATES: QrTemplate[] = [
+  { id: "card", kind: "vcard", sizeMm: 18, fx: 0.96, fy: 0.96, caption: { tr: "", en: "" } },
+  { id: "menu", kind: "url", sizeMm: 45, fx: 0.5, fy: 0.92, caption: { tr: "Menü için okutun", en: "Scan for the menu" } },
+  { id: "invoice", kind: "url", sizeMm: 22, fx: 0.96, fy: 0.97, caption: { tr: "Detaylar için okutun", en: "Scan for details" } },
+];
+
 /** Dosya adı: orijinal-ad_qr.pdf */
 export function qrOutputName(original: string): string {
   return `${original.replace(/\.pdf$/i, "")}_qr.pdf`;

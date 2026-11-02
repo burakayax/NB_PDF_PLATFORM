@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFRef } from "pdf-lib";
 import {
-  TocFileError, defaultTitle, inspectPdf, mergeWithToc, paginate, type TocOptions,
+  TocFileError, defaultTitle, inspectPdf, mergeWithToc, paginate, readOutline, type TocOptions,
 } from "../lib/pdfToc";
 
 const fontBytes = new Uint8Array(readFileSync("public/fonts/Roboto-Regular.ttf"));
@@ -142,5 +142,37 @@ describe("birleştirme + içindekiler", () => {
     expect(paginate([20, 20, 20])).toEqual([0, 0, 0]);
     const cok = paginate(new Array(60).fill(22));
     expect(cok[cok.length - 1]).toBeGreaterThan(0);
+  });
+});
+
+describe("alt başlıklar ve kaynak yer imleri", () => {
+  it("alt başlık içindekilerde ve iç içe yer iminde doğru sayfaya gider", async () => {
+    const a = { ...(await dosya("A.pdf", 4)), subs: [{ title: "Madde 2", page: 3 }, { title: "Madde 1", page: 2 }, { title: "Geçersiz", page: 99 }] };
+    const b = await dosya("B.pdf", 2);
+    const r = await mergeWithToc([a, b], OPT);
+    const d = await PDFDocument.load(r.bytes);
+    expect(r.tocPages).toBe(1);
+    expect(d.getPageCount()).toBe(1 + 4 + 2);
+    // içindekiler: A, A.1(sayfa 2 → 3. sayfa), A.2, B  → 4 bağlantı
+    expect(baglantilar(d, 0)).toEqual([1, 2, 3, 5]);
+    // yer imleri: üst düzeyde yalnız A ve B; A'nın 2 çocuğu var
+    expect(yerImleri(d).map((y) => y.title)).toEqual(["A", "B"]);
+    const alt = await readOutline(r.bytes); // üst düzey = bölümler
+    expect(alt.map((x) => x.page)).toEqual([2, 6]);
+  });
+
+  it("readOutline: kaynak yer imlerini sayfalarıyla verir, yer imi yoksa boş döner", async () => {
+    const f = await dosya("X.pdf", 3);
+    expect(await readOutline(f.bytes)).toEqual([]);
+    const merged = await mergeWithToc([f, await dosya("Y.pdf", 1)], OPT);
+    const o = await readOutline(merged.bytes);
+    expect(o.map((x) => x.title)).toEqual(["X", "Y"]);
+  });
+
+  it("çok alt başlık içindekileri sonraki sayfaya taşırır", async () => {
+    const subs = Array.from({ length: 55 }, (_, i) => ({ title: `Madde ${i + 1}`, page: 1 + (i % 3) }));
+    const r = await mergeWithToc([{ ...(await dosya("Uzun.pdf", 3)), subs }, await dosya("Z.pdf", 1)], OPT);
+    expect(r.tocPages).toBeGreaterThan(1);
+    expect(r.sections[0]!.startPage).toBe(r.tocPages + 1);
   });
 });

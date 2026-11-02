@@ -145,12 +145,6 @@ const DocumentScanner = lazyWithRetry(() =>
 // Hero'da "kendi sayfasında açılır" (page) türündeki araçlar — önceden /tools/<slug>'a
 // tam sayfa yönlendiriyordu; artık Birleştir/Böl gibi YERİNDE açılıyor. Ana pakete
 // girmesinler diye (yalnızca seçilince indirilsin) lazy.
-const PdfQrTool = lazyWithRetry(() =>
-  import("../tools/PdfQrTool").then((m) => ({ default: m.PdfQrTool })),
-);
-const PdfMergeTocTool = lazyWithRetry(() =>
-  import("../tools/PdfMergeTocTool").then((m) => ({ default: m.PdfMergeTocTool })),
-);
 const PdfLayoutTool = lazyWithRetry(() =>
   import("../tools/PdfLayoutTool").then((m) => ({ default: m.PdfLayoutTool })),
 );
@@ -814,7 +808,6 @@ function Hero({
                         const next = firstRunnable(c.id);
                         setEditorOn(next.editor);
                         if (next.free) setFreeTool(next.free);
-                        if (next.page) setPageTool(next.page);
                       }}
                       className={`rounded-xl px-4 py-2 text-[15px] font-bold transition ${
                         active ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-200"
@@ -1132,18 +1125,6 @@ function Hero({
               // ediyor, o yüzden yalnızca WorkspaceUploadField kullanan araçları sarıyoruz.
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
-              </ToolPageContext.Provider>
-            ) : pageTool === "pdf-qr-ekle" ? (
-              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
-                <Suspense fallback={<HeroToolSkeleton />}>
-                  <PdfQrTool language={language} accessToken={accessToken} initialFile={scannedFile} />
-                </Suspense>
-              </ToolPageContext.Provider>
-            ) : pageTool === "pdf-birlestir-icindekiler" ? (
-              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
-                <Suspense fallback={<HeroToolSkeleton />}>
-                  <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={scannedFile} />
-                </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "sayfa-duzeni" ? (
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>

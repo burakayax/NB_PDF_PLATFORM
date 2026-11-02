@@ -55,8 +55,6 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "imza-iste",
   "ustveri-temizle",
   "form-doldur",
-  "pdf-qr-ekle",
-  "pdf-birlestir-icindekiler",
 ]);
 
 

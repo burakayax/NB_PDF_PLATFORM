@@ -26,8 +26,6 @@ import {
   FileType2,
   Grid2x2,
   Highlighter,
-  ListTree,
-  QrCode,
   Maximize2,
   Minimize2,
   PenTool,
@@ -45,7 +43,7 @@ export type HeroItem =
   | { k: "page"; slug: string; Icon: LucideIcon; tr: string; en: string }
   | { k: "member"; slug: string; Icon: LucideIcon; tr: string; en: string };
 
-export type HeroCatId = "pages" | "edit" | "convert" | "shrink" | "add";
+export type HeroCatId = "pages" | "edit" | "convert" | "shrink";
 
 export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem[] }[] = [
   {
@@ -96,15 +94,6 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
       { k: "member", slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
     ],
   },
-  {
-    id: "add",
-    tr: "Belgeye Ekle",
-    en: "Add to PDF",
-    items: [
-      { k: "page", slug: "pdf-qr-ekle", Icon: QrCode, tr: "PDF'ye QR Kod Ekle", en: "Add QR Code to PDF" },
-      { k: "page", slug: "pdf-birlestir-icindekiler", Icon: ListTree, tr: "Birleştir + İçindekiler", en: "Merge + Table of Contents" },
-    ],
-  },
 ];
 
 /** Bir aracın hangi sekmede durduğu (dışarıdan araç seçilince doğru sekme açılsın). */
@@ -116,14 +105,11 @@ export function catOfFreeTool(id: FreeToolId): HeroCatId {
 }
 
 /** Sekme değişince hero'da hangi aracın açılacağı — kategorinin ilk çalışır aracı. */
-export function firstRunnable(cat: HeroCatId): { free?: FreeToolId; editor: boolean; page?: string } {
+export function firstRunnable(cat: HeroCatId): { free?: FreeToolId; editor: boolean } {
   const items = HERO_CATS.find((c) => c.id === cat)?.items ?? [];
   for (const it of items) {
     if (it.k === "editor") return { editor: true };
     if (it.k === "free") return { free: it.id, editor: false };
   }
-  // Yalnızca «kendi sayfasında açılan» araçlardan oluşan sekme (ör. Belgeye Ekle): ilkini aç.
-  const ilkSayfa = items.find((it) => it.k === "page");
-  if (ilkSayfa && ilkSayfa.k === "page") return { editor: false, page: ilkSayfa.slug };
   return { free: "merge", editor: false };
 }
