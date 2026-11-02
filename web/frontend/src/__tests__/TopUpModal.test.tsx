@@ -7,6 +7,15 @@ vi.mock("../hooks/useSettings", () => ({
   useSettings: vi.fn(() => ({ flags: { featureFlags: { paymentsDisabled: false } } })),
 }));
 
+// Fiyatlar sitede şimdilik gizli ("Yakında"); fiyat biçimi testleri için anahtar açılır.
+const priceState = vi.hoisted(() => ({ hidden: false }));
+vi.mock("../lib/priceVisibility", () => ({
+  get PRICES_HIDDEN() {
+    return priceState.hidden;
+  },
+  priceComingSoonLabel: (tr: boolean) => (tr ? "Yakında" : "Coming soon"),
+}));
+
 vi.mock("../api/ai", () => ({
   fetchTopupPacks: vi.fn(async () => [
     { id: "ai-50", credits: 50, priceUSD: 4.99, priceTRY: 149 },
@@ -61,6 +70,19 @@ describe("TopUpModal", () => {
     expect(screen.getByText(/349/)).toBeInTheDocument();
     // Popüler rozeti
     expect(screen.getByText(/Popüler/)).toBeInTheDocument();
+  });
+
+  it("fiyatlar gizliyken rakam yerine 'Yakında' yazar", async () => {
+    priceState.hidden = true;
+    try {
+      render(<TopUpModal language="tr" accessToken="jwt" onClose={vi.fn()} />);
+      expect((await screen.findAllByText(/AI kredisi/)).length).toBe(2);
+      expect(screen.queryByText(/149/)).toBeNull();
+      expect(screen.queryByText(/349/)).toBeNull();
+      expect(screen.getAllByText("Yakında").length).toBeGreaterThanOrEqual(2);
+    } finally {
+      priceState.hidden = false;
+    }
   });
 
   it("starts iyzico checkout when a pack is purchased (payments enabled)", async () => {

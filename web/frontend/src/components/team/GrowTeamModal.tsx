@@ -1,3 +1,4 @@
+import { PRICES_HIDDEN } from "../../lib/priceVisibility";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
@@ -19,7 +20,9 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
   const unitPrice = effectiveCurrency === "TRY" ? SEAT_PRICE_TRY : SEAT_PRICE_USD;
   const sym = effectiveCurrency === "TRY" ? "₺" : "$";
   const fmt = (n: number) =>
-    effectiveCurrency === "TRY"
+    PRICES_HIDDEN
+      ? "Yakında"
+      : effectiveCurrency === "TRY"
       ? `₺${Math.round(n).toLocaleString("tr-TR")}`
       : `$${n.toFixed(2)}`;
 
@@ -51,7 +54,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
           </p>
           <h2 className="mt-1 text-xl font-bold text-white">Ekstra Koltuk Ekle</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Şu an {currentTotal} kişilik ekibinize yeni koltuk ekleyin. {sym}{unitPrice}/kişi/ay.
+            Şu an {currentTotal} kişilik ekibinize yeni koltuk ekleyin.{PRICES_HIDDEN ? "" : ` ${sym}${unitPrice}/kişi/ay.`}
           </p>
         </div>
 
@@ -60,7 +63,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-white">Eklenecek Koltuk</p>
-              <p className="text-xs text-slate-400">her koltuk {fmt(unitPrice)}/ay (KDV dahil)</p>
+              <p className="text-xs text-slate-400">{PRICES_HIDDEN ? "Koltuk fiyatı yakında açıklanacak" : `her koltuk ${fmt(unitPrice)}/ay (KDV dahil)`}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -102,12 +105,12 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-center">
             <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Aylık</p>
             <p className="text-2xl font-black text-white">{fmt(monthlyTotal)}</p>
-            <p className="text-xs text-slate-400 mt-0.5">/ay (KDV dahil)</p>
+            {PRICES_HIDDEN ? null : <p className="text-xs text-slate-400 mt-0.5">/ay (KDV dahil)</p>}
           </div>
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-center">
             <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Yıllık</p>
             <p className="text-2xl font-black text-white">{fmt(yearlyPerMonth)}</p>
-            <p className="text-xs text-emerald-500 mt-0.5">{fmt(yearlyTotal)}/yıl · %17 tasarruf</p>
+            {PRICES_HIDDEN ? null : <p className="text-xs text-emerald-500 mt-0.5">{fmt(yearlyTotal)}/yıl · %17 tasarruf</p>}
           </div>
         </div>
 
@@ -118,17 +121,19 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
+            disabled={PRICES_HIDDEN}
             onClick={() => { onPurchaseIntent("MONTHLY", newSeats); }}
-            className="rounded-xl border border-white/[0.1] bg-white/[0.05] py-3 text-sm font-semibold text-white hover:bg-white/[0.08]"
+            className="rounded-xl border disabled:cursor-not-allowed disabled:opacity-50 border-white/[0.1] bg-white/[0.05] py-3 text-sm font-semibold text-white hover:bg-white/[0.08]"
           >
-            Aylık Öde
+            {PRICES_HIDDEN ? "Yakında" : "Aylık Öde"}
           </button>
           <button
             type="button"
+            disabled={PRICES_HIDDEN}
             onClick={() => { onPurchaseIntent("YEARLY", newSeats); }}
-            className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3 text-sm font-bold text-white hover:from-emerald-500 hover:to-teal-500"
+            className="rounded-xl disabled:cursor-not-allowed disabled:opacity-50 bg-gradient-to-r from-emerald-600 to-teal-600 py-3 text-sm font-bold text-white hover:from-emerald-500 hover:to-teal-500"
           >
-            Yıllık Öde
+            {PRICES_HIDDEN ? "Yakında" : "Yıllık Öde"}
           </button>
         </div>
       </div>
