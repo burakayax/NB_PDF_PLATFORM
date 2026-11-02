@@ -537,6 +537,18 @@ async def _editor_quota_consume(ident: dict[str, Any]) -> dict[str, Any]:
     return dec
 
 
+def _normalize_page_rotation(doc: Any) -> None:
+    """/Rotate'li sayfaları (ör. yatay taranmış/e-devlet belgeleri) görünümü KORUYARAK rotasyonsuz yapar.
+    PyMuPDF metin/görsel koordinatlarını döndürülmemiş sayfa uzayında verir; tarayıcı ise döndürülmüş
+    görünümü çizer → kutular yanlış yerde kalıp alanlar seçilemiyordu. Analiz ve düzenleme aynı uzayda çalışsın."""
+    for pg in doc:
+        try:
+            if int(pg.rotation) % 360:
+                pg.remove_rotation()
+        except Exception:
+            pass
+
+
 @router.post("/edit-text")
 @limiter.limit("15/minute")
 async def tool_edit_text(
@@ -613,6 +625,7 @@ async def tool_edit_text(
                 if doc.needs_pass:
                     if not pwd or not doc.authenticate(pwd):
                         raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+                _normalize_page_rotation(doc)
                 n = doc.page_count
                 # Orijinal font (op.ofont = xref): onarılmış TTF'i çalışma klasörüne yaz → yol tabanlı
                 # yardımcılar (genişlik/harf bazlı yazım) aynen kullanılır.
@@ -773,6 +786,35 @@ async def tool_edit_text(
                         )
                     if vt_ops:
                         page.apply_redactions(images=0, graphics=0, text=0)
+                        # Altı çizili yazı (ör. bağlantı adresi) çoğu zaman AYRI bir ince çizgi çizimidir;
+                        # yazı silinince çizgi havada kalıyordu. Yalnız yazının hemen altındaki, yazı
+                        # genişliğine oturan ince yatay çizgi kaldırılır (tablo/kenarlık çizgilerine dokunulmaz).
+                        try:
+                            _draws = page.get_drawings()
+                            _ul_rects: list[Any] = []
+                            for op in vt_ops:
+                                cb = op.get("clear") or op["bbox"]
+                                x0, y0, x1, y1 = (float(v) for v in cb)
+                                _by = float(op["oby"]) if op.get("oby") is not None else float(op["by"])
+                                _osz = float(op.get("osz") or op.get("size") or max(1.0, (y1 - y0) / 1.2))
+                                for _d in _draws:
+                                    _dr = _fitz.Rect(_d["rect"])
+                                    _w = float(_d.get("width") or 0.0)
+                                    if _d.get("type") not in ("s", "fs") or _dr.height > 0.8:
+                                        continue
+                                    if not (_by - 0.1 * _osz <= _dr.y0 <= _by + 0.35 * _osz):
+                                        continue
+                                    if _dr.x0 < x0 - 3 or _dr.x1 > x1 + 3 or _dr.width < 0.6 * (x1 - x0):
+                                        continue
+                                    _ul_rects.append(_fitz.Rect(_dr.x0 - 3, _dr.y0 - (10 * _w + 1), _dr.x1 + 3, _dr.y1 + (10 * _w + 1)))
+                            if _ul_rects:
+                                for _ur in _ul_rects:
+                                    page.add_redact_annot(_ur, fill=False)
+                                page.apply_redactions(images=_fitz.PDF_REDACT_IMAGE_NONE,
+                                                      graphics=_fitz.PDF_REDACT_LINE_ART_REMOVE_IF_COVERED,
+                                                      text=_fitz.PDF_REDACT_TEXT_NONE)
+                        except Exception:
+                            pass
                     # 1b) Görüntüdeki yazı (OCR / görünmez katman) ve görsel silme: piksel de örtülmeli.
                     for op in other_ops:
                         # `clear` (kaydırmada ORİJİNAL konum) varsa onu, yoksa bbox'ı temizle.
@@ -1253,6 +1295,7 @@ async def tool_pdf_analyze(
                 if doc.needs_pass:
                     if not pwd or not doc.authenticate(pwd):
                         raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+                _normalize_page_rotation(doc)
                 pages: list[dict[str, Any]] = []
                 # Yeniden kullanılabilir gömülü fontlar (doğrulanmış harf kümesiyle) — yeni metin
                 # yalnız bu harflerden oluşuyorsa orijinal fontla yazılır (glif şekli birebir).
