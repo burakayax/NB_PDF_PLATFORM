@@ -8,6 +8,8 @@ export type PublishInput = {
   imageUrl: string | null;
   item: FeedItem;
   secrets: Record<string, string>;
+  /** Pinterest: kuyruğa alınırken seçilen pano anahtarı (yoksa yayıncı konuya göre yeniden seçer). */
+  boardKey?: string | null;
 };
 
 export type Publisher = (input: PublishInput) => Promise<PublishResult>;

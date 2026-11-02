@@ -7,9 +7,7 @@
  * Saf işlevler: ağ/veritabanı yok, bu yüzden testlenebilir.
  */
 
-import { toolIdFromGuid } from "./platforms/reel-cover.js";
-import { topicOf } from "./feed-topic.js";
-import type { PinBoardTopic, PinKeywords } from "./social.service.js";
+import type { PinKeywords } from "./social.service.js";
 
 export const PIN_LIMITS = { title: 100, description: 800, altText: 500, link: 2048 } as const;
 /** Açıklamada en fazla bu kadar etiket kalır (etiket yığını sıralamaya yardım etmez). */
@@ -98,20 +96,4 @@ export function buildPinAltText(title: string, keywords: PinKeywords | null, lan
   const lead = lang === "tr" ? "PDF Platform kapak görseli:" : "PDF Platform cover image:";
   const text = main ? `${lead} ${title} (${main})` : `${lead} ${title}`;
   return cutAtWord(text, PIN_LIMITS.altText);
-}
-
-/** İçeriğin gideceği pano konusu: CV yazıları "cv", sözleşme/ihale "sozlesme", araçlar ve geri kalanı "pdf". */
-export function boardTopicOf(item: { guid: string; title: string; link: string; categories: string[] }): PinBoardTopic {
-  if (toolIdFromGuid(item.guid)) return "pdf";
-  const topic = topicOf(item);
-  return topic === "cv" ? "cv" : topic === "sozlesme" ? "sozlesme" : "pdf";
-}
-
-/** Konuya ayrılmış pano varsa o, yoksa seçili tek pano. */
-export function pickBoardId(
-  topic: PinBoardTopic,
-  boards: Partial<Record<PinBoardTopic, string>>,
-  fallback: string | undefined,
-): string | null {
-  return boards[topic]?.trim() || fallback?.trim() || null;
 }

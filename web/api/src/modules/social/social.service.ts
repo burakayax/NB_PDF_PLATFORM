@@ -10,6 +10,8 @@
  * sunucu örneği aynı anda çalışsa bile veritabanı ikinciyi reddeder.
  */
 
+import { chooseBoard } from "./pinterest-board.js";
+import { PIN_BOARD_KEYS, type PinBoardKey } from "./pinterest-boards.config.js";
 import { env } from "../../config/env.js";
 import { Prisma } from "@prisma/client";
 import type { SocialAccount, SocialPlatform } from "@prisma/client";
@@ -121,22 +123,22 @@ export type SocialAutomationConfig = {
    * hesaplanır). Kum havuzu kutusu değişirse eski anahtar yeni ortamda geçmez: panel "yeniden bağlan" der.
    */
   pinterestToken: PinterestTokenInfo | null;
-  /** İçerik türüne göre pano: cv / pdf / sozlesme → pano kimliği. Boşsa seçili tek pano kullanılır. */
-  pinterestBoards: Partial<Record<PinBoardTopic, string>>;
+  /** Pano anahtarı (cv, pdf-duzenleme, …) → Pinterest pano kimliği. Boş anahtar = seçili tek pano kullanılır. */
+  pinterestBoards: Partial<Record<PinBoardKey, string>>;
+  /** Pano kimlikleri hangi ortamda (kum havuzu / gerçek) eşleştirildi? Kutu değişirse kimlikler geçmez. */
+  pinterestBoardsEnv: "sandbox" | "production" | null;
   /** Araç/yazı başına Pinterest anahtar kelimeleri (anahtar: araç kimliği ya da yazı guid'i). */
   pinterestKeywords: Record<string, PinKeywords>;
 };
 
-export type PinBoardTopic = "cv" | "pdf" | "sozlesme";
-export const PIN_BOARD_TOPICS: PinBoardTopic[] = ["cv", "pdf", "sozlesme"];
 export type PinKeywords = { main: string; extra: string[] };
 
-function parsePinBoards(raw: unknown): Partial<Record<PinBoardTopic, string>> {
-  const out: Partial<Record<PinBoardTopic, string>> = {};
+function parsePinBoards(raw: unknown): Partial<Record<PinBoardKey, string>> {
+  const out: Partial<Record<PinBoardKey, string>> = {};
   if (!raw || typeof raw !== "object") return out;
-  for (const topic of PIN_BOARD_TOPICS) {
-    const v = (raw as Record<string, unknown>)[topic];
-    if (typeof v === "string" && v.trim() && v.length <= 64) out[topic] = v.trim();
+  for (const key of PIN_BOARD_KEYS) {
+    const v = (raw as Record<string, unknown>)[key];
+    if (typeof v === "string" && v.trim() && v.length <= 64) out[key] = v.trim();
   }
   return out;
 }
@@ -189,6 +191,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   pinterestSandbox: true,
   pinterestToken: null,
   pinterestBoards: {},
+  pinterestBoardsEnv: null,
   pinterestKeywords: {},
 };
 
@@ -221,6 +224,7 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     pinterestSandbox: raw.pinterestSandbox !== false,
     pinterestToken: parsePinterestToken(raw.pinterestToken),
     pinterestBoards: parsePinBoards(raw.pinterestBoards),
+    pinterestBoardsEnv: raw.pinterestBoardsEnv === "sandbox" || raw.pinterestBoardsEnv === "production" ? raw.pinterestBoardsEnv : null,
     pinterestKeywords: parsePinKeywords(raw.pinterestKeywords),
   };
 }
@@ -546,6 +550,16 @@ export function canonicalLink(url: string): string {
 }
 
 /** Görsel seçimi: platformun istediği kesim yoksa elde olana düşülür. */
+/** Pinterest kayıtlarına pano anahtarı + nedeni yazılır (yayın anında kategori/özet bilinmediği için kuyruğa alırken seçilir). */
+function pinBoardFields(
+  platform: SocialPlatform,
+  item: { guid: string; title: string; summary?: string; link: string; categories?: string[] },
+): { boardKey?: string; boardReason?: string } {
+  if (platform !== "PINTEREST") return {};
+  const choice = chooseBoard(item);
+  return { boardKey: choice.key, boardReason: choice.reason };
+}
+
 function pickImage(item: FeedItem, platform: SocialPlatform): string | null {
   const preferred = PLATFORM_SPECS[platform].imageFormat;
   return item.images[preferred] ?? item.images.wide ?? item.images.square ?? item.images.tall ?? null;
@@ -716,6 +730,7 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
             scheduledAt,
             dayKey,
             status: manual ? "MANUAL" : holdThis ? "DRAFT" : "QUEUED",
+            ...pinBoardFields(platform, item),
           },
         });
         result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl, manual });
@@ -901,6 +916,7 @@ export async function queueToolReel(
             scheduledAt,
             dayKey: attempt === 1 ? dayKey : `${dayKey}~${attempt}`,
             status,
+            ...pinBoardFields(platform, item),
           },
         });
         result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl: media.url, manual });
@@ -1152,6 +1168,7 @@ async function publishOne(postId: string, secrets: Record<string, string>): Prom
       body: post.body,
       imageUrl: post.imageUrl,
       secrets,
+      boardKey: post.boardKey,
       item: {
         guid: post.guid,
         lang: post.lang === "en" ? "en" : "tr",

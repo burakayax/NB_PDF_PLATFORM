@@ -9,6 +9,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { HttpError } from "../../lib/http-error.js";
+import { prisma } from "../../lib/prisma.js";
 import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { logAdminAudit } from "../admin/admin-audit.service.js";
 import { env } from "../../config/env.js";
@@ -43,7 +44,17 @@ import {
 } from "./platforms/pinterest.platform.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import { socialLink } from "./social-link.js";
-import { buildPinAltText, buildPinDescription, buildPinTitle, pickBoardId } from "./pinterest-content.js";
+import { buildPinAltText, buildPinDescription, buildPinTitle } from "./pinterest-content.js";
+import { boardIdFor, chooseBoard } from "./pinterest-board.js";
+import { envOf, inspectBoards, syncBoards } from "./pinterest-board-setup.js";
+import {
+  CATEGORY_RULES,
+  DEFAULT_PIN_BOARD,
+  KEYWORD_RULES,
+  PIN_BOARDS,
+  PIN_BOARD_KEYS,
+  TOOL_BOARD,
+} from "./pinterest-boards.config.js";
 import { pinKeywordKey, resolvePinKeywords, suggestPinKeywords } from "./pinterest-keywords.js";
 import { availableReelCover } from "./platforms/reel-cover.js";
 import { isReelUrl } from "./reels.service.js";
@@ -51,8 +62,6 @@ import { TOOL_REEL_CATALOG } from "./tool-reel-catalog.js";
 import { toolReelGuid } from "./tool-reels.service.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
-  PIN_BOARD_TOPICS,
-  type PinBoardTopic,
   deletePost,
   unsharePost,
   disconnectAccount,
@@ -347,36 +356,87 @@ socialRouter.post(
   }),
 );
 
-/** Konuya göre pano eşlemesi (CV / PDF / Sözleşme) ve panolar. */
+/** Pano kurulumu: 6 hedef panonun durumu (kayıtlı / adla bulundu / eksik). Hiçbir şey oluşturmaz. */
 socialRouter.get(
-  "/pinterest/board-map",
+  "/pinterest/board-setup",
   asyncHandler(async (_request, response) => {
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
     const config = await readSocialConfig();
-    response.json({ boards: config.pinterestBoards });
+    if (!pinterestTokenMatches(config.pinterestToken, config.pinterestSandbox)) {
+      throw new HttpError(409, "Pinterest bağlantısı yeniden kurulmalı (kum havuzu kutusu değişti).");
+    }
+    try {
+      response.json(await inspectBoards(secrets, config));
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "Panolar okunamadı");
+    }
   }),
 );
 
+/**
+ * Panoları eşleştirir. `createMissing: false` → yalnız adla bulunanlar bağlanır (yeni pano açılmaz).
+ * `createMissing: true` → eksikler de herkese açık olarak oluşturulur (panelde onay sonrası).
+ */
+socialRouter.post(
+  "/pinterest/board-setup/sync",
+  asyncHandler(async (request, response) => {
+    const body = z.object({ createMissing: z.boolean().default(false) }).parse(request.body ?? {});
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
+    const config = await readSocialConfig();
+    if (!pinterestTokenMatches(config.pinterestToken, config.pinterestSandbox)) {
+      throw new HttpError(409, "Pinterest bağlantısı yeniden kurulmalı (kum havuzu kutusu değişti).");
+    }
+    try {
+      const result = await syncBoards(secrets, config, body.createMissing);
+      // Başka ortamdan kalan eski kimlikler atılır; yalnız bu ortamın eşlemesi saklanır.
+      await writeSocialConfig({ pinterestBoards: result.boards, pinterestBoardsEnv: envOf(config.pinterestSandbox) });
+      await logAdminAudit(
+        actorOf(request),
+        "social.pinterest.board-setup",
+        "PINTEREST",
+        `Pinterest panoları eşleştirildi${result.created.length ? `; oluşturulan: ${result.created.join(", ")}` : ""}`,
+      );
+      response.json({ ...result.state, created: result.created });
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "Panolar eşleştirilemedi");
+    }
+  }),
+);
+
+/** Bir konunun panosunu elle değiştirir (hesapta var olan panolardan biri). */
 socialRouter.put(
   "/pinterest/board-map",
   asyncHandler(async (request, response) => {
-    const body = z
-      .object({ cv: z.string().max(64).optional(), pdf: z.string().max(64).optional(), sozlesme: z.string().max(64).optional() })
-      .parse(request.body);
+    const body = z.object({ key: z.enum(PIN_BOARD_KEYS), boardId: z.string().trim().min(1).max(64) }).parse(request.body);
     const secrets = await readAccountSecrets("PINTEREST");
     if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
+    const config = await readSocialConfig();
     const known = await listPinterestBoards(secrets).catch((err) => {
       throw new HttpError(502, err instanceof Error ? err.message : "Panolar okunamadı");
     });
-    const boards: Partial<Record<PinBoardTopic, string>> = {};
-    for (const topic of PIN_BOARD_TOPICS) {
-      const id = body[topic]?.trim();
-      if (!id) continue; // boş = bu konu için ayrı pano yok (seçili tek pano kullanılır)
-      if (!known.some((b) => b.id === id)) throw new HttpError(400, "Seçilen pano hesabında bulunamadı.");
-      boards[topic] = id;
-    }
-    await writeSocialConfig({ pinterestBoards: boards });
-    await logAdminAudit(actorOf(request), "social.pinterest.board-map", "PINTEREST", "Pinterest pano eşlemesi güncellendi");
-    response.json({ boards });
+    if (!known.some((b) => b.id === body.boardId)) throw new HttpError(400, "Seçilen pano hesabında bulunamadı.");
+    // Ortam değiştiyse eski kimlikler atılır, yalnız bu seçim kalır.
+    const env = envOf(config.pinterestSandbox);
+    const keep = config.pinterestBoardsEnv && config.pinterestBoardsEnv !== env ? {} : config.pinterestBoards;
+    await writeSocialConfig({ pinterestBoards: { ...keep, [body.key]: body.boardId }, pinterestBoardsEnv: env });
+    await logAdminAudit(actorOf(request), "social.pinterest.board-map", "PINTEREST", `Pinterest panosu değiştirildi: ${body.key}`);
+    response.json({ ok: true });
+  }),
+);
+
+/** Eşleştirme kuralları (araç → pano tablosu, kategori ve anahtar kelime kuralları): panelde kontrol için gösterilir. */
+socialRouter.get(
+  "/pinterest/board-rules",
+  asyncHandler(async (_request, response) => {
+    response.json({
+      boards: PIN_BOARDS,
+      defaultBoard: DEFAULT_PIN_BOARD,
+      tools: Object.entries(TOOL_BOARD).map(([slug, board]) => ({ slug, board })),
+      categoryRules: CATEGORY_RULES,
+      keywordRules: KEYWORD_RULES,
+    });
   }),
 );
 
@@ -418,7 +478,10 @@ socialRouter.get(
       description: buildPinDescription(entry.tr.summary),
       altText: buildPinAltText(entry.tr.title, keywords),
       link: socialLink("PINTEREST", entry.tr.link, "arac"),
-      topic: "pdf",
+      board: (() => {
+        const c = chooseBoard({ guid, title: entry.tr.title, summary: entry.tr.summary, link: entry.tr.link });
+        return { key: c.key, name: PIN_BOARDS[c.key].name, reason: c.reason };
+      })(),
     });
   }),
 );
@@ -458,8 +521,8 @@ const pinterestPinSchema = z.object({
   altText: z.string().trim().max(500).optional(),
   /** Bağlantının kampanya adı için: araç sayfası mı, blog yazısı mı. */
   kind: z.enum(["blog", "arac"]).default("arac"),
-  /** Pano konusu (cv / pdf / sozlesme); verilirse o konuya ayrılmış pano kullanılır. */
-  topic: z.enum(["cv", "pdf", "sozlesme"]).optional(),
+  /** Elle seçilen pano anahtarı; yoksa araç/başlıktan otomatik seçilir. */
+  boardKey: z.enum(PIN_BOARD_KEYS).optional(),
 });
 
 /** Aynı pinin kısa sürede iki kez gönderilmesini önler (çift tıklama / yeniden deneme). */
@@ -482,7 +545,12 @@ socialRouter.post(
     const secrets = await readAccountSecrets("PINTEREST");
     if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
     const config = await readSocialConfig();
-    const boardId = body.topic ? pickBoardId(body.topic, config.pinterestBoards, secrets.boardId) : secrets.boardId?.trim();
+    const choice = chooseBoard(
+      { guid: body.toolId ? toolReelGuid(body.toolId) : undefined, title: body.title, summary: body.description, link: body.link },
+      body.boardKey,
+    );
+    const mapped = boardIdFor(choice.key, config.pinterestBoards, config.pinterestBoardsEnv, envOf(config.pinterestSandbox));
+    const boardId = mapped ?? secrets.boardId?.trim();
     if (!boardId) throw new HttpError(400, "Önce bir pano seçin.");
 
     const now = Date.now();
@@ -508,7 +576,12 @@ socialRouter.post(
           })
         : await createPinterestPin(secrets, { ...common, imageUrl: body.imageUrl as string });
       await logAdminAudit(actorOf(request), "social.pinterest.pin", "PINTEREST", `Pinterest'e elle pin gönderildi${pin.sandbox ? " (kum havuzu)" : ""}`);
-      response.json({ ...pin, warning: pin.sandbox ? SANDBOX_NOTE : null });
+      const boardNote = mapped ? null : "Konuya ayrılmış pano eşleşmedi; seçili tek panoya gönderildi.";
+      response.json({
+        ...pin,
+        board: { key: choice.key, name: PIN_BOARDS[choice.key].name, reason: choice.reason, matched: Boolean(mapped) },
+        warning: [pin.sandbox ? SANDBOX_NOTE : null, boardNote].filter(Boolean).join(" ") || null,
+      });
     } catch (err) {
       recentPins.delete(key); // Başarısız denemeyi yeniden denemeye izin ver.
       throw new HttpError(502, err instanceof Error ? err.message : "Pin gönderilemedi");
@@ -690,6 +763,21 @@ socialRouter.post(
     if (!result.ok) throw new HttpError(502, result.error ?? "Yayınlanamadı");
     await logAdminAudit(actorOf(request), "social.publish", String(request.params.id), "Gönderi elle yayınlandı");
     response.json({ ok: true });
+  }),
+);
+
+/** Bekleyen bir Pinterest gönderisinin panosunu elle değiştirir (neden: "elle seçim"). */
+socialRouter.put(
+  "/posts/:id/pinterest-board",
+  asyncHandler(async (request, response) => {
+    const body = z.object({ boardKey: z.enum(PIN_BOARD_KEYS) }).parse(request.body);
+    const id = String(request.params.id);
+    const post = await prisma.socialPost.findUnique({ where: { id }, select: { platform: true, status: true } });
+    if (!post || post.platform !== "PINTEREST") throw new HttpError(404, "Pinterest gönderisi bulunamadı.");
+    if (post.status === "PUBLISHED" || post.status === "PUBLISHING") throw new HttpError(409, "Yayınlanmış gönderinin panosu değiştirilemez.");
+    await prisma.socialPost.update({ where: { id }, data: { boardKey: body.boardKey, boardReason: "elle seçim" } });
+    await logAdminAudit(actorOf(request), "social.pinterest.post-board", id, `Gönderi panosu: ${body.boardKey}`);
+    response.json({ ok: true, boardKey: body.boardKey, boardName: PIN_BOARDS[body.boardKey].name });
   }),
 );
 

@@ -10,6 +10,7 @@ vi.mock("../modules/social/social.service.js", () => ({
     pinterestSandbox: true,
     pinterestToken: tokenInfo,
     pinterestBoards: boards,
+    pinterestBoardsEnv: "sandbox",
     pinterestKeywords: {},
   })),
   writeSocialConfig: vi.fn(async () => ({})),
@@ -21,13 +22,11 @@ vi.mock("../modules/social/keywords.service.js", () => ({
 
 import { socialLink } from "../modules/social/social-link.js";
 import {
-  boardTopicOf,
   buildPinAltText,
   buildPinDescription,
   buildPinTitle,
   cutAtWord,
   limitTags,
-  pickBoardId,
   PIN_LIMITS,
 } from "../modules/social/pinterest-content.js";
 import { createPinterestVideoPin, publishToPinterest } from "../modules/social/platforms/pinterest.platform.js";
@@ -101,21 +100,6 @@ describe("Pin başlığı, açıklaması, alt metni", () => {
   it("yardımcılar", () => {
     expect(cutAtWord("bir iki üç dört beş", 12)).toBe("bir iki üç");
     expect(limitTags("a #x #y #z", 2)).toBe("a #x #y");
-  });
-});
-
-describe("Pano seçimi (içerik türüne göre)", () => {
-  it("CV yazısı cv, sözleşme yazısı sozlesme, araç ve diğerleri pdf", () => {
-    const base = { guid: "g", link: "https://x/blog/a", categories: [] as string[] };
-    expect(boardTopicOf({ ...base, title: "Ats uyumlu cv örnekleri" })).toBe("cv");
-    expect(boardTopicOf({ ...base, title: "Kira sözleşmesi nasıl okunur" })).toBe("sozlesme");
-    expect(boardTopicOf({ ...base, title: "PDF nasıl küçülür" })).toBe("pdf");
-    expect(boardTopicOf({ ...base, guid: "tool-reel:compress", title: "CV" })).toBe("pdf");
-  });
-  it("konuya ayrılmış pano varsa o, yoksa seçili pano, hiçbiri yoksa null", () => {
-    expect(pickBoardId("cv", { cv: "b-cv" }, "b-default")).toBe("b-cv");
-    expect(pickBoardId("pdf", { cv: "b-cv" }, "b-default")).toBe("b-default");
-    expect(pickBoardId("pdf", {}, undefined)).toBeNull();
   });
 });
 
@@ -218,7 +202,7 @@ describe("Otomatik yayıncı", () => {
   };
 
   it("araç videosu video pin olur; bağlantıya pinterest/arac UTM'i, açıklamaya çağrı, ana kelime başlığa girer", async () => {
-    boards = { pdf: "b-pdf" };
+    boards = { "pdf-duzenleme": "b-pdf" };
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       const u = String(url);
       if (u.endsWith(".mp4")) return new Response(new Uint8Array([1]), { status: 200 });

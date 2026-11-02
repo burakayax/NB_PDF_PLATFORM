@@ -24,13 +24,12 @@ import { availableReelCover } from "./reel-cover.js";
 import { isReelUrl } from "../reels.service.js";
 import { linkKindOf, socialLink } from "../social-link.js";
 import { resolvePinKeywords } from "../pinterest-keywords.js";
+import { boardIdFor, chooseBoard } from "../pinterest-board.js";
 import {
   PIN_LIMITS,
-  boardTopicOf,
   buildPinAltText,
   buildPinDescription,
   buildPinTitle,
-  pickBoardId,
 } from "../pinterest-content.js";
 
 const AUTHORIZE_URL = "https://www.pinterest.com/oauth/";
@@ -348,8 +347,11 @@ export async function listPinterestBoards(secrets: Record<string, string>): Prom
 }
 
 /** Yeni pano açar (kum havuzunda hazır pano olmadığı için gerekli). */
-export async function createPinterestBoard(secrets: Record<string, string>, name: string): Promise<PinterestBoard> {
-  const json = await pinterestCall(secrets, "/boards", { method: "POST", body: { name: name.slice(0, 180), privacy: "PUBLIC" } });
+export async function createPinterestBoard(secrets: Record<string, string>, name: string, description?: string): Promise<PinterestBoard> {
+  const json = await pinterestCall(secrets, "/boards", {
+    method: "POST",
+    body: { name: name.slice(0, 180), ...(description ? { description: description.slice(0, 500) } : {}), privacy: "PUBLIC" },
+  });
   if (typeof json.id !== "string") throw new Error("Pinterest pano oluşturmadı");
   return { id: json.id, name: typeof json.name === "string" ? json.name : name, privacy: "PUBLIC" };
 }
@@ -475,15 +477,20 @@ export async function createPinterestVideoPin(
 export const SANDBOX_NOTE =
   "Pin Pinterest kum havuzuna (Trial) gönderildi: yalnızca hesap sahibi görür ve bağlantı normal Pinterest'te açılmayabilir. Standard onayı gelince panelde “Pinterest kum havuzu”nu kapat.";
 
-export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secrets }) => {
+export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secrets, boardKey: postBoardKey }) => {
   if (!imageUrl) throw new Error("Pinterest görselsiz pin kabul etmiyor");
   // Döngüsel içe aktarmayı önlemek için geç yüklenir.
   const { readSocialConfig } = await import("../social.service.js");
   const config = await readSocialConfig();
 
   // Konuya ayrılmış pano (CV / PDF / Sözleşme) varsa o, yoksa seçili tek pano.
-  const boardId = pickBoardId(boardTopicOf(item), config.pinterestBoards, secrets.boardId);
+  const env = config.pinterestSandbox ? "sandbox" : "production";
+  const choice = postBoardKey ? { key: postBoardKey } : chooseBoard({ guid: item.guid, title: item.title, link: item.link, categories: item.categories });
+  const mapped = boardIdFor(choice.key, config.pinterestBoards, config.pinterestBoardsEnv, env);
+  const boardId = mapped ?? secrets.boardId?.trim();
   if (!boardId) throw new Error("Pinterest Pano seçilmemiş (panelden seçilir)");
+  let boardWarning: string | undefined;
+  if (!mapped) boardWarning = "Konuya ayrılmış pano eşleşmedi; seçili tek panoya gönderildi (panelden “Panoları eşleştir” yapın).";
 
   const lang = item.lang === "en" ? "en" : "tr";
   const keywords = await resolvePinKeywords(item, config.pinterestKeywords);
@@ -504,7 +511,7 @@ export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secr
   } else {
     pin = await createPinterestPin(secrets, { ...content, imageUrl });
   }
-  const notes = [warning, pin.sandbox ? SANDBOX_NOTE : undefined].filter(Boolean).join(" ");
+  const notes = [warning, boardWarning, pin.sandbox ? SANDBOX_NOTE : undefined].filter(Boolean).join(" ");
   return { externalId: pin.id, externalUrl: pin.url, ...(notes ? { warning: notes } : {}) };
 };
 
