@@ -29,6 +29,16 @@ import {
   postTiktokVideo,
   tiktokRedirectUri,
 } from "./platforms/tiktok.platform.js";
+import {
+  SANDBOX_NOTE,
+  buildPinterestAuthorizeUrl,
+  createPinterestBoard,
+  createPinterestPin,
+  createPinterestState,
+  fetchPinterestUsername,
+  listPinterestBoards,
+  pinterestRedirectUri,
+} from "./platforms/pinterest.platform.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import { clearHistory, listPanelPosts, recentPublishedByPlatform } from "./social.history.js";
 import {
@@ -123,6 +133,7 @@ const configSchema = z.object({
   toolReelEveryDays: z.number().int().min(0).max(30).optional(),
   tiktokPublic: z.boolean().optional(),
   tiktokBrandOrganic: z.boolean().optional(),
+  pinterestSandbox: z.boolean().optional(),
 });
 
 socialRouter.put(
@@ -238,6 +249,120 @@ socialRouter.post(
       response.json(result);
     } catch (err) {
       throw new HttpError(502, err instanceof Error ? err.message : "TikTok paylaşımı başarısız");
+    }
+  }),
+);
+
+// ───────────────────────── Pinterest ─────────────────────────
+
+/** "Pinterest ile bağlan": kayıtlı App ID ile izin ekranı adresini ve Pinterest'e yazılacak geri dönüş adresini verir. */
+socialRouter.get(
+  "/pinterest/connect",
+  asyncHandler(async (_request, response) => {
+    const secrets = await readAccountSecrets("PINTEREST");
+    const appId = secrets?.appId?.trim();
+    if (!appId || !secrets?.appSecret?.trim()) {
+      throw new HttpError(400, "Önce Pinterest App ID ve App Secret değerlerini kaydedin.");
+    }
+    response.json({ url: buildPinterestAuthorizeUrl(appId, createPinterestState()), redirectUri: pinterestRedirectUri() });
+  }),
+);
+
+socialRouter.get(
+  "/pinterest/redirect-uri",
+  asyncHandler(async (_request, response) => {
+    response.json({ redirectUri: pinterestRedirectUri() });
+  }),
+);
+
+/** Demo ekranı: bağlı hesap adı, panolar, seçili pano ve kum havuzu durumu. */
+socialRouter.get(
+  "/pinterest/overview",
+  asyncHandler(async (_request, response) => {
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil. Önce “Pinterest ile bağlan”ı tamamlayın.");
+    try {
+      const [username, boards, config] = await Promise.all([
+        fetchPinterestUsername(secrets),
+        listPinterestBoards(secrets),
+        readSocialConfig(),
+      ]);
+      response.json({ username, boards, boardId: secrets.boardId ?? "", sandbox: config.pinterestSandbox });
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "Pinterest hesabı okunamadı");
+    }
+  }),
+);
+
+/** Pano seçimi (ID elle yazılmaz): seçilen pano hesabın kayıtlı panosu olur. */
+socialRouter.put(
+  "/pinterest/board",
+  asyncHandler(async (request, response) => {
+    const body = z.object({ boardId: z.string().min(1).max(64) }).parse(request.body);
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
+    const boards = await listPinterestBoards(secrets).catch((err) => {
+      throw new HttpError(502, err instanceof Error ? err.message : "Panolar okunamadı");
+    });
+    if (!boards.some((b) => b.id === body.boardId)) throw new HttpError(400, "Bu pano hesabında bulunamadı.");
+    await saveAccount({ platform: "PINTEREST", secrets: { boardId: body.boardId } });
+    await logAdminAudit(actorOf(request), "social.pinterest.board", "PINTEREST", "Pinterest panosu seçildi");
+    response.json({ ok: true });
+  }),
+);
+
+/** Yeni pano açar (kum havuzunda hazır pano yoktur) ve seçer. */
+socialRouter.post(
+  "/pinterest/boards",
+  asyncHandler(async (request, response) => {
+    const body = z.object({ name: z.string().trim().min(1).max(100) }).parse(request.body);
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
+    try {
+      const board = await createPinterestBoard(secrets, body.name);
+      await saveAccount({ platform: "PINTEREST", secrets: { boardId: board.id } });
+      await logAdminAudit(actorOf(request), "social.pinterest.board-create", "PINTEREST", "Pinterest panosu oluşturuldu");
+      response.json({ board });
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "Pano oluşturulamadı");
+    }
+  }),
+);
+
+const pinterestPinSchema = z.object({
+  imageUrl: z.string().url().max(500),
+  title: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(1).max(500),
+  link: z.string().url().max(500),
+});
+
+/** Aynı pinin kısa sürede iki kez gönderilmesini önler (çift tıklama / yeniden deneme). */
+const recentPins = new Map<string, number>();
+const PIN_DEDUPE_MS = 10 * 60_000;
+
+/** Elle pin: kullanıcı önizlemeyi görür, "Pinle"ye basar. */
+socialRouter.post(
+  "/pinterest/pin",
+  asyncHandler(async (request, response) => {
+    const body = pinterestPinSchema.parse(request.body);
+    const secrets = await readAccountSecrets("PINTEREST");
+    if (!secrets?.refreshToken) throw new HttpError(400, "Pinterest bağlı değil.");
+    const boardId = secrets.boardId?.trim();
+    if (!boardId) throw new HttpError(400, "Önce bir pano seçin.");
+
+    const now = Date.now();
+    for (const [k, t] of recentPins) if (now - t > PIN_DEDUPE_MS) recentPins.delete(k);
+    const key = JSON.stringify([boardId, body.imageUrl, body.title, body.description, body.link]);
+    if (recentPins.has(key)) throw new HttpError(409, "Bu pin az önce zaten gönderildi; aynı pin iki kez gönderilmez.");
+    recentPins.set(key, now);
+
+    try {
+      const pin = await createPinterestPin(secrets, { boardId, ...body });
+      await logAdminAudit(actorOf(request), "social.pinterest.pin", "PINTEREST", `Pinterest'e elle pin gönderildi${pin.sandbox ? " (kum havuzu)" : ""}`);
+      response.json({ ...pin, warning: pin.sandbox ? SANDBOX_NOTE : null });
+    } catch (err) {
+      recentPins.delete(key); // Başarısız denemeyi yeniden denemeye izin ver.
+      throw new HttpError(502, err instanceof Error ? err.message : "Pin gönderilemedi");
     }
   }),
 );

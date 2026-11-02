@@ -1018,6 +1018,8 @@ export type SocialConfig = {
   tiktokPublic: boolean;
   /** TikTok’ta “kendi markamızı tanıtıyor” işareti. */
   tiktokBrandOrganic: boolean;
+  /** Pinterest istekleri kum havuzuna mı gitsin? Trial’da açık, Standard onayında kapatılır. */
+  pinterestSandbox: boolean;
 };
 
 export type SocialAccountRow = {
@@ -1209,6 +1211,49 @@ export async function fetchTiktokConnectUrl(accessToken: string): Promise<string
     throw new Error(message);
   }
   return ((await r.json()) as { url: string }).url;
+}
+
+async function jsonOrThrow<T>(r: Response, fallback: string): Promise<T> {
+  if (!r.ok) throw new Error(await errorMessageOf(r, fallback));
+  return (await r.json()) as T;
+}
+
+/** Pinterest geliştirici sayfasına yazılacak geri dönüş adresi. */
+export async function fetchPinterestRedirectUri(accessToken: string): Promise<string> {
+  const r = await adminFetch(accessToken, "/social/pinterest/redirect-uri");
+  return (await jsonOrThrow<{ redirectUri: string }>(r, "Adres okunamadı.")).redirectUri;
+}
+
+/** "Pinterest ile bağlan": izin ekranı adresi (App ID kayıtlı olmalı). */
+export async function fetchPinterestConnectUrl(accessToken: string): Promise<string> {
+  const r = await adminFetch(accessToken, "/social/pinterest/connect");
+  return (await jsonOrThrow<{ url: string }>(r, "Pinterest bağlantısı başlatılamadı.")).url;
+}
+
+export type PinterestBoard = { id: string; name: string; privacy: string };
+export type PinterestOverview = { username: string; boards: PinterestBoard[]; boardId: string; sandbox: boolean };
+
+export async function fetchPinterestOverview(accessToken: string): Promise<PinterestOverview> {
+  const r = await adminFetch(accessToken, "/social/pinterest/overview");
+  return jsonOrThrow<PinterestOverview>(r, "Pinterest hesabı okunamadı.");
+}
+
+export async function selectPinterestBoard(accessToken: string, boardId: string): Promise<void> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board", { method: "PUT", body: JSON.stringify({ boardId }) });
+  await jsonOrThrow<{ ok: boolean }>(r, "Pano seçilemedi.");
+}
+
+export async function createPinterestBoard(accessToken: string, name: string): Promise<PinterestBoard> {
+  const r = await adminFetch(accessToken, "/social/pinterest/boards", { method: "POST", body: JSON.stringify({ name }) });
+  return (await jsonOrThrow<{ board: PinterestBoard }>(r, "Pano oluşturulamadı.")).board;
+}
+
+export type PinterestPinBody = { imageUrl: string; title: string; description: string; link: string };
+export type PinterestPinResult = { id: string | null; url: string | null; sandbox: boolean; warning: string | null };
+
+export async function createPinterestPin(accessToken: string, body: PinterestPinBody): Promise<PinterestPinResult> {
+  const r = await adminFetch(accessToken, "/social/pinterest/pin", { method: "POST", body: JSON.stringify(body) });
+  return jsonOrThrow<PinterestPinResult>(r, "Pin gönderilemedi.");
 }
 
 export type SocialPostsResponse = {
