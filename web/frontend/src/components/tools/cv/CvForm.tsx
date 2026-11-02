@@ -5,6 +5,8 @@ import {
   Check,
   Briefcase,
   ChevronDown,
+  Info,
+  Car,
   Award,
   FolderGit2,
   GraduationCap,
@@ -319,7 +321,7 @@ export function EducationEditor({ e, data, set, tr }: { e: CvEducation; data: Cv
       <div>
         <span className="mb-1.5 block text-[12px] font-semibold text-slate-300">{tr ? "Eğitim düzeyi" : "Level of education"}</span>
         <div role="radiogroup" aria-label={tr ? "Eğitim düzeyi" : "Level of education"} className="flex flex-wrap gap-1.5">
-          {EDU_LEVELS.map((l) => (
+          {EDU_LEVELS.filter((l) => l.id !== "course" || e.level === "course").map((l) => (
             <button key={l.id} type="button" role="radio" aria-checked={e.level === l.id} onClick={() => upd({ level: e.level === l.id ? "" : l.id })} className={`rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition ${e.level === l.id ? "border-sky-400 bg-sky-500/20 text-white ring-1 ring-sky-400/40" : "border-white/15 bg-white/[0.04] text-slate-200 hover:border-white/30 hover:bg-white/[0.08]"}`}>{tr ? l.tr : l.en}</button>
           ))}
         </div>
@@ -391,14 +393,14 @@ export function CertsEditor({ data, set, tr }: { data: CvData; set: <K extends k
     <>
       {data.certs.map((c: CvCert, i) => (
         <ItemCard key={c.id} tr={tr} first={i === 0} last={i === data.certs.length - 1} onUp={() => set("certs", move(data.certs, i, -1))} onDown={() => set("certs", move(data.certs, i, 1))} onRemove={() => set("certs", data.certs.filter((x) => x.id !== c.id))}>
-          <Text label={tr ? "Sertifika adı" : "Certificate"} value={c.name} onChange={(v) => set("certs", patch(data.certs, c.id, { name: v }))} placeholder={tr ? "Ör. Forklift Operatörlük Belgesi" : "E.g. Forklift Operator Licence"} />
+          <Text label={tr ? "Kurs / sertifika adı" : "Course / certificate"} value={c.name} onChange={(v) => set("certs", patch(data.certs, c.id, { name: v }))} placeholder={tr ? "Ör. Forklift Operatörlük Belgesi, Yazılım Kursu" : "E.g. Forklift Operator Licence, Coding Course"} />
           <div className="grid gap-3 sm:grid-cols-2">
             <Text label={tr ? "Veren kurum" : "Issuer"} value={c.issuer} onChange={(v) => set("certs", patch(data.certs, c.id, { issuer: v }))} />
             <Text label={tr ? "Tarih" : "Date"} type="month" tr={tr} value={c.date} onChange={(v) => set("certs", patch(data.certs, c.id, { date: v }))} />
           </div>
         </ItemCard>
       ))}
-      <AddButton label={data.certs.length ? (tr ? "Bir sertifika daha ekle" : "Add another certificate") : (tr ? "Sertifika ekle" : "Add a certificate")} onClick={() => set("certs", [...data.certs, { id: uid(), name: "", issuer: "", date: "" }])} />
+      <AddButton label={data.certs.length ? (tr ? "Bir kurs / sertifika daha ekle" : "Add another course / certificate") : (tr ? "Kurs / sertifika ekle" : "Add a course / certificate")} onClick={() => set("certs", [...data.certs, { id: uid(), name: "", issuer: "", date: "" }])} />
     </>
   );
 }
@@ -435,9 +437,58 @@ export function ProjectsEditor({ data, set, tr }: { data: CvData; set: <K extend
   );
 }
 
+const LICENSE_CLASSES = ["M", "A1", "A2", "A", "B1", "B", "BE", "C1", "C1E", "C", "CE", "D1", "D1E", "D", "DE", "F", "G"] as const;
+
+/** Kayıtlı ehliyet yazısını (ör. "B, A2 sınıfı, Forklift") seçili sınıflara + serbest metne ayırır. */
+function parseLicense(v: string): { picked: string[]; other: string } {
+  const picked: string[] = [];
+  const other: string[] = [];
+  // Not: JS'te  yalnız ASCII harflerle çalışır ("sınıfı" sonundaki ı'yı kaçırır) → boşluk/uç temelli ayıklama.
+  const strip = (x: string) => x.replace(/(^|\s)(sınıfı|sınıf|class)(?=\s|$)/gi, " ").replace(/\s+/g, " ").trim();
+  for (const raw of v.split(",")) {
+    const t = strip(raw);
+    if (!t) continue;
+    const up = t.toUpperCase();
+    if ((LICENSE_CLASSES as readonly string[]).includes(up)) { if (!picked.includes(up)) picked.push(up); }
+    else other.push(t);
+  }
+  return { picked, other: other.join(", ") };
+}
+
+function composeLicense(picked: string[], other: string, tr: boolean): string {
+  const ordered = LICENSE_CLASSES.filter((c) => picked.includes(c));
+  const cls = ordered.length ? (tr ? `${ordered.join(", ")} Sınıfı` : `Class ${ordered.join(", ")}`) : "";
+  const o = other.trim();
+  return cls && o ? `${cls}, ${o}` : cls || o;
+}
+
+/** Ehliyet: sınıf düğmeleri (birden çok seçilebilir) + "Diğer" için serbest yazı. */
+function LicenseField({ value, onChange, tr }: { value: string; onChange: (v: string) => void; tr: boolean }) {
+  const parsed = parseLicense(value);
+  const [other, setOther] = useState(parsed.other);
+  const last = useRef(value);
+  useEffect(() => {
+    if (value !== last.current) { last.current = value; setOther(parseLicense(value).other); }
+  }, [value]);
+  const emit = (picked: string[], o: string) => { const v = composeLicense(picked, o, tr); last.current = v; onChange(v); };
+  return (
+    <div className="space-y-3">
+      <div role="group" aria-label={tr ? "Ehliyet sınıfı" : "Licence class"} className="flex flex-wrap gap-2">
+        {LICENSE_CLASSES.map((c) => {
+          const on = parsed.picked.includes(c);
+          return (
+            <button key={c} type="button" aria-pressed={on} onClick={() => emit(on ? parsed.picked.filter((x) => x !== c) : [...parsed.picked, c], other)} className={`min-w-[2.75rem] rounded-xl px-3 py-2 text-[13px] font-bold transition ${on ? "bg-emerald-500 text-white shadow-[0_6px_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-300" : "bg-white/[0.06] text-slate-200 ring-1 ring-white/10 hover:bg-white/10"}`}>{c}</button>
+          );
+        })}
+      </div>
+      <Text label={tr ? "Diğer (kendiniz yazın)" : "Other (type your own)"} value={other} onChange={(v) => { setOther(v); emit(parsed.picked, v); }} placeholder={tr ? "Ör. Forklift belgesi" : "E.g. Forklift certificate"} />
+    </div>
+  );
+}
+
 export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon, aiLocked, onAiLocked }: Props) {
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
-  const [moreOpen, setMoreInfo] = useState(() => !!(data.website || data.linkedin || data.socials.length || data.birth || data.license));
+  const moreFilled = !!(data.website || data.linkedin || data.socials.length);
   const iss = (i: { tr: string; en: string } | null) => (i ? (tr ? i.tr : i.en) : null);
   const lang = data.settings.lang;
   const monthType = "month";
@@ -448,24 +499,22 @@ export function CvForm({ data, onChange, tpl, disabled, tr, aiComingSoon, aiLock
         <PhotoField data={data} onChange={onChange} tpl={tpl} disabled={disabled} tr={tr} aiComingSoon={aiComingSoon} aiLocked={aiLocked} onAiLocked={onAiLocked} />
 
         <Text label={tr ? "Ad soyad" : "Full name"} value={data.name} onChange={(v) => set("name", v)} autoComplete="name" />
+        <Text label={tr ? "Doğum tarihi" : "Date of birth"} value={data.birth} onChange={(v) => set("birth", v)} />
         <Text label={tr ? "Unvan / hedef pozisyon" : "Job title / target role"} value={data.title} onChange={(v) => set("title", v)} placeholder={tr ? "Ör. Muhasebe Uzmanı" : "E.g. Accountant"} suggest={(q) => suggestTitles(q, lang)} tr={tr} />
         <div className="grid gap-3 sm:grid-cols-2">
           <Text label={tr ? "E-posta" : "Email"} type="email" value={data.email} onChange={(v) => set("email", v)} autoComplete="email" error={iss(emailIssue(data.email))} />
           <Text label={tr ? "Şehir" : "City"} value={data.city} onChange={(v) => set("city", v)} placeholder={tr ? "Ör. İstanbul" : "E.g. London"} autoComplete="address-level2" hint={tr ? "CV'de iletişim bilgileri arasında “Şehir” olarak görünür." : "Shown as “City” among your contact details."} />
         </div>
         <PhoneField label={tr ? "Telefon" : "Phone"} value={data.phone} onChange={(v) => set("phone", v)} city={data.city} tr={tr} disabled={disabled} error={iss(phoneIssue(data.phone))} />
-        <button type="button" onClick={() => setMoreInfo((o) => !o)} aria-expanded={moreOpen} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-sky-300 hover:text-sky-200">
-          <ChevronDown className={`h-3.5 w-3.5 transition ${moreOpen ? "rotate-180" : ""}`} />{tr ? "Daha fazla bilgi (web sitesi, LinkedIn, sosyal hesaplar, doğum tarihi, ehliyet…)" : "More details (website, LinkedIn, birth date…)"}
-        </button>
-        {moreOpen ? (
-          <>
-            <SocialsEditor data={data} set={set} tr={tr} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Text label={tr ? "Doğum tarihi" : "Date of birth"} value={data.birth} onChange={(v) => set("birth", v)} />
-              <Text label={tr ? "Ehliyet" : "Driving licence"} value={data.license} onChange={(v) => set("license", v)} />
-            </div>
-          </>
-        ) : null}
+      </Accordion>
+
+      <Accordion title={tr ? "Daha fazla bilgi" : "More details"} icon={<Info className="h-4 w-4" />} defaultOpen={moreFilled}>
+        <p className="text-[12px] text-slate-400">{tr ? "İsteğe bağlı: web sitesi, LinkedIn, sosyal hesaplar." : "Optional: website, LinkedIn, social accounts."}</p>
+        <SocialsEditor data={data} set={set} tr={tr} />
+      </Accordion>
+
+      <Accordion title={tr ? "Ehliyet" : "Driving licence"} icon={<Car className="h-4 w-4" />} defaultOpen={!!data.license}>
+        <LicenseField value={data.license} onChange={(v) => set("license", v)} tr={tr} />
       </Accordion>
 
       <Accordion title={tr ? "Profil özeti" : "Profile summary"} icon={<FileText className="h-4 w-4" />}>
@@ -535,7 +584,7 @@ ${line}` : line }))} />
 
       <p className="px-1 pt-2 text-[12px] font-bold uppercase tracking-wide text-slate-500">{tr ? "Ek bölümler (isteğe bağlı)" : "Extra sections (optional)"}</p>
 
-      <Accordion title={tr ? "Sertifikalar" : "Certifications"} icon={<Award className="h-4 w-4" />} count={data.certs.length}>
+      <Accordion title={tr ? "Kurslar ve Sertifikalar" : "Courses & Certifications"} icon={<Award className="h-4 w-4" />} count={data.certs.length}>
         <CertsEditor data={data} set={set} tr={tr} />
       </Accordion>
 

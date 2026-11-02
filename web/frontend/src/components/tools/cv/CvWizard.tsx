@@ -3,11 +3,11 @@
  * Aynı veri modelini düzenler (tam form ile birebir paylaşır); istenirse "Tüm formu göster"e geçilir.
  */
 import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Download, FileUp, GraduationCap, Linkedin, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Download, FileUp, GraduationCap, Upload, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { Area, AddButton, CertsEditor, EducationEditor, PhotoField, ProjectsEditor, ReferencesEditor, SocialsEditor, GRADUATE_ORDER, Text, inputCls, patch } from "./CvForm";
 import { PhoneField } from "./CvFields";
 import { BulletPicker, SkillPicker, SummaryPicker } from "./CvPhrasePicker";
-import { LANG_LEVELS, uid, type CvData } from "./cvModel";
+import { LANG_LEVELS, resolveOrder, uid, type CvData, type SectionKey } from "./cvModel";
 import { PROFESSIONS, matchProfession, professionById, professionSample, type Profession } from "./cvPhrases";
 import { dateOrderIssue, emailIssue, phoneIssue } from "./cvValidate";
 import { SuggestInput } from "./CvSuggestInput";
@@ -30,31 +30,50 @@ type Props = {
   onOpenDesign: () => void;
 };
 
-/** Herkes için aynı adımlar: projeler, sertifikalar, ek bilgiler ve referanslar da burada sorulur (hepsi isteğe bağlı). */
-const STEPS = ["start", "you", "work", "edu", "projects", "skills", "certs", "more", "refs", "summary", "done"] as const;
-type Step = (typeof STEPS)[number];
+/** Tüm adımlar (hepsi isteğe bağlı). Sıra sabit değildir: CV şablonundaki bölüm sırasını izler. */
+type Step = "start" | "you" | "work" | "edu" | "projects" | "skills" | "certs" | "more" | "refs" | "summary" | "done";
+
+/** Bölüm → adım eşlemesi ("languages" beceri adımında, "interests" ek bilgiler adımında sorulur). */
+const SECTION_STEP: Partial<Record<SectionKey, Step>> = {
+  summary: "summary", experience: "work", education: "edu", skills: "skills", languages: "skills",
+  certs: "certs", projects: "projects", interests: "more", references: "refs",
+};
+
+/** Adım sırası: önce kişisel bilgiler (CV'nin en üstü) + alan seçimi, sonra CV'de göründüğü sırayla bölümler, en sonda bitiş. */
+export function wizardSteps(order: SectionKey[]): Step[] {
+  const steps: Step[] = ["you", "start"];
+  for (const k of order) {
+    const st = SECTION_STEP[k];
+    if (st && !steps.includes(st)) steps.push(st);
+  }
+  for (const st of ["summary", "work", "edu", "skills", "certs", "projects", "more", "refs"] as const) if (!steps.includes(st)) steps.push(st);
+  steps.push("done");
+  return steps;
+}
 
 export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAiLocked, disabled, onFullForm, onDownload, onOpenLinkedin, onOpenDesign }: Props) {
   const lang = data.settings.lang;
-  const [i, setI] = useState(0);
+  const [cur, setCur] = useState<Step>("you");
   const [profId, setProfId] = useState<string>("");
   const [graduate, setGraduate] = useState(false);
   const [ownRole, setOwnRole] = useState("");
-  const step: Step = STEPS[i];
+  const steps = useMemo(() => wizardSteps(resolveOrder(data)), [data]);
+  const step: Step = steps.includes(cur) ? cur : "you";
+  const i = steps.indexOf(step);
   const set = <K extends keyof CvData>(k: K, v: CvData[K]) => onChange({ ...data, [k]: v });
   const prof: Profession | null = (profId && professionById(profId)) || matchProfession(`${data.title} ${data.experience[0]?.role ?? ""}`);
 
   const labels: Record<Step, string> = {
     start: tr ? "Başlangıç" : "Start", you: tr ? "Siz" : "You", work: tr ? "Deneyim" : "Work", edu: tr ? "Eğitim" : "Education",
-    projects: tr ? "Projeler" : "Projects", skills: tr ? "Beceriler" : "Skills", certs: tr ? "Sertifikalar" : "Certificates", more: tr ? "Ek bilgiler" : "More details", refs: tr ? "Referanslar" : "References", summary: tr ? "Özet" : "Summary", done: tr ? "Bitti" : "Done",
+    projects: tr ? "Projeler" : "Projects", skills: tr ? "Beceriler" : "Skills", certs: tr ? "Kurslar ve sertifikalar" : "Courses & certificates", more: tr ? "Ek bilgiler" : "More details", refs: tr ? "Referanslar" : "References", summary: tr ? "Özet" : "Summary", done: tr ? "Bitti" : "Done",
   };
 
   // Adım kuralları: ilerlemeyi engellemez, yalnız nazikçe yönlendirir
   const emailBad = emailIssue(data.email), phoneBad = phoneIssue(data.phone);
   const canNext = step === "you" ? !!data.name.trim() : true;
 
-  const next = () => setI((x) => Math.min(STEPS.length - 1, x + 1));
-  const back = () => setI((x) => Math.max(0, x - 1));
+  const next = () => setCur(steps[Math.min(steps.length - 1, i + 1)]);
+  const back = () => setCur(steps[Math.max(0, i - 1)]);
 
   function chooseProfession(p: Profession) {
     setProfId(p.id);
@@ -66,13 +85,13 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
     const found = matchProfession(t);
     setProfId(found ? found.id : "general");
     onChange({ ...data, title: t, settings: { ...data.settings, order: graduate ? GRADUATE_ORDER : data.settings.order } });
-    setI((x) => Math.min(STEPS.length - 1, x + 1));
+    setCur(steps[Math.min(steps.length - 1, i + 1)]);
   }
   function loadSample() {
     if (!prof) return;
     const s = professionSample(prof.id, lang);
     onChange({ ...s, photo: data.photo, showPhoto: data.showPhoto, settings: { ...data.settings, order: graduate ? GRADUATE_ORDER : data.settings.order } });
-    setI(STEPS.indexOf("done"));
+    setCur("done");
   }
   function toggleGraduate(v: boolean) {
     setGraduate(v);
@@ -86,12 +105,12 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
       {/* İlerleme */}
       <div className="border-b border-white/10 px-5 pb-4 pt-5">
         <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-wider text-sky-300/90">
-          <span>{tr ? `Adım ${i + 1} / ${STEPS.length}` : `Step ${i + 1} of ${STEPS.length}`} · {labels[step]}</span>
+          <span>{tr ? `Adım ${i + 1} / ${steps.length}` : `Step ${i + 1} of ${steps.length}`} · {labels[step]}</span>
           <button type="button" onClick={onFullForm} className="normal-case tracking-normal text-slate-400 underline-offset-2 hover:text-white hover:underline">{tr ? "Tüm formu göster" : "Show full form"}</button>
         </div>
-        <div className="mt-3 flex gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={i + 1}>
-          {STEPS.map((s, n) => (
-            <button key={s} type="button" onClick={() => setI(n)} aria-label={labels[s]} className={`h-1.5 flex-1 rounded-full transition ${n < i ? "bg-sky-400" : n === i ? "bg-gradient-to-r from-sky-400 to-indigo-400" : "bg-white/10 hover:bg-white/20"}`} />
+        <div className="mt-3 flex gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={i + 1}>
+          {steps.map((s, n) => (
+            <button key={s} type="button" onClick={() => setCur(s)} aria-label={labels[s]} className={`h-1.5 flex-1 rounded-full transition ${n < i ? "bg-sky-400" : n === i ? "bg-gradient-to-r from-sky-400 to-indigo-400" : "bg-white/10 hover:bg-white/20"}`} />
           ))}
         </div>
         {step !== "start" && step !== "done" ? (
@@ -123,7 +142,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
             </label>
             <div className="grid gap-2 sm:grid-cols-2">
               <button type="button" disabled={!prof} onClick={loadSample} className="flex items-center gap-2.5 rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-fuchsia-100 hover:bg-fuchsia-500/15 disabled:opacity-40"><Wand2 className="h-4 w-4 shrink-0" /><span>{tr ? "Bu mesleğin örnek CV'sini aç" : "Open a sample CV for this field"}<span className="block text-[12px] font-normal text-fuchsia-200/90">{tr ? "Hazır doldurulmuş; üzerine kendi bilgilerinizi yazın" : "Pre-filled; type your own details over it"}</span></span></button>
-              <button type="button" onClick={onOpenLinkedin} className="flex items-center gap-2.5 rounded-xl border border-sky-400/25 bg-sky-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-sky-100 hover:bg-sky-500/15"><Linkedin className="h-4 w-4 shrink-0" /><span>{tr ? "LinkedIn / eski CV'den aktar" : "Import from LinkedIn / old CV"}<span className="block text-[12px] font-normal text-sky-200/90">{tr ? "Dosyadan cihazınızda okunur, ücretsiz" : "Read on your device, free"}</span></span></button>
+              <button type="button" onClick={onOpenLinkedin} className="flex items-center gap-2.5 rounded-xl border border-sky-400/25 bg-sky-500/[0.07] px-3.5 py-3 text-left text-[13px] font-semibold text-sky-100 hover:bg-sky-500/15"><Upload className="h-4 w-4 shrink-0" /><span>{tr ? "Önceki CV'mi yükle" : "Upload my earlier CV"}<span className="block text-[12px] font-normal text-sky-200/90">{tr ? "Bu uygulamayla hazırlayıp indirdiğiniz PDF" : "A PDF you made and downloaded here"}</span></span></button>
             </div>
           </>
         ) : null}
@@ -218,7 +237,7 @@ export function CvWizard({ data, onChange, tpl, tr, aiComingSoon, aiLocked, onAi
 
         {step === "certs" ? (
           <>
-            <Head title={tr ? "Sertifika ya da belgeniz var mı?" : "Any certificates or licences?"} sub={tr ? "Mesleki belgeler, kurs sertifikaları, ehliyet dışı yeterlilikler (ör. forklift belgesi, dil sınavı, yazılım kursu). Yoksa “Atla”ya basın." : "Professional licences, course certificates, qualifications (e.g. forklift licence, language exam, coding course). Press “Skip” if none."} />
+            <Head title={tr ? "Kurs, sertifika ya da belgeniz var mı?" : "Any courses, certificates or licences?"} sub={tr ? "Mesleki belgeler, kurs sertifikaları, ehliyet dışı yeterlilikler (ör. forklift belgesi, dil sınavı, yazılım kursu). Yoksa “Atla”ya basın." : "Professional licences, course certificates, qualifications (e.g. forklift licence, language exam, coding course). Press “Skip” if none."} />
             <CertsEditor data={data} set={set} tr={tr} />
           </>
         ) : null}

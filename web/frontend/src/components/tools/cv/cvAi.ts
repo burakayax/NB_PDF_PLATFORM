@@ -59,7 +59,7 @@ export function cvTextForAi(d: CvData): string {
   const langs = d.languages.map((l) => [l.name, l.level].filter(Boolean).join(" ")).filter(Boolean);
   if (langs.length) out.push(`Diller: ${langs.join(", ")}`);
   const certs = d.certs.map((c) => c.name).filter(Boolean);
-  if (certs.length) out.push(`Sertifikalar: ${certs.join(", ")}`);
+  if (certs.length) out.push(`Kurslar ve sertifikalar: ${certs.join(", ")}`);
   return out.join("\n").trim();
 }
 

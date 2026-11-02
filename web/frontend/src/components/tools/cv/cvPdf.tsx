@@ -11,10 +11,11 @@
  */
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { PDFDocument, popGraphicsState, pushGraphicsState, rgb, setCharacterSpacing, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
+import { PDFDocument, PDFName, PDFString, popGraphicsState, pushGraphicsState, rgb, setCharacterSpacing, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { PDF_SAVE_OPTIONS } from "../../../lib/pdfSaveOptions";
 import { buildModel, type CvData, type BuildMode } from "./cvModel";
+import { buildEmbedPayload, EMBED_INFO_KEY } from "./cvEmbed";
 import { MAX_FIT_STEP, MAX_TRIM, styleFromSettings, trimForFit } from "./cvStyle";
 import { CoverLetterPage, CvPage, FONT_CSS, FONT_FILE, PAGE_H, PAGE_W, ensureCvStyles, getTemplate, type FontKey } from "./cvTemplates";
 
@@ -274,7 +275,7 @@ async function visit(p: Painter, el: Element, parentOpacity: number, ox: number,
   }
 }
 
-export async function domToPdf(root: HTMLElement, pages: number, meta: { title: string }): Promise<Uint8Array> {
+export async function domToPdf(root: HTMLElement, pages: number, meta: { title: string; embed?: string | null }): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
   const painter = new Painter(pdf, root);
@@ -285,6 +286,11 @@ export async function domToPdf(root: HTMLElement, pages: number, meta: { title: 
     pdf.setTitle(meta.title);
     pdf.setProducer("PDF Platform (pdfplatform.app)");
     pdf.setCreator("PDF Platform (pdfplatform.app)");
+    // CV bilgileri (yeniden yükleyip düzenlemek için) — görünmez künye alanı
+    if (meta.embed) {
+      const info = pdf.context.lookup(pdf.context.trailerInfo.Info);
+      if (info && "set" in info) (info as unknown as { set: (k: PDFName, v: PDFString) => void }).set(PDFName.of(EMBED_INFO_KEY), PDFString.of(meta.embed));
+    }
   } catch { /* künye yazılamazsa çıktı yine geçerlidir */ }
   return pdf.save(PDF_SAVE_OPTIONS);
 }
@@ -391,7 +397,8 @@ export async function measureFit(data: CvData, templateId: string): Promise<{ pa
 export async function buildCvPdf(data: CvData, templateId: string, mode: BuildMode): Promise<{ bytes: Uint8Array; pages: number; fitStep: number; trim: number; hidden: number }> {
   return withOffscreen(data, templateId, mode, async (o) => {
     const { pages, step, trim, hidden } = fitLoop(o, data.settings.fitOnePage);
-    const bytes = await domToPdf(o.root, pages, { title: `${data.name.trim() || "CV"} — ${data.settings.lang === "tr" ? "Özgeçmiş" : "Resume"}` });
+    const embed = mode === "export" ? await buildEmbedPayload(data, templateId).catch(() => null) : null;
+    const bytes = await domToPdf(o.root, pages, { title: `${data.name.trim() || "CV"} — ${data.settings.lang === "tr" ? "Özgeçmiş" : "Resume"}`, embed });
     return { bytes, pages, fitStep: step, trim, hidden };
   });
 }

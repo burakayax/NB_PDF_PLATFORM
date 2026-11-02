@@ -98,7 +98,7 @@ export function CvPassModal({ language, accessToken, onClose, onUpgrade }: Props
           {msg ? <p className="text-center text-[13px] font-semibold text-red-300">{msg}</p> : null}
           {paymentsDisabled ? <p className="pt-1 text-center text-[12px] text-slate-400">{tr ? "Ödeme sistemi çok yakında açılıyor." : "Payments are coming very soon."}</p> : null}
           <ul className="space-y-1 pt-2 text-[12px] text-slate-400">
-            <li className="flex items-start gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />{tr ? "Süre bitince şablonlar yeniden kilitlenir; taslağınız cihazınızda kalır." : "When time runs out the templates lock again; your draft stays on your device."}</li>
+            <li className="flex items-start gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />{tr ? "Süre bitince şablonlar yeniden kilitlenir; indirdiğiniz PDF'ler elinizde kalır." : "When time runs out the templates lock again; the PDFs you downloaded are yours to keep."}</li>
             <li className="flex items-start gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />{tr ? "İndirdiğiniz PDF'ler sizindir, süre bitince de geçerli kalır." : "PDFs you downloaded stay yours after the pass ends."}</li>
             <li className="flex items-start gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />{tr ? "Yeniden satın alırsanız süre kalan sürenin üstüne eklenir." : "If you buy again, the time is added on top of what remains."}</li>
           </ul>

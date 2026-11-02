@@ -24,6 +24,9 @@ async function pipe(bytes: Uint8Array, stream: CompressionStream | Decompression
   return new Uint8Array(buf);
 }
 
+export const gzipBytes = (b: Uint8Array): Promise<Uint8Array> => (typeof CompressionStream === "undefined" ? Promise.resolve(b) : pipe(b, new CompressionStream("gzip")));
+export const gunzipBytes = (b: Uint8Array): Promise<Uint8Array> => pipe(b, new DecompressionStream("gzip"));
+
 /** Paylaşılacak sade veri: fotoğraf yok, boş alanlar atılır. */
 export function shareablePayload(d: CvData): string {
   const { photo: _photo, ...rest } = d;

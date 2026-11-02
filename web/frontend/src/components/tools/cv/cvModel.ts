@@ -156,7 +156,7 @@ export function sampleCv(lang: CvLang): CvData {
     linkedin: tr ? "linkedin.com/in/elifyilmaz" : "linkedin.com/in/emmacarter",
     socials: [],
     birth: "",
-    license: tr ? "B sınıfı" : "",
+    license: tr ? "B Sınıfı" : "",
     summary: tr
       ? "10 yılı aşkın deneyime sahip, sonuç odaklı proje yöneticisi. Çok disiplinli ekipleri yöneterek bütçe ve takvim hedeflerinin üzerinde teslimatlar gerçekleştirdim. Veriye dayalı karar almayı ve açık iletişimi önemserim."
       : "Results-driven project manager with 10+ years of experience leading cross-functional teams to deliver ahead of budget and schedule. Committed to data-informed decisions and clear communication.",
@@ -214,12 +214,12 @@ export type Labels = {
 
 export const LABELS: Record<CvLang, Labels> = {
   tr: {
-    profile: "Profil", experience: "İş Deneyimi", education: "Eğitim", skills: "Beceriler", languages: "Yabancı Diller", certs: "Sertifikalar",
+    profile: "Profil", experience: "İş Deneyimi", education: "Eğitim", skills: "Beceriler", languages: "Yabancı Diller", certs: "Kurslar ve Sertifikalar",
     projects: "Projeler", interests: "İlgi Alanları", references: "Referanslar", contact: "İletişim", personal: "Kişisel Bilgiler", present: "Devam ediyor",
     birth: "Doğum tarihi", license: "Ehliyet",
   },
   en: {
-    profile: "Profile", experience: "Work Experience", education: "Education", skills: "Skills", languages: "Languages", certs: "Certifications",
+    profile: "Profile", experience: "Work Experience", education: "Education", skills: "Skills", languages: "Languages", certs: "Courses & Certifications",
     projects: "Projects", interests: "Interests", references: "References", contact: "Contact", personal: "Personal Details", present: "Present",
     birth: "Date of birth", license: "Driving licence",
   },
@@ -237,7 +237,7 @@ const PH: Record<CvLang, Record<string, string>> = {
     summary: "Kendinizi iki-üç cümleyle tanıtın: deneyiminiz, güçlü yönleriniz ve hedefiniz.",
     company: "Şirket adı", role: "Pozisyon", location: "Şehir", dates: "Başlangıç – Bitiş", bullet: "Başarınızı rakamla anlatan bir madde ekleyin",
     school: "Okul / Üniversite", degree: "Bölüm, Derece", skill: "Beceri", language: "Dil", langLevel: "Seviye",
-    cert: "Sertifika adı", issuer: "Veren kurum", project: "Proje adı", projectDesc: "Projeyi kısaca anlatın", refName: "Referans kişi", refRole: "Unvan, Kurum", refContact: "Telefon / e-posta",
+    cert: "Kurs / sertifika adı", issuer: "Veren kurum", project: "Proje adı", projectDesc: "Projeyi kısaca anlatın", refName: "Referans kişi", refRole: "Unvan, Kurum", refContact: "Telefon / e-posta",
     interest: "İlgi alanlarınız",
     customTitle: "Bölüm başlığı", customItem: "Başlık", customDesc: "Kısa açıklama",
   },

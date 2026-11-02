@@ -307,7 +307,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
               </div>
             ) : null}
             <div className="flex flex-wrap gap-2">
-              <button type="button" className={btn} onClick={() => { onNewCv(applyTailor(data, tailor, { summary: tailor.pickSummary, bullets: tailor.pickBullets }), position.trim() ? `${position.trim()} (${tr ? "uyarlanmış" : "tailored"})` : tr ? "İlana uyarlanmış CV" : "Tailored CV"); setTailor(null); }}><Copy className="h-4 w-4" />{tr ? "Uyarlanmış kopya oluştur" : "Create tailored copy"}</button>
+              <button type="button" className={btn} onClick={() => { onNewCv(applyTailor(data, tailor, { summary: tailor.pickSummary, bullets: tailor.pickBullets }), position.trim() ? `${position.trim()} (${tr ? "uyarlanmış" : "tailored"})` : tr ? "İlana uyarlanmış CV" : "Tailored CV"); setTailor(null); }}><Copy className="h-4 w-4" />{tr ? "Uyarlanmış hâli CV'ye uygula" : "Apply tailored version to my CV"}</button>
               <button type="button" className={ghost} onClick={() => setTailor(null)}>{tr ? "Vazgeç" : "Dismiss"}</button>
             </div>
           </div>
@@ -345,7 +345,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
             <p className="font-bold text-emerald-200">{tr ? "Okundu:" : "Read:"} {imp.parsed.name || (tr ? "(ad bulunamadı)" : "(no name found)")}{imp.parsed.title ? ` — ${imp.parsed.title}` : ""}</p>
             <p className="mt-1 text-slate-300">{tr ? `${imp.parsed.experience.length} deneyim, ${imp.parsed.education.length} eğitim, ${imp.parsed.skills.length} beceri, ${imp.parsed.languages.length} dil${imp.parsed.other.length ? `, ${imp.parsed.other.length} ek bölüm` : ""}.` : `${imp.parsed.experience.length} jobs, ${imp.parsed.education.length} education, ${imp.parsed.skills.length} skills, ${imp.parsed.languages.length} languages${imp.parsed.other.length ? `, ${imp.parsed.other.length} extra section(s)` : ""}.`}</p>
             <p className="mt-1 text-[12px] text-slate-400">{tr ? "Eklemeden önce alanları gözden geçirin; yapay zekâ belgedeki bir bilgiyi yanlış okumuş olabilir." : "Review the fields after adding; the AI may have misread something."}</p>
-            <div className="mt-2 flex gap-2"><button type="button" className={btn} onClick={() => { onNewCv(parsedToCv(imp.parsed, data), imp.name || (tr ? "İçe aktarılan CV" : "Imported CV")); setImp(null); }}><Check className="h-4 w-4" />{tr ? "Yeni CV olarak ekle" : "Add as a new CV"}</button><button type="button" className={ghost} onClick={() => setImp(null)}>{tr ? "Vazgeç" : "Dismiss"}</button></div>
+            <div className="mt-2 flex gap-2"><button type="button" className={btn} onClick={() => { onNewCv(parsedToCv(imp.parsed, data), imp.name || (tr ? "İçe aktarılan CV" : "Imported CV")); setImp(null); }}><Check className="h-4 w-4" />{tr ? "CV'me aktar" : "Use as my CV"}</button><button type="button" className={ghost} onClick={() => setImp(null)}>{tr ? "Vazgeç" : "Dismiss"}</button></div>
           </div>
         ) : null}
       </Card>
