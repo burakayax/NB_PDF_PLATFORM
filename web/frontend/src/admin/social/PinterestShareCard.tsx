@@ -3,16 +3,19 @@ import { AlertTriangle, Check, ExternalLink, Loader2, Plus, RefreshCw, Send } fr
 import {
   createPinterestBoard,
   createPinterestPin,
-  fetchPinterestBoardMap,
+  fetchPinterestBoardRules,
+  fetchPinterestBoardSetup,
   fetchPinterestKeywords,
   fetchPinterestOverview,
   fetchPinterestPreview,
   fetchSocialToolReels,
-  savePinterestBoardMap,
   savePinterestKeywords,
   selectPinterestBoard,
-  type PinterestBoardMap,
-  type PinterestBoardTopic,
+  setPinterestBoardMap,
+  syncPinterestBoards,
+  type PinterestBoardChoice,
+  type PinterestBoardRules,
+  type PinterestBoardSetup,
   type PinterestOverview,
   type PinterestPinResult,
   type PinterestToolKeywords,
@@ -36,12 +39,11 @@ function absoluteLink(link: string): string {
   return link.startsWith("http") ? link : `${window.location.origin}${link.startsWith("/") ? "" : "/"}${link}`;
 }
 
-/** İçerik türüne göre pano başlıkları (Pinterest'te bu adlarla pano açılması önerilir). */
-const BOARD_TOPICS: { topic: PinterestBoardTopic; label: string; hint: string }[] = [
-  { topic: "cv", label: "CV Örnekleri", hint: "CV ve iş başvurusu yazıları" },
-  { topic: "pdf", label: "PDF İpuçları", hint: "PDF araçları ve diğer yazılar" },
-  { topic: "sozlesme", label: "Sözleşme ve Hukuk Belgeleri", hint: "Sözleşme, ihale, kira yazıları" },
-];
+const SOURCE_LABEL: Record<string, string> = {
+  kayıtlı: "Bağlı",
+  "adla bulundu": "Adla bulundu (henüz bağlanmadı)",
+  eksik: "Eksik",
+};
 
 export function PinterestShareCard({ accessToken, onChanged }: { accessToken: string; onChanged?: () => void | Promise<void> }) {
   const [overview, setOverview] = useState<PinterestOverview | null>(null);
@@ -60,9 +62,15 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   const [altText, setAltText] = useState("");
   const [mode, setMode] = useState<"image" | "video">("image");
 
-  // Konuya göre pano eşlemesi ve anahtar kelimeler.
-  const [boardMap, setBoardMap] = useState<PinterestBoardMap>({});
-  const [mapMsg, setMapMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Altı konu panosunun kurulumu (eşleştirme / eksikleri oluşturma) ve eşleştirme kuralları.
+  const [setup, setSetup] = useState<PinterestBoardSetup | null>(null);
+  const [setupMsg, setSetupMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [setupBusy, setSetupBusy] = useState(false);
+  const [confirmCreate, setConfirmCreate] = useState(false);
+  const [rules, setRules] = useState<PinterestBoardRules | null>(null);
+  const [showRules, setShowRules] = useState(false);
+  const [previewBoard, setPreviewBoard] = useState<PinterestBoardChoice | null>(null);
+  // Anahtar kelimeler.
   const [toolKeywords, setToolKeywords] = useState<PinterestToolKeywords[]>([]);
   const [kwMain, setKwMain] = useState("");
   const [kwExtra, setKwExtra] = useState("");
@@ -76,16 +84,16 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   const load = useCallback(async () => {
     setLoadErr(null);
     try {
-      const [o, r, map, kws] = await Promise.all([
+      const [o, r, boardSetup, kws] = await Promise.all([
         fetchPinterestOverview(accessToken),
         fetchSocialToolReels(accessToken),
-        fetchPinterestBoardMap(accessToken).catch(() => ({}) as PinterestBoardMap),
+        fetchPinterestBoardSetup(accessToken).catch(() => null),
         fetchPinterestKeywords(accessToken).catch(() => [] as PinterestToolKeywords[]),
       ]);
       setOverview(o);
       setBoardId(o.boardId);
       setReels(r.reels);
-      setBoardMap(map);
+      setSetup(boardSetup);
       setToolKeywords(kws);
       setReelId((current) => current || r.reels[0]?.id || "");
     } catch (e) {
@@ -98,8 +106,8 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   }, [load]);
 
   const reel = reels.find((r) => r.id === reelId) ?? null;
-  // Pin, "PDF" konusuna ayrılmış panoya ya da (yoksa) seçili panoya gider.
-  const hasBoard = Boolean(boardId || boardMap.pdf);
+  // Pin, konusuna ayrılmış panoya ya da (eşleşme yoksa) seçili tek panoya gider.
+  const hasBoard = Boolean(boardId || setup?.rows.some((row) => row.boardId));
   // Pin görseli: aracın dikey markalı kapağı (sitede yayında olmalı; Pinterest adresten indirir).
   const imageUrl = reel ? `${window.location.origin}/reel-covers/${encodeURIComponent(reel.id)}.jpg` : "";
 
@@ -128,6 +136,7 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
         setDescription(p.description);
         setLink(p.link);
         setAltText(p.altText);
+        setPreviewBoard(p.board);
       })
       .catch(() => live && fallback());
     return () => {
@@ -146,17 +155,51 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
     setKwMsg(null);
   }, [reelKey, toolKeywords]);
 
-  async function changeBoardTopic(topic: PinterestBoardTopic, id: string) {
-    const next = { ...boardMap, [topic]: id || undefined };
-    setBoardMap(next);
-    setMapMsg(null);
+  async function runSync(createMissing: boolean) {
+    setSetupBusy(true);
+    setSetupMsg(null);
+    setConfirmCreate(false);
     try {
-      const saved = await savePinterestBoardMap(accessToken, next);
-      setBoardMap(saved);
-      setMapMsg({ ok: true, text: "Pano eşlemesi kaydedildi." });
+      const next = await syncPinterestBoards(accessToken, createMissing);
+      setSetup(next);
+      const made = next.created?.length ?? 0;
+      setSetupMsg({
+        ok: true,
+        text: createMissing
+          ? made > 0
+            ? `${made} pano oluşturuldu ve bağlandı.`
+            : "Oluşturulacak eksik pano yoktu; bulunanlar bağlandı."
+          : "Adla bulunan panolar bağlandı. Eksik olanlar için “Eksik panoları oluştur”a bas.",
+      });
+      await load();
     } catch (e) {
-      setMapMsg({ ok: false, text: e instanceof Error ? e.message : "Pano eşlemesi kaydedilemedi" });
-      void load();
+      setSetupMsg({ ok: false, text: e instanceof Error ? e.message : "Panolar eşleştirilemedi" });
+    } finally {
+      setSetupBusy(false);
+    }
+  }
+
+  async function changeBoardFor(key: string, id: string) {
+    if (!id) return;
+    setSetupMsg(null);
+    try {
+      await setPinterestBoardMap(accessToken, key, id);
+      setSetup(await fetchPinterestBoardSetup(accessToken));
+      setSetupMsg({ ok: true, text: "Pano değiştirildi." });
+    } catch (e) {
+      setSetupMsg({ ok: false, text: e instanceof Error ? e.message : "Pano değiştirilemedi" });
+    }
+  }
+
+  async function toggleRules() {
+    const next = !showRules;
+    setShowRules(next);
+    if (next && !rules) {
+      try {
+        setRules(await fetchPinterestBoardRules(accessToken));
+      } catch (e) {
+        setSetupMsg({ ok: false, text: e instanceof Error ? e.message : "Kurallar okunamadı" });
+      }
     }
   }
 
@@ -224,11 +267,10 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
         link,
         altText: altText.trim() || undefined,
         kind: "arac",
-        topic: "pdf",
       });
       setResult({
         ok: true,
-        message: `Pin Pinterest’e gönderildi.${pin.warning ? ` ${pin.warning}` : ""}`,
+        message: `Pin Pinterest’e gönderildi${pin.board ? ` → “${pin.board.name}” panosu (${pin.board.reason})` : ""}.${pin.warning ? ` ${pin.warning}` : ""}`,
         pin,
       });
     } catch (e) {
@@ -328,32 +370,112 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
       </div>
 
       <div className="space-y-2 rounded-xl border border-slate-700/50 bg-slate-950/30 p-3">
-        <p className="text-xs font-medium text-slate-300">İçerik türüne göre panolar</p>
+        <p className="text-xs font-medium text-slate-300">Konuya göre panolar (otomatik seçilir)</p>
         <p className="text-[11px] leading-relaxed text-slate-500">
-          Otomatik pinler konusuna göre ilgili panoya gider. Bir konuyu boş bırakırsan yukarıda seçtiğin pano kullanılır. Panoları önce
-          yukarıdan oluştur (ör. “CV Örnekleri”, “PDF İpuçları”, “Sözleşme ve Hukuk Belgeleri”).
+          Her pin, konusuna göre bu 6 panodan birine kendiliğinden gider. Önce hesaptaki panolar adla bulunur; eksik olanları senin
+          onayınla oluşturulur. Seçilen pano ve nedeni her gönderinin yanında görünür.
         </p>
-        <div className="grid gap-2 md:grid-cols-3">
-          {BOARD_TOPICS.map(({ topic, label, hint }) => (
-            <label key={topic} className="block">
-              <span className="text-[11px] font-medium text-slate-300">{label}</span>
-              <select
-                className={`${fieldClass} mt-1`}
-                value={boardMap[topic] ?? ""}
-                onChange={(e) => void changeBoardTopic(topic, e.target.value)}
-                title={hint}
+        {setup?.envMismatch ? (
+          <p className="flex items-start gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              “Kum havuzu” kutusu değişti: panolar başka ortamda eşleştirilmişti ve burada geçmez.{" "}
+              {setup.sandbox ? "Kum havuzu" : "Gerçek hesap"} için aşağıdan <strong>Panoları eşleştir</strong> ve gerekirse{" "}
+              <strong>Eksik panoları oluştur</strong> yap.
+            </span>
+          </p>
+        ) : null}
+        {setup ? (
+          <div className="space-y-1.5">
+            {setup.rows.map((row) => (
+              <div key={row.key} className="grid items-center gap-2 md:grid-cols-[1fr_1.2fr]">
+                <div>
+                  <p className="text-[12px] font-medium text-slate-200">{row.name}</p>
+                  <p className={`text-[10px] ${row.source === "eksik" ? "text-amber-300" : row.source === "kayıtlı" ? "text-emerald-300" : "text-slate-400"}`}>
+                    {SOURCE_LABEL[row.source] ?? row.source}
+                  </p>
+                </div>
+                <select
+                  className={fieldClass}
+                  value={row.boardId ?? ""}
+                  onChange={(e) => void changeBoardFor(row.key, e.target.value)}
+                  disabled={setupBusy}
+                >
+                  <option value="">{row.source === "eksik" ? "Henüz yok" : "Seç…"}</option>
+                  {overview.boards.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[11px] text-slate-500">Pano durumu okunamadı.</p>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-600 px-4 text-xs font-semibold text-slate-200 transition hover:border-slate-400 disabled:opacity-40"
+            disabled={setupBusy}
+            onClick={() => void runSync(false)}
+          >
+            {setupBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Panoları eşleştir
+          </button>
+          {setup && setup.missingCount > 0 ? (
+            confirmCreate ? (
+              <span className="inline-flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-100">
+                {setup.missingCount} pano Pinterest’te herkese açık oluşturulacak. Onaylıyor musun?
+                <button type="button" className="rounded-lg bg-rose-600 px-3 py-1 font-semibold text-white" disabled={setupBusy} onClick={() => void runSync(true)}>
+                  Evet, oluştur
+                </button>
+                <button type="button" className="underline" onClick={() => setConfirmCreate(false)}>
+                  Vazgeç
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-rose-600 px-4 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:opacity-40"
+                disabled={setupBusy}
+                onClick={() => setConfirmCreate(true)}
               >
-                <option value="">Seçili pano (varsayılan)</option>
-                {overview.boards.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
+                <Plus className="h-3.5 w-3.5" />
+                Eksik panoları oluştur ({setup.missingCount})
+              </button>
+            )
+          ) : null}
+          <button type="button" className="text-[11px] text-slate-400 underline" onClick={() => void toggleRules()}>
+            {showRules ? "Eşleştirme kurallarını gizle" : "Eşleştirme kurallarını göster"}
+          </button>
         </div>
-        {mapMsg ? <p className={`text-[11px] ${mapMsg.ok ? "text-emerald-300" : "text-rose-300"}`}>{mapMsg.text}</p> : null}
+        {setupMsg ? <p className={`text-[11px] ${setupMsg.ok ? "text-emerald-300" : "text-rose-300"}`}>{setupMsg.text}</p> : null}
+        {setup?.sandbox ? (
+          <p className="text-[11px] leading-relaxed text-amber-300/90">
+            Kum havuzu açık: bu panolar test ortamında oluşur. Canlıya geçince (kutu kapanınca) aynı eşleştirmeyi gerçek hesapta bir kez daha yapman gerekir; panel
+            seni uyaracak.
+          </p>
+        ) : null}
+        {showRules && rules ? (
+          <div className="space-y-2 rounded-lg border border-slate-700/50 p-2 text-[11px] text-slate-300">
+            <p className="font-medium text-slate-200">Sıra: elle seçim → araç → blog kategorisi/etiketi → başlık+açıklama anahtar kelimesi → varsayılan ({rules.boards[rules.defaultBoard]?.name})</p>
+            {Object.entries(rules.boards).map(([key, board]) => {
+              const toolList = rules.tools.filter((x) => x.board === key).map((x) => x.slug);
+              const cat = rules.categoryRules.find((r) => r.board === key)?.terms ?? [];
+              const kw = rules.keywordRules.filter((r) => r.board === key).flatMap((r) => r.terms);
+              return (
+                <div key={key} className="rounded-md bg-slate-900/60 p-2">
+                  <p className="font-semibold text-slate-100">{board.name}</p>
+                  {toolList.length ? <p><span className="text-slate-500">Araçlar:</span> {toolList.join(", ")}</p> : null}
+                  {cat.length ? <p><span className="text-slate-500">Blog kategorisi/etiketi:</span> {cat.join(", ")}</p> : null}
+                  {kw.length ? <p><span className="text-slate-500">Başlık/açıklama kelimeleri:</span> {kw.join(", ")}</p> : null}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
 
       {reels.length === 0 ? (
@@ -454,6 +576,12 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
               })}
               {!videoUrl ? <span className="text-[10px] text-slate-500">Bu aracın videosu şu an hazır değil.</span> : null}
             </div>
+            {previewBoard ? (
+              <p className="rounded-lg border border-slate-700/50 bg-slate-950/30 px-3 py-2 text-[11px] text-slate-300">
+                Gideceği pano: <strong className="text-slate-100">{previewBoard.name}</strong>
+                <span className="text-slate-500"> · neden: {previewBoard.reason}</span>
+              </p>
+            ) : null}
             <label className="block">
               <span className="text-xs font-medium text-slate-300">Başlık</span>
               <input className={`${fieldClass} mt-1`} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} />

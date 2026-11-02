@@ -1058,6 +1058,9 @@ export type SocialPostRow = {
   lastError: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Pinterest: seçilen pano anahtarı ve nedeni ("araç eşleştirmesi: compress"). Diğer ağlarda boş. */
+  boardKey?: string | null;
+  boardReason?: string | null;
   /**
    * Kaydırmalı (carousel) gönderinin slaytları — Instagram'da gerçekte gidecek/giden hâl.
    * Boşsa tek görsel (ya da video) paylaşılır.
@@ -1268,24 +1271,67 @@ export type PinterestPinBody = {
   altText?: string;
   /** Bağlantının kampanya adı: araç sayfası ("arac") ya da blog ("blog"). */
   kind?: "arac" | "blog";
-  /** Pano konusu; verilirse o konuya ayrılmış pano kullanılır. */
-  topic?: PinterestBoardTopic;
+  /** Elle seçilen pano anahtarı; yoksa araçtan/başlıktan otomatik seçilir. */
+  boardKey?: string;
 };
 
-export type PinterestBoardTopic = "cv" | "pdf" | "sozlesme";
-export type PinterestBoardMap = Partial<Record<PinterestBoardTopic, string>>;
 export type PinterestKeywords = { main: string; extra: string[] };
 export type PinterestToolKeywords = { id: string; title: string; saved: PinterestKeywords | null; suggested: PinterestKeywords | null };
-export type PinterestPreview = { title: string; description: string; altText: string; link: string; topic: PinterestBoardTopic };
+export type PinterestBoardChoice = { key: string; name: string; reason: string };
+export type PinterestPreview = { title: string; description: string; altText: string; link: string; board: PinterestBoardChoice };
 
-export async function fetchPinterestBoardMap(accessToken: string): Promise<PinterestBoardMap> {
-  const r = await adminFetch(accessToken, "/social/pinterest/board-map");
-  return (await jsonOrThrow<{ boards: PinterestBoardMap }>(r, "Pano eşlemesi okunamadı.")).boards;
+export type PinterestBoardRow = {
+  key: string;
+  name: string;
+  description: string;
+  boardId: string | null;
+  source: "kayıtlı" | "adla bulundu" | "eksik";
+};
+export type PinterestBoardSetup = {
+  sandbox: boolean;
+  /** Eşleşme başka ortamda yapılmış (kutu değişti): yeniden eşleştirilmeli. */
+  envMismatch: boolean;
+  rows: PinterestBoardRow[];
+  missingCount: number;
+  /** Yalnız "eşleştir" yanıtında: bu çağrıda oluşturulan pano anahtarları. */
+  created?: string[];
+};
+export type PinterestBoardRules = {
+  boards: Record<string, { name: string; description: string }>;
+  defaultBoard: string;
+  tools: { slug: string; board: string }[];
+  categoryRules: { board: string; terms: string[] }[];
+  keywordRules: { board: string; terms: string[] }[];
+};
+
+export async function fetchPinterestBoardSetup(accessToken: string): Promise<PinterestBoardSetup> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board-setup");
+  return jsonOrThrow<PinterestBoardSetup>(r, "Pano durumu okunamadı.");
 }
 
-export async function savePinterestBoardMap(accessToken: string, map: PinterestBoardMap): Promise<PinterestBoardMap> {
-  const r = await adminFetch(accessToken, "/social/pinterest/board-map", { method: "PUT", body: JSON.stringify(map) });
-  return (await jsonOrThrow<{ boards: PinterestBoardMap }>(r, "Pano eşlemesi kaydedilemedi.")).boards;
+/** `createMissing: false` yalnız adla bulunan panoları bağlar; `true` eksikleri de herkese açık oluşturur. */
+export async function syncPinterestBoards(accessToken: string, createMissing: boolean): Promise<PinterestBoardSetup> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board-setup/sync", { method: "POST", body: JSON.stringify({ createMissing }) });
+  return jsonOrThrow<PinterestBoardSetup>(r, "Panolar eşleştirilemedi.");
+}
+
+export async function setPinterestBoardMap(accessToken: string, key: string, boardId: string): Promise<void> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board-map", { method: "PUT", body: JSON.stringify({ key, boardId }) });
+  await jsonOrThrow<{ ok: boolean }>(r, "Pano değiştirilemedi.");
+}
+
+export async function fetchPinterestBoardRules(accessToken: string): Promise<PinterestBoardRules> {
+  const r = await adminFetch(accessToken, "/social/pinterest/board-rules");
+  return jsonOrThrow<PinterestBoardRules>(r, "Eşleştirme kuralları okunamadı.");
+}
+
+/** Bekleyen bir Pinterest gönderisinin panosunu elle değiştirir. */
+export async function setPostPinterestBoard(accessToken: string, postId: string, boardKey: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(postId)}/pinterest-board`, {
+    method: "PUT",
+    body: JSON.stringify({ boardKey }),
+  });
+  await jsonOrThrow<{ ok: boolean }>(r, "Pano değiştirilemedi.");
 }
 
 export async function fetchPinterestKeywords(accessToken: string): Promise<PinterestToolKeywords[]> {
@@ -1303,7 +1349,14 @@ export async function fetchPinterestPreview(accessToken: string, toolId: string)
   const r = await adminFetch(accessToken, `/social/pinterest/preview/${encodeURIComponent(toolId)}`);
   return jsonOrThrow<PinterestPreview>(r, "Pin önizlemesi okunamadı.");
 }
-export type PinterestPinResult = { id: string | null; url: string | null; sandbox: boolean; warning: string | null };
+export type PinterestPinResult = {
+  id: string | null;
+  url: string | null;
+  sandbox: boolean;
+  warning: string | null;
+  /** Pinin gittiği pano ve seçilme nedeni. */
+  board?: { key: string; name: string; reason: string; matched: boolean };
+};
 
 export async function createPinterestPin(accessToken: string, body: PinterestPinBody): Promise<PinterestPinResult> {
   const r = await adminFetch(accessToken, "/social/pinterest/pin", { method: "POST", body: JSON.stringify(body) });
