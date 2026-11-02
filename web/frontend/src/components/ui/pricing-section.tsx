@@ -548,36 +548,37 @@ function CycleAwareCard({
       {/* Extra seats stepper — Business only */}
       {isBusiness && (
         <div className="mb-4 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-300">
-                {tr ? "Ekstra Kişi" : "Extra Seats"}
-              </p>
-              <p className="text-[11px] text-slate-400">
-                {PRICES_HIDDEN
-                  ? (tr ? "5 kişi dahil" : "5 seats included")
-                  : tr
-                  ? `5 kişi dahil · +${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
-                  : `5 seats included · +${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setExtraSeats((n) => Math.max(0, n - 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-              >
-                −
-              </button>
-              <span className="w-6 text-center text-sm font-bold text-white">{extraSeats}</span>
-              <button
-                type="button"
-                onClick={() => setExtraSeats((n) => Math.min(95, n + 1))}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
-              >
-                +
-              </button>
-            </div>
+          <p className="text-center text-xs font-semibold text-slate-200">
+            {tr ? "Ekstra Kişi" : "Extra Seats"}{" "}
+            <span className="text-violet-300">
+              {tr ? `(5 dahil +${extraSeats})` : `(5 included +${extraSeats})`}
+            </span>
+          </p>
+          {!PRICES_HIDDEN && (
+            <p className="mt-0.5 text-center text-[11px] text-slate-400">
+              {tr
+                ? `+${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
+                : `+${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
+            </p>
+          )}
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              aria-label={tr ? "Ekstra kişiyi azalt" : "Remove one seat"}
+              onClick={() => setExtraSeats((n) => Math.max(0, n - 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+            >
+              −
+            </button>
+            <span className="w-8 text-center text-sm font-bold text-white tabular-nums">{extraSeats}</span>
+            <button
+              type="button"
+              aria-label={tr ? "Ekstra kişiyi artır" : "Add one seat"}
+              onClick={() => setExtraSeats((n) => Math.min(95, n + 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
+            >
+              +
+            </button>
           </div>
           {!PRICES_HIDDEN && extraSeats > 0 && (
             <p className="mt-1.5 text-[11px] text-violet-400">
