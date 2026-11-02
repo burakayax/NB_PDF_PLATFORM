@@ -61,14 +61,23 @@ function Card({ icon, title, sub, children, open: o = false }: { icon: ReactNode
 const btn = "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-4 py-2.5 text-[13px] font-bold text-white hover:brightness-110 disabled:opacity-40";
 const ghost = "inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.05] px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-white/10 disabled:opacity-40";
 
+/** Yapay zekânın kendiliğinden eklediği sözcükleri metnin İÇİNDE sarıyla işaretler (ayrı kelime listesi yok). */
+function Marked({ text, words }: { text: string; words: string[] }) {
+  if (!words.length) return <>{text}</>;
+  const esc = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const re = new RegExp("(?<![\\p{L}])(" + esc.join("|") + ")(?![\\p{L}])", "giu");
+  const parts = text.split(re);
+  return <>{parts.map((t, i) => (i % 2 === 1 ? <mark key={i} className="rounded bg-amber-400/25 px-0.5 text-amber-100">{t}</mark> : <span key={i}>{t}</span>))}</>;
+}
+
+/** Tek satırlık, korkutmayan açıklama: yalnızca işaretli sözcük varsa görünür. */
 function Added({ words, tr }: { words: string[]; tr: boolean }) {
   if (!words.length) return null;
   return (
-    <div className="mt-2 rounded-xl bg-amber-500/[0.08] px-3 py-2.5 text-[12px] leading-relaxed text-amber-100 ring-1 ring-amber-400/25">
-      <p className="flex items-start gap-1.5 font-semibold"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "Bu metinde sizin yazmadığınız ifadeler var:" : "This text contains wording you didn't write:"}</p>
-      <p className="mt-1.5 flex flex-wrap gap-1.5">{words.map((w) => <span key={w} className="rounded-full bg-amber-500/20 px-2 py-0.5 font-semibold ring-1 ring-amber-400/30">{w}</span>)}</p>
-      <p className="mt-1.5 text-amber-100/80">{tr ? "Yapay zekâ bunları kendi eklemiş olabilir. Doğruysa kullanın; size ait değilse bu öneriyi seçmeyin ya da metni kendiniz düzenleyin." : "The AI may have added these itself. Use the text if they're true; if they don't apply to you, skip this suggestion or edit the text yourself."}</p>
-    </div>
+    <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-snug text-amber-100/90">
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+      <span>{tr ? <><mark className="rounded bg-amber-400/25 px-0.5 text-amber-100">Sarı</mark> işaretli sözcükleri siz yazmamıştınız. Doğruysa uygulayın; değilse bu öneriyi seçmeyin.</> : <><mark className="rounded bg-amber-400/25 px-0.5 text-amber-100">Yellow</mark> words weren't in what you wrote. Apply if true; otherwise skip this suggestion.</>}</span>
+    </p>
   );
 }
 
@@ -260,7 +269,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
         {!data.title.trim() && !exps.length ? <p className="text-[12px] text-slate-500">{tr ? "Önce unvanınızı ve en az bir deneyim açıklamanızı girin." : "Enter your title and at least one job description first."}</p> : null}
         {summaries?.map((s, i) => (
           <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <p className="text-[13px] leading-relaxed text-slate-100">{s.text}</p>
+            <p className="text-[13px] leading-relaxed text-slate-100"><Marked text={s.text} words={s.added} /></p>
             <Added words={s.added} tr={tr} />
             <button type="button" className={`${ghost} mt-2`} onClick={() => { onChange({ ...data, summary: s.text }); setSummaries(null); }}><Check className="h-3.5 w-3.5" />{tr ? "Bunu kullan" : "Use this"}</button>
           </div>
@@ -281,7 +290,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
             {bullets.items.map((it, i) => (
               <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
                 <p className="text-[12px] text-slate-500 line-through">{it.original}</p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-100">{it.improved}</p>
+                <p className="mt-1 text-[13px] font-semibold text-slate-100"><Marked text={it.improved} words={it.added} /></p>
                 {it.rejectedNumber ? <p className="mt-1 text-[12px] text-amber-200">{tr ? "Yapay zekâ olmayan bir rakam eklemişti; reddedildi, özgün metin korundu." : "The AI had added a number you didn't give; it was rejected and your original kept."}</p> : null}
                 <Added words={it.added} tr={tr} />
                 {it.askMetric ? (
@@ -312,7 +321,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
             {tailor.summary ? (
               <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
                 <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">{tr ? "Önerilen özet" : "Suggested summary"}</p>
-                <p className="mt-1 text-[13px] leading-relaxed text-slate-100">{tailor.summary}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-slate-100"><Marked text={tailor.summary} words={tailor.summaryAdded} /></p>
                 <Added words={tailor.summaryAdded} tr={tr} />
                 <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" className="h-4 w-4 accent-fuchsia-500" checked={tailor.pickSummary} onChange={(e) => setTailor({ ...tailor, pickSummary: e.target.checked })} />{tr ? "Kopyaya uygula" : "Apply to the copy"}</label>
               </div>
@@ -321,7 +330,7 @@ export function CvAiPanel({ data, templateId, onChange, onNewCv, tr, language, a
               <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
                 <p className="text-[12px] text-slate-500">{b.where}</p>
                 <p className="mt-0.5 text-[12px] text-slate-500 line-through">{b.original}</p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-100">{b.improved}</p>
+                <p className="mt-1 text-[13px] font-semibold text-slate-100"><Marked text={b.improved} words={b.added} /></p>
                 <p className="mt-1 text-[12px] text-slate-400">{b.why}</p>
                 <Added words={b.added} tr={tr} />
                 <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12px] text-slate-200"><input type="checkbox" className="h-4 w-4 accent-fuchsia-500" checked={tailor.pickBullets[i]} onChange={(e) => setTailor({ ...tailor, pickBullets: tailor.pickBullets.map((v, j) => (j === i ? e.target.checked : v)) })} />{tr ? "Kopyaya uygula" : "Apply to the copy"}</label>
