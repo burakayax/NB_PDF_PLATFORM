@@ -542,9 +542,15 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         const container = overlayRef.current?.parentElement?.parentElement;
         const cs = container ? getComputedStyle(container) : null;
         const padX = cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 0;
-        const availW = Math.min((container?.clientWidth ?? 700) - padX - 4, 820);
-        // Sayfayı genişliğe sığdır (fit) × kullanıcı zoom faktörü.
-        const fit = Math.max(0.4, availW / base.width);
+        const padY = cs ? parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) : 0;
+        const fullW = (container?.clientWidth ?? 700) - padX - 4;
+        const availW = Math.min(fullW, 820);
+        // Eski davranış (en çok 820 px genişlik) taban; geniş ekranda sayfa, görünen alanın hem
+        // genişliğine hem yüksekliğine sığacak kadar büyür (boşluk kalmasın, sayfa kesilmesin).
+        const baseFit = Math.max(0.4, availW / base.width);
+        const availH = (container?.clientHeight ?? 0) - padY - 8;
+        const roomyFit = availH > 200 ? Math.min(fullW / base.width, availH / base.height) : baseFit;
+        const fit = Math.max(baseFit, roomyFit);
         const s = fit * zoom;
         const vp = page.getViewport({ scale: s });
         const canvas = canvasRef.current;
