@@ -224,6 +224,7 @@ import {
   readPendingToolAndClear,
   clearPendingTool,
 } from "./lib/appNavigation";
+import { isDocToolSlug } from "./lib/docToolSlugs";
 import type {
   AppView,
   ContentPanel,
@@ -407,6 +408,12 @@ const TtsReadTool = lazyWithRetry(() =>
 );
 const IdCardSheetTool = lazyWithRetry(() =>
   import("./components/tools/IdCardSheetTool").then((m) => ({ default: m.IdCardSheetTool })),
+);
+const DocHub = lazyWithRetry(() =>
+  import("./components/tools/DocHub").then((m) => ({ default: m.DocHub })),
+);
+const DocModeTool = lazyWithRetry(() =>
+  import("./components/tools/DocHub").then((m) => ({ default: m.DocModeTool })),
 );
 const UdfHub = lazyWithRetry(() =>
   import("./components/tools/UdfHub").then((m) => ({ default: m.UdfHub })),
@@ -3253,6 +3260,7 @@ function App() {
         p === "/tools/dilekce-sablonlari" ||
         p === "/tools/kimlik-karti-tek-sayfa" ||
         p === "/tools/pdf-sesli-oku" ||
+        isDocToolSlug(p.replace("/tools/", "")) ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5802,6 +5810,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (isDocToolSlug(seoSlug)) {
+      return (
+        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <DocModeTool language={language} mode={seoSlug} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "pdf-sesli-oku") {
       return (
         <GuestSeoToolPage slug="pdf-sesli-oku" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -7111,6 +7128,7 @@ function App() {
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
+          onOpenDocConv={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("docconv"); }}
           onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
           onOpenTts={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("tts"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
@@ -7155,6 +7173,7 @@ function App() {
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
+          onOpenDocConv={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("docconv"); }}
           onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
           onOpenTts={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("tts"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
@@ -7378,6 +7397,14 @@ function App() {
               <WorkspaceToolShell id="kimlik-karti-tek-sayfa" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <IdCardSheetTool language={language} />
+                </Suspense>
+              </WorkspaceToolShell>
+            ) : null}
+
+            {contentPanel === "docconv" ? (
+              <WorkspaceToolShell id="txt-to-pdf" language={language}>
+                <Suspense fallback={<PageSkeleton />}>
+                  <DocHub language={language} />
                 </Suspense>
               </WorkspaceToolShell>
             ) : null}
