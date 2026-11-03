@@ -47,7 +47,7 @@ describe("hero araç kapsamı", () => {
     // Sekme değişince alttaki dosya bırakma alanı bir araca bağlanmalı; yoksa
     // kullanıcı boş bir alanla karşılaşır.
     const bos = HERO_CATS.filter(
-      (c) => !c.items.some((it) => it.k === "free" || it.k === "editor" || ((c.id === "legal" || c.id === "docs") && it.k === "page")),
+      (c) => !c.items.some((it) => it.k === "free" || it.k === "editor" || ((c.id === "legal" || c.id === "docs" || c.id === "extra") && it.k === "page")),
     ).map((c) => c.id);
     expect(bos).toEqual([]);
   });

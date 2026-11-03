@@ -166,6 +166,11 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
   ],
+  "pdf-ust-alt-bilgi": [
+    { icon: Zap, tr: "Her sayfaya tek seferde", trDesc: "Sol, orta ve sağ konuma metin; sayfa numarası, tarih ve dosya adı otomatik.", en: "Every page at once", enDesc: "Text at left, center and right; page number, date and file name filled in automatically." },
+    { icon: Zap, tr: "Canlı önizleme", trDesc: "Yazdıkça ilk sayfada nasıl görüneceğini gör; kapağı atla, aralık seç.", en: "Live preview", enDesc: "See how it looks on page 1 as you type; skip the cover, pick a range." },
+    { icon: Lock, tr: "Gizli", trDesc: "Belgeniz cihazınızda işlenir; sunucuya yüklenmez.", en: "Private", enDesc: "Your document is processed on your device; never uploaded." },
+  ],
   "pdf-sesli-oku": [
     { icon: Zap, tr: "Doğal Türkçe ses", trDesc: "Tarayıcının hazır sesinden daha akıcı yapay zekâ sesi.", en: "Natural Turkish voice", enDesc: "A more fluent AI voice than the built-in browser voice." },
     { icon: Zap, tr: "Sayfa aralığı ve hız", trDesc: "İstediğiniz sayfaları, istediğiniz hızda dinleyin.", en: "Page range and speed", enDesc: "Listen to the pages you want at the speed you want." },
