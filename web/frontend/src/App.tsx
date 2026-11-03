@@ -7252,10 +7252,12 @@ function App() {
             ) : null}
 
             {contentPanel === "toc" ? (
-              <WorkspaceToolShell id="pdf-birlestir-icindekiler" language={language} full>
-                <Suspense fallback={<PageSkeleton />}>
-                  <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
-                </Suspense>
+              <WorkspaceToolShell id="pdf-birlestir-icindekiler" language={language} full deviceBadge>
+                <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
+                  </Suspense>
+                </ToolPageContext.Provider>
               </WorkspaceToolShell>
             ) : null}
 
