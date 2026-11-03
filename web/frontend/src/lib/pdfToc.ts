@@ -58,7 +58,20 @@ export async function inspectPdf(bytes: Uint8Array, index = 0): Promise<{ pageCo
 
 /** Bölümün altında görünecek alt başlık. `page`: dosya içindeki sayfa (1 tabanlı). */
 export type TocSub = { title: string; page: number };
-export type TocFile = { name: string; title: string; bytes: Uint8Array; subs?: TocSub[] };
+export type TocFile = {
+  name: string;
+  title: string;
+  bytes: Uint8Array;
+  subs?: TocSub[];
+  /** Doluysa: bu dosyanın ÖNÜNE bir grup başlığı (ör. FATURALAR) konur; sonraki dosyalar bir sonraki başlığa kadar onun altında girintili durur. */
+  group?: string;
+};
+export const MAX_GROUPS = 20;
+const GROUP_PT = 14;
+const GROUP_LINE = 19;
+const GROUP_TOP = 10;
+const GROUP_BOTTOM = 8;
+const GROUP_INDENT = 14;
 export const MAX_SUBS = 60;
 const SUB_PT = 10;
 const SUB_LINE = 14;
@@ -146,13 +159,16 @@ export function wrapTitle(text: string, font: PDFFont, size: number, maxW: numbe
 }
 
 /** Hangi girdi hangi içindekiler sayfasına düşer. */
-export function paginate(heights: number[]): number[] {
+export function paginate(heights: number[], keepNext: boolean[] = []): number[] {
   const pageOf: number[] = [];
   let page = 0;
   let y = TOP + HEAD_BLOCK;
   const limit = A4_H - BOTTOM;
-  for (const h of heights) {
-    if (y + h > limit) {
+  for (let i = 0; i < heights.length; i++) {
+    const h = heights[i]!;
+    // Grup başlığı sayfanın en altında tek başına kalmasın: bir sonraki girdiyle birlikte sığmalı
+    const need = h + (keepNext[i] ? (heights[i + 1] ?? 0) : 0);
+    if (y + need > limit) {
       page++;
       y = TOP + HEAD_BLOCK_CONT;
     }
@@ -193,7 +209,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   const bold = await out.embedFont(o.boldBytes, { subset: true });
 
   // 2) Girdiler: her bölüm + (varsa) alt başlıkları. Sayfa sayısı yazı ölçüsüne bağlıdır.
-  type Item = { file: number; sub: number | null; lines: string[]; height: number; size: number; lineH: number; indent: number };
+  type Item = { file: number; sub: number | null; lines: string[]; height: number; size: number; lineH: number; indent: number; group?: boolean };
   const numColW = font.widthOfTextAtSize("999", ENTRY_PT);
   const labelW = A4_W - MARGIN_X * 2 - numColW - 10;
   const cleanSubs: TocSub[][] = files.map((f, i) =>
@@ -203,17 +219,26 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
       .slice(0, MAX_SUBS),
   );
   const items: Item[] = [];
+  let girinti = 0; // ilk grup başlığından sonra dosyalar girintili durur
+  let gruplar = 0;
   files.forEach((f, i) => {
+    const gb = (f.group ?? "").trim();
+    if (gb && gruplar < MAX_GROUPS) {
+      gruplar++;
+      girinti = GROUP_INDENT;
+      const gl = wrapTitle(safeText(gb, bold), bold, GROUP_PT, A4_W - MARGIN_X * 2);
+      items.push({ file: i, sub: null, lines: gl, height: GROUP_TOP + gl.length * GROUP_LINE + GROUP_BOTTOM, size: GROUP_PT, lineH: GROUP_LINE, indent: 0, group: true });
+    }
     const prefix = o.numbering ? `${i + 1}. ` : "";
-    const lines = wrapTitle(prefix + safeText(f.title || defaultTitle(f.name), font), font, ENTRY_PT, labelW);
-    items.push({ file: i, sub: null, lines, height: lines.length * LINE_H + ENTRY_GAP, size: ENTRY_PT, lineH: LINE_H, indent: 0 });
+    const lines = wrapTitle(prefix + safeText(f.title || defaultTitle(f.name), font), font, ENTRY_PT, labelW - girinti);
+    items.push({ file: i, sub: null, lines, height: lines.length * LINE_H + ENTRY_GAP, size: ENTRY_PT, lineH: LINE_H, indent: girinti });
     cleanSubs[i]!.forEach((s, k) => {
       const pre = o.numbering ? `${i + 1}.${k + 1} ` : "– ";
-      const sl = wrapTitle(pre + safeText(s.title, font), font, SUB_PT, labelW - SUB_INDENT);
-      items.push({ file: i, sub: k, lines: sl, height: sl.length * SUB_LINE + SUB_GAP, size: SUB_PT, lineH: SUB_LINE, indent: SUB_INDENT });
+      const sl = wrapTitle(pre + safeText(s.title, font), font, SUB_PT, labelW - SUB_INDENT - girinti);
+      items.push({ file: i, sub: k, lines: sl, height: sl.length * SUB_LINE + SUB_GAP, size: SUB_PT, lineH: SUB_LINE, indent: SUB_INDENT + girinti });
     });
   });
-  const pageOf = paginate(items.map((l) => l.height));
+  const pageOf = paginate(items.map((l) => l.height), items.map((l) => !!l.group));
   const tocPages = (pageOf.length ? pageOf[pageOf.length - 1]! : 0) + 1;
 
   // 3) Bölüm başlangıç sayfaları
@@ -283,6 +308,17 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
     const p = pageOf[n]!;
     const pg = tocPageObjs[p]!;
     const yTop = ys[p]!;
+    if (it.group) {
+      it.lines.forEach((ln, k) => {
+        const w = bold.widthOfTextAtSize(ln, GROUP_PT);
+        pg.drawText(ln, { x: Math.max(MARGIN_X, (A4_W - w) / 2), y: yTop - GROUP_TOP - (k + 1) * GROUP_LINE + 4, size: GROUP_PT, font: bold, color: ink });
+      });
+      const yLine = yTop - GROUP_TOP - it.lines.length * GROUP_LINE - 2;
+      pg.drawLine({ start: { x: MARGIN_X, y: yLine }, end: { x: A4_W - MARGIN_X, y: yLine }, thickness: 0.5, color: muted });
+      linkTo(pg, [MARGIN_X, yTop - GROUP_TOP - it.lines.length * GROUP_LINE - 2, A4_W - MARGIN_X, yTop - GROUP_TOP + 2], sectionFirstPage[it.file]!);
+      ys[p] = yTop - it.height;
+      return;
+    }
     const isSub = it.sub !== null;
     const startPage = isSub
       ? sections[it.file]!.startPage + cleanSubs[it.file]![it.sub!]!.page - 1
@@ -312,44 +348,52 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
     ys[p] = yTop - it.height;
   });
 
-  // 6) Yer imleri (outline): bölümler, altlarında alt başlıklar
-  const outlineRef = out.context.nextRef();
-  const itemRefs = sections.map(() => out.context.nextRef());
-  const subRefs = cleanSubs.map((l) => l.map(() => out.context.nextRef()));
+  // 6) Yer imleri (outline): [grup başlığı →] bölümler → alt başlıklar
+  type ON = { title: string; page: PDFPage; kids: ON[]; ref?: PDFRef };
   const dest = (pg: PDFPage) => [pg.ref, "XYZ", 0, pg.getSize().height, null];
-  sections.forEach((s, i) => {
-    const dict: Record<string, unknown> = {
-      Title: PDFHexString.fromText(s.title),
-      Parent: outlineRef,
-      Dest: dest(sectionFirstPage[i]!),
-    };
-    if (i > 0) dict.Prev = itemRefs[i - 1];
-    if (i < sections.length - 1) dict.Next = itemRefs[i + 1];
-    const kids = subRefs[i]!;
-    if (kids.length) {
-      dict.First = kids[0];
-      dict.Last = kids[kids.length - 1];
-      dict.Count = kids.length;
+  const tree: ON[] = [];
+  let grup: ON | null = null;
+  let gn = 0;
+  files.forEach((f, i) => {
+    const gb = (f.group ?? "").trim();
+    if (gb && gn < MAX_GROUPS) {
+      gn++;
+      grup = { title: gb.slice(0, 120), page: sectionFirstPage[i]!, kids: [] };
+      tree.push(grup);
     }
-    out.context.assign(itemRefs[i]!, out.context.obj(dict as never));
-    cleanSubs[i]!.forEach((sb, k) => {
-      const d: Record<string, unknown> = {
-        Title: PDFHexString.fromText(sb.title),
-        Parent: itemRefs[i],
-        Dest: dest(filePages[i]![sb.page - 1]!),
-      };
-      if (k > 0) d.Prev = kids[k - 1];
-      if (k < kids.length - 1) d.Next = kids[k + 1];
-      out.context.assign(kids[k]!, out.context.obj(d as never));
-    });
+    const node: ON = {
+      title: sections[i]!.title,
+      page: sectionFirstPage[i]!,
+      kids: cleanSubs[i]!.map((sb) => ({ title: sb.title, page: filePages[i]![sb.page - 1]!, kids: [] })),
+    };
+    (grup ? (grup as ON).kids : tree).push(node);
   });
+  const outlineRef = out.context.nextRef();
+  const refAta = (n: ON) => { n.ref = out.context.nextRef(); n.kids.forEach(refAta); };
+  tree.forEach(refAta);
+  const say = (n: ON): number => n.kids.reduce((t, k) => t + 1 + say(k), 0);
+  const yaz = (nodes: ON[], parent: PDFRef) => {
+    nodes.forEach((n, k) => {
+      const d: Record<string, unknown> = { Title: PDFHexString.fromText(n.title), Parent: parent, Dest: dest(n.page) };
+      if (k > 0) d.Prev = nodes[k - 1]!.ref;
+      if (k < nodes.length - 1) d.Next = nodes[k + 1]!.ref;
+      if (n.kids.length) {
+        d.First = n.kids[0]!.ref;
+        d.Last = n.kids[n.kids.length - 1]!.ref;
+        d.Count = say(n);
+      }
+      out.context.assign(n.ref!, out.context.obj(d as never));
+      yaz(n.kids, n.ref!);
+    });
+  };
+  yaz(tree, outlineRef);
   out.context.assign(
     outlineRef,
     out.context.obj({
       Type: "Outlines",
-      First: itemRefs[0],
-      Last: itemRefs[itemRefs.length - 1],
-      Count: sections.length + cleanSubs.reduce((n, l) => n + l.length, 0),
+      First: tree[0]!.ref,
+      Last: tree[tree.length - 1]!.ref,
+      Count: tree.reduce((t, n) => t + 1 + say(n), 0),
     } as never),
   );
   out.catalog.set(PDFName.of("Outlines"), outlineRef as PDFRef);

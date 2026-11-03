@@ -44,7 +44,7 @@ const T = {
     needTwo: "Birleştirmek için en az 2 geçerli PDF gerekli.",
     settings: "İçindekiler ayarları", heading: "Sayfa başlığı", headingDefault: "İçindekiler",
     numbering: "Bölümleri numaralandır (1., 2., 3. …)", footer: "Tüm sayfalara «Sayfa 3 / 42» alt bilgisi ekle",
-    back: "Her bölümün başına «İçindekilere dön» bağlantısı ekle", outName: "Dosya adı", fontLabel: "Yazı tipi",
+    back: "Her bölümün başına «İçindekilere dön» bağlantısı ekle", outName: "Dosya adı", fontLabel: "Yazı tipi", addGroup: "Başlık ekle", groupLabel: "Grup başlığı", groupPh: "Başlık (ör. FATURALAR)", groupHint: "«Başlık ekle» ile FATURALAR, SÖZLEŞMELER gibi gruplar aç; başlığın altındaki dosyalar o grupta toplanır. Başlığı dosyaların arasına oklarla ya da sürükleyerek taşıyabilirsin.", groupEmpty: "Altında dosya olmayan başlık içindekilere eklenmez.",
     build: "Birleştir ve içindekiler ekle", working: "Hazırlanıyor…", failed: "Birleştirme başarısız oldu. Dosyalardan biri korumalı ya da bozuk olabilir.",
     fileErr: "Hata:", another: "Dosyaları temizle", addMore: "Dosya ekle",
     onDevice: "Dosyaların cihazından çıkmaz.", sub: "bölüm", pageWord: "Sayfa", continued: "(devam)", backLabel: "İçindekilere dön",
@@ -62,7 +62,7 @@ const T = {
     needTwo: "At least 2 valid PDFs are needed to merge.",
     settings: "Contents settings", heading: "Page heading", headingDefault: "Contents",
     numbering: "Number the sections (1., 2., 3. …)", footer: "Add a “Page 3 / 42” footer to every page",
-    back: "Add a “Back to contents” link at the start of each section", outName: "File name", fontLabel: "Font",
+    back: "Add a “Back to contents” link at the start of each section", outName: "File name", fontLabel: "Font", addGroup: "Add heading", groupLabel: "Group heading", groupPh: "Heading (e.g. INVOICES)", groupHint: "Use “Add heading” to create groups such as INVOICES or CONTRACTS; files below a heading are gathered under it. Move a heading between files with the arrows or by dragging.", groupEmpty: "A heading with no files under it is left out of the contents.",
     build: "Merge and add contents", working: "Working…", failed: "Merge failed. One of the files may be protected or corrupt.",
     fileErr: "Error:", another: "Clear files", addMore: "Add files",
     onDevice: "Your files never leave your device.", sub: "sections", pageWord: "Page", continued: "(cont.)", backLabel: "Back to contents",
@@ -81,6 +81,8 @@ type Item = {
   subs: TocSub[];
   outline: TocSub[];
   open: boolean;
+  /** true ise bu satır bir dosya değil, içindekilerde görünecek grup başlığıdır (ör. FATURALAR). */
+  grup?: boolean;
 };
 
 let sayac = 0;
@@ -118,7 +120,7 @@ export function PdfMergeTocTool({
     setOkuyor(true);
     const yeniNotlar: string[] = [];
     const eklenecek: Item[] = [];
-    let kalan = TOC_MAX_FILES - items.length;
+    let kalan = TOC_MAX_FILES - items.filter((x) => !x.grup).length;
     for (const f of files) {
       if (kalan <= 0) {
         yeniNotlar.push(t.tooMany);
@@ -155,7 +157,10 @@ export function PdfMergeTocTool({
       return c;
     });
 
-  const gecerli = items.filter((i) => !i.error);
+  const gecerli = items.filter((i) => !i.error && !i.grup);
+  const dosyaSayisi = items.filter((i) => !i.grup).length;
+  const baslikEkle = () =>
+    setItems((m) => [...m, { id: ++sayac, name: "", bytes: new Uint8Array(), pageCount: 0, thumb: null, title: "", error: null, subs: [], outline: [], open: false, grup: true }]);
   const toplamSayfa = gecerli.reduce((n, i) => n + i.pageCount, 0);
 
   const birlestir = async () => {
@@ -177,7 +182,17 @@ export function PdfMergeTocTool({
         ),
       );
       const r = await mergeWithToc(
-        gecerli.map((i) => ({ name: i.name, title: i.title.trim() || defaultTitle(i.name), bytes: i.bytes, subs: i.subs })),
+        (() => {
+          let bekleyen = "";
+          const liste: { name: string; title: string; bytes: Uint8Array; subs: TocSub[]; group?: string }[] = [];
+          for (const i of items) {
+            if (i.grup) { bekleyen = i.title.trim() || bekleyen; continue; }
+            if (i.error) continue;
+            liste.push({ name: i.name, title: i.title.trim() || defaultTitle(i.name), bytes: i.bytes, subs: i.subs, group: bekleyen || undefined });
+            bekleyen = "";
+          }
+          return liste;
+        })(),
         {
           heading: heading.trim() || t.headingDefault, continued: t.continued, numbering, pageFooter: footer,
           pageWord: t.pageWord, backLinks, backLabel: t.backLabel, fontBytes, boldBytes,
@@ -244,11 +259,13 @@ export function PdfMergeTocTool({
       <div className="mt-1 mb-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
-            <span className="font-bold text-white">{items.length} {dil === "tr" ? "dosya" : "files"}</span>
+            <span className="font-bold text-white">{dosyaSayisi} {dil === "tr" ? "dosya" : "files"}</span>
             {toplamSayfa > 0 && <span className="text-slate-400">{toplamSayfa} {t.pages}</span>}
-            <span className="text-slate-500">{items.length}/{TOC_MAX_FILES}</span>
+            <span className="text-slate-500">{dosyaSayisi}/{TOC_MAX_FILES}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
+            <button type="button" onClick={baslikEkle}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-cyan-300 transition hover:bg-cyan-500/10 hover:text-cyan-200"><Plus className="h-3.5 w-3.5" />{t.addGroup}</button>
             <button type="button" onClick={() => setItems((m) => [...m].sort((a, b) => a.title.localeCompare(b.title, dil, { numeric: true })))}
               className="rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">{t.az}</button>
             <label className="cursor-pointer rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">
@@ -263,10 +280,40 @@ export function PdfMergeTocTool({
           </div>
         </div>
         <p className="mt-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">{t.order}</p>
+        <p className="mt-1 text-[12px] text-slate-500">{t.groupHint}</p>
       </div>
 
       <ul className="space-y-2">
-        {items.map((it, i) => (
+        {items.map((it, i) => it.grup ? (
+          <li
+            key={it.id}
+            draggable
+            onDragStart={() => { surukleniyor.current = i; }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              const k = surukleniyor.current;
+              surukleniyor.current = null;
+              if (k === null || k === i) return;
+              setItems((m) => {
+                const c = [...m];
+                const [x] = c.splice(k, 1);
+                c.splice(i, 0, x!);
+                return c;
+              });
+            }}
+            className="flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-500/[0.07] px-3 py-2.5"
+          >
+            <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-slate-400 sm:block" aria-hidden />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-200"><ListTree className="h-4 w-4" /></span>
+            <input className={girdi} value={it.title} maxLength={80} placeholder={t.groupPh} aria-label={t.groupLabel}
+              onChange={(e) => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, title: e.target.value } : x)))} />
+            <span className="flex shrink-0 items-center">
+              <button type="button" onClick={() => tasi(i, -1)} disabled={i === 0} aria-label={t.up} className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+              <button type="button" onClick={() => tasi(i, 1)} disabled={i === items.length - 1} aria-label={t.down} className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+            </span>
+            <button type="button" onClick={() => setItems((m) => m.filter((x) => x.id !== it.id))} aria-label={t.remove} className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+          </li>
+        ) : (
           <li
             key={it.id}
             draggable
