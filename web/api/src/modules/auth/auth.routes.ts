@@ -3,6 +3,7 @@ import { asyncHandler } from "../../lib/async-handler.js";
 import { csrfOriginCheck } from "../../middleware/csrf.middleware.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import {
+  deviceIdMiddleware,
   changePasswordController,
   deleteMyAccountController,
   exportMyDataController,
@@ -31,6 +32,7 @@ import {
 } from "./password-reset.controller.js";
 
 export const authRouter = Router();
+authRouter.use(deviceIdMiddleware);
 
 authRouter.get("/google", asyncHandler(googleOAuthStartController));
 authRouter.get("/google/callback", asyncHandler(googleOAuthCallbackController));

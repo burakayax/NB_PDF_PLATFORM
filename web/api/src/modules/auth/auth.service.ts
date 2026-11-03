@@ -28,6 +28,8 @@ import { ensureDesktopDeviceAccess } from "../device/device.service.js";
 import { normalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
 import { normalizeToE164 } from "../../lib/phone-e164.js";
 import { createUrlSafeToken, hashToken } from "../../lib/token.js";
+import { currentDeviceId } from "./device-context.js";
+import { CEREZ_ANAHTAR_ONEKI, bilinenCihazAnahtarlari, sendNewDeviceAlert, yeniCihazUyarisiGerekli } from "./new-device-alert.js";
 import {
   createAdminNotificationEmailTemplate,
   createVerificationEmailTemplate,
@@ -217,6 +219,9 @@ function ipOzeti(ip?: string | null): string | null {
  * Bu alan o sayımı mümkün kılar; içinde açık kişisel veri taşımaz.
  */
 function cihazAnahtari(userAgent?: string | null, ip?: string | null): string | null {
+  // Tarayıcı çerezindeki cihaz kimliği varsa cihaz ONA göre tanınır (IP değişse de aynı cihaz kalır).
+  const cerez = currentDeviceId();
+  if (cerez) return `${CEREZ_ANAHTAR_ONEKI}${hashToken(`dev|${cerez}`)}`;
   const ua = (userAgent ?? "").trim();
   if (!ua && !ip) return null;
   return hashToken(`${ua}|${ip ?? ""}`);
@@ -263,6 +268,17 @@ async function issueSession(
   // Yenileme oturum SAYISINI değiştirmez; yalnız yeni giriş sınırı zorlar.
   if (!rotateFrom) await eskiOturumlariBudaOturum(user.id);
 
+  // Yeni cihaz uyarısı için bu giriş ÖNCESİNDEKİ bilinen cihazlar (yalnız yeni girişte; hata girişi bozmaz).
+  const buCihaz = cihazAnahtari(bilgi.userAgent, bilgi.ip);
+  let yeniCihazUyar = false;
+  if (!rotateFrom && buCihaz) {
+    try {
+      yeniCihazUyar = yeniCihazUyarisiGerekli(await bilinenCihazAnahtarlari(user.id), buCihaz);
+    } catch {
+      /* uyarı opsiyonel */
+    }
+  }
+
   const payload = {
     sub: user.id,
     email: user.email,
@@ -301,7 +317,7 @@ async function issueSession(
       userId: user.id,
       userAgent: bilgi.userAgent ? bilgi.userAgent.slice(0, 500) : null,
       ipHash: ipOzeti(bilgi.ip),
-      deviceKey: cihazAnahtari(bilgi.userAgent, bilgi.ip),
+      deviceKey: buCihaz,
       isDesktop: Boolean(isDesktop || bilgi.isDesktop),
     },
   });
@@ -316,6 +332,8 @@ async function issueSession(
       return null;
     }
   }
+
+  if (yeniCihazUyar) void sendNewDeviceAlert(user, bilgi.userAgent);
 
   return sessionResult(user, accessToken, refreshToken, { persistent: politika.persistent, expiresAt });
 }
