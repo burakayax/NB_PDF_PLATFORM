@@ -36,6 +36,25 @@ Alt seçenekler (hiçbiri bu projede kurulu değil):
 2. A'nın kalitesi sizin cihazlarınızda yetersizse **B1** (Piper) için küçük bir deneme sunucusu kurup aynı metni karşılaştırırım; MP3 indirme ve tutarlı ses bu yoldan gelir.
 3. B2'yi ancak ücret + gizlilik değişimi kabul edilirse düşünürüm.
 
+
+## GÜNCELLEME — Seçenek C: tarayıcıda çalışan yapay zekâ sesi (araştırma sonucu)
+
+Deneme sayfasında tarayıcının hazır sesini metinle yönlendirmeye çalıştık (noktalama, sayı, şapka). Üç ayrı yerde takıldı; "Haakim" gibi uzatma ve virgül duraksaması sesin **kendi içinden** geliyor, metinle düzeltilemez. Bu yüzden Seçenek A'yı tek başına yeterli bulmuyorum.
+
+Araştırmada **sunucu gerektirmeyen, tamamen tarayıcıda çalışan Türkçe yapay zekâ sesleri** buldum. Sunucu maliyeti yok, metin cihazdan çıkmıyor (gizlilik iddiamız korunur):
+
+| Model | Boyut | Lisans (kod / ses ağırlıkları) | Not | Dinleme adresi |
+|---|---|---|---|---|
+| **Antalia-2 Mini** | ~50 MB (ilk açılışta iner, sonra çevrimdışı) | Apache-2.0 / Apache-2.0 | Sayı, tarih, kısaltma düzeltici dahil; tek erkek ses; WebGPU veya WASM | https://fr0stb1rd.github.io/antalia-mini-web/ |
+| **EMA Lightning** | 8,6 M parametre | Apache-2.0 / Apache-2.0 | Yazarın ölçümünde Okur'a göre daha anlaşılır (hata oranı %1,10) ve daha doğal (UTMOS 3,29) | https://huggingface.co/spaces/korhun/turkce-dogal-ses |
+| **Okur** | ~10 M parametre | Apache-2.0 / CC BY 4.0 (ses sahibine atıf şart) | Şapkalı harf, sıra sayısı ve sayı okuma var; yazarın kendi ölçümünde dördü arasında en az doğal | https://huggingface.co/spaces/ahakan/okur-tts |
+
+Kaynak ölçümler (hata oranı / doğallık, Okur yazarının karşılaştırması): EMA 1,10 % / 3,29, Okur 1,81 % / 2,93, Piper 3,14 % / 3,66, Meta MMS 5,74 % / 3,78. Yani Piper ve MMS daha "doğal" puanlı ama daha çok yanlış okuyor. **Bu rakamlar bağımsız değil, Okur yazarının kendi ölçümü.** Dinleyerek karar verin.
+
+**Doğrulanmadı / dikkat:** Lisans sayfaları "ticari kullanım" kelimesini açıkça yazmıyor (Apache-2.0 genelde ticari kullanıma izin verir, ama canlıya almadan önce LICENSE ve NOTICE dosyaları okunmalı). Okur'un yazarı sesin başkasını taklit etmek ya da dinleyiciyi yanıltmak için kullanılmamasını istiyor. Modellerin mobil telefonlarda hızı ölçülmedi. Model dosyalarını kendi sunucumuzdan sunmamız gerekir (~50 MB, ilk kullanımda indirilir ve tarayıcıda saklanır).
+
+**Önerim (güncel):** C'yi seçelim. Yukarıdaki üç adresten aynı cümleyi dinleyin ("Sayın Hakim, ..."); en iyi geleni siteye gömerim: araç, ilk kullanımda modeli indirir (ilerleme çubuğuyla), PDF metnini cümle cümle okur, sayfa gezinme ve hız ayarı ekler. Telefonda yavaşsa tarayıcı sesine (A) otomatik geri düşer.
+
 ## Sizden istenen
 
 - [ ] Deneme sayfasını **bilgisayarda ve telefonda** dinleyin. Kalite yeterli mi?
