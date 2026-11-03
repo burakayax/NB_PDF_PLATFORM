@@ -6,12 +6,32 @@ import type { QuizQuestion } from "../api/ai";
 
 const LETTERS = ["A", "B", "C", "D"];
 
-/** Bir sorunun doğru cevabının okunur hâli: "B) …" ya da "Doğru"/"Yanlış". */
-export function answerLabel(q: QuizQuestion, lang: "tr" | "en"): string {
-  if (q.type === "tf") return q.answer ? (lang === "tr" ? "Doğru" : "True") : lang === "tr" ? "Yanlış" : "False";
-  return `${LETTERS[q.answer] ?? "?"}) ${q.options[q.answer] ?? ""}`;
+/** Karşılaştırma için: küçük harf (Türkçe İ/ı dahil), noktalama ve fazla boşluk yok sayılır. */
+export function normAnswer(s: string): string {
+  return s
+    .toLocaleLowerCase("tr")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 }
 
+/** Boşluk doldurmada kullanıcının yazdığı cevap doğru mu? */
+export function fillIsCorrect(input: string, answer: string): boolean {
+  const a = normAnswer(input);
+  return a.length > 0 && a === normAnswer(answer);
+}
+
+/** Bir sorunun doğru cevabının okunur hâli: "B) …", "Doğru"/"Yanlış" ya da yazılı cevap. */
+export function answerLabel(q: QuizQuestion, lang: "tr" | "en"): string {
+  if (q.type === "tf") return q.answer ? (lang === "tr" ? "Doğru" : "True") : lang === "tr" ? "Yanlış" : "False";
+  if (q.type === "mcq") return `${LETTERS[q.answer] ?? "?"}) ${q.options[q.answer] ?? ""}`;
+  return q.answer;
+}
+
+/**
+ * Sınav kâğıdı düzeni: soru numarası kalın, şıklar madde işaretsiz alt alta,
+ * açık uçlu sorulara cevap çizgisi, doğru/yanlış için işaretleme kutucukları.
+ * `withAnswers` ise sonda "Cevap Anahtarı" bölümü eklenir.
+ */
 export function quizToMarkdown(
   questions: QuizQuestion[],
   lang: "tr" | "en",
@@ -21,8 +41,14 @@ export function quizToMarkdown(
   const out: string[] = [`# ${opts.title}`, ""];
   questions.forEach((q, i) => {
     out.push(`**${i + 1}. ${q.q}**`);
-    if (q.type === "mcq") q.options.forEach((o, k) => out.push(`- ${LETTERS[k]}) ${o}`));
-    else out.push(tr ? "- Doğru   - Yanlış" : "- True   - False");
+    if (q.type === "mcq") {
+      q.options.forEach((o, k) => out.push(`${LETTERS[k]}) ${o}`));
+    } else if (q.type === "tf") {
+      out.push(tr ? "(   ) Doğru        (   ) Yanlış" : "(   ) True        (   ) False");
+    } else if (q.type === "open") {
+      out.push(tr ? "Cevap: ______________________________________________" : "Answer: ______________________________________________");
+      out.push("______________________________________________________");
+    }
     out.push("");
   });
   if (opts.withAnswers) {

@@ -41,7 +41,7 @@ import {
   type ChatTurn,
   type ExtractedData,
   type QuizData,
-  type QuizKind,
+  type QuizType,
   type QuizLevel,
 } from "../../api/ai";
 import { quizToMarkdown } from "../../lib/quizFormat";
@@ -169,7 +169,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   // Soru / test
   const [quiz, setQuiz] = useState<QuizData | null>(null);
   const [quizCount, setQuizCount] = useState(10);
-  const [quizKind, setQuizKind] = useState<QuizKind>("mixed");
+  const [quizTypes, setQuizTypes] = useState<QuizType[]>(["mcq", "tf"]);
   const [quizLevel, setQuizLevel] = useState<QuizLevel>("medium");
   const [translatedBlob, setTranslatedBlob] = useState<Blob | null>(null);
   const [targetLang, setTargetLang] = useState(language === "tr" ? "en" : "tr");
@@ -330,7 +330,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setGate(null);
     try {
       setBusy(true);
-      const { quiz: qz, quota: q } = await aiQuiz(docText, { count: quizCount, kind: quizKind, level: quizLevel }, tr ? "tr" : "en", accessToken);
+      const { quiz: qz, quota: q } = await aiQuiz(docText, { count: quizCount, types: quizTypes, level: quizLevel }, tr ? "tr" : "en", accessToken);
       setQuiz(qz);
       if (q) setQuota(q);
     } catch (e) {
@@ -709,7 +709,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           : tr ? "PDF ile Sohbet" : "Chat with PDF";
   const subtitle =
     mode === "quiz"
-      ? tr ? "PDF'inizden çoktan seçmeli ve doğru-yanlış sorular üretir; testi ekranda çözün ya da PDF olarak indirin. Her soru belgeden alıntıyla doğrulanır." : "Creates multiple-choice and true/false questions from your PDF; take the quiz on screen or download it as PDF. Every question is verified against a quote from the document."
+      ? tr ? "PDF'inizden çoktan seçmeli, doğru-yanlış, boşluk doldurma ve açık uçlu sorular üretir; testi ekranda çözün ya da PDF olarak indirin. Her soru belgeden alıntıyla doğrulanır." : "Creates multiple-choice, true/false, fill-in-the-blank and open-ended questions from your PDF; take the quiz on screen or download it as PDF. Every question is verified against a quote from the document."
       : mode === "summarize"
       ? tr ? "PDF'inizi baştan sona okumadan; başlık, ana konular ve önemli noktalarıyla profesyonel bir özete çevirir." : "Turns your PDF into a professional summary — title, key topics and key points — without reading it end to end."
       : mode === "extract"
@@ -721,7 +721,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   const benefits: { icon: LucideIcon; title: string; desc: string }[] =
     mode === "quiz"
       ? [
-          { icon: ListChecks, title: tr ? "Çoktan seçmeli + doğru/yanlış" : "Multiple choice + true/false", desc: tr ? "Sayıyı, türü ve zorluğu siz seçin; ekranda çözün, puanınızı görün." : "Choose the number, type and difficulty; take it on screen and see your score." },
+          { icon: ListChecks, title: tr ? "4 soru türü" : "4 question types", desc: tr ? "Çoktan seçmeli, doğru/yanlış, boşluk doldurma, açık uçlu: sayıyı, türleri ve zorluğu siz seçin; ekranda çözün, puanınızı görün." : "Choose the number, type and difficulty; take it on screen and see your score." },
           { icon: Target, title: tr ? "Yalnızca belgeden" : "Only from the document", desc: tr ? "Her soru belgeden alınan bir cümleyle doğrulanır; dayanağı bulunamayan soru elenir." : "Each question is checked against a sentence from the document; unsupported ones are dropped." },
           { icon: Download, title: tr ? "PDF olarak indir" : "Download as PDF", desc: tr ? "Soru kâğıdını ya da cevap anahtarlı sürümünü tek tıkla alın." : "Get the question sheet or the version with an answer key in one click." },
         ]
@@ -923,7 +923,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               </p>
             ) : (
               <>
-                <QuizOptions tr={tr} count={quizCount} kind={quizKind} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onKind={setQuizKind} onLevel={setQuizLevel} />
+                <QuizOptions tr={tr} count={quizCount} types={quizTypes} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onTypes={setQuizTypes} onLevel={setQuizLevel} />
                 <button type="button" onClick={() => void runQuiz()}
                   className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
                   <ListChecks className="h-5 w-5" />
