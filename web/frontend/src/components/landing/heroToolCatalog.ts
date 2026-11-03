@@ -43,7 +43,7 @@ export type HeroItem =
   | { k: "page"; slug: string; Icon: LucideIcon; tr: string; en: string }
   | { k: "member"; slug: string; Icon: LucideIcon; tr: string; en: string };
 
-export type HeroCatId = "pages" | "edit" | "convert" | "shrink";
+export type HeroCatId = "pages" | "edit" | "convert" | "legal" | "shrink";
 
 export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem[] }[] = [
   {
@@ -78,10 +78,22 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
     en: "Convert",
     items: [
       { k: "free", id: "image-to-pdf" },
-      { k: "page", slug: "udf-to-pdf", Icon: Scale, tr: "UDF → PDF", en: "UDF → PDF" },
       { k: "page", slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan Document" },
       { k: "member", slug: "pdf-to-text", Icon: FileType2, tr: "PDF → Metin", en: "PDF → Text" },
       { k: "member", slug: "aranabilir-pdf", Icon: FileSearch, tr: "Aranabilir PDF", en: "Searchable PDF" },
+    ],
+  },
+  {
+    id: "legal",
+    tr: "Hukuk / UYAP",
+    en: "Legal / UYAP",
+    items: [
+      { k: "page", slug: "udf-to-pdf", Icon: Scale, tr: "UDF → PDF", en: "UDF → PDF" },
+      { k: "page", slug: "pdf-to-udf", Icon: Scale, tr: "PDF → UDF", en: "PDF → UDF" },
+      { k: "page", slug: "word-to-udf", Icon: Scale, tr: "Word → UDF", en: "Word → UDF" },
+      { k: "page", slug: "udf-to-word", Icon: Scale, tr: "UDF → Word", en: "UDF → Word" },
+      { k: "page", slug: "udf-viewer", Icon: Scale, tr: "UDF Görüntüleyici", en: "UDF Viewer" },
+      { k: "page", slug: "image-to-udf", Icon: Scale, tr: "Görsel / TIFF → UDF", en: "Image / TIFF → UDF" },
     ],
   },
   {
@@ -105,11 +117,13 @@ export function catOfFreeTool(id: FreeToolId): HeroCatId {
 }
 
 /** Sekme değişince hero'da hangi aracın açılacağı — kategorinin ilk çalışır aracı. */
-export function firstRunnable(cat: HeroCatId): { free?: FreeToolId; editor: boolean } {
+export function firstRunnable(cat: HeroCatId): { free?: FreeToolId; editor: boolean; page?: string } {
   const items = HERO_CATS.find((c) => c.id === cat)?.items ?? [];
   for (const it of items) {
     if (it.k === "editor") return { editor: true };
     if (it.k === "free") return { free: it.id, editor: false };
+    // Yalnızca "kendi sayfasında" araçları olan sekme (Hukuk / UYAP) ilk aracını açar.
+    if (it.k === "page" && !items.some((x) => x.k === "free" || x.k === "editor")) return { page: it.slug, editor: false };
   }
   return { free: "merge", editor: false };
 }

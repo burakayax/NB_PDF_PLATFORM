@@ -28,6 +28,11 @@ export const ON_DEVICE_SEO_TOOLS: ReadonlySet<string> = new Set([
   "pdf-birlestir-icindekiler",
   "sayfa-duzeni",
   "udf-to-pdf",
+  "pdf-to-udf",
+  "word-to-udf",
+  "udf-to-word",
+  "udf-viewer",
+  "image-to-udf",
   // Fotoğraf ve CV bilgisi tarayıcıdan çıkmaz: modeller cihazda (WASM) çalışır, CV tarayıcıda çizilir.
   "ai-fotograf-studyosu",
   "cv-olustur",

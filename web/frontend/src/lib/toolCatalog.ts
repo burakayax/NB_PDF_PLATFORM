@@ -69,7 +69,7 @@ import {
 } from "lucide-react";
 
 /** Araç kategorileri — ana sayfadaki listede başlık ve süzgeç olarak kullanılır. */
-export type CategoryId = "ai" | "edit" | "scan" | "convert" | "security";
+export type CategoryId = "ai" | "edit" | "scan" | "convert" | "security" | "legal";
 
 export type Tool = {
   id: string;
@@ -358,9 +358,34 @@ export const TOOLS: Tool[] = [
     en: { name: "Redact PDF", desc: "Black out IDs, account numbers and names for good." },
   },
   {
-    id: "udf-to-pdf", cat: "convert", Icon: Scale, free: true,
+    id: "udf-to-pdf", cat: "legal", Icon: Scale, free: true,
     tr: { name: "UDF → PDF", desc: "UYAP'tan inen .udf belgesini program kurmadan PDF'ye çevirin." },
     en: { name: "UDF → PDF", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
+  },
+  {
+    id: "pdf-to-udf", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "PDF → UDF", desc: "Metin içeren PDF'yi UYAP'ta açılabilen .udf belgesine çevirin." },
+    en: { name: "PDF → UDF", desc: "Turn a text PDF into a .udf document that opens in UYAP." },
+  },
+  {
+    id: "word-to-udf", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "Word → UDF", desc: "Word (.docx) dilekçenizi biçimiyle birlikte .udf'ye çevirin." },
+    en: { name: "Word → UDF", desc: "Convert a Word (.docx) petition to .udf, keeping its formatting." },
+  },
+  {
+    id: "udf-to-word", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "UDF → Word", desc: "UYAP belgesini düzenlenebilir Word dosyasına çevirin." },
+    en: { name: "UDF → Word", desc: "Turn a UYAP document into an editable Word file." },
+  },
+  {
+    id: "udf-viewer", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "UDF Görüntüleyici", desc: "UDF dosyasını program kurmadan tarayıcıda açıp okuyun." },
+    en: { name: "UDF Viewer", desc: "Open and read a UDF file in your browser — nothing to install." },
+  },
+  {
+    id: "image-to-udf", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "Görsel / TIFF → UDF", desc: "JPG, PNG ve çok sayfalı TIFF'i UDF belgesine çevirin." },
+    en: { name: "Image / TIFF → UDF", desc: "Turn JPG, PNG and multi-page TIFF into a UDF document." },
   },
   {
     id: "repair-pdf", cat: "edit", Icon: Wrench,
@@ -506,6 +531,11 @@ export const TOOL_HUE: Record<string, HueId> = {
   "html-to-pdf": "sky",
   "pdf-to-text": "violet",
   "udf-to-pdf": "indigo",
+  "pdf-to-udf": "indigo",
+  "word-to-udf": "indigo",
+  "udf-to-word": "indigo",
+  "udf-viewer": "indigo",
+  "image-to-udf": "indigo",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

@@ -48,6 +48,11 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "gorsel-boyutlandir",
   "pdf-kesit-al",
   "udf-to-pdf",
+  "pdf-to-udf",
+  "word-to-udf",
+  "udf-to-word",
+  "udf-viewer",
+  "image-to-udf",
   // Bu dördü de App.tsx'te GuestSeoToolPage ile misafir sayfası olarak çalışıyor
   // (/tools/<slug>) ama bu listede eksikti → tıklanınca FeatureKey sanılıp
   // workspace'e (navigateToTool) gönderiliyordu; misafirde işlem yaptırmıyordu.
@@ -94,6 +99,13 @@ const CATEGORY_META: Record<
     text: "text-cyan-300",
     glow: "group-hover:shadow-[0_18px_40px_-20px_rgba(34,211,238,0.55)]",
   },
+  legal: {
+    tr: "Hukuk / UYAP", en: "Legal / UYAP",
+    ring: "group-hover:border-amber-400/40",
+    tint: "bg-amber-500/10 ring-amber-400/20",
+    text: "text-amber-300",
+    glow: "group-hover:shadow-[0_18px_40px_-20px_rgba(245,158,11,0.55)]",
+  },
   security: {
     tr: "Güvenlik", en: "Security",
     ring: "group-hover:border-emerald-400/40",
@@ -115,7 +127,7 @@ const ROZET_RENK: Record<AccessTone, { text: string; dot: string }> = {
 /** Katalog kimliği ile araç sayfası adresi ayrışan araçlar (adres = /tools/<slug>). */
 const TOOL_URL_SLUG: Record<string, string> = { merge: "merge-pdf", split: "split-pdf" };
 
-const CATEGORY_ORDER: CategoryId[] = ["ai", "edit", "scan", "convert", "security"];
+const CATEGORY_ORDER: CategoryId[] = ["ai", "edit", "scan", "convert", "legal", "security"];
 
 /** Arama için: Türkçe karakterleri sadeleştirip küçük harfe indirger. */
 function norm(s: string): string {

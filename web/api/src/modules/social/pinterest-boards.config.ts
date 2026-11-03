@@ -53,6 +53,8 @@ export const PIN_BOARDS: Record<PinBoardKey, { name: string; description: string
 export const TOOL_BOARD: Record<string, PinBoardKey> = {
   // ── PDF düzenleme ──
   "merge-pdf": "pdf-duzenleme",
+  "pdf-birlestir-icindekiler": "pdf-duzenleme",
+  "pdf-qr-ekle": "pdf-duzenleme",
   "split-pdf": "pdf-duzenleme",
   compress: "pdf-duzenleme",
   "rotate-pdf": "pdf-duzenleme",
@@ -106,6 +108,11 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   // ── Hukuk ──
   "sozlesme-denetci": "hukuk",
   "udf-to-pdf": "hukuk",
+  "pdf-to-udf": "hukuk",
+  "word-to-udf": "hukuk",
+  "udf-to-word": "hukuk",
+  "udf-viewer": "hukuk",
+  "image-to-udf": "hukuk",
   // ── CV ──
   "cv-olustur": "cv",
   "ai-fotograf-studyosu": "cv",

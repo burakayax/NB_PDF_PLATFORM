@@ -604,10 +604,11 @@ const PACKAGE_TOOL_CATEGORY_LABEL: Record<string, string> = {
   edit: "Düzenle",
   scan: "Tara & Metin Tanıma",
   convert: "Dönüştür",
+  legal: "Hukuk / UYAP",
   security: "Güvenlik",
   other: "Diğer",
 };
-const PACKAGE_TOOL_CATEGORY_ORDER = ["ai", "edit", "scan", "convert", "security", "other"];
+const PACKAGE_TOOL_CATEGORY_ORDER = ["ai", "edit", "scan", "convert", "legal", "security", "other"];
 const PACKAGE_TOOL_CATEGORY_BY_ID = new Map(TOOL_CATALOG.map((t) => [t.id, t.cat] as const));
 
 function groupFeatureKeysByCategory(

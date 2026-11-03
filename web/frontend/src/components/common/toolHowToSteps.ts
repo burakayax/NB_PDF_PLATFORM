@@ -584,6 +584,71 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "pdf-to-udf": S(
+    [
+      { title: "PDF dosyanı seç", detail: "Metin içeren PDF'ni sürükle ya da seç." },
+      { title: "«UDF'ye çevir»e bas", detail: "Metin ve paragraflar bilgisayarında UDF'ye aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your PDF", detail: "Drag or pick a PDF with selectable text." },
+      { title: "Click «Convert to UDF»", detail: "Text and paragraphs are converted on your own computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "word-to-udf": S(
+    [
+      { title: "Word dosyanı seç", detail: "Sonu «.docx» ile biten dilekçeni seç." },
+      { title: "«UDF'ye çevir»e bas", detail: "Biçim, tablo ve görseller bilgisayarında UDF'ye aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your Word file", detail: "Pick your petition ending in «.docx»." },
+      { title: "Click «Convert to UDF»", detail: "Formatting, tables and images are converted on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "udf-to-word": S(
+    [
+      { title: "UDF dosyanı seç", detail: "UYAP'tan indirdiğin «.udf» dosyasını seç." },
+      { title: "«Word'e çevir»e bas", detail: "Belge bilgisayarında düzenlenebilir Word dosyasına çevrilir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your UDF file", detail: "Pick the «.udf» file you downloaded from UYAP." },
+      { title: "Click «Convert to Word»", detail: "The document becomes an editable Word file on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "udf-viewer": S(
+    [
+      { title: "UDF dosyanı seç", detail: "UYAP'tan indirdiğin «.udf» dosyasını seç." },
+      { title: "«Belgeyi göster»e bas", detail: "Belge metni tarayıcıda açılır; istersen kopyalarsın." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your UDF file", detail: "Pick the «.udf» file you downloaded from UYAP." },
+      { title: "Click «Show document»", detail: "The text opens in your browser; copy it if you like." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "image-to-udf": S(
+    [
+      { title: "Görsellerini seç", detail: "JPG, PNG ya da TIFF dosyalarını seç; her görsel ayrı sayfa olur." },
+      { title: "«UDF'ye çevir»e bas", detail: "Görseller bilgisayarında tek bir UDF belgesine toplanır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your images", detail: "Pick JPG, PNG or TIFF files; each image becomes a page." },
+      { title: "Click «Convert to UDF»", detail: "The images are gathered into one UDF on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   "pdf-ozetle": S(
     [

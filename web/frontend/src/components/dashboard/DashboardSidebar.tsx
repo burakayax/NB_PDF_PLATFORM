@@ -156,7 +156,7 @@ const CUSTOM_TOOLS: {
   iconClass: string;
 }[] = [
   { key: "snip", favId: "snip-pdf", group: "convert", tr: "PDF'ten Kesit Al", en: "Snip to Image", Icon: Scissors, iconClass: "text-cyan-300" },
-  { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF → PDF", en: "UDF → PDF", Icon: Scale, iconClass: "text-cyan-300" },
+  { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF / UYAP Araçları", en: "UDF / UYAP Tools", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
   { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
   { key: "searchable", favId: "searchable-pdf", group: "convert", tr: "Aranabilir PDF", en: "Searchable PDF", Icon: FileSearch, iconClass: "text-cyan-300" },
@@ -1049,7 +1049,7 @@ export function DashboardSidebarMobileLauncher({
           : contentPanel === "snip"
           ? tr ? "PDF'ten Kesit Al" : "Snip to Image"
           : contentPanel === "udf"
-          ? tr ? "UDF → PDF" : "UDF → PDF"
+          ? tr ? "UDF / UYAP Araçları" : "UDF / UYAP Tools"
           : contentPanel === "searchable"
           ? tr ? "Aranabilir PDF" : "Searchable PDF"
           : contentPanel === "cv"

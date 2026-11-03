@@ -43,6 +43,11 @@ const ROWS = [
   ["pdf-birlestir-icindekiler", "Birleştir + İçindekiler", "Merge + Table of Contents", "device", "", ""],
   ["sayfa-duzeni", "Sayfa Düzeni", "Page Layout", "device", "", ""],
   ["udf-to-pdf", "UDF → PDF", "UDF to PDF", "device", "", ""],
+  ["pdf-to-udf", "PDF → UDF", "PDF to UDF", "device", "", ""],
+  ["word-to-udf", "Word → UDF", "Word to UDF", "device", "", ""],
+  ["udf-to-word", "UDF → Word", "UDF to Word", "device", "", ""],
+  ["udf-viewer", "UDF Görüntüleyici", "UDF Viewer", "device", "", ""],
+  ["image-to-udf", "Görsel / TIFF → UDF", "Image / TIFF to UDF", "device", "", ""],
   ["ai-fotograf-studyosu", "Fotoğraf Stüdyosu", "Photo Studio", "device", "Yapay zekâ modelleri tarayıcıda çalışır; fotoğraf cihazdan çıkmaz", "AI models run in the browser; the photo never leaves your device"],
   ["cv-olustur", "CV Oluştur", "CV Maker", "device", "", ""],
   // ── Sunucuda ──
