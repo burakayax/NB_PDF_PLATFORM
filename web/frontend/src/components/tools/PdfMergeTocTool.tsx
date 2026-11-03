@@ -106,6 +106,7 @@ export function PdfMergeTocTool({
   const [okuyor, setOkuyor] = useState(false);
   const [heading, setHeading] = useState<string>(t.headingDefault);
   const [yazi, setYazi] = useState<(typeof YAZI_TIPLERI)[number]["id"]>("roboto");
+  const [yaziAcik, setYaziAcik] = useState(false);
   const [numbering, setNumbering] = useState(true);
   const [footer, setFooter] = useState(false);
   const [backLinks, setBackLinks] = useState(false);
@@ -406,14 +407,23 @@ export function PdfMergeTocTool({
           <div className="sm:col-span-2" role="radiogroup" aria-label={t.fontLabel}>
             <style>{YAZI_TIPLERI.map((y) => `@font-face{font-family:'toc-${y.id}';src:url('${y.dosya}-Regular.ttf') format('truetype');font-display:swap;}`).join("")}</style>
             <span className="mb-1 block text-[12px] text-slate-400">{t.fontLabel}</span>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {YAZI_TIPLERI.map((y) => (
-                <button key={y.id} type="button" role="radio" aria-checked={yazi === y.id} onClick={() => setYazi(y.id)}
-                  className={`rounded-xl border px-3 py-2.5 text-left transition ${yazi === y.id ? "border-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-400/60" : "border-white/15 bg-white/[0.04] hover:bg-white/[0.08]"}`}>
-                  <span className="block text-[18px] leading-tight text-white" style={{ fontFamily: `'toc-${y.id}', sans-serif` }}>{dil === "tr" ? "İçindekiler 1234" : "Contents 1234"}</span>
-                  <span className="mt-0.5 block text-[11px] text-slate-400">{y[dil]}</span>
-                </button>
-              ))}
+            <div className="relative">
+              <button type="button" aria-haspopup="listbox" aria-expanded={yaziAcik} onClick={() => setYaziAcik((v) => !v)}
+                className={`${girdi} flex items-center justify-between gap-2 text-left`}>
+                <span style={{ fontFamily: `'toc-${yazi}', sans-serif`, fontSize: 16 }}>{YAZI_TIPLERI.find((y) => y.id === yazi)![dil]}</span>
+                <span aria-hidden className="text-slate-400">{yaziAcik ? "▴" : "▾"}</span>
+              </button>
+              {yaziAcik && (
+                <ul role="listbox" className="absolute left-0 right-0 z-20 mt-1 max-h-72 overflow-auto rounded-lg border border-white/20 bg-slate-900 py-1 shadow-xl">
+                  {YAZI_TIPLERI.map((y) => (
+                    <li key={y.id} role="option" aria-selected={yazi === y.id}>
+                      <button type="button" onClick={() => { setYazi(y.id); setYaziAcik(false); }}
+                        className={`block w-full px-3 py-2 text-left text-[17px] text-white hover:bg-white/10 ${yazi === y.id ? "bg-cyan-500/20" : ""}`}
+                        style={{ fontFamily: `'toc-${y.id}', sans-serif` }}>{y[dil]}</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
           <label><span className="mb-1 block text-[12px] text-slate-400">{t.outName}</span>
