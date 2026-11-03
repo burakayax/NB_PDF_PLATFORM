@@ -24,6 +24,11 @@ Oturum kesilirse bu dosya okunup kalınan yerden devam edilir.
 | 10 | [ ] | Güven mesajı (ana sayfa + fiyat sayfası) | — | — | — | Önce ödeme sisteminin gerçekten böyle çalıştığı kodda doğrulanacak |
 | 11 | [ ] | Tüm site SEO taraması + 10 blog yazısı (taslak) | — | — | — | Yeni+eski ~60 araç; yazılar önce taslak |
 
+## İleride (sıraya alınmadı)
+
+- **Kendi sesimiz (ince ayar):** Seslendirme sanatçısıyla yazılı sözleşme (yapay ses olarak kullanım izni) + birkaç saatlik kayıt ile Antalia'yı markaya özel sese eğitmek. Şirket kurulunca avukat görüşüyle; eğitim için ekran kartlı makine/sunucu gerekir. Maliyet ölçülmedi.
+- **Antalia lisans teyidi:** Yazara (GitHub `fr0stb1rd/antalia-mini-web` Issues veya Hugging Face `cloud0day3/antalia-mini` Community) ticari kullanım ve yardımcı dosya lisansı sorusu; cevap gelene kadar araç canlıya alınmamalı.
+
 ## Proje bulguları (0. adım)
 
 - **Yapı:** React + TypeScript + Vite (web/frontend), Express + Prisma (web/api), Python FastAPI PDF servisi (web/backend + src/).
