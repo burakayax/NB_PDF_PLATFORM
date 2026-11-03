@@ -49,7 +49,7 @@ const BURST_COOLDOWN_MS = 60 * 60_000;
 const CRITICAL_COOLDOWN_MS = 30 * 60_000;
 const MAX_PER_HOUR = 6;
 
-type Hit = { at: number; ip?: string };
+type Hit = { at: number; ip?: string; path?: string; ua?: string };
 
 const hits = new Map<string, Hit[]>(); // burst key → olaylar
 const lastSentByKey = new Map<string, number>();
@@ -106,7 +106,7 @@ ${lines.map((l) => `<p style="margin:4px 0">${l}</p>`).join("")}
 }
 
 /** logSuspiciousActivity / başarısız giriş kaydı bu fonksiyonu çağırır. Asla hata fırlatmaz. */
-export function noteSecurityEvent(type: string, info: { ip?: string; detail?: string } = {}, now = Date.now()): void {
+export function noteSecurityEvent(type: string, info: { ip?: string; detail?: string; path?: string; userAgent?: string } = {}, now = Date.now()): void {
   try {
     if (!sender || !alertsEnabled()) return;
 
@@ -125,17 +125,26 @@ export function noteSecurityEvent(type: string, info: { ip?: string; detail?: st
     if (!rule) return;
 
     const list = (hits.get(rule.key) ?? []).filter((h) => now - h.at < WINDOW_MS);
-    list.push({ at: now, ip: info.ip });
+    list.push({ at: now, ip: info.ip, path: info.path, ua: info.userAgent });
     hits.set(rule.key, list);
     if (list.length < rule.threshold) return;
 
     const byIp = new Map<string, number>();
     for (const h of list) if (h.ip) byIp.set(h.ip, (byIp.get(h.ip) ?? 0) + 1);
     const top = [...byIp.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const topOf = (pick: (h: Hit) => string | undefined, max: number, cut = 90) => {
+      const m = new Map<string, number>();
+      for (const h of list) { const v = pick(h); if (v) m.set(v.slice(0, cut), (m.get(v.slice(0, cut)) ?? 0) + 1); }
+      return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, max);
+    };
+    const topPaths = topOf((h) => h.path, 3);
+    const topUas = topOf((h) => h.ua, 2);
     void dispatch(`burst:${rule.key}`, BURST_COOLDOWN_MS, now, `${rule.label} sayısı arttı`, [
       `<b>Son 10 dakikada:</b> ${list.length} olay`,
       `<b>Zaman:</b> ${trTime(now)} (TR saati)`,
-      top.length ? `<b>En çok görülen IP'ler:</b> ${top.map(([ip, n]) => `${esc(ip)} (${n})`).join(", ")}` : "",
+      top.length ? `<b>En çok görülen IP'ler:</b> ${top.map(([ip, n]) => `${esc(ip)} (${n})`).join(", ")} — toplam ${byIp.size} farklı IP` : "",
+      topPaths.length ? `<b>En çok istenen sayfa:</b> ${topPaths.map(([p, n]) => `${esc(p)} (${n})`).join(", ")}` : "",
+      topUas.length ? `<b>Tarayıcı/uygulama:</b> ${topUas.map(([u, n]) => `${esc(u)} (${n})`).join(" · ")}` : "",
       rule.hint,
     ].filter(Boolean));
   } catch {
