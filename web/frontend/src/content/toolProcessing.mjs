@@ -49,6 +49,7 @@ const ROWS = [
   ["udf-viewer", "UDF Görüntüleyici", "UDF Viewer", "device", "", ""],
   ["image-to-udf", "Görsel / TIFF → UDF", "Image / TIFF to UDF", "device", "", ""],
   ["e-basvuru-uyumluluk", "E-başvuru Uyumluluk Kontrolü", "Filing Compliance Check", "device", "", ""],
+  ["dilekce-sablonlari", "Dilekçe Şablonları", "Petition Templates", "device", "", ""],
   ["ai-fotograf-studyosu", "Fotoğraf Stüdyosu", "Photo Studio", "device", "Yapay zekâ modelleri tarayıcıda çalışır; fotoğraf cihazdan çıkmaz", "AI models run in the browser; the photo never leaves your device"],
   ["cv-olustur", "CV Oluştur", "CV Maker", "device", "", ""],
   // ── Sunucuda ──

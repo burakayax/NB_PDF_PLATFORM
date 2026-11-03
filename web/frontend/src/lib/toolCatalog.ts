@@ -388,6 +388,11 @@ export const TOOLS: Tool[] = [
     en: { name: "Filing Compliance Check", desc: "Check a PDF against size, page and A4 limits you choose, and fix it." },
   },
   {
+    id: "dilekce-sablonlari", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "Dilekçe Şablonları", desc: "Hazır dilekçe ve form şablonunu doldurun; PDF veya UDF olarak indirin." },
+    en: { name: "Petition Templates", desc: "Fill in a ready-made letter template and download it as PDF or UDF." },
+  },
+  {
     id: "image-to-udf", cat: "legal", Icon: Scale, free: true,
     tr: { name: "Görsel / TIFF → UDF", desc: "JPG, PNG ve çok sayfalı TIFF'i UDF belgesine çevirin." },
     en: { name: "Image / TIFF → UDF", desc: "Turn JPG, PNG and multi-page TIFF into a UDF document." },
@@ -542,6 +547,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "udf-viewer": "indigo",
   "image-to-udf": "indigo",
   "e-basvuru-uyumluluk": "indigo",
+  "dilekce-sablonlari": "indigo",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

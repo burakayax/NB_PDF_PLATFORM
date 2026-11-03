@@ -121,6 +121,11 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
   ],
+  "dilekce-sablonlari": [
+    { icon: Zap, tr: "Hazır şablonlar", trDesc: "Sık kullanılan dilekçeleri birkaç alanı doldurarak hazırlayın.", en: "Ready templates", enDesc: "Prepare common letters by filling in a few fields." },
+    { icon: Zap, tr: "PDF veya UDF", trDesc: "Aynı dilekçeyi PDF ya da UYAP için UDF olarak indirin.", en: "PDF or UDF", enDesc: "Download the same letter as PDF or as UDF for UYAP." },
+    { icon: Lock, tr: "Gizli", trDesc: "Bilgileriniz cihazınızdan hiç çıkmaz.", en: "Private", enDesc: "Your details never leave your device." },
+  ],
   "ai-fotograf-studyosu": [
     { icon: Zap, tr: "Amaca göre hazır", trDesc: "Vesikalık, biyometrik, vize, CV ve LinkedIn ölçülerine tek tıkla kırpar; arka planı değiştirir.", en: "Ready for the purpose", enDesc: "Crops to ID, biometric, visa, CV and LinkedIn sizes in one click and swaps the background." },
     { icon: Zap, tr: "Uygunluk denetimi", trDesc: "Baş oranı, ifade ve ışığı kontrol edip uyarır.", en: "Suitability check", enDesc: "Checks head size, expression and light, and warns you." },

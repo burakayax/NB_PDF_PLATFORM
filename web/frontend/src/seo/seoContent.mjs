@@ -92,6 +92,7 @@ export const TOOL_SLUGS = [
   "udf-viewer",
   "image-to-udf",
   "e-basvuru-uyumluluk",
+  "dilekce-sablonlari",
   "ai-fotograf-studyosu",
   "cv-olustur",
 ];
@@ -2118,6 +2119,36 @@ export const TOOL_SEO = {
       ],
     ),
   },
+  "dilekce-sablonlari": {
+    tr: T(
+      "Dilekçe Şablonları — PDF ve UDF Olarak İndir",
+      "Hazır dilekçe şablonunu doldurun, PDF veya UDF indirin. Üyeliksiz, ücretsiz; bilgileriniz cihazınızdan çıkmaz.",
+      "Dilekçe Şablonları",
+      "Genel dilekçe, bilgi edinme, istifa, iade, abonelik iptali ve tahliye bildirimi şablonlarını doldurup PDF ya da UYAP için UDF olarak indirin. Şablonlar genel bilgilendirme amaçlıdır, hukuki danışmanlık değildir; kendi durumunuza uyarlayın, gerekirse bir avukata danışın.",
+      ["dilekçe şablonu", "dilekçe örneği", "istifa dilekçesi örneği", "bilgi edinme dilekçesi", "dilekçe pdf", "dilekçe udf"],
+      [
+        {"q": "Hangi dilekçe şablonları var?", "a": "Genel dilekçe, bilgi edinme başvurusu, istifa dilekçesi, ürün iade talebi, abonelik iptal talebi ve kiracı tahliye bildirimi."},
+        {"q": "Dilekçeyi PDF mi UDF mi indirmeliyim?", "a": "Kuruma PDF olarak vereceksiniz ya da yazdıracaksanız PDF; UYAP Doküman Editörü'nde düzenleyip göndereceksiniz UDF seçin."},
+        {"q": "Bu şablonlar hukuki danışmanlık mı?", "a": "Hayır. Şablonlar genel bilgilendirme amaçlıdır, hukuki danışmanlık değildir; kendi durumunuza uyarlayın, gerekirse bir avukata danışın."},
+        {"q": "Bilgilerim sunucuya gidiyor mu?", "a": "Hayır. Dilekçe tarayıcınızda oluşturulur; yazdığınız kimlik ve adres bilgileri cihazınızdan çıkmaz."},
+        {"q": "Boş bıraktığım isteğe bağlı alan ne olur?", "a": "İlgili satır belgeden çıkarılır; belgede boş etiket kalmaz."},
+      ],
+    ),
+    en: T(
+      "Petition Templates — Download as PDF or UDF",
+      "Fill a ready-made letter template and download it as PDF or UDF. No signup, free; your details never leave your device.",
+      "Petition Templates",
+      "Fill in templates for a general petition, information request, resignation, refund, subscription cancellation or move-out notice and download as PDF or UDF for UYAP. Templates are for general information only and are not legal advice; adapt them to your case and consult a lawyer if needed.",
+      ["petition template", "resignation letter template", "turkish petition pdf"],
+      [
+        {"q": "Which templates are available?", "a": "General petition, freedom-of-information request, resignation letter, refund request, subscription cancellation and tenant move-out notice (texts are in Turkish)."},
+        {"q": "PDF or UDF?", "a": "Choose PDF to print or hand in; choose UDF if you will edit and file it in the UYAP Document Editor."},
+        {"q": "Is this legal advice?", "a": "No. Templates are for general information only and are not legal advice; adapt them to your case and consult a lawyer if needed."},
+        {"q": "Is my information uploaded?", "a": "No. The letter is built in your browser; the ID and address you type never leave your device."},
+        {"q": "What happens to optional fields I leave empty?", "a": "The related line is removed from the document, so no empty labels remain."},
+      ],
+    ),
+  },
 };
 
 // Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
@@ -2488,6 +2519,7 @@ export const RELATED_TOOLS = {
   "udf-viewer": ["udf-to-pdf", "udf-to-word", "image-to-udf"],
   "image-to-udf": ["pdf-to-udf", "compress", "image-to-pdf"],
   "e-basvuru-uyumluluk": ["compress", "udf-to-pdf", "split-pdf", "taranmis-pdf-ocr"],
+  "dilekce-sablonlari": ["udf-to-pdf", "pdf-imzala", "e-basvuru-uyumluluk", "compress"],
   "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
   "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };

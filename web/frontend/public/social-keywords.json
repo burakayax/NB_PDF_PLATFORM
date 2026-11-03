@@ -7144,5 +7144,37 @@
       "filing pdf checker"
     ],
     "tool": "/tools/e-basvuru-uyumluluk"
+  },
+  "https://www.pdfplatform.app/tools/dilekce-sablonlari": {
+    "tr": [
+      "dilekçe şablonu",
+      "dilekçe örneği",
+      "istifa dilekçesi örneği",
+      "bilgi edinme dilekçesi",
+      "dilekçe pdf",
+      "dilekçe udf"
+    ],
+    "en": [
+      "petition template",
+      "resignation letter template",
+      "turkish petition pdf"
+    ],
+    "tool": "/tools/dilekce-sablonlari"
+  },
+  "https://www.pdfplatform.app/en/tools/dilekce-sablonlari": {
+    "tr": [
+      "dilekçe şablonu",
+      "dilekçe örneği",
+      "istifa dilekçesi örneği",
+      "bilgi edinme dilekçesi",
+      "dilekçe pdf",
+      "dilekçe udf"
+    ],
+    "en": [
+      "petition template",
+      "resignation letter template",
+      "turkish petition pdf"
+    ],
+    "tool": "/tools/dilekce-sablonlari"
   }
 }

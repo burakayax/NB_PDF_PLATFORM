@@ -164,6 +164,7 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/udf-viewer" ||
     rawPath === "/tools/image-to-udf" ||
     rawPath === "/tools/e-basvuru-uyumluluk" ||
+    rawPath === "/tools/dilekce-sablonlari" ||
     // Aşağıdaki dördü REGISTRY'de (workspace araç listesi) YOKTUR — kendi
     // panelleri vardır. Bu yüzden parseWorkspaceToolPath onları tanımıyordu ve
     // doğrudan adresle gelen ziyaretçi ana sayfaya atılıyordu (arama sonucundan
@@ -279,7 +280,7 @@ export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle", "/tools/sozlesme-denetci", "/tools/ai-fotograf-studyosu", "/tools/cv-olustur",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
-  "/tools/pdf-to-udf", "/tools/word-to-udf", "/tools/udf-to-word", "/tools/udf-viewer", "/tools/image-to-udf", "/tools/e-basvuru-uyumluluk",
+  "/tools/pdf-to-udf", "/tools/word-to-udf", "/tools/udf-to-word", "/tools/udf-viewer", "/tools/image-to-udf", "/tools/e-basvuru-uyumluluk", "/tools/dilekce-sablonlari",
   "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
   "/tools/pdf-qr-ekle", "/tools/pdf-birlestir-icindekiler",
   "/tools/imza-iste",
@@ -313,6 +314,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "udf-viewer": "udf",
   "image-to-udf": "udf",
   "e-basvuru-uyumluluk": "udf",
+  "dilekce-sablonlari": "udf",
   "cv-olustur": "cv",
   "aranabilir-pdf": "searchable",
   "taranmis-pdf-ocr": "searchable",
