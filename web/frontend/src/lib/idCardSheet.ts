@@ -38,7 +38,7 @@ export type WatermarkOpts = { text: string; opacity?: number };
 
 /** Kaynak görseli kart oranlı tuvale sığdırır (kırpmaz), isteğe bağlı döndürür ve filigran basar. */
 export async function renderCardJpeg(
-  file: File,
+  file: Blob,
   kind: CardKind,
   rotation: Rotation,
   watermark?: WatermarkOpts,
@@ -85,7 +85,7 @@ export async function renderCardJpeg(
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-export type SheetInput = { file: File; rotation: Rotation };
+export type SheetInput = { file: Blob; rotation: Rotation };
 
 /** Tek A4 PDF üretir. `inputs` uzunluğu mode ile uyumlu olmalı (two → 2, one → 1). */
 export async function buildIdSheetPdf(

@@ -245,3 +245,54 @@ describe("grup başlıkları", () => {
     expect(r.tocPages).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("alt başlık ve ayırıcı sayfa", () => {
+  const hazirla = async () => [
+    { ...(await dosya("internet.pdf", 1)), group: "FATURALAR", subgroup: "İnternet" },
+    { ...(await dosya("telefon.pdf", 2)), group: "FATURALAR", subgroup: "Telefon" },
+    { ...(await dosya("ihale.pdf", 1)), group: "SÖZLEŞMELER" },
+  ];
+  const agac = (doc: PDFDocument) => {
+    const baslik = (ref: PDFRef) => (doc.context.lookup(ref, PDFDict).lookup(PDFName.of("Title")) as PDFHexString).decodeText();
+    const oku = (ilk: PDFRef | undefined): unknown[] => {
+      const s: unknown[] = [];
+      let ref = ilk;
+      while (ref) {
+        const d = doc.context.lookup(ref, PDFDict);
+        const kids = oku(d.get(PDFName.of("First")) as PDFRef | undefined);
+        s.push(kids.length ? { [baslik(ref)]: kids } : baslik(ref));
+        ref = d.get(PDFName.of("Next")) as PDFRef | undefined;
+      }
+      return s;
+    };
+    return oku(doc.catalog.lookup(PDFName.of("Outlines"), PDFDict).get(PDFName.of("First")) as PDFRef);
+  };
+
+  it("yer imleri grup → alt başlık → dosya olarak üç katlı gelir", async () => {
+    const r = await mergeWithToc(await hazirla(), OPT);
+    expect(agac(await PDFDocument.load(r.bytes))).toEqual([
+      { FATURALAR: [{ "İnternet": ["internet"] }, { Telefon: ["telefon"] }] },
+      { "SÖZLEŞMELER": ["ihale"] },
+    ]);
+  });
+
+  it("ayırıcı sayfa açıkken her grubun önüne bir sayfa eklenir ve sayfa numaraları kaymaz", async () => {
+    const kapali = await mergeWithToc(await hazirla(), OPT);
+    const acik = await mergeWithToc(await hazirla(), { ...OPT, separators: true });
+    expect(acik.totalPages).toBe(kapali.totalPages + 2);
+    const doc = await PDFDocument.load(acik.bytes);
+    expect(doc.getPageCount()).toBe(acik.totalPages);
+    // içindekiler(1) + ayırıcı(1) → internet 3. sayfada; telefon 4-5; ayırıcı 6; ihale 7
+    expect(acik.sections.map((x) => x.startPage)).toEqual([3, 4, 7]);
+    // Yer imi: grup başlığı ayırıcı sayfaya gider
+    const kok = doc.catalog.lookup(PDFName.of("Outlines"), PDFDict);
+    const ilk = doc.context.lookup(kok.get(PDFName.of("First")) as PDFRef, PDFDict);
+    const pages = doc.getPages().map((p) => p.ref.tag);
+    expect(pages.indexOf(((ilk.lookup(PDFName.of("Dest"), PDFArray)).get(0) as PDFRef).tag)).toBe(1);
+  });
+
+  it("hiç grup yokken ayırıcı seçeneği sayfa eklemez", async () => {
+    const r = await mergeWithToc([await dosya("a.pdf", 1), await dosya("b.pdf", 1)], { ...OPT, separators: true });
+    expect(r.totalPages).toBe(3);
+  });
+});

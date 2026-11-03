@@ -2162,7 +2162,7 @@ export const TOOL_SEO = {
         {"q": "Kimliğin ön ve arka yüzünü tek sayfaya nasıl koyarım?", "a": "Ön ve arka yüzün fotoğrafını ekleyin, gerekirse döndürün ve «Tek sayfa PDF oluştur»a basın. İki yüz gerçek boyutunda alt alta tek A4 sayfaya yerleşir."},
         {"q": "Ehliyet ve pasaport için de kullanılır mı?", "a": "Evet. Ehliyet kimlik kartıyla aynı boyuttadır; pasaport için bilgi sayfası seçeneği vardır."},
         {"q": "Filigran ne işe yarar?", "a": "Üzerine «Yalnızca X kurumu için – tarih» gibi bir yazı basarak kimliğin başka amaçlarla kullanılmasını zorlaştırır. Bazı kurumlar filigranlı kimliği kabul etmeyebilir; önce kuruma sorun."},
-        {"q": "Görüntü kırpılıyor mu?", "a": "Hayır. Fotoğraf kart oranına kırpılmadan sığdırılır; en iyi sonuç için belgeyi düz ve çerçeveyi sıkı çekin."},
+        {"q": "Kimliğin kenarlarını kendim mi kırpmam gerekiyor?", "a": "Hayır. Genel bir fotoğraf çekmeniz yeterli; kimliğin kenarları cihazınızda otomatik bulunur ve eğrilik düzeltilir. Yine de kimliği ne kadar yakından çekerseniz sonuç o kadar net olur. Kenar bulunamazsa fotoğraf olduğu gibi kullanılır."},
       ],
     ),
     en: T(
@@ -2176,7 +2176,7 @@ export const TOOL_SEO = {
         {"q": "How do I put both sides of an ID on one page?", "a": "Add the front and back photos, rotate if needed and click Create. Both sides are placed at real size on one A4 page."},
         {"q": "Does it work for driving licences and passports?", "a": "Yes. A licence is the same size as an ID card; for passports there is a data-page option."},
         {"q": "What does the watermark do?", "a": "It overlays text such as 'Only for X – date' to make other uses of the ID harder. Some institutions may refuse a watermarked ID; check first."},
-        {"q": "Is the image cropped?", "a": "No. The photo is fitted to the card ratio without cropping; for best results shoot the document flat and framed tightly."},
+        {"q": "Do I have to crop the card myself?", "a": "No. Take a general photo; the card edges are found on your device and the skew is corrected. The closer you shoot the card the sharper the result. If the edges cannot be found the photo is used as is."},
       ],
     ),
   },
