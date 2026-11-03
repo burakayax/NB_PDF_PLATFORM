@@ -9,6 +9,7 @@
  * her PDF'i bir gruba atar. Grup varsa gruplanmamış PDF kalamaz (düğme o PDF'e götürür).
  */
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AlertTriangle, ArrowDown, ArrowUp, FileText, GripVertical, ListTree, Loader2, Pencil, Plus, Trash2,
 } from "lucide-react";
@@ -636,8 +637,8 @@ export function PdfMergeTocTool({
         <p className="mt-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">{t.order}</p>
       </div>
 
-      {secili.length > 0 && (
-        <div className="sticky top-2 z-10 mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-indigo-400/40 bg-slate-900/95 px-3.5 py-2.5 shadow-lg backdrop-blur">
+      {secili.length > 0 && createPortal(
+        <div className="fixed bottom-4 left-1/2 z-30 flex w-[min(52rem,calc(100vw-2rem))] -translate-x-1/2 flex-wrap items-center gap-2 rounded-2xl border border-indigo-400/50 bg-slate-900/95 px-4 py-3 shadow-2xl backdrop-blur">
           <span className="text-[13px] font-bold text-white">{secili.length} {t.selected}</span>
           <span className="text-[12px] text-slate-400">{t.assignTo}</span>
           <select className={`${secim} !w-auto min-w-[9rem]`} style={{ colorScheme: "dark" }} value={secGrup === null ? "" : `g${secGrup}`} aria-label={t.pickGroup}
@@ -655,7 +656,8 @@ export function PdfMergeTocTool({
             </select>
           )}
           <button type="button" onClick={() => setSecili([])} className="ml-auto rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-300 hover:bg-white/[0.08]">{t.clearSel}</button>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {groups.length === 0 ? (
