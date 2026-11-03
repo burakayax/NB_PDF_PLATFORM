@@ -1,4 +1,5 @@
-import type { CookieOptions, Request, Response } from "express";
+import type { CookieOptions, NextFunction, Request, Response } from "express";
+import { DEVICE_COOKIE_NAME, deviceCtx, newDeviceId, parseDeviceId } from "./device-context.js";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { signGoogleSignupToken, verifyGoogleSignupToken } from "../../lib/google-signup-token.js";
@@ -141,6 +142,23 @@ function getCookieOptions(session?: { persistent: boolean; expiresAt: Date }): C
     opts.domain = domain;
   }
   return opts;
+}
+
+/**
+ * Güvenilir cihaz çerezi: yoksa üretip yazar (uzun ömürlü, HttpOnly). Bu istekte YENİ üretilen kimlik
+ * cihaz tanımada kullanılmaz (çerez saklanmayan istemcilerde her istek "yeni cihaz" olmasın);
+ * bir sonraki istekte çerezle geri geldiğinde kullanılır.
+ */
+export function deviceIdMiddleware(request: Request, response: Response, next: NextFunction) {
+  const gelen = parseDeviceId((request.cookies as Record<string, unknown> | undefined)?.[DEVICE_COOKIE_NAME]);
+  if (!gelen) {
+    response.cookie(
+      DEVICE_COOKIE_NAME,
+      newDeviceId(),
+      getCookieOptions({ persistent: true, expiresAt: new Date(Date.now() + 400 * 24 * 60 * 60 * 1000) }),
+    );
+  }
+  deviceCtx.run({ deviceId: gelen }, next);
 }
 
 /**
