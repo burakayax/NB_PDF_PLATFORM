@@ -172,6 +172,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   const [quizCount, setQuizCount] = useState(10);
   const [quizTypes, setQuizTypes] = useState<QuizType[]>(["mcq", "tf"]);
   const [quizLevel, setQuizLevel] = useState<QuizLevel>("medium");
+  const [quizExamTitle, setQuizExamTitle] = useState("");
+  const [quizLabel, setQuizLabel] = useState("");
+  const [quizPoints, setQuizPoints] = useState(false);
   const [translatedBlob, setTranslatedBlob] = useState<Blob | null>(null);
   const [targetLang, setTargetLang] = useState(language === "tr" ? "en" : "tr");
   // Sohbet
@@ -341,7 +344,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     }
   }
 
-  const quizTitle = `${fileName ? fileName.replace(/\.pdf$/i, "") : tr ? "Belge" : "Document"} — ${tr ? "Test" : "Quiz"}`;
+  const quizTitle = quizExamTitle.trim() || `${fileName ? fileName.replace(/\.pdf$/i, "") : tr ? "Belge" : "Document"} — ${tr ? "Test" : "Quiz"}`;
 
   async function downloadQuiz(withAnswers: boolean) {
     if (exporting || !quiz) return;
@@ -349,7 +352,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setExporting(true);
       const levelText = quizLevel === "easy" ? (tr ? "Kolay" : "Easy") : quizLevel === "hard" ? (tr ? "Zor" : "Hard") : tr ? "Orta" : "Medium";
       const subtitle = `${quiz.questions.length} ${tr ? "soru" : "questions"} · ${levelText} ${tr ? "zorluk" : "difficulty"} · ${new Date().toLocaleDateString(tr ? "tr-TR" : "en-US")}`;
-      const bytes = await quizToPdf(quiz.questions, tr ? "tr" : "en", { title: quizTitle, subtitle, withAnswers, studentInfo: !withAnswers });
+      const bytes = await quizToPdf(quiz.questions, tr ? "tr" : "en", { title: quizTitle, subtitle, withAnswers, studentInfo: !withAnswers, label: quizLabel.trim() || undefined, showPoints: quizPoints });
       const blob = pdfBytesToBlob(bytes);
       await saveBlobWithPicker(blob, `${(fileName || "belge").replace(/\.pdf$/i, "")}-${withAnswers ? "test-cevapli" : "test"}.pdf`, {
         description: "PDF",
@@ -914,6 +917,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 busy={busy}
                 exporting={exporting}
                 copied={copied}
+                showPoints={quizPoints}
                 onRegenerate={() => void runQuiz()}
                 onPdf={(w) => void downloadQuiz(w)}
                 onCopy={copyQuiz}
@@ -926,7 +930,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               </p>
             ) : (
               <>
-                <QuizOptions tr={tr} count={quizCount} types={quizTypes} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onTypes={setQuizTypes} onLevel={setQuizLevel} />
+                <QuizOptions tr={tr} count={quizCount} types={quizTypes} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onTypes={setQuizTypes} onLevel={setQuizLevel} examTitle={quizExamTitle} label={quizLabel} showPoints={quizPoints} onExamTitle={setQuizExamTitle} onLabel={setQuizLabel} onShowPoints={setQuizPoints} />
                 <button type="button" onClick={() => void runQuiz()}
                   className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
                   <ListChecks className="h-5 w-5" />

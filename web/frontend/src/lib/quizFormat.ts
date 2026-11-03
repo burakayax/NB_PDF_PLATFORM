@@ -60,3 +60,14 @@ export function quizToMarkdown(
   }
   return out.join("\n");
 }
+
+/**
+ * Toplam puanı (varsayılan 100) sorulara eşit paylaştırır. Artan puan ilk sorulara birer birer
+ * verilir; örnek: 9 soru → 12, 11, 11, 11, 11, 11, 11, 11, 11 (toplam 100).
+ */
+export function distributePoints(n: number, total = 100): number[] {
+  if (n <= 0) return [];
+  const base = Math.floor(total / n);
+  const extra = total - base * n;
+  return Array.from({ length: n }, (_, i) => base + (i < extra ? 1 : 0));
+}

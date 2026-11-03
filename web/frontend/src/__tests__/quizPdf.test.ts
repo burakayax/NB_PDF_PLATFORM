@@ -35,6 +35,20 @@ describe("quizToPdf", () => {
     }
   });
 
+  it("etiket + puan seçenekleriyle de PDF üretir (puanlama tablosu cevap anahtarında)", async () => {
+    vi.stubGlobal("fetch", async (u: string) => ({ arrayBuffer: async () => Uint8Array.from(readFileSync("public" + u)).buffer }));
+    const base = { title: "Güneş Sistemi — Yazılı", subtitle: "9 soru · Orta zorluk", label: "FEN BİLGİSİ · 6. SINIF", showPoints: true };
+    const sheet = await quizToPdf(qs, "tr", { ...base, withAnswers: false, studentInfo: true });
+    const key = await quizToPdf(qs, "tr", { ...base, withAnswers: true });
+    expect((await PDFDocument.load(sheet)).getPageCount()).toBeGreaterThanOrEqual(1);
+    expect((await PDFDocument.load(key)).getPageCount()).toBeGreaterThan(1);
+    const out = process.env.QUIZ_PDF_OUT;
+    if (out) {
+      writeFileSync(out + "test-kagidi-puanli.pdf", sheet);
+      writeFileSync(out + "test-cevapli-puanli.pdf", key);
+    }
+  });
+
   it("boş soru listesinde bile çökmeden tek sayfa üretir", async () => {
     vi.stubGlobal("fetch", async (u: string) => ({ arrayBuffer: async () => Uint8Array.from(readFileSync("public" + u)).buffer }));
     const bytes = await quizToPdf([], "tr", { title: "T", subtitle: "0 soru", withAnswers: false });

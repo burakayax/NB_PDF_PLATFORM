@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check, Copy, Download, Eye, Loader2, RefreshCw, X } from "lucide-react";
 import type { QuizData, QuizLevel, QuizType } from "../../api/ai";
-import { answerLabel, fillIsCorrect } from "../../lib/quizFormat";
+import { answerLabel, distributePoints, fillIsCorrect } from "../../lib/quizFormat";
 
 const LETTERS = ["A", "B", "C", "D"];
 
@@ -12,18 +12,30 @@ export function QuizOptions({
   types,
   level,
   cost,
+  examTitle,
+  label,
+  showPoints,
   onCount,
   onTypes,
   onLevel,
+  onExamTitle,
+  onLabel,
+  onShowPoints,
 }: {
   tr: boolean;
   count: number;
   types: QuizType[];
   level: QuizLevel;
   cost: number;
+  examTitle?: string;
+  label?: string;
+  showPoints?: boolean;
   onCount: (n: number) => void;
   onTypes: (t: QuizType[]) => void;
   onLevel: (l: QuizLevel) => void;
+  onExamTitle?: (s: string) => void;
+  onLabel?: (s: string) => void;
+  onShowPoints?: (v: boolean) => void;
 }) {
   const chip = (active: boolean) =>
     `rounded-xl border px-3.5 py-2 text-[13px] font-semibold transition ${
@@ -73,6 +85,32 @@ export function QuizOptions({
           <button type="button" onClick={() => onLevel("hard")} className={chip(level === "hard")}>{tr ? "Zor" : "Hard"}</button>
         </div>
       </div>
+      {onExamTitle && onLabel && onShowPoints ? (
+        <div>
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-slate-400">{tr ? "Sınav kâğıdı (PDF) görünümü" : "Exam sheet (PDF) look"}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              value={examTitle ?? ""}
+              onChange={(e) => onExamTitle(e.target.value)}
+              maxLength={80}
+              placeholder={tr ? "Sınav başlığı (boşsa dosya adı)" : "Exam title (file name if empty)"}
+              aria-label={tr ? "Sınav başlığı" : "Exam title"}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-fuchsia-400/50 focus:outline-none"
+            />
+            <input
+              value={label ?? ""}
+              onChange={(e) => onLabel(e.target.value)}
+              maxLength={40}
+              placeholder={tr ? "Etiket, ör. MATEMATİK · 9. SINIF" : "Tag, e.g. MATHEMATICS · GRADE 9"}
+              aria-label={tr ? "Ders ve sınıf etiketi" : "Subject and grade tag"}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-fuchsia-400/50 focus:outline-none"
+            />
+          </div>
+          <button type="button" aria-pressed={!!showPoints} onClick={() => onShowPoints(!showPoints)} className={`mt-2 ${chip(!!showPoints)}`}>
+            {showPoints ? "✓ " : ""}{tr ? "Puan değerleri (100 puan üzerinden) + puanlama tablosu" : "Point values (out of 100) + scoring table"}
+          </button>
+        </div>
+      ) : null}
       <p className="text-[12px] text-slate-400">
         {tr ? `Bu işlem ${cost} yapay zekâ hakkı harcar.` : `This uses ${cost} AI operation${cost > 1 ? "s" : ""}.`}
       </p>
@@ -87,6 +125,7 @@ export function QuizPanel({
   busy,
   exporting,
   copied,
+  showPoints,
   onRegenerate,
   onPdf,
   onCopy,
@@ -96,6 +135,7 @@ export function QuizPanel({
   busy: boolean;
   exporting: boolean;
   copied: boolean;
+  showPoints?: boolean;
   onRegenerate: () => void;
   onPdf: (withAnswers: boolean) => void;
   onCopy: () => void;
@@ -126,6 +166,13 @@ export function QuizPanel({
   }, [quiz, picks, typed, checked]);
 
   const total = quiz.questions.length;
+  const pts = showPoints ? distributePoints(total) : [];
+  const TYPE_NAME: Record<string, { tr: string; en: string }> = {
+    mcq: { tr: "Çoktan seçmeli", en: "Multiple choice" },
+    tf: { tr: "Doğru / Yanlış", en: "True / False" },
+    fill: { tr: "Boşluk doldurma", en: "Fill in the blank" },
+    open: { tr: "Açık uçlu", en: "Open-ended" },
+  };
   const hasOpen = quiz.questions.some((q) => q.type === "open");
 
   const inputCls =
@@ -199,10 +246,14 @@ export function QuizPanel({
           const fillBad = q.type === "fill" && !!checked[i] && !fillOk;
           return (
             <div key={i} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-              <p className="text-[14px] font-semibold leading-relaxed text-white">
-                <span className="mr-1.5 text-fuchsia-300">{i + 1}.</span>
-                {q.q}
-              </p>
+              <div className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-600 to-violet-600 text-[13px] font-bold text-white">{i + 1}</span>
+                <p className="min-w-0 flex-1 pt-0.5 text-[14px] font-semibold leading-relaxed text-white">{q.q}</p>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10.5px] font-semibold text-slate-300">{tr ? TYPE_NAME[q.type].tr : TYPE_NAME[q.type].en}</span>
+                  {showPoints ? <span className="text-[11px] font-bold text-fuchsia-300">{pts[i]} {tr ? "puan" : "pts"}</span> : null}
+                </span>
+              </div>
 
               {isChoice && (
                 <div className="mt-3 grid gap-2">

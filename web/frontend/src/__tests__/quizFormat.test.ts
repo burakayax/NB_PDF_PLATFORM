@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerLabel, fillIsCorrect, normAnswer, quizToMarkdown } from "../lib/quizFormat";
+import { answerLabel, distributePoints, fillIsCorrect, normAnswer, quizToMarkdown } from "../lib/quizFormat";
 import type { QuizQuestion } from "../api/ai";
 
 const qs: QuizQuestion[] = [
@@ -43,5 +43,14 @@ describe("quizFormat", () => {
     expect(fillIsCorrect("IŞIK", "ışık")).toBe(true);
     expect(fillIsCorrect("üç", "iki")).toBe(false);
     expect(fillIsCorrect("", "iki")).toBe(false);
+  });
+
+  it("puanı eşit paylaştırır, artanı ilk sorulara verir, toplam hep 100", () => {
+    expect(distributePoints(10)).toEqual(Array(10).fill(10));
+    const d = distributePoints(9);
+    expect(d[0]).toBe(12);
+    expect(d.slice(1).every((x) => x === 11)).toBe(true);
+    for (const n of [1, 3, 7, 13, 20]) expect(distributePoints(n).reduce((a, b) => a + b, 0)).toBe(100);
+    expect(distributePoints(0)).toEqual([]);
   });
 });
