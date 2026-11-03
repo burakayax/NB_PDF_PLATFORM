@@ -7230,21 +7230,19 @@ function App() {
             ) : null}
 
             {contentPanel === "toc" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="pdf-birlestir-icindekiler" language={language} className="mb-4" />
+              <WorkspaceToolShell id="pdf-birlestir-icindekiler" language={language} full>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "qr" ? (
-              <section className="mx-auto w-full max-w-5xl py-2">
-                <ToolHowTo slug="pdf-qr-ekle" language={language} className="mb-4" />
+              <WorkspaceToolShell id="pdf-qr-ekle" language={language} full>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfQrTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "metadata" ? (
