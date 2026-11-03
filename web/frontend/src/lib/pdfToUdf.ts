@@ -21,6 +21,11 @@ export class ScannedPdfError extends Error {
 
 /** Bir sayfanın metin parçalarını paragraf metinlerine çevirir (satır içi boşluklar korunur). */
 export function itemsToParagraphs(items: TextItem[]): string[] {
+  return itemsToParagraphsH(items).map((p) => p.text);
+}
+
+/** Aynı gruplama; her paragrafın yazı yüksekliği (en büyük satır) da döner (başlık tespiti için). */
+export function itemsToParagraphsH(items: TextItem[]): { text: string; h: number }[] {
   const real = items.filter((i) => i.str.trim().length > 0);
   if (real.length === 0) return [];
   // Yukarıdan aşağı (PDF y yukarı doğru artar), aynı satırda soldan sağa.
@@ -53,19 +58,22 @@ export function itemsToParagraphs(items: TextItem[]): string[] {
   for (let i = 1; i < lines.length; i++) gaps.push(lines[i - 1]!.y - lines[i]!.y);
   const sortedGaps = [...gaps].sort((a, b) => a - b);
   const typical = sortedGaps.length ? sortedGaps[Math.floor((sortedGaps.length - 1) / 2)]! : 0;
-  const paras: string[] = [];
+  const paras: { text: string; h: number }[] = [];
   let cur = texts[0] ?? "";
+  let curH = lines[0]?.h ?? 10;
   for (let i = 1; i < texts.length; i++) {
     const newPara = typical > 0 && gaps[i - 1]! > typical * 1.6;
     if (newPara) {
-      paras.push(cur);
+      paras.push({ text: cur, h: curH });
       cur = texts[i]!;
+      curH = lines[i]!.h;
     } else {
       // Satır sonu tire ile bölünmüş kelime birleştirilmez (Türkçede yanlış birleşme riski); boşlukla katılır.
       cur += ` ${texts[i]}`;
+      curH = Math.max(curH, lines[i]!.h);
     }
   }
-  paras.push(cur);
+  paras.push({ text: cur, h: curH });
   return paras;
 }
 

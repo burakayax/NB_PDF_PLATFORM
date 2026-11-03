@@ -131,6 +131,41 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "İsteğe bağlı filigran", trDesc: "Kimliğin kötüye kullanımını zorlaştırın.", en: "Optional watermark", enDesc: "Make misuse of the ID harder." },
     { icon: Lock, tr: "Gizli", trDesc: "Fotoğrafınız cihazınızdan hiç çıkmaz.", en: "Private", enDesc: "Your photo never leaves your device." },
   ],
+  "txt-to-pdf": [
+    { icon: Zap, tr: "Türkçe karakter sorunsuz", trDesc: "ş, ğ, ı, İ, ç, ö, ü eski ANSI dosyalarda bile doğru çıkar.", en: "Turkish characters intact", enDesc: "ş, ğ, ı, İ, ç, ö, ü come out right even from legacy ANSI files." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "markdown-to-pdf": [
+    { icon: Zap, tr: "Biçim korunur", trDesc: "Başlık, liste, alıntı, kod ve kalın yazı PDF'te düzenli görünür.", en: "Formatting kept", enDesc: "Headings, lists, quotes, code and bold text look tidy in the PDF." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "rtf-to-pdf": [
+    { icon: Zap, tr: "Türkçe karakter sorunsuz", trDesc: "RTF içindeki Türkçe harfler doğru çözülür.", en: "Turkish characters intact", enDesc: "Turkish letters inside RTF are decoded correctly." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "odt-to-pdf": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "LibreOffice yüklemeden ODT belgenizi PDF yapın.", en: "No software needed", enDesc: "Turn ODT into PDF without installing LibreOffice." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "epub-to-pdf": [
+    { icon: Zap, tr: "Okuma sırası korunur", trDesc: "Bölümler kitabın sırasıyla, yeni sayfalarda başlar.", en: "Reading order kept", enDesc: "Chapters follow the book's order, each starting on a new page." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "pdf-to-epub": [
+    { icon: Zap, tr: "Telefonda rahat okuma", trDesc: "Metin ekrana sığar; başlıklara göre bölümlenir, içindekiler eklenir.", en: "Comfortable on a phone", enDesc: "Text reflows to the screen; split by headings with a table of contents." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "pdf-to-markdown": [
+    { icon: Zap, tr: "Başlıklar otomatik", trDesc: "Yazı boyutuna göre başlık seviyeleri ve listeler bulunur.", en: "Headings detected", enDesc: "Heading levels and lists are found from the text sizes." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
   "pdf-sesli-oku": [
     { icon: Zap, tr: "Doğal Türkçe ses", trDesc: "Tarayıcının hazır sesinden daha akıcı yapay zekâ sesi.", en: "Natural Turkish voice", enDesc: "A more fluent AI voice than the built-in browser voice." },
     { icon: Zap, tr: "Sayfa aralığı ve hız", trDesc: "İstediğiniz sayfaları, istediğiniz hızda dinleyin.", en: "Page range and speed", enDesc: "Listen to the pages you want at the speed you want." },

@@ -684,6 +684,97 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "txt-to-pdf": S(
+    [
+      { title: "Metin dosyanı seç", detail: "Sonu «.txt» ile biten dosyayı seç." },
+      { title: "«PDF'ye çevir»e bas", detail: "Türkçe karakterler korunarak bilgisayarında PDF'ye çevrilir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your text file", detail: "Pick a file ending in «.txt»." },
+      { title: "Click «Convert to PDF»", detail: "It is turned into a PDF on your computer with all characters intact." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "markdown-to-pdf": S(
+    [
+      { title: "Markdown dosyanı seç", detail: "Sonu «.md» ile biten notunu seç." },
+      { title: "«PDF'ye çevir»e bas", detail: "Başlık, liste ve kod blokları bilgisayarında PDF'e aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your Markdown file", detail: "Pick a note ending in «.md»." },
+      { title: "Click «Convert to PDF»", detail: "Headings, lists and code blocks are converted on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "rtf-to-pdf": S(
+    [
+      { title: "RTF dosyanı seç", detail: "Sonu «.rtf» ile biten belgeni seç." },
+      { title: "«PDF'ye çevir»e bas", detail: "Metin ve kalın yazılar bilgisayarında PDF'e aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your RTF file", detail: "Pick a document ending in «.rtf»." },
+      { title: "Click «Convert to PDF»", detail: "Text and bold are converted on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "odt-to-pdf": S(
+    [
+      { title: "ODT dosyanı seç", detail: "Sonu «.odt» ile biten LibreOffice belgeni seç." },
+      { title: "«PDF'ye çevir»e bas", detail: "Başlık, paragraf, liste ve tablolar bilgisayarında PDF'e aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your ODT file", detail: "Pick your LibreOffice document ending in «.odt»." },
+      { title: "Click «Convert to PDF»", detail: "Headings, paragraphs, lists and tables are converted on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "epub-to-pdf": S(
+    [
+      { title: "EPUB dosyanı seç", detail: "Sonu «.epub» ile biten e-kitabı seç (DRM'siz olmalı)." },
+      { title: "«PDF'ye çevir»e bas", detail: "Bölümler sırayla bilgisayarında PDF'e aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your EPUB file", detail: "Pick an e-book ending in «.epub» (it must be DRM-free)." },
+      { title: "Click «Convert to PDF»", detail: "Chapters are converted in order on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "pdf-to-epub": S(
+    [
+      { title: "PDF dosyanı seç", detail: "Seçilebilir metni olan bir PDF seç." },
+      { title: "«EPUB'a çevir»e bas", detail: "Metin bilgisayarında e-kitaba aktarılır; başlıklara göre bölümlenir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your PDF", detail: "Pick a PDF with selectable text." },
+      { title: "Click «Convert to EPUB»", detail: "Text is carried into an e-book on your computer, split by headings." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
+  "pdf-to-markdown": S(
+    [
+      { title: "PDF dosyanı seç", detail: "Seçilebilir metni olan bir PDF seç." },
+      { title: "«Markdown'a çevir»e bas", detail: "Başlıklar, listeler ve paragraflar bilgisayarında Markdown'a aktarılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your PDF", detail: "Pick a PDF with selectable text." },
+      { title: "Click «Convert to Markdown»", detail: "Headings, lists and paragraphs are converted on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   "pdf-sesli-oku": S(
     [
       { title: "PDF'ini ekle ya da metin yaz", detail: "Okunacak sayfa aralığını seç; hızı ayarla." },

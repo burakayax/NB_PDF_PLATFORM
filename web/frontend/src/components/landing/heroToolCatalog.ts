@@ -43,7 +43,7 @@ export type HeroItem =
   | { k: "page"; slug: string; Icon: LucideIcon; tr: string; en: string }
   | { k: "member"; slug: string; Icon: LucideIcon; tr: string; en: string };
 
-export type HeroCatId = "pages" | "edit" | "convert" | "legal" | "shrink";
+export type HeroCatId = "pages" | "edit" | "convert" | "docs" | "legal" | "shrink";
 
 export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem[] }[] = [
   {
@@ -86,6 +86,19 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
     ],
   },
   {
+    id: "docs",
+    tr: "Metin & E-kitap",
+    en: "Text & E-book",
+    items: [
+      { k: "page", slug: "txt-to-pdf", Icon: FileType2, tr: "TXT → PDF", en: "TXT → PDF" },
+      { k: "page", slug: "markdown-to-pdf", Icon: FileType2, tr: "Markdown → PDF", en: "Markdown → PDF" },
+      { k: "page", slug: "rtf-to-pdf", Icon: FileType2, tr: "RTF → PDF", en: "RTF → PDF" },
+      { k: "page", slug: "odt-to-pdf", Icon: FileType2, tr: "ODT → PDF", en: "ODT → PDF" },
+      { k: "page", slug: "epub-to-pdf", Icon: FileType2, tr: "EPUB → PDF", en: "EPUB → PDF" },
+      { k: "page", slug: "pdf-to-epub", Icon: FileType2, tr: "PDF → EPUB", en: "PDF → EPUB" },
+    ],
+  },
+  {
     id: "legal",
     tr: "Hukuk / UYAP",
     en: "Legal / UYAP",
@@ -108,6 +121,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
       { k: "member", slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
       { k: "page", slug: "kimlik-karti-tek-sayfa", Icon: Scale, tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page" },
       { k: "page", slug: "pdf-sesli-oku", Icon: Scale, tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)" },
+      { k: "page", slug: "pdf-to-markdown", Icon: FileType2, tr: "PDF → Markdown", en: "PDF → Markdown" },
     ],
   },
 ];

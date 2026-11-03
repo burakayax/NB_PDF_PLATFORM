@@ -356,6 +356,41 @@ export const TOOLS: Tool[] = [
     tr: { name: "PDF → Metin", desc: "Belgedeki tüm yazıyı düz metin olarak alın." },
     en: { name: "PDF → Text", desc: "Get all the writing as plain text." },
   },
+  {
+    id: "txt-to-pdf", cat: "convert", Icon: FileType2, free: true,
+    tr: { name: "TXT → PDF", desc: "Metin dosyasını Türkçe karakterleri bozmadan PDF yapın." },
+    en: { name: "TXT → PDF", desc: "Turn a text file into a PDF without breaking Turkish characters." },
+  },
+  {
+    id: "markdown-to-pdf", cat: "convert", Icon: FileText, free: true,
+    tr: { name: "Markdown → PDF", desc: "Markdown (.md) notunuzu başlık ve listeleriyle PDF yapın." },
+    en: { name: "Markdown → PDF", desc: "Turn a Markdown (.md) note into a PDF with headings and lists." },
+  },
+  {
+    id: "rtf-to-pdf", cat: "convert", Icon: FileType2, free: true,
+    tr: { name: "RTF → PDF", desc: "RTF belgesini Türkçe karakterli PDF'e çevirin." },
+    en: { name: "RTF → PDF", desc: "Convert an RTF document to PDF with Turkish characters intact." },
+  },
+  {
+    id: "odt-to-pdf", cat: "convert", Icon: FileOutput, free: true,
+    tr: { name: "ODT → PDF", desc: "LibreOffice ODT belgesini PDF'e çevirin." },
+    en: { name: "ODT → PDF", desc: "Convert a LibreOffice ODT document to PDF." },
+  },
+  {
+    id: "epub-to-pdf", cat: "convert", Icon: FileOutput, free: true,
+    tr: { name: "EPUB → PDF", desc: "DRM'siz EPUB e-kitabını PDF'e çevirin." },
+    en: { name: "EPUB → PDF", desc: "Convert a DRM-free EPUB e-book to PDF." },
+  },
+  {
+    id: "pdf-to-epub", cat: "convert", Icon: FileInput, free: true,
+    tr: { name: "PDF → EPUB", desc: "Metin PDF'ini telefonda okunur EPUB e-kitaba çevirin." },
+    en: { name: "PDF → EPUB", desc: "Turn a text PDF into an EPUB e-book readable on a phone." },
+  },
+  {
+    id: "pdf-to-markdown", cat: "convert", Icon: FileType2, free: true,
+    tr: { name: "PDF → Markdown", desc: "PDF'i başlık ve listeleriyle Markdown'a çevirin." },
+    en: { name: "PDF → Markdown", desc: "Turn a PDF into Markdown with its headings and lists." },
+  },
 
   // ── Güvenlik ──────────────────────────────────────────────────────────────
   {
@@ -567,6 +602,13 @@ export const TOOL_HUE: Record<string, HueId> = {
   "dilekce-sablonlari": "indigo",
   "kimlik-karti-tek-sayfa": "teal",
   "pdf-sesli-oku": "cyan",
+  "txt-to-pdf": "violet",
+  "markdown-to-pdf": "violet",
+  "rtf-to-pdf": "blue",
+  "odt-to-pdf": "blue",
+  "epub-to-pdf": "orange",
+  "pdf-to-epub": "orange",
+  "pdf-to-markdown": "violet",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

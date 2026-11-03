@@ -4,6 +4,7 @@
   sonuna "-en" alır ve dile göre otomatik seçilir (bkz. lib/langAsset.ts).
   Galeri bileşeni: components/landing/ProductGallery.tsx
 */
+import { isDocToolSlug } from "../../lib/docToolSlugs";
 import { useCallback, useEffect, useRef, useState, Suspense, Fragment } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
@@ -165,6 +166,9 @@ const TtsReadTool = lazyWithRetry(() =>
 );
 const IdCardSheetTool = lazyWithRetry(() =>
   import("../tools/IdCardSheetTool").then((m) => ({ default: m.IdCardSheetTool })),
+);
+const DocModeTool = lazyWithRetry(() =>
+  import("../tools/DocHub").then((m) => ({ default: m.DocModeTool })),
 );
 const UdfModeTool = lazyWithRetry(() =>
   import("../tools/UdfHub").then((m) => ({ default: m.UdfModeTool })),
@@ -1160,6 +1164,12 @@ function Hero({
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <UdfModeTool language={language} mode={pageTool} />
+                </Suspense>
+              </ToolPageContext.Provider>
+            ) : isDocToolSlug(pageTool) ? (
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <DocModeTool language={language} mode={pageTool} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "pdf-sesli-oku" ? (

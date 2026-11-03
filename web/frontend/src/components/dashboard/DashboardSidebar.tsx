@@ -2,7 +2,7 @@ import { ACCOUNT_PANEL_TITLES } from "../../lib/accountPaths";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { ChevronLeft, ChevronRight, Crop, Eraser, FileSearch, FileUser, Highlighter, ImageDown, LayoutGrid, ListTree, Pencil, PenLine, QrCode, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crop, Eraser, FileSearch, FileType2, FileUser, Highlighter, ImageDown, LayoutGrid, ListTree, Pencil, PenLine, QrCode, Scale, Scaling, ScanLine, Scissors, Search, Send, Sparkles, TextCursorInput, X } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -146,7 +146,7 @@ const SCAN_FAV_ID = "scan-doc";
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 /** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
-type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "idcard" | "tts" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "idcard" | "tts" | "docconv" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
 const CUSTOM_TOOLS: {
   key: CustomToolKey;
   favId: string;
@@ -159,6 +159,7 @@ const CUSTOM_TOOLS: {
   { key: "snip", favId: "snip-pdf", group: "convert", tr: "PDF'ten Kesit Al", en: "Snip to Image", Icon: Scissors, iconClass: "text-cyan-300" },
   { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF / UYAP Araçları", en: "UDF / UYAP Tools", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "idcard", favId: "idcard-sheet", group: "organize", tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page", Icon: Scale, iconClass: "text-cyan-300" },
+  { key: "docconv", favId: "doc-convert", group: "convert", tr: "Ek Dönüştürmeler (TXT, EPUB, Markdown…)", en: "More Conversions (TXT, EPUB, Markdown…)", Icon: FileType2, iconClass: "text-cyan-300" },
   { key: "tts", favId: "pdf-sesli-oku", group: "convert", tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
   { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
@@ -219,6 +220,7 @@ type DashboardSidebarProps = {
   onOpenMetadata?: () => void;
   onOpenQr?: () => void;
   onOpenToc?: () => void;
+  onOpenDocConv?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -281,6 +283,7 @@ export function DashboardSidebar({
   onOpenMetadata,
   onOpenQr,
   onOpenToc,
+  onOpenDocConv,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -327,6 +330,7 @@ export function DashboardSidebar({
     metadata: onOpenMetadata,
     qr: onOpenQr,
     toc: onOpenToc,
+    docconv: onOpenDocConv,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const sidebarGroups = useMemo(() => {
@@ -1017,6 +1021,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenMetadata,
   onOpenQr,
   onOpenToc,
+  onOpenDocConv,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -1043,6 +1048,8 @@ export function DashboardSidebarMobileLauncher({
       ? tr ? "İmza İste" : "Request Signature"
       : contentPanel === "qr"
       ? tr ? "PDF'ye QR Kod Ekle" : "Add QR Code to PDF"
+      : contentPanel === "docconv"
+      ? tr ? "Ek Dönüştürmeler" : "More Conversions"
       : contentPanel === "toc"
       ? tr ? "Birleştir + İçindekiler" : "Merge + Table of Contents"
       : contentPanel === "metadata"
@@ -1101,6 +1108,7 @@ export function DashboardSidebarMobileLauncher({
     metadata: onOpenMetadata,
     qr: onOpenQr,
     toc: onOpenToc,
+    docconv: onOpenDocConv,
   };
   const favCustomTools = CUSTOM_TOOLS.filter((t) => customHandlers[t.key] && isFavorite(t.favId));
   const groups = useMemo(() => {
