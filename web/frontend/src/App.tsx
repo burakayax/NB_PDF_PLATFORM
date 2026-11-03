@@ -1086,7 +1086,7 @@ function App() {
    * IndexedDB'yi boş bulup aynı dosyayı siliyordu. Aynı araçtaysak silmeyi atlıyoruz.
    */
   const deliveredForRef = useRef<{ slug: string; file: File } | null>(null);
-  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo" | null>(null);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo" | "quiz" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -3234,6 +3234,7 @@ function App() {
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
         p === "/tools/pdf-ceviri" ||
+        p === "/tools/pdf-sinav-olustur" ||
         p === "/tools/ai-toplu-islem" ||
         p === "/tools/pdf-karsilastir" ||
         p === "/tools/hassas-veri-gizle" ||
@@ -4241,7 +4242,7 @@ function App() {
 
   /** AI aracına geç — açık PDF varsa beraberinde taşı (batch/compare çok dosyalı, taşınmaz). */
   async function openAiWithOpenPdf(
-    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo",
+    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | "contract" | "photo" | "quiz",
   ) {
     const carried =
       mode !== "batch" && mode !== "compare" && mode !== "contract" && mode !== "photo" ? await carryOpenPdfToPanel() : false;
@@ -5996,12 +5997,14 @@ function App() {
       seoSlug === "pdf-ozetle" ||
       seoSlug === "pdf-sohbet" ||
       seoSlug === "pdf-veri-cikar" ||
-      seoSlug === "pdf-ceviri"
+      seoSlug === "pdf-ceviri" ||
+      seoSlug === "pdf-sinav-olustur"
     ) {
       const aiMode =
         seoSlug === "pdf-sohbet" ? "chat" :
         seoSlug === "pdf-veri-cikar" ? "extract" :
-        seoSlug === "pdf-ceviri" ? "translate" : "summarize";
+        seoSlug === "pdf-ceviri" ? "translate" :
+        seoSlug === "pdf-sinav-olustur" ? "quiz" : "summarize";
       return (
         <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>

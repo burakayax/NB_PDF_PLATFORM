@@ -213,3 +213,22 @@ export async function aiChat(
   );
   return { answer: d.answer ?? "", quota: d.quota };
 }
+
+/** Soru / test oluşturucu sonucu (backend quiz.service ile aynı). */
+export type QuizQuestion =
+  | { type: "mcq"; q: string; options: string[]; answer: number; explanation: string; evidence: string }
+  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string };
+export type QuizData = { questions: QuizQuestion[]; requested: number; dropped: number };
+export type QuizKind = "mixed" | "mcq" | "tf";
+export type QuizLevel = "easy" | "medium" | "hard";
+
+/** Belge metninden çoktan seçmeli / doğru-yanlış soru üretir (her soru belgeden alıntıyla doğrulanır). */
+export async function aiQuiz(
+  text: string,
+  opts: { count: number; kind: QuizKind; level: QuizLevel },
+  lang: "tr" | "en",
+  token: string | null,
+): Promise<{ quiz: QuizData; quota?: AiQuota }> {
+  const d = await postAi<{ quiz?: QuizData; quota?: AiQuota }>("quiz", { text, lang, ...opts }, token);
+  return { quiz: d.quiz ?? { questions: [], requested: opts.count, dropped: 0 }, quota: d.quota };
+}

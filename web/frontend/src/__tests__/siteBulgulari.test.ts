@@ -23,7 +23,7 @@ describe("AI açılana kadar vaatler", () => {
 
   it("araç sayısı kullanılamayan (çok yakında) AI araçlarını saymaz", () => {
     expect(ARAC_SAYISI).toBeGreaterThan(0);
-    expect(AI_COMING_SOON_SLUGS.length).toBe(9);
+    expect(AI_COMING_SOON_SLUGS.length).toBe(10);
   });
 });
 

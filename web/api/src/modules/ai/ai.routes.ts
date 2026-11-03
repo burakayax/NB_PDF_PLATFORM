@@ -16,6 +16,7 @@ import {
   topupPacksController,
   topupGrantController,
   cvAssistController,
+  quizController,
 } from "./ai.controller.js";
 import {
   startContractReviewController,
@@ -48,6 +49,8 @@ aiRouter.post("/translate", requireAuth, requireAiAccess, requireAiTool("pdf-cev
 aiRouter.post("/translate-segments", requireAuth, requireAiAccess, requireAiTool("pdf-ceviri"), asyncHandler(translateSegmentsController));
 aiRouter.post("/compare", requireAuth, requireAiAccess, requireAiTool("pdf-karsilastir"), asyncHandler(compareController));
 aiRouter.post("/detect-sensitive", requireAuth, requireAiAccess, requireAiTool("hassas-veri-gizle"), asyncHandler(detectSensitiveController));
+
+aiRouter.post("/quiz", requireAuth, requireAiAccess, requireAiTool("pdf-sinav-olustur"), asyncHandler(quizController));
 
 // CV Yapay Zekâ Asistanı — özet / madde / ilana uyarlama / ön yazı / içe aktarma (1 hak/çağrı).
 aiRouter.post("/cv/:mode", requireAuth, requireAiAccess, requireAiTool("cv-olustur"), asyncHandler(cvAssistController));

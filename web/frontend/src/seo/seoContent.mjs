@@ -81,6 +81,7 @@ export const TOOL_SLUGS = [
   "taranmis-pdf-ocr",
   "pdf-veri-cikar",
   "pdf-ceviri",
+  "pdf-sinav-olustur",
   "ai-toplu-islem",
   "pdf-karsilastir",
   "hassas-veri-gizle",
@@ -117,6 +118,7 @@ export const AI_COMING_SOON_SLUGS = [
   "pdf-ozetle",
   "pdf-sohbet",
   "pdf-ceviri",
+  "pdf-sinav-olustur",
   "pdf-karsilastir",
   "pdf-veri-cikar",
   "sozlesme-denetci",
@@ -1668,6 +1670,41 @@ export const TOOL_SEO = {
     ),
   },
 
+  "pdf-sinav-olustur": {
+    tr: T(
+      "Soru / Test Oluştur — PDF'den Sınav Sorusu (AI)",
+      "PDF'inizden çoktan seçmeli ve doğru-yanlış sorular üretin; testi ekranda çözün ya da cevap anahtarlı PDF indirin. Her soru belgeden alıntıyla doğrulanır.",
+      "PDF'den Test ve Sınav Sorusu Oluştur",
+      "Ders notunuzdan, makaleden ya da eğitim belgenizden otomatik test hazırlayın: çoktan seçmeli ve doğru-yanlış sorular, cevap anahtarı ve açıklamalarıyla. Soru sayısını, türünü ve zorluğunu siz seçersiniz. Her soru belgeden alınan bir alıntıyla doğrulanır; belgede dayanağı bulunamayan soru elenir. Yapay zekâ hata yapabilir; önemli sınavlarda soruları kontrol edin.",
+      ["pdf'den test oluştur", "pdf'den soru üret", "ders notundan test", "yapay zeka soru oluşturucu", "çoktan seçmeli soru oluşturma", "pdf sınav hazırlama"],
+      [
+        {"q": "PDF'den test nasıl hazırlanır?", "a": "PDF'i yükleyin, soru sayısını, türünü ve zorluğunu seçip «Soruları Oluştur»a basın. Testi ekranda çözebilir ya da PDF olarak indirebilirsiniz."},
+        {"q": "Sorular belgeden mi geliyor, uydurma olabilir mi?", "a": "Sorular yalnızca belgedeki bilgiye dayanır. Her soru için belgeden bir alıntı istenir ve sistem bu alıntının belgede gerçekten geçtiğini denetler; geçmeyen soru elenir. Yine de yapay zekâ hata yapabilir, önemli sınavlarda soruları siz de kontrol edin."},
+        {"q": "Hangi soru türleri var?", "a": "Çoktan seçmeli (4 şık), doğru/yanlış ya da karışık. Zorluğu kolay, orta veya zor seçebilirsiniz."},
+        {"q": "Cevap anahtarı alabilir miyim?", "a": "Evet. «Soru kâğıdı» ve «Cevap anahtarlı» olmak üzere iki ayrı PDF indirebilirsiniz; ekranda her sorunun cevabı, açıklaması ve belgedeki dayanağı da görünür."},
+        {"q": "Kaç soru üretebilirim?", "a": "Tek seferde 5 ile 20 arasında. 10'a kadar 1, daha fazlası 2 yapay zekâ hakkı harcar."},
+        {"q": "Taranmış PDF'ten soru üretilir mi?", "a": "Evet. Taranmış belgelerde metin önce cihazınızda tanınır, sonra sorular hazırlanır."},
+        {"q": "Belgem nereye gidiyor?", "a": "Belgenin yalnızca metni, soru üretmek için yapay zekâ servisine gönderilir; dosyanın kendisi cihazınızdan çıkmaz."},
+      ],
+    ),
+    en: T(
+      "Quiz Maker — Create Quiz Questions from a PDF (AI)",
+      "Generate multiple-choice and true/false questions from your PDF; take the quiz on screen or download it with an answer key. Verified against the document.",
+      "Create a Quiz from a PDF",
+      "Turn lecture notes, articles or training documents into a quiz: multiple-choice and true/false questions with an answer key and explanations. You choose the number, type and difficulty. Each question is verified against a quote from the document; questions without support are dropped. AI can make mistakes, so review the questions for important exams.",
+      ["quiz from pdf", "generate quiz questions from pdf", "ai quiz generator", "multiple choice question generator", "pdf to quiz"],
+      [
+        {"q": "How do I make a quiz from a PDF?", "a": "Upload the PDF, choose the number, type and difficulty of questions and click Generate Questions. Take the quiz on screen or download it as a PDF."},
+        {"q": "Do questions come from the document or can they be invented?", "a": "Questions rely only on the document. Each question must include a quote from the document and the system checks that the quote really appears in it; questions that fail are dropped. AI can still make mistakes, so review the questions for important exams."},
+        {"q": "What question types are available?", "a": "Multiple choice (4 options), true/false or mixed, at easy, medium or hard difficulty."},
+        {"q": "Can I get an answer key?", "a": "Yes. Download a question sheet and a version with an answer key; on screen each question shows the answer, an explanation and its source in the document."},
+        {"q": "How many questions can I generate?", "a": "5 to 20 at a time. Up to 10 uses 1 AI operation, more uses 2."},
+        {"q": "Does it work for scanned PDFs?", "a": "Yes. For scanned documents the text is recognized on your device first, then the questions are generated."},
+        {"q": "Where does my document go?", "a": "Only the document's text is sent to the AI service to generate questions; the file itself never leaves your device."},
+      ],
+    ),
+  },
+
   "pdf-ceviri": {
     tr: T(
       "PDF Çeviri — PDF'i Yapay Zekâ ile Çevir (12+ Dil)",
@@ -2565,6 +2602,7 @@ export const RELATED_TOOLS = {
   "deskew-pdf": ["aranabilir-pdf", "rotate-pdf", "compress", "merge-pdf"],
   "extract-images": ["pdf-to-image", "image-to-pdf", "compress", "pdf-to-word"],
   "pdf-ozetle": ["pdf-sohbet", "pdf-ceviri", "pdf-veri-cikar", "taranmis-pdf-ocr"],
+  "pdf-sinav-olustur": ["pdf-ozetle", "pdf-sohbet", "pdf-ceviri", "taranmis-pdf-ocr"],
   "pdf-sohbet": ["pdf-ozetle", "pdf-ceviri", "pdf-veri-cikar"],
   "pdf-duzenle": ["pdf-imzala", "pdf-yorumla", "watermark", "page-numbers"],
   "pdf-imzala": ["pdf-yorumla", "pdf-duzenle", "watermark", "encrypt"],

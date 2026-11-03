@@ -146,6 +146,7 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/taranmis-pdf-ocr" ||
     rawPath === "/tools/pdf-veri-cikar" ||
     rawPath === "/tools/pdf-ceviri" ||
+    rawPath === "/tools/pdf-sinav-olustur" ||
     rawPath === "/tools/ai-toplu-islem" ||
     rawPath === "/tools/pdf-karsilastir" ||
     rawPath === "/tools/hassas-veri-gizle" ||
@@ -278,7 +279,7 @@ export function isKnownAppPath(pathname: string): boolean {
  */
 export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/pdf-ozetle", "/tools/pdf-sohbet", "/tools/pdf-duzenle", "/tools/pdf-imzala",
-  "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
+  "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri", "/tools/pdf-sinav-olustur",
   "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle", "/tools/sozlesme-denetci", "/tools/ai-fotograf-studyosu", "/tools/cv-olustur",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
@@ -327,12 +328,13 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
 /** AI araç slug'ı → "ai" panelinin modu. */
 export const AI_TOOL_MODES: Record<
   string,
-  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare" | "contract" | "photo"
+  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare" | "contract" | "photo" | "quiz"
 > = {
   "pdf-ozetle": "summarize",
   "pdf-sohbet": "chat",
   "pdf-veri-cikar": "extract",
   "pdf-ceviri": "translate",
+  "pdf-sinav-olustur": "quiz",
   "hassas-veri-gizle": "redact",
   "ai-toplu-islem": "batch",
   "pdf-karsilastir": "compare",

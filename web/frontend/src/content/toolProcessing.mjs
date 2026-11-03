@@ -85,6 +85,7 @@ const ROWS = [
   ["pdf-ozetle", "PDF Özetle", "Summarize PDF", "ai", "", ""],
   ["pdf-sohbet", "PDF ile Sohbet", "Chat with PDF", "ai", "", ""],
   ["pdf-ceviri", "PDF Çeviri", "Translate PDF", "ai", "", ""],
+  ["pdf-sinav-olustur", "Soru / Test Oluştur", "Quiz Maker", "ai", "", ""],
   ["pdf-karsilastir", "PDF Karşılaştır", "Compare PDFs", "ai", "", ""],
   ["pdf-veri-cikar", "Veri Çıkar", "Extract Data", "ai", "", ""],
   ["ai-toplu-islem", "Toplu Yapay Zekâ", "Batch AI", "ai", "", ""],
