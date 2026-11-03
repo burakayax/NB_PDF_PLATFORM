@@ -56,6 +56,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "e-basvuru-uyumluluk",
   "dilekce-sablonlari",
   "kimlik-karti-tek-sayfa",
+  "pdf-sesli-oku",
   // Bu dördü de App.tsx'te GuestSeoToolPage ile misafir sayfası olarak çalışıyor
   // (/tools/<slug>) ama bu listede eksikti → tıklanınca FeatureKey sanılıp
   // workspace'e (navigateToTool) gönderiliyordu; misafirde işlem yaptırmıyordu.

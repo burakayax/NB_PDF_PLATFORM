@@ -160,6 +160,9 @@ const PdfAnnotate = lazyWithRetry(() =>
 const PhotoStudioTool = lazyWithRetry(() =>
   import("../tools/PhotoStudioTool").then((m) => ({ default: m.PhotoStudioTool })),
 );
+const TtsReadTool = lazyWithRetry(() =>
+  import("../tools/TtsReadTool").then((m) => ({ default: m.TtsReadTool })),
+);
 const IdCardSheetTool = lazyWithRetry(() =>
   import("../tools/IdCardSheetTool").then((m) => ({ default: m.IdCardSheetTool })),
 );
@@ -1157,6 +1160,12 @@ function Hero({
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <UdfModeTool language={language} mode={pageTool} />
+                </Suspense>
+              </ToolPageContext.Provider>
+            ) : pageTool === "pdf-sesli-oku" ? (
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <TtsReadTool language={language} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "kimlik-karti-tek-sayfa" ? (

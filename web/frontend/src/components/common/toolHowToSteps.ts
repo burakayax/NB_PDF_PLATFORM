@@ -684,6 +684,19 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "pdf-sesli-oku": S(
+    [
+      { title: "PDF'ini ekle ya da metin yaz", detail: "Okunacak sayfa aralığını seç; hızı ayarla." },
+      { title: "«Oku»ya bas", detail: "İlk kullanımda ses modeli iner; sonra metin doğal bir sesle okunur, istersen WAV indirirsin." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Add your PDF or type text", detail: "Choose the page range and set the speed." },
+      { title: "Click Read aloud", detail: "The voice model downloads on first use; then the text is read in a natural voice and you can download WAV." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   "pdf-ozetle": S(
     [

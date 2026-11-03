@@ -224,6 +224,11 @@ export const TOOLS: Tool[] = [
     en: { name: "Request Signature", desc: "Send a document out for signature and get an audited signed copy." },
   },
   {
+    id: "pdf-sesli-oku", cat: "convert", Icon: Scale, free: true,
+    tr: { name: "Sesli Okuma (PDF → Ses)", desc: "PDF'i ya da yazdığınız metni doğal bir Türkçe sesle dinleyin; ses dosyası olarak indirin." },
+    en: { name: "Read Aloud (PDF → Voice)", desc: "Listen to a PDF or your text in a natural Turkish voice; download it as an audio file." },
+  },
+  {
     id: "kimlik-karti-tek-sayfa", cat: "edit", Icon: Scale, free: true,
     tr: { name: "Kimlik Ön–Arka Tek Sayfa", desc: "Kimlik, ehliyet veya pasaportun iki yüzünü tek A4 sayfaya gerçek boyutta koyun." },
     en: { name: "ID Front+Back on One Page", desc: "Put both sides of an ID, licence or passport on one A4 page at real size." },
@@ -554,6 +559,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "e-basvuru-uyumluluk": "indigo",
   "dilekce-sablonlari": "indigo",
   "kimlik-karti-tek-sayfa": "teal",
+  "pdf-sesli-oku": "cyan",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

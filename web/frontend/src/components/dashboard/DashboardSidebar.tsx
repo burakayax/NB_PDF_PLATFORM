@@ -145,7 +145,7 @@ const SCAN_FAV_ID = "scan-doc";
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 /** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
-type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "idcard" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "idcard" | "tts" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
 const CUSTOM_TOOLS: {
   key: CustomToolKey;
   favId: string;
@@ -158,6 +158,7 @@ const CUSTOM_TOOLS: {
   { key: "snip", favId: "snip-pdf", group: "convert", tr: "PDF'ten Kesit Al", en: "Snip to Image", Icon: Scissors, iconClass: "text-cyan-300" },
   { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF / UYAP Araçları", en: "UDF / UYAP Tools", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "idcard", favId: "idcard-sheet", group: "organize", tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page", Icon: Scale, iconClass: "text-cyan-300" },
+  { key: "tts", favId: "pdf-sesli-oku", group: "convert", tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
   { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
   { key: "searchable", favId: "searchable-pdf", group: "convert", tr: "Aranabilir PDF", en: "Searchable PDF", Icon: FileSearch, iconClass: "text-cyan-300" },
@@ -206,6 +207,7 @@ type DashboardSidebarProps = {
   onOpenResizeImage?: () => void;
   onOpenUdf?: () => void;
   onOpenIdcard?: () => void;
+  onOpenTts?: () => void;
   onOpenCv?: () => void;
   /** Aranabilir PDF (OCR) aracını aç. */
   onOpenSearchable?: () => void;
@@ -269,6 +271,7 @@ export function DashboardSidebar({
   onOpenResizeImage,
   onOpenUdf,
   onOpenIdcard,
+  onOpenTts,
   onOpenCv,
   onOpenSearchable,
   onOpenLayout,
@@ -315,6 +318,7 @@ export function DashboardSidebar({
     cv: onOpenCv,
     udf: onOpenUdf,
     idcard: onOpenIdcard,
+    tts: onOpenTts,
     searchable: onOpenSearchable,
     layout: onOpenLayout,
     formfill: onOpenFormFill,
@@ -1003,6 +1007,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenResizeImage,
   onOpenUdf,
   onOpenIdcard,
+  onOpenTts,
   onOpenCv,
   onOpenSearchable,
   onOpenLayout,
@@ -1053,6 +1058,8 @@ export function DashboardSidebarMobileLauncher({
           ? tr ? "Görsel Boyutlandır" : "Resize Image"
           : contentPanel === "snip"
           ? tr ? "PDF'ten Kesit Al" : "Snip to Image"
+          : contentPanel === "tts"
+          ? tr ? "Sesli Okuma (PDF → Ses)" : "Read Aloud (PDF → Voice)"
           : contentPanel === "idcard"
           ? tr ? "Kimlik Ön–Arka Tek Sayfa" : "ID Front+Back on One Page"
           : contentPanel === "udf"
@@ -1085,6 +1092,7 @@ export function DashboardSidebarMobileLauncher({
     cv: onOpenCv,
     udf: onOpenUdf,
     idcard: onOpenIdcard,
+    tts: onOpenTts,
     searchable: onOpenSearchable,
     layout: onOpenLayout,
     formfill: onOpenFormFill,

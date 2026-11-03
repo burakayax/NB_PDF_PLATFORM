@@ -94,6 +94,7 @@ export const TOOL_SLUGS = [
   "e-basvuru-uyumluluk",
   "dilekce-sablonlari",
   "kimlik-karti-tek-sayfa",
+  "pdf-sesli-oku",
   "ai-fotograf-studyosu",
   "cv-olustur",
 ];
@@ -2180,6 +2181,40 @@ export const TOOL_SEO = {
       ],
     ),
   },
+  "pdf-sesli-oku": {
+    tr: T(
+      "Sesli Okuma — PDF'i Türkçe Sesle Dinle",
+      "PDF'i ya da metni doğal bir Türkçe yapay zekâ sesiyle dinleyin. Üyeliksiz, ücretsiz; metin cihazınızdan çıkmaz.",
+      "PDF'i Türkçe Sesle Dinle",
+      "PDF'inizi ya da yazdığınız metni Türkçe bir yapay zekâ sesiyle dinleyin; isterseniz WAV olarak indirin. Ses modeli tarayıcınızda çalışır, metniniz sunucuya gönderilmez. Ses yapay olarak üretilmiştir; birini taklit etmek ya da dinleyiciyi yanıltmak için kullanmayın.",
+      ["pdf sesli oku", "türkçe sesli okuma", "metni sese çevirme", "pdf dinle", "türkçe seslendirme", "yapay zeka ses"],
+      [
+        {"q": "PDF'i sesli nasıl dinlerim?", "a": "PDF'i ekleyin, okunacak sayfa aralığını seçin ve «Oku»ya basın. Ya da metni yazıp yapıştırarak dinleyin."},
+        {"q": "Ses doğal mı, makine sesi mi?", "a": "Yapay zekâ ile üretilen Türkçe bir sestir; tarayıcının hazır sesinden daha akıcıdır. Yine de yapay bir sestir ve kimi sözcüklerde hata yapabilir."},
+        {"q": "Metnim sunucuya gönderiliyor mu?", "a": "Hayır. Ses modeli tarayıcınızda çalışır; PDF'iniz ve metniniz cihazınızdan çıkmaz."},
+        {"q": "İlk kullanımda neden bir şey iniyor?", "a": "Ses modeli (yaklaşık 49 MB) yalnızca ilk kullanımda iner ve tarayıcıda saklanır; sonraki kullanımlarda yeniden inmez."},
+        {"q": "Sayılar, tarihler ve kısaltmalar doğru okunur mu?", "a": "Sayılar, tarihler, para tutarları ve yaygın kısaltmalar okunuşa çevrilir. Yabancı özel adlar ve nadir kısaltmalar hatalı okunabilir."},
+        {"q": "Sesi dosya olarak indirebilir miyim?", "a": "Evet. Okuma bittikten sonra WAV dosyası olarak indirebilirsiniz. Uzun metinlerde dosya büyük olur."},
+        {"q": "Taranmış PDF'i okutabilir miyim?", "a": "Doğrudan hayır; seçilebilir metin gerekir. Önce «Taranmış PDF (OCR)» aracıyla metne çevirin."},
+      ],
+    ),
+    en: T(
+      "Read Aloud — Listen to a PDF in Turkish",
+      "Listen to a PDF or text in a natural AI Turkish voice. No signup, free; your text never leaves your device.",
+      "Listen to a PDF in Turkish",
+      "Listen to your PDF or typed text in a Turkish AI voice and optionally download it as WAV. The voice model runs in your browser; your text is never sent to a server. The voice is synthetic; do not use it to impersonate anyone or mislead listeners.",
+      ["turkish text to speech", "pdf read aloud turkish", "turkish voice"],
+      [
+        {"q": "How do I listen to a PDF?", "a": "Add the PDF, choose the page range and click Read aloud. Or type or paste text instead."},
+        {"q": "Is the voice natural?", "a": "It is an AI-generated Turkish voice, more fluent than a browser's built-in voice, but still synthetic and may mispronounce some words."},
+        {"q": "Is my text sent to a server?", "a": "No. The voice model runs in your browser; your PDF and text never leave your device."},
+        {"q": "Why does something download on first use?", "a": "The voice model (about 49 MB) downloads only on first use and is stored in your browser."},
+        {"q": "Are numbers, dates and abbreviations read correctly?", "a": "Numbers, dates, amounts and common abbreviations are converted to spoken form. Foreign proper names and rare abbreviations may be misread."},
+        {"q": "Can I download the audio?", "a": "Yes, as a WAV file after reading finishes. Long texts make large files."},
+        {"q": "Can it read a scanned PDF?", "a": "Not directly; it needs selectable text. Run OCR first."},
+      ],
+    ),
+  },
 };
 
 // Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
@@ -2552,6 +2587,7 @@ export const RELATED_TOOLS = {
   "e-basvuru-uyumluluk": ["compress", "udf-to-pdf", "split-pdf", "taranmis-pdf-ocr"],
   "dilekce-sablonlari": ["udf-to-pdf", "pdf-imzala", "e-basvuru-uyumluluk", "compress"],
   "kimlik-karti-tek-sayfa": ["belge-tara", "image-to-pdf", "compress", "encrypt"],
+  "pdf-sesli-oku": ["taranmis-pdf-ocr", "pdf-ozetle", "pdf-to-text", "pdf-ceviri"],
   "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
   "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };

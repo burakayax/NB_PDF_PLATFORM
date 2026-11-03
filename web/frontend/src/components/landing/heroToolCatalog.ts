@@ -100,13 +100,14 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
   },
   {
     id: "shrink",
-    tr: "Küçült",
-    en: "Shrink",
+    tr: "Küçült & Diğer",
+    en: "Shrink & More",
     items: [
       { k: "free", id: "gorsel-sikistir" },
       { k: "page", slug: "gorsel-boyutlandir", Icon: Maximize2, tr: "Görsel Boyutlandır", en: "Resize Image" },
       { k: "member", slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
       { k: "page", slug: "kimlik-karti-tek-sayfa", Icon: Scale, tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page" },
+      { k: "page", slug: "pdf-sesli-oku", Icon: Scale, tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)" },
     ],
   },
 ];
