@@ -671,6 +671,19 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "kimlik-karti-tek-sayfa": S(
+    [
+      { title: "Ön ve arka yüzün fotoğrafını ekle", detail: "Belgeyi düz bir zeminde, ışık yansımadan çek; gerekirse döndür." },
+      { title: "«Tek sayfa PDF oluştur»a bas", detail: "İki yüz gerçek boyutunda tek A4 sayfaya yerleşir; istersen filigran ekle." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Add front and back photos", detail: "Shoot the document flat without glare; rotate if needed." },
+      { title: "Click Create one-page PDF", detail: "Both sides are placed at real size on one A4 page; add a watermark if you like." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   "pdf-ozetle": S(
     [

@@ -7176,5 +7176,35 @@
       "turkish petition pdf"
     ],
     "tool": "/tools/dilekce-sablonlari"
+  },
+  "https://www.pdfplatform.app/tools/kimlik-karti-tek-sayfa": {
+    "tr": [
+      "kimlik ön arka tek sayfa",
+      "kimlik fotokopisi pdf",
+      "ehliyet ön arka tek sayfa",
+      "kimlik kartı a4",
+      "kimlik filigran"
+    ],
+    "en": [
+      "id front back one page",
+      "id copy pdf",
+      "driving licence copy a4"
+    ],
+    "tool": "/tools/kimlik-karti-tek-sayfa"
+  },
+  "https://www.pdfplatform.app/en/tools/kimlik-karti-tek-sayfa": {
+    "tr": [
+      "kimlik ön arka tek sayfa",
+      "kimlik fotokopisi pdf",
+      "ehliyet ön arka tek sayfa",
+      "kimlik kartı a4",
+      "kimlik filigran"
+    ],
+    "en": [
+      "id front back one page",
+      "id copy pdf",
+      "driving licence copy a4"
+    ],
+    "tool": "/tools/kimlik-karti-tek-sayfa"
   }
 }

@@ -93,6 +93,7 @@ export const TOOL_SLUGS = [
   "image-to-udf",
   "e-basvuru-uyumluluk",
   "dilekce-sablonlari",
+  "kimlik-karti-tek-sayfa",
   "ai-fotograf-studyosu",
   "cv-olustur",
 ];
@@ -2149,6 +2150,36 @@ export const TOOL_SEO = {
       ],
     ),
   },
+  "kimlik-karti-tek-sayfa": {
+    tr: T(
+      "Kimlik Ön Arka Tek Sayfa PDF — Ücretsiz",
+      "Kimlik, ehliyet veya pasaportun ön ve arkasını tek A4 sayfaya koyun. Fotoğraflar cihazınızdan çıkmaz; üyeliksiz, ücretsiz.",
+      "Kimlik Ön–Arka Tek Sayfa",
+      "Kimlik kartı, ehliyet ya da pasaportun iki yüzünü gerçek boyutunda tek A4 sayfaya yerleştirir; isteğe bağlı filigran ekler. Fotoğraflar yalnızca tarayıcınızda işlenir.",
+      ["kimlik ön arka tek sayfa", "kimlik fotokopisi pdf", "ehliyet ön arka tek sayfa", "kimlik kartı a4", "kimlik filigran"],
+      [
+        {"q": "Kimlik fotoğrafım sunucuya yükleniyor mu?", "a": "Hayır. Fotoğraflar yalnızca tarayıcınızda işlenir ve cihazınızdan çıkmaz. Kimlik gibi hassas bir belgede bu bilerek böyle tasarlandı."},
+        {"q": "Kimliğin ön ve arka yüzünü tek sayfaya nasıl koyarım?", "a": "Ön ve arka yüzün fotoğrafını ekleyin, gerekirse döndürün ve «Tek sayfa PDF oluştur»a basın. İki yüz gerçek boyutunda alt alta tek A4 sayfaya yerleşir."},
+        {"q": "Ehliyet ve pasaport için de kullanılır mı?", "a": "Evet. Ehliyet kimlik kartıyla aynı boyuttadır; pasaport için bilgi sayfası seçeneği vardır."},
+        {"q": "Filigran ne işe yarar?", "a": "Üzerine «Yalnızca X kurumu için – tarih» gibi bir yazı basarak kimliğin başka amaçlarla kullanılmasını zorlaştırır. Bazı kurumlar filigranlı kimliği kabul etmeyebilir; önce kuruma sorun."},
+        {"q": "Görüntü kırpılıyor mu?", "a": "Hayır. Fotoğraf kart oranına kırpılmadan sığdırılır; en iyi sonuç için belgeyi düz ve çerçeveyi sıkı çekin."},
+      ],
+    ),
+    en: T(
+      "ID Front and Back on One Page PDF — Free",
+      "Put both sides of an ID, licence or passport on one A4 page. Photos never leave your device; no signup, free.",
+      "ID Front+Back on One Page",
+      "Places both sides of an ID card, driving licence or passport at real size on one A4 page, with an optional watermark. Photos are processed only in your browser.",
+      ["id front back one page", "id copy pdf", "driving licence copy a4"],
+      [
+        {"q": "Is my ID photo uploaded?", "a": "No. Photos are processed only in your browser and never leave your device. For a sensitive document like an ID this is deliberate."},
+        {"q": "How do I put both sides of an ID on one page?", "a": "Add the front and back photos, rotate if needed and click Create. Both sides are placed at real size on one A4 page."},
+        {"q": "Does it work for driving licences and passports?", "a": "Yes. A licence is the same size as an ID card; for passports there is a data-page option."},
+        {"q": "What does the watermark do?", "a": "It overlays text such as 'Only for X – date' to make other uses of the ID harder. Some institutions may refuse a watermarked ID; check first."},
+        {"q": "Is the image cropped?", "a": "No. The photo is fitted to the card ratio without cropping; for best results shoot the document flat and framed tightly."},
+      ],
+    ),
+  },
 };
 
 // Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
@@ -2520,6 +2551,7 @@ export const RELATED_TOOLS = {
   "image-to-udf": ["pdf-to-udf", "compress", "image-to-pdf"],
   "e-basvuru-uyumluluk": ["compress", "udf-to-pdf", "split-pdf", "taranmis-pdf-ocr"],
   "dilekce-sablonlari": ["udf-to-pdf", "pdf-imzala", "e-basvuru-uyumluluk", "compress"],
+  "kimlik-karti-tek-sayfa": ["belge-tara", "image-to-pdf", "compress", "encrypt"],
   "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
   "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };
