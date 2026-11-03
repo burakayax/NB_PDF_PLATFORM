@@ -1,0 +1,6 @@
+Bu klasordeki yazi tipleri, Turkce karakterleri koruyacak sekilde kucultulmus (subset) kopyalardir.
+Lato (c) Lukasz Dziedzic - SIL Open Font License 1.1
+PT Sans, PT Serif (c) ParaType - SIL Open Font License 1.1
+Fira Sans (c) The Mozilla Foundation / Carrois Corporate - SIL Open Font License 1.1
+Source Sans 3 (c) Adobe - SIL Open Font License 1.1
+Liberation Mono (c) Red Hat - SIL Open Font License 1.1 (bkz. ../cv/LICENSE-Liberation.txt)

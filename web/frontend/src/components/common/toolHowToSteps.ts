@@ -349,12 +349,12 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
   "pdf-birlestir-icindekiler": S(
     [
       { title: "PDF'leri ekle", detail: "Birleştirmek istediğin dosyaları (en az 2) bırak ya da seç." },
-      { title: "Sırala ve başlıkları düzenle", detail: "Dosyaları sürükleyerek sırala; başlıklarını değiştir, istersen «Başlık ekle» ile FATURALAR gibi gruplar aç ve yazı tipini seç." },
+      { title: "Sırala ve başlıkları düzenle", detail: "Dosyaları sürükleyerek sırala; başlıklarını değiştir, her PDF'i bir gruba (FATURALAR, SÖZLEŞMELER gibi) ve istersen alt başlığa ata; yazı tipini seç." },
       { title: "İçindekileri oluştur ve indir", detail: "Tıklanabilir içindekiler sayfası ve PDF yer imleri otomatik eklenir. Sonucu indir." },
     ],
     [
       { title: "Add your PDFs", detail: "Drop or pick the files you want to merge (at least 2)." },
-      { title: "Order them and edit titles", detail: "Drag the files into order and edit their titles; optionally add headings such as INVOICES to group them, and pick a font." },
+      { title: "Order them and edit titles", detail: "Drag the files into order and edit their titles; assign each PDF to a group (INVOICES, CONTRACTS …) and optionally a sub-heading, and pick a font." },
       { title: "Build the contents and download", detail: "A clickable table of contents page and PDF bookmarks are added automatically. Download the result." },
     ],
   ),
