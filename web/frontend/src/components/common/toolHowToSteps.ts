@@ -662,6 +662,19 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "dilekce-sablonlari": S(
+    [
+      { title: "Şablonu seç, bilgileri yaz", detail: "Listeden dilekçe türünü seç; ad, adres ve diğer alanları doldur." },
+      { title: "Biçimi seç, «Dilekçeyi oluştur»a bas", detail: "PDF ya da UYAP için UDF seç; belge bilgisayarında hazırlanır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Pick a template and fill it in", detail: "Choose the letter type, then fill in name, address and other fields." },
+      { title: "Choose a format and click Create", detail: "Pick PDF or UDF for UYAP; the document is built on your computer." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   "pdf-ozetle": S(
     [

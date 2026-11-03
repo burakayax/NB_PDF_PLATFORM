@@ -80,6 +80,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
       { k: "free", id: "image-to-pdf" },
       { k: "page", slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan Document" },
       { k: "page", slug: "e-basvuru-uyumluluk", Icon: Scale, tr: "E-başvuru Uyumluluk Kontrolü", en: "Filing Compliance Check" },
+      { k: "page", slug: "dilekce-sablonlari", Icon: Scale, tr: "Dilekçe Şablonları", en: "Petition Templates" },
       { k: "member", slug: "pdf-to-text", Icon: FileType2, tr: "PDF → Metin", en: "PDF → Text" },
       { k: "member", slug: "aranabilir-pdf", Icon: FileSearch, tr: "Aranabilir PDF", en: "Searchable PDF" },
     ],
