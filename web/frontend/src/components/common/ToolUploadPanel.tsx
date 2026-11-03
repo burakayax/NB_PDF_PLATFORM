@@ -113,30 +113,6 @@ export function ToolUploadPanel({
 
   return (
     <div className={`w-full ${className ?? ""}`}>
-      {showHeader && copy && (
-        <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 sm:mb-4 sm:gap-3 sm:px-4 sm:py-3">
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${tile} ${icon}`}>
-            <Icon className="h-5 w-5" strokeWidth={2} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-bold leading-tight text-white">{copy.name}</p>
-            <p className="mt-0.5 hidden text-[12.5px] leading-snug text-slate-400 sm:block">{copy.desc}</p>
-          </div>
-          <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-bold ${
-              onDevice
-                ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-                : "border-sky-400/30 bg-sky-500/10 text-sky-300"
-            }`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            {onDevice
-              ? tr ? "Cihazında çalışır" : "Runs on your device"
-              : tr ? "Güvenli sunucuda" : "On our secure server"}
-          </span>
-        </div>
-      )}
-
       <div
         role="button"
         tabIndex={0}

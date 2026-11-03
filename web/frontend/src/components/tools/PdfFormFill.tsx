@@ -184,7 +184,7 @@ export function PdfFormFill({
 
   if (!bytes || !alanlar) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <div className="tool-form">
           <WorkspaceUploadField
             toolId="form-doldur"
@@ -209,7 +209,7 @@ export function PdfFormFill({
 
   if (doldurulabilir.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <p className="rounded-xl border border-amber-400/25 bg-amber-500/[0.08] px-4 py-3 text-[13px] leading-relaxed text-amber-200">
           {t.noFields}
         </p>
@@ -229,7 +229,7 @@ export function PdfFormFill({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
       <div className="mb-3 flex items-center gap-2 text-[13px] text-slate-400">
         <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
         <span className="truncate">{fileName}</span>

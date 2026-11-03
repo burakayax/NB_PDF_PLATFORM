@@ -508,7 +508,7 @@ export function PdfLayoutTool({
 
   if (!bytes) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <div className="tool-form">
           <WorkspaceUploadField
             toolId="sayfa-duzeni"
@@ -530,7 +530,7 @@ export function PdfLayoutTool({
     kip === "kitapcik" ? t.summaryBooklet(pageCount, yaprak) : t.summaryNup(pageCount, adet, yaprak);
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
       <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-cyan-300">
           <FileText className="h-4 w-4" />
