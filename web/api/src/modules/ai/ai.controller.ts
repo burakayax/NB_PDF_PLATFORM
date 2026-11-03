@@ -24,7 +24,7 @@ import {
   tailorToJob,
   writeCoverLetter,
 } from "./cv-assist.service.js";
-import { generateQuiz, quizCreditCost, QUIZ_LIMITS, type QuizKind, type QuizLevel } from "./quiz.service.js";
+import { generateQuiz, quizCreditCost, parseQuizTypes, QUIZ_LIMITS, type QuizLevel } from "./quiz.service.js";
 import { isContractReviewOpen } from "./contract-review.controller.js";
 import { closedAiTools, closedAiToolNotes } from "./ai-tool-switch.js";
 import { getAiQuota, reserveAiQuota, refundAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
@@ -394,7 +394,7 @@ export async function cvAssistController(req: Request, res: Response): Promise<v
   res.json({ result: run.value, quota });
 }
 
-/** POST /api/ai/quiz — { text, lang?, count?, kind?, level? } → { quiz, quota } */
+/** POST /api/ai/quiz — { text, lang?, count?, types?, level? } → { quiz, quota } */
 export async function quizController(req: Request, res: Response): Promise<void> {
   const text = typeof req.body?.text === "string" ? req.body.text : "";
   if (text.trim().length < QUIZ_LIMITS.minChars) {
@@ -404,7 +404,7 @@ export async function quizController(req: Request, res: Response): Promise<void>
   const count = Number.isFinite(rawCount)
     ? Math.max(QUIZ_LIMITS.minCount, Math.min(QUIZ_LIMITS.maxCount, Math.round(rawCount)))
     : QUIZ_LIMITS.defaultCount;
-  const kind: QuizKind = req.body?.kind === "mcq" || req.body?.kind === "tf" ? req.body.kind : "mixed";
+  const types = parseQuizTypes(req.body?.types);
   const level: QuizLevel = req.body?.level === "easy" || req.body?.level === "hard" ? req.body.level : "medium";
   const run = await runWithQuota(
     req,
@@ -412,7 +412,7 @@ export async function quizController(req: Request, res: Response): Promise<void>
     "quiz",
     async () => {
       try {
-        return await generateQuiz(text.slice(0, MAX_TEXT), getLang(req), { count, kind, level });
+        return await generateQuiz(text.slice(0, MAX_TEXT), getLang(req), { count, types, level });
       } catch (e) {
         if (e instanceof Error && (e.message === "AI_QUIZ_PARSE" || e.message === "AI_QUIZ_EMPTY")) {
           throw new HttpError(422, "Bu belgeden güvenilir soru üretilemedi. Metin yeterince açık olmayabilir; tekrar deneyin ya da daha uzun bir bölüm seçin.");

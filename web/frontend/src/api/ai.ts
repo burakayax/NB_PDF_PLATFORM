@@ -217,15 +217,17 @@ export async function aiChat(
 /** Soru / test oluşturucu sonucu (backend quiz.service ile aynı). */
 export type QuizQuestion =
   | { type: "mcq"; q: string; options: string[]; answer: number; explanation: string; evidence: string }
-  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string };
+  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string }
+  | { type: "open"; q: string; answer: string; explanation: string; evidence: string }
+  | { type: "fill"; q: string; answer: string; explanation: string; evidence: string };
 export type QuizData = { questions: QuizQuestion[]; requested: number; dropped: number };
-export type QuizKind = "mixed" | "mcq" | "tf";
+export type QuizType = "mcq" | "tf" | "open" | "fill";
 export type QuizLevel = "easy" | "medium" | "hard";
 
 /** Belge metninden çoktan seçmeli / doğru-yanlış soru üretir (her soru belgeden alıntıyla doğrulanır). */
 export async function aiQuiz(
   text: string,
-  opts: { count: number; kind: QuizKind; level: QuizLevel },
+  opts: { count: number; types: QuizType[]; level: QuizLevel },
   lang: "tr" | "en",
   token: string | null,
 ): Promise<{ quiz: QuizData; quota?: AiQuota }> {
