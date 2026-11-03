@@ -205,3 +205,43 @@ describe("içindekiler başlığı ve yazı tipi", () => {
     expect(r.sections).toHaveLength(2);
   });
 });
+
+describe("grup başlıkları", () => {
+  it("yer imleri grup → dosya → alt başlık olarak iç içe gelir", async () => {
+    const a = { ...(await dosya("telefon.pdf", 1)), group: "FATURALAR" };
+    const b = { ...(await dosya("internet.pdf", 2)), subs: [{ title: "Ocak", page: 2 }] };
+    const c = { ...(await dosya("ihale.pdf", 1)), group: "SÖZLEŞMELER" };
+    const r = await mergeWithToc([a, b, c], OPT);
+    const doc = await PDFDocument.load(r.bytes);
+    const kok = doc.catalog.lookup(PDFName.of("Outlines"), PDFDict);
+    const baslik = (ref: PDFRef) => (doc.context.lookup(ref, PDFDict).lookup(PDFName.of("Title")) as PDFHexString).decodeText();
+    const ust: string[] = [];
+    let ref = kok.get(PDFName.of("First")) as PDFRef | undefined;
+    const cocuk: number[] = [];
+    while (ref) {
+      const d = doc.context.lookup(ref, PDFDict);
+      ust.push(baslik(ref));
+      cocuk.push((d.get(PDFName.of("Count")) as { asNumber(): number } | undefined)?.asNumber() ?? 0);
+      ref = d.get(PDFName.of("Next")) as PDFRef | undefined;
+    }
+    expect(ust).toEqual(["FATURALAR", "SÖZLEŞMELER"]);
+    expect(cocuk).toEqual([3, 1]); // FATURALAR: telefon + internet + Ocak, SÖZLEŞMELER: ihale
+    // Bölüm başlangıç sayfaları grup başlıkları yüzünden kaymaz
+    expect(r.sections.map((x) => x.startPage)).toEqual([2, 3, 5]);
+  });
+
+  it("grup yoksa yer imleri eskisi gibi düz kalır", async () => {
+    const r = await mergeWithToc([await dosya("a.pdf", 1), await dosya("b.pdf", 1)], OPT);
+    expect(yerImleri(await PDFDocument.load(r.bytes)).map((x) => x.title)).toEqual(["a", "b"]);
+  });
+
+  it("çok grup ve dosya içindekileri birden çok sayfaya taşırsa başlık sayfa sonunda yalnız kalmaz", async () => {
+    const dosyalar = [];
+    for (let i = 0; i < 20; i++) {
+      dosyalar.push({ ...(await dosya(`f${i}.pdf`, 1)), group: i % 2 === 0 ? `GRUP ${i}` : undefined });
+    }
+    const r = await mergeWithToc(dosyalar, OPT);
+    expect(r.sections).toHaveLength(20);
+    expect(r.tocPages).toBeGreaterThanOrEqual(1);
+  });
+});
