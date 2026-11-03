@@ -53,16 +53,38 @@ if(ss){ ss.onvoiceschanged = yukle; yukle(); }
 const KISALTMA = [[/\bSn\.\s*/g,'Sayın '],[/\bDr\.\s*/g,'Doktor '],[/\bAv\.\s*/g,'Avukat '],[/\bProf\.\s*/g,'Profesör '],
   [/\bCad\.\s*/g,'Caddesi '],[/\bSk\.\s*/g,'Sokak '],[/\bMah\.\s*/g,'Mahallesi '],[/\bNo\s*[:.]\s*/g,'numara '],
   [/\bvb\./g,'ve benzeri'],[/\bvs\./g,'vesaire'],[/\bbkz\.\s*/gi,'bakınız '],[/\bTC\b|\bT\.C\./g,'Türkiye Cumhuriyeti']];
+// ---- Sayıyı Türkçe yazıya çevirir: 3450000 -> "üç milyon dört yüz elli bin" ----
+const BIR=['','bir','iki','üç','dört','beş','altı','yedi','sekiz','dokuz'],ON=['','on','yirmi','otuz','kırk','elli','altmış','yetmiş','seksen','doksan'];
+const BASAMAK=['','bin','milyon','milyar','trilyon'];
+function ucluk(n){ // 0-999
+  const y=Math.floor(n/100),o=Math.floor(n%100/10),b=n%10;
+  return (y?(y>1?BIR[y]+' ':'')+'yüz ':'')+(o?ON[o]+' ':'')+(b?BIR[b]+' ':'');
+}
+function sayiYazi(str){
+  if(/^0\d/.test(str)||str.length>=11) return str.split('').map(c=>c==='0'?'sıfır':BIR[+c]).join(' '); // 007, TC no, telefon, kart no: rakam rakam
+  let n=BigInt(str); if(n===0n) return 'sıfır';
+  const parcalar=[];
+  while(n>0n){parcalar.push(Number(n%1000n));n/=1000n;}
+  let out='';
+  for(let k=parcalar.length-1;k>=0;k--){
+    const p=parcalar[k]; if(!p) continue;
+    if(k===1&&p===1) out+='bin '; else out+=ucluk(p)+(BASAMAK[k]?BASAMAK[k]+' ':'');
+  }
+  return out.trim();
+}
+const AYLAR=['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 function hazirla(t){
   t=t.replace(/\r?\n+/g,' ').replace(/\s+/g,' ');
   KISALTMA.forEach(([r,y])=>{t=t.replace(r,y);});
+  t=t.replace(/\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b/g,(m,g,a,y)=>+a>=1&&+a<=12&&+g>=1&&+g<=31?sayiYazi(String(+g))+' '+AYLAR[+a]+' '+sayiYazi(y):m); // 03.11.2026 -> üç Kasım iki bin yirmi altı
+  t=t.replace(/(\d{1,2})[.:](\d{2})\b(?!\s*(?:TL|lira|\d))/g,(m,a,b)=>+a<24&&+b<60?sayiYazi(String(+a))+(b==='00'?'':' '+(b[0]==='0'?'sıfır ':'')+sayiYazi(String(+b))):m); // 14.30 -> on dört otuz
   t=t.replace(/(\d)\.(?=\d{3}(?!\d))/g,'$1');            // 3.450.000 -> 3450000
   t=t.replace(/(\d+),(\d+)/g,'$1 virgül $2');            // 12,5 -> 12 virgül 5
-  t=t.replace(/(\d{1,2})[.:](\d{2})\b(?!\s*(?:TL|lira|\d))/g,(m,a,b)=>+a<24&&+b<60?a+':'+b:m); // 14.30 -> 14:30 (saat)
   t=t.replace(/%\s*(\d+(?: virgül \d+)?)/g,'yüzde $1').replace(/(\d+(?: virgül \d+)?)\s*%/g,'yüzde $1');
   const EK={ye:'ya',yi:'yı',nin:'nın',den:'dan',de:'da',dir:'dır',yle:'yla',e:'ya',i:'yı'};
   t=t.replace(/\bTL['’](\w+)/g,(m,e)=>'lira'+(EK[e]?EK[e].replace(/^y/,'y'):'')); // TL'ye -> liraya
   t=t.replace(/₺\s*(\d+)/g,'$1 Türk lirası').replace(/\bTL\b/g,'Türk lirası');
+  t=t.replace(/\d+/g,m=>sayiYazi(m));                  // kalan tüm sayılar yazıya
   t=t.replace(/[…]|\.{2,}/g,'.').replace(/;|:\s/g,', ').replace(/\s[-–—]+\s|[–—]/g,', ');
   t=t.replace(/[()\[\]{}“”*_#\/\|<>]/g,' ');  // kesme işareti (7'de, İstanbul'da) KORUNUR: sesler ekleri onunla doğru okur
   t=t.replace(/\s*,(\s*,)+/g,',').replace(/\s+([,.!?])/g,'$1').replace(/,\s*([.!?])/g,'$1').replace(/\s+/g,' ').trim();
