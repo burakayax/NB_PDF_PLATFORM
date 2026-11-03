@@ -42,7 +42,7 @@ const T = {
     tooMany: "En fazla 20 dosya ekleyebilirsin; fazlası eklenmedi.",
     subsTitle: "Alt başlıklar", subsAdd: "Alt başlık ekle", subsTitleLabel: "Alt başlık", subsPage: "Sayfa", subsImport: "Dosyanın kendi yer imlerini al", subsNone: "Henüz alt başlık yok.", subsHint: "Alt başlıklar içindekilerde bölümün altında girintili görünür; tıklanınca o sayfaya gider.",
     needTwo: "Birleştirmek için en az 2 geçerli PDF gerekli.",
-    settings: "İçindekiler ayarları", heading: "Sayfa başlığı", headingDefault: "İçindekiler",
+    settings: "AYARLAR", heading: "Sayfa başlığı", headingDefault: "İçindekiler",
     numbering: "Bölümleri numaralandır (1., 2., 3. …)", footer: "Tüm sayfalara «Sayfa 3 / 42» alt bilgisi ekle",
     back: "Her bölümün başına «İçindekilere dön» bağlantısı ekle", outName: "Dosya adı", fontLabel: "Yazı tipi", addGroup: "Başlık ekle", groupLabel: "Grup başlığı", groupPh: "Başlık (ör. FATURALAR)", groupHint: "«Başlık ekle» ile FATURALAR, SÖZLEŞMELER gibi gruplar aç; başlığın altındaki dosyalar o grupta toplanır. Başlığı dosyaların arasına oklarla ya da sürükleyerek taşıyabilirsin.", groupEmpty: "Altında dosya olmayan başlık içindekilere eklenmez.",
     build: "Birleştir ve içindekiler ekle", working: "Hazırlanıyor…", failed: "Birleştirme başarısız oldu. Dosyalardan biri korumalı ya da bozuk olabilir.",
@@ -60,7 +60,7 @@ const T = {
     tooMany: "You can add at most 20 files; the rest were not added.",
     subsTitle: "Sub-headings", subsAdd: "Add sub-heading", subsTitleLabel: "Sub-heading", subsPage: "Page", subsImport: "Use the file's own bookmarks", subsNone: "No sub-headings yet.", subsHint: "Sub-headings appear indented under the section in the contents; a click jumps to that page.",
     needTwo: "At least 2 valid PDFs are needed to merge.",
-    settings: "Contents settings", heading: "Page heading", headingDefault: "Contents",
+    settings: "SETTINGS", heading: "Page heading", headingDefault: "Contents",
     numbering: "Number the sections (1., 2., 3. …)", footer: "Add a “Page 3 / 42” footer to every page",
     back: "Add a “Back to contents” link at the start of each section", outName: "File name", fontLabel: "Font", addGroup: "Add heading", groupLabel: "Group heading", groupPh: "Heading (e.g. INVOICES)", groupHint: "Use “Add heading” to create groups such as INVOICES or CONTRACTS; files below a heading are gathered under it. Move a heading between files with the arrows or by dragging.", groupEmpty: "A heading with no files under it is left out of the contents.",
     build: "Merge and add contents", working: "Working…", failed: "Merge failed. One of the files may be protected or corrupt.",
@@ -264,8 +264,6 @@ export function PdfMergeTocTool({
             <span className="text-slate-500">{dosyaSayisi}/{TOC_MAX_FILES}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <button type="button" onClick={baslikEkle}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-cyan-300 transition hover:bg-cyan-500/10 hover:text-cyan-200"><Plus className="h-3.5 w-3.5" />{t.addGroup}</button>
             <button type="button" onClick={() => setItems((m) => [...m].sort((a, b) => a.title.localeCompare(b.title, dil, { numeric: true })))}
               className="rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">{t.az}</button>
             <label className="cursor-pointer rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">
@@ -280,7 +278,6 @@ export function PdfMergeTocTool({
           </div>
         </div>
         <p className="mt-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">{t.order}</p>
-        <p className="mt-1 text-[12px] text-slate-500">{t.groupHint}</p>
       </div>
 
       <ul className="space-y-2">
@@ -415,6 +412,11 @@ export function PdfMergeTocTool({
               <input className={girdi} value={outName} maxLength={80} onChange={(e) => setOutName(e.target.value)} />
               <span className="text-[13px] text-slate-400">.pdf</span>
             </span></label>
+        </div>
+        <div className="mt-3 rounded-lg border border-cyan-400/20 bg-cyan-500/[0.05] p-3">
+          <button type="button" onClick={baslikEkle}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-1.5 text-[13px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"><Plus className="h-4 w-4" />{t.addGroup}</button>
+          <p className="mt-2 text-[12px] text-slate-400">{t.groupHint}</p>
         </div>
         <div className="mt-3 space-y-2">
           {([[numbering, setNumbering, t.numbering], [footer, setFooter, t.footer], [backLinks, setBackLinks, t.back]] as const).map(([v, set, l]) => (
