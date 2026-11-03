@@ -846,6 +846,12 @@ export async function refreshSession(
    * cihaz sınırı iptallerinde "yerine geçen" yoktur → onlar kesin kapanır.
    */
   if (storedToken.revokedAt) {
+    // "Yerine geçen" YOKSA anahtar dönüşümle değil; çıkış, uzaktan kapatma ya da OTURUM SINIRI yüzünden
+    // iptal edilmiştir (ör. 5. cihaz girince en eski cihaz düşer). Bu bir çalıntı işareti DEĞİLDİR:
+    // yalnız bu oturum kapanır, kullanıcının diğer cihazlarına ve "güvenlik" uyarısına dokunulmaz.
+    if (!storedToken.replacedById) {
+      throw new HttpError(401, "Session was ended. Please sign in again.");
+    }
     const ardil = await yerineGecenOturum(storedToken);
     if (!ardil) {
       authLog.warn("refresh: iptal edilmiş oturum anahtarı yeniden kullanıldı", {

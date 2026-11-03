@@ -208,6 +208,18 @@ describe("güvenlik sınırları", () => {
     await expect(refreshSession(giris.refreshToken, BILGI)).rejects.toMatchObject({ statusCode: 401 });
   });
 
+  it("oturum sınırıyla düşürülen eski cihaz, diğer oturumları kapatmaz ve güvenlik uyarısı üretmez", async () => {
+    const eski = await girisYap();
+    const diger = await girisYap(TELEFON);
+    // Sınır yüzünden iptal: yerine geçen YOK.
+    depo.find((t) => t.tokenHash === hashToken(eski.refreshToken))!.revokedAt = new Date(Date.now() - 120_000);
+    const hata = await refreshSession(eski.refreshToken, BILGI).catch((e: Error) => e);
+    expect(hata).toMatchObject({ statusCode: 401 });
+    expect((hata as Error).message).not.toContain("closed for security");
+    const kayit = depo.find((t) => t.tokenHash === hashToken(diger.refreshToken))!;
+    expect(kayit.revokedAt).toBeNull();
+  });
+
   it("telefon oturumu hiçbir yenileme senaryosundan etkilenmez", async () => {
     const giris = await girisYap();
     const telefon = await girisYap(TELEFON);
