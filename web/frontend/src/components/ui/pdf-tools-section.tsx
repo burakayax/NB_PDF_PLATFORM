@@ -58,6 +58,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "dilekce-sablonlari",
   "kimlik-karti-tek-sayfa",
   "pdf-sesli-oku",
+  "pdf-ust-alt-bilgi",
   "txt-to-pdf",
   "markdown-to-pdf",
   "rtf-to-pdf",

@@ -230,6 +230,11 @@ export const TOOLS: Tool[] = [
     en: { name: "Request Signature", desc: "Send a document out for signature and get an audited signed copy." },
   },
   {
+    id: "pdf-ust-alt-bilgi", cat: "edit", Icon: Hash, free: true,
+    tr: { name: "Üst / Alt Bilgi Ekle", desc: "Her sayfanın üstüne ve altına başlık, tarih, dosya adı ve sayfa numarası yazın." },
+    en: { name: "Add Header / Footer", desc: "Put a title, date, file name and page number at the top and bottom of every page." },
+  },
+  {
     id: "pdf-sesli-oku", cat: "convert", Icon: Scale, free: true,
     tr: { name: "Sesli Okuma (PDF → Ses)", desc: "PDF'i ya da yazdığınız metni doğal bir Türkçe sesle dinleyin; ses dosyası olarak indirin." },
     en: { name: "Read Aloud (PDF → Voice)", desc: "Listen to a PDF or your text in a natural Turkish voice; download it as an audio file." },
@@ -602,6 +607,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "dilekce-sablonlari": "indigo",
   "kimlik-karti-tek-sayfa": "teal",
   "pdf-sesli-oku": "cyan",
+  "pdf-ust-alt-bilgi": "blue",
   "txt-to-pdf": "violet",
   "markdown-to-pdf": "violet",
   "rtf-to-pdf": "blue",

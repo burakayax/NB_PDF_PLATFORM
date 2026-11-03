@@ -96,6 +96,7 @@ export const TOOL_SLUGS = [
   "dilekce-sablonlari",
   "kimlik-karti-tek-sayfa",
   "pdf-sesli-oku",
+  "pdf-ust-alt-bilgi",
   "txt-to-pdf",
   "markdown-to-pdf",
   "rtf-to-pdf",
@@ -2421,6 +2422,40 @@ export const TOOL_SEO = {
       ],
     ),
   },
+  "pdf-ust-alt-bilgi": {
+    tr: T(
+      "PDF'e Üst Bilgi ve Alt Bilgi Ekle – Ücretsiz",
+      "PDF'in her sayfasına üst bilgi, alt bilgi, sayfa numarası, tarih ve dosya adı ekleyin. Üyeliksiz, ücretsiz; dosyanız cihazınızdan çıkmaz.",
+      "PDF'e Üst Bilgi ve Alt Bilgi Ekle",
+      "PDF'inizin her sayfasının üstüne ve altına başlık, tarih, dosya adı veya sayfa numarası yazın. Sol, orta ve sağ konumu ayrı ayrı belirleyin; kapağı atlayın, sayfa aralığı seçin, numarayı istediğiniz sayıdan başlatın. Belgeniz tarayıcınızda işlenir, sunucuya yüklenmez. Metin sayfanın üzerine yazılır; sayfada o noktada yazı varsa üst üste binebilir, önizlemeden kontrol edin.",
+      ["pdf üst bilgi ekle", "pdf alt bilgi ekle", "pdf header footer", "pdf'e sayfa numarası ve tarih ekle", "pdf başlık ekle"],
+      [
+        {"q": "PDF'e üst bilgi ve alt bilgi nasıl eklerim?", "a": "PDF'i ekleyin, hazır bir düzen seçin ya da üst ve alt bilgi kutularına kendi metninizi yazın, «Üst/alt bilgiyi ekle»ye basın. Önizleme ilk sayfada sonucu gösterir."},
+        {"q": "Sayfa numarasını otomatik nasıl yazdırırım?", "a": "Metne {sayfa} yazın; her sayfada o sayfanın numarası gelir. «{sayfa} / {toplam}» yazarsanız «3 / 12» gibi görünür. {tarih} bugünün tarihini, {dosya} dosya adını yazar."},
+        {"q": "Kapak sayfasına yazılmasını nasıl engellerim?", "a": "«İlk sayfaya (kapak) yazma» kutusunu işaretleyin. Numaralandırma ikinci sayfadan başlar; isterseniz başlangıç numarasını değiştirin."},
+        {"q": "Yalnızca belirli sayfalara ekleyebilir miyim?", "a": "Evet. İlk ve son sayfa kutularıyla bir aralık seçin; aralığın dışındaki sayfalara dokunulmaz."},
+        {"q": "Türkçe karakterler doğru çıkar mı?", "a": "Evet. Yazı tipi dosyaya gömülür; ş, ğ, ı, İ, ç, ö, ü her görüntüleyicide doğru görünür. Yazı tipinde olmayan nadir simgeler (ör. emoji) «?» olarak yazılır."},
+        {"q": "Yazı sayfadaki içeriğin üstüne biner mi?", "a": "Metin sayfanın üzerine çizilir; sayfa kenarına çok yakın yazı varsa üst üste gelebilir. Önizlemeyi kontrol edin, gerekirse kenar boşluğunu artırın."},
+        {"q": "Dosyam sunucuya yükleniyor mu?", "a": "Hayır. İşlem tarayıcınızda yapılır; PDF'iniz cihazınızdan çıkmaz. Şifreli PDF'lerin önce şifresi kaldırılmalıdır."},
+      ],
+    ),
+    en: T(
+      "Add Header and Footer to PDF – Free Online",
+      "Add a header, footer, page numbers, date and file name to every PDF page. No signup, free; your file never leaves your device.",
+      "Add a Header and Footer to a PDF",
+      "Write a title, date, file name or page number at the top and bottom of every page of your PDF. Set the left, center and right positions separately, skip the cover, choose a page range and start numbering from any number. Your document is processed in your browser and never uploaded. The text is drawn on top of the page, so it can overlap existing content at that spot; check the preview.",
+      ["add header to pdf", "add footer to pdf", "pdf header and footer", "add page numbers and date to pdf"],
+      [
+        {"q": "How do I add a header and footer to a PDF?", "a": "Add the PDF, pick a quick layout or type your own text in the header and footer boxes, then click Add header/footer. The preview shows the result on page 1."},
+        {"q": "How do I print the page number automatically?", "a": "Type {page} in the text and every page gets its own number. «{page} / {total}» shows as «3 / 12». {date} writes today's date and {file} the file name."},
+        {"q": "How do I keep the cover page clean?", "a": "Tick «Skip the first page (cover)». Numbering starts from page two; you can also change the starting number."},
+        {"q": "Can I add it to only some pages?", "a": "Yes. Choose a range with the first and last page boxes; pages outside it are left untouched."},
+        {"q": "Are Turkish characters shown correctly?", "a": "Yes. The font is embedded in the file, so ş, ğ, ı, İ, ç, ö, ü look right in any viewer. Rare symbols missing from the font (such as emoji) are written as «?»."},
+        {"q": "Can the text overlap the page content?", "a": "The text is drawn on top of the page, so it can overlap content very close to the page edge. Check the preview and increase the margin if needed."},
+        {"q": "Is my file uploaded?", "a": "No. Everything runs in your browser; your PDF never leaves your device. Password-protected PDFs must be unlocked first."},
+      ],
+    ),
+  },
   "pdf-sesli-oku": {
     tr: T(
       "Sesli Okuma — PDF'i Türkçe Sesle Dinle",
@@ -2836,6 +2871,7 @@ export const RELATED_TOOLS = {
   "dilekce-sablonlari": ["udf-to-pdf", "pdf-imzala", "e-basvuru-uyumluluk", "compress"],
   "kimlik-karti-tek-sayfa": ["belge-tara", "image-to-pdf", "compress", "encrypt"],
   "pdf-sesli-oku": ["taranmis-pdf-ocr", "pdf-ozetle", "pdf-to-text", "pdf-ceviri"],
+  "pdf-ust-alt-bilgi": ["page-numbers", "watermark", "compress", "merge-pdf"],
   "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
   "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };

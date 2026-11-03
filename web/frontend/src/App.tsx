@@ -406,6 +406,9 @@ const UdfToPdfTool = lazyWithRetry(() =>
 const TtsReadTool = lazyWithRetry(() =>
   import("./components/tools/TtsReadTool").then((m) => ({ default: m.TtsReadTool })),
 );
+const PdfHeaderFooterTool = lazyWithRetry(() =>
+  import("./components/tools/PdfHeaderFooterTool").then((m) => ({ default: m.PdfHeaderFooterTool })),
+);
 const IdCardSheetTool = lazyWithRetry(() =>
   import("./components/tools/IdCardSheetTool").then((m) => ({ default: m.IdCardSheetTool })),
 );
@@ -3260,6 +3263,7 @@ function App() {
         p === "/tools/dilekce-sablonlari" ||
         p === "/tools/kimlik-karti-tek-sayfa" ||
         p === "/tools/pdf-sesli-oku" ||
+        p === "/tools/pdf-ust-alt-bilgi" ||
         isDocToolSlug(p.replace("/tools/", "")) ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
@@ -5819,6 +5823,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "pdf-ust-alt-bilgi") {
+      return (
+        <GuestSeoToolPage slug="pdf-ust-alt-bilgi" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfHeaderFooterTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "pdf-sesli-oku") {
       return (
         <GuestSeoToolPage slug="pdf-sesli-oku" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -7131,6 +7144,7 @@ function App() {
           onOpenDocConv={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("docconv"); }}
           onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
           onOpenTts={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("tts"); }}
+          onOpenHeaderFooter={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("headerfooter"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
@@ -7176,6 +7190,7 @@ function App() {
           onOpenDocConv={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("docconv"); }}
           onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
           onOpenTts={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("tts"); }}
+          onOpenHeaderFooter={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("headerfooter"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
@@ -7385,6 +7400,14 @@ function App() {
             ) : null}
 
             {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {contentPanel === "headerfooter" ? (
+              <WorkspaceToolShell id="pdf-ust-alt-bilgi" language={language}>
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfHeaderFooterTool language={language} />
+                </Suspense>
+              </WorkspaceToolShell>
+            ) : null}
+
             {contentPanel === "tts" ? (
               <WorkspaceToolShell id="pdf-sesli-oku" language={language}>
                 <Suspense fallback={<PageSkeleton />}>

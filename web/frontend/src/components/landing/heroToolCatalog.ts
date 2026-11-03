@@ -25,6 +25,7 @@ import {
   FileSearch,
   FileType2,
   Grid2x2,
+  Hash,
   Highlighter,
   Maximize2,
   Minimize2,
@@ -43,7 +44,7 @@ export type HeroItem =
   | { k: "page"; slug: string; Icon: LucideIcon; tr: string; en: string }
   | { k: "member"; slug: string; Icon: LucideIcon; tr: string; en: string };
 
-export type HeroCatId = "pages" | "edit" | "convert" | "docs" | "legal" | "shrink";
+export type HeroCatId = "pages" | "edit" | "convert" | "docs" | "legal" | "shrink" | "extra";
 
 export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem[] }[] = [
   {
@@ -113,13 +114,21 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
   },
   {
     id: "shrink",
-    tr: "Küçült & Diğer",
-    en: "Shrink & More",
+    tr: "Küçült",
+    en: "Shrink",
     items: [
       { k: "free", id: "gorsel-sikistir" },
       { k: "page", slug: "gorsel-boyutlandir", Icon: Maximize2, tr: "Görsel Boyutlandır", en: "Resize Image" },
       { k: "member", slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
       { k: "page", slug: "kimlik-karti-tek-sayfa", Icon: Scale, tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page" },
+    ],
+  },
+  {
+    id: "extra",
+    tr: "Diğer",
+    en: "More",
+    items: [
+      { k: "page", slug: "pdf-ust-alt-bilgi", Icon: Hash, tr: "Üst / Alt Bilgi Ekle", en: "Add Header / Footer" },
       { k: "page", slug: "pdf-sesli-oku", Icon: Scale, tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)" },
       { k: "page", slug: "pdf-to-markdown", Icon: FileType2, tr: "PDF → Markdown", en: "PDF → Markdown" },
     ],
