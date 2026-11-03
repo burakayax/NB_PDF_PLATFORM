@@ -224,6 +224,11 @@ export const TOOLS: Tool[] = [
     en: { name: "Request Signature", desc: "Send a document out for signature and get an audited signed copy." },
   },
   {
+    id: "kimlik-karti-tek-sayfa", cat: "edit", Icon: Scale, free: true,
+    tr: { name: "Kimlik Ön–Arka Tek Sayfa", desc: "Kimlik, ehliyet veya pasaportun iki yüzünü tek A4 sayfaya gerçek boyutta koyun." },
+    en: { name: "ID Front+Back on One Page", desc: "Put both sides of an ID, licence or passport on one A4 page at real size." },
+  },
+  {
     id: "sayfa-duzeni", cat: "edit", Icon: Grid2x2, free: true,
     tr: { name: "PDF Sayfa Düzeni", desc: "2/4/8 sayfayı tek kâğıda sığdırın ya da kitapçık dizin." },
     en: { name: "PDF Page Layout", desc: "Fit 2/4/8 pages on one sheet, or impose a booklet." },
@@ -548,6 +553,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "image-to-udf": "indigo",
   "e-basvuru-uyumluluk": "indigo",
   "dilekce-sablonlari": "indigo",
+  "kimlik-karti-tek-sayfa": "teal",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

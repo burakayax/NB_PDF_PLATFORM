@@ -402,6 +402,9 @@ const GuestCompressTool = lazyWithRetry(() =>
 const UdfToPdfTool = lazyWithRetry(() =>
   import("./components/tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
 );
+const IdCardSheetTool = lazyWithRetry(() =>
+  import("./components/tools/IdCardSheetTool").then((m) => ({ default: m.IdCardSheetTool })),
+);
 const UdfHub = lazyWithRetry(() =>
   import("./components/tools/UdfHub").then((m) => ({ default: m.UdfHub })),
 );
@@ -3244,6 +3247,7 @@ function App() {
         p === "/tools/image-to-udf" ||
         p === "/tools/e-basvuru-uyumluluk" ||
         p === "/tools/dilekce-sablonlari" ||
+        p === "/tools/kimlik-karti-tek-sayfa" ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5793,6 +5797,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "kimlik-karti-tek-sayfa") {
+      return (
+        <GuestSeoToolPage slug="kimlik-karti-tek-sayfa" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <IdCardSheetTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "udf-to-pdf") {
       return (
         <GuestSeoToolPage slug="udf-to-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -7082,6 +7095,7 @@ function App() {
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
+          onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
@@ -7124,6 +7138,7 @@ function App() {
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
+          onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
@@ -7333,6 +7348,14 @@ function App() {
             ) : null}
 
             {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {contentPanel === "idcard" ? (
+              <WorkspaceToolShell id="kimlik-karti-tek-sayfa" language={language}>
+                <Suspense fallback={<PageSkeleton />}>
+                  <IdCardSheetTool language={language} />
+                </Suspense>
+              </WorkspaceToolShell>
+            ) : null}
+
             {contentPanel === "udf" ? (
               <WorkspaceToolShell id="udf-to-pdf" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
