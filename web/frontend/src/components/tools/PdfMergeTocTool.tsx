@@ -200,7 +200,7 @@ export function PdfMergeTocTool({
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <div className="tool-form">
           <WorkspaceUploadField
             toolId="pdf-birlestir-icindekiler"
@@ -224,7 +224,7 @@ export function PdfMergeTocTool({
   const girdi = "w-full rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-2 text-[13px] text-white placeholder:text-slate-500";
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
       <div className="mt-1 mb-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
