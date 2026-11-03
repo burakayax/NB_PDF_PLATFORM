@@ -75,6 +75,7 @@ function sayiYazi(str){
 const AYLAR=['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 function hazirla(t){
   t=t.replace(/\r?\n+/g,' ').replace(/\s+/g,' ');
+  t=t.replace(/[âîû]/g,c=>({'â':'a','î':'i','û':'u'})[c]).replace(/[ÂÎÛ]/g,c=>({'Â':'A','Î':'İ','Û':'U'})[c]); // Hâkim -> Hakim (şapkalı harfi ses motoru yanlış okur)
   KISALTMA.forEach(([r,y])=>{t=t.replace(r,y);});
   t=t.replace(/\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b/g,(m,g,a,y)=>+a>=1&&+a<=12&&+g>=1&&+g<=31?sayiYazi(String(+g))+' '+AYLAR[+a]+' '+sayiYazi(y):m); // 03.11.2026 -> üç Kasım iki bin yirmi altı
   t=t.replace(/(\d{1,2})[.:](\d{2})\b(?!\s*(?:TL|lira|\d))/g,(m,a,b)=>+a<24&&+b<60?sayiYazi(String(+a))+(b==='00'?'':' '+(b[0]==='0'?'sıfır ':'')+sayiYazi(String(+b))):m); // 14.30 -> on dört otuz
