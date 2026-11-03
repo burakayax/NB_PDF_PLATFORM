@@ -131,6 +131,11 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "İsteğe bağlı filigran", trDesc: "Kimliğin kötüye kullanımını zorlaştırın.", en: "Optional watermark", enDesc: "Make misuse of the ID harder." },
     { icon: Lock, tr: "Gizli", trDesc: "Fotoğrafınız cihazınızdan hiç çıkmaz.", en: "Private", enDesc: "Your photo never leaves your device." },
   ],
+  "pdf-sesli-oku": [
+    { icon: Zap, tr: "Doğal Türkçe ses", trDesc: "Tarayıcının hazır sesinden daha akıcı yapay zekâ sesi.", en: "Natural Turkish voice", enDesc: "A more fluent AI voice than the built-in browser voice." },
+    { icon: Zap, tr: "Sayfa aralığı ve hız", trDesc: "İstediğiniz sayfaları, istediğiniz hızda dinleyin.", en: "Page range and speed", enDesc: "Listen to the pages you want at the speed you want." },
+    { icon: Lock, tr: "Gizli", trDesc: "Metin ve ses modeli cihazınızda çalışır; hiçbir şey gönderilmez.", en: "Private", enDesc: "Text and voice model run on your device; nothing is sent." },
+  ],
   "ai-fotograf-studyosu": [
     { icon: Zap, tr: "Amaca göre hazır", trDesc: "Vesikalık, biyometrik, vize, CV ve LinkedIn ölçülerine tek tıkla kırpar; arka planı değiştirir.", en: "Ready for the purpose", enDesc: "Crops to ID, biometric, visa, CV and LinkedIn sizes in one click and swaps the background." },
     { icon: Zap, tr: "Uygunluk denetimi", trDesc: "Baş oranı, ifade ve ışığı kontrol edip uyarır.", en: "Suitability check", enDesc: "Checks head size, expression and light, and warns you." },

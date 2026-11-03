@@ -39,7 +39,7 @@ function run(name) {
 try {
   await run("fetch-tool-ratings");
   await Promise.all(
-    ["generate-seo-files", "generate-reel-covers", "setup-tesseract", "setup-scanic-ml", "setup-photo-ai"].map(run),
+    ["generate-seo-files", "generate-reel-covers", "setup-tesseract", "setup-scanic-ml", "setup-photo-ai", "setup-antalia"].map(run),
   );
 } catch (err) {
   console.error(`Hazırlık adımı başarısız: ${err instanceof Error ? err.message : String(err)}`);

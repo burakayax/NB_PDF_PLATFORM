@@ -55,6 +55,7 @@ export type ContentPanel =
   | "resize-image"
   | "udf"
   | "idcard"
+  | "tts"
   | "cv"
   | "snip"
   | "searchable"

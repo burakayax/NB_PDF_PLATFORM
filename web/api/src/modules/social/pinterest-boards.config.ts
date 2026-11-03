@@ -116,6 +116,7 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   "e-basvuru-uyumluluk": "hukuk",
   "dilekce-sablonlari": "hukuk",
   "kimlik-karti-tek-sayfa": "pdf-duzenleme",
+  "pdf-sesli-oku": "ogrenci",
   // ── CV ──
   "cv-olustur": "cv",
   "ai-fotograf-studyosu": "cv",

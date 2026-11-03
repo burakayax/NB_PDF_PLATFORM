@@ -402,6 +402,9 @@ const GuestCompressTool = lazyWithRetry(() =>
 const UdfToPdfTool = lazyWithRetry(() =>
   import("./components/tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
 );
+const TtsReadTool = lazyWithRetry(() =>
+  import("./components/tools/TtsReadTool").then((m) => ({ default: m.TtsReadTool })),
+);
 const IdCardSheetTool = lazyWithRetry(() =>
   import("./components/tools/IdCardSheetTool").then((m) => ({ default: m.IdCardSheetTool })),
 );
@@ -3248,6 +3251,7 @@ function App() {
         p === "/tools/e-basvuru-uyumluluk" ||
         p === "/tools/dilekce-sablonlari" ||
         p === "/tools/kimlik-karti-tek-sayfa" ||
+        p === "/tools/pdf-sesli-oku" ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5797,6 +5801,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "pdf-sesli-oku") {
+      return (
+        <GuestSeoToolPage slug="pdf-sesli-oku" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <TtsReadTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "kimlik-karti-tek-sayfa") {
       return (
         <GuestSeoToolPage slug="kimlik-karti-tek-sayfa" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -7096,6 +7109,7 @@ function App() {
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
+          onOpenTts={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("tts"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
@@ -7139,6 +7153,7 @@ function App() {
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenUdf={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("udf"); }}
           onOpenIdcard={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("idcard"); }}
+          onOpenTts={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("tts"); }}
           onOpenCv={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("cv-olustur"); setContentPanel("cv"); }}
           onOpenSearchable={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("aranabilir-pdf"); setContentPanel("searchable"); }}
           onOpenLayout={() => { setMergeShareReady(null); setMergeShare(null); pushToolPath("sayfa-duzeni"); setContentPanel("layout"); }}
@@ -7348,6 +7363,14 @@ function App() {
             ) : null}
 
             {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {contentPanel === "tts" ? (
+              <WorkspaceToolShell id="pdf-sesli-oku" language={language}>
+                <Suspense fallback={<PageSkeleton />}>
+                  <TtsReadTool language={language} />
+                </Suspense>
+              </WorkspaceToolShell>
+            ) : null}
+
             {contentPanel === "idcard" ? (
               <WorkspaceToolShell id="kimlik-karti-tek-sayfa" language={language}>
                 <Suspense fallback={<PageSkeleton />}>

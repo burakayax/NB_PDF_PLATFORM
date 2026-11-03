@@ -61,3 +61,8 @@ Kaynak ölçümler (hata oranı / doğallık, Okur yazarının karşılaştırma
 - [ ] Karar: **A** / **B1** / **B2** / (A ile başla, sonra B1)
 
 Karar gelene kadar İş 6 için araç sayfası **yapılmadı** (boşa iş olmasın diye).
+
+
+## KARAR (2026-11-03)
+
+Kullanıcı **Antalia-2 Mini**'yi seçti ve araç olarak eklendi: `/tools/pdf-sesli-oku`. Okur kullanılmadı (ses sahibine atıf şartı var). Deneme sayfası silindi. Lisans: kod ve ses ağırlıkları Apache-2.0 (`web/frontend/src/lib/antalia/LICENSE`, `NOTICE`). Doğrulanmadı: telefonda hız; dinleme kalitesi kullanıcının kulağına bağlı.
