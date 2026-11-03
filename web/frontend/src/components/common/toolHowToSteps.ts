@@ -649,6 +649,19 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "e-basvuru-uyumluluk": S(
+    [
+      { title: "PDF'ni seç ve sınırları gir", detail: "Kurumun duyurusundaki boyut, sayfa sayısı ve A4 gibi sınırları kendin işaretle." },
+      { title: "«Kontrol et», sonra gerekirse «Düzelt»", detail: "Hangi maddenin tutmadığını görürsün; düzeltilebilenler tek tıkla düzelir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Choose your PDF and enter limits", detail: "Tick the size, page count and A4 limits from the institution's notice." },
+      { title: "Click Check, then Fix if needed", detail: "You see which item fails; fixable ones are corrected in one click." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   // ── Yapay zekâ ────────────────────────────────────────────────────────────
   "pdf-ozetle": S(
     [

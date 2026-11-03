@@ -3242,6 +3242,7 @@ function App() {
         p === "/tools/udf-to-word" ||
         p === "/tools/udf-viewer" ||
         p === "/tools/image-to-udf" ||
+        p === "/tools/e-basvuru-uyumluluk" ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5782,11 +5783,11 @@ function App() {
         </GuestSeoToolPage>
       );
     }
-    if (["pdf-to-udf", "word-to-udf", "udf-to-word", "udf-viewer", "image-to-udf"].includes(seoSlug)) {
+    if (["pdf-to-udf", "word-to-udf", "udf-to-word", "udf-viewer", "image-to-udf", "e-basvuru-uyumluluk"].includes(seoSlug)) {
       return (
         <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <UdfModeTool language={language} mode={seoSlug as "pdf-to-udf" | "word-to-udf" | "udf-to-word" | "udf-viewer" | "image-to-udf"} />
+            <UdfModeTool language={language} mode={seoSlug as "pdf-to-udf" | "word-to-udf" | "udf-to-word" | "udf-viewer" | "image-to-udf" | "e-basvuru-uyumluluk"} />
           </Suspense>
         </GuestSeoToolPage>
       );

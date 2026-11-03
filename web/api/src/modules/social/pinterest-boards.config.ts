@@ -113,6 +113,7 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   "udf-to-word": "hukuk",
   "udf-viewer": "hukuk",
   "image-to-udf": "hukuk",
+  "e-basvuru-uyumluluk": "hukuk",
   // ── CV ──
   "cv-olustur": "cv",
   "ai-fotograf-studyosu": "cv",

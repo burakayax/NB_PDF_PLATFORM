@@ -7112,5 +7112,37 @@
       "image to udf"
     ],
     "tool": "/tools/image-to-udf"
+  },
+  "https://www.pdfplatform.app/tools/e-basvuru-uyumluluk": {
+    "tr": [
+      "e-başvuru pdf",
+      "uyap pdf boyutu",
+      "pdf a4 yapma",
+      "pdf uyumluluk kontrolü",
+      "uyap pdf yükleme sınırı"
+    ],
+    "en": [
+      "pdf compliance check",
+      "uyap pdf size",
+      "make pdf a4",
+      "filing pdf checker"
+    ],
+    "tool": "/tools/e-basvuru-uyumluluk"
+  },
+  "https://www.pdfplatform.app/en/tools/e-basvuru-uyumluluk": {
+    "tr": [
+      "e-başvuru pdf",
+      "uyap pdf boyutu",
+      "pdf a4 yapma",
+      "pdf uyumluluk kontrolü",
+      "uyap pdf yükleme sınırı"
+    ],
+    "en": [
+      "pdf compliance check",
+      "uyap pdf size",
+      "make pdf a4",
+      "filing pdf checker"
+    ],
+    "tool": "/tools/e-basvuru-uyumluluk"
   }
 }

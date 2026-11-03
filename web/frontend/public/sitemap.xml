@@ -1154,6 +1154,24 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.pdfplatform.app/tools/e-basvuru-uyumluluk</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/tools/e-basvuru-uyumluluk"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/tools/e-basvuru-uyumluluk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/tools/e-basvuru-uyumluluk"/>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/en/tools/e-basvuru-uyumluluk</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/tools/e-basvuru-uyumluluk"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/tools/e-basvuru-uyumluluk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/tools/e-basvuru-uyumluluk"/>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.pdfplatform.app/tools/ai-fotograf-studyosu</loc>
     <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/tools/ai-fotograf-studyosu"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/tools/ai-photo-studio"/>
