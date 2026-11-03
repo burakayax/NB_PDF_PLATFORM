@@ -29,6 +29,16 @@ describe("güvenlik uyarıları", () => {
     expect(send).toHaveBeenCalledTimes(1);
   });
 
+  it("geçersiz anahtar uyarısı hangi sayfa ve tarayıcıdan geldiğini de yazar", async () => {
+    for (let i = 0; i < 60; i++) noteSecurityEvent("invalid_jwt", { ip: "9.9.9.9", path: "/api/auth/me", userAgent: "Mozilla/5.0 Chrome" }, 1_000 + i);
+    await flush();
+    expect(send).toHaveBeenCalledTimes(1);
+    const metin = (send.mock.calls[0] as unknown as string[])[1]!;
+    expect(metin).toContain("/api/auth/me");
+    expect(metin).toContain("Mozilla/5.0 Chrome");
+    expect(metin).toContain("1 farklı IP");
+  });
+
   it("10 dakikadan eski olaylar sayılmaz", async () => {
     for (let i = 0; i < 39; i++) noteSecurityEvent("login_failure", {}, 1_000);
     noteSecurityEvent("login_failure", {}, 1_000 + 11 * 60_000);

@@ -94,7 +94,7 @@ export function logSuspiciousActivity(payload: {
   userAgent?: string;
 }): void {
   write("security", payload as Record<string, unknown>);
-  noteSecurityEvent(payload.type, { ip: payload.ip, detail: payload.detail });
+  noteSecurityEvent(payload.type, { ip: payload.ip, detail: payload.detail, path: payload.path, userAgent: payload.userAgent });
 }
 
 /** Mock checkout / confirm — no external PSP; complements NDJSON audit. */

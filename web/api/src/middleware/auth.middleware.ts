@@ -56,16 +56,20 @@ function requireAuthImpl(request: Request, response: Response, next: NextFunctio
       organizationId: payload.organizationId ?? null,
     };
     next();
-  } catch {
-    const ip = request.ip || request.socket?.remoteAddress;
-    logSuspiciousActivity({
-      type: "invalid_jwt",
-      ip,
-      path: request.originalUrl?.split("?")[0],
-      method: request.method,
-      userAgent: request.headers["user-agent"] as string | undefined,
-      detail: "Bearer present but verify failed",
-    });
+  } catch (err) {
+    // SÜRESİ DOLMUŞ anahtar sıradan bir durumdur (anahtarlar 15 dakikada yenilenir; arka plandaki sekme
+    // eski anahtarla istek atar). Yalnız imzası bozuk/sahte anahtarlar şüpheli sayılır ve alarma girer.
+    if ((err as Error)?.name !== "TokenExpiredError") {
+      const ip = request.ip || request.socket?.remoteAddress;
+      logSuspiciousActivity({
+        type: "invalid_jwt",
+        ip,
+        path: request.originalUrl?.split("?")[0],
+        method: request.method,
+        userAgent: request.headers["user-agent"] as string | undefined,
+        detail: "Bearer present but verify failed",
+      });
+    }
     response
       .status(401)
       .set("WWW-Authenticate", BEARER_CHALLENGE)
