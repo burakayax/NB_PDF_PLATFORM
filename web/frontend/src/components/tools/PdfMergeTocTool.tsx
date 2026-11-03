@@ -21,6 +21,16 @@ import {
 /** Kayıt gerekli mi? Karar verilince tek yerden değişir (katalogdaki free/account bayrağıyla birlikte). */
 const KAYIT_GEREKLI = true;
 
+/** İçindekiler sayfasında kullanılabilen yazı tipleri (hepsi Türkçe karakterli, cihazdan yüklenir). */
+const YAZI_TIPLERI = [
+  { id: "roboto", dosya: "/fonts/Roboto", tr: "Sade modern (Roboto)", en: "Clean modern (Roboto)" },
+  { id: "arial", dosya: "/fonts/cv/LiberationSans", tr: "Arial tarzı", en: "Arial style" },
+  { id: "times", dosya: "/fonts/cv/LiberationSerif", tr: "Times tarzı (resmî belge)", en: "Times style (formal)" },
+  { id: "calibri", dosya: "/fonts/cv/Carlito", tr: "Calibri tarzı", en: "Calibri style" },
+  { id: "cambria", dosya: "/fonts/cv/Caladea", tr: "Cambria tarzı", en: "Cambria style" },
+  { id: "georgia", dosya: "/fonts/cv/Gelasio", tr: "Georgia tarzı", en: "Georgia style" },
+] as const;
+
 const T = {
   tr: {
     hint: "Birleştirmek istediğin PDF'leri seç (en az 2, en çok 20).",
@@ -34,7 +44,7 @@ const T = {
     needTwo: "Birleştirmek için en az 2 geçerli PDF gerekli.",
     settings: "İçindekiler ayarları", heading: "Sayfa başlığı", headingDefault: "İçindekiler",
     numbering: "Bölümleri numaralandır (1., 2., 3. …)", footer: "Tüm sayfalara «Sayfa 3 / 42» alt bilgisi ekle",
-    back: "Her bölümün başına «İçindekilere dön» bağlantısı ekle", outName: "Dosya adı",
+    back: "Her bölümün başına «İçindekilere dön» bağlantısı ekle", outName: "Dosya adı", fontLabel: "Yazı tipi",
     build: "Birleştir ve içindekiler ekle", working: "Hazırlanıyor…", failed: "Birleştirme başarısız oldu. Dosyalardan biri korumalı ya da bozuk olabilir.",
     fileErr: "Hata:", another: "Dosyaları temizle", addMore: "Dosya ekle",
     onDevice: "Dosyaların cihazından çıkmaz.", sub: "bölüm", pageWord: "Sayfa", continued: "(devam)", backLabel: "İçindekilere dön",
@@ -52,7 +62,7 @@ const T = {
     needTwo: "At least 2 valid PDFs are needed to merge.",
     settings: "Contents settings", heading: "Page heading", headingDefault: "Contents",
     numbering: "Number the sections (1., 2., 3. …)", footer: "Add a “Page 3 / 42” footer to every page",
-    back: "Add a “Back to contents” link at the start of each section", outName: "File name",
+    back: "Add a “Back to contents” link at the start of each section", outName: "File name", fontLabel: "Font",
     build: "Merge and add contents", working: "Working…", failed: "Merge failed. One of the files may be protected or corrupt.",
     fileErr: "Error:", another: "Clear files", addMore: "Add files",
     onDevice: "Your files never leave your device.", sub: "sections", pageWord: "Page", continued: "(cont.)", backLabel: "Back to contents",
@@ -93,6 +103,7 @@ export function PdfMergeTocTool({
   const [notlar, setNotlar] = useState<string[]>([]);
   const [okuyor, setOkuyor] = useState(false);
   const [heading, setHeading] = useState<string>(t.headingDefault);
+  const [yazi, setYazi] = useState<(typeof YAZI_TIPLERI)[number]["id"]>("roboto");
   const [numbering, setNumbering] = useState(true);
   const [footer, setFooter] = useState(false);
   const [backLinks, setBackLinks] = useState(false);
@@ -156,10 +167,15 @@ export function PdfMergeTocTool({
     setCalisiyor(true);
     setHata(null);
     try {
-      const [fontBytes, boldBytes] = await Promise.all([
-        fetch("/fonts/Roboto-Regular.ttf").then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)),
-        fetch("/fonts/Roboto-Bold.ttf").then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)),
-      ]);
+      const dosya = (YAZI_TIPLERI.find((y) => y.id === yazi) ?? YAZI_TIPLERI[0]).dosya;
+      const [fontBytes, boldBytes] = await Promise.all(
+        ["Regular", "Bold"].map((a) =>
+          fetch(`${dosya}-${a}.ttf`).then((r) => {
+            if (!r.ok) throw new Error("font");
+            return r.arrayBuffer();
+          }).then((b) => new Uint8Array(b)),
+        ),
+      );
       const r = await mergeWithToc(
         gecerli.map((i) => ({ name: i.name, title: i.title.trim() || defaultTitle(i.name), bytes: i.bytes, subs: i.subs })),
         {
@@ -343,6 +359,10 @@ export function PdfMergeTocTool({
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label><span className="mb-1 block text-[12px] text-slate-400">{t.heading}</span>
             <input className={girdi} value={heading} maxLength={60} onChange={(e) => setHeading(e.target.value)} /></label>
+          <label><span className="mb-1 block text-[12px] text-slate-400">{t.fontLabel}</span>
+            <select className={girdi} value={yazi} onChange={(e) => setYazi(e.target.value as typeof yazi)}>
+              {YAZI_TIPLERI.map((y) => <option key={y.id} value={y.id}>{y[dil]}</option>)}
+            </select></label>
           <label><span className="mb-1 block text-[12px] text-slate-400">{t.outName}</span>
             <span className="flex items-center gap-1">
               <input className={girdi} value={outName} maxLength={80} onChange={(e) => setOutName(e.target.value)} />

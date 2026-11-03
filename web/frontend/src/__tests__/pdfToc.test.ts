@@ -176,3 +176,32 @@ describe("alt başlıklar ve kaynak yer imleri", () => {
     expect(r.sections[0]!.startPage).toBe(r.tocPages + 1);
   });
 });
+
+describe("içindekiler başlığı ve yazı tipi", () => {
+  it("başlık sayfada ortalanır", async () => {
+    const r = await mergeWithToc([await dosya("a.pdf", 1), await dosya("b.pdf", 1)], OPT);
+    const doc = await PDFDocument.load(r.bytes);
+    const { decodePDFRawStream } = await import("pdf-lib");
+    const icerik = doc.getPage(0).node.Contents();
+    const parcalar = icerik instanceof PDFArray
+      ? Array.from({ length: icerik.size() }, (_, i) => icerik.lookup(i))
+      : [icerik];
+    const metin = parcalar
+      .map((c) => Buffer.from(decodePDFRawStream(c as import("pdf-lib").PDFRawStream).decode()).toString("latin1"))
+      .join(" ");
+    const m = metin.match(/1 0 0 1 ([\d.]+) ([\d.]+) Tm/);
+    expect(m).not.toBeNull();
+    const x = Number(m![1]);
+    // A4 genişliği 595.28; başlık ortalıysa sol boşluk yaklaşık sağ boşluğa eşittir (sol kenar 56 değil)
+    expect(x).toBeGreaterThan(150);
+    expect(x).toBeLessThan(300);
+  });
+
+  it.each(["LiberationSans", "LiberationSerif", "Carlito", "Caladea", "Gelasio"])("%s ile Türkçe başlıklar üretilir", async (aile) => {
+    const f = new Uint8Array(readFileSync(`public/fonts/cv/${aile}-Regular.ttf`));
+    const b = new Uint8Array(readFileSync(`public/fonts/cv/${aile}-Bold.ttf`));
+    const a = { ...(await dosya("a.pdf", 1)), title: "Çağrı Şişli İğne Öğün" };
+    const r = await mergeWithToc([a, await dosya("b.pdf", 1)], { ...OPT, fontBytes: f, boldBytes: b });
+    expect(r.sections).toHaveLength(2);
+  });
+});
