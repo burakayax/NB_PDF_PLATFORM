@@ -402,6 +402,12 @@ const GuestCompressTool = lazyWithRetry(() =>
 const UdfToPdfTool = lazyWithRetry(() =>
   import("./components/tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
 );
+const UdfHub = lazyWithRetry(() =>
+  import("./components/tools/UdfHub").then((m) => ({ default: m.UdfHub })),
+);
+const UdfModeTool = lazyWithRetry(() =>
+  import("./components/tools/UdfHub").then((m) => ({ default: m.UdfModeTool })),
+);
 const BlogIndexPage = lazyWithRetry(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
@@ -3231,6 +3237,11 @@ function App() {
         p === "/tools/belge-tara" ||
         p === "/tools/aranabilir-pdf" ||
         p === "/tools/udf-to-pdf" ||
+        p === "/tools/pdf-to-udf" ||
+        p === "/tools/word-to-udf" ||
+        p === "/tools/udf-to-word" ||
+        p === "/tools/udf-viewer" ||
+        p === "/tools/image-to-udf" ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5771,6 +5782,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (["pdf-to-udf", "word-to-udf", "udf-to-word", "udf-viewer", "image-to-udf"].includes(seoSlug)) {
+      return (
+        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <UdfModeTool language={language} mode={seoSlug as "pdf-to-udf" | "word-to-udf" | "udf-to-word" | "udf-viewer" | "image-to-udf"} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "udf-to-pdf") {
       return (
         <GuestSeoToolPage slug="udf-to-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -7316,7 +7336,7 @@ function App() {
             {contentPanel === "udf" ? (
               <WorkspaceToolShell id="udf-to-pdf" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
-                  <UdfToPdfTool language={language} />
+                  <UdfHub language={language} />
                 </Suspense>
               </WorkspaceToolShell>
             ) : null}

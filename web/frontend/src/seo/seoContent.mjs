@@ -86,6 +86,11 @@ export const TOOL_SLUGS = [
   "hassas-veri-gizle",
   "sozlesme-denetci",
   "udf-to-pdf",
+  "pdf-to-udf",
+  "word-to-udf",
+  "udf-to-word",
+  "udf-viewer",
+  "image-to-udf",
   "ai-fotograf-studyosu",
   "cv-olustur",
 ];
@@ -1941,6 +1946,147 @@ export const TOOL_SEO = {
       ],
     ),
   },
+
+  "pdf-to-udf": {
+    tr: T(
+      "PDF'den UDF'ye Çevir — UYAP Belgesi Yap",
+      "Metin içeren PDF'yi UYAP'ta açılabilen .udf belgesine çevirin. Üyeliksiz, ücretsiz; dosyanız tarayıcınızdan çıkmaz.",
+      "PDF'yi UDF'ye Çevir",
+      "PDF'deki metni ve paragrafları UYAP Doküman Editörü'nde açılabilen bir .udf belgesine dönüştürür. Yazı tipi ve boyut aktarılmaz; metin düz paragraflar olarak gelir, editörde istediğiniz gibi biçimlendirebilirsiniz. Taranmış (metni olmayan) PDF'lerde önce OCR aracını kullanın. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın.",
+      ["pdf to udf", "pdf udf çevirme", "pdf udf dönüştürücü", "udf yapma", "uyap udf oluşturma"],
+      [
+        {"q": "PDF'yi UDF'ye çevirince biçim korunur mu?", "a": "Metin ve paragraf yapısı aktarılır; yazı tipi, boyut ve kalın/italik gibi biçimler aktarılmaz. UYAP Doküman Editörü'nde biçimlendirebilirsiniz."},
+        {"q": "Taranmış PDF'yi çevirebilir miyim?", "a": "Doğrudan hayır; içinde seçilebilir metin olmalı. Taranmış belgeyi önce «Taranmış PDF (OCR)» aracıyla metne çevirin."},
+        {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete gönderilmez. Dava evrakı kişisel veri taşıdığı için işlem bilerek cihazda tutulur."},
+        {"q": "E-imza dönüştürülen belgeye taşınır mı?", "a": "Hayır. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın."},
+      ],
+    ),
+    en: T(
+      "PDF to UDF — Make a UYAP Document",
+      "Turn a text PDF into a .udf document that opens in UYAP. No signup, free; your file never leaves your browser.",
+      "Convert PDF to UDF",
+      "Converts the text and paragraphs in a PDF into a .udf document that opens in the UYAP Document Editor. Fonts and sizes are not carried over; the text arrives as plain paragraphs you can format in the editor. For scanned PDFs run OCR first. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions.",
+      ["pdf to udf", "convert pdf to udf", "uyap udf creator"],
+      [
+        {"q": "Is formatting preserved?", "a": "Text and paragraph structure carry over; fonts, sizes and bold/italic do not. Format it in the UYAP editor."},
+        {"q": "Can I convert a scanned PDF?", "a": "Not directly; it needs selectable text. Run it through the OCR tool first."},
+        {"q": "Is my file uploaded to your server?", "a": "No. Conversion happens entirely in your browser; the file is never sent over the internet. Court papers carry personal data, so the work is deliberately kept on your device."},
+        {"q": "Does the e-signature carry over?", "a": "No. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions."},
+      ],
+    ),
+  },
+  "word-to-udf": {
+    tr: T(
+      "Word'den UDF'ye Çevir — Dilekçe UDF Yap",
+      "Word (.docx) dilekçenizi biçimiyle birlikte .udf'ye çevirin. Üyeliksiz, ücretsiz; dosyanız tarayıcınızdan çıkmaz.",
+      "Word'ü UDF'ye Çevir",
+      "Word (.docx) belgenizi paragraf hizalaması, kalın/italik/altı çizili yazılar, yazı boyutu, renk, tablo ve görselleriyle birlikte UYAP'ın .udf biçimine çevirir. Dilekçeyi Word'de hazırlayıp UYAP Doküman Editörü'nde açmak isteyenler için. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın.",
+      ["word to udf", "docx udf çevirme", "dilekçe udf yapma", "word udf dönüştürücü"],
+      [
+        {"q": "Hangi Word biçimleri destekleniyor?", "a": "Yalnızca .docx. Eski .doc dosyasını önce Word'de «Farklı Kaydet» ile .docx yapın."},
+        {"q": "Tablolar ve görseller aktarılır mı?", "a": "Evet; tablolar, gömülü görseller, hizalama ve temel yazı biçimleri aktarılır. Çok karmaşık düzenler sadeleşebilir."},
+        {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete gönderilmez. Dava evrakı kişisel veri taşıdığı için işlem bilerek cihazda tutulur."},
+        {"q": "E-imza dönüştürülen belgeye taşınır mı?", "a": "Hayır. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın."},
+      ],
+    ),
+    en: T(
+      "Word to UDF — Turn a Petition into UDF",
+      "Convert a Word (.docx) petition to .udf, keeping its formatting. No signup, free; your file never leaves your browser.",
+      "Convert Word to UDF",
+      "Converts your Word (.docx) document — alignment, bold/italic/underline, size, colour, tables and images — into UYAP's .udf format. For people who draft in Word and open the result in the UYAP Document Editor. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions.",
+      ["word to udf", "docx to udf", "petition udf converter"],
+      [
+        {"q": "Which Word formats work?", "a": "Only .docx. Save an old .doc as .docx in Word first."},
+        {"q": "Are tables and images kept?", "a": "Yes; tables, embedded images, alignment and basic text formatting carry over. Very complex layouts may be simplified."},
+        {"q": "Is my file uploaded to your server?", "a": "No. Conversion happens entirely in your browser; the file is never sent over the internet. Court papers carry personal data, so the work is deliberately kept on your device."},
+        {"q": "Does the e-signature carry over?", "a": "No. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions."},
+      ],
+    ),
+  },
+  "udf-to-word": {
+    tr: T(
+      "UDF'den Word'e Çevir — UYAP Belgesi Düzenle",
+      "UYAP'tan inen .udf belgesini düzenlenebilir Word (.docx) dosyasına çevirin. Üyeliksiz, ücretsiz; dosyanız cihazınızdan çıkmaz.",
+      "UDF'yi Word'e Çevir",
+      "UYAP'tan indirdiğiniz .udf belgesini Word'de düzenleyebileceğiniz .docx dosyasına dönüştürür. Metin, hizalama, yazı biçimleri, tablolar ve gömülü görseller aktarılır. Program kurmanız gerekmez. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın.",
+      ["udf to word", "udf docx çevirme", "uyap karar word", "udf düzenleme"],
+      [
+        {"q": "UDF'yi Word'e çevirince neler aktarılır?", "a": "Metin, paragraf hizalaması, kalın/italik/altı çizili yazı, boyut, renk, tablolar ve görseller."},
+        {"q": "UYAP kararını Word'e nasıl aktarırım?", "a": "UYAP'tan .udf olarak indirin, bu sayfaya bırakın, çıkan .docx dosyasını Word'de açın."},
+        {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete gönderilmez. Dava evrakı kişisel veri taşıdığı için işlem bilerek cihazda tutulur."},
+        {"q": "E-imza dönüştürülen belgeye taşınır mı?", "a": "Hayır. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın."},
+      ],
+    ),
+    en: T(
+      "UDF to Word — Edit a UYAP Document",
+      "Turn a .udf document from UYAP into an editable Word (.docx) file. No signup, free; your file never leaves your device.",
+      "Convert UDF to Word",
+      "Converts a .udf document you downloaded from UYAP into a .docx you can edit in Word. Text, alignment, text formatting, tables and embedded images carry over. Nothing to install. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions.",
+      ["udf to word", "udf to docx", "uyap document to word"],
+      [
+        {"q": "What carries over?", "a": "Text, alignment, bold/italic/underline, size, colour, tables and images."},
+        {"q": "How do I move a UYAP decision to Word?", "a": "Download it as .udf from UYAP, drop it here, then open the .docx in Word."},
+        {"q": "Is my file uploaded to your server?", "a": "No. Conversion happens entirely in your browser; the file is never sent over the internet. Court papers carry personal data, so the work is deliberately kept on your device."},
+        {"q": "Does the e-signature carry over?", "a": "No. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions."},
+      ],
+    ),
+  },
+  "udf-viewer": {
+    tr: T(
+      "UDF Görüntüleyici — UDF Dosyası Aç, Oku",
+      "UDF dosyasını program kurmadan tarayıcıda açıp okuyun. Üyeliksiz, ücretsiz; dosyanız cihazınızdan çıkmaz.",
+      "UDF Dosyasını Aç ve Oku",
+      "UDF dosyasının içeriğini UYAP Doküman Editörü ya da Java kurmadan tarayıcıda okuyun; metni kopyalayabilirsiniz. Dosya cihazınızdan çıkmaz. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın.",
+      ["udf görüntüleyici", "udf dosyası aç", "udf okuyucu", "udf nasıl açılır"],
+      [
+        {"q": "UDF dosyasını nasıl açarım?", "a": "Dosyayı bu sayfadaki alana bırakın; metni tarayıcıda görüp kopyalayabilirsiniz. İsterseniz PDF ya da Word'e de çevirebilirsiniz."},
+        {"q": "Görüntüleyici biçimi olduğu gibi gösterir mi?", "a": "Bu görüntüleyici belgenin metnini gösterir; sayfa düzenini birebir yansıtmaz. Düzen için UDF → PDF aracını kullanın."},
+        {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete gönderilmez. Dava evrakı kişisel veri taşıdığı için işlem bilerek cihazda tutulur."},
+        {"q": "E-imza dönüştürülen belgeye taşınır mı?", "a": "Hayır. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın."},
+      ],
+    ),
+    en: T(
+      "UDF Viewer — Open and Read UDF Files",
+      "Open and read a UDF file in your browser with nothing to install. No signup, free; your file never leaves your device.",
+      "Open and Read a UDF File",
+      "Read the contents of a UDF file in your browser without the UYAP Document Editor or Java, and copy the text. The file never leaves your device. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions.",
+      ["udf viewer", "open udf file", "udf reader"],
+      [
+        {"q": "How do I open a UDF file?", "a": "Drop it into the area on this page; the text appears in your browser and can be copied. You can also convert it to PDF or Word."},
+        {"q": "Does it show the exact layout?", "a": "It shows the document text, not the exact page layout. Use UDF to PDF for layout."},
+        {"q": "Is my file uploaded to your server?", "a": "No. Conversion happens entirely in your browser; the file is never sent over the internet. Court papers carry personal data, so the work is deliberately kept on your device."},
+        {"q": "Does the e-signature carry over?", "a": "No. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions."},
+      ],
+    ),
+  },
+  "image-to-udf": {
+    tr: T(
+      "Görsel ve TIFF'ten UDF'ye Çevir — Ek Belge UDF",
+      "JPG, PNG ve çok sayfalı TIFF'i UDF belgesine çevirin. Üyeliksiz, ücretsiz; dosyanız tarayıcınızdan çıkmaz.",
+      "Görsel / TIFF'i UDF'ye Çevir",
+      "JPG, PNG ve çok sayfalı TIFF dosyalarını, her görsel ayrı sayfa olacak şekilde tek bir .udf belgesine çevirir. Taranmış ek belgeleri UDF olarak hazırlamak için. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın.",
+      ["tiff udf çevirme", "jpg udf çevirme", "görsel udf", "resim udf yapma"],
+      [
+        {"q": "Çok sayfalı TIFF desteklenir mi?", "a": "Evet; TIFF'in her sayfası UDF'de ayrı sayfa olur."},
+        {"q": "Kaç görsel ekleyebilirim?", "a": "Tek seferde 30 görsele ve toplam 40 MB'a kadar."},
+        {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete gönderilmez. Dava evrakı kişisel veri taşıdığı için işlem bilerek cihazda tutulur."},
+        {"q": "E-imza dönüştürülen belgeye taşınır mı?", "a": "Hayır. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın."},
+      ],
+    ),
+    en: T(
+      "Image and TIFF to UDF — Make an Attachment UDF",
+      "Turn JPG, PNG and multi-page TIFF into a UDF document. No signup, free; your file never leaves your browser.",
+      "Convert Image / TIFF to UDF",
+      "Converts JPG, PNG and multi-page TIFF files into one .udf document with one image per page — handy for preparing scanned attachments. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions.",
+      ["tiff to udf", "jpg to udf", "image to udf"],
+      [
+        {"q": "Is multi-page TIFF supported?", "a": "Yes; each TIFF page becomes its own page in the UDF."},
+        {"q": "How many images can I add?", "a": "Up to 30 images and 40 MB in total at once."},
+        {"q": "Is my file uploaded to your server?", "a": "No. Conversion happens entirely in your browser; the file is never sent over the internet. Court papers carry personal data, so the work is deliberately kept on your device."},
+        {"q": "Does the e-signature carry over?", "a": "No. This tool is not an official UYAP service. Signatures on e-signed documents do not carry over to the converted copy; use the original signed document for official submissions."},
+      ],
+    ),
+  },
 };
 
 // Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
@@ -2305,6 +2451,11 @@ export const RELATED_TOOLS = {
   // UYAP evrakıyla gelen kullanıcının bir sonraki işi neredeyse her zaman aynı:
   // dosyayı küçültüp portala yüklemek ya da parçaları tek dosyada toplamak.
   "udf-to-pdf": ["compress", "merge-pdf", "pdf-to-word", "hassas-veri-gizle"],
+  "pdf-to-udf": ["udf-to-pdf", "taranmis-pdf-ocr", "compress"],
+  "word-to-udf": ["udf-to-word", "udf-to-pdf", "pdf-to-udf"],
+  "udf-to-word": ["word-to-udf", "udf-to-pdf", "udf-viewer"],
+  "udf-viewer": ["udf-to-pdf", "udf-to-word", "image-to-udf"],
+  "image-to-udf": ["pdf-to-udf", "compress", "image-to-pdf"],
   "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
   "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };

@@ -6970,5 +6970,147 @@
       "udf file opener"
     ],
     "tool": "/tools/udf-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-udf": {
+    "tr": [
+      "pdf to udf",
+      "pdf udf çevirme",
+      "pdf udf dönüştürücü",
+      "udf yapma",
+      "uyap udf oluşturma"
+    ],
+    "en": [
+      "pdf to udf",
+      "convert pdf to udf",
+      "uyap udf creator"
+    ],
+    "tool": "/tools/pdf-to-udf"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-udf": {
+    "tr": [
+      "pdf to udf",
+      "pdf udf çevirme",
+      "pdf udf dönüştürücü",
+      "udf yapma",
+      "uyap udf oluşturma"
+    ],
+    "en": [
+      "pdf to udf",
+      "convert pdf to udf",
+      "uyap udf creator"
+    ],
+    "tool": "/tools/pdf-to-udf"
+  },
+  "https://www.pdfplatform.app/tools/word-to-udf": {
+    "tr": [
+      "word to udf",
+      "docx udf çevirme",
+      "dilekçe udf yapma",
+      "word udf dönüştürücü"
+    ],
+    "en": [
+      "word to udf",
+      "docx to udf",
+      "petition udf converter"
+    ],
+    "tool": "/tools/word-to-udf"
+  },
+  "https://www.pdfplatform.app/en/tools/word-to-udf": {
+    "tr": [
+      "word to udf",
+      "docx udf çevirme",
+      "dilekçe udf yapma",
+      "word udf dönüştürücü"
+    ],
+    "en": [
+      "word to udf",
+      "docx to udf",
+      "petition udf converter"
+    ],
+    "tool": "/tools/word-to-udf"
+  },
+  "https://www.pdfplatform.app/tools/udf-to-word": {
+    "tr": [
+      "udf to word",
+      "udf docx çevirme",
+      "uyap karar word",
+      "udf düzenleme"
+    ],
+    "en": [
+      "udf to word",
+      "udf to docx",
+      "uyap document to word"
+    ],
+    "tool": "/tools/udf-to-word"
+  },
+  "https://www.pdfplatform.app/en/tools/udf-to-word": {
+    "tr": [
+      "udf to word",
+      "udf docx çevirme",
+      "uyap karar word",
+      "udf düzenleme"
+    ],
+    "en": [
+      "udf to word",
+      "udf to docx",
+      "uyap document to word"
+    ],
+    "tool": "/tools/udf-to-word"
+  },
+  "https://www.pdfplatform.app/tools/udf-viewer": {
+    "tr": [
+      "udf görüntüleyici",
+      "udf dosyası aç",
+      "udf okuyucu",
+      "udf nasıl açılır"
+    ],
+    "en": [
+      "udf viewer",
+      "open udf file",
+      "udf reader"
+    ],
+    "tool": "/tools/udf-viewer"
+  },
+  "https://www.pdfplatform.app/en/tools/udf-viewer": {
+    "tr": [
+      "udf görüntüleyici",
+      "udf dosyası aç",
+      "udf okuyucu",
+      "udf nasıl açılır"
+    ],
+    "en": [
+      "udf viewer",
+      "open udf file",
+      "udf reader"
+    ],
+    "tool": "/tools/udf-viewer"
+  },
+  "https://www.pdfplatform.app/tools/image-to-udf": {
+    "tr": [
+      "tiff udf çevirme",
+      "jpg udf çevirme",
+      "görsel udf",
+      "resim udf yapma"
+    ],
+    "en": [
+      "tiff to udf",
+      "jpg to udf",
+      "image to udf"
+    ],
+    "tool": "/tools/image-to-udf"
+  },
+  "https://www.pdfplatform.app/en/tools/image-to-udf": {
+    "tr": [
+      "tiff udf çevirme",
+      "jpg udf çevirme",
+      "görsel udf",
+      "resim udf yapma"
+    ],
+    "en": [
+      "tiff to udf",
+      "jpg to udf",
+      "image to udf"
+    ],
+    "tool": "/tools/image-to-udf"
   }
 }

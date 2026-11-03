@@ -160,8 +160,8 @@ const PdfAnnotate = lazyWithRetry(() =>
 const PhotoStudioTool = lazyWithRetry(() =>
   import("../tools/PhotoStudioTool").then((m) => ({ default: m.PhotoStudioTool })),
 );
-const UdfToPdfTool = lazyWithRetry(() =>
-  import("../tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
+const UdfModeTool = lazyWithRetry(() =>
+  import("../tools/UdfHub").then((m) => ({ default: m.UdfModeTool })),
 );
 // "gorsel-boyutlandir" de heroToolCatalog'da "page" türü ama ilk turda atlanmıştı
 // (6 değil 7 araç varmış) — kullanıcı geri bildirimiyle fark edildi.
@@ -803,9 +803,9 @@ function Hero({
                       type="button"
                       onClick={() => {
                         setAiTool(null);
-                        setPageTool(null);
                         setHeroCat(c.id);
                         const next = firstRunnable(c.id);
+                        setPageTool(next.page ?? null);
                         setEditorOn(next.editor);
                         if (next.free) setFreeTool(next.free);
                       }}
@@ -1150,10 +1150,10 @@ function Hero({
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={scannedFile} />
                 </Suspense>
               </ToolPageContext.Provider>
-            ) : pageTool === "udf-to-pdf" ? (
+            ) : pageTool === "udf-to-pdf" || pageTool === "pdf-to-udf" || pageTool === "word-to-udf" || pageTool === "udf-to-word" || pageTool === "udf-viewer" || pageTool === "image-to-udf" ? (
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
-                  <UdfToPdfTool language={language} />
+                  <UdfModeTool language={language} mode={pageTool} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "gorsel-boyutlandir" ? (

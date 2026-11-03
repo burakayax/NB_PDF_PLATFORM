@@ -91,6 +91,31 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
   ],
+  "pdf-to-udf": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "UYAP belgesiyle ilgili işi doğrudan tarayıcıda yapın.", en: "No software needed", enDesc: "Handle UYAP documents straight in your browser." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "word-to-udf": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "UYAP belgesiyle ilgili işi doğrudan tarayıcıda yapın.", en: "No software needed", enDesc: "Handle UYAP documents straight in your browser." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "udf-to-word": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "UYAP belgesiyle ilgili işi doğrudan tarayıcıda yapın.", en: "No software needed", enDesc: "Handle UYAP documents straight in your browser." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "udf-viewer": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "UYAP belgesiyle ilgili işi doğrudan tarayıcıda yapın.", en: "No software needed", enDesc: "Handle UYAP documents straight in your browser." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "image-to-udf": [
+    { icon: Zap, tr: "Program kurmadan", trDesc: "UYAP belgesiyle ilgili işi doğrudan tarayıcıda yapın.", en: "No software needed", enDesc: "Handle UYAP documents straight in your browser." },
+    { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
   "ai-fotograf-studyosu": [
     { icon: Zap, tr: "Amaca göre hazır", trDesc: "Vesikalık, biyometrik, vize, CV ve LinkedIn ölçülerine tek tıkla kırpar; arka planı değiştirir.", en: "Ready for the purpose", enDesc: "Crops to ID, biometric, visa, CV and LinkedIn sizes in one click and swaps the background." },
     { icon: Zap, tr: "Uygunluk denetimi", trDesc: "Baş oranı, ifade ve ışığı kontrol edip uyarır.", en: "Suitability check", enDesc: "Checks head size, expression and light, and warns you." },
