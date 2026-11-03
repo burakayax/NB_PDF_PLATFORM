@@ -27,6 +27,9 @@
 <label>Okuma modu
   <select id="mod"><option value="akici">Akıcı (metni hazırla + cümle cümle oku)</option><option value="ham">Ham (olduğu gibi tek parça)</option></select>
 </label>
+<label>Virgüller
+  <select id="virgul"><option value="koru">Koru (doğal duraksama)</option><option value="kaldir">Kaldır (duraksama olmadan, kesintisiz)</option></select>
+</label>
 <details><summary>Okunacak hazırlanmış metin</summary><pre id="hazir" style="white-space:pre-wrap"></pre></details>
 <button id="oku">Oku</button>
 <button id="dur" style="background:#475569">Durdur</button>
@@ -102,12 +105,12 @@ function parcala(t,max=200){
   if(cur) out.push(cur.trim());
   return out;
 }
-let keep=null;
 function oku(){
-  ss.cancel(); clearInterval(keep);
+  ss.cancel();
   const ham=document.getElementById('mod').value==='ham';
   const raw=document.getElementById('metin').value;
-  const hazir=ham?raw:hazirla(raw);
+  let hazir=ham?raw:hazirla(raw);
+  if(!ham&&document.getElementById('virgul').value==='kaldir') hazir=hazir.replace(/\s*,\s*/g,' ');
   document.getElementById('hazir').textContent=ham?raw:parcala(hazir).join('\n— ');
   const parcalar=ham?[raw]:parcala(hazir);
   const v=(window._tr||[])[document.getElementById('ses').value];
@@ -115,11 +118,10 @@ function oku(){
   const uts=parcalar.map(p=>{const u=new SpeechSynthesisUtterance(p); if(v){u.voice=v;u.lang=v.lang;}else u.lang='tr-TR'; u.rate=rate; return u;});
   // Hepsini baştan sıraya koy: parçalar arasında boşluk kalmasın.
   uts.forEach(u=>ss.speak(u));
-  // Chrome'da internetten gelen seslerde ~15 sn sonra konuşma kesilir; periyodik canlı tutma.
-  keep=setInterval(()=>{ if(!ss.speaking){clearInterval(keep);return;} ss.pause(); ss.resume(); },10000);
+  // NOT: eskiden her 10 sn pause/resume yapılıyordu; bu, konuşmayı ortada kesiyordu. Parçalar kısa (<=200 karakter) olduğundan gerek yok.
 }
 document.getElementById('oku').onclick=oku;
-document.getElementById('dur').onclick = ()=>{ss.cancel();clearInterval(keep);};
+document.getElementById('dur').onclick = ()=>{ss.cancel();};
 </script>
 </body>
 </html>
