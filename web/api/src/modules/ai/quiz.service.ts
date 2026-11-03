@@ -27,13 +27,33 @@ export function parseQuizTypes(v: unknown): QuizType[] {
   return out.length ? out : [...DEFAULT_QUIZ_TYPES];
 }
 
+/** Matematik sorusu için fonksiyon grafiği tarifi; çizimi istemci yapar (güvenli ifade çözümleyiciyle). */
+export type QuizGraph = { fns: string[]; xmin: number; xmax: number; ymin: number; ymax: number };
+
+/** Modelin verdiği grafik tarifini doğrular: en çok 3 fonksiyon, yalnızca güvenli karakterler, makul aralık. */
+export function cleanGraph(v: unknown): QuizGraph | null {
+  const g = (v ?? {}) as Record<string, unknown>;
+  const fns = Array.isArray(g.fns)
+    ? g.fns
+        .filter((f): f is string => typeof f === "string")
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0 && f.length <= 80 && /^[0-9A-Za-z+\-*/^().,\s=]+$/.test(f))
+        .slice(0, 3)
+    : [];
+  const nums = [g.xmin, g.xmax, g.ymin, g.ymax].map(Number);
+  if (!fns.length || nums.some((n) => !Number.isFinite(n) || Math.abs(n) > 1000)) return null;
+  const [xmin, xmax, ymin, ymax] = nums;
+  if (xmin >= xmax || ymin >= ymax) return null;
+  return { fns, xmin, xmax, ymin, ymax };
+}
+
 export type QuizQuestion =
-  | { type: "mcq"; q: string; options: string[]; answer: number; explanation: string; evidence: string }
-  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string }
+  | { type: "mcq"; q: string; options: string[]; answer: number; explanation: string; evidence: string; graph?: QuizGraph }
+  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string; graph?: QuizGraph }
   /** Açık uçlu: `answer` örnek cevaptır (otomatik puanlanmaz). */
-  | { type: "open"; q: string; answer: string; explanation: string; evidence: string }
+  | { type: "open"; q: string; answer: string; explanation: string; evidence: string; graph?: QuizGraph }
   /** Boşluk doldurma: `q` içinde tek bir "____" boşluğu, `answer` boşluğa gelecek kısa ifade. */
-  | { type: "fill"; q: string; answer: string; explanation: string; evidence: string };
+  | { type: "fill"; q: string; answer: string; explanation: string; evidence: string; graph?: QuizGraph };
 
 export type QuizResult = { questions: QuizQuestion[]; requested: number; dropped: number };
 
@@ -118,6 +138,8 @@ export function normalizeQuiz(parsed: unknown, docText: string, types: readonly 
     const explanation = str(it.explanation, 500);
     const evidence = str(it.evidence, 400);
     const type = QUIZ_TYPES.find((t) => t === it.type) ?? null;
+    const graph = cleanGraph(it.graph);
+    const push = (qq: QuizQuestion) => out.push(graph ? { ...qq, graph } : qq);
     const key = normForMatch(q);
     if (!q || !type || !evidence || seen.has(key)) { dropped++; continue; }
     if (!types.includes(type)) { dropped++; continue; }
@@ -127,7 +149,7 @@ export function normalizeQuiz(parsed: unknown, docText: string, types: readonly 
       const answer = str(it.answer, 700);
       if (answer.length < 3) { dropped++; continue; }
       seen.add(key);
-      out.push({ type: "open", q, answer, explanation, evidence });
+      push({ type: "open", q, answer, explanation, evidence });
       continue;
     }
     if (type === "fill") {
@@ -137,14 +159,14 @@ export function normalizeQuiz(parsed: unknown, docText: string, types: readonly 
       const answerNorm = normForMatch(answer);
       if (blanks.length !== 1 || !answerNorm || answerNorm.split(" ").length > 4 || !normForMatch(evidence).includes(answerNorm)) { dropped++; continue; }
       seen.add(key);
-      out.push({ type: "fill", q: q.replace(/_{2,}/, "____"), answer, explanation, evidence });
+      push({ type: "fill", q: q.replace(/_{2,}/, "____"), answer, explanation, evidence });
       continue;
     }
 
     if (type === "tf") {
       if (typeof it.answer !== "boolean") { dropped++; continue; }
       seen.add(key);
-      out.push({ type: "tf", q, answer: it.answer, explanation, evidence });
+      push({ type: "tf", q, answer: it.answer, explanation, evidence });
       continue;
     }
     const options = Array.isArray(it.options) ? it.options.map((o) => str(o, 240)).filter(Boolean) : [];
@@ -152,7 +174,7 @@ export function normalizeQuiz(parsed: unknown, docText: string, types: readonly 
     const distinct = new Set(options.map(normForMatch));
     if (options.length !== 4 || distinct.size !== 4 || answer < 0 || answer > 3) { dropped++; continue; }
     seen.add(key);
-    out.push({ type: "mcq", q, options, answer, explanation, evidence });
+    push({ type: "mcq", q, options, answer, explanation, evidence });
   }
 
   return { questions: balanceByType(out, types, count), requested: count, dropped };
@@ -190,6 +212,11 @@ KESİN KURALLAR:
 - Boşluk doldurma sorusunda "q" belgedeki bir cümleye dayanan, TAM BİR boşluk içeren ("____") cümle olsun; "answer" boşluğa gelen kısa ifade (en çok 4 sözcük) olsun ve "evidence" cümlesinde AYNEN geçsin; boşluk tek anlamlı bir cevaba çıksın.
 - "explanation": cevabın neden doğru olduğunu belgeye dayanarak tek cümleyle açıkla.
 - Aynı bilgiyi soran tekrar eden soru yazma. Belgenin farklı bölümlerinden sor.
+MATEMATİK/FEN GÖSTERİMİ (yalnızca belgede formül/işlem varsa kullan; düz metinde KULLANMA):
+- Formülü $...$ içine yaz. Üs: x^2 veya x^{n+1}; alt indis: a_1; kesir: frac{a}{b}; kök: sqrt{x}.
+- Semboller: pi, le, ge, neq, approx, times, div, pm, infty, cap, cup, in, notin, subset, emptyset, to; sayı kümeleri mathbb{R}, mathbb{N}, mathbb{Z}, mathbb{Q}. ASLA ters bölü (\\) kullanma; sade sayıları ($5$ gibi) formül içine alma.
+- Belgede formül metni bozuk/okunaksız çıkmışsa o formülden soru ÜRETME; emin olmadığın işlem sonucunu sorma.
+- Fonksiyon grafiği gereken soruda soruya "graph" alanı ekle: {"fns":["x^2-4"],"xmin":-4,"xmax":4,"ymin":-5,"ymax":12}. İfadede yalnız x, sayılar, + - * / ^ ( ) ve sin cos tan sqrt abs ln log exp pi e kullan; en çok 3 fonksiyon; grafiği yalnızca belgede o fonksiyon/grafik anlatılıyorsa ekle.
 YALNIZCA şu JSON'u döndür (markdown/backtick YOK): ${schema}`
       : `You are an experienced assessment designer. From the given document text write ${ask} exam questions in ENGLISH: ${kindEn}. Difficulty: ${levelEn}.
 ${INJECTION_GUARD_EN}
@@ -202,6 +229,11 @@ STRICT RULES:
 - Fill-in-the-blank: "q" is a sentence based on the document with EXACTLY ONE blank ("____"); "answer" is the short missing phrase (at most 4 words) and must appear VERBATIM in "evidence"; the blank must have a single clear answer.
 - "explanation": one sentence explaining why the answer is right, based on the document.
 - No duplicate questions about the same fact. Cover different parts of the document.
+MATH/SCIENCE NOTATION (use only if the document has formulas/working; NOT in plain text):
+- Put formulas inside $...$. Powers: x^2 or x^{n+1}; subscripts: a_1; fractions: frac{a}{b}; roots: sqrt{x}.
+- Symbols: pi, le, ge, neq, approx, times, div, pm, infty, cap, cup, in, notin, subset, emptyset, to; number sets mathbb{R}, mathbb{N}, mathbb{Z}, mathbb{Q}. NEVER use a backslash; do not wrap plain numbers like $5$.
+- If the document's formula text looks garbled/unreadable, do NOT write questions from it; never ask for a result you are unsure of.
+- For a question that needs a function graph add a "graph" field: {"fns":["x^2-4"],"xmin":-4,"xmax":4,"ymin":-5,"ymax":12}. Use only x, numbers, + - * / ^ ( ) and sin cos tan sqrt abs ln log exp pi e; at most 3 functions; add a graph only if the document describes that function/graph.
 Return ONLY this JSON (NO markdown/backticks): ${schema}`;
 
   // Düşünen modelde max_tokens düşünme payını da kapsar (bkz. cv-assist.service.ts) → geniş tutulur.

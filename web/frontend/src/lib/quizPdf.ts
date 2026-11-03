@@ -13,6 +13,9 @@ import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import type { QuizQuestion } from "../api/ai";
 import { answerLabel, distributePoints } from "./quizFormat";
+import { allChars, hasMath, plainText } from "./mathText";
+import { drawGraph, richPieces, textBox, type Fonts, type Piece } from "./mathPdf";
+import { cleanGraphSpec } from "./graphPlot";
 import { loadPdfFonts } from "./summaryPdf";
 import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 
@@ -43,9 +46,11 @@ export type QuizPdfOptions = {
   label?: string;
   /** true ise sorulara 100 puan üzerinden değer yazılır ve cevap anahtarında puanlama tablosu çizilir. */
   showPoints?: boolean;
+  /** Soru başına elle verilen puanlar (uzunluk soru sayısına eşitse kullanılır; yoksa 100 eşit bölünür). */
+  points?: number[];
 };
 
-type Tok = { t: string; w: number; blank: boolean };
+type Line = { pcs: Piece[]; top: number; bot: number };
 
 export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", opts: QuizPdfOptions): Promise<Uint8Array> {
   const tr = lang === "tr";
@@ -56,7 +61,31 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
   const bold = await pdf.embedFont(boldBuf, { subset: true });
   pdf.setTitle(opts.title);
 
-  const points = opts.showPoints ? distributePoints(questions.length) : [];
+  // Roboto'da olmayan semboller (∩ ∪ ℝ → …) varsa yedek yazı tipi (DejaVu Sans) yalnızca o zaman yüklenir.
+  const roboto = new Set<number>(reg.getCharacterSet());
+  const need = new Set<string>();
+  for (const q of questions) {
+    const texts = [q.q, q.explanation, q.evidence, typeof q.answer === "string" ? q.answer : "", ...(q.type === "mcq" ? q.options : [])];
+    for (const t of texts) for (const ch of allChars(t)) need.add(ch);
+  }
+  for (const ch of allChars(opts.title + (opts.label ?? ""))) need.add(ch);
+  let fb: PDFFont | undefined;
+  if ([...need].some((ch) => ch.trim() && !roboto.has(ch.codePointAt(0) ?? 0))) {
+    try {
+      const r = await fetch("/fonts/DejaVuSans.ttf");
+      if (r.ok) fb = await pdf.embedFont(await r.arrayBuffer(), { subset: true });
+    } catch {
+      fb = undefined;
+    }
+  }
+  const F: Fonts = { reg, bold, fb };
+  const mathNote = questions.some((q) => !!q.graph || hasMath(q.q) || hasMath(q.explanation) || (q.type === "mcq" && q.options.some(hasMath)));
+
+  const points = opts.showPoints
+    ? opts.points && opts.points.length === questions.length
+      ? opts.points.map((n) => Math.max(0, Math.round(Number(n) || 0)))
+      : distributePoints(questions.length)
+    : [];
   const shortTitle = opts.title.length > 60 ? opts.title.slice(0, 59) + "…" : opts.title;
 
   let page: PDFPage = pdf.addPage([PW, PH]);
@@ -82,47 +111,43 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
     if (y - h < M + 22) newPage();
   };
 
-  /** Sözcüklere böler; "____" boşluğu sabit genişlikli özel öğedir. */
-  const tokens = (text: string, font: PDFFont, size: number): Tok[] => {
-    const out: Tok[] = [];
-    for (const w of text.split(/\s+/).filter(Boolean)) {
-      if (/^_{2,}[.,;:!?]*$/.test(w)) out.push({ t: w.replace(/^_+/, ""), w: 70, blank: true });
-      else out.push({ t: w, w: font.widthOfTextAtSize(w, size), blank: false });
-    }
-    return out;
-  };
-
-  /** Metni genişliğe göre satırlara böler (öğe dizisi döner). */
-  const wrap = (text: string, font: PDFFont, size: number, maxW: number): Tok[][] => {
-    const space = font.widthOfTextAtSize(" ", size);
-    const lines: Tok[][] = [];
-    let cur: Tok[] = [];
+  /** Metni genişliğe göre satırlara böler; formüller bölünmez, satır yüksekliği formüle göre büyür. */
+  const wrap = (text: string, font: PDFFont, size: number, maxW: number): Line[] => {
+    const isBold = font === bold;
+    const space = textBox(" ", F, size, isBold).w;
+    const lines: Line[] = [];
+    let cur: Piece[] = [];
     let w = 0;
-    for (const tk of tokens(text, font, size)) {
-      const add = (cur.length ? space : 0) + tk.w;
-      if (w + add > maxW && cur.length) {
-        lines.push(cur);
-        cur = [];
-        w = 0;
-      }
-      w += (cur.length ? space : 0) + tk.w;
-      cur.push(tk);
+    const close = () => {
+      const top = Math.max(0, ...cur.map((p) => p.box.asc - size * 0.8));
+      const bot = Math.max(0, ...cur.map((p) => p.box.desc - size * 0.22));
+      lines.push({ pcs: cur, top, bot });
+      cur = [];
+      w = 0;
+    };
+    for (const pc of richPieces(text, F, size, isBold)) {
+      const add = (cur.length ? space : 0) + pc.box.w;
+      if (w + add > maxW && cur.length) close();
+      w += (cur.length ? space : 0) + pc.box.w;
+      cur.push(pc);
     }
-    if (cur.length) lines.push(cur);
-    return lines.length ? lines : [[]];
+    if (cur.length || !lines.length) close();
+    return lines;
   };
+  /** Satırların toplam yüksekliği (`lead` = düz metin satır aralığı). */
+  const linesH = (ls: Line[], lead: number) => ls.reduce((a, l) => a + lead + l.top + l.bot, 0);
 
-  const drawLine = (toks: Tok[], x: number, baseY: number, font: PDFFont, size: number, color = INK) => {
-    const space = font.widthOfTextAtSize(" ", size);
+  const drawLine = (ln: Line, x: number, baseY: number, font: PDFFont, size: number, color = INK) => {
+    const space = textBox(" ", F, size, font === bold).w;
     let cx = x;
-    for (const tk of toks) {
-      if (tk.blank) {
+    for (const pc of ln.pcs) {
+      if (pc.blank) {
         page.drawLine({ start: { x: cx, y: baseY - 1.5 }, end: { x: cx + 66, y: baseY - 1.5 }, thickness: 0.8, color: INK });
-        if (tk.t) page.drawText(tk.t, { x: cx + 66, y: baseY, size, font, color });
+        if (pc.suffix) textBox(pc.suffix, F, size, font === bold).draw(page, cx + 66, baseY, color);
       } else {
-        page.drawText(tk.t, { x: cx, y: baseY, size, font, color });
+        pc.box.draw(page, cx, baseY, color);
       }
-      cx += tk.w + space;
+      cx += pc.box.w + space;
     }
   };
 
@@ -175,16 +200,19 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
 
   questions.forEach((q, i) => {
     const qLines = wrap(q.q, bold, QSIZE, TEXT_W - PTS_W);
-    const qh = qLines.length * 15.5;
-    let bodyH = 0;
-    let optLines: Tok[][][] = [];
+    const qh = linesH(qLines, 15.5);
+    const gspec = q.graph ? cleanGraphSpec(q.graph) : null;
+    const GW = Math.min(280, TEXT_W - 10);
+    const GH = 150;
+    let bodyH = gspec ? GH + 12 : 0;
+    let optLines: Line[][] = [];
     if (q.type === "mcq") {
       optLines = q.options.map((o) => wrap(o, reg, OSIZE, TEXT_W - 30));
-      bodyH = optLines.reduce((s, l) => s + Math.max(22, l.length * 14 + 8) + 5, 0);
+      bodyH += optLines.reduce((s, l) => s + Math.max(22, linesH(l, 14) + 8) + 5, 0);
     } else if (q.type === "tf") {
-      bodyH = 28;
+      bodyH += 28;
     } else if (q.type === "open") {
-      bodyH = 3 * 24 + 6;
+      bodyH += 3 * 24 + 6;
     }
     const total = Math.max(qh + bodyH + 14, 40);
     ensure(total);
@@ -197,17 +225,25 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
     }
     let cy = y - 4;
     qLines.forEach((ln) => {
-      drawLine(ln, TEXT_X, cy - 11, bold, QSIZE);
-      cy -= 15.5;
+      drawLine(ln, TEXT_X, cy - 11 - ln.top, bold, QSIZE);
+      cy -= 15.5 + ln.top + ln.bot;
     });
     cy -= 6;
+    if (gspec) {
+      drawGraph(page, gspec, TEXT_X, cy, GW, GH, F);
+      cy -= GH + 12;
+    }
 
     if (q.type === "mcq") {
       optLines.forEach((ol, k) => {
-        const h = Math.max(22, ol.length * 14 + 8);
-        rect(TEXT_X, cy - h, 18, 18, VIOLET_SOFT, LINE);
+        const h = Math.max(22, linesH(ol, 14) + 8);
+        rect(TEXT_X, cy - 22, 18, 18, VIOLET_SOFT, LINE);
         centered(LETTERS[k], TEXT_X + 9, cy - 13, bold, 9.5, VIOLET);
-        ol.forEach((ln, li) => drawLine(ln, TEXT_X + 28, cy - 12 - li * 14, reg, OSIZE));
+        let oy = cy;
+        ol.forEach((ln) => {
+          drawLine(ln, TEXT_X + 28, oy - 12 - ln.top, reg, OSIZE);
+          oy -= 14 + ln.top + ln.bot;
+        });
         cy -= h + 5;
       });
     } else if (q.type === "tf") {
@@ -233,6 +269,13 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
     rect(0, PH - 70, PW, 70, GREEN);
     page.drawText(tr ? "Cevap Anahtarı" : "Answer Key", { x: M, y: PH - 44, size: 20, font: bold, color: WHITE });
     y = PH - 70 - 24;
+    if (mathNote) {
+      const note = tr
+        ? "Matematik içeriği yapay zekâ ile hazırlanmıştır; cevapları ve işlemleri kullanmadan önce mutlaka kontrol ediniz."
+        : "Math content was prepared with AI; please check answers and working before use.";
+      page.drawText(note, { x: M, y: y + 4, size: 8.5, font: reg, color: rgb(0.7, 0.3, 0.05) });
+      y -= 18;
+    }
 
     // Puanlama tablosu: soru numaraları üstte, puanlar altta, sonda TOPLAM.
     if (opts.showPoints && questions.length) {
@@ -266,7 +309,7 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
     // Özet ızgarası: 1 · A  2 · Doğru  3 · demir oksit …
     const short = questions.map((q, i) => {
       if (q.type === "open") return `${i + 1} · ${tr ? "açık uçlu" : "open"}`;
-      return `${i + 1} · ${q.type === "mcq" ? LETTERS[q.answer] : answerLabel(q, lang)}`;
+      return `${i + 1} · ${q.type === "mcq" ? LETTERS[q.answer] : plainText(answerLabel(q, lang))}`;
     });
     const cellW = (CW - 10 * 2) / 3;
     let col = 0;
@@ -291,13 +334,13 @@ export async function quizToPdf(questions: QuizQuestion[], lang: "tr" | "en", op
       const ans = wrap(answerLabel(q, lang), bold, 10.5, TEXT_W);
       const exp = q.explanation ? wrap(q.explanation, reg, 10, TEXT_W) : [];
       const src = wrap(`${tr ? "Belgeden" : "From the document"}: “${q.evidence}”`, reg, 9, TEXT_W);
-      const h = ans.length * 14 + exp.length * 13 + src.length * 12 + 14;
+      const h = linesH(ans, 14) + linesH(exp, 13) + linesH(src, 12) + 14;
       ensure(h);
       badge(i + 1, M, y);
       let cy = y;
-      ans.forEach((ln) => { drawLine(ln, TEXT_X, cy - 12, bold, 10.5, GREEN); cy -= 14; });
-      exp.forEach((ln) => { drawLine(ln, TEXT_X, cy - 11, reg, 10); cy -= 13; });
-      src.forEach((ln) => { drawLine(ln, TEXT_X, cy - 10, reg, 9, MUTED); cy -= 12; });
+      ans.forEach((ln) => { drawLine(ln, TEXT_X, cy - 12 - ln.top, bold, 10.5, GREEN); cy -= 14 + ln.top + ln.bot; });
+      exp.forEach((ln) => { drawLine(ln, TEXT_X, cy - 11 - ln.top, reg, 10); cy -= 13 + ln.top + ln.bot; });
+      src.forEach((ln) => { drawLine(ln, TEXT_X, cy - 10 - ln.top, reg, 9, MUTED); cy -= 12 + ln.top + ln.bot; });
       y -= h + 4;
     });
   }

@@ -44,7 +44,7 @@ import {
   type QuizType,
   type QuizLevel,
 } from "../../api/ai";
-import { quizToMarkdown } from "../../lib/quizFormat";
+import { distributePoints, quizToMarkdown } from "../../lib/quizFormat";
 import { quizToPdf } from "../../lib/quizPdf";
 import { QuizOptions, QuizPanel } from "./QuizPanel";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
@@ -175,6 +175,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   const [quizExamTitle, setQuizExamTitle] = useState("");
   const [quizLabel, setQuizLabel] = useState("");
   const [quizPoints, setQuizPoints] = useState(false);
+  const [quizDate, setQuizDate] = useState("");
+  const [quizPointList, setQuizPointList] = useState<number[]>([]);
   const [translatedBlob, setTranslatedBlob] = useState<Blob | null>(null);
   const [targetLang, setTargetLang] = useState(language === "tr" ? "en" : "tr");
   // Sohbet
@@ -336,6 +338,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setBusy(true);
       const { quiz: qz, quota: q } = await aiQuiz(docText, { count: quizCount, types: quizTypes, level: quizLevel }, tr ? "tr" : "en", accessToken);
       setQuiz(qz);
+      setQuizPointList(distributePoints(qz.questions.length));
       if (q) setQuota(q);
     } catch (e) {
       handleAiError(e);
@@ -350,9 +353,11 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     if (exporting || !quiz) return;
     try {
       setExporting(true);
+      const dateObj = quizDate ? new Date(`${quizDate}T12:00:00`) : new Date();
+      const quizDateText = dateObj.toLocaleDateString(tr ? "tr-TR" : "en-US");
       const levelText = quizLevel === "easy" ? (tr ? "Kolay" : "Easy") : quizLevel === "hard" ? (tr ? "Zor" : "Hard") : tr ? "Orta" : "Medium";
-      const subtitle = `${quiz.questions.length} ${tr ? "soru" : "questions"} · ${levelText} ${tr ? "zorluk" : "difficulty"} · ${new Date().toLocaleDateString(tr ? "tr-TR" : "en-US")}`;
-      const bytes = await quizToPdf(quiz.questions, tr ? "tr" : "en", { title: quizTitle, subtitle, withAnswers, studentInfo: !withAnswers, label: quizLabel.trim() || undefined, showPoints: quizPoints });
+      const subtitle = `${quiz.questions.length} ${tr ? "soru" : "questions"} · ${levelText} ${tr ? "zorluk" : "difficulty"} · ${quizDateText}`;
+      const bytes = await quizToPdf(quiz.questions, tr ? "tr" : "en", { title: quizTitle, subtitle, withAnswers, studentInfo: !withAnswers, label: quizLabel.trim() || undefined, showPoints: quizPoints, points: quizPointList });
       const blob = pdfBytesToBlob(bytes);
       await saveBlobWithPicker(blob, `${(fileName || "belge").replace(/\.pdf$/i, "")}-${withAnswers ? "test-cevapli" : "test"}.pdf`, {
         description: "PDF",
@@ -918,6 +923,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 exporting={exporting}
                 copied={copied}
                 showPoints={quizPoints}
+                points={quizPointList}
+                onPointsChange={setQuizPointList}
                 onRegenerate={() => void runQuiz()}
                 onPdf={(w) => void downloadQuiz(w)}
                 onCopy={copyQuiz}
@@ -930,7 +937,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               </p>
             ) : (
               <>
-                <QuizOptions tr={tr} count={quizCount} types={quizTypes} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onTypes={setQuizTypes} onLevel={setQuizLevel} examTitle={quizExamTitle} label={quizLabel} showPoints={quizPoints} onExamTitle={setQuizExamTitle} onLabel={setQuizLabel} onShowPoints={setQuizPoints} />
+                <QuizOptions tr={tr} count={quizCount} types={quizTypes} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onTypes={setQuizTypes} onLevel={setQuizLevel} examTitle={quizExamTitle} label={quizLabel} showPoints={quizPoints} onExamTitle={setQuizExamTitle} onLabel={setQuizLabel} examDate={quizDate} onExamDate={setQuizDate} onShowPoints={setQuizPoints} />
                 <button type="button" onClick={() => void runQuiz()}
                   className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
                   <ListChecks className="h-5 w-5" />

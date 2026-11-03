@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Check, Copy, Download, Eye, Loader2, RefreshCw, X } from "lucide-react";
 import type { QuizData, QuizLevel, QuizType } from "../../api/ai";
+import { hasMath } from "../../lib/mathText";
+import { MathText, QuizGraphView } from "./MathText";
 import { answerLabel, distributePoints, fillIsCorrect } from "../../lib/quizFormat";
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -14,12 +16,14 @@ export function QuizOptions({
   cost,
   examTitle,
   label,
+  examDate,
   showPoints,
   onCount,
   onTypes,
   onLevel,
   onExamTitle,
   onLabel,
+  onExamDate,
   onShowPoints,
 }: {
   tr: boolean;
@@ -29,12 +33,14 @@ export function QuizOptions({
   cost: number;
   examTitle?: string;
   label?: string;
+  examDate?: string;
   showPoints?: boolean;
   onCount: (n: number) => void;
   onTypes: (t: QuizType[]) => void;
   onLevel: (l: QuizLevel) => void;
   onExamTitle?: (s: string) => void;
   onLabel?: (s: string) => void;
+  onExamDate?: (s: string) => void;
   onShowPoints?: (v: boolean) => void;
 }) {
   const chip = (active: boolean) =>
@@ -106,8 +112,20 @@ export function QuizOptions({
               className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-fuchsia-400/50 focus:outline-none"
             />
           </div>
+          {onExamDate ? (
+            <label className="mt-2 flex items-center gap-2 text-[12px] text-slate-400">
+              <span className="shrink-0">{tr ? "Sınav tarihi (boşsa bugün)" : "Exam date (today if empty)"}</span>
+              <input
+                type="date"
+                value={examDate ?? ""}
+                onChange={(e) => onExamDate(e.target.value)}
+                aria-label={tr ? "Sınav tarihi" : "Exam date"}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] text-white [color-scheme:dark] focus:border-fuchsia-400/50 focus:outline-none"
+              />
+            </label>
+          ) : null}
           <button type="button" aria-pressed={!!showPoints} onClick={() => onShowPoints(!showPoints)} className={`mt-2 ${chip(!!showPoints)}`}>
-            {showPoints ? "✓ " : ""}{tr ? "Puan değerleri (100 puan üzerinden) + puanlama tablosu" : "Point values (out of 100) + scoring table"}
+            {showPoints ? "✓ " : ""}{tr ? "Puan değerleri + puanlama tablosu (puanları sonra değiştirebilirsiniz)" : "Point values + scoring table (editable after generating)"}
           </button>
         </div>
       ) : null}
@@ -126,6 +144,8 @@ export function QuizPanel({
   exporting,
   copied,
   showPoints,
+  points,
+  onPointsChange,
   onRegenerate,
   onPdf,
   onCopy,
@@ -136,6 +156,9 @@ export function QuizPanel({
   exporting: boolean;
   copied: boolean;
   showPoints?: boolean;
+  /** Soru başına puan (showPoints açıkken); verilmezse 100 eşit bölünür ve değiştirilemez. */
+  points?: number[];
+  onPointsChange?: (next: number[]) => void;
   onRegenerate: () => void;
   onPdf: (withAnswers: boolean) => void;
   onCopy: () => void;
@@ -166,7 +189,10 @@ export function QuizPanel({
   }, [quiz, picks, typed, checked]);
 
   const total = quiz.questions.length;
-  const pts = showPoints ? distributePoints(total) : [];
+  const pts = showPoints ? (points && points.length === total ? points : distributePoints(total)) : [];
+  const editable = !!(showPoints && onPointsChange && points && points.length === total);
+  const ptsSum = pts.reduce((a, b) => a + b, 0);
+  const mathNote = quiz.questions.some((x) => !!x.graph || hasMath(x.q) || hasMath(x.explanation) || (x.type === "mcq" && x.options.some(hasMath)));
   const TYPE_NAME: Record<string, { tr: string; en: string }> = {
     mcq: { tr: "Çoktan seçmeli", en: "Multiple choice" },
     tf: { tr: "Doğru / Yanlış", en: "True / False" },
@@ -226,6 +252,23 @@ export function QuizPanel({
               : `${quiz.dropped} question(s) without support in the document were removed for safety; the rest are verified against quotes from the document.`}
           </p>
         )}
+        {mathNote && (
+          <p className="rounded-xl border border-amber-400/20 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-100/90">
+            {tr ? "Matematik içeriği yapay zekâ ile hazırlandı: cevapları ve işlemleri kullanmadan önce mutlaka kontrol edin." : "Math content was prepared with AI: please check answers and working before using them."}
+          </p>
+        )}
+        {editable && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[12.5px] text-slate-300">
+            <span>
+              {tr ? "Toplam: " : "Total: "}
+              <b className={ptsSum === 100 ? "text-emerald-300" : "text-amber-300"}>{ptsSum}</b> {tr ? "puan" : "pts"}
+              {ptsSum !== 100 ? <span className="ml-1 text-slate-500">{tr ? "(100 değil; isterseniz böyle bırakabilirsiniz)" : "(not 100; you can leave it)"}</span> : null}
+            </span>
+            <button type="button" onClick={() => onPointsChange!(distributePoints(total))} className="rounded-lg border border-white/10 px-2.5 py-1 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08]">
+              {tr ? "Eşit dağıt (100)" : "Spread evenly (100)"}
+            </button>
+          </div>
+        )}
         {hasOpen && (
           <p className="text-[12px] text-slate-400">
             {tr ? "Açık uçlu sorular puanlanmaz: cevabınızı yazın, sonra örnek cevapla karşılaştırın." : "Open-ended questions are not scored: write your answer, then compare it with the model answer."}
@@ -248,12 +291,33 @@ export function QuizPanel({
             <div key={i} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
               <div className="flex items-start gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-600 to-violet-600 text-[13px] font-bold text-white">{i + 1}</span>
-                <p className="min-w-0 flex-1 pt-0.5 text-[14px] font-semibold leading-relaxed text-white">{q.q}</p>
+                <p className="min-w-0 flex-1 pt-0.5 text-[14px] font-semibold leading-relaxed text-white"><MathText text={q.q} /></p>
                 <span className="flex shrink-0 flex-col items-end gap-1">
                   <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10.5px] font-semibold text-slate-300">{tr ? TYPE_NAME[q.type].tr : TYPE_NAME[q.type].en}</span>
-                  {showPoints ? <span className="text-[11px] font-bold text-fuchsia-300">{pts[i]} {tr ? "puan" : "pts"}</span> : null}
+                  {showPoints ? (
+                    editable ? (
+                      <label className="flex items-center gap-1 text-[11px] font-bold text-fuchsia-300">
+                        <input
+                          type="number"
+                          min={0}
+                          max={999}
+                          value={pts[i]}
+                          aria-label={tr ? `Soru ${i + 1} puanı` : `Question ${i + 1} points`}
+                          onChange={(e) => {
+                            const v = Math.max(0, Math.min(999, Math.round(Number(e.target.value) || 0)));
+                            onPointsChange!(pts.map((p, k) => (k === i ? v : p)));
+                          }}
+                          className="w-14 rounded-lg border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-right text-[12px] text-white focus:border-fuchsia-400/50 focus:outline-none"
+                        />
+                        {tr ? "puan" : "pts"}
+                      </label>
+                    ) : (
+                      <span className="text-[11px] font-bold text-fuchsia-300">{pts[i]} {tr ? "puan" : "pts"}</span>
+                    )
+                  ) : null}
                 </span>
               </div>
+              {q.graph ? <QuizGraphView spec={q.graph} tr={tr} /> : null}
 
               {isChoice && (
                 <div className="mt-3 grid gap-2">
@@ -275,7 +339,7 @@ export function QuizPanel({
                         onClick={() => setPicks((p) => ({ ...p, [i]: o.value }))}
                         className={`flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-left text-[13px] transition ${tone}`}
                       >
-                        <span className="min-w-0 flex-1 break-words">{o.label}</span>
+                        <span className="min-w-0 flex-1 break-words"><MathText text={o.label} /></span>
                         {done && isAnswer ? <Check className="h-4 w-4 shrink-0 text-emerald-300" /> : null}
                         {done && isPicked && !isAnswer ? <X className="h-4 w-4 shrink-0 text-red-300" /> : null}
                       </button>
@@ -331,9 +395,9 @@ export function QuizPanel({
                 <div className="mt-3 space-y-1.5 rounded-xl bg-white/[0.03] px-3.5 py-3 text-[12.5px] leading-relaxed">
                   <p className="text-slate-200">
                     <span className="font-bold text-emerald-300">{q.type === "open" ? (tr ? "Örnek cevap: " : "Model answer: ") : tr ? "Doğru cevap: " : "Correct answer: "}</span>
-                    {answerLabel(q, tr ? "tr" : "en")}
+                    <MathText text={answerLabel(q, tr ? "tr" : "en")} />
                   </p>
-                  {q.explanation ? <p className="text-slate-300">{q.explanation}</p> : null}
+                  {q.explanation ? <p className="text-slate-300"><MathText text={q.explanation} /></p> : null}
                   <p className="text-slate-400">
                     <span className="font-semibold">{tr ? "Belgeden: " : "From the document: "}</span>
                     “{q.evidence}”
