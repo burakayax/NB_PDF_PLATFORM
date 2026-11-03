@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Türkçe sesli okuma denemesi (geçici)</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:720px;margin:24px auto;padding:0 16px;background:#0f172a;color:#e2e8f0}
+  textarea,select,button{font:inherit;width:100%;box-sizing:border-box;margin:6px 0;padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0}
+  button{background:#2563eb;border:0;cursor:pointer;font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{border-bottom:1px solid #334155;padding:6px;text-align:left}
+  .ok{color:#34d399}.no{color:#f87171}
+</style>
+</head>
+<body>
+<h1>Türkçe sesli okuma denemesi</h1>
+<p>Bu sayfa <b>geçici</b>dir: tarayıcının kendi sesinin (Web Speech) bu cihazda Türkçeyi nasıl okuduğunu dinlemeniz içindir. Metin hiçbir yere gönderilmez.</p>
+<p id="durum"></p>
+<label>Ses
+  <select id="ses"></select>
+</label>
+<label>Hız <input id="hiz" type="range" min="0.6" max="1.4" step="0.1" value="1" style="width:100%"></label>
+<label>Metin
+<textarea id="metin" rows="9">Sayın Hâkim, dava dilekçemde belirttiğim nedenlerle; ilgili kararın kaldırılmasını talep ediyorum. Şirketimizin 2026 yılı gelirleri %12,5 artarak 3.450.000 TL'ye ulaşmıştır. Toplantı 14.30'da İstanbul'da, Çankaya Caddesi No: 7'de yapılacaktır. İğne, ığdır, öğretmen, şemsiye, ağaç ve Işık gibi sözcükleri doğru okuyor mu?</textarea></label>
+<button id="oku">Oku</button>
+<button id="dur" style="background:#475569">Durdur</button>
+<h2>Bulunan Türkçe sesler</h2>
+<table id="tablo"><thead><tr><th>Ad</th><th>Dil</th><th>Cihazda</th></tr></thead><tbody></tbody></table>
+<script>
+const ss = window.speechSynthesis;
+const durum = document.getElementById('durum');
+if(!ss){ durum.innerHTML='<span class="no">Bu tarayıcı sesli okumayı desteklemiyor.</span>'; }
+function yukle(){
+  const tr = ss.getVoices().filter(v=>/^tr/i.test(v.lang));
+  const sel = document.getElementById('ses'); sel.innerHTML='';
+  const tb = document.querySelector('#tablo tbody'); tb.innerHTML='';
+  tr.forEach((v,i)=>{
+    sel.add(new Option(v.name+' ('+v.lang+')', i));
+    tb.insertAdjacentHTML('beforeend','<tr><td>'+v.name+'</td><td>'+v.lang+'</td><td>'+(v.localService?'evet (çevrimdışı)':'hayır (internetten)')+'</td></tr>');
+  });
+  durum.innerHTML = tr.length ? '<span class="ok">'+tr.length+' Türkçe ses bulundu.</span>' : '<span class="no">Bu cihazda Türkçe ses bulunamadı.</span>';
+  window._tr = tr;
+}
+if(ss){ ss.onvoiceschanged = yukle; yukle(); }
+document.getElementById('oku').onclick = ()=>{
+  ss.cancel();
+  const u = new SpeechSynthesisUtterance(document.getElementById('metin').value);
+  const v = (window._tr||[])[document.getElementById('ses').value];
+  if(v){ u.voice=v; u.lang=v.lang; } else { u.lang='tr-TR'; }
+  u.rate = parseFloat(document.getElementById('hiz').value);
+  ss.speak(u);
+};
+document.getElementById('dur').onclick = ()=>ss.cancel();
+</script>
+</body>
+</html>
