@@ -91,6 +91,7 @@ export const TOOL_SLUGS = [
   "udf-to-word",
   "udf-viewer",
   "image-to-udf",
+  "e-basvuru-uyumluluk",
   "ai-fotograf-studyosu",
   "cv-olustur",
 ];
@@ -2087,6 +2088,36 @@ export const TOOL_SEO = {
       ],
     ),
   },
+  "e-basvuru-uyumluluk": {
+    tr: T(
+      "E-başvuru PDF Uyumluluk Kontrolü — Boyut, A4",
+      "PDF'niz kurum yükleme sınırlarına uyuyor mu? Boyut, sayfa ve A4'ü denetleyin, düzeltin. Üyeliksiz; dosya cihazınızdan çıkmaz.",
+      "E-başvuru PDF Uyumluluk Kontrolü",
+      "Kuruma yüklemeden önce PDF'nizi kontrol edin: dosya boyutu, sayfa sayısı, A4 sayfa ve seçilebilir metin. Sınırları siz seçersiniz; araç sabit bir kurum sınırı varsaymaz.",
+      ["e-başvuru pdf", "uyap pdf boyutu", "pdf a4 yapma", "pdf uyumluluk kontrolü", "uyap pdf yükleme sınırı"],
+      [
+        {"q": "UYAP'ın dosya boyutu sınırı nedir?", "a": "Sınırlar kurumdan kuruma değişir ve güncellenir; bu yüzden araç sabit bir sınır varsaymaz. İlgili kurumun güncel duyurusundaki değeri siz girersiniz."},
+        {"q": "Kontrol neleri denetler?", "a": "Seçtiğiniz en fazla dosya boyutunu, en fazla sayfa sayısını, tüm sayfaların A4 olup olmadığını ve seçilebilir metin bulunup bulunmadığını."},
+        {"q": "«Düzelt» ne yapar?", "a": "Boyut aşılmışsa sayfaları görüntüye çevirip kaliteyi kademeli düşürerek sınırın altına inmeyi dener; A4 değilse sayfaları A4'e sığdırır. Sayfa fazlası ve metinsizlik otomatik düzeltilemez, nedenini ve ne yapacağınızı söyler."},
+        {"q": "Boyut düzeltmesi e-imzayı bozar mı?", "a": "Evet. Sayfalar görüntüye çevrildiği için yazı seçilemez hâle gelir ve belgedeki e-imza/kaşe korunmaz. Resmî gönderimlerde orijinal imzalı dosyayı kullanın."},
+        {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Kontrol ve düzeltme tamamen tarayıcınızda yapılır."},
+      ],
+    ),
+    en: T(
+      "Filing PDF Compliance Check — Size, A4",
+      "Does your PDF meet an institution's upload limits? Check size, pages and A4, then fix it. No signup; the file never leaves your device.",
+      "Filing PDF Compliance Check",
+      "Check your PDF before uploading it to an institution: file size, page count, A4 pages and selectable text. You choose the limits; the tool assumes no fixed institutional limit.",
+      ["pdf compliance check", "uyap pdf size", "make pdf a4", "filing pdf checker"],
+      [
+        {"q": "What is the UYAP file size limit?", "a": "Limits differ between institutions and change over time, so the tool assumes none. You enter the value from the institution's current notice."},
+        {"q": "What does the check cover?", "a": "Your chosen maximum file size and page count, whether every page is A4, and whether selectable text exists."},
+        {"q": "What does Fix do?", "a": "If the size is over, it rasterizes pages and lowers quality step by step to get under the limit; if pages are not A4 it fits them to A4. Too many pages or missing text cannot be auto-fixed; it tells you why and what to do."},
+        {"q": "Does the size fix break e-signatures?", "a": "Yes. Pages become images, so text is no longer selectable and e-signatures/stamps are not kept. Use the original signed file for official submissions."},
+        {"q": "Is my file uploaded?", "a": "No. Checking and fixing happen entirely in your browser."},
+      ],
+    ),
+  },
 };
 
 // Rehber içeriğindeki ek SSS soruları, mevcut SSS listesinin sonuna eklenir; böylece
@@ -2456,6 +2487,7 @@ export const RELATED_TOOLS = {
   "udf-to-word": ["word-to-udf", "udf-to-pdf", "udf-viewer"],
   "udf-viewer": ["udf-to-pdf", "udf-to-word", "image-to-udf"],
   "image-to-udf": ["pdf-to-udf", "compress", "image-to-pdf"],
+  "e-basvuru-uyumluluk": ["compress", "udf-to-pdf", "split-pdf", "taranmis-pdf-ocr"],
   "ai-fotograf-studyosu": ["cv-olustur", "gorsel-boyutlandir", "gorsel-sikistir", "image-to-pdf"],
   "cv-olustur": ["ai-fotograf-studyosu", "pdf-duzenle", "compress", "merge-pdf"],
 };

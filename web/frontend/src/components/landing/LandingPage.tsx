@@ -1150,7 +1150,7 @@ function Hero({
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={scannedFile} />
                 </Suspense>
               </ToolPageContext.Provider>
-            ) : pageTool === "udf-to-pdf" || pageTool === "pdf-to-udf" || pageTool === "word-to-udf" || pageTool === "udf-to-word" || pageTool === "udf-viewer" || pageTool === "image-to-udf" ? (
+            ) : pageTool === "udf-to-pdf" || pageTool === "pdf-to-udf" || pageTool === "word-to-udf" || pageTool === "udf-to-word" || pageTool === "udf-viewer" || pageTool === "image-to-udf" || pageTool === "e-basvuru-uyumluluk" ? (
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <UdfModeTool language={language} mode={pageTool} />

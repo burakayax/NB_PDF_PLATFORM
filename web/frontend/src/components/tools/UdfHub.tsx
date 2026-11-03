@@ -2,8 +2,9 @@ import { useState } from "react";
 import type { Language } from "../../i18n/landing";
 import { UdfToPdfTool } from "./UdfToPdfTool";
 import { UdfConvertTool, type UdfMode } from "./UdfConvertTool";
+import { PdfComplianceTool } from "./PdfComplianceTool";
 
-export type UdfHubMode = "udf-to-pdf" | UdfMode;
+export type UdfHubMode = "udf-to-pdf" | "e-basvuru-uyumluluk" | UdfMode;
 
 const TABS: { id: UdfHubMode; tr: string; en: string }[] = [
   { id: "udf-to-pdf", tr: "UDF → PDF", en: "UDF → PDF" },
@@ -12,10 +13,12 @@ const TABS: { id: UdfHubMode; tr: string; en: string }[] = [
   { id: "udf-to-word", tr: "UDF → Word", en: "UDF → Word" },
   { id: "udf-viewer", tr: "UDF Görüntüleyici", en: "UDF Viewer" },
   { id: "image-to-udf", tr: "Görsel / TIFF → UDF", en: "Image / TIFF → UDF" },
+  { id: "e-basvuru-uyumluluk", tr: "E-başvuru Uyumluluk Kontrolü", en: "Filing Compliance Check" },
 ];
 
 /** Tek bir araç sayfası için doğru bileşeni verir (SEO sayfaları + panel ortak kullanır). */
 export function UdfModeTool({ language, mode }: { language: Language; mode: UdfHubMode }) {
+  if (mode === "e-basvuru-uyumluluk") return <PdfComplianceTool language={language} />;
   return mode === "udf-to-pdf" ? (
     <UdfToPdfTool language={language} />
   ) : (

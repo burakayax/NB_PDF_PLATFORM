@@ -383,6 +383,11 @@ export const TOOLS: Tool[] = [
     en: { name: "UDF Viewer", desc: "Open and read a UDF file in your browser — nothing to install." },
   },
   {
+    id: "e-basvuru-uyumluluk", cat: "legal", Icon: Scale, free: true,
+    tr: { name: "E-başvuru Uyumluluk Kontrolü", desc: "PDF'nin boyut, sayfa ve A4 sınırlarına uyup uymadığını denetleyin; düzeltin." },
+    en: { name: "Filing Compliance Check", desc: "Check a PDF against size, page and A4 limits you choose, and fix it." },
+  },
+  {
     id: "image-to-udf", cat: "legal", Icon: Scale, free: true,
     tr: { name: "Görsel / TIFF → UDF", desc: "JPG, PNG ve çok sayfalı TIFF'i UDF belgesine çevirin." },
     en: { name: "Image / TIFF → UDF", desc: "Turn JPG, PNG and multi-page TIFF into a UDF document." },
@@ -536,6 +541,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "udf-to-word": "indigo",
   "udf-viewer": "indigo",
   "image-to-udf": "indigo",
+  "e-basvuru-uyumluluk": "indigo",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

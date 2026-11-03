@@ -33,6 +33,7 @@ export const ON_DEVICE_SEO_TOOLS: ReadonlySet<string> = new Set([
   "udf-to-word",
   "udf-viewer",
   "image-to-udf",
+  "e-basvuru-uyumluluk",
   // Fotoğraf ve CV bilgisi tarayıcıdan çıkmaz: modeller cihazda (WASM) çalışır, CV tarayıcıda çizilir.
   "ai-fotograf-studyosu",
   "cv-olustur",
