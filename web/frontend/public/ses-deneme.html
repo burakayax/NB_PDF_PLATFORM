@@ -24,6 +24,10 @@
 <label>Hız <input id="hiz" type="range" min="0.6" max="1.4" step="0.1" value="1" style="width:100%"></label>
 <label>Metin
 <textarea id="metin" rows="9">Sayın Hâkim, dava dilekçemde belirttiğim nedenlerle; ilgili kararın kaldırılmasını talep ediyorum. Şirketimizin 2026 yılı gelirleri %12,5 artarak 3.450.000 TL'ye ulaşmıştır. Toplantı 14.30'da İstanbul'da, Çankaya Caddesi No: 7'de yapılacaktır. İğne, ığdır, öğretmen, şemsiye, ağaç ve Işık gibi sözcükleri doğru okuyor mu?</textarea></label>
+<label>Okuma modu
+  <select id="mod"><option value="akici">Akıcı (metni hazırla + cümle cümle oku)</option><option value="ham">Ham (olduğu gibi tek parça)</option></select>
+</label>
+<details><summary>Okunacak hazırlanmış metin</summary><pre id="hazir" style="white-space:pre-wrap"></pre></details>
 <button id="oku">Oku</button>
 <button id="dur" style="background:#475569">Durdur</button>
 <h2>Bulunan Türkçe sesler</h2>
@@ -44,15 +48,55 @@ function yukle(){
   window._tr = tr;
 }
 if(ss){ ss.onvoiceschanged = yukle; yukle(); }
-document.getElementById('oku').onclick = ()=>{
-  ss.cancel();
-  const u = new SpeechSynthesisUtterance(document.getElementById('metin').value);
-  const v = (window._tr||[])[document.getElementById('ses').value];
-  if(v){ u.voice=v; u.lang=v.lang; } else { u.lang='tr-TR'; }
-  u.rate = parseFloat(document.getElementById('hiz').value);
-  ss.speak(u);
-};
-document.getElementById('dur').onclick = ()=>ss.cancel();
+
+// ---- Metin hazırlama: sesin takılmasına yol açan işaretleri sadeleştirir ----
+const KISALTMA = [[/\bSn\.\s*/g,'Sayın '],[/\bDr\.\s*/g,'Doktor '],[/\bAv\.\s*/g,'Avukat '],[/\bProf\.\s*/g,'Profesör '],
+  [/\bCad\.\s*/g,'Caddesi '],[/\bSk\.\s*/g,'Sokak '],[/\bMah\.\s*/g,'Mahallesi '],[/\bNo\s*[:.]\s*/g,'numara '],
+  [/\bvb\./g,'ve benzeri'],[/\bvs\./g,'vesaire'],[/\bbkz\.\s*/gi,'bakınız '],[/\bTC\b|\bT\.C\./g,'Türkiye Cumhuriyeti']];
+function hazirla(t){
+  t=t.replace(/\r?\n+/g,' ').replace(/\s+/g,' ');
+  KISALTMA.forEach(([r,y])=>{t=t.replace(r,y);});
+  t=t.replace(/(\d)\.(?=\d{3}(?!\d))/g,'$1');            // 3.450.000 -> 3450000
+  t=t.replace(/(\d+),(\d+)/g,'$1 virgül $2');            // 12,5 -> 12 virgül 5
+  t=t.replace(/(\d{1,2})[.:](\d{2})\b(?!\s*(?:TL|lira|\d))/g,(m,a,b)=>+a<24&&+b<60?a+':'+b:m); // 14.30 -> 14:30 (saat)
+  t=t.replace(/%\s*(\d+(?: virgül \d+)?)/g,'yüzde $1').replace(/(\d+(?: virgül \d+)?)\s*%/g,'yüzde $1');
+  const EK={ye:'ya',yi:'yı',nin:'nın',den:'dan',de:'da',dir:'dır',yle:'yla',e:'ya',i:'yı'};
+  t=t.replace(/\bTL['’](\w+)/g,(m,e)=>'lira'+(EK[e]?EK[e].replace(/^y/,'y'):'')); // TL'ye -> liraya
+  t=t.replace(/₺\s*(\d+)/g,'$1 Türk lirası').replace(/\bTL\b/g,'Türk lirası');
+  t=t.replace(/[…]|\.{2,}/g,'.').replace(/;|:\s/g,', ').replace(/\s[-–—]+\s|[–—]/g,', ');
+  t=t.replace(/[()\[\]{}“”*_#\/\|<>]/g,' ');  // kesme işareti (7'de, İstanbul'da) KORUNUR: sesler ekleri onunla doğru okur
+  t=t.replace(/\s*,(\s*,)+/g,',').replace(/\s+([,.!?])/g,'$1').replace(/,\s*([.!?])/g,'$1').replace(/\s+/g,' ').trim();
+  return t;
+}
+function parcala(t,max=200){
+  const cumleler=t.match(/[^.!?]+[.!?]*/g)||[t];
+  const out=[];let cur='';
+  const ekle=c=>{ if((cur+' '+c).trim().length>max && cur){out.push(cur.trim());cur=c;} else cur=(cur+' '+c).trim(); };
+  cumleler.forEach(c=>{
+    c=c.trim(); if(!c) return;
+    if(c.length>max){ c.split(/(?<=,)\s+/).forEach(ekle); } else ekle(c);
+  });
+  if(cur) out.push(cur.trim());
+  return out;
+}
+let keep=null;
+function oku(){
+  ss.cancel(); clearInterval(keep);
+  const ham=document.getElementById('mod').value==='ham';
+  const raw=document.getElementById('metin').value;
+  const hazir=ham?raw:hazirla(raw);
+  document.getElementById('hazir').textContent=ham?raw:parcala(hazir).join('\n— ');
+  const parcalar=ham?[raw]:parcala(hazir);
+  const v=(window._tr||[])[document.getElementById('ses').value];
+  const rate=parseFloat(document.getElementById('hiz').value);
+  const uts=parcalar.map(p=>{const u=new SpeechSynthesisUtterance(p); if(v){u.voice=v;u.lang=v.lang;}else u.lang='tr-TR'; u.rate=rate; return u;});
+  // Hepsini baştan sıraya koy: parçalar arasında boşluk kalmasın.
+  uts.forEach(u=>ss.speak(u));
+  // Chrome'da internetten gelen seslerde ~15 sn sonra konuşma kesilir; periyodik canlı tutma.
+  keep=setInterval(()=>{ if(!ss.speaking){clearInterval(keep);return;} ss.pause(); ss.resume(); },10000);
+}
+document.getElementById('oku').onclick=oku;
+document.getElementById('dur').onclick = ()=>{ss.cancel();clearInterval(keep);};
 </script>
 </body>
 </html>
