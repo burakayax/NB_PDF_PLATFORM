@@ -65,6 +65,8 @@ export type TocFile = {
   subs?: TocSub[];
   /** Doluysa: bu dosyanın ÖNÜNE bir grup başlığı (ör. FATURALAR) konur; sonraki dosyalar bir sonraki başlığa kadar onun altında girintili durur. */
   group?: string;
+  /** Grubun altındaki alt başlık (ör. İnternet). Aynı grupta ardışık dosyalar tek alt başlık altında toplanır. */
+  subgroup?: string;
 };
 export const MAX_GROUPS = 20;
 const GROUP_PT = 14;
@@ -72,6 +74,13 @@ const GROUP_LINE = 19;
 const GROUP_TOP = 10;
 const GROUP_BOTTOM = 8;
 const GROUP_INDENT = 14;
+const SG_PT = 12;
+const SG_LINE = 16;
+const SG_TOP = 6;
+const SG_BOTTOM = 4;
+const SG_INDENT = 14;
+const SEP_PT = 30;
+const SEP_LINE = 40;
 export const MAX_SUBS = 60;
 const SUB_PT = 10;
 const SUB_LINE = 14;
@@ -90,10 +99,12 @@ export type TocOptions = {
   backLabel: string;
   fontBytes: Uint8Array;
   boldBytes: Uint8Array;
+  /** true: her grubun önüne, ortasında grup adı yazan tek sayfalık ayırıcı sayfa konur. */
+  separators?: boolean;
 };
 
 export type TocSection = { title: string; startPage: number; pageCount: number };
-export type TocResult = { bytes: Uint8Array; tocPages: number; sections: TocSection[] };
+export type TocResult = { bytes: Uint8Array; tocPages: number; sections: TocSection[]; totalPages: number };
 
 // ─── Yerleşim ───────────────────────────────────────────────────────────────
 
@@ -209,7 +220,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   const bold = await out.embedFont(o.boldBytes, { subset: true });
 
   // 2) Girdiler: her bölüm + (varsa) alt başlıkları. Sayfa sayısı yazı ölçüsüne bağlıdır.
-  type Item = { file: number; sub: number | null; lines: string[]; height: number; size: number; lineH: number; indent: number; group?: boolean };
+  type Item = { file: number; sub: number | null; lines: string[]; height: number; size: number; lineH: number; indent: number; head?: "g" | "s" };
   const numColW = font.widthOfTextAtSize("999", ENTRY_PT);
   const labelW = A4_W - MARGIN_X * 2 - numColW - 10;
   const cleanSubs: TocSub[][] = files.map((f, i) =>
@@ -219,16 +230,35 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
       .slice(0, MAX_SUBS),
   );
   const items: Item[] = [];
-  let girinti = 0; // ilk grup başlığından sonra dosyalar girintili durur
+  const sepBefore: (string | null)[] = files.map(() => null);
+  const meta: { newGroup?: string; newSub?: string; active: boolean }[] = [];
+  let curGroup = "";
+  let curSub = "";
   let gruplar = 0;
   files.forEach((f, i) => {
+    const m: { newGroup?: string; newSub?: string; active: boolean } = { active: false };
     const gb = (f.group ?? "").trim();
-    if (gb && gruplar < MAX_GROUPS) {
+    if (gb && gb !== curGroup && gruplar < MAX_GROUPS) {
       gruplar++;
-      girinti = GROUP_INDENT;
+      curGroup = gb;
+      curSub = "";
+      m.newGroup = gb;
+      if (o.separators) sepBefore[i] = gb;
       const gl = wrapTitle(safeText(gb, bold), bold, GROUP_PT, A4_W - MARGIN_X * 2);
-      items.push({ file: i, sub: null, lines: gl, height: GROUP_TOP + gl.length * GROUP_LINE + GROUP_BOTTOM, size: GROUP_PT, lineH: GROUP_LINE, indent: 0, group: true });
+      items.push({ file: i, sub: null, lines: gl, height: GROUP_TOP + gl.length * GROUP_LINE + GROUP_BOTTOM, size: GROUP_PT, lineH: GROUP_LINE, indent: 0, head: "g" });
     }
+    m.active = curGroup !== "";
+    const sb = m.active ? (f.subgroup ?? "").trim() : "";
+    if (sb !== curSub) {
+      curSub = sb;
+      if (sb) {
+        m.newSub = sb;
+        const sl = wrapTitle(safeText(sb, bold), bold, SG_PT, A4_W - MARGIN_X * 2 - GROUP_INDENT);
+        items.push({ file: i, sub: null, lines: sl, height: SG_TOP + sl.length * SG_LINE + SG_BOTTOM, size: SG_PT, lineH: SG_LINE, indent: GROUP_INDENT, head: "s" });
+      }
+    }
+    meta.push(m);
+    const girinti = m.active ? GROUP_INDENT + (curSub ? SG_INDENT : 0) : 0;
     const prefix = o.numbering ? `${i + 1}. ` : "";
     const lines = wrapTitle(prefix + safeText(f.title || defaultTitle(f.name), font), font, ENTRY_PT, labelW - girinti);
     items.push({ file: i, sub: null, lines, height: lines.length * LINE_H + ENTRY_GAP, size: ENTRY_PT, lineH: LINE_H, indent: girinti });
@@ -238,24 +268,43 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
       items.push({ file: i, sub: k, lines: sl, height: sl.length * SUB_LINE + SUB_GAP, size: SUB_PT, lineH: SUB_LINE, indent: SUB_INDENT + girinti });
     });
   });
-  const pageOf = paginate(items.map((l) => l.height), items.map((l) => !!l.group));
+  const pageOf = paginate(items.map((l) => l.height), items.map((l) => !!l.head));
   const tocPages = (pageOf.length ? pageOf[pageOf.length - 1]! : 0) + 1;
 
   // 3) Bölüm başlangıç sayfaları
   const sections: TocSection[] = [];
   let cursor = tocPages + 1;
   srcs.forEach((s, i) => {
+    if (sepBefore[i]) cursor++; // ayırıcı sayfa bölümden önce gelir
     sections.push({ title: files[i]!.title || defaultTitle(files[i]!.name), startPage: cursor, pageCount: s.getPageCount() });
     cursor += s.getPageCount();
   });
   const totalPages = cursor - 1;
+
+  const ink = rgb(0.1, 0.1, 0.12);
+  const muted = rgb(0.45, 0.47, 0.52);
+  const accent = rgb(0.1, 0.35, 0.75);
 
   // 4) Sayfaları ekle: önce içindekiler, sonra kaynaklar
   const tocPageObjs: PDFPage[] = [];
   for (let i = 0; i < tocPages; i++) tocPageObjs.push(out.addPage([A4_W, A4_H]));
   const filePages: PDFPage[][] = [];
   const sectionFirstPage: PDFPage[] = [];
-  for (const s of srcs) {
+  const sepPages: (PDFPage | undefined)[] = [];
+  for (let si = 0; si < srcs.length; si++) {
+    const s = srcs[si]!;
+    if (sepBefore[si]) {
+      const sp = out.addPage([A4_W, A4_H]);
+      sepPages[si] = sp;
+      const ad = wrapTitle(safeText(sepBefore[si]!, bold), bold, SEP_PT, A4_W - MARGIN_X * 2);
+      const top = A4_H / 2 + (ad.length * SEP_LINE) / 2;
+      ad.forEach((ln, k) => {
+        const w = bold.widthOfTextAtSize(ln, SEP_PT);
+        sp.drawText(ln, { x: Math.max(MARGIN_X, (A4_W - w) / 2), y: top - (k + 1) * SEP_LINE + 10, size: SEP_PT, font: bold, color: ink });
+      });
+      const yl = top - ad.length * SEP_LINE - 6;
+      sp.drawLine({ start: { x: A4_W / 2 - 60, y: yl }, end: { x: A4_W / 2 + 60, y: yl }, thickness: 1.2, color: accent });
+    }
     const copied = await out.copyPages(s, s.getPageIndices());
     copied.forEach((p, k) => {
       out.addPage(p);
@@ -263,10 +312,6 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
     });
     filePages.push(copied);
   }
-
-  const ink = rgb(0.1, 0.1, 0.12);
-  const muted = rgb(0.45, 0.47, 0.52);
-  const accent = rgb(0.1, 0.35, 0.75);
 
   // 5) İçindekiler çizimi + dahili bağlantılar
   const ys: number[] = new Array(tocPages).fill(0).map((_, p) => A4_H - TOP - (p === 0 ? HEAD_BLOCK : HEAD_BLOCK_CONT));
@@ -308,14 +353,22 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
     const p = pageOf[n]!;
     const pg = tocPageObjs[p]!;
     const yTop = ys[p]!;
-    if (it.group) {
+    if (it.head === "s") {
+      it.lines.forEach((ln, k) => {
+        pg.drawText(ln, { x: MARGIN_X + it.indent, y: yTop - SG_TOP - (k + 1) * SG_LINE + 4, size: SG_PT, font: bold, color: ink });
+      });
+      linkTo(pg, [MARGIN_X + it.indent, yTop - SG_TOP - it.lines.length * SG_LINE, A4_W - MARGIN_X, yTop - SG_TOP + 2], sectionFirstPage[it.file]!);
+      ys[p] = yTop - it.height;
+      return;
+    }
+    if (it.head === "g") {
       it.lines.forEach((ln, k) => {
         const w = bold.widthOfTextAtSize(ln, GROUP_PT);
         pg.drawText(ln, { x: Math.max(MARGIN_X, (A4_W - w) / 2), y: yTop - GROUP_TOP - (k + 1) * GROUP_LINE + 4, size: GROUP_PT, font: bold, color: ink });
       });
       const yLine = yTop - GROUP_TOP - it.lines.length * GROUP_LINE - 2;
       pg.drawLine({ start: { x: MARGIN_X, y: yLine }, end: { x: A4_W - MARGIN_X, y: yLine }, thickness: 0.5, color: muted });
-      linkTo(pg, [MARGIN_X, yTop - GROUP_TOP - it.lines.length * GROUP_LINE - 2, A4_W - MARGIN_X, yTop - GROUP_TOP + 2], sectionFirstPage[it.file]!);
+      linkTo(pg, [MARGIN_X, yTop - GROUP_TOP - it.lines.length * GROUP_LINE - 2, A4_W - MARGIN_X, yTop - GROUP_TOP + 2], sepPages[it.file] ?? sectionFirstPage[it.file]!);
       ys[p] = yTop - it.height;
       return;
     }
@@ -352,21 +405,30 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   type ON = { title: string; page: PDFPage; kids: ON[]; ref?: PDFRef };
   const dest = (pg: PDFPage) => [pg.ref, "XYZ", 0, pg.getSize().height, null];
   const tree: ON[] = [];
-  let grup: ON | null = null;
-  let gn = 0;
+  let gNode: ON | null = null;
+  let sNode: ON | null = null;
+  let lastSub = "";
   files.forEach((f, i) => {
-    const gb = (f.group ?? "").trim();
-    if (gb && gn < MAX_GROUPS) {
-      gn++;
-      grup = { title: gb.slice(0, 120), page: sectionFirstPage[i]!, kids: [] };
-      tree.push(grup);
+    const m = meta[i]!;
+    if (m.newGroup) {
+      gNode = { title: m.newGroup.slice(0, 120), page: sepPages[i] ?? sectionFirstPage[i]!, kids: [] };
+      sNode = null;
+      lastSub = "";
+      tree.push(gNode);
     }
+    const sb = m.active ? (f.subgroup ?? "").trim() : "";
+    if (sb && sb !== lastSub && gNode) {
+      sNode = { title: sb.slice(0, 120), page: sectionFirstPage[i]!, kids: [] };
+      (gNode as ON).kids.push(sNode);
+    }
+    lastSub = sb;
     const node: ON = {
       title: sections[i]!.title,
       page: sectionFirstPage[i]!,
-      kids: cleanSubs[i]!.map((sb) => ({ title: sb.title, page: filePages[i]![sb.page - 1]!, kids: [] })),
+      kids: cleanSubs[i]!.map((x) => ({ title: x.title, page: filePages[i]![x.page - 1]!, kids: [] })),
     };
-    (grup ? (grup as ON).kids : tree).push(node);
+    const parent: ON | null = m.active ? (sb && sNode ? (sNode as ON) : (gNode as ON | null)) : null;
+    (parent ? parent.kids : tree).push(node);
   });
   const outlineRef = out.context.nextRef();
   const refAta = (n: ON) => { n.ref = out.context.nextRef(); n.kids.forEach(refAta); };
@@ -403,7 +465,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   if (o.backLinks) {
     const label = safeText(o.backLabel, font);
     const lw = font.widthOfTextAtSize(label, 8);
-    sectionFirstPage.forEach((pg) => {
+    [...sectionFirstPage, ...sepPages.filter((x): x is PDFPage => !!x)].forEach((pg) => {
       if (pg.getRotation().angle % 360 !== 0) return;
       const { width, height } = pg.getSize();
       const x = width - lw - 24;
@@ -431,7 +493,7 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
 
   out.setCreator("PDF Platform");
   out.setProducer("PDF Platform");
-  return { bytes: await out.save(), tocPages, sections };
+  return { bytes: await out.save(), tocPages, sections, totalPages };
 }
 
 export const TOC_MAX_FILES = 20;
