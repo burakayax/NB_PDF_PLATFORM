@@ -403,10 +403,19 @@ export function PdfMergeTocTool({
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label><span className="mb-1 block text-[12px] text-slate-400">{t.heading}</span>
             <input className={girdi} value={heading} maxLength={60} onChange={(e) => setHeading(e.target.value)} /></label>
-          <label><span className="mb-1 block text-[12px] text-slate-400">{t.fontLabel}</span>
-            <select className={girdi} value={yazi} onChange={(e) => setYazi(e.target.value as typeof yazi)}>
-              {YAZI_TIPLERI.map((y) => <option key={y.id} value={y.id}>{y[dil]}</option>)}
-            </select></label>
+          <div className="sm:col-span-2" role="radiogroup" aria-label={t.fontLabel}>
+            <style>{YAZI_TIPLERI.map((y) => `@font-face{font-family:'toc-${y.id}';src:url('${y.dosya}-Regular.ttf') format('truetype');font-display:swap;}`).join("")}</style>
+            <span className="mb-1 block text-[12px] text-slate-400">{t.fontLabel}</span>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {YAZI_TIPLERI.map((y) => (
+                <button key={y.id} type="button" role="radio" aria-checked={yazi === y.id} onClick={() => setYazi(y.id)}
+                  className={`rounded-xl border px-3 py-2.5 text-left transition ${yazi === y.id ? "border-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-400/60" : "border-white/15 bg-white/[0.04] hover:bg-white/[0.08]"}`}>
+                  <span className="block text-[18px] leading-tight text-white" style={{ fontFamily: `'toc-${y.id}', sans-serif` }}>{dil === "tr" ? "İçindekiler 1234" : "Contents 1234"}</span>
+                  <span className="mt-0.5 block text-[11px] text-slate-400">{y[dil]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <label><span className="mb-1 block text-[12px] text-slate-400">{t.outName}</span>
             <span className="flex items-center gap-1">
               <input className={girdi} value={outName} maxLength={80} onChange={(e) => setOutName(e.target.value)} />
