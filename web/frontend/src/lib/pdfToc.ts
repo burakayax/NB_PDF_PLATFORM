@@ -247,8 +247,10 @@ export async function mergeWithToc(files: TocFile[], o: TocOptions): Promise<Toc
   const ys: number[] = new Array(tocPages).fill(0).map((_, p) => A4_H - TOP - (p === 0 ? HEAD_BLOCK : HEAD_BLOCK_CONT));
   tocPageObjs.forEach((pg, p) => {
     const text = p === 0 ? o.heading : `${o.heading} ${o.continued}`;
-    pg.drawText(safeText(text, bold), {
-      x: MARGIN_X,
+    const headText = safeText(text, bold);
+    const headSize = p === 0 ? HEAD_PT : HEAD_PT_CONT;
+    pg.drawText(headText, {
+      x: Math.max(MARGIN_X, (A4_W - bold.widthOfTextAtSize(headText, headSize)) / 2),
       y: A4_H - TOP - (p === 0 ? HEAD_PT : HEAD_PT_CONT) + 4,
       size: p === 0 ? HEAD_PT : HEAD_PT_CONT,
       font: bold,
