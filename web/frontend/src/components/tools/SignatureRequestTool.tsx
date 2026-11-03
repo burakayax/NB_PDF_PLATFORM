@@ -205,7 +205,7 @@ export function SignatureRequestTool({
 
   if (!accessToken) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <p className="rounded-xl border border-amber-400/25 bg-amber-500/[0.08] px-4 py-3 text-[13px] text-amber-200">
           {t.loginNeeded}
         </p>
@@ -214,7 +214,7 @@ export function SignatureRequestTool({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
       <div className="tool-form">
         {dosya ? (
           /* Karşı tarafa imzaya gidecek belge kart kart görünür — yanlış dosyayı

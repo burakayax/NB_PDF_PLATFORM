@@ -269,7 +269,7 @@ import {
   watermarkMissingContent,
 } from "./lib/toolSubmissionCheck";
 import { readAccessToken } from "./lib/accessTokenStore";
-import { WorkspaceToolShell } from "./components/common/WorkspaceToolShell";
+import { WorkspaceToolShell, ToolHeadline } from "./components/common/WorkspaceToolShell";
 import { ToolPageContext } from "./components/common/toolPageContext";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
@@ -7234,25 +7234,23 @@ function App() {
             ) : null}
 
             {contentPanel === "signrequest" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="imza-iste" language={language} className="mb-4" />
+              <WorkspaceToolShell id="imza-iste" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <SignatureRequestTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "layout" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="sayfa-duzeni" language={language} className="mb-4" />
+              <WorkspaceToolShell id="sayfa-duzeni" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfLayoutTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "toc" ? (
-              <WorkspaceToolShell id="pdf-birlestir-icindekiler" language={language} full deviceBadge>
+              <WorkspaceToolShell id="pdf-birlestir-icindekiler" language={language} full>
                 <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                   <Suspense fallback={<PageSkeleton />}>
                     <PdfMergeTocTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
@@ -7270,21 +7268,19 @@ function App() {
             ) : null}
 
             {contentPanel === "metadata" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="ustveri-temizle" language={language} className="mb-4" />
+              <WorkspaceToolShell id="ustveri-temizle" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "formfill" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="form-doldur" language={language} className="mb-4" />
+              <WorkspaceToolShell id="form-doldur" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {contentPanel === "sign" ? (
@@ -7347,8 +7343,7 @@ function App() {
 
             {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
             {contentPanel === "searchable" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
-                <ToolHowTo slug="aranabilir-pdf" language={language} className="mb-4" />
+              <WorkspaceToolShell id="aranabilir-pdf" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
                   <SearchablePdfTool
                     language={language}
@@ -7358,7 +7353,7 @@ function App() {
                     initialFile={pendingToolFile}
                   />
                 </Suspense>
-              </section>
+              </WorkspaceToolShell>
             ) : null}
 
             {/* Belge Tarayıcı — panel içi karşılığı (harici SEO sayfası yerine). */}
@@ -7552,9 +7547,7 @@ function App() {
                 >
                   <div className="workspace-card__header">
                     <div>
-                      <h1 className="text-xl font-bold tracking-tight text-nb-text md:text-2xl">
-                        {selectedFeature.title}
-                      </h1>
+                      <ToolHeadline id={selectedFeature.id} title={selectedFeature.title} language={language} />
                       {/* Kalıcı puan satırı — işi biten kişiye bir kez sorulan
                           soruya EK olarak, fikrini değiştirmek isteyenin geri
                           dönebileceği yer. */}

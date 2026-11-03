@@ -208,7 +208,7 @@ export function PdfMetadataTool({
 
   if (!bytes || !ozet) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <div className="tool-form">
           <WorkspaceUploadField
             toolId="ustveri-temizle"
@@ -234,7 +234,7 @@ export function PdfMetadataTool({
     alanGirdileri.length === 0 && !ozet.xmpVar && ozet.exifliGorsel === 0;
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
       {/* Temizlenecek belge kart kart görünür; kullanıcı gizli bilgileri
           silmeden önce doğru dosyaya baktığını görür. */}
       {file ? (
