@@ -45,6 +45,7 @@ import {
   type QuizLevel,
 } from "../../api/ai";
 import { quizToMarkdown } from "../../lib/quizFormat";
+import { quizToPdf } from "../../lib/quizPdf";
 import { QuizOptions, QuizPanel } from "./QuizPanel";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 import { ToolRating } from "../common/ToolRating";
@@ -346,8 +347,10 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     if (exporting || !quiz) return;
     try {
       setExporting(true);
-      const md = quizToMarkdown(quiz.questions, tr ? "tr" : "en", { title: quizTitle, withAnswers });
-      const blob = pdfBytesToBlob(await summaryToPdf(md, quizTitle));
+      const levelText = quizLevel === "easy" ? (tr ? "Kolay" : "Easy") : quizLevel === "hard" ? (tr ? "Zor" : "Hard") : tr ? "Orta" : "Medium";
+      const subtitle = `${quiz.questions.length} ${tr ? "soru" : "questions"} · ${levelText} ${tr ? "zorluk" : "difficulty"} · ${new Date().toLocaleDateString(tr ? "tr-TR" : "en-US")}`;
+      const bytes = await quizToPdf(quiz.questions, tr ? "tr" : "en", { title: quizTitle, subtitle, withAnswers, studentInfo: !withAnswers });
+      const blob = pdfBytesToBlob(bytes);
       await saveBlobWithPicker(blob, `${(fileName || "belge").replace(/\.pdf$/i, "")}-${withAnswers ? "test-cevapli" : "test"}.pdf`, {
         description: "PDF",
         accept: { "application/pdf": [".pdf"] },
