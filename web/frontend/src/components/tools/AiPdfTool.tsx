@@ -32,6 +32,7 @@ import {
   aiSummarize,
   aiChat,
   aiExtract,
+  aiQuiz,
   aiTranslateSegments,
   fetchAiQuota,
   TRANSLATE_TARGETS,
@@ -39,7 +40,12 @@ import {
   type AiQuota,
   type ChatTurn,
   type ExtractedData,
+  type QuizData,
+  type QuizKind,
+  type QuizLevel,
 } from "../../api/ai";
+import { quizToMarkdown } from "../../lib/quizFormat";
+import { QuizOptions, QuizPanel } from "./QuizPanel";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 import { ToolRating } from "../common/ToolRating";
 import { AiCreditBadge, creditBalance, monthlyLeft } from "./AiCreditBadge";
@@ -47,7 +53,7 @@ import { AI_MONTHLY_CREDITS_BY_PLAN } from "../../lib/aiCredits";
 import { TopUpModal } from "./TopUpModal";
 import { AiResultNotice } from "./AiResultNotice";
 
-type AiMode = "summarize" | "chat" | "extract" | "translate";
+type AiMode = "summarize" | "chat" | "extract" | "translate" | "quiz";
 
 /**
  * Dosyayı kaydeder. Destekleyen tarayıcılarda (Chrome/Edge) kaydetme konumunu
@@ -160,6 +166,11 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   // Özet
   const [summary, setSummary] = useState("");
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
+  // Soru / test
+  const [quiz, setQuiz] = useState<QuizData | null>(null);
+  const [quizCount, setQuizCount] = useState(10);
+  const [quizKind, setQuizKind] = useState<QuizKind>("mixed");
+  const [quizLevel, setQuizLevel] = useState<QuizLevel>("medium");
   const [translatedBlob, setTranslatedBlob] = useState<Blob | null>(null);
   const [targetLang, setTargetLang] = useState(language === "tr" ? "en" : "tr");
   // Sohbet
@@ -233,6 +244,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setGate(null);
     setSummary("");
     setExtracted(null);
+    setQuiz(null);
     setTranslatedBlob(null);
     setMessages([]);
     if (!f) return;
@@ -311,6 +323,49 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     } finally {
       setBusy(false);
     }
+  }
+
+  async function runQuiz() {
+    setError(null);
+    setGate(null);
+    try {
+      setBusy(true);
+      const { quiz: qz, quota: q } = await aiQuiz(docText, { count: quizCount, kind: quizKind, level: quizLevel }, tr ? "tr" : "en", accessToken);
+      setQuiz(qz);
+      if (q) setQuota(q);
+    } catch (e) {
+      handleAiError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const quizTitle = `${fileName ? fileName.replace(/\.pdf$/i, "") : tr ? "Belge" : "Document"} — ${tr ? "Test" : "Quiz"}`;
+
+  async function downloadQuiz(withAnswers: boolean) {
+    if (exporting || !quiz) return;
+    try {
+      setExporting(true);
+      const md = quizToMarkdown(quiz.questions, tr ? "tr" : "en", { title: quizTitle, withAnswers });
+      const blob = pdfBytesToBlob(await summaryToPdf(md, quizTitle));
+      await saveBlobWithPicker(blob, `${(fileName || "belge").replace(/\.pdf$/i, "")}-${withAnswers ? "test-cevapli" : "test"}.pdf`, {
+        description: "PDF",
+        accept: { "application/pdf": [".pdf"] },
+      });
+    } catch {
+      setError(tr ? "PDF oluşturulamadı." : "Couldn't create the PDF.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function copyQuiz() {
+    if (!quiz) return;
+    const md = quizToMarkdown(quiz.questions, tr ? "tr" : "en", { title: quizTitle, withAnswers: true });
+    void navigator.clipboard?.writeText(md).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    });
   }
 
   // Konum-koruyan çeviri: PDF'i analiz et → her metin öğesini yerinde çevir →
@@ -634,6 +689,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setDocText("");
     setSummary("");
     setExtracted(null);
+    setQuiz(null);
     setTranslatedBlob(null);
     setMessages([]);
     setError(null);
@@ -642,7 +698,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   }
 
   const title =
-    mode === "summarize"
+    mode === "quiz"
+      ? tr ? "Soru / Test Oluştur" : "Quiz Maker"
+      : mode === "summarize"
       ? tr ? "PDF Özetle" : "Summarize PDF"
       : mode === "extract"
         ? tr ? "PDF Veri Çıkar" : "Extract PDF Data"
@@ -650,7 +708,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           ? tr ? "PDF Çevir" : "Translate PDF"
           : tr ? "PDF ile Sohbet" : "Chat with PDF";
   const subtitle =
-    mode === "summarize"
+    mode === "quiz"
+      ? tr ? "PDF'inizden çoktan seçmeli ve doğru-yanlış sorular üretir; testi ekranda çözün ya da PDF olarak indirin. Her soru belgeden alıntıyla doğrulanır." : "Creates multiple-choice and true/false questions from your PDF; take the quiz on screen or download it as PDF. Every question is verified against a quote from the document."
+      : mode === "summarize"
       ? tr ? "PDF'inizi baştan sona okumadan; başlık, ana konular ve önemli noktalarıyla profesyonel bir özete çevirir." : "Turns your PDF into a professional summary — title, key topics and key points — without reading it end to end."
       : mode === "extract"
         ? tr ? "Fatura, ihale, sözleşme ya da tablodaki bilgileri otomatik olarak yapılandırılmış veriye çevirir — alanlar + kalemler, tabloya dök, CSV indir." : "Turns invoices, tenders, contracts or tables into structured data — fields + line items, view as a table, export CSV."
@@ -659,7 +719,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           : tr ? "PDF'inize doğal dille soru sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlar." : "Ask your PDF questions in plain language; the AI answers instantly, based only on the document.";
 
   const benefits: { icon: LucideIcon; title: string; desc: string }[] =
-    mode === "summarize"
+    mode === "quiz"
+      ? [
+          { icon: ListChecks, title: tr ? "Çoktan seçmeli + doğru/yanlış" : "Multiple choice + true/false", desc: tr ? "Sayıyı, türü ve zorluğu siz seçin; ekranda çözün, puanınızı görün." : "Choose the number, type and difficulty; take it on screen and see your score." },
+          { icon: Target, title: tr ? "Yalnızca belgeden" : "Only from the document", desc: tr ? "Her soru belgeden alınan bir cümleyle doğrulanır; dayanağı bulunamayan soru elenir." : "Each question is checked against a sentence from the document; unsupported ones are dropped." },
+          { icon: Download, title: tr ? "PDF olarak indir" : "Download as PDF", desc: tr ? "Soru kâğıdını ya da cevap anahtarlı sürümünü tek tıkla alın." : "Get the question sheet or the version with an answer key in one click." },
+        ]
+      : mode === "summarize"
       ? [
           { icon: Zap, title: tr ? "Saniyeler içinde kavra" : "Grasp it in seconds", desc: tr ? "Uzun raporu, sözleşmeyi ya da makaleyi baştan sona okumadan ana fikri al." : "Get the gist of a long report, contract or article without reading it all." },
           { icon: ListChecks, title: tr ? "Yapılandırılmış özet" : "Structured output", desc: tr ? "Başlık, ana konular, önemli noktalar ve sonuç — düzenli ve profesyonel." : "Title, key topics, key points and conclusion — clean and professional." },
@@ -731,7 +797,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             </div>
             <p className="relative mt-5 text-xl font-black text-white">{title}</p>
             <p className="relative mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-slate-300">
-              {mode === "summarize"
+              {mode === "quiz"
+                ? tr ? "Belgelerden otomatik sınav sorusu üreten yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that generates quiz questions from documents is coming very soon. We're putting on the finishing touches."
+                : mode === "summarize"
                 ? tr ? "Uzun belgeleri saniyeler içinde özetleyen yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that summarizes long documents in seconds is coming very soon. We're putting on the finishing touches."
                 : mode === "extract"
                 ? tr ? "Fatura, ihale ve tablolardan yapılandırılmış veri çıkaran yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that extracts structured data from invoices, tenders and tables is coming very soon. We're putting on the finishing touches."
@@ -834,7 +902,36 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           </div>
           <div className="mb-4 -mt-2"><AiResultNotice language={language} /></div>
 
-          {mode === "summarize" ? (
+          {mode === "quiz" ? (
+            quiz ? (
+              <QuizPanel
+                key={quiz.questions.map((x) => x.q).join("|").slice(0, 120)}
+                tr={tr}
+                quiz={quiz}
+                busy={busy}
+                exporting={exporting}
+                copied={copied}
+                onRegenerate={() => void runQuiz()}
+                onPdf={(w) => void downloadQuiz(w)}
+                onCopy={copyQuiz}
+              />
+            ) : busy ? (
+              <StatusStrip label={tr ? "Sorular hazırlanıyor…" : "Preparing questions…"} ratio={null} />
+            ) : docText.trim().length < 200 ? (
+              <p className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.07] px-4 py-3 text-[13px] text-amber-100">
+                {tr ? "Bu belgede soru üretmek için yeterli metin yok." : "This document doesn't have enough text to generate questions."}
+              </p>
+            ) : (
+              <>
+                <QuizOptions tr={tr} count={quizCount} kind={quizKind} level={quizLevel} cost={quizCount > 10 ? 2 : 1} onCount={setQuizCount} onKind={setQuizKind} onLevel={setQuizLevel} />
+                <button type="button" onClick={() => void runQuiz()}
+                  className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
+                  <ListChecks className="h-5 w-5" />
+                  {tr ? "Soruları Oluştur" : "Generate Questions"}
+                </button>
+              </>
+            )
+          ) : mode === "summarize" ? (
             summary ? (
               <div className="overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
                 {/* Aksiyon çubuğu */}
@@ -1054,7 +1151,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       )}
 
       {/* Sonuç üretildiyse puanlama — her AI modunun kendi araç kimliği var. */}
-      {(mode === "summarize"
+      {(mode === "quiz"
+        ? !!quiz
+        : mode === "summarize"
         ? !!summary
         : mode === "extract"
           ? !!extracted
@@ -1063,7 +1162,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             : messages.some((m) => m.role === "assistant")) && (
         <ToolRating
           toolSlug={
-            mode === "summarize"
+            mode === "quiz"
+              ? "pdf-sinav-olustur"
+              : mode === "summarize"
               ? "pdf-ozetle"
               : mode === "extract"
                 ? "pdf-veri-cikar"

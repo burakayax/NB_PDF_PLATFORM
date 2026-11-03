@@ -31,6 +31,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "pdf-ozetle",
   "pdf-sohbet",
   "pdf-ceviri",
+  "pdf-sinav-olustur",
   "pdf-karsilastir",
   "pdf-veri-cikar",
   "ai-toplu-islem",

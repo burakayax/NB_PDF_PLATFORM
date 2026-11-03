@@ -66,6 +66,7 @@ import {
   Gavel,
   FileUser,
   UserRound,
+  ListChecks,
 } from "lucide-react";
 
 /** Araç kategorileri — ana sayfadaki listede başlık ve süzgeç olarak kullanılır. */
@@ -100,6 +101,11 @@ export const TOOLS: Tool[] = [
     id: "pdf-ceviri", cat: "ai", Icon: Languages, ai: true,
     tr: { name: "PDF Çeviri", desc: "Düzeni bozmadan belgeyi başka dile çevirir." },
     en: { name: "Translate PDF", desc: "Translates the document while keeping its layout." },
+  },
+  {
+    id: "pdf-sinav-olustur", cat: "ai", Icon: ListChecks, ai: true,
+    tr: { name: "Soru / Test Oluştur", desc: "Belgenizden çoktan seçmeli ve doğru-yanlış sorular üretir; testi çözün ya da PDF indirin." },
+    en: { name: "Quiz Maker", desc: "Creates multiple-choice and true/false questions from your document; take the quiz or download a PDF." },
   },
   {
     id: "pdf-karsilastir", cat: "ai", Icon: ArrowRightLeft, ai: true,
@@ -502,6 +508,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "ai-fotograf-studyosu": "rose",
   "pdf-sohbet": "purple",
   "pdf-ceviri": "indigo",
+  "pdf-sinav-olustur": "amber",
   "pdf-karsilastir": "violet",
   "sozlesme-denetci": "fuchsia",
   "pdf-veri-cikar": "teal",

@@ -46,7 +46,7 @@ describe("araç erişim rozeti", () => {
 
   it("yapay zekâ kategorisindeki her araç rozet taşıyor ve Başlangıç+ diyor", () => {
     const aiAraclar = TOOLS.filter((t) => t.cat === "ai");
-    expect(aiAraclar.length).toBe(8);
+    expect(aiAraclar.length).toBe(9);
     for (const t of aiAraclar) {
       const b = toolAccessBadge(t, true);
       expect(b.tone, t.id).toBe("ai");

@@ -20,6 +20,7 @@ const SUNUCUYA_GIDENLER = [
   "pdf-sohbet",
   "pdf-veri-cikar",
   "pdf-ceviri",
+  "pdf-sinav-olustur",
   "ai-toplu-islem",
   "pdf-karsilastir",
   "hassas-veri-gizle",

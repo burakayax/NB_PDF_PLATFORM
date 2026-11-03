@@ -24,6 +24,7 @@ import {
   tailorToJob,
   writeCoverLetter,
 } from "./cv-assist.service.js";
+import { generateQuiz, quizCreditCost, QUIZ_LIMITS, type QuizKind, type QuizLevel } from "./quiz.service.js";
 import { isContractReviewOpen } from "./contract-review.controller.js";
 import { closedAiTools, closedAiToolNotes } from "./ai-tool-switch.js";
 import { getAiQuota, reserveAiQuota, refundAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
@@ -391,4 +392,38 @@ export async function cvAssistController(req: Request, res: Response): Promise<v
   const u = req.authUser!;
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ result: run.value, quota });
+}
+
+/** POST /api/ai/quiz — { text, lang?, count?, kind?, level? } → { quiz, quota } */
+export async function quizController(req: Request, res: Response): Promise<void> {
+  const text = typeof req.body?.text === "string" ? req.body.text : "";
+  if (text.trim().length < QUIZ_LIMITS.minChars) {
+    throw new HttpError(400, "Soru üretmek için belgede yeterli metin yok. Taranmış bir belgeyse önce metne çevrilmesi gerekir.");
+  }
+  const rawCount = Number(req.body?.count);
+  const count = Number.isFinite(rawCount)
+    ? Math.max(QUIZ_LIMITS.minCount, Math.min(QUIZ_LIMITS.maxCount, Math.round(rawCount)))
+    : QUIZ_LIMITS.defaultCount;
+  const kind: QuizKind = req.body?.kind === "mcq" || req.body?.kind === "tf" ? req.body.kind : "mixed";
+  const level: QuizLevel = req.body?.level === "easy" || req.body?.level === "hard" ? req.body.level : "medium";
+  const run = await runWithQuota(
+    req,
+    res,
+    "quiz",
+    async () => {
+      try {
+        return await generateQuiz(text.slice(0, MAX_TEXT), getLang(req), { count, kind, level });
+      } catch (e) {
+        if (e instanceof Error && (e.message === "AI_QUIZ_PARSE" || e.message === "AI_QUIZ_EMPTY")) {
+          throw new HttpError(422, "Bu belgeden güvenilir soru üretilemedi. Metin yeterince açık olmayabilir; tekrar deneyin ya da daha uzun bir bölüm seçin.");
+        }
+        throw e;
+      }
+    },
+    quizCreditCost(count),
+  );
+  if (!run.ok) return;
+  const u = req.authUser!;
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ quiz: run.value, quota });
 }

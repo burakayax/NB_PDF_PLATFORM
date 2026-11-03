@@ -20,7 +20,8 @@ export type AiToolId =
   | "pdf-veri-cikar"
   | "hassas-veri-gizle"
   | "sozlesme-denetci"
-  | "cv-olustur";
+  | "cv-olustur"
+  | "pdf-sinav-olustur";
 
 export const AI_TOOL_CATALOG: readonly { id: AiToolId; label: string; description: string; defaultOpen: boolean }[] = [
   { id: "pdf-ozetle", label: "PDF Özetle", description: "Belgenin kısa özetini çıkarır.", defaultOpen: true },
@@ -30,6 +31,7 @@ export const AI_TOOL_CATALOG: readonly { id: AiToolId; label: string; descriptio
   { id: "pdf-veri-cikar", label: "PDF'ten Veri Çıkar", description: "Belgeden tablo ve alan verisi çıkarır.", defaultOpen: true },
   { id: "hassas-veri-gizle", label: "Hassas Veri Gizle", description: "Kişisel verileri bulur ve karartır.", defaultOpen: true },
   { id: "cv-olustur", label: "CV Yapay Zekâ Asistanı", description: "CV özeti, madde güçlendirme, ilana uyarlama, ön yazı ve belgeden içe aktarma.", defaultOpen: true },
+  { id: "pdf-sinav-olustur", label: "Soru / Test Oluşturucu", description: "Belgeden çoktan seçmeli ve doğru-yanlış sorular üretir.", defaultOpen: true },
   { id: "sozlesme-denetci", label: "Sözleşme Denetçisi", description: "Sözleşme ve ihale belgelerindeki riskleri bulur. Satışa hazır olana kadar kapalı tutulur.", defaultOpen: false },
 ];
 

@@ -734,6 +734,18 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       { title: "Get it as a table", detail: "What's found is arranged into a tidy table you can move into Excel." },
     ],
   ),
+  "pdf-sinav-olustur": S(
+    [
+      PICK_TR("PDF ya da ders notunu"),
+      { title: "Soruları ayarla", detail: "Soru sayısını, türünü (çoktan seçmeli / doğru-yanlış) ve zorluğu seç." },
+      { title: "Testi çöz ya da indir", detail: "Ekranda çöz, puanını gör; soru kâğıdını ya da cevap anahtarlı PDF'i indir." },
+    ],
+    [
+      PICK_EN("your PDF or study notes"),
+      { title: "Set the questions", detail: "Choose the number, type (multiple choice / true-false) and difficulty." },
+      { title: "Take the quiz or download", detail: "Take it on screen and see your score; download the question sheet or a PDF with answer key." },
+    ],
+  ),
   "pdf-ceviri": S(
     [
       PICK_TR(),

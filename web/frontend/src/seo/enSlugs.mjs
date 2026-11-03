@@ -31,6 +31,7 @@ export const EN_TOOL_SLUGS = {
   "taranmis-pdf-ocr": "ocr-pdf",
   "pdf-veri-cikar": "extract-data-from-pdf",
   "pdf-ceviri": "translate-pdf",
+  "pdf-sinav-olustur": "pdf-quiz-generator",
   "ai-toplu-islem": "batch-process-pdf",
   "pdf-karsilastir": "compare-pdf",
   "hassas-veri-gizle": "redact-pdf",
