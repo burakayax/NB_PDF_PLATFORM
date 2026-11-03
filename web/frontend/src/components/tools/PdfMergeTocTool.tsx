@@ -10,6 +10,7 @@ import { AlertTriangle, ArrowDown, ArrowUp, FileText, GripVertical, ListTree, Lo
 import type { Language } from "../../i18n/landing";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { useToolPageContext } from "../common/toolPageContext";
 import { MemberGateModal } from "../common/MemberGateModal";
 import { PdfThumbError, renderPdfPage } from "../../lib/pdfThumbs";
 import {
@@ -87,6 +88,7 @@ export function PdfMergeTocTool({
 }) {
   const dil = language === "tr" ? "tr" : "en";
   const t = T[dil];
+  const { describesTool } = useToolPageContext();
   const [items, setItems] = useState<Item[]>([]);
   const [notlar, setNotlar] = useState<string[]>([]);
   const [okuyor, setOkuyor] = useState(false);
@@ -206,6 +208,7 @@ export function PdfMergeTocTool({
             accept="application/pdf,.pdf"
             multiple
             note={t.hint}
+            hideHeader={describesTool}
             onFiles={(f) => void ekle(f)}
           />
         </div>
@@ -221,22 +224,32 @@ export function PdfMergeTocTool({
   const girdi = "w-full rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-2 text-[13px] text-white placeholder:text-slate-500";
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{t.files} ({items.length}/{TOC_MAX_FILES})</p>
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setItems((m) => [...m].sort((a, b) => a.title.localeCompare(b.title, dil, { numeric: true })))}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08]">{t.az}</button>
-          <label className="cursor-pointer rounded-lg border border-white/15 px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.08]">
-            {t.addMore}
-            <input type="file" accept="application/pdf,.pdf" multiple className="sr-only"
-              onChange={(e) => { void ekle(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
-          </label>
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="mt-1 mb-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+            <span className="font-bold text-white">{items.length} {dil === "tr" ? "dosya" : "files"}</span>
+            {toplamSayfa > 0 && <span className="text-slate-400">{toplamSayfa} {t.pages}</span>}
+            <span className="text-slate-500">{items.length}/{TOC_MAX_FILES}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <button type="button" onClick={() => setItems((m) => [...m].sort((a, b) => a.title.localeCompare(b.title, dil, { numeric: true })))}
+              className="rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">{t.az}</button>
+            <label className="cursor-pointer rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">
+              {t.addMore}
+              <input type="file" accept="application/pdf,.pdf" multiple className="sr-only"
+                onChange={(e) => { void ekle(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
+            </label>
+            <button type="button" onClick={() => { setItems([]); setNotlar([]); setHata(null); }}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
+              <Trash2 className="h-3.5 w-3.5" />{dil === "tr" ? "Tümünü sil" : "Clear all"}
+            </button>
+          </div>
         </div>
+        <p className="mt-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">{t.order}</p>
       </div>
-      <p className="mt-1 text-[12px] text-slate-400">{t.order}</p>
 
-      <ul className="mt-3 space-y-2">
+      <ul className="space-y-2">
         {items.map((it, i) => (
           <li
             key={it.id}
@@ -254,15 +267,12 @@ export function PdfMergeTocTool({
                 return c;
               });
             }}
-            className={`flex flex-wrap items-center gap-3 rounded-xl border p-2.5 ${it.error ? "border-rose-400/40 bg-rose-500/[0.07]" : "border-white/[0.08] bg-white/[0.03]"}`}
+            className={`flex flex-wrap items-center gap-2 rounded-xl border bg-white/[0.03] px-3 py-2.5 ${it.error ? "border-amber-400/30 bg-amber-500/[0.06]" : "border-white/[0.08]"}`}
           >
-            <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-slate-500 sm:block" aria-hidden />
-            <span className="w-5 shrink-0 text-center text-[12px] font-semibold tabular-nums text-slate-400">{i + 1}</span>
-            {it.thumb ? (
-              <img src={it.thumb} alt="" className="h-14 w-10 shrink-0 rounded border border-white/15 bg-white object-cover" />
-            ) : (
-              <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded border border-white/15 bg-white/[0.05]"><FileText className="h-5 w-5 text-slate-500" /></div>
-            )}
+            <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-slate-400 sm:block" aria-hidden />
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${it.error ? "bg-amber-500/10 text-amber-300" : "bg-white/[0.06] text-cyan-300"}`}>
+              {it.error ? <AlertTriangle className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+            </span>
             <div className="min-w-0 flex-1">
               <input className={girdi} value={it.title} aria-label={`${t.titleLabel}: ${it.name}`} maxLength={120}
                 onChange={(e) => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, title: e.target.value } : x)))} />
@@ -276,11 +286,11 @@ export function PdfMergeTocTool({
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
-              <button type="button" onClick={() => tasi(i, -1)} disabled={i === 0} aria-label={t.up} className="rounded-md border border-white/15 p-1.5 text-slate-300 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
-              <button type="button" onClick={() => tasi(i, 1)} disabled={i === items.length - 1} aria-label={t.down} className="rounded-md border border-white/15 p-1.5 text-slate-300 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
-              <button type="button" onClick={() => setItems((m) => m.filter((x) => x.id !== it.id))} aria-label={t.remove} className="rounded-md border border-white/15 p-1.5 text-rose-300"><Trash2 className="h-3.5 w-3.5" /></button>
-            </div>
+            <span className="flex shrink-0 items-center">
+              <button type="button" onClick={() => tasi(i, -1)} disabled={i === 0} aria-label={t.up} className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+              <button type="button" onClick={() => tasi(i, 1)} disabled={i === items.length - 1} aria-label={t.down} className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+            </span>
+            <button type="button" onClick={() => setItems((m) => m.filter((x) => x.id !== it.id))} aria-label={t.remove} className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
             {!it.error && (
               <div className="basis-full border-t border-white/[0.06] pt-2">
                 <button type="button" onClick={() => setItems((m) => m.map((x) => (x.id === it.id ? { ...x, open: !x.open } : x)))}
@@ -328,7 +338,7 @@ export function PdfMergeTocTool({
       {okuyor && <p className="mt-2 flex items-center gap-2 text-[13px] text-slate-300" role="status"><Loader2 className="h-4 w-4 animate-spin" /> {t.reading}</p>}
       {notlar.map((n, k) => <p key={k} className="mt-1 text-[12px] text-amber-300" role="alert">{n}</p>)}
 
-      <div className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+      <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
         <p className="text-[13px] font-semibold text-slate-100">{t.settings}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label><span className="mb-1 block text-[12px] text-slate-400">{t.heading}</span>
@@ -351,15 +361,14 @@ export function PdfMergeTocTool({
       {gecerli.length < 2 && <p className="mt-3 text-[13px] text-amber-300" role="status">{t.needTwo}</p>}
       {hata && <p className="mt-3 text-[13px] text-rose-300" role="alert">{hata}</p>}
 
-      <div className="mt-5 flex gap-2.5">
-        <button type="button" onClick={() => { setItems([]); setNotlar([]); setHata(null); }}
-          className="shrink-0 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200">{t.another}</button>
-        <button type="button" onClick={() => void birlestir()} disabled={gecerli.length < 2 || calisiyor}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-50">
-          {calisiyor ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListTree className="h-4 w-4" />}
-          {calisiyor ? t.working : t.build}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => void birlestir()}
+        disabled={gecerli.length < 2 || calisiyor}
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-70 disabled:saturate-50"
+      >
+        {calisiyor ? <><Loader2 className="h-5 w-5 animate-spin" />{t.working}</> : <>{t.build} →</>}
+      </button>
       <p className="mt-2 text-center text-[12px] text-slate-500">{t.onDevice}</p>
       {kapi && !isSignedIn && (
         <MemberGateModal language={language} icon={<ListTree className="h-7 w-7" />} toolName={dil === "tr" ? "Birleştir + İçindekiler" : "Merge + Table of Contents"} onClose={() => setKapi(false)} onLogin={onLogin} />

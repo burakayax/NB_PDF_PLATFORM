@@ -6,7 +6,10 @@
  * içeriği (metin, bağlantılar, formlar) değiştirilmez; QR üstüne eklenir.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ImagePlus, Loader2, QrCode, Wand2, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { AlertTriangle, FileText, ImagePlus, Loader2, QrCode, Sliders, Trash2, Wand2, X } from "lucide-react";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
+import { useToolPageContext } from "../common/toolPageContext";
 import type { Language } from "../../i18n/landing";
 import { MemberGateModal } from "../common/MemberGateModal";
 import { findFreeSpot } from "../../lib/pdfFreeSpot";
@@ -54,7 +57,7 @@ const T = {
     logo: "Ortaya logo ekle", logoNote: "Logo eklenince hata düzeltme otomatik «Çok yüksek» olur.", logoRemove: "Logoyu kaldır",
     logoBad: "Logo PNG ya da JPG olmalı.",
     add: "QR'ı PDF'ye ekle", working: "Ekleniyor…", failed: "QR eklenemedi. Dosya bozuk ya da korumalı olabilir.",
-    png: "QR'ı PNG indir", svg: "QR'ı SVG indir", another: "Başka dosya seç",
+    png: "QR'ı PNG indir", svg: "QR'ı SVG indir", another: "Başka dosya seç", close: "Kapat", remove: "Kaldır", modalTitle: "QR kod yerleştir", editEditor: "QR ayarlarını düzenle", pageWord: "sayfa", summaryLabel: "QR",
     linkNote: "Bu QR, PDF'te tıklanabilir bağlantı olarak da eklenir.",
     onDevice: "Dosyan cihazından çıkmaz.",
     addedTo: "sayfaya QR eklendi",
@@ -97,7 +100,7 @@ const T = {
     logo: "Add a logo in the middle", logoNote: "Adding a logo sets error correction to “Highest” automatically.", logoRemove: "Remove logo",
     logoBad: "The logo must be a PNG or JPG.",
     add: "Add QR to PDF", working: "Adding…", failed: "Could not add the QR. The file may be corrupt or protected.",
-    png: "Download QR as PNG", svg: "Download QR as SVG", another: "Choose another file",
+    png: "Download QR as PNG", svg: "Download QR as SVG", another: "Choose another file", close: "Close", remove: "Remove", modalTitle: "Place QR code", editEditor: "Edit QR settings", pageWord: "pages", summaryLabel: "QR",
     linkNote: "This QR is also added as a clickable link in the PDF.",
     onDevice: "Your file never leaves your device.",
     addedTo: "pages got a QR",
@@ -189,6 +192,9 @@ export function PdfQrTool({
 }) {
   const dil = language === "tr" ? "tr" : "en";
   const t = T[dil];
+  const { describesTool } = useToolPageContext();
+  const [modalAcik, setModalAcik] = useState(false);
+  useBodyScrollLock(modalAcik);
 
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("belge.pdf");
@@ -235,6 +241,7 @@ export function PdfQrTool({
         setFileName(f.name);
         setThumb(th);
         setPreviewPage(0);
+        setModalAcik(true); // dosya yüklenince ayar penceresi açılır (diğer sayfa araçlarıyla aynı)
       } catch (e) {
         setHata(e instanceof PdfThumbError && e.kind === "encrypted" ? t.encrypted : t.broken);
       } finally {
@@ -489,6 +496,7 @@ export function PdfQrTool({
             language={language}
             accept="application/pdf,.pdf"
             note={t.hint}
+            hideHeader={describesTool}
             onFiles={(files) => void dosyaYukle(files[0])}
           />
         </div>
@@ -514,10 +522,10 @@ export function PdfQrTool({
           .replace("{p}", String(thumb.pageCount))
       : null;
 
-  return (
-    <div className="mx-auto grid w-full max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+  const modalIcerik = (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
       {/* ── Ayarlar ── */}
-      <div className="order-2 space-y-5 lg:order-1">
+      <div className="shrink-0 space-y-5 overflow-y-auto border-b border-white/[0.08] p-3 sm:max-h-[46%] sm:p-4 md:max-h-none md:w-[26rem] md:border-b-0 md:border-r">
         <section aria-label={t.templates}>
           <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{t.templates}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -722,17 +730,6 @@ export function PdfQrTool({
 
         {hata && <p className="text-[13px] text-rose-300" role="alert">{hata}</p>}
 
-        <div className="flex flex-wrap gap-2.5">
-          <button type="button" onClick={() => { setBytes(null); setThumb(null); }}
-            className="shrink-0 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200">
-            {t.another}
-          </button>
-          <button type="button" onClick={() => void ekle()} disabled={!hazir || calisiyor}
-            className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50">
-            {calisiyor ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-            {calisiyor ? t.working : t.add}
-          </button>
-        </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={!svg} onClick={() => void qrIndir("png")} className="rounded-lg border border-white/15 px-3 py-2 text-[12px] font-semibold text-slate-200 disabled:opacity-40">{t.png}</button>
           <button type="button" disabled={!svg} onClick={() => void qrIndir("svg")} className="rounded-lg border border-white/15 px-3 py-2 text-[12px] font-semibold text-slate-200 disabled:opacity-40">{t.svg}</button>
@@ -741,7 +738,7 @@ export function PdfQrTool({
       </div>
 
       {/* ── Sayfa önizlemesi ── */}
-      <div className="order-1 lg:order-2 lg:sticky lg:top-4 lg:self-start">
+      <div className="min-h-[240px] min-w-0 flex-1 overflow-y-auto p-2 sm:p-3">
         <div ref={kutuRef} className="relative mx-auto w-full max-w-sm select-none overflow-hidden rounded-lg border border-white/15 bg-white shadow-lg" style={{ aspectRatio: `${thumb.widthPt} / ${thumb.heightPt}` }}>
           <img src={thumb.dataUrl} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
           {svgUrl && (
@@ -786,6 +783,99 @@ export function PdfQrTool({
           </label>
         )}
       </div>
+    </div>
+  );
+
+  const ozetMetin = `${thumb.pageCount} ${t.pageWord} · ${sizeMm} mm`;
+
+  return (
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-cyan-300">
+          <FileText className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-slate-100">{fileName}</p>
+          <p className="text-[12px] text-slate-400">{thumb.pageCount} {t.pageWord}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setBytes(null); setThumb(null); setModalAcik(false); }}
+          className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
+          aria-label={t.remove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-3 rounded-xl border border-cyan-400/25 bg-cyan-500/[0.07] px-4 py-3">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-cyan-300/80">{t.summaryLabel}</p>
+        <p className="mt-0.5 text-sm font-semibold text-cyan-50">{ozetMetin}</p>
+      </div>
+
+      {hata && <p className="mt-3 text-[13px] text-rose-300" role="alert">{hata}</p>}
+
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => setModalAcik(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-4 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+        >
+          <Sliders className="h-4 w-4" />
+          {t.editEditor}
+        </button>
+        <button
+          type="button"
+          onClick={() => void ekle()}
+          disabled={!hazir || calisiyor}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50"
+        >
+          {calisiyor ? (<><Loader2 className="h-5 w-5 animate-spin" />{t.working}</>) : (<>{t.add} →</>)}
+        </button>
+      </div>
+      <p className="mt-3 text-[12px] text-slate-500">{t.onDevice}</p>
+
+      {modalAcik &&
+        createPortal(
+          <div className="fixed inset-0 z-[11000] flex items-center justify-center p-1 sm:p-1.5" role="presentation">
+            <button type="button" aria-label={t.close} className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setModalAcik(false)} />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t.modalTitle}
+              className="relative z-10 flex h-[min(94vh,100dvh)] w-[min(96vw,100vw)] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/[0.98] via-slate-950/[0.99] to-[#070b12] shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)]"
+            >
+              <div className="flex shrink-0 items-center gap-3 border-b border-cyan-500/15 bg-slate-950/50 px-3 py-2 sm:py-2.5">
+                <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-50 sm:text-base">
+                  {t.modalTitle} <span className="font-normal text-slate-400">· {fileName}</span>
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setModalAcik(false)}
+                  className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-white/[0.12] sm:min-h-0 sm:px-2.5"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden />
+                  {t.close}
+                </button>
+              </div>
+              {modalIcerik}
+              <div className="flex shrink-0 flex-col gap-2 border-t border-cyan-500/15 bg-slate-950/60 px-3 py-2.5 sm:flex-row sm:items-center">
+                <p className="min-w-0 flex-1 text-[12.5px] font-medium text-slate-300">{ozetMetin}</p>
+                {hata && <p className="text-[12px] text-rose-300">{hata}</p>}
+                <button
+                  type="button"
+                  onClick={() => void ekle()}
+                  disabled={!hazir || calisiyor}
+                  className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50"
+                >
+                  {calisiyor ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {calisiyor ? t.working : `${t.add} →`}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
       {kapi && !isSignedIn && (
         <MemberGateModal language={language} icon={<QrCode className="h-7 w-7" />} toolName={dil === "tr" ? "PDF'ye QR Kod Ekle" : "Add QR Code to PDF"} onClose={() => setKapi(false)} onLogin={onLogin} />
       )}

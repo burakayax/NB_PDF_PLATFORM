@@ -21,7 +21,7 @@ export function MemberGateModal({
 }) {
   const tr = language === "tr";
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/65 p-4 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[12000] flex items-end justify-center bg-black/65 p-4 sm:items-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
