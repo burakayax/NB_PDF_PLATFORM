@@ -1,0 +1,5 @@
+DejaVu Sans - Copyright (c) 2003 Bitstream, Inc. ve Tavmjong Bah. Tum haklari saklidir.
+DejaVu yazi tipleri, Bitstream Vera lisansina dayanan serbest bir lisansla dagitilir; ucretsiz kullanilabilir,
+kopyalanabilir ve yeniden dagitilabilir (telif bildirimi korunmak kosuluyla). Ayrintilar:
+https://dejavu-fonts.github.io/License.html
+Bu projede yalniz sinav PDF'lerinde Roboto'da bulunmayan matematik sembolleri (kume isaretleri vb.) icin yedek olarak kullanilir.

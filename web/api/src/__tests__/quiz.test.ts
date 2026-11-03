@@ -5,7 +5,7 @@ const callClaude = vi.fn();
 vi.mock("../config/env.js", () => ({ env: { AI_CV_MODEL: "claude-sonnet-5-5" } }));
 vi.mock("../modules/ai/ai.service.js", () => ({ callClaude: (...a: unknown[]) => callClaude(...a) }));
 
-import { evidenceInDoc, generateQuiz, normForMatch, normalizeQuiz, parseQuizTypes, quizCreditCost, balanceByType } from "../modules/ai/quiz.service.js";
+import { cleanGraph, evidenceInDoc, generateQuiz, normForMatch, normalizeQuiz, parseQuizTypes, quizCreditCost, balanceByType } from "../modules/ai/quiz.service.js";
 
 const MIX = ["mcq", "tf"] as const;
 const ALL = ["mcq", "tf", "open", "fill"] as const;
@@ -216,5 +216,24 @@ describe("balanceByType", () => {
   it("az soru varsa hepsini döndürür", () => {
     const r = normalizeQuiz({ questions: [mcq()] }, DOC, ALL, 10);
     expect(r.questions).toHaveLength(1);
+  });
+});
+
+describe("matematik grafiği", () => {
+  it("geçerli tarifi korur, tehlikeli/bozuk olanı eler", () => {
+    expect(cleanGraph({ fns: ["x^2-4"], xmin: -4, xmax: 4, ymin: -5, ymax: 12 })).toEqual({ fns: ["x^2-4"], xmin: -4, xmax: 4, ymin: -5, ymax: 12 });
+    expect(cleanGraph({ fns: ["process.exit(1);"], xmin: -4, xmax: 4, ymin: -5, ymax: 12 })).toBeNull();
+    expect(cleanGraph({ fns: ["x"], xmin: 4, xmax: -4, ymin: -5, ymax: 12 })).toBeNull();
+    expect(cleanGraph({ fns: ["x"], xmin: -99999, xmax: 4, ymin: -5, ymax: 12 })).toBeNull();
+    expect(cleanGraph({ fns: ["x", "2x", "x^2", "x^3"], xmin: -1, xmax: 1, ymin: -1, ymax: 1 })?.fns).toHaveLength(3);
+    expect(cleanGraph(undefined)).toBeNull();
+  });
+
+  it("sorulara grafik eklenir; geçersiz grafik soruyu düşürmez, sadece grafiği atar", () => {
+    const withG = { ...mcq(), graph: { fns: ["x^2"], xmin: -2, xmax: 2, ymin: -1, ymax: 5 } };
+    const bad = { ...mcq({ q: "Başka bir soru nedir ve ne kadardır?" }), graph: { fns: ["x; drop"], xmin: -2, xmax: 2, ymin: -1, ymax: 5 } };
+    const r = normalizeQuiz({ questions: [withG, bad] }, DOC, ALL, 10);
+    expect(r.questions[0]).toHaveProperty("graph");
+    expect(r.questions[1]).not.toHaveProperty("graph");
   });
 });

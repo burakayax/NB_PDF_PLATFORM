@@ -215,11 +215,13 @@ export async function aiChat(
 }
 
 /** Soru / test oluşturucu sonucu (backend quiz.service ile aynı). */
+/** Matematik soruları için fonksiyon grafiği tarifi (çizimi istemci yapar). */
+export type QuizGraph = { fns: string[]; xmin: number; xmax: number; ymin: number; ymax: number };
 export type QuizQuestion =
-  | { type: "mcq"; q: string; options: string[]; answer: number; explanation: string; evidence: string }
-  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string }
-  | { type: "open"; q: string; answer: string; explanation: string; evidence: string }
-  | { type: "fill"; q: string; answer: string; explanation: string; evidence: string };
+  | { type: "mcq"; q: string; options: string[]; answer: number; explanation: string; evidence: string; graph?: QuizGraph }
+  | { type: "tf"; q: string; answer: boolean; explanation: string; evidence: string; graph?: QuizGraph }
+  | { type: "open"; q: string; answer: string; explanation: string; evidence: string; graph?: QuizGraph }
+  | { type: "fill"; q: string; answer: string; explanation: string; evidence: string; graph?: QuizGraph };
 export type QuizData = { questions: QuizQuestion[]; requested: number; dropped: number };
 export type QuizType = "mcq" | "tf" | "open" | "fill";
 export type QuizLevel = "easy" | "medium" | "hard";

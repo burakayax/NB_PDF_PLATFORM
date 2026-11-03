@@ -3,6 +3,7 @@
  * Saf fonksiyonlar — arayüzden bağımsız, test edilebilir.
  */
 import type { QuizQuestion } from "../api/ai";
+import { plainText } from "./mathText";
 
 const LETTERS = ["A", "B", "C", "D"];
 
@@ -40,9 +41,9 @@ export function quizToMarkdown(
   const tr = lang === "tr";
   const out: string[] = [`# ${opts.title}`, ""];
   questions.forEach((q, i) => {
-    out.push(`**${i + 1}. ${q.q}**`);
+    out.push(`**${i + 1}. ${plainText(q.q)}**`);
     if (q.type === "mcq") {
-      q.options.forEach((o, k) => out.push(`${LETTERS[k]}) ${o}`));
+      q.options.forEach((o, k) => out.push(`${LETTERS[k]}) ${plainText(o)}`));
     } else if (q.type === "tf") {
       out.push(tr ? "(   ) Doğru        (   ) Yanlış" : "(   ) True        (   ) False");
     } else if (q.type === "open") {
@@ -54,8 +55,8 @@ export function quizToMarkdown(
   if (opts.withAnswers) {
     out.push("---", "", `## ${tr ? "Cevap Anahtarı" : "Answer Key"}`, "");
     questions.forEach((q, i) => {
-      out.push(`**${i + 1}.** ${answerLabel(q, lang)}`);
-      if (q.explanation) out.push(`- ${q.explanation}`);
+      out.push(`**${i + 1}.** ${plainText(answerLabel(q, lang))}`);
+      if (q.explanation) out.push(`- ${plainText(q.explanation)}`);
     });
   }
   return out.join("\n");
