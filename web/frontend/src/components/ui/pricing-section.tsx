@@ -719,8 +719,8 @@ function CycleAwareCard({
 function GuvenSatiri({ language }: { language: Language }) {
   const tr = language === "tr";
   const maddeler = tr
-    ? ["7 gün iade garantisi", "Otomatik yenileme yok", "Güvenli ödeme (PayTR)"]
-    : ["7-day money-back", "No auto-renewal", "Secure payment (PayTR)"];
+    ? ["7 gün iade garantisi", "Otomatik yenileme yok", "Güvenli ödeme (PayTR)", "Kart bilgileriniz bizde saklanmaz"]
+    : ["7-day money-back", "No auto-renewal", "Secure payment (PayTR)", "Your card details are never stored by us"];
   return (
     <ul className="mt-3 space-y-1">
       {maddeler.map((m) => (
