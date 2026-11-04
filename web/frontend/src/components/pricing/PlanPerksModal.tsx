@@ -127,7 +127,7 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
                 label: tr ? "Excel, PowerPoint ve HTML dönüşümleri" : "Excel, PowerPoint and HTML conversions",
                 detail: tr
                   ? "PDF'ten Excel'e, Excel'den PDF'e, PDF'ten PowerPoint'e, PowerPoint'ten PDF'e ve HTML'den PDF'e."
-                  : "PDF'ten Excel'e, Excel'den PDF'e, PDF'ten PowerPoint'e, PowerPoint'ten PDF'e and HTML'den PDF'e.",
+                  : "PDF to Excel, Excel to PDF, PDF to PowerPoint, PowerPoint to PDF and HTML to PDF.",
               },
               {
                 label: tr ? "Gelişmiş PDF araçları" : "Advanced PDF tools",

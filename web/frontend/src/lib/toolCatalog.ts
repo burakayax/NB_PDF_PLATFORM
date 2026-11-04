@@ -231,8 +231,8 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "tiff-to-pdf", cat: "convert", Icon: FileType2, free: true,
-    tr: { name: "TIFF'ten PDF'e", desc: "Tek ya da çok sayfalı TIFF taramalarını PDF'e çevirin; sayfa sırası korunur." },
-    en: { name: "TIFF'ten PDF'e", desc: "Turn single or multi-page TIFF scans into a PDF; page order is kept." },
+    tr: { name: "TIFF'ten PDF'e", desc: "Tarayıcıdan çıkan TIFF dosyasını PDF'e çevirir. Bir TIFF'in içinde birkaç sayfa olabilir; hepsi sırayla PDF'e konur." },
+    en: { name: "TIFF to PDF", desc: "Turn single or multi-page TIFF scans into a PDF; page order is kept." },
   },
   {
     id: "pdf-ust-alt-bilgi", cat: "edit", Icon: Hash, free: true,
@@ -314,32 +314,32 @@ export const TOOLS: Tool[] = [
   {
     id: "pdf-to-word", cat: "convert", Icon: FileText, account: true,
     tr: { name: "PDF'ten Word'e", desc: "Düzenlenebilir Word belgesine çevirin." },
-    en: { name: "PDF'ten Word'e", desc: "Convert into an editable Word document." },
+    en: { name: "PDF to Word", desc: "Convert into an editable Word document." },
   },
   {
     id: "word-to-pdf", cat: "convert", Icon: FileOutput, account: true,
     tr: { name: "Word'den PDF'e", desc: "Word dosyasını herkesin açabildiği PDF yapın." },
-    en: { name: "Word'den PDF'e", desc: "Turn a Word file into a PDF anyone can open." },
+    en: { name: "Word to PDF", desc: "Turn a Word file into a PDF anyone can open." },
   },
   {
     id: "pdf-to-excel", cat: "convert", Icon: FileSpreadsheet,
     tr: { name: "PDF'ten Excel'e", desc: "Tabloları hesaplanabilir Excel sayfasına aktarın." },
-    en: { name: "PDF'ten Excel'e", desc: "Move tables into a spreadsheet you can calculate with." },
+    en: { name: "PDF to Excel", desc: "Move tables into a spreadsheet you can calculate with." },
   },
   {
     id: "excel-to-pdf", cat: "convert", Icon: FileInput,
     tr: { name: "Excel'den PDF'e", desc: "Tabloyu bozulmadan paylaşılabilir PDF yapın." },
-    en: { name: "Excel'den PDF'e", desc: "Share a spreadsheet as a PDF that keeps its layout." },
+    en: { name: "Excel to PDF", desc: "Share a spreadsheet as a PDF that keeps its layout." },
   },
   {
     id: "pdf-to-ppt", cat: "convert", Icon: Presentation,
     tr: { name: "PDF'ten PowerPoint'e", desc: "Sayfaları düzenlenebilir sunum slaytlarına çevirin." },
-    en: { name: "PDF'ten PowerPoint'e", desc: "Turn pages into editable presentation slides." },
+    en: { name: "PDF to PowerPoint", desc: "Turn pages into editable presentation slides." },
   },
   {
     id: "ppt-to-pdf", cat: "convert", Icon: Layout,
     tr: { name: "PowerPoint'ten PDF'e", desc: "Sunumu her cihazda aynı görünen PDF yapın." },
-    en: { name: "PowerPoint'ten PDF'e", desc: "Make a deck that looks the same on every device." },
+    en: { name: "PowerPoint to PDF", desc: "Make a deck that looks the same on every device." },
   },
   {
     id: "pdf-to-image", cat: "convert", Icon: Files, account: true,
@@ -359,7 +359,7 @@ export const TOOLS: Tool[] = [
   {
     id: "html-to-pdf", cat: "convert", Icon: Globe,
     tr: { name: "HTML'den PDF'e", desc: "Bir web sayfasını olduğu gibi PDF'e alın." },
-    en: { name: "HTML'den PDF'e", desc: "Capture a web page as a PDF, exactly as it looks." },
+    en: { name: "HTML to PDF", desc: "Capture a web page as a PDF, exactly as it looks." },
   },
   {
     id: "pdf-to-text", cat: "convert", Icon: FileType2,
@@ -369,37 +369,37 @@ export const TOOLS: Tool[] = [
   {
     id: "txt-to-pdf", cat: "convert", Icon: FileType2, free: true,
     tr: { name: "TXT'den PDF'e", desc: "Metin dosyasını Türkçe karakterleri bozmadan PDF yapın." },
-    en: { name: "TXT'den PDF'e", desc: "Turn a text file into a PDF without breaking Turkish characters." },
+    en: { name: "TXT to PDF", desc: "Turn a text file into a PDF without breaking Turkish characters." },
   },
   {
     id: "markdown-to-pdf", cat: "convert", Icon: FileText, free: true,
     tr: { name: "Markdown'dan PDF'e", desc: "Markdown (.md) notunuzu başlık ve listeleriyle PDF yapın." },
-    en: { name: "Markdown'dan PDF'e", desc: "Turn a Markdown (.md) note into a PDF with headings and lists." },
+    en: { name: "Markdown to PDF", desc: "Turn a Markdown (.md) note into a PDF with headings and lists." },
   },
   {
     id: "rtf-to-pdf", cat: "convert", Icon: FileType2, free: true,
     tr: { name: "RTF'den PDF'e", desc: "RTF belgesini Türkçe karakterli PDF'e çevirin." },
-    en: { name: "RTF'den PDF'e", desc: "Convert an RTF document to PDF with Turkish characters intact." },
+    en: { name: "RTF to PDF", desc: "Convert an RTF document to PDF with Turkish characters intact." },
   },
   {
     id: "odt-to-pdf", cat: "convert", Icon: FileOutput, free: true,
     tr: { name: "ODT'den PDF'e", desc: "LibreOffice ODT belgesini PDF'e çevirin." },
-    en: { name: "ODT'den PDF'e", desc: "Convert a LibreOffice ODT document to PDF." },
+    en: { name: "ODT to PDF", desc: "Convert a LibreOffice ODT document to PDF." },
   },
   {
     id: "epub-to-pdf", cat: "convert", Icon: FileOutput, free: true,
     tr: { name: "EPUB'tan PDF'e", desc: "DRM'siz EPUB e-kitabını PDF'e çevirin." },
-    en: { name: "EPUB'tan PDF'e", desc: "Convert a DRM-free EPUB e-book to PDF." },
+    en: { name: "EPUB to PDF", desc: "Convert a DRM-free EPUB e-book to PDF." },
   },
   {
     id: "pdf-to-epub", cat: "convert", Icon: FileInput, free: true,
     tr: { name: "PDF'ten EPUB'a", desc: "Metin PDF'ini telefonda okunur EPUB e-kitaba çevirin." },
-    en: { name: "PDF'ten EPUB'a", desc: "Turn a text PDF into an EPUB e-book readable on a phone." },
+    en: { name: "PDF to EPUB", desc: "Turn a text PDF into an EPUB e-book readable on a phone." },
   },
   {
     id: "pdf-to-markdown", cat: "convert", Icon: FileType2, free: true,
     tr: { name: "PDF'ten Markdown'a", desc: "PDF'i başlık ve listeleriyle Markdown'a çevirin." },
-    en: { name: "PDF'ten Markdown'a", desc: "Turn a PDF into Markdown with its headings and lists." },
+    en: { name: "PDF to Markdown", desc: "Turn a PDF into Markdown with its headings and lists." },
   },
 
   // ── Güvenlik ──────────────────────────────────────────────────────────────
@@ -421,22 +421,22 @@ export const TOOLS: Tool[] = [
   {
     id: "udf-to-pdf", cat: "legal", Icon: Scale, free: true,
     tr: { name: "UDF'den PDF'e", desc: "UYAP'tan inen .udf belgesini program kurmadan PDF'ye çevirin." },
-    en: { name: "UDF'den PDF'e", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
+    en: { name: "UDF to PDF", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
   },
   {
     id: "pdf-to-udf", cat: "legal", Icon: Scale, free: true,
     tr: { name: "PDF'ten UDF'ye", desc: "Metin içeren PDF'yi UYAP'ta açılabilen .udf belgesine çevirin." },
-    en: { name: "PDF'ten UDF'ye", desc: "Turn a text PDF into a .udf document that opens in UYAP." },
+    en: { name: "PDF to UDF", desc: "Turn a text PDF into a .udf document that opens in UYAP." },
   },
   {
     id: "word-to-udf", cat: "legal", Icon: Scale, free: true,
     tr: { name: "Word'den UDF'ye", desc: "Word (.docx) dilekçenizi biçimiyle birlikte .udf'ye çevirin." },
-    en: { name: "Word'den UDF'ye", desc: "Convert a Word (.docx) petition to .udf, keeping its formatting." },
+    en: { name: "Word to UDF", desc: "Convert a Word (.docx) petition to .udf, keeping its formatting." },
   },
   {
     id: "udf-to-word", cat: "legal", Icon: Scale, free: true,
     tr: { name: "UDF'den Word'e", desc: "UYAP belgesini düzenlenebilir Word dosyasına çevirin." },
-    en: { name: "UDF'den Word'e", desc: "Turn a UYAP document into an editable Word file." },
+    en: { name: "UDF to Word", desc: "Turn a UYAP document into an editable Word file." },
   },
   {
     id: "udf-viewer", cat: "legal", Icon: Scale, free: true,

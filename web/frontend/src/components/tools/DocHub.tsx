@@ -11,13 +11,13 @@ function modeFromPath(): DocMode | null {
 }
 
 const TABS: { id: DocMode; tr: string; en: string }[] = [
-  { id: "txt-to-pdf", tr: "TXT'den PDF'e", en: "TXT'den PDF'e" },
-  { id: "markdown-to-pdf", tr: "Markdown'dan PDF'e", en: "Markdown'dan PDF'e" },
-  { id: "rtf-to-pdf", tr: "RTF'den PDF'e", en: "RTF'den PDF'e" },
-  { id: "odt-to-pdf", tr: "ODT'den PDF'e", en: "ODT'den PDF'e" },
-  { id: "epub-to-pdf", tr: "EPUB'tan PDF'e", en: "EPUB'tan PDF'e" },
-  { id: "pdf-to-epub", tr: "PDF'ten EPUB'a", en: "PDF'ten EPUB'a" },
-  { id: "pdf-to-markdown", tr: "PDF'ten Markdown'a", en: "PDF'ten Markdown'a" },
+  { id: "txt-to-pdf", tr: "TXT'den PDF'e", en: "TXT to PDF" },
+  { id: "markdown-to-pdf", tr: "Markdown'dan PDF'e", en: "Markdown to PDF" },
+  { id: "rtf-to-pdf", tr: "RTF'den PDF'e", en: "RTF to PDF" },
+  { id: "odt-to-pdf", tr: "ODT'den PDF'e", en: "ODT to PDF" },
+  { id: "epub-to-pdf", tr: "EPUB'tan PDF'e", en: "EPUB to PDF" },
+  { id: "pdf-to-epub", tr: "PDF'ten EPUB'a", en: "PDF to EPUB" },
+  { id: "pdf-to-markdown", tr: "PDF'ten Markdown'a", en: "PDF to Markdown" },
 ];
 
 /** Tek bir araç sayfası için bileşen (SEO sayfaları + panel ortak kullanır). */

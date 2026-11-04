@@ -262,7 +262,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       const accepted = wantImages ? imgs : pdfs;
       const wrongType = wantImages ? pdfs : imgs; // aracın istemediği ama bilinen tür
       if (accepted.length === 0 && tiffHint) {
-        setError(tr ? "TIFF dosyaları için «TIFF'ten PDF'e» aracını kullanın." : "For TIFF files use the TIFF'ten PDF'e tool.");
+        setError(tr ? "TIFF dosyaları için «TIFF'ten PDF'e» aracını kullanın." : "For TIFF files use the TIFF to PDF tool.");
         return;
       }
       if (accepted.length === 0) {
@@ -280,7 +280,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       if (rejected.length || wrongType.length) {
         setError(tr
           ? `${rejected.length + wrongType.length} dosya atlandı — bu araç yalnız ${wantImages ? "görsel (JPG, PNG, WebP)" : "PDF"} kabul eder.${tiffHint ? " TIFF için «TIFF'ten PDF'e» aracını kullanın." : ""}`
-          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG, PNG, WebP)" : "PDF"}.${tiffHint ? " For TIFF use the TIFF'ten PDF'e tool." : ""}`);
+          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG, PNG, WebP)" : "PDF"}.${tiffHint ? " For TIFF use the TIFF to PDF tool." : ""}`);
       }
       // Görseller: hafif kontrol (0 bayt engelle). PDF'ler: cihazda denetle (boş/bozuk/şifreli/sayfa).
       const fresh: Picked[] = accepted.map((file) => ({

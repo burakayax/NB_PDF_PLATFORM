@@ -135,10 +135,10 @@ export function groupToolsByCategory(
 const SB: Record<FeatureKey, { tr: string; en: string }> = {
   split: { tr: "PDF Böl", en: "Split PDF" },
   merge: { tr: "PDF Birleştir", en: "Merge PDF" },
-  "pdf-to-word": { tr: "PDF'ten Word'e", en: "PDF'ten Word'e" },
-  "word-to-pdf": { tr: "Word'den PDF'e", en: "Word'den PDF'e" },
-  "excel-to-pdf": { tr: "Excel'den PDF'e", en: "Excel'den PDF'e" },
-  "pdf-to-excel": { tr: "PDF'ten Excel'e", en: "PDF'ten Excel'e" },
+  "pdf-to-word": { tr: "PDF'ten Word'e", en: "PDF to Word" },
+  "word-to-pdf": { tr: "Word'den PDF'e", en: "Word to PDF" },
+  "excel-to-pdf": { tr: "Excel'den PDF'e", en: "Excel to PDF" },
+  "pdf-to-excel": { tr: "PDF'ten Excel'e", en: "PDF to Excel" },
   compress: { tr: "PDF Sıkıştır", en: "Compress PDF" },
   encrypt: { tr: "PDF Şifrele", en: "Encrypt PDF" },
   "delete-pages": { tr: "Sayfa Sil", en: "Delete Pages" },
@@ -148,11 +148,11 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   watermark: { tr: "Filigran Ekle", en: "Add Watermark" },
   "page-numbers": { tr: "Sayfa Numarası", en: "Page Numbers" },
   "repair-pdf": { tr: "PDF Onar", en: "Repair PDF" },
-  "pdf-to-ppt": { tr: "PDF'ten PowerPoint'e", en: "PDF'ten PowerPoint'e" },
-  "ppt-to-pdf": { tr: "PowerPoint'ten PDF'e", en: "PowerPoint'ten PDF'e" },
+  "pdf-to-ppt": { tr: "PDF'ten PowerPoint'e", en: "PDF to PowerPoint" },
+  "ppt-to-pdf": { tr: "PowerPoint'ten PDF'e", en: "PowerPoint to PDF" },
   "pdf-to-image": { tr: "PDF'ten Görsele", en: "PDF to Image" },
   "image-to-pdf": { tr: "Görselden PDF'e", en: "Image to PDF" },
-  "html-to-pdf": { tr: "HTML'den PDF'e", en: "HTML'den PDF'e" },
+  "html-to-pdf": { tr: "HTML'den PDF'e", en: "HTML to PDF" },
   "pdf-to-text": { tr: "PDF'ten Metne", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
   "grayscale-pdf": { tr: "PDF Siyah-Beyaz Yap", en: "Grayscale PDF" },
@@ -553,28 +553,28 @@ export function featureCopy(
       button: tr ? "PDF'leri Birleştir" : "Merge PDFs",
     },
     "pdf-to-word": {
-      title: tr ? "PDF'ten Word'e" : "PDF'ten Word'e",
+      title: tr ? "PDF'ten Word'e" : "PDF to Word",
       description: tr
         ? "PDF dosyasını düzenlenebilir Word belgesine dönüştürür (metin tabanlı PDF'ler)."
         : "Convert PDF to an editable Word document (text-based PDFs).",
       button: tr ? "Word'e Çevir" : "Convert to Word",
     },
     "word-to-pdf": {
-      title: tr ? "Word'den PDF'e" : "Word'den PDF'e",
+      title: tr ? "Word'den PDF'e" : "Word to PDF",
       description: tr
         ? "Word belgesini PDF biçiminde dışa aktarır."
         : "Export a Word document to PDF.",
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "excel-to-pdf": {
-      title: tr ? "Excel'den PDF'e" : "Excel'den PDF'e",
+      title: tr ? "Excel'den PDF'e" : "Excel to PDF",
       description: tr
         ? "Excel tablolarını PDF biçimine dönüştürür."
         : "Convert Excel spreadsheets to PDF.",
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "pdf-to-excel": {
-      title: tr ? "PDF'ten Excel'e" : "PDF'ten Excel'e",
+      title: tr ? "PDF'ten Excel'e" : "PDF to Excel",
       description: tr
         ? "PDF tablo yapısını korumaya odaklanarak Excel çıktısı oluşturur."
         : "Build an Excel file while preserving table structure where possible.",
@@ -644,14 +644,14 @@ export function featureCopy(
       button: tr ? "PDF'i Onar" : "Repair PDF",
     },
     "pdf-to-ppt": {
-      title: tr ? "PDF'ten PowerPoint'e" : "PDF'ten PowerPoint'e",
+      title: tr ? "PDF'ten PowerPoint'e" : "PDF to PowerPoint",
       description: tr
         ? "Sayfaları slayt görsellerine dönüştürerek PPTX üretir."
         : "Render pages as slide images and build a PPTX.",
       button: tr ? "PowerPoint'e Çevir" : "Convert to PowerPoint",
     },
     "ppt-to-pdf": {
-      title: tr ? "PowerPoint'ten PDF'e" : "PowerPoint'ten PDF'e",
+      title: tr ? "PowerPoint'ten PDF'e" : "PowerPoint to PDF",
       description: tr
         ? "Sunumu PDF’e aktarır (Windows + PowerPoint ortamında en iyi sonuç)."
         : "Convert a presentation to PDF (best on Windows with PowerPoint).",
@@ -672,7 +672,7 @@ export function featureCopy(
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "html-to-pdf": {
-      title: tr ? "HTML'den PDF'e" : "HTML'den PDF'e",
+      title: tr ? "HTML'den PDF'e" : "HTML to PDF",
       description: tr
         ? "Bir web adresini veya HTML parçasını PDF’e çevirir."
         : "Turn a web URL or HTML snippet into a PDF.",
