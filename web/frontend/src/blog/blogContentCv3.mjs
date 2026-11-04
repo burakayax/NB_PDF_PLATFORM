@@ -86,6 +86,9 @@ function enBlocks(p, name) {
   ];
 }
 
+/** Başlık arama sonucunda kesilmesin (≤60) ama kısa kalıp aranan kelimeleri boşa da harcamasın: ek yalnız sığarsa eklenir. */
+const uzat = (base, ek) => (base.length + ek.length <= 60 ? base + ek : base);
+
 export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS[p.id]).map((p, i) => {
   const [slugTr, , nameTr, nameEn] = CV_PROFESSION_SLUGS[p.id];
   const faq = cvFaq(p.id, nameTr, nameEn);
@@ -100,14 +103,14 @@ export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS
       tool: "/tools/cv-olustur",
     },
     {
-      title: `${nameTr} CV Örneği`,
+      title: uzat(`${nameTr} CV Örneği`, ": Özet ve Deneyim Maddeleri"),
       description: `${nameTr} CV'si nasıl yazılır? Profil özeti, rakamlı deneyim maddeleri ve beceri örnekleri; kopyalayıp kendinize uyarlayın.`,
       excerpt: `${nameTr} CV'sinde görev listesi yerine sonuç yazın. Özet, deneyim maddesi ve beceri örnekleri bu rehberde.`,
       blocks: trBlocks(p, nameTr),
       faq: faq.tr,
     },
     {
-      title: `${nameEn} CV Example`,
+      title: uzat(`${nameEn} CV Example`, ": Summary and Bullet Points"),
       description: `How to write a ${nameEn} CV: profile summary, number-driven bullets and key skills, with examples you can adapt.`,
       excerpt: `In a ${nameEn.toLowerCase()} CV, write results rather than a duty list. Summary, bullet and skills examples inside.`,
       blocks: enBlocks(p, nameEn),
