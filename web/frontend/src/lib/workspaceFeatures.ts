@@ -122,7 +122,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     id: "image-to-pdf",
     icon: "🖼",
     endpoint: "image-to-pdf",
-    accept: "image/png,image/jpeg,image/jpg,image/webp,image/tiff,.tif,.tiff",
+    accept: "image/png,image/jpeg,image/jpg,image/webp",
     multiple: true,
     fallbackFilename: "fotograflar.pdf",
   },

@@ -87,7 +87,7 @@ export async function runClientPdfTool(
   }
 
   if (toolId === "image-to-pdf") {
-    // Çok sayfalı TIFF her sayfası ayrı görsel olarak, dosya sırasıyla açılır; WebP PNG'ye çevrilir.
+    // WebP PNG'ye çevrilir; JPG/PNG olduğu gibi kalır. (TIFF için ayrı araç var: tiff-to-pdf.)
     const images = await filesToImageInputs(files);
     return {
       blob: pdfBytesToBlob(await imagesToPdf(images)),

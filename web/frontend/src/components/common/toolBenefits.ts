@@ -33,7 +33,7 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Lock, tr: "Gizli", trDesc: "Belgen cihazından hiç çıkmaz.", en: "Private", enDesc: "Your document never leaves your device." },
   ],
   "image-to-pdf": [
-    { icon: Zap, tr: "Görselleri PDF yap", trDesc: "JPG, PNG, WebP ve çok sayfalı TIFF dosyalarını tek PDF'e sırayla dönüştür.", en: "Images to PDF", enDesc: "Turn JPG, PNG, WebP and multi-page TIFF files into one ordered PDF." },
+    { icon: Zap, tr: "Görselleri PDF yap", trDesc: "JPG, PNG ve WebP dosyalarını tek PDF'e sırayla dönüştür.", en: "Images to PDF", enDesc: "Turn JPG, PNG and WebP files into one ordered PDF." },
     { icon: Zap, tr: "Anında", trDesc: "Sürükle-bırak, saniyeler içinde hazır.", en: "Instant", enDesc: "Drag & drop, ready in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Görsellerin cihazında kalır.", en: "Private", enDesc: "Your images stay on your device." },
   ],
