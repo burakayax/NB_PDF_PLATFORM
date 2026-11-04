@@ -222,9 +222,9 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
 
   const isImages = activeTool === "image-to-pdf";
   const accept = autoDetect
-    ? "application/pdf,image/png,image/jpeg,image/jpg,image/webp,image/tiff,.tif,.tiff"
+    ? "application/pdf,image/png,image/jpeg,image/jpg,image/webp"
     : isImages
-      ? "image/png,image/jpeg,image/jpg,image/webp,image/tiff,.tif,.tiff"
+      ? "image/png,image/jpeg,image/jpg,image/webp"
       : "application/pdf";
   const minFiles = isImages ? 1 : 2;
   const ctaLabel = isImages
@@ -244,7 +244,9 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     (incoming: FileList | File[]) => {
       setError(null);
       const list = Array.from(incoming);
-      const imgs = list.filter((f) => f.type.startsWith("image/") || isTiffFile(f));
+      // TIFF bu araca değil «TIFF → PDF» aracına aittir; burada kabul edilmez, kullanıcı oraya yönlendirilir.
+      const tiffs = list.filter(isTiffFile);
+      const imgs = list.filter((f) => f.type.startsWith("image/") && !isTiffFile(f));
       const pdfs = list.filter((f) => f.type === "application/pdf");
 
       let next = activeTool;
@@ -255,14 +257,19 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       }
       // Reddedilen türler hakkında bilgilendir (sessizce yutma).
       const rejected = list.filter((f) => !imgs.includes(f) && !pdfs.includes(f));
+      const tiffHint = tiffs.length > 0;
       const wantImages = next === "image-to-pdf";
       const accepted = wantImages ? imgs : pdfs;
       const wrongType = wantImages ? pdfs : imgs; // aracın istemediği ama bilinen tür
+      if (accepted.length === 0 && tiffHint) {
+        setError(tr ? "TIFF dosyaları için «TIFF → PDF» aracını kullanın." : "For TIFF files use the TIFF → PDF tool.");
+        return;
+      }
       if (accepted.length === 0) {
         setError(
           tr
             ? wantImages
-              ? "Lütfen görsel (JPG, PNG, WebP ya da TIFF) ekleyin — PDF bu araca uymaz."
+              ? "Lütfen görsel (JPG, PNG ya da WebP) ekleyin — PDF bu araca uymaz."
               : "Lütfen PDF dosyası ekleyin — görseller «Görsel → PDF» aracına uyar."
             : wantImages
               ? "Please add image files."
@@ -272,8 +279,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       }
       if (rejected.length || wrongType.length) {
         setError(tr
-          ? `${rejected.length + wrongType.length} dosya atlandı — bu araç yalnız ${wantImages ? "görsel (JPG, PNG, WebP, TIFF)" : "PDF"} kabul eder.`
-          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG, PNG, WebP, TIFF)" : "PDF"}.`);
+          ? `${rejected.length + wrongType.length} dosya atlandı — bu araç yalnız ${wantImages ? "görsel (JPG, PNG, WebP)" : "PDF"} kabul eder.${tiffHint ? " TIFF için «TIFF → PDF» aracını kullanın." : ""}`
+          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG, PNG, WebP)" : "PDF"}.${tiffHint ? " For TIFF use the TIFF → PDF tool." : ""}`);
       }
       // Görseller: hafif kontrol (0 bayt engelle). PDF'ler: cihazda denetle (boş/bozuk/şifreli/sayfa).
       const fresh: Picked[] = accepted.map((file) => ({
@@ -349,7 +356,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       setBusy(true);
       let bytes: Uint8Array;
       if (isImages) {
-        // Çok sayfalı TIFF sayfa sayfa açılır, WebP PNG'ye çevrilir; JPG/PNG olduğu gibi kalır.
+        // WebP PNG'ye çevrilir; JPG/PNG olduğu gibi kalır.
         const imgs = await filesToImageInputs(okFiles.map((f) => f.file));
         bytes = await imagesToPdf(imgs);
       } else {
