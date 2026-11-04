@@ -59,6 +59,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "kimlik-karti-tek-sayfa",
   "pdf-sesli-oku",
   "pdf-ust-alt-bilgi",
+  "tiff-to-pdf",
   "txt-to-pdf",
   "markdown-to-pdf",
   "rtf-to-pdf",

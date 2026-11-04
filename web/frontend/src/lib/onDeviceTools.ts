@@ -45,6 +45,7 @@ export const ON_DEVICE_SEO_TOOLS: ReadonlySet<string> = new Set([
   "kimlik-karti-tek-sayfa",
   "pdf-sesli-oku",
   "pdf-ust-alt-bilgi",
+  "tiff-to-pdf",
   // Fotoğraf ve CV bilgisi tarayıcıdan çıkmaz: modeller cihazda (WASM) çalışır, CV tarayıcıda çizilir.
   "ai-fotograf-studyosu",
   "cv-olustur",

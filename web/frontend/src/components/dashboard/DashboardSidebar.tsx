@@ -146,7 +146,7 @@ const SCAN_FAV_ID = "scan-doc";
 const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 /** FeatureKey olmayan, kendi paneliyle açılan araçlar — favori yıldızı + kategori yerleşimi tek yerden. */
-type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "idcard" | "tts" | "headerfooter" | "docconv" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
+type CustomToolKey = "snip" | "compress-image" | "resize-image" | "cv" | "udf" | "idcard" | "tts" | "headerfooter" | "tiff" | "docconv" | "searchable" | "formfill" | "metadata" | "layout" | "signrequest" | "qr" | "toc";
 const CUSTOM_TOOLS: {
   key: CustomToolKey;
   favId: string;
@@ -160,6 +160,7 @@ const CUSTOM_TOOLS: {
   { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF / UYAP Araçları", en: "UDF / UYAP Tools", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "idcard", favId: "idcard-sheet", group: "organize", tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "docconv", favId: "doc-convert", group: "convert", tr: "Ek Dönüştürmeler (TXT, EPUB, Markdown…)", en: "More Conversions (TXT, EPUB, Markdown…)", Icon: FileType2, iconClass: "text-cyan-300" },
+  { key: "tiff", favId: "tiff-to-pdf", group: "convert", tr: "TIFF → PDF", en: "TIFF → PDF", Icon: FileType2, iconClass: "text-cyan-300" },
   { key: "headerfooter", favId: "pdf-ust-alt-bilgi", group: "organize", tr: "Üst / Alt Bilgi Ekle", en: "Add Header / Footer", Icon: Hash, iconClass: "text-cyan-300" },
   { key: "tts", favId: "pdf-sesli-oku", group: "convert", tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
@@ -212,6 +213,7 @@ type DashboardSidebarProps = {
   onOpenIdcard?: () => void;
   onOpenTts?: () => void;
   onOpenHeaderFooter?: () => void;
+  onOpenTiff?: () => void;
   onOpenCv?: () => void;
   /** Aranabilir PDF (OCR) aracını aç. */
   onOpenSearchable?: () => void;
@@ -278,6 +280,7 @@ export function DashboardSidebar({
   onOpenIdcard,
   onOpenTts,
   onOpenHeaderFooter,
+  onOpenTiff,
   onOpenCv,
   onOpenSearchable,
   onOpenLayout,
@@ -327,6 +330,7 @@ export function DashboardSidebar({
     idcard: onOpenIdcard,
     tts: onOpenTts,
     headerfooter: onOpenHeaderFooter,
+    tiff: onOpenTiff,
     searchable: onOpenSearchable,
     layout: onOpenLayout,
     formfill: onOpenFormFill,
@@ -1018,6 +1022,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenIdcard,
   onOpenTts,
   onOpenHeaderFooter,
+  onOpenTiff,
   onOpenCv,
   onOpenSearchable,
   onOpenLayout,
@@ -1071,6 +1076,8 @@ export function DashboardSidebarMobileLauncher({
           ? tr ? "Görsel Boyutlandır" : "Resize Image"
           : contentPanel === "snip"
           ? tr ? "PDF'ten Kesit Al" : "Snip to Image"
+          : contentPanel === "tiff"
+          ? "TIFF → PDF"
           : contentPanel === "headerfooter"
           ? tr ? "Üst / Alt Bilgi Ekle" : "Add Header / Footer"
           : contentPanel === "tts"
@@ -1109,6 +1116,7 @@ export function DashboardSidebarMobileLauncher({
     idcard: onOpenIdcard,
     tts: onOpenTts,
     headerfooter: onOpenHeaderFooter,
+    tiff: onOpenTiff,
     searchable: onOpenSearchable,
     layout: onOpenLayout,
     formfill: onOpenFormFill,

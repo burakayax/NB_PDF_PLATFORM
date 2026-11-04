@@ -33,7 +33,7 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Lock, tr: "Gizli", trDesc: "Belgen cihazından hiç çıkmaz.", en: "Private", enDesc: "Your document never leaves your device." },
   ],
   "image-to-pdf": [
-    { icon: Zap, tr: "Görselleri PDF yap", trDesc: "JPG/PNG'leri tek PDF'e sırayla dönüştür.", en: "Images to PDF", enDesc: "Turn JPG/PNG files into one ordered PDF." },
+    { icon: Zap, tr: "Görselleri PDF yap", trDesc: "JPG, PNG, WebP ve çok sayfalı TIFF dosyalarını tek PDF'e sırayla dönüştür.", en: "Images to PDF", enDesc: "Turn JPG, PNG, WebP and multi-page TIFF files into one ordered PDF." },
     { icon: Zap, tr: "Anında", trDesc: "Sürükle-bırak, saniyeler içinde hazır.", en: "Instant", enDesc: "Drag & drop, ready in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Görsellerin cihazında kalır.", en: "Private", enDesc: "Your images stay on your device." },
   ],
@@ -165,6 +165,11 @@ const CUSTOM: Record<string, Benefit[]> = {
     { icon: Zap, tr: "Başlıklar otomatik", trDesc: "Yazı boyutuna göre başlık seviyeleri ve listeler bulunur.", en: "Headings detected", enDesc: "Heading levels and lists are found from the text sizes." },
     { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Sunucuya yüklenmez — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "Never uploaded — done on your device in seconds." },
     { icon: Lock, tr: "Gizli", trDesc: "Dosyan cihazından hiç çıkmaz.", en: "Private", enDesc: "Your file never leaves your device." },
+  ],
+  "tiff-to-pdf": [
+    { icon: Zap, tr: "Çok sayfalı TIFF", trDesc: "Her sayfa PDF'te ayrı sayfa olur, sıra bozulmaz; birden çok TIFF'i tek PDF'te birleştir.", en: "Multi-page TIFF", enDesc: "Each page becomes its own PDF page in order; combine several TIFFs into one PDF." },
+    { icon: Zap, tr: "Tarayıcı çıktısına uygun", trDesc: "Fotokopi makinesi ve tarayıcıların TIF çıktısı (CCITT dahil) açılır.", en: "Made for scanner output", enDesc: "TIF files from copiers and scanners (including CCITT) open fine." },
+    { icon: Lock, tr: "Gizli", trDesc: "Dosyaların cihazında işlenir; sunucuya yüklenmez.", en: "Private", enDesc: "Files are processed on your device; never uploaded." },
   ],
   "pdf-ust-alt-bilgi": [
     { icon: Zap, tr: "Her sayfaya tek seferde", trDesc: "Sol, orta ve sağ konuma metin; sayfa numarası, tarih ve dosya adı otomatik.", en: "Every page at once", enDesc: "Text at left, center and right; page number, date and file name filled in automatically." },

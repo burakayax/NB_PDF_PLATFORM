@@ -230,6 +230,11 @@ export const TOOLS: Tool[] = [
     en: { name: "Request Signature", desc: "Send a document out for signature and get an audited signed copy." },
   },
   {
+    id: "tiff-to-pdf", cat: "convert", Icon: FileType2, free: true,
+    tr: { name: "TIFF → PDF", desc: "Tek ya da çok sayfalı TIFF taramalarını PDF'e çevirin; sayfa sırası korunur." },
+    en: { name: "TIFF → PDF", desc: "Turn single or multi-page TIFF scans into a PDF; page order is kept." },
+  },
+  {
     id: "pdf-ust-alt-bilgi", cat: "edit", Icon: Hash, free: true,
     tr: { name: "Üst / Alt Bilgi Ekle", desc: "Her sayfanın üstüne ve altına başlık, tarih, dosya adı ve sayfa numarası yazın." },
     en: { name: "Add Header / Footer", desc: "Put a title, date, file name and page number at the top and bottom of every page." },
@@ -608,6 +613,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "kimlik-karti-tek-sayfa": "teal",
   "pdf-sesli-oku": "cyan",
   "pdf-ust-alt-bilgi": "blue",
+  "tiff-to-pdf": "cyan",
   "txt-to-pdf": "violet",
   "markdown-to-pdf": "violet",
   "rtf-to-pdf": "blue",

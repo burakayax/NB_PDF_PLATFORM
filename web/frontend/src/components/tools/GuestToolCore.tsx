@@ -17,6 +17,7 @@ import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { savePendingTool } from "../../lib/appNavigation";
+import { filesToImageInputs, isTiffFile } from "../../lib/tiffPages";
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import {
   mergePdfs,
@@ -221,9 +222,9 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
 
   const isImages = activeTool === "image-to-pdf";
   const accept = autoDetect
-    ? "application/pdf,image/png,image/jpeg,image/jpg,image/webp"
+    ? "application/pdf,image/png,image/jpeg,image/jpg,image/webp,image/tiff,.tif,.tiff"
     : isImages
-      ? "image/png,image/jpeg,image/jpg,image/webp"
+      ? "image/png,image/jpeg,image/jpg,image/webp,image/tiff,.tif,.tiff"
       : "application/pdf";
   const minFiles = isImages ? 1 : 2;
   const ctaLabel = isImages
@@ -243,7 +244,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     (incoming: FileList | File[]) => {
       setError(null);
       const list = Array.from(incoming);
-      const imgs = list.filter((f) => f.type.startsWith("image/"));
+      const imgs = list.filter((f) => f.type.startsWith("image/") || isTiffFile(f));
       const pdfs = list.filter((f) => f.type === "application/pdf");
 
       let next = activeTool;
@@ -261,7 +262,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
         setError(
           tr
             ? wantImages
-              ? "Lütfen görsel (JPG/PNG) ekleyin — PDF bu araca uymaz."
+              ? "Lütfen görsel (JPG, PNG, WebP ya da TIFF) ekleyin — PDF bu araca uymaz."
               : "Lütfen PDF dosyası ekleyin — görseller «Görsel → PDF» aracına uyar."
             : wantImages
               ? "Please add image files."
@@ -271,8 +272,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       }
       if (rejected.length || wrongType.length) {
         setError(tr
-          ? `${rejected.length + wrongType.length} dosya atlandı — bu araç yalnız ${wantImages ? "görsel (JPG/PNG)" : "PDF"} kabul eder.`
-          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG/PNG)" : "PDF"}.`);
+          ? `${rejected.length + wrongType.length} dosya atlandı — bu araç yalnız ${wantImages ? "görsel (JPG, PNG, WebP, TIFF)" : "PDF"} kabul eder.`
+          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG, PNG, WebP, TIFF)" : "PDF"}.`);
       }
       // Görseller: hafif kontrol (0 bayt engelle). PDF'ler: cihazda denetle (boş/bozuk/şifreli/sayfa).
       const fresh: Picked[] = accepted.map((file) => ({
@@ -348,9 +349,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       setBusy(true);
       let bytes: Uint8Array;
       if (isImages) {
-        const imgs = await Promise.all(
-          okFiles.map(async (f) => ({ bytes: await f.file.arrayBuffer(), mime: f.file.type })),
-        );
+        // Çok sayfalı TIFF sayfa sayfa açılır, WebP PNG'ye çevrilir; JPG/PNG olduğu gibi kalır.
+        const imgs = await filesToImageInputs(okFiles.map((f) => f.file));
         bytes = await imagesToPdf(imgs);
       } else {
         bytes = await mergePdfs(await Promise.all(okFiles.map((f) => f.file.arrayBuffer())));

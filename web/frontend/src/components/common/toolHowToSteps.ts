@@ -775,6 +775,19 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     ],
   ),
 
+  "tiff-to-pdf": S(
+    [
+      { title: "TIFF dosyanı ekle", detail: "Bir ya da birkaç .tif / .tiff dosyası seç; çok sayfalı olabilir. Sırayı okla değiştir." },
+      { title: "Sayfa boyutunu seç", detail: "Taramanın kendi boyutu ya da A4'e sığdır; sonra «PDF'e çevir»e bas." },
+      TR_DOWNLOAD,
+    ],
+    [
+      { title: "Add your TIFF file", detail: "Choose one or more .tif / .tiff files; they can be multi-page. Change the order with the arrows." },
+      { title: "Pick the page size", detail: "Same as the scan or fit to A4; then click Convert to PDF." },
+      EN_DOWNLOAD,
+    ],
+  ),
+
   "pdf-ust-alt-bilgi": S(
     [
       { title: "PDF'ini ekle", detail: "Hazır bir düzen seç ya da üst ve alt bilgiyi kendin yaz; {sayfa} yazarsan sayfa numarası otomatik gelir." },

@@ -128,6 +128,7 @@ export const HERO_CATS: { id: HeroCatId; tr: string; en: string; items: HeroItem
     tr: "Diğer",
     en: "More",
     items: [
+      { k: "page", slug: "tiff-to-pdf", Icon: FileType2, tr: "TIFF → PDF", en: "TIFF → PDF" },
       { k: "page", slug: "pdf-ust-alt-bilgi", Icon: Hash, tr: "Üst / Alt Bilgi Ekle", en: "Add Header / Footer" },
       { k: "page", slug: "pdf-sesli-oku", Icon: Scale, tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)" },
       { k: "page", slug: "pdf-to-markdown", Icon: FileType2, tr: "PDF → Markdown", en: "PDF → Markdown" },
