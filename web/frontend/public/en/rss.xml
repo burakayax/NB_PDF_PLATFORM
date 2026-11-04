@@ -10,7 +10,7 @@
     <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
     <language>en-US</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Mon, 02 Nov 2026 15:31:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 04 Nov 2026 16:05:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,38 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/en/blog</link>
     </image>
+    <item>
+      <title>Convert TIFF to PDF: Multi-Page TIF Scans Explained</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-multi-page-tiff-to-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-multi-page-tiff-to-pdf</guid>
+      <pubDate>Wed, 04 Nov 2026 16:05:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/tiff-pdf-cevirme-cok-sayfali-tif" />
+      <description><![CDATA[Your scanner gave you a TIF and the form wants a PDF. How to convert a multi-page TIFF without losing page order, and what to check afterwards.]]></description>
+      <content:encoded><![CDATA[<p>Office scanners and copiers often save a scan as TIF or TIFF. It opens like a picture, but the moment you need to attach it to an online form, email it or file it, a PDF is what people ask for. Here is how to convert a TIFF, which route suits which situation, and what to check before you hit submit.</p>
+<h2>Why does the scanner give you a TIFF?</h2>
+<p>TIFF stores the image without losing detail, and one file can hold many pages, so a thirty-page scan arriving as a single file is perfectly normal. The catch is that many phones and browsers cannot preview it, while upload forms tend to prefer PDF.</p>
+<h2>Converting step by step</h2>
+<ol><li><strong>Add the file</strong> — Drop your TIF or TIFF into the tool. You can add several files and see them in a list.</li><li><strong>Check the order</strong> — With more than one file, move them up or down with the arrows. The PDF follows the list order.</li><li><strong>Pick a page size</strong> — Same as the scan keeps each page as it is; Fit to A4 puts every page on the same size.</li><li><strong>Convert and download</strong> — Press Convert to PDF. Every page of a multi-page TIFF becomes its own PDF page.</li></ol>
+<p><strong>TIFF to PDF</strong> — The file is converted in your browser and never uploaded. <a href="https://www.pdfplatform.app/en/tools/tiff-to-pdf">Open the tool</a></p>
+<h2>Which route when?</h2>
+<ul><li>A one-off, non-sensitive file: most online converters will do, although many upload the file to their servers and cap the number of free conversions per day.</li><li>ID papers, court files, medical or financial documents: pick a tool that processes the file in your browser instead of uploading it. The tool on this site works that way.</li><li>On a Mac: the built-in Preview app can open a TIFF and export it as a PDF.</li><li>Hundreds of files or automation: command-line tools such as ImageMagick fit, at the cost of setup and know-how.</li></ul>
+<h2>Checks after converting</h2>
+<ul><li>Does the PDF have the same number of pages as the TIFF?</li><li>Are the pages in the right order and the right way up?</li><li>Is the text legible? A faint scan stays faint in the PDF.</li><li>Is the file under the size limit of the form you are filling in?</li></ul>
+<h2>If the PDF turns out huge</h2>
+<p>Because TIFF is lossless, the PDF can end up large. If the upload form has a limit, run the result through Compress PDF. Accepted formats and size limits differ from one organisation to the next, so always read the exact numbers on the form itself.</p>
+<h2>Making the text selectable</h2>
+<p>A scan is a picture, and it stays a picture inside the PDF: you cannot select or search the words. If you need real text, run the PDF through the Searchable PDF (OCR) tool, and for anything important compare the output with the original page.</p>
+<blockquote><p>For JPG, PNG or WebP pictures use the Image to PDF tool instead; the TIFF tool is separate because it is built to open multi-page files page by page.</p></blockquote>]]></content:encoded>
+      <category>TIFF</category>
+      <category>Scanning</category>
+      <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-multi-page-tiff-to-pdf.png" type="image/png" length="33243" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-multi-page-tiff-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-multi-page-tiff-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-multi-page-tiff-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-multi-page-tiff-to-pdf.png" />
+    </item>
     <item>
       <title>Clickable Table of Contents for Case Files and Tenders</title>
       <link>https://www.pdfplatform.app/en/blog/case-file-tender-table-of-contents-bookmarks</link>

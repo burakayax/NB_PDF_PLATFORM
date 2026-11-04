@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Mon, 02 Nov 2026 15:31:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 04 Nov 2026 16:05:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,38 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>TIFF&apos;i PDF&apos;e Çevirme: Çok Sayfalı TIF Taramaları</title>
+      <link>https://www.pdfplatform.app/blog/tiff-pdf-cevirme-cok-sayfali-tif</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/tiff-pdf-cevirme-cok-sayfali-tif</guid>
+      <pubDate>Wed, 04 Nov 2026 16:05:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/convert-multi-page-tiff-to-pdf" />
+      <description><![CDATA[Tarayıcı TIF verdi, başvuru ekranı PDF istiyor. Çok sayfalı TIFF'i sırayı bozmadan tek PDF yapmanın adımları ve dikkat edilecekler.]]></description>
+      <content:encoded><![CDATA[<p>Ofis tarayıcıları ve fotokopi makineleri taramayı çoğu zaman TIF ya da TIFF olarak kaydeder. Dosya bir görüntü gibi açılır, ama bir başvuru ekranına, e-postaya ya da arşive koymak istediğinizde PDF gerekir. Aşağıda TIFF'i PDF'e çevirmenin yolları, hangisinin ne zaman uygun olduğu ve çevirdikten sonra neleri kontrol etmeniz gerektiği var.</p>
+<h2>TIFF nedir, neden tarayıcılar bunu kullanır?</h2>
+<p>TIFF, görüntüyü kayıpsız saklayan bir biçimdir. Tek bir TIFF dosyasının içinde birden fazla sayfa bulunabilir; bu yüzden onlarca sayfalık bir taramanın tek dosya olarak çıkması normaldir. Dezavantajı, çoğu tarayıcının ve telefonun bu biçimi kendiliğinden önizleyememesi, kurumların yükleme ekranlarının ise sıkça PDF istemesidir.</p>
+<h2>Adım adım: TIFF'i PDF'e çevirmek</h2>
+<ol><li><strong>Dosyayı ekleyin</strong> — TIF ya da TIFF dosyanızı araca bırakın. Birden fazla dosya ekleyebilirsiniz; hepsi listede görünür.</li><li><strong>Sırayı kontrol edin</strong> — Birden çok dosya varsa okla yukarı ya da aşağı taşıyın. PDF, listedeki sırayla oluşur.</li><li><strong>Sayfa boyutunu seçin</strong> — «Taramanın kendi boyutu» sayfayı olduğu gibi bırakır; «A4'e sığdır» tüm sayfaları aynı boyuta getirir.</li><li><strong>Çevirin ve indirin</strong> — «PDF'e çevir»e basın. Çok sayfalı TIFF'in her sayfası PDF'te ayrı bir sayfa olur.</li></ol>
+<p><strong>TIFF'ten PDF'e</strong> — Dosyanız tarayıcınızda çevrilir, sunucuya yüklenmez. <a href="https://www.pdfplatform.app/tools/tiff-to-pdf">Aracı aç</a></p>
+<h2>Hangi yöntem ne zaman?</h2>
+<ul><li>Tek seferlik, hassas olmayan bir dosya: çevrimiçi dönüştürücülerin çoğu iş görür; ancak birçoğu dosyayı kendi sunucusuna yükler ve günlük dosya sınırı koyar.</li><li>Kimlik, dava dosyası, sağlık ya da mali belge: dosyayı hiç yüklemeyen, işlemi tarayıcıda yapan bir araç tercih edin. Bu sitedeki araç böyle çalışır.</li><li>Mac kullanıyorsanız: Önizleme uygulaması TIFF'i açıp PDF olarak dışa aktarabilir.</li><li>Yüzlerce dosya ya da otomasyon: komut satırı araçları (örneğin ImageMagick) uygundur, ama kurulum ve bilgi ister.</li></ul>
+<h2>Çevirdikten sonra kontrol listesi</h2>
+<ul><li>Sayfa sayısı özgün TIFF ile aynı mı?</li><li>Sayfalar doğru sırada ve doğru yönde mi?</li><li>Metin okunaklı mı? Çok soluk taramalar PDF'te de soluk kalır.</li><li>Dosya boyutu yükleyeceğiniz ekranın sınırının altında mı?</li></ul>
+<h2>PDF çok büyük çıkarsa</h2>
+<p>TIFF kayıpsız olduğu için sonuç PDF'in boyutu yüksek olabilir. Yükleme ekranı sınır koyuyorsa «PDF Sıkıştır» aracıyla dosyayı küçültün. Sınır ve kabul edilen biçimler kurumdan kuruma değiştiği için kesin değerleri her zaman ilgili ekrandaki açıklamadan okuyun.</p>
+<h2>Yazıyı seçilebilir yapmak</h2>
+<p>Tarama bir görüntüdür; PDF'e çevrilince de görüntü olarak kalır, içindeki yazı seçilemez ve aranamaz. Metne ihtiyacınız varsa çıkan PDF'i «Aranabilir PDF (OCR)» aracından geçirin. OCR sonucunu önemli belgelerde özgün sayfayla karşılaştırmak iyi bir alışkanlıktır.</p>
+<blockquote><p>JPG, PNG ya da WebP görselleriniz varsa «Görselden PDF'e» aracını kullanın; TIFF için ayrı olan bu araç çok sayfalı dosyaları sayfa sayfa açmak üzere hazırlandı.</p></blockquote>]]></content:encoded>
+      <category>TIFF</category>
+      <category>Tarama</category>
+      <category>PDF Araçları</category>
+      <enclosure url="https://www.pdfplatform.app/covers/tiff-pdf-cevirme-cok-sayfali-tif.png" type="image/png" length="32931" />
+      <media:content url="https://www.pdfplatform.app/covers/tiff-pdf-cevirme-cok-sayfali-tif.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/tiff-pdf-cevirme-cok-sayfali-tif.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/tiff-pdf-cevirme-cok-sayfali-tif.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/tiff-pdf-cevirme-cok-sayfali-tif.png" />
+    </item>
     <item>
       <title>Dava Dosyası ve İhale İçin Tıklanabilir İçindekiler</title>
       <link>https://www.pdfplatform.app/blog/dava-dosyasi-ihale-icindekiler-yer-imi</link>
