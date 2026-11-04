@@ -82,6 +82,9 @@ const FREE_TOOLS: FeatureKey[] = [
   "sayfa-duzeni",
   "form-doldur",
   "ustveri-temizle",
+  // İmza isteme: plan kapısı yok, tek sınır aylık kontenjan (Ücretsiz 1, Başlangıç 3 …;
+  // signature.service.ts → AYLIK_KONTENJAN). Plan listesi bu gerçeği yansıtsın diye buradadır.
+  "imza-iste",
 ];
 
 /** Starter'a ek olarak açılan araçlar */

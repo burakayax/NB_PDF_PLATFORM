@@ -110,18 +110,8 @@ export const TOOL_SLUGS = [
 ];
 
 /**
- * Sitede kaç araç olduğu — TEK KAYNAK.
- *
- * Bu sayı ana sayfa başlığı, H1, açıklama ve fiyat kartında geçiyordu ve HER
- * BİRİNE ELLE yazılmıştı. Yeni araç eklendiğinde güncellenmesi unutuldu: site
- * 46 araç sunarken Google'a ve ziyaretçiye "45 araç" diyordu. Artık listeden
- * türetiliyor, kendiliğinden doğru kalıyor.
- */
-export const ARAC_SAYISI = TOOL_SLUGS.length - 9; // AI_COMING_SOON_SLUGS.length (aşağıda)
-
-/**
  * Yapay zekâ araçları halka açılana kadar "Çok yakında" durumunda; sayıma KATILMAZ (kullanılamayan
- * aracı "var" diye saymak güven kırar). AI açıldığında bu listeyi boşalt VE yukarıdaki `- 9`'u kaldır.
+ * aracı "var" diye saymak güven kırar). AI açıldığında bu listeyi boşalt; ARAC_SAYISI listeden türediği için kendiliğinden doğru kalır.
  */
 export const AI_COMING_SOON_SLUGS = [
   "pdf-ozetle",
@@ -135,6 +125,17 @@ export const AI_COMING_SOON_SLUGS = [
   "ai-toplu-islem",
   "hassas-veri-gizle",
 ];
+
+/**
+ * Sitede kaç araç olduğu — TEK KAYNAK.
+ *
+ * Bu sayı ana sayfa başlığı, H1, açıklama ve fiyat kartında geçiyordu ve HER
+ * BİRİNE ELLE yazılmıştı. Yeni araç eklendiğinde güncellenmesi unutuldu: site
+ * 46 araç sunarken Google'a ve ziyaretçiye "45 araç" diyordu. Artık listeden
+ * türetiliyor, kendiliğinden doğru kalıyor.
+ */
+export const ARAC_SAYISI = TOOL_SLUGS.length - AI_COMING_SOON_SLUGS.length;
+
 
 /**
  * Başlığa marka ekini YALNIZCA 60 karakterlik görünür sınıra sığdığında ekler.

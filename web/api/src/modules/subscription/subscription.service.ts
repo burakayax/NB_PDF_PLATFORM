@@ -10,7 +10,7 @@ import {
 import { buildRecordPastLimitCopy, buildSummaryUpgradeHint } from "./conversion-upgrade.js";
 import { getResolvedTOOLSBusinessConfig } from "./tools-config-runtime.js";
 import { computeUsageSoftWarnings, mergeUsageSoftWarnings } from "./usage-soft-warnings.js";
-import type { FeatureKey } from "./subscription.config.js";
+import { featureCatalog, type FeatureKey } from "./subscription.config.js";
 import { getPaymentPricesTry } from "../payment/payment-pricing.js";
 import { isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
 import { getPlanDefinitionsResolved } from "./plan-runtime.js";
@@ -45,7 +45,7 @@ export async function ensurePaidSubscriptionActiveOrDowngrade(userId: string): P
     return { user: userBefore, downgraded: false };
   }
 
-  const paid = userBefore.plan === "PLUS" || userBefore.plan === "PRO" || userBefore.plan === "BUSINESS";
+  const paid = userBefore.plan === "STARTER" || userBefore.plan === "PLUS" || userBefore.plan === "PRO" || userBefore.plan === "BUSINESS";
   if (paid && userBefore.organizationId) {
     const org = await prisma.organization.findUnique({
       where: { id: userBefore.organizationId },
@@ -154,7 +154,8 @@ export async function getSubscriptionSummary(userId: string) {
   const usedToday = usage?.operationsCount ?? 0;
 
   if (isAdminUser(user)) {
-    const adminPlan = defs.PRO;
+    // Admin: panel ayarından bağımsız, TÜM araçlar + en üst düzey (Business) özellikler.
+    const adminPlan = { ...defs.BUSINESS, allowedFeatures: [...featureCatalog] };
     return {
       currentPlan: {
         ...adminPlan,

@@ -188,7 +188,7 @@ export async function checkQuota(
   currentOrg = await resetMonthlyIfNeeded(currentOrg, timezone);
 
   // Check allowed tools
-  if (currentOrg.plan !== "BUSINESS" && currentOrg.plan !== "PLUS" && currentOrg.plan !== "PRO") {
+  {
     // Araç izni TEK kaynaktan okunur: plan tanımı + yönetim panelindeki "Paket & fiyat" ayarı.
     // Eskiden PlanConfig.allowedTools (seed'den kalma "merge,split,compress") okunuyordu; kod ve panel
     // ücretsiz üyeye Word→PDF / PDF→Word / PDF→JPG'yi açsa bile bu eski sütun indirmede 402 verip

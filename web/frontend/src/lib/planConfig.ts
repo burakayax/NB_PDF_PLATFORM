@@ -25,6 +25,7 @@ export const FREE_PLAN_TOOL_IDS: FeatureKey[] = [
   "sayfa-duzeni",
   "form-doldur",
   "ustveri-temizle",
+  "imza-iste",
 ];
 
 /**
@@ -50,6 +51,7 @@ export const STARTER_TOOL_IDS: FeatureKey[] = [
   "sayfa-duzeni",
   "form-doldur",
   "ustveri-temizle",
+  "imza-iste",
   "page-numbers",
   "watermark",
   "extract-images",

@@ -805,8 +805,9 @@ function App() {
   // Plan bilgisini uygulama geneline duyur — sonuç ekranındaki üyelik daveti
   // ücretli aboneye çıkmasın (araçların çoğu kimlik bilgisini prop almıyor).
   useEffect(() => {
-    setCurrentPlan(user?.plan ?? null, Boolean(user?.isTeamMember), user?.cvPassUntil ?? null);
-  }, [user?.plan, user?.isTeamMember, user?.cvPassUntil]);
+    // Admin her zaman en üst düzey (Business) özelliklerle çalışır.
+    setCurrentPlan(user?.role === "ADMIN" ? "BUSINESS" : (user?.plan ?? null), Boolean(user?.isTeamMember), user?.cvPassUntil ?? null);
+  }, [user?.plan, user?.role, user?.isTeamMember, user?.cvPassUntil]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
@@ -1340,11 +1341,13 @@ function App() {
       loading: subscriptionLoading,
       failed: subscriptionFailed,
     };
+    if (user?.role === "ADMIN") return next; // admin: hiçbir araç kilitli olmaz
     for (const f of workspaceFeatures) {
       if (isFeatureLockedByPlan(f.id, gate)) next.add(f.id);
     }
     return next;
   }, [
+    user?.role,
     isAuthenticated,
     subscriptionSummary,
     subscriptionLoading,
@@ -1369,6 +1372,7 @@ function App() {
     pdfInspectionFeatures.includes(selectedFeatureId);
   const selectedFeatureAllowed = useMemo(
     () =>
+      user?.role === "ADMIN" ||
       !isFeatureLockedByPlan(selectedFeatureId, {
         isAuthenticated,
         allowedFeatures: subscriptionSummary?.allowedFeatures ?? null,
@@ -1376,6 +1380,7 @@ function App() {
         failed: subscriptionFailed,
       }),
     [
+      user?.role,
       isAuthenticated,
       subscriptionFailed,
       subscriptionLoading,

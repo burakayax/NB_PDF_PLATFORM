@@ -89,13 +89,12 @@ const SPECIAL: Record<string, Special> = {
       en: "Monthly signature-request quota: Free 1, Starter 3, Plus 10, Pro 20, Business unlimited.",
     },
   },
-  // Kaynak: backend/app/api/tool_routes_extra.py → /redact-pdf (giriş istemez), ai.middleware.ts (YZ tespiti).
+  // Kaynak: components/tools/AiRedactTool.tsx → gate (giriş + Başlangıç+ plan), ai.middleware.ts.
   "hassas-veri-gizle": {
-    tone: "guest",
-    suffix: { tr: "YZ tespiti ücretli", en: "AI detection paid" },
+    tone: "ai",
     detail: {
-      tr: "Bulunan verileri gizleme üyeliksiz çalışır (dosya sunucuya yüklenir). Yapay zekâ ile tespit Başlangıç ve üzeri plan ya da kredi gerektirir.",
-      en: "Redacting the items works without an account (the file is uploaded). AI detection needs a Starter-or-higher plan or credits.",
+      tr: "Giriş ve Başlangıç ve üzeri plan (ya da işlem kredisi) gerekir. Kişisel veriler bulunup PDF'ten kalıcı olarak kaldırılır.",
+      en: "Needs sign-in and a Starter-or-higher plan (or credits). Personal data is found and permanently removed from the PDF.",
     },
   },
   // Kaynak: components/tools/cv/cvTemplates.tsx (30 şablonun 4'ü ücretsiz), CvMakerTool (isPaidPlan).

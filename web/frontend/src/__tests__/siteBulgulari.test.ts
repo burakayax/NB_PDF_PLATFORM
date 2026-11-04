@@ -18,7 +18,7 @@ describe("AI açılana kadar vaatler", () => {
       const b = toolAccessBadge({ id, ai: true }, true, true);
       expect(b.label).toBe("Çok yakında");
     }
-    expect(toolAccessBadge({ id: "hassas-veri-gizle" }, true, false).label).not.toBe("Çok yakında");
+    expect(toolAccessBadge({ id: "hassas-veri-gizle" }, true, false).label).toBe("Başlangıç+");
   });
 
   it("araç sayısı kullanılamayan (çok yakında) AI araçlarını saymaz", () => {
