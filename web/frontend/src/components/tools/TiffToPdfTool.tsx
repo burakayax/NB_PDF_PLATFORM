@@ -132,20 +132,28 @@ export function TiffToPdfTool({ language }: { language: Language }) {
       )}
 
       {items.length > 0 && (
-        <ul className="field--full mt-3 space-y-2" aria-label={tr ? "Seçilen dosyalar" : "Selected files"}>
+        <>
+        <p className="field--full mt-4 text-[13px] font-semibold uppercase tracking-wide text-cyan-200">
+          {tr ? `Eklenen dosya${items.length > 1 ? "lar" : ""} (${items.length})` : `Added file${items.length > 1 ? "s" : ""} (${items.length})`}
+        </p>
+        <ul className="field--full mt-2 space-y-2.5" aria-label={tr ? "Seçilen dosyalar" : "Selected files"}>
           {items.map((it, i) => (
-            <li key={it.id} className="flex items-center gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] px-4 py-3.5">
-              <FileType2 className="h-5 w-5 shrink-0 text-cyan-300" aria-hidden />
-              <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-slate-100">{it.file.name}</span>
-              <span className="shrink-0 text-[13px] text-slate-300">{mb(it.file.size)}</span>
+            <li key={it.id} className="flex items-center gap-4 rounded-2xl border-2 border-cyan-400/50 bg-cyan-400/[0.10] px-5 py-5 shadow-[0_0_24px_-8px_rgba(34,211,238,0.45)]">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/20 text-cyan-200"><FileType2 className="h-6 w-6" aria-hidden /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[16px] font-semibold text-white">{it.file.name}</span>
+                <span className="mt-0.5 block text-[13px] text-slate-300">TIFF · {mb(it.file.size)}</span>
+              </span>
               <button type="button" disabled={i === 0} onClick={() => move(i, -1)} aria-label={tr ? "Yukarı al" : "Move up"} className="rounded-md p-1.5 text-slate-300 hover:bg-white/5 disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
               <button type="button" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={tr ? "Aşağı al" : "Move down"} className="rounded-md p-1.5 text-slate-300 hover:bg-white/5 disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
               <button type="button" onClick={() => setItems((p) => p.filter((x) => x.id !== it.id))} aria-label={tr ? "Kaldır" : "Remove"} className="rounded-md p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
             </li>
           ))}
         </ul>
+        </>
       )}
 
+      {items.length > 0 && (
       <div className="field field--full mt-3 flex flex-wrap items-center gap-3 text-[13px] text-slate-200">
         <label className="flex items-center gap-1.5">
           {tr ? "Sayfa boyutu:" : "Page size:"}
@@ -155,12 +163,15 @@ export function TiffToPdfTool({ language }: { language: Language }) {
           </select>
         </label>
       </div>
+      )}
 
       {error && <p className="field--full mt-2 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-2.5 text-[13px] text-amber-200" role="alert">{error}</p>}
 
-      <button type="button" className="primary-action mt-3" onClick={() => void run()} disabled={busy || items.length === 0}>
-        {busy ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr ? "Çevriliyor…" : "Converting…"}</span> : tr ? "PDF'e çevir" : "Convert to PDF"}
-      </button>
+      {items.length > 0 && (
+        <button type="button" className="primary-action mt-3" onClick={() => void run()} disabled={busy}>
+          {busy ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr ? "Çevriliyor…" : "Converting…"}</span> : tr ? "PDF'e çevir" : "Convert to PDF"}
+        </button>
+      )}
       <p className="field--full mt-2 text-center text-[12px] text-slate-400">
         {tr ? "Dosyalarınız tarayıcınızda işlenir — sunucumuza yüklenmez." : "Your files are processed in your browser — never uploaded."}
       </p>
