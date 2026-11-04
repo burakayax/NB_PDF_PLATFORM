@@ -2,7 +2,7 @@
  * Pinterest pano anahtarları ve adları. Sunucudaki `pinterest-boards.config.ts` ile AYNI anahtarlar olmalı;
  * eşleştirme kuralları ve araç tablosu yalnız sunucudadır (panelde “Eşleştirme kuralları”ndan görülür).
  */
-export type PinterestBoardKey = "cv" | "pdf-duzenleme" | "tarama" | "gizlilik" | "hukuk" | "ogrenci";
+export type PinterestBoardKey = "cv" | "pdf-duzenleme" | "tarama" | "gizlilik" | "hukuk" | "ogrenci" | "donusum";
 
 export const PINTEREST_BOARDS: { key: PinterestBoardKey; name: string }[] = [
   { key: "cv", name: "CV Örnekleri ve CV Hazırlama" },
@@ -11,6 +11,7 @@ export const PINTEREST_BOARDS: { key: PinterestBoardKey; name: string }[] = [
   { key: "gizlilik", name: "Belge Gizliliği ve Kişisel Veri" },
   { key: "hukuk", name: "Sözleşme ve Hukuk Belgeleri" },
   { key: "ogrenci", name: "Öğrenciler İçin PDF ve Ödev İpuçları" },
+  { key: "donusum", name: "E-kitap ve Metin Dönüşümü" },
 ];
 
 export const pinterestBoardName = (key: string | null | undefined): string =>
