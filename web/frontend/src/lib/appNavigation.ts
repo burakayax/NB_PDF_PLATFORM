@@ -169,6 +169,7 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/kimlik-karti-tek-sayfa" ||
     rawPath === "/tools/pdf-sesli-oku" ||
     rawPath === "/tools/pdf-ust-alt-bilgi" ||
+    rawPath === "/tools/tiff-to-pdf" ||
     rawPath === "/tools/txt-to-pdf" ||
     rawPath === "/tools/markdown-to-pdf" ||
     rawPath === "/tools/rtf-to-pdf" ||
@@ -291,7 +292,7 @@ export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle", "/tools/sozlesme-denetci", "/tools/ai-fotograf-studyosu", "/tools/cv-olustur",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/gorsel-sikistir",
   "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al", "/tools/udf-to-pdf",
-  "/tools/txt-to-pdf", "/tools/markdown-to-pdf", "/tools/rtf-to-pdf", "/tools/odt-to-pdf", "/tools/epub-to-pdf", "/tools/pdf-to-epub", "/tools/pdf-to-markdown", "/tools/pdf-to-udf", "/tools/word-to-udf", "/tools/udf-to-word", "/tools/udf-viewer", "/tools/image-to-udf", "/tools/e-basvuru-uyumluluk", "/tools/dilekce-sablonlari", "/tools/kimlik-karti-tek-sayfa", "/tools/pdf-sesli-oku", "/tools/pdf-ust-alt-bilgi",
+  "/tools/txt-to-pdf", "/tools/markdown-to-pdf", "/tools/rtf-to-pdf", "/tools/odt-to-pdf", "/tools/epub-to-pdf", "/tools/pdf-to-epub", "/tools/pdf-to-markdown", "/tools/pdf-to-udf", "/tools/word-to-udf", "/tools/udf-to-word", "/tools/udf-viewer", "/tools/image-to-udf", "/tools/e-basvuru-uyumluluk", "/tools/dilekce-sablonlari", "/tools/kimlik-karti-tek-sayfa", "/tools/pdf-sesli-oku", "/tools/pdf-ust-alt-bilgi", "/tools/tiff-to-pdf",
   "/tools/sayfa-duzeni", "/tools/form-doldur", "/tools/ustveri-temizle",
   "/tools/pdf-qr-ekle", "/tools/pdf-birlestir-icindekiler",
   "/tools/imza-iste",
@@ -329,6 +330,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "kimlik-karti-tek-sayfa": "idcard",
   "pdf-sesli-oku": "tts",
   "pdf-ust-alt-bilgi": "headerfooter",
+  "tiff-to-pdf": "tiff",
   "txt-to-pdf": "docconv",
   "markdown-to-pdf": "docconv",
   "rtf-to-pdf": "docconv",

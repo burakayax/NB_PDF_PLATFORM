@@ -57,6 +57,7 @@ export type ContentPanel =
   | "idcard"
   | "tts"
   | "headerfooter"
+  | "tiff"
   | "docconv"
   | "cv"
   | "snip"

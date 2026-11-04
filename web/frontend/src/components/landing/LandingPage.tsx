@@ -161,6 +161,9 @@ const PdfAnnotate = lazyWithRetry(() =>
 const PhotoStudioTool = lazyWithRetry(() =>
   import("../tools/PhotoStudioTool").then((m) => ({ default: m.PhotoStudioTool })),
 );
+const TiffToPdfTool = lazyWithRetry(() =>
+  import("../tools/TiffToPdfTool").then((m) => ({ default: m.TiffToPdfTool })),
+);
 const PdfHeaderFooterTool = lazyWithRetry(() =>
   import("../tools/PdfHeaderFooterTool").then((m) => ({ default: m.PdfHeaderFooterTool })),
 );
@@ -1173,6 +1176,12 @@ function Hero({
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
                 <Suspense fallback={<HeroToolSkeleton />}>
                   <DocModeTool language={language} mode={pageTool} />
+                </Suspense>
+              </ToolPageContext.Provider>
+            ) : pageTool === "tiff-to-pdf" ? (
+              <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
+                <Suspense fallback={<HeroToolSkeleton />}>
+                  <TiffToPdfTool language={language} />
                 </Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "pdf-ust-alt-bilgi" ? (

@@ -97,6 +97,7 @@ export const TOOL_SLUGS = [
   "kimlik-karti-tek-sayfa",
   "pdf-sesli-oku",
   "pdf-ust-alt-bilgi",
+  "tiff-to-pdf",
   "txt-to-pdf",
   "markdown-to-pdf",
   "rtf-to-pdf",
@@ -671,11 +672,11 @@ export const TOOL_SEO = {
 
   "image-to-pdf": {
     tr: T(
-      "JPG'den PDF'e Dönüştürme — görselleri ekle",
+      "JPG, PNG, WebP ve TIFF'ten PDF'e Dönüştürme",
       "JPG, PNG, WebP ve çok sayfalı TIFF görsellerini tek bir PDF dosyasında toplayın. Fotoğraf ve taramaları PDF'e çevirin — online ve ücretsiz.",
-      "Görüntüden (JPG/PNG) PDF'e Dönüştürme",
+      "Görüntüden (JPG/PNG/TIFF) PDF'e Dönüştürme",
       "Birden fazla JPG, PNG veya WebP görselini tek bir PDF'te birleştirin — üyelik gerekmez. Görselleriniz sunucuya gitmeden tarayıcınızda işlenir (gizli); fotoğraf, tarama ve ekran görüntülerini saniyeler içinde ücretsiz PDF yapın.",
-      ["jpg'den pdf'e", "görüntüden pdf'e", "image to pdf", "kayıt olmadan jpg pdf", "fotoğraf pdf yapma"],
+      ["jpg'den pdf'e", "görüntüden pdf'e", "image to pdf", "kayıt olmadan jpg pdf", "fotoğraf pdf yapma", "tiff pdf'e çevirme"],
       [
         { q: "Görselleri üye olmadan tek PDF'te nasıl birleştiririm?", a: "JPG/PNG/WebP dosyalarınızı sürükleyip bırakın, sırayı düzenleyin ve PDF olarak indirin. Görselleriniz cihazınızda işlenir, sunucuya gitmez — üyelik yok, ücretsiz." },
         { q: "PDF'e çevirince görsel kalitesi düşer mi?", a: "Hayır. JPG dosyanız yeniden sıkıştırılmadan, özgün baytlarıyla PDF'in içine yerleştirilir; fotoğrafın kalitesi dönüşümde bozulmaz. Küçültmek isterseniz bunu ayrıca, kendi seçiminizle yapabilirsiniz." },
@@ -687,11 +688,11 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "JPG to PDF — combine images into PDF",
+      "JPG, PNG, WebP & TIFF to PDF — Combine Images",
       "Combine JPG, PNG and WebP images into a single PDF file. Turn photos and scans into PDF — free and online.",
-      "JPG / PNG to PDF — Combine Images into PDF",
+      "JPG / PNG / TIFF to PDF — Combine Images into PDF",
       "Merge multiple JPG, PNG or WebP images into one PDF. Reorder them and turn photos, scans and screenshots into a shareable PDF.",
-      ["jpg to pdf", "image to pdf", "png to pdf", "photos to pdf"],
+      ["jpg to pdf", "image to pdf", "png to pdf", "photos to pdf", "tiff to pdf"],
       [
         { q: "How do I combine images into one PDF?", a: "Upload your JPG/PNG/WebP files, arrange the order, and download a single PDF." },
         { q: "Does image quality drop when converting to PDF?", a: "No. Your JPG is placed into the PDF as-is, without being recompressed, so the photo quality is not degraded by the conversion. If you want a smaller file you can do that separately, by your own choice." },
@@ -2422,6 +2423,40 @@ export const TOOL_SEO = {
       ],
     ),
   },
+  "tiff-to-pdf": {
+    tr: T(
+      "TIFF'ten PDF'e Çevirme – Çok Sayfalı TIF, Ücretsiz",
+      "Tek ya da çok sayfalı TIFF/TIF taramalarını PDF'e çevirin. Sayfa sırası korunur; UYAP ve e-başvuru için uygun. Cihazınızda, ücretsiz.",
+      "TIFF'ten PDF'e Çevirme",
+      "Tarayıcınızdan ya da fotokopi makinenizden çıkan TIF / TIFF dosyalarını PDF'e çevirin. Çok sayfalı bir TIFF'in her sayfası PDF'te ayrı sayfa olur, sıra bozulmaz; birden çok TIFF'i tek PDF'te birleştirebilirsiniz. Dosyalarınız tarayıcınızda işlenir, sunucuya yüklenmez. Taranmış sayfalar görüntü olarak kalır; yazının aranabilir olması için ayrıca «Aranabilir PDF (OCR)» aracını kullanın.",
+      ["tiff pdf'e çevirme", "tif pdf çevirme", "tiff to pdf", "çok sayfalı tiff pdf", "uyap tif pdf", "tarama tif pdf yapma"],
+      [
+        {"q": "TIFF'i PDF'e nasıl çeviririm?", "a": "TIF ya da TIFF dosyanızı ekleyin, sayfa boyutunu seçin ve «PDF'e çevir»e basın. İşlem tarayıcınızda yapılır."},
+        {"q": "Çok sayfalı TIFF'in bütün sayfaları gelir mi?", "a": "Evet. Her TIFF sayfası PDF'te ayrı bir sayfa olur ve sayfa sırası korunur."},
+        {"q": "Birden fazla TIFF'i tek PDF'te birleştirebilir miyim?", "a": "Evet. Dosyaları ekleyin, okla sıralayın; seçtiğiniz sırayla tek PDF'te birleşirler."},
+        {"q": "UYAP ya da e-başvuru ekranı TIF yerine PDF istiyor, bu araç işe yarar mı?", "a": "Evet, TIF'i PDF'e çevirmek için kullanılabilir. Dosya boyutu ve sayfa sınırı kurumdan kuruma değişir; sonuç büyükse «PDF Sıkıştır» kullanın ve ekrandaki açıklamayı esas alın."},
+        {"q": "Dosyam bir yere yükleniyor mu?", "a": "Hayır. TIFF cihazınızda PDF'e çevrilir; hiçbir şey sunucuya gitmez."},
+        {"q": "PDF'teki yazı seçilebilir olur mu?", "a": "Taranmış sayfa bir görüntü olarak PDF'e konur, yazı seçilemez. Seçilebilir ve aranabilir metin için PDF'i «Aranabilir PDF (OCR)» aracından geçirin."},
+        {"q": "JPG ya da PNG için de kullanabilir miyim?", "a": "Bu araç TIFF içindir. JPG, PNG ve WebP için «Görsel → PDF» aracını kullanın."},
+      ],
+    ),
+    en: T(
+      "TIFF to PDF Converter – Multi-Page TIF, Free",
+      "Convert single or multi-page TIFF/TIF scans to PDF. Page order is kept; works with scanner and copier output. On your device, free.",
+      "Convert TIFF to PDF",
+      "Turn the TIF / TIFF files from your scanner or copier into a PDF. Every page of a multi-page TIFF becomes its own PDF page in order, and you can combine several TIFFs into one PDF. Your files are processed in your browser and never uploaded. Scanned pages stay as images; to make the text searchable, run the PDF through the Searchable PDF (OCR) tool.",
+      ["tiff to pdf", "tif to pdf converter", "multi page tiff to pdf", "convert scanned tiff to pdf"],
+      [
+        {"q": "How do I convert a TIFF to PDF?", "a": "Add your TIF or TIFF file, choose the page size and click Convert to PDF. It runs in your browser."},
+        {"q": "Are all pages of a multi-page TIFF included?", "a": "Yes. Each TIFF page becomes its own page in the PDF, in the original order."},
+        {"q": "Can I combine several TIFFs into one PDF?", "a": "Yes. Add the files, order them with the arrows and they are merged into one PDF in that order."},
+        {"q": "An online form asks for PDF instead of TIF. Will this help?", "a": "Yes, it converts the TIF to PDF. File size and page limits vary by institution; if the result is large, use Compress PDF and follow the limits shown on the form."},
+        {"q": "Is my file uploaded anywhere?", "a": "No. The TIFF is converted on your device; nothing is sent to a server."},
+        {"q": "Will the text in the PDF be selectable?", "a": "A scanned page is placed in the PDF as an image, so the text is not selectable. For searchable, selectable text run the PDF through the Searchable PDF (OCR) tool."},
+        {"q": "Can I use it for JPG or PNG?", "a": "This tool is for TIFF. For JPG, PNG and WebP use the Image → PDF tool."},
+      ],
+    ),
+  },
   "pdf-ust-alt-bilgi": {
     tr: T(
       "PDF'e Üst Bilgi ve Alt Bilgi Ekle – Ücretsiz",
@@ -2820,7 +2855,8 @@ export const RELATED_TOOLS = {
   "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
   "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
   "pdf-to-image": ["pdf-kesit-al", "extract-images", "image-to-pdf", "compress"],
-  "image-to-pdf": ["gorsel-sikistir", "gorsel-boyutlandir", "pdf-to-image", "extract-images"],
+  "image-to-pdf": ["tiff-to-pdf", "gorsel-sikistir", "gorsel-boyutlandir", "pdf-to-image"],
+  "tiff-to-pdf": ["image-to-pdf", "aranabilir-pdf", "compress", "merge-pdf"],
   "gorsel-sikistir": ["gorsel-boyutlandir", "image-to-pdf", "pdf-to-image", "compress"],
   "gorsel-boyutlandir": ["gorsel-sikistir", "image-to-pdf", "pdf-to-image"],
   "belge-tara": ["image-to-pdf", "aranabilir-pdf", "pdf-to-image", "compress"],

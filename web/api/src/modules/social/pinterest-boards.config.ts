@@ -130,6 +130,7 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   "kimlik-karti-tek-sayfa": "pdf-duzenleme",
   "pdf-sesli-oku": "ogrenci",
   "pdf-ust-alt-bilgi": "pdf-duzenleme",
+  "tiff-to-pdf": "tarama",
   // ── CV ──
   "cv-olustur": "cv",
   "ai-fotograf-studyosu": "cv",
