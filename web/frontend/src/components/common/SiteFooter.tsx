@@ -44,9 +44,9 @@ export function SiteFooter({ language }: { language: Language }) {
       heading: tr ? "Popüler Araçlar" : "Popular Tools",
       links: [
         { label: tr ? "PDF Birleştir" : "Merge PDF", href: yol("/tools/merge-pdf") },
-        { label: tr ? "PDF → Word" : "PDF to Word", href: yol("/tools/pdf-to-word") },
+        { label: tr ? "PDF'ten Word'e" : "PDF to Word", href: yol("/tools/pdf-to-word") },
         { label: tr ? "PDF Sıkıştır" : "Compress PDF", href: yol("/tools/compress") },
-        { label: tr ? "PDF → JPG" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
+        { label: tr ? "PDF to JPG" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
       ],
     },
     {

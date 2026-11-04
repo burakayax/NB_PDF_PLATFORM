@@ -160,9 +160,9 @@ const CUSTOM_TOOLS: {
   { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF / UYAP Araçları", en: "UDF / UYAP Tools", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "idcard", favId: "idcard-sheet", group: "organize", tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "docconv", favId: "doc-convert", group: "convert", tr: "Ek Dönüştürmeler (TXT, EPUB, Markdown…)", en: "More Conversions (TXT, EPUB, Markdown…)", Icon: FileType2, iconClass: "text-cyan-300" },
-  { key: "tiff", favId: "tiff-to-pdf", group: "convert", tr: "TIFF → PDF", en: "TIFF → PDF", Icon: FileType2, iconClass: "text-cyan-300" },
+  { key: "tiff", favId: "tiff-to-pdf", group: "convert", tr: "TIFF'ten PDF'e", en: "TIFF'ten PDF'e", Icon: FileType2, iconClass: "text-cyan-300" },
   { key: "headerfooter", favId: "pdf-ust-alt-bilgi", group: "organize", tr: "Üst / Alt Bilgi Ekle", en: "Add Header / Footer", Icon: Hash, iconClass: "text-cyan-300" },
-  { key: "tts", favId: "pdf-sesli-oku", group: "convert", tr: "Sesli Okuma (PDF → Ses)", en: "Read Aloud (PDF → Voice)", Icon: Scale, iconClass: "text-cyan-300" },
+  { key: "tts", favId: "pdf-sesli-oku", group: "convert", tr: "Sesli Okuma", en: "Read Aloud", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
   { key: "resize-image", favId: "resize-image", group: "optimize", tr: "Görsel Boyutlandır", en: "Resize Image", Icon: Scaling, iconClass: "text-cyan-300" },
   { key: "searchable", favId: "searchable-pdf", group: "convert", tr: "Aranabilir PDF", en: "Searchable PDF", Icon: FileSearch, iconClass: "text-cyan-300" },
@@ -170,7 +170,7 @@ const CUSTOM_TOOLS: {
   { key: "layout", favId: "page-layout", group: "organize", tr: "Sayfa Düzeni", en: "Page Layout", Icon: LayoutGrid, iconClass: "text-cyan-300" },
   { key: "formfill", favId: "form-fill", group: "annotate", tr: "Form Doldur", en: "Fill Form", Icon: TextCursorInput, iconClass: "text-cyan-300" },
   { key: "signrequest", favId: "sign-request", group: "annotate", tr: "İmza İste", en: "Request Signature", Icon: Send, iconClass: "text-cyan-300" },
-  { key: "metadata", favId: "metadata-clean", group: "secure", tr: "Üstveri Temizle", en: "Clean Metadata", Icon: Eraser, iconClass: "text-cyan-300" },
+  { key: "metadata", favId: "metadata-clean", group: "secure", tr: "Gizli Bilgi Temizle", en: "Clean Metadata", Icon: Eraser, iconClass: "text-cyan-300" },
   { key: "qr", favId: "pdf-qr-ekle", group: "annotate", tr: "PDF'ye QR Kod Ekle", en: "Add QR Code to PDF", Icon: QrCode, iconClass: "text-cyan-300" },
   { key: "toc", favId: "pdf-birlestir-icindekiler", group: "organize", tr: "Birleştir + İçindekiler", en: "Merge + Table of Contents", Icon: ListTree, iconClass: "text-cyan-300" },
 ];
@@ -217,7 +217,7 @@ type DashboardSidebarProps = {
   onOpenCv?: () => void;
   /** Aranabilir PDF (OCR) aracını aç. */
   onOpenSearchable?: () => void;
-  /** Kendi paneliyle açılan sayfa araçları (Sayfa Düzeni, Form Doldur, İmza İste, Üstveri Temizle). */
+  /** Kendi paneliyle açılan sayfa araçları (Sayfa Düzeni, Form Doldur, İmza İste, Gizli Bilgi Temizle). */
   onOpenLayout?: () => void;
   onOpenFormFill?: () => void;
   onOpenSignRequest?: () => void;
@@ -1063,7 +1063,7 @@ export function DashboardSidebarMobileLauncher({
       : contentPanel === "toc"
       ? tr ? "Birleştir + İçindekiler" : "Merge + Table of Contents"
       : contentPanel === "metadata"
-      ? tr ? "Üstveri Temizle" : "Clean Metadata"
+      ? tr ? "Gizli Bilgi Temizle" : "Clean Metadata"
       : contentPanel === "editor"
       ? tr ? "PDF Düzenle" : "Edit PDF"
       : contentPanel === "sign"
@@ -1077,11 +1077,11 @@ export function DashboardSidebarMobileLauncher({
           : contentPanel === "snip"
           ? tr ? "PDF'ten Kesit Al" : "Snip to Image"
           : contentPanel === "tiff"
-          ? "TIFF → PDF"
+          ? "TIFF'ten PDF'e"
           : contentPanel === "headerfooter"
           ? tr ? "Üst / Alt Bilgi Ekle" : "Add Header / Footer"
           : contentPanel === "tts"
-          ? tr ? "Sesli Okuma (PDF → Ses)" : "Read Aloud (PDF → Voice)"
+          ? tr ? "Sesli Okuma" : "Read Aloud"
           : contentPanel === "idcard"
           ? tr ? "Kimlik Ön–Arka Tek Sayfa" : "ID Front+Back on One Page"
           : contentPanel === "udf"

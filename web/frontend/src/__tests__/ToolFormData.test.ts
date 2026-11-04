@@ -185,7 +185,7 @@ describe("buildBatchFormData", () => {
   });
 });
 
-describe("PDF → Görsel çözünürlük seçimi", () => {
+describe("PDF'ten Görsele çözünürlük seçimi", () => {
   it("seçilen kaliteyi sunucuya gönderir", () => {
     const fd = buildToolFormData("pdf-to-image", state({ pdfToImgQuality: "baski" }));
     expect(fd.get("quality")).toBe("baski");

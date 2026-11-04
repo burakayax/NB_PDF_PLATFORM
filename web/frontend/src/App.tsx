@@ -2314,10 +2314,10 @@ function App() {
             split: "PDF Böl",
             merge: "PDF Birleştir",
             compress: "PDF Sıkıştır",
-            "pdf-to-word": "PDF → Word",
-            "word-to-pdf": "Word → PDF",
-            "excel-to-pdf": "Excel → PDF",
-            "pdf-to-excel": "PDF → Excel",
+            "pdf-to-word": "PDF'ten Word'e",
+            "word-to-pdf": "Word'den PDF'e",
+            "excel-to-pdf": "Excel'den PDF'e",
+            "pdf-to-excel": "PDF'ten Excel'e",
             encrypt: "PDF Şifrele",
             "unlock-pdf": "PDF Kilidi Aç",
             "delete-pages": "Sayfa Sil",
@@ -2326,21 +2326,21 @@ function App() {
             watermark: "Filigran",
             "page-numbers": "Sayfa Numarası",
             "repair-pdf": "PDF Onar",
-            "pdf-to-ppt": "PDF → PowerPoint",
-            "ppt-to-pdf": "PowerPoint → PDF",
-            "pdf-to-image": "PDF → Görsel",
-            "image-to-pdf": "Görsel → PDF",
-            "html-to-pdf": "HTML → PDF",
-            "pdf-to-text": "PDF → Metin",
+            "pdf-to-ppt": "PDF'ten PowerPoint'e",
+            "ppt-to-pdf": "PowerPoint'ten PDF'e",
+            "pdf-to-image": "PDF'ten Görsele",
+            "image-to-pdf": "Görselden PDF'e",
+            "html-to-pdf": "HTML'den PDF'e",
+            "pdf-to-text": "PDF'ten Metne",
             "flatten-pdf": "PDF Düzleştir",
-            "grayscale-pdf": "PDF Gri Tonlama",
-            "resize-pdf": "PDF Sayfa Boyutu",
+            "grayscale-pdf": "PDF Siyah-Beyaz Yap",
+            "resize-pdf": "PDF Sayfa Boyutunu Değiştir",
             "flip-pdf": "PDF Çevir (Ayna)",
-            "alternate-mix-pdf": "PDF Dönüşümlü Birleştir",
-            "deskew-pdf": "PDF Eğri Tarama Düzeltme",
-            "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
+            "alternate-mix-pdf": "PDF Sırayla Birleştir",
+            "deskew-pdf": "PDF Eğri Taramayı Düzelt",
+            "pdf-to-pdfa": "PDF'ten PDF/A'ya (Arşiv)",
             "form-doldur": "PDF Form Doldur",
-            "ustveri-temizle": "PDF Üstveri Temizle",
+            "ustveri-temizle": "PDF Gizli Bilgi Temizle",
             "sayfa-duzeni": "Sayfa Düzeni",
             "pdf-qr-ekle": "PDF'ye QR Kod Ekle",
             "pdf-birlestir-icindekiler": "Birleştir + İçindekiler",
@@ -3747,7 +3747,7 @@ function App() {
     return estimateBase;
   }, [toolRunFileBytes, selectedFeatureId, premiumProcessingLane]);
 
-  // PDF → Word: yüklenen dosya taranmış (görüntü) ise önceden bilgi verilir.
+  // PDF'ten Word'e: yüklenen dosya taranmış (görüntü) ise önceden bilgi verilir.
   // Kontrol cihazda yapılır; dosya bu iş için sunucuya gönderilmez.
   const [scannedWordWarn, setScannedWordWarn] = useState(false);
   const wordWarnFile =
@@ -4476,7 +4476,7 @@ function App() {
       if (carry.length > 0 && target && target.requiresUpload !== false) {
         const allowed = allowedExtensionsFromAccept(target.accept);
         const { rejected } = partitionByAllowedExtensions(carry, allowed);
-        // Tür uyuşmuyorsa (ör. PDF → Word'den PDF'e) taşımayı dene bile deme.
+        // Tür uyuşmuyorsa (ör. PDF'ten Word'e'den PDF'e) taşımayı dene bile deme.
         if (rejected.length === 0) {
           carryFilesToTool(id as FeatureId, carry);
           return;
@@ -4924,7 +4924,7 @@ function App() {
       setExcelDialogOpen(true);
       return;
     }
-    // Taranmış PDF → Word: dönüştürmeden önce bir kez bilgilendir.
+    // Taranmış PDF'ten Word'e: dönüştürmeden önce bir kez bilgilendir.
     if (
       selectedFeature.id === "pdf-to-word" &&
       scannedWordWarn &&
@@ -6025,7 +6025,7 @@ function App() {
         </GuestSeoToolPage>
       );
     }
-    // Taranmış PDF → Metin (OCR): SEO içeriği "cihazda OCR ile aranabilir/düzenlenebilir
+    // Taranmış PDF'ten Metne (OCR): SEO içeriği "cihazda OCR ile aranabilir/düzenlenebilir
     // metin" vaat ediyor → AI özet yerine gerçek OCR aracı (SearchablePdfTool).
     if (seoSlug === "taranmis-pdf-ocr") {
       return (
@@ -7414,7 +7414,7 @@ function App() {
               </section>
             ) : null}
 
-            {/* UDF → PDF — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
+            {/* UDF'den PDF'e — panel içi karşılığı (UYAP belgesi, cihazda çevrilir). */}
             {contentPanel === "tiff" ? (
               <WorkspaceToolShell id="tiff-to-pdf" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
@@ -7463,7 +7463,7 @@ function App() {
               </WorkspaceToolShell>
             ) : null}
 
-            {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
+            {/* Aranabilir PDF / Taranmış PDF'ten Metne (OCR) — panel içi karşılığı. */}
             {contentPanel === "searchable" ? (
               <WorkspaceToolShell id="aranabilir-pdf" language={language}>
                 <Suspense fallback={<PageSkeleton />}>
@@ -7726,7 +7726,7 @@ function App() {
                         {selectedFeature.id === "html-to-pdf" ? (
                           <div className="field field--full">
                             <span>
-                              {language === "tr" ? "HTML → PDF" : "HTML → PDF"}
+                              {language === "tr" ? "HTML'den PDF'e" : "HTML'den PDF'e"}
                             </span>
                             <div className="mb-2 flex flex-wrap gap-2">
                               <button

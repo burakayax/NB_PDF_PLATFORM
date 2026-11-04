@@ -6621,6 +6621,42 @@
     ],
     "tool": "/tools/pdf-veri-cikar"
   },
+  "https://www.pdfplatform.app/tools/pdf-sinav-olustur": {
+    "tr": [
+      "pdf'den test oluştur",
+      "pdf'den soru üret",
+      "ders notundan test",
+      "yapay zeka soru oluşturucu",
+      "çoktan seçmeli soru oluşturma",
+      "pdf sınav hazırlama"
+    ],
+    "en": [
+      "quiz from pdf",
+      "generate quiz questions from pdf",
+      "ai quiz generator",
+      "multiple choice question generator",
+      "pdf to quiz"
+    ],
+    "tool": "/tools/pdf-sinav-olustur"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-quiz-generator": {
+    "tr": [
+      "pdf'den test oluştur",
+      "pdf'den soru üret",
+      "ders notundan test",
+      "yapay zeka soru oluşturucu",
+      "çoktan seçmeli soru oluşturma",
+      "pdf sınav hazırlama"
+    ],
+    "en": [
+      "quiz from pdf",
+      "generate quiz questions from pdf",
+      "ai quiz generator",
+      "multiple choice question generator",
+      "pdf to quiz"
+    ],
+    "tool": "/tools/pdf-sinav-olustur"
+  },
   "https://www.pdfplatform.app/tools/pdf-ceviri": {
     "tr": [
       "pdf çeviri",
@@ -7001,6 +7037,202 @@
     ],
     "tool": "/tools/pdf-to-udf"
   },
+  "https://www.pdfplatform.app/tools/txt-to-pdf": {
+    "tr": [
+      "txt pdf çevirme",
+      "metin dosyasını pdf yapma",
+      "txt to pdf türkçe karakter",
+      "not defteri pdf"
+    ],
+    "en": [
+      "txt to pdf",
+      "convert text file to pdf",
+      "txt to pdf turkish characters"
+    ],
+    "tool": "/tools/txt-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/txt-to-pdf": {
+    "tr": [
+      "txt pdf çevirme",
+      "metin dosyasını pdf yapma",
+      "txt to pdf türkçe karakter",
+      "not defteri pdf"
+    ],
+    "en": [
+      "txt to pdf",
+      "convert text file to pdf",
+      "txt to pdf turkish characters"
+    ],
+    "tool": "/tools/txt-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/markdown-to-pdf": {
+    "tr": [
+      "markdown pdf çevirme",
+      "md to pdf",
+      "readme pdf yapma",
+      "markdown dönüştürücü"
+    ],
+    "en": [
+      "markdown to pdf",
+      "md to pdf",
+      "convert readme to pdf"
+    ],
+    "tool": "/tools/markdown-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/markdown-to-pdf": {
+    "tr": [
+      "markdown pdf çevirme",
+      "md to pdf",
+      "readme pdf yapma",
+      "markdown dönüştürücü"
+    ],
+    "en": [
+      "markdown to pdf",
+      "md to pdf",
+      "convert readme to pdf"
+    ],
+    "tool": "/tools/markdown-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/rtf-to-pdf": {
+    "tr": [
+      "rtf pdf çevirme",
+      "rtf to pdf",
+      "rtf dosyası açma",
+      "wordpad pdf"
+    ],
+    "en": [
+      "rtf to pdf",
+      "convert rtf file",
+      "wordpad to pdf"
+    ],
+    "tool": "/tools/rtf-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/rtf-to-pdf": {
+    "tr": [
+      "rtf pdf çevirme",
+      "rtf to pdf",
+      "rtf dosyası açma",
+      "wordpad pdf"
+    ],
+    "en": [
+      "rtf to pdf",
+      "convert rtf file",
+      "wordpad to pdf"
+    ],
+    "tool": "/tools/rtf-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/odt-to-pdf": {
+    "tr": [
+      "odt pdf çevirme",
+      "odt to pdf",
+      "libreoffice pdf",
+      "odt dosyası açma"
+    ],
+    "en": [
+      "odt to pdf",
+      "libreoffice to pdf",
+      "convert odt file"
+    ],
+    "tool": "/tools/odt-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/odt-to-pdf": {
+    "tr": [
+      "odt pdf çevirme",
+      "odt to pdf",
+      "libreoffice pdf",
+      "odt dosyası açma"
+    ],
+    "en": [
+      "odt to pdf",
+      "libreoffice to pdf",
+      "convert odt file"
+    ],
+    "tool": "/tools/odt-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/epub-to-pdf": {
+    "tr": [
+      "epub pdf çevirme",
+      "epub to pdf",
+      "e-kitap pdf yapma",
+      "epub okuma"
+    ],
+    "en": [
+      "epub to pdf",
+      "convert ebook to pdf",
+      "epub converter"
+    ],
+    "tool": "/tools/epub-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/epub-to-pdf": {
+    "tr": [
+      "epub pdf çevirme",
+      "epub to pdf",
+      "e-kitap pdf yapma",
+      "epub okuma"
+    ],
+    "en": [
+      "epub to pdf",
+      "convert ebook to pdf",
+      "epub converter"
+    ],
+    "tool": "/tools/epub-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-epub": {
+    "tr": [
+      "pdf epub çevirme",
+      "pdf to epub",
+      "pdf e-kitap yapma",
+      "telefonda pdf okuma"
+    ],
+    "en": [
+      "pdf to epub",
+      "convert pdf to ebook",
+      "read pdf on phone"
+    ],
+    "tool": "/tools/pdf-to-epub"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-epub": {
+    "tr": [
+      "pdf epub çevirme",
+      "pdf to epub",
+      "pdf e-kitap yapma",
+      "telefonda pdf okuma"
+    ],
+    "en": [
+      "pdf to epub",
+      "convert pdf to ebook",
+      "read pdf on phone"
+    ],
+    "tool": "/tools/pdf-to-epub"
+  },
+  "https://www.pdfplatform.app/tools/pdf-to-markdown": {
+    "tr": [
+      "pdf markdown çevirme",
+      "pdf to markdown",
+      "pdf md dönüştürme",
+      "obsidian pdf aktarma"
+    ],
+    "en": [
+      "pdf to markdown",
+      "convert pdf to md",
+      "pdf to obsidian"
+    ],
+    "tool": "/tools/pdf-to-markdown"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-to-markdown": {
+    "tr": [
+      "pdf markdown çevirme",
+      "pdf to markdown",
+      "pdf md dönüştürme",
+      "obsidian pdf aktarma"
+    ],
+    "en": [
+      "pdf to markdown",
+      "convert pdf to md",
+      "pdf to obsidian"
+    ],
+    "tool": "/tools/pdf-to-markdown"
+  },
   "https://www.pdfplatform.app/tools/word-to-udf": {
     "tr": [
       "word to udf",
@@ -7206,5 +7438,103 @@
       "driving licence copy a4"
     ],
     "tool": "/tools/kimlik-karti-tek-sayfa"
+  },
+  "https://www.pdfplatform.app/tools/tiff-to-pdf": {
+    "tr": [
+      "tiff pdf'e çevirme",
+      "tif pdf çevirme",
+      "tiff to pdf",
+      "çok sayfalı tiff pdf",
+      "uyap tif pdf",
+      "tarama tif pdf yapma"
+    ],
+    "en": [
+      "tiff to pdf",
+      "tif to pdf converter",
+      "multi page tiff to pdf",
+      "convert scanned tiff to pdf"
+    ],
+    "tool": "/tools/tiff-to-pdf"
+  },
+  "https://www.pdfplatform.app/en/tools/tiff-to-pdf": {
+    "tr": [
+      "tiff pdf'e çevirme",
+      "tif pdf çevirme",
+      "tiff to pdf",
+      "çok sayfalı tiff pdf",
+      "uyap tif pdf",
+      "tarama tif pdf yapma"
+    ],
+    "en": [
+      "tiff to pdf",
+      "tif to pdf converter",
+      "multi page tiff to pdf",
+      "convert scanned tiff to pdf"
+    ],
+    "tool": "/tools/tiff-to-pdf"
+  },
+  "https://www.pdfplatform.app/tools/pdf-ust-alt-bilgi": {
+    "tr": [
+      "pdf üst bilgi ekle",
+      "pdf alt bilgi ekle",
+      "pdf header footer",
+      "pdf'e sayfa numarası ve tarih ekle",
+      "pdf başlık ekle"
+    ],
+    "en": [
+      "add header to pdf",
+      "add footer to pdf",
+      "pdf header and footer",
+      "add page numbers and date to pdf"
+    ],
+    "tool": "/tools/pdf-ust-alt-bilgi"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-ust-alt-bilgi": {
+    "tr": [
+      "pdf üst bilgi ekle",
+      "pdf alt bilgi ekle",
+      "pdf header footer",
+      "pdf'e sayfa numarası ve tarih ekle",
+      "pdf başlık ekle"
+    ],
+    "en": [
+      "add header to pdf",
+      "add footer to pdf",
+      "pdf header and footer",
+      "add page numbers and date to pdf"
+    ],
+    "tool": "/tools/pdf-ust-alt-bilgi"
+  },
+  "https://www.pdfplatform.app/tools/pdf-sesli-oku": {
+    "tr": [
+      "pdf sesli oku",
+      "türkçe sesli okuma",
+      "metni sese çevirme",
+      "pdf dinle",
+      "türkçe seslendirme",
+      "yapay zeka ses"
+    ],
+    "en": [
+      "turkish text to speech",
+      "pdf read aloud turkish",
+      "turkish voice"
+    ],
+    "tool": "/tools/pdf-sesli-oku"
+  },
+  "https://www.pdfplatform.app/en/tools/pdf-sesli-oku": {
+    "tr": [
+      "pdf sesli oku",
+      "türkçe sesli okuma",
+      "metni sese çevirme",
+      "pdf dinle",
+      "türkçe seslendirme",
+      "yapay zeka ses"
+    ],
+    "en": [
+      "turkish text to speech",
+      "pdf read aloud turkish",
+      "turkish voice"
+    ],
+    "tool": "/tools/pdf-sesli-oku"
   }
 }

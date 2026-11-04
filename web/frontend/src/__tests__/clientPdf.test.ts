@@ -118,7 +118,7 @@ describe("rotate / delete / reorder", () => {
   });
 });
 
-// ─── Görsel → PDF ─────────────────────────────────────────────────────────────
+// ─── Görselden PDF'e ─────────────────────────────────────────────────────────────
 describe("imagesToPdf", () => {
   it("PNG'yi tek sayfalık PDF yapar", async () => {
     const out = await imagesToPdf([{ bytes: pngBytes(), mime: "image/png" }]);

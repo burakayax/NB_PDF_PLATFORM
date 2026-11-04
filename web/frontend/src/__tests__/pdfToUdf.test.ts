@@ -6,7 +6,7 @@ import { writeUdf } from "../lib/udfWrite";
 
 const it_ = (str: string, x: number, y: number, w = str.length * 5, h = 10): TextItem => ({ str, x, y, w, h });
 
-describe("PDF → UDF metin gruplama", () => {
+describe("PDF'ten UDF'ye metin gruplama", () => {
   it("aynı satırdaki parçalar birleşir, geniş aralık yeni paragraf olur", () => {
     const items = [
       it_("Sayın", 50, 700), it_("Hakim,", 80, 700),

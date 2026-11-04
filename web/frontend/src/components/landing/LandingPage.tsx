@@ -119,7 +119,7 @@ const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "PDF Birleştir", en: "Merge PDF" },
   { id: "split", tr: "PDF Böl", en: "Split PDF" },
-  { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
+  { id: "image-to-pdf", tr: "Görselden PDF'e", en: "Image to PDF" },
   { id: "gorsel-sikistir", tr: "Görsel Sıkıştır", en: "Compress Image" },
   { id: "rotate-pdf", tr: "PDF Döndür", en: "Rotate PDF" },
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete Pages" },

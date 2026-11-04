@@ -12,7 +12,7 @@ import { parseUdf, udfPlainText, UdfParseError, type UdfDocument } from "../../l
 import { udfToPdf } from "../../lib/udfPdf";
 
 /**
- * UDF → PDF — UYAP Doküman Formatı'ndaki belgeyi PDF'e çevirir.
+ * UDF'den PDF'e — UYAP Doküman Formatı'ndaki belgeyi PDF'e çevirir.
  *
  * Tamamen CİHAZDA çalışır: dosya sunucuya GİTMEZ. Bu araçta gizlilik teorik bir
  * satış cümlesi değil, gereklilik — UDF dosyaları dava dilekçesi, müzekkere ve

@@ -7,7 +7,7 @@ import { TOOLS } from "../lib/toolCatalog";
  *
  * Sayfanın altındaki tam araç listesinde "Üyeliksiz" rozeti taşıyan bir araç
  * yukarıdaki hızlı alanda yoksa, ziyaretçi aşağıda gördüğü ücretsiz aracı
- * yukarıda bulamaz; rozete güveni kırılır. (Sayfa Düzeni ve UDF → PDF tam olarak
+ * yukarıda bulamaz; rozete güveni kırılır. (Sayfa Düzeni ve UDF'den PDF'e tam olarak
  * bu şekilde gözden kaçmıştı.)
  *
  * Yeni bir üyeliksiz araç eklenip hero kategorilerine yazılmazsa bu test düşer.

@@ -135,10 +135,10 @@ export function groupToolsByCategory(
 const SB: Record<FeatureKey, { tr: string; en: string }> = {
   split: { tr: "PDF Böl", en: "Split PDF" },
   merge: { tr: "PDF Birleştir", en: "Merge PDF" },
-  "pdf-to-word": { tr: "PDF → Word", en: "PDF → Word" },
-  "word-to-pdf": { tr: "Word → PDF", en: "Word → PDF" },
-  "excel-to-pdf": { tr: "Excel → PDF", en: "Excel → PDF" },
-  "pdf-to-excel": { tr: "PDF → Excel", en: "PDF → Excel" },
+  "pdf-to-word": { tr: "PDF'ten Word'e", en: "PDF'ten Word'e" },
+  "word-to-pdf": { tr: "Word'den PDF'e", en: "Word'den PDF'e" },
+  "excel-to-pdf": { tr: "Excel'den PDF'e", en: "Excel'den PDF'e" },
+  "pdf-to-excel": { tr: "PDF'ten Excel'e", en: "PDF'ten Excel'e" },
   compress: { tr: "PDF Sıkıştır", en: "Compress PDF" },
   encrypt: { tr: "PDF Şifrele", en: "Encrypt PDF" },
   "delete-pages": { tr: "Sayfa Sil", en: "Delete Pages" },
@@ -148,21 +148,21 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   watermark: { tr: "Filigran Ekle", en: "Add Watermark" },
   "page-numbers": { tr: "Sayfa Numarası", en: "Page Numbers" },
   "repair-pdf": { tr: "PDF Onar", en: "Repair PDF" },
-  "pdf-to-ppt": { tr: "PDF → PowerPoint", en: "PDF → PowerPoint" },
-  "ppt-to-pdf": { tr: "PowerPoint → PDF", en: "PowerPoint → PDF" },
-  "pdf-to-image": { tr: "PDF → Görsel", en: "PDF → Image" },
-  "image-to-pdf": { tr: "Görsel → PDF", en: "Image → PDF" },
-  "html-to-pdf": { tr: "HTML → PDF", en: "HTML → PDF" },
-  "pdf-to-text": { tr: "PDF → Metin", en: "PDF → Text" },
+  "pdf-to-ppt": { tr: "PDF'ten PowerPoint'e", en: "PDF'ten PowerPoint'e" },
+  "ppt-to-pdf": { tr: "PowerPoint'ten PDF'e", en: "PowerPoint'ten PDF'e" },
+  "pdf-to-image": { tr: "PDF'ten Görsele", en: "PDF to Image" },
+  "image-to-pdf": { tr: "Görselden PDF'e", en: "Image to PDF" },
+  "html-to-pdf": { tr: "HTML'den PDF'e", en: "HTML'den PDF'e" },
+  "pdf-to-text": { tr: "PDF'ten Metne", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
-  "grayscale-pdf": { tr: "PDF Gri Tonlama", en: "Grayscale PDF" },
-  "resize-pdf": { tr: "PDF Sayfa Boyutu", en: "Resize PDF Pages" },
+  "grayscale-pdf": { tr: "PDF Siyah-Beyaz Yap", en: "Grayscale PDF" },
+  "resize-pdf": { tr: "PDF Sayfa Boyutunu Değiştir", en: "Resize PDF Pages" },
   "flip-pdf": { tr: "PDF Çevir (Ayna)", en: "Flip PDF" },
-  "alternate-mix-pdf": { tr: "PDF Dönüşümlü Birleştir", en: "Alternate & Mix PDF" },
-  "deskew-pdf": { tr: "PDF Eğri Tarama Düzeltme", en: "Deskew PDF" },
+  "alternate-mix-pdf": { tr: "PDF Sırayla Birleştir", en: "Alternate & Mix PDF" },
+  "deskew-pdf": { tr: "PDF Eğri Taramayı Düzelt", en: "Deskew PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
-  "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
-  "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
+  "ustveri-temizle": { tr: "PDF Gizli Bilgi Temizle", en: "Remove PDF Metadata" },
+  "pdf-to-pdfa": { tr: "PDF'ten PDF/A'ya (Arşiv)", en: "PDF to PDF/A (Archive)" },
   "sayfa-duzeni": { tr: "PDF Sayfa Düzeni", en: "PDF Page Layout" },
   "imza-iste": { tr: "İmza İste", en: "Request Signature" },
   "extract-images": { tr: "Görselleri Çıkar", en: "Extract Images" },
@@ -553,28 +553,28 @@ export function featureCopy(
       button: tr ? "PDF'leri Birleştir" : "Merge PDFs",
     },
     "pdf-to-word": {
-      title: tr ? "PDF → Word" : "PDF → Word",
+      title: tr ? "PDF'ten Word'e" : "PDF'ten Word'e",
       description: tr
         ? "PDF dosyasını düzenlenebilir Word belgesine dönüştürür (metin tabanlı PDF'ler)."
         : "Convert PDF to an editable Word document (text-based PDFs).",
       button: tr ? "Word'e Çevir" : "Convert to Word",
     },
     "word-to-pdf": {
-      title: tr ? "Word → PDF" : "Word → PDF",
+      title: tr ? "Word'den PDF'e" : "Word'den PDF'e",
       description: tr
         ? "Word belgesini PDF biçiminde dışa aktarır."
         : "Export a Word document to PDF.",
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "excel-to-pdf": {
-      title: tr ? "Excel → PDF" : "Excel → PDF",
+      title: tr ? "Excel'den PDF'e" : "Excel'den PDF'e",
       description: tr
         ? "Excel tablolarını PDF biçimine dönüştürür."
         : "Convert Excel spreadsheets to PDF.",
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "pdf-to-excel": {
-      title: tr ? "PDF → Excel" : "PDF → Excel",
+      title: tr ? "PDF'ten Excel'e" : "PDF'ten Excel'e",
       description: tr
         ? "PDF tablo yapısını korumaya odaklanarak Excel çıktısı oluşturur."
         : "Build an Excel file while preserving table structure where possible.",
@@ -644,42 +644,42 @@ export function featureCopy(
       button: tr ? "PDF'i Onar" : "Repair PDF",
     },
     "pdf-to-ppt": {
-      title: tr ? "PDF → PowerPoint" : "PDF → PowerPoint",
+      title: tr ? "PDF'ten PowerPoint'e" : "PDF'ten PowerPoint'e",
       description: tr
         ? "Sayfaları slayt görsellerine dönüştürerek PPTX üretir."
         : "Render pages as slide images and build a PPTX.",
       button: tr ? "PowerPoint'e Çevir" : "Convert to PowerPoint",
     },
     "ppt-to-pdf": {
-      title: tr ? "PowerPoint → PDF" : "PowerPoint → PDF",
+      title: tr ? "PowerPoint'ten PDF'e" : "PowerPoint'ten PDF'e",
       description: tr
         ? "Sunumu PDF’e aktarır (Windows + PowerPoint ortamında en iyi sonuç)."
         : "Convert a presentation to PDF (best on Windows with PowerPoint).",
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "pdf-to-image": {
-      title: tr ? "PDF → Görsel" : "PDF → Image",
+      title: tr ? "PDF'ten Görsele" : "PDF to Image",
       description: tr
         ? "Her sayfayı JPG veya PNG olarak ZIP içinde dışa aktarır."
         : "Export each page as JPG/PNG in a ZIP file.",
       button: tr ? "Görsellere Çevir" : "Convert to Images",
     },
     "image-to-pdf": {
-      title: tr ? "Görsel → PDF" : "Image → PDF",
+      title: tr ? "Görselden PDF'e" : "Image to PDF",
       description: tr
         ? "Birden çok görüntüyü tek PDF’e birleştirir."
         : "Combine multiple images into one PDF.",
       button: tr ? "PDF'e Çevir" : "Convert to PDF",
     },
     "html-to-pdf": {
-      title: tr ? "HTML → PDF" : "HTML → PDF",
+      title: tr ? "HTML'den PDF'e" : "HTML'den PDF'e",
       description: tr
         ? "Bir web adresini veya HTML parçasını PDF’e çevirir."
         : "Turn a web URL or HTML snippet into a PDF.",
       button: tr ? "PDF Oluştur" : "Create PDF",
     },
     "pdf-to-text": {
-      title: tr ? "PDF → Metin" : "PDF → Text",
+      title: tr ? "PDF'ten Metne" : "PDF to Text",
       description: tr
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
@@ -700,14 +700,14 @@ export function featureCopy(
       button: tr ? "Sayfaları Düzenle" : "Apply Layout",
     },
     "pdf-to-pdfa": {
-      title: tr ? "PDF → PDF/A (Arşiv)" : "PDF to PDF/A (Archive)",
+      title: tr ? "PDF'ten PDF/A'ya (Arşiv)" : "PDF to PDF/A (Archive)",
       description: tr
         ? "Belgeyi arşiv biçimine çevirir: yazı tipleri gömülür, yıllar sonra da aynı görünür."
         : "Converts to the archival format: fonts are embedded so it looks the same years later.",
       button: tr ? "PDF/A'ya Çevir" : "Convert to PDF/A",
     },
     "ustveri-temizle": {
-      title: tr ? "PDF Üstveri Temizle" : "Remove PDF Metadata",
+      title: tr ? "PDF Gizli Bilgi Temizle" : "Remove PDF Metadata",
       description: tr
         ? "Yazar adı, program bilgisi, tarihler, XMP bloğu ve fotoğraf EXIF/GPS izlerini siler."
         : "Removes author name, software info, dates, the XMP block and photo EXIF/GPS traces.",
@@ -721,14 +721,14 @@ export function featureCopy(
       button: tr ? "Form Doldur" : "Fill Form",
     },
     "grayscale-pdf": {
-      title: tr ? "PDF Gri Tonlama" : "Grayscale PDF",
+      title: tr ? "PDF Siyah-Beyaz Yap" : "Grayscale PDF",
       description: tr
         ? "Renkli PDF'i siyah-beyaza çevirir; metin seçilebilir kalır."
         : "Turns a colour PDF black-and-white; text stays selectable.",
       button: tr ? "Griye Çevir" : "Convert to Grayscale",
     },
     "resize-pdf": {
-      title: tr ? "PDF Sayfa Boyutu" : "Resize PDF Pages",
+      title: tr ? "PDF Sayfa Boyutunu Değiştir" : "Resize PDF Pages",
       description: tr
         ? "Sayfaları A4, A5, Letter veya özel ölçüye getirir."
         : "Fits pages to A4, A5, Letter or a custom size.",
@@ -742,14 +742,14 @@ export function featureCopy(
       button: tr ? "Sayfaları Çevir" : "Flip Pages",
     },
     "alternate-mix-pdf": {
-      title: tr ? "PDF Dönüşümlü Birleştir" : "Alternate & Mix PDF",
+      title: tr ? "PDF Sırayla Birleştir" : "Alternate & Mix PDF",
       description: tr
         ? "İki PDF'in sayfalarını sırayla serpiştirir (çift taraflı tarama)."
         : "Interleaves the pages of two PDFs (double-sided scans).",
-      button: tr ? "Serpiştir" : "Interleave",
+      button: tr ? "Sırayla Birleştir" : "Interleave",
     },
     "deskew-pdf": {
-      title: tr ? "PDF Eğri Tarama Düzeltme" : "Deskew PDF",
+      title: tr ? "PDF Eğri Taramayı Düzelt" : "Deskew PDF",
       description: tr
         ? "Eğri taranmış sayfaları düzeltir; yazı katmanlı sayfalara dokunmaz."
         : "Straightens crooked scanned pages; leaves text-layer pages alone.",
