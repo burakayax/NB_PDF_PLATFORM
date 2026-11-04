@@ -255,3 +255,56 @@ describe("sütun bazlı yazı stili ve çizgi", () => {
     expect(downLine).toBeDefined(); // alt bilgi: çizgi yazının ÜSTÜNDE
   });
 });
+
+/** Görünen (döndürülmüş) sayfada her metnin sol-üst köşeye göre konumunu verir: { str, x, y, w, h } (px, y aşağı). */
+async function visiblePositions(bytes: Uint8Array) {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const doc = await pdfjs.getDocument({ data: bytes.slice(), isEvalSupported: false, useWorkerFetch: false }).promise;
+  const out: { w: number; h: number; items: { str: string; x: number; y: number }[] }[] = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const vp = page.getViewport({ scale: 1 });
+    const tc = await page.getTextContent();
+    const items = tc.items
+      .filter((it) => "str" in it && it.str.trim())
+      .map((it) => {
+        const t = (it as { transform: number[]; str: string }).transform;
+        const [x, y] = vp.convertToViewportPoint(t[4]!, t[5]!);
+        return { str: (it as { str: string }).str, x, y };
+      });
+    out.push({ w: vp.width, h: vp.height, items });
+  }
+  return out;
+}
+
+describe("döndürülmüş / kırpılmış sayfada konum", () => {
+  const opts = { header: { left: "SOL", center: "", right: "SAĞ" }, footer: { left: "", center: "ALT", right: "" }, fonts };
+
+  it.each([0, 90, 180, 270])("%i° sayfada üst bilgi görünen üstte, alt bilgi görünen altta, sol/sağ doğru yönde", async (rot) => {
+    const src = await makePdf(1, [rot]);
+    const r = await addHeaderFooter(src, opts);
+    const [pg] = await visiblePositions(r.bytes);
+    const by = (s: string) => pg!.items.find((i) => i.str === s)!;
+    expect(by("SOL").y).toBeLessThan(pg!.h * 0.12);
+    expect(by("SAĞ").y).toBeLessThan(pg!.h * 0.12);
+    expect(by("ALT").y).toBeGreaterThan(pg!.h * 0.88);
+    expect(by("SOL").x).toBeLessThan(pg!.w * 0.2);
+    expect(by("SAĞ").x).toBeGreaterThan(pg!.w * 0.7);
+    expect(Math.abs(by("ALT").x - pg!.w / 2)).toBeLessThan(pg!.w * 0.1);
+  });
+
+  it("yatay sayfa (MediaBox yatay) + 90° ve ofsetli CropBox doğru yere yazar", async () => {
+    const d = await PDFDocument.create();
+    const p = d.addPage([842, 595]);
+    p.setMediaBox(0, 0, 842, 595);
+    p.setCropBox(40, 30, 700, 500);
+    p.setRotation(degrees(90));
+    const r = await addHeaderFooter(await d.save(), opts);
+    const [pg] = await visiblePositions(r.bytes);
+    const by = (s: string) => pg!.items.find((i) => i.str === s)!;
+    expect(by("SOL").y).toBeLessThan(pg!.h * 0.15);
+    expect(by("ALT").y).toBeGreaterThan(pg!.h * 0.85);
+    expect(by("SOL").x).toBeLessThan(pg!.w * 0.2);
+    expect(by("SAĞ").x).toBeGreaterThan(pg!.w * 0.7);
+  });
+});
