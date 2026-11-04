@@ -38,8 +38,8 @@ describe("araç erişim rozeti", () => {
     expect(ek("pdf-duzenle")).toMatchObject({ tone: "guest" });
     expect(ek("imza-iste")).toMatchObject({ tone: "account" });
     expect(ek("imza-iste").label).toContain("ayda 1");
-    expect(ek("hassas-veri-gizle")).toMatchObject({ tone: "guest" });
-    expect(ek("hassas-veri-gizle").label).toContain("YZ");
+    expect(ek("hassas-veri-gizle")).toMatchObject({ tone: "ai" });
+    expect(ek("hassas-veri-gizle").label).toBe("Başlangıç+");
     expect(ek("cv-olustur")).toMatchObject({ tone: "account" });
     expect(ek("ai-fotograf-studyosu").label).toBe("Başlangıç+");
   });
