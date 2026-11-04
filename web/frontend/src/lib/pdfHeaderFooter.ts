@@ -235,7 +235,8 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
     const rule = legacy ? rules[0]! : ruleForPage(rules, li + 1, totalPages, opts.skipFirst);
     if (!rule) continue;
     const page = pages[i]!;
-    const mb = page.getMediaBox();
+    // Okuyucunun gösterdiği alan CropBox'tır (yoksa MediaBox); yazı ona göre konumlanır.
+    const mb = page.getCropBox();
     const rot = ((page.getRotation().angle % 360) + 360) % 360;
     const visW = rot === 90 || rot === 270 ? mb.height : mb.width;
     const visH = rot === 90 || rot === 270 ? mb.width : mb.height;

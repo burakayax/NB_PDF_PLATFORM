@@ -8,7 +8,7 @@
  *  • Önizleme büyüktür: sayfa geçişi, yakınlaştırma ve fareyle tutup sürükleyerek gezme.
  */
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Hash, Loader2, Pencil, Sigma, Slash, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
@@ -25,10 +25,10 @@ const PREVIEW_PX = 1500;
 
 type Preset = { id: string; tr: string; en: string; header: Slot3; footer: Slot3 };
 const PRESETS: Preset[] = [
-  { id: "num", tr: "Sayfa numarası", en: "Page number", header: EMPTY_SLOT, footer: { left: "", center: "{sayfa} / {toplam}", right: "" } },
-  { id: "name", tr: "Dosya adı + numara", en: "File name + number", header: { left: "{dosya}", center: "", right: "" }, footer: { left: "", center: "", right: "Sayfa {sayfa} / {toplam}" } },
-  { id: "date", tr: "Tarih + numara", en: "Date + number", header: { left: "", center: "", right: "{tarih}" }, footer: { left: "", center: "", right: "{sayfa}" } },
-  { id: "conf", tr: "Gizlilik notu", en: "Confidentiality note", header: { left: "", center: "GİZLİDİR", right: "" }, footer: { left: "{dosya}", center: "", right: "{sayfa} / {toplam}" } },
+  { id: "num", tr: "Sayfa Numarası", en: "Page Number", header: EMPTY_SLOT, footer: { left: "", center: "{sayfa} / {toplam}", right: "" } },
+  { id: "name", tr: "Dosya Adı + Numara", en: "File Name + Number", header: { left: "{dosya}", center: "", right: "" }, footer: { left: "", center: "", right: "Sayfa {sayfa} / {toplam}" } },
+  { id: "date", tr: "Tarih + Numara", en: "Date + Number", header: { left: "", center: "", right: "{tarih}" }, footer: { left: "", center: "", right: "{sayfa}" } },
+  { id: "conf", tr: "Gizlilik Notu", en: "Confidentiality Note", header: { left: "", center: "GİZLİDİR", right: "" }, footer: { left: "{dosya}", center: "", right: "{sayfa} / {toplam}" } },
 ];
 
 const T = {
@@ -51,8 +51,8 @@ const T = {
     footer: "Alt bilgi",
     left: "Sol", center: "Orta", right: "Sağ",
     insertTitle: "Kutuya ekle",
-    insertPageAuto: "Sayfa numarası her sayfada kendiliğinden değişir.",
-    chips: { page: "Sayfa no", total: "Toplam sayfa", both: "Sayfa / Toplam", date: "Tarih", file: "Dosya adı" },
+    insertPageAuto: "«Sayfa No» her sayfada kendi numarasını yazar; kutuda şu an baktığın sayfanın numarası görünür.",
+    chips: { page: "Sayfa No", total: "Toplam Sayfa", both: "Sayfa / Toplam", date: "Tarih", file: "Dosya Adı" },
     appearance: "Görünüm",
     headerLook: "Üst bilgi görünümü",
     footerLook: "Alt bilgi görünümü",
@@ -66,7 +66,7 @@ const T = {
     preview: "Önizleme", previewing: "Önizleme hazırlanıyor…",
     page: "Sayfa", prev: "Önceki sayfa", next: "Sonraki sayfa",
     zoomIn: "Yakınlaştır", zoomOut: "Uzaklaştır", zoomFit: "Sığdır",
-    panHint: "Yakınlaştırınca fareyle tutup sürükleyerek gezebilirsin.",
+    altWheel: "Alt + fare tekerleği ile yakınlaştır / uzaklaştır",
     notStamped: "Bu sayfaya üst/alt bilgi yazılmayacak.",
     emptyWarn: "Üst ya da alt bilgiye en az bir metin yaz.",
     add: "Üst/alt bilgiyi PDF'ye ekle", working: "Ekleniyor…",
@@ -78,7 +78,6 @@ const T = {
     change: "Başka dosya seç",
     back: "Düzenlemeye Dön",
     noPages: "Seçilen sayfalarda işlenecek sayfa yok.",
-    markers: { sayfa: "‹Sayfa no›", toplam: "‹Toplam›", tarih: "‹Tarih›", dosya: "‹Dosya›" },
   },
   en: {
     hint: "Choose a PDF — you'll write the header and footer in the next step.",
@@ -99,8 +98,8 @@ const T = {
     footer: "Footer",
     left: "Left", center: "Center", right: "Right",
     insertTitle: "Insert into box",
-    insertPageAuto: "The page number changes by itself on every page.",
-    chips: { page: "Page no.", total: "Total pages", both: "Page / Total", date: "Date", file: "File name" },
+    insertPageAuto: "“Page No” writes each page's own number; the box shows the number of the page you are looking at.",
+    chips: { page: "Page No", total: "Total Pages", both: "Page / Total", date: "Date", file: "File Name" },
     appearance: "Appearance",
     headerLook: "Header look",
     footerLook: "Footer look",
@@ -114,7 +113,7 @@ const T = {
     preview: "Preview", previewing: "Preparing preview…",
     page: "Page", prev: "Previous page", next: "Next page",
     zoomIn: "Zoom in", zoomOut: "Zoom out", zoomFit: "Fit",
-    panHint: "When zoomed in, hold and drag with the mouse to move around.",
+    altWheel: "Alt + mouse wheel to zoom in / out",
     notStamped: "No header/footer will be written on this page.",
     emptyWarn: "Write at least one text in the header or footer.",
     add: "Add header/footer to PDF", working: "Adding…",
@@ -126,7 +125,6 @@ const T = {
     change: "Choose another file",
     back: "Back to Editing",
     noPages: "No pages to process in the chosen pages.",
-    markers: { sayfa: "‹Page›", toplam: "‹Total›", tarih: "‹Date›", dosya: "‹File›" },
   },
 } as const;
 
@@ -163,36 +161,112 @@ const toPartStyle = (s: StyleState): PartStyle => {
   };
 };
 
-/** Kutuda kod yerine okunur etiket gösterilir ({sayfa} → ‹Sayfa no›); kaydedilirken koda döner. */
-type Key = "sayfa" | "toplam" | "tarih" | "dosya";
-const ALIASES: Record<string, Key> = { sayfa: "sayfa", page: "sayfa", toplam: "toplam", total: "toplam", tarih: "tarih", date: "tarih", dosya: "dosya", file: "dosya" };
-const MARKER_WORDS: Record<string, Key> = {
-  "‹Sayfa no›": "sayfa", "‹Toplam›": "toplam", "‹Tarih›": "tarih", "‹Dosya›": "dosya",
-  "‹Page›": "sayfa", "‹Total›": "toplam", "‹Date›": "tarih", "‹File›": "dosya",
+/**
+ * Kutuda KOD değil, o an önizlenen sayfanın GERÇEK değeri görünür (ör. «3 / 30»).
+ * Arka planda sayfa numarası gibi alanlar kod ({sayfa}) olarak saklanır ki her sayfada kendi numarası yazılsın;
+ * kullanıcı kutuyu düzenlerse dokunduğu kısım düz metne döner, dokunmadığı alanlar kendiliğinden değişmeye devam eder.
+ */
+type Vars = { page: number; total: number; date: string; file: string };
+type Seg = { text: string; raw: string; tok: boolean };
+const TOKEN_RE = /\{(sayfa|toplam|tarih|dosya|page|total|date|file)\}/gi;
+const tokenValue = (k: string, v: Vars) => {
+  switch (k.toLowerCase()) {
+    case "sayfa": case "page": return String(v.page);
+    case "toplam": case "total": return String(v.total);
+    case "tarih": case "date": return v.date;
+    default: return v.file;
+  }
 };
-const toDisplay = (text: string, t: TT) =>
-  text.replace(/\{(sayfa|toplam|tarih|dosya|page|total|date|file)\}/gi, (_m, k: string) => t.markers[ALIASES[k.toLowerCase()]!]);
-const fromDisplay = (text: string) => text.replace(/‹[^›]*›/g, (m) => (MARKER_WORDS[m] ? `{${MARKER_WORDS[m]}}` : m));
+function segsOf(raw: string, v: Vars): Seg[] {
+  const out: Seg[] = [];
+  let last = 0;
+  for (const m of raw.matchAll(TOKEN_RE)) {
+    const i = m.index ?? 0;
+    if (i > last) out.push({ text: raw.slice(last, i), raw: raw.slice(last, i), tok: false });
+    out.push({ text: tokenValue(m[1]!, v), raw: m[0], tok: true });
+    last = i + m[0].length;
+  }
+  if (last < raw.length) out.push({ text: raw.slice(last), raw: raw.slice(last), tok: false });
+  return out;
+}
+const resolveText = (raw: string, v: Vars) => segsOf(raw, v).map((x) => x.text).join("");
+/** Kutudaki görünen metin değişince, saklanan ham metni (kodlarla) günceller. */
+function editRaw(raw: string, v: Vars, next: string): string {
+  const segs = segsOf(raw, v);
+  const old = segs.map((x) => x.text).join("");
+  let p = 0;
+  while (p < old.length && p < next.length && old[p] === next[p]) p++;
+  let q = 0;
+  while (q < old.length - p && q < next.length - p && old[old.length - 1 - q] === next[next.length - 1 - q]) q++;
+  const mid = next.slice(p, next.length - q);
+  const sStart = old.length - q;
+  let pre = "";
+  let suf = "";
+  let pos = 0;
+  for (const sg of segs) {
+    const start = pos;
+    const end = pos + sg.text.length;
+    pos = end;
+    if (end <= p) pre += sg.raw;
+    else if (start >= sStart) suf += sg.raw;
+    else {
+      if (start < p) pre += sg.text.slice(0, p - start); // kısmen önekte → düz metne döner
+      if (end > sStart) suf += sg.text.slice(Math.max(0, sStart - start)); // kısmen sonekte → düz metne döner
+    }
+  }
+  return pre + mid + suf;
+}
 
-function SlotRow({ label, slot, onChange, t, part, onFocus }: {
+function SlotRow({ label, slot, onChange, t, part, onFocus, vars, st, onStyle }: {
   label: string; slot: Slot3; onChange: (s: Slot3) => void; t: TT; part: "header" | "footer"; onFocus: (f: FocusRef) => void;
+  vars: Vars; st: StyleState; onStyle: (c: Col, patch: Partial<ColState>) => void;
 }) {
   const cols: [Col, string][] = [["left", t.left], ["center", t.center], ["right", t.right]];
   return (
     <section aria-label={label}>
       <p className="text-[12px] font-semibold text-slate-300">{label}</p>
-      <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mt-1.5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {cols.map(([k, name]) => (
-          <label key={k} className="text-[12px] text-slate-400">
-            {name}
-            <input
-              className={`${input} mt-1`}
-              value={toDisplay(slot[k], t)}
-              maxLength={120}
-              onFocus={() => onFocus({ part, slot: k })}
-              onChange={(e) => onChange({ ...slot, [k]: fromDisplay(e.target.value) })}
-            />
-          </label>
+          <div key={k} className="text-[12px] text-slate-400">
+            <label className="block">
+              {label} · {name}
+              <input
+                className={`${input} mt-1`}
+                value={resolveText(slot[k], vars)}
+                maxLength={120}
+                onFocus={() => onFocus({ part, slot: k })}
+                onChange={(e) => onChange({ ...slot, [k]: editRaw(slot[k], vars, e.target.value) })}
+              />
+            </label>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <input
+                aria-label={`${label} ${name} ${t.size}`}
+                title={t.size}
+                className={`${inputSm} w-12 px-1.5 text-center`}
+                inputMode="numeric"
+                value={st.cols[k].size}
+                onChange={(e) => onStyle(k, { size: e.target.value })}
+              />
+              <input
+                aria-label={`${label} ${name} ${t.color}`}
+                title={t.color}
+                type="color"
+                className="h-[34px] w-9 cursor-pointer rounded border border-white/15 bg-transparent"
+                value={st.cols[k].color}
+                onChange={(e) => onStyle(k, { color: e.target.value })}
+              />
+              <button
+                type="button"
+                aria-pressed={st.cols[k].bold}
+                aria-label={`${label} ${name} ${t.boldShort}`}
+                title={t.boldShort}
+                onClick={() => onStyle(k, { bold: !st.cols[k].bold })}
+                className={`h-[34px] w-8 rounded-lg border text-[14px] font-extrabold transition ${st.cols[k].bold ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.09]"}`}
+              >
+                B
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </section>
@@ -203,48 +277,11 @@ function StyleCard({ title, st, onChange, edgeLabel, ruleLabel, t }: {
   title: string; st: StyleState; onChange: (s: StyleState) => void; edgeLabel: string; ruleLabel: string; t: TT;
 }) {
   const set = <K extends keyof StyleState>(k: K, v: StyleState[K]) => onChange({ ...st, [k]: v });
-  const setCol = (c: Col, patch: Partial<ColState>) => onChange({ ...st, cols: { ...st.cols, [c]: { ...st.cols[c], ...patch } } });
-  const cols: [Col, string][] = [["left", t.left], ["center", t.center], ["right", t.right]];
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
       <p className="text-[13px] font-semibold text-slate-100">{title}</p>
 
-      <p className="mt-2.5 text-[11.5px] font-semibold uppercase tracking-wider text-slate-500">{t.colStyles}</p>
-      <div className="mt-1.5 space-y-1.5">
-        {cols.map(([c, name]) => (
-          <div key={c} className="flex items-center gap-2">
-            <span className="w-10 shrink-0 text-[12px] text-slate-400">{name}</span>
-            <input
-              aria-label={`${name} ${t.size}`}
-              title={t.size}
-              className={`${inputSm} w-14 text-center`}
-              inputMode="numeric"
-              value={st.cols[c].size}
-              onChange={(e) => setCol(c, { size: e.target.value })}
-            />
-            <input
-              aria-label={`${name} ${t.color}`}
-              title={t.color}
-              type="color"
-              className="h-[34px] w-10 cursor-pointer rounded border border-white/15 bg-transparent"
-              value={st.cols[c].color}
-              onChange={(e) => setCol(c, { color: e.target.value })}
-            />
-            <button
-              type="button"
-              aria-pressed={st.cols[c].bold}
-              aria-label={`${name} ${t.boldShort}`}
-              title={t.boldShort}
-              onClick={() => setCol(c, { bold: !st.cols[c].bold })}
-              className={`h-[34px] w-9 rounded-lg border text-[14px] font-extrabold transition ${st.cols[c].bold ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.09]"}`}
-            >
-              B
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[12px] text-slate-400">
+      <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-[12px] text-slate-400">
         <label>{edgeLabel}<input className={`${input} mt-1`} inputMode="decimal" value={st.edge} onChange={(e) => set("edge", e.target.value)} /></label>
         <label>{t.side}<input className={`${input} mt-1`} inputMode="decimal" value={st.side} onChange={(e) => set("side", e.target.value)} /></label>
       </div>
@@ -458,16 +495,51 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   };
   const pageNo = previewPage + 1;
   const stripped = fileName.replace(/\.pdf$/i, "");
+  const startN = Number.isFinite(parseInt(startNumber, 10)) ? parseInt(startNumber, 10) : 1;
+  const vars: Vars = {
+    page: mode === "all" ? startN + previewPage - (skipFirst ? 1 : 0) : pageNo,
+    total: pageCount,
+    date: formatDateTr(new Date()),
+    file: stripped,
+  };
+  const setCols = (setter: React.Dispatch<React.SetStateAction<StyleState>>) => (c: Col, patch: Partial<ColState>) =>
+    setter((p) => ({ ...p, cols: { ...p.cols, [c]: { ...p.cols[c], ...patch } } }));
   // «Tüm sayfalar» kipinde sayfa numarası her sayfada değişmeli → kod yazılır, kutuda ‹Sayfa no› görünür.
   const pageVal = mode === "all" ? "{sayfa}" : String(pageNo);
   const chips = [
-    { id: "page", name: t.chips.page, ex: mode === "all" ? "" : String(pageNo), ins: pageVal },
-    { id: "total", name: t.chips.total, ex: String(pageCount), ins: String(pageCount) },
-    { id: "both", name: t.chips.both, ex: mode === "all" ? "" : `${pageNo} / ${pageCount}`, ins: `${pageVal} / ${pageCount}` },
-    { id: "date", name: t.chips.date, ex: formatDateTr(new Date()), ins: formatDateTr(new Date()) },
-    { id: "file", name: t.chips.file, ex: stripped, ins: stripped },
+    { id: "page", name: t.chips.page, Icon: Hash, ins: pageVal },
+    { id: "total", name: t.chips.total, Icon: Sigma, ins: String(pageCount) },
+    { id: "both", name: t.chips.both, Icon: Slash, ins: `${pageVal} / ${pageCount}` },
+    { id: "date", name: t.chips.date, Icon: CalendarDays, ins: formatDateTr(new Date()) },
+    { id: "file", name: t.chips.file, Icon: FileText, ins: stripped },
   ];
 
+  const zoomRef = useRef(1);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  // Alt + fare tekerleği: imlecin altındaki nokta sabit kalacak şekilde yakınlaştır / uzaklaştır.
+  useEffect(() => {
+    const el = viewRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.altKey) return;
+      e.preventDefault();
+      const z1 = zoomRef.current;
+      const z2 = Math.min(3, Math.max(1, Math.round((z1 + (e.deltaY < 0 ? 0.25 : -0.25)) * 100) / 100));
+      if (z2 === z1) return;
+      const r = el.getBoundingClientRect();
+      const mx = e.clientX - r.left;
+      const my = e.clientY - r.top;
+      const sl = el.scrollLeft;
+      const st = el.scrollTop;
+      setZoom(z2);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.scrollLeft = (sl + mx) * (z2 / z1) - mx;
+        el.scrollTop = (st + my) * (z2 / z1) - my;
+      }));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [bytes, result]);
   const changeZoom = (z: number) => setZoom(Math.min(3, Math.max(1, Math.round(z * 100) / 100)));
   const onPanDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = viewRef.current;
@@ -549,7 +621,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
         {/* ── Büyük önizleme (solda) ── */}
         <aside aria-label={t.preview} className="lg:sticky lg:top-4 lg:self-start">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <p className={`${heading} mr-auto`}>{t.preview}</p>
+            <p className={`${heading} mr-auto`}>{t.preview} <span className="ml-1 text-[11px] font-normal normal-case tracking-normal text-slate-500">· {t.altWheel}</span></p>
             <div className="flex items-center gap-1">
               <button type="button" aria-label={t.prev} title={t.prev} disabled={previewPage <= 0} onClick={() => goPage(previewPage - 1)} className={iconBtn}>
                 <ChevronLeft className="h-4 w-4" />
@@ -607,8 +679,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
               </div>
             )}
           </div>
-          {zoom > 1 && <p className="mt-1.5 text-[12px] text-slate-500">{t.panHint}</p>}
-          {notStamped && <p className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-200">{t.notStamped}</p>}
+                    {notStamped && <p className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-200">{t.notStamped}</p>}
         </aside>
 
         {/* ── Düzenleme (sağda) ── */}
@@ -665,22 +736,22 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
                 </button>
               )}
             </div>
-            <SlotRow label={t.header} slot={cur.header} onChange={(sl) => setCur({ header: sl })} t={t} part="header" onFocus={setFocus} />
-            <SlotRow label={t.footer} slot={cur.footer} onChange={(sl) => setCur({ footer: sl })} t={t} part="footer" onFocus={setFocus} />
+            <SlotRow label={t.header} slot={cur.header} onChange={(sl) => setCur({ header: sl })} t={t} part="header" onFocus={setFocus} vars={vars} st={headerStyle} onStyle={setCols(setHeaderStyle)} />
+            <SlotRow label={t.footer} slot={cur.footer} onChange={(sl) => setCur({ footer: sl })} t={t} part="footer" onFocus={setFocus} vars={vars} st={footerStyle} onStyle={setCols(setFooterStyle)} />
 
             <div className="border-t border-white/10 pt-2.5">
               <p className="text-[12px] font-semibold text-slate-300">{t.insertTitle}</p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {chips.map((c) => (
                   <button
                     key={c.id}
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => insertText(c.ins)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-semibold text-slate-100 transition hover:border-cyan-400/50 hover:bg-cyan-400/10"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-gradient-to-b from-white/[0.09] to-white/[0.03] px-3.5 py-2 text-[13px] font-bold text-slate-100 shadow-[0_2px_0_rgba(0,0,0,0.35)] transition hover:border-cyan-400/50 hover:from-cyan-400/20 hover:to-cyan-400/[0.06] active:translate-y-px active:shadow-none"
                   >
+                    <c.Icon className="h-4 w-4 text-cyan-300" aria-hidden />
                     {c.name}
-                    {c.ex && <span className="max-w-[9rem] truncate font-normal text-slate-400">{c.ex}</span>}
                   </button>
                 ))}
               </div>
