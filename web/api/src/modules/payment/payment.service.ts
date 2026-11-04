@@ -1,5 +1,5 @@
 /**
- * @deprecated — feature-flagged via `PAYMENTS_PROVIDER=iyzico`; Stripe replaces this in Phase 3.
+ * YEDEK sağlayıcı — `PAYMENTS_PROVIDER=iyzico` ile seçilir (varsayılan paytr).
  * Do not add new features here. See `.cursor/plans/stripe-phase-1-systemmap_*.plan.md`.
  */
 import { randomUUID } from "node:crypto";
