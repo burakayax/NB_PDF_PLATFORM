@@ -103,8 +103,8 @@ describe("Araç → pano tablosu", () => {
       expect(slug && TOOL_BOARD[slug], entry.id).toBeTruthy();
     }
   });
-  it("6 pano tanımlı, adlar ve açıklamalar dolu", () => {
-    expect(PIN_BOARD_KEYS).toHaveLength(6);
+  it("7 pano tanımlı, adlar ve açıklamalar dolu", () => {
+    expect(PIN_BOARD_KEYS).toHaveLength(7);
     for (const k of PIN_BOARD_KEYS) {
       expect(PIN_BOARDS[k].name.length).toBeGreaterThan(5);
       expect(PIN_BOARDS[k].description.length).toBeGreaterThan(20);
@@ -135,7 +135,7 @@ describe("Pano kurulumu", () => {
     expect(by["pdf-duzenleme"]).toMatchObject({ boardId: "p1", source: "adla bulundu" });
     expect(by["gizlilik"]).toMatchObject({ boardId: "p2", source: "adla bulundu" });
     expect(by["cv"]).toMatchObject({ boardId: null, source: "eksik" });
-    expect(s.missingCount).toBe(4);
+    expect(s.missingCount).toBe(5);
     expect(s.envMismatch).toBe(false);
   });
   it("kayıtlı kimlik hâlâ hesapta duruyorsa 'kayıtlı' kalır; silinmişse ada bakılır", () => {
@@ -166,20 +166,20 @@ describe("Pano kurulumu", () => {
       expect(r.boards).toEqual({ "pdf-duzenleme": "p1", gizlilik: "p2" });
       expect(fetchMock.mock.calls.every((c) => (c[1] as RequestInit).method === "GET")).toBe(true);
     });
-    it("createMissing=true: eksik 4 pano ad + açıklamayla ve HERKESE AÇIK oluşturulur", async () => {
+    it("createMissing=true: eksik 5 pano ad + açıklamayla ve HERKESE AÇIK oluşturulur", async () => {
       let n = 0;
       fetchMock.mockImplementation(async (_url: string, init?: RequestInit) => {
         if (init?.method === "POST") return reply(201, { id: `new${++n}`, name: JSON.parse(String(init.body)).name });
         return reply(200, { items: exists });
       });
       const r = await syncBoards(secrets, config as never, true);
-      expect(r.created.sort()).toEqual(["cv", "hukuk", "ogrenci", "tarama"]);
+      expect(r.created.sort()).toEqual(["cv", "donusum", "hukuk", "ogrenci", "tarama"]);
       const posts = (fetchMock.mock.calls as Array<[string, RequestInit]>).filter((c) => c[1].method === "POST");
-      expect(posts).toHaveLength(4);
+      expect(posts).toHaveLength(5);
       const sent = JSON.parse(String(posts[0]![1].body));
       expect(sent.privacy).toBe("PUBLIC");
       expect(sent.description).toBeTruthy();
-      expect(Object.keys(r.boards)).toHaveLength(6);
+      expect(Object.keys(r.boards)).toHaveLength(7);
       expect(r.state.missingCount).toBe(0);
     });
   });

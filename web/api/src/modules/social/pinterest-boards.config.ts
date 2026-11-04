@@ -8,7 +8,7 @@
  *   1. elle seçim  2. araç eşleştirmesi  3. blog kategorisi/etiketi  4. başlık+açıklama anahtar kelimesi  5. varsayılan
  */
 
-export const PIN_BOARD_KEYS = ["cv", "pdf-duzenleme", "tarama", "gizlilik", "hukuk", "ogrenci"] as const;
+export const PIN_BOARD_KEYS = ["cv", "pdf-duzenleme", "tarama", "gizlilik", "hukuk", "ogrenci", "donusum"] as const;
 export type PinBoardKey = (typeof PIN_BOARD_KEYS)[number];
 
 export function isPinBoardKey(value: unknown): value is PinBoardKey {
@@ -44,6 +44,10 @@ export const PIN_BOARDS: Record<PinBoardKey, { name: string; description: string
     name: "Öğrenciler İçin PDF ve Ödev İpuçları",
     description: "Ödev, tez ve ders notları için PDF birleştirme, sıkıştırma ve düzenleme ipuçları.",
   },
+  donusum: {
+    name: "E-kitap ve Metin Dönüşümü",
+    description: "EPUB, Markdown, TXT, RTF ve ODT dosyalarını PDF'e çevirme; PDF'ten e-kitap ve Markdown çıkarma rehberleri.",
+  },
 };
 
 /**
@@ -70,13 +74,13 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   "ppt-to-pdf": "pdf-duzenleme",
   "pdf-to-image": "pdf-duzenleme",
   "pdf-to-text": "pdf-duzenleme",
-  "txt-to-pdf": "pdf-duzenleme",
-  "markdown-to-pdf": "pdf-duzenleme",
-  "rtf-to-pdf": "pdf-duzenleme",
-  "odt-to-pdf": "pdf-duzenleme",
-  "epub-to-pdf": "pdf-duzenleme",
-  "pdf-to-epub": "pdf-duzenleme",
-  "pdf-to-markdown": "pdf-duzenleme",
+  "txt-to-pdf": "donusum",
+  "markdown-to-pdf": "donusum",
+  "rtf-to-pdf": "donusum",
+  "odt-to-pdf": "donusum",
+  "epub-to-pdf": "donusum",
+  "pdf-to-epub": "donusum",
+  "pdf-to-markdown": "donusum",
   "html-to-pdf": "pdf-duzenleme",
   "extract-images": "pdf-duzenleme",
   "pdf-imzala": "pdf-duzenleme",
@@ -141,6 +145,7 @@ export const CATEGORY_RULES: { board: PinBoardKey; terms: string[] }[] = [
   { board: "cv", terms: ["cv", "ozgecmis", "europass", "on yazi", "cover letter", "resume", "is basvurusu", "mulakat", "ats"] },
   { board: "hukuk", terms: ["sozlesme", "uyap", "cezai sart", "ihale", "sartname", "kira kontrat", "dilekce", "contract", "tender"] },
   { board: "gizlilik", terms: ["kvkk", "kimlik", "metadata", "ustveri", "karart", "redact", "kisisel veri", "hassas veri", "privacy", "gizlilik"] },
+  { board: "donusum", terms: ["epub", "e-kitap", "ekitap", "markdown"] },
   { board: "tarama", terms: ["belge tara", "tarama", "tarayici", "scan", "ocr", "fotograftan pdf", "aranabilir"] },
 ];
 
