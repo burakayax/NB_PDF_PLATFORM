@@ -3970,6 +3970,45 @@
         "/x-cards/fact/dava-dosyasi-ihale-icindekiler-yer-imi-1.png",
         "/x-cards/fact/dava-dosyasi-ihale-icindekiler-yer-imi-3.png"
       ]
+    },
+    "https://www.pdfplatform.app/blog/tiff-pdf-cevirme-cok-sayfali-tif": {
+      "slug": "tiff-pdf-cevirme-cok-sayfali-tif",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "TIFF'i PDF'e Çevirme",
+      "tips": [
+        {
+          "title": "Dört adım",
+          "text": "Dosyayı ekleyin, sırayı kontrol edin, sayfa boyutunu seçin, çevirin. Dosyanız cihazınızdan çıkmaz"
+        },
+        {
+          "title": "Her sayfa ayrı sayfa",
+          "text": "Çok sayfalı TIFF'in her sayfası PDF'te ayrı bir sayfa olur, sıra bozulmaz"
+        },
+        {
+          "title": "Birden çok dosya",
+          "text": "Birkaç TIFF'i okla sıralayıp tek PDF'te birleştirebilirsiniz"
+        },
+        {
+          "title": "Yazı seçilebilir mi?",
+          "text": "Hayır, tarama görüntü olarak kalır. Aranabilir metin için PDF'i OCR aracından geçirin"
+        },
+        {
+          "title": "PDF büyük çıktıysa",
+          "text": "PDF Sıkıştır ile yükleme ekranının sınırına indirin. Kesin sınırı kendi ekranınızdan okuyun"
+        }
+      ],
+      "card": "/x-cards/tip/tiff-pdf-cevirme-cok-sayfali-tif.png",
+      "factTips": [
+        2,
+        3
+      ],
+      "factCards": [
+        "/x-cards/fact/tiff-pdf-cevirme-cok-sayfali-tif-2.png",
+        "/x-cards/fact/tiff-pdf-cevirme-cok-sayfali-tif-3.png"
+      ]
     }
   },
   "products": [
