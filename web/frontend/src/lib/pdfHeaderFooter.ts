@@ -13,15 +13,50 @@ import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 
 export type Slot3 = { left: string; center: string; right: string };
 
-export type HeaderFooterOptions = {
-  header: Slot3;
-  footer: Slot3;
+/** Üst bilgi ya da alt bilginin görünümü — ikisi ayrı ayrı ayarlanır. */
+export type PartStyle = {
   /** Yazı boyutu (pt). 6–24 arasına sıkıştırılır. */
   fontSize?: number;
   /** #RRGGBB */
   color?: string;
   bold?: boolean;
-  /** Sayfa kenarından uzaklık (mm). */
+  /** Üst bilgide sayfanın ÜSTünden, alt bilgide ALTtan uzaklık (mm). */
+  edgeMm?: number;
+  /** Soldan ve sağdan boşluk (mm). */
+  sideMm?: number;
+  /** Metnin iç tarafına ince çizgi çek. */
+  rule?: boolean;
+};
+
+/** Hangi sayfalara uygulanacağı. */
+export type PageScope = "all" | "odd" | "even" | "range";
+
+/** Bir bölüm: belirli sayfalara yazılacak üst ve alt bilgi metni. */
+export type HeaderFooterRule = {
+  header: Slot3;
+  footer: Slot3;
+  pages: PageScope;
+  /** pages === "range" iken (1 tabanlı, dahil). */
+  from?: number;
+  to?: number;
+};
+
+export type HeaderFooterOptions = {
+  /** Birden çok bölüm: bir sayfa birden çok bölüme uyuyorsa SONDAKİ geçerli olur. */
+  rules?: HeaderFooterRule[];
+  /** Tek bölümlü kullanım (rules verilmezse bunlar kullanılır). */
+  header?: Slot3;
+  footer?: Slot3;
+  headerStyle?: PartStyle;
+  footerStyle?: PartStyle;
+  /** Önizleme: verilen belge asıl belgenin bu sayfasıdır (0 tabanlı); kurallar ve numara ona göre hesaplanır. */
+  asPageIndex?: number;
+  /** Yazı boyutu (pt). 6–24 arasına sıkıştırılır. (Eski tek-ayar alanları; ikisine birden uygulanır.) */
+  fontSize?: number;
+  /** #RRGGBB */
+  color?: string;
+  bold?: boolean;
+  /** Sayfa kenarından uzaklık (mm) — üstten/alttan ve yandan. */
   marginMm?: number;
   /** Uygulanacak sayfa aralığı (1 tabanlı, dahil). Boşsa tüm sayfalar. */
   fromPage?: number;
@@ -101,34 +136,95 @@ function cleanFor(font: PDFFont, s: string): string {
 
 export type HeaderFooterResult = { bytes: Uint8Array; stamped: number; shrunk: number };
 
+/** Sayfa (1 tabanlı) bu kapsama giriyor mu? */
+export function pageInScope(n: number, total: number, r: Pick<HeaderFooterRule, "pages" | "from" | "to">): boolean {
+  switch (r.pages) {
+    case "odd": return n % 2 === 1;
+    case "even": return n % 2 === 0;
+    case "range": {
+      const a = Math.max(1, Math.floor(r.from && r.from > 0 ? r.from : 1));
+      const b = Math.min(total, Math.floor(r.to && r.to > 0 ? r.to : total));
+      return n >= a && n <= b;
+    }
+    default: return true;
+  }
+}
+
+/** Bu sayfada geçerli bölüm (sondaki kazanır); yoksa null. */
+export function ruleForPage(rules: HeaderFooterRule[], n: number, total: number, skipFirst?: boolean): HeaderFooterRule | null {
+  if (skipFirst && n === 1) return null;
+  for (let k = rules.length - 1; k >= 0; k--) {
+    const r = rules[k]!;
+    if (!pageInScope(n, total, r)) continue;
+    return slotHasText(r.header) || slotHasText(r.footer) ? r : null;
+  }
+  return null;
+}
+
 export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptions): Promise<HeaderFooterResult> {
   const pdf = await PDFDocument.load(input, { ignoreEncryption: false });
   pdf.registerFontkit(fontkit);
   const f = opts.fonts ?? (await loadPdfFonts());
-  const font = await pdf.embedFont(opts.bold ? f.bold : f.regular, { subset: true });
 
   const pages = pdf.getPages();
-  const range = resolveRange(pages.length, opts.fromPage, opts.toPage, opts.skipFirst);
-  if (!range) return { bytes: input, stamped: 0, shrunk: 0 };
+  const totalPages = opts.totalPages ?? pages.length;
+  const offset = opts.asPageIndex ?? 0;
 
-  const size = Math.min(24, Math.max(6, opts.fontSize ?? 10));
-  const color = hexToRgb(opts.color ?? "#555555");
-  const margin = Math.max(3, Math.min(40, opts.marginMm ?? 10)) * MM_TO_PT;
+  // Tek bölümlü eski kullanım: aralık (from–to) bu bölümün kapsamıdır.
+  const legacy = !opts.rules;
+  const rules: HeaderFooterRule[] = opts.rules ?? [{
+    header: opts.header ?? EMPTY_SLOT,
+    footer: opts.footer ?? EMPTY_SLOT,
+    pages: opts.fromPage || opts.toPage ? "range" : "all",
+    from: opts.fromPage,
+    to: opts.toPage,
+  }];
+  if (!rules.some((r) => slotHasText(r.header) || slotHasText(r.footer))) return { bytes: input, stamped: 0, shrunk: 0 };
+
+  // {sayfa} sayacı ilk yazılan sayfadan başlar (kapak atlanırsa 2. sayfa, aralık verilmişse ilk sayfası).
+  const legacyRange = legacy ? resolveRange(totalPages, opts.fromPage, opts.toPage, opts.skipFirst) : null;
+  if (legacy && !legacyRange) return { bytes: input, stamped: 0, shrunk: 0 };
+  const base = legacyRange ? legacyRange[0] - 1 : opts.skipFirst ? 1 : 0;
+
+  const styleOf = (st?: PartStyle) => ({
+    size: Math.min(24, Math.max(6, st?.fontSize ?? opts.fontSize ?? 10)),
+    color: hexToRgb(st?.color ?? opts.color ?? "#555555"),
+    bold: st?.bold ?? opts.bold ?? false,
+    edge: Math.max(3, Math.min(60, st?.edgeMm ?? opts.marginMm ?? 10)) * MM_TO_PT,
+    side: Math.max(3, Math.min(60, st?.sideMm ?? opts.marginMm ?? 10)) * MM_TO_PT,
+    rule: st?.rule ?? opts.rule ?? false,
+  });
+  const hs = styleOf(opts.headerStyle);
+  const fs = styleOf(opts.footerStyle);
+
+  const fontCache = new Map<boolean, PDFFont>();
+  const fontFor = async (bold: boolean) => {
+    let ft = fontCache.get(bold);
+    if (!ft) {
+      ft = await pdf.embedFont(bold ? f.bold : f.regular, { subset: true });
+      fontCache.set(bold, ft);
+    }
+    return ft;
+  };
+
   const start = Math.floor(opts.startNumber ?? 1);
   const date = formatDateTr(opts.date ?? new Date());
   const file = (opts.fileName ?? "").replace(/\.pdf$/i, "");
-  const totalPages = opts.totalPages ?? pages.length;
 
   let stamped = 0;
   let shrunk = 0;
 
-  for (let i = range[0] - 1; i <= range[1] - 1; i++) {
+  for (let i = 0; i < pages.length; i++) {
+    const li = offset + i; // asıl belgedeki 0 tabanlı sıra
+    if (legacyRange && (li < legacyRange[0] - 1 || li > legacyRange[1] - 1)) continue;
+    const rule = legacy ? rules[0]! : ruleForPage(rules, li + 1, totalPages, opts.skipFirst);
+    if (!rule) continue;
     const page = pages[i]!;
     const mb = page.getMediaBox();
     const rot = ((page.getRotation().angle % 360) + 360) % 360;
     const visW = rot === 90 || rot === 270 ? mb.height : mb.width;
     const visH = rot === 90 || rot === 270 ? mb.width : mb.height;
-    const vars = { page: start + (i - (range[0] - 1)), total: totalPages, date, file };
+    const vars = { page: start + (li - base), total: totalPages, date, file };
 
     /** Görünen (y yukarı) koordinattan sayfa koordinatına. */
     const place = (vx: number, vy: number) => {
@@ -140,9 +236,12 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
       }
     };
 
-    const drawRow = (slot: Slot3, top: boolean) => {
-      const baseline = top ? visH - margin - size * 0.8 : margin;
-      const maxW = visW - 2 * margin;
+    const drawRow = async (slot: Slot3, top: boolean) => {
+      const st = top ? hs : fs;
+      const font = await fontFor(st.bold);
+      const size = st.size;
+      const baseline = top ? visH - st.edge - size * 0.8 : st.edge;
+      const maxW = visW - 2 * st.side;
       const items: { text: string; align: "l" | "c" | "r" }[] = [
         { text: slot.left, align: "l" },
         { text: slot.center, align: "c" },
@@ -154,30 +253,30 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
         const text = cleanFor(font, fillPlaceholders(it.text, vars));
         if (!text.trim()) continue;
         const w = font.widthOfTextAtSize(text, size);
-        // Üç parça aynı satırda: her birine en çok genişliğin üçte biri (ortadaki yarım payla) ayrılır; taşarsa küçült.
+        // Üç parça aynı satırda: her birine en çok genişliğin üçte biri ayrılır; taşarsa küçült.
         const room = maxW / 3;
-        let fs = size;
+        let sz = size;
         if (w > room) {
-          fs = Math.max(4, (size * room) / w);
+          sz = Math.max(4, (size * room) / w);
           shrunk++;
         }
-        const ww = font.widthOfTextAtSize(text, fs);
-        const vx = it.align === "l" ? margin : it.align === "r" ? visW - margin - ww : (visW - ww) / 2;
+        const ww = font.widthOfTextAtSize(text, sz);
+        const vx = it.align === "l" ? st.side : it.align === "r" ? visW - st.side - ww : (visW - ww) / 2;
         const p = place(vx, baseline);
-        page.drawText(text, { x: p.x, y: p.y, size: fs, font, color, rotate: degrees(p.a) });
+        page.drawText(text, { x: p.x, y: p.y, size: sz, font, color: st.color, rotate: degrees(p.a) });
         drewAny = true;
       }
-      if (drewAny && opts.rule) {
+      if (drewAny && st.rule) {
         const ry = top ? baseline - size * 0.45 : baseline + size * 1.15;
-        const p1 = place(margin, ry);
-        const p2 = place(visW - margin, ry);
-        page.drawLine({ start: { x: p1.x, y: p1.y }, end: { x: p2.x, y: p2.y }, thickness: 0.4, color });
+        const p1 = place(st.side, ry);
+        const p2 = place(visW - st.side, ry);
+        page.drawLine({ start: { x: p1.x, y: p1.y }, end: { x: p2.x, y: p2.y }, thickness: 0.4, color: st.color });
       }
       return drewAny;
     };
 
-    const a = slotHasText(opts.header) ? drawRow(opts.header, true) : false;
-    const b = slotHasText(opts.footer) ? drawRow(opts.footer, false) : false;
+    const a = slotHasText(rule.header) ? await drawRow(rule.header, true) : false;
+    const b = slotHasText(rule.footer) ? await drawRow(rule.footer, false) : false;
     if (a || b) stamped++;
   }
 
