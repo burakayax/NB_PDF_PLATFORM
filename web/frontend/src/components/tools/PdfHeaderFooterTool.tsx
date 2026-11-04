@@ -229,6 +229,10 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const [notStamped, setNotStamped] = useState(false);
   const [zoom, setZoom] = useState(false);
   const seq = useRef(0);
+  // Sayfa geçişini hızlandırmak için: kaynak belge bir kez ayrıştırılır, aynı ayar+sayfa önizlemesi önbellekten gelir.
+  const srcDoc = useRef<Promise<import("pdf-lib").PDFDocument> | null>(null);
+  const previewCache = useRef(new Map<string, { url: string; notStamped: boolean }>());
+  const lastSettingsKey = useRef("");
 
   const hasText = rules.some((r) => slotHasText(r.header) || slotHasText(r.footer));
 
@@ -255,6 +259,8 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     try {
       const b = new Uint8Array(await f.arrayBuffer());
       const th = await renderPdfPage(b, 0, 1100);
+      srcDoc.current = null;
+      previewCache.current.clear();
       setBytes(b);
       setFileName(f.name);
       setPageCount(th.pageCount);
@@ -275,33 +281,63 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   };
 
   // Ayarlar ya da sayfa değişince seçili sayfanın önizlemesini (kısa bir beklemeyle) yeniler.
-  const optionsKey = JSON.stringify([rules, headerStyle, footerStyle, skipFirst, startNumber, previewPage]);
+  const settingsKey = JSON.stringify([rules, headerStyle, footerStyle, skipFirst, startNumber]);
+  const optionsKey = `${settingsKey}|${previewPage}`;
   useEffect(() => {
     if (!bytes) return;
     const my = ++seq.current;
+    const cached = previewCache.current.get(optionsKey);
+    // Yalnız sayfa değiştiyse bekleme yok; metin yazılırken kısa bekleme (her tuşta yeniden çizmesin).
+    const wait = lastSettingsKey.current === settingsKey ? 0 : 450;
+    lastSettingsKey.current = settingsKey;
+    const build = async (index: number) => {
+      // Önizleme yalnız seçili sayfa: büyük belgede tamamını işlememek için o sayfa ayrı belgeye alınır.
+      srcDoc.current ??= import("pdf-lib").then(({ PDFDocument }) => PDFDocument.load(bytes));
+      const single = await singlePage(await srcDoc.current, index);
+      let out = single;
+      let stamped = 0;
+      if (hasText) {
+        const r = await addHeaderFooter(single, { ...buildOptions(), asPageIndex: index, totalPages: pageCount });
+        out = r.bytes;
+        stamped = r.stamped;
+      }
+      const th = await renderPdfPage(out, 0, 1100);
+      const entry = { url: th.dataUrl, notStamped: hasText && stamped === 0 };
+      if (previewCache.current.size > 24) previewCache.current.delete(previewCache.current.keys().next().value as string);
+      previewCache.current.set(`${settingsKey}|${index}`, entry);
+      return entry;
+    };
+    const prefetchNext = async () => {
+      // Boşta kalınca sıradaki sayfayı da hazırla: "Sonraki"ye basınca anında gelsin.
+      const nextIdx = previewPage + 1;
+      if (my === seq.current && nextIdx < pageCount && !previewCache.current.has(`${settingsKey}|${nextIdx}`)) {
+        try { await build(nextIdx); } catch { /* önemsiz */ }
+      }
+    };
+    if (cached) {
+      setPreviewUrl(cached.url);
+      setNotStamped(cached.notStamped);
+      setPreviewing(false);
+      lastSettingsKey.current = settingsKey;
+      const idle = setTimeout(() => void prefetchNext(), 150);
+      return () => clearTimeout(idle);
+    }
     const timer = setTimeout(async () => {
       setPreviewing(true);
       try {
-        // Önizleme yalnız seçili sayfa: büyük belgede tamamını işlememek için o sayfa ayrı belgeye alınır.
-        const single = await singlePage(bytes, previewPage);
-        let out = single;
-        let stamped = 0;
-        if (hasText) {
-          const r = await addHeaderFooter(single, { ...buildOptions(), asPageIndex: previewPage, totalPages: pageCount });
-          out = r.bytes;
-          stamped = r.stamped;
-        }
-        const th = await renderPdfPage(out, 0, 1100);
+        const e = await build(previewPage);
         if (my === seq.current) {
-          setPreviewUrl(th.dataUrl);
-          setNotStamped(hasText && stamped === 0);
+          setPreviewUrl(e.url);
+          setNotStamped(e.notStamped);
+          setPreviewing(false);
         }
+        await prefetchNext();
       } catch {
         /* önizleme hatası işlemi engellemez */
       } finally {
         if (my === seq.current) setPreviewing(false);
       }
-    }, 450);
+    }, wait);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bytes, optionsKey]);
@@ -419,14 +455,19 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-        {/* ── Büyük önizleme ── */}
+        {/* ── Büyük önizleme (solda) ── */}
         <aside aria-label={t.preview} className="lg:sticky lg:top-4 lg:self-start">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <p className={`${heading} mr-auto`}>{t.preview}</p>
-            <button type="button" aria-label={t.prev} disabled={previewPage <= 0} onClick={() => goPage(previewPage - 1)} className="rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <label className="flex items-center gap-1.5 text-[13px] text-slate-300">
+            <div className="flex items-center gap-1">
+              <button type="button" aria-label={t.prev} title={t.prev} disabled={previewPage <= 0} onClick={() => goPage(previewPage - 1)} className="rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button type="button" aria-label={t.next} title={t.next} disabled={previewPage >= pageCount - 1} onClick={() => goPage(previewPage + 1)} className="rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="flex items-center gap-1.5 whitespace-nowrap text-[13px] text-slate-300">
               {t.page}
               <input
                 className={`${inputSm} w-14 text-center`}
@@ -439,9 +480,6 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
               />
               / {pageCount}
             </label>
-            <button type="button" aria-label={t.next} disabled={previewPage >= pageCount - 1} onClick={() => goPage(previewPage + 1)} className="rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30">
-              <ChevronRight className="h-4 w-4" />
-            </button>
             <button type="button" onClick={() => setZoom(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.09]">
               <Maximize2 className="h-3.5 w-3.5" />{t.zoom}
             </button>
@@ -586,9 +624,8 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
 }
 
 /** Önizleme için yalnız seçili sayfayı içeren küçük bir PDF üretir (büyük belgede hızlı kalır). */
-async function singlePage(src: Uint8Array, index: number): Promise<Uint8Array> {
+async function singlePage(doc: import("pdf-lib").PDFDocument, index: number): Promise<Uint8Array> {
   const { PDFDocument } = await import("pdf-lib");
-  const doc = await PDFDocument.load(src);
   const out = await PDFDocument.create();
   const [p] = await out.copyPages(doc, [Math.min(index, doc.getPageCount() - 1)]);
   out.addPage(p!);
