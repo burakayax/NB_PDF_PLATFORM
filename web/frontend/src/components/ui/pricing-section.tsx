@@ -185,8 +185,8 @@ function StarterToolsModal({
         {remaining > 0 && (
           <p className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] px-4 py-3 text-xs text-blue-300/80">
             {tr
-              ? `${remaining} araç daha (PDF → Word, Excel, PowerPoint dönüşümleri ve fazlası) Plus ve üzeri planlarda mevcuttur.`
-              : `${remaining} more tools (PDF → Word, Excel, PowerPoint conversions and more) are available on Plus and higher plans.`}
+              ? `${remaining} araç daha (PDF'ten Word'e, Excel, PowerPoint dönüşümleri ve fazlası) Plus ve üzeri planlarda mevcuttur.`
+              : `${remaining} more tools (PDF'ten Word'e, Excel, PowerPoint conversions and more) are available on Plus and higher plans.`}
           </p>
         )}
       </motion.div>

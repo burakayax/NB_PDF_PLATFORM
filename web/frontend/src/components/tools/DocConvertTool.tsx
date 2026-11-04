@@ -12,7 +12,7 @@ import { ScannedPdfError } from "../../lib/pdfToUdf";
 
 /**
  * Ek dönüştürmeler — hepsi CİHAZDA çalışır, dosya sunucuya gitmez.
- * TXT / Markdown / RTF / ODT / EPUB → PDF, PDF → EPUB, PDF → Markdown.
+ * TXT / Markdown / RTF / ODT / EPUB'tan PDF'e, PDF'ten EPUB'a, PDF'ten Markdown'a.
  */
 export type DocMode = "txt-to-pdf" | "markdown-to-pdf" | "rtf-to-pdf" | "odt-to-pdf" | "epub-to-pdf" | "pdf-to-epub" | "pdf-to-markdown";
 

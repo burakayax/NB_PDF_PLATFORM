@@ -1,5 +1,5 @@
 /**
- * UDF → PDF ÇİZİMİ.
+ * UDF'den PDF'e ÇİZİMİ.
  *
  * Gerçek Roboto baytları ve gerçek pdf-lib ile çalışır. Korunan davranışlar:
  * Türkçe harflerin PDF'e gerçekten yazılabilmesi, uzun metnin sayfaya bölünmesi,

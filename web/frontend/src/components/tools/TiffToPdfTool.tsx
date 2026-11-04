@@ -1,9 +1,9 @@
 /**
- * TIFF → PDF — tek veya çok sayfalı TIFF/TIF dosyalarını PDF'e çevirir (taranmış belge, UYAP/e-başvuru evrakı).
+ * TIFF'ten PDF'e — tek veya çok sayfalı TIFF/TIF dosyalarını PDF'e çevirir (taranmış belge, UYAP/e-başvuru evrakı).
  *
  * Her şey cihazda yapılır (utif2 + pdf-lib); dosya sunucuya gitmez. Çok sayfalı TIFF'in her sayfası
  * PDF'te ayrı sayfa olur, sıra korunur. Birden çok TIFF seçilirse dosya sırasıyla tek PDF'te birleşir.
- * Motor "Görsel → PDF" ile aynıdır (`filesToImageInputs` + `imagesToPdf`).
+ * Motor "Görselden PDF'e" ile aynıdır (`filesToImageInputs` + `imagesToPdf`).
  */
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Loader2, Trash2 } from "lucide-react";
@@ -40,7 +40,7 @@ export function TiffToPdfTool({ language }: { language: Language }) {
     const room = MAX_FILES - items.length;
     const take = tiffs.slice(0, Math.max(0, room));
     if (take.length === 0) {
-      setError(tr ? "Lütfen TIFF (.tif / .tiff) dosyası seçin. JPG, PNG ve WebP için «Görsel → PDF» aracını kullanın." : "Please choose a TIFF (.tif / .tiff) file. For JPG, PNG and WebP use the Image → PDF tool.");
+      setError(tr ? "Lütfen TIFF (.tif / .tiff) dosyası seçin. JPG, PNG ve WebP için «Görselden PDF'e» aracını kullanın." : "Please choose a TIFF (.tif / .tiff) file. For JPG, PNG and WebP use the Image to PDF tool.");
       return;
     }
     const big = take.find((f) => f.size > MAX_BYTES);

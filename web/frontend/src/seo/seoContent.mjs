@@ -681,8 +681,8 @@ export const TOOL_SEO = {
         { q: "Görselleri üye olmadan tek PDF'te nasıl birleştiririm?", a: "JPG/PNG/WebP dosyalarınızı sürükleyip bırakın, sırayı düzenleyin ve PDF olarak indirin. Görselleriniz cihazınızda işlenir, sunucuya gitmez — üyelik yok, ücretsiz." },
         { q: "PDF'e çevirince görsel kalitesi düşer mi?", a: "Hayır. JPG dosyanız yeniden sıkıştırılmadan, özgün baytlarıyla PDF'in içine yerleştirilir; fotoğrafın kalitesi dönüşümde bozulmaz. Küçültmek isterseniz bunu ayrıca, kendi seçiminizle yapabilirsiniz." },
         { q: "Görsel sırasını değiştirebilir miyim?", a: "Evet. Yüklediğiniz görselleri sürükleyerek istediğiniz sıraya dizebilirsiniz." },
-        { q: "Hangi görsel formatlarını PDF'e çevirebilirim?", a: "JPG, PNG ve WebP desteklenir. Farklı formatları aynı anda yükleyip tek bir PDF'te birleştirebilirsiniz. TIFF için ayrı «TIFF → PDF» aracı var." },
-        { q: "TIFF dosyalarını PDF'e çevirebilir miyim?", a: "Bu araç JPG, PNG ve WebP içindir. Tek ya da çok sayfalı TIFF (TIF) taramaları için «TIFF → PDF» aracını kullanın; sayfa sırası korunur ve dosya cihazınızda işlenir." },
+        { q: "Hangi görsel formatlarını PDF'e çevirebilirim?", a: "JPG, PNG ve WebP desteklenir. Farklı formatları aynı anda yükleyip tek bir PDF'te birleştirebilirsiniz. TIFF için ayrı «TIFF'ten PDF'e» aracı var." },
+        { q: "TIFF dosyalarını PDF'e çevirebilir miyim?", a: "Bu araç JPG, PNG ve WebP içindir. Tek ya da çok sayfalı TIFF (TIF) taramaları için «TIFF'ten PDF'e» aracını kullanın; sayfa sırası korunur ve dosya cihazınızda işlenir." },
         { q: "Telefonla çektiğim fotoğrafları PDF yapabilir miyim?", a: "Evet. Telefonunuzdaki fotoğrafları yükleyin; cihazınızda tek PDF'e dönüştürülür, sunucuya gitmez." },
         { q: "Görseller sunucuya yüklenir mi?", a: "Hayır. Dönüştürme tamamen tarayıcınızda yapılır; görselleriniz cihazınızdan çıkmaz." },
       ],
@@ -697,8 +697,8 @@ export const TOOL_SEO = {
         { q: "How do I combine images into one PDF?", a: "Upload your JPG/PNG/WebP files, arrange the order, and download a single PDF." },
         { q: "Does image quality drop when converting to PDF?", a: "No. Your JPG is placed into the PDF as-is, without being recompressed, so the photo quality is not degraded by the conversion. If you want a smaller file you can do that separately, by your own choice." },
         { q: "Can I change the image order?", a: "Yes. Drag the uploaded images into any order you like." },
-        { q: "Which image formats can I convert to PDF?", a: "JPG, PNG and WebP are supported. Upload different formats at once and combine them into a single PDF. TIFF has its own TIFF → PDF tool." },
-        { q: "Can I convert TIFF files to PDF?", a: "This tool is for JPG, PNG and WebP. For single or multi-page TIFF (TIF) scans use the TIFF → PDF tool; the page order is kept and the file is processed on your device." },
+        { q: "Which image formats can I convert to PDF?", a: "JPG, PNG and WebP are supported. Upload different formats at once and combine them into a single PDF. TIFF has its own TIFF'ten PDF'e tool." },
+        { q: "Can I convert TIFF files to PDF?", a: "This tool is for JPG, PNG and WebP. For single or multi-page TIFF (TIF) scans use the TIFF'ten PDF'e tool; the page order is kept and the file is processed on your device." },
         { q: "Can I turn photos from my phone into a PDF?", a: "Yes. Upload photos from your phone and they're combined into one PDF on your device — never sent to a server." },
         { q: "Are my images uploaded to a server?", a: "No. Conversion happens entirely in your browser — your images never leave your device and stay 100% private." },
       ],
@@ -1002,9 +1002,9 @@ export const TOOL_SEO = {
 
   "grayscale-pdf": {
     tr: T(
-      "PDF Gri Tonlama — siyah-beyaza çevir",
+      "PDF Siyah-Beyaz Yap — siyah-beyaza çevir",
       "Renkli PDF'i gri tonlamaya (siyah-beyaz) çevirin. Yazılar seçilebilir kalır, dosya boyutu genellikle küçülür — online.",
-      "PDF Gri Tonlama (Siyah-Beyaz Yapma)",
+      "PDF Siyah-Beyaz Yap (Siyah-Beyaz Yapma)",
       "Renkli bir PDF'in tüm renklerini griye çevirin. Metin ve çizimler seçilebilir kalır; görseller siyah-beyaz olur. Yazdırmada mürekkep ve boyut tasarrufu için idealdir.",
       ["pdf gri tonlama", "pdf siyah beyaz yapma", "pdf grayscale", "renkli pdf siyah beyaz", "pdf renk kaldırma"],
       [
@@ -1033,9 +1033,9 @@ export const TOOL_SEO = {
 
   "resize-pdf": {
     tr: T(
-      "PDF Sayfa Boyutu Değiştirme — A4, A5, Letter",
+      "PDF Sayfa Boyutunu Değiştir Değiştirme — A4, A5, Letter",
       "PDF sayfalarını A4, A5, A3, Letter veya özel ölçüye getirin. Yazılar keskin kalır, oran bozulmaz — online.",
-      "PDF Sayfa Boyutu Değiştirme (A4'e Getirme)",
+      "PDF Sayfa Boyutunu Değiştir Değiştirme (A4'e Getirme)",
       "PDF sayfalarını istediğiniz kâğıt boyutuna getirin: A4, A5, A3, A6, Letter, Legal ya da kendi ölçünüz. İçerik vektör olarak taşınır, yazılar ve çizimler keskin kalır.",
       ["pdf sayfa boyutu değiştirme", "pdf a4 yapma", "pdf boyutlandırma", "resize pdf", "letter a4 dönüştürme"],
       [
@@ -1097,9 +1097,9 @@ export const TOOL_SEO = {
 
   "alternate-mix-pdf": {
     tr: T(
-      "PDF Dönüşümlü Birleştirme — sayfaları sırayla serpiştir",
+      "PDF Sırayla Birleştirme — sayfaları sırayla serpiştir",
       "İki PDF'in sayfalarını sırayla serpiştirin: 1-1-2-2 yerine A1, B1, A2, B2. Çift taraflı taramalar için ideal — online.",
-      "PDF Dönüşümlü Birleştirme (Alternate & Mix)",
+      "PDF Sırayla Birleştirme (Alternate & Mix)",
       "İki (ya da daha fazla) PDF'in sayfalarını sırayla iç içe geçirin. Tarayıcınız çift taraflı taramayı ön yüzler ve arka yüzler olarak ayrı dosyalara kaydediyorsa, bu araç onları doğru sırada tek belgeye çevirir.",
       ["pdf dönüşümlü birleştirme", "pdf sayfa serpiştirme", "alternate mix pdf", "çift taraflı tarama birleştirme", "pdf ön arka yüz birleştirme"],
       [
@@ -1128,9 +1128,9 @@ export const TOOL_SEO = {
 
   "deskew-pdf": {
     tr: T(
-      "PDF Eğri Tarama Düzeltme — eğri sayfaları düzelt",
+      "PDF Eğri Taramayı Düzelt — eğri sayfaları düzelt",
       "Eğri taranmış PDF sayfalarını otomatik düzeltin. Eğriliği kendisi bulur; yazı katmanı olan sayfalara dokunmaz — online.",
-      "PDF Eğri Tarama Düzeltme (Deskew)",
+      "PDF Eğri Taramayı Düzelt (Deskew)",
       "Tarayıcıda ya da telefonla eğri çekilmiş belge sayfalarını düzeltin. Araç yazı satırlarının eğimini kendisi bulur ve sayfayı düzeltir; yazı katmanı olan (dijital) sayfalara dokunulmaz.",
       ["pdf eğri tarama düzeltme", "pdf deskew", "eğri taranmış belge düzeltme", "taranmış pdf düzleştirme", "pdf sayfa eğriliği"],
       [
@@ -1198,7 +1198,7 @@ export const TOOL_SEO = {
       "PDF dosyasının içine gömülü tüm fotoğrafları, logoları ve resimleri özgün formatında (JPG/PNG) tek tek çıkarır ve bir ZIP arşivinde toplar. Sayfaları ekran görüntüsü gibi resme çevirmez; dokümandaki asıl görsel dosyalarını kayıpsız ayıklar.",
       ["pdf resim çıkarma", "pdf görsel çıkarma", "pdf içinden fotoğraf çıkarma", "pdf resimleri kaydetme", "pdf logo çıkarma"],
       [
-        { q: "Bu araç sayfaları mı resme çeviriyor?", a: "Hayır. Sayfa görüntüsü almaz; PDF'in içine gömülü asıl görsel akışlarını (fotoğraf, logo) özgün formatıyla ayıklar. Sayfayı resme çevirmek isterseniz 'PDF → Görsel' aracını kullanın." },
+        { q: "Bu araç sayfaları mı resme çeviriyor?", a: "Hayır. Sayfa görüntüsü almaz; PDF'in içine gömülü asıl görsel akışlarını (fotoğraf, logo) özgün formatıyla ayıklar. Sayfayı resme çevirmek isterseniz 'PDF'ten Görsele' aracını kullanın." },
         { q: "Görseller hangi formatta gelir?", a: "Her görsel PDF'te saklandığı özgün formatıyla (genellikle JPG veya PNG) çıkarılır ve kayıpsız olarak bir ZIP dosyasında toplanır." },
         { q: "Aynı logo birden çok sayfada varsa ne olur?", a: "Aynı görsel tekilleştirilir; tekrar eden bir logo veya resim ZIP'te yalnızca bir kez yer alır." },
         { q: "Şifreli PDF'ten görsel çıkarabilir miyim?", a: "Evet. Parolayı girdiğinizde şifreli PDF'in kilidi işlem için açılır ve görseller çıkarılır." },
@@ -1621,7 +1621,7 @@ export const TOOL_SEO = {
     tr: T(
       "Taranmış PDF'i Metne Çevir (OCR)",
       "Taranmış veya fotoğraf tabanlı PDF'lerdeki yazıyı OCR ile gerçek metne çevirin — Türkçe ve İngilizce destekli, tarayıcınızda ve ücretsiz.",
-      "Taranmış PDF → Metin (OCR)",
+      "Taranmış PDF'ten Metne (OCR)",
       "Fotoğraf/tarama belgelerdeki yazı aslında resimdir; OCR bu yazıyı cihazınızda gerçek metne çevirir (Türkçe + İngilizce). Böylece gazete, tapu, fatura ve resmi evrakı özetleyebilir, arayabilir ve düzenleyebilirsiniz.",
       ["taranmış pdf metne çevir", "ocr pdf", "pdf ocr türkçe", "resimden metin", "taranmış belge okuma"],
       [
@@ -1635,7 +1635,7 @@ export const TOOL_SEO = {
     en: T(
       "Scanned PDF to Text (OCR)",
       "Turn text inside scanned or photo-based PDFs into real text with OCR — Turkish and English, in your browser and free.",
-      "Scanned PDF → Text (OCR)",
+      "Scanned PDF to Text (OCR)",
       "Text inside photo/scanned documents is actually an image; OCR converts it into real text on your device (Turkish + English). So you can summarize, search and edit invoices, official papers and more.",
       ["scanned pdf to text", "ocr pdf", "pdf ocr", "image to text pdf", "read scanned document"],
       [
@@ -2286,7 +2286,7 @@ export const TOOL_SEO = {
       ["udf görüntüleyici", "udf dosyası aç", "udf okuyucu", "udf nasıl açılır"],
       [
         {"q": "UDF dosyasını nasıl açarım?", "a": "Dosyayı bu sayfadaki alana bırakın; metni tarayıcıda görüp kopyalayabilirsiniz. İsterseniz PDF ya da Word'e de çevirebilirsiniz."},
-        {"q": "Görüntüleyici biçimi olduğu gibi gösterir mi?", "a": "Bu görüntüleyici belgenin metnini gösterir; sayfa düzenini birebir yansıtmaz. Düzen için UDF → PDF aracını kullanın."},
+        {"q": "Görüntüleyici biçimi olduğu gibi gösterir mi?", "a": "Bu görüntüleyici belgenin metnini gösterir; sayfa düzenini birebir yansıtmaz. Düzen için UDF'den PDF'e aracını kullanın."},
         {"q": "Dosyam sunucunuza yükleniyor mu?", "a": "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete gönderilmez. Dava evrakı kişisel veri taşıdığı için işlem bilerek cihazda tutulur."},
         {"q": "E-imza dönüştürülen belgeye taşınır mı?", "a": "Hayır. Bu araç resmi bir UYAP hizmeti değildir. E-imzalı belgelerin imzası dönüştürülen kopyaya taşınmaz; resmi gönderimlerde orijinal imzalı belgeyi kullanın."},
       ],
@@ -2437,7 +2437,7 @@ export const TOOL_SEO = {
         {"q": "UYAP ya da e-başvuru ekranı TIF yerine PDF istiyor, bu araç işe yarar mı?", "a": "Evet, TIF'i PDF'e çevirmek için kullanılabilir. Dosya boyutu ve sayfa sınırı kurumdan kuruma değişir; sonuç büyükse «PDF Sıkıştır» kullanın ve ekrandaki açıklamayı esas alın."},
         {"q": "Dosyam bir yere yükleniyor mu?", "a": "Hayır. TIFF cihazınızda PDF'e çevrilir; hiçbir şey sunucuya gitmez."},
         {"q": "PDF'teki yazı seçilebilir olur mu?", "a": "Taranmış sayfa bir görüntü olarak PDF'e konur, yazı seçilemez. Seçilebilir ve aranabilir metin için PDF'i «Aranabilir PDF (OCR)» aracından geçirin."},
-        {"q": "JPG ya da PNG için de kullanabilir miyim?", "a": "Bu araç TIFF içindir. JPG, PNG ve WebP için «Görsel → PDF» aracını kullanın."},
+        {"q": "JPG ya da PNG için de kullanabilir miyim?", "a": "Bu araç TIFF içindir. JPG, PNG ve WebP için «Görselden PDF'e» aracını kullanın."},
       ],
     ),
     en: T(
@@ -2453,7 +2453,7 @@ export const TOOL_SEO = {
         {"q": "An online form asks for PDF instead of TIF. Will this help?", "a": "Yes, it converts the TIF to PDF. File size and page limits vary by institution; if the result is large, use Compress PDF and follow the limits shown on the form."},
         {"q": "Is my file uploaded anywhere?", "a": "No. The TIFF is converted on your device; nothing is sent to a server."},
         {"q": "Will the text in the PDF be selectable?", "a": "A scanned page is placed in the PDF as an image, so the text is not selectable. For searchable, selectable text run the PDF through the Searchable PDF (OCR) tool."},
-        {"q": "Can I use it for JPG or PNG?", "a": "This tool is for TIFF. For JPG, PNG and WebP use the Image → PDF tool."},
+        {"q": "Can I use it for JPG or PNG?", "a": "This tool is for TIFF. For JPG, PNG and WebP use the Image to PDF tool."},
       ],
     ),
   },

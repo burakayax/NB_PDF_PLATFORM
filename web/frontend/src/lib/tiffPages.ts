@@ -1,5 +1,5 @@
 /**
- * Çok sayfalı TIFF'i cihazda sayfa sayfa PNG'ye açar (Görsel → PDF için).
+ * Çok sayfalı TIFF'i cihazda sayfa sayfa PNG'ye açar (Görselden PDF'e için).
  *
  * Tarayıcılar TIFF'i göstermez/çizemez ve PDF'e gömülemez; bu yüzden dosya, küçük bir çözücüyle (utif2,
  * yalnızca TIFF seçilince yüklenir) sayfalarına ayrılır. Her sayfa PNG olur, sırası korunur. Dosya sunucuya gitmez.
@@ -44,7 +44,7 @@ async function imageToPng(file: Blob): Promise<ArrayBuffer> {
 }
 
 /**
- * Görsel → PDF için dosyaları PDF'e gömülebilir hale getirir, dosya sırası korunur:
+ * Görselden PDF'e için dosyaları PDF'e gömülebilir hale getirir, dosya sırası korunur:
  * JPG/PNG olduğu gibi, çok sayfalı TIFF sayfa sayfa PNG, WebP vb. PNG olarak.
  * Hem ziyaretçi kutusu hem çalışma alanı bunu kullanır (ikisi ayrışmasın diye tek yer).
  */

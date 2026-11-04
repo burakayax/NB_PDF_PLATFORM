@@ -1,5 +1,5 @@
 /**
- * UDF → PDF ÇİZİCİ — cihazda, pdf-lib ile.
+ * UDF'den PDF'e ÇİZİCİ — cihazda, pdf-lib ile.
  *
  * `parseUdf()` çıktısındaki blokları A4 sayfalara döker: paragraf hizalaması,
  * kalın/altı çizili/üst simge, renk, girinti, tablo ve gömülü görsel. Türkçe

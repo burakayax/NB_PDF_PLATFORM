@@ -8,12 +8,12 @@ import { PetitionTemplateTool } from "./PetitionTemplateTool";
 export type UdfHubMode = "udf-to-pdf" | "e-basvuru-uyumluluk" | "dilekce-sablonlari" | UdfMode;
 
 const TABS: { id: UdfHubMode; tr: string; en: string }[] = [
-  { id: "udf-to-pdf", tr: "UDF → PDF", en: "UDF → PDF" },
-  { id: "pdf-to-udf", tr: "PDF → UDF", en: "PDF → UDF" },
-  { id: "word-to-udf", tr: "Word → UDF", en: "Word → UDF" },
-  { id: "udf-to-word", tr: "UDF → Word", en: "UDF → Word" },
+  { id: "udf-to-pdf", tr: "UDF'den PDF'e", en: "UDF'den PDF'e" },
+  { id: "pdf-to-udf", tr: "PDF'ten UDF'ye", en: "PDF'ten UDF'ye" },
+  { id: "word-to-udf", tr: "Word'den UDF'ye", en: "Word'den UDF'ye" },
+  { id: "udf-to-word", tr: "UDF'den Word'e", en: "UDF'den Word'e" },
   { id: "udf-viewer", tr: "UDF Görüntüleyici", en: "UDF Viewer" },
-  { id: "image-to-udf", tr: "Görsel / TIFF → UDF", en: "Image / TIFF → UDF" },
+  { id: "image-to-udf", tr: "Görsel ve TIFF'ten UDF'ye", en: "Image and TIFF to UDF" },
   { id: "e-basvuru-uyumluluk", tr: "E-başvuru Uyumluluk Kontrolü", en: "Filing Compliance Check" },
   { id: "dilekce-sablonlari", tr: "Dilekçe Şablonları", en: "Petition Templates" },
 ];

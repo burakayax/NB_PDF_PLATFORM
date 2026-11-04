@@ -60,7 +60,7 @@ export const TOOL_GUIDE_EXTRA = {
       ],
       faq: [
         { q: "Dönüştürülen sunumda her şey birebir aynı mı çıkar?", a: "Karmaşık yerleşimlerde küçük kaymalar olabilir. En iyi sonuç metin katmanı olan, düz tasarımlı PDF'lerde alınır; çıktıyı PowerPoint'te gözden geçirmenizi öneririz." },
-        { q: "Taranmış bir PDF'i PowerPoint'e çevirebilir miyim?", a: "Taranmış sayfalar resim olduğu için metin olarak düzenlenemez. Önce «Taranmış PDF → Metin (OCR)» aracıyla metni çıkarmanız gerekir." },
+        { q: "Taranmış bir PDF'i PowerPoint'e çevirebilir miyim?", a: "Taranmış sayfalar resim olduğu için metin olarak düzenlenemez. Önce «Taranmış PDF'ten Metne (OCR)» aracıyla metni çıkarmanız gerekir." },
       ],
     },
     en: {
@@ -282,7 +282,7 @@ export const TOOL_GUIDE_EXTRA = {
       ],
       faq: [
         { q: "Çıkan metinde sayfa düzeni korunur mu?", a: "Hayır. Çıktı düz metindir; tablolar, sütunlar ve görseller düzenleriyle gelmez, yalnızca yazı alınır." },
-        { q: "Taranmış PDF'te metin çıkmıyorsa ne yapmalıyım?", a: "Sayfa resimden oluşuyorsa «Taranmış PDF → Metin (OCR)» aracını kullanın; yazıyı cihazınızda tanır." },
+        { q: "Taranmış PDF'te metin çıkmıyorsa ne yapmalıyım?", a: "Sayfa resimden oluşuyorsa «Taranmış PDF'ten Metne (OCR)» aracını kullanın; yazıyı cihazınızda tanır." },
       ],
     },
     en: {
@@ -467,7 +467,7 @@ export const TOOL_GUIDE_EXTRA = {
       ],
       faq: [
         { q: "Döndürme sayfanın içeriğini bozar mı?", a: "Hayır. Sayfanın yönü değişir, içerik aynı kalır; metin ve görseller kalite kaybetmez." },
-        { q: "90° dışında bir açıyla döndürebilir miyim?", a: "Bu araç sayfaları 90° katlarıyla çevirir. Hafif eğik taramalar için «PDF Eğri Tarama Düzeltme» aracını kullanın." },
+        { q: "90° dışında bir açıyla döndürebilir miyim?", a: "Bu araç sayfaları 90° katlarıyla çevirir. Hafif eğik taramalar için «PDF Eğri Taramayı Düzelt» aracını kullanın." },
       ],
     },
     en: {
@@ -541,7 +541,7 @@ export const TOOL_GUIDE_EXTRA = {
       ],
       faq: [
         { q: "Sayfa sayısı çok olan dosyada kolay mı?", a: "Konum numarası girerek uzun belgelerde bir sayfayı doğrudan istediğiniz yere gönderebilirsiniz." },
-        { q: "İki dosyanın sayfalarını iç içe dizebilir miyim?", a: "Bunun için «Serpiştir» aracını kullanın; ön ve arka yüz dosyalarını sırayla birleştirir." },
+        { q: "İki dosyanın sayfalarını iç içe dizebilir miyim?", a: "Bunun için «Sırayla Birleştir» aracını kullanın; ön ve arka yüz dosyalarını sırayla birleştirir." },
       ],
     },
     en: {
@@ -577,7 +577,7 @@ export const TOOL_GUIDE_EXTRA = {
         { title: "Sunum ve rapor görselleri", x: "Bir raporun grafik ve fotoğraflarını başka bir belgede kullanmak için ayırın." },
       ],
       faq: [
-        { q: "Sayfaları görsele çevirmekle farkı nedir?", a: "Bu araç sayfanın ekran görüntüsünü almaz, belgeye gömülü asıl görselleri çıkarır. Sayfaların tamamını resim yapmak için «PDF → Görsel» aracını kullanın." },
+        { q: "Sayfaları görsele çevirmekle farkı nedir?", a: "Bu araç sayfanın ekran görüntüsünü almaz, belgeye gömülü asıl görselleri çıkarır. Sayfaların tamamını resim yapmak için «PDF'ten Görsele» aracını kullanın." },
         { q: "Vektör grafikler de çıkar mı?", a: "Hayır. Yalnızca gömülü resim dosyaları (fotoğraf, logo gibi) ayıklanır; çizgi ve şekil olarak çizilmiş vektör grafikler resim olarak çıkmaz." },
       ],
     },

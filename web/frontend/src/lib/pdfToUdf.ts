@@ -1,5 +1,5 @@
 /**
- * PDF → UDF (metin tabanlı PDF). Cihazda çalışır; dosya sunucuya gitmez.
+ * PDF'ten UDF'ye (metin tabanlı PDF). Cihazda çalışır; dosya sunucuya gitmez.
  *
  * pdf.js metin parçalarını satırlara, satırları paragraflara toplar: aynı yükseklikteki parçalar bir satır,
  * satırlar arası boşluk normal satır aralığından belirgin büyükse yeni paragraf. Sayfalar arasına sayfa kesmesi

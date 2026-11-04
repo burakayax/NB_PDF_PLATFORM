@@ -9,7 +9,7 @@ describe("araç arama", () => {
     expect(matchesSearch("sikistir", "PDF Sıkıştır")).toBe(true);
     expect(matchesSearch("ISARETLE", "PDF İşaretle")).toBe(true);
     expect(matchesSearch("imza", "PDF İmzala")).toBe(true);
-    expect(matchesSearch("word", "Sıkıştır", "PDF → Word")).toBe(true);
+    expect(matchesSearch("word", "Sıkıştır", "PDF'ten Word'e")).toBe(true);
   });
   it("eşleşmeyeni ve boş sorguyu doğru yönetir", () => {
     expect(matchesSearch("xyz", "PDF Böl")).toBe(false);

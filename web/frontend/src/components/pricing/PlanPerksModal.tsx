@@ -126,13 +126,13 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
               {
                 label: tr ? "Excel, PowerPoint ve HTML dönüşümleri" : "Excel, PowerPoint and HTML conversions",
                 detail: tr
-                  ? "PDF → Excel, Excel → PDF, PDF → PowerPoint, PowerPoint → PDF ve HTML → PDF."
-                  : "PDF → Excel, Excel → PDF, PDF → PowerPoint, PowerPoint → PDF and HTML → PDF.",
+                  ? "PDF'ten Excel'e, Excel'den PDF'e, PDF'ten PowerPoint'e, PowerPoint'ten PDF'e ve HTML'den PDF'e."
+                  : "PDF'ten Excel'e, Excel'den PDF'e, PDF'ten PowerPoint'e, PowerPoint'ten PDF'e and HTML'den PDF'e.",
               },
               {
                 label: tr ? "Gelişmiş PDF araçları" : "Advanced PDF tools",
                 detail: tr
-                  ? "PDF Onar, PDF/A'ya dönüştür, PDF Düzleştir, Gri Tonlama, Eğriliği Düzelt, Sayfa Boyutlandır, PDF Çevir (Ayna) ve PDF Dönüşümlü Birleştir."
+                  ? "PDF Onar, PDF/A'ya dönüştür, PDF Düzleştir, Siyah-Beyaz Yap, Eğriliği Düzelt, Sayfa Boyutlandır, PDF Çevir (Ayna) ve PDF Sırayla Birleştir."
                   : "Repair PDF, convert to PDF/A, flatten, grayscale, deskew, resize pages, Flip PDF (mirror) and Alternate & Mix PDF.",
               },
             ]),

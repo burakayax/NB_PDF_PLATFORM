@@ -3,7 +3,7 @@
  *
  *   docxToUdf     Word (.docx) → UdfDocument   (paragraf, biçim, hizalama, tablo, görsel)
  *   udfToDocx     UdfDocument → Word (.docx)   (aynı öğeler)
- *   linesToUdf    düz metin satırları → UdfDocument (PDF → UDF ve TXT için ortak kuruluş)
+ *   linesToUdf    düz metin satırları → UdfDocument (PDF'ten UDF'ye ve TXT için ortak kuruluş)
  *   imagesToUdf   görseller → UdfDocument      (her görsel kendi sayfasında, ortalı)
  *
  * UdfDocument yapısı `udf.ts`'te; .udf dosyasına yazmak `udfWrite.ts`'te.
@@ -109,7 +109,7 @@ export function imagesToUdf(images: { bytes: Uint8Array; mime: "image/png" | "im
   return newUdfDocument(blocks);
 }
 
-/* ------------------------------------------------------------------ Word → UDF */
+/* ------------------------------------------------------------------ Word'den UDF'ye */
 
 const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
@@ -271,7 +271,7 @@ export function docxToUdf(bytes: Uint8Array): UdfDocument {
   return newUdfDocument(blocks);
 }
 
-/* ------------------------------------------------------------------ UDF → Word */
+/* ------------------------------------------------------------------ UDF'den Word'e */
 
 const esc = (s: string): string =>
   // eslint-disable-next-line no-control-regex

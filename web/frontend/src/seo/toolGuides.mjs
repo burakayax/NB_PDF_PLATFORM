@@ -132,7 +132,7 @@ const TOOL_GUIDE_CORE = {
         { title: "Form ve dilekçe taslakları", x: "Hazır bir dilekçe veya form PDF'ini Word'e alıp kendi bilgilerinize göre doldurun." },
       ],
       faq: [
-        { q: "PDF'i Excel veya PowerPoint'e de çevirebilir miyim?", a: "Evet. Tablolu belgeler için PDF → Excel, sunumlar için PDF → PowerPoint araçlarımız var; ayrı sayfalarından kullanabilirsiniz." },
+        { q: "PDF'i Excel veya PowerPoint'e de çevirebilir miyim?", a: "Evet. Tablolu belgeler için PDF'ten Excel'e, sunumlar için PDF'ten PowerPoint'e araçlarımız var; ayrı sayfalarından kullanabilirsiniz." },
         { q: "Taranmış belgede sonuç iyi çıkmazsa ne yapmalıyım?", a: "Taranmış belge aslında bir resimdir. Önce Taranmış PDF (OCR) aracıyla metin katmanı oluşturmak sonucu iyileştirebilir." },
       ],
     },
@@ -210,7 +210,7 @@ const TOOL_GUIDE_CORE = {
         { title: "Yalnızca belirli sayfalar", x: "Uzun bir PDF'ten sadece birkaç sayfayı görsele çevirerek zaman kazanın." },
       ],
       faq: [
-        { q: "Görsellerden tekrar PDF yapabilir miyim?", a: "Evet. Görsel → PDF aracı JPG, PNG ve WebP görsellerini tek PDF'te birleştirir." },
+        { q: "Görsellerden tekrar PDF yapabilir miyim?", a: "Evet. Görselden PDF'e aracı JPG, PNG ve WebP görsellerini tek PDF'te birleştirir." },
         { q: "Telefonda kullanabilir miyim?", a: "Evet. Araç tarayıcı tabanlıdır; kurulum gerektirmeden telefon ve tablette de çalışır." },
       ],
     },

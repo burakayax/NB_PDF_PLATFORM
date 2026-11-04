@@ -389,7 +389,7 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
   "grayscale-pdf": S(
     [
       PICK_TR(),
-      { title: "«Gri Tonlama» düğmesine bas", detail: "Sayfadaki renkler griye çevrilir; yazılar seçilebilir kalır, görseller siyah-beyaz olur." },
+      { title: "«Siyah-Beyaz Yap» düğmesine bas", detail: "Sayfadaki renkler griye çevrilir; yazılar seçilebilir kalır, görseller siyah-beyaz olur." },
       TR_DOWNLOAD,
     ],
     [
@@ -430,7 +430,7 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
     [
       { title: "İki (ya da daha fazla) PDF seç", detail: "İlk seçtiğin belgenin sayfaları 1., 3., 5. sıraya; ikincinin sayfaları 2., 4., 6. sıraya yerleşir." },
       { title: "Gerekirse «İkinciyi ters sırada oku»yu işaretle", detail: "Çift taraflı taramada önce ön yüzleri, sonra arka yüzleri ters sırada taradıysan doğru sıra budur." },
-      { title: "«Serpiştir» düğmesine bas", detail: "Tek bir PDF çıkar. Sayfa sayıları farklıysa uzun olanın kalanı sona eklenir." },
+      { title: "«Sırayla Birleştir» düğmesine bas", detail: "Tek bir PDF çıkar. Sayfa sayıları farklıysa uzun olanın kalanı sona eklenir." },
       TR_DOWNLOAD,
     ],
     [

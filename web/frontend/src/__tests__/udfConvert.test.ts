@@ -27,7 +27,7 @@ const PNG = Uint8Array.from(
 );
 
 describe("UDF ⇄ Word", () => {
-  it.each(files)("gerçek UDF → Word → UDF içeriği korur: %s", (f) => {
+  it.each(files)("gerçek UDF'den Word'e → UDF içeriği korur: %s", (f) => {
     const original = parseUdf(new Uint8Array(readFileSync(resolve(DIR, f))));
     const docx = udfToDocx(original);
     const back = docxToUdf(docx);
@@ -36,7 +36,7 @@ describe("UDF ⇄ Word", () => {
     expect(imgs(back)).toBe(imgs(original));
   });
 
-  it("Word → UDF → Word: biçim, hizalama ve Türkçe karakterler korunur", () => {
+  it("Word'den UDF'ye'den Word'e: biçim, hizalama ve Türkçe karakterler korunur", () => {
     const src: UdfDocument = {
       formatId: "1.8",
       rawText: "",
