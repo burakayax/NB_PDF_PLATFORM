@@ -3,14 +3,12 @@
  *
  * Her şey cihazda yapılır (pdf-lib + pdf.js); dosya sunucuya gitmez. Orijinal içerik değişmez.
  *
- *  • Bölümler: farklı sayfalara farklı metin (tüm / tek / çift sayfalar ya da sayfa aralığı).
- *    Bir sayfa birden çok bölüme uyarsa en alttaki bölüm geçerli olur.
- *  • Üst bilgi ve alt bilginin görünümü (boyut, kalınlık, renk, kenar ve yan boşluk) ayrı ayrı ayarlanır.
- *  • Önizleme büyüktür, istenen sayfaya geçilebilir ve tam ekrana büyütülebilir.
+ *  • İki kip: «tüm sayfalara aynı metin» ya da «sayfa sayfa farklı metin» (o an açık sayfa için yazılır).
+ *  • Üst bilgi ve alt bilginin görünümü ayrı; boyut, renk ve kalınlık her sütun (sol/orta/sağ) için ayrı.
+ *  • Önizleme büyüktür: sayfa geçişi, yakınlaştırma ve fareyle tutup sürükleyerek gezme.
  */
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, Pencil, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
@@ -23,6 +21,7 @@ import {
 } from "../../lib/pdfHeaderFooter";
 
 const MAX_BYTES = 50 * 1024 * 1024;
+const PREVIEW_PX = 1500;
 
 type Preset = { id: string; tr: string; en: string; header: Slot3; footer: Slot3 };
 const PRESETS: Preset[] = [
@@ -40,34 +39,34 @@ const T = {
     broken: "Dosya okunamadı. Bozuk olabilir; başka bir PDF dene.",
     tooBig: "Dosya 50 MB'dan büyük. Önce sıkıştırıp tekrar dene.",
     presets: "Hazır düzen",
-    presetsHelp: "Üst ve alt bilgi kutularını hazır bir düzenle doldurur.",
     modeTitle: "Hangi sayfalara yazılsın?",
-    modeAll: "Tüm sayfalara aynı metin",
+    modeAll: "Tüm sayfalar",
     modeAllHelp: "Yazdığın üst ve alt bilgi her sayfaya eklenir.",
-    modePage: "Sayfa sayfa farklı metin",
+    modePage: "Sayfa sayfa",
     modePageHelp: "Soldaki önizlemede bir sayfa aç, o sayfanın metnini yaz. Metin girmediğin sayfalara bir şey yazılmaz.",
     editingAll: "Tüm sayfalara yazılacak metin",
     editingPage: (n: number) => `Sayfa ${n} için yazılacak metin`,
-    pagesWithText: (n: number) => `Metin girilen sayfa sayısı: ${n}`,
-    clearPage: "Bu sayfanın metnini temizle",
-    tokensTitle: "Sayfa numarası, tarih gibi bilgiler ekle",
-    tokensHelp: "Önce yazacağın kutuya tıkla, sonra aşağıdan birine bas. PDF'e yazılırken her sayfada o sayfanın kendi bilgisi görünür.",
-    tokensExample: (a: number, b: number) => `«${a} / ${b}» demek: ${b} sayfalık belgenin ${a}. sayfası.`,
-    here: "Bu sayfada",
-    inDoc: "Bu belgede",
-    tokNames: { page: "Sayfa numarası", total: "Toplam sayfa sayısı", both: "Sayfa numarası / toplam", date: "Bugünün tarihi", file: "Dosya adı" },
+    clear: "Temizle",
     header: "Üst bilgi",
     footer: "Alt bilgi",
     left: "Sol", center: "Orta", right: "Sağ",
+    insertTitle: "Kutuya ekle",
+    insertPageAuto: "Sayfa numarası her sayfada kendiliğinden değişir.",
+    chips: { page: "Sayfa no", total: "Toplam sayfa", both: "Sayfa / Toplam", date: "Tarih", file: "Dosya adı" },
     appearance: "Görünüm",
     headerLook: "Üst bilgi görünümü",
     footerLook: "Alt bilgi görünümü",
-    size: "Yazı boyutu (pt)", color: "Renk", bold: "Kalın yaz", rule: "Altına/üstüne ince çizgi çiz",
-    edgeTop: "Sayfanın üstünden (mm)", edgeBottom: "Sayfanın altından (mm)", side: "Soldan ve sağdan (mm)",
+    colStyles: "Sütunların yazısı",
+    size: "Boyut", color: "Renk", boldShort: "Kalın",
+    edgeTop: "Üstten boşluk (mm)", edgeBottom: "Alttan boşluk (mm)", side: "Yandan boşluk (mm)",
+    ruleHeader: "Altına ince çizgi çiz", ruleFooter: "Üstüne ince çizgi çiz",
+    ruleColor: "Çizgi rengi", ruleWidth: "Çizgi kalınlığı (pt)",
     numbering: "Numaralandırma",
     skipFirst: "İlk sayfaya (kapak) yazma", start: "Numara şuradan başlasın",
     preview: "Önizleme", previewing: "Önizleme hazırlanıyor…",
-    page: "Sayfa", prev: "Önceki sayfa", next: "Sonraki sayfa", zoom: "Büyüt", closeZoom: "Kapat",
+    page: "Sayfa", prev: "Önceki sayfa", next: "Sonraki sayfa",
+    zoomIn: "Yakınlaştır", zoomOut: "Uzaklaştır", zoomFit: "Sığdır",
+    panHint: "Yakınlaştırınca fareyle tutup sürükleyerek gezebilirsin.",
     notStamped: "Bu sayfaya üst/alt bilgi yazılmayacak.",
     emptyWarn: "Üst ya da alt bilgiye en az bir metin yaz.",
     add: "Üst/alt bilgiyi PDF'ye ekle", working: "Ekleniyor…",
@@ -79,6 +78,7 @@ const T = {
     change: "Başka dosya seç",
     back: "Düzenlemeye Dön",
     noPages: "Seçilen sayfalarda işlenecek sayfa yok.",
+    markers: { sayfa: "‹Sayfa no›", toplam: "‹Toplam›", tarih: "‹Tarih›", dosya: "‹Dosya›" },
   },
   en: {
     hint: "Choose a PDF — you'll write the header and footer in the next step.",
@@ -87,34 +87,34 @@ const T = {
     broken: "The file could not be read. It may be corrupt; try another PDF.",
     tooBig: "The file is larger than 50 MB. Compress it first and try again.",
     presets: "Quick layouts",
-    presetsHelp: "Fills the header and footer boxes with a ready-made layout.",
     modeTitle: "Which pages?",
-    modeAll: "Same text on all pages",
+    modeAll: "All pages",
     modeAllHelp: "The header and footer you write are added to every page.",
-    modePage: "Different text page by page",
+    modePage: "Page by page",
     modePageHelp: "Open a page in the preview on the left and write its text. Pages you leave empty get nothing.",
     editingAll: "Text written on all pages",
     editingPage: (n: number) => `Text for page ${n}`,
-    pagesWithText: (n: number) => `Pages with text: ${n}`,
-    clearPage: "Clear this page's text",
-    tokensTitle: "Add a page number, date and more",
-    tokensHelp: "Click the box you want to write in first, then press one below. Each page shows its own value when the PDF is written.",
-    tokensExample: (a: number, b: number) => `“${a} / ${b}” means page ${a} of a ${b}-page document.`,
-    here: "On this page",
-    inDoc: "In this document",
-    tokNames: { page: "Page number", total: "Total number of pages", both: "Page number / total", date: "Today's date", file: "File name" },
+    clear: "Clear",
     header: "Header",
     footer: "Footer",
     left: "Left", center: "Center", right: "Right",
+    insertTitle: "Insert into box",
+    insertPageAuto: "The page number changes by itself on every page.",
+    chips: { page: "Page no.", total: "Total pages", both: "Page / Total", date: "Date", file: "File name" },
     appearance: "Appearance",
     headerLook: "Header look",
     footerLook: "Footer look",
-    size: "Font size (pt)", color: "Color", bold: "Bold", rule: "Draw a thin line",
-    edgeTop: "From the top of the page (mm)", edgeBottom: "From the bottom of the page (mm)", side: "From left and right (mm)",
+    colStyles: "Text of each column",
+    size: "Size", color: "Color", boldShort: "Bold",
+    edgeTop: "Top margin (mm)", edgeBottom: "Bottom margin (mm)", side: "Side margin (mm)",
+    ruleHeader: "Draw a thin line below", ruleFooter: "Draw a thin line above",
+    ruleColor: "Line color", ruleWidth: "Line thickness (pt)",
     numbering: "Numbering",
     skipFirst: "Skip the first page (cover)", start: "Start numbering at",
     preview: "Preview", previewing: "Preparing preview…",
-    page: "Page", prev: "Previous page", next: "Next page", zoom: "Enlarge", closeZoom: "Close",
+    page: "Page", prev: "Previous page", next: "Next page",
+    zoomIn: "Zoom in", zoomOut: "Zoom out", zoomFit: "Fit",
+    panHint: "When zoomed in, hold and drag with the mouse to move around.",
     notStamped: "No header/footer will be written on this page.",
     emptyWarn: "Write at least one text in the header or footer.",
     add: "Add header/footer to PDF", working: "Adding…",
@@ -126,35 +126,58 @@ const T = {
     change: "Choose another file",
     back: "Back to Editing",
     noPages: "No pages to process in the chosen pages.",
+    markers: { sayfa: "‹Page›", toplam: "‹Total›", tarih: "‹Date›", dosya: "‹File›" },
   },
 } as const;
 
 type TT = (typeof T)["tr"] | (typeof T)["en"];
 
 const inputSm = "rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500";
-const input = "w-full rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500";
+const input = `w-full ${inputSm}`;
 const heading = "text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400";
 
 type TextPair = { header: Slot3; footer: Slot3 };
 type Mode = "all" | "page";
-type StyleState = { size: string; color: string; bold: boolean; edge: string; side: string; rule: boolean };
-type FocusRef = { part: "header" | "footer"; slot: keyof Slot3 } | null;
+type Col = "left" | "center" | "right";
+type ColState = { size: string; color: string; bold: boolean };
+type StyleState = { cols: Record<Col, ColState>; edge: string; side: string; rule: boolean; ruleColor: string; ruleWidth: string };
+type FocusRef = { part: "header" | "footer"; slot: Col } | null;
 
-const DEFAULT_STYLE: StyleState = { size: "10", color: "#555555", bold: false, edge: "10", side: "10", rule: false };
+const DEFAULT_COL: ColState = { size: "10", color: "#555555", bold: false };
+const defaultStyle = (): StyleState => ({
+  cols: { left: { ...DEFAULT_COL }, center: { ...DEFAULT_COL }, right: { ...DEFAULT_COL } },
+  edge: "10", side: "10", rule: false, ruleColor: "#555555", ruleWidth: "0.5",
+});
 
 const EMPTY_PAIR: TextPair = { header: EMPTY_SLOT, footer: EMPTY_SLOT };
 const pairHasText = (p: TextPair) => slotHasText(p.header) || slotHasText(p.footer);
+const samePair = (a: TextPair, b: { header: Slot3; footer: Slot3 }) => JSON.stringify([a.header, a.footer]) === JSON.stringify([b.header, b.footer]);
 
 const num = (v: string, d: number) => (Number.isFinite(parseFloat(v)) ? parseFloat(v) : d);
-const toPartStyle = (s: StyleState): PartStyle => ({
-  fontSize: num(s.size, 10), color: s.color, bold: s.bold, edgeMm: num(s.edge, 10), sideMm: num(s.side, 10), rule: s.rule,
-});
+const toPartStyle = (s: StyleState): PartStyle => {
+  const col = (c: ColState) => ({ fontSize: num(c.size, 10), color: c.color, bold: c.bold });
+  return {
+    cols: { left: col(s.cols.left), center: col(s.cols.center), right: col(s.cols.right) },
+    edgeMm: num(s.edge, 10), sideMm: num(s.side, 10),
+    rule: s.rule, ruleColor: s.ruleColor, ruleWidth: num(s.ruleWidth, 0.5),
+  };
+};
+
+/** Kutuda kod yerine okunur etiket gösterilir ({sayfa} → ‹Sayfa no›); kaydedilirken koda döner. */
+type Key = "sayfa" | "toplam" | "tarih" | "dosya";
+const ALIASES: Record<string, Key> = { sayfa: "sayfa", page: "sayfa", toplam: "toplam", total: "toplam", tarih: "tarih", date: "tarih", dosya: "dosya", file: "dosya" };
+const MARKER_WORDS: Record<string, Key> = {
+  "‹Sayfa no›": "sayfa", "‹Toplam›": "toplam", "‹Tarih›": "tarih", "‹Dosya›": "dosya",
+  "‹Page›": "sayfa", "‹Total›": "toplam", "‹Date›": "tarih", "‹File›": "dosya",
+};
+const toDisplay = (text: string, t: TT) =>
+  text.replace(/\{(sayfa|toplam|tarih|dosya|page|total|date|file)\}/gi, (_m, k: string) => t.markers[ALIASES[k.toLowerCase()]!]);
+const fromDisplay = (text: string) => text.replace(/‹[^›]*›/g, (m) => (MARKER_WORDS[m] ? `{${MARKER_WORDS[m]}}` : m));
 
 function SlotRow({ label, slot, onChange, t, part, onFocus }: {
-  label: string; slot: Slot3; onChange: (s: Slot3) => void; t: TT; part: "header" | "footer";
-  onFocus: (f: FocusRef) => void;
+  label: string; slot: Slot3; onChange: (s: Slot3) => void; t: TT; part: "header" | "footer"; onFocus: (f: FocusRef) => void;
 }) {
-  const cols: [keyof Slot3, string][] = [["left", t.left], ["center", t.center], ["right", t.right]];
+  const cols: [Col, string][] = [["left", t.left], ["center", t.center], ["right", t.right]];
   return (
     <section aria-label={label}>
       <p className="text-[12px] font-semibold text-slate-300">{label}</p>
@@ -164,10 +187,10 @@ function SlotRow({ label, slot, onChange, t, part, onFocus }: {
             {name}
             <input
               className={`${input} mt-1`}
-              value={slot[k]}
+              value={toDisplay(slot[k], t)}
               maxLength={120}
               onFocus={() => onFocus({ part, slot: k })}
-              onChange={(e) => onChange({ ...slot, [k]: e.target.value })}
+              onChange={(e) => onChange({ ...slot, [k]: fromDisplay(e.target.value) })}
             />
           </label>
         ))}
@@ -176,21 +199,65 @@ function SlotRow({ label, slot, onChange, t, part, onFocus }: {
   );
 }
 
-function StyleCard({ title, st, onChange, edgeLabel, t }: { title: string; st: StyleState; onChange: (s: StyleState) => void; edgeLabel: string; t: TT }) {
+function StyleCard({ title, st, onChange, edgeLabel, ruleLabel, t }: {
+  title: string; st: StyleState; onChange: (s: StyleState) => void; edgeLabel: string; ruleLabel: string; t: TT;
+}) {
   const set = <K extends keyof StyleState>(k: K, v: StyleState[K]) => onChange({ ...st, [k]: v });
+  const setCol = (c: Col, patch: Partial<ColState>) => onChange({ ...st, cols: { ...st.cols, [c]: { ...st.cols[c], ...patch } } });
+  const cols: [Col, string][] = [["left", t.left], ["center", t.center], ["right", t.right]];
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
       <p className="text-[13px] font-semibold text-slate-100">{title}</p>
-      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 text-[12px] text-slate-400">
-        <label>{t.size}<input className={`${input} mt-1`} inputMode="numeric" value={st.size} onChange={(e) => set("size", e.target.value)} /></label>
-        <label>{t.color}<input type="color" className="mt-1 block h-[34px] w-full rounded border border-white/15 bg-transparent" value={st.color} onChange={(e) => set("color", e.target.value)} /></label>
+
+      <p className="mt-2.5 text-[11.5px] font-semibold uppercase tracking-wider text-slate-500">{t.colStyles}</p>
+      <div className="mt-1.5 space-y-1.5">
+        {cols.map(([c, name]) => (
+          <div key={c} className="flex items-center gap-2">
+            <span className="w-10 shrink-0 text-[12px] text-slate-400">{name}</span>
+            <input
+              aria-label={`${name} ${t.size}`}
+              title={t.size}
+              className={`${inputSm} w-14 text-center`}
+              inputMode="numeric"
+              value={st.cols[c].size}
+              onChange={(e) => setCol(c, { size: e.target.value })}
+            />
+            <input
+              aria-label={`${name} ${t.color}`}
+              title={t.color}
+              type="color"
+              className="h-[34px] w-10 cursor-pointer rounded border border-white/15 bg-transparent"
+              value={st.cols[c].color}
+              onChange={(e) => setCol(c, { color: e.target.value })}
+            />
+            <button
+              type="button"
+              aria-pressed={st.cols[c].bold}
+              aria-label={`${name} ${t.boldShort}`}
+              title={t.boldShort}
+              onClick={() => setCol(c, { bold: !st.cols[c].bold })}
+              className={`h-[34px] w-9 rounded-lg border text-[14px] font-extrabold transition ${st.cols[c].bold ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.09]"}`}
+            >
+              B
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[12px] text-slate-400">
         <label>{edgeLabel}<input className={`${input} mt-1`} inputMode="decimal" value={st.edge} onChange={(e) => set("edge", e.target.value)} /></label>
         <label>{t.side}<input className={`${input} mt-1`} inputMode="decimal" value={st.side} onChange={(e) => set("side", e.target.value)} /></label>
       </div>
-      <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-slate-200">
-        <label className="flex items-center gap-1.5"><input type="checkbox" checked={st.bold} onChange={(e) => set("bold", e.target.checked)} />{t.bold}</label>
-        <label className="flex items-center gap-1.5"><input type="checkbox" checked={st.rule} onChange={(e) => set("rule", e.target.checked)} />{t.rule}</label>
-      </div>
+
+      <label className="mt-3 flex items-center gap-1.5 text-[13px] text-slate-200">
+        <input type="checkbox" checked={st.rule} onChange={(e) => set("rule", e.target.checked)} />{ruleLabel}
+      </label>
+      {st.rule && (
+        <div className="mt-2 flex flex-wrap items-end gap-3 text-[12px] text-slate-400">
+          <label>{t.ruleColor}<input type="color" className="mt-1 block h-[34px] w-14 cursor-pointer rounded border border-white/15 bg-transparent" value={st.ruleColor} onChange={(e) => set("ruleColor", e.target.value)} /></label>
+          <label>{t.ruleWidth}<input className={`${inputSm} mt-1 w-20`} inputMode="decimal" value={st.ruleWidth} onChange={(e) => set("ruleWidth", e.target.value)} /></label>
+        </div>
+      )}
     </div>
   );
 }
@@ -209,8 +276,8 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const [mode, setMode] = useState<Mode>("all");
   const [allText, setAllText] = useState<TextPair>({ header: EMPTY_SLOT, footer: PRESETS[0]!.footer });
   const [pageTexts, setPageTexts] = useState<Record<number, TextPair>>({});
-  const [headerStyle, setHeaderStyle] = useState<StyleState>(DEFAULT_STYLE);
-  const [footerStyle, setFooterStyle] = useState<StyleState>(DEFAULT_STYLE);
+  const [headerStyle, setHeaderStyle] = useState<StyleState>(defaultStyle);
+  const [footerStyle, setFooterStyle] = useState<StyleState>(defaultStyle);
   const [skipFirst, setSkipFirst] = useState(false);
   const [startNumber, setStartNumber] = useState("1");
   const [focus, setFocus] = useState<FocusRef>(null);
@@ -222,8 +289,11 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const [previewPage, setPreviewPage] = useState(0);
   const [pageInput, setPageInput] = useState("1");
   const [notStamped, setNotStamped] = useState(false);
-  const [zoom, setZoom] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [grabbing, setGrabbing] = useState(false);
   const seq = useRef(0);
+  const viewRef = useRef<HTMLDivElement | null>(null);
+  const pan = useRef<{ x: number; y: number; sl: number; st: number } | null>(null);
   // Sayfa geçişini hızlandırmak için: kaynak belge bir kez ayrıştırılır, aynı ayar+sayfa önizlemesi önbellekten gelir.
   const srcDoc = useRef<Promise<import("pdf-lib").PDFDocument> | null>(null);
   const previewCache = useRef(new Map<string, { url: string; notStamped: boolean }>());
@@ -234,8 +304,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     if (mode === "all") setAllText((p) => ({ ...p, ...patch }));
     else setPageTexts((p) => ({ ...p, [previewPage]: { ...(p[previewPage] ?? EMPTY_PAIR), ...patch } }));
   };
-  const pagesWithText = Object.values(pageTexts).filter(pairHasText).length;
-  const hasText = mode === "all" ? pairHasText(allText) : pagesWithText > 0;
+  const hasText = mode === "all" ? pairHasText(allText) : Object.values(pageTexts).some(pairHasText);
 
   const toRules = (): HeaderFooterRule[] =>
     mode === "all"
@@ -260,7 +329,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     setReading(true);
     try {
       const b = new Uint8Array(await f.arrayBuffer());
-      const th = await renderPdfPage(b, 0, 1100);
+      const th = await renderPdfPage(b, 0, PREVIEW_PX);
       srcDoc.current = null;
       previewCache.current.clear();
       setBytes(b);
@@ -269,6 +338,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
       setPreviewUrl(th.dataUrl);
       setPreviewPage(0);
       setPageInput("1");
+      setZoom(1);
     } catch (e) {
       setError(e instanceof PdfThumbError && e.kind === "encrypted" ? t.encrypted : t.broken);
     } finally {
@@ -282,16 +352,13 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     setPageInput(String(n + 1));
   };
 
-  // Ayarlar ya da sayfa değişince seçili sayfanın önizlemesini (kısa bir beklemeyle) yeniler.
+  // Ayarlar ya da sayfa değişince seçili sayfanın önizlemesini yeniler (aynı ayar+sayfa önbellekten gelir).
   const settingsKey = JSON.stringify([mode, allText, pageTexts, headerStyle, footerStyle, skipFirst, startNumber]);
   const optionsKey = `${settingsKey}|${previewPage}`;
   useEffect(() => {
     if (!bytes) return;
     const my = ++seq.current;
     const cached = previewCache.current.get(optionsKey);
-    // Yalnız sayfa değiştiyse bekleme yok; metin yazılırken kısa bekleme (her tuşta yeniden çizmesin).
-    const wait = lastSettingsKey.current === settingsKey ? 0 : 450;
-    lastSettingsKey.current = settingsKey;
     const build = async (index: number) => {
       // Önizleme yalnız seçili sayfa: büyük belgede tamamını işlememek için o sayfa ayrı belgeye alınır.
       srcDoc.current ??= import("pdf-lib").then(({ PDFDocument }) => PDFDocument.load(bytes));
@@ -303,7 +370,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
         out = r.bytes;
         stamped = r.stamped;
       }
-      const th = await renderPdfPage(out, 0, 1100);
+      const th = await renderPdfPage(out, 0, PREVIEW_PX);
       const entry = { url: th.dataUrl, notStamped: hasText && stamped === 0 };
       if (previewCache.current.size > 24) previewCache.current.delete(previewCache.current.keys().next().value as string);
       previewCache.current.set(`${settingsKey}|${index}`, entry);
@@ -324,6 +391,9 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
       const idle = setTimeout(() => void prefetchNext(), 150);
       return () => clearTimeout(idle);
     }
+    // Yalnız sayfa değiştiyse bekleme yok; metin yazılırken kısa bekleme (her tuşta yeniden çizmesin).
+    const wait = lastSettingsKey.current === settingsKey ? 0 : 450;
+    lastSettingsKey.current = settingsKey;
     const timer = setTimeout(async () => {
       setPreviewing(true);
       try {
@@ -370,28 +440,53 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     setMode("all");
     setAllText({ header: EMPTY_SLOT, footer: PRESETS[0]!.footer });
     setPageTexts({});
-    setHeaderStyle(DEFAULT_STYLE);
-    setFooterStyle(DEFAULT_STYLE);
+    setHeaderStyle(defaultStyle());
+    setFooterStyle(defaultStyle());
     setSkipFirst(false);
     setStartNumber("1");
     setPreviewPage(0);
     setPageInput("1");
     setFocus(null);
+    setZoom(1);
   };
 
-  const insertToken = (token: string) => {
+  /** Düğmeye basılınca ilgili kutuya O ANKİ değer yazılır (sayfa kipinde sayfa numarası dahil). */
+  const insertText = (text: string) => {
     const target: NonNullable<FocusRef> = focus ?? { part: "footer", slot: "center" };
     const slot = cur[target.part];
-    setCur({ [target.part]: { ...slot, [target.slot]: (slot[target.slot] + token).slice(0, 120) } });
+    setCur({ [target.part]: { ...slot, [target.slot]: (slot[target.slot] + text).slice(0, 120) } });
   };
-
-  const tokens = [
-    { ins: "{sayfa}", name: t.tokNames.page, ex: `${t.here}: ${previewPage + 1}` },
-    { ins: "{toplam}", name: t.tokNames.total, ex: `${t.inDoc}: ${pageCount}` },
-    { ins: "{sayfa} / {toplam}", name: t.tokNames.both, ex: `${t.here}: «${previewPage + 1} / ${pageCount}»` },
-    { ins: "{tarih}", name: t.tokNames.date, ex: formatDateTr(new Date()) },
-    { ins: "{dosya}", name: t.tokNames.file, ex: fileName.replace(/\.pdf$/i, "") },
+  const pageNo = previewPage + 1;
+  const stripped = fileName.replace(/\.pdf$/i, "");
+  // «Tüm sayfalar» kipinde sayfa numarası her sayfada değişmeli → kod yazılır, kutuda ‹Sayfa no› görünür.
+  const pageVal = mode === "all" ? "{sayfa}" : String(pageNo);
+  const chips = [
+    { id: "page", name: t.chips.page, ex: mode === "all" ? "" : String(pageNo), ins: pageVal },
+    { id: "total", name: t.chips.total, ex: String(pageCount), ins: String(pageCount) },
+    { id: "both", name: t.chips.both, ex: mode === "all" ? "" : `${pageNo} / ${pageCount}`, ins: `${pageVal} / ${pageCount}` },
+    { id: "date", name: t.chips.date, ex: formatDateTr(new Date()), ins: formatDateTr(new Date()) },
+    { id: "file", name: t.chips.file, ex: stripped, ins: stripped },
   ];
+
+  const changeZoom = (z: number) => setZoom(Math.min(3, Math.max(1, Math.round(z * 100) / 100)));
+  const onPanDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = viewRef.current;
+    if (!el || zoom <= 1 || e.pointerType !== "mouse" || e.button !== 0) return;
+    pan.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop };
+    el.setPointerCapture(e.pointerId);
+    setGrabbing(true);
+  };
+  const onPanMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = viewRef.current;
+    const p = pan.current;
+    if (!el || !p) return;
+    el.scrollLeft = p.sl - (e.clientX - p.x);
+    el.scrollTop = p.st - (e.clientY - p.y);
+  };
+  const onPanUp = () => {
+    pan.current = null;
+    setGrabbing(false);
+  };
 
   if (result) {
     return (
@@ -438,16 +533,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     );
   }
 
-  const previewBox = (
-    <div className="relative overflow-hidden rounded-lg border border-white/10 bg-white">
-      {previewUrl && <img src={previewUrl} alt={t.preview} className="block w-full" />}
-      {previewing && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/30" role="status" aria-label={t.previewing}>
-          <Loader2 className="h-6 w-6 animate-spin text-white" />
-        </div>
-      )}
-    </div>
-  );
+  const iconBtn = "rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30";
 
   return (
     <div className="w-full">
@@ -465,11 +551,22 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <p className={`${heading} mr-auto`}>{t.preview}</p>
             <div className="flex items-center gap-1">
-              <button type="button" aria-label={t.prev} title={t.prev} disabled={previewPage <= 0} onClick={() => goPage(previewPage - 1)} className="rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30">
+              <button type="button" aria-label={t.prev} title={t.prev} disabled={previewPage <= 0} onClick={() => goPage(previewPage - 1)} className={iconBtn}>
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <button type="button" aria-label={t.next} title={t.next} disabled={previewPage >= pageCount - 1} onClick={() => goPage(previewPage + 1)} className="rounded-lg border border-white/15 bg-white/[0.04] p-1.5 text-slate-200 hover:bg-white/[0.09] disabled:opacity-30">
+              <button type="button" aria-label={t.next} title={t.next} disabled={previewPage >= pageCount - 1} onClick={() => goPage(previewPage + 1)} className={iconBtn}>
                 <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
+              <button type="button" disabled={zoom <= 1} onClick={() => changeZoom(zoom - 0.25)} title={t.zoomOut} aria-label={t.zoomOut} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white disabled:opacity-30">
+                <ZoomOut className="h-4 w-4" />
+              </button>
+              <button type="button" onClick={() => changeZoom(1)} title={t.zoomFit} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 hover:bg-white/10">
+                {Math.round(zoom * 100)}%
+              </button>
+              <button type="button" disabled={zoom >= 3} onClick={() => changeZoom(zoom + 0.25)} title={t.zoomIn} aria-label={t.zoomIn} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white disabled:opacity-30">
+                <ZoomIn className="h-4 w-4" />
               </button>
             </div>
             <label className="flex items-center gap-1.5 whitespace-nowrap text-[13px] text-slate-300">
@@ -485,102 +582,128 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
               />
               / {pageCount}
             </label>
-            <button type="button" onClick={() => setZoom(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.09]">
-              <Maximize2 className="h-3.5 w-3.5" />{t.zoom}
-            </button>
           </div>
-          {previewBox}
+
+          <div
+            ref={viewRef}
+            onPointerDown={onPanDown}
+            onPointerMove={onPanMove}
+            onPointerUp={onPanUp}
+            onPointerCancel={onPanUp}
+            className={`relative overflow-auto rounded-lg border border-white/10 bg-white ${zoom > 1 ? `max-h-[78vh] ${grabbing ? "cursor-grabbing" : "cursor-grab"}` : ""}`}
+          >
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt={t.preview}
+                draggable={false}
+                style={{ width: `${zoom * 100}%`, maxWidth: "none" }}
+                className="block select-none"
+              />
+            )}
+            {previewing && (
+              <div className="pointer-events-none sticky bottom-0 left-0 flex h-0 items-center justify-center" role="status" aria-label={t.previewing}>
+                <Loader2 className="absolute -top-8 h-6 w-6 animate-spin text-slate-500" />
+              </div>
+            )}
+          </div>
+          {zoom > 1 && <p className="mt-1.5 text-[12px] text-slate-500">{t.panHint}</p>}
           {notStamped && <p className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-200">{t.notStamped}</p>}
         </aside>
 
-        {/* ── Ayarlar ── */}
+        {/* ── Düzenleme (sağda) ── */}
         <div className="space-y-5">
-          <section aria-label={t.presets}>
-            <p className={heading}>{t.presets}</p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setCur({ header: p.header, footer: p.footer })}
-                  className="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.09]"
-                >
-                  {tr ? p.tr : p.en}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1.5 text-[12px] text-slate-500">{t.presetsHelp}</p>
-          </section>
-
           <section aria-label={t.modeTitle} className="space-y-2">
             <p className={heading}>{t.modeTitle}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {([["all", t.modeAll, t.modeAllHelp], ["page", t.modePage, t.modePageHelp]] as [Mode, string, string][]).map(([m, name, help]) => (
+            <div className="inline-flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
+              {([["all", t.modeAll], ["page", t.modePage]] as [Mode, string][]).map(([m, name]) => (
                 <button
                   key={m}
                   type="button"
                   aria-pressed={mode === m}
                   onClick={() => setMode(m)}
-                  className={`rounded-xl border px-3.5 py-3 text-left transition ${mode === m ? "border-cyan-400/60 bg-cyan-400/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]"}`}
+                  className={`rounded-lg px-4 py-1.5 text-[13px] font-semibold transition ${mode === m ? "bg-cyan-500/20 text-cyan-100 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.45)]" : "text-slate-300 hover:bg-white/[0.07]"}`}
                 >
-                  <span className="block text-[13.5px] font-semibold text-slate-100">{name}</span>
-                  <span className="mt-0.5 block text-[12px] leading-snug text-slate-400">{help}</span>
+                  {name}
                 </button>
               ))}
             </div>
+            <p className="text-[12px] text-slate-500">{mode === "all" ? t.modeAllHelp : t.modePageHelp}</p>
           </section>
 
-          <section aria-label={mode === "all" ? t.editingAll : t.editingPage(previewPage + 1)} className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <section aria-label={t.presets}>
+            <p className={heading}>{t.presets}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {PRESETS.map((p) => {
+                const on = samePair(cur, p);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setCur({ header: p.header, footer: p.footer })}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold transition ${on ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100 shadow-[0_0_0_3px_rgba(34,211,238,0.10)]" : "border-white/12 bg-white/[0.04] text-slate-200 hover:border-white/25 hover:bg-white/[0.09]"}`}
+                  >
+                    {on && <Check className="h-3.5 w-3.5" aria-hidden />}
+                    {tr ? p.tr : p.en}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section aria-label={mode === "all" ? t.editingAll : t.editingPage(pageNo)} className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[13px] font-bold text-cyan-200">{mode === "all" ? t.editingAll : t.editingPage(previewPage + 1)}</p>
-              {mode === "page" && <span className="text-[12px] text-slate-400">· {t.pagesWithText(pagesWithText)}</span>}
+              <p className="text-[13px] font-bold text-cyan-200">{mode === "all" ? t.editingAll : t.editingPage(pageNo)}</p>
               {mode === "page" && pairHasText(cur) && (
-                <button type="button" onClick={() => setPageTexts((p) => { const n = { ...p }; delete n[previewPage]; return n; })} className="ml-auto text-[12px] text-slate-400 underline-offset-2 hover:text-rose-300 hover:underline">
-                  {t.clearPage}
+                <button
+                  type="button"
+                  onClick={() => setPageTexts((p) => { const n = { ...p }; delete n[previewPage]; return n; })}
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-[12px] font-semibold text-rose-200 transition hover:bg-rose-500/20"
+                >
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden />{t.clear}
                 </button>
               )}
             </div>
             <SlotRow label={t.header} slot={cur.header} onChange={(sl) => setCur({ header: sl })} t={t} part="header" onFocus={setFocus} />
             <SlotRow label={t.footer} slot={cur.footer} onChange={(sl) => setCur({ footer: sl })} t={t} part="footer" onFocus={setFocus} />
-          </section>
 
-          <section aria-label={t.tokensTitle} className="rounded-xl border border-sky-400/20 bg-sky-400/[0.04] p-3">
-            <p className="text-[13px] font-semibold text-sky-100">{t.tokensTitle}</p>
-            <p className="mt-1 text-[12px] text-slate-400">{t.tokensHelp}</p>
-            <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
-              {tokens.map((k) => (
-                <li key={k.ins}>
+            <div className="border-t border-white/10 pt-2.5">
+              <p className="text-[12px] font-semibold text-slate-300">{t.insertTitle}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {chips.map((c) => (
                   <button
+                    key={c.id}
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => insertToken(k.ins)}
-                    className="flex w-full flex-col items-start rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left hover:bg-white/[0.09]"
+                    onClick={() => insertText(c.ins)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-semibold text-slate-100 transition hover:border-cyan-400/50 hover:bg-cyan-400/10"
                   >
-                    <span className="text-[13px] font-semibold text-slate-100">{k.name}</span>
-                    <span className="mt-0.5 text-[11.5px] text-slate-400">{k.ex}</span>
+                    {c.name}
+                    {c.ex && <span className="max-w-[9rem] truncate font-normal text-slate-400">{c.ex}</span>}
                   </button>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-[12px] text-slate-300">{t.tokensExample(previewPage + 1, pageCount)}</p>
+                ))}
+              </div>
+              {mode === "all" && <p className="mt-1.5 text-[11.5px] text-slate-500">{t.insertPageAuto}</p>}
+            </div>
           </section>
 
           <section aria-label={t.appearance} className="space-y-3">
             <p className={heading}>{t.appearance}</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <StyleCard title={t.headerLook} st={headerStyle} onChange={setHeaderStyle} edgeLabel={t.edgeTop} t={t} />
-              <StyleCard title={t.footerLook} st={footerStyle} onChange={setFooterStyle} edgeLabel={t.edgeBottom} t={t} />
+              <StyleCard title={t.headerLook} st={headerStyle} onChange={setHeaderStyle} edgeLabel={t.edgeTop} ruleLabel={t.ruleHeader} t={t} />
+              <StyleCard title={t.footerLook} st={footerStyle} onChange={setFooterStyle} edgeLabel={t.edgeBottom} ruleLabel={t.ruleFooter} t={t} />
             </div>
           </section>
 
           {mode === "all" && (
-          <section aria-label={t.numbering} className="space-y-2">
-            <p className={heading}>{t.numbering}</p>
-            <div className="flex flex-wrap items-end gap-4 text-[12px] text-slate-400">
-              <label>{t.start}<input className={`${inputSm} mt-1 w-24`} inputMode="numeric" value={startNumber} onChange={(e) => setStartNumber(e.target.value)} /></label>
-              <label className="flex items-center gap-1.5 pb-1.5 text-[13px] text-slate-200"><input type="checkbox" checked={skipFirst} onChange={(e) => setSkipFirst(e.target.checked)} />{t.skipFirst}</label>
-            </div>
-          </section>
+            <section aria-label={t.numbering} className="space-y-2">
+              <p className={heading}>{t.numbering}</p>
+              <div className="flex flex-wrap items-end gap-4 text-[12px] text-slate-400">
+                <label>{t.start}<input className={`${inputSm} mt-1 w-24`} inputMode="numeric" value={startNumber} onChange={(e) => setStartNumber(e.target.value)} /></label>
+                <label className="flex items-center gap-1.5 pb-1.5 text-[13px] text-slate-200"><input type="checkbox" checked={skipFirst} onChange={(e) => setSkipFirst(e.target.checked)} />{t.skipFirst}</label>
+              </div>
+            </section>
           )}
 
           <p className="rounded-xl border border-sky-400/20 bg-sky-400/[0.05] px-3.5 py-2.5 text-[12px] leading-relaxed text-sky-100/90">{t.note}</p>
@@ -598,25 +721,6 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
           <p className="text-[12px] text-slate-500">{t.privacy}</p>
         </div>
       </div>
-
-      {zoom &&
-        createPortal(
-          <div className="fixed inset-0 z-[11000] flex items-center justify-center p-2 sm:p-4" role="presentation">
-            <button type="button" aria-label={t.closeZoom} className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" onClick={() => setZoom(false)} />
-            <div role="dialog" aria-modal="true" aria-label={t.preview} className="relative z-10 flex max-h-[96vh] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-white/15 bg-slate-900">
-              <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-3 py-2">
-                <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-100">{t.preview} · {t.page} {previewPage + 1} / {pageCount}</p>
-                <button type="button" aria-label={t.prev} disabled={previewPage <= 0} onClick={() => goPage(previewPage - 1)} className="rounded-md border border-white/15 p-1.5 text-slate-200 disabled:opacity-30"><ChevronLeft className="h-4 w-4" /></button>
-                <button type="button" aria-label={t.next} disabled={previewPage >= pageCount - 1} onClick={() => goPage(previewPage + 1)} className="rounded-md border border-white/15 p-1.5 text-slate-200 disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
-                <button type="button" onClick={() => setZoom(false)} className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-white/[0.12]"><X className="h-3.5 w-3.5" />{t.closeZoom}</button>
-              </div>
-              <div className="min-h-0 overflow-auto bg-slate-800 p-2">
-                {previewUrl && <img src={previewUrl} alt={t.preview} className="mx-auto block max-h-[calc(96vh-4rem)] w-auto max-w-full bg-white" />}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
     </div>
   );
 }

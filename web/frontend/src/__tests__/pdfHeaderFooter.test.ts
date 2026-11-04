@@ -209,3 +209,49 @@ describe("bölümler (farklı sayfalara farklı metin)", () => {
     expect(up.transform[5]).toBeGreaterThan(down.transform[5]);
   });
 });
+
+describe("sütun bazlı yazı stili ve çizgi", () => {
+  it("sol/orta/sağ sütunlar ayrı boyut ve kalınlıkla çizilir", async () => {
+    const pdf = await makePdf(1);
+    const r = await addHeaderFooter(pdf, {
+      fonts,
+      rules: [{ header: { left: "SOL", center: "ORTA", right: "SAG" }, footer: EMPTY_SLOT, pages: "all" }],
+      headerStyle: { cols: { left: { fontSize: 8 }, center: { fontSize: 14, bold: true }, right: { fontSize: 20, color: "#ff0000" } } },
+    });
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const doc = await pdfjs.getDocument({ data: r.bytes.slice(), isEvalSupported: false, useWorkerFetch: false }).promise;
+    const tc = await (await doc.getPage(1)).getTextContent();
+    const sz = (s: string) => (tc.items.find((x) => "str" in x && x.str === s) as { transform: number[] }).transform[0];
+    expect(sz("SOL")).toBeCloseTo(8, 0);
+    expect(sz("ORTA")).toBeCloseTo(14, 0);
+    expect(sz("SAG")).toBeCloseTo(20, 0);
+  });
+
+  it("üst bilgide çizgi yazının altına, alt bilgide üstüne çizilir", async () => {
+    const pdf = await makePdf(1);
+    const r = await addHeaderFooter(pdf, {
+      fonts,
+      rules: [{ header: { left: "UST", center: "", right: "" }, footer: { left: "ALT", center: "", right: "" }, pages: "all" }],
+      headerStyle: { rule: true, ruleColor: "#00ff00", ruleWidth: 2 },
+      footerStyle: { rule: true },
+    });
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const doc = await pdfjs.getDocument({ data: r.bytes.slice(), isEvalSupported: false, useWorkerFetch: false }).promise;
+    const page = await doc.getPage(1);
+    const tc = await page.getTextContent();
+    const y = (s: string) => (tc.items.find((x) => "str" in x && x.str === s) as { transform: number[] }).transform[5];
+    const ops = await page.getOperatorList();
+    // constructPath: [alt işlemler, koordinatlar] — çizgilerin y değerleri
+    const ys: number[] = [];
+    ops.fnArray.forEach((fn, k) => {
+      if (fn === pdfjs.OPS.constructPath) {
+        const coords = ops.argsArray[k][1] as number[];
+        for (let c = 1; c < coords.length; c += 2) ys.push(coords[c]!);
+      }
+    });
+    const upLine = ys.find((v) => v < y("UST") && v > y("UST") - 12);
+    const downLine = ys.find((v) => v > y("ALT") && v < y("ALT") + 20);
+    expect(upLine).toBeDefined(); // üst bilgi: çizgi yazının ALTINDA
+    expect(downLine).toBeDefined(); // alt bilgi: çizgi yazının ÜSTÜNDE
+  });
+});

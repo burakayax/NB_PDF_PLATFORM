@@ -13,8 +13,17 @@ import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 
 export type Slot3 = { left: string; center: string; right: string };
 
+/** Tek bir sütunun (sol / orta / sağ) yazı görünümü. */
+export type ColStyle = { fontSize?: number; color?: string; bold?: boolean };
+
 /** Üst bilgi ya da alt bilginin görünümü — ikisi ayrı ayrı ayarlanır. */
 export type PartStyle = {
+  /** Sütunlara özel boyut / renk / kalınlık; verilmeyen alan aşağıdaki genel değere düşer. */
+  cols?: { left?: ColStyle; center?: ColStyle; right?: ColStyle };
+  /** Çizgi rengi (#RRGGBB); verilmezse yazı rengi. */
+  ruleColor?: string;
+  /** Çizgi kalınlığı (pt). */
+  ruleWidth?: number;
   /** Yazı boyutu (pt). 6–24 arasına sıkıştırılır. */
   fontSize?: number;
   /** #RRGGBB */
@@ -136,6 +145,8 @@ function cleanFor(font: PDFFont, s: string): string {
 
 export type HeaderFooterResult = { bytes: Uint8Array; stamped: number; shrunk: number };
 
+const slotText = (s: Slot3, a: "l" | "c" | "r") => (a === "l" ? s.left : a === "c" ? s.center : s.right);
+
 /** Sayfa (1 tabanlı) bu kapsama giriyor mu? */
 export function pageInScope(n: number, total: number, r: Pick<HeaderFooterRule, "pages" | "from" | "to">): boolean {
   switch (r.pages) {
@@ -186,10 +197,14 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
   if (legacy && !legacyRange) return { bytes: input, stamped: 0, shrunk: 0 };
   const base = legacyRange ? legacyRange[0] - 1 : opts.skipFirst ? 1 : 0;
 
+  const clampSize = (v: number) => Math.min(24, Math.max(6, v));
   const styleOf = (st?: PartStyle) => ({
-    size: Math.min(24, Math.max(6, st?.fontSize ?? opts.fontSize ?? 10)),
+    size: clampSize(st?.fontSize ?? opts.fontSize ?? 10),
     color: hexToRgb(st?.color ?? opts.color ?? "#555555"),
     bold: st?.bold ?? opts.bold ?? false,
+    cols: st?.cols ?? {},
+    ruleColor: st?.ruleColor,
+    ruleWidth: Math.min(5, Math.max(0.1, st?.ruleWidth ?? 0.4)),
     edge: Math.max(3, Math.min(60, st?.edgeMm ?? opts.marginMm ?? 10)) * MM_TO_PT,
     side: Math.max(3, Math.min(60, st?.sideMm ?? opts.marginMm ?? 10)) * MM_TO_PT,
     rule: st?.rule ?? opts.rule ?? false,
@@ -238,8 +253,19 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
 
     const drawRow = async (slot: Slot3, top: boolean) => {
       const st = top ? hs : fs;
-      const font = await fontFor(st.bold);
-      const size = st.size;
+      const colOf = (align: "l" | "c" | "r") => {
+        const c = st.cols[align === "l" ? "left" : align === "c" ? "center" : "right"];
+        return {
+          size: clampSize(c?.fontSize ?? st.size),
+          color: c?.color ? hexToRgb(c.color) : st.color,
+          bold: c?.bold ?? st.bold,
+        };
+      };
+      // Satırın yüksekliği en büyük sütuna göre belirlenir (taşma/çakışma olmasın).
+      const size = Math.max(
+        ...(["l", "c", "r"] as const).map((a) => (slotText(slot, a).trim() ? colOf(a).size : 0)),
+        1,
+      );
       const baseline = top ? visH - st.edge - size * 0.8 : st.edge;
       const maxW = visW - 2 * st.side;
       const items: { text: string; align: "l" | "c" | "r" }[] = [
@@ -250,27 +276,29 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
       let drewAny = false;
       for (const it of items) {
         if (!it.text.trim()) continue;
+        const cs = colOf(it.align);
+        const font = await fontFor(cs.bold);
         const text = cleanFor(font, fillPlaceholders(it.text, vars));
         if (!text.trim()) continue;
-        const w = font.widthOfTextAtSize(text, size);
+        const w = font.widthOfTextAtSize(text, cs.size);
         // Üç parça aynı satırda: her birine en çok genişliğin üçte biri ayrılır; taşarsa küçült.
         const room = maxW / 3;
-        let sz = size;
+        let sz = cs.size;
         if (w > room) {
-          sz = Math.max(4, (size * room) / w);
+          sz = Math.max(4, (cs.size * room) / w);
           shrunk++;
         }
         const ww = font.widthOfTextAtSize(text, sz);
         const vx = it.align === "l" ? st.side : it.align === "r" ? visW - st.side - ww : (visW - ww) / 2;
         const p = place(vx, baseline);
-        page.drawText(text, { x: p.x, y: p.y, size: sz, font, color: st.color, rotate: degrees(p.a) });
+        page.drawText(text, { x: p.x, y: p.y, size: sz, font, color: cs.color, rotate: degrees(p.a) });
         drewAny = true;
       }
       if (drewAny && st.rule) {
         const ry = top ? baseline - size * 0.45 : baseline + size * 1.15;
         const p1 = place(st.side, ry);
         const p2 = place(visW - st.side, ry);
-        page.drawLine({ start: { x: p1.x, y: p1.y }, end: { x: p2.x, y: p2.y }, thickness: 0.4, color: st.color });
+        page.drawLine({ start: { x: p1.x, y: p1.y }, end: { x: p2.x, y: p2.y }, thickness: st.ruleWidth, color: st.ruleColor ? hexToRgb(st.ruleColor) : st.color });
       }
       return drewAny;
     };
