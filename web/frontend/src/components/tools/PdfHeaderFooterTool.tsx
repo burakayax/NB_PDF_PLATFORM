@@ -10,7 +10,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, Pencil, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
@@ -18,7 +18,7 @@ import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { PdfThumbError, renderPdfPage } from "../../lib/pdfThumbs";
 import {
-  EMPTY_SLOT, addHeaderFooter, headerFooterOutputName, slotHasText,
+  EMPTY_SLOT, addHeaderFooter, formatDateTr, headerFooterOutputName, slotHasText,
   type HeaderFooterOptions, type HeaderFooterRule, type PageScope, type PartStyle, type Slot3,
 } from "../../lib/pdfHeaderFooter";
 
@@ -40,28 +40,25 @@ const T = {
     broken: "Dosya okunamadı. Bozuk olabilir; başka bir PDF dene.",
     tooBig: "Dosya 50 MB'dan büyük. Önce sıkıştırıp tekrar dene.",
     presets: "Hazır düzen",
-    presetsHelp: "İlk bölümün metinlerini hazır bir düzenle doldurur.",
-    sections: "Bölümler",
-    sectionsHelp: "Her bölüm, seçtiğin sayfalara kendi üst ve alt bilgisini yazar. Farklı sayfalara farklı metin için bölüm ekle.",
-    section: "Bölüm",
-    scopeLabel: "Hangi sayfalara?",
-    scope: { all: "Tüm sayfalar", odd: "Tek sayfalar (1, 3, 5…)", even: "Çift sayfalar (2, 4, 6…)", range: "Sayfa aralığı" } as Record<PageScope, string>,
-    from: "İlk sayfa", to: "Son sayfa",
-    addSection: "Farklı sayfalara başka metin ekle",
-    removeSection: "Bölümü sil",
-    overlapNote: "Bir sayfa birden çok bölüme giriyorsa en alttaki bölüm geçerli olur. Bir bölümü boş bırakırsan o sayfalara hiçbir şey yazılmaz.",
+    presetsHelp: "Üst ve alt bilgi kutularını hazır bir düzenle doldurur.",
+    modeTitle: "Hangi sayfalara yazılsın?",
+    modeAll: "Tüm sayfalara aynı metin",
+    modeAllHelp: "Yazdığın üst ve alt bilgi her sayfaya eklenir.",
+    modePage: "Sayfa sayfa farklı metin",
+    modePageHelp: "Soldaki önizlemede bir sayfa aç, o sayfanın metnini yaz. Metin girmediğin sayfalara bir şey yazılmaz.",
+    editingAll: "Tüm sayfalara yazılacak metin",
+    editingPage: (n: number) => `Sayfa ${n} için yazılacak metin`,
+    pagesWithText: (n: number) => `Metin girilen sayfa sayısı: ${n}`,
+    clearPage: "Bu sayfanın metnini temizle",
+    tokensTitle: "Sayfa numarası, tarih gibi bilgiler ekle",
+    tokensHelp: "Önce yazacağın kutuya tıkla, sonra aşağıdan birine bas. PDF'e yazılırken her sayfada o sayfanın kendi bilgisi görünür.",
+    tokensExample: (a: number, b: number) => `«${a} / ${b}» demek: ${b} sayfalık belgenin ${a}. sayfası.`,
+    here: "Bu sayfada",
+    inDoc: "Bu belgede",
+    tokNames: { page: "Sayfa numarası", total: "Toplam sayfa sayısı", both: "Sayfa numarası / toplam", date: "Bugünün tarihi", file: "Dosya adı" },
     header: "Üst bilgi",
     footer: "Alt bilgi",
     left: "Sol", center: "Orta", right: "Sağ",
-    tokensTitle: "Yer tutucular — metne tıklayıp ekle",
-    tokensHelp: "Bunlar her sayfada kendiliğinden değişen bilgilerdir. Önce yazacağın kutuya tıkla, sonra aşağıdan birini seç.",
-    tokens: [
-      { k: "{sayfa}", name: "Sayfa numarası", ex: "3. sayfada «3»" },
-      { k: "{toplam}", name: "Toplam sayfa sayısı", ex: "12 sayfalık belgede «12»" },
-      { k: "{tarih}", name: "Bugünün tarihi", ex: "04.11.2026" },
-      { k: "{dosya}", name: "Dosya adı", ex: "sozlesme" },
-    ],
-    tokensExample: "Örnek: «Sayfa {sayfa} / {toplam}» yazarsan 3. sayfada «Sayfa 3 / 12» çıkar.",
     appearance: "Görünüm",
     headerLook: "Üst bilgi görünümü",
     footerLook: "Alt bilgi görünümü",
@@ -90,28 +87,25 @@ const T = {
     broken: "The file could not be read. It may be corrupt; try another PDF.",
     tooBig: "The file is larger than 50 MB. Compress it first and try again.",
     presets: "Quick layouts",
-    presetsHelp: "Fills the texts of the first section with a ready-made layout.",
-    sections: "Sections",
-    sectionsHelp: "Each section writes its own header and footer on the pages you choose. Add a section to put different text on different pages.",
-    section: "Section",
-    scopeLabel: "Which pages?",
-    scope: { all: "All pages", odd: "Odd pages (1, 3, 5…)", even: "Even pages (2, 4, 6…)", range: "Page range" } as Record<PageScope, string>,
-    from: "First page", to: "Last page",
-    addSection: "Add different text for other pages",
-    removeSection: "Remove section",
-    overlapNote: "If a page falls into more than one section, the last section wins. A section left empty writes nothing on its pages.",
+    presetsHelp: "Fills the header and footer boxes with a ready-made layout.",
+    modeTitle: "Which pages?",
+    modeAll: "Same text on all pages",
+    modeAllHelp: "The header and footer you write are added to every page.",
+    modePage: "Different text page by page",
+    modePageHelp: "Open a page in the preview on the left and write its text. Pages you leave empty get nothing.",
+    editingAll: "Text written on all pages",
+    editingPage: (n: number) => `Text for page ${n}`,
+    pagesWithText: (n: number) => `Pages with text: ${n}`,
+    clearPage: "Clear this page's text",
+    tokensTitle: "Add a page number, date and more",
+    tokensHelp: "Click the box you want to write in first, then press one below. Each page shows its own value when the PDF is written.",
+    tokensExample: (a: number, b: number) => `“${a} / ${b}” means page ${a} of a ${b}-page document.`,
+    here: "On this page",
+    inDoc: "In this document",
+    tokNames: { page: "Page number", total: "Total number of pages", both: "Page number / total", date: "Today's date", file: "File name" },
     header: "Header",
     footer: "Footer",
     left: "Left", center: "Center", right: "Right",
-    tokensTitle: "Placeholders — click to insert",
-    tokensHelp: "These are details that change by themselves on every page. Click the box you want to write in first, then pick one below.",
-    tokens: [
-      { k: "{page}", name: "Page number", ex: "“3” on page 3" },
-      { k: "{total}", name: "Total number of pages", ex: "“12” in a 12-page file" },
-      { k: "{date}", name: "Today's date", ex: "04.11.2026" },
-      { k: "{file}", name: "File name", ex: "contract" },
-    ],
-    tokensExample: "Example: write “Page {page} / {total}” and page 3 shows “Page 3 / 12”.",
     appearance: "Appearance",
     headerLook: "Header look",
     footerLook: "Footer look",
@@ -141,24 +135,23 @@ const inputSm = "rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1.5
 const input = "w-full rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500";
 const heading = "text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400";
 
-type RuleState = { id: number; scope: PageScope; from: string; to: string; header: Slot3; footer: Slot3 };
+type TextPair = { header: Slot3; footer: Slot3 };
+type Mode = "all" | "page";
 type StyleState = { size: string; color: string; bold: boolean; edge: string; side: string; rule: boolean };
-type FocusRef = { ruleId: number; part: "header" | "footer"; slot: keyof Slot3 } | null;
+type FocusRef = { part: "header" | "footer"; slot: keyof Slot3 } | null;
 
 const DEFAULT_STYLE: StyleState = { size: "10", color: "#555555", bold: false, edge: "10", side: "10", rule: false };
 
-let ruleSeq = 0;
-const newRule = (over?: Partial<RuleState>): RuleState => ({
-  id: ++ruleSeq, scope: "all", from: "", to: "", header: EMPTY_SLOT, footer: EMPTY_SLOT, ...over,
-});
+const EMPTY_PAIR: TextPair = { header: EMPTY_SLOT, footer: EMPTY_SLOT };
+const pairHasText = (p: TextPair) => slotHasText(p.header) || slotHasText(p.footer);
 
 const num = (v: string, d: number) => (Number.isFinite(parseFloat(v)) ? parseFloat(v) : d);
 const toPartStyle = (s: StyleState): PartStyle => ({
   fontSize: num(s.size, 10), color: s.color, bold: s.bold, edgeMm: num(s.edge, 10), sideMm: num(s.side, 10), rule: s.rule,
 });
 
-function SlotRow({ label, slot, onChange, t, ruleId, part, onFocus }: {
-  label: string; slot: Slot3; onChange: (s: Slot3) => void; t: TT; ruleId: number; part: "header" | "footer";
+function SlotRow({ label, slot, onChange, t, part, onFocus }: {
+  label: string; slot: Slot3; onChange: (s: Slot3) => void; t: TT; part: "header" | "footer";
   onFocus: (f: FocusRef) => void;
 }) {
   const cols: [keyof Slot3, string][] = [["left", t.left], ["center", t.center], ["right", t.right]];
@@ -173,7 +166,7 @@ function SlotRow({ label, slot, onChange, t, ruleId, part, onFocus }: {
               className={`${input} mt-1`}
               value={slot[k]}
               maxLength={120}
-              onFocus={() => onFocus({ ruleId, part, slot: k })}
+              onFocus={() => onFocus({ part, slot: k })}
               onChange={(e) => onChange({ ...slot, [k]: e.target.value })}
             />
           </label>
@@ -213,7 +206,9 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const [reading, setReading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [rules, setRules] = useState<RuleState[]>(() => [newRule({ footer: PRESETS[0]!.footer })]);
+  const [mode, setMode] = useState<Mode>("all");
+  const [allText, setAllText] = useState<TextPair>({ header: EMPTY_SLOT, footer: PRESETS[0]!.footer });
+  const [pageTexts, setPageTexts] = useState<Record<number, TextPair>>({});
   const [headerStyle, setHeaderStyle] = useState<StyleState>(DEFAULT_STYLE);
   const [footerStyle, setFooterStyle] = useState<StyleState>(DEFAULT_STYLE);
   const [skipFirst, setSkipFirst] = useState(false);
@@ -234,20 +229,27 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const previewCache = useRef(new Map<string, { url: string; notStamped: boolean }>());
   const lastSettingsKey = useRef("");
 
-  const hasText = rules.some((r) => slotHasText(r.header) || slotHasText(r.footer));
+  const cur: TextPair = mode === "all" ? allText : (pageTexts[previewPage] ?? EMPTY_PAIR);
+  const setCur = (patch: Partial<TextPair>) => {
+    if (mode === "all") setAllText((p) => ({ ...p, ...patch }));
+    else setPageTexts((p) => ({ ...p, [previewPage]: { ...(p[previewPage] ?? EMPTY_PAIR), ...patch } }));
+  };
+  const pagesWithText = Object.values(pageTexts).filter(pairHasText).length;
+  const hasText = mode === "all" ? pairHasText(allText) : pagesWithText > 0;
 
   const toRules = (): HeaderFooterRule[] =>
-    rules.map((r) => ({
-      header: r.header, footer: r.footer, pages: r.scope,
-      from: parseInt(r.from, 10) || undefined, to: parseInt(r.to, 10) || undefined,
-    }));
+    mode === "all"
+      ? [{ header: allText.header, footer: allText.footer, pages: "all" }]
+      : Object.entries(pageTexts)
+          .filter(([, v]) => pairHasText(v))
+          .map(([i, v]) => ({ header: v.header, footer: v.footer, pages: "range" as PageScope, from: Number(i) + 1, to: Number(i) + 1 }));
 
   const buildOptions = (): HeaderFooterOptions => ({
     rules: toRules(),
     headerStyle: toPartStyle(headerStyle),
     footerStyle: toPartStyle(footerStyle),
-    skipFirst,
-    startNumber: Number.isFinite(parseInt(startNumber, 10)) ? parseInt(startNumber, 10) : 1,
+    skipFirst: mode === "all" ? skipFirst : false,
+    startNumber: mode === "all" && Number.isFinite(parseInt(startNumber, 10)) ? parseInt(startNumber, 10) : 1,
     fileName,
   });
 
@@ -281,7 +283,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   };
 
   // Ayarlar ya da sayfa değişince seçili sayfanın önizlemesini (kısa bir beklemeyle) yeniler.
-  const settingsKey = JSON.stringify([rules, headerStyle, footerStyle, skipFirst, startNumber]);
+  const settingsKey = JSON.stringify([mode, allText, pageTexts, headerStyle, footerStyle, skipFirst, startNumber]);
   const optionsKey = `${settingsKey}|${previewPage}`;
   useEffect(() => {
     if (!bytes) return;
@@ -365,7 +367,9 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     setBytes(null);
     setPreviewUrl(null);
     setError(null);
-    setRules([newRule({ footer: PRESETS[0]!.footer })]);
+    setMode("all");
+    setAllText({ header: EMPTY_SLOT, footer: PRESETS[0]!.footer });
+    setPageTexts({});
     setHeaderStyle(DEFAULT_STYLE);
     setFooterStyle(DEFAULT_STYLE);
     setSkipFirst(false);
@@ -375,18 +379,19 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
     setFocus(null);
   };
 
-  const updateRule = (id: number, patch: Partial<RuleState>) => setRules((p) => p.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-
   const insertToken = (token: string) => {
-    const target: NonNullable<FocusRef> = focus && rules.some((r) => r.id === focus.ruleId)
-      ? focus
-      : { ruleId: rules[0]!.id, part: "footer", slot: "center" };
-    setRules((p) => p.map((r) => {
-      if (r.id !== target.ruleId) return r;
-      const slot = r[target.part];
-      return { ...r, [target.part]: { ...slot, [target.slot]: (slot[target.slot] + token).slice(0, 120) } };
-    }));
+    const target: NonNullable<FocusRef> = focus ?? { part: "footer", slot: "center" };
+    const slot = cur[target.part];
+    setCur({ [target.part]: { ...slot, [target.slot]: (slot[target.slot] + token).slice(0, 120) } });
   };
+
+  const tokens = [
+    { ins: "{sayfa}", name: t.tokNames.page, ex: `${t.here}: ${previewPage + 1}` },
+    { ins: "{toplam}", name: t.tokNames.total, ex: `${t.inDoc}: ${pageCount}` },
+    { ins: "{sayfa} / {toplam}", name: t.tokNames.both, ex: `${t.here}: «${previewPage + 1} / ${pageCount}»` },
+    { ins: "{tarih}", name: t.tokNames.date, ex: formatDateTr(new Date()) },
+    { ins: "{dosya}", name: t.tokNames.file, ex: fileName.replace(/\.pdf$/i, "") },
+  ];
 
   if (result) {
     return (
@@ -497,7 +502,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setRules((r) => r.map((x, i) => (i === 0 ? { ...x, header: p.header, footer: p.footer } : x)))}
+                  onClick={() => setCur({ header: p.header, footer: p.footer })}
                   className="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[12px] font-semibold text-slate-200 hover:bg-white/[0.09]"
                 >
                   {tr ? p.tr : p.en}
@@ -507,66 +512,57 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
             <p className="mt-1.5 text-[12px] text-slate-500">{t.presetsHelp}</p>
           </section>
 
-          <section aria-label={t.sections} className="space-y-3">
-            <div>
-              <p className={heading}>{t.sections}</p>
-              <p className="mt-1 text-[12px] text-slate-500">{t.sectionsHelp}</p>
+          <section aria-label={t.modeTitle} className="space-y-2">
+            <p className={heading}>{t.modeTitle}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {([["all", t.modeAll, t.modeAllHelp], ["page", t.modePage, t.modePageHelp]] as [Mode, string, string][]).map(([m, name, help]) => (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={mode === m}
+                  onClick={() => setMode(m)}
+                  className={`rounded-xl border px-3.5 py-3 text-left transition ${mode === m ? "border-cyan-400/60 bg-cyan-400/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]"}`}
+                >
+                  <span className="block text-[13.5px] font-semibold text-slate-100">{name}</span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-slate-400">{help}</span>
+                </button>
+              ))}
             </div>
-            {rules.map((r, idx) => (
-              <div key={r.id} className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                <div className="flex flex-wrap items-end gap-3">
-                  <p className="text-[13px] font-bold text-cyan-200">{t.section} {idx + 1}</p>
-                  <label className="text-[12px] text-slate-400">
-                    {t.scopeLabel}
-                    <select className={`${input} mt-1`} value={r.scope} onChange={(e) => updateRule(r.id, { scope: e.target.value as PageScope })}>
-                      {(["all", "odd", "even", "range"] as PageScope[]).map((s) => <option key={s} value={s}>{t.scope[s]}</option>)}
-                    </select>
-                  </label>
-                  {r.scope === "range" && (
-                    <>
-                      <label className="text-[12px] text-slate-400">{t.from}<input className={`${inputSm} mt-1 w-20`} inputMode="numeric" placeholder="1" value={r.from} onChange={(e) => updateRule(r.id, { from: e.target.value })} /></label>
-                      <label className="text-[12px] text-slate-400">{t.to}<input className={`${inputSm} mt-1 w-20`} inputMode="numeric" placeholder={String(pageCount)} value={r.to} onChange={(e) => updateRule(r.id, { to: e.target.value })} /></label>
-                    </>
-                  )}
-                  {rules.length > 1 && (
-                    <button type="button" onClick={() => setRules((p) => p.filter((x) => x.id !== r.id))} aria-label={t.removeSection} title={t.removeSection} className="ml-auto rounded-md p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-400">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                <SlotRow label={t.header} slot={r.header} onChange={(s) => updateRule(r.id, { header: s })} t={t} ruleId={r.id} part="header" onFocus={setFocus} />
-                <SlotRow label={t.footer} slot={r.footer} onChange={(s) => updateRule(r.id, { footer: s })} t={t} ruleId={r.id} part="footer" onFocus={setFocus} />
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setRules((p) => [...p, newRule({ scope: "range" })])}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-cyan-400/40 px-3 py-2 text-[13px] font-semibold text-cyan-200 hover:bg-cyan-400/10"
-            >
-              <Plus className="h-4 w-4" />{t.addSection}
-            </button>
-            {rules.length > 1 && <p className="text-[12px] text-slate-500">{t.overlapNote}</p>}
+          </section>
+
+          <section aria-label={mode === "all" ? t.editingAll : t.editingPage(previewPage + 1)} className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[13px] font-bold text-cyan-200">{mode === "all" ? t.editingAll : t.editingPage(previewPage + 1)}</p>
+              {mode === "page" && <span className="text-[12px] text-slate-400">· {t.pagesWithText(pagesWithText)}</span>}
+              {mode === "page" && pairHasText(cur) && (
+                <button type="button" onClick={() => setPageTexts((p) => { const n = { ...p }; delete n[previewPage]; return n; })} className="ml-auto text-[12px] text-slate-400 underline-offset-2 hover:text-rose-300 hover:underline">
+                  {t.clearPage}
+                </button>
+              )}
+            </div>
+            <SlotRow label={t.header} slot={cur.header} onChange={(sl) => setCur({ header: sl })} t={t} part="header" onFocus={setFocus} />
+            <SlotRow label={t.footer} slot={cur.footer} onChange={(sl) => setCur({ footer: sl })} t={t} part="footer" onFocus={setFocus} />
           </section>
 
           <section aria-label={t.tokensTitle} className="rounded-xl border border-sky-400/20 bg-sky-400/[0.04] p-3">
             <p className="text-[13px] font-semibold text-sky-100">{t.tokensTitle}</p>
             <p className="mt-1 text-[12px] text-slate-400">{t.tokensHelp}</p>
             <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
-              {t.tokens.map((k) => (
-                <li key={k.k}>
+              {tokens.map((k) => (
+                <li key={k.ins}>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => insertToken(k.k)}
+                    onClick={() => insertToken(k.ins)}
                     className="flex w-full flex-col items-start rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-left hover:bg-white/[0.09]"
                   >
-                    <span className="text-[13px] font-semibold text-slate-100"><code className="mr-1.5 rounded bg-black/30 px-1.5 py-0.5 text-cyan-200">{k.k}</code>{k.name}</span>
+                    <span className="text-[13px] font-semibold text-slate-100">{k.name}</span>
                     <span className="mt-0.5 text-[11.5px] text-slate-400">{k.ex}</span>
                   </button>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-[12px] text-slate-300">{t.tokensExample}</p>
+            <p className="mt-2 text-[12px] text-slate-300">{t.tokensExample(previewPage + 1, pageCount)}</p>
           </section>
 
           <section aria-label={t.appearance} className="space-y-3">
@@ -577,6 +573,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
             </div>
           </section>
 
+          {mode === "all" && (
           <section aria-label={t.numbering} className="space-y-2">
             <p className={heading}>{t.numbering}</p>
             <div className="flex flex-wrap items-end gap-4 text-[12px] text-slate-400">
@@ -584,6 +581,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
               <label className="flex items-center gap-1.5 pb-1.5 text-[13px] text-slate-200"><input type="checkbox" checked={skipFirst} onChange={(e) => setSkipFirst(e.target.checked)} />{t.skipFirst}</label>
             </div>
           </section>
+          )}
 
           <p className="rounded-xl border border-sky-400/20 bg-sky-400/[0.05] px-3.5 py-2.5 text-[12px] leading-relaxed text-sky-100/90">{t.note}</p>
           {!hasText && <p className="text-[12px] text-amber-300">{t.emptyWarn}</p>}
