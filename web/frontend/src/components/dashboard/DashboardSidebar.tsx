@@ -160,7 +160,7 @@ const CUSTOM_TOOLS: {
   { key: "udf", favId: "udf-pdf", group: "convert", tr: "UDF / UYAP Araçları", en: "UDF / UYAP Tools", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "idcard", favId: "idcard-sheet", group: "organize", tr: "Kimlik Ön–Arka Tek Sayfa", en: "ID Front+Back on One Page", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "docconv", favId: "doc-convert", group: "convert", tr: "Ek Dönüştürmeler (TXT, EPUB, Markdown…)", en: "More Conversions (TXT, EPUB, Markdown…)", Icon: FileType2, iconClass: "text-cyan-300" },
-  { key: "tiff", favId: "tiff-to-pdf", group: "convert", tr: "TIFF'ten PDF'e", en: "TIFF'ten PDF'e", Icon: FileType2, iconClass: "text-cyan-300" },
+  { key: "tiff", favId: "tiff-to-pdf", group: "convert", tr: "TIFF'ten PDF'e", en: "TIFF to PDF", Icon: FileType2, iconClass: "text-cyan-300" },
   { key: "headerfooter", favId: "pdf-ust-alt-bilgi", group: "organize", tr: "Üst / Alt Bilgi Ekle", en: "Add Header / Footer", Icon: Hash, iconClass: "text-cyan-300" },
   { key: "tts", favId: "pdf-sesli-oku", group: "convert", tr: "Sesli Okuma", en: "Read Aloud", Icon: Scale, iconClass: "text-cyan-300" },
   { key: "compress-image", favId: "compress-image", group: "optimize", tr: "Görsel Sıkıştır", en: "Compress Image", Icon: ImageDown, iconClass: "text-cyan-300" },
@@ -1077,7 +1077,7 @@ export function DashboardSidebarMobileLauncher({
           : contentPanel === "snip"
           ? tr ? "PDF'ten Kesit Al" : "Snip to Image"
           : contentPanel === "tiff"
-          ? "TIFF'ten PDF'e"
+          ? tr ? "TIFF'ten PDF'e" : "TIFF to PDF"
           : contentPanel === "headerfooter"
           ? tr ? "Üst / Alt Bilgi Ekle" : "Add Header / Footer"
           : contentPanel === "tts"

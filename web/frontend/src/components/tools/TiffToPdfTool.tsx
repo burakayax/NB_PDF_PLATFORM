@@ -6,7 +6,7 @@
  * Motor "Görselden PDF'e" ile aynıdır (`filesToImageInputs` + `imagesToPdf`).
  */
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Loader2, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, FileType2, Loader2, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
@@ -106,18 +106,38 @@ export function TiffToPdfTool({ language }: { language: Language }) {
         accept="image/tiff,.tif,.tiff"
         multiple
         disabled={busy}
+        appendMode={items.length > 0}
+        hideBenefits={items.length > 0}
         label={tr ? "TIFF dosyalarını buraya sürükle" : "Drag your TIFF files here"}
         note={tr ? "TIF / TIFF · çok sayfalı olabilir · cihazınızdan çıkmaz" : "TIF / TIFF · may be multi-page · stays on your device"}
         hideHeader={describesTool}
         onFiles={add}
       />
 
+      {items.length === 0 && (
+        <div className="field--full mt-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[13px] leading-relaxed text-slate-300">
+          <p className="font-semibold text-slate-100">{tr ? "Bu araç ne işe yarar?" : "What is this tool for?"}</p>
+          <p className="mt-1">
+            {tr
+              ? "Tarayıcı ve fotokopi makineleri taramayı çoğu zaman TIFF (.tif) olarak kaydeder; başvuru ekranları ve e-postalar ise PDF ister. Bu araç TIFF dosyanızı PDF'e çevirir. Sonuçta yazı seçilemez, dosya bir görüntü gibi PDF'e konur."
+              : "Scanners and copiers often save scans as TIFF (.tif), while online forms and email want a PDF. This tool turns your TIFF into a PDF. The result is an image placed in a PDF, so the text is not selectable."}
+          </p>
+          <p className="mt-2 font-semibold text-slate-100">{tr ? "Çok sayfalı TIFF nedir?" : "What is a multi-page TIFF?"}</p>
+          <p className="mt-1">
+            {tr
+              ? "Tek bir TIFF dosyasının içinde birden fazla sayfa olabilir. Örneğin 10 sayfalık bir belgeyi taradığınızda tek bir .tif dosyası çıkar. Araç bu sayfaların hepsini sırayla PDF'e koyar; bir fotoğraf gibi tek sayfalık TIFF ise tek sayfalık PDF olur."
+              : "One TIFF file can hold several pages. Scan a 10-page document and you may get a single .tif file. The tool puts every page into the PDF in order; a single-page TIFF, like a photo, becomes a one-page PDF."}
+          </p>
+        </div>
+      )}
+
       {items.length > 0 && (
         <ul className="field--full mt-3 space-y-2" aria-label={tr ? "Seçilen dosyalar" : "Selected files"}>
           {items.map((it, i) => (
-            <li key={it.id} className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2">
-              <span className="min-w-0 flex-1 truncate text-[13px] text-slate-200">{it.file.name}</span>
-              <span className="shrink-0 text-[12px] text-slate-400">{mb(it.file.size)}</span>
+            <li key={it.id} className="flex items-center gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] px-4 py-3.5">
+              <FileType2 className="h-5 w-5 shrink-0 text-cyan-300" aria-hidden />
+              <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-slate-100">{it.file.name}</span>
+              <span className="shrink-0 text-[13px] text-slate-300">{mb(it.file.size)}</span>
               <button type="button" disabled={i === 0} onClick={() => move(i, -1)} aria-label={tr ? "Yukarı al" : "Move up"} className="rounded-md p-1.5 text-slate-300 hover:bg-white/5 disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
               <button type="button" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={tr ? "Aşağı al" : "Move down"} className="rounded-md p-1.5 text-slate-300 hover:bg-white/5 disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
               <button type="button" onClick={() => setItems((p) => p.filter((x) => x.id !== it.id))} aria-label={tr ? "Kaldır" : "Remove"} className="rounded-md p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>

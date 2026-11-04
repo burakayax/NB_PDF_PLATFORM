@@ -117,9 +117,9 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
   {
     id: "convert", tr: "Dönüştür & Çıkar", en: "Convert & extract", accent: "violet", convert: true,
     tools: [
-      { id: "pdf-to-word", icon: <FileText className="h-5 w-5" />, tr: "PDF'ten Word'e", en: "PDF'ten Word'e" },
-      { id: "pdf-to-excel", icon: <Table className="h-5 w-5" />, tr: "PDF'ten Excel'e", en: "PDF'ten Excel'e" },
-      { id: "pdf-to-ppt", icon: <Presentation className="h-5 w-5" />, tr: "PDF'ten PowerPoint'e", en: "PDF'ten PowerPoint'e" },
+      { id: "pdf-to-word", icon: <FileText className="h-5 w-5" />, tr: "PDF'ten Word'e", en: "PDF to Word" },
+      { id: "pdf-to-excel", icon: <Table className="h-5 w-5" />, tr: "PDF'ten Excel'e", en: "PDF to Excel" },
+      { id: "pdf-to-ppt", icon: <Presentation className="h-5 w-5" />, tr: "PDF'ten PowerPoint'e", en: "PDF to PowerPoint" },
       { id: "pdf-to-image", icon: <ImageIcon className="h-5 w-5" />, tr: "PDF'ten Görsele", en: "PDF to Image" },
       { id: "pdf-to-text", icon: <Type className="h-5 w-5" />, tr: "PDF'ten Metne", en: "PDF to Text" },
       { id: "extract-images", icon: <Images className="h-5 w-5" />, tr: "Görselleri Çıkar", en: "Extract Images" },

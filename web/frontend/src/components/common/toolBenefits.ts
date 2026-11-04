@@ -168,7 +168,7 @@ const CUSTOM: Record<string, Benefit[]> = {
   ],
   "tiff-to-pdf": [
     { icon: Zap, tr: "Çok sayfalı TIFF", trDesc: "Her sayfa PDF'te ayrı sayfa olur, sıra bozulmaz; birden çok TIFF'i tek PDF'te birleştir.", en: "Multi-page TIFF", enDesc: "Each page becomes its own PDF page in order; combine several TIFFs into one PDF." },
-    { icon: Zap, tr: "Tarayıcı çıktısına uygun", trDesc: "Fotokopi makinesi ve tarayıcıların TIF çıktısı (CCITT dahil) açılır.", en: "Made for scanner output", enDesc: "TIF files from copiers and scanners (including CCITT) open fine." },
+    { icon: Zap, tr: "Tarayıcı çıktısına uygun", trDesc: "Fotokopi makinesi ve tarayıcıların çıkardığı TIF dosyaları açılır.", en: "Made for scanner output", enDesc: "TIF files from copiers and scanners open fine." },
     { icon: Lock, tr: "Gizli", trDesc: "Dosyaların cihazında işlenir; sunucuya yüklenmez.", en: "Private", enDesc: "Files are processed on your device; never uploaded." },
   ],
   "pdf-ust-alt-bilgi": [

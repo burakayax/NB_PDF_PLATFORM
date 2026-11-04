@@ -58,7 +58,7 @@ const ROWS = [
   ["e-basvuru-uyumluluk", "E-başvuru Uyumluluk Kontrolü", "Filing Compliance Check", "device", "", ""],
   ["dilekce-sablonlari", "Dilekçe Şablonları", "Petition Templates", "device", "", ""],
   ["kimlik-karti-tek-sayfa", "Kimlik Ön–Arka Tek Sayfa", "ID Front+Back on One Page", "device", "Kimlik fotoğrafı yalnızca tarayıcıda işlenir; sunucuya gönderilmez", "The ID photo is processed only in the browser and never sent to a server"],
-  ["tiff-to-pdf", "TIFF'ten PDF'e", "TIFF'ten PDF'e", "device", "", ""],
+  ["tiff-to-pdf", "TIFF'ten PDF'e", "TIFF to PDF", "device", "", ""],
   ["pdf-ust-alt-bilgi", "Üst / Alt Bilgi Ekle", "Add Header / Footer", "device", "", ""],
   ["pdf-sesli-oku", "Sesli Okuma", "Read Aloud", "device", "Yapay zekâ sesi tarayıcıda çalışır; metin sunucuya gönderilmez", "The AI voice runs in the browser; the text is never sent to a server"],
   ["ai-fotograf-studyosu", "Fotoğraf Stüdyosu", "Photo Studio", "device", "Yapay zekâ modelleri tarayıcıda çalışır; fotoğraf cihazdan çıkmaz", "AI models run in the browser; the photo never leaves your device"],

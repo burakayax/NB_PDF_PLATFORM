@@ -698,7 +698,7 @@ export const TOOL_SEO = {
         { q: "Does image quality drop when converting to PDF?", a: "No. Your JPG is placed into the PDF as-is, without being recompressed, so the photo quality is not degraded by the conversion. If you want a smaller file you can do that separately, by your own choice." },
         { q: "Can I change the image order?", a: "Yes. Drag the uploaded images into any order you like." },
         { q: "Which image formats can I convert to PDF?", a: "JPG, PNG and WebP are supported. Upload different formats at once and combine them into a single PDF. TIFF has its own TIFF'ten PDF'e tool." },
-        { q: "Can I convert TIFF files to PDF?", a: "This tool is for JPG, PNG and WebP. For single or multi-page TIFF (TIF) scans use the TIFF'ten PDF'e tool; the page order is kept and the file is processed on your device." },
+        { q: "Can I convert TIFF files to PDF?", a: "This tool is for JPG, PNG and WebP. For single or multi-page TIFF (TIF) scans use the TIFF to PDF tool; the page order is kept and the file is processed on your device." },
         { q: "Can I turn photos from my phone into a PDF?", a: "Yes. Upload photos from your phone and they're combined into one PDF on your device — never sent to a server." },
         { q: "Are my images uploaded to a server?", a: "No. Conversion happens entirely in your browser — your images never leave your device and stay 100% private." },
       ],
