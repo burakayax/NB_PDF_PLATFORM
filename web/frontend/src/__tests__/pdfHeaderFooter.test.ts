@@ -137,3 +137,75 @@ describe("çıktı adı", () => {
     expect(headerFooterOutputName("")).toBe("belge_ustbilgi.pdf");
   });
 });
+
+describe("bölümler (farklı sayfalara farklı metin)", () => {
+  const S = (center: string) => ({ left: "", center, right: "" });
+
+  it("tek ve çift sayfalara ayrı metin yazar", async () => {
+    const pdf = await makePdf(4);
+    const r = await addHeaderFooter(pdf, {
+      fonts,
+      rules: [
+        { header: S("TEK"), footer: EMPTY_SLOT, pages: "odd" },
+        { header: S("CIFT"), footer: EMPTY_SLOT, pages: "even" },
+      ],
+    });
+    expect(r.stamped).toBe(4);
+    expect(await pageTexts(r.bytes)).toEqual(["TEK", "CIFT", "TEK", "CIFT"]);
+  });
+
+  it("sayfa aralığı bölümü yalnız o sayfalara yazar; sondaki bölüm kazanır", async () => {
+    const pdf = await makePdf(5);
+    const r = await addHeaderFooter(pdf, {
+      fonts,
+      rules: [
+        { header: S("GENEL"), footer: EMPTY_SLOT, pages: "all" },
+        { header: S("OZEL"), footer: EMPTY_SLOT, pages: "range", from: 2, to: 3 },
+      ],
+    });
+    expect(await pageTexts(r.bytes)).toEqual(["GENEL", "OZEL", "OZEL", "GENEL", "GENEL"]);
+  });
+
+  it("boş bırakılan bölüm o sayfalara hiçbir şey yazmaz", async () => {
+    const pdf = await makePdf(3);
+    const r = await addHeaderFooter(pdf, {
+      fonts,
+      rules: [
+        { header: S("X"), footer: EMPTY_SLOT, pages: "all" },
+        { header: EMPTY_SLOT, footer: EMPTY_SLOT, pages: "range", from: 2, to: 2 },
+      ],
+    });
+    expect(r.stamped).toBe(2);
+    expect(await pageTexts(r.bytes)).toEqual(["X", "", "X"]);
+  });
+
+  it("önizleme: asPageIndex ile tek sayfalık belge asıl sayfa gibi işlenir", async () => {
+    const pdf = await makePdf(1);
+    const r = await addHeaderFooter(pdf, {
+      fonts, asPageIndex: 4, totalPages: 12,
+      rules: [{ header: EMPTY_SLOT, footer: S("{sayfa}/{toplam}"), pages: "all" }],
+    });
+    expect((await pageTexts(r.bytes))[0]).toBe("5/12");
+  });
+
+  it("üst ve alt bilgi ayrı boyut ve yan boşlukla çizilir", async () => {
+    const pdf = await makePdf(1);
+    const r = await addHeaderFooter(pdf, {
+      fonts,
+      rules: [{ header: { left: "UST", center: "", right: "" }, footer: { left: "ALT", center: "", right: "" }, pages: "all" }],
+      headerStyle: { fontSize: 20, bold: true, edgeMm: 20, sideMm: 30 },
+      footerStyle: { fontSize: 8, bold: false, edgeMm: 5, sideMm: 10 },
+    });
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const doc = await pdfjs.getDocument({ data: r.bytes.slice(), isEvalSupported: false, useWorkerFetch: false }).promise;
+    const tc = await (await doc.getPage(1)).getTextContent();
+    const it = (s: string) => tc.items.find((x) => "str" in x && x.str === s) as { transform: number[] };
+    const up = it("UST");
+    const down = it("ALT");
+    expect(up.transform[0]).toBeCloseTo(20, 0); // yazı boyutu
+    expect(down.transform[0]).toBeCloseTo(8, 0);
+    expect(up.transform[4]).toBeCloseTo(30 * (72 / 25.4), 0); // soldan boşluk
+    expect(down.transform[4]).toBeCloseTo(10 * (72 / 25.4), 0);
+    expect(up.transform[5]).toBeGreaterThan(down.transform[5]);
+  });
+});
