@@ -742,21 +742,8 @@ export function DashboardSidebar({
       }
       aria-hidden={!overlay && collapsed ? true : undefined}
     >
-      {/* Sağ üst: araç çubuğunu gizle (masaüstü) */}
-      {!overlay && onCollapsedChange ? (
-        <button
-          type="button"
-          onClick={() => onCollapsedChange(true)}
-          data-nb-keep-sidebar
-          aria-label={tr ? "Araç çubuğunu gizle" : "Hide tools panel"}
-          title={tr ? "Araç çubuğunu gizle" : "Hide tools panel"}
-          className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-nb-muted transition hover:bg-white/10 hover:text-nb-text"
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-        </button>
-      ) : null}
       {/* Araç arama — en üstte sabit; büyük/küçük harf ve aksan fark etmez ("donu" → Dönüştür) */}
-      <div className={`px-3 ${!overlay && onCollapsedChange ? "pt-11" : "pt-4"}`} data-nb-keep-sidebar>
+      <div className="px-3 pt-3" data-nb-keep-sidebar>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nb-muted/80" aria-hidden />
           <input
