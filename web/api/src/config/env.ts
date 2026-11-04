@@ -187,14 +187,16 @@ const rawEnvSchema = z
     /**
      * Ödeme sağlayıcı seçim bayrağı.
      *
-     * iyzico rotaları her zaman mount edilir; IYZICO_API_KEY / IYZICO_SECRET_KEY / IYZICO_URI
-     * eksikse ödeme oluşturma işlemleri 503 döner (servis katmanında).
+     * VARSAYILAN: paytr. iyzico kodu YEDEK olarak durur: PAYMENTS_PROVIDER=iyzico yapılınca eski
+     * akışa dönülür (başka kod değişikliği gerekmez). iyzico rotaları her zaman mount edilir;
+     * IYZICO_API_KEY / IYZICO_SECRET_KEY / IYZICO_URI eksikse iyzico ödemesi 503 döner.
+     * PayTR seçiliyken PAYTR_* anahtarları eksikse ödeme 503 döner (sessizce iyzico'ya düşülmez).
      * Stripe Phase 3'e ertelenmiş; router'ı mount edilmez.
      */
-    PAYMENTS_PROVIDER: z.enum(["iyzico", "stripe", "paytr"]).default("iyzico"),
+    PAYMENTS_PROVIDER: z.enum(["iyzico", "stripe", "paytr"]).default("paytr"),
     /**
      * PayTR (iFrame API) — Mağaza Paneli > Bilgi > Entegrasyon Bilgileri.
-     * PAYMENTS_PROVIDER=paytr iken ödeme PayTR'den alınır; iyzico kodu yedek olarak durur.
+     * PAYMENTS_PROVIDER=paytr (varsayılan) iken ödeme PayTR'den alınır; iyzico kodu yedek olarak durur.
      * Üçü de doluysa paytrEnabled=true olur; eksikse PayTR ödemesi 503 döner.
      */
     PAYTR_MERCHANT_ID: z.string().optional().default(""),
