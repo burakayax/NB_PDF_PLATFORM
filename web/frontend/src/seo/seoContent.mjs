@@ -2982,7 +2982,7 @@ export function getGuideSlugsForTool(slug) {
 export const ABOUT_SEO = {
   tr: {
     title: markaEkle(`Hakkımızda: Misyon ve Çalışma İlkelerimiz`),
-    description: "PDF Platform kim tarafından, neden geliştiriliyor? Dosyaların cihazda kalması, yapay zekânın yalnızca seçildiğinde çalışması ve filigransız sonuçlar: çalışma ilkelerimiz.",
+    description: "PDF Platform neden geliştiriliyor? Dosyaların cihazda kalması, yapay zekânın yalnızca seçildiğinde çalışması ve filigransız sonuçlar: ilkelerimiz.",
     h1: "Hakkımızda",
     intro: "Belgeleriniz üzerinde çalışmak hızlı, anlaşılır ve güvenli olmalı. PDF Platform'u bunun için geliştiriyoruz.",
     keywords: [],
