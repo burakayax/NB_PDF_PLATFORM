@@ -24,6 +24,7 @@ interface BillingFormState {
   onBilgilendirmeAccepted: boolean;
   contractAccepted: boolean;
   withdrawalWaived: boolean;
+  guardianDeclared: boolean;
 }
 
 export interface BillingInfoModalProps {
@@ -245,6 +246,7 @@ const EMPTY_FORM: BillingFormState = {
   onBilgilendirmeAccepted: false,
   contractAccepted: false,
   withdrawalWaived: false,
+  guardianDeclared: false,
 };
 
 function readToken(fallback: string): string {
@@ -302,10 +304,11 @@ async function saveBillingInfoApi(
   token: string,
   data: Omit<
     BillingFormState,
-    "onBilgilendirmeAccepted" | "contractAccepted" | "withdrawalWaived"
+    "onBilgilendirmeAccepted" | "contractAccepted" | "withdrawalWaived" | "guardianDeclared"
   > & {
     distanceSalesConsented: boolean;
     withdrawalWaived: boolean;
+    guardianDeclared: boolean;
     documentVersion: string;
   },
   tr: boolean,
@@ -370,6 +373,7 @@ export function BillingInfoModal({
             onBilgilendirmeAccepted: false,
             contractAccepted: false,
             withdrawalWaived: false,
+            guardianDeclared: false,
           }));
         }
         return saved;
@@ -401,7 +405,7 @@ export function BillingInfoModal({
     // Yurt içi alıcıda ilçe zorunlu (VUK md. 230: eksiksiz adres). Yurt dışında ilçe kavramı ülkeye göre değişir.
     if (isTurkish && !form.billingDistrict.trim()) return false;
     if (!form.billingCountryCode) return false;
-    if (!form.onBilgilendirmeAccepted || !form.contractAccepted || !form.withdrawalWaived) return false;
+    if (!form.onBilgilendirmeAccepted || !form.contractAccepted || !form.withdrawalWaived || !form.guardianDeclared) return false;
     if (isTurkish && form.invoiceType === "corporate") {
       if (
         !form.companyName.trim() ||
@@ -453,6 +457,7 @@ export function BillingInfoModal({
           // Hem ön bilgilendirme hem sözleşme ayrı ayrı onaylanmadan kayıt oluşmaz.
           distanceSalesConsented: form.onBilgilendirmeAccepted && form.contractAccepted,
           withdrawalWaived: form.withdrawalWaived,
+          guardianDeclared: form.guardianDeclared,
           documentVersion: DISTANCE_SALES_DOCS_VERSION,
         },
         tr,
@@ -968,6 +973,38 @@ export function BillingInfoModal({
                         performance of the digital service begins immediately
                         and understand that my statutory right of withdrawal
                         will therefore not apply.{" "}
+                        <span className="text-red-400">*</span>
+                      </>
+                    )}
+                  </span>
+                </label>
+
+                {/* Blok D: Reşit olma / yasal temsilci beyanı (TMK md. 16) */}
+                <label className="flex cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                    checked={form.guardianDeclared}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        guardianDeclared: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span>
+                    {tr ? (
+                      <>
+                        18 yaşını doldurduğumu veya 18 yaşından küçükse bu
+                        satın alma için yasal temsilcimin (anne/baba/vasi)
+                        onayının bulunduğunu beyan ederim.{" "}
+                        <span className="text-red-400">*</span>
+                      </>
+                    ) : (
+                      <>
+                        I declare that I am at least 18 years old or, if I am
+                        under 18, that my legal guardian (parent/guardian) has
+                        approved this purchase.{" "}
                         <span className="text-red-400">*</span>
                       </>
                     )}

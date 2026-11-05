@@ -77,6 +77,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       kvkkConsentedAt: iso(user.kvkkConsentedAt),
       distanceSalesConsentedAt: iso(user.distanceSalesConsentedAt),
       withdrawalWaivedAt: iso(user.withdrawalWaivedAt),
+      guardianDeclaredAt: iso(user.guardianDeclaredAt),
       distanceSalesVersion: user.distanceSalesVersion,
       totalRefunds: user.totalRefunds,
       firstRefundedAt: iso(user.firstRefundedAt),
@@ -112,6 +113,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
       contractVersion: p.contractVersion,
       distanceSalesConsentedAt: iso(p.distanceSalesConsentedAt),
       withdrawalWaivedAt: iso(p.withdrawalWaivedAt),
+      guardianDeclaredAt: iso(p.guardianDeclaredAt),
     })),
     invoices: invoices.map((i) => ({
       invoiceNo: i.invoiceNo,
@@ -204,6 +206,7 @@ export async function adminUserDisputeFileController(req: Request, res: Response
   L.push(`  KVKK aydınlatma metni ödeme öncesi adımda gösterildi (onay değil, bilgilendirme): ${u.kvkkConsentedAt ?? "gösterilmedi (kullanıcı henüz ödeme adımına gelmemiş)"}`);
   L.push(`  Mesafeli satış sözleşmesi onayı (ödeme öncesi adım): ${u.distanceSalesConsentedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}${u.distanceSalesVersion ? ` (metin sürümü ${u.distanceSalesVersion})` : ""}`);
   L.push(`  Cayma hakkından feragat onayı (ödeme öncesi adım): ${u.withdrawalWaivedAt ?? "alınmadı (kullanıcı henüz ödeme adımına gelmemiş)"}`);
+  L.push(`  Reşit olma / yasal temsilci onayı beyanı (ödeme öncesi adım): ${u.guardianDeclaredAt ?? "alınmadı (bu özellikten önce veya kullanıcı ödeme adımına gelmemiş)"}`);
   L.push(`  Toplam iade: ${u.totalRefunds}   İlk iade: ${u.firstRefundedAt ?? "-"}   Son iade: ${u.lastRefundedAt ?? "-"}`);
   L.push(`  İşlem kaydı sayısı: ${u.operationLogCount}   İndirme kaydı sayısı: ${u.downloadLogCount}   Sayaç (kota işlemleri): ${u.totalOperationsCount}${u.isAdminAccount ? "   (yönetici hesaplarında kota sayacı işlemez)" : ""}`);
   L.push("");

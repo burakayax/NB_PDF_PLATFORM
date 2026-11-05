@@ -18,6 +18,8 @@ export interface BillingInfoInput {
   phone?: string;
   distanceSalesConsented: boolean;
   withdrawalWaived: boolean;
+  /** "Reşit değilsem yasal temsilcimin onayı var" beyanı. */
+  guardianDeclared: boolean;
   /** Ekranda gösterilen sözleşme/ön bilgilendirme metninin sürümü (tarih etiketi). */
   documentVersion?: string;
 }
@@ -38,6 +40,7 @@ export interface BillingInfoOutput {
   phone: string | null;
   distanceSalesConsentedAt: Date | null;
   withdrawalWaivedAt: Date | null;
+  guardianDeclaredAt: Date | null;
 }
 
 export async function saveBillingInfo(userId: string, input: BillingInfoInput): Promise<void> {
@@ -109,6 +112,9 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
   if (input.withdrawalWaived) {
     updateData.withdrawalWaivedAt = now;
   }
+  if (input.guardianDeclared) {
+    updateData.guardianDeclaredAt = now;
+  }
 
   await prisma.user.update({
     where: { id: userId },
@@ -135,6 +141,7 @@ export async function getBillingInfo(userId: string): Promise<BillingInfoOutput>
       phone: true,
       distanceSalesConsentedAt: true,
       withdrawalWaivedAt: true,
+      guardianDeclaredAt: true,
     },
   });
 
@@ -171,5 +178,6 @@ export async function getBillingInfo(userId: string): Promise<BillingInfoOutput>
     phone: safeDecrypt(user.phone),
     distanceSalesConsentedAt: user.distanceSalesConsentedAt,
     withdrawalWaivedAt: user.withdrawalWaivedAt,
+    guardianDeclaredAt: user.guardianDeclaredAt,
   };
 }
