@@ -66,7 +66,7 @@ function LegalTable({ rows }: { rows: string[][] }) {
               {row.map((cell, j) => (
                 <td key={j} className={`px-3 py-2.5 ${j === 0 ? "font-semibold text-nb-text" : ""}`}>
                   {j === 1 ? (
-                    <span className={`inline-block rounded-full border px-2 py-0.5 text-[12px] font-semibold leading-snug ${whereBadgeClass(cell)}`}>
+                    <span className={`inline-block max-w-full rounded-xl border px-2.5 py-1 text-[12px] font-semibold leading-snug ${whereBadgeClass(cell)}`}>
                       {cell}
                     </span>
                   ) : (
