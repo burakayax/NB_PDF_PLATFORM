@@ -395,8 +395,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
         else
           setError(
             tr
-              ? "Otomatik kenar bulunamadı — köşeleri elle ayarlayabilirsin."
-              : "Couldn't auto-detect edges — adjust the corners manually.",
+              ? "Sayfa kenarları net seçilemedi — tüm sayfa seçildi, köşeleri elle ayarlayabilirsin."
+              : "Page edges weren't clear — the whole page was selected; adjust the corners manually.",
           );
       } catch {
         setError(
@@ -1080,8 +1080,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     {uzunSuredirBulunamadi && !liveQuad && (
                       <p className="pointer-events-none absolute inset-x-6 top-14 rounded-xl bg-black/55 px-3 py-2 text-center text-[12px] leading-relaxed text-amber-200">
                         {tr
-                          ? "Belge seçilemiyor: kâğıdın dört kenarı da görünsün, zemin kâğıttan koyu olsun ve gölge düşmesin."
-                          : "Can't lock on: keep all four edges in view, use a background darker than the paper, and avoid shadows."}
+                          ? "Belge seçilemiyor: kâğıdın dört kenarı da görünsün, zemin kâğıttan koyu olsun ve gölge düşmesin. Kitap ya da kenarı belirsiz sayfaysa sayfayı kadraja doldurup deklanşöre bas; köşeleri sonra ayarlayabilirsin."
+                          : "Can't lock on: keep all four edges in view, use a background darker than the paper, and avoid shadows. For a book or a page with unclear edges, fill the frame and tap capture; you can adjust the corners afterwards."}
                       </p>
                     )}
                     {/* Otomatik yakalama ilerleme çubuğu */}

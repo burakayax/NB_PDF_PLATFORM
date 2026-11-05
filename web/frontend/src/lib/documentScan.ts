@@ -9,6 +9,7 @@
  * Warp başarısız olursa CSP-safe CPU warp'a (perspectiveWarp) düşülür.
  */
 import type { CornerPoints, Scanner as ScannerType } from "scanic";
+import { quadGecerli, cekimSonucuGuvenilir } from "./quadGecerlilik";
 import { warpPerspective, type WarpEnhance, type WarpQuad } from "./perspectiveWarp";
 
 export type Pt = { x: number; y: number };
@@ -69,7 +70,10 @@ function quadArea(q: Quad): number {
 async function classicalQuad(s: ScannerType, canvas: HTMLCanvasElement): Promise<Quad | null> {
   try {
     const r = await s.scan(canvas, { mode: "detect", maxProcessingDimension: 900 });
-    if (r.success && r.corners) return cornersToQuad(r.corners);
+    if (r.success && r.corners) {
+      const q = cornersToQuad(r.corners);
+      if (cekimSonucuGuvenilir(q, canvas.width, canvas.height)) return q;
+    }
   } catch {
     /* yoksay */
   }
@@ -111,7 +115,9 @@ export type Olcum = { quad: Quad; guven: number };
 /** Kadrajın tamamını ya da bir kırıntısını seçen sonuç belge değildir. */
 function makulBelge(q: Quad, w: number, h: number): boolean {
   const oran = quadArea(q) / (w * h);
-  return oran > 0.04 && oran < 0.95;
+  // Alan makul olsa bile çarpık/kendini kesen/ince şerit dörtgenler (kitap
+  // kıvrımı, metin bloğu, gölge) belge sayılmaz.
+  return oran > 0.04 && oran < 0.95 && quadGecerli(q, w, h);
 }
 
 /**
@@ -209,13 +215,15 @@ export async function detectDocumentQuad(
       });
       if (r.success && r.corners) {
         const q = cornersToQuad(r.corners);
-        // ML sonucu makul (kadrajı doldurmuyor) → DOĞRUDAN kullan.
-        if (quadArea(q) < imgArea * 0.92) return q;
-        // ML neredeyse tüm kadrajı seçmiş (masa/çerçeve şüphesi) → classical daha
-        // küçük/makul bir belge bulursa onu tercih et; yoksa yine ML.
+        const mlGuvenilir = cekimSonucuGuvenilir(q, canvas.width, canvas.height);
+        // ML sonucu makul (kadrajı doldurmuyor, geometri geçerli) → DOĞRUDAN kullan.
+        if (mlGuvenilir && quadArea(q) < imgArea * 0.92) return q;
+        // ML geçersiz ya da neredeyse tüm kadrajı seçmiş → classical'a danış.
         const qc = await classicalQuad(s, canvas);
-        if (qc && quadArea(qc) < quadArea(q)) return qc;
-        return q;
+        if (mlGuvenilir) return qc && quadArea(qc) < quadArea(q) ? qc : q;
+        // ML saçmaladı (kitap/kenarsız sayfa): classical geçerliyse onu, değilse
+        // null dön → çağıran tam kareye düşer, kullanıcı köşeleri ayarlar.
+        return qc;
       }
     } catch {
       /* ML yok → classical'a düş */
