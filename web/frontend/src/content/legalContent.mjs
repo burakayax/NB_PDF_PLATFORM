@@ -95,7 +95,7 @@ export const legalDocuments = {
           title: "10. Changes and contact",
           paragraphs: [
             "We may update these Terms from time to time. We will post the revised version with an updated effective date. Material changes may be communicated by email or in-product notice where appropriate.",
-            "Questions about these Terms: info@pdfplatform.app.",
+            "Questions about these Terms: info@pdfplatform.app",
           ],
         },
       ],
@@ -209,7 +209,7 @@ export const legalDocuments = {
         {
           title: "8. International transfers",
           paragraphs: [
-            "Some of our providers process data outside Türkiye: our AI provider Anthropic (United States), our hosting providers and, only with your consent, our analytics and error-monitoring providers. These transfers fall under Article 9 of Turkish Law No. 6698. For AI tools, a transfer happens only when you choose to use an AI tool and only for the document text; for tools that run on your device, your file never leaves your device. For information about the safeguards behind these transfers, write to info@pdfplatform.app.",
+            "Some of our providers process data outside Türkiye: our AI provider Anthropic (United States), our hosting providers and, only with your consent, our analytics and error-monitoring providers. These transfers fall under Article 9 of Turkish Law No. 6698. For AI tools, a transfer happens only when you choose to use an AI tool and only for the document text; for tools that run on your device, your file never leaves your device. For information about the safeguards behind these transfers, write to info@pdfplatform.app",
           ],
         },
         {
@@ -233,7 +233,7 @@ export const legalDocuments = {
         },
         {
           title: "12. Contact",
-          paragraphs: ["Privacy inquiries: info@pdfplatform.app."],
+          paragraphs: ["Privacy inquiries: info@pdfplatform.app"],
         },
       ],
     },
@@ -260,7 +260,7 @@ export const legalDocuments = {
         {
           title: "3. Rights & contact",
           paragraphs: [
-            "You may request access, rectification, erasure, restriction or objection under Articles 11–13 KVKK / GDPR-style rights. Contact: info@pdfplatform.app.",
+            "You may request access, rectification, erasure, restriction or objection under Articles 11–13 KVKK / GDPR-style rights. Contact: info@pdfplatform.app",
           ],
         },
       ],
@@ -309,7 +309,7 @@ export const legalDocuments = {
         {
           title: "5. Complaints and Disputes",
           paragraphs: [
-            "For complaints, you may send an email to info@pdfplatform.app.",
+            "For complaints, you may send an email to info@pdfplatform.app",
             "Your right to apply to Consumer Arbitration Committees and Consumer Courts remains reserved.",
           ],
         },
@@ -510,7 +510,7 @@ export const legalDocuments = {
         {
           title: "5. More information",
           paragraphs: [
-            "For how we process personal data, see the Privacy Policy and the KVKK Disclosure. Questions: info@pdfplatform.app.",
+            "For how we process personal data, see the Privacy Policy and the KVKK Disclosure. Questions: info@pdfplatform.app",
           ],
         },
       ],
@@ -606,7 +606,7 @@ export const legalDocuments = {
           title: "10. Değişiklikler ve iletişim",
           paragraphs: [
             "Bu Şartları zaman zaman güncelleyebiliriz. Güncellenmiş sürümü güncellenmiş yürürlük tarihiyle yayınlarız. Önemli değişiklikleri yasal gereklilik ve uygunluk çerçevesinde e-posta veya ürün içi bildirimle duyurabiliriz.",
-            "Şartlarla ilgili sorular: info@pdfplatform.app.",
+            "Şartlarla ilgili sorular: info@pdfplatform.app",
           ],
         },
       ],
@@ -745,7 +745,7 @@ export const legalDocuments = {
         },
         {
           title: "12. İletişim",
-          paragraphs: ["Gizlilik soruları: info@pdfplatform.app."],
+          paragraphs: ["Gizlilik soruları: info@pdfplatform.app"],
         },
       ],
     },
@@ -1076,7 +1076,7 @@ export const legalDocuments = {
         {
           title: "5. Daha fazla bilgi",
           paragraphs: [
-            "Kişisel verileri nasıl işlediğimiz için Gizlilik Politikası'na ve KVKK Aydınlatma Metni'ne bakabilirsiniz. Sorularınız için: info@pdfplatform.app.",
+            "Kişisel verileri nasıl işlediğimiz için Gizlilik Politikası'na ve KVKK Aydınlatma Metni'ne bakabilirsiniz. Sorularınız için: info@pdfplatform.app",
           ],
         },
       ],
