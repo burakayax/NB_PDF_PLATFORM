@@ -139,9 +139,14 @@ export function SiteFooter({ language }: { language: Language }) {
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-2 border-t border-white/[0.06] pt-6 text-center text-[12px] text-gray-400 sm:flex-row sm:justify-between sm:text-left">
-          <p>
-            © {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
-          </p>
+          <div className="space-y-1">
+            <p>
+              © {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
+            </p>
+            <p className="text-[11.5px] text-gray-500">
+              Burak KAYA · {tr ? "Hızırbey V.D." : "Hızırbey Tax Office"} 5300847203 · Toklu Mah. Gürpınar Sk. No: 2/26 Ortahisar/Trabzon · info@pdfplatform.app
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <PaytrBadge height={16} tr={tr} />
             <ThemeToggle tr={tr} />
