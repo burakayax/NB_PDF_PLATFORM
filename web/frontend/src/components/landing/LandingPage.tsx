@@ -2235,7 +2235,15 @@ function Footer({
       links: [
         { label: copy.footer.termsLabel, href: yol("/terms"), action: onOpenTerms },
         { label: copy.footer.privacyLabel, href: yol("/privacy"), action: onOpenPrivacy },
-        ...(tr ? [{ label: "KVKK", href: yol("/kvkk"), action: onOpenKvkk }] : []),
+        ...(tr
+          ? [
+              { label: "KVKK", href: yol("/kvkk"), action: onOpenKvkk },
+              { label: "Ön Bilgilendirme", href: yol("/legal/on-bilgilendirme") },
+              { label: "Mesafeli Satış", href: yol("/legal/mesafeli-satis") },
+              { label: "İptal ve İade", href: yol("/legal/iptal-iade") },
+              { label: "Çerez Politikası", href: yol("/legal/cerez-politikasi") },
+            ]
+          : []),
       ],
     },
   ];
