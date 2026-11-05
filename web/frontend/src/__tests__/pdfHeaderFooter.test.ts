@@ -118,10 +118,10 @@ describe("üst / alt bilgi ekleme", () => {
     t.forEach((x) => { expect(x).toContain("ÜST"); expect(x).toContain("ALT"); });
   });
 
-  it("çok uzun metin taşmasın diye küçültülür", async () => {
+  it("çok uzun metin küçültülmez (serbest boyut)", async () => {
     const src = await makePdf(1);
     const r = await addHeaderFooter(src, { header: { ...EMPTY_SLOT, left: "Bu çok uzun bir üst bilgi metnidir ".repeat(8) }, footer: EMPTY_SLOT, fonts });
-    expect(r.shrunk).toBe(1);
+    expect(r.shrunk).toBe(0);
   });
 
   it("fontta olmayan karakter belgeyi bozmaz", async () => {
