@@ -57,7 +57,7 @@ export const legalDocuments = {
             "Certain features or higher usage limits may require a paid plan. Plan names, prices, included features, and fair-use rules are those shown in the product, checkout, or order confirmation at the time you subscribe.",
             "Subscriptions do not renew automatically. Before your period ends we send you a reminder; if you wish to continue, you confirm the renewal and pay for the new period. If you do not confirm, paid features end when the period ends and your account returns to the free plan.",
             "We may change plan prices or features for new purchases or renewals with reasonable notice. Changes apply only to a new period, and the current price and terms are shown to you before you confirm a renewal.",
-            "Prices in Turkish lira shown to individual users resident in Türkiye include VAT; no VAT applies to users resident abroad. Any other taxes are your responsibility unless we state otherwise at checkout.",
+            "Prices in Turkish lira shown to users resident in Türkiye (individual or corporate) include VAT; corporate customers treat this VAT on their invoices under their own rules; no VAT applies to users resident abroad. Any other taxes are your responsibility unless we state otherwise at checkout.",
           ],
         },
         {
@@ -347,7 +347,7 @@ export const legalDocuments = {
           title: "3. Order Details, Price and Payment",
           paragraphs: [
             "The name and basic characteristics of the Service (plan), subscription period (monthly/yearly), quantity, total price including VAT, payment method and order date are shown to the BUYER at the payment screen and in the order summary and form an integral part of this agreement. Because the Service is delivered electronically, there is no shipping or delivery fee.",
-            "The sales price is shown including VAT. 20% VAT applies to individual users residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
+            "The sales price is shown including VAT. 20% VAT applies to users (individual or corporate) residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
             "Payment is made securely by credit or debit card through the PayTR infrastructure. Card details are not stored by the SELLER. Payment of the price is a precondition for performance of the order.",
             "Prices published on the website are valid until updated or changed; time-limited prices are valid until the stated end. The SELLER may change prices and plan contents going forward; such a change is not applied to the BUYER's disadvantage for the period of an order already paid for.",
             "The SELLER reserves the right to cancel an order where a price is clearly incorrect because of a system or internet error (for example zero or an extremely low amount); in that case the BUYER is refunded what was paid.",
@@ -573,7 +573,7 @@ export const legalDocuments = {
             "Bazı özellikler veya daha yüksek kullanım limitleri ücretli plan gerektirebilir. Plan adları, fiyatlar, dahil özellikler ve makul kullanım kuralları; abone olduğunuz andaki ürün, ödeme veya sipariş onayındaki hükümlerdir.",
             "Abonelikler kendiliğinden yenilenmez. Dönem sona ermeden önce size bir hatırlatma gönderilir; devam etmek isterseniz yenilemeyi onaylar ve yeni dönemin ücretini ödersiniz. Onay vermezseniz dönem sonunda ücretli özellikler sona erer ve hesabınız ücretsiz plana döner.",
             "Yasal gerekliliklere uygun makul bildirimle plan fiyatlarını veya özelliklerini yeni satın alımlar veya yenilemeler için değiştirebiliriz. Değişiklikler yalnızca yeni dönem için geçerli olur; yenilemeyi onaylamadan önce güncel fiyat ve koşullar size gösterilir.",
-            "Türkiye’de mukim bireysel kullanıcılara gösterilen TL fiyatlara KDV dahildir; yurt dışında mukim kullanıcılar için KDV uygulanmaz. Bunun dışındaki vergiler (varsa), ödeme sırasında aksi belirtilmedikçe sizin sorumluluğunuzdadır.",
+            "Türkiye’de mukim kullanıcılara (bireysel veya kurumsal) gösterilen TL fiyatlara KDV dahildir; kurumsal müşteriler bu KDV’yi faturaları üzerinden kendi mevzuatlarına göre değerlendirir; yurt dışında mukim kullanıcılar için KDV uygulanmaz. Bunun dışındaki vergiler (varsa), ödeme sırasında aksi belirtilmedikçe sizin sorumluluğunuzdadır.",
           ],
         },
         {
@@ -918,7 +918,7 @@ export const legalDocuments = {
           title: "3. Sipariş Bilgileri, Fiyat ve Ödeme",
           paragraphs: [
             "Hizmetin adı ve temel nitelikleri (plan), abonelik dönemi (aylık/yıllık), adedi, KDV dahil toplam bedeli, ödeme şekli ve sipariş tarihi; ödeme ekranında ve sipariş özetinde ALICI'ya gösterilir ve bu sözleşmenin ayrılmaz parçasıdır. Hizmet elektronik ortamda sunulduğundan teslimat ve kargo bedeli yoktur.",
-            "Satış fiyatı KDV dahil olarak gösterilir. Türkiye'de mukim bireysel kullanıcılar için %20 KDV uygulanır. Yurt dışında mukim kullanıcılar için KDV uygulanmaz (ihracat istisnası).",
+            "Satış fiyatı KDV dahil olarak gösterilir. Türkiye'de mukim kullanıcılar için (bireysel veya kurumsal) %20 KDV uygulanır. Yurt dışında mukim kullanıcılar için KDV uygulanmaz (ihracat istisnası).",
             "Ödeme, PayTR altyapısı üzerinden kredi kartı veya banka kartı ile güvenli biçimde yapılır. Kart bilgileri SATICI tarafından saklanmaz. Siparişin ifası için bedelin ödenmiş olması şarttır.",
             "Web sitesinde ilan edilen fiyatlar, güncellenip değiştirilene kadar; süreli ilan edilenler ise belirtilen süre sonuna kadar geçerlidir. SATICI fiyatları ve plan içeriklerini ileriye dönük değiştirebilir; bu değişiklik, ödemesi tamamlanmış sipariş için seçilen dönem boyunca ALICI aleyhine uygulanmaz.",
             "Sistem veya internet kaynaklı teknik hatalar nedeniyle açıkça hatalı yansıyan fiyatlar (ör. sıfır veya aşırı düşük tutar) için SATICI siparişi iptal etme hakkını saklı tutar; bu durumda ALICI'ya ödediği bedel iade edilir.",
