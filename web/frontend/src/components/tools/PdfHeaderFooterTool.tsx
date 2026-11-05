@@ -8,7 +8,7 @@
  *  • Önizleme büyüktür: sayfa geçişi, yakınlaştırma ve fareyle tutup sürükleyerek gezme.
  */
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Hash, Loader2, Pencil, Sigma, Slash, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
@@ -25,10 +25,17 @@ const PREVIEW_PX = 1500;
 
 type Preset = { id: string; tr: string; en: string; header: Slot3; footer: Slot3 };
 const PRESETS: Preset[] = [
-  { id: "num", tr: "Sayfa Numarası", en: "Page Number", header: EMPTY_SLOT, footer: { left: "", center: "{sayfa} / {toplam}", right: "" } },
+  { id: "num", tr: "Sayfa Numarası", en: "Page Number", header: EMPTY_SLOT, footer: { left: "", center: "{sayfa}", right: "" } },
+  { id: "pt", tr: "Sayfa / Toplam", en: "Page / Total", header: EMPTY_SLOT, footer: { left: "", center: "{sayfa} / {toplam}", right: "" } },
+  { id: "sayfa", tr: "Sayfa 1 / 5", en: "Page 1 of 5", header: EMPTY_SLOT, footer: { left: "", center: "Sayfa {sayfa} / {toplam}", right: "" } },
+  { id: "right", tr: "Sağ Altta Numara", en: "Number, Bottom Right", header: EMPTY_SLOT, footer: { left: "", center: "", right: "{sayfa}" } },
+  { id: "name1", tr: "Dosya Adı", en: "File Name", header: { left: "{dosya}", center: "", right: "" }, footer: EMPTY_SLOT },
   { id: "name", tr: "Dosya Adı + Numara", en: "File Name + Number", header: { left: "{dosya}", center: "", right: "" }, footer: { left: "", center: "", right: "Sayfa {sayfa} / {toplam}" } },
+  { id: "date1", tr: "Tarih", en: "Date", header: { left: "", center: "", right: "{tarih}" }, footer: EMPTY_SLOT },
   { id: "date", tr: "Tarih + Numara", en: "Date + Number", header: { left: "", center: "", right: "{tarih}" }, footer: { left: "", center: "", right: "{sayfa}" } },
+  { id: "full", tr: "Dosya Adı + Tarih + Numara", en: "File Name + Date + Number", header: { left: "{dosya}", center: "", right: "{tarih}" }, footer: { left: "", center: "{sayfa} / {toplam}", right: "" } },
   { id: "conf", tr: "Gizlilik Notu", en: "Confidentiality Note", header: { left: "", center: "GİZLİDİR", right: "" }, footer: { left: "{dosya}", center: "", right: "{sayfa} / {toplam}" } },
+  { id: "draft", tr: "Taslak", en: "Draft", header: { left: "", center: "TASLAK", right: "" }, footer: { left: "", center: "{sayfa}", right: "" } },
 ];
 
 const T = {
@@ -39,6 +46,7 @@ const T = {
     broken: "Dosya okunamadı. Bozuk olabilir; başka bir PDF dene.",
     tooBig: "Dosya 50 MB'dan büyük. Önce sıkıştırıp tekrar dene.",
     presets: "Hazır düzen",
+    presetsHelp: "Birine tıkla; üst ve alt bilgi kutuları dolar, sonra istediğin gibi değiştirebilirsin. Sayfa numarası her sayfada kendi numarasını yazar.",
     modeTitle: "Hangi sayfalara yazılsın?",
     modeAll: "Tüm sayfalar",
     modeAllHelp: "Yazdığın üst ve alt bilgi her sayfaya eklenir.",
@@ -50,9 +58,6 @@ const T = {
     header: "Üst bilgi",
     footer: "Alt bilgi",
     left: "Sol", center: "Orta", right: "Sağ",
-    insertTitle: "Kutuya ekle",
-    insertPageAuto: "«Sayfa No» her sayfada kendi numarasını yazar; kutuda şu an baktığın sayfanın numarası görünür.",
-    chips: { page: "Sayfa No", total: "Toplam Sayfa", both: "Sayfa / Toplam", date: "Tarih", file: "Dosya Adı" },
     appearance: "Görünüm",
     headerLook: "Üst bilgi görünümü",
     footerLook: "Alt bilgi görünümü",
@@ -86,6 +91,7 @@ const T = {
     broken: "The file could not be read. It may be corrupt; try another PDF.",
     tooBig: "The file is larger than 50 MB. Compress it first and try again.",
     presets: "Quick layouts",
+    presetsHelp: "Click one to fill the header and footer boxes, then edit as you like. The page number writes each page's own number.",
     modeTitle: "Which pages?",
     modeAll: "All pages",
     modeAllHelp: "The header and footer you write are added to every page.",
@@ -97,9 +103,6 @@ const T = {
     header: "Header",
     footer: "Footer",
     left: "Left", center: "Center", right: "Right",
-    insertTitle: "Insert into box",
-    insertPageAuto: "“Page No” writes each page's own number; the box shows the number of the page you are looking at.",
-    chips: { page: "Page No", total: "Total Pages", both: "Page / Total", date: "Date", file: "File Name" },
     appearance: "Appearance",
     headerLook: "Header look",
     footerLook: "Footer look",
@@ -317,7 +320,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const [footerStyle, setFooterStyle] = useState<StyleState>(defaultStyle);
   const [skipFirst, setSkipFirst] = useState(false);
   const [startNumber, setStartNumber] = useState("1");
-  const [focus, setFocus] = useState<FocusRef>(null);
+  const [, setFocus] = useState<FocusRef>(null);
 
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ blob: Blob; stamped: number; shrunk: number } | null>(null);
@@ -488,11 +491,6 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   };
 
   /** Düğmeye basılınca ilgili kutuya O ANKİ değer yazılır (sayfa kipinde sayfa numarası dahil). */
-  const insertText = (text: string) => {
-    const target: NonNullable<FocusRef> = focus ?? { part: "footer", slot: "center" };
-    const slot = cur[target.part];
-    setCur({ [target.part]: { ...slot, [target.slot]: text.slice(0, 120) } }); // otomatik düğme: kutunun içeriğinin ÜZERİNE yazar
-  };
   const pageNo = previewPage + 1;
   const stripped = fileName.replace(/\.pdf$/i, "");
   const startN = Number.isFinite(parseInt(startNumber, 10)) ? parseInt(startNumber, 10) : 1;
@@ -505,15 +503,6 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const setCols = (setter: React.Dispatch<React.SetStateAction<StyleState>>) => (c: Col, patch: Partial<ColState>) =>
     setter((p) => ({ ...p, cols: { ...p.cols, [c]: { ...p.cols[c], ...patch } } }));
   // «Tüm sayfalar» kipinde sayfa numarası her sayfada değişmeli → kod yazılır, kutuda ‹Sayfa no› görünür.
-  const pageVal = mode === "all" ? "{sayfa}" : String(pageNo);
-  const chips = [
-    { id: "page", name: t.chips.page, Icon: Hash, ins: pageVal },
-    { id: "total", name: t.chips.total, Icon: Sigma, ins: String(pageCount) },
-    { id: "both", name: t.chips.both, Icon: Slash, ins: `${pageVal} / ${pageCount}` },
-    { id: "date", name: t.chips.date, Icon: CalendarDays, ins: formatDateTr(new Date()) },
-    { id: "file", name: t.chips.file, Icon: FileText, ins: stripped },
-  ];
-
   const zoomRef = useRef(1);
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   // Alt + fare tekerleği: imlecin altındaki nokta sabit kalacak şekilde yakınlaştır / uzaklaştır.
@@ -713,7 +702,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
                     type="button"
                     aria-pressed={on}
                     onClick={() => setCur({ header: p.header, footer: p.footer })}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold transition ${on ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100 shadow-[0_0_0_3px_rgba(34,211,238,0.10)]" : "border-white/12 bg-white/[0.04] text-slate-200 hover:border-white/25 hover:bg-white/[0.09]"}`}
+                    className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[13px] font-bold shadow-[0_2px_0_rgba(0,0,0,0.35)] transition active:translate-y-px active:shadow-none ${on ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-100" : "border-white/12 bg-gradient-to-b from-white/[0.09] to-white/[0.03] text-slate-100 hover:border-cyan-400/50 hover:from-cyan-400/20 hover:to-cyan-400/[0.06]"}`}
                   >
                     {on && <Check className="h-3.5 w-3.5" aria-hidden />}
                     {tr ? p.tr : p.en}
@@ -721,6 +710,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
                 );
               })}
             </div>
+            <p className="mt-1.5 text-[11.5px] text-slate-500">{t.presetsHelp}</p>
           </section>
 
           <section aria-label={mode === "all" ? t.editingAll : t.editingPage(pageNo)} className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
@@ -738,25 +728,6 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
             </div>
             <SlotRow label={t.header} slot={cur.header} onChange={(sl) => setCur({ header: sl })} t={t} part="header" onFocus={setFocus} vars={vars} st={headerStyle} onStyle={setCols(setHeaderStyle)} />
             <SlotRow label={t.footer} slot={cur.footer} onChange={(sl) => setCur({ footer: sl })} t={t} part="footer" onFocus={setFocus} vars={vars} st={footerStyle} onStyle={setCols(setFooterStyle)} />
-
-            <div className="border-t border-white/10 pt-2.5">
-              <p className="text-[12px] font-semibold text-slate-300">{t.insertTitle}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {chips.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => insertText(c.ins)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-gradient-to-b from-white/[0.09] to-white/[0.03] px-3.5 py-2 text-[13px] font-bold text-slate-100 shadow-[0_2px_0_rgba(0,0,0,0.35)] transition hover:border-cyan-400/50 hover:from-cyan-400/20 hover:to-cyan-400/[0.06] active:translate-y-px active:shadow-none"
-                  >
-                    <c.Icon className="h-4 w-4 text-cyan-300" aria-hidden />
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-              {mode === "all" && <p className="mt-1.5 text-[11.5px] text-slate-500">{t.insertPageAuto}</p>}
-            </div>
           </section>
 
           <section aria-label={t.appearance} className="space-y-3">
