@@ -77,7 +77,7 @@ export const X_PRODUCTS = [
     title: "PDF'İ",
     tag: "Word'e çevir",
     fact: "PDF'ten düzenlenebilir Word'e",
-    text: "PDF'i düzenlenebilir Word belgesine çevir. Kurulum gerekmez.",
+    text: "PDF'teki bir satırı değiştirmek için her şeyi baştan mı yazıyorsun? PDF'ini Word'e çevir: dosyayı yükle, düzenlenebilir Word belgesi olarak indir, istediğin yeri düzelt.",
     tool: "/tools/pdf-to-word",
   },
   {

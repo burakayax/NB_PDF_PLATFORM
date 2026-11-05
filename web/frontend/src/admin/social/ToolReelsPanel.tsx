@@ -49,6 +49,57 @@ const VARIANT_INFO: Record<VariantKey, { label: string; platforms: string; note:
 };
 
 /** Videoyu dosya olarak indirir; sunucu farklı adreste olduğundan önce içeriği çekip yerelden kaydeder. */
+/**
+ * TikTok kapağı: TikTok profil ızgarasında/kapak ekranında kenarları ve üst-altı kırptığı için araç kapağı
+ * 1080×1920 tuvalin ortasına %72 küçültülerek yerleştirilir; çevresi kapağın kendi zemin renginden doldurulur.
+ */
+async function downloadTiktokCover(toolId: string): Promise<void> {
+  const src = `/reel-covers/${encodeURIComponent(toolId)}.jpg`;
+  try {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    const W = 1080;
+    const H = 1920;
+    const S = 0.72;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("canvas");
+    const probe = document.createElement("canvas");
+    probe.width = img.naturalWidth;
+    probe.height = img.naturalHeight;
+    const pctx = probe.getContext("2d");
+    if (!pctx) throw new Error("canvas");
+    pctx.drawImage(img, 0, 0);
+    const rgb = (x: number, y: number) => {
+      const d = pctx.getImageData(x, y, 1, 1).data;
+      return `rgb(${d[0]},${d[1]},${d[2]})`;
+    };
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, rgb(4, 4));
+    g.addColorStop(1, rgb(4, img.naturalHeight - 5));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    const fw = Math.round(W * S);
+    const fh = Math.round(H * S);
+    ctx.drawImage(img, Math.round((W - fw) / 2), Math.round((H - fh) / 2), fw, fh);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    if (!blob) throw new Error("blob");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${toolId}-tiktok-kapak.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  } catch {
+    window.open(src, "_blank", "noopener");
+  }
+}
+
 async function downloadVideo(url: string, filename: string): Promise<void> {
   try {
     const res = await fetch(url);
@@ -218,6 +269,15 @@ export function ToolReelsPanel({
                         >
                           <Download className="h-3.5 w-3.5" />
                           {variant === "caption" ? "YouTube / Facebook için indir" : "Instagram için indir"}
+                        </button>
+                        <button
+                          type="button"
+                          className={ghostButton}
+                          onClick={() => void downloadTiktokCover(reel.id)}
+                          title="TikTok kapağı: ekrana sığacak şekilde kenar boşluklu 1080×1920"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          TikTok kapağını indir
                         </button>
                       </div>
                     </div>
