@@ -2325,10 +2325,15 @@ function Footer({
       {/* Bottom bar */}
       <div className="border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 py-6 text-center sm:flex-row sm:justify-between sm:gap-3 sm:px-8 sm:text-left">
-          <p className="text-xs text-gray-400">
-            © {new Date().getFullYear()} NB Global Studio.{" "}
-            {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
-          </p>
+          <div className="space-y-1">
+            <p className="text-xs text-gray-400">
+              © {new Date().getFullYear()} NB Global Studio.{" "}
+              {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
+            </p>
+            <p className="text-[11.5px] text-gray-500">
+              Burak KAYA · {tr ? "Hızırbey V.D." : "Hızırbey Tax Office"} 5300847203 · Toklu Mah. Gürpınar Sk. No: 2/26 Ortahisar/Trabzon · info@pdfplatform.app
+            </p>
+          </div>
           <div className="flex items-center gap-3 text-xs text-gray-400">
             <PaytrBadge height={16} tr={tr} />
             <p>{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
