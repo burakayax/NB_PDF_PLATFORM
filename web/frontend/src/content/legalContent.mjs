@@ -110,7 +110,7 @@ export const legalDocuments = {
         {
           title: "1. Data controller",
           paragraphs: [
-            "The data controller responsible for personal data processed in connection with PDF Platform is Burak KAYA (NB Global Studio), Hızırbey Tax Office, Tax No 5300847203, Toklu Mahallesi, Gürpınar Sk. No: 2 A Door No: 26, Ortahisar/Trabzon. For privacy requests, use the contact email at the end of this policy.",
+            "The data controller responsible for personal data processed in connection with PDF Platform is Burak KAYA, a sole proprietor who uses the “NB Global Studio” brand (Hızırbey Tax Office, Tax No 5300847203, Toklu Mahallesi, Gürpınar Sk. No: 2 A Door No: 26, Ortahisar/Trabzon). For privacy requests, use the contact email at the end of this policy.",
           ],
         },
         {
@@ -621,7 +621,7 @@ export const legalDocuments = {
         {
           title: "1. Veri sorumlusu",
           paragraphs: [
-            "PDF Platform ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu Burak KAYA’dır (NB Global Studio; Hızırbey Vergi Dairesi, Vergi No: 5300847203, Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon). Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
+            "PDF Platform ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu, “NB Global Studio” markasını kullanan şahıs işletmesi sahibi Burak KAYA’dır (Hızırbey Vergi Dairesi, Vergi No: 5300847203, Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon). Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
           ],
         },
         {
@@ -759,7 +759,7 @@ export const legalDocuments = {
         {
           title: "1. Veri Sorumlusu",
           paragraphs: [
-            "Veri sorumlusu: Burak KAYA (NB Global Studio) — Hızırbey Vergi Dairesi, Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon (bundan böyle ‘Şirket’ olarak anılacaktır).",
+            "Veri sorumlusu: Burak KAYA (şahıs işletmesi; “NB Global Studio” markasını kullanır) — Hızırbey Vergi Dairesi, Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon (bundan böyle ‘Şirket’ olarak anılacaktır).",
             "İletişim: info@pdfplatform.app — KVKK kapsamındaki tüm başvurularınızı bu adrese iletebilirsiniz.",
           ],
         },
