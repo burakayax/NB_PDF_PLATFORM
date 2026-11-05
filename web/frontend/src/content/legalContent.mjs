@@ -88,6 +88,7 @@ export const legalDocuments = {
           title: "9. Governing law and disputes",
           paragraphs: [
             "These Terms are governed by Turkish law. If you act as a consumer, your right to apply to the Consumer Arbitration Committees and Consumer Courts under Law No. 6502 is preserved, and nothing in these Terms limits that right.",
+            "For disputes with non-consumer (commercial) users arising from these Terms, the courts and enforcement offices of Trabzon have jurisdiction.",
             "For informal resolution of disputes, you may contact us at the email address shown in the product or on our website before initiating formal proceedings.",
           ],
         },
@@ -187,6 +188,7 @@ export const legalDocuments = {
             "Analytics data: 13 months (aligned with Google Analytics 4 default retention).",
             "Error and diagnostic logs: 30 days.",
             "Comment text attached to tool ratings: 180 days. After that the comment is deleted; the star rating itself is kept because it forms the average.",
+            "Pre-payment consent records (Pre-Purchase Information and Distance Sales Agreement approval, withdrawal-right waiver, age / legal guardian declaration; time and text version): kept as part of the related payment record as evidence in refund and invoice disputes, and retained for 10 years like payment records.",
             "Commercial electronic message consent records: 3 years after the consent ceases to be valid, as required by Turkish regulations on commercial electronic messages.",
             "Uploaded files: on server-side tools the file you upload is deleted as soon as processing ends; the output file we produce is kept for at most 24 hours so you can download it, then deleted automatically (see the table in section 2a). Two features keep documents until you delete them or your account is deleted: scans you choose to \"save to my account\" in Document Scanner (older scans are removed automatically beyond your plan's scan limit), and documents sent through Signature Requests together with their signed copies (the signing link itself is valid for 14 days).",
           ],
@@ -254,7 +256,7 @@ export const legalDocuments = {
         {
           title: "2. Legal bases",
           paragraphs: [
-            "Processing relies on contract performance (supplying paid tools), legitimate interests (security/anti-abuse—balanced against your rights), and—to the extent consent is collected explicitly—your freely given approval at checkout.",
+            "Processing relies on contract performance (supplying paid tools), legitimate interests (security/anti-abuse—balanced against your rights), establishment, exercise or protection of a legal right (keeping consent and order records as evidence in refund and invoice disputes), and—to the extent consent is collected explicitly—your freely given approval at checkout.",
           ],
         },
         {
@@ -295,6 +297,8 @@ export const legalDocuments = {
           paragraphs: [
             "Prices are determined by the plan you select and the billing period (monthly/yearly). For users residing in Turkey, 20% VAT is included in the total amount charged.",
             "Payment is made via credit card or debit card through the PayTR infrastructure.",
+            "The subscription period is monthly or yearly, depending on the plan you choose. The subscription does not renew automatically: a reminder is sent before the period ends, and a new payment is taken only if you confirm the renewal.",
+            "The service is delivered electronically. Once the payment is approved, the subscription is activated in your account immediately; there is no delivery or shipping. The total price including VAT is shown separately in the order summary on the payment screen.",
             "While there is no statutory refund obligation for the remaining period once the subscription term has commenced, the SELLER honours, under its own commercial guarantee, any refund request made within 7 days of the first payment, with no reason required. Outside that window, access continues until the end of the paid period.",
           ],
         },
@@ -328,6 +332,7 @@ export const legalDocuments = {
             "SELLER: Burak KAYA (NB Global Studio), Hızırbey Tax Office (Ortahisar/Trabzon), Tax No: 5300847203, Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Email: info@pdfplatform.app, Website: pdfplatform.app",
             "BUYER: The user identified by the name (or title), billing address, phone and email provided at the payment step; for taxpayers, the tax number and tax office are also part of this information.",
             "In this agreement the BUYER and the SELLER are each a “Party” and together the “Parties”. The BUYER confirms that the information given at the payment step is accurate and current and that the invoice details are complete. If the order is placed on behalf of another person, the person placing the order is responsible for the accuracy of that person's information and for obligations under personal data protection law.",
+            "The BUYER declares at the payment step that they are at least 18 years old or, if under 18, that their legal guardian (parent/guardian) has approved this purchase. Orders placed by a minor without the legal guardian's approval may be invalid under mandatory law.",
           ],
         },
         {
@@ -362,7 +367,7 @@ export const legalDocuments = {
           title: "5. Subscription and Renewal",
           paragraphs: [
             "The subscription term is determined by the selected plan (monthly/yearly).",
-            "Subscriptions do not renew automatically. A reminder is sent before the period ends; renewal requires your confirmation and a new payment. No charge is made without your confirmation.",
+            "Subscriptions do not renew automatically. A reminder is sent by the SELLER to the BUYER before the period ends; renewal requires the BUYER's confirmation and a new payment. No charge is made without the BUYER's confirmation.",
             "When the subscription term expires, paid features are deactivated and the account automatically reverts to the free plan.",
           ],
         },
@@ -386,7 +391,7 @@ export const legalDocuments = {
         {
           title: "8. Protection of Personal Data",
           paragraphs: [
-            "The BUYER's personal data is processed within the scope of KVKK and GDPR. Invoice records are retained for 10 years (VUK Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; the longer period applies).",
+            "The BUYER's personal data is processed within the scope of Law No. 6698 (KVKK). Invoice records are retained for 10 years (VUK Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; the longer period applies).",
             "The disclosure text for personal data processed in the course of purchases is available on the website, and the BUYER may review it at any time. For detailed information, please review the Privacy Policy and KVKK Disclosure Text.",
           ],
         },
@@ -599,6 +604,7 @@ export const legalDocuments = {
           title: "9. Uygulanacak hukuk ve uyuşmazlıklar",
           paragraphs: [
             "Bu Şartlara Türk hukuku uygulanır. Tüketici olarak hareket ediyorsanız, 6502 sayılı Kanun uyarınca Tüketici Hakem Heyetlerine ve Tüketici Mahkemelerine başvuru hakkınız saklıdır; bu Şartlardaki hiçbir hüküm bu hakkı sınırlamaz.",
+            "Tüketici olmayan (ticari) kullanıcılarla bu Şartlardan doğan uyuşmazlıklarda Trabzon Mahkemeleri ve İcra Daireleri yetkilidir.",
             "Resmi yollara başvurmadan önce ürün veya web sitemizde belirtilen e-posta üzerinden bizimle iletişime geçerek çözüm arayabilirsiniz.",
           ],
         },
@@ -691,6 +697,7 @@ export const legalDocuments = {
             "Kişisel verileri aşağıda belirtilen süreler boyunca saklarız; süre dolduğunda veriler silinir veya anonimleştirilir:",
             "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
             "Hesap açılışındaki onay kayıtları (Hizmet Şartları/Gizlilik kabulü, aydınlatma okundu; zaman, sürüm ve IP adresi): hesabınız silinene kadar.",
+            "Ödeme öncesi onay kayıtları (Ön Bilgilendirme ve Mesafeli Satış onayı, cayma hakkı feragati, reşit olma / yasal temsilci beyanı; zaman ve metin sürümü): iade ve fatura uyuşmazlıklarında ispat için ilgili ödeme kaydının bir parçası olarak tutulur ve ödeme kayıtları gibi 10 yıl saklanır.",
             "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; sonrasında arşivlenir ve oluşturulmasından 1 yıl sonra silinir.",
             "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün (IP adresi ve tarayıcı bilgisi dahil); sonrasında IP adresi ve tarayıcı bilgisi silinir, kayıt oluşturulmasından 1 yıl sonra tamamen silinir.",
             "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
@@ -780,6 +787,7 @@ export const legalDocuments = {
             "Sözleşmenin kurulması ve ifası (KVKK md. 5/2-c): Hesap oluşturma, ödeme işlemi, abonelik yönetimi ve hizmetlerin sunulması.",
             "Meşru menfaat (KVKK md. 5/2-f): Hizmetin güvenliğinin sağlanması, dolandırıcılık ve kötüye kullanımın önlenmesi, sistem performansı.",
             "Hukuki yükümlülüğün yerine getirilmesi (KVKK md. 5/2-ç): Vergi mevzuatı ve diğer kanuni yükümlülükler kapsamında fatura ve kayıt tutma.",
+            "Bir hakkın tesisi, kullanılması veya korunması (KVKK md. 5/2-e): İade, itiraz ve fatura uyuşmazlıklarında ispat için ödeme öncesi onay kayıtlarının (sözleşme onayı, cayma hakkı feragati, reşit olma / yasal temsilci beyanı) saklanması.",
             "Yapay zekâ destekli araçların sunulması (KVKK md. 5/2-c — sözleşmenin ifası): Bir yapay zekâ aracını kullanmayı seçtiğinizde, talebinizi yerine getirmek üzere belge metninizin yapay zekâ sağlayıcısına aktarılarak sonuç üretilmesi. Bu aktarımın yurt dışına yapılması ayrıca md. 9 kapsamında değerlendirilir (4. bölüm).",
             "Açık rıza (KVKK md. 5/1): Analitik ve pazarlama amaçlı çerezler gibi zorunlu olmayan veri işleme faaliyetleri için ayrıca açık rızanız alınır.",
           ],
@@ -859,6 +867,8 @@ export const legalDocuments = {
           paragraphs: [
             "Fiyatlar, seçtiğiniz plana ve ödeme dönemine (aylık/yıllık) göre belirlenmektedir. Türkiye'de mukim kullanıcılar için %20 KDV dahil toplam tutar tahsil edilmektedir.",
             "Ödeme PayTR altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
+            "Abonelik süresi seçtiğiniz plana göre aylıktır veya yıllıktır. Abonelik kendiliğinden yenilenmez: dönem bitmeden size hatırlatma gönderilir ve yeni ödeme yalnızca yenilemeyi onaylarsanız alınır.",
+            "Hizmet elektronik ortamda sunulur. Ödemenin onaylanmasının ardından abonelik hemen hesabınızda etkinleştirilir; teslimat veya kargo yoktur. KDV dahil toplam bedel, ödeme ekranında sipariş özetinde ayrıca gösterilir.",
             "Abonelik süresi başladıktan sonra kalan süre için kanuni bir iade yükümlülüğü bulunmamakla birlikte, SATICI kendi ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde yapılan iade taleplerini gerekçe aranmaksızın karşılar (tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar saklıdır) (aşağıda «Ticari İade Garantisi»). Bu süre dışındaki iptallerde, ödenmiş dönem sonuna kadar hizmete erişim devam eder.",
           ],
         },
@@ -893,6 +903,7 @@ export const legalDocuments = {
             "SATICI: Burak KAYA (NB Global Studio), Hızırbey Vergi Dairesi Müd. (Ortahisar/Trabzon), Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, E-posta: info@pdfplatform.app, Web sitesi: pdfplatform.app",
             "ALICI: Ödeme adımında beyan edilen ad-soyad (veya unvan), fatura adresi, telefon ve e-posta bilgileriyle tanımlanan kullanıcıdır; vergi mükellefiyse vergi numarası ve vergi dairesi de bu bilgilere dahildir.",
             "İşbu sözleşmede ALICI ve SATICI ayrı ayrı “Taraf”, birlikte “Taraflar” olarak anılır. ALICI, ödeme adımında verdiği bilgilerin doğru ve güncel olduğunu, fatura bilgilerinin eksiksiz olduğunu kabul eder. Siparişi başka bir kişi adına veriyorsa, o kişinin bilgilerinin doğruluğundan ve kişisel verilerin korunması mevzuatı kapsamındaki yükümlülüklerden siparişi veren sorumludur.",
+            "ALICI, ödeme adımında 18 yaşını doldurduğunu veya 18 yaşından küçükse bu satın alma için yasal temsilcisinin (anne/baba/vasi) onayının bulunduğunu beyan eder. Yasal temsilcinin onayı olmaksızın reşit olmayan bir kişi tarafından verilen siparişler, emredici mevzuat uyarınca geçerli olmayabilir.",
           ],
         },
         {
@@ -927,7 +938,7 @@ export const legalDocuments = {
           title: "5. Abonelik ve Yenileme",
           paragraphs: [
             "Abonelik süresi seçilen plana göre belirlenir (aylık/yıllık).",
-            "Abonelik otomatik olarak yenilenmez. Dönem sona ermeden önce size hatırlatma gönderilir; yenileme için onayınızın alınması ve yeni bir ödeme yapılması gerekmektedir. Onayınız olmadan ücret tahsil edilmez.",
+            "Abonelik otomatik olarak yenilenmez. Dönem sona ermeden önce SATICI tarafından ALICI'ya hatırlatma gönderilir; yenileme için ALICI'nın onayının alınması ve yeni bir ödeme yapılması gerekmektedir. ALICI'nın onayı olmadan ücret tahsil edilmez.",
             "Abonelik süresi dolduğunda ücretli özellikler devre dışı kalır, ücretsiz plana geçiş otomatik olarak gerçekleşir.",
           ],
         },
@@ -951,7 +962,7 @@ export const legalDocuments = {
         {
           title: "8. Kişisel Verilerin Korunması",
           paragraphs: [
-            "ALICI'ya ait kişisel veriler KVKK ve GDPR kapsamında işlenmektedir. Fatura bilgileri 10 yıl süreyle saklanmaktadır (VUK Madde 253 uyarınca 5 yıl, TTK Madde 82 uyarınca 10 yıl; uzun olan süre uygulanır).",
+            "ALICI'ya ait kişisel veriler 6698 sayılı KVKK kapsamında işlenmektedir. Fatura bilgileri 10 yıl süreyle saklanmaktadır (VUK Madde 253 uyarınca 5 yıl, TTK Madde 82 uyarınca 10 yıl; uzun olan süre uygulanır).",
             "Alışveriş işlemleri kapsamında işlenen kişisel verilere ilişkin aydınlatma metni web sitesinde yer alır; ALICI dilediği zaman inceleyebilir. Ayrıntılı bilgi için Gizlilik Politikası ve KVKK Aydınlatma Metni'ni inceleyiniz.",
           ],
         },
