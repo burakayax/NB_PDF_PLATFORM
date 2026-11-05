@@ -197,7 +197,7 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
   if (legacy && !legacyRange) return { bytes: input, stamped: 0, shrunk: 0 };
   const base = legacyRange ? legacyRange[0] - 1 : opts.skipFirst ? 1 : 0;
 
-  const clampSize = (v: number) => Math.min(24, Math.max(6, v));
+  const clampSize = (v: number) => Math.min(72, Math.max(4, v));
   const styleOf = (st?: PartStyle) => ({
     size: clampSize(st?.fontSize ?? opts.fontSize ?? 10),
     color: hexToRgb(st?.color ?? opts.color ?? "#555555"),
@@ -282,8 +282,9 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
         const text = cleanFor(font, fillPlaceholders(it.text, vars));
         if (!text.trim()) continue;
         const w = font.widthOfTextAtSize(text, cs.size);
-        // Üç parça aynı satırda: her birine en çok genişliğin üçte biri ayrılır; taşarsa küçült.
-        const room = maxW / 3;
+        // Aynı satırdaki dolu parça sayısına göre pay: tek parça tüm genişliği, ikisi yarıyı, üçü üçte biri kullanır; taşarsa küçült.
+        const used = items.filter((x) => x.text.trim()).length;
+        const room = used <= 1 ? maxW : used === 2 ? maxW * 0.46 : maxW / 3;
         let sz = cs.size;
         if (w > room) {
           sz = Math.max(4, (cs.size * room) / w);
