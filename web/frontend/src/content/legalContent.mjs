@@ -439,7 +439,7 @@ export const legalDocuments = {
         {
           title: "3. 7-day commercial refund guarantee",
           paragraphs: [
-            "Independently of the statutory rule, the SELLER honours refund requests made within 7 days of the first payment, with no reason required. Reasonable limits apply to repeated or abusive requests.",
+            "Independently of the statutory rule, PDF Platform honours refund requests made within 7 days of the first payment, with no reason required. Reasonable limits apply to repeated or abusive requests.",
             "After the 7 days there is no statutory refund obligation. If you cancel, you keep full access until the end of the period you paid for.",
           ],
         },
@@ -1004,7 +1004,7 @@ export const legalDocuments = {
         {
           title: "3. 7 günlük ticari iade garantisi",
           paragraphs: [
-            "Kanuni kuraldan bağımsız olarak SATICI, ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar. Tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar uygulanır.",
+            "Kanuni kuraldan bağımsız olarak PDF Platform, ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar. Tekrarlayan veya kötüye kullanıma dayalı taleplerde makul sınırlar uygulanır.",
             "7 günün ardından kanuni bir iade yükümlülüğü doğmaz. İptal etseniz de ödediğiniz dönemin sonuna kadar tüm özelliklere erişiminiz sürer.",
           ],
         },
