@@ -197,7 +197,7 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
   if (legacy && !legacyRange) return { bytes: input, stamped: 0, shrunk: 0 };
   const base = legacyRange ? legacyRange[0] - 1 : opts.skipFirst ? 1 : 0;
 
-  const clampSize = (v: number) => Math.min(72, Math.max(4, v));
+  const clampSize = (v: number) => Math.min(200, Math.max(1, v));
   const styleOf = (st?: PartStyle) => ({
     size: clampSize(st?.fontSize ?? opts.fontSize ?? 10),
     color: hexToRgb(st?.color ?? opts.color ?? "#555555"),
@@ -227,7 +227,7 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
   const file = (opts.fileName ?? "").replace(/\.pdf$/i, "");
 
   let stamped = 0;
-  let shrunk = 0;
+  const shrunk = 0;
 
   for (let i = 0; i < pages.length; i++) {
     const li = offset + i; // asıl belgedeki 0 tabanlı sıra
@@ -268,7 +268,6 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
         1,
       );
       const baseline = top ? visH - st.edge - size * 0.8 : st.edge;
-      const maxW = visW - 2 * st.side;
       const items: { text: string; align: "l" | "c" | "r" }[] = [
         { text: slot.left, align: "l" },
         { text: slot.center, align: "c" },
@@ -281,15 +280,8 @@ export async function addHeaderFooter(input: Uint8Array, opts: HeaderFooterOptio
         const font = await fontFor(cs.bold);
         const text = cleanFor(font, fillPlaceholders(it.text, vars));
         if (!text.trim()) continue;
-        const w = font.widthOfTextAtSize(text, cs.size);
-        // Aynı satırdaki dolu parça sayısına göre pay: tek parça tüm genişliği, ikisi yarıyı, üçü üçte biri kullanır; taşarsa küçült.
-        const used = items.filter((x) => x.text.trim()).length;
-        const room = used <= 1 ? maxW : used === 2 ? maxW * 0.46 : maxW / 3;
-        let sz = cs.size;
-        if (w > room) {
-          sz = Math.max(4, (cs.size * room) / w);
-          shrunk++;
-        }
+        // Kullanıcı serbest: yazı otomatik küçültülmez / ölçeklenmez, seçilen boyutta yazılır.
+        const sz = cs.size;
         const ww = font.widthOfTextAtSize(text, sz);
         const vx = it.align === "l" ? st.side : it.align === "r" ? visW - st.side - ww : (visW - ww) / 2;
         const p = place(vx, baseline);
