@@ -790,12 +790,12 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
 
   "pdf-ust-alt-bilgi": S(
     [
-      { title: "PDF'ini ekle", detail: "Hazır bir düzen seç ya da üst ve alt bilgiyi kendin yaz; {sayfa} yazarsan sayfa numarası otomatik gelir." },
+      { title: "PDF'ini ekle", detail: "Hazır bir düzen seç ya da üst ve alt bilgiyi kendin yaz; «Sayfa No» düğmesine basarsan sayfa numarası otomatik gelir." },
       { title: "Önizlemeye bak", detail: "İlk sayfada nasıl göründüğünü kontrol et; gerekirse boyut, renk ve kenar boşluğunu ayarla." },
       TR_DOWNLOAD,
     ],
     [
-      { title: "Add your PDF", detail: "Pick a quick layout or write the header and footer yourself; use {page} for an automatic page number." },
+      { title: "Add your PDF", detail: "Pick a quick layout or write the header and footer yourself; press “Page No” for an automatic page number." },
       { title: "Check the preview", detail: "See how page 1 looks; adjust the size, color and margin if needed." },
       EN_DOWNLOAD,
     ],
