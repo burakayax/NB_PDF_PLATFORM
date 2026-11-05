@@ -131,15 +131,15 @@ export async function initializePaymentsController(request: Request, response: R
   // kurulmuş sayılmaz. Ekrandaki kontrol atlatılabildiği için onay kaydı SUNUCUDA da aranır.
   const consent = await prisma.user.findUnique({
     where: { id: userId },
-    select: { distanceSalesConsentedAt: true, withdrawalWaivedAt: true },
+    select: { distanceSalesConsentedAt: true, withdrawalWaivedAt: true, guardianDeclaredAt: true },
   });
   const consentAgeMs = consent?.distanceSalesConsentedAt
     ? Date.now() - consent.distanceSalesConsentedAt.getTime()
     : Number.POSITIVE_INFINITY;
-  if (!consent?.withdrawalWaivedAt || consentAgeMs > PAYMENT_CONSENT_MAX_AGE_MS) {
+  if (!consent?.withdrawalWaivedAt || !consent.guardianDeclaredAt || consentAgeMs > PAYMENT_CONSENT_MAX_AGE_MS) {
     throw new HttpError(
       403,
-      "Ödemeden önce Ön Bilgilendirme Formu, Mesafeli Satış Sözleşmesi ve cayma hakkı onaylarının verilmesi gerekir. Lütfen fatura bilgileri adımını tamamlayın.",
+      "Ödemeden önce Ön Bilgilendirme Formu, Mesafeli Satış Sözleşmesi ve cayma hakkı onaylarının ve reşit olma/yasal temsilci beyanının verilmesi gerekir. Lütfen fatura bilgileri adımını tamamlayın.",
     );
   }
   const rawCurrency = parsed.data.currency;

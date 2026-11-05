@@ -592,6 +592,7 @@ export async function createPaymentCheckoutSession(params: {
       contractVersion: user.distanceSalesVersion ?? null,
       distanceSalesConsentedAt: user.distanceSalesConsentedAt ?? null,
       withdrawalWaivedAt: user.withdrawalWaivedAt ?? null,
+      guardianDeclaredAt: user.guardianDeclaredAt ?? null,
     },
   });
 
