@@ -491,7 +491,7 @@ export function PdfHeaderFooterTool({ language }: { language: Language }) {
   const insertText = (text: string) => {
     const target: NonNullable<FocusRef> = focus ?? { part: "footer", slot: "center" };
     const slot = cur[target.part];
-    setCur({ [target.part]: { ...slot, [target.slot]: (slot[target.slot] + text).slice(0, 120) } });
+    setCur({ [target.part]: { ...slot, [target.slot]: text.slice(0, 120) } }); // otomatik düğme: kutunun içeriğinin ÜZERİNE yazar
   };
   const pageNo = previewPage + 1;
   const stripped = fileName.replace(/\.pdf$/i, "");
