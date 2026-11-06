@@ -2736,7 +2736,7 @@ function App() {
   useEffect(() => {
     if (view !== "web" || !isAuthenticated || isRestoring) return;
     const mevcut = window.location.pathname;
-    if (contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription") {
+    if (contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription" || contentPanel === "team") {
       const hedef = withLangPrefix(ACCOUNT_PANEL_PATHS[contentPanel], language);
       if (mevcut.replace(/\/+$/, "") !== hedef) {
         window.history.pushState({}, "", hedef);

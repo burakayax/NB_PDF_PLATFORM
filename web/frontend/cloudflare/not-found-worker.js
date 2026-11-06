@@ -20,7 +20,7 @@
  */
 
 /*ROTALAR:BASLA*/
-const BILINEN_TAM = ["/","/login","/register","/forgot-password","/about","/terms","/privacy","/kvkk","/workspace","/nbadmin","/admin","/team-invite","/pricing","/contact","/pdf-api","/blog","/taramalarim","/login-success","/login-error","/google-signup","/index.html","/reset-password","/verify-email","/hesap/profil","/hesap/api","/hesap/abonelik"];
+const BILINEN_TAM = ["/","/login","/register","/forgot-password","/about","/terms","/privacy","/kvkk","/workspace","/nbadmin","/admin","/team-invite","/pricing","/contact","/pdf-api","/blog","/taramalarim","/login-success","/login-error","/google-signup","/index.html","/reset-password","/verify-email","/hesap/profil","/hesap/api","/hesap/abonelik","/hesap/ekip"];
 const BILINEN_ONEK = ["/legal/","/admin/","/invite/","/fake-payment","/pdf-api/","/blog/","/hesap/","/imzala/","/tools/","/api/","/payment","/workspace/"];
 /*ROTALAR:BITIS*/
 
