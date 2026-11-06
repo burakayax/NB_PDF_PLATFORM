@@ -1035,7 +1035,7 @@ export function DashboardSidebarMobileLauncher({
   // FeatureKey OLMAYAN aktif panelleri de başlıkta göster (activeSidebar bunlarda
   // güncellenmiyor). Öncelik: aktif özel/AI panel → normal araç → "Menü".
   const panelLabel =
-    contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription"
+    contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription" || contentPanel === "team"
       ? ACCOUNT_PANEL_TITLES[contentPanel][tr ? "tr" : "en"]
       : contentPanel === "layout"
       ? tr ? "Sayfa Düzeni" : "Page Layout"
