@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, Lightbulb } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { howToForTool } from "./toolHowToSteps";
+import { howToForTool, tipForTool } from "./toolHowToSteps";
 
 /**
  * "NASIL ÇALIŞIR?" KARTI — her aracın başında duran, numaralı adım listesi.
@@ -26,6 +26,7 @@ export function ToolHowTo({
   compact?: boolean;
 }) {
   const steps = howToForTool(slug, language);
+  const tip = tipForTool(slug, language);
   // Mobilde kapalı başlar: yükleme alanı ilk ekranda görünsün diye adımlar açılır menüde.
   const [open, setOpen] = useState(false);
   if (!steps || steps.length === 0) return null;
@@ -71,6 +72,14 @@ export function ToolHowTo({
           </li>
         ))}
       </ol>
+      {tip && (
+        <p
+          className={`mt-3 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] px-3.5 py-2.5 text-[12px] leading-relaxed text-amber-100/90 ${open ? "" : "hidden sm:block"}`}
+        >
+          <span className="font-bold text-amber-300">{tr ? "İpucu: " : "Tip: "}</span>
+          {tip}
+        </p>
+      )}
     </section>
   );
 }

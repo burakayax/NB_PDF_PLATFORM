@@ -18,18 +18,86 @@ export const CARD_MM: Record<CardKind, { w: number; h: number }> = {
 export const A4_MM = { w: 210, h: 297 };
 const MM_TO_PT = 72 / 25.4;
 const GAP_MM = 12;
-const TOP_MM = 28;
+/** Sayfa kenarından bırakılan boşluk (mm). */
+const MARGIN_MM = 15;
+/** Çakışma sayılmayan en küçük boşluk (mm). */
+const MIN_SEP_MM = 3;
+
+/** Sayfadaki yatay / dikey hizalama. Varsayılan: üstte, yatayda ortalı. */
+export type AlignH = "left" | "center" | "right";
+export type AlignV = "top" | "middle" | "bottom";
+export type SheetAlign = { h: AlignH; v: AlignV };
+/** Ön ve arka yüz ayrı ayrı konumlanır. */
+export type SheetAligns = { front: SheetAlign; back: SheetAlign };
+export const DEFAULT_ALIGN: SheetAlign = { h: "center", v: "top" };
+export const DEFAULT_ALIGNS: SheetAligns = { front: DEFAULT_ALIGN, back: DEFAULT_ALIGN };
+
+/** Arayüzdeki seçilebilir konumlar: 3 sütun × 3 satır. */
+export const UI_COLS: AlignH[] = ["left", "center", "right"];
+export const UI_ROWS: AlignV[] = ["top", "middle", "bottom"];
+
+/** Hazır düzen 1: ortada, ön yüz üstte arka yüz hemen altında (tek blok; aynı konum = birlikte). */
+export function stackedAligns(_kind: CardKind): SheetAligns {
+  return { front: DEFAULT_ALIGN, back: DEFAULT_ALIGN };
+}
+
+/** Hazır düzen 2: yan yana (sol üst + sağ üst). Belge sığmıyorsa (pasaport) null. */
+export function sideBySideAligns(kind: CardKind): SheetAligns | null {
+  const front: SheetAlign = { h: "left", v: "top" };
+  const back: SheetAlign = { h: "right", v: "top" };
+  return alignmentsConflict(kind, front, back) ? null : { front, back };
+}
+
+/** Başlangıç düzeni = ortada alt alta. */
+export const defaultAligns = stackedAligns;
 
 export type Rect = { x: number; y: number; w: number; h: number };
 
-/** Sayfa (pt, sol-üst başlangıç) üzerindeki kart dikdörtgenleri. Gerçek boyut. */
-export function layoutSheet(kind: CardKind, mode: SheetMode): { page: { w: number; h: number }; cards: Rect[] } {
+export const sameAlign = (a: SheetAlign, b: SheetAlign) => a.h === b.h && a.v === b.v;
+
+/** Bir kartın (mm) verilen hizalamadaki sol-üst köşesi; `blockH` = hizalanan bloğun yüksekliği. */
+function originMm(kind: CardKind, align: SheetAlign, blockH: number): { x: number; y: number } {
+  const c = CARD_MM[kind];
+  const x = align.h === "left" ? MARGIN_MM : align.h === "right" ? A4_MM.w - MARGIN_MM - c.w : (A4_MM.w - c.w) / 2;
+  const y = align.v === "top" ? MARGIN_MM : align.v === "bottom" ? A4_MM.h - MARGIN_MM - blockH : (A4_MM.h - blockH) / 2;
+  return { x, y };
+}
+
+/** Tek kartın (mm) verilen hizalamadaki dikdörtgeni. */
+function cardMm(kind: CardKind, align: SheetAlign) {
+  const c = CARD_MM[kind];
+  const o = originMm(kind, align, c.h);
+  return { x: o.x, y: o.y, w: c.w, h: c.h };
+}
+
+/** İki hizalamadaki kartlar aynı yerde mi, üst üste mi ya da birbirine çok yakın mı? */
+export function alignmentsConflict(kind: CardKind, a: SheetAlign, b: SheetAlign): boolean {
+  if (sameAlign(a, b)) return true;
+  const r1 = cardMm(kind, a);
+  const r2 = cardMm(kind, b);
+  return (
+    r1.x < r2.x + r2.w + MIN_SEP_MM && r2.x < r1.x + r1.w + MIN_SEP_MM && r1.y < r2.y + r2.h + MIN_SEP_MM && r2.y < r1.y + r1.h + MIN_SEP_MM
+  );
+}
+
+/**
+ * Sayfa (pt, sol-üst başlangıç) üzerindeki kart dikdörtgenleri. Gerçek boyut.
+ * Ön ve arka yüz ayrı konumlanır. İkisi AYNI konumu seçerse tek blok olarak konur: arka yüz ön yüzün hemen altına gelir ("alt alta").
+ */
+export function layoutSheet(
+  kind: CardKind,
+  mode: SheetMode,
+  aligns: SheetAligns = DEFAULT_ALIGNS,
+): { page: { w: number; h: number }; cards: Rect[] } {
   const c = CARD_MM[kind];
   const page = { w: A4_MM.w * MM_TO_PT, h: A4_MM.h * MM_TO_PT };
-  const x = ((A4_MM.w - c.w) / 2) * MM_TO_PT;
-  const mk = (topMm: number): Rect => ({ x, y: topMm * MM_TO_PT, w: c.w * MM_TO_PT, h: c.h * MM_TO_PT });
-  const cards = mode === "two" ? [mk(TOP_MM), mk(TOP_MM + c.h + GAP_MM)] : [mk(TOP_MM)];
-  return { page, cards };
+  const pt = (r: { x: number; y: number; w: number; h: number }): Rect => ({ x: r.x * MM_TO_PT, y: r.y * MM_TO_PT, w: r.w * MM_TO_PT, h: r.h * MM_TO_PT });
+  if (mode === "one") return { page, cards: [pt(cardMm(kind, aligns.front))] };
+  if (sameAlign(aligns.front, aligns.back)) {
+    const o = originMm(kind, aligns.front, c.h * 2 + GAP_MM);
+    return { page, cards: [pt({ x: o.x, y: o.y, w: c.w, h: c.h }), pt({ x: o.x, y: o.y + c.h + GAP_MM, w: c.w, h: c.h })] };
+  }
+  return { page, cards: [pt(cardMm(kind, aligns.front)), pt(cardMm(kind, aligns.back))] };
 }
 
 export type Rotation = 0 | 90 | 180 | 270;
@@ -93,9 +161,10 @@ export async function buildIdSheetPdf(
   mode: SheetMode,
   inputs: SheetInput[],
   watermark?: WatermarkOpts,
+  aligns: SheetAligns = DEFAULT_ALIGNS,
 ): Promise<Uint8Array> {
   const { PDFDocument, rgb } = await import("pdf-lib");
-  const { page, cards } = layoutSheet(kind, mode);
+  const { page, cards } = layoutSheet(kind, mode, aligns);
   const pdf = await PDFDocument.create();
   const pg = pdf.addPage([page.w, page.h]);
   for (let i = 0; i < cards.length; i++) {

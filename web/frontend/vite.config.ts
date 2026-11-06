@@ -168,6 +168,30 @@ function saasProxyOptions(saasProxyTarget: string) {
   };
 }
 
+/**
+ * GELİŞTİRME: scanic-ml kendi ONNX `.mjs` dosyasını çalışma anında `import()` ile yükler.
+ * Vite dev sunucusu public/ altındaki dosyayı modül olarak dönüştürmeyi reddeder
+ * ("should not be imported from source code"). Bu dosyaları olduğu gibi sunarız.
+ * Üretim derlemesinde sorun yok (dosya olduğu gibi kopyalanır).
+ */
+function servePublicWasmModules(root: string): Plugin {
+  return {
+    name: "serve-public-wasm-modules",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = (req.url ?? "").split("?")[0];
+        if (!/^\/(scanic-ml|photo-ai\/ort|tts-tr\/ort)\/[\w.\-]+\.mjs$/.test(url)) return next();
+        const file = path.join(root, "public", url);
+        if (!fs.existsSync(file)) return next();
+        res.setHeader("Content-Type", "text/javascript");
+        res.setHeader("Cache-Control", "no-cache");
+        fs.createReadStream(file).pipe(res);
+      });
+    },
+  };
+}
+
 export default defineConfig(({ command, mode, isPreview }) => {
   // `vite preview` de command === "serve" ile çalışır; ancak preview yalnızca
   // önceden derlenmiş dist/'i servis eder ve .env'e ihtiyaç duymaz. CI'da .env
@@ -239,6 +263,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     plugins: [
       react(),
       tailwindcss(),
+      servePublicWasmModules(frontendRoot),
       ...(command === "serve"
         ? [
             warnIfPdfApiUnreachable(pdfProxyTarget),

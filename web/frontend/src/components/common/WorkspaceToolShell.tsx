@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ShieldCheck } from "lucide-react";
+import { RunsWhereBadge } from "./RunsWhereBadge";
 import { isOnDeviceTool } from "../../lib/onDeviceTools";
 import { toolVisual } from "./ToolUploadPanel";
 import type { Language } from "../../i18n/landing";
@@ -21,18 +21,7 @@ export function ToolHeadline({ id, title, language }: { id: string; title: strin
         <Icon className="h-5 w-5" strokeWidth={2} />
       </span>
       <h1 className="text-xl font-bold tracking-tight text-nb-text md:text-2xl">{title}</h1>
-      <span
-        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-bold ${
-          onDevice
-            ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-            : "border-sky-400/30 bg-sky-500/10 text-sky-300"
-        }`}
-      >
-        <ShieldCheck className="h-3.5 w-3.5" />
-        {onDevice
-          ? tr ? "Cihazında çalışır" : "Runs on your device"
-          : tr ? "Güvenli sunucuda" : "On our secure server"}
-      </span>
+      <RunsWhereBadge onDevice={onDevice} language={language} />
     </div>
   );
 }
