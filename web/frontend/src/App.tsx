@@ -117,7 +117,7 @@ import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
 import { WorkspaceFooter } from "./components/common/WorkspaceFooter";
-import { clearScannedPdf, peekScannedPdf, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
+import { clearAllScans, clearScannedPdf, peekScannedPdf, purgeExpiredScans, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
@@ -538,6 +538,11 @@ function App() {
   // Oturum (e-posta, Google, geri yükleme) kurulunca dil kuralı: elle seçim > tarayıcı dili > hesap.
   // Hesaptaki kayıt (çoğu hesapta varsayılan "en") sayfa dilini ezmez; aksine hesap bu dile eşitlenir.
   const languageSyncedForUser = useRef<string | null>(null);
+  // Gizlilik: giriş yönlendirmesi için geçici saklanıp teslim edilmeyen/süresi dolan dosyalar uygulama açılırken silinir.
+  useEffect(() => {
+    void purgeExpiredScans();
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated || !user || !accessToken) return;
     if (languageSyncedForUser.current === user.id) return;
@@ -4760,6 +4765,7 @@ function App() {
   async function handleLogout() {
     clearNbResumeProcess();
     clearPendingTool();
+    void clearAllScans(); // gizlilik: çıkışta cihazda bekleyen dosya kalmasın
     await logout();
     setAuthError("");
     const nextLanguage = detectInitialLanguage();

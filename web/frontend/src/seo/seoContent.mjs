@@ -2403,10 +2403,10 @@ export const TOOL_SEO = {
       ["kimlik ön arka tek sayfa", "kimlik fotokopisi pdf", "ehliyet ön arka tek sayfa", "kimlik kartı a4", "kimlik filigran"],
       [
         {"q": "Kimlik fotoğrafım sunucuya yükleniyor mu?", "a": "Hayır. Fotoğraflar yalnızca tarayıcınızda işlenir ve cihazınızdan çıkmaz. Kimlik gibi hassas bir belgede bu bilerek böyle tasarlandı."},
-        {"q": "Kimliğin ön ve arka yüzünü tek sayfaya nasıl koyarım?", "a": "Ön ve arka yüzün fotoğrafını ekleyin, gerekirse döndürün ve «Tek sayfa PDF oluştur»a basın. İki yüz gerçek boyutunda alt alta tek A4 sayfaya yerleşir."},
-        {"q": "Ehliyet ve pasaport için de kullanılır mı?", "a": "Evet. Ehliyet kimlik kartıyla aynı boyuttadır; pasaport için bilgi sayfası seçeneği vardır."},
+        {"q": "Kimliğin ön ve arka yüzünü tek sayfaya nasıl koyarım?", "a": "Ön ve arka yüzün fotoğrafını ekleyin; açılan pencerede kimliği kutunun içine alacak şekilde kırpıp «Tamam»a basın, ardından «Tek sayfa PDF oluştur»a basın. İki yüz gerçek boyutunda, ön yüz üstte arka yüz altta olacak şekilde tek A4 sayfaya yerleşir. İsterseniz önce «Önizle» ile çıktıya bakabilirsiniz."},
+        {"q": "Ehliyet ve pasaport için de kullanılır mı?", "a": "Evet. Ehliyet kimlik kartıyla aynı boyuttadır. Pasaportta ön/arka yüz yoktur; yalnızca fotoğraflı bilgi sayfası tek sayfa olarak A4'e yerleşir."},
         {"q": "Filigran ne işe yarar?", "a": "Üzerine «Yalnızca X kurumu için – tarih» gibi bir yazı basarak kimliğin başka amaçlarla kullanılmasını zorlaştırır. Bazı kurumlar filigranlı kimliği kabul etmeyebilir; önce kuruma sorun."},
-        {"q": "Kimliğin kenarlarını kendim mi kırpmam gerekiyor?", "a": "Hayır. Genel bir fotoğraf çekmeniz yeterli; kimliğin kenarları cihazınızda otomatik bulunur ve eğrilik düzeltilir. Yine de kimliği ne kadar yakından çekerseniz sonuç o kadar net olur. Kenar bulunamazsa fotoğraf olduğu gibi kullanılır."},
+        {"q": "Kimliği nasıl kırparım?", "a": "Fotoğrafı ekleyince küçük bir kırpma penceresi açılır. Kutuyu sürükleyip köşelerinden büyüterek yalnızca kimlik kartını içine alın, fotoğraf yan duruyorsa döndürün ve «Tamam»a basın. Kırptığınız hali sayfaya aynen yerleşir. Kimliği ne kadar yakından çekerseniz sonuç o kadar net olur."},
       ],
     ),
     en: T(
@@ -2417,10 +2417,10 @@ export const TOOL_SEO = {
       ["id front back one page", "id copy pdf", "driving licence copy a4"],
       [
         {"q": "Is my ID photo uploaded?", "a": "No. Photos are processed only in your browser and never leave your device. For a sensitive document like an ID this is deliberate."},
-        {"q": "How do I put both sides of an ID on one page?", "a": "Add the front and back photos, rotate if needed and click Create. Both sides are placed at real size on one A4 page."},
-        {"q": "Does it work for driving licences and passports?", "a": "Yes. A licence is the same size as an ID card; for passports there is a data-page option."},
+        {"q": "How do I put both sides of an ID on one page?", "a": "Add the front and back photos; in the window that opens, crop so the card fills the box and click Done, then click Create. Both sides are placed at real size on one A4 page, front on top and back below. You can preview the output first."},
+        {"q": "Does it work for driving licences and passports?", "a": "Yes. A licence is the same size as an ID card. A passport has no front/back; only the photo data page is placed on the A4 page."},
         {"q": "What does the watermark do?", "a": "It overlays text such as 'Only for X – date' to make other uses of the ID harder. Some institutions may refuse a watermarked ID; check first."},
-        {"q": "Do I have to crop the card myself?", "a": "No. Take a general photo; the card edges are found on your device and the skew is corrected. The closer you shoot the card the sharper the result. If the edges cannot be found the photo is used as is."},
+        {"q": "How do I crop the card?", "a": "A small crop window opens when you add a photo. Drag the box and resize it from the corners so only the card is inside, rotate if the photo is sideways and click Done. Your crop is placed on the page exactly as is. The closer you shoot the card the sharper the result."},
       ],
     ),
   },
