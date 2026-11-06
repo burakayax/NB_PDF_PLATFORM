@@ -135,8 +135,10 @@ export function buildPayload(kind: QrKind, f: QrFields): PayloadResult {
       const n = normalizeTrPhone(f.phone);
       if (!n) return { ok: false, error: "empty" };
       if (n.length < 8 || n.length > 15) return { ok: false, error: "invalid" };
-      const t = `https://wa.me/${n}${f.waText.trim() ? `?text=${encodeURIComponent(f.waText.trim())}` : ""}`;
-      return { ok: true, text: t, link: t };
+      const q = f.waText.trim() ? `&text=${encodeURIComponent(f.waText.trim())}` : "";
+      // QR: telefon kamerası WhatsApp uygulamasını doğrudan açsın (https://wa.me tarayıcıya gönderiyordu).
+      // PDF'teki tıklanabilir bağlantı: bilgisayar/PDF okuyucular özel adresleri açamaz, bu yüzden https kalır.
+      return { ok: true, text: `whatsapp://send?phone=${n}${q}`, link: `https://wa.me/${n}${q ? `?${q.slice(1)}` : ""}` };
     }
     case "wifi": {
       if (!f.ssid.trim()) return { ok: false, error: "empty" };
@@ -263,6 +265,29 @@ export function resolvePages(sel: PageSelection, pageCount: number): number[] | 
 export const MM = 72 / 25.4;
 export const MIN_SAFE_MM = 15;
 
+/** Tek modülün basılı genişliği bunun altına inerse QR baskıda/ekranda güvenle okunmaz (GS1 perakende alt sınırı 0,396 mm). */
+export const MIN_MODUL_MM = 0.33;
+/** Logonun QR deseni genişliğine en çok oranı (ölçüldü: 0,25 üstünde yoğun QR bozulur). */
+export const MAX_LOGO_RATIO = 0.2;
+
+/** İçerik + dayanıklılık + kenar boşluğu için gereken en küçük QR kenarı (mm, kenar boşluğu dahil). */
+export function minSizeMm(texts: string[], ecl: QrEcl, marginModules: number): number {
+  let mx = 0;
+  for (const t of texts) {
+    try {
+      mx = Math.max(mx, makeMatrix(t, ecl).size);
+    } catch {
+      /* çok uzun içerik */
+    }
+  }
+  return mx ? Math.max(10, Math.ceil(MIN_MODUL_MM * (mx + marginModules * 2))) : 10;
+}
+
+/** Alt yazıya sığabilecek en çok karakter (yazı 9 pt'tan küçülmesin diye QR genişliğine göre). */
+export function captionMaxChars(sizeMm: number): number {
+  return Math.max(0, Math.floor((sizeMm * MM) / (9 * 0.52)));
+}
+
 export type StampOptions = {
   text: string;
   /** Doluysa QR alanı bu adrese tıklanabilir link olur. */
@@ -280,6 +305,8 @@ export type StampOptions = {
   fy: number;
   caption?: string;
   logoBytes?: Uint8Array | null;
+  /** Logonun QR genişliğine oranı (kenar boşluğu hariç; ölçüldü: 0,25 üstü yoğun QR'da okunmaz, güvenli üst sınır 0,2). */
+  logoRatio?: number;
   fontBytes?: Uint8Array | null;
 };
 
@@ -346,8 +373,8 @@ export async function stampQr(pdfBytes: Uint8Array, o: StampOptions): Promise<Ui
       popGraphicsState(),
     );
     if (logoImg) {
-      const logoSide = sidePt * 0.2;
-      const pad = logoSide * 0.12;
+      const logoSide = mod * matrix.size * Math.min(o.logoRatio ?? 0.16, MAX_LOGO_RATIO);
+      const pad = logoSide * 0.08;
       const cx = x + sidePt / 2;
       const cy = qrBottom + sidePt / 2;
       page.drawRectangle({

@@ -63,7 +63,7 @@ describe("QR içerik türleri", () => {
     expect(normalizeTrPhone("0532 123 45 67")).toBe("905321234567");
     expect(normalizeTrPhone("532-123-45-67")).toBe("905321234567");
     expect(normalizeTrPhone("+49 170 1234567")).toBe("491701234567");
-    expect(ok("whatsapp", f({ phone: "(0532) 123 45 67" })).text).toBe("https://wa.me/905321234567");
+    expect(ok("whatsapp", f({ phone: "(0532) 123 45 67" })).text).toBe("whatsapp://send?phone=905321234567");
   });
   it("Wi-Fi: özel karakterler kaçırılır ve QR okunur", () => {
     const r = ok("wifi", f({ ssid: "Ev;Ağı", wifiPassword: "şifre:1,2", wifiType: "WPA" }));
