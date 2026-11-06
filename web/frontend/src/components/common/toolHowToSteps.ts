@@ -13,9 +13,16 @@ import type { Language } from "../../i18n/landing";
  */
 
 export type HowToStep = { title: string; detail: string };
-type Entry = { tr: HowToStep[]; en: HowToStep[] };
+type Entry = { tr: HowToStep[]; en: HowToStep[]; tip?: { tr: string; en: string } };
 
-const S = (tr: HowToStep[], en: HowToStep[]): Entry => ({ tr, en });
+const S = (tr: HowToStep[], en: HowToStep[], tip?: { tr: string; en: string }): Entry => ({ tr, en, tip });
+
+/** Kartın altında ayrı renkli kutuda gösterilen ipucu (yoksa null). */
+export function tipForTool(slug: string, language: Language): string | null {
+  const t = TOOL_HOW_TO[slug]?.tip;
+  if (!t) return null;
+  return language === "en" ? t.en : t.tr;
+}
 
 /** Her araçta tekrar eden son adım — dosyanın nereye indiğini söyler. */
 const TR_DOWNLOAD: HowToStep = {
@@ -673,15 +680,19 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
 
   "kimlik-karti-tek-sayfa": S(
     [
-      { title: "Ön ve arka yüzün fotoğrafını ekle", detail: "Belgeyi düz bir zeminde, ışık yansımadan çek; gerekirse döndür." },
-      { title: "«Tek sayfa PDF oluştur»a bas", detail: "İki yüz gerçek boyutunda tek A4 sayfaya yerleşir; istersen filigran ekle." },
+      { title: "Ön ve arka yüzün fotoğrafını ekle", detail: "Açılan küçük pencerede kimliği kutunun içine alacak şekilde kırp ve «Tamam»a bas." },
+      { title: "«Tek sayfa PDF oluştur»a bas", detail: "İki yüz gerçek boyutunda tek A4 sayfaya yerleşir; önce «Önizle» ile bakabilir, istersen filigran ekleyebilirsin." },
       TR_DOWNLOAD,
     ],
     [
-      { title: "Add front and back photos", detail: "Shoot the document flat without glare; rotate if needed." },
-      { title: "Click Create one-page PDF", detail: "Both sides are placed at real size on one A4 page; add a watermark if you like." },
+      { title: "Add front and back photos", detail: "In the small window that opens, crop so the card fills the box and click Done." },
+      { title: "Click Create one-page PDF", detail: "Both sides are placed at real size on one A4 page; preview it first, and add a watermark if you like." },
       EN_DOWNLOAD,
     ],
+    {
+      tr: "Kimliği ne kadar yakından çekerseniz sonuç o kadar net ve kaliteli olur. Belge kadrajın büyük bölümünü kaplasın; düz bir zemine koyun, ışık yansıması olmasın. Kırparken kartın kenarlarını kutuya tam oturtun.",
+      en: "The closer you shoot the ID, the sharper the result. Let the document fill most of the frame, place it on a plain surface and avoid glare. When cropping, fit the box snugly to the card edges.",
+    },
   ),
 
   "txt-to-pdf": S(

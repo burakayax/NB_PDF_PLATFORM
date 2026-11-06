@@ -5,6 +5,22 @@
  * geri yükler. localStorage/sessionStorage büyük Blob'lar için yetersiz; IndexedDB
  * File'ı (structured clone) doğrudan saklar.
  */
+/**
+ * GİZLİLİK: Bu geçici saklama yalnızca giriş/kayıt yönlendirmesi sırasında dosya
+ * kaybolmasın diye var. Teslim edilmeyen dosya cihazda KALMASIN diye her kayıt
+ * zaman damgalı tutulur ve `PENDING_TTL_MS` sonra geçersiz sayılıp silinir.
+ * Uygulama açılırken (`purgeExpiredScans`) ve çıkışta (`clearAllScans`) temizlenir.
+ */
+export const PENDING_TTL_MS = 30 * 60 * 1000;
+type Stored = { file: File; savedAt: number };
+const wrap = (file: File): Stored => ({ file, savedAt: Date.now() });
+/** Süresi dolmamış kayıttan dosyayı çıkarır; eski biçim (zaman damgasız) ya da süresi dolmuş → null. */
+function freshFile(v: unknown): File | null {
+  const r = v as Partial<Stored> | undefined;
+  if (!r || !(r.file instanceof Blob) || typeof r.savedAt !== "number") return null;
+  return Date.now() - r.savedAt > PENDING_TTL_MS ? null : r.file;
+}
+
 const DB_NAME = "nbpdf";
 const STORE = "pendingScan";
 const KEY = "current";
@@ -26,7 +42,7 @@ export async function saveScannedPdf(file: File): Promise<void> {
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(file, KEY);
+      tx.objectStore(STORE).put(wrap(file), KEY);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -48,7 +64,7 @@ export async function peekScannedPdf(): Promise<File | null> {
       return await new Promise<File | null>((resolve) => {
         const tx = db.transaction(STORE, "readonly");
         const req = tx.objectStore(STORE).get(KEY);
-        req.onsuccess = () => resolve((req.result as File | undefined) ?? null);
+        req.onsuccess = () => resolve(freshFile(req.result));
         req.onerror = () => resolve(null);
       });
     } finally {
@@ -87,9 +103,9 @@ export async function takeScannedPdf(): Promise<File | null> {
       const store = tx.objectStore(STORE);
       const getReq = store.get(KEY);
       getReq.onsuccess = () => {
-        const val = getReq.result as File | undefined;
+        const val = freshFile(getReq.result);
         store.delete(KEY);
-        resolve(val ?? null);
+        resolve(val);
       };
       getReq.onerror = () => reject(getReq.error);
     });
@@ -111,7 +127,7 @@ export async function saveScanForAccount(file: File): Promise<void> {
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(file, ACCOUNT_KEY);
+      tx.objectStore(STORE).put(wrap(file), ACCOUNT_KEY);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -130,9 +146,9 @@ export async function takeScanForAccount(): Promise<File | null> {
         const store = tx.objectStore(STORE);
         const getReq = store.get(ACCOUNT_KEY);
         getReq.onsuccess = () => {
-          const val = getReq.result as File | undefined;
+          const val = freshFile(getReq.result);
           store.delete(ACCOUNT_KEY);
-          resolve(val ?? null);
+          resolve(val);
         };
         getReq.onerror = () => reject(getReq.error);
       });
@@ -144,21 +160,54 @@ export async function takeScanForAccount(): Promise<File | null> {
   }
 }
 
-/** Bekleyen PDF var mı (silmeden kontrol). */
+/** Bekleyen PDF var mı (silmeden kontrol). Süresi dolmuşsa yok sayılır. */
 export async function hasScannedPdf(): Promise<boolean> {
+  return (await peekScannedPdf()) !== null;
+}
+
+/** Süresi dolmuş (ya da eski biçimli, zaman damgasız) tüm kayıtları siler. Uygulama açılırken çağrılır. */
+export async function purgeExpiredScans(): Promise<void> {
   try {
     const db = await openDb();
     try {
-      return await new Promise<boolean>((resolve) => {
-        const tx = db.transaction(STORE, "readonly");
-        const req = tx.objectStore(STORE).count(KEY);
-        req.onsuccess = () => resolve(req.result > 0);
-        req.onerror = () => resolve(false);
+      await new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE, "readwrite");
+        const store = tx.objectStore(STORE);
+        const req = store.openCursor();
+        req.onsuccess = () => {
+          const cur = req.result;
+          if (!cur) return;
+          if (freshFile(cur.value) === null) cur.delete();
+          cur.continue();
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+        tx.onabort = () => resolve();
       });
     } finally {
       db.close();
     }
   } catch {
-    return false;
+    /* IndexedDB yok / kapalı */
+  }
+}
+
+/** Bekleyen tüm dosyaları siler (çıkışta çağrılır). */
+export async function clearAllScans(): Promise<void> {
+  try {
+    const db = await openDb();
+    try {
+      await new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+        tx.onabort = () => resolve();
+      });
+    } finally {
+      db.close();
+    }
+  } catch {
+    /* yoksay */
   }
 }

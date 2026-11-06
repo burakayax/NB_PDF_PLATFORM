@@ -131,6 +131,7 @@ import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { HeroBackground } from "./HeroBackground";
 import { ThemeToggle } from "../common/ThemeToggle";
+import { RunsWhereBadge } from "../common/RunsWhereBadge";
 import { ProductGallery } from "./ProductGallery";
 import { PaytrBadge } from "../common/PaytrBadge";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
@@ -1121,12 +1122,7 @@ function Hero({
                     <p className="text-[17px] font-bold text-white">{tr ? meta.tr : meta.en}</p>
                     <p className="truncate text-[14px] text-slate-400">{tr ? meta.trDesc : meta.enDesc}</p>
                   </div>
-                  {onDevice && (
-                    <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[12px] font-bold text-emerald-300 sm:inline-flex">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      {tr ? "Cihazında çalışır" : "Runs on your device"}
-                    </span>
-                  )}
+                  {onDevice && <RunsWhereBadge onDevice language={language} className="hidden sm:inline-flex" />}
                 </div>
               );
             })()}

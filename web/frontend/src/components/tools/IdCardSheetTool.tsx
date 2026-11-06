@@ -1,29 +1,96 @@
-import { useEffect, useState } from "react";
-import { Loader2, RotateCw, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Crop, LayoutTemplate, Eye, Loader2, Trash2, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
-import { buildIdSheetPdf, type CardKind, type Rotation, type SheetMode } from "../../lib/idCardSheet";
+import { IdCropDialog } from "./IdCropDialog";
+import { alignmentsConflict, buildIdSheetPdf, CARD_MM, defaultAligns, layoutSheet, sameAlign, type AlignH, type AlignV, type CardKind, type SheetAlign, type SheetAligns, type SheetMode } from "../../lib/idCardSheet";
 import { isTiffFile } from "../../lib/tiffPages";
-import { detectIdCard, qualityHint, type DetectResult } from "../../lib/idCardDetect";
 
-type Detect = DetectResult | "detecting" | "error";
-type Slot = {
-  file: File;
-  rotation: Rotation;
-  url: string;
-  cropped: Blob | null;
-  croppedUrl: string | null;
-  detect: Detect;
-} | null;
+/** `original`: kullanıcının yüklediği dosya (yeniden kırpmak için), `cropped`: kırpılmış hali. */
+type Slot = { original: File; cropped: Blob; url: string } | null;
 
 const revoke = (s: Slot) => {
-  if (!s) return;
-  URL.revokeObjectURL(s.url);
-  if (s.croppedUrl) URL.revokeObjectURL(s.croppedUrl);
+  if (s) URL.revokeObjectURL(s.url);
 };
+
+/** `together`: ön ve arka aynı konumda = tek blok, arka yüz ön yüzün hemen altında. */
+type Preset = { key: string; tr: string; en: string; front: SheetAlign; back: SheetAlign; together?: boolean };
+const A = (h: AlignH, v: AlignV): SheetAlign => ({ h, v });
+
+/** İki yüz için hazır düzenler (konuşulan tüm varyasyonlar). */
+const TWO_PRESETS: Preset[] = [
+  // 1. satır: alt alta, sayfanın üstünde — soldan sağa
+  { key: "stack-l", tr: "Solda alt alta", en: "Stacked, left", front: A("left", "top"), back: A("left", "top"), together: true },
+  { key: "stack-c", tr: "Ortada alt alta", en: "Stacked, centered", front: A("center", "top"), back: A("center", "top"), together: true },
+  { key: "stack-r", tr: "Sağda alt alta", en: "Stacked, right", front: A("right", "top"), back: A("right", "top"), together: true },
+  // 2. satır: yan yana — yukarıdan aşağıya
+  { key: "side-top", tr: "Üstte yan yana", en: "Side by side, top", front: A("left", "top"), back: A("right", "top") },
+  { key: "side-mid", tr: "Ortada yan yana", en: "Side by side, middle", front: A("left", "middle"), back: A("right", "middle") },
+  { key: "side-bot", tr: "Altta yan yana", en: "Side by side, bottom", front: A("left", "bottom"), back: A("right", "bottom") },
+  // 3. satır: ortalı — yukarıdan aşağıya
+  { key: "top-bottom", tr: "Üstte ve altta", en: "Top and bottom", front: A("center", "top"), back: A("center", "bottom") },
+  { key: "stack-mid", tr: "Sayfa ortasında alt alta", en: "Stacked, page middle", front: A("center", "middle"), back: A("center", "middle"), together: true },
+  { key: "stack-bot", tr: "Altta alt alta", en: "Stacked, bottom", front: A("center", "bottom"), back: A("center", "bottom"), together: true },
+];
+
+/** Tek yüz için hazır konumlar. */
+const ONE_PRESETS: Preset[] = [
+  { key: "one-tl", tr: "Üstte solda", en: "Top, left", front: A("left", "top"), back: A("left", "top") },
+  { key: "one-tc", tr: "Üstte ortada", en: "Top, center", front: A("center", "top"), back: A("center", "top") },
+  { key: "one-tr", tr: "Üstte sağda", en: "Top, right", front: A("right", "top"), back: A("right", "top") },
+  { key: "one-mc", tr: "Sayfanın ortası", en: "Page center", front: A("center", "middle"), back: A("center", "middle") },
+  { key: "one-bc", tr: "Altta ortada", en: "Bottom, center", front: A("center", "bottom"), back: A("center", "bottom") },
+];
+
+/** A4 sayfanın küçük çizimi: ön yüz turkuaz, arka yüz yeşil. Konumlar gerçek yerleşim hesabından gelir. */
+function PageThumb({ kind, mode, front, back }: { kind: CardKind; mode: SheetMode; front: SheetAlign; back: SheetAlign }) {
+  const { page, cards } = layoutSheet(kind, mode, { front, back });
+  const W = 44;
+  const k = W / page.w;
+  return (
+    <span className="relative block rounded-[3px] bg-white/90 shadow-inner" style={{ width: W, height: page.h * k }} aria-hidden>
+      {cards.map((c, i) => (
+        <span
+          key={i}
+          className={`absolute rounded-[1.5px] ${i === 0 ? "bg-cyan-500" : "bg-emerald-500"}`}
+          style={{ left: c.x * k, top: c.y * k, width: c.w * k, height: c.h * k }}
+        />
+      ))}
+    </span>
+  );
+}
+
+/** Seçenekleri doğrudan gösteren düğme grubu (açılır liste yerine). */
+function Segmented({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <div className="min-w-0 space-y-1.5">
+      <p className="text-[13px] font-semibold text-slate-300">{label}</p>
+      <div className="flex gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-1.5" role="radiogroup" aria-label={label}>
+        {options.map((o) => {
+          const on = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => onChange(o.value)}
+              className={`min-h-[44px] flex-1 rounded-lg px-3 text-[13px] font-semibold transition ${
+                on ? "bg-cyan-400/15 text-cyan-100 shadow-[0_0_0_1px_rgba(34,211,238,0.5)]" : "text-slate-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 /** Kimlik / Ehliyet / Pasaport → tek A4 sayfa. Görüntü cihazdan çıkmaz. */
 export function IdCardSheetTool({ language }: { language: Language }) {
@@ -32,20 +99,43 @@ export function IdCardSheetTool({ language }: { language: Language }) {
   const [kind, setKind] = useState<CardKind>("id1");
   const [mode, setMode] = useState<SheetMode>("two");
   const [slots, setSlots] = useState<[Slot, Slot]>([null, null]);
-  const [autoCrop, setAutoCrop] = useState(true);
+  const [crop, setCrop] = useState<{ i: 0 | 1; file: File } | null>(null);
+  const [aligns, setAligns] = useState<SheetAligns>(() => defaultAligns("id1"));
   const [wm, setWm] = useState(false);
   const [wmText, setWmText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+
+  // Güncel değerleri ref'te tut: sayfadan çıkarken temizlik eski (boş) state'i yakalamasın.
+  const previewRef = useRef<string | null>(null);
+  previewRef.current = previewUrl;
+  const slotsRef = useRef<[Slot, Slot]>([null, null]);
+  slotsRef.current = slots;
+
+  const closePreview = () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
+    setPreviewUrl(null);
+  };
+  // Girdiler değişince eski önizleme geçersiz olur.
+  useEffect(() => {
+    closePreview();
+  }, [slots, kind, mode, aligns, wm, wmText]);
+  useEffect(() => () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); }, []);
 
   // Önizleme adresleri bellekten serbest bırakılır.
-  useEffect(() => () => slots.forEach(revoke), []);
+  useEffect(() => () => slotsRef.current.forEach(revoke), []);
 
   const count = mode === "two" ? 2 : 1;
   const labels = tr ? ["Ön yüz", "Arka yüz"] : ["Front", "Back"];
 
-  const setSlot = (i: 0 | 1, files: File[]) => {
+  const aspect = CARD_MM[kind].w / CARD_MM[kind].h;
+
+  // Dosya seçilince doğrudan kırpma penceresi açılır.
+  const pick = (i: 0 | 1, files: File[]) => {
     const f = files[0];
     if (!f) return;
     if (isTiffFile(f) || !/^image\//.test(f.type || "image/x")) {
@@ -53,37 +143,19 @@ export function IdCardSheetTool({ language }: { language: Language }) {
       return;
     }
     setError(null);
+    setCrop({ i, file: f });
+  };
+  const applyCrop = (blob: Blob) => {
+    if (!crop) return;
+    const { i, file } = crop;
     setSlots((prev) => {
       const n: [Slot, Slot] = [prev[0], prev[1]];
       revoke(n[i]);
-      n[i] = { file: f, rotation: 0, url: URL.createObjectURL(f), cropped: null, croppedUrl: null, detect: "detecting" };
+      n[i] = { original: file, cropped: blob, url: URL.createObjectURL(blob) };
       return n;
     });
-    // Kenar bulma arka planda; bitince aynı dosya hâlâ yuvadaysa sonuç yazılır.
-    void detectIdCard(f)
-      .then((d) => ({ d, err: false }))
-      .catch(() => ({ d: null, err: true }))
-      .then(({ d, err }) =>
-        setSlots((prev) => {
-          const cur = prev[i];
-          if (!cur || cur.file !== f) return prev;
-          const n: [Slot, Slot] = [prev[0], prev[1]];
-          n[i] = {
-            ...cur,
-            cropped: d?.blob ?? null,
-            croppedUrl: d?.blob ? URL.createObjectURL(d.blob) : null,
-            detect: err || !d ? "error" : d,
-          };
-          return n;
-        }),
-      );
+    setCrop(null);
   };
-  const rotate = (i: 0 | 1) =>
-    setSlots((p) => {
-      const n: [Slot, Slot] = [p[0], p[1]];
-      if (n[i]) n[i] = { ...n[i]!, rotation: (((n[i]!.rotation + 90) % 360) as Rotation) };
-      return n;
-    });
   const clear = (i: 0 | 1) =>
     setSlots((p) => {
       const n: [Slot, Slot] = [p[0], p[1]];
@@ -91,17 +163,56 @@ export function IdCardSheetTool({ language }: { language: Language }) {
       n[i] = null;
       return n;
     });
+  // Belge türü değişince oran değişir → eski kırpmalar geçersiz, baştan alınır.
+  const changeKind = (k: CardKind) => {
+    if (k === kind) return;
+    setSlots((p) => {
+      p.forEach(revoke);
+      return [null, null];
+    });
+    setKind(k);
+    setAligns(defaultAligns(k));
+    // Pasaportta ön/arka yok: yalnızca fotoğraflı bilgi sayfası kopyalanır → tek sayfa.
+    setMode(k === "id3" ? "one" : "two");
+  };
 
-  const ready = slots.slice(0, count).every((s) => s && s.detect !== "detecting");
-  const usesCrop = (s: NonNullable<Slot>) => autoCrop && !!s.cropped;
+  const ready = slots.slice(0, count).every(Boolean);
+
+  const buildPdf = async () => {
+    const inputs = slots.slice(0, count).map((s) => ({ file: s!.cropped, rotation: 0 as const }));
+    const bytes = await buildIdSheetPdf(kind, mode, inputs, wm ? { text: wmText.trim() } : undefined, aligns);
+    return new Blob([bytes as BlobPart], { type: "application/pdf" });
+  };
+
+  const preview = async () => {
+    setError(null);
+    setPreviewBusy(true);
+    try {
+      const blob = await buildPdf();
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      setPreviewUrl(URL.createObjectURL(blob));
+    } catch {
+      setError(tr ? "Önizleme oluşturulamadı. Fotoğraflar bozuk olabilir." : "Could not build the preview. The photos may be corrupt.");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  /** İş bitti: fotoğraflar ve sonuç bellekten atılır (kimlik gibi hassas belge sayfada kalmasın). */
+  const finish = () => {
+    setSlots((p) => {
+      p.forEach(revoke);
+      return [null, null];
+    });
+    closePreview();
+    setResult(null);
+  };
 
   const run = async () => {
     setError(null);
     setBusy(true);
     try {
-      const inputs = slots.slice(0, count).map((s) => ({ file: usesCrop(s!) ? s!.cropped! : s!.file, rotation: usesCrop(s!) ? s!.rotation : s!.rotation }));
-      const bytes = await buildIdSheetPdf(kind, mode, inputs, wm ? { text: wmText.trim() } : undefined);
-      setResult(new Blob([bytes as BlobPart], { type: "application/pdf" }));
+      setResult(await buildPdf());
     } catch {
       setError(tr ? "Sayfa oluşturulamadı. Fotoğraflar bozuk olabilir." : "Could not build the page. The photos may be corrupt.");
     } finally {
@@ -111,7 +222,7 @@ export function IdCardSheetTool({ language }: { language: Language }) {
 
   if (result) {
     return (
-      <ToolResultPanel ratingToolSlug="kimlik-karti-tek-sayfa" blob={result} filename="kimlik-on-arka.pdf" language={language} processedOnDevice onClose={() => setResult(null)}>
+      <ToolResultPanel ratingToolSlug="kimlik-karti-tek-sayfa" blob={result} filename="kimlik-on-arka.pdf" language={language} processedOnDevice onClose={finish}>
         <p className="mt-5 text-[13px] font-semibold text-emerald-200">
           {tr ? "Kimlik sayfanız hazır: belge gerçek boyutunda tek A4 sayfada." : "Your ID page is ready: the document at real size on one A4 page."}
         </p>
@@ -122,47 +233,51 @@ export function IdCardSheetTool({ language }: { language: Language }) {
 
   return (
     <div className="tool-form">
-      <div className="field field--full flex flex-wrap gap-4 text-[13px] text-slate-200">
-        <label className="flex items-center gap-1.5">
-          {tr ? "Belge:" : "Document:"}
-          <select value={kind} onChange={(e) => setKind(e.target.value as CardKind)}>
-            <option value="id1">{tr ? "Kimlik kartı / Ehliyet" : "ID card / Driving licence"}</option>
-            <option value="id3">{tr ? "Pasaport (bilgi sayfası)" : "Passport (data page)"}</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-1.5">
-          {tr ? "Yüz:" : "Sides:"}
-          <select value={mode} onChange={(e) => setMode(e.target.value as SheetMode)}>
-            <option value="two">{tr ? "Ön + arka" : "Front + back"}</option>
-            <option value="one">{tr ? "Tek yüz" : "One side"}</option>
-          </select>
-        </label>
+      <div className="field--full grid gap-4 sm:grid-cols-2">
+        <Segmented
+          label={tr ? "Belge türü" : "Document type"}
+          value={kind}
+          onChange={(v) => changeKind(v as CardKind)}
+          options={[
+            { value: "id1", label: tr ? "Kimlik kartı / Ehliyet" : "ID card / Driving licence" },
+            { value: "id3", label: tr ? "Pasaport" : "Passport" },
+          ]}
+        />
+        {kind === "id1" ? (
+          <Segmented
+            label={tr ? "Kaç yüz?" : "How many sides?"}
+            value={mode}
+            onChange={(v) => setMode(v as SheetMode)}
+            options={[
+              { value: "two", label: tr ? "Ön + arka" : "Front + back" },
+              { value: "one", label: tr ? "Tek yüz" : "One side" },
+            ]}
+          />
+        ) : (
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-[13px] font-semibold text-slate-300">{tr ? "Pasaportta ne kopyalanır?" : "What is copied for a passport?"}</p>
+            <p className="flex min-h-[56px] items-center rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-[13px] leading-snug text-slate-300">
+              {tr ? "Yalnızca fotoğraflı bilgi sayfası (tek sayfa). Ön/arka yüz yoktur." : "Only the photo data page (a single page). There is no front/back."}
+            </p>
+          </div>
+        )}
       </div>
 
-      <div className="field field--full space-y-2 rounded-xl border border-sky-400/20 bg-sky-400/[0.05] px-3.5 py-2.5 text-left text-[12px] leading-relaxed text-sky-100/90">
-        <p>
-          {tr
-            ? "İpucu: Kimliği ne kadar yakından çekerseniz sonuç o kadar net ve kaliteli olur. Belge kadrajın büyük bölümünü kaplasın; düz bir zemine koyun, ışık yansıması olmasın. Genel bir fotoğraf da olur — kimliğin kenarlarını biz buluruz."
-            : "Tip: the closer you shoot the ID, the sharper the result. Let the document fill most of the frame, place it on a plain surface and avoid glare. A general photo works too — we find the card edges for you."}
-        </p>
-        <label className="flex items-center gap-2 text-slate-200">
-          <input type="checkbox" checked={autoCrop} onChange={(e) => setAutoCrop(e.target.checked)} />
-          {tr ? "Kimliğin kenarlarını otomatik bul ve düzelt" : "Find and straighten the card edges automatically"}
-        </label>
-      </div>
-
+      <div className={`field--full grid gap-4 ${count === 2 ? "sm:grid-cols-2" : ""}`}>
       {([0, 1] as const).slice(0, count).map((i) => (
-        <div key={`${kind}-${mode}-${i}`} className="field field--full">
-          <span>{mode === "one" ? (tr ? "Fotoğraf" : "Photo") : labels[i]}</span>
+        <div key={`${kind}-${mode}-${i}`} className="field min-w-0">
+          <span>{mode === "one" ? (kind === "id3" ? (tr ? "Bilgi sayfası (fotoğraflı sayfa)" : "Data page (photo page)") : tr ? "Fotoğraf" : "Photo") : labels[i]}</span>
           {slots[i] ? (
-            <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5">
-              <img src={usesCrop(slots[i]!) ? slots[i]!.croppedUrl! : slots[i]!.url} alt="" className="h-20 w-32 rounded-md bg-slate-900 object-contain" style={{ transform: `rotate(${slots[i]!.rotation}deg)` }} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] text-slate-200">{slots[i]!.file.name}</p>
-                <SlotStatus slot={slots[i]!} tr={tr} autoCrop={autoCrop} />
+            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.03]">
+              <img src={slots[i]!.url} alt="" className="block aspect-[1.586/1] w-full bg-slate-900 object-contain" />
+              <div className="flex items-center gap-2 p-2.5">
+                <p className="min-w-0 flex-1 truncate text-[13px] text-slate-200">{slots[i]!.original.name}</p>
+                <button type="button" onClick={() => setCrop({ i, file: slots[i]!.original })} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold text-cyan-200 hover:bg-white/5">
+                  <Crop className="h-4 w-4" />
+                  {tr ? "Yeniden kırp" : "Re-crop"}
+                </button>
+                <button type="button" onClick={() => clear(i)} aria-label={tr ? "Kaldır" : "Remove"} className="rounded-md p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
               </div>
-              <button type="button" onClick={() => rotate(i)} aria-label={tr ? "Döndür" : "Rotate"} className="rounded-md p-1.5 text-slate-300 hover:bg-white/5"><RotateCw className="h-4 w-4" /></button>
-              <button type="button" onClick={() => clear(i)} aria-label={tr ? "Kaldır" : "Remove"} className="rounded-md p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
             </div>
           ) : (
             <WorkspaceUploadField
@@ -170,22 +285,28 @@ export function IdCardSheetTool({ language }: { language: Language }) {
               language={language}
               accept="image/*"
               disabled={busy}
-              label={tr ? `${mode === "one" ? "Fotoğrafı" : labels[i] + " fotoğrafını"} buraya sürükle` : "Drag the photo here"}
+              label={tr ? `${mode === "one" ? (kind === "id3" ? "Bilgi sayfasının fotoğrafını" : "Fotoğrafı") : labels[i] + " fotoğrafını"} buraya sürükle` : kind === "id3" ? "Drag the data-page photo here" : "Drag the photo here"}
               note={tr ? "JPG / PNG · cihazınızdan çıkmaz" : "JPG / PNG · stays on your device"}
               hideHeader={describesTool}
-              onFiles={(f) => setSlot(i, f)}
+              hideBenefits
+              onFiles={(f) => pick(i, f)}
             />
           )}
         </div>
       ))}
+      </div>
 
-      <div className="field field--full space-y-2">
-        <label className="flex items-center gap-2 text-[13px] text-slate-200">
-          <input type="checkbox" checked={wm} onChange={(e) => setWm(e.target.checked)} />
+      <div className="field--full space-y-2.5">
+        <label
+          className={`inline-flex min-h-[48px] cursor-pointer items-center gap-2.5 rounded-xl border px-4 text-[13px] font-semibold transition ${
+            wm ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100" : "border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/25"
+          }`}
+        >
+          <input type="checkbox" className="h-4 w-4 cursor-pointer accent-cyan-400" checked={wm} onChange={(e) => setWm(e.target.checked)} />
           {tr ? "Filigran ekle (kimliğin kötüye kullanımına karşı)" : "Add a watermark (against misuse of the ID)"}
         </label>
         {wm && (
-          <>
+          <div className="field">
             <input
               value={wmText}
               onChange={(e) => setWmText(e.target.value)}
@@ -197,55 +318,93 @@ export function IdCardSheetTool({ language }: { language: Language }) {
                 ? "Filigran belgenin üzerine yazılır. Bazı kurumlar filigranlı kimliği kabul etmeyebilir; önce kuruma sorun."
                 : "The watermark is drawn over the document. Some institutions may not accept a watermarked ID; check first."}
             </p>
-          </>
+          </div>
         )}
       </div>
+
+      <div className="field--full space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
+            <LayoutTemplate className="h-[18px] w-[18px]" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[14px] font-bold text-white">{tr ? "Sayfa düzeni" : "Page layout"}</p>
+            <p className="text-[12px] leading-snug text-slate-400">
+              {tr ? "Kimliğin A4 sayfada nerede duracağını seçin. " : "Choose where the ID goes on the A4 page. "}
+              <span className="font-semibold text-cyan-300">{mode === "two" ? (tr ? "Turkuaz: ön yüz" : "Cyan: front") : tr ? "Turkuaz: belge" : "Cyan: document"}</span>
+              {mode === "two" && (
+                <>
+                  {" · "}
+                  <span className="font-semibold text-emerald-300">{tr ? "Yeşil: arka yüz" : "Green: back"}</span>
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label={tr ? "Sayfa düzeni" : "Page layout"}>
+          {(mode === "two" ? TWO_PRESETS : ONE_PRESETS).map((p) => {
+            const fits = mode === "one" || !!p.together || !alignmentsConflict(kind, p.front, p.back);
+            const active = sameAlign(p.front, aligns.front) && (mode === "one" || sameAlign(p.back, aligns.back));
+            return (
+              <button
+                key={p.key}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                disabled={!fits}
+                title={!fits ? (tr ? "Bu belge bu düzene sığmaz" : "This document does not fit this layout") : undefined}
+                onClick={() => setAligns({ front: p.front, back: p.back })}
+                className={`flex flex-col items-center gap-2 rounded-xl border px-2 py-3 text-center transition ${
+                  active
+                    ? "border-cyan-400/60 bg-cyan-400/10 shadow-[0_0_0_1px_rgba(34,211,238,0.35)]"
+                    : fits
+                      ? "border-white/10 bg-white/[0.04] hover:border-white/30 hover:bg-white/[0.07]"
+                      : "cursor-not-allowed border-white/5 opacity-40"
+                }`}
+              >
+                <PageThumb kind={kind} mode={mode} front={p.front} back={p.back} />
+                <span className={`text-[12px] font-semibold leading-tight ${active ? "text-cyan-100" : "text-slate-300"} ${fits ? "" : "line-through"}`}>{tr ? p.tr : p.en}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="field--full inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/[0.07] px-4 text-[14px] font-semibold text-cyan-100 transition hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => void preview()}
+        disabled={busy || previewBusy || !ready || (wm && !wmText.trim())}
+      >
+        {previewBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+        {tr ? "Önizle (PDF çıktısını gör)" : "Preview (see the PDF output)"}
+      </button>
+
+      {previewUrl && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3" role="dialog" aria-modal="true" aria-label={tr ? "Çıktı önizlemesi" : "Output preview"} onClick={closePreview}>
+          <div className="flex h-full max-h-[92vh] w-full max-w-3xl flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <p className="text-[15px] font-bold text-white">{tr ? "Çıktı önizlemesi (A4 PDF)" : "Output preview (A4 PDF)"}</p>
+              <button type="button" onClick={closePreview} aria-label={tr ? "Kapat" : "Close"} className="rounded-md p-1.5 text-slate-300 hover:bg-white/10"><X className="h-5 w-5" /></button>
+            </div>
+            <iframe title={tr ? "PDF önizleme" : "PDF preview"} src={`${previewUrl}#toolbar=0&navpanes=0&view=FitH`} className="min-h-0 w-full flex-1 rounded-lg bg-white" />
+            <button type="button" onClick={closePreview} className="min-h-[44px] rounded-xl bg-cyan-500 px-6 text-[13px] font-bold text-slate-950 hover:bg-cyan-400">
+              {tr ? "Kapat" : "Close"}
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
 
       {error && <p className="field--full rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300" role="alert">{error}</p>}
 
       <button type="button" className="primary-action" onClick={() => void run()} disabled={busy || !ready || (wm && !wmText.trim())}>
         {busy ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{tr ? "Hazırlanıyor…" : "Preparing…"}</span> : tr ? "Tek sayfa PDF oluştur" : "Create one-page PDF"}
       </button>
+      {crop && <IdCropDialog file={crop.file} aspect={aspect} tr={tr} onCancel={() => setCrop(null)} onDone={applyCrop} />}
       <p className="field--full text-center text-[12px] text-slate-400">
         {tr ? "Fotoğraflarınız tarayıcınızda işlenir — sunucumuza yüklenmez." : "Your photos are processed in your browser — never uploaded."}
       </p>
     </div>
   );
-}
-
-function SlotStatus({ slot, tr, autoCrop }: { slot: NonNullable<Slot>; tr: boolean; autoCrop: boolean }) {
-  const d = slot.detect;
-  if (!autoCrop) return null;
-  if (d === "detecting")
-    return <p className="mt-0.5 text-[12px] text-slate-400">{tr ? "Kenarlar aranıyor…" : "Looking for the edges…"}</p>;
-  if (d === "error" || d.reason === "not-found")
-    return (
-      <p className="mt-0.5 text-[12px] text-amber-300">
-        {tr
-          ? "Kimlik bulunamadı; fotoğraf olduğu gibi kullanılacak. Daha yakından ve düz bir zeminde çekmeyi deneyin."
-          : "Card not found; the photo will be used as is. Try a closer shot on a plain surface."}
-      </p>
-    );
-  if (d.reason === "not-card-shaped")
-    return (
-      <p className="mt-0.5 text-[12px] text-amber-300">
-        {tr
-          ? "Bulunan şekil kimlik oranına uymuyor; fotoğraf olduğu gibi kullanılacak. Daha yakından çekin."
-          : "The detected shape does not match a card; the photo will be used as is. Shoot closer."}
-      </p>
-    );
-  const hint = qualityHint(d);
-  if (hint === "closer")
-    return (
-      <p className="mt-0.5 text-[12px] text-amber-300">
-        {tr ? "Kimlik bulundu ama fotoğrafın küçük bir kısmını kaplıyor. Daha yakından çekerseniz daha net çıkar." : "Card found but it fills only a small part of the photo. Shoot closer for a sharper result."}
-      </p>
-    );
-  if (hint === "low-res")
-    return (
-      <p className="mt-0.5 text-[12px] text-amber-300">
-        {tr ? "Kimlik bulundu ama çözünürlük düşük; baskıda bulanık çıkabilir. Daha yakından çekin." : "Card found but resolution is low; print may look blurry. Shoot closer."}
-      </p>
-    );
-  return <p className="mt-0.5 text-[12px] text-emerald-300">{tr ? "Kimlik bulundu ve düzeltildi." : "Card found and straightened."}</p>;
 }
