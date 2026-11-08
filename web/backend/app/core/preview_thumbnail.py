@@ -29,7 +29,7 @@ _HERO_WATERMARK = "NB GLOBAL STUDIO"
 
 def _blurred_png_bytes_from_fitz_doc(doc: object) -> Optional[bytes]:
     try:
-        import fitz  # noqa: F401
+        import pymupdf as fitz  # noqa: F401
         from PIL import Image, ImageDraw, ImageFilter, ImageFont
     except ImportError:
         return None
@@ -97,7 +97,7 @@ def generate_blurred_pdf_thumbnail(pdf_bytes: bytes) -> Optional[bytes]:
         return None
 
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         logger.warning("preview_thumbnail: PyMuPDF (fitz) is not installed; skipping")
         return None
@@ -132,7 +132,7 @@ def generate_blurred_pdf_thumbnail_from_path(pdf_path: Union[str, Path]) -> Opti
         return None
 
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         logger.warning("preview_thumbnail: PyMuPDF (fitz) is not installed; skipping")
         return None
@@ -164,7 +164,7 @@ def generate_hero_watermarked_preview_png(pdf_bytes: bytes) -> Optional[bytes]:
         return None
 
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         logger.warning("preview_thumbnail hero: PyMuPDF missing")
         return None
@@ -245,7 +245,7 @@ def generate_hero_watermarked_preview_png_from_path(pdf_path: Union[str, Path]) 
         return None
 
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         logger.warning("preview_thumbnail hero: PyMuPDF missing")
         return None
@@ -371,7 +371,7 @@ def generate_watermarked_preview_pdf_from_path(
         return None
 
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         logger.warning("preview_pdf: PyMuPDF missing")
         return None

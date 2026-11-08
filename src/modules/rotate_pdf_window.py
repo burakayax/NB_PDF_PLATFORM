@@ -166,7 +166,7 @@ class RotatePdfWindow(ctk.CTkToplevel):
             try:
                 if self.access_controller:
                     self.access_controller.authorize_operation("rotate-pdf", [self.selected_file])
-                import fitz
+                import pymupdf as fitz
                 doc = fitz.open(self.selected_file)
                 if self.selected_password:
                     doc.authenticate(self.selected_password)

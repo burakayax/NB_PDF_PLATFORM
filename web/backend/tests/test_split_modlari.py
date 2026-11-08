@@ -5,7 +5,7 @@ import types
 import zipfile
 from pathlib import Path
 
-import fitz
+import pymupdf as fitz
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

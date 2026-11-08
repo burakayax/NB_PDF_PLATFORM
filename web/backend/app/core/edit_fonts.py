@@ -137,7 +137,7 @@ def pdf_fontname(path: str) -> str:
 
 @lru_cache(maxsize=64)
 def font_obj(path: str) -> Any:
-    import fitz
+    import pymupdf as fitz
 
     return fitz.Font(fontfile=path)
 
@@ -162,7 +162,7 @@ def text_width(text: str, primary: str, fallback: str, size: float) -> float:
 def insert_runs(page: Any, x: float, baseline: float, text: str, size: float, color: Any,
                 primary: str, fallback: str, morph: Any = None) -> float:
     """Metni harf-bazlı yedekle yazar (birincil fontta olmayan harf yedekten). Genişliği döner."""
-    import fitz
+    import pymupdf as fitz
 
     cx = x
     for t, p in split_runs(text, primary, fallback):
@@ -236,7 +236,7 @@ def insert_spaced(page: Any, x: float, baseline: float, text: str, size: float, 
                   primary: str, fallback: str, hs: float = 1.0, cs: float = 0.0, ws: float = 0.0) -> float:
     """Harf harf yazar: yatay ölçek (hs) + harf aralığı (cs) + kelime aralığı (ws) — orijinal
     Tc/Tw/Tz davranışı. Genişliği döner."""
-    import fitz
+    import pymupdf as fitz
 
     cx = x
     for t, p in split_runs(text, primary, fallback):
@@ -350,7 +350,7 @@ def remove_image_placement(doc: Any, page: Any, rect: Any) -> str | None:
          (başka sayfalardaki aynı logo etkilenmez).
       2) Kutuya başka görsel değmiyorsa silme aracıyla yalnız görseli kaldır (yazı/çizgiye dokunma).
     Başarılıysa kullanılan yöntemin adı, değilse None (çağıran eski dolgu yöntemine düşer)."""
-    import fitz
+    import pymupdf as fitz
 
     r = fitz.Rect(rect)
     try:
@@ -393,7 +393,7 @@ def vector_emblems(page: Any, image_rects: list[Any], max_clusters: int = 40) ->
     dikdörtgen dolgu ve tek çizgiler değil. Aday kutular birbirine yakınsa tek amblemde birleşir.
     Sayfayı kaplayan, çok küçük ya da bir görselle neredeyse aynı yerde olan kümeler atılır;
     çok sayıda küme (harita/grafik) çıkarsa hiçbiri döndürülmez (arayüz kalabalıklaşmasın)."""
-    import fitz
+    import pymupdf as fitz
 
     try:
         draws = page.get_drawings()

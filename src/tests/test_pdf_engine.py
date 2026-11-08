@@ -13,7 +13,7 @@ import pdf_engine as pdf_engine
 
 
 def _write_min_pdf(path: str, *, user_pw: str | None = None) -> None:
-    import fitz
+    import pymupdf as fitz
 
     doc = fitz.open()
     doc.new_page()
@@ -117,7 +117,7 @@ class TestPdfEngine(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             inp = os.path.join(tmpdir, 'in.pdf')
             out_path = os.path.join(tmpdir, 'out.pdf')
-            import fitz
+            import pymupdf as fitz
 
             d = fitz.open()
             d.new_page()
@@ -139,7 +139,7 @@ class TestPdfEngine(unittest.TestCase):
     def test_extract_pages_separate_success(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             inp = os.path.join(tmpdir, 'in.pdf')
-            import fitz
+            import pymupdf as fitz
 
             d = fitz.open()
             d.new_page()

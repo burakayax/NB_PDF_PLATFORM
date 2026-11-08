@@ -226,7 +226,9 @@ services:
     autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     runtime: static
     rootDir: web/frontend
-    buildCommand: npm ci && npm run build
+    # tsc (tip denetimi) burada ATLANIR: CI'daki "TypeScript Type Check" işi deploy'dan önce zorunlu
+    # ve yeşil olmak zorunda; vite zaten tipsiz derler. ~30-50 sn kazanç. Tam komut: `npm run build`.
+    buildCommand: npm ci && npm run build:render
     staticPublishPath: dist
     # SPA fallback: tüm yollar index.html'e döner (React Router için)
     # ── Prerender SEO sayfalari: slash'siz URL'leri dizin index.html'ine yonlendir ──

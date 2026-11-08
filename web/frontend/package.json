@@ -19,6 +19,7 @@
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
     "dev:fullstack": "npm run dev --prefix ../..",
     "build": "tsc && vite build && node scripts/inject-prerender-assets.mjs && node scripts/stamp-sw-version.mjs",
+    "build:render": "vite build && node scripts/inject-prerender-assets.mjs && node scripts/stamp-sw-version.mjs",
     "preview": "vite preview",
     "lint": "eslint src"
   },

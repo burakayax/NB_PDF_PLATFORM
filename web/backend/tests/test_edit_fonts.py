@@ -2,7 +2,7 @@
 import io
 import json
 
-import fitz
+import pymupdf as fitz
 import pytest
 from fastapi.testclient import TestClient
 

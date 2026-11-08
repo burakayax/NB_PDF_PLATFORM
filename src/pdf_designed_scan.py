@@ -712,7 +712,7 @@ def try_designed_pdf_to_word(pdf_path: str, docx_path: str, password: Optional[s
                              progress_callback=None) -> bool:
     """Tasarımlı (yan panelli / renkli şeritli) taranmış PDF'i Word'e çevir. Uygun değilse False."""
     try:
-        import fitz
+        import pymupdf as fitz
     except ImportError:
         return False
     doc = fitz.open(pdf_path)

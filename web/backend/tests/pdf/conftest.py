@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz  # PyMuPDF
     HAS_FITZ = True
 except ImportError:
     HAS_FITZ = False

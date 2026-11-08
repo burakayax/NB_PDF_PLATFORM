@@ -139,7 +139,7 @@ class PdfVisualGrid(ctk.CTkFrame):
         self._photo_refs.clear()
 
         try:
-            import fitz
+            import pymupdf as fitz
             doc = fitz.open(path)
             if doc.needs_pass and password:
                 doc.authenticate(password)
@@ -420,7 +420,7 @@ class PdfVisualGrid(ctk.CTkFrame):
 
     def _render_worker(self):
         try:
-            import fitz
+            import pymupdf as fitz
             doc = fitz.open(self._pdf_path)
             if doc.needs_pass and self._password:
                 doc.authenticate(self._password)

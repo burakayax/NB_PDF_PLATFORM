@@ -27,3 +27,21 @@ docs
 **/tmp
 **/dist
 **/build
+
+# Backend imajına GİRMEYEN büyük/ilgisiz klasörler (Render her deploy'da bağlamı yükler; küçük bağlam = hızlı build).
+# Not: Library yalnız Windows'ta (poppler) kullanılır; Linux imajı poppler-utils'i apt ile kurar.
+node_modules
+**/node_modules
+Library
+release
+installer
+packaging
+assets
+_screenshots
+sosyal medya
+udfornek
+tools
+share
+infra
+deploy
+*.pdf
