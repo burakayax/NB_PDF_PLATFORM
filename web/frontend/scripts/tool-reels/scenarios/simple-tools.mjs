@@ -5,7 +5,7 @@
  * Yazılar aracın gerçek davranışına dayanır (src/lib/toolCatalog.ts açıklamaları + ekran).
  */
 
-import { pickOption, simpleTool, typeInto } from "../lib/kit.mjs";
+import { clickAt, pickOption, simpleTool, typeInto } from "../lib/kit.mjs";
 
 const btn = (re) => (pg) => pg.getByRole("button", { name: re });
 const R = "Rapor-Hafif.pdf";
@@ -285,6 +285,14 @@ export const SIMPLE = {
     files: ["Tarama-On-Yuzler.pdf", "Tarama-Arka-Yuzler.pdf"],
     pick: { l1: "Ön yüz ve arka yüz PDF'lerini seç", l2: "çift taraflı taramalar için" },
     loaded: (pg) => pg.getByText("Tarama-Arka-Yuzler.pdf").first(),
+    options: [
+      {
+        title: "Arka yüzler ters sırada",
+        l1: "\"İkinciyi ters sırada oku\" kutusunu işaretle",
+        l2: "sıra 1, 2, 3… doğru çıkar",
+        run: async (st) => clickAt(st, st.pg.getByText(/İkinciyi ters sırada oku/).first()),
+      },
+    ],
     button: btn(/Sırayla Birleştir/),
     press: { title: "Sırayla Birleştir'e bas", l1: "Sayfalar sırayla dizilir" },
     resultLine: "İki PDF sırayla birleşti",
