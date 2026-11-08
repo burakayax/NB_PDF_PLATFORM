@@ -23,7 +23,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 try:
-    import fitz
+    import pymupdf as fitz
     from PIL import Image
 
     import src.pdf_toolkit_extra as ptx  # noqa: E402

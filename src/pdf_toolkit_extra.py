@@ -14,7 +14,7 @@ import zipfile
 from typing import Callable, Dict, List, Optional
 from urllib.parse import urlsplit
 
-import fitz
+import pymupdf as fitz
 
 # pdf_engine'den parola açma + OCR (taranmış sayfalar için)
 from src.pdf_engine import (
@@ -75,7 +75,7 @@ def delete_pages_pdf(
     total_pages: Optional[int] = None,
 ) -> bool:
     """İstenen sayfalar çıkarılmış yeni belge oluşturur (insert_pdf aralık aktarımı ile büyük PDF’lerde çok daha hızlı)."""
-    import fitz as _fitz_local
+    import pymupdf as _fitz_local
     src = _fitz_open(pdf_path, password=password)
     try:
         n = src.page_count
@@ -177,7 +177,7 @@ def organize_pdf(
     insert_pdf ile ardışık aralık aktarımı kullanır — büyük PDF'lerde
     select()+save() tam dosya yeniden yazımından çok daha hızlıdır.
     """
-    import fitz as _fitz_local
+    import pymupdf as _fitz_local
     src = _fitz_open(pdf_path, password=password)
     try:
         n = src.page_count

@@ -68,7 +68,7 @@ def _pdf_open_user_message(where: str, exc: BaseException, basename: str) -> str
 
 def _pymupdf_page_count(pdf_path: str, password: Optional[str] = None) -> int:
     """pypdf başarısız olursa sayfa sayısı için PyMuPDF yedek."""
-    import fitz
+    import pymupdf as fitz
 
     doc = fitz.open(pdf_path)
     try:
@@ -267,7 +267,7 @@ def pymupdf_requires_non_empty_password(pdf_path: str) -> Tuple[bool, Dict[str, 
     """
     meta: Dict[str, Any] = {}
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         meta["error"] = "PyMuPDF (fitz) not installed — cannot classify"
         logger.warning("[pdf-password] pymupdf import failed for %s", os.path.basename(pdf_path))
@@ -632,7 +632,7 @@ def word_to_pdf(docx_path: str, pdf_path: str, progress_callback=None) -> bool:
 
 def _fitz_pdf_text_stats(pdf_path: str, password: Optional[str]) -> Tuple[int, int]:
     """Sayfa sayısı ve çıkarılabilir metin uzunluğu (taranmış PDF ayırt etmek için)."""
-    import fitz
+    import pymupdf as fitz
 
     doc = fitz.open(pdf_path)
     try:
@@ -659,7 +659,7 @@ def _is_scanned_pdf(pdf_path: str, password: Optional[str] = None) -> bool:
       - Görüntü bloğu var AND metin bloğu çok az → taranmış sayfa
       - Sayfaların %50+ taranmışsa → taranmış PDF
     """
-    import fitz
+    import pymupdf as fitz
 
     doc = fitz.open(pdf_path)
     try:
@@ -873,7 +873,7 @@ def _pdf_to_word_easyocr(
     """
     try:
         import easyocr as _easyocr
-        import fitz as _fitz
+        import pymupdf as _fitz
     except ImportError:
         return False
 
@@ -1190,7 +1190,7 @@ def _pdf_to_word_ocr_fitz(
     5. Satır içi X-boşluk analizi ile kolon/etiket-değer tespiti yap
     6. Düzen bloklarını Word'e yaz (paragraf veya kenarlıksız tablo satırı)
     """
-    import fitz
+    import pymupdf as fitz
     from pytesseract import Output
 
     doc_pdf = fitz.open(pdf_path)
@@ -2119,7 +2119,7 @@ def _append_layout_block_to_document(doc: Document, block: Dict[str, Any]) -> No
 
 def _fitz_open_for_tool(pdf_path: str, password: Optional[str] = None, context: str = "Bu işlem"):
     """PyMuPDF ile aç; boş kullanıcı parolası olan PDF'ler authenticate('') ile açılır."""
-    import fitz
+    import pymupdf as fitz
 
     basename = os.path.basename(pdf_path)
     doc = fitz.open(pdf_path)
@@ -2254,7 +2254,7 @@ def _merge_pdfs_fitz_throttled(
     passwords: Optional[Dict[str, str]],
 ) -> None:
     """pikepdf uyumsuz PDF’ler için PyMuPDF geri dönüşü; ilerleme güncellemesi seyreltildi."""
-    import fitz
+    import pymupdf as fitz
 
     passwords = passwords or {}
     progress_every = int(os.environ.get("NB_MERGE_FITZ_PROGRESS_EVERY", "96"))
@@ -2345,7 +2345,7 @@ def extract_pages(
     pdf_path içinden verilen sayfaları (1 tabanlı liste) alır ve tek PDF olarak output_path'e yazar.
     PyMuPDF ile tek kaynak açılır; büyük belgelerde bellek kullanımı daha kontrollüdür.
     """
-    import fitz
+    import pymupdf as fitz
 
     try:
         doc = _fitz_open_for_tool(pdf_path, password, context="Sayfa ayıklama")
@@ -2382,7 +2382,7 @@ def extract_pages_separate(
     Verilen sayfaları (1 tabanlı) ayırır; her birini output_folder içinde ayrı PDF olarak kaydeder.
     Kaynak tek kez açılır; çok sayfalı dosyalarda daha verimlidir.
     """
-    import fitz
+    import pymupdf as fitz
 
     try:
         if not os.path.isdir(output_folder):
@@ -2869,7 +2869,7 @@ def pdf_text_to_excel(
                 if not lines:
                     # Metin katmanı yok (taranmış sayfa) → Tesseract OCR ile metni tanı.
                     try:
-                        import fitz as _fitz
+                        import pymupdf as _fitz
                         if _fdoc is None:
                             _fdoc = _fitz.open(pdf_path)
                             if _fdoc.needs_pass and password:
@@ -3169,7 +3169,7 @@ def _ghostscript_compress_to_path(
 def _pdf_page_count(path: str, password: str = "") -> int:
     """PyMuPDF ile sayfa sayısını döndürür; hata olursa -1."""
     try:
-        import fitz
+        import pymupdf as fitz
         doc = fitz.open(path)
         if password and doc.needs_pass:
             doc.authenticate(password)
@@ -3359,7 +3359,7 @@ def _fitz_render_compress(
     JPEG stream olarak yerleştirir. Metin aranabilirliği kaybolur ama görüntü ağırlıklı
     (tarama) PDF'lerde en agresif boyut küçültmeyi sağlar.
     """
-    import fitz
+    import pymupdf as fitz
     from PIL import Image as PilImage
 
     dpi_map   = {"extreme": 72, "low": 96,  "auto": 120, "medium": 150, "high": 200}
@@ -3427,7 +3427,7 @@ def _fitz_render_compress(
 
 def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: str) -> None:
     """PyMuPDF stream-sıkıştırma yedek boru hattı (görüntü yeniden örnekleme yapmaz)."""
-    import fitz
+    import pymupdf as fitz
 
     out_dir = os.path.dirname(output_path) or None
     fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
@@ -3661,7 +3661,7 @@ TARGET_MAX_BYTES = 200 * 1024 * 1024
 def _pdf_text_chars(path: str, password: str = "", max_pages: int = 8) -> int:
     """İlk sayfalardaki seçilebilir metin karakter sayısı; okunamazsa -1."""
     try:
-        import fitz
+        import pymupdf as fitz
 
         doc = fitz.open(path)
         try:
@@ -3699,7 +3699,7 @@ def _rasterize_to_target(
     None döndürür.
     """
     import time
-    import fitz
+    import pymupdf as fitz
     from PIL import Image as PilImage
 
     out_dir = os.path.dirname(os.path.abspath(output_path)) or None

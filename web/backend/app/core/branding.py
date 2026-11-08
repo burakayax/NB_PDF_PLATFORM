@@ -42,7 +42,7 @@ def brand_pdf_output(p: Path | str, *, watermark_enabled: bool) -> None:
     ekler; büyük merge çıktısında bile ucuzdur.
     """
     try:
-        import fitz
+        import pymupdf as fitz
     except Exception:  # pragma: no cover - fitz her zaman var
         logger.warning("branding atlandı: fitz import edilemedi")
         return

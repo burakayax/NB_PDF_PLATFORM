@@ -296,7 +296,7 @@ async def tool_delete_pages(
         watermark = bool(decision.get("watermarkEnabled", False))
 
         def _run() -> dict[str, Any]:
-            import fitz as _fitz
+            import pymupdf as _fitz
             src = _fitz.open(sp)
             if src.needs_pass:
                 if not (pwd or ""):
@@ -412,7 +412,7 @@ def _edit_font_archive():
     """insert_htmlbox'a verilecek font arşivi (gömülü TTF'ler, basename ile). Süreç başına bir kez."""
     global _edit_font_archive_cache
     if _edit_font_archive_cache is None:
-        import fitz as _fitz
+        import pymupdf as _fitz
 
         ar = _fitz.Archive()
         for _v in _EDIT_FONTS.values():
@@ -618,7 +618,7 @@ async def tool_edit_text(
         _store_result = str(store).strip().lower() in ("1", "true", "yes")
 
         def _run() -> Any:
-            import fitz as _fitz
+            import pymupdf as _fitz
 
             doc = _fitz.open(sp)
             try:
@@ -1193,7 +1193,7 @@ async def tool_redact_pdf(
         out_p = workdir / format_derived_filename(file.filename or saved.name, "Gizlenmis", "pdf")
 
         def _run() -> bytes:
-            import fitz as _fitz
+            import pymupdf as _fitz
             import io as _io
             from PIL import Image as _Image, ImageFilter as _ImageFilter
 
@@ -1288,7 +1288,7 @@ async def tool_pdf_analyze(
         sp = str(saved)
 
         def _run() -> dict[str, Any]:
-            import fitz as _fitz
+            import pymupdf as _fitz
 
             doc = _fitz.open(sp)
             try:
@@ -1554,7 +1554,7 @@ async def tool_rotate_pdf(
 
         def _run():
             # PDF sayfa sayısını burada alıyoruz — tek run_cpu_bound çağrısı yeterli
-            import fitz as _fitz
+            import pymupdf as _fitz
             doc = _fitz.open(sp)
             if doc.needs_pass:
                 if not (pwd or ""):
@@ -1624,7 +1624,7 @@ async def tool_organize_pdf(
         raw_order_str = page_order
 
         def _run() -> dict[str, Any]:
-            import fitz as _fitz
+            import pymupdf as _fitz
             src = _fitz.open(sp)
             if src.needs_pass:
                 if not (pwd or ""):

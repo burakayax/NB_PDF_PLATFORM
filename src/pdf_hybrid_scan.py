@@ -135,7 +135,7 @@ def _runs(l: Dict[str, Any], text: str) -> List[Tuple[str, bool]]:
 
 
 def _natural_width(runs: List[Tuple[str, bool]], size: float) -> float:
-    import fitz
+    import pymupdf as fitz
     # Yerleşik Helvetica yalnızca Latin-1 biliyor; Türkçe harfler 0 genişlik sayılıp punto şişmesin
     tr = str.maketrans("İıŞşĞğ", "IiSsGg")
     return sum(fitz.get_text_length(t.translate(tr), fontname="hebo" if b else "helv", fontsize=size)
@@ -253,7 +253,7 @@ def _frame_line(doc, l: Dict[str, Any], k: float, size: float, text: str, page_w
 def hybrid_pdf_to_word(pdf_path: str, docx_path: str, *, use_claude: bool = False,
                        api_key: str = "", model: str = "claude-haiku-5-5",
                        password: Optional[str] = None, progress_callback=None) -> Dict[str, Any]:
-    import fitz
+    import pymupdf as fitz
     from docx import Document
     from docx.shared import Pt
 
@@ -321,7 +321,7 @@ _PRODUCT_MAX_PAGES = 10
 def try_hybrid_pdf_to_word(pdf_path: str, docx_path: str, password: Optional[str] = None,
                            progress_callback=None) -> bool:
     """Taranmış PDF'i hibrit Word'e çevir (ürün girişi). Uygun değilse veya hata olursa False."""
-    import fitz
+    import pymupdf as fitz
     doc = fitz.open(pdf_path)
     try:
         if doc.needs_pass and not doc.authenticate(password or ""):
