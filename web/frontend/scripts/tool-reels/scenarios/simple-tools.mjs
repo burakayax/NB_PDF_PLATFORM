@@ -285,8 +285,8 @@ export const SIMPLE = {
     files: ["Tarama-On-Yuzler.pdf", "Tarama-Arka-Yuzler.pdf"],
     pick: { l1: "Ön yüz ve arka yüz PDF'lerini seç", l2: "çift taraflı taramalar için" },
     loaded: (pg) => pg.getByText("Tarama-Arka-Yuzler.pdf").first(),
-    button: btn(/Serpiştir/),
-    press: { title: "Serpiştir'e bas", l1: "Sayfalar sırayla dizilir" },
+    button: btn(/Sırayla Birleştir/),
+    press: { title: "Sırayla Birleştir'e bas", l1: "Sayfalar sırayla dizilir" },
     resultLine: "İki PDF sırayla birleşti",
   }),
 };
