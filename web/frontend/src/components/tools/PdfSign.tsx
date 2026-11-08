@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { createPortal } from "react-dom";
-import { ToolRating } from "../common/ToolRating";
+import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { useToolPageContext } from "../common/toolPageContext";
@@ -9,9 +9,10 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
   Calendar,
-  Download,
+  Check,
   Layers,
   Loader2,
+  Pencil,
   PenLine,
   RotateCw,
   Trash2,
@@ -23,8 +24,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { applySignatures, pdfBytesToBlob, type SignatureItem } from "../../lib/clientPdfWorker";
-import { deleteSavedSignature, loadSavedSignatures, saveSignature, userKeyFromToken, type SavedSignature } from "../../lib/savedSignatures";
-import { saveBlobToUser } from "../../api";
+import { deleteSavedSignature, loadSavedSignatures, MAX_SAVED_SIGNATURES, saveSignature, userKeyFromToken, type SavedSignature } from "../../lib/savedSignatures";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -96,12 +96,14 @@ function renderTextToPng(text: string, color = "#0b2447", style: TextStyle = {})
   return { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect: w / h };
 }
 
+const EMPTY_PLACEMENT: Placement = { id: "", page: 0, xNorm: 0, yNorm: 0, wNorm: 0.3, dataUrl: "", bytes: new Uint8Array(), aspect: 1 };
+
 function todayStr(): string {
   return new Date().toLocaleDateString();
 }
 
 /** Metin/tarih alanı renk seçenekleri (lacivert, siyah, kırmızı, mavi, yeşil, beyaz). */
-const SIGN_COLORS = ["#0b2447", "#111827", "#2563eb", "#dc2626"];
+const SIGN_COLORS = ["#0b2447", "#000000", "#2563eb", "#dc2626"];
 const TEXT_COLORS = ["#0b2447", "#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"];
 
 export function PdfSign({ language, accessToken, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
@@ -129,7 +131,22 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
   useBodyScrollLock(editorOpen);
   /** Çıktı gerçekten kaydedildi mi — puanlama yalnız o zaman sorulur. */
   const [applied, setApplied] = useState(false);
+  /** Uygulanan imzalı PDF — indirme sonuç ekranında, kullanıcı «İndir»e basınca olur. */
+  const [result, setResult] = useState<{ blob: Blob; name: string } | null>(null);
   const [sigModalOpen, setSigModalOpen] = useState(false);
+  const [clearArmed, setClearArmed] = useState(false);
+  const [closeArmed, setCloseArmed] = useState(false);
+  useEffect(() => {
+    if (!clearArmed) return;
+    const t = window.setTimeout(() => setClearArmed(false), 6000);
+    return () => window.clearTimeout(t);
+  }, [clearArmed]);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!saveNotice) return;
+    const t = window.setTimeout(() => setSaveNotice(null), 7000);
+    return () => window.clearTimeout(t);
+  }, [saveNotice]);
   const [activeSig, setActiveSig] = useState<SigSource | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -394,7 +411,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
       }));
       const outBytes = await applySignatures(srcBytes.slice(), items);
       const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-imzali.pdf`;
-      await saveBlobToUser(pdfBytesToBlob(outBytes), name).catch(() => {});
+      setResult({ blob: pdfBytesToBlob(outBytes), name });
       setEditorOpen(false);
       setApplied(true);
     } catch (e) {
@@ -445,7 +462,43 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
   }
 
   const selectedPlacement = placements.find((p) => p.id === selected) ?? null;
+  const textActive = selectedPlacement?.text !== undefined;
+  const tp: Placement = textActive && selectedPlacement ? selectedPlacement : EMPTY_PLACEMENT;
+  const op: Placement = selectedPlacement ?? EMPTY_PLACEMENT;
   const pagePlacements = placements.filter((p) => p.page === current);
+
+  if (result && !editorOpen) {
+    return (
+      <div className="mx-auto w-full max-w-3xl text-left">
+        <ToolResultPanel
+          ratingToolSlug="pdf-imzala"
+          blob={result.blob}
+          filename={result.name}
+          language={language}
+          processedOnDevice
+          onClose={() => {
+            setResult(null);
+            setApplied(false);
+          }}
+          extraActions={
+            <button
+              type="button"
+              onClick={() => {
+                setResult(null);
+                setEditorOpen(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-5 py-3 text-sm font-bold text-cyan-100 transition duration-200 hover:scale-[1.04] hover:bg-cyan-500/20"
+            >
+              <Pencil className="h-4 w-4" />
+              {tr ? "Düzenlemeye Dön" : "Back to editing"}
+            </button>
+          }
+        >
+          <ValueMomentNudge language={language} source="sign_success" />
+        </ToolResultPanel>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -463,15 +516,6 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
         </div>
       )}
 
-      {applied && !editorOpen && (
-        <>
-          <ToolRating toolSlug="pdf-imzala" language={language} />
-          {/* Misafir burada değerini yeni aldı (belge işlendi, indirildi) ama hiçbir
-              kayıt daveti görmüyordu — araç bedava, doğal bir duvar yok. */}
-          <ValueMomentNudge language={language} source="sign_success" />
-        </>
-      )}
-
       {error && !editorOpen && (
         <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3 text-[13px] text-red-300">{error}</p>
       )}
@@ -480,7 +524,9 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
         createPortal(
           <div className="fixed inset-0 z-[100] flex flex-col bg-[#0b1020]/97 backdrop-blur-sm">
             {/* Üst araç çubuğu */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-2.5">
+            <div className="border-b border-white/[0.08] bg-nb-bg-elevated/80">
+            <div className="flex items-start gap-2 px-3 py-2.5">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setSigModalOpen(true)}
@@ -490,7 +536,8 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                 {tr ? "İmza Ekle" : "Add signature"}
               </button>
               {savedSigs.length > 0 && (
-                <span className="flex items-center gap-1.5" aria-label={tr ? "Kayıtlı imzalarım" : "My saved signatures"}>
+                <span className="flex items-center gap-2 rounded-2xl border border-violet-400/25 bg-violet-500/[0.07] px-2.5 py-1.5" aria-label={tr ? "Kayıtlı imzalarım" : "My saved signatures"}>
+                  <span className="hidden text-[11px] font-bold uppercase tracking-wide text-violet-200 sm:inline">{tr ? "Kayıtlı imzalarım" : "Saved"}</span>
                   {savedSigs.map((sg) => (
                     <span key={sg.id} className="group relative">
                       <button
@@ -501,7 +548,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                           setActiveSig(sig);
                           placeSignature(sig);
                         }}
-                        className="flex h-9 w-16 items-center justify-center rounded-lg border border-white/15 bg-white p-1 transition hover:border-cyan-400/60"
+                        className="flex h-9 w-16 items-center justify-center rounded-lg border border-white/20 bg-white p-1 shadow-sm transition duration-200 hover:scale-[1.08] hover:border-violet-400 hover:shadow-md"
                       >
                         <img src={sg.dataUrl} alt={tr ? "Kayıtlı imza" : "Saved signature"} className="max-h-full max-w-full object-contain" draggable={false} />
                       </button>
@@ -518,11 +565,11 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                 </span>
               )}
 
-              <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
+              <span className="mx-1 hidden h-6 w-px bg-white/15 sm:block" />
               <button
                 type="button"
                 onClick={() => addTextField(tr ? "Metin" : "Text")}
-                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.05] px-3 py-2 text-[13px] font-semibold text-slate-100 transition duration-200 hover:scale-[1.05] hover:border-cyan-400/60 hover:bg-cyan-500/15 hover:text-cyan-100 active:scale-100"
               >
                 <TypeIcon className="h-4 w-4" />
                 {tr ? "Metin" : "Text"}
@@ -530,13 +577,51 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
               <button
                 type="button"
                 onClick={() => addTextField(todayStr())}
-                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.05] px-3 py-2 text-[13px] font-semibold text-slate-100 transition duration-200 hover:scale-[1.05] hover:border-cyan-400/60 hover:bg-cyan-500/15 hover:text-cyan-100 active:scale-100"
               >
                 <Calendar className="h-4 w-4" />
                 {tr ? "Tarih" : "Date"}
               </button>
+              <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[12px] font-medium text-slate-300 lg:inline-flex">
+                {tr ? "Kopyala/Yapıştır:" : "Copy/paste:"}
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-slate-100">Ctrl+C</kbd>
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-slate-100">Ctrl+V</kbd>
+              </span>
+            </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
+                  <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
+                    <ZoomOut className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={() => setZoom(1)} title={tr ? "Sığdır" : "Fit"} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 hover:bg-white/10">{Math.round(zoom * 100)}%</button>
+                  <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
+                    <ZoomIn className="h-4 w-4" />
+                  </button>
+                </div>
+                <span className="hidden text-[12px] font-semibold text-cyan-300 md:inline">{placements.length} {tr ? "öğe" : "items"}</span>
+                <button
+                  type="button"
+                  disabled={busy || placements.length === 0}
+                  onClick={() => void apply()}
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                >
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {tr ? "Uygula" : "Apply"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => (placements.length > 0 ? setCloseArmed(true) : setEditorOpen(false))}
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-[13px] font-bold text-amber-200 transition hover:bg-amber-500/20"
+                >
+                  <X className="h-4 w-4" />
+                  {tr ? "Kapat" : "Close"}
+                </button>
+              </div>
+            </div>
+            {(
+              <div className="flex flex-wrap items-center gap-2 border-t border-white/[0.06] px-3 py-2">
               {/* Metin rengi skalası + özel renk seçici — yeni metni ve seçili metni etkiler */}
-              <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1" title={tr ? "Metin rengi" : "Text color"}>
+              <span className={`flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1 ${textActive ? "" : "pointer-events-none opacity-40"}`} aria-disabled={!textActive} title={tr ? "Metin rengi" : "Text color"}>
                 {TEXT_COLORS.map((c) => {
                   const activeColor = selectedPlacement?.text !== undefined ? selectedPlacement.color : textColor;
                   const active = activeColor === c;
@@ -570,31 +655,26 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                   />
                 </label>
               </span>
-              <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[12px] font-medium text-slate-300 lg:inline-flex">
-                {tr ? "Kopyala/Yapıştır:" : "Copy/paste:"}
-                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-slate-100">Ctrl+C</kbd>
-                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[11px] text-slate-100">Ctrl+V</kbd>
-              </span>
-              {selectedPlacement?.text !== undefined && (
+              {(
                 <input
-                  autoFocus
-                  value={selectedPlacement.text}
-                  onChange={(e) => updateTextField(selectedPlacement.id, e.target.value)}
+                  disabled={!textActive}
+                  value={tp.text ?? ""}
+                  onChange={(e) => updateTextField(tp.id, e.target.value)}
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
-                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400"
+                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400 disabled:opacity-40"
                 />
               )}
-              {selectedPlacement?.text !== undefined && (
-                <span className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1">
+              {(
+                <span className={`flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1 ${textActive ? "" : "pointer-events-none opacity-40"}`} aria-disabled={!textActive}>
                   <select
-                    value={selectedPlacement.fontKey ?? "sans"}
+                    value={tp.fontKey ?? "sans"}
                     onChange={(e) => {
                       const f = FONTS.find((x) => x.key === e.target.value);
-                      restyleText(selectedPlacement.id, { fontKey: e.target.value, italic: f?.italic ? true : selectedPlacement.italic });
+                      restyleText(tp.id, { fontKey: e.target.value, italic: f?.italic ? true : tp.italic });
                     }}
                     title={tr ? "Yazı tipi" : "Font"}
                     className="rounded-md border border-white/15 bg-[#0b1020] px-1.5 py-1 text-[12px] text-slate-100 outline-none"
-                    style={{ fontFamily: fontStack(selectedPlacement.fontKey) }}
+                    style={{ fontFamily: fontStack(tp.fontKey) }}
                   >
                     {FONTS.map((f) => (
                       <option key={f.key} value={f.key} style={{ fontFamily: f.stack }}>{f.label}</option>
@@ -602,97 +682,90 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                   </select>
                   <button
                     type="button"
-                    onClick={() => restyleText(selectedPlacement.id, { bold: !selectedPlacement.bold })}
+                    onClick={() => restyleText(tp.id, { bold: !tp.bold })}
                     title={tr ? "Kalın" : "Bold"}
-                    className={`h-7 w-7 rounded-md text-[13px] font-black ${selectedPlacement.bold ? "bg-cyan-500/30 text-cyan-100" : "text-slate-300 hover:bg-white/10"}`}
+                    className={`h-7 w-7 rounded-md text-[13px] font-black ${tp.bold ? "bg-cyan-500/30 text-cyan-100" : "text-slate-300 hover:bg-white/10"}`}
                   >B</button>
                   <button
                     type="button"
-                    onClick={() => restyleText(selectedPlacement.id, { italic: !selectedPlacement.italic })}
+                    onClick={() => restyleText(tp.id, { italic: !tp.italic })}
                     title={tr ? "İtalik" : "Italic"}
-                    className={`h-7 w-7 rounded-md text-[13px] font-semibold italic ${selectedPlacement.italic ? "bg-cyan-500/30 text-cyan-100" : "text-slate-300 hover:bg-white/10"}`}
+                    className={`h-7 w-7 rounded-md text-[13px] font-semibold italic ${tp.italic ? "bg-cyan-500/30 text-cyan-100" : "text-slate-300 hover:bg-white/10"}`}
                   >I</button>
                   <span className="mx-0.5 h-4 w-px bg-white/15" />
-                  <button type="button" onClick={() => setFontSize(selectedPlacement.id, Math.max(4, Math.round(fontPtOf(selectedPlacement)) - 1))} title={tr ? "Yazı boyutunu küçült" : "Smaller"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">−</button>
+                  <button type="button" onClick={() => setFontSize(tp.id, Math.max(4, Math.round(fontPtOf(tp)) - 1))} title={tr ? "Yazı boyutunu küçült" : "Smaller"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">−</button>
                   <input
                     type="number"
                     min={4}
                     max={200}
-                    value={Math.round(fontPtOf(selectedPlacement))}
-                    onChange={(e) => setFontSize(selectedPlacement.id, Number(e.target.value))}
+                    value={Math.round(fontPtOf(tp))}
+                    onChange={(e) => setFontSize(tp.id, Number(e.target.value))}
                     title={tr ? "Yazı boyutu (pt)" : "Font size (pt)"}
                     className="w-12 rounded-md border border-white/15 bg-white/[0.06] px-1 py-1 text-center text-[12px] tabular-nums text-white outline-none"
                   />
-                  <button type="button" onClick={() => setFontSize(selectedPlacement.id, Math.round(fontPtOf(selectedPlacement)) + 1)} title={tr ? "Yazı boyutunu büyüt" : "Larger"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">+</button>
+                  <button type="button" onClick={() => setFontSize(tp.id, Math.round(fontPtOf(tp)) + 1)} title={tr ? "Yazı boyutunu büyüt" : "Larger"} className="h-7 w-6 rounded-md text-[15px] font-bold text-slate-200 hover:bg-white/10">+</button>
                   <span className="text-[12px] text-slate-400">pt</span>
                 </span>
               )}
-              {selectedPlacement && (
-                <span className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5">
+              {(
+                <span className={`flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 ${selectedPlacement ? "" : "pointer-events-none opacity-40"}`} aria-disabled={!selectedPlacement}>
                   <span className="text-[12px] font-semibold text-slate-100">{tr ? "Saydamlık" : "Opacity"}</span>
                   <input
                     type="range"
                     min={0.2}
                     max={1}
                     step={0.05}
-                    value={selectedPlacement.opacity ?? 1}
-                    onChange={(e) => updatePlacement(selectedPlacement.id, { opacity: Number(e.target.value) })}
+                    value={op.opacity ?? 1}
+                    onChange={(e) => updatePlacement(op.id, { opacity: Number(e.target.value) })}
                     className="w-20 accent-cyan-400"
                     title={tr ? "Saydamlık" : "Opacity"}
                   />
-                  <span className="w-9 text-right text-[12px] font-semibold tabular-nums text-slate-200">{Math.round((selectedPlacement.opacity ?? 1) * 100)}%</span>
+                  <span className="w-9 text-right text-[12px] font-semibold tabular-nums text-slate-200">{Math.round((op.opacity ?? 1) * 100)}%</span>
                 </span>
               )}
-              {pagePlacements.length > 0 && pageCount > 1 && (
+              {(
                 <button
                   type="button"
                   onClick={applyCurrentPageToAll}
+                  disabled={!(pagePlacements.length > 0 && pageCount > 1)}
                   title={tr ? "Bu sayfadaki tüm öğeleri (imza, metin, tarih) aynı yere tüm sayfalara koy" : "Copy every item on this page to all pages at the same position"}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:pointer-events-none disabled:opacity-40"
                 >
                   <Layers className="h-4 w-4" />
                   {tr ? "Tüm sayfalara uygula" : "Apply to all pages"}
                 </button>
               )}
-              {placements.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearAllPlacements}
-                  title={tr ? "Tüm sayfalardaki tüm öğeleri temizle" : "Clear every item on all pages"}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08]"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {tr ? "Tümünü temizle" : "Clear all"}
-                </button>
-              )}
-
-              <div className="ml-auto flex items-center gap-3">
-                <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
-                  <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
-                    <ZoomOut className="h-4 w-4" />
+              {(clearArmed ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-400/40 bg-rose-500/10 px-2 py-1">
+                    <span className="text-[12px] font-semibold text-rose-200">{tr ? "Tüm öğeler silinecek. Emin misin?" : "All items will be removed. Sure?"}</span>
+                    <button type="button" onClick={() => { clearAllPlacements(); setClearArmed(false); }} className="rounded-lg bg-rose-600 px-2.5 py-1 text-[12px] font-bold text-white hover:bg-rose-500">{tr ? "Evet, temizle" : "Yes, clear"}</button>
+                    <button type="button" onClick={() => setClearArmed(false)} className="rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-300 hover:bg-white/10">{tr ? "Vazgeç" : "Cancel"}</button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setClearArmed(true)}
+                    disabled={placements.length === 0}
+                    title={tr ? "Tüm sayfalardaki tüm öğeleri temizle" : "Clear every item on all pages"}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-400/40 bg-rose-500/10 px-2.5 py-2 text-[12px] font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {tr ? "Tümünü temizle" : "Clear all"}
                   </button>
-                  <button type="button" onClick={() => setZoom(1)} title={tr ? "Sığdır" : "Fit"} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 hover:bg-white/10">{Math.round(zoom * 100)}%</button>
-                  <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
-                    <ZoomIn className="h-4 w-4" />
-                  </button>
-                </div>
-                <span className="hidden text-[12px] font-semibold text-cyan-300 md:inline">{placements.length} {tr ? "öğe" : "items"}</span>
-                <button
-                  type="button"
-                  disabled={busy || placements.length === 0}
-                  onClick={() => void apply()}
-                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                  {tr ? "Uygula ve İndir" : "Apply & download"}
-                </button>
-                <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white">
-                  <X className="h-5 w-5" />
-                </button>
+                ))}
               </div>
+            )}
             </div>
 
             {error && <div className="border-b border-red-500/20 bg-red-500/[0.08] px-4 py-2 text-[13px] text-red-300">{error}</div>}
+            {closeArmed && (
+              <div className="flex flex-wrap items-center gap-3 border-b border-amber-400/30 bg-amber-500/[0.12] px-4 py-2 text-[13px] text-amber-100">
+                <span className="font-semibold">{tr ? "Yaptıkların uygulanmadan silinecek. Yine de kapatmak istiyor musun?" : "Your changes will be discarded without being applied. Close anyway?"}</span>
+                <button type="button" onClick={() => { setCloseArmed(false); setEditorOpen(false); }} className="rounded-lg bg-amber-600 px-3 py-1 text-[12px] font-bold text-white hover:bg-amber-500">{tr ? "Evet, kapat" : "Yes, close"}</button>
+                <button type="button" onClick={() => setCloseArmed(false)} className="rounded-lg px-3 py-1 text-[12px] font-semibold text-slate-200 hover:bg-white/10">{tr ? "Vazgeç" : "Cancel"}</button>
+              </div>
+            )}
+            {saveNotice && <div className="border-b border-amber-400/20 bg-amber-500/[0.1] px-4 py-2 text-[13px] text-amber-200">{saveNotice}</div>}
 
             <div className="flex min-h-0 flex-1">
               {/* Sol: thumbnail'ler */}
@@ -718,7 +791,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
               </div>
 
               {/* Sağ: imzalama alanı */}
-              <div className="min-w-0 flex-1 overflow-auto p-2 sm:p-6">
+              <div className="min-w-0 flex-1 overflow-auto p-2 sm:p-6" onPointerDown={() => setSelected(null)}>
                 <div className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
                   <canvas ref={canvasRef} className="block rounded-lg" />
                   {rendering && (
@@ -754,7 +827,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                             setSelected(p.id);
                             setDrag({ id: p.id, mode: "move", sx: e.clientX, sy: e.clientY, ox: p.xNorm, oy: p.yNorm });
                           }}
-                          className={`absolute select-none ${isSel ? "ring-2 ring-cyan-400" : "ring-1 ring-cyan-400/30"}`}
+                          className={`absolute select-none ${isSel ? "ring-2 ring-cyan-400" : "hover:ring-1 hover:ring-cyan-400/40"}`}
                           style={{
                             left,
                             top,
@@ -843,13 +916,19 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
                 <SignatureModal
                   tr={tr}
                   canSave={!!userKey}
+                  savedCount={savedSigs.length}
                   onClose={() => setSigModalOpen(false)}
                   onDoneText={(text, color, fontKey) => {
                     addTextField(text, color, { fontKey, italic: !!FONTS.find((f) => f.key === fontKey)?.italic }, 0.28);
                     setSigModalOpen(false);
                   }}
                   onDone={(dataUrl, aspect, save) => {
-                    if (save && userKey) setSavedSigs(saveSignature(userKey, { dataUrl, aspect }));
+                    if (save && userKey) {
+                      if (!savedSigs.some((x) => x.dataUrl === dataUrl) && savedSigs.length >= MAX_SAVED_SIGNATURES) {
+                        setSaveNotice(tr ? `${MAX_SAVED_SIGNATURES} imza sınırına ulaşıldı: en eski kayıtlı imzan silindi.` : `Limit of ${MAX_SAVED_SIGNATURES} reached: your oldest saved signature was deleted.`);
+                      }
+                      setSavedSigs(saveSignature(userKey, { dataUrl, aspect }));
+                    }
                     const sig = { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect };
                     setActiveSig(sig);
                     placeSignature(sig); // tıklama bekleme — direkt ortaya yerleştir
@@ -866,7 +945,7 @@ export function PdfSign({ language, accessToken, initialFile }: { language: Lang
 }
 
 // ── İmza oluşturma penceresi: Çiz / Yaz / Yükle ─────────────────────────────
-export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { tr: boolean; canSave: boolean; onClose: () => void; onDone: (dataUrl: string, aspect: number, save: boolean) => void; onDoneText: (text: string, color: string, fontKey: string) => void }) {
+export function SignatureModal({ tr, canSave, savedCount = 0, onClose, onDone, onDoneText }: { tr: boolean; canSave: boolean; savedCount?: number; onClose: () => void; onDone: (dataUrl: string, aspect: number, save: boolean) => void; onDoneText: (text: string, color: string, fontKey: string) => void }) {
   const [tab, setTab] = useState<"draw" | "type" | "upload">("draw");
   const [saveIt, setSaveIt] = useState(true);
   const [typed, setTyped] = useState("");
@@ -878,17 +957,61 @@ export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { t
   const stroke = useRef<{ lx: number; ly: number; mx: number; my: number; w: number; t: number } | null>(null);
 
   // Yumuşak çizim: orta noktalar arası ikinci derece eğri + hıza bağlı çizgi kalınlığı.
+  // Çizgiler nokta listesi olarak saklanır; renk/kalınlık değişince tüm çizim yeni ayarla yeniden çizilir.
+  const strokes = useRef<{ x: number; y: number; t: number }[][]>([]);
+
+  function segStart(ctx: CanvasRenderingContext2D, p: { x: number; y: number }, t: number, color: string, width: number) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, width / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return { lx: p.x, ly: p.y, mx: p.x, my: p.y, w: width, t };
+  }
+
+  function segMove(ctx: CanvasRenderingContext2D, st: NonNullable<typeof stroke.current>, x: number, y: number, now: number, color: string, width: number) {
+    const dist = Math.hypot(x - st.lx, y - st.ly);
+    if (dist < 0.8) return false;
+    ctx.strokeStyle = color;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const speed = dist / Math.max(1, now - st.t); // px/ms
+    const target = Math.max(width * 0.55, Math.min(width * 1.15, width * 1.15 - speed * width * 0.25));
+    const w = st.w + (target - st.w) * 0.25;
+    const mx = (st.lx + x) / 2;
+    const my = (st.ly + y) / 2;
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(st.mx, st.my);
+    ctx.quadraticCurveTo(st.lx, st.ly, mx, my);
+    ctx.stroke();
+    st.lx = x;
+    st.ly = y;
+    st.mx = mx;
+    st.my = my;
+    st.w = w;
+    st.t = now;
+    return true;
+  }
+
+  function segEnd(ctx: CanvasRenderingContext2D, st: NonNullable<typeof stroke.current>, color: string) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = st.w;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(st.mx, st.my);
+    ctx.lineTo(st.lx, st.ly);
+    ctx.stroke();
+  }
+
   function penDown(e: React.PointerEvent<HTMLCanvasElement>) {
     const c = drawRef.current!;
     c.setPointerCapture(e.pointerId);
     const ctx = c.getContext("2d")!;
     const p = pos(e);
-    ctx.fillStyle = penColor;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, penWidth / 2, 0, Math.PI * 2);
-    ctx.fill();
+    const t = performance.now();
+    stroke.current = segStart(ctx, p, t, penColor, penWidth);
+    strokes.current.push([{ x: p.x, y: p.y, t }]);
     hasInk.current = true;
-    stroke.current = { lx: p.x, ly: p.y, mx: p.x, my: p.y, w: penWidth, t: performance.now() };
   }
 
   function penMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -896,52 +1019,39 @@ export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { t
     if (!st) return;
     const c = drawRef.current!;
     const ctx = c.getContext("2d")!;
-    ctx.strokeStyle = penColor;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
     const native = e.nativeEvent;
     const coalesced = native.getCoalescedEvents?.() ?? [];
     const evs = coalesced.length ? coalesced : [native];
     const r = c.getBoundingClientRect();
+    const pts = strokes.current[strokes.current.length - 1];
     for (const ev of evs) {
       const x = ((ev.clientX - r.left) / r.width) * c.width;
       const y = ((ev.clientY - r.top) / r.height) * c.height;
-      const dist = Math.hypot(x - st.lx, y - st.ly);
-      if (dist < 0.8) continue;
       const now = performance.now();
-      const speed = dist / Math.max(1, now - st.t); // px/ms
-      const target = Math.max(penWidth * 0.55, Math.min(penWidth * 1.15, penWidth * 1.15 - speed * penWidth * 0.25));
-      const w = st.w + (target - st.w) * 0.25;
-      const mx = (st.lx + x) / 2;
-      const my = (st.ly + y) / 2;
-      ctx.lineWidth = w;
-      ctx.beginPath();
-      ctx.moveTo(st.mx, st.my);
-      ctx.quadraticCurveTo(st.lx, st.ly, mx, my);
-      ctx.stroke();
-      st.lx = x;
-      st.ly = y;
-      st.mx = mx;
-      st.my = my;
-      st.w = w;
-      st.t = now;
+      if (segMove(ctx, st, x, y, now, penColor, penWidth)) pts.push({ x, y, t: now });
     }
   }
 
   function penUp() {
     const st = stroke.current;
-    if (st) {
-      const ctx = drawRef.current!.getContext("2d")!;
-      ctx.strokeStyle = penColor;
-      ctx.lineWidth = st.w;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(st.mx, st.my);
-      ctx.lineTo(st.lx, st.ly);
-      ctx.stroke();
-    }
+    if (st) segEnd(drawRef.current!.getContext("2d")!, st, penColor);
     stroke.current = null;
   }
+
+  // Renk/kalınlık değişince mevcut çizimi yeni ayarla yeniden çiz.
+  useEffect(() => {
+    const c = drawRef.current;
+    if (!c || stroke.current) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, c.width, c.height);
+    for (const pts of strokes.current) {
+      if (!pts.length) continue;
+      const st = segStart(ctx, pts[0], pts[0].t, penColor, penWidth);
+      for (let i = 1; i < pts.length; i++) segMove(ctx, st, pts[i].x, pts[i].y, pts[i].t, penColor, penWidth);
+      segEnd(ctx, st, penColor);
+    }
+  }, [penColor, penWidth]);
 
   function pos(e: React.PointerEvent) {
     const c = drawRef.current!;
@@ -1048,11 +1158,11 @@ export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { t
                 </span>
                 <span className="flex items-center gap-2 text-[12px] text-slate-300">
                   {tr ? "Kalınlık" : "Thickness"}
-                  <input type="range" min={3} max={12} step={1} value={penWidth} onChange={(e) => setPenWidth(Number(e.target.value))} className="w-24 accent-cyan-400" />
+                  <input type="range" min={2} max={16} step={1} value={penWidth} onChange={(e) => setPenWidth(Number(e.target.value))} className="w-24 accent-cyan-400" />
                 </span>
               </div>
               <div className="mt-3 flex justify-between">
-                <button type="button" onClick={() => { const c = drawRef.current!; c.getContext("2d")!.clearRect(0, 0, c.width, c.height); hasInk.current = false; stroke.current = null; }} className="rounded-lg border border-white/10 px-3 py-1.5 text-[12px] font-medium text-slate-300 hover:bg-white/[0.06]">{tr ? "Temizle" : "Clear"}</button>
+                <button type="button" onClick={() => { const c = drawRef.current!; c.getContext("2d")!.clearRect(0, 0, c.width, c.height); hasInk.current = false; stroke.current = null; strokes.current = []; }} className="rounded-lg border border-white/10 px-3 py-1.5 text-[12px] font-medium text-slate-300 hover:bg-white/[0.06]">{tr ? "Temizle" : "Clear"}</button>
                 <button type="button" onClick={useDrawn} className="rounded-lg bg-cyan-600 px-4 py-1.5 text-[13px] font-bold text-white hover:brightness-110">{tr ? "Kullan" : "Use"}</button>
               </div>
             </>
@@ -1088,10 +1198,19 @@ export function SignatureModal({ tr, canSave, onClose, onDone, onDoneText }: { t
 
           {tab !== "type" && (
             canSave ? (
+              <>
               <label className="mt-3 flex cursor-pointer items-center gap-2 text-[12.5px] text-slate-300">
                 <input type="checkbox" checked={saveIt} onChange={(e) => setSaveIt(e.target.checked)} className="h-4 w-4 accent-cyan-500" />
                 {tr ? "Bu imzayı kaydet — sonraki belgelerde tek tıkla kullan (yalnız bu cihazda saklanır)" : "Save this signature for one-click use next time (stored on this device only)"}
               </label>
+              {saveIt && savedCount >= MAX_SAVED_SIGNATURES && (
+                <p className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[12.5px] leading-snug text-amber-200">
+                  {tr
+                    ? `En fazla ${MAX_SAVED_SIGNATURES} imza kaydedebilirsin. Yenisini kaydedersen en eski kayıtlı imzan silinir.`
+                    : `You can save up to ${MAX_SAVED_SIGNATURES} signatures. Saving a new one deletes your oldest saved signature.`}
+                </p>
+              )}
+              </>
             ) : (
               <p className="mt-3 rounded-lg border border-cyan-400/20 bg-cyan-500/[0.06] px-3 py-2 text-[12.5px] leading-snug text-cyan-100">
                 {tr ? "İmzanı kaydedip her belgede tek tıkla kullanmak için " : "To save your signature for one-click use, "}
