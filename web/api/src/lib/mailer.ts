@@ -33,6 +33,8 @@ export type SendMailInput = {
   replyTo?: string;
   /** Pazarlama e-postalarında tek-tık abonelikten çıkış URL'i (RFC 8058, Gmail/Yahoo zorunlu). */
   listUnsubscribeUrl?: string;
+  /** E-posta ekleri (ör. imzalı PDF). */
+  attachments?: Array<{ filename: string; content: Buffer; contentType?: string }>;
 };
 
 export async function sendMail(input: SendMailInput) {
@@ -52,6 +54,7 @@ export async function sendMail(input: SendMailInput) {
       subject: input.subject,
       html: input.html,
       text: input.text,
+      ...(input.attachments?.length ? { attachments: input.attachments } : {}),
     });
   } catch (error) {
     logApiFailure({

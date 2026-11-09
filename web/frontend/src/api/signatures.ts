@@ -22,6 +22,11 @@ async function ensureOk(response: Response, varsayilan: string): Promise<void> {
   }
 }
 
+/** İmzanın hangi sayfalara, belgenin neresine konacağı — gönderen seçer. */
+export type ImzaKonumu = "sag-alt" | "orta-alt" | "sol-alt" | "sag-ust" | "orta-ust" | "sol-ust";
+export type ImzaSayfaModu = "son" | "ilk" | "hepsi" | "sec" | "haric";
+export type ImzaTercihi = { mod: ImzaSayfaModu; sayfalar: string; konum: ImzaKonumu };
+
 export type ImzaDurumu = "PENDING" | "VIEWED" | "SIGNED" | "DECLINED" | "CANCELLED" | "EXPIRED";
 
 export type ImzaIstegi = {
@@ -50,7 +55,15 @@ export type ImzaIstegiDetay = ImzaIstegi & {
 
 export async function imzaIstegiGonder(
   accessToken: string,
-  girdi: { file: File; title: string; signerEmail: string; signerName?: string; message?: string },
+  girdi: {
+    file: File;
+    title: string;
+    signerEmail: string;
+    signerName?: string;
+    message?: string;
+    placement?: ImzaTercihi;
+    notifyOwner?: boolean;
+  },
 ): Promise<{ id: string }> {
   const form = new FormData();
   form.append("file", girdi.file);
@@ -58,6 +71,8 @@ export async function imzaIstegiGonder(
   form.append("signerEmail", girdi.signerEmail);
   if (girdi.signerName) form.append("signerName", girdi.signerName);
   if (girdi.message) form.append("message", girdi.message);
+  if (girdi.notifyOwner) form.append("notifyOwner", "true");
+  if (girdi.placement) form.append("placement", JSON.stringify(girdi.placement));
   const r = await saasFetch(`/api/signatures`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -100,6 +115,14 @@ export async function imzaIstegiIptalEt(accessToken: string, id: string): Promis
   await ensureOk(r, "İmza isteği iptal edilemedi.");
 }
 
+export async function imzaIstegiSil(accessToken: string, id: string): Promise<void> {
+  const r = await saasFetch(`/api/signatures/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  await ensureOk(r, "İmza isteği silinemedi.");
+}
+
 export async function imzaBelgesiniIndir(accessToken: string, id: string): Promise<Blob> {
   const r = await saasFetch(`/api/signatures/${encodeURIComponent(id)}/download`, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -122,6 +145,8 @@ export type ImzaSayfasi = {
   isteyenEposta: string;
   belgeBase64: string;
   imzalandiMi: boolean;
+  /** İmzanın nereye ekleneceğini anlatan tek cümle. */
+  yerlesimOzeti: string;
 };
 
 export async function imzaSayfasiniGetir(token: string): Promise<ImzaSayfasi> {
@@ -136,7 +161,6 @@ export async function imzayiGonder(
     signaturePng: string;
     signerName: string;
     consent: boolean;
-    placement: { sayfa: number; xOran: number; yOran: number; genislikOran: number };
   },
 ): Promise<void> {
   const r = await saasFetch(`/api/sign/${encodeURIComponent(token)}/sign`, {

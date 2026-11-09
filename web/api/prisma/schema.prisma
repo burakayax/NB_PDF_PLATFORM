@@ -1022,6 +1022,12 @@ model SignatureRequest {
   signedData   Bytes?   @map("signed_data")
   signedHash   String?  @map("signed_hash")
   message      String?
+  /// İmzanın nereye konacağı (JSON): sayfa seçimi + konum. Boşsa son sayfa / sağ alt.
+  placement    String?
+  /// İsteği gönderen, imza/ret olduğunda e-posta ile bilgilendirilmek istedi mi (varsayılan: hayır).
+  notifyOwner  Boolean  @default(false) @map("notify_owner")
+  /// Kullanıcı sildiğinde dolar: belge içeriği temizlenir, denetim kaydı ve kontenjan sayımı kalır.
+  deletedAt    DateTime? @map("deleted_at")
   status       SignatureRequestStatus @default(PENDING)
   signerEmail  String   @map("signer_email")
   signerName   String?  @map("signer_name")

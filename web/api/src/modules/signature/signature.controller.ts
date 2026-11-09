@@ -7,6 +7,7 @@ import {
   imzaIstegiDetayi,
   imzaIstegiIptal,
   imzaBelgesiniIndir,
+  imzaIstegiSil,
   imzaSayfasiniAc,
   imzayiUygula,
   imzayiReddet,
@@ -32,9 +33,10 @@ function pdfGonder(response: Response, filename: string, data: Buffer) {
   response.setHeader("Content-Type", "application/pdf");
   response.setHeader(
     "Content-Disposition",
-    `attachment; filename="${encodeURIComponent(filename)}"`,
+    `attachment; filename="belge.pdf"; filename*=UTF-8''${encodeURIComponent(filename)}`,
   );
-  response.send(data);
+  response.setHeader("Content-Length", String(data.length));
+  response.end(Buffer.from(data));
 }
 
 export async function createSignatureRequestController(request: Request, response: Response) {
@@ -51,6 +53,8 @@ export async function createSignatureRequestController(request: Request, respons
       signerEmail: govde.signerEmail || "",
       signerName: govde.signerName,
       message: govde.message,
+      placement: govde.placement,
+      bildirimEposta: govde.notifyOwner === "true",
     },
     bilgi(request),
   );
@@ -75,6 +79,11 @@ export async function cancelSignatureRequestController(request: Request, respons
   response.status(204).send();
 }
 
+export async function deleteSignatureRequestController(request: Request, response: Response) {
+  await imzaIstegiSil(kullanici(request), String(request.params.id), bilgi(request));
+  response.status(204).send();
+}
+
 export async function downloadSignatureDocumentController(request: Request, response: Response) {
   const { filename, data } = await imzaBelgesiniIndir(
     kullanici(request),
@@ -95,21 +104,13 @@ export async function submitSignatureController(request: Request, response: Resp
     signaturePng?: string;
     signerName?: string;
     consent?: boolean;
-    placement?: { sayfa?: number; xOran?: number; yOran?: number; genislikOran?: number };
   };
-  const y = govde.placement ?? {};
   const sonuc = await imzayiUygula(
     String(request.params.token),
     {
       imzaPngBase64: govde.signaturePng || "",
       imzalayanAd: govde.signerName || "",
       riza: Boolean(govde.consent),
-      yerlesim: {
-        sayfa: Number(y.sayfa) || 1,
-        xOran: Number.isFinite(Number(y.xOran)) ? Number(y.xOran) : 0.6,
-        yOran: Number.isFinite(Number(y.yOran)) ? Number(y.yOran) : 0.8,
-        genislikOran: Math.min(0.6, Math.max(0.1, Number(y.genislikOran) || 0.25)),
-      },
     },
     bilgi(request),
   );

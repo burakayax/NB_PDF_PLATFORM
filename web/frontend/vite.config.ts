@@ -242,6 +242,12 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "billing",
     "ai",
     "team",
+    // Imza istekleri (oturumlu) ve imzalayan baglantisi (herkese acik).
+    "signatures",
+    "sign",
+    "org",
+    "email",
+    "payments",
     // Arac puanlama — misafire acik, kimlik API'sinde.
     "tool-rating",
   ];

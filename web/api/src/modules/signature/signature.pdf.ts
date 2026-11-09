@@ -15,6 +15,7 @@
 import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { createHash } from "node:crypto";
+import { sayfalariCoz, type ImzaTercihi } from "./signature.placement.js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,14 +42,7 @@ export function sha256(veri: Uint8Array | Buffer): string {
   return createHash("sha256").update(veri).digest("hex");
 }
 
-export type ImzaYerlesimi = {
-  /** 1'den başlayan sayfa numarası. */
-  sayfa: number;
-  /** Sayfa genişliğine ORANLA konum (0-1) — sayfa boyutundan bağımsız olsun. */
-  xOran: number;
-  yOran: number;
-  genislikOran: number;
-};
+export type ImzaYerlesimi = ImzaTercihi;
 
 export type DenetimOlayi = {
   type: string;
@@ -82,6 +76,7 @@ const OLAY_ADI: Record<string, string> = {
   declined: "İmza reddedildi",
   cancelled: "İstek iptal edildi",
   downloaded: "İmzalı belge indirildi",
+  deleted: "İstek kullanıcı tarafından silindi",
 };
 
 function tarihMetni(t: Date): string {
@@ -115,27 +110,42 @@ export async function imzaliBelgeUret(girdi: ImzaGommeGirdisi): Promise<Uint8Arr
   }
 
   // ── 1) İmzayı yerleştir ────────────────────────────────────────────────────
+  // Sayfalar ve köşe, isteği gönderenin onayladığı tercihten gelir. İmza
+  // görüntüsü istemcide içeriğine göre kırpılır; bu yüzden köşeye TAM yaslanır.
   const sayfalar = pdf.getPages();
-  const indeks = Math.min(Math.max(girdi.yerlesim.sayfa, 1), sayfalar.length) - 1;
-  const sayfa = sayfalar[indeks]!;
-  const { width: sEn, height: sBoy } = sayfa.getSize();
-
+  const hedefler = sayfalariCoz(girdi.yerlesim, sayfalar.length);
   const imza = await pdf.embedPng(girdi.imzaPng);
-  const imzaEn = Math.max(40, sEn * girdi.yerlesim.genislikOran);
-  const imzaBoy = (imza.height / imza.width) * imzaEn;
-  const imzaX = Math.min(Math.max(0, sEn * girdi.yerlesim.xOran), sEn - imzaEn);
-  // Oran üstten ölçülür; pdf-lib'in başlangıç noktası sol-alt olduğu için çevrilir.
-  const imzaY = Math.min(Math.max(0, sBoy - sBoy * girdi.yerlesim.yOran - imzaBoy), sBoy - imzaBoy);
-  sayfa.drawImage(imza, { x: imzaX, y: imzaY, width: imzaEn, height: imzaBoy });
+  const KENAR = 36;
+  const ALT_PAY = 48;
+  const [yatay, dikey] = girdi.yerlesim.konum.split("-") as ["sag" | "orta" | "sol", "alt" | "ust"];
+  const altYazi = `${girdi.imzalayanAd} · ${tarihMetni(girdi.imzaZamani)}`;
 
-  // İmzanın altına kim, ne zaman imzaladı bilgisi (belgenin üstünde de görünsün).
-  sayfa.drawText(`${girdi.imzalayanAd} · ${tarihMetni(girdi.imzaZamani)}`, {
-    x: imzaX,
-    y: Math.max(4, imzaY - 10),
-    size: 7,
-    font,
-    color: rgb(0.35, 0.4, 0.48),
-  });
+  for (const no of hedefler) {
+    const sayfa = sayfalar[no - 1]!;
+    const { width: sEn, height: sBoy } = sayfa.getSize();
+    let imzaEn = Math.min(sEn * 0.26, 170);
+    let imzaBoy = (imza.height / imza.width) * imzaEn;
+    if (imzaBoy > 80) {
+      imzaBoy = 80;
+      imzaEn = (imza.width / imza.height) * imzaBoy;
+    }
+    const imzaX =
+      yatay === "sag" ? sEn - KENAR - imzaEn : yatay === "orta" ? (sEn - imzaEn) / 2 : KENAR;
+    const imzaY = dikey === "alt" ? ALT_PAY : sBoy - KENAR - 14 - imzaBoy;
+    sayfa.drawImage(imza, { x: imzaX, y: imzaY, width: imzaEn, height: imzaBoy });
+
+    // İmzanın altına kim, ne zaman imzaladı bilgisi (belgenin üstünde de görünsün).
+    const yaziEn = font.widthOfTextAtSize(altYazi, 7);
+    const yaziX =
+      yatay === "sag" ? sEn - KENAR - yaziEn : yatay === "orta" ? (sEn - yaziEn) / 2 : KENAR;
+    sayfa.drawText(altYazi, {
+      x: Math.max(4, yaziX),
+      y: Math.max(4, imzaY - 11),
+      size: 7,
+      font,
+      color: rgb(0.35, 0.4, 0.48),
+    });
+  }
 
   // ── 2) Denetim sertifikası sayfası ─────────────────────────────────────────
   const sert = pdf.addPage([595.28, 841.89]); // A4
