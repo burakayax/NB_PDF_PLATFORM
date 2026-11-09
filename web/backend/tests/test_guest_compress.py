@@ -33,7 +33,7 @@ def client(tmp_path, monkeypatch):
 
 
 def _pdf_bytes(pages: int = 1) -> bytes:
-    import pymupdf as fitz
+    from tests import minifitz as fitz
 
     doc = fitz.open()
     for i in range(pages):

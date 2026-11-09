@@ -90,8 +90,8 @@ jobs:
           sudo apt-get install -y ffmpeg fonts-dejavu-core
           ffmpeg -hide_banner -filters | grep -q drawtext
           python -m pip install --upgrade pip
-          # Örnek belgeler: PDF/görsel (pymupdf, pillow) + Word/Excel/PowerPoint dosyaları (python-docx, openpyxl, python-pptx)
-          pip install pymupdf pillow python-docx openpyxl python-pptx
+          # Örnek belgeler: PDF/görsel (pillow, reportlab, pikepdf) + Word/Excel/PowerPoint dosyaları (python-docx, openpyxl, python-pptx)
+          pip install pillow reportlab pikepdf pypdfium2 fonttools python-docx openpyxl python-pptx
           (cd web/frontend && npm ci && npx playwright install --with-deps chromium)
 
       - name: Videoyu uret

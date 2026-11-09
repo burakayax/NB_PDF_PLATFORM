@@ -56,7 +56,7 @@ def test_parola_disi_teknik_hata_hala_gizlenir() -> None:
 
 
 def test_sifreli_pdf_yanlis_parolayla_sikistirilamaz(tmp_path) -> None:
-    fitz = pytest.importorskip("fitz")
+    from tests import minifitz as fitz
     from src.pdf_engine import compress_pdf
 
     kaynak = tmp_path / "sifreli.pdf"

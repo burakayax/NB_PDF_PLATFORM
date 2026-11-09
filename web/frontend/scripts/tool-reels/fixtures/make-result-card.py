@@ -9,7 +9,7 @@ import os
 import sys
 import zipfile
 
-import fitz  # pymupdf
+import pypdfium2 as pdfium
 from PIL import Image, ImageDraw, ImageFont
 
 src, out, fonts = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -22,9 +22,8 @@ thumbs, caption = [], ""
 
 def pdf_pages(doc, limit=3):
     res = []
-    for i in range(min(limit, doc.page_count)):
-        pix = doc[i].get_pixmap(matrix=fitz.Matrix(1.2, 1.2))
-        res.append(Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB"))
+    for i in range(min(limit, len(doc))):
+        res.append(doc[i].render(scale=1.2).to_pil().convert("RGB"))
     return res
 
 
@@ -39,9 +38,9 @@ elif ext in (".png", ".jpg", ".jpeg"):
     thumbs = [Image.open(src).convert("RGB")]
     caption = "Görsel hazır"
 elif ext == ".pdf":
-    doc = fitz.open(src)
+    doc = pdfium.PdfDocument(src)
     thumbs = pdf_pages(doc)
-    caption = f"{doc.page_count} sayfalık PDF hazır"
+    caption = f"{len(doc)} sayfalık PDF hazır"
 else:
     sys.exit(3)
 

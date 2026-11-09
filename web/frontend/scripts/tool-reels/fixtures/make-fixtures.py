@@ -6,7 +6,11 @@ Araç videoları için örnek belgeler (hepsi uydurma, gerçek veri yok).
 
 Kullanım: python make-fixtures.py <çıktı klasörü> <yazı tipi klasörü>
 """
-import fitz, io, math, random, sys
+import io, math, os, random, sys
+
+# PyMuPDF'siz: testlerin ortak küçük PDF yazıcısı (reportlab tabanlı) kullanılır.
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "backend")))
+from tests import minifitz as fitz
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 random.seed(11)
 S = sys.argv[1]  # çıktı klasörü
@@ -222,12 +226,29 @@ print("birleştirme belgeleri hazır")
 import zipfile, os
 
 # 1) Hafif rapor: Faaliyet raporunun küçültülmüş hâli (sayfa/dönüştürme araçları hızlı çalışsın).
-light = fitz.open(S + "/Faaliyet-Raporu-2025.pdf")
-try:
-    light.rewrite_images(dpi_threshold=110, dpi_target=80, quality=55)
-except Exception as e:  # eski PyMuPDF: görselleri küçültemeden kaydet
-    print("rewrite_images yok:", e)
-light.save(S + "/Rapor-Hafif.pdf", garbage=4, deflate=True)
+import pikepdf
+from pikepdf import PdfImage
+
+light = pikepdf.open(S + "/Faaliyet-Raporu-2025.pdf")
+for pg_ in light.pages:  # görselleri küçült (≈80 dpi, kalite 55)
+    for name_, xo in list(pg_.Resources.get("/XObject", {}).items()):
+        if xo.get("/Subtype") != "/Image":
+            continue
+        try:
+            im_ = PdfImage(xo).as_pil_image().convert("RGB")
+            im_ = im_.resize((max(1, int(im_.width * 0.55)), max(1, int(im_.height * 0.55))), Image.LANCZOS)
+            buf_ = io.BytesIO()
+            im_.save(buf_, "JPEG", quality=55)
+            xo.write(buf_.getvalue(), filter=pikepdf.Name.DCTDecode)
+            xo.Width, xo.Height = im_.width, im_.height
+            xo.ColorSpace = pikepdf.Name.DeviceRGB
+            xo.BitsPerComponent = 8
+            for k_ in ("/SMask", "/DecodeParms", "/Decode"):
+                if k_ in xo:
+                    del xo[k_]
+        except Exception as e:
+            print("görsel küçültülemedi:", e)
+light.save(S + "/Rapor-Hafif.pdf")
 light.close()
 
 # 2) Görseller (JPG): yüksek çözünürlüklü, sıkıştır/boyutlandır için.
@@ -288,8 +309,8 @@ fm.save(S + "/Basvuru-Formu.pdf")
 fm.close()
 
 # 5) Şifreli PDF (parola: demo123) ve 6) bozuk PDF.
-base = fitz.open(S + "/Sozlesme.pdf")
-base.save(S + "/Sifreli-Sozlesme.pdf", encryption=fitz.PDF_ENCRYPT_AES_256, user_pw="demo123", owner_pw="demo123-owner")
+base = pikepdf.open(S + "/Sozlesme.pdf")
+base.save(S + "/Sifreli-Sozlesme.pdf", encryption=pikepdf.Encryption(user="demo123", owner="demo123-owner", R=6))
 base.close()
 raw = open(S + "/Rapor-Hafif.pdf", "rb").read()
 open(S + "/Bozuk-Rapor.pdf", "wb").write(raw[: int(len(raw) * 0.82)])  # sonu kesik: açılmaz

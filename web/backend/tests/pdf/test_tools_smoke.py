@@ -24,7 +24,7 @@ _ROOT = Path(__file__).resolve().parents[4]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pymupdf as fitz  # PyMuPDF
+from tests import minifitz as fitz
 from PIL import Image
 
 from src import pdf_toolkit_extra as ptx  # noqa: E402

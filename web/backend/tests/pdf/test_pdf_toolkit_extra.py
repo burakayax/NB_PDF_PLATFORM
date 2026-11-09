@@ -33,7 +33,7 @@ class TestDeletePages:
         assert result is True
         assert out.exists()
 
-        import pymupdf as fitz
+        from tests import minifitz as fitz
         doc = fitz.open(str(out))
         assert doc.page_count == 2
 
@@ -91,7 +91,7 @@ class TestOrganizePdf:
         assert result is True
         assert out.exists()
 
-        import pymupdf as fitz
+        from tests import minifitz as fitz
         doc = fitz.open(str(out))
         assert doc.page_count == 3
 
@@ -206,7 +206,7 @@ class TestImagesToPdf:
             from PIL import Image
         except ImportError:
             pytest.skip("Pillow gerekli")
-        import pymupdf as fitz
+        from tests import minifitz as fitz
 
         tif = tmp_dir / "cok_sayfali.tiff"
         sayfalar = [

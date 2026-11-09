@@ -12,21 +12,21 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import pdf_engine as pdf_engine
 
 
-def _write_min_pdf(path: str, *, user_pw: str | None = None) -> None:
-    import pymupdf as fitz
+def _write_pdf(path: str, pages: int = 1, *, user_pw: str | None = None) -> None:
+    import pikepdf
 
-    doc = fitz.open()
-    doc.new_page()
+    pdf = pikepdf.new()
+    for _ in range(pages):
+        pdf.add_blank_page(page_size=(595, 842))
     if user_pw is not None:
-        doc.save(
-            path,
-            encryption=fitz.PDF_ENCRYPT_AES_256,
-            user_pw=user_pw,
-            owner_pw=user_pw,
-        )
+        pdf.save(path, encryption=pikepdf.Encryption(user=user_pw, owner=user_pw, R=6))
     else:
-        doc.save(path)
-    doc.close()
+        pdf.save(path)
+    pdf.close()
+
+
+def _write_min_pdf(path: str, *, user_pw: str | None = None) -> None:
+    _write_pdf(path, 1, user_pw=user_pw)
 
 
 class TestPdfEngine(unittest.TestCase):
@@ -117,14 +117,7 @@ class TestPdfEngine(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             inp = os.path.join(tmpdir, 'in.pdf')
             out_path = os.path.join(tmpdir, 'out.pdf')
-            import pymupdf as fitz
-
-            d = fitz.open()
-            d.new_page()
-            d.new_page()
-            d.new_page()
-            d.save(inp)
-            d.close()
+            _write_pdf(inp, 3)
             self.assertTrue(pdf_engine.extract_pages(inp, [1, 3], out_path))
             self.assertTrue(os.path.isfile(out_path))
 
@@ -139,14 +132,7 @@ class TestPdfEngine(unittest.TestCase):
     def test_extract_pages_separate_success(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             inp = os.path.join(tmpdir, 'in.pdf')
-            import pymupdf as fitz
-
-            d = fitz.open()
-            d.new_page()
-            d.new_page()
-            d.new_page()
-            d.save(inp)
-            d.close()
+            _write_pdf(inp, 3)
             paths = pdf_engine.extract_pages_separate(inp, [1, 2], tmpdir)
             self.assertEqual(len(paths), 2)
             for p in paths:

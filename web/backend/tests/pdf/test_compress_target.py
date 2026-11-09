@@ -22,7 +22,7 @@ _ROOT = Path(__file__).resolve().parents[4]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import pymupdf as fitz  # PyMuPDF
+from tests import minifitz as fitz
 from PIL import Image
 
 try:
@@ -104,9 +104,18 @@ def test_ulasilabilir_hedefte_hedefin_altina_iner_ve_metin_korunur(photo_pdf, tm
     fitz.open(out).close()  # geçerli PDF
 
 
-def test_ulasilamayan_hedefte_durust_sonuc(photo_pdf, tmp_path):
+def test_ulasilamayan_hedefte_durust_sonuc(tmp_path):
+    # Her sayfada FARKLI fotoğraf: en düşük kalitede bile toplam 20 KB (alt sınır) altına inemez.
+    src = tmp_path / "farkli_foto.pdf"
+    doc = fitz.open()
+    for i in range(4):
+        page = doc.new_page()
+        page.insert_text((60, 80), f"Sayfa {i + 1}", fontsize=11)
+        page.insert_image(fitz.Rect(40, 360, 555, 760), stream=_photo(1600, 1100, i + 1))
+    doc.save(str(src))
+    photo_pdf = str(src)
     out = str(tmp_path / "out.pdf")
-    r = engine.compress_pdf_to_target(photo_pdf, out, 21 * KB)  # 4 sayfalık fotoğraflı PDF için imkânsız
+    r = engine.compress_pdf_to_target(photo_pdf, out, 20 * KB)  # 4 farklı fotoğraf için imkânsız
     assert r["reached"] is False
     assert r["rasterized"] is False  # izin verilmedi
     assert os.path.getsize(out) == r["bytes"]
