@@ -125,12 +125,14 @@ import { UserJourneyTab } from "./journey/UserJourneyTab";
 import { ConsentLogTab } from "./compliance/ConsentLogTab";
 import { SystemControlTab } from "./SystemControlTab";
 import { AutoHealTab } from "./AutoHealTab";
+import { PaymentsTab } from "./payments/PaymentsTab";
 import { AdminToaster } from "./AdminToaster";
 import { readAccessToken } from "../lib/accessTokenStore";
 
 type AdminTabId =
   | "dashboard"
   | "users"
+  | "payments"
   | "cmd-mkt"
   | "cmd-coupons"
   | "cmd-emails"
@@ -166,6 +168,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
     items: [
       { id: "dashboard", label: "Kontrol paneli" },
       { id: "users", label: "Kullanıcılar" },
+      { id: "payments", label: "Ödemeler ve iade" },
     ],
   },
   {
@@ -436,6 +439,7 @@ export function AdminPanel({
           )
         ) : null}
         {tab === "users" ? <AdminUserManagement accessToken={accessToken} uiMode={uiMode} /> : null}
+        {tab === "payments" ? <PaymentsTab accessToken={accessToken} /> : null}
 
         {tab === "cmd-mkt" && cmdMkt ? (
           <div className="max-w-5xl space-y-6">
