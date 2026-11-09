@@ -97,6 +97,7 @@ import {
 } from "./admin-system-defaults.js";
 import {
   processRefund,
+  refundPaytrCheckoutIfApplicable,
   REFUND_WINDOW_DAYS,
 } from "../payment/payment.service.js";
 import { adminRefundBodySchema } from "./admin.schema.js";
@@ -989,6 +990,7 @@ export async function adminIssueRefundController(
 
   // forceOverrideWindow modunda pencere kontrolü atlanır — normal modda processRefund yapar
   let result;
+  let providerRefunded = false;
   if (forceOverrideWindow) {
     // Pencere kontrolü olmadan doğrudan iade et
     const { prisma } = await import("../../lib/prisma.js");
@@ -1002,6 +1004,12 @@ export async function adminIssueRefundController(
     if (checkout.status !== "completed") {
       throw new HttpError(400, `Cannot refund a payment with status "${checkout.status}".`);
     }
+    // PayTR ile alınmış ödemede önce PayTR'ye iade gönderilir; başarısızsa kayıt DEĞİŞMEZ.
+    const gw = await refundPaytrCheckoutIfApplicable(checkout);
+    if (gw && !gw.ok) {
+      throw new HttpError(502, `PayTR iadesi başarısız, kayıt değiştirilmedi: ${gw.error ?? "bilinmeyen hata"}`);
+    }
+    providerRefunded = gw !== null;
     await prisma.$transaction(async (tx) => {
       await tx.paymentCheckout.update({
         where: { conversationId },
@@ -1017,10 +1025,18 @@ export async function adminIssueRefundController(
     });
     result = { ok: true as const, conversationId, userId: checkout.userId, planBefore: checkout.plan };
   } else {
-    result = await processRefund(conversationId, `admin: ${reason}`);
+    result = await processRefund(conversationId, `admin: ${reason}`, async (c) => {
+      const gw = await refundPaytrCheckoutIfApplicable(c);
+      if (gw === null) return { ok: true }; // PayTR ödemesi değil: eski akış (iade elle yapılır)
+      providerRefunded = true;
+      return gw;
+    });
   }
 
   if (!result.ok) {
+    if (result.reason === "provider_failed") {
+      throw new HttpError(502, `PayTR iadesi başarısız, kayıt değiştirilmedi: ${result.detail}`);
+    }
     const statusMap: Record<string, number> = {
       not_found: 404,
       already_refunded: 409,
@@ -1051,6 +1067,8 @@ export async function adminIssueRefundController(
     planBefore: result.planBefore,
     planAfter: "FREE",
     refundedAt: new Date().toISOString(),
+    // true: para PayTR üzerinden otomatik iade edildi. false: iade elle yapılmalı (eski/PayTR dışı ödeme).
+    providerRefunded,
   });
 }
 

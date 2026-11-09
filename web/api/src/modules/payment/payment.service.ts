@@ -22,7 +22,7 @@ import { createTeamForOwner } from "../team/team.service.js";
 import { cvPassInvoiceLabel, cvPassNewExpiry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
 import { missingInvoiceAddressFields } from "../billing/invoice-address.js";
 import { getPaytrCredentials, isPaytrSelected, startPaytrSession } from "./paytr/paytr.service.js";
-import { requestPaytrRefund } from "./paytr/paytr.client.js";
+import { queryPaytrStatus, requestPaytrRefund, summarizePaytrReturns, toKurus } from "./paytr/paytr.client.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
 
@@ -1499,6 +1499,25 @@ export async function checkRefundAbuse(userId: string): Promise<RefundAbuseCheck
   return { allowed: true, requiresAdminReview: refundCount12m >= 1 };
 }
 
+type PaytrVerify = "refunded" | "not_refunded" | "unknown";
+
+/**
+ * İade isteğinin sonucu belirsizse (bağlantı koptu / PayTR "toplam iade tutarı fazla" dedi)
+ * PayTR Durum Sorgu'dan gerçek durumu okur. TAHMİN ETMEZ: iade tutarı okunamazsa "unknown".
+ */
+async function verifyPaytrRefund(merchantOid: string, expectedKurus: number): Promise<PaytrVerify> {
+  try {
+    const st = await queryPaytrStatus(merchantOid, getPaytrCredentials());
+    if (!st.ok) return "unknown";
+    const sum = summarizePaytrReturns(st.raw);
+    if (sum.state === "none") return "not_refunded";
+    if (sum.state === "unknown") return "unknown";
+    return sum.totalKurus >= expectedKurus ? "refunded" : "not_refunded";
+  } catch {
+    return "unknown";
+  }
+}
+
 /** PayTR İade API — tam iade (kısmi iade bu üründe yok). Sonuç, iyzico iadesiyle aynı biçimdedir. */
 async function issuePaytrRefund(
   merchantOid: string,
@@ -1508,6 +1527,17 @@ async function issuePaytrRefund(
   if (!env.paytrEnabled) {
     return { ok: false, error: "paytr_not_configured" };
   }
+  const expectedKurus = toKurus(grossPrice);
+
+  const resolveByStatus = async (why: string): Promise<{ ok: boolean; error?: string }> => {
+    const v = await verifyPaytrRefund(merchantOid, expectedKurus);
+    logger.warn("payment", "[paytr/refund] sonuç durum sorgu ile doğrulandı", { conversationId, why, verdict: v });
+    if (v === "refunded") return { ok: true };
+    if (v === "not_refunded") return { ok: false, error: `paytr_refund_not_done (${why})` };
+    // Okunamadı: iade yapılmış OLABİLİR → otomatik tekrar/başarı sayma; elle PayTR panelinden bakılmalı.
+    return { ok: false, error: `paytr_refund_unverified_check_panel (${why})` };
+  };
+
   try {
     const r = await requestPaytrRefund(merchantOid, grossPrice, getPaytrCredentials(), conversationId);
     if (r.ok) {
@@ -1515,12 +1545,26 @@ async function issuePaytrRefund(
       return { ok: true };
     }
     logger.warn("payment", "[paytr/refund] iade reddedildi", { conversationId, errNo: r.errNo, errMsg: r.errMsg });
+    // 009 = "toplam iade tutarı ödeme tutarından fazla": daha önce iade edilmiş olabilir (ör. bağlantı kopan deneme).
+    if (r.errNo === "009") return resolveByStatus("err_009");
     return { ok: false, error: `paytr_${r.errNo}: ${r.errMsg}` };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    logger.error("payment", "[paytr/refund] iade isteği hata verdi", msg);
-    return { ok: false, error: msg };
+    logger.error("payment", "[paytr/refund] iade isteği hata verdi — durum sorgulanıyor", msg);
+    return resolveByStatus("no_response");
   }
+}
+
+/**
+ * Ödeme PayTR ile alınmışsa PayTR'ye iade gönderir. PayTR ödemesi DEĞİLSE null döner (çağıran eski akışı sürdürür).
+ */
+export async function refundPaytrCheckoutIfApplicable(checkout: {
+  conversationId: string;
+  iyzicoPaymentId?: string | null;
+  priceTry: string;
+}): Promise<null | { ok: boolean; error?: string }> {
+  if (!checkout.iyzicoPaymentId?.startsWith("paytr:")) return null;
+  return issuePaytrRefund(checkout.iyzicoPaymentId.slice("paytr:".length), checkout.priceTry, checkout.conversationId);
 }
 
 export async function issueIyzicoRefund(
@@ -1618,7 +1662,8 @@ export const REFUND_WINDOW_DAYS = 7;
 
 export type RefundResult =
   | { ok: true; conversationId: string; userId: string; planBefore: string }
-  | { ok: false; reason: "not_found" | "already_refunded" | "window_expired" | "not_completed" };
+  | { ok: false; reason: "not_found" | "already_refunded" | "window_expired" | "not_completed" }
+  | { ok: false; reason: "provider_failed"; detail: string };
 
 /**
  * Hem admin manuel iadesi hem de iyzico webhook bildirimi için ortak iade mantığı.
@@ -1630,6 +1675,8 @@ export type RefundResult =
 export async function processRefund(
   conversationId: string,
   reason: string,
+  /** Doğrulamalar geçtikten SONRA, veritabanı değişmeden ÖNCE çağrılır (ör. PayTR'ye iade). Başarısızsa hiçbir şey değişmez. */
+  providerRefund?: (checkout: { conversationId: string; iyzicoPaymentId: string | null; priceTry: string }) => Promise<{ ok: boolean; error?: string }>,
 ): Promise<RefundResult> {
   const checkout = await prisma.paymentCheckout.findUnique({
     where: { conversationId },
@@ -1661,6 +1708,14 @@ export async function processRefund(
   }
 
   const planBefore = checkout.plan;
+
+  if (providerRefund) {
+    const pr = await providerRefund(checkout);
+    if (!pr.ok) {
+      logger.error("payment", `${REFUND_LOG} sağlayıcı iadesi başarısız — kayıt değiştirilmedi`, { conversationId, error: pr.error });
+      return { ok: false, reason: "provider_failed", detail: pr.error ?? "unknown" };
+    }
+  }
 
   await prisma.$transaction(async (tx) => {
     // Checkout kaydını güncelle
