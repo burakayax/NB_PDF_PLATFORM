@@ -216,7 +216,6 @@ def log_pdf_library_versions() -> dict[str, str]:
     _libs: list[tuple[str, str, str]] = [
         ("pypdfium2",     "pypdfium2", "pypdfium2"),
         ("pikepdf",       "pikepdf",   "pikepdf"),
-        ("pdf2docx",      "pdf2docx",  "pdf2docx"),
         ("pypdf",         "pypdf",     "pypdf"),
         ("reportlab",     "reportlab", "ReportLab"),
         ("pdfplumber",    "pdfplumber","pdfplumber"),
@@ -246,7 +245,6 @@ def get_library_versions() -> dict[str, str]:
     _libs = [
         ("pypdfium2",  "pypdfium2"),
         ("pikepdf",    "pikepdf"),
-        ("pdf2docx",   "pdf2docx"),
         ("pypdf",      "pypdf"),
         ("reportlab",  "reportlab"),
         ("PIL",        "Pillow"),

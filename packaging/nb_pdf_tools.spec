@@ -42,7 +42,6 @@ a = Analysis(
         "reportlab",
         "pdfplumber",
         "Crypto",
-        "pdf2docx",
         "windnd",
         "pytesseract",
         "pdf2image",

@@ -1383,7 +1383,7 @@ def pdf_to_word(
     PDF’i düzenlenebilir DOCX olarak dönüştürür.
     Öncelik sırası:
     1. Docling (IBM, sinir ağı tabanlı layout + OCR) — her PDF türü için en iyi kalite
-    2. pdf2docx — dijital PDF’ler için fallback
+    2. dijital PDF dönüştürücü (src/pdf_to_docx_digital.py)
     3. Tesseract OCR — son çare
     """
     try:
@@ -1464,35 +1464,20 @@ def pdf_to_word(
         if progress_callback:
             progress_callback(0, 4, "Metin katmanı Word'e aktarılıyor...")
 
-        # 1. pdf2docx — metin katmanı olan (dijital) PDF'ler için doğru araç
+        # 1. Kendi dijital-PDF dönüştürücümüz (PyMuPDF'siz; pdf2docx'in yerini aldı)
         try:
-            from pdf2docx import Converter
+            from src.pdf_to_docx_digital import pdf_to_docx_digital
             if os.path.isfile(docx_path):
                 try:
                     os.remove(docx_path)
                 except OSError:
                     pass
-            converter = Converter(pdf_path, password=password)
-            try:
-                converter.convert(
-                    docx_path,
-                    clip_image_res_ratio=2.0,
-                    float_image_ignorable_gap=3.0,
-                    line_overlap_threshold=0.9,
-                    line_separate_threshold=3.0,
-                    connected_border_tolerance=0.5,
-                    min_section_height=10.0,
-                    page_margin_factor_top=0.5,
-                    page_margin_factor_bottom=0.5,
-                )
-            finally:
-                converter.close()
-            if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
+            if pdf_to_docx_digital(pdf_path, docx_path, password=password, progress_callback=progress_callback):
                 if progress_callback:
                     progress_callback(4, 4, "Tamamlandı.")
                 return True
-        except Exception as pdf2docx_err:
-            print(f"[pdf_to_word] pdf2docx başarısız: {pdf2docx_err}")
+        except Exception as digital_err:
+            print(f"[pdf_to_word] dijital dönüştürücü başarısız: {digital_err}")
 
         # 2. Görüntü tanıma — yalnızca yukarıdaki başarısız olursa.
         if progress_callback:

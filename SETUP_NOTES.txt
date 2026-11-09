@@ -26,7 +26,6 @@ Asagidaki Python kutuphaneleri ve harici programlar eksiksiz kurulmalidir.
 - reportlab
 - pdfplumber
 - pycryptodome
-- pdf2docx
 
 Kurulum:
 python -m pip install -r requirements.txt
