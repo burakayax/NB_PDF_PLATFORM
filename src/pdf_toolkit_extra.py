@@ -1,6 +1,7 @@
 """
 Ek PDF araçları (sayfa yönetimi, dönüşüm, güvenlik).
-pymupdf (fitz), pikepdf, PyPDF2 ve mevcut pdf_engine yardımcılarıyla.
+pikepdf, pypdfium2 (PDFium), reportlab, PyPDF2 ve mevcut pdf_engine yardımcılarıyla
+(src.pdfcore çekirdeği üzerinden; AGPL lisanslı PyMuPDF KULLANILMAZ).
 """
 
 from __future__ import annotations
@@ -14,7 +15,9 @@ import zipfile
 from typing import Callable, Dict, List, Optional
 from urllib.parse import urlsplit
 
-import pymupdf as fitz
+from src.pdfcore import PdfiumReader
+from src.pdfcore import overlay as _ov
+from src.pdfcore import pages as _pc
 
 # pdf_engine'den parola açma + OCR (taranmış sayfalar için)
 from src.pdf_engine import (
@@ -56,14 +59,10 @@ def _guvenli_raster_dpi(sayfa_sayisi: int, istenen_dpi: int) -> int:
     return min(istenen_dpi, 150)
 
 
-def _fitz_open(pdf_path: str, password: Optional[str] = None):
-    doc = fitz.open(pdf_path)
-    if doc.needs_pass:
-        if not (password or "").strip():
-            raise Exception("Şifreli PDF için parola gerekli.")
-        if not doc.authenticate(password or ""):
-            raise Exception("Girilen PDF parolası hatalı.")
-    return doc
+def _open_pdf(pdf_path: str, password: Optional[str] = None):
+    """pikepdf ile açar; şifreliyse parola ister. Hata iletileri eski davranışla aynıdır
+    ("Şifreli PDF için parola gerekli." / "Girilen PDF parolası hatalı.")."""
+    return _pc.open_pdf(pdf_path, password, suppress_warnings=True)
 
 
 def delete_pages_pdf(
@@ -74,23 +73,18 @@ def delete_pages_pdf(
     *,
     total_pages: Optional[int] = None,
 ) -> bool:
-    """İstenen sayfalar çıkarılmış yeni belge oluşturur (insert_pdf aralık aktarımı ile büyük PDF’lerde çok daha hızlı)."""
-    import pymupdf as _fitz_local
-    src = _fitz_open(pdf_path, password=password)
+    """İstenen sayfalar çıkarılmış yeni belge oluşturur (sayfa kaynakları kaynak belge başına bir kez
+    kopyalanır; yer imleri ve belge bilgisi taşınır)."""
+    src = _open_pdf(pdf_path, password=password)
     try:
-        n = src.page_count
+        n = len(src.pages)
         to_del = {int(p) for p in pages_to_delete}
         if any(p < 1 or p > n for p in to_del):
             raise Exception("Geçersiz sayfa numarası.")
         if len(to_del) >= n:
             raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
         keep = [i for i in range(n) if (i + 1) not in to_del]
-        # NEDEN select(): Bitişik olmayan sayfalar silinince aralık aralık insert_pdf
-        # her aralıkta yazı tipi/görselleri YENİDEN kopyalıyordu (2 aralık = dosya ~2 kat,
-        # garbage=0 olduğu için tekilleştirme de yok). select() aynı belge üzerinde
-        # çalışır, ortak kaynaklar bir kez kalır; garbage=3 kullanılmayan nesneleri atar.
-        src.select(keep)
-        src.save(output_path, garbage=3, deflate=True, linear=False)
+        _pc.write_selected_pages(src, output_path, keep)
     finally:
         src.close()
     return True
@@ -105,9 +99,9 @@ def rotate_pdf(
     per_page_degrees: Optional[Dict[int, int]] = None,
 ) -> bool:
     """Rotate pages. Use either legacy (degrees + pages_1based) or per_page_degrees (1-based page -> add 90/180/270)."""
-    doc = _fitz_open(pdf_path, password=password)
+    doc = _open_pdf(pdf_path, password=password)
     try:
-        n = doc.page_count
+        n = len(doc.pages)
         if per_page_degrees is not None:
             for p in range(1, n + 1):
                 add_deg = int(per_page_degrees.get(p, 0))
@@ -115,9 +109,7 @@ def rotate_pdf(
                     continue
                 if add_deg not in (90, 180, 270):
                     raise Exception("Sayfa başına dönüş yalnızca 90, 180 veya 270 olabilir.")
-                page = doc[p - 1]
-                cur = int(page.rotation) % 360
-                page.set_rotation((cur + add_deg) % 360)
+                _pc.rotate_page(doc.pages[p - 1], add_deg)
         else:
             if degrees not in (90, 180, 270):
                 raise Exception("Dönüş açısı 90, 180 veya 270 olmalıdır.")
@@ -125,43 +117,13 @@ def rotate_pdf(
             for i in targets:
                 if i < 0 or i >= n:
                     continue
-                page = doc[i]
-                cur = int(page.rotation) % 360
-                page.set_rotation((cur + degrees) % 360)
+                _pc.rotate_page(doc.pages[i], degrees)
         # Döndürme yalnızca sayfa sözlüğündeki /Rotate meta-verisini değiştirir;
-        # içerik akışları dokunulmaz — yeniden sıkıştırmaya gerek yok.
-        doc.save(output_path, garbage=0, deflate=False, linear=False)
+        # içerik akışları dokunulmaz.
+        _pc.save_pdf(doc, output_path)
     finally:
         doc.close()
     return True
-
-
-def _yer_imlerini_aktar(src, out, kaynak_sayfalar: list[int]) -> None:
-    """Yer imlerini (içindekiler) yeni belgeye taşır. insert_pdf bunları KOPYALAMAZ.
-
-    ``kaynak_sayfalar[k]`` = çıktının k'ıncı sayfasının kaynaktaki 0 tabanlı sayfası. Yalnız çıktıda
-    kalan sayfalara işaret edenler yazılır; seviye atlaması (ör. 1 → 3) PyMuPDF'in kuralına göre düzeltilir.
-    Hata olursa sessizce geçer — çıktı yer imsiz kalsa da geçerlidir.
-    """
-    try:
-        eski_yeni: dict[int, int] = {}
-        for yeni, eski in enumerate(kaynak_sayfalar):
-            eski_yeni.setdefault(eski, yeni)
-        yeni_toc: list[list] = []
-        for lvl, baslik, sayfa, *_ in src.get_toc(simple=False):
-            if sayfa < 1:
-                continue
-            yeni = eski_yeni.get(sayfa - 1)
-            if yeni is None:
-                continue
-            seviye = max(1, int(lvl))
-            onceki = yeni_toc[-1][0] if yeni_toc else 0
-            seviye = min(seviye, onceki + 1)
-            yeni_toc.append([seviye, baslik, yeni + 1])
-        if yeni_toc:
-            out.set_toc(yeni_toc)
-    except Exception:
-        pass
 
 
 def organize_pdf(
@@ -172,15 +134,10 @@ def organize_pdf(
     *,
     total_pages: Optional[int] = None,
 ) -> bool:
-    """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2]).
-
-    insert_pdf ile ardışık aralık aktarımı kullanır — büyük PDF'lerde
-    select()+save() tam dosya yeniden yazımından çok daha hızlıdır.
-    """
-    import pymupdf as _fitz_local
-    src = _fitz_open(pdf_path, password=password)
+    """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2]). Yer imleri yeni sıraya taşınır."""
+    src = _open_pdf(pdf_path, password=password)
     try:
-        n = src.page_count
+        n = len(src.pages)
         for p in new_order_1based:
             if p < 1 or p > n:
                 raise Exception(f"Geçersiz sayfa: {p} (1–{n})")
@@ -188,24 +145,7 @@ def organize_pdf(
             raise Exception("Sıra listesi, tüm sayfaları tam olarak bir kez içermelidir.")
         if len(set(new_order_1based)) != n:
             raise Exception("Aynı sayfa iki kez kullanılamaz.")
-        order_0 = [p - 1 for p in new_order_1based]
-        ranges: list[tuple[int, int]] = []
-        s = order_0[0]; e = order_0[0]
-        for k in order_0[1:]:
-            if k == e + 1:
-                e = k
-            else:
-                ranges.append((s, e))
-                s = e = k
-        ranges.append((s, e))
-        new_doc = _fitz_local.open()
-        try:
-            for from_p, to_p in ranges:
-                new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
-            _yer_imlerini_aktar(src, new_doc, order_0)
-            new_doc.save(output_path, garbage=0, deflate=False, linear=False)
-        finally:
-            new_doc.close()
+        _pc.write_selected_pages(src, output_path, [p - 1 for p in new_order_1based])
     finally:
         src.close()
     return True
@@ -251,8 +191,8 @@ def add_watermark_text(
     from_page: int = 1,
     to_page: int = 0,
 ) -> bool:
-    """rotation: derece (0 = yatay, 45 = çapraz). size_pct: metnin sayfa genişliğine oranı (%).
-    from_page/to_page: filigranlanacak aralık (1 tabanlı, to_page=0 → son sayfa)."""
+    """rotation: derece (0 = yatay, 45 = çapraz, pozitif = saat yönünün tersi). size_pct: metnin sayfa
+    genişliğine oranı (%). from_page/to_page: filigranlanacak aralık (1 tabanlı, to_page=0 → son sayfa)."""
     if not (text or "").strip():
         raise Exception("Filigran metni boş olamaz.")
     # Üst sınır %100: rakiplerde tam opak filigran var; kullanıcı isterse okunaklı basabilmeli.
@@ -281,52 +221,32 @@ def add_watermark_text(
     ]
     ttf_yolu = next((y for y in _yollar if os.path.isfile(y)), None)
 
-    doc = _fitz_open(input_path, password=password)
+    def _filigran_ciz(cv: "_ov.Canvas2D") -> None:
+        genislik, yukseklik = cv.width, cv.height
+        # Boyut sayfaya göre: metin sayfanın (varsayılan) yaklaşık %70'ini kaplasın.
+        # Sabit 22 punto A4'te kaybolacak kadar küçük kalıyordu.
+        punto = max(14.0, min(150.0, (genislik * boyut_orani) / max(1, len(metin)) * 1.9))
+        orta_x, orta_y = genislik / 2, yukseklik / 2
+        if ttf_yolu:
+            uzunluk = _ov.text_width(metin, ttf_yolu, punto)
+            # Önce sayfanın TAM ORTASINA yatay yazılır, sonra aynı nokta etrafında döndürülür:
+            # filigran her sayfa ölçüsünde ortada kalır. Varsayılan 45 derece çapraz.
+            cv.text(
+                orta_x - uzunluk / 2, orta_y, metin, font=ttf_yolu, size=punto,
+                color=color, alpha=op, rotate=rot, pivot=(orta_x, orta_y),
+            )
+        else:
+            # Gömülü yazı tipi bulunamazsa eski davranış (yalnız acil yedek).
+            cv.text(orta_x, orta_y, metin, font="helv", size=22, color=color, alpha=op)
+
+    doc = _open_pdf(input_path, password=password)
     try:
+        toplam = len(doc.pages)
         ilk = max(1, int(from_page))
-        son = doc.page_count if int(to_page) <= 0 else min(doc.page_count, int(to_page))
-        for i in range(ilk - 1, son):
-            page = doc[i]
-            r = page.rect
-            genislik = r.x1 - r.x0
-            yukseklik = r.y1 - r.y0
-
-            # Boyut sayfaya göre: metin sayfanın (varsayılan) yaklaşık %70'ini kaplasın.
-            # Sabit 22 punto A4'te kaybolacak kadar küçük kalıyordu.
-            punto = max(14.0, min(150.0, (genislik * boyut_orani) / max(1, len(metin)) * 1.9))
-
-            if ttf_yolu:
-                yazici = fitz.TextWriter(r)
-                font = fitz.Font(fontfile=ttf_yolu)
-                uzunluk = font.text_length(metin, fontsize=punto)
-                # Önce sayfanın TAM ORTASINA yatay yazılır, sonra aynı nokta
-                # etrafında döndürülür: böylece filigran her sayfa ölçüsünde
-                # ortada kalır (önce köşegene göre hesaplanıyordu ve metin sağ
-                # alt köşeye kayıyordu).
-                orta_x = r.x0 + genislik / 2
-                orta_y = r.y0 + yukseklik / 2
-                baslangic = fitz.Point(orta_x - uzunluk / 2, orta_y)
-                yazici.append(baslangic, metin, font=font, fontsize=punto)
-                # Varsayılan 45 derece çapraz: filigranın beklenen görünümü budur.
-                yazici.write_text(page, color=color, opacity=op, morph=(
-                    fitz.Point(orta_x, orta_y),
-                    fitz.Matrix(rot),
-                ))
-            else:
-                # Gömülü yazı tipi bulunamazsa eski davranış (yalnız acil yedek).
-                c = fitz.Point((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2)
-                page.insert_text(
-                    c, metin, fontname="helv", fontsize=22,
-                    color=color, render_mode=0, fill_opacity=op,
-                )
-        # Gömülü yazı tipi tamamı eklenip dosyayı şişiriyordu (+100-166 KB). Alt kümeleme yalnızca
-        # kullanılan harfleri tutar; fontTools yoksa ya da başarısız olursa sessizce atlanır.
-        try:
-            doc.subset_fonts()
-        except Exception:
-            pass
-        # garbage=3 + deflate: kullanılmayan nesneleri atar, akışları sıkıştırır.
-        doc.save(output_path, garbage=3, deflate=True, linear=False)
+        son = toplam if int(to_page) <= 0 else min(toplam, int(to_page))
+        _ov.stamp_pages(doc, {i: _filigran_ciz for i in range(ilk - 1, son)})
+        # Gömülü yazı tipi yalnızca kullanılan harflerle (alt küme) yazılır (reportlab bunu kendiliğinden yapar).
+        _pc.save_pdf(doc, output_path)
     finally:
         doc.close()
     return True
@@ -378,35 +298,32 @@ def add_watermark_image(
     oran_genislik = max(5.0, min(100.0, float(size_pct))) / 100.0
     kenar = 24.0
 
-    doc = _fitz_open(input_path, password=password)
+    def _gorsel_ciz(cv: "_ov.Canvas2D") -> None:
+        gw, gh = cv.width, cv.height
+        w = gw * oran_genislik
+        h = w * img.height / img.width
+        if h > gh * 0.95:  # sayfadan uzun olmasın
+            h = gh * 0.95
+            w = h * img.width / img.height
+        if position == "top-left":
+            x0, y0 = kenar, kenar
+        elif position == "top-right":
+            x0, y0 = gw - kenar - w, kenar
+        elif position == "bottom-left":
+            x0, y0 = kenar, gh - kenar - h
+        elif position == "bottom-right":
+            x0, y0 = gw - kenar - w, gh - kenar - h
+        else:
+            x0, y0 = (gw - w) / 2, (gh - h) / 2
+        cv.image((x0, y0, x0 + w, y0 + h), png, keep_proportion=True)
+
+    doc = _open_pdf(input_path, password=password)
     try:
+        toplam = len(doc.pages)
         ilk = max(1, int(from_page))
-        son = doc.page_count if int(to_page) <= 0 else min(doc.page_count, int(to_page))
-        xref = 0
-        for i in range(ilk - 1, son):
-            page = doc[i]
-            r = page.rect
-            w = r.width * oran_genislik
-            h = w * img.height / img.width
-            if h > r.height * 0.95:  # sayfadan uzun olmasın
-                h = r.height * 0.95
-                w = h * img.width / img.height
-            if position == "top-left":
-                x0, y0 = r.x0 + kenar, r.y0 + kenar
-            elif position == "top-right":
-                x0, y0 = r.x1 - kenar - w, r.y0 + kenar
-            elif position == "bottom-left":
-                x0, y0 = r.x0 + kenar, r.y1 - kenar - h
-            elif position == "bottom-right":
-                x0, y0 = r.x1 - kenar - w, r.y1 - kenar - h
-            else:
-                x0, y0 = r.x0 + (r.width - w) / 2, r.y0 + (r.height - h) / 2
-            kutu = fitz.Rect(x0, y0, x0 + w, y0 + h)
-            if xref:
-                page.insert_image(kutu, xref=xref, overlay=True, keep_proportion=True)
-            else:
-                xref = page.insert_image(kutu, stream=png, overlay=True, keep_proportion=True)
-        doc.save(output_path, garbage=3, deflate=True, linear=False)
+        son = toplam if int(to_page) <= 0 else min(toplam, int(to_page))
+        _ov.stamp_pages(doc, {i: _gorsel_ciz for i in range(ilk - 1, son)})
+        _pc.save_pdf(doc, output_path)
     finally:
         doc.close()
     return True
@@ -596,36 +513,37 @@ def resize_pdf_pages(
         fit = "fit"
     marj = max(0.0, min(100.0, float(margin_mm))) * _MM
 
-    src = _fitz_open(input_path, password=password)
-    out = fitz.open()
+    src = _open_pdf(input_path, password=password)
+    out = _pc.new_pdf()
     try:
-        for pno in range(src.page_count):
-            kaynak_sayfa = src[pno]
-            r = kaynak_sayfa.rect
+        n = len(src.pages)
+        for pno in range(n):
+            kw, kh = _pc.page_visual_size(src.pages[pno])
             w, h = w_mm * _MM, h_mm * _MM
-            yatay = r.width > r.height
+            yatay = kw > kh
             if orientation == "landscape" or (orientation == "auto" and yatay):
                 w, h = max(w, h), min(w, h)
             else:
                 w, h = min(w, h), max(w, h)
-            yeni = out.new_page(width=w, height=h)
-            hedef = fitz.Rect(marj, marj, w - marj, h - marj)
-            if hedef.is_empty:
+            out.add_blank_page(page_size=(w, h))
+            yeni = out.pages[len(out.pages) - 1]
+            hedef = (marj, marj, w - marj, h - marj)
+            hw, hh = hedef[2] - hedef[0], hedef[3] - hedef[1]
+            if hw <= 0 or hh <= 0:
                 raise Exception("Boşluk sayfadan büyük.")
             if fit == "stretch":
-                yeni.show_pdf_page(hedef, src, pno, keep_proportion=False)
+                _pc.place_page(out, yeni, src, pno, hedef, keep_proportion=False)
             elif fit == "fill":
-                oran = max(hedef.width / r.width, hedef.height / r.height)
-                gw, gh = r.width * oran, r.height * oran
-                dx = hedef.x0 + (hedef.width - gw) / 2
-                dy = hedef.y0 + (hedef.height - gh) / 2
-                kutu = fitz.Rect(dx, dy, dx + gw, dy + gh)
+                oran = max(hw / kw, hh / kh)
+                gw, gh = kw * oran, kh * oran
+                dx = hedef[0] + (hw - gw) / 2
+                dy = hedef[1] + (hh - gh) / 2
                 # Taşan kısım sayfa sınırının dışında kaldığı için görünmez (kenar boşluğu 0 iken kesilir).
-                yeni.show_pdf_page(kutu, src, pno, keep_proportion=True)
+                _pc.place_page(out, yeni, src, pno, (dx, dy, dx + gw, dy + gh), keep_proportion=True)
             else:
-                yeni.show_pdf_page(hedef, src, pno, keep_proportion=True)
-        out.save(output_path, garbage=3, deflate=True, linear=False)
-        return {"sayfa": src.page_count, "genislik_mm": round(w_mm, 1), "yukseklik_mm": round(h_mm, 1)}
+                _pc.place_page(out, yeni, src, pno, hedef, keep_proportion=True)
+        _pc.save_pdf(out, output_path)
+        return {"sayfa": n, "genislik_mm": round(w_mm, 1), "yukseklik_mm": round(h_mm, 1)}
     finally:
         out.close()
         src.close()
@@ -700,13 +618,13 @@ def alternate_mix_pdfs(
         raise Exception("En fazla 10 PDF serpiştirilebilir.")
     passwords = passwords or [None] * len(input_paths)
     docs = []
-    out = fitz.open()
+    out = _pc.new_pdf()
     try:
         for i, yol in enumerate(input_paths):
-            docs.append(_fitz_open(yol, password=(passwords[i] if i < len(passwords) else None)))
+            docs.append(_open_pdf(yol, password=(passwords[i] if i < len(passwords) else None)))
         sirali = []
         for i, d in enumerate(docs):
-            idx = list(range(d.page_count))
+            idx = list(range(len(d.pages)))
             if reverse_second and i >= 1:
                 idx.reverse()
             sirali.append(idx)
@@ -714,9 +632,10 @@ def alternate_mix_pdfs(
         for k in range(en_uzun):
             for d, idx in zip(docs, sirali):
                 if k < len(idx):
-                    out.insert_pdf(d, from_page=idx[k], to_page=idx[k])
-        out.save(output_path, garbage=3, deflate=True, linear=False)
-        return {"sayfa": out.page_count, "belge": len(docs)}
+                    out.pages.append(d.pages[idx[k]])
+        toplam = len(out.pages)
+        _pc.save_pdf(out, output_path)
+        return {"sayfa": toplam, "belge": len(docs)}
     finally:
         out.close()
         for d in docs:
@@ -789,37 +708,35 @@ def deskew_pdf(
     from PIL import Image
 
     azami = max(1.0, min(20.0, float(azami_aci)))
-    src = _fitz_open(input_path, password=password)
-    out = fitz.open()
+    src = _open_pdf(input_path, password=password)
+    out = _pc.new_pdf()
+    reader = PdfiumReader(input_path, (password or "").strip() or None)
     try:
-        n = src.page_count
+        n = len(src.pages)
         if n > 300:
             raise Exception("Eğri düzeltme en fazla 300 sayfalık belgelerde çalışır.")
         duzeltilen = atlanan_metin = atlanan_duz = 0
         acilar: dict = {}
         for i in range(n):
-            sayfa = src[i]
-            metin_var = bool(sayfa.get_text().strip())
-            taranmis = (not metin_var) and bool(sayfa.get_images())
+            metin_var = bool(reader.text(i).strip())
+            taranmis = (not metin_var) and reader.has_images(i)
             if not taranmis:
-                out.insert_pdf(src, from_page=i, to_page=i)
+                out.pages.append(src.pages[i])
                 if metin_var:
                     atlanan_metin += 1
                 continue
-            pix = sayfa.get_pixmap(dpi=int(dpi), colorspace=fitz.csGRAY)
-            gri = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w)
+            gri = np.asarray(reader.render(i, dpi=int(dpi), grayscale=True), dtype=np.uint8)
             aci = _egrilik_acisi(gri, azami)
             if abs(aci) < float(esik_aci):
-                out.insert_pdf(src, from_page=i, to_page=i)
+                out.pages.append(src.pages[i])
                 atlanan_duz += 1
                 continue
-            renkli = sayfa.get_pixmap(dpi=int(dpi), colorspace=fitz.csRGB)
-            im = Image.frombytes("RGB", (renkli.w, renkli.h), renkli.samples)
+            im = reader.render(i, dpi=int(dpi)).convert("RGB")
             im = im.rotate(aci, resample=Image.BICUBIC, fillcolor=(255, 255, 255))
             buf = io.BytesIO()
             im.save(buf, format="JPEG", quality=88, optimize=True, dpi=(int(dpi), int(dpi)))
-            yeni = out.new_page(width=sayfa.rect.width, height=sayfa.rect.height)
-            yeni.insert_image(yeni.rect, stream=buf.getvalue())
+            pw, ph = reader.page_size(i)
+            _pc.add_image_page(out, buf.getvalue(), im.width, im.height, pw, ph)
             duzeltilen += 1
             acilar[i + 1] = aci
         if duzeltilen == 0:
@@ -829,12 +746,13 @@ def deskew_pdf(
                 f"Düzeltilecek eğri sayfa bulunamadı: {atlanan_duz} taranmış sayfa zaten düz, "
                 f"{atlanan_metin} sayfa yazı katmanlı. Dosyan olduğu gibi kullanılabilir."
             )
-        out.save(output_path, garbage=3, deflate=True, linear=False)
+        _pc.save_pdf(out, output_path)
         return {
             "duzeltilen": duzeltilen, "atlanan_metinli": atlanan_metin,
             "atlanan_duz": atlanan_duz, "acilar": acilar,
         }
     finally:
+        reader.close()
         out.close()
         src.close()
 
@@ -849,10 +767,10 @@ def _guvenli_ad(metin: str, varsayilan: str = "bolum") -> str:
 
 def _aralik_boyutu(src, a: int, b: int) -> int:
     """src'nin [a, b] (0 tabanlı, dahil) sayfa aralığının gerçek (sıkıştırılmış) dosya boyutu."""
-    d = fitz.open()
+    d = _pc.new_pdf()
     try:
-        d.insert_pdf(src, from_page=a, to_page=b)
-        return len(d.tobytes(garbage=3, deflate=True))
+        _pc.append_pages(d, src, range(a, b + 1))
+        return len(_pc.pdf_to_bytes(d))
     finally:
         d.close()
 
@@ -875,9 +793,9 @@ def split_pdf_advanced(
     Döner: {"dosyalar": [yollar], "asan": [tek başına limiti aşan sayfa numaraları]}
     """
     os.makedirs(out_dir, exist_ok=True)
-    src = _fitz_open(input_path, password=password)
+    src = _open_pdf(input_path, password=password)
     try:
-        n = src.page_count
+        n = len(src.pages)
         aralıklar: list[tuple[int, int, str]] = []  # (ilk, son, ad) 0 tabanlı, dahil
         asan: list[int] = []
         if mode == "every":
@@ -912,7 +830,7 @@ def split_pdf_advanced(
                 aralıklar.append((a, alt, f"{base_name}_{a + 1}-{alt + 1}"))
                 a = alt + 1
         elif mode == "outline":
-            toc = [t for t in src.get_toc(simple=True) if t[0] == 1 and 1 <= t[2] <= n]
+            toc = [t for t in _pc.get_toc(src) if t[0] == 1 and 1 <= t[2] <= n]
             if not toc:
                 raise Exception("Bu PDF'te üst düzey yer imi (bookmark) bulunamadı.")
             toc.sort(key=lambda t: t[2])
@@ -944,13 +862,7 @@ def split_pdf_advanced(
                 sayac += 1
             kullanilan.add(ham.lower())
             yol = os.path.join(out_dir, f"{ham}.pdf")
-            d = fitz.open()
-            try:
-                d.insert_pdf(src, from_page=a, to_page=b)
-                _yer_imlerini_aktar(src, d, list(range(a, b + 1)))
-                d.save(yol, garbage=3, deflate=True, linear=False)
-            finally:
-                d.close()
+            _pc.write_selected_pages(src, yol, list(range(a, b + 1)), carry_docinfo=False)
             yollar.append(yol)
         return {"dosyalar": yollar, "asan": asan}
     finally:
@@ -1017,39 +929,33 @@ def add_header_footer(
     rgb = _hex_to_rgb(color) if color else (0.27, 0.27, 0.27)
     margin_x = 36
 
-    doc = _fitz_open(input_path, password=password)
+    doc = _open_pdf(input_path, password=password)
     try:
-        toplam = doc.page_count
+        toplam = len(doc.pages)
         ilk = max(1, int(from_page))
         son = toplam if int(to_page) <= 0 else min(toplam, int(to_page))
-        sayac = int(start_at)
-        for i in range(ilk - 1, son):
-            page = doc[i]
-            r = page.rect
-            for konum, sablon in temiz.items():
-                def _doldur(m, sayac=sayac):
-                    deger = sayac if m.group(1) == "sayfa" else toplam
-                    return str(deger).zfill(int(m.group(2))) if m.group(2) else str(deger)
+        sayac0 = int(start_at)
 
-                metin = _pad_re.sub(_doldur, sablon).replace("{tarih}", bugun).replace("{dosya}", dosya_adi)
-                dikey, _, yatay = konum.partition("-")
-                if dikey == "header":
-                    kutu = fitz.Rect(r.x0 + margin_x, r.y0 + 6, r.x1 - margin_x, r.y0 + strip_h)
-                else:
-                    kutu = fitz.Rect(r.x0 + margin_x, r.y1 - strip_h, r.x1 - margin_x, r.y1 - 6)
-                hiza = {"left": fitz.TEXT_ALIGN_LEFT, "right": fitz.TEXT_ALIGN_RIGHT}.get(
-                    yatay, fitz.TEXT_ALIGN_CENTER
-                )
-                kw = {"fontsize": size, "color": rgb, "align": hiza}
-                if ttf_yolu:
-                    kw.update(fontname="robotohf", fontfile=ttf_yolu)
-                page.insert_textbox(kutu, metin, **kw)
-            sayac += 1
-        try:
-            doc.subset_fonts()
-        except Exception:
-            pass
-        doc.save(output_path, garbage=3, deflate=True, linear=False)
+        def _sayfa_ciz(sayac: int):
+            def _ciz(cv: "_ov.Canvas2D") -> None:
+                for konum, sablon in temiz.items():
+                    def _doldur(m):
+                        deger = sayac if m.group(1) == "sayfa" else toplam
+                        return str(deger).zfill(int(m.group(2))) if m.group(2) else str(deger)
+
+                    metin = _pad_re.sub(_doldur, sablon).replace("{tarih}", bugun).replace("{dosya}", dosya_adi)
+                    dikey, _, yatay = konum.partition("-")
+                    if dikey == "header":
+                        kutu = (margin_x, 6, cv.width - margin_x, strip_h)
+                    else:
+                        kutu = (margin_x, cv.height - strip_h, cv.width - margin_x, cv.height - 6)
+                    hiza = yatay if yatay in ("left", "right") else "center"
+                    cv.textbox_line(kutu, metin, font=ttf_yolu, size=size, color=rgb, align=hiza, shrink_to_fit=True)
+            return _ciz
+
+        builders = {i: _sayfa_ciz(sayac0 + (i - (ilk - 1))) for i in range(ilk - 1, son)}
+        _ov.stamp_pages(doc, builders)
+        _pc.save_pdf(doc, output_path)
     finally:
         doc.close()
     return True
@@ -1077,48 +983,41 @@ def add_page_numbers(
     from_page / to_page: numaralanacak aralık (1 tabanlı, to_page=0 → son sayfa).
         Numara, aralığın ilk sayfasında start_at değerinden başlar.
     """
-    doc = _fitz_open(input_path, password=password)
+    doc = _open_pdf(input_path, password=password)
     try:
-        total = doc.page_count
+        total = len(doc.pages)
         num = int(start_at)
         margin_x = 36
         size = max(6.0, min(48.0, float(font_size)))
-        # Kutu, yazıyı sığdıracak kadar yüksek olmalı: sığmazsa insert_textbox yazıyı
-        # SESSİZCE çizmez (negatif döner), numara hiç görünmez.
+        # Kutu, yazıyı sığdıracak kadar yüksek olmalı (eski yerleşimle aynı ölçüler).
         strip_h = max(24.0, size * 2.0 + 8.0)
         rgb = _hex_to_rgb(color) if color else (0.4, 0.4, 0.4)
         vert, _, horiz = (position or "footer").partition("-")
         vert = "header" if vert == "header" else "footer"
-        align = {
-            "left": fitz.TEXT_ALIGN_LEFT,
-            "right": fitz.TEXT_ALIGN_RIGHT,
-        }.get(horiz, fitz.TEXT_ALIGN_CENTER)
+        align = horiz if horiz in ("left", "right") else "center"
         first = max(1, int(from_page))
         last = total if int(to_page) <= 0 else min(total, int(to_page))
-        for i in range(first - 1, last):
-            page = doc[i]
-            r = page.rect
-            if fmt == "page":
-                label = f"Sayfa {num}"
-            elif fmt == "of":
-                label = f"{num} / {total}"
-            elif fmt == "page-of":
-                label = f"Sayfa {num} / {total}"
-            else:
-                label = str(num)
-            # Use a full-width rect so insert_textbox can align the text.
-            if vert == "header":
-                rect = fitz.Rect(r.x0 + margin_x, r.y0 + 6, r.x1 - margin_x, r.y0 + strip_h)
-            else:
-                rect = fitz.Rect(r.x0 + margin_x, r.y1 - strip_h, r.x1 - margin_x, r.y1 - 6)
-            page.insert_textbox(
-                rect, label,
-                fontsize=size,
-                color=rgb,
-                align=align,
-            )
-            num += 1
-        doc.save(output_path, garbage=0, deflate=False, linear=False)
+
+        def _sayfa_ciz(no: int):
+            def _ciz(cv: "_ov.Canvas2D") -> None:
+                if fmt == "page":
+                    label = f"Sayfa {no}"
+                elif fmt == "of":
+                    label = f"{no} / {total}"
+                elif fmt == "page-of":
+                    label = f"Sayfa {no} / {total}"
+                else:
+                    label = str(no)
+                if vert == "header":
+                    rect = (margin_x, 6, cv.width - margin_x, strip_h)
+                else:
+                    rect = (margin_x, cv.height - strip_h, cv.width - margin_x, cv.height - 6)
+                cv.textbox_line(rect, label, font="helv", size=size, color=rgb, align=align, shrink_to_fit=True)
+            return _ciz
+
+        builders = {i: _sayfa_ciz(num + (i - (first - 1))) for i in range(first - 1, last)}
+        _ov.stamp_pages(doc, builders)
+        _pc.save_pdf(doc, output_path)
     finally:
         doc.close()
     return True
@@ -1133,20 +1032,20 @@ def _onarim_kazanci(output_path: str) -> tuple[int, int]:
     kurtarılıp kurtarılmadığının ölçüsüdür.
     """
     try:
-        doc = fitz.open(output_path)
+        okuyucu = PdfiumReader(output_path)
     except Exception:
         return (0, 0)
     try:
         icerikli = 0
-        for sayfa in doc:
+        for i in range(len(okuyucu)):
             try:
-                if sayfa.get_text().strip() or sayfa.get_images():
+                if okuyucu.text_len(i) > 0 or okuyucu.has_images(i):
                     icerikli += 1
             except Exception:
                 continue
-        return (doc.page_count, icerikli)
+        return (len(okuyucu), icerikli)
     finally:
-        doc.close()
+        okuyucu.close()
 
 
 def _beklenen_sayfa_sayisi(yol: str, ust_sinir_mb: int = 100) -> int:
@@ -1169,39 +1068,97 @@ def _beklenen_sayfa_sayisi(yol: str, ust_sinir_mb: int = 100) -> int:
 
 
 def _onarim_bozuk_sayfa(output_path: str) -> int:
-    """Çizilirken eksik kaynak (görsel/yazı tipi) hatası veren sayfa sayısı.
+    """Eksik kaynak (görsel/yazı tipi/grafik durumu) çağıran ya da çizilemeyen sayfa sayısı.
 
     NEDEN: Onarım, "en az bir sayfada yazı/görsel var" diye ilk yöntemde duruyordu;
     ama o yöntem bazı sayfalardaki görseli düşürebiliyor (sayfa var, içi bozuk).
     Aynı dosyayı başka yöntem kusursuz kurtarabildiği halde kullanıcıya bozuk sayfa
     veriliyordu. Hata sayımı, yöntemleri birbiriyle kıyaslamamızı sağlar.
+
+    Yöntem: sayfanın içerik akışındaki Do/Tf/gs/sh komutlarının adı, sayfanın
+    kaynak sözlüğünde var mı diye bakılır (yarım kalmış görselin kendisi hata
+    sayılmaz: kısmen de olsa görünür). Ayrıca sayfa çizilirken hata çıkıyor mu denenir.
     """
+    import pikepdf
+
     try:
-        doc = fitz.open(output_path)
+        pdf = pikepdf.open(output_path, suppress_warnings=True)
     except Exception:
         return 10**6
     bozuk = 0
+    kaynak_turu = {"Do": "/XObject", "Tf": "/Font", "gs": "/ExtGState", "sh": "/Shading"}
     try:
         try:
-            fitz.TOOLS.mupdf_display_errors(False)
+            okuyucu = PdfiumReader(output_path)
         except Exception:
-            pass
-        for sayfa in doc:
+            okuyucu = None
+        for i, sayfa in enumerate(pdf.pages):
+            hatali = False
             try:
-                fitz.TOOLS.reset_mupdf_warnings()
-                sayfa.get_pixmap(dpi=24)
-                uyarilar = (fitz.TOOLS.mupdf_warnings() or "").lower()
-                if "cannot find" in uyarilar or "error" in uyarilar:
-                    bozuk += 1
+                kaynaklar = sayfa.get("/Resources")
+                if kaynaklar is None:
+                    kaynaklar = _pc._inherited(sayfa, "/Resources")
+                for ops, op in pikepdf.parse_content_stream(sayfa):
+                    ad = str(op)
+                    tur = kaynak_turu.get(ad)
+                    if tur is None or not ops:
+                        continue
+                    ilk = ops[0] if ad != "Tf" else ops[0]
+                    tablo = kaynaklar.get(tur) if kaynaklar is not None else None
+                    if tablo is None or str(ilk) not in tablo:
+                        hatali = True
+                        break
             except Exception:
+                hatali = True
+            if not hatali and okuyucu is not None:
+                try:
+                    okuyucu.render(i, 0.2)
+                except Exception:
+                    hatali = True
+            if hatali:
                 bozuk += 1
     finally:
-        doc.close()
-        try:
-            fitz.TOOLS.mupdf_display_errors(True)
-        except Exception:
-            pass
+        pdf.close()
+        if okuyucu is not None:
+            okuyucu.close()
     return bozuk
+
+
+def _kesik_dosyayi_kurtar(ham: bytes) -> Optional[bytes]:
+    """Dosya bir akışın ORTASINDA kesilmişse (indirme yarıda kalmış) akışı ve dosya sonunu kapatır.
+
+    NEDEN: Kesilen dosyada son görselin akışı "endstream" ile bitmez ve dosya sonu
+    bilgisi (trailer) yoktur; onarım araçları bu son nesneyi komple atar. Biz akışı
+    eldeki baytlarla kapatır, uzunluğunu düzeltir ve sonuna dosya sonu bilgisi ekleriz;
+    böylece yarım kalmış görsel de (görünen kısmıyla) kurtarılır.
+    Dosya zaten düzgün bitiyorsa None döner.
+    """
+    import re
+
+    son = None
+    for m in re.finditer(rb"(?<![a-zA-Z])stream\r?\n", ham):
+        son = m
+    if son is None or ham.find(b"endstream", son.end()) != -1:
+        return None
+    veri = ham[son.end():]
+    obj_kw = ham.rfind(b"obj", 0, son.start())
+    if obj_kw < 0:
+        return None
+    baslik = ham[obj_kw + 3:son.start()]
+    if re.search(rb"/Length\s+\d+(\s+\d+\s+R)?", baslik):
+        baslik = re.sub(rb"/Length\s+\d+(\s+\d+\s+R)?", b"/Length %d" % len(veri), baslik, count=1)
+    elif b">>" in baslik:
+        baslik = baslik.replace(b">>", b"/Length %d>>" % len(veri), 1)
+    else:
+        return None
+    govde = ham[:obj_kw + 3] + baslik + b"stream\n" + veri + b"\nendstream\nendobj\n"
+    kok = None
+    for m in re.finditer(rb"(\d+) 0 obj\s*<<[^>]*?/Type\s*/Catalog", govde):
+        kok = int(m.group(1))
+    if kok is None:
+        return None
+    boyut = max(int(x) for x in re.findall(rb"\n(\d+) 0 obj", govde)) + 1
+    return govde + b"trailer\n<</Root %d 0 R/Size %d>>\n%%%%EOF\n" % (kok, boyut)
 
 
 def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
@@ -1271,22 +1228,46 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
     except Exception as e1:
         errors.append(f"pikepdf: {e1!s:.150}")
 
-    # Strateji 2: PyMuPDF — xref tablosunu yeniden oluşturur, stream'leri temizler
+    # Strateji 2: kesik (yarıda kalmış) dosya kurtarma — son akışı kapat, dosya sonu bilgisi ekle
     try:
-        doc = _fitz_open(input_path, password=password)
-        try:
-            doc.save(output_path, garbage=4, deflate=True, clean=True, linear=False)
-        finally:
-            doc.close()
-        if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-            if _aday_degerlendir(output_path):
-                return True
-            if not adaylar:
-                errors.append("fitz: dosya yazıldı ama sayfalar boş çıktı")
+        if os.path.getsize(input_path) <= 300 * 1024 * 1024:
+            with open(input_path, "rb") as f:
+                ham = f.read()
+            yama = _kesik_dosyayi_kurtar(ham)
+            if yama is not None:
+                with pikepdf.open(io.BytesIO(yama), password=op, suppress_warnings=True) as pdf:
+                    if len(pdf.pages) > 0:
+                        pdf.save(output_path, compress_streams=True, recompress_flate=True)
+                if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
+                    if _aday_degerlendir(output_path):
+                        return True
+                    if not adaylar:
+                        errors.append("kesik-dosya: dosya yazıldı ama sayfalar boş çıktı")
+    except pikepdf.PasswordError:
+        raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
     except Exception as e2:
-        if "password" in str(e2).lower() or "encrypted" in str(e2).lower():
-            raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
-        errors.append(f"fitz: {e2!s:.150}")
+        errors.append(f"kesik-dosya: {e2!s:.150}")
+
+    # Strateji 2b: pypdf (hoşgörülü okuma) — sayfaları tek tek yeni dosyaya taşır
+    try:
+        import pypdf
+
+        okuyucu = pypdf.PdfReader(input_path, strict=False)
+        if okuyucu.is_encrypted:
+            okuyucu.decrypt(op)
+        yazici = pypdf.PdfWriter()
+        for sayfa in okuyucu.pages:
+            yazici.add_page(sayfa)
+        if len(yazici.pages) > 0:
+            with open(output_path, "wb") as f:
+                yazici.write(f)
+            if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
+                if _aday_degerlendir(output_path):
+                    return True
+                if not adaylar:
+                    errors.append("pypdf: dosya yazıldı ama sayfalar boş çıktı")
+    except Exception as e2b:
+        errors.append(f"pypdf: {e2b!s:.150}")
 
     # Strateji 3: pikepdf lenient mode (çok bozuk dosyalar için, kurtarılabilir sayfalar)
     try:
@@ -1331,23 +1312,20 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
 
 def pdf_to_text(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
     """PDF içindeki metin katmanını düz metin dosyasına yazar (sayfa başlıkları dahil)."""
-    doc = _fitz_open(input_path, password=password)
-    try:
+    with PdfiumReader(input_path, password) as okuyucu:
         lines: list[str] = []
-        for page_num, page in enumerate(doc, 1):
-            text = page.get_text("text").strip()
+        for i in range(len(okuyucu)):
+            text = okuyucu.text(i).strip()
             if not text:
                 # Metin katmanı yok (taranmış/görüntü sayfa) → Tesseract OCR ile metni tanı.
-                text = ocr_page_text(page).strip()
+                text = ocr_page_text(okuyucu, i).strip()
             if text:
-                lines.append(f"--- Sayfa {page_num} ---")
+                lines.append(f"--- Sayfa {i + 1} ---")
                 lines.append(text)
-        if not lines:
-            raise Exception("PDF içinde metin bulunamadı (OCR de metin çıkaramadı — görüntü kalitesi düşük olabilir).")
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
-    finally:
-        doc.close()
+    if not lines:
+        raise Exception("PDF içinde metin bulunamadı (OCR de metin çıkaramadı — görüntü kalitesi düşük olabilir).")
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
     return True
 
 
@@ -1483,29 +1461,39 @@ def extract_images_zip(
     - Aynı görsel birden çok sayfada kullanılıyorsa xref ile TEKİLLEŞTİRİLİR.
     - Hiç görsel yoksa açıklayıcı hata verir (boş ZIP dönmez).
     """
-    doc = _fitz_open(pdf_path, password=password)
+    import pikepdf
+    from pikepdf import PdfImage
+
+    try:
+        pdf = pikepdf.open(pdf_path, password=(password or "").strip())
+    except pikepdf.PasswordError:
+        raise Exception("Şifreli PDF için parola gerekli." if not (password or "").strip() else "Girilen PDF parolası hatalı.")
     try:
         zip_path = os.path.join(workdir, "gorseller.zip")
-        seen_xrefs: set[int] = set()
+        gorulen: set[tuple[int, int]] = set()
         count = 0
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for page_number in range(doc.page_count):
-                page = doc.load_page(page_number)
-                for img in page.get_images(full=True):
-                    xref = img[0]
-                    if xref in seen_xrefs:
+            for sayfa in pdf.pages:
+                try:
+                    gorseller = list(sayfa.images.items())
+                except Exception:
+                    continue
+                for _ad, nesne in gorseller:
+                    # Aynı görsel birden çok sayfada kullanılıyorsa nesne kimliğiyle tekilleştir.
+                    kimlik = nesne.objgen
+                    if kimlik != (0, 0) and kimlik in gorulen:
                         continue
-                    seen_xrefs.add(xref)
+                    gorulen.add(kimlik)
                     try:
-                        info = doc.extract_image(xref)
+                        buf = io.BytesIO()
+                        uzanti = PdfImage(nesne).extract_to(stream=buf)
+                        veri = buf.getvalue()
                     except Exception:
                         continue
-                    data = info.get("image")
-                    if not data:
+                    if not veri:
                         continue
-                    ext = (info.get("ext") or "png").lower()
                     count += 1
-                    zf.writestr(f"gorsel_{count:04d}.{ext}", data)
+                    zf.writestr(f"gorsel_{count:04d}{uzanti}", veri)
         if count == 0:
             try:
                 os.remove(zip_path)
@@ -1514,7 +1502,7 @@ def extract_images_zip(
             raise Exception("Bu PDF'de ayıklanabilir gömülü görsel bulunamadı.")
         return zip_path
     finally:
-        doc.close()
+        pdf.close()
 
 
 def images_to_pdf(
@@ -1535,54 +1523,49 @@ def images_to_pdf(
     if page_size not in ("a4", "original"):
         page_size = "a4"
 
-    if page_size == "original":
-        try:
-            import img2pdf
-            with open(output_path, "wb") as f:
-                f.write(img2pdf.convert(image_paths))
-            return True
-        except ImportError:
-            pass
+    import img2pdf
+    from PIL import Image
 
     A4_W, A4_H = 595.28, 841.89
     BOSLUK = 18.0
-    merged = fitz.open()
+
+    def _a4_yerlesim(w_px, h_px, ndpi):
+        # Yönü korur: yatay görsel yatay A4'e, dikey görsel dikey A4'e; kenarlarda boşluk kalır.
+        yatay = w_px > h_px
+        sayfa_w, sayfa_h = (A4_H, A4_W) if yatay else (A4_W, A4_H)
+        olcek = min((sayfa_w - 2 * BOSLUK) / w_px, (sayfa_h - 2 * BOSLUK) / h_px)
+        return sayfa_w, sayfa_h, w_px * olcek, h_px * olcek
+
+    yerlesim = img2pdf.get_layout_fun(None) if page_size == "original" else _a4_yerlesim
+
+    temizlik: list[str] = []
+    girdiler: list[str] = []
     try:
-        for p in image_paths:
-            imgdoc = fitz.open(p)
-            try:
-                pdfb = imgdoc.convert_to_pdf()
-            finally:
-                imgdoc.close()
-            m = fitz.open("pdf", pdfb)
-            try:
-                if page_size == "original":
-                    merged.insert_pdf(m)
+        for yol in image_paths:
+            # img2pdf saydamlı görseli reddeder → beyaz zemine düzleştirip geçici dosyaya yaz.
+            with Image.open(yol) as im:
+                saydam = im.mode in ("RGBA", "LA", "PA") or (im.mode == "P" and "transparency" in im.info)
+                if saydam:
+                    rgba = im.convert("RGBA")
+                    zemin = Image.new("RGB", rgba.size, (255, 255, 255))
+                    zemin.paste(rgba, mask=rgba.getchannel("A"))
+                    fd, gecici = tempfile.mkstemp(suffix=".png")
+                    os.close(fd)
+                    zemin.save(gecici, "PNG")
+                    temizlik.append(gecici)
+                    girdiler.append(gecici)
                     continue
-                # Çok sayfalı TIFF: her sayfa ayrı A4 sayfası olur (eskiden yalnız ilk sayfa alınıyordu).
-                for sira in range(m.page_count):
-                    kaynak = m[sira].rect
-                    yatay = kaynak.width > kaynak.height
-                    sayfa_w, sayfa_h = (A4_H, A4_W) if yatay else (A4_W, A4_H)
-                    sayfa = merged.new_page(width=sayfa_w, height=sayfa_h)
-                    olcek = min(
-                        (sayfa_w - 2 * BOSLUK) / kaynak.width,
-                        (sayfa_h - 2 * BOSLUK) / kaynak.height,
-                    )
-                    w = kaynak.width * olcek
-                    h = kaynak.height * olcek
-                    hedef = fitz.Rect(
-                        (sayfa_w - w) / 2,
-                        (sayfa_h - h) / 2,
-                        (sayfa_w + w) / 2,
-                        (sayfa_h + h) / 2,
-                    )
-                    sayfa.show_pdf_page(hedef, m, sira)
-            finally:
-                m.close()
-        merged.save(output_path, garbage=1, deflate=False)
+            girdiler.append(yol)
+        # Çok sayfalı TIFF: img2pdf her kareyi ayrı sayfa yapar.
+        veri = img2pdf.convert(girdiler, layout_fun=yerlesim)
+        with open(output_path, "wb") as f:
+            f.write(veri)
     finally:
-        merged.close()
+        for g in temizlik:
+            try:
+                os.remove(g)
+            except OSError:
+                pass
     return True
 
 

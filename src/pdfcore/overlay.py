@@ -194,11 +194,20 @@ class Canvas2D:
         color: Color = (0.0, 0.0, 0.0),
         align: str = "left",
         alpha: float = 1.0,
+        shrink_to_fit: bool = False,
+        min_size: float = 5.0,
     ) -> float:
         """Tek satırlık metin kutusu (PyMuPDF `insert_textbox` ile aynı yerleşim): ilk satırın taban
-        çizgisi = kutu üstü + yükselti × punto; yatay hiza kutu içinde. Çizilen metin genişliğini döndürür."""
+        çizgisi = kutu üstü + yükselti × punto; yatay hiza kutu içinde. Çizilen metin genişliğini döndürür.
+
+        shrink_to_fit: metin kutudan genişse puntoyu küçültür (alt sınır `min_size`). PyMuPDF bu
+        durumda HİÇBİR ŞEY çizmiyordu (uzun üst bilgi sessizce kayboluyordu); burada okunur kalır."""
         x0, y0, x1, _y1 = rect
         tw = text_width(text, font, size)
+        box_w = x1 - x0
+        if shrink_to_fit and box_w > 0 and tw > box_w:
+            size = max(min_size, size * box_w / tw)
+            tw = text_width(text, font, size)
         if align == "center":
             x = x0 + (x1 - x0 - tw) / 2.0
         elif align == "right":

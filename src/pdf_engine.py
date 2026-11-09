@@ -66,23 +66,15 @@ def _pdf_open_user_message(where: str, exc: BaseException, basename: str) -> str
     return f"[{ename}] {where} ({basename}): {msg}"
 
 
-def _pymupdf_page_count(pdf_path: str, password: Optional[str] = None) -> int:
-    """pypdf başarısız olursa sayfa sayısı için PyMuPDF yedek."""
-    import pymupdf as fitz
+def _pdfium_page_count(pdf_path: str, password: Optional[str] = None) -> int:
+    """pypdf başarısız olursa sayfa sayısı için PDFium yedek (bozuk dosyalara daha dayanıklı)."""
+    from src.pdfcore import PdfiumReader, PdfPasswordRequired, PdfPasswordWrong
 
-    doc = fitz.open(pdf_path)
     try:
-        if doc.needs_pass:
-            pwd = (password or "").strip()
-            if doc.authenticate(pwd):
-                pass
-            elif doc.authenticate(""):
-                pass
-            else:
-                raise Exception("PyMuPDF: PDF parolası gerekli veya hatalı.")
-        return doc.page_count
-    finally:
-        doc.close()
+        with PdfiumReader(pdf_path, (password or "").strip() or None) as r:
+            return r.page_count
+    except (PdfPasswordRequired, PdfPasswordWrong):
+        raise Exception("PDFium: PDF parolası gerekli veya hatalı.") from None
 
 
 def _open_pdf_reader(pdf_path: str, password: Optional[str] = None, context: str = "Bu işlem") -> PyPDF2.PdfReader:
@@ -172,7 +164,7 @@ def classify_pdf_password_requirement(pdf_path: str) -> Tuple[bool, Dict[str, An
     Requires True ise kullanıcı arayüzünde açılış şifresi istenmeli.
     Bazı PDF'ler Encrypt sözlüğü nedeniyle PyPDF'de `is_encrypted=True` görünürken
     boş kullanıcı parolasıyla veya görüntüleyici yüzünden parolasız açılabilir;
-    ikinci olarak PyMuPDF ile doğrulanır; PyPDF başarısız olursa yalnızca PyMuPDF denenir.
+    ikinci olarak PDFium ile doğrulanır; PyPDF başarısız olursa yalnızca PDFium denenir.
     diagnostics: parola sızdırmadan kısa teşhis bilgisi (log / inspect API).
     """
     basename = os.path.basename(pdf_path)
@@ -212,13 +204,13 @@ def classify_pdf_password_requirement(pdf_path: str) -> Tuple[bool, Dict[str, An
             "open_ok": False,
             "detail": _pdf_open_user_message("classify_pdf pypdf", e, basename),
         }
-        return _finalize(*_fallback_classify_via_pymupdf(pdf_path, diagnostics, pdf_read_error=e))
+        return _finalize(*_fallback_classify_via_pdfium(pdf_path, diagnostics, pdf_read_error=e))
     except Exception as e:
         diagnostics["engines"]["pypdf"] = {
             "open_ok": False,
             "detail": _pdf_open_user_message("classify_pdf pypdf", e, basename),
         }
-        return _finalize(*_fallback_classify_via_pymupdf(pdf_path, diagnostics, pdf_read_error=e))
+        return _finalize(*_fallback_classify_via_pdfium(pdf_path, diagnostics, pdf_read_error=e))
 
     diagnostics["engines"]["pypdf"] = {
         "is_encrypted_flag": bool(reader.is_encrypted),
@@ -247,96 +239,53 @@ def classify_pdf_password_requirement(pdf_path: str) -> Tuple[bool, Dict[str, An
         ] = "Decrypt boş ile 0 görünse bile içerik okunabildi (şifresiz kullanıcı parolası / metadata)."
         return _finalize(False, "pypdf_lazy_content_readable")
 
-    pym_needs_pw, pym_meta = pymupdf_requires_non_empty_password(pdf_path)
-    diagnostics["engines"]["pymupdf"] = pym_meta
+    pdfium_needs_pw, pdfium_meta = pdfium_requires_non_empty_password(pdf_path)
+    diagnostics["engines"]["pdfium"] = pdfium_meta
 
-    if not pym_needs_pw:
+    if not pdfium_needs_pw:
         diagnostics[
             "note"
-        ] = "PyPDF parola gerektiriyor görünürken PyMuPDF açılış için boş kullanıcı parolası yeterli (veya parola gerekmiyor)."
-        return _finalize(False, "pymupdf_relaxed_false_positive_guard")
+        ] = "PyPDF parola gerektiriyor görünürken PDFium açılış için boş kullanıcı parolası yeterli (veya parola gerekmiyor)."
+        return _finalize(False, "pdfium_relaxed_false_positive_guard")
 
     diagnostics["engines"]["note"] = "Her iki katmanda da kullanıcı açılış şifresi gerekiyor kabulü."
     return _finalize(True, "password_required")
 
 
-def pymupdf_requires_non_empty_password(pdf_path: str) -> Tuple[bool, Dict[str, Any]]:
+def pdfium_requires_non_empty_password(pdf_path: str) -> Tuple[bool, Dict[str, Any]]:
     """
     True ise boş şifreyle açılamıyor, dolayısı kullanıcıdan parola beklenmeli.
-    Fitiz (PyMuPDF) yüklenmezse güvenli tarafta kalınır ve (True, {error:...}) döner.
+    PDFium dosyayı açarken boş kullanıcı parolasını kendisi dener; "parola gerekli" derse
+    gerçekten kilitlidir. Dosya bozuksa (biçim hatası) şifreli sayılmaz, arızalı sayılır.
     """
+    from src.pdfcore import PdfCoreError, PdfiumReader, PdfPasswordRequired, PdfPasswordWrong
+
     meta: Dict[str, Any] = {}
     try:
-        import pymupdf as fitz  # PyMuPDF
-    except ImportError:
-        meta["error"] = "PyMuPDF (fitz) not installed — cannot classify"
-        logger.warning("[pdf-password] pymupdf import failed for %s", os.path.basename(pdf_path))
+        reader = PdfiumReader(pdf_path)
+    except (PdfPasswordRequired, PdfPasswordWrong):
+        meta["needs_pass"] = True
+        meta["note"] = "needs_pass ve boş parola reddi — kullanıcı açılış parolası gerekli kabulü."
         return True, meta
-
-    try:
-        doc = fitz.open(pdf_path)
-    except Exception as e:
+    except PdfCoreError as e:
         meta["open_error"] = f"{type(e).__name__}:{e}"
-        err_lower = str(e).lower()
         # Bozuk/geçersiz/boş dosya hataları → şifreli değil, arızalı
-        if any(k in err_lower for k in ("empty", "invalid", "cannot open", "not a pdf", "no objects", "bad file", "syntax")):
+        if getattr(e, "corrupt", False):
             meta["corrupt"] = True
             meta["note"] = "Bozuk veya geçersiz PDF — şifreli değil."
             return False, meta
-        # Bilinmeyen exception — ihtiyatlı: şifreli sayılır
+        # Bilinmeyen hata — ihtiyatlı: şifreli sayılır
+        return True, meta
+    except Exception as e:
+        meta["open_error"] = f"{type(e).__name__}:{e}"
         return True, meta
 
     try:
-        meta["needs_pass"] = bool(doc.needs_pass)
-        if not doc.needs_pass:
-            meta["note"] = "needs_pass=false — açılışta parola istemi yok."
-            return False, meta
-
-        auth_attempts = []
-        for candidate in ("", b""):
-            try:
-                ok = bool(doc.authenticate(candidate))
-                auth_attempts.append({"candidate_type": type(candidate).__name__, "ok": ok})
-                if ok:
-                    meta["authenticate"] = "empty_accepted"
-                    meta["attempts"] = auth_attempts
-                    meta[
-                        "note"
-                    ] = "needs_pass olsa bile boş kullanıcı parolası kabul edildi (şifreyi gerektiren arayüz gereksiz)."
-                    return False, meta
-            except Exception as ae:
-                auth_attempts.append(
-                    {"candidate_type": type(candidate).__name__, "error": f"{type(ae).__name__}:{ae}"}
-                )
-        meta["attempts"] = auth_attempts
-
-        probe_ok, probe_msg = _pymupdf_probe_first_page_text(doc)
-        meta["lazy_page_probe"] = probe_msg
-        if probe_ok:
-            meta[
-                "note"
-            ] = "authenticate boş ile başarısız görünse bile ilk sayfa okunuyor → parola zorunluluğu yok varsayılıyor."
-            return False, meta
-
-        meta[
-            "note"
-        ] = "needs_pass ve boş parola reddi — kullanıcı açılış parolası gerekli kabulü."
-        return True, meta
+        meta["needs_pass"] = False
+        meta["note"] = "needs_pass=false — açılışta parola istemi yok."
+        return False, meta
     finally:
-        doc.close()
-
-
-def _pymupdf_probe_first_page_text(doc: Any) -> Tuple[bool, str]:
-    """İlk sayfadaki metnin okunup okunmadığını dener — taranmış görüntü PDF'lerinde metin olmayabilir (False)."""
-    try:
-        n = getattr(doc, "page_count", 0) or 0
-        if n == 0:
-            return False, "page_count_zero"
-        txt = doc.load_page(0).get_text() or ""
-        stripped = (txt or "").strip()
-        return (len(stripped) > 0), f"non_empty_chars={len(stripped)}"
-    except Exception as exc:
-        return False, f"{type(exc).__name__}:{exc!s}"[:200]
+        reader.close()
 
 
 def _pypdf_attempt_read_plain_content(reader: PyPDF2.PdfReader) -> Tuple[bool, str]:
@@ -361,25 +310,25 @@ def _pypdf_attempt_read_plain_content(reader: PyPDF2.PdfReader) -> Tuple[bool, s
         return False, f"{type(e).__name__}:{e!s}"[:220]
 
 
-def _fallback_classify_via_pymupdf(
+def _fallback_classify_via_pdfium(
     pdf_path: str,
     diagnostics: Dict[str, Any],
     pdf_read_error: BaseException,
 ) -> Tuple[bool, str]:
     """
-    PyPDF okuyamazsa bile PyMuPDF açabiliyorsa güvenilir sayfa kullanıcıya 'parolasız kullanılabilir' diye bildirilir.
+    PyPDF okuyamazsa bile PDFium açabiliyorsa güvenilir sayfa kullanıcıya 'parolasız kullanılabilir' diye bildirilir.
     """
-    needs, pym = pymupdf_requires_non_empty_password(pdf_path)
+    needs, meta = pdfium_requires_non_empty_password(pdf_path)
     diagnostics["engines"]["fallback"] = {
         "from_pypdf_error": True,
         "pypdf_error_type": type(pdf_read_error).__name__,
     }
-    diagnostics["engines"]["pymupdf"] = pym
+    diagnostics["engines"]["pdfium"] = meta
     if needs:
-        logger.warning("[pdf-password] PyPDF unreadable and pymupdf still locked: %s", diagnostics)
-        return True, "pypdf_failed_pymupdf_locked"
-    logger.info("[pdf-password] PyPDF unreadable ama pymupdf parolasız: %s", diagnostics)
-    return False, "pypdf_fatal_pymupdf_ok"
+        logger.warning("[pdf-password] PyPDF unreadable and pdfium still locked: %s", diagnostics)
+        return True, "pypdf_failed_pdfium_locked"
+    logger.info("[pdf-password] PyPDF unreadable ama pdfium parolasız: %s", diagnostics)
+    return False, "pypdf_fatal_pdfium_ok"
 
 
 def is_pdf_encrypted(pdf_path: str) -> bool:
@@ -405,16 +354,16 @@ def validate_pdf_password(pdf_path: str, password: str) -> bool:
 def get_num_pages(pdf_path: str, password: Optional[str] = None) -> int:
     """PDF içindeki sayfa sayısını döndürür; şifreliyse parola ile açar.
     Bölme ve önizleme akışları sayfa sınırı bilmek zorundadır.
-    pypdf başarısız olursa PyMuPDF ile sayfa sayısı denenir."""
+    pypdf başarısız olursa PDFium ile sayfa sayısı denenir."""
     try:
         reader = _open_pdf_reader(pdf_path, password=password, context="Sayfa bilgisi okuma")
         return len(reader.pages)
     except Exception as e:
         try:
-            return _pymupdf_page_count(pdf_path, password=password)
+            return _pdfium_page_count(pdf_path, password=password)
         except Exception as e2:
             raise Exception(
-                f"PDF sayfa sayısı okunamadı — pypdf: {e} | PyMuPDF: {e2}",
+                f"PDF sayfa sayısı okunamadı — pypdf: {e} | PDFium: {e2}",
             ) from e2
 
 
@@ -630,62 +579,27 @@ def word_to_pdf(docx_path: str, pdf_path: str, progress_callback=None) -> bool:
     return True
 
 
-def _fitz_pdf_text_stats(pdf_path: str, password: Optional[str]) -> Tuple[int, int]:
-    """Sayfa sayısı ve çıkarılabilir metin uzunluğu (taranmış PDF ayırt etmek için)."""
-    import pymupdf as fitz
-
-    doc = fitz.open(pdf_path)
-    try:
-        if doc.needs_pass:
-            if not password:
-                raise Exception("Şifre gerekli")
-            if not doc.authenticate(password):
-                raise Exception("Girilen şifre hatalı")
-        n = len(doc)
-        total = 0
-        for i in range(n):
-            total += len(doc.load_page(i).get_text())
-        return n, total
-    finally:
-        doc.close()
-
-
 def _is_scanned_pdf(pdf_path: str, password: Optional[str] = None) -> bool:
     """
-    Taranmış PDF tespiti: sayfaların büyük çoğunluğu görüntü blokları içeriyorsa
+    Taranmış PDF tespiti: sayfaların büyük çoğunluğu görüntü içeriyorsa
     ve metin çok azsa taranmış kabul et.
 
-    Yöntem: fitz ile her sayfa blok analizi yap.
-      - Görüntü bloğu var AND metin bloğu çok az → taranmış sayfa
+    Yöntem: PDFium ile her sayfada görsel nesnesi ve metin uzunluğu ölç.
+      - Görsel var AND metin çok az → taranmış sayfa
       - Sayfaların %50+ taranmışsa → taranmış PDF
     """
-    import pymupdf as fitz
+    from src.pdfcore import PdfiumReader
 
-    doc = fitz.open(pdf_path)
-    try:
-        if doc.needs_pass:
-            doc.authenticate((password or "").strip())
-        n = len(doc)
+    with PdfiumReader(pdf_path, (password or "").strip() or None) as r:
+        n = r.page_count
         if n == 0:
             return False
         scanned_pages = 0
         for i in range(n):
-            page = doc[i]
-            blocks = page.get_text("dict")["blocks"]
-            img_blocks = sum(1 for b in blocks if b.get("type") == 1)
-            # Metin karakteri sayısı (gerçek metin, boşluk sayılmaz)
-            text_chars = sum(
-                len(span["text"].strip())
-                for b in blocks if b.get("type") == 0
-                for line in b.get("lines", [])
-                for span in line.get("spans", [])
-            )
-            # Sayfa taranmış mı: görüntü var AND metin çok az (sayfa başına <30 karakter)
-            if img_blocks >= 1 and text_chars < 30:
+            # Sayfa taranmış mı: görsel var AND metin çok az (sayfa başına <30 karakter)
+            if r.has_images(i) and r.text_len(i) < 30:
                 scanned_pages += 1
         return scanned_pages >= max(1, n * 0.5)
-    finally:
-        doc.close()
 
 
 _TESSDATA_CACHE: Optional[str] = None
@@ -693,7 +607,7 @@ _TESSDATA_DONE = False
 
 
 def _tessdata_dir() -> Optional[str]:
-    """PyMuPDF get_textpage_ocr için Tesseract dil-verisi (tessdata) dizinini bul.
+    """Tesseract OCR için dil-verisi (tessdata) dizinini bul.
     TESSDATA_PREFIX env → yaygın Linux/Docker yolları → glob. Sürümden bağımsız (bookworm=5)."""
     global _TESSDATA_CACHE, _TESSDATA_DONE
     if _TESSDATA_DONE:
@@ -722,16 +636,24 @@ def _tessdata_dir() -> Optional[str]:
     return None
 
 
-def ocr_page_text(fitz_page, lang: str = "tur+eng", dpi: int = 200) -> str:
-    """Bir fitz sayfasını PyMuPDF yerleşik OCR'ı (Tesseract) ile OCR'layıp DÜZ METİN döndürür.
-    Taranmış/görüntü sayfalar için; tessdata otomatik bulunur. Hata olursa boş string."""
+def ocr_image_text(img: "Image.Image", lang: str = "tur+eng") -> str:
+    """Bir görüntüyü Tesseract ile OCR'layıp DÜZ METİN döndürür. Hata olursa boş string.
+    tessdata dizini otomatik bulunur (TESSDATA_PREFIX → yaygın Linux/Docker yolları)."""
     try:
-        kw: Dict[str, object] = dict(flags=0, language=lang, dpi=dpi, full=True)
+        config = _TESSERACT_CONFIG
         td = _tessdata_dir()
         if td:
-            kw["tessdata"] = td
-        tp = fitz_page.get_textpage_ocr(**kw)
-        return fitz_page.get_text("text", textpage=tp) or ""
+            config += f' --tessdata-dir "{td}"'
+        return pytesseract.image_to_string(img, lang=lang, config=config) or ""
+    except Exception:
+        return ""
+
+
+def ocr_page_text(reader, index: int, lang: str = "tur+eng", dpi: int = 200) -> str:
+    """PdfiumReader'ın `index`. sayfasını dpi ile görüntüleyip OCR'layarak DÜZ METİN döndürür.
+    Taranmış/görüntü sayfalar için. Hata olursa boş string."""
+    try:
+        return ocr_image_text(reader.render(index, dpi=dpi), lang=lang)
     except Exception:
         return ""
 
@@ -866,14 +788,14 @@ def _pdf_to_word_easyocr(
 ) -> bool:
     """
     EasyOCR (Türkçe+İngilizce) ile taranmış/görsel PDF → DOCX.
-    - PyMuPDF ile yüksek DPI render
+    - PDFium ile yüksek DPI render
     - EasyOCR bounding box ile koordinat bazlı layout tespiti
     - Y kümeleme → satırlar, X boşluk analizi → kolonlar
     - Başlık, ortalı metin ve çok sütunlu yapı korunur
     """
     try:
         import easyocr as _easyocr
-        import pymupdf as _fitz
+        from src.pdfcore import PdfiumReader as _PdfiumReader
     except ImportError:
         return False
 
@@ -884,12 +806,10 @@ def _pdf_to_word_easyocr(
         return False
 
     try:
-        doc_pdf = _fitz.open(pdf_path)
-        if doc_pdf.needs_pass:
-            if not (password or ""):
-                return False
-            if not doc_pdf.authenticate(password or ""):
-                return False
+        try:
+            doc_pdf = _PdfiumReader(pdf_path, (password or "").strip() or None)
+        except Exception:
+            return False  # parola gerekli/hatalı veya dosya açılamadı
 
         dw = Document()
         style = dw.styles["Normal"]
@@ -902,11 +822,11 @@ def _pdf_to_word_easyocr(
             if progress_callback:
                 progress_callback(i + 1, max(n, 1), f"OCR işleniyor: sayfa {i + 1}/{n}")
 
-            page = doc_pdf.load_page(i)
-            mat = _fitz.Matrix(render_scale, render_scale)
-            pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=_fitz.csRGB)
-            img_bytes = pix.tobytes("png")
-            page_w_px = pix.width
+            _pil = doc_pdf.render(i, render_scale)
+            _buf = io.BytesIO()
+            _pil.save(_buf, format="PNG")
+            img_bytes = _buf.getvalue()
+            page_w_px = _pil.width
 
             if i > 0:
                 dw.add_page_break()
@@ -1170,7 +1090,7 @@ def _add_markdown_runs(paragraph, text: str) -> None:
         paragraph.add_run(text[last:])
 
 
-def _pdf_to_word_ocr_fitz(
+def _pdf_to_word_ocr(
     pdf_path: str,
     docx_path: str,
     password: Optional[str],
@@ -1190,34 +1110,27 @@ def _pdf_to_word_ocr_fitz(
     5. Satır içi X-boşluk analizi ile kolon/etiket-değer tespiti yap
     6. Düzen bloklarını Word'e yaz (paragraf veya kenarlıksız tablo satırı)
     """
-    import pymupdf as fitz
     from pytesseract import Output
+    from src.pdfcore import PdfiumReader
 
-    doc_pdf = fitz.open(pdf_path)
+    # Parola gerekli/hatalıysa PdfiumReader eski metinlerle ("Şifreli PDF için parola gerekli." /
+    # "Girilen PDF parolası hatalı.") hata verir.
+    doc_pdf = PdfiumReader(pdf_path, (password or "").strip() or None)
     try:
-        if doc_pdf.needs_pass:
-            if not password:
-                raise Exception("Şifre gerekli")
-            if not doc_pdf.authenticate(password):
-                raise Exception("Girilen şifre hatalı")
-
         dw = Document()
         style = dw.styles["Normal"]
         style.font.name = "Calibri"
         from docx.shared import Pt
         style.font.size = Pt(11)
 
-        n = len(doc_pdf)
+        n = doc_pdf.page_count
         ocr_lang = "tur+eng"
 
         for i in range(n):
             if progress_callback:
                 progress_callback(i + 1, max(n, 1), f"OCR işleniyor: sayfa {i + 1}/{n}")
 
-            page = doc_pdf.load_page(i)
-            mat = fitz.Matrix(ocr_matrix_scale, ocr_matrix_scale)
-            pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
-            img = Image.open(io.BytesIO(pix.tobytes("png")))
+            img = doc_pdf.render(i, ocr_matrix_scale)
             img_proc = _preprocess_ocr_image(img)
             page_w = img_proc.width
 
@@ -1511,7 +1424,7 @@ def pdf_to_word(
                         progress_callback(4, 4, "Tamamlandı.")
                     return True
             ocr_scale = 1.38 if reduced_quality else 2.0
-            _pdf_to_word_ocr_fitz(
+            _pdf_to_word_ocr(
                 pdf_path, docx_path, password,
                 progress_callback=progress_callback,
                 ocr_matrix_scale=ocr_scale,
@@ -1599,7 +1512,7 @@ def pdf_to_word(
             except OSError:
                 pass
         ocr_scale = 1.38 if reduced_quality else 2.0
-        _pdf_to_word_ocr_fitz(
+        _pdf_to_word_ocr(
             pdf_path, docx_path, password,
             progress_callback=progress_callback,
             ocr_matrix_scale=ocr_scale,
@@ -2117,30 +2030,6 @@ def _append_layout_block_to_document(doc: Document, block: Dict[str, Any]) -> No
         return
 
 
-def _fitz_open_for_tool(pdf_path: str, password: Optional[str] = None, context: str = "Bu işlem"):
-    """PyMuPDF ile aç; boş kullanıcı parolası olan PDF'ler authenticate('') ile açılır."""
-    import pymupdf as fitz
-
-    basename = os.path.basename(pdf_path)
-    doc = fitz.open(pdf_path)
-    if doc.needs_pass:
-        pwd = (password or "").strip()
-        ok = False
-        if pwd:
-            ok = doc.authenticate(pwd)
-        if not ok:
-            ok = doc.authenticate("")
-        if not ok:
-            doc.close()
-            if pwd:
-                raise Exception(f"{context}: girilen PDF parolası hatalı ({basename}).")
-            raise Exception(
-                f"{context} için seçtiğiniz dosya şifreli: {basename}\n"
-                "Lütfen dosya için şifre girin."
-            )
-    return doc
-
-
 # --- 2. PDF BİRLEŞTİRME ---
 def _pikepdf_open_for_merge(
     pdf_path: str,
@@ -2148,7 +2037,7 @@ def _pikepdf_open_for_merge(
     *,
     context: str = "PDF birleştirme",
 ):
-    """pikepdf ile aç; PyMuPDF şifre mesajlarıyla uyumlu hatalar."""
+    """pikepdf ile aç (birleştirme, ayıklama, sıkıştırma ön kontrolü); eski şifre mesajlarıyla aynı hatalar."""
     import pikepdf
 
     basename = os.path.basename(pdf_path)
@@ -2247,69 +2136,37 @@ def _merge_pdfs_pikepdf(
         merged.close()
 
 
-def _merge_pdfs_fitz_throttled(
+def _merge_pdfs_pdfium(
     pdf_list: List[str],
     output_path: str,
     progress_callback,
     passwords: Optional[Dict[str, str]],
 ) -> None:
-    """pikepdf uyumsuz PDF’ler için PyMuPDF geri dönüşü; ilerleme güncellemesi seyreltildi."""
-    import pymupdf as fitz
+    """pikepdf'in okuyamadığı PDF'ler için PDFium geri dönüşü (bozuk dosyalara daha hoşgörülü)."""
+    from src.pdfcore.pdfium_io import pdfium_merge
 
     passwords = passwords or {}
-    progress_every = int(os.environ.get("NB_MERGE_FITZ_PROGRESS_EVERY", "96"))
-    progress_every = max(16, min(progress_every, 2000))
-
-    total_pages = 0
     for pdf in pdf_list:
         if not os.path.isfile(pdf):
             raise FileNotFoundError(f"Birleştirilecek dosya bulunamadı: {pdf}")
-        doc = _fitz_open_for_tool(pdf, passwords.get(pdf), context="PDF birleştirme")
-        try:
-            total_pages += doc.page_count
-        finally:
-            doc.close()
+    total = len(pdf_list) + 1
 
-    merged = fitz.open()
-    try:
-        current_page = 0
-        total = max(1, total_pages + 1)
-        for pdf in pdf_list:
-            src = _fitz_open_for_tool(pdf, passwords.get(pdf), context="PDF birleştirme")
-            try:
-                base_name = os.path.basename(pdf)
-                n = src.page_count
-                merged.insert_pdf(src)
-                for page_idx in range(1, n + 1):
-                    current_page += 1
-                    at_last = page_idx == n
-                    if progress_callback and (
-                        at_last
-                        or page_idx == 1
-                        or (page_idx % progress_every == 0)
-                    ):
-                        res = progress_callback(
-                            current_page,
-                            total,
-                            f"{base_name} | Sayfa {page_idx}/{n}",
-                        )
-                        if res is False:
-                            raise Exception("İşlem iptal edildi.")
-            finally:
-                src.close()
+    def _on_progress(k: int, _n: int, path: str):
         if progress_callback:
-            progress_callback(total, total, "PDF yazılıyor...")
-        merged.save(output_path, garbage=2, deflate=False, linear=False)
-    finally:
-        merged.close()
+            return progress_callback(k, total, f"{os.path.basename(path)} | {k}/{len(pdf_list)}")
+        return None
+
+    pdfium_merge(pdf_list, output_path, passwords, on_progress=_on_progress)
+    if progress_callback:
+        progress_callback(total, total, "PDF yazılıyor...")
 
 
 def merge_pdfs(pdf_list: List[str], output_path: str, progress_callback=None, passwords: Optional[Dict[str, str]] = None) -> bool:
     """
     Birden fazla PDF dosyasını tek çıktıda birleştirir.
 
-    Varsayılan olarak pikepdf kullanılır (on binlerce sayfada PyMuPDF’e göre çok daha düşük tepe bellek).
-    Başarısız olursa PyMuPDF ile yeniden denenir.
+    Varsayılan olarak pikepdf kullanılır (on binlerce sayfada düşük tepe bellek).
+    Başarısız olursa PDFium ile yeniden denenir.
     """
     try:
         try:
@@ -2318,10 +2175,10 @@ def merge_pdfs(pdf_list: List[str], output_path: str, progress_callback=None, pa
             raise
         except Exception as first:
             logger.info(
-                "merge_pdfs_pikepdf_failed_trying_fitz",
+                "merge_pdfs_pikepdf_failed_trying_pdfium",
                 extra={"reason": str(first)},
             )
-            _merge_pdfs_fitz_throttled(pdf_list, output_path, progress_callback, passwords)
+            _merge_pdfs_pdfium(pdf_list, output_path, progress_callback, passwords)
         return True
     except Exception as e:
         err_text = str(e)
@@ -2343,14 +2200,14 @@ def extract_pages(
 ) -> bool:
     """
     pdf_path içinden verilen sayfaları (1 tabanlı liste) alır ve tek PDF olarak output_path'e yazar.
-    PyMuPDF ile tek kaynak açılır; büyük belgelerde bellek kullanımı daha kontrollüdür.
+    Tek kaynak açılır (pikepdf); sayfalar sırayla yeni belgeye aktarılır, yer imleri taşınır.
     """
-    import pymupdf as fitz
+    from src.pdfcore import pages as _pc
 
     try:
-        doc = _fitz_open_for_tool(pdf_path, password, context="Sayfa ayıklama")
+        doc = _pikepdf_open_for_merge(pdf_path, password, context="Sayfa ayıklama")
         try:
-            num_pages = doc.page_count
+            num_pages = len(doc.pages)
             normalized = []
             for p in pages:
                 if not isinstance(p, int):
@@ -2359,9 +2216,7 @@ def extract_pages(
                     raise ValueError(f"Geçersiz sayfa numarası: {p} (Dosya {num_pages} sayfa)")
                 normalized.append(p)
 
-            # select() ile istenilen sayfalar in-place seçilir; insert_pdf döngüsünden çok daha hızlı.
-            doc.select([p - 1 for p in normalized])
-            doc.save(output_path, garbage=2, deflate=False, linear=False)
+            _pc.write_selected_pages(doc, output_path, [p - 1 for p in normalized])
         finally:
             doc.close()
         _apply_output_pdf_password(output_path, output_password)
@@ -2382,15 +2237,15 @@ def extract_pages_separate(
     Verilen sayfaları (1 tabanlı) ayırır; her birini output_folder içinde ayrı PDF olarak kaydeder.
     Kaynak tek kez açılır; çok sayfalı dosyalarda daha verimlidir.
     """
-    import pymupdf as fitz
+    from src.pdfcore import pages as _pc
 
     try:
         if not os.path.isdir(output_folder):
             raise FileNotFoundError(f"Hedef klasör bulunamadı: {output_folder}")
 
-        doc = _fitz_open_for_tool(pdf_path, password, context="Sayfa ayıklama")
+        doc = _pikepdf_open_for_merge(pdf_path, password, context="Sayfa ayıklama")
         try:
-            num_pages = doc.page_count
+            num_pages = len(doc.pages)
             normalized = []
             for p in pages:
                 if not isinstance(p, int):
@@ -2403,14 +2258,9 @@ def extract_pages_separate(
             output_paths: List[str] = []
 
             for p in normalized:
-                one = fitz.open()
-                try:
-                    one.insert_pdf(doc, from_page=p - 1, to_page=p - 1)
-                    out_name = f"{base_name}_page_{p}.pdf"
-                    out_path = os.path.join(output_folder, out_name)
-                    one.save(out_path, garbage=2, deflate=False, linear=False)
-                finally:
-                    one.close()
+                out_name = f"{base_name}_page_{p}.pdf"
+                out_path = os.path.join(output_folder, out_name)
+                _pc.write_selected_pages(doc, out_path, [p - 1], carry_outline=False, carry_docinfo=False)
                 _apply_output_pdf_password(out_path, output_password)
                 output_paths.append(out_path)
 
@@ -2855,7 +2705,7 @@ def pdf_text_to_excel(
         ws.title = "PDF Metni"
         ws.append(["Sayfa", "Satır No", "Metin"])
 
-        _fdoc = None  # taranmış sayfalar için lazy açılan fitz belgesi (OCR)
+        _fdoc = None  # taranmış sayfalar için lazy açılan PDFium okuyucusu (OCR)
         try:
             for i in range(num):
                 if progress_callback:
@@ -2869,12 +2719,10 @@ def pdf_text_to_excel(
                 if not lines:
                     # Metin katmanı yok (taranmış sayfa) → Tesseract OCR ile metni tanı.
                     try:
-                        import pymupdf as _fitz
+                        from src.pdfcore import PdfiumReader as _PdfiumReader
                         if _fdoc is None:
-                            _fdoc = _fitz.open(pdf_path)
-                            if _fdoc.needs_pass and password:
-                                _fdoc.authenticate(password)
-                        ocr_txt = ocr_page_text(_fdoc.load_page(i))
+                            _fdoc = _PdfiumReader(pdf_path, (password or "").strip() or None)
+                        ocr_txt = ocr_page_text(_fdoc, i)
                         lines = [ln.strip() for ln in ocr_txt.splitlines() if ln.strip()]
                     except Exception:
                         lines = []
@@ -3167,15 +3015,11 @@ def _ghostscript_compress_to_path(
 
 
 def _pdf_page_count(path: str, password: str = "") -> int:
-    """PyMuPDF ile sayfa sayısını döndürür; hata olursa -1."""
+    """PDFium ile sayfa sayısını döndürür; hata olursa -1."""
     try:
-        import pymupdf as fitz
-        doc = fitz.open(path)
-        if password and doc.needs_pass:
-            doc.authenticate(password)
-        n = doc.page_count
-        doc.close()
-        return n
+        from src.pdfcore import pdfium_page_count
+
+        return pdfium_page_count(path, (password or "").strip() or None)
     except Exception:
         return -1
 
@@ -3350,17 +3194,17 @@ def _fast_image_compress_pipeline(
                 pass
 
 
-def _fitz_render_compress(
+def _render_compress(
     input_path: str, output_path: str, open_password: str, quality: str = "auto"
 ) -> bool:
-    """PyMuPDF ile sayfa bazlı render + JPEG yeniden kodlama (Ghostscript alternatifi).
+    """PDFium ile sayfa bazlı render + JPEG yeniden kodlama (Ghostscript alternatifi).
 
     Her sayfayı hedef DPI'de piksel olarak render eder, ardından yeni bir PDF içine
     JPEG stream olarak yerleştirir. Metin aranabilirliği kaybolur ama görüntü ağırlıklı
     (tarama) PDF'lerde en agresif boyut küçültmeyi sağlar.
     """
-    import pymupdf as fitz
-    from PIL import Image as PilImage
+    from src.pdfcore import PdfiumReader
+    from src.pdfcore import pages as _pc
 
     dpi_map   = {"extreme": 72, "low": 96,  "auto": 120, "medium": 150, "high": 200}
     jpegq_map = {"extreme": 30, "low": 35,  "auto": 50,  "medium": 62,  "high": 75}
@@ -3373,36 +3217,20 @@ def _fitz_render_compress(
     tmp_keep: Optional[str] = tmp_out
 
     try:
-        src = fitz.open(input_path)
-        if open_password and src.needs_pass:
-            src.authenticate(open_password)
-
-        out_doc = fitz.open()
-        scale = dpi / 72.0
-        mat = fitz.Matrix(scale, scale)
-
-        for page in src:
-            pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
-            # Pillow ile JPEG olarak yeniden kodla (kalite kontrolü için)
-            pil_img = PilImage.frombytes("RGB", (pix.width, pix.height), pix.samples)
-            buf = io.BytesIO()
-            pil_img.save(buf, format="JPEG", quality=jpegq, optimize=True, progressive=True)
-            jpeg_bytes = buf.getvalue()
-
-            # Orijinal sayfa boyutlarını koru (pt cinsinden)
-            rect = page.rect
-            new_page = out_doc.new_page(width=rect.width, height=rect.height)
-            new_page.insert_image(rect, stream=jpeg_bytes)
-
-        src.close()
-        out_doc.save(
-            tmp_out,
-            garbage=4,
-            deflate=True,
-            deflate_images=True,
-            deflate_fonts=True,
-        )
-        out_doc.close()
+        out_doc = _pc.new_pdf()
+        try:
+            with PdfiumReader(input_path, (open_password or "").strip() or None) as src:
+                for pno in range(src.page_count):
+                    pil_img = src.render(pno, dpi / 72.0)
+                    # Pillow ile JPEG olarak yeniden kodla (kalite kontrolü için)
+                    buf = io.BytesIO()
+                    pil_img.save(buf, format="JPEG", quality=jpegq, optimize=True, progressive=True)
+                    # Orijinal sayfa boyutlarını koru (pt cinsinden)
+                    pw, ph = src.page_size(pno)
+                    _pc.add_image_page(out_doc, buf.getvalue(), pil_img.width, pil_img.height, pw, ph)
+            _pc.save_pdf(out_doc, tmp_out)
+        finally:
+            out_doc.close()
 
         in_size  = os.path.getsize(input_path)
         out_size = os.path.getsize(tmp_out)
@@ -3414,49 +3242,13 @@ def _fitz_render_compress(
         return False
 
     except Exception as e:
-        logger.warning("_fitz_render_compress failed: %s", e)
+        logger.warning("_render_compress failed: %s", e)
         shutil.copy2(input_path, output_path)
         return False
     finally:
         if tmp_keep and os.path.isfile(tmp_keep):
             try:
                 os.remove(tmp_keep)
-            except OSError:
-                pass
-
-
-def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: str) -> None:
-    """PyMuPDF stream-sıkıştırma yedek boru hattı (görüntü yeniden örnekleme yapmaz)."""
-    import pymupdf as fitz
-
-    out_dir = os.path.dirname(output_path) or None
-    fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
-    os.close(fd)
-    try:
-        doc = fitz.open(input_path)
-        if open_password and doc.needs_pass:
-            doc.authenticate(open_password)
-        doc.save(
-            tmp_out,
-            garbage=4,
-            deflate=True,
-            deflate_images=True,
-            deflate_fonts=True,
-            clean=True,
-            linear=False,
-        )
-        doc.close()
-        if os.path.getsize(tmp_out) < os.path.getsize(input_path):
-            os.replace(tmp_out, output_path)
-            tmp_out = None
-        else:
-            shutil.copy2(input_path, output_path)
-    except Exception:
-        raise
-    finally:
-        if tmp_out and os.path.isfile(tmp_out):
-            try:
-                os.remove(tmp_out)
             except OSError:
                 pass
 
@@ -3543,7 +3335,7 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
             # küçültemediği için girdi olduğu gibi kopyalanıyor ve kullanıcıya
             # "işlem başarılı" deniyordu: hakkı harcanıyor, elindeki dosya ise
             # hâlâ şifreli ve hiç değişmemiş oluyordu.
-            _fitz_open_for_tool(input_path, password, context="PDF sıkıştırma").close()
+            _pikepdf_open_for_merge(input_path, password, context="PDF sıkıştırma").close()
         open_password = (password or "").strip()
         in_size = os.path.getsize(input_path)
         timeout_sec = _tool_subprocess_timeout_sec()
@@ -3570,7 +3362,7 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
         best_size: int = pike_size
         need_second = False
 
-        # --- 2. İkinci geçiş: önce GS dene, yoksa fitz render ---
+        # --- 2. İkinci geçiş: önce GS dene, yoksa sayfa render ---
         # pikepdf yeterli kazanım sağlayamadıysa veya "high" kaliteyse ikinci geçiş zorunlu
         need_second = (quality == "high") or (pike_ratio < _COMPRESS_GS_FALLBACK_THRESHOLD)
 
@@ -3595,9 +3387,9 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
                     dpi_override=_COMPRESS_GS_DPI.get(quality),
                 )
             else:
-                # GS yok → fitz sayfa render pipeline (metin aranabilirliği kaybolur
+                # GS yok → PDFium sayfa render pipeline (metin aranabilirliği kaybolur
                 # ama görüntü ağırlıklı/tarama PDF'lerde en etkili sıkıştırma)
-                second_ok = _fitz_render_compress(second_input, second_out, open_password, quality)
+                second_ok = _render_compress(second_input, second_out, open_password, quality)
 
             if second_ok:
                 second_size = os.path.getsize(second_out)
@@ -3661,20 +3453,13 @@ TARGET_MAX_BYTES = 200 * 1024 * 1024
 def _pdf_text_chars(path: str, password: str = "", max_pages: int = 8) -> int:
     """İlk sayfalardaki seçilebilir metin karakter sayısı; okunamazsa -1."""
     try:
-        import pymupdf as fitz
+        from src.pdfcore import PdfiumReader
 
-        doc = fitz.open(path)
-        try:
-            if doc.needs_pass and not (password and doc.authenticate(password)):
-                return -1
+        with PdfiumReader(path, (password or "").strip() or None) as r:
             total = 0
-            for i, page in enumerate(doc):
-                if i >= max_pages:
-                    break
-                total += len((page.get_text("text") or "").strip())
+            for i in range(min(r.page_count, max_pages)):
+                total += len(r.text(i).strip())
             return total
-        finally:
-            doc.close()
     except Exception:
         return -1
 
@@ -3699,36 +3484,34 @@ def _rasterize_to_target(
     None döndürür.
     """
     import time
-    import pymupdf as fitz
-    from PIL import Image as PilImage
+    from src.pdfcore import PdfiumReader, PdfPasswordRequired, PdfPasswordWrong
+    from src.pdfcore import pages as _pc
 
     out_dir = os.path.dirname(os.path.abspath(output_path)) or None
     best: Optional[Tuple[int, str]] = None  # (boyut, geçici yol)
-    src = fitz.open(input_path)
     try:
-        if src.needs_pass and not (password and src.authenticate(password)):
-            return None
+        src = PdfiumReader(input_path, (password or "").strip() or None)
+    except (PdfPasswordRequired, PdfPasswordWrong):
+        return None
+    try:
         for dpi in _TARGET_RASTER_DPIS:
             if time.monotonic() > deadline:
                 break
-            mat = fitz.Matrix(dpi / 72.0, dpi / 72.0)
-            docs = {q: fitz.open() for q in _TARGET_RASTER_JPEG_QS}
+            docs = {q: _pc.new_pdf() for q in _TARGET_RASTER_JPEG_QS}
             try:
-                for page in src:
-                    pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
-                    pil = PilImage.frombytes("RGB", (pix.width, pix.height), pix.samples)
-                    rect = page.rect
+                for pno in range(src.page_count):
+                    pil = src.render(pno, dpi / 72.0)
+                    pw, ph = src.page_size(pno)
                     for q in _TARGET_RASTER_JPEG_QS:
                         buf = io.BytesIO()
                         pil.save(buf, format="JPEG", quality=q, optimize=True)
-                        new_page = docs[q].new_page(width=rect.width, height=rect.height)
-                        new_page.insert_image(rect, stream=buf.getvalue())
+                        _pc.add_image_page(docs[q], buf.getvalue(), pil.width, pil.height, pw, ph)
                     if time.monotonic() > deadline:
                         raise TimeoutError("hedef boyut süre bütçesi doldu")
                 for q in _TARGET_RASTER_JPEG_QS:
                     fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
                     os.close(fd)
-                    docs[q].save(tmp, garbage=4, deflate=True)
+                    _pc.save_pdf(docs[q], tmp)
                     size = os.path.getsize(tmp)
                     if best is None or size < best[0]:
                         if best is not None and os.path.isfile(best[1]):

@@ -64,7 +64,11 @@ def _load_document(src: PdfSource, password: Optional[str]) -> "pdfium.PdfDocume
             if not pwd:
                 raise PdfPasswordRequired(MSG_NEED_PASSWORD) from None
             raise PdfPasswordWrong(MSG_WRONG_PASSWORD) from None
-        raise PdfCoreError(f"PDF açılamadı: {e}") from e
+        code = getattr(e, "err_code", None)
+        raise PdfCoreError(
+            f"PDF açılamadı: {e}",
+            corrupt=code in (pdfium_c.FPDF_ERR_FORMAT, pdfium_c.FPDF_ERR_FILE),
+        ) from e
     except FileNotFoundError:
         raise
 
@@ -238,3 +242,37 @@ def pdfium_text_stats(src: PdfSource, password: Optional[str] = None) -> Tuple[i
         for i in range(r.page_count):
             total += len(r.text(i))
         return r.page_count, total
+
+
+def pdfium_merge(
+    paths: Sequence[str],
+    out_path: Union[str, "os.PathLike[str]"],
+    passwords: Optional[dict] = None,
+    on_progress=None,
+) -> int:
+    """Birden çok PDF'i PDFium ile birleştirir (pikepdf'in okuyamadığı dosyalar için yedek yol).
+    `on_progress(k, toplam, yol)` her kaynak aktarıldıktan sonra çağrılır; False dönerse iptal.
+    Dönen: toplam sayfa."""
+    passwords = passwords or {}
+    with _LOCK:
+        out = pdfium.PdfDocument.new()
+        opened: List[Any] = []
+        try:
+            for k, p in enumerate(paths, 1):
+                src = _load_document(p, passwords.get(p))
+                opened.append(src)
+                out.import_pages(src)
+                if on_progress is not None and on_progress(k, len(paths), p) is False:
+                    raise PdfCoreError("İşlem iptal edildi.")
+            out.save(os.fspath(out_path))
+            return len(out)
+        finally:
+            for d in opened:
+                try:
+                    d.close()
+                except Exception:
+                    pass
+            try:
+                out.close()
+            except Exception:
+                pass

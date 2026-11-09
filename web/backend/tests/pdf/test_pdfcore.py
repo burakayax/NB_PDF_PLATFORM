@@ -183,3 +183,33 @@ def test_stamp_text_turkish_and_link(tmp_path):
 def test_text_metrics():
     assert ov.text_width("Sayfa 12", "helv", 10) == pytest.approx(37.8, abs=2.0)
     assert ov.font_ascender("helv") == pytest.approx(1.075)
+
+
+# ── sayfa yerleştirme (show_pdf_page karşılığı) ──────────────────────────
+@pytest.mark.parametrize("rot", [0, 90, 180, 270])
+@pytest.mark.parametrize("crop", [None, [20, 20, 180, 280]])
+def test_place_page_matches_direct_render(tmp_path, rot, crop):
+    """Kaynak sayfayı AYNI ölçüde yeni sayfaya yerleştirince, kaynağın kendi görüntüsüyle aynı çıkmalı."""
+    src_path = tmp_path / "s.pdf"
+    c = canvas.Canvas(str(src_path), pagesize=(200, 300))
+    c.setFillColorRGB(1, 0, 0); c.rect(0, 260, 40, 40, fill=1, stroke=0)
+    c.setFillColorRGB(0, 0, 1); c.rect(160, 0, 40, 40, fill=1, stroke=0)
+    c.setFillColorRGB(0, 0.6, 0); c.rect(20, 20, 30, 30, fill=1, stroke=0)
+    c.showPage(); c.save()
+    with pikepdf.open(src_path, allow_overwriting_input=True) as p:
+        p.pages[0].obj["/Rotate"] = rot
+        if crop:
+            p.pages[0].obj["/CropBox"] = crop
+        p.save(src_path)
+    with pikepdf.open(src_path) as src:
+        w, h = pg.page_visual_size(src.pages[0])
+        out = pg.new_pdf()
+        out.add_blank_page(page_size=(w, h))
+        pg.place_page(out, out.pages[0], src, 0, (0, 0, w, h))
+        out.save(tmp_path / "o.pdf")
+        out.close()
+    with PdfiumReader(src_path) as a, PdfiumReader(tmp_path / "o.pdf") as b:
+        ia = np.asarray(a.render(0, scale=2)).astype(int)
+        ib = np.asarray(b.render(0, scale=2)).astype(int)
+    assert ia.shape == ib.shape
+    assert np.abs(ia - ib).mean() < 1.0

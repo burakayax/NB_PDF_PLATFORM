@@ -217,6 +217,38 @@ def append_pages(dest: pikepdf.Pdf, src: pikepdf.Pdf, indices: Iterable[int]) ->
         dest.pages.append(src.pages[i])
 
 
+def write_selected_pages(
+    src: pikepdf.Pdf,
+    out_path: Union[str, "os.PathLike[str]"],
+    keep_indices: Sequence[int],
+    *,
+    carry_outline: bool = True,
+    carry_docinfo: bool = True,
+) -> int:
+    """Açık kaynak belgeden `keep_indices` (0 tabanlı, SIRAYLA) sayfalarını yeni PDF olarak yazar.
+    Silme, ayıklama ve yeniden sıralamanın ortak yolu. Yer imleri ve belge bilgisi (başlık,
+    yazar…) taşınır. Dönen: yazılan sayfa sayısı."""
+    n = len(src.pages)
+    for i in keep_indices:
+        if i < 0 or i >= n:
+            raise PdfCoreError(f"Geçersiz sayfa dizini: {i}")
+    out = new_pdf()
+    try:
+        append_pages(out, src, keep_indices)
+        if carry_outline:
+            transfer_outline(src, out, list(keep_indices))
+        if carry_docinfo:
+            try:
+                for k, v in src.docinfo.items():
+                    out.docinfo[k] = v
+            except Exception:
+                pass
+        save_pdf(out, out_path)
+    finally:
+        out.close()
+    return len(keep_indices)
+
+
 def select_pages(
     src: PdfSource,
     out_path: Union[str, "os.PathLike[str]"],
@@ -225,22 +257,9 @@ def select_pages(
     *,
     carry_outline: bool = True,
 ) -> int:
-    """Kaynaktan `keep_indices` (0 tabanlı, SIRAYLA) sayfalarını yeni PDF olarak yazar.
-    Silme, ayıklama ve yeniden sıralamanın ortak yolu. Dönen: yazılan sayfa sayısı."""
+    """`write_selected_pages` için dosya yolu alan kısayol."""
     with open_pdf(src, password, suppress_warnings=True) as s:
-        n = len(s.pages)
-        for i in keep_indices:
-            if i < 0 or i >= n:
-                raise PdfCoreError(f"Geçersiz sayfa dizini: {i}")
-        out = new_pdf()
-        try:
-            append_pages(out, s, keep_indices)
-            if carry_outline:
-                transfer_outline(s, out, list(keep_indices))
-            save_pdf(out, out_path)
-        finally:
-            out.close()
-        return len(keep_indices)
+        return write_selected_pages(s, out_path, keep_indices, carry_outline=carry_outline)
 
 
 def merge_pdfs_pikepdf(
@@ -305,3 +324,76 @@ def page_visual_size(page: pikepdf.Page) -> Tuple[float, float]:
     x0, y0, x1, y1 = page_box(page)
     w, h = x1 - x0, y1 - y0
     return (h, w) if page_rotation(page) in (90, 270) else (w, h)
+
+
+def add_image_page(
+    pdf: pikepdf.Pdf,
+    jpeg_bytes: bytes,
+    width_px: int,
+    height_px: int,
+    page_w: float,
+    page_h: float,
+    *,
+    gray: bool = False,
+) -> pikepdf.Page:
+    """JPEG baytlarını (yeniden kodlamadan, DCTDecode olarak) `page_w` × `page_h` punto büyüklüğünde
+    yeni bir sayfaya tam sayfa yerleştirir. Sıkıştırma / taranmış-belge üretiminin ortak yapı taşı."""
+    img = pikepdf.Stream(pdf, jpeg_bytes)
+    img["/Type"] = pikepdf.Name.XObject
+    img["/Subtype"] = pikepdf.Name.Image
+    img["/Width"] = int(width_px)
+    img["/Height"] = int(height_px)
+    img["/ColorSpace"] = pikepdf.Name.DeviceGray if gray else pikepdf.Name.DeviceRGB
+    img["/BitsPerComponent"] = 8
+    img["/Filter"] = pikepdf.Name.DCTDecode
+    pdf.add_blank_page(page_size=(float(page_w), float(page_h)))
+    page = pdf.pages[len(pdf.pages) - 1]
+    page.obj["/Resources"] = pikepdf.Dictionary(XObject=pikepdf.Dictionary(Im0=img))
+    page.obj["/Contents"] = pdf.make_stream(f"q {page_w:.4f} 0 0 {page_h:.4f} 0 0 cm /Im0 Do Q\n".encode("ascii"))
+    return page
+
+
+def place_page(
+    dest: pikepdf.Pdf,
+    dest_page: pikepdf.Page,
+    src: pikepdf.Pdf,
+    src_index: int,
+    rect: Tuple[float, float, float, float],
+    *,
+    keep_proportion: bool = True,
+) -> None:
+    """Kaynak sayfayı (vektör olarak, form nesnesi biçiminde) hedef sayfadaki `rect` kutusuna yerleştirir
+    (PyMuPDF `show_pdf_page` karşılığı). `rect` = ÜST-SOL başlangıçlı (x0, y0, x1, y1), punto;
+    hedef sayfa döndürülmemiş olmalı (yeni oluşturulmuş sayfa). keep_proportion → oran korunur ve
+    kutuda ortalanır. Kaynak sayfanın /Rotate ve CropBox değerleri uygulanır."""
+    form = src.pages[src_index].as_form_xobject()
+    m = [float(v) for v in form.get("/Matrix", [1, 0, 0, 1, 0, 0])]
+    bx0, by0, bx1, by1 = (float(v) for v in form.BBox)
+    xs, ys = [], []
+    for px, py in ((bx0, by0), (bx1, by0), (bx0, by1), (bx1, by1)):
+        xs.append(m[0] * px + m[2] * py + m[4])
+        ys.append(m[1] * px + m[3] * py + m[5])
+    tx0, ty0, tx1, ty1 = min(xs), min(ys), max(xs), max(ys)
+    tw, th = tx1 - tx0, ty1 - ty0
+    if tw <= 0 or th <= 0:
+        raise PdfCoreError("Kaynak sayfa boyutu geçersiz.")
+    _dx0, _dy0, _dx1, dy1 = page_box(dest_page)
+    hd = dy1 - _dy0
+    rx0, ry0, rx1, ry1 = rect
+    X0, X1 = rx0, rx1
+    Y0, Y1 = hd - ry1, hd - ry0  # PDF uzayı (y yukarı)
+    bw, bh = X1 - X0, Y1 - Y0
+    if keep_proportion:
+        s = min(bw / tw, bh / th)
+        sx = sy = s
+        ox = X0 + (bw - tw * s) / 2.0
+        oy = Y0 + (bh - th * s) / 2.0
+    else:
+        sx, sy = bw / tw, bh / th
+        ox, oy = X0, Y0
+    e = ox - sx * tx0
+    f = oy - sy * ty0
+    foreign = dest.copy_foreign(form)
+    name = dest_page.add_resource(foreign, pikepdf.Name.XObject, prefix="NbPg")
+    cmd = f"q {sx:.6f} 0 0 {sy:.6f} {e:.6f} {f:.6f} cm {name} Do Q\n"
+    dest_page.contents_add(pikepdf.Stream(dest, cmd.encode("ascii")), prepend=False)
