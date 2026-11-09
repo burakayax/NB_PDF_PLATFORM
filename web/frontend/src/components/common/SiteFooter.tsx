@@ -144,7 +144,7 @@ export function SiteFooter({ language }: { language: Language }) {
               © {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
             </p>
             <p className="text-[11.5px] text-gray-500">
-              Burak KAYA · {tr ? "Hızırbey V.D." : "Hızırbey Tax Office"} 5300847203 · Toklu Mah. Gürpınar Sk. No: 2/26 Ortahisar/Trabzon · info@pdfplatform.app
+              Burak KAYA · {tr ? "Hızırbey V.D." : "Hızırbey Tax Office"} 5300847203 · Toklu Mah. Gürpınar Sk. No: 2/26 Ortahisar/Trabzon · 0541 784 9889 · info@pdfplatform.app
             </p>
           </div>
           <div className="flex items-center gap-3">

@@ -136,6 +136,15 @@ export const legalDocuments = {
           ],
         },
         {
+          title: "2b. Signature Requests: the person signing",
+          paragraphs: [
+            "If someone sent you a document through \"Signature Request\", this section applies to you even without an account. The person or organisation that sent the document is responsible for its content and for sending it to you; we only provide the signing service and process your data on their behalf in doing so.",
+            "Data processed: your email address, the full name you type on the signing page, the signature image you draw or upload, the times you viewed, signed or declined, a record that you ticked the consent box, and an irreversible digest of your connection information (your IP address is not stored in the clear). The document itself is also stored.",
+            "Purpose: to be able to prove that the signature came from you and that the document was not altered after signing, to deliver the signed document to the sender, and to produce a time-stamped audit record. This data is not used for marketing.",
+            "Retention: the signing link is valid for 14 days. The document, signature and audit record are kept until the requesting user deletes them or closes their account. See section 9 for your rights; for requests about the document itself you may also contact the sender first.",
+          ],
+        },
+        {
           title: "3. Why we use personal data",
           paragraphs: [
             "To provide and secure the service: register and authenticate users, enforce plan limits, prevent fraud and abuse, and maintain infrastructure.",
@@ -280,6 +289,7 @@ export const legalDocuments = {
             "Seller: Burak KAYA (sole proprietor; operates the PDF Platform / NB Global Studio brands)",
             "Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon",
             "Tax office / number: Hızırbey Tax Office (Ortahisar/Trabzon) — 5300847203",
+            "Phone: +90 541 784 9889",
             "Email: info@pdfplatform.app",
             "Website: pdfplatform.app",
             "Service: PDF Platform — cloud-based PDF processing services",
@@ -329,7 +339,7 @@ export const legalDocuments = {
         {
           title: "1. Parties",
           paragraphs: [
-            "SELLER: Burak KAYA (NB Global Studio), Hızırbey Tax Office (Ortahisar/Trabzon), Tax No: 5300847203, Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Email: info@pdfplatform.app, Website: pdfplatform.app",
+            "SELLER: Burak KAYA (NB Global Studio), Hızırbey Tax Office (Ortahisar/Trabzon), Tax No: 5300847203, Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Phone: +90 541 784 9889, Email: info@pdfplatform.app, Website: pdfplatform.app",
             "BUYER: The user identified by the name (or title), billing address, phone and email provided at the payment step; for taxpayers, the tax number and tax office are also part of this information.",
             "In this agreement the BUYER and the SELLER are each a “Party” and together the “Parties”. The BUYER confirms that the information given at the payment step is accurate and current and that the invoice details are complete. If the order is placed on behalf of another person, the person placing the order is responsible for the accuracy of that person's information and for obligations under personal data protection law.",
             "The BUYER declares at the payment step that they are at least 18 years old or, if under 18, that their legal guardian (parent/guardian) has approved this purchase. Orders placed by a minor without the legal guardian's approval may be invalid under mandatory law.",
@@ -652,6 +662,15 @@ export const legalDocuments = {
           ],
         },
         {
+          title: "2b. İmza İste: imzalayan kişi",
+          paragraphs: [
+            "«İmza İste» ile size bir belge gönderildiyse, hesabınız olmasa da bu bölüm sizin için geçerlidir. Belgeyi gönderen kişi ya da kurum, belgenin içeriğinden ve onu size göndermekten sorumludur; biz yalnızca imzalama hizmetini sunar ve bu süreçte verilerinizi onun adına işleriz.",
+            "İşlenen veriler: e-posta adresiniz, imza sayfasında yazdığınız ad soyad, çizdiğiniz veya yüklediğiniz imza görüntüsü, belgeyi görüntüleme/imzalama/reddetme zamanları, onay kutusunu işaretlediğinize dair kayıt ve bağlantı bilginizin geri döndürülemez özeti (IP adresiniz açık saklanmaz). Belgenin kendisi de saklanır.",
+            "Amaç: imzanın sizden geldiğini ve belgenin imzadan sonra değişmediğini kanıtlayabilmek, imzalı belgeyi göndericiye iletmek ve zaman damgalı bir denetim kaydı oluşturmak. Bu veriler pazarlama için kullanılmaz.",
+            "Saklama: imza bağlantısı 14 gün geçerlidir. Belge, imza ve denetim kaydı, isteği gönderen kullanıcı silene veya hesabını kapatana kadar saklanır. Haklarınız için 9. bölüme bakın; belgeyle ilgili talepler için önce göndericiye de başvurabilirsiniz.",
+          ],
+        },
+        {
           title: "3. Kişisel verileri kullanma amaçları",
           paragraphs: [
             "Hizmeti sunmak ve güvence altına almak: kullanıcı kaydı ve kimlik doğrulama, plan limitlerini uygulama, dolandırıcılık ve kötüye kullanımı önleme, altyapıyı işletme.",
@@ -782,6 +801,13 @@ export const legalDocuments = {
           ],
         },
         {
+          title: "2a. İmza İste kapsamında imzalayan kişi",
+          paragraphs: [
+            "Hesabınız olmasa da size «İmza İste» ile bir belge gönderildiyse; e-posta adresiniz, ad soyadınız, imza görüntünüz, görüntüleme/imza/ret zamanlarınız, onay kaydınız ve bağlantı bilginizin geri döndürülemez özeti işlenir. Amaç, imzanın size ait olduğunu ve belgenin değişmediğini ispat etmek ve imzalı belgeyi göndericiye iletmektir.",
+            "Hukuki sebep: sözleşmenin ifası için gerekli olması (KVKK md. 5/2-c) ve bir hakkın tesisi, kullanılması veya korunması için zorunlu olması (md. 5/2-e). Veriler pazarlama amacıyla kullanılmaz ve yurt içi/yurt dışı hizmet sağlayıcılarımız dışında üçüncü kişilerle paylaşılmaz; belge ve imzalı kopya isteği gönderen kullanıcıya iletilir. Saklama: isteği gönderen kullanıcı belgeyi silene veya hesabını kapatana kadar.",
+          ],
+        },
+        {
           title: "3. İşlemenin Amaçları ve Hukuki Sebebi",
           paragraphs: [
             "Sözleşmenin kurulması ve ifası (KVKK md. 5/2-c): Hesap oluşturma, ödeme işlemi, abonelik yönetimi ve hizmetlerin sunulması.",
@@ -850,6 +876,7 @@ export const legalDocuments = {
             "Satıcı: Burak KAYA (şahıs işletmesi; PDF Platform / NB Global Studio markalarının işletmecisi)",
             "Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon",
             "Vergi dairesi / numarası: Hızırbey Vergi Dairesi Müdürlüğü (Ortahisar/Trabzon) — 5300847203",
+            "Telefon: 0541 784 9889",
             "E-posta: info@pdfplatform.app",
             "Web sitesi: pdfplatform.app",
             "Hizmet: PDF Platform — bulut tabanlı PDF işleme hizmetleri",
@@ -900,7 +927,7 @@ export const legalDocuments = {
         {
           title: "1. Taraflar",
           paragraphs: [
-            "SATICI: Burak KAYA (NB Global Studio), Hızırbey Vergi Dairesi Müd. (Ortahisar/Trabzon), Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, E-posta: info@pdfplatform.app, Web sitesi: pdfplatform.app",
+            "SATICI: Burak KAYA (NB Global Studio), Hızırbey Vergi Dairesi Müd. (Ortahisar/Trabzon), Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Telefon: 0541 784 9889, E-posta: info@pdfplatform.app, Web sitesi: pdfplatform.app",
             "ALICI: Ödeme adımında beyan edilen ad-soyad (veya unvan), fatura adresi, telefon ve e-posta bilgileriyle tanımlanan kullanıcıdır; vergi mükellefiyse vergi numarası ve vergi dairesi de bu bilgilere dahildir.",
             "İşbu sözleşmede ALICI ve SATICI ayrı ayrı “Taraf”, birlikte “Taraflar” olarak anılır. ALICI, ödeme adımında verdiği bilgilerin doğru ve güncel olduğunu, fatura bilgilerinin eksiksiz olduğunu kabul eder. Siparişi başka bir kişi adına veriyorsa, o kişinin bilgilerinin doğruluğundan ve kişisel verilerin korunması mevzuatı kapsamındaki yükümlülüklerden siparişi veren sorumludur.",
             "ALICI, ödeme adımında 18 yaşını doldurduğunu veya 18 yaşından küçükse bu satın alma için yasal temsilcisinin (anne/baba/vasi) onayının bulunduğunu beyan eder. Yasal temsilcinin onayı olmaksızın reşit olmayan bir kişi tarafından verilen siparişler, emredici mevzuat uyarınca geçerli olmayabilir.",

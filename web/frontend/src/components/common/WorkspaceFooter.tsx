@@ -165,7 +165,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
           <div className="text-[12px] text-slate-400 md:order-1">
             <p>© {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}</p>
             <p className="mt-0.5 text-[11.5px] text-slate-500">
-              Burak KAYA · {tr ? "Hızırbey V.D." : "Hızırbey Tax Office"} 5300847203 · Toklu Mah. Gürpınar Sk. No: 2/26 Ortahisar/Trabzon · info@pdfplatform.app
+              Burak KAYA · {tr ? "Hızırbey V.D." : "Hızırbey Tax Office"} 5300847203 · Toklu Mah. Gürpınar Sk. No: 2/26 Ortahisar/Trabzon · 0541 784 9889 · info@pdfplatform.app
             </p>
             <p className="mt-0.5">{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
             <PaytrBadge height={16} tr={tr} className="mt-2" />
