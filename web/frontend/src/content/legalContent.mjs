@@ -18,7 +18,7 @@ export const legalDocuments = {
       summary:
         "These Terms of Service (“Terms”) form a binding agreement between you and Burak KAYA (operating under the NB Global Studio brand) regarding PDF Platform. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "21 October 2026",
+      effectiveDate: "9 November 2026",
       sections: [
         {
           title: "1. Who we are and what you accept",
@@ -106,7 +106,7 @@ export const legalDocuments = {
       summary:
         "This Privacy Policy describes how Burak KAYA (NB Global Studio) collects, uses, stores, and protects personal information when you use PDF Platform (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "21 October 2026",
+      effectiveDate: "9 November 2026",
       sections: [
         {
           title: "1. Data controller",
@@ -253,7 +253,7 @@ export const legalDocuments = {
       summary:
         "This notice summarizes how Burak KAYA (NB Global Studio) processes personal data in PDF Platform checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via PayTR). It complements—not replaces—the Privacy Policy and Terms.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "21 October 2026",
+      effectiveDate: "9 November 2026",
       sections: [
         {
           title: "1. Processing grounds",
@@ -281,7 +281,7 @@ export const legalDocuments = {
       summary:
         "Mandatory consumer information form required before payment, pursuant to the Distance Sales Regulation.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "30 October 2026",
+      effectiveDate: "9 November 2026",
       sections: [
         {
           title: "1. Seller Information",
@@ -435,7 +435,7 @@ export const legalDocuments = {
       summary:
         "How subscriptions are cancelled, when refunds are available and how refunds are paid. This page summarizes the refund rules in the Distance Sales Agreement and the Pre-Purchase Information Form in one place.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "30 October 2026",
+      effectiveDate: "9 November 2026",
       sections: [
         {
           title: "1. Cancelling your subscription",
@@ -486,7 +486,7 @@ export const legalDocuments = {
       summary:
         "Which cookies and similar storage items PDF Platform uses, why, and how you can control them.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "30 October 2026",
+      effectiveDate: "9 November 2026",
       sections: [
         {
           title: "1. What are cookies?",
@@ -544,7 +544,7 @@ export const legalDocuments = {
       summary:
         "İşbu Hizmet Şartları (“Şartlar”), PDF Platform’un kullanımına ilişkin sizinle Burak KAYA (NB Global Studio markası) arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "21 Ekim 2026",
+      effectiveDate: "9 Kasım 2026",
       sections: [
         {
           title: "1. Taraflar ve kabul",
@@ -632,7 +632,7 @@ export const legalDocuments = {
       summary:
         "Bu Gizlilik Politikası, PDF Platform’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda Burak KAYA’nın (NB Global Studio) kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "21 Ekim 2026",
+      effectiveDate: "9 Kasım 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",
@@ -780,7 +780,7 @@ export const legalDocuments = {
       summary:
         "NB Global Studio markasının sahibi Burak KAYA olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamındaki veri sorumlusu sıfatıyla kişisel verilerinizin güvenliği ve gizliliği konusundaki sorumluluğumuzun bilinciyle hareket etmekteyiz. Bu Aydınlatma Metni, hangi kişisel verilerinizi, hangi amaçlarla, hangi hukuki sebeple işlediğimizi ve KVKK madde 11 kapsamındaki haklarınızı açıklamaktadır.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "21 Ekim 2026",
+      effectiveDate: "9 Kasım 2026",
       sections: [
         {
           title: "1. Veri Sorumlusu",
@@ -868,7 +868,7 @@ export const legalDocuments = {
       summary:
         "Mesafeli Sözleşmeler Yönetmeliği kapsamında, ödeme öncesinde tüketiciye sunulması zorunlu bilgilendirme formu.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "30 Ekim 2026",
+      effectiveDate: "9 Kasım 2026",
       sections: [
         {
           title: "1. Satıcı Bilgileri",
@@ -1023,7 +1023,7 @@ export const legalDocuments = {
       summary:
         "Aboneliğin nasıl iptal edildiği, iadenin hangi durumlarda yapıldığı ve iadenin nasıl ödendiği. Bu sayfa, Mesafeli Satış Sözleşmesi ile Ön Bilgilendirme Formu'ndaki iade kurallarını tek yerde özetler.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "30 Ekim 2026",
+      effectiveDate: "9 Kasım 2026",
       sections: [
         {
           title: "1. Aboneliği iptal etme",
@@ -1074,7 +1074,7 @@ export const legalDocuments = {
       summary:
         "PDF Platform'un hangi çerezleri ve benzeri depolama öğelerini neden kullandığı ve bunları nasıl yönetebileceğiniz.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "30 Ekim 2026",
+      effectiveDate: "9 Kasım 2026",
       sections: [
         {
           title: "1. Çerez nedir?",
