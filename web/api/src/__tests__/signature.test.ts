@@ -58,7 +58,11 @@ vi.mock("../modules/signature/signature.pdf.js", async () => {
 
 const svc = await import("../modules/signature/signature.service.js");
 
-const pdf = Buffer.from("%PDF-1.7\n" + "x".repeat(200), "latin1");
+// Sunucu belgenin gerçek sayfa sayısını okuyup imza yerini doğruladığı için örnek belge GERÇEK bir PDF olmalı.
+const { PDFDocument } = await import("pdf-lib");
+const ornekPdf = await PDFDocument.create();
+ornekPdf.addPage([200, 200]);
+const pdf = Buffer.from(await ornekPdf.save());
 const imzaPng = Buffer.from("x".repeat(500)).toString("base64");
 
 beforeEach(() => {
@@ -279,8 +283,20 @@ describe("imzalama", () => {
     await expect(svc.imzaSayfasiniAc("yanlis")).rejects.toMatchObject({ statusCode: 404 });
   });
 
-  it("imzadan sonra iki tarafa da haber verir", async () => {
+  it("imzadan sonra imzalayana her zaman, göndereni yalnız isteyerek bilgilendirir (varsayılan: bildirim yok)", async () => {
     requestFindUnique.mockResolvedValue(bekleyenIstek());
+    requestUpdate.mockResolvedValue({});
+    await svc.imzayiUygula("t", {
+      imzaPngBase64: imzaPng, imzalayanAd: "Mehmet Demir",
+      yerlesim: { sayfa: 1, xOran: 0.5, yOran: 0.8, genislikOran: 0.25 }, riza: true,
+    });
+    const alicilar = gonderilenPostalar.map((m) => m.to);
+    expect(alicilar).toContain("imzalayan@ornek.com");
+    expect(alicilar).not.toContain("gonderen@ornek.com");
+  });
+
+  it("gönderen bildirimi açtıysa (notifyOwner) iki tarafa da haber verir", async () => {
+    requestFindUnique.mockResolvedValue(bekleyenIstek({ notifyOwner: true }));
     requestUpdate.mockResolvedValue({});
     await svc.imzayiUygula("t", {
       imzaPngBase64: imzaPng, imzalayanAd: "Mehmet Demir",
