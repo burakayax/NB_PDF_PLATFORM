@@ -148,7 +148,7 @@ def test_metric_family_uses_real_bold_face_and_fallback_glyph():
                     headers=_AUTH, data={"edits": json.dumps([op])})
     assert r.status_code == 200
     fonts = {s["font"] for s in _spans(fitz.open("pdf", r.content)[0])}
-    assert "Carlito Bold" in fonts  # sahte (çift basım) değil, gerçek kalın kesit
+    assert "Carlito-Bold" in {f.replace(" ", "-") for f in fonts}  # sahte (çift basım) değil, gerçek kalın kesit
     assert any(f.startswith("Roboto") for f in fonts)  # ₺ sınıf yedeğinden
 
 
@@ -182,12 +182,14 @@ def test_original_font_reused_only_for_verified_chars():
     r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, headers=_AUTH, data={"edits": json.dumps(ops)})
     orig_font = next(s["font"] for s in _spans(fitz.open("pdf", pdf)[0]))
     fonts = {s["font"] for s in _spans(fitz.open("pdf", r.content)[0]) if "Blind" in s["text"]}
-    assert fonts and all(f.split(" ")[0].split("-")[0] == orig_font.split("-")[0] or f.startswith("Carlito") for f in fonts)
+    import re as _re
+    _strip = lambda n: _re.sub(r"^[A-Z]{6}\+", "", n)  # alt küme etiketi (ABCDEF+Ad) font adı değildir
+    assert fonts and all(_strip(f).split(" ")[0].split("-")[0] == _strip(orig_font).split("-")[0] or _strip(f).startswith("Carlito") for f in fonts)
     # yeni harf (Z, ş) → orijinal font KULLANILMAZ (boş glif riski), ölçü-uyumlu aile
     ops = [dict(base, text="Zeynep Şişli")]
     r = client.post("/api/edit-text", files={"file": ("a.pdf", pdf, "application/pdf")}, headers=_AUTH, data={"edits": json.dumps(ops)})
     out = [s for s in _spans(fitz.open("pdf", r.content)[0]) if "Zeynep" in s["text"]]
-    assert out and out[0]["font"] == "Carlito Regular"
+    assert out and out[0]["font"].replace(" ", "-") == "Carlito-Regular"
 
 
 

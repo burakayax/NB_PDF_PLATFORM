@@ -397,3 +397,42 @@ def place_page(
     name = dest_page.add_resource(foreign, pikepdf.Name.XObject, prefix="NbPg")
     cmd = f"q {sx:.6f} 0 0 {sy:.6f} {e:.6f} {f:.6f} cm {name} Do Q\n"
     dest_page.contents_add(pikepdf.Stream(dest, cmd.encode("ascii")), prepend=False)
+
+
+def remove_rotation(pdf: pikepdf.Pdf, page: pikepdf.Page) -> bool:
+    """/Rotate'li sayfayı GÖRÜNÜMÜ KORUYARAK rotasyonsuz yapar (içerik döndürülür, kutular yenilenir).
+    Düzenleme/analiz aynı koordinat uzayında çalışsın diye. Döndürme yoksa False."""
+    from .overlay import visual_to_user_matrix
+
+    rot = page_rotation(page)
+    box_changed = False
+    x0, y0, x1, y1 = page_box(page)
+    if rot == 0 and not (x0 or y0):
+        return False
+    u = visual_to_user_matrix(page)
+    det = u[0] * u[3] - u[1] * u[2]
+    a, b, c, d = u[3] / det, -u[1] / det, -u[2] / det, u[0] / det
+    e = -(u[4] * a + u[5] * c)
+    f = -(u[4] * b + u[5] * d)
+    w, h = page_visual_size(page)
+    cmd = f"q {a:.8f} {b:.8f} {c:.8f} {d:.8f} {e:.8f} {f:.8f} cm\n".encode("ascii")
+    page.contents_add(pikepdf.Stream(pdf, cmd), prepend=True)
+    page.contents_add(pikepdf.Stream(pdf, b"\nQ\n"), prepend=False)
+    page.obj["/MediaBox"] = pikepdf.Array([0, 0, w, h])
+    for k in ("/CropBox", "/TrimBox", "/BleedBox", "/ArtBox"):
+        if k in page.obj:
+            del page.obj[k]
+    page.obj["/Rotate"] = 0
+    try:
+        for an in page.obj.get("/Annots", []):
+            r = an.get("/Rect")
+            if r is None:
+                continue
+            xs = [float(r[0]), float(r[2])]
+            ys = [float(r[1]), float(r[3])]
+            pts = [(a * x + c * y + e, b * x + d * y + f) for x in xs for y in ys]
+            an["/Rect"] = pikepdf.Array([min(p_[0] for p_ in pts), min(p_[1] for p_ in pts),
+                                          max(p_[0] for p_ in pts), max(p_[1] for p_ in pts)])
+    except Exception:
+        pass
+    return True

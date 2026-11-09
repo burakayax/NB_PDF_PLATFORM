@@ -135,11 +135,46 @@ def pdf_fontname(path: str) -> str:
     return "EF" + re.sub(r"[^A-Za-z0-9]", "", Path(path).stem)[:24]
 
 
-@lru_cache(maxsize=64)
-def font_obj(path: str) -> Any:
-    import pymupdf as fitz
+class MetricFont:
+    """TTF harf ölçüleri (fontTools): glif var mı + metin genişliği. PyMuPDF `Font` karşılığı."""
 
-    return fitz.Font(fontfile=path)
+    def __init__(self, path: str) -> None:
+        from fontTools.ttLib import TTFont
+
+        tt = TTFont(path, lazy=True)
+        self._cmap = tt.getBestCmap() or {}
+        self._hmtx = tt["hmtx"].metrics
+        self._upm = float(tt["head"].unitsPerEm)
+        self._notdef = self._hmtx.get(".notdef", (self._upm * 0.5, 0))[0]
+        hh = tt["hhea"]
+        self.ascent = float(hh.ascent) / self._upm
+        self.descent = abs(float(hh.descent)) / self._upm
+        tt.close()
+
+    def has_glyph(self, cp: int) -> bool:
+        return cp in self._cmap
+
+    def _adv(self, cp: int) -> float:
+        g = self._cmap.get(cp)
+        if g is None:
+            return self._notdef
+        return self._hmtx.get(g, (self._notdef, 0))[0]
+
+    def text_length(self, text: str, fontsize: float = 11.0) -> float:
+        return sum(self._adv(ord(ch)) for ch in text) * fontsize / self._upm
+
+
+@lru_cache(maxsize=64)
+def font_obj(path: str) -> MetricFont:
+    return MetricFont(path)
+
+
+def ascent_ratio(path: str) -> float:
+    return font_obj(path).ascent
+
+
+def descent_ratio(path: str) -> float:
+    return font_obj(path).descent
 
 
 def split_runs(text: str, primary: str, fallback: str) -> list[tuple[str, str]]:
@@ -159,42 +194,37 @@ def text_width(text: str, primary: str, fallback: str, size: float) -> float:
     return sum(font_obj(p).text_length(t, fontsize=size) for t, p in split_runs(text, primary, fallback))
 
 
-def insert_runs(page: Any, x: float, baseline: float, text: str, size: float, color: Any,
-                primary: str, fallback: str, morph: Any = None) -> float:
-    """Metni harf-bazlı yedekle yazar (birincil fontta olmayan harf yedekten). Genişliği döner."""
-    import pymupdf as fitz
-
+def draw_runs(cv: Any, x: float, baseline: float, text: str, size: float, color: Any,
+              primary: str, fallback: str) -> float:
+    """Metni harf-bazlı yedekle çizer (birincil fontta olmayan harf yedekten). `cv`: overlay.Canvas2D.
+    Genişliği döner."""
     cx = x
     for t, p in split_runs(text, primary, fallback):
-        kw: dict[str, Any] = dict(fontsize=size, color=color, fontname=pdf_fontname(p), fontfile=p)
-        if morph is not None:
-            kw["morph"] = morph
-        page.insert_text(fitz.Point(cx, baseline), t, **kw)
+        cv.text(cx, baseline, t, font=p, size=size, color=color)
         cx += font_obj(p).text_length(t, fontsize=size)
     return cx - x
 
 
-def span_spacing(raw_span: dict, span: dict, trace_size: float | None) -> dict:
+def span_spacing(glyphs: list[Any]) -> dict:
     """Orijinal span'in yatay ölçeği (hs, Tz), harf aralığı (cs, Tc) ve kelime aralığı (ws, Tw)
     — yeni yazı bunlarla çizilir → aralıklı başlık / sıkıştırılmış yazı görünümünü korur.
 
-    hs: MuPDF span boyutu √(Tfs²·Th), texttrace boyutu ise yatay boyut (Tfs·Th) → Th =
-        (trace/span)². Gerçek içerik akışlarındaki Tz/Tm ile doğrulandı (BM Şartı Tz 82 → 0.82,
-        makale Tm 1.02 → 1.02, reportlab Tz 70 → 0.70). Yalnız ≥%5 sapma dikkate alınır
-        (daha küçüğü görünmez; eşleştirme gürültüsünü de eler).
-    cs/ws: rawdict'te ardışık harflerin adımı − glif genişliği = Tc·Th (boşlukta + Tw·Th).
-        Kerning gürültüsü yanlış alarm vermesin diye ölçümlerin ≥%60'ı medyana ±0.05 pt
+    `glyphs`: span'i oluşturan `pdfcore.content.Glyph` listesi (içerik akışından, okuma sırasıyla).
+    hs: içerik akışındaki Tz (yalnız ≥%5 sapma dikkate alınır). size: gerçek dikey boyut.
+    cs/ws: ardışık harflerin köken adımı − doğal glif genişliği (Tc ve TJ düzeltmelerini birlikte
+        yakalar). Kerning gürültüsü yanlış alarm vermesin diye ölçümlerin ≥%60'ı medyana ±0.05 pt
         yakın olmalı. Yalnız yatay (dönmemiş) satırlar."""
     out: dict = {}
-    chars = raw_span.get("chars") or []
-    size = float(span.get("size") or 0)
-    if len(chars) < 3 or size <= 0:
+    if len(glyphs) < 3:
         return out
-    if trace_size and trace_size > 0:
-        th = (float(trace_size) / size) ** 2
-        if 0.3 < th < 3 and abs(th - 1) >= 0.05:
-            out["hs"] = round(th, 3)
-            out["size"] = round(size / th ** 0.5, 2)
+    size = float(glyphs[0].size)
+    if size <= 0:
+        return out
+    ths = sorted(g.th for g in glyphs)
+    th = ths[len(ths) // 2]
+    if 0.3 < th < 3 and abs(th - 1) >= 0.05:
+        out["hs"] = round(th, 3)
+        out["size"] = round(size, 2)
 
     def _consistent(vals: list[float]) -> float | None:
         # ≥4 harf çifti: kısa kelimede kerning çiftleri (ör. "over") harf aralığı sanılmasın.
@@ -206,11 +236,11 @@ def span_spacing(raw_span: dict, span: dict, trace_size: float | None) -> dict:
         return m
 
     cs_l, ws_l = [], []
-    for a, b in zip(chars, chars[1:], strict=False):
-        extra = (b["origin"][0] - a["origin"][0]) - (a["bbox"][2] - a["bbox"][0])
-        if a["c"] == " ":
+    for a, b in zip(glyphs, glyphs[1:], strict=False):
+        extra = (b.ox - a.ox) - a.nat
+        if a.ch == " ":
             ws_l.append(extra)
-        elif not b["c"].isspace():
+        elif not b.ch.isspace():
             cs_l.append(extra)
     cs = _consistent(cs_l) or 0.0
     if abs(cs) > 0.05:
@@ -232,21 +262,16 @@ def spaced_width(text: str, primary: str, fallback: str, size: float, hs: float 
     return w
 
 
-def insert_spaced(page: Any, x: float, baseline: float, text: str, size: float, color: Any,
-                  primary: str, fallback: str, hs: float = 1.0, cs: float = 0.0, ws: float = 0.0) -> float:
-    """Harf harf yazar: yatay ölçek (hs) + harf aralığı (cs) + kelime aralığı (ws) — orijinal
+def draw_spaced(cv: Any, x: float, baseline: float, text: str, size: float, color: Any,
+                primary: str, fallback: str, hs: float = 1.0, cs: float = 0.0, ws: float = 0.0) -> float:
+    """Harf harf çizer: yatay ölçek (hs) + harf aralığı (cs) + kelime aralığı (ws) — orijinal
     Tc/Tw/Tz davranışı. Genişliği döner."""
-    import pymupdf as fitz
-
     cx = x
     for t, p in split_runs(text, primary, fallback):
         f = font_obj(p)
         for ch in t:
             if not ch.isspace():
-                kw: dict[str, Any] = dict(fontsize=size, color=color, fontname=pdf_fontname(p), fontfile=p)
-                if abs(hs - 1) > 1e-3:
-                    kw["morph"] = (fitz.Point(cx, baseline), fitz.Matrix(hs, 0, 0, 1, 0, 0))
-                page.insert_text(fitz.Point(cx, baseline), ch, **kw)
+                cv.text(cx, baseline, ch, font=p, size=size, color=color, hscale=hs * 100.0)
             cx += f.text_length(ch, fontsize=size) * hs + cs + (ws if ch == " " else 0.0)
     return cx - x
 
@@ -266,10 +291,22 @@ def _base_name(name: str) -> str:
     return re.sub(r"^[A-Z]{6}\+", "", name or "")
 
 
-def original_fonts(doc: Any) -> dict[str, dict]:
+def _embedded_ttf(font: Any) -> bytes | None:
+    """PDF yazı tipi sözlüğündeki gömülü TrueType (FontFile2) baytları; yoksa None."""
+    try:
+        fd = font.obj
+        if font.composite:
+            fd = fd.DescendantFonts[0]
+        ff = fd.FontDescriptor.get("/FontFile2")
+        return bytes(ff.read_bytes()) if ff is not None else None
+    except Exception:
+        return None
+
+
+def original_fonts(pdf: Any) -> dict[str, dict]:
     """Belgedeki yeniden kullanılabilir gömülü TrueType fontlar.
 
-    Dönüş: {font_adı (alt küme öneki yok): {"key": xref, "buf": onarılmış TTF, "chars": str}}.
+    Dönüş: {font_adı (alt küme öneki yok): {"key": nesne no, "buf": onarılmış TTF, "chars": str}}.
     Aynı adı taşıyan birden çok gömülü font varsa (hangi span'in hangisini kullandığı
     bilinemez) o ad ATLANIR — yanlış glif riski alınmaz."""
     import io
@@ -277,33 +314,62 @@ def original_fonts(doc: Any) -> dict[str, dict]:
     from fontTools.ttLib import TTFont, newTable
     from fontTools.ttLib.tables._c_m_a_p import cmap_format_4
 
-    xrefs_by_name: dict[str, set[int]] = {}
+    from src.pdfcore import content as _ct
+
+    fonts_by_name: dict[str, dict[Any, Any]] = {}
     use: dict[str, dict[int, set[int]]] = {}
-    for pi in range(min(doc.page_count, _ORIG_MAX_PAGES)):
-        page = doc[pi]
-        for (xref, _ext, _typ, base, *_r) in page.get_fonts(full=True):
-            xrefs_by_name.setdefault(_base_name(base), set()).add(xref)
+    ttcache: dict[Any, Any] = {}
+    for pi in range(min(len(pdf.pages), _ORIG_MAX_PAGES)):
         try:
-            for sp in page.get_texttrace():
-                if int(sp.get("type", 0)) == 3:  # görünmez katman: şekil doğrulanamaz
-                    continue
-                m = use.setdefault(str(sp.get("font", "")), {})
-                for ch in sp["chars"]:
-                    m.setdefault(int(ch[0]), set()).add(int(ch[1]))
+            sc = _ct.scan_page(pdf, pdf.pages[pi])
         except Exception:
             continue
+        for g in sc.glyphs:
+            if g.mode == 3:  # görünmez katman: şekil doğrulanamaz
+                continue
+            nm = _base_name(g.font.name)
+            key = g.font.obj.objgen if g.font.obj.objgen != (0, 0) else id(g.font.obj)
+            fonts_by_name.setdefault(nm, {})[key] = g.font
+            gid = g.font.gid(g.code)
+            if gid is None:  # basit font: gömülü fontun kendi cmap'inden çöz
+                if key not in ttcache:
+                    raw = _embedded_ttf(g.font)
+                    try:
+                        ttcache[key] = TTFont(io.BytesIO(raw)) if raw else None
+                    except Exception:
+                        ttcache[key] = None
+                tt0 = ttcache[key]
+                if tt0 is None:
+                    continue
+                gid = _simple_gid(tt0, g.font, g.code)
+                if gid is None:
+                    continue
+            if not g.ch:
+                continue
+            use.setdefault(nm, {}).setdefault(ord(g.ch[0]), set()).add(int(gid))
     out: dict[str, dict] = {}
-    for name, xs in xrefs_by_name.items():
-        if len(xs) != 1 or name not in use:
+    for name, fs_ in fonts_by_name.items():
+        if len(fs_) != 1 or name not in use:
             continue
-        xref = next(iter(xs))
+        pf = next(iter(fs_.values()))
         try:
-            _n, ext, _t, buf = doc.extract_font(xref)
-            if ext != "ttf" or not buf or len(buf) > _ORIG_MAX_BYTES:
+            buf = _embedded_ttf(pf)
+            if not buf or len(buf) > _ORIG_MAX_BYTES:
                 continue
             tt = TTFont(io.BytesIO(buf))
             if "glyf" not in tt:
                 continue
+            if "post" not in tt:  # PDF'e gömülü alt kümelerde 'post' tablosu olmayabilir
+                _post = newTable("post")
+                _post.formatType = 3.0
+                _post.italicAngle = 0
+                _post.underlinePosition = -100
+                _post.underlineThickness = 50
+                _post.isFixedPitch = 0
+                _post.minMemType42 = _post.maxMemType42 = _post.minMemType1 = _post.maxMemType1 = 0
+                _post.glyphOrder = None
+                tt["post"] = _post
+                tt.setGlyphOrder([".notdef"] + [f"glyph{i:05d}" for i in range(1, tt["maxp"].numGlyphs)])
             order = tt.getGlyphOrder()
             glyf = tt["glyf"]
             verified: dict[int, str] = {}
@@ -329,117 +395,163 @@ def original_fonts(doc: Any) -> dict[str, dict]:
             tt["cmap"] = newTable("cmap")
             tt["cmap"].tableVersion = 0
             tt["cmap"].tables = tabs
+            # reportlab yazı tipi yüzlerini AD'a göre kaydeder; farklı belgelerin aynı adlı alt kümeleri
+            # çakışıp harfleri bozmasın diye (sunucu süreci uzun yaşar) içeriğe özgü benzersiz ad ver.
+            import hashlib
+
+            _h = hashlib.sha1(buf).digest()
+            tag = "".join(chr(65 + b % 26) for b in _h[:6])  # PDF alt küme etiketi (ABCDEF+Ad)
+            uniq = f"{tag}+{name}"
+            if "name" in tt:
+                for rec in tt["name"].names:
+                    if rec.nameID in (1, 3, 4, 6, 16):
+                        try:
+                            rec.string = uniq
+                        except Exception:
+                            pass
             bio = io.BytesIO()
             tt.save(bio)
-            out[name] = {"key": str(xref), "buf": bio.getvalue(),
+            xr = pf.obj.objgen[0] if pf.obj.objgen != (0, 0) else abs(hash(name)) % 10**8
+            out[name] = {"key": str(xr), "buf": bio.getvalue(),
                          "chars": "".join(sorted(chr(u) for u in verified))}
         except Exception:
             continue
     return out
 
 
+def _simple_gid(tt: Any, font: Any, code: int) -> int | None:
+    """Basit (tek baytlı) TrueType fontta kod → glif no (cmap (3,1) → (3,0) 0xF000+kod/kod → (1,0))."""
+    order = tt.getGlyphOrder()
+    cm = tt["cmap"]
+    cands: list[tuple[Any, int]] = []
+    u = font.enc_map.get(code, "")
+    if u:
+        cands.append(((3, 1), ord(u[0])))
+    cands += [((3, 0), 0xF000 + code), ((3, 0), code), ((1, 0), code)]
+    for (pid, eid), c in cands:
+        t = cm.getcmap(pid, eid)
+        if t is not None and c in t.cmap:
+            gn = t.cmap[c]
+            if gn in order:
+                return order.index(gn)
+    return None
+
+
 def original_font_covers(info: dict, text: str) -> bool:
     return bool(text) and all(ch in info["chars"] for ch in text)
 
 
-def remove_image_placement(doc: Any, page: Any, rect: Any) -> str | None:
+def remove_image_placement(pdf: Any, page: Any, rect: Any) -> str | None:
     """Silinen görseli (logo/amblem) BOYAMADAN kaldırır: altındaki zemin (degrade, fotoğraf, yazı)
     olduğu gibi kalır. Eski yöntem görselin kutusunu örneklenen renkle boyuyordu → düz olmayan
-    zeminde kare kutu kalıyordu (ölçüldü). Sıra:
-      1) Bu sayfanın içerik akışında bu görselin TEK çizim komutu ("/Ad Do") varsa yalnız onu sil
-         (başka sayfalardaki aynı logo etkilenmez).
-      2) Kutuya başka görsel değmiyorsa silme aracıyla yalnız görseli kaldır (yazı/çizgiye dokunma).
-    Başarılıysa kullanılan yöntemin adı, değilse None (çağıran eski dolgu yöntemine düşer)."""
-    import pymupdf as fitz
+    zeminde kare kutu kalıyordu (ölçüldü).
 
-    r = fitz.Rect(rect)
-    try:
-        infos = page.get_image_info(xrefs=True)
-    except Exception:
-        return None
+    Sayfanın içerik akışında bu görselin TEK çizim komutu ("/Ad Do") varsa yalnız o kaldırılır
+    (başka sayfalardaki aynı logo etkilenmez). Kutuya başka görsel değmiyorsa yalnız görsel
+    kaldırılır (yazı/çizgiye dokunulmaz). Başarılıysa "content", değilse None (çağıran eski dolgu
+    yöntemine düşer)."""
+    from src.pdfcore import content as _ct
+
+    r = tuple(float(v) for v in rect)
+    sc = _ct.scan_page(pdf, page)
+    infos = sc.images
 
     def _iou(a: Any, b: Any) -> float:
-        inter = (a & b).get_area()
-        u = a.get_area() + b.get_area() - inter
+        iw = min(a[2], b[2]) - max(a[0], b[0])
+        ih = min(a[3], b[3]) - max(a[1], b[1])
+        inter = max(0.0, iw) * max(0.0, ih)
+        u = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
         return inter / u if u > 0 else 0.0
 
-    matches = [i for i in infos if _iou(fitz.Rect(i["bbox"]), r) > 0.85]
-    if len(matches) == 1 and matches[0].get("xref", 0) > 0:
-        xref = matches[0]["xref"]
-        if sum(1 for i in infos if i.get("xref") == xref) == 1:
-            names = [im[7] for im in page.get_images(full=True) if im[0] == xref]
-            if len(names) == 1 and names[0]:
-                pat = re.compile(rb"/" + re.escape(names[0].encode("latin-1")) + rb"\s+Do\b")
-                streams = [(cx, doc.xref_stream(cx) or b"") for cx in page.get_contents()]
-                if sum(len(pat.findall(s)) for _, s in streams) == 1:
-                    for cx, s in streams:
-                        if pat.search(s):
-                            doc.update_stream(cx, pat.sub(b"", s, count=1))
-                            return "content"
-    others = [i for i in infos if (fitz.Rect(i["bbox"]) & r).get_area() > 1 and i not in matches]
-    if matches and not others:
-        page.add_redact_annot(r, fill=False)
-        page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_REMOVE, graphics=fitz.PDF_REDACT_LINE_ART_NONE,
-                              text=fitz.PDF_REDACT_TEXT_NONE)
-        return "redact"
-    return None
+    matches = [i for i in infos if _iou(i.rect, r) > 0.85]
+    if len(matches) != 1:
+        return None
+    m = matches[0]
+    others = [
+        i for i in infos if i is not m
+        and max(0.0, min(i.rect[2], r[2]) - max(i.rect[0], r[0])) * max(0.0, min(i.rect[3], r[3]) - max(i.rect[1], r[1])) > 1
+    ]
+    if m.xref > 0 and sum(1 for i in infos if i.xref == m.xref) > 1 and others:
+        return None
+    if others and sum(1 for i in infos if i.xref == m.xref and m.xref > 0) != 1:
+        return None
+    target = (m.xref, tuple(round(v, 2) for v in m.rect))
+
+    def _dimg(im: Any) -> bool:
+        return (im.xref, tuple(round(v, 2) for v in im.rect)) == target
+
+    it = _ct.Interp(pdf, _ct.base_matrix(page), rewrite=True, del_image=_dimg)
+    it.run_page(page)
+    return "content" if it.changed else None
 
 
-def vector_emblems(page: Any, image_rects: list[Any], max_clusters: int = 40) -> list[tuple[float, float, float, float]]:
+def vector_emblems(pdf: Any, page: Any, image_rects: list[Any], max_clusters: int = 40) -> list[tuple[float, float, float, float]]:
     """Çizim komutlarından (eğri/çokgen) oluşan amblem/logo kümelerini bulur.
 
-    `get_image_info` yalnız piksel görselleri verir; vektör çizilmiş amblemler seçilemiyordu.
+    Piksel görsel bilgisi yalnız resimleri verir; vektör çizilmiş amblemler seçilemiyordu.
     Yalnız ŞEKİL benzeri çizimler (eğri ya da kapalı çokgen) aday olur — tablo çizgisi, düz
     dikdörtgen dolgu ve tek çizgiler değil. Aday kutular birbirine yakınsa tek amblemde birleşir.
     Sayfayı kaplayan, çok küçük ya da bir görselle neredeyse aynı yerde olan kümeler atılır;
     çok sayıda küme (harita/grafik) çıkarsa hiçbiri döndürülmez (arayüz kalabalıklaşmasın)."""
-    import pymupdf as fitz
+    from src.pdfcore import content as _ct
+    from src.pdfcore.pages import page_visual_size
 
     try:
-        draws = page.get_drawings()
+        sc = _ct.scan_page(pdf, page)
     except Exception:
         return []
-    pr = page.rect
-    boxes: list[Any] = []
-    for d in draws:
-        items = d.get("items") or []
-        if not items:
-            continue
-        kinds = [it[0] for it in items]
+    pw, ph = page_visual_size(page)
+    boxes: list[list[float]] = []
+    for d in sc.paths:
+        kinds = d.kinds
         has_curve = "c" in kinds
-        poly = kinds.count("l") >= 3 or "qu" in kinds
+        poly = kinds.count("l") >= 3
         if not (has_curve or poly):
             continue
-        if d.get("fill") is None and d.get("color") is None:
+        if d.fill_color is None and d.color is None:
             continue
-        r = fitz.Rect(d["rect"])
-        if r.is_empty or r.width > pr.width * 0.7 or r.height > pr.height * 0.7:
+        x0, y0, x1, y1 = d.rect
+        w, h = x1 - x0, y1 - y0
+        if w <= 0 or h <= 0 or w > pw * 0.7 or h > ph * 0.7:
             continue
-        boxes.append(r)
+        boxes.append([x0, y0, x1, y1])
     if not boxes or len(boxes) > 4000:
         return []
     # Yakın/üst üste kutuları birleştir (3 pt tolerans).
     gap = 3.0
+
+    def _inter(a: list[float], b: list[float]) -> bool:
+        return a[0] - gap < b[2] and a[2] + gap > b[0] and a[1] - gap < b[3] and a[3] + gap > b[1]
+
     changed = True
     while changed and len(boxes) > 1:
         changed = False
-        out: list[Any] = []
+        out: list[list[float]] = []
         for b in boxes:
             for i, o in enumerate(out):
-                if fitz.Rect(b.x0 - gap, b.y0 - gap, b.x1 + gap, b.y1 + gap).intersects(o):
-                    out[i] = o | b
+                if _inter(b, o):
+                    out[i] = [min(o[0], b[0]), min(o[1], b[1]), max(o[2], b[2]), max(o[3], b[3])]
                     changed = True
                     break
             else:
-                out.append(fitz.Rect(b))
+                out.append(list(b))
         boxes = out
     res: list[tuple[float, float, float, float]] = []
     for b in boxes:
-        if b.width < 8 or b.height < 8 or b.width * b.height > pr.width * pr.height * 0.25:
+        bw, bh = b[2] - b[0], b[3] - b[1]
+        if bw < 8 or bh < 8 or bw * bh > pw * ph * 0.25:
             continue
-        if any(b.get_area() > 0 and (b & ir).get_area() / b.get_area() > 0.8 for ir in image_rects):
+        area = bw * bh
+        covered = False
+        for ir in image_rects:
+            iw = min(b[2], ir[2]) - max(b[0], ir[0])
+            ih = min(b[3], ir[3]) - max(b[1], ir[1])
+            if area > 0 and max(0.0, iw) * max(0.0, ih) / area > 0.8:
+                covered = True
+                break
+        if covered:
             continue
-        res.append((b.x0, b.y0, b.x1, b.y1))
+        res.append((b[0], b[1], b[2], b[3]))
     return res if len(res) <= max_clusters else []
 
 
@@ -468,22 +580,3 @@ def wrap_missing_glyphs(html: str) -> str:
     # Yalnız etiket DIŞINDAKİ metin; HTML varlıkları (&amp; …) bütün kalır.
     parts = re.split(r"(<[^>]+>|&[#\w]+;)", html)
     return "".join(p if (p.startswith("<") or (p.startswith("&") and p.endswith(";"))) else _fix(p) for p in parts)
-
-
-def html_css() -> str:
-    """insert_htmlbox için @font-face'ler: her ailenin 4 kesiti (gerçek kalın/italik)."""
-    out = []
-    for key, (css, _stem, _cls) in METRIC_FAMILIES.items():
-        for (b, i), _suf in _STYLE_SUFFIX.items():
-            out.append(
-                f'@font-face {{font-family: "{css}"; src: url({Path(family_path(key, b, i)).name});'
-                f' font-weight: {"bold" if b else "normal"}; font-style: {"italic" if i else "normal"};}}'
-            )
-    return "".join(out)
-
-
-def add_to_archive(ar: Any) -> None:
-    for key in METRIC_FAMILIES:
-        for (b, i) in _STYLE_SUFFIX:
-            p = family_path(key, b, i)
-            ar.add(p, Path(p).name)

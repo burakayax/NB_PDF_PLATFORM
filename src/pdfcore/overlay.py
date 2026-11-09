@@ -41,20 +41,43 @@ _BUILTIN_FONTS = {
     "cour": "Courier", "cobo": "Courier-Bold", "coit": "Courier-Oblique", "cobi": "Courier-BoldOblique",
 }
 
-_registered: Dict[str, str] = {}
+_registered: Dict[str, Tuple[Tuple[int, int], str]] = {}
+_reg_counter = 0
+
+
+def _forget(name: str) -> None:
+    try:
+        pdfmetrics._fonts.pop(name, None)
+        pdfmetrics._typefaces.pop(name, None)
+    except Exception:
+        pass
 
 
 def register_font(path: str) -> str:
-    """TTF dosyasını reportlab'a kaydeder; font adını döndürür (aynı yol için tekrar kaydetmez).
+    """TTF dosyasını reportlab'a kaydeder; font adını döndürür (aynı yol + aynı içerik için tekrar
+    kaydetmez). Aynı yola FARKLI içerik yazılırsa (ör. istek başına geçici font) yeniden kaydedilir.
     reportlab TTF'leri çıktıda KENDİLİĞİNDEN yalnız kullanılan harflerle (alt küme) gömer."""
+    global _reg_counter
     ap = os.path.abspath(path)
-    name = _registered.get(ap)
-    if name:
-        return name
-    name = f"nbf{len(_registered)}_{os.path.splitext(os.path.basename(ap))[0]}"
+    st = os.stat(ap)
+    sig = (int(st.st_mtime_ns), int(st.st_size))
+    hit = _registered.get(ap)
+    if hit and hit[0] == sig:
+        return hit[1]
+    if hit:
+        _forget(hit[1])
+    _reg_counter += 1
+    name = f"nbf{_reg_counter}_{os.path.splitext(os.path.basename(ap))[0]}"
     pdfmetrics.registerFont(TTFont(name, ap))
-    _registered[ap] = name
+    _registered[ap] = (sig, name)
     return name
+
+
+def forget_font(path: str) -> None:
+    """Geçici bir fontun kaydını bellekten siler (sunucu belleği şişmesin)."""
+    hit = _registered.pop(os.path.abspath(path), None)
+    if hit:
+        _forget(hit[1])
 
 
 def resolve_font(font: Optional[str]) -> Tuple[str, bool]:

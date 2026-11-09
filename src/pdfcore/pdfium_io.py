@@ -188,6 +188,50 @@ class PdfiumReader:
         """Boşluk dışı karakter sayısı (taranmış/dijital ayrımı için)."""
         return len("".join(self.text(index).split()))
 
+    def search_rects(self, index: int, term: str, match_case: bool = False) -> List[Tuple[float, float, float, float]]:
+        """Sayfada `term` geçtiği yerlerin kutuları (x0, y0, x1, y1) — GÖRÜNEN koordinat, üst-sol
+        başlangıç, punto. (PyMuPDF `search_for` karşılığı; çok satırlı eşleşmede her satır ayrı kutu.)
+        Sayfada /Rotate yoksa ve kutu başlangıcı (0,0) ise koordinatlar doğrudan örtüşür."""
+        out: List[Tuple[float, float, float, float]] = []
+        if not term:
+            return out
+        with _LOCK:
+            page = self._page(index)
+            try:
+                _w, h = page.get_size()
+                tp = page.get_textpage()
+                try:
+                    searcher = tp.search(term, match_case=match_case)
+                    try:
+                        while True:
+                            hit = searcher.get_next()
+                            if hit is None:
+                                break
+                            start, count = hit
+                            line: Optional[List[float]] = None
+                            last_y = None
+                            for ci in range(start, start + count):
+                                l, b, r, t = tp.get_charbox(ci)
+                                if r <= l or t <= b:
+                                    continue
+                                if line is not None and abs(((b + t) / 2) - (line[1] + line[3]) / 2) > max(line[3] - line[1], t - b) * 0.8:
+                                    out.append((line[0], h - line[3], line[2], h - line[1]))
+                                    line = None
+                                if line is None:
+                                    line = [l, b, r, t]
+                                else:
+                                    line = [min(line[0], l), min(line[1], b), max(line[2], r), max(line[3], t)]
+                                last_y = (b + t) / 2
+                            if line is not None:
+                                out.append((line[0], h - line[3], line[2], h - line[1]))
+                    finally:
+                        searcher.close()
+                finally:
+                    tp.close()
+            finally:
+                page.close()
+        return out
+
     # ── görseller ────────────────────────────────────────────────────
     def image_count(self, index: int) -> int:
         """Sayfadaki (form içindekiler dahil) görsel nesnesi sayısı."""

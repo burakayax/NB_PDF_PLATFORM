@@ -365,10 +365,8 @@ _EDIT_FONTS = {
     "anton": str(_ASSETS / "Anton-Regular.ttf"),
 }
 
-# Kelime bazlı zengin biçim (insert_htmlbox) için: font-family adlarını (frontend'in
-# gönderdiği FONT_LABEL adları) gerçek gömülü TTF'lere @font-face + archive ile bağla →
-# 7 font DOĞRU çıkar (aksi halde htmlbox genel aileye düşerdi). Adlar tarayıcı önizlemesiyle
-# birebir aynı (Roboto / Noto Serif / …) → önizleme = indirilen.
+# Zengin metin (HTML) kutusu için: frontend'in gönderdiği font-family adları (FONT_LABEL) →
+# gömülü TTF anahtarları. Adlar tarayıcı önizlemesiyle birebir aynı (Roboto / Noto Serif / …).
 _EDIT_FONT_FAMILY = {
     "sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono",
     "lato": "Lato", "montserrat": "Montserrat", "merriweather": "Merriweather", "oswald": "Oswald",
@@ -376,25 +374,6 @@ _EDIT_FONT_FAMILY = {
     "ptserif": "PT Serif", "dancing": "Dancing Script", "greatvibes": "Great Vibes",
     "pacifico": "Pacifico", "anton": "Anton",
 }
-_EDIT_FONT_CSS = "".join(
-    f'@font-face {{font-family: "{_EDIT_FONT_FAMILY[_k]}"; src: url({Path(_v).name});}}'
-    for _k, _v in _EDIT_FONTS.items()
-) + _ef.html_css()
-_edit_font_archive_cache: Any = None
-
-
-def _edit_font_archive():
-    """insert_htmlbox'a verilecek font arşivi (gömülü TTF'ler, basename ile). Süreç başına bir kez."""
-    global _edit_font_archive_cache
-    if _edit_font_archive_cache is None:
-        import pymupdf as _fitz
-
-        ar = _fitz.Archive()
-        for _v in _EDIT_FONTS.values():
-            ar.add(_v, Path(_v).name)
-        _ef.add_to_archive(ar)
-        _edit_font_archive_cache = ar
-    return _edit_font_archive_cache
 
 
 _tessdata_cache: str | None = None
@@ -512,18 +491,6 @@ async def _editor_quota_consume(ident: dict[str, Any]) -> dict[str, Any]:
     return dec
 
 
-def _normalize_page_rotation(doc: Any) -> None:
-    """/Rotate'li sayfaları (ör. yatay taranmış/e-devlet belgeleri) görünümü KORUYARAK rotasyonsuz yapar.
-    PyMuPDF metin/görsel koordinatlarını döndürülmemiş sayfa uzayında verir; tarayıcı ise döndürülmüş
-    görünümü çizer → kutular yanlış yerde kalıp alanlar seçilemiyordu. Analiz ve düzenleme aynı uzayda çalışsın."""
-    for pg in doc:
-        try:
-            if int(pg.rotation) % 360:
-                pg.remove_rotation()
-        except Exception:
-            pass
-
-
 @router.post("/edit-text")
 @limiter.limit("15/minute")
 async def tool_edit_text(
@@ -593,16 +560,16 @@ async def tool_edit_text(
         _store_result = str(store).strip().lower() in ("1", "true", "yes")
 
         def _run() -> Any:
-            import pymupdf as _fitz
+            from src.pdfcore import pages as _pc
+            from src.pdfcore.errors import PdfPasswordRequired, PdfPasswordWrong
+            from app.core import edit_apply as _ea
 
-            doc = _fitz.open(sp)
             try:
-                if doc.needs_pass:
-                    if not pwd or not doc.authenticate(pwd):
-                        raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
-                _normalize_page_rotation(doc)
-                n = doc.page_count
-                # Orijinal font (op.ofont = xref): onarılmış TTF'i çalışma klasörüne yaz → yol tabanlı
+                doc = _pc.open_pdf(sp, pwd)
+            except (PdfPasswordRequired, PdfPasswordWrong):
+                raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+            try:
+                # Orijinal font (op.ofont): onarılmış TTF'i çalışma klasörüne yaz → yol tabanlı
                 # yardımcılar (genişlik/harf bazlı yazım) aynen kullanılır.
                 _orig_paths: dict[str, tuple[str, str]] = {}
                 if any(o.get("ofont") for o in ops):
@@ -613,420 +580,14 @@ async def tool_edit_text(
                             _orig_paths[_v["key"]] = (_fp, _v["chars"])
                     except Exception:
                         _orig_paths = {}
-                by_page: dict[int, list] = {}
-                for op in ops:
-                    try:
-                        pi = int(op.get("page", 0))
-                        bb = op.get("bbox") or []
-                        if 0 <= pi < n and len(bb) == 4:
-                            by_page.setdefault(pi, []).append(op)
-                    except Exception:
-                        continue
-                import base64 as _b64
-                import io as _io
-                import math as _math
-
-                # Otomatik sığdır: çevrilmiş/düzenlenmiş metin orijinal kutudan genişse
-                # fontu SIĞACAK şekilde küçült (tek satır kalır → alttaki içerikle çakışmaz).
-                _font_cache: dict[str, _fitz.Font] = {}
-
-                def _metric(op: dict) -> tuple[str, str] | None:
-                    """op ölçü-uyumlu aile kullanıyorsa (birincil, yedek) font yolları."""
-                    k = op.get("font")
-                    if k not in _ef.METRIC_FAMILIES:
-                        return None
-                    return (_ef.family_path(k, bool(op.get("bold")), bool(op.get("italic"))),
-                            _ef.FALLBACK_BY_CLASS[_ef.family_class(k)])
-
-                def _fit_size(text: str, fkey: str, box_w: float, fs: float) -> float:
-                    if box_w <= 1:
-                        return fs
-                    if fkey in _ef.METRIC_FAMILIES:
-                        _p = _ef.family_path(fkey)
-                        tw0 = _ef.text_width(text, _p, _ef.FALLBACK_BY_CLASS[_ef.family_class(fkey)], fs)
-                        return max(fs * (box_w / tw0), 5.0) if tw0 > box_w and tw0 > 0 else fs
-                    fobj = _font_cache.get(fkey)
-                    if fobj is None:
-                        try:
-                            fobj = _fitz.Font(fontfile=_EDIT_FONTS[fkey])
-                        except Exception:
-                            return fs
-                        _font_cache[fkey] = fobj
-                    try:
-                        tw = fobj.text_length(text, fontsize=fs)
-                    except Exception:
-                        return fs
-                    if tw > box_w and tw > 0:
-                        return max(fs * (box_w / tw), 5.0)  # okunur taban 5pt
-                    return fs
-
-                def _fit_block_size(text: str, fkey: str, box_w: float, box_h: float, fs: float) -> float:
-                    """Sarmalı (çok satırlı) blok için: metin, kelime kaydırmayla box_w'ye sarıldığında
-                    gereken satır sayısı × satır yüksekliği box_h'yi aşıyorsa fontu küçült. Çeviri
-                    (hedef dil çoğu kez daha uzun) paragraf kutusuna sığsın diye."""
-                    if box_w <= 1 or box_h <= 1:
-                        return fs
-                    fobj = _font_cache.get(fkey)
-                    if fobj is None:
-                        try:
-                            fobj = _fitz.Font(fontfile=_EDIT_FONTS[fkey])
-                        except Exception:
-                            return fs
-                        _font_cache[fkey] = fobj
-                    words = text.split()
-                    if not words:
-                        return fs
-
-                    def _lines_at(size: float) -> int:
-                        try:
-                            space = fobj.text_length(" ", fontsize=size)
-                        except Exception:
-                            return 1
-                        lines = 1
-                        cur = 0.0
-                        for w in words:
-                            wl = fobj.text_length(w, fontsize=size)
-                            if cur <= 0:
-                                cur = wl
-                            elif cur + space + wl > box_w:
-                                lines += 1
-                                cur = wl
-                            else:
-                                cur += space + wl
-                        return lines
-
-                    size = fs
-                    for _ in range(60):
-                        if _lines_at(size) * size * 1.28 <= box_h or size <= 5.0:
-                            break
-                        size = max(5.0, size - 0.5)
-                    return size
-
-                for pi, page_ops in by_page.items():
-                    page = doc[pi]
-                    # Görsel EKLEME op'ları (op.image) altındaki içeriği silmemeli;
-                    # metin/silme op'larından ayrılır.
-                    text_ops = [o for o in page_ops if not o.get("image") and not o.get("deco")]
-                    deco_ops = [o for o in page_ops if o.get("deco")]  # yalnız altı/üstü çizgi: yazı silinmez
-                    image_ops = [o for o in page_ops if o.get("image")]
-                    image_moves: list[tuple[int, list[float]]] = []  # taşınan MEVCUT görseller (xref, yeni kutu)
-                    # 0) Silinen GÖRSEL (logo/amblem): boyamadan gerçekten kaldır — diğer silmeler içerik
-                    #    akışını yeniden yazmadan ÖNCE (çizim komutu adıyla bulunur). Olmazsa eski dolgu yolu.
-                    for o in [o for o in text_ops if o.get("img") and not (o.get("text") or "").strip()]:
-                        try:
-                            if o.get("vec"):
-                                # Vektör amblem: yalnız kutunun TAMAMEN içindeki çizim komutlarını kaldır
-                                # (altındaki yazı/görsel/zemin korunur).
-                                _vb = _fitz.Rect(*[float(v) for v in o["bbox"]])
-                                # MuPDF "tamamen içinde" ölçüsü çizgi kalınlığını ~10 kat şişirir → kutuya
-                                # içindeki en kalın çizgiye göre pay ver (yoksa kontur çizili şekil silinmez).
-                                _pad = 1.0
-                                for _d in page.get_drawings():
-                                    _dr = _fitz.Rect(_d["rect"])
-                                    if _vb.intersects(_dr) and _dr.x0 >= _vb.x0 - 3 and _dr.y0 >= _vb.y0 - 3 and _dr.x1 <= _vb.x1 + 3 and _dr.y1 <= _vb.y1 + 3:
-                                        _pad = max(_pad, 10.0 * float(_d.get("width") or 0.0) + 1.0)
-                                page.add_redact_annot(_fitz.Rect(_vb.x0 - _pad, _vb.y0 - _pad, _vb.x1 + _pad, _vb.y1 + _pad), fill=False)
-                                page.apply_redactions(images=_fitz.PDF_REDACT_IMAGE_NONE,
-                                                      graphics=_fitz.PDF_REDACT_LINE_ART_REMOVE_IF_COVERED,
-                                                      text=_fitz.PDF_REDACT_TEXT_NONE)
-                                text_ops.remove(o)
-                            else:
-                                if _ef.remove_image_placement(doc, page, o["bbox"]):
-                                    text_ops.remove(o)
-                                _mv = o.get("move")
-                                if _mv and o.get("xref"):  # kaldırma başarısızsa eski yer dolguyla örtülür, yeni yere yine konur
-                                    image_moves.append((int(o["xref"]), [float(v) for v in _mv]))
-                        except Exception:
-                            pass
-
-                    # 1) Seçili bölgelerin mevcut içeriğini GERÇEKTEN kaldır (yalnız metin op'ları).
-                    #    Redaction fill = frontend'in canvas'tan örneklediği ARKA PLAN rengi
-                    #    (varsayılan beyaz yerine) → kırmızı/siyah/renkli zeminde beyaz kutu kalmaz.
-                    # 1a) VEKTÖR yazı (op.vt): harf "kutuyla en ufak kesişim" kuralıyla silinir
-                    #     (PyMuPDF belgesi) → tam yükseklikte kutu, sıkı satır aralığında ÜST/ALT
-                    #     satırın harflerini de siler (0.82 em aralıkta 3 satır birden silindiği
-                    #     ölçüldü). Bu yüzden taban çizgisi etrafında ince ŞERİT: satırın her harfi
-                    #     keser, komşu satırlar kesmez. Dolgu YOK (arka plan/çizgi/görsel olduğu gibi
-                    #     kalır — beyaz kutu tablo çizgisini örtüyordu), görsel ve çizgiye dokunulmaz.
-                    vt_ops = [o for o in text_ops if o.get("vt") and o.get("by") is not None]
-                    other_ops = [o for o in text_ops if not (o.get("vt") and o.get("by") is not None)]
-                    for op in vt_ops:
-                        cb = op.get("clear") or op["bbox"]
-                        x0, y0, x1, y1 = (float(v) for v in cb)
-                        _by = float(op["oby"]) if op.get("oby") is not None else float(op["by"])
-                        _osz = float(op.get("osz") or op.get("size") or max(1.0, (y1 - y0) / 1.2))
-                        _ins = min(0.3, max(0.0, (x1 - x0) / 4))
-                        page.add_redact_annot(
-                            _fitz.Rect(x0 + _ins, _by - 0.35 * _osz, x1 - _ins, _by - 0.15 * _osz), fill=False,
-                        )
-                    if vt_ops:
-                        page.apply_redactions(images=0, graphics=0, text=0)
-                        # Altı çizili yazı (ör. bağlantı adresi) çoğu zaman AYRI bir ince çizgi çizimidir;
-                        # yazı silinince çizgi havada kalıyordu. Yalnız yazının hemen altındaki, yazı
-                        # genişliğine oturan ince yatay çizgi kaldırılır (tablo/kenarlık çizgilerine dokunulmaz).
-                        try:
-                            _draws = page.get_drawings()
-                            _ul_rects: list[Any] = []
-                            for op in vt_ops:
-                                cb = op.get("clear") or op["bbox"]
-                                x0, y0, x1, y1 = (float(v) for v in cb)
-                                _by = float(op["oby"]) if op.get("oby") is not None else float(op["by"])
-                                _osz = float(op.get("osz") or op.get("size") or max(1.0, (y1 - y0) / 1.2))
-                                for _d in _draws:
-                                    _dr = _fitz.Rect(_d["rect"])
-                                    _w = float(_d.get("width") or 0.0)
-                                    if _d.get("type") not in ("s", "fs") or _dr.height > 0.8:
-                                        continue
-                                    if not (_by - 0.1 * _osz <= _dr.y0 <= _by + 0.35 * _osz):
-                                        continue
-                                    if _dr.x0 < x0 - 3 or _dr.x1 > x1 + 3 or _dr.width < 0.6 * (x1 - x0):
-                                        continue
-                                    _ul_rects.append(_fitz.Rect(_dr.x0 - 3, _dr.y0 - (10 * _w + 1), _dr.x1 + 3, _dr.y1 + (10 * _w + 1)))
-                            if _ul_rects:
-                                for _ur in _ul_rects:
-                                    page.add_redact_annot(_ur, fill=False)
-                                page.apply_redactions(images=_fitz.PDF_REDACT_IMAGE_NONE,
-                                                      graphics=_fitz.PDF_REDACT_LINE_ART_REMOVE_IF_COVERED,
-                                                      text=_fitz.PDF_REDACT_TEXT_NONE)
-                        except Exception:
-                            pass
-                    # 1b) Görüntüdeki yazı (OCR / görünmez katman) ve görsel silme: piksel de örtülmeli.
-                    for op in other_ops:
-                        # `clear` (kaydırmada ORİJİNAL konum) varsa onu, yoksa bbox'ı temizle.
-                        cb = op.get("clear") or op["bbox"]
-                        x0, y0, x1, y1 = (float(v) for v in cb)
-                        fill = _hex_to_rgb01(op.get("bg")) if op.get("bg") else (1.0, 1.0, 1.0)
-                        page.add_redact_annot(_fitz.Rect(x0, y0, x1, y1), fill=fill)
-                    if other_ops:
-                        page.apply_redactions()
-                    # 2) Yeni metinleri aynı bölgeye yaz (varsa).
-                    for op in text_ops:
-                        # HTML modu (ZENGİN konum-koruyan ÇEVİRİ): op bir PARAGRAF bloğudur ve
-                        # `html` alanı stil taşır (kalın <b>, renk <span style=color>, hizalama).
-                        # insert_htmlbox → orijinalin KALIN/RENK/İKİ-YANA-YASLI düzenini korur;
-                        # scale_low=0 → metin kutuya sığmıyorsa otomatik küçültür. (Düz insert_text
-                        # bunu yapamıyordu → çeviri kalın/renk/justify kaybediyordu.)
-                        html = op.get("html")
-                        if html:
-                            x0, y0, x1, y1 = (float(v) for v in op["bbox"])
-                            rect = _fitz.Rect(x0, y0, x1, y1)
-                            try:
-                                # css + archive → font-family adları (Roboto/Noto Serif/…) gerçek
-                                # gömülü TTF'lere çözülür (7 font kelime bazında doğru).
-                                page.insert_htmlbox(rect, _ef.wrap_missing_glyphs(str(html)), css=_EDIT_FONT_CSS, archive=_edit_font_archive(), scale_low=0)
-                            except Exception:
-                                # htmlbox yoksa/başarısızsa (eski PyMuPDF) blok BOŞ kalmasın:
-                                # HTML etiketlerini sıyır, düz metni sarmalı yaz (stil kaybı olur ama okunur).
-                                import re as _re
-                                plain = _re.sub(r"<[^>]+>", "", str(html))
-                                plain = (plain.replace("&amp;", "&").replace("&lt;", "<")
-                                         .replace("&gt;", ">").replace("&#160;", " ")).strip()
-                                if plain:
-                                    fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "serif"
-                                    bfs = _fit_block_size(plain, fkey, x1 - x0, y1 - y0, float(op.get("size") or 11))
-                                    page.insert_textbox(rect, plain, fontsize=bfs, fontname=fkey,
-                                                        fontfile=_EDIT_FONTS[fkey], align=0)
-                            continue
-                        # Baştaki/sondaki BOŞLUKLARI KORU — kullanıcı elle hizalama/indent için
-                        # boşluk ekleyebilir (ör. satırı ortaya çekmek). Yalnız tamamen boş op'u atla.
-                        t = op.get("text") or ""
-                        if not t.strip():
-                            continue
-                        x0, y0, x1, y1 = (float(v) for v in op["bbox"])
-                        fs = float(op.get("size") or 11)
-                        # Taban çizgisi: analyze'dan gelen gerçek origin.y (by) varsa onu kullan
-                        # → metin orijinaliyle tam aynı yere oturur. Yoksa y0+fs'e düş.
-                        by = op.get("by")
-                        baseline = float(by) if by is not None else (y0 + fs)
-                        col = _hex_to_rgb01(op.get("color"))
-                        _mt = _metric(op)
-                        _of = _orig_paths.get(str(op.get("ofont") or ""))
-                        if _of and all(ch in _of[1] for ch in (op.get("text") or "")):
-                            # Tüm harfler belgede bu fontla doğrulanmış → ORİJİNAL font (birebir glif).
-                            _fb0 = _mt[1] if _mt else _ef.FALLBACK_BY_CLASS["sans"]
-                            _mt = (_of[0], _fb0)
-                        fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
-                        # WRAP modu (konum-koruyan ÇEVİRİ): op bir PARAGRAF bloğudur → metni
-                        # blok dikdörtgenine kelime-kaydırmayla sar (insert_textbox). Tek satır
-                        # baseline yerine kutuya sarma, çok satırlı paragrafı orijinal alanında tutar.
-                        if op.get("wrap") and _mt:
-                            # Ölçü-uyumlu aile: gerçek kesit dosyasıyla sar (sahte kalın yok).
-                            rect = _fitz.Rect(x0, y0, x1, y1)
-                            page.insert_textbox(rect, t, fontsize=fs, color=col, fontname=_ef.pdf_fontname(_mt[0]),
-                                                fontfile=_mt[0], align=0)
-                            continue
-                        if op.get("wrap"):
-                            rect = _fitz.Rect(x0, y0, x1, y1)
-                            bfs = _fit_block_size(t, fkey, x1 - x0, y1 - y0, fs)
-                            tb_kwargs: dict[str, Any] = dict(
-                                fontsize=bfs, color=col, fontname=fkey,
-                                fontfile=_EDIT_FONTS[fkey], align=0,
-                            )
-                            page.insert_textbox(rect, t, **tb_kwargs)
-                            if op.get("bold"):  # çift-basım faux-bold (kutu minik dx kaydırılır)
-                                page.insert_textbox(
-                                    _fitz.Rect(x0 + max(0.25, bfs * 0.03), y0, x1 + max(0.25, bfs * 0.03), y1),
-                                    t, **tb_kwargs,
-                                )
-                            continue
-                        # Madde 3: noshrink → fontu KÜÇÜLTME (komşu metin frontend'de sağa
-                        # kaydırıldığı için taşacak yer açıldı). Aksi halde eskisi gibi sığdır.
-                        if not op.get("noshrink"):
-                            if _mt:  # seçilen gerçek fontun (orijinal / ölçü-uyumlu) genişliğiyle sığdır
-                                _tw0 = _ef.text_width(t, _mt[0], _mt[1], fs)
-                                if _tw0 > (x1 - x0) > 1:
-                                    fs = max(fs * ((x1 - x0) / _tw0), 5.0)
-                            else:
-                                fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
-                        # Metin genişliği — hizalama + altı/üstü çizgi konumu için.
-                        _af = _font_cache.get(fkey)
-                        if _af is None:
-                            try:
-                                _af = _fitz.Font(fontfile=_EDIT_FONTS[fkey])
-                                _font_cache[fkey] = _af
-                            except Exception:
-                                _af = None
-                        try:
-                            if _mt:
-                                tw = _ef.text_width(t, _mt[0], _mt[1], fs)
-                            else:
-                                tw = _af.text_length(t, fontsize=fs) if _af else (x1 - x0)
-                        except Exception:
-                            tw = x1 - x0
-                        # Hizalama (madde 8): sol/orta/sağ — orijinal kutu genişliği içinde.
-                        box_w = x1 - x0
-                        draw_x = x0
-                        _align = op.get("align")
-                        if _align == "center" and box_w > tw:
-                            draw_x = x0 + (box_w - tw) / 2
-                        elif _align == "right" and box_w > tw:
-                            draw_x = x1 - tw
-                        _hs = float(op.get("hs") or 1.0)
-                        _cs = float(op.get("cs") or 0.0)
-                        _uses_orig = bool(_of and all(ch in _of[1] for ch in (op.get("text") or "")))
-                        if _uses_orig:
-                            _cs += float(op.get("ocs") or 0.0)  # orijinal font: satır genişliği harf aralığıyla
-                        else:
-                            _hs *= float(op.get("fit") or 1.0)  # yedek font: genişlik yatay ölçekle
-                        _ws = float(op.get("ws") or 0.0)
-                        if abs(_hs - 1) > 1e-3 or _cs or _ws:
-                            # Orijinal harf aralığı / kelime aralığı / yatay ölçek korunur.
-                            _pp, _fb = _mt if _mt else (_EDIT_FONTS[fkey], _EDIT_FONTS[fkey])
-                            _tw2 = _ef.spaced_width(t, _pp, _fb, fs, _hs, _cs, _ws)
-                            _dx = draw_x
-                            if _align == "center" and box_w > _tw2:
-                                _dx = x0 + (box_w - _tw2) / 2
-                            elif _align == "right" and box_w > _tw2:
-                                _dx = x1 - _tw2
-                            _ef.insert_spaced(page, _dx, baseline, t, fs, col, _pp, _fb, _hs, _cs, _ws)
-                            if not _mt and op.get("bold"):
-                                _ef.insert_spaced(page, _dx + max(0.25, fs * 0.03), baseline, t, fs, col, _pp, _fb, _hs, _cs, _ws)
-                            _lw = max(0.5, fs * 0.05)
-                            if op.get("underline"):
-                                uy = baseline + fs * 0.12
-                                page.draw_line(_fitz.Point(_dx, uy), _fitz.Point(_dx + _tw2, uy), color=col, width=_lw)
-                            if op.get("strike"):
-                                sy = baseline - fs * 0.30
-                                page.draw_line(_fitz.Point(_dx, sy), _fitz.Point(_dx + _tw2, sy), color=col, width=_lw)
-                            continue
-                        if _mt:
-                            # Ölçü-uyumlu aile: kesit dosyası kalınlığı/eğikliği ZATEN taşır →
-                            # sahte (çift-basım/eğme) uygulanmaz; eksik harf (₺) yedekten.
-                            _ef.insert_runs(page, draw_x, baseline, t, fs, col, _mt[0], _mt[1])
-                            _lw = max(0.5, fs * 0.05)
-                            if op.get("underline"):
-                                uy = baseline + fs * 0.12
-                                page.draw_line(_fitz.Point(draw_x, uy), _fitz.Point(draw_x + tw, uy), color=col, width=_lw)
-                            if op.get("strike"):
-                                sy = baseline - fs * 0.30
-                                page.draw_line(_fitz.Point(draw_x, sy), _fitz.Point(draw_x + tw, sy), color=col, width=_lw)
-                            continue
-                        ins_kwargs: dict[str, Any] = dict(
-                            fontsize=fs, color=col,
-                            fontname=fkey, fontfile=_EDIT_FONTS[fkey],
-                        )
-                        # İtalik: taban çizgisi etrafında yatay kesme (shear) → sentetik italik
-                        if op.get("italic"):
-                            ins_kwargs["morph"] = (
-                                _fitz.Point(draw_x, baseline),
-                                _fitz.Matrix(1, 0, 0.2, 1, 0, 0),
-                            )
-                        page.insert_text(_fitz.Point(draw_x, baseline), t, **ins_kwargs)
-                        # Kalın: metni çok küçük yatay offset'le İKİNCİ kez yaz (çift-basım
-                        # faux-bold). render_mode/stroke yöntemi küçük punto'da glyph'leri
-                        # birleştirip okunamaz SİYAH LEKE yapıyordu; çift-basım okunur kalır.
-                        if op.get("bold"):
-                            page.insert_text(
-                                _fitz.Point(draw_x + max(0.25, fs * 0.03), baseline),
-                                t, **ins_kwargs,
-                            )
-                        # Altı çizili / üstü çizili (madde 8): metin genişliği boyunca çizgi.
-                        _lw = max(0.5, fs * 0.05)
-                        if op.get("underline"):
-                            uy = baseline + fs * 0.12
-                            page.draw_line(_fitz.Point(draw_x, uy), _fitz.Point(draw_x + tw, uy), color=col, width=_lw)
-                        if op.get("strike"):
-                            sy = baseline - fs * 0.30
-                            page.draw_line(_fitz.Point(draw_x, sy), _fitz.Point(draw_x + tw, sy), color=col, width=_lw)
-                    # 2a) Yalnız çizgi: orijinal yazı AYNEN kalır (font/ölçü/aralık bozulmaz), üstüne/altına çizgi çekilir.
-                    for op in deco_ops:
-                        try:
-                            dx0, dy0, dx1, _dy1 = (float(v) for v in op["bbox"])
-                            dfs = float(op.get("size") or 11)
-                            dbase = float(op["by"]) if op.get("by") is not None else dy0 + dfs
-                            dcol = _hex_to_rgb01(op.get("color"))
-                            dlw = max(0.5, dfs * 0.05)
-                            if op.get("underline"):
-                                page.draw_line(_fitz.Point(dx0, dbase + dfs * 0.12), _fitz.Point(dx1, dbase + dfs * 0.12), color=dcol, width=dlw)
-                            if op.get("strike"):
-                                page.draw_line(_fitz.Point(dx0, dbase - dfs * 0.30), _fitz.Point(dx1, dbase - dfs * 0.30), color=dcol, width=dlw)
-                        except Exception:
-                            continue
-                    # 2b) Taşınan mevcut görselleri yeni konuma yerleştir (özgün piksel + saydamlık maskesi).
-                    for _xr, _nb in image_moves:
-                        try:
-                            _pix = _fitz.Pixmap(doc, _xr)
-                            _sm = doc.xref_get_key(_xr, "SMask")
-                            if _sm and _sm[0] == "xref":
-                                _mx = int(_sm[1].split()[0])
-                                _pix = _fitz.Pixmap(_pix, _fitz.Pixmap(doc, _mx))
-                            elif _pix.colorspace and _pix.colorspace.n > 3:
-                                _pix = _fitz.Pixmap(_fitz.csRGB, _pix)
-                            page.insert_image(_fitz.Rect(*_nb), pixmap=_pix, keep_proportion=False)
-                        except Exception:
-                            continue
-                    # 3) Kullanıcının eklediği resimleri yerleştir (serbest açıyla).
-                    for op in image_ops:
-                        try:
-                            data = str(op.get("image") or "")
-                            raw = _b64.b64decode(data.split(",")[-1])
-                            x0, y0, x1, y1 = (float(v) for v in op["bbox"])
-                            deg = float(op.get("rotate") or 0) % 360
-                            if abs(deg) < 0.5:
-                                page.insert_image(_fitz.Rect(x0, y0, x1, y1), stream=raw, keep_proportion=False)
-                                continue
-                            # Serbest açı: PIL ile döndür (CSS saat yönü = PIL -deg), döndürülmüş
-                            # görselin merkez-korumalı bounding box'ına oturt.
-                            from PIL import Image as _Image
-                            img = _Image.open(_io.BytesIO(raw)).convert("RGBA")
-                            rot = img.rotate(-deg, expand=True, resample=_Image.BICUBIC)
-                            buf = _io.BytesIO(); rot.save(buf, "PNG")
-                            r = _math.radians(deg)
-                            w0, h0 = (x1 - x0), (y1 - y0)
-                            bw = abs(w0 * _math.cos(r)) + abs(h0 * _math.sin(r))
-                            bh = abs(w0 * _math.sin(r)) + abs(h0 * _math.cos(r))
-                            cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-                            page.insert_image(
-                                _fitz.Rect(cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2),
-                                stream=buf.getvalue(), keep_proportion=False,
-                            )
-                        except Exception:
-                            continue
-                try:
-                    doc.subset_fonts()  # fontTools gerekir; yoksa tam font gömülü kalır (bozulmaz)
-                except Exception:
-                    pass
-                doc.save(str(out_p), garbage=3, deflate=True)
+                _ea.apply_edit_ops(
+                    doc, ops, edit_fonts=_EDIT_FONTS, font_family_names=_EDIT_FONT_FAMILY,
+                    orig_paths=_orig_paths,
+                )
+                _pc.save_pdf(doc, out_p)
+                from src.pdfcore import overlay as _ovl
+                for _fp, _ in _orig_paths.values():
+                    _ovl.forget_font(_fp)
                 # store=1 (PDF Düzenle editörü): sonucu (fork edilmiş süreç içinde) SUNUCUDA
                 # sakla, handle döndür → bytes boşuna pickle edilmez. Aksi halde bytes döndür.
                 if _store_result:
@@ -1145,7 +706,7 @@ async def tool_redact_pdf(
     password: str = Form(""),
 ):
     """Hassas veri gizleme: verilen metin parçalarını (TC/IBAN/telefon/e-posta/isim…)
-    PyMuPDF ile TÜM sayfalarda bulup GERÇEKTEN kaldırır. Siyah kutu yerine, kaldırılan
+    TÜM sayfalarda bulup GERÇEKTEN kaldırır. Siyah kutu yerine, kaldırılan
     bölgenin orijinal görüntüsü BULANIKLAŞTIRILARAK geri konur — renk korunur, metin
     PDF'ten silinir (geri getirilemez), örtme değil. `terms`: JSON string listesi. Misafire açık (token yok);
     boyut/oran/sandbox korur. NOT: dosya sunucuya yüklenir (frontend'de gizlilik uyarısı)."""
@@ -1168,55 +729,75 @@ async def tool_redact_pdf(
         out_p = workdir / format_derived_filename(file.filename or saved.name, "Gizlenmis", "pdf")
 
         def _run() -> bytes:
-            import pymupdf as _fitz
             import io as _io
-            from PIL import Image as _Image, ImageFilter as _ImageFilter
+            from PIL import ImageFilter as _ImageFilter
+            from src.pdfcore import PdfiumReader
+            from src.pdfcore import content as _ct
+            from src.pdfcore import overlay as _ov
+            from src.pdfcore import pages as _pc
+            from src.pdfcore.errors import PdfPasswordRequired, PdfPasswordWrong
+            from app.core import edit_apply as _ea
 
-            doc = _fitz.open(sp)
             try:
-                if doc.needs_pass:
-                    if not pwd or not doc.authenticate(pwd):
-                        raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
-                for page in doc:
-                    # 1. Gizlenecek tüm bölgeleri bul.
-                    rects = []
-                    for term in term_list:
+                doc = _pc.open_pdf(sp, pwd)
+            except (PdfPasswordRequired, PdfPasswordWrong):
+                raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+            try:
+                # Koordinatlar tek uzayda (görünen sayfa) kalsın diye döndürme kaldırılır.
+                for _pg in doc.pages:
+                    try:
+                        _pc.remove_rotation(doc, _pg)
+                    except Exception:
+                        pass
+                reader = PdfiumReader(_pc.pdf_to_bytes(doc))
+                builders: dict[int, Any] = {}
+                try:
+                    for pi in range(len(doc.pages)):
+                        page = doc.pages[pi]
+                        # 1. Gizlenecek tüm bölgeleri bul (büyük/küçük harf duyarsız).
+                        rects: list[tuple[float, float, float, float]] = []
+                        for term in term_list:
+                            try:
+                                rects.extend(reader.search_rects(pi, term))
+                            except Exception:
+                                pass
+                        if not rects:
+                            continue
+
+                        # 2. GÜVENLİ BLUR: metni siyahla ÖRTMEK yerine gerçekten kaldırıp yerine
+                        #    orijinalin BULANIK rasterini koyarız: altta metin kalmaz (geri
+                        #    getirilemez) ama renk korunur, siyah kutu olmaz. Bulanık görüntü,
+                        #    içerik kaldırılmadan ÖNCE üretilir.
+                        blur_imgs: list[tuple[tuple[float, float, float, float], Any]] = []
+                        for r in rects:
+                            try:
+                                img = reader.render(pi, 3.0, crop=r)
+                                radius = max(6, int(min(img.width, img.height) / 4))
+                                blur_imgs.append((r, img.filter(_ImageFilter.GaussianBlur(radius))))
+                            except Exception:
+                                blur_imgs.append((r, None))  # görüntü üretilemezse içerik yine kaldırılır (beyaz)
+
+                        # 3. İçeriği (metin, görsel pikselleri, örtülen çizimler) GERÇEKTEN kaldır.
                         try:
-                            for r in page.search_for(term, quads=False):
-                                rects.append(r)
+                            _ea.blank_image_pixels(doc, page, rects, (1.0, 1.0, 1.0))
                         except Exception:
                             pass
-                    if not rects:
-                        continue
+                        _ct.remove_in_rects(doc, page, rects, text=True, paths=True)
 
-                    # 2. GÜVENLİ BLUR: metni siyahla ÖRTMEK yerine gerçekten kaldırıp
-                    #    yerine orijinalin BULANIK rasterini koyarız. Böylece altta metin
-                    #    kalmaz (geri getirilemez) ama renk korunur, siyah kutu olmaz.
-                    #    Önce orijinal içerikten yüksek çözünürlüklü bulanık görüntü üret.
-                    blur_imgs = []
-                    for r in rects:
-                        try:
-                            pix = page.get_pixmap(clip=r, matrix=_fitz.Matrix(3, 3), alpha=False)
-                            img = _Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-                            radius = max(6, int(min(pix.width, pix.height) / 4))
-                            blurred = img.filter(_ImageFilter.GaussianBlur(radius))
-                            buf = _io.BytesIO()
-                            blurred.save(buf, format="PNG")
-                            blur_imgs.append((r, buf.getvalue()))
-                        except Exception:
-                            # Görüntü üretilemezse en azından içeriği kaldır (beyaz).
-                            blur_imgs.append((r, None))
+                        # 4. Beyaz zemin + bulanık raster (kaldırmadan SONRA, sayfa üstüne).
+                        def _draw(cv, rects=rects, blur_imgs=blur_imgs):
+                            for r in rects:
+                                cv.rect(r, fill=(1.0, 1.0, 1.0))
+                            for r, im in blur_imgs:
+                                if im is not None:
+                                    cv.image(r, im, keep_proportion=False)
 
-                    # 3. İçeriği (metin dahil) GERÇEKTEN kaldır.
-                    for r in rects:
-                        page.add_redact_annot(r, fill=(1, 1, 1))
-                    page.apply_redactions()
-
-                    # 4. Bulanık rasteri geri koy (redaction'dan SONRA).
-                    for r, png in blur_imgs:
-                        if png:
-                            page.insert_image(r, stream=png)
-                doc.save(str(out_p), garbage=3, deflate=True)
+                        builders[pi] = _draw
+                finally:
+                    reader.close()
+                if builders:
+                    _ov.stamp_pages(doc, builders)
+                _pc.save_pdf(doc, out_p)
                 return out_p.read_bytes()
             finally:
                 doc.close()
@@ -1263,204 +844,16 @@ async def tool_pdf_analyze(
         sp = str(saved)
 
         def _run() -> dict[str, Any]:
-            import pymupdf as _fitz
+            from src.pdfcore import pages as _pc
+            from src.pdfcore.errors import PdfPasswordRequired, PdfPasswordWrong
+            from app.core import edit_analyze as _an
 
-            doc = _fitz.open(sp)
             try:
-                if doc.needs_pass:
-                    if not pwd or not doc.authenticate(pwd):
-                        raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
-                _normalize_page_rotation(doc)
-                pages: list[dict[str, Any]] = []
-                # Yeniden kullanılabilir gömülü fontlar (doğrulanmış harf kümesiyle) — yeni metin
-                # yalnız bu harflerden oluşuyorsa orijinal fontla yazılır (glif şekli birebir).
-                try:
-                    _orig = _ef.original_fonts(doc)
-                except Exception:
-                    _orig = {}
-                _used_orig: set[str] = set()
-                for pi in range(doc.page_count):
-                    page = doc[pi]
-                    els: list[dict[str, Any]] = []
-                    ei = 0
-                    _tp0 = page.get_textpage()
-                    text_dict = page.get_text("dict", textpage=_tp0)
-                    raw_dict = page.get_text("rawdict", textpage=_tp0)
-                    # Görünmez metin (Tr 3): yazı aslında altındaki GÖRÜNTÜDE → düzenlerken
-                    # görüntü pikselleri de örtülmeli (vektör yazı gibi yalnız harf silinmez).
-                    _inv_boxes: list[Any] = []
-                    _trace: list[tuple[Any, str, float]] = []  # (kutu, font, yatay boyut) — Tz ölçümü
-                    # Yalnız görünmez yazıda kullanılan fontlar (ör. OCR programlarının "GlyphLessFont"u):
-                    # kutu eşleştirmesi texttrace kutuları daha dar olduğu için kelimelerin ~yarısını
-                    # kaçırıyordu (ölçüldü: 31 kelimeden 16'sı) → font adına göre de işaretlenir.
-                    _vis_fonts: set[str] = set()
-                    _invis_fonts: set[str] = set()
-                    try:
-                        for _tt in page.get_texttrace():
-                            _tf = str(_tt.get("font", ""))
-                            if int(_tt.get("type", 0)) == 3:
-                                _inv_boxes.append(_fitz.Rect(_tt["bbox"]))
-                                _invis_fonts.add(_tf)
-                            else:
-                                _vis_fonts.add(_tf)
-                            _trace.append((_fitz.Rect(_tt["bbox"]), _tf, float(_tt.get("size", 0))))
-                    except Exception:
-                        _inv_boxes = []
-                    _invis_only = _invis_fonts - _vis_fonts
-                    # Taranmış sayfa (metin katmanı yok) + ocr=1 → Tesseract OCR ile metni tanı,
-                    # KOORDİNATLI span'ler döndür (aynı yapı) → editörde düzenlenebilir olsun.
-                    if want_ocr:
-                        _has_text = any(
-                            (_s.get("text") or "").strip()
-                            for _b in text_dict.get("blocks", [])
-                            for _l in _b.get("lines", [])
-                            for _s in _l.get("spans", [])
-                        )
-                        if not _has_text:
-                            try:
-                                _td = _tessdata_dir()
-                                _ocr_kw: dict[str, Any] = dict(flags=0, language="tur+eng", dpi=200, full=True)
-                                if _td:
-                                    _ocr_kw["tessdata"] = _td
-                                _tp = page.get_textpage_ocr(**_ocr_kw)
-                                text_dict = page.get_text("dict", textpage=_tp)
-                                raw_dict = page.get_text("rawdict", textpage=_tp)
-                            except Exception:
-                                pass  # OCR başarısız → sayfa görüntü olarak kalır
-                    for bi, bl in enumerate(text_dict.get("blocks", [])):
-                        for li, ln in enumerate(bl.get("lines", [])):
-                            for si, span in enumerate(ln.get("spans", [])):
-                                txt = span.get("text", "")
-                                if not txt.strip():
-                                    continue
-                                try:
-                                    _rs = raw_dict["blocks"][bi]["lines"][li]["spans"][si]
-                                except Exception:
-                                    _rs = None
-                                x0, y0, x1, y1 = span["bbox"]
-                                c = int(span.get("color", 0))
-                                # Gerçek taban çizgisi (origin.y) — hem önizleme hem export
-                                # bu değerle orijinal metnin tam yerine oturur.
-                                oy = float(span.get("origin", (x0, y1))[1])
-                                # Kalın/italik: PyMuPDF span flags (bit4=16 bold, bit1=2 italic)
-                                # + font adı yedeği (ör. "Arial-BoldItalicMT").
-                                _flags = int(span.get("flags", 0))
-                                _fname = str(span.get("font", ""))
-                                _fl = _fname.lower()
-                                _bold = bool(_flags & 16) or "bold" in _fl or "black" in _fl or "heavy" in _fl
-                                _italic = bool(_flags & 2) or "italic" in _fl or "oblique" in _fl
-                                _mk = _ef.metric_family_for(_fname)
-                                # Harf/kelime aralığı + yatay ölçek (+ gerçek boyut) — orijinal görünüm.
-                                _sp: dict = {}
-                                try:
-                                    if _rs and tuple(ln.get("dir", (1, 0))) == (1.0, 0.0):
-                                        _r0 = _fitz.Rect(x0, y0, x1, y1)
-                                        _best, _bo = None, 0.0
-                                        for _tr, _tf, _tsz in _trace:
-                                            if _tf != _fname:
-                                                continue
-                                            _o = (_r0 & _tr).get_area()
-                                            if _o > _bo:
-                                                _bo, _best = _o, _tsz
-                                        _sp = _ef.span_spacing(_rs, span, _best)
-                                except Exception:
-                                    _sp = {}
-                                # Font anahtarı: ölçü-uyumlu aile → aynı fontun kendisi (Lato/Montserrat/
-                                # Oswald/Merriweather elimizde) → sınıf ailesi + GENİŞLİK UYDURMA (yedek
-                                # font dar/geniş olabilir; orijinal satır genişliği korunur).
-                                _legacy = _map_font_to_key(_fname)
-                                if _mk:
-                                    _fkey = _mk
-                                elif _legacy in ("lato", "montserrat", "oswald", "merriweather"):
-                                    _fkey = _legacy
-                                else:
-                                    _fkey = _ef.class_family(_fname, _flags)
-                                    try:
-                                        _chs = [c_ for c_ in (_rs or {}).get("chars", []) if not c_["c"].isspace()]
-                                        if len(_chs) >= 3:
-                                            _nat = _chs[-1]["bbox"][2] - _chs[0]["origin"][0]
-                                            _n = len(txt.strip())
-                                            _nat -= float(_sp.get("cs", 0)) * (_n - 1) + float(_sp.get("ws", 0)) * txt.strip().count(" ")
-                                            _fit = _ef.fit_scale(txt, _fkey, _bold, _italic,
-                                                                 float(_sp.get("size", span.get("size", 11))), _nat)
-                                            if _fit:
-                                                # Ölçüm GERÇEK genişlikten (Tz dahil) → yedek fontta hs yerine geçer.
-                                                # Ayrı alan: orijinal font kullanılırsa UYGULANMAZ (o zaten doğru genişlikte).
-                                                _sp["fit"] = round(_fit / float(_sp.get("hs", 1.0)), 3)
-                                    except Exception:
-                                        pass
-                                # Orijinal fontla yazılırsa: Word vb. harfleri satır yerleşiminde mikro
-                                # sıkıştırır (TJ); yeni yazı font genişliğiyle yazılınca satır sonu ~2 pt
-                                # kayıyordu (ölçüldü) → farkı harf aralığına eşit dağıt (şekil bozulmaz).
-                                if _fname in _orig:
-                                    try:
-                                        _chs2 = [c_ for c_ in (_rs or {}).get("chars", [])]
-                                        _t2 = "".join(c_["c"] for c_ in _chs2).rstrip()
-                                        _n2 = len(_t2)
-                                        if _n2 >= 4:
-                                            _of_font = _orig[_fname].setdefault("_font", _fitz.Font(fontbuffer=_orig[_fname]["buf"]))
-                                            _sz2 = float(_sp.get("size", span.get("size", 11)))
-                                            _hs2 = float(_sp.get("hs", 1.0))
-                                            _nat2 = _chs2[_n2 - 1]["bbox"][2] - _chs2[0]["origin"][0]
-                                            _exp2 = (_of_font.text_length(_t2, fontsize=_sz2) * _hs2
-                                                     + float(_sp.get("cs", 0)) * (_n2 - 1) + float(_sp.get("ws", 0)) * _t2.count(" "))
-                                            _ocs = (_nat2 - _exp2) / (_n2 - 1)
-                                            if 0.004 < abs(_ocs) < 0.15 * _sz2:
-                                                _sp["ocs"] = round(_ocs, 4)
-                                    except Exception:
-                                        pass
-                                els.append({
-                                    "id": f"t{pi}_{ei}", "type": "text",
-                                    "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
-                                    # 2 ondalık: 1 ondalık yuvarlama uzun satırda ~0.6 pt kayma yapıyordu (ölçüldü).
-                                    "text": txt, "size": round(float(span.get("size", 11)), 2),
-                                    "color": f"#{c & 0xFFFFFF:06x}", "by": round(oy, 1),
-                                    "font": _fkey,
-                                    "bold": _bold, "italic": _italic,
-                                    # Satır grubu (sayfa:blok:satır) — konum-koruyan çeviri span'ları
-                                    # AYNI SATIRDA birleştirip tutarlı segment üretsin diye. PyMuPDF'in
-                                    # kendi satır segmentasyonu blok/hücreye saygılıdır.
-                                    "line": f"{pi}:{bi}:{li}",
-                                    "inv": _fname in _invis_only or (bool(_inv_boxes) and any(
-                                        _r.contains(_fitz.Point((x0 + x1) / 2, (y0 + y1) / 2)) for _r in _inv_boxes
-                                    )),
-                                    **_sp,
-                                    **({"ofont": _orig[_fname]["key"]} if _fname in _orig else {}),
-                                })
-                                ei += 1
-                    _img_rects: list[Any] = []
-                    for img in page.get_image_info(xrefs=True):
-                        x0, y0, x1, y1 = img["bbox"]
-                        if (x1 - x0) < 4 or (y1 - y0) < 4:
-                            continue
-                        _img_rects.append(_fitz.Rect(x0, y0, x1, y1))
-                        els.append({
-                            "id": f"i{pi}_{ei}", "type": "image",
-                            "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
-                            **({"xref": int(img["xref"])} if img.get("xref") else {}),
-                        })
-                        ei += 1
-                    # VEKTÖR amblem/logo (çizim komutlarından oluşan şekiller): görsel gibi seçilip silinebilsin.
-                    for _vr in _ef.vector_emblems(page, _img_rects):
-                        els.append({
-                            "id": f"i{pi}_{ei}", "type": "image", "vec": True,
-                            "bbox": [round(_vr[0], 1), round(_vr[1], 1), round(_vr[2], 1), round(_vr[3], 1)],
-                        })
-                        ei += 1
-                    pages.append({
-                        "width": round(page.rect.width, 1),
-                        "height": round(page.rect.height, 1),
-                        "elements": els,
-                    })
-                for _e in (e for p_ in pages for e in p_["elements"]):
-                    if _e.get("ofont"):
-                        _used_orig.add(_e["ofont"])
-                import base64 as _b64m
-                _fonts = {
-                    v["key"]: {"b64": _b64m.b64encode(v["buf"]).decode("ascii"), "chars": v["chars"]}
-                    for v in _orig.values() if v["key"] in _used_orig
-                }
-                return {"pages": pages, "fonts": _fonts}
+                doc = _pc.open_pdf(sp, pwd)
+            except (PdfPasswordRequired, PdfPasswordWrong):
+                raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+            try:
+                return _an.analyze_pdf(doc, want_ocr=want_ocr)
             finally:
                 doc.close()
 
