@@ -743,9 +743,11 @@ interface PricingSectionProps {
   onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: BillingCycle, extraSeats?: number) => void;
   /** Giriş yapmış kullanıcının planı: FREE ise ücretsiz kartı "Mevcut planın" (tıklanamaz) olur. */
   currentPlan?: string | null;
+  /** Yönetici oturumu: ödemeler kullanıcılara kapalıyken de satın alma düğmeleri çalışır (canlı deneme için). */
+  adminTestCheckout?: boolean;
 }
 
-export default function PricingSection({ language, onUseWebApp, onSelectPlan, onNotify, currentPlan }: PricingSectionProps) {
+export default function PricingSection({ language, onUseWebApp, onSelectPlan, onNotify, currentPlan, adminTestCheckout = false }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { cards, flags, pricing } = useSettings();
@@ -753,7 +755,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
   const editorLimits = useEditorLimits();
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
-  const comingSoon = PRICES_HIDDEN || flags?.featureFlags?.paymentsDisabled !== false;
+  const comingSoon = !adminTestCheckout && (PRICES_HIDDEN || flags?.featureFlags?.paymentsDisabled !== false);
   // "Tüm ayrıcalıkları gör" popup'ı — hangi planın detayı açık.
   const [perksPlan, setPerksPlan] = useState<PlanId | null>(null);
   const starterTools: FeatureKey[] = (
