@@ -3311,6 +3311,26 @@ function App() {
   }, [isAuthenticated, isRestoring, view, language]);
 
   /**
+   * E-postadaki «araca git» bağlantısı: `/tools/<araç>?giris=1`. Oturum açıksa
+   * araç normal açılır; açık değilse doğrudan giriş ekranı gelir ve giriş
+   * bittiğinde kullanıcı aynı araca döner (bekleyen araç kaydıyla).
+   */
+  const girisIstegiIslendiRef = useRef(false);
+  useEffect(() => {
+    if (isRestoring || isAuthenticated || girisIstegiIslendiRef.current) return;
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("giris") !== "1") return;
+    const arac = parseWorkspaceToolPath(window.location.pathname);
+    if (!arac) return;
+    girisIstegiIslendiRef.current = true;
+    savePendingTool(arac);
+    window.history.replaceState({}, "", withLangPrefix("/login", language));
+    setAuthError("");
+    setView("login");
+  }, [isRestoring, isAuthenticated, language]);
+
+  /**
    * Giriş yapmış kullanıcı `/tools/pdf-duzenle` gibi (FeatureKey olmayan) bir araç
    * URL'ine geldiğinde — doğrudan link, PWA kısayolu, geri/ileri — doğru panel açılsın.
    * Bu olmadan workspace varsayılan "tool" panelinde kalır ve yanlış araç görünür.

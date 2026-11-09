@@ -29,9 +29,18 @@ import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import { createUrlSafeToken, hashToken } from "../../lib/token.js";
 import { sendMail } from "../../lib/mailer.js";
+import {
+  imzaIstegiEposta,
+  imzalandiGonderenEposta,
+  imzalandiImzalayanEposta,
+  imzaReddedildiEposta,
+} from "./signature.email.js";
 import { logger } from "../../lib/file-log.js";
 import { bufferToBytes } from "../../lib/bytes.js";
-import { imzaliBelgeUret, sha256, type ImzaYerlesimi } from "./signature.pdf.js";
+import { PDFDocument } from "pdf-lib";
+import { imzaliBelgeUret, sha256 } from "./signature.pdf.js";
+import { NOT_EN_COK_KARAKTER, notDuzMetin, temizNot } from "./signature.note.js";
+import { sayfalariCoz, tercihiCoz, tercihOzeti } from "./signature.placement.js";
 
 
 
@@ -131,6 +140,10 @@ export async function imzaIstegiOlustur(
     signerEmail: string;
     signerName?: string;
     message?: string;
+    /** JSON metni: { mod, sayfalar, konum } */
+    placement?: string;
+    /** true: imza/ret olunca gönderene e-posta gider. */
+    bildirimEposta?: boolean;
   },
   bilgi: IstekBilgisi = {},
 ): Promise<{ id: string; baglanti: string }> {
@@ -141,6 +154,23 @@ export async function imzaIstegiOlustur(
   if (girdi.belge.subarray(0, 5).toString("latin1") !== "%PDF-") {
     throw new HttpError(400, "Yalnızca PDF belgeler imzaya gönderilebilir.");
   }
+  // İmza yeri: belgenin gerçek sayfa sayısına karşı doğrulanır (olmayan sayfa istenemez).
+  const tercih = tercihiCoz(girdi.placement);
+  let sayfaSayisi: number;
+  try {
+    sayfaSayisi = (await PDFDocument.load(girdi.belge, { ignoreEncryption: true })).getPageCount();
+  } catch {
+    throw new HttpError(400, "PDF okunamadı. Dosya bozuk ya da parola korumalı olabilir.");
+  }
+  sayfalariCoz(tercih, sayfaSayisi);
+
+  // Not: biçimli HTML gelir; beyaz listeyle temizlenir, düz metin uzunluğu sınırlanır.
+  const notHtml = temizNot(girdi.message);
+  const notMetin = notDuzMetin(notHtml);
+  if (notMetin.length > NOT_EN_COK_KARAKTER) {
+    throw new HttpError(400, `Not en fazla ${NOT_EN_COK_KARAKTER} karakter olabilir.`);
+  }
+
   const eposta = (girdi.signerEmail || "").trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(eposta)) {
     throw new HttpError(400, "Geçerli bir e-posta adresi gerekli.");
@@ -169,7 +199,9 @@ export async function imzaIstegiOlustur(
       filename: (girdi.filename || "belge.pdf").slice(0, 200),
       originalData: bufferToBytes(girdi.belge),
       originalHash: sha256(girdi.belge),
-      message: (girdi.message || "").slice(0, 1000) || null,
+      message: notMetin ? notHtml : null,
+      placement: JSON.stringify(tercih),
+      notifyOwner: Boolean(girdi.bildirimEposta),
       signerEmail: eposta,
       signerName: (girdi.signerName || "").trim().slice(0, 120) || null,
       tokenHash: hashToken(token),
@@ -188,18 +220,14 @@ export async function imzaIstegiOlustur(
   await sendMail({
     to: eposta,
     replyTo: gonderen.email,
-    subject: `${gonderenAd} imzanızı bekliyor: ${istek.title}`,
-    text:
-      `${gonderenAd} (${gonderen.email}) bir belgeyi imzalamanızı istiyor: ${istek.title}\n\n` +
-      (girdi.message ? `Notu: ${girdi.message}\n\n` : "") +
-      `Belgeyi görüntülemek ve imzalamak için: ${baglanti}\n\n` +
-      `Bağlantı ${GECERLILIK_GUN} gün geçerlidir ve yalnızca sizin için üretilmiştir.`,
-    html:
-      `<p><strong>${gonderenAd}</strong> (${gonderen.email}) bir belgeyi imzalamanızı istiyor:</p>` +
-      `<p style="font-size:16px"><strong>${istek.title}</strong></p>` +
-      (girdi.message ? `<p style="color:#475569">Notu: ${girdi.message}</p>` : "") +
-      `<p><a href="${baglanti}" style="display:inline-block;background:#0891b2;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none">Belgeyi görüntüle ve imzala</a></p>` +
-      `<p style="color:#64748b;font-size:13px">Bağlantı ${GECERLILIK_GUN} gün geçerlidir ve yalnızca sizin için üretilmiştir.</p>`,
+    ...imzaIstegiEposta({
+      gonderenAd,
+      gonderenEposta: gonderen.email,
+      baslik: istek.title,
+      notHtml: notMetin ? notHtml : undefined,
+      baglanti,
+      gecerlilikGun: GECERLILIK_GUN,
+    }),
   });
   await olayYaz(istek.id, "sent", bilgi, { actor: eposta });
 
@@ -209,7 +237,7 @@ export async function imzaIstegiOlustur(
 
 export async function imzaIstekleriniListele(ownerId: string) {
   const kayitlar = await prisma.signatureRequest.findMany({
-    where: { ownerId },
+    where: { ownerId, deletedAt: null },
     orderBy: { createdAt: "desc" },
     take: 100,
     select: {
@@ -237,7 +265,7 @@ export async function imzaIstekleriniListele(ownerId: string) {
 
 export async function imzaIstegiDetayi(ownerId: string, id: string) {
   const istek = await prisma.signatureRequest.findFirst({
-    where: { id, ownerId },
+    where: { id, ownerId, deletedAt: null },
     select: {
       id: true,
       title: true,
@@ -262,17 +290,43 @@ export async function imzaIstegiDetayi(ownerId: string, id: string) {
 }
 
 export async function imzaIstegiIptal(ownerId: string, id: string, bilgi: IstekBilgisi = {}) {
-  const istek = await prisma.signatureRequest.findFirst({ where: { id, ownerId }, select: { id: true, status: true } });
+  const istek = await prisma.signatureRequest.findFirst({ where: { id, ownerId, deletedAt: null }, select: { id: true, status: true } });
   if (!istek) throw new HttpError(404, "İmza isteği bulunamadı.");
   if (istek.status === "SIGNED") throw new HttpError(409, "İmzalanmış bir istek iptal edilemez.");
   await prisma.signatureRequest.update({ where: { id }, data: { status: "CANCELLED" } });
   await olayYaz(id, "cancelled", bilgi);
 }
 
+/**
+ * Kullanıcı isteği siler: belge içeriği (özgün + imzalı) kalıcı olarak temizlenir,
+ * imza bağlantısı çalışmaz. Denetim olayları ve belge parmak izleri, olası bir
+ * itiraz için kalır; ayrıca silme, aylık kontenjanı geri vermez (gönder-sil
+ * döngüsüyle sınırın aşılmasını önler).
+ */
+export async function imzaIstegiSil(ownerId: string, id: string, bilgi: IstekBilgisi = {}) {
+  const istek = await prisma.signatureRequest.findFirst({
+    where: { id, ownerId, deletedAt: null },
+    select: { id: true, status: true },
+  });
+  if (!istek) throw new HttpError(404, "İmza isteği bulunamadı.");
+  const bekliyor = istek.status === "PENDING" || istek.status === "VIEWED";
+  await prisma.signatureRequest.update({
+    where: { id },
+    data: {
+      deletedAt: new Date(),
+      ...(bekliyor ? { status: "CANCELLED" as const } : {}),
+      originalData: bufferToBytes(Buffer.alloc(0)),
+      signedData: null,
+      message: null,
+    },
+  });
+  await olayYaz(id, "deleted", bilgi, { detail: "Kullanıcı tarafından silindi" });
+}
+
 /** İmzalı (yoksa özgün) belgeyi indirir. */
 export async function imzaBelgesiniIndir(ownerId: string, id: string, bilgi: IstekBilgisi = {}) {
   const istek = await prisma.signatureRequest.findFirst({
-    where: { id, ownerId },
+    where: { id, ownerId, deletedAt: null },
     select: { id: true, filename: true, signedData: true, originalData: true, status: true },
   });
   if (!istek) throw new HttpError(404, "İmza isteği bulunamadı.");
@@ -280,7 +334,7 @@ export async function imzaBelgesiniIndir(ownerId: string, id: string, bilgi: Ist
   await olayYaz(id, "downloaded", bilgi, { detail: imzali ? "imzalı belge" : "özgün belge" });
   return {
     filename: imzali ? istek.filename.replace(/\.pdf$/i, "") + "-imzali.pdf" : istek.filename,
-    data: (istek.signedData ?? istek.originalData) as Buffer,
+    data: Buffer.from((istek.signedData ?? istek.originalData) as Uint8Array),
   };
 }
 
@@ -294,6 +348,9 @@ async function tokenlaBul(token: string) {
       title: true,
       filename: true,
       message: true,
+      placement: true,
+      notifyOwner: true,
+      deletedAt: true,
       status: true,
       signerEmail: true,
       signerName: true,
@@ -303,7 +360,7 @@ async function tokenlaBul(token: string) {
       owner: { select: { email: true, name: true, firstName: true } },
     },
   });
-  if (!istek) throw new HttpError(404, "Bu imza bağlantısı geçersiz.");
+  if (!istek || istek.deletedAt) throw new HttpError(404, "Bu imza bağlantısı geçersiz.");
   return istek;
 }
 
@@ -330,13 +387,14 @@ export async function imzaSayfasiniAc(token: string, bilgi: IstekBilgisi = {}) {
     id: istek.id,
     title: istek.title,
     filename: istek.filename,
-    message: istek.message,
+    message: istek.message ? temizNot(istek.message) || null : null,
     status: istek.status === "PENDING" ? "VIEWED" : istek.status,
     signerEmail: istek.signerEmail,
     signerName: istek.signerName,
     isteyen: isteyen.name || isteyen.firstName || isteyen.email,
     isteyenEposta: isteyen.email,
-    belgeBase64: (istek.originalData as Buffer).toString("base64"),
+    belgeBase64: Buffer.from(istek.originalData as Uint8Array).toString("base64"),
+    yerlesimOzeti: tercihOzeti(tercihiCoz(istek.placement)),
     imzalandiMi: istek.status === "SIGNED",
   };
 }
@@ -352,7 +410,6 @@ export async function imzayiUygula(
   girdi: {
     imzaPngBase64: string;
     imzalayanAd: string;
-    yerlesim: ImzaYerlesimi;
     riza: boolean;
   },
   bilgi: IstekBilgisi = {},
@@ -396,7 +453,7 @@ export async function imzayiUygula(
   const imzali = await imzaliBelgeUret({
     ozgunPdf: new Uint8Array(istek.originalData as Buffer),
     imzaPng: new Uint8Array(imzaPng),
-    yerlesim: girdi.yerlesim,
+    yerlesim: tercihiCoz(istek.placement),
     imzalayanAd: ad,
     imzalayanEposta: istek.signerEmail,
     isteyenAd: istek.owner.name || istek.owner.firstName || "",
@@ -421,22 +478,36 @@ export async function imzayiUygula(
   await olayYaz(istek.id, "signed", bilgi, { actor: `${ad} <${istek.signerEmail}>` });
 
   // İki tarafa da haber ver — imzalayanın elinde de kopyası olmalı.
-  const konu = `İmzalandı: ${istek.title}`;
-  const govde =
-    `«${istek.title}» belgesi ${ad} tarafından imzalandı.\n\n` +
-    `İmzalı belge, imzalama sürecinin zaman damgalı kaydını taşıyan bir denetim ` +
-    `sertifikası sayfasıyla birlikte hesabınızda hazır.`;
-  await sendMail({
-    to: istek.owner.email,
-    subject: konu,
-    text: govde,
-    html: `<p>«<strong>${istek.title}</strong>» belgesi <strong>${ad}</strong> tarafından imzalandı.</p><p style="color:#475569">İmzalı belge, denetim sertifikasıyla birlikte hesabınızda hazır.</p>`,
-  }).catch(() => undefined);
+  const gonderenAd = istek.owner.name || istek.owner.firstName || istek.owner.email;
+  // Gönderen yalnızca isteyerek bilgilendirilir (istek formundaki kutu). Ekranı anlık güncellenir.
+  if (istek.notifyOwner) {
+    await sendMail({
+      to: istek.owner.email,
+      ...imzalandiGonderenEposta({
+        baslik: istek.title,
+        imzalayanAd: ad,
+        imzalayanEposta: istek.signerEmail,
+        imzaZamani,
+      }),
+    }).catch(() => undefined);
+  }
   await sendMail({
     to: istek.signerEmail,
-    subject: konu,
-    text: `«${istek.title}» belgesini imzaladınız. Bir kopyası isteği gönderen tarafa iletildi.`,
-    html: `<p>«<strong>${istek.title}</strong>» belgesini imzaladınız. Bir kopyası isteği gönderen tarafa iletildi.</p>`,
+    ...imzalandiImzalayanEposta({
+      baslik: istek.title,
+      gonderenAd,
+      imzalayanAd: ad,
+      imzaZamani,
+      dosyaAdi: istek.filename.replace(/\.pdf$/i, "") + "-imzali.pdf",
+    }),
+    // İmzalı kopya e-postaya DOĞRUDAN eklenir; ayrıca indirme bağlantısı verilmez.
+    attachments: [
+      {
+        filename: istek.filename.replace(/\.pdf$/i, "") + "-imzali.pdf",
+        content: imzaliBuf,
+        contentType: "application/pdf",
+      },
+    ],
   }).catch(() => undefined);
 
   logger.info("imza", "belge imzalandı", { id: istek.id });
@@ -463,12 +534,12 @@ export async function imzayiReddet(
     actor: istek.signerEmail,
     detail: (sebep || "").slice(0, 200) || undefined,
   });
-  await sendMail({
-    to: istek.owner.email,
-    subject: `İmza reddedildi: ${istek.title}`,
-    text: `«${istek.title}» için imza isteği reddedildi.` + (sebep ? `\n\nBelirtilen sebep: ${sebep}` : ""),
-    html: `<p>«<strong>${istek.title}</strong>» için imza isteği reddedildi.</p>` + (sebep ? `<p style="color:#475569">Belirtilen sebep: ${sebep}</p>` : ""),
-  }).catch(() => undefined);
+  if (istek.notifyOwner) {
+    await sendMail({
+      to: istek.owner.email,
+      ...imzaReddedildiEposta({ baslik: istek.title, imzalayanEposta: istek.signerEmail, sebep: sebep || undefined }),
+    }).catch(() => undefined);
+  }
 }
 
 /** İmzalayan kendi kopyasını indirebilsin (imzaladıktan sonra). */
@@ -482,6 +553,6 @@ export async function imzalayanKopyasi(token: string) {
   }
   return {
     filename: istek.filename.replace(/\.pdf$/i, "") + "-imzali.pdf",
-    data: istek.signedData as Buffer,
+    data: Buffer.from(istek.signedData as Uint8Array),
   };
 }

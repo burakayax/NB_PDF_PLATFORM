@@ -30,6 +30,12 @@ export type ToolResultPanelProps = {
   children?: ReactNode;
   /** "Aç" düğmesini gizler — ör. ZIP çıktısı tarayıcı sekmesinde önizlenemez. */
   hideOpen?: boolean;
+  /** Varsayılan başlığın («PDF hazır» vb.) yerine geçer. */
+  heading?: string;
+  /** false: dosya indirilmeden kapatırken uyarı gösterilmez (dosya asıl çıktı değilse). */
+  confirmClose?: boolean;
+  /** true: İndir / Paylaş / Aç düğmeleri gösterilmez (sonuç bir dosya değilse). */
+  hideFileActions?: boolean;
   /**
    * Araç kimliği — verilirse işlem bitiminde tek soruluk puanlama gösterilir.
    *
@@ -112,6 +118,9 @@ export function ToolResultPanel({
   children,
   ratingToolSlug,
   hideOpen = false,
+  heading,
+  confirmClose = true,
+  hideFileActions = false,
   extraActions,
 }: ToolResultPanelProps) {
   const t = L[language] ?? L.tr;
@@ -223,7 +232,7 @@ export function ToolResultPanel({
    * işlem (ücretli araçlarda hakkıyla birlikte) boşa gitmiş olur.
    */
   function handleClose() {
-    if (!everDownloaded && !closeArmed) {
+    if (confirmClose && !everDownloaded && !closeArmed) {
       setCloseArmed(true);
       window.setTimeout(() => setCloseArmed(false), 5000);
       return;
@@ -263,7 +272,7 @@ export function ToolResultPanel({
         <Check className="h-8 w-8" />
       </div>
       <p className="mt-4 inline-flex items-center justify-center gap-2.5 text-xl font-bold text-white">
-        {isPdf ? t.ready : t.readyGeneric}
+        {heading ?? (isPdf ? t.ready : t.readyGeneric)}
         <FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden />
       </p>
       <p className="mt-1 text-sm text-slate-400">
@@ -273,6 +282,8 @@ export function ToolResultPanel({
         {filename}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        {!hideFileActions && (
+          <>
         <button
           type="button"
           onClick={() => void save()}
@@ -306,6 +317,8 @@ export function ToolResultPanel({
           <button type="button" onClick={open} className={btnOpen}>
             <ExternalLink className="h-4 w-4" /> {t.open}
           </button>
+        )}
+          </>
         )}
         {extraActions}
         <button

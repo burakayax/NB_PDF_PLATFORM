@@ -9,6 +9,7 @@ import {
   signatureRequestDetailController,
   cancelSignatureRequestController,
   downloadSignatureDocumentController,
+  deleteSignatureRequestController,
   openSignPageController,
   submitSignatureController,
   declineSignatureController,
@@ -28,6 +29,7 @@ signatureRouter.get("/", asyncHandler(listSignatureRequestsController));
 signatureRouter.post("/", belgeYukleme.single("file"), asyncHandler(createSignatureRequestController));
 signatureRouter.get("/:id", asyncHandler(signatureRequestDetailController));
 signatureRouter.post("/:id/cancel", asyncHandler(cancelSignatureRequestController));
+signatureRouter.delete("/:id", asyncHandler(deleteSignatureRequestController));
 signatureRouter.get("/:id/download", asyncHandler(downloadSignatureDocumentController));
 
 /**

@@ -35,8 +35,8 @@ export function RunsWhereBadge({ onDevice, language, className = "" }: { onDevic
           ? "Bu işlem güçlü bir bilgisayar gerektirdiği için dosyanız şifreli bağlantıyla sunucumuza gönderilir ve orada işlenir."
           : "This task needs a powerful computer, so your file is sent over an encrypted connection to our server and processed there.",
         points: tr
-          ? ["Aktarım şifrelidir; dosyanız yolda okunamaz.", "İşlem bittikten sonra dosyanız sunucudan silinir.", "Çok hassas bir belgeyse, «Cihazında çalışır» yazan araçları tercih edebilirsiniz."]
-          : ["The transfer is encrypted; your file cannot be read on the way.", "Your file is deleted from the server after processing.", "For a very sensitive document, prefer tools marked “Runs on your device”."],
+          ? ["Aktarım şifrelidir; dosyanız yolda okunamaz.", "İşlem bittikten sonra dosyanız sunucudan silinir.", "Dosyanız yalnızca istediğiniz işlem için kullanılır; başka hiçbir amaçla kullanılmaz."]
+          : ["The transfer is encrypted; your file cannot be read on the way.", "Your file is deleted from the server after processing.", "Your file is used only for the task you asked for, and for nothing else."],
       };
 
   return (
