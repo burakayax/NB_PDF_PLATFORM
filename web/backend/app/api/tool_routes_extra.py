@@ -296,16 +296,10 @@ async def tool_delete_pages(
         watermark = bool(decision.get("watermarkEnabled", False))
 
         def _run() -> dict[str, Any]:
-            import pymupdf as _fitz
-            src = _fitz.open(sp)
-            if src.needs_pass:
-                if not (pwd or ""):
-                    raise Exception("Şifreli PDF için parola gerekli.")
-                if not src.authenticate(pwd or ""):
-                    raise Exception("Girilen PDF parolası hatalı.")
-            thumb: bytes | None = None
+            from src.pdfcore import pages as _pc
+            src = _pc.open_pdf(sp, pwd)
             try:
-                n = src.page_count
+                n = len(src.pages)
                 to_del = parse_pages_text(pages_to_delete, max_page=n)
                 to_del_set = {int(p) for p in to_del}
                 if len(to_del_set) >= n:
@@ -314,29 +308,10 @@ async def tool_delete_pages(
                         detail="Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.",
                     )
                 keep = [i for i in range(n) if (i + 1) not in to_del_set]
-                # Ardışık aralıkları tek insert_pdf çağrısıyla kopyala —
-                # select()+save() tüm dosyayı yeniden yazarken bu yaklaşım
-                # yalnızca tutulan sayfaları yeni boş doc'a aktarır.
-                new_doc = _fitz.open()
-                try:
-                    ranges: list[tuple[int, int]] = []
-                    if keep:
-                        s = keep[0]; e = keep[0]
-                        for k in keep[1:]:
-                            if k == e + 1:
-                                e = k
-                            else:
-                                ranges.append((s, e))
-                                s = e = k
-                        ranges.append((s, e))
-                    for from_p, to_p in ranges:
-                        new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
-                    thumb = generate_blurred_pdf_thumbnail_from_doc(new_doc)
-                    new_doc.save(str(out_p), garbage=0, deflate=False, linear=False)
-                finally:
-                    new_doc.close()
+                _pc.write_selected_pages(src, str(out_p), keep)
             finally:
                 src.close()
+            thumb = generate_blurred_pdf_thumbnail_from_path(out_p)
             _maybe_watermark_pdf(out_p, watermark)
             h = save_result_from_file(
                 out_p,
@@ -1554,34 +1529,25 @@ async def tool_rotate_pdf(
 
         def _run():
             # PDF sayfa sayısını burada alıyoruz — tek run_cpu_bound çağrısı yeterli
-            import pymupdf as _fitz
-            doc = _fitz.open(sp)
-            if doc.needs_pass:
-                if not (pwd or ""):
-                    raise Exception("Şifreli PDF için parola gerekli.")
-                if not doc.authenticate(pwd or ""):
-                    raise Exception("Girilen PDF parolası hatalı.")
+            from src.pdfcore import pages as _pc
+            doc = _pc.open_pdf(sp, pwd)
             try:
-                n = doc.page_count
+                n = len(doc.pages)
                 pages_l = parse_pages_text(pages_str, max_page=n) if (per_page_raw is None and pages_str) else None
                 if per_page_raw is not None:
                     for p in range(1, n + 1):
                         add_deg = int(per_page_raw.get(p, 0))
                         if add_deg == 0:
                             continue
-                        page = doc[p - 1]
-                        cur = int(page.rotation) % 360
-                        page.set_rotation((cur + add_deg) % 360)
+                        _pc.rotate_page(doc.pages[p - 1], add_deg)
                 else:
                     targets = [p - 1 for p in (pages_l or list(range(1, n + 1)))]
                     for i in targets:
                         if i < 0 or i >= n:
                             continue
-                        page = doc[i]
-                        cur = int(page.rotation) % 360
-                        page.set_rotation((cur + int(degrees)) % 360)
+                        _pc.rotate_page(doc.pages[i], int(degrees))
                 # Döndürme yalnızca /Rotate meta-verisini değiştirir — içerik akışı yok
-                doc.save(str(out_p), garbage=0, deflate=False, linear=False)
+                _pc.save_pdf(doc, out_p)
             finally:
                 doc.close()
             _maybe_watermark_pdf(out_p, watermark)
@@ -1624,16 +1590,10 @@ async def tool_organize_pdf(
         raw_order_str = page_order
 
         def _run() -> dict[str, Any]:
-            import pymupdf as _fitz
-            src = _fitz.open(sp)
-            if src.needs_pass:
-                if not (pwd or ""):
-                    raise Exception("Şifreli PDF için parola gerekli.")
-                if not src.authenticate(pwd or ""):
-                    raise Exception("Girilen PDF parolası hatalı.")
-            thumb: bytes | None = None
+            from src.pdfcore import pages as _pc
+            src = _pc.open_pdf(sp, pwd)
             try:
-                n = src.page_count
+                n = len(src.pages)
                 raw = [int(x.strip()) for x in raw_order_str.split(",") if x.strip().isdigit()]
                 if len(raw) != n:
                     raise HTTPException(
@@ -1641,25 +1601,15 @@ async def tool_organize_pdf(
                         detail=f"Tam {n} sayfa numarası verin (virgülle, örn. 2,1,3).",
                     )
                 order_0 = [p - 1 for p in raw]
-                ranges: list[tuple[int, int]] = []
-                s = order_0[0]; e = order_0[0]
-                for k in order_0[1:]:
-                    if k == e + 1:
-                        e = k
-                    else:
-                        ranges.append((s, e))
-                        s = e = k
-                ranges.append((s, e))
-                new_doc = _fitz.open()
-                try:
-                    for from_p, to_p in ranges:
-                        new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
-                    thumb = generate_blurred_pdf_thumbnail_from_doc(new_doc)
-                    new_doc.save(str(out_p), garbage=0, deflate=False, linear=False)
-                finally:
-                    new_doc.close()
+                if any(i < 0 or i >= n for i in order_0):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Sayfa numaraları 1 ile {n} arasında olmalı.",
+                    )
+                _pc.write_selected_pages(src, str(out_p), order_0)
             finally:
                 src.close()
+            thumb = generate_blurred_pdf_thumbnail_from_path(out_p)
             _maybe_watermark_pdf(out_p, watermark)
             h = save_result_from_file(
                 out_p, out_n, "application/pdf",
