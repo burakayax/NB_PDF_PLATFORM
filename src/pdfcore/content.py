@@ -369,6 +369,7 @@ class Interp:
         self._fonts: Dict[Any, PdfFont] = {}
         self._seen_forms: set = set()
         self._ndel = 0
+        self._nclone = 0
 
     def font_for(self, fobj: Any) -> PdfFont:
         key = fobj.objgen if getattr(fobj, "objgen", (0, 0)) != (0, 0) else id(fobj)
@@ -684,7 +685,16 @@ class Interp:
                             self.changed = False
                             new_sub = self._run(sub, fres, mul(fmat, ctm), depth + 1)  # type: ignore[arg-type]
                             if self.rewrite and self.changed:
-                                xo.write(pikepdf.unparse_content_stream(new_sub))
+                                # Ortak (birden çok kez çizilen) form başka yerlerde de değişmesin diye
+                                # düzenlenen kopya YENİ bir form olarak eklenir; bu çağrı ona yönlendirilir.
+                                clone = self.pdf.make_stream(pikepdf.unparse_content_stream(new_sub))
+                                for k in list(xo.keys()):
+                                    if k not in ("/Length", "/Filter", "/DecodeParms"):
+                                        clone[k] = xo[k]
+                                self._nclone += 1
+                                nm = pikepdf.Name(f"/NbF{self._nclone}")
+                                res.XObject[nm] = clone
+                                replacement = [pikepdf.ContentStreamInstruction([nm], pikepdf.Operator("Do"))]
                             self.changed = before or self.changed
                         finally:
                             self._seen_forms.discard(xo.objgen)
