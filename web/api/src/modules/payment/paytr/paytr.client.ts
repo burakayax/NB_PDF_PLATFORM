@@ -264,6 +264,47 @@ export async function queryPaytrStatus(
   return { ok: false, errNo: String(data?.err_no ?? "?"), errMsg: String(data?.err_msg ?? `http_${res.status}`) };
 }
 
+// ─── Durum sorgu: iade özeti ─────────────────────────────────────────────────
+
+export type PaytrReturnsSummary =
+  | { state: "none" } // Sipariş için hiç iade yok (PayTR "returns" göndermedi/boş)
+  | { state: "known"; totalKurus: number } // Tutar okundu
+  | { state: "unknown" }; // İade var gibi ama tutar okunamadı → TAHMİN ETME
+
+/** "10,8" | "10.80" | "1.234,50" → kuruş. Okunamazsa null. */
+export function parsePaytrMoneyToKurus(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? Math.round(v * 100) : null;
+  if (typeof v !== "string") return null;
+  let s = v.trim();
+  if (!s) return null;
+  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (s.includes(",")) s = s.replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(s)) return null;
+  return Math.round(Number(s) * 100);
+}
+
+/**
+ * Durum sorgu yanıtındaki "returns" alanından toplam iade tutarını çıkarır.
+ * Döküman alan adlarını net vermediği için bilinen adlar denenir (return_amount / Amount / amount);
+ * hiçbiri okunamazsa "unknown" döner — çağıran bunu "iade yapıldı" SAYMAMALI.
+ */
+export function summarizePaytrReturns(raw: Record<string, unknown>): PaytrReturnsSummary {
+  const r = raw.returns;
+  if (r === undefined || r === null || r === "" || (Array.isArray(r) && r.length === 0)) {
+    return { state: "none" };
+  }
+  if (!Array.isArray(r)) return { state: "unknown" };
+  let total = 0;
+  for (const item of r) {
+    if (!item || typeof item !== "object") return { state: "unknown" };
+    const o = item as Record<string, unknown>;
+    const k = parsePaytrMoneyToKurus(o.return_amount ?? o.Amount ?? o.amount);
+    if (k === null) return { state: "unknown" };
+    total += k;
+  }
+  return { state: "known", totalKurus: total };
+}
+
 // ─── İade ────────────────────────────────────────────────────────────────────
 
 export type PaytrRefundResult =
