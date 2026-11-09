@@ -111,7 +111,7 @@ export const legalDocuments = {
         {
           title: "1. Data controller",
           paragraphs: [
-            "The data controller responsible for personal data processed in connection with PDF Platform is Burak KAYA, a sole proprietor who uses the “NB Global Studio” brand (Hızırbey Tax Office, Tax No 51391675940, Toklu Mahallesi, Gürpınar Sk. No: 2 A Door No: 26, Ortahisar/Trabzon). For privacy requests, use the contact email at the end of this policy.",
+            "The data controller responsible for personal data processed in connection with PDF Platform is Burak KAYA, a sole proprietor who uses the “NB Global Studio” brand (Hızırbey Tax Office, Tax No 5300847203, Toklu Mahallesi, Gürpınar Sk. No: 2 A Door No: 26, Ortahisar/Trabzon). For privacy requests, use the contact email at the end of this policy.",
           ],
         },
         {
@@ -288,7 +288,7 @@ export const legalDocuments = {
           paragraphs: [
             "Seller: Burak KAYA (sole proprietor; operates the PDF Platform / NB Global Studio brands)",
             "Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon",
-            "Tax office / number: Hızırbey Tax Office (Ortahisar/Trabzon) — 51391675940",
+            "Tax office / number: Hızırbey Tax Office (Ortahisar/Trabzon) — 5300847203",
             "Phone: +90 541 784 9889",
             "Email: info@pdfplatform.app",
             "Website: pdfplatform.app",
@@ -339,7 +339,7 @@ export const legalDocuments = {
         {
           title: "1. Parties",
           paragraphs: [
-            "SELLER: Burak KAYA (NB Global Studio), Hızırbey Tax Office (Ortahisar/Trabzon), Tax No: 51391675940, Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Phone: +90 541 784 9889, Email: info@pdfplatform.app, Website: pdfplatform.app",
+            "SELLER: Burak KAYA (NB Global Studio), Hızırbey Tax Office (Ortahisar/Trabzon), Tax No: 5300847203, Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Phone: +90 541 784 9889, Email: info@pdfplatform.app, Website: pdfplatform.app",
             "BUYER: The user identified by the name (or title), billing address, phone and email provided at the payment step; for taxpayers, the tax number and tax office are also part of this information.",
             "In this agreement the BUYER and the SELLER are each a “Party” and together the “Parties”. The BUYER confirms that the information given at the payment step is accurate and current and that the invoice details are complete. If the order is placed on behalf of another person, the person placing the order is responsible for the accuracy of that person's information and for obligations under personal data protection law.",
             "The BUYER declares at the payment step that they are at least 18 years old or, if under 18, that their legal guardian (parent/guardian) has approved this purchase. Orders placed by a minor without the legal guardian's approval may be invalid under mandatory law.",
@@ -637,7 +637,7 @@ export const legalDocuments = {
         {
           title: "1. Veri sorumlusu",
           paragraphs: [
-            "PDF Platform ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu, “NB Global Studio” markasını kullanan şahıs işletmesi sahibi Burak KAYA’dır (Hızırbey Vergi Dairesi, Vergi No: 51391675940, Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon). Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
+            "PDF Platform ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu, “NB Global Studio” markasını kullanan şahıs işletmesi sahibi Burak KAYA’dır (Hızırbey Vergi Dairesi, Vergi No: 5300847203, Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon). Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
           ],
         },
         {
@@ -785,7 +785,7 @@ export const legalDocuments = {
         {
           title: "1. Veri Sorumlusu",
           paragraphs: [
-            "Veri sorumlusu: Burak KAYA (şahıs işletmesi; “NB Global Studio” markasını kullanır) — Hızırbey Vergi Dairesi, Vergi No: 51391675940, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon (bundan böyle ‘Şirket’ olarak anılacaktır).",
+            "Veri sorumlusu: Burak KAYA (şahıs işletmesi; “NB Global Studio” markasını kullanır) — Hızırbey Vergi Dairesi, Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon (bundan böyle ‘Şirket’ olarak anılacaktır).",
             "İletişim: info@pdfplatform.app — KVKK kapsamındaki tüm başvurularınızı bu adrese iletebilirsiniz.",
           ],
         },
@@ -875,7 +875,7 @@ export const legalDocuments = {
           paragraphs: [
             "Satıcı: Burak KAYA (şahıs işletmesi; PDF Platform / NB Global Studio markalarının işletmecisi)",
             "Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon",
-            "Vergi dairesi / numarası: Hızırbey Vergi Dairesi Müdürlüğü (Ortahisar/Trabzon) — 51391675940",
+            "Vergi dairesi / numarası: Hızırbey Vergi Dairesi Müdürlüğü (Ortahisar/Trabzon) — 5300847203",
             "Telefon: 0541 784 9889",
             "E-posta: info@pdfplatform.app",
             "Web sitesi: pdfplatform.app",
@@ -927,7 +927,7 @@ export const legalDocuments = {
         {
           title: "1. Taraflar",
           paragraphs: [
-            "SATICI: Burak KAYA (NB Global Studio), Hızırbey Vergi Dairesi Müd. (Ortahisar/Trabzon), Vergi No: 51391675940, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Telefon: 0541 784 9889, E-posta: info@pdfplatform.app, Web sitesi: pdfplatform.app",
+            "SATICI: Burak KAYA (NB Global Studio), Hızırbey Vergi Dairesi Müd. (Ortahisar/Trabzon), Vergi No: 5300847203, Adres: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon, Telefon: 0541 784 9889, E-posta: info@pdfplatform.app, Web sitesi: pdfplatform.app",
             "ALICI: Ödeme adımında beyan edilen ad-soyad (veya unvan), fatura adresi, telefon ve e-posta bilgileriyle tanımlanan kullanıcıdır; vergi mükellefiyse vergi numarası ve vergi dairesi de bu bilgilere dahildir.",
             "İşbu sözleşmede ALICI ve SATICI ayrı ayrı “Taraf”, birlikte “Taraflar” olarak anılır. ALICI, ödeme adımında verdiği bilgilerin doğru ve güncel olduğunu, fatura bilgilerinin eksiksiz olduğunu kabul eder. Siparişi başka bir kişi adına veriyorsa, o kişinin bilgilerinin doğruluğundan ve kişisel verilerin korunması mevzuatı kapsamındaki yükümlülüklerden siparişi veren sorumludur.",
             "ALICI, ödeme adımında 18 yaşını doldurduğunu veya 18 yaşından küçükse bu satın alma için yasal temsilcisinin (anne/baba/vasi) onayının bulunduğunu beyan eder. Yasal temsilcinin onayı olmaksızın reşit olmayan bir kişi tarafından verilen siparişler, emredici mevzuat uyarınca geçerli olmayabilir.",
