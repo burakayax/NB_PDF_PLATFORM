@@ -205,6 +205,7 @@ export function PlanUpgradeModal({
             onUseWebApp={onClose}
             onSelectPlan={accessToken && user ? handleSelectPlan : undefined}
             currentPlan={user?.plan ?? null}
+            adminTestCheckout={user?.role === "ADMIN"}
           />
         </div>
       </div>
