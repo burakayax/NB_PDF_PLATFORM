@@ -1,5 +1,6 @@
 import { adminUserDisputeFileController, adminVerifyOutputFileController } from "./dispute.admin.js";
 import { adminFinancialExportController } from "./financial-export.admin.js";
+import { adminListPaymentsController } from "./payments-list.admin.js";
 import { adminServiceStatusController } from "./service-status.admin.js";
 import express, { Router } from "express";
 import multer from "multer";
@@ -172,6 +173,7 @@ adminRouter.post("/credits/adjust", asyncHandler(adminAdjustCreditsController));
 adminRouter.post("/usage/grant-today", asyncHandler(adminGrantBonusOpsController));
 adminRouter.post("/usage/custom-daily-limit", asyncHandler(adminSetCustomDailyLimitController));
 
+adminRouter.get("/payments", asyncHandler(adminListPaymentsController));
 adminRouter.post("/payments/:conversationId/refund", asyncHandler(adminIssueRefundController));
 
 adminRouter.post("/rate-limit/reset/:userId", asyncHandler(adminResetRateLimitController));

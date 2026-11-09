@@ -1668,3 +1668,72 @@ export async function saveEditorLimits(
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<EditorLimitsAdminState>;
 }
+
+/* ───────────── Ödeme listesi + iade ───────────── */
+
+export type AdminPaymentRow = {
+  conversationId: string;
+  createdAt: string;
+  completedAt: string | null;
+  refundedAt: string | null;
+  refundReason: string | null;
+  status: string;
+  kind: "plan" | "topup" | "cvpass" | "seats";
+  plan: string;
+  billingCycle: string;
+  amount: number;
+  currency: string;
+  netAmount: string | null;
+  kdvAmount: string | null;
+  kdvRate: number | null;
+  discountPercent: number | null;
+  provider: "paytr" | "diger";
+  invoiceStatus: string | null;
+  invoiceNo: string | null;
+  user: { id: string; email: string; name: string };
+  refundable: boolean;
+  withinRefundWindow: boolean;
+};
+
+export type AdminPaymentsPage = {
+  rows: AdminPaymentRow[];
+  total: number;
+  offset: number;
+  limit: number;
+  truncated: boolean;
+  refundWindowDays: number;
+  totals: { completedCount: number; completedAmount: number; refundedCount: number; refundedAmount: number };
+};
+
+export async function fetchAdminPayments(accessToken: string, params: Record<string, string>): Promise<AdminPaymentsPage> {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== "" && v !== "all") qs.set(k, v);
+  }
+  const res = await adminFetch(accessToken, `/payments?${qs.toString()}`);
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "Ödemeler yüklenemedi.");
+  return (await res.json()) as AdminPaymentsPage;
+}
+
+export type AdminRefundResult = {
+  ok: true;
+  conversationId: string;
+  planAfter: string;
+  refundedAt: string;
+  /** true: para PayTR üzerinden otomatik iade edildi. false: iade elle yapılmalı. */
+  providerRefunded: boolean;
+};
+
+export async function refundAdminPayment(
+  accessToken: string,
+  conversationId: string,
+  reason: string,
+  forceOverrideWindow: boolean,
+): Promise<AdminRefundResult> {
+  const res = await adminFetch(accessToken, `/payments/${encodeURIComponent(conversationId)}/refund`, {
+    method: "POST",
+    body: JSON.stringify({ reason, forceOverrideWindow }),
+  });
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "İade yapılamadı.");
+  return (await res.json()) as AdminRefundResult;
+}

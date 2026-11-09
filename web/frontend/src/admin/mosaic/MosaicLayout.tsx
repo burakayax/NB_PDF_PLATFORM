@@ -17,6 +17,7 @@ import {
   Tag,
   Ticket,
   Users,
+  CreditCard,
   Wrench,
   X,
   Share2,
@@ -31,6 +32,7 @@ export type MosaicNavGroup = { title: string; items: MosaicNavItem[] };
 const iconMap: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   users: Users,
+  payments: CreditCard,
   "cmd-mkt": Radio,
   "cmd-coupons": Ticket,
   "cmd-social": Share2,
