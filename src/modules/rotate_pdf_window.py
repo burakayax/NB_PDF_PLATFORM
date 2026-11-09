@@ -166,16 +166,15 @@ class RotatePdfWindow(ctk.CTkToplevel):
             try:
                 if self.access_controller:
                     self.access_controller.authorize_operation("rotate-pdf", [self.selected_file])
-                import pymupdf as fitz
-                doc = fitz.open(self.selected_file)
-                if self.selected_password:
-                    doc.authenticate(self.selected_password)
-                for pnum, delta in rotations.items():
-                    if delta != 0:
-                        page = doc[pnum - 1]
-                        page.set_rotation((page.rotation + delta) % 360)
-                doc.save(save_path, garbage=4, deflate=True)
-                doc.close()
+                from src.pdfcore import pages as _pc
+                doc = _pc.open_pdf(self.selected_file, self.selected_password)
+                try:
+                    for pnum, delta in rotations.items():
+                        if delta != 0:
+                            _pc.rotate_page(doc.pages[pnum - 1], delta)
+                    _pc.save_pdf(doc, save_path)
+                finally:
+                    doc.close()
                 q.put(("done", save_path))
             except Exception as e:
                 q.put(("error", str(e)))

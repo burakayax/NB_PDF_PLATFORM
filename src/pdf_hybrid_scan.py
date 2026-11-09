@@ -135,10 +135,10 @@ def _runs(l: Dict[str, Any], text: str) -> List[Tuple[str, bool]]:
 
 
 def _natural_width(runs: List[Tuple[str, bool]], size: float) -> float:
-    import pymupdf as fitz
+    from src.pdfcore.overlay import text_width
     # Yerleşik Helvetica yalnızca Latin-1 biliyor; Türkçe harfler 0 genişlik sayılıp punto şişmesin
     tr = str.maketrans("İıŞşĞğ", "IiSsGg")
-    return sum(fitz.get_text_length(t.translate(tr), fontname="hebo" if b else "helv", fontsize=size)
+    return sum(text_width(t.translate(tr), "hebo" if b else "helv", size)
                for t, b in runs)
 
 
@@ -253,27 +253,27 @@ def _frame_line(doc, l: Dict[str, Any], k: float, size: float, text: str, page_w
 def hybrid_pdf_to_word(pdf_path: str, docx_path: str, *, use_claude: bool = False,
                        api_key: str = "", model: str = "claude-haiku-5-5",
                        password: Optional[str] = None, progress_callback=None) -> Dict[str, Any]:
-    import pymupdf as fitz
     from docx import Document
     from docx.shared import Pt
+    from src.pdfcore import PdfiumReader
+    from src.pdfcore.errors import PdfPasswordRequired, PdfPasswordWrong
 
     info: Dict[str, Any] = {"usage": {}, "fixes": 0}
-    doc = fitz.open(pdf_path)
-    if doc.needs_pass and not doc.authenticate(password or ""):
+    try:
+        doc = PdfiumReader(pdf_path, password)
+    except (PdfPasswordRequired, PdfPasswordWrong):
         raise ValueError("PDF şifreli")
     dw = Document()
     sec = dw.sections[0]
-    wpt, hpt = doc.load_page(0).rect.width, doc.load_page(0).rect.height
+    wpt, hpt = doc.page_size(0)
     sec.page_width, sec.page_height = Pt(wpt), Pt(hpt)
     sec.left_margin = sec.right_margin = sec.top_margin = sec.bottom_margin = Pt(0)
 
     for i in range(len(doc)):
         if progress_callback:
             progress_callback(i + 1, len(doc), f"Görünüm korunarak okunuyor: sayfa {i + 1}/{len(doc)}")
-        pg = doc.load_page(i)
-        scale = max(1.5, min(3.0, 1700.0 / max(1.0, pg.rect.width)))
-        pix = pg.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False, colorspace=fitz.csRGB)
-        img = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
+        scale = max(1.5, min(3.0, 1700.0 / max(1.0, doc.page_size(i)[0])))
+        img = doc.render(i, scale).convert("RGB")
         arr = np.asarray(img).copy()
         lay = ds.analyze_page(img) or {"zones": [{"x0": 0, "x1": img.width, "role": "main", "bands": [],
                                                   "bg": ds._dominant(arr.reshape(-1, 3))[0]}]}
@@ -321,18 +321,20 @@ _PRODUCT_MAX_PAGES = 10
 def try_hybrid_pdf_to_word(pdf_path: str, docx_path: str, password: Optional[str] = None,
                            progress_callback=None) -> bool:
     """Taranmış PDF'i hibrit Word'e çevir (ürün girişi). Uygun değilse veya hata olursa False."""
-    import pymupdf as fitz
-    doc = fitz.open(pdf_path)
+    from src.pdfcore import PdfiumReader
+    from src.pdfcore.errors import PdfPasswordRequired, PdfPasswordWrong
     try:
-        if doc.needs_pass and not doc.authenticate(password or ""):
-            return False
+        doc = PdfiumReader(pdf_path, password)
+    except (PdfPasswordRequired, PdfPasswordWrong):
+        return False
+    try:
         n = len(doc)
         if n == 0 or n > _PRODUCT_MAX_PAGES:
             return False
-        w0, h0 = doc.load_page(0).rect.width, doc.load_page(0).rect.height
+        w0, h0 = doc.page_size(0)
         for i in range(1, n):
-            r = doc.load_page(i).rect
-            if abs(r.width - w0) > 2 or abs(r.height - h0) > 2:
+            rw, rh = doc.page_size(i)
+            if abs(rw - w0) > 2 or abs(rh - h0) > 2:
                 return False  # karışık sayfa boyutu: tek bölümlü düzen uymaz
     finally:
         doc.close()

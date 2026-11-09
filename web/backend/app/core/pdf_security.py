@@ -141,12 +141,12 @@ def validate_pdf_before_processing(
 
 
 def _fast_page_count(path: Path, *, filename: str, client_ip: str) -> int | None:
-    """PyMuPDF ile sayfa sayısını döndürür. Kitaplık yoksa veya hata olursa None."""
+    """pdfium ile sayfa sayısını döndürür. Kitaplık yoksa veya hata olursa None."""
     try:
-        import pymupdf as fitz  # type: ignore[import]
-        doc = fitz.open(str(path))
+        from src.pdfcore import PdfiumReader
+        doc = PdfiumReader(str(path))
         try:
-            return doc.page_count
+            return len(doc)
         finally:
             doc.close()
     except ImportError:
@@ -214,7 +214,7 @@ def log_pdf_library_versions() -> dict[str, str]:
     versions: dict[str, str] = {}
 
     _libs: list[tuple[str, str, str]] = [
-        ("pymupdf",       "pymupdf",   "PyMuPDF"),
+        ("pypdfium2",     "pypdfium2", "pypdfium2"),
         ("pikepdf",       "pikepdf",   "pikepdf"),
         ("pdf2docx",      "pdf2docx",  "pdf2docx"),
         ("pypdf",         "pypdf",     "pypdf"),
@@ -224,7 +224,7 @@ def log_pdf_library_versions() -> dict[str, str]:
         ("pptx",          "python-pptx","python-pptx"),
         ("xhtml2pdf",     "xhtml2pdf", "xhtml2pdf"),
     ]
-    _critical = {"pymupdf", "pikepdf", "PIL"}
+    _critical = {"pypdfium2", "pikepdf", "PIL"}
 
     for import_name, pkg_name, display in _libs:
         try:
@@ -244,7 +244,7 @@ def get_library_versions() -> dict[str, str]:
     """Mevcut PDF kütüphanesi versiyonlarını döndürür (health endpoint için)."""
     versions: dict[str, str] = {}
     _libs = [
-        ("pymupdf",    "pymupdf"),
+        ("pypdfium2",  "pypdfium2"),
         ("pikepdf",    "pikepdf"),
         ("pdf2docx",   "pdf2docx"),
         ("pypdf",      "pypdf"),

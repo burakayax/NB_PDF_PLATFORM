@@ -139,10 +139,8 @@ class PdfVisualGrid(ctk.CTkFrame):
         self._photo_refs.clear()
 
         try:
-            import pymupdf as fitz
-            doc = fitz.open(path)
-            if doc.needs_pass and password:
-                doc.authenticate(password)
+            from src.pdfcore import PdfiumReader
+            doc = PdfiumReader(path, password)
             self._page_count = len(doc)
             doc.close()
         except Exception:
@@ -420,18 +418,13 @@ class PdfVisualGrid(ctk.CTkFrame):
 
     def _render_worker(self):
         try:
-            import pymupdf as fitz
-            doc = fitz.open(self._pdf_path)
-            if doc.needs_pass and self._password:
-                doc.authenticate(self._password)
+            from src.pdfcore import PdfiumReader
+            doc = PdfiumReader(self._pdf_path, self._password)
             for i in range(self._page_count):
                 if self._stop_render.is_set():
                     break
-                page = doc[i]
-                scale = RENDER_W / max(page.rect.width, 1)
-                mat = fitz.Matrix(scale, scale)
-                pix = page.get_pixmap(matrix=mat, alpha=False)
-                img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+                scale = RENDER_W / max(doc.page_size(i)[0], 1)
+                img = doc.render(i, scale)
                 # Cache doluysa en eski girişi temizle
                 if len(self._raw_cache) >= self._CACHE_MAX_PAGES:
                     oldest = min(self._raw_cache)

@@ -711,24 +711,21 @@ def build_docx(pages: List[Dict[str, Any]], docx_path: str, page_pt: Tuple[float
 def try_designed_pdf_to_word(pdf_path: str, docx_path: str, password: Optional[str] = None,
                              progress_callback=None) -> bool:
     """Tasarımlı (yan panelli / renkli şeritli) taranmış PDF'i Word'e çevir. Uygun değilse False."""
+    from src.pdfcore import PdfiumReader
+    from src.pdfcore.errors import PdfPasswordRequired, PdfPasswordWrong
     try:
-        import pymupdf as fitz
-    except ImportError:
+        doc = PdfiumReader(pdf_path, password)
+    except (PdfPasswordRequired, PdfPasswordWrong):
         return False
-    doc = fitz.open(pdf_path)
     try:
-        if doc.needs_pass and not doc.authenticate(password or ""):
-            return False
         n = len(doc)
         if n == 0 or n > _MAX_PAGES:
             return False
 
         designed = False
         for i in range(n):
-            pg = doc.load_page(i)
-            s = 400.0 / max(1.0, pg.rect.width)
-            pix = pg.get_pixmap(matrix=fitz.Matrix(s, s), alpha=False, colorspace=fitz.csRGB)
-            im = Image.open(io.BytesIO(pix.tobytes("png")))
+            s = 400.0 / max(1.0, doc.page_size(i)[0])
+            im = doc.render(i, s)
             if analyze_page(im):
                 designed = True
                 break
@@ -736,14 +733,12 @@ def try_designed_pdf_to_word(pdf_path: str, docx_path: str, password: Optional[s
             return False
 
         pages: List[Dict[str, Any]] = []
-        page_pt = (doc.load_page(0).rect.width, doc.load_page(0).rect.height)
+        page_pt = doc.page_size(0)
         for i in range(n):
             if progress_callback:
                 progress_callback(i + 1, n, f"Tasarım korunarak okunuyor: sayfa {i + 1}/{n}")
-            pg = doc.load_page(i)
-            scale = max(1.5, min(3.0, 1700.0 / max(1.0, pg.rect.width)))
-            pix = pg.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False, colorspace=fitz.csRGB)
-            img = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
+            scale = max(1.5, min(3.0, 1700.0 / max(1.0, doc.page_size(i)[0])))
+            img = doc.render(i, scale).convert("RGB")
             arr = np.asarray(img).copy()
             lay = analyze_page(img) or {
                 "zones": [{"x0": 0, "x1": img.width, "bg": _dominant(arr.reshape(-1, 3))[0],
