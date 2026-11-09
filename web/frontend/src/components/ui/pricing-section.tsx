@@ -275,6 +275,7 @@ function MonthlyOnlyCard({
   onNotify,
   onShowPerks,
   starterTools = [],
+  adminPrices = false,
 }: {
   plan: PlanDefinition;
   currency: Currency;
@@ -287,7 +288,9 @@ function MonthlyOnlyCard({
   onNotify?: () => void;
   onShowPerks?: () => void;
   starterTools?: FeatureKey[];
+  adminPrices?: boolean;
 }) {
+  const pricesHidden = PRICES_HIDDEN && !adminPrices;
   const tr = lang === "tr";
   const features = softenGiftLines(tr ? plan.featuresTr : plan.featuresEn, tr, useAiNotOpen());
   const price = faceValue(plan.pricing.monthly[currency]);
@@ -344,7 +347,7 @@ function MonthlyOnlyCard({
           : (tr ? "PDF işine yeni başlayanlar için." : "Perfect for getting started."))}
       </p>
 
-      {PRICES_HIDDEN ? (
+      {pricesHidden ? (
         <div className="mb-6 flex items-baseline gap-1.5">
           <span className="text-3xl lg:text-4xl font-black text-white">{priceComingSoonLabel(tr)}</span>
         </div>
@@ -443,6 +446,7 @@ function CycleAwareCard({
   comingSoon = false,
   onNotify,
   onShowPerks,
+  adminPrices = false,
 }: {
   plan: PlanDefinition;
   currency: Currency;
@@ -453,7 +457,9 @@ function CycleAwareCard({
   comingSoon?: boolean;
   onNotify?: () => void;
   onShowPerks?: () => void;
+  adminPrices?: boolean;
 }) {
+  const pricesHidden = PRICES_HIDDEN && !adminPrices;
   /**
    * VARSAYILAN YILLIK.
    *
@@ -535,7 +541,7 @@ function CycleAwareCard({
       </p>
 
       {/* Per-card billing toggle — sadece yıllık seçeneği olan planlarda (Business aylık) */}
-      {!PRICES_HIDDEN && !plan.monthlyOnlyBilling && (
+      {!pricesHidden && !plan.monthlyOnlyBilling && (
         <CardBillingToggle
           cycle={cycle}
           onChange={setCycle}
@@ -554,7 +560,7 @@ function CycleAwareCard({
               {tr ? `(5 dahil +${extraSeats})` : `(5 included +${extraSeats})`}
             </span>
           </p>
-          {!PRICES_HIDDEN && (
+          {!pricesHidden && (
             <p className="mt-0.5 text-center text-[11px] text-slate-400">
               {tr
                 ? `+${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
@@ -580,7 +586,7 @@ function CycleAwareCard({
               +
             </button>
           </div>
-          {!PRICES_HIDDEN && extraSeats > 0 && (
+          {!pricesHidden && extraSeats > 0 && (
             <p className="mt-1.5 text-[11px] text-violet-400">
               {tr
                 ? `${5 + extraSeats} kişi · ${fmt(extraSeatTotal, currency)}/ay ekstra`
@@ -592,7 +598,7 @@ function CycleAwareCard({
 
       {/* Yearly savings badge */}
       <AnimatePresence>
-        {!PRICES_HIDDEN && isYearly && savePct > 0 && (
+        {!pricesHidden && isYearly && savePct > 0 && (
           <motion.div
             key="save-badge"
             initial={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -607,7 +613,7 @@ function CycleAwareCard({
         )}
       </AnimatePresence>
 
-      {PRICES_HIDDEN ? (
+      {pricesHidden ? (
         <div className="mb-6 flex items-baseline gap-1.5">
           <span className="text-3xl lg:text-4xl font-black text-white">{priceComingSoonLabel(tr)}</span>
         </div>
@@ -663,7 +669,7 @@ function CycleAwareCard({
         {features.map((f) => <Feature key={f} text={f} highlight={false} />)}
       </ul>
 
-      <p className={`text-gray-400 text-xs mb-3 text-center ${PRICES_HIDDEN ? "hidden" : ""}`}>
+      <p className={`text-gray-400 text-xs mb-3 text-center ${pricesHidden ? "hidden" : ""}`}>
         {isPlus || isPro
           ? (tr ? "Yıllık taahhüt en iyi fiyat-değer dengesini sunar" : "Yearly commitment offers the best value")
           : (tr ? "Kurumsal lisanslama · organizasyonunuzla ölçeklenir" : "Enterprise licensing built to scale with your organization")}
@@ -749,6 +755,7 @@ interface PricingSectionProps {
 
 export default function PricingSection({ language, onUseWebApp, onSelectPlan, onNotify, currentPlan, adminTestCheckout = false }: PricingSectionProps) {
   const tr = language === "tr";
+  const pricesHidden = PRICES_HIDDEN && !adminTestCheckout;
   const copy = pricingSectionCopy(language);
   const { cards, flags, pricing } = useSettings();
   const toolCount = useToolCount();
@@ -869,6 +876,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             displaySymbol={currencySymbol}
             starterTools={starterTools}
             comingSoon={comingSoon}
+            adminPrices={adminTestCheckout}
             onNotify={onNotify}
             onShowPerks={() => setPerksPlan("STARTER")}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
@@ -880,6 +888,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             delay={0.08}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            adminPrices={adminTestCheckout}
             onNotify={onNotify}
             onShowPerks={() => setPerksPlan("PLUS")}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PLUS", cycle, 0) : () => onUseWebApp()}
@@ -891,6 +900,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             delay={0.12}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            adminPrices={adminTestCheckout}
             onNotify={onNotify}
             onShowPerks={() => setPerksPlan("PRO")}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle, 0) : () => onUseWebApp()}
@@ -902,6 +912,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             delay={0.16}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            adminPrices={adminTestCheckout}
             onNotify={onNotify}
             onShowPerks={() => setPerksPlan("BUSINESS")}
             onCta={onSelectPlan ? (cycle, extraSeats) => onSelectPlan("BUSINESS", cycle, extraSeats) : () => onUseWebApp()}
@@ -909,7 +920,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
         </div>
 
         {/* VAT info note — kullanıcıya yalnız KENDİ durumu gösterilir (TL = Türkiye, KDV dahil; döviz = yurt dışı, KDV yok) */}
-        {PRICES_HIDDEN ? null : (
+        {pricesHidden ? null : (
         <p className="text-center text-gray-400 text-xs mt-4">
           {currency === "TRY"
             ? tr
@@ -932,7 +943,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
               <PaytrBadge height={18} tr={tr} />
             </span>
           </span>
-          {!PRICES_HIDDEN && isEurDisplay && (
+          {!pricesHidden && isEurDisplay && (
             <span className="block mt-1 text-xs text-amber-400/80">
               {tr
                 ? "EUR fiyatlar gösterim amaçlıdır; ödeme USD bant fiyatıyla işlenir."
