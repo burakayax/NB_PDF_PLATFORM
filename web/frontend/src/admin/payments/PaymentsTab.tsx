@@ -3,9 +3,11 @@ import { Loader2, RefreshCw, Search, Undo2, X } from "lucide-react";
 
 import {
   fetchAdminPayments,
+  fetchAdminPaytrStatus,
   refundAdminPayment,
   type AdminPaymentRow,
   type AdminPaymentsPage,
+  type AdminPaytrStatus,
   type AdminRefundResult,
 } from "../../api/admin";
 
@@ -379,6 +381,47 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
   );
 }
 
+const STATUS_FIELD_LABEL: Record<string, string> = {
+  payment_amount: "Sipariş tutarı",
+  payment_total: "Müşterinin ödediği",
+  payment_date: "İşlem tarihi",
+  currency: "Para birimi",
+  net_tutar: "Kesinti sonrası net",
+  kesinti_tutari: "Kesinti",
+  taksit: "Taksit",
+  odeme_tipi: "Ödeme tipi",
+};
+
+/** PayTR Durum Sorgu cevabını yorumsuz, olduğu gibi gösterir (tahmin yok). */
+function PaytrStatusView({ status }: { status: AdminPaytrStatus }) {
+  if (!status.ok) {
+    return (
+      <p className="mt-2 rounded-md border border-amber-400/30 bg-amber-500/10 px-2.5 py-2 text-[12px] leading-relaxed text-amber-100">
+        PayTR cevabı: <strong>{status.errNo}</strong> — {status.errMsg}
+      </p>
+    );
+  }
+  const f = status.fields;
+  const returns = Array.isArray(f.returns) ? f.returns : [];
+  return (
+    <div className="mt-2 rounded-md border border-emerald-400/25 bg-emerald-500/[0.07] px-2.5 py-2 text-[12px] text-slate-100">
+      <p className="font-semibold text-emerald-200">PayTR bu siparişi buluyor.</p>
+      <dl className="mt-1.5 space-y-1">
+        <div className="flex justify-between gap-3"><dt className="text-slate-400">Test işlemi mi?</dt><dd>{status.testMode ? "Evet (test)" : "Hayır (canlı)"}</dd></div>
+        {Object.entries(STATUS_FIELD_LABEL).map(([k, label]) =>
+          f[k] !== undefined && f[k] !== "" ? (
+            <div key={k} className="flex justify-between gap-3"><dt className="text-slate-400">{label}</dt><dd>{String(f[k])}</dd></div>
+          ) : null,
+        )}
+        <div className="flex justify-between gap-3">
+          <dt className="text-slate-400">PayTR'deki iadeler</dt>
+          <dd>{returns.length === 0 ? "Yok" : `${returns.length} kayıt: ${JSON.stringify(returns)}`}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
 function RefundDialog({
   accessToken,
   row,
@@ -397,8 +440,25 @@ function RefundDialog({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [status, setStatus] = useState<AdminPaytrStatus | null>(null);
+  const [statusErr, setStatusErr] = useState<string | null>(null);
+
   const outsideWindow = !row.withinRefundWindow;
   const canSubmit = reason.trim().length > 0 && (!outsideWindow || force) && !busy;
+
+  const checkStatus = async () => {
+    setStatusBusy(true);
+    setStatusErr(null);
+    setStatus(null);
+    try {
+      setStatus(await fetchAdminPaytrStatus(accessToken, row.conversationId));
+    } catch (e) {
+      setStatusErr(e instanceof Error ? e.message : "PayTR durumu sorgulanamadı.");
+    } finally {
+      setStatusBusy(false);
+    }
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -427,6 +487,24 @@ function RefundDialog({
           Bu işlem geri alınamaz. {row.provider === "paytr" ? "Tutar müşterinin kartına PayTR üzerinden iade edilir. " : ""}
           Müşterinin planı Ücretsiz'e düşer.
         </p>
+
+        {row.provider === "paytr" && (
+          <div className="mt-3 rounded-lg border border-white/[0.1] bg-black/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[12px] text-slate-300">İade öncesi PayTR bu siparişi görüyor mu? (para hareketi yapmaz)</span>
+              <button
+                type="button"
+                onClick={() => void checkStatus()}
+                disabled={statusBusy || busy}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/[0.14] px-3 py-1.5 text-[12px] font-semibold text-slate-100 hover:bg-white/[0.06] disabled:opacity-50"
+              >
+                {statusBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} PayTR durumunu sorgula
+              </button>
+            </div>
+            {statusErr && <p className="mt-2 text-[12px] text-rose-200">{statusErr}</p>}
+            {status && <PaytrStatusView status={status} />}
+          </div>
+        )}
 
         {outsideWindow && (
           <label className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-[12px] text-amber-100">

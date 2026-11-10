@@ -4,9 +4,11 @@ import type { AdminPaymentRow, AdminPaymentsPage } from "../api/admin";
 
 const fetchPayments = vi.fn();
 const refund = vi.fn();
+const paytrStatus = vi.fn();
 vi.mock("../api/admin", () => ({
   fetchAdminPayments: (...a: unknown[]) => fetchPayments(...a),
   refundAdminPayment: (...a: unknown[]) => refund(...a),
+  fetchAdminPaytrStatus: (...a: unknown[]) => paytrStatus(...a),
 }));
 
 import { PaymentsTab } from "../admin/payments/PaymentsTab";
@@ -53,6 +55,7 @@ describe("PaymentsTab — ödemeler ve iade", () => {
   beforeEach(() => {
     fetchPayments.mockReset();
     refund.mockReset();
+    paytrStatus.mockReset();
   });
 
   it("kullanıcı adı, e-posta, tutar ve durumu listeler", async () => {
@@ -112,6 +115,38 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     fireEvent.change(screen.getByLabelText(/İade nedeni/), { target: { value: "x" } });
     fireEvent.click(screen.getByText("İadeyi yap"));
     expect(await screen.findByText(/elle iade edin/)).toBeTruthy();
+  });
+
+  it("PayTR durumunu sorgular: bulunan siparişi ve test bilgisini gösterir", async () => {
+    fetchPayments.mockResolvedValue(page([row()]));
+    paytrStatus.mockResolvedValue({
+      ok: true,
+      merchantOid: "abc",
+      testMode: true,
+      fields: { payment_amount: "129.00", currency: "TL", returns: [] },
+    });
+    render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("İade et"));
+    fireEvent.click(screen.getByText("PayTR durumunu sorgula"));
+    expect(await screen.findByText("PayTR bu siparişi buluyor.")).toBeTruthy();
+    expect(paytrStatus).toHaveBeenCalledWith("t", "oid-1");
+    expect(screen.getByText("Evet (test)")).toBeTruthy();
+    expect(screen.getByText("Yok")).toBeTruthy();
+  });
+
+  it("PayTR siparişi bulamazsa hata kodunu olduğu gibi gösterir; PayTR dışı ödemede düğme yok", async () => {
+    fetchPayments.mockResolvedValue(page([row()]));
+    paytrStatus.mockResolvedValue({ ok: false, merchantOid: "abc", errNo: "004", errMsg: "merchant_oid ile islem bulunamadi" });
+    const { unmount } = render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("İade et"));
+    fireEvent.click(screen.getByText("PayTR durumunu sorgula"));
+    expect(await screen.findByText(/merchant_oid ile islem bulunamadi/)).toBeTruthy();
+    unmount();
+
+    fetchPayments.mockResolvedValue(page([row({ provider: "diger" })]));
+    render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("İade et"));
+    expect(screen.queryByText("PayTR durumunu sorgula")).toBeNull();
   });
 
   it("iade hatasını gösterir ve pencereyi açık tutar", async () => {

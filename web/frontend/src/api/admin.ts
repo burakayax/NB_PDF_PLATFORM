@@ -1715,6 +1715,17 @@ export async function fetchAdminPayments(accessToken: string, params: Record<str
   return (await res.json()) as AdminPaymentsPage;
 }
 
+/** PayTR Durum Sorgu cevabı (salt okunur). ok=false: PayTR siparişi bulamadı / hata verdi. */
+export type AdminPaytrStatus =
+  | { ok: true; merchantOid: string; testMode: boolean; fields: Record<string, unknown> }
+  | { ok: false; merchantOid: string; errNo: string; errMsg: string };
+
+export async function fetchAdminPaytrStatus(accessToken: string, conversationId: string): Promise<AdminPaytrStatus> {
+  const res = await adminFetch(accessToken, `/payments/${encodeURIComponent(conversationId)}/paytr-status`);
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "PayTR durumu sorgulanamadı.");
+  return (await res.json()) as AdminPaytrStatus;
+}
+
 export type AdminRefundResult = {
   ok: true;
   conversationId: string;
