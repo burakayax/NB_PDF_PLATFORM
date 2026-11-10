@@ -1,4 +1,6 @@
-import { renderCorporateEmail, detailTable } from "../../lib/email-layout.js";
+import { renderCorporateEmail, detailTable, ctaButton, calloutBox, checkList, sectionTitle } from "../../lib/email-layout.js";
+import { env } from "../../config/env.js";
+import { planDefinitions } from "./subscription.config.js";
 import { escapeHtml } from "../../lib/email-html.js";
 import type { Locale } from "../../lib/email-i18n.js";
 
@@ -14,6 +16,18 @@ type PaymentSuccessInput = {
   lang?: Locale;
 };
 
+/** Planın müşteriye görünen adı (veritabanındaki STARTER/PLUS/... kodu e-postada gösterilmez). */
+function planDisplayName(plan: string, tr: boolean): string {
+  const names: Record<string, { tr: string; en: string }> = {
+    STARTER: { tr: "Başlangıç", en: "Starter" },
+    PLUS: { tr: "Plus", en: "Plus" },
+    PRO: { tr: "Pro", en: "Pro" },
+    BUSINESS: { tr: "İşletme", en: "Business" },
+  };
+  const n = names[plan];
+  return n ? (tr ? n.tr : n.en) : plan;
+}
+
 export function createPaymentSuccessEmailTemplate({
   planName,
   amount,
@@ -22,46 +36,88 @@ export function createPaymentSuccessEmailTemplate({
   lang = "tr",
 }: PaymentSuccessInput) {
   const tr = lang === "tr";
-  const safePlan = escapeHtml(planName);
+  const planLabel = planDisplayName(planName, tr);
+  const safePlan = escapeHtml(planLabel);
   const safeAmount = escapeHtml(`${amount} ${currency}`);
   const safePeriod = periodEnd ? escapeHtml(periodEnd) : "";
+  const workspaceUrl = `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
 
   const subject = tr
-    ? `Aboneliğiniz aktif — ${PRODUCT}`
-    : `Your subscription is active — ${PRODUCT}`;
+    ? `Ödemeniz alındı, ${planLabel} planınız aktif — ${PRODUCT}`
+    : `Payment received, your ${planLabel} plan is active — ${PRODUCT}`;
 
   const rows = [
-    { label: tr ? "Plan" : "Plan", value: safePlan },
-    { label: tr ? "Tutar" : "Amount", value: safeAmount },
+    { label: "Plan", value: safePlan },
+    { label: tr ? "Ödenen tutar" : "Amount paid", value: safeAmount },
   ];
+  const daily = (planDefinitions as Record<string, { dailyLimit: number | null } | undefined>)[planName]?.dailyLimit;
+  if (daily !== undefined) {
+    rows.push({
+      label: tr ? "Günlük işlem hakkı" : "Daily operations",
+      value: daily === null ? (tr ? "Sınırsız" : "Unlimited") : String(daily),
+    });
+  }
   if (safePeriod) {
-    rows.push({ label: tr ? "Dönem bitişi" : "Period ends", value: safePeriod });
+    rows.push({ label: tr ? "Erişim bitişi" : "Access until", value: safePeriod });
   }
 
   const html = renderCorporateEmail({
-    eyebrow: tr ? "Ödeme" : "Payment",
-    title: tr ? "Aboneliğiniz başarıyla aktifleştirildi" : "Your subscription is now active",
+    eyebrow: tr ? "Ödeme onaylandı" : "Payment confirmed",
+    title: tr ? `${safePlan} planınız aktif` : `Your ${safePlan} plan is active`,
     intro: tr
-      ? `${PRODUCT} ${safePlan} planınız için ödemeniz alındı. Tüm premium araçlara artık erişebilirsiniz.`
-      : `We received your payment for the ${PRODUCT} ${safePlan} plan. You now have access to all premium tools.`,
+      ? `Ödemeniz başarıyla alındı. ${PRODUCT} hesabınızda ${safePlan} planının tüm ayrıcalıkları şimdi açık, hemen kullanmaya başlayabilirsiniz.`
+      : `We received your payment. All ${safePlan} plan benefits are now unlocked in your ${PRODUCT} account — you can start right away.`,
     bodyHtml: `
-      ${detailTable(rows)}
-      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">${
+      ${calloutBox(
+        tr ? "Hesabınız yükseltildi" : "Your account is upgraded",
         tr
-          ? "Faturanız ayrıca e-posta ile gönderilecektir. Aboneliğinizi istediğiniz zaman hesap ayarlarınızdan yönetebilirsiniz."
-          : "Your invoice will be sent separately. You can manage your subscription anytime from your account settings."
+          ? "Planınıza dahil olan araçlar çalışma alanınızda kullanıma hazır. Sayfayı yenilemeniz yeterli."
+          : "The tools included in your plan are ready in your workspace. Just refresh the page.",
+      )}
+      ${sectionTitle(tr ? "Ödeme özeti" : "Payment summary")}
+      ${detailTable(rows)}
+      ${ctaButton(workspaceUrl, tr ? "Çalışma alanına git" : "Go to workspace")}
+      ${sectionTitle(tr ? "Bilmeniz gerekenler" : "Good to know")}
+      ${checkList(
+        tr
+          ? [
+              "Faturanız ayrı bir e-posta ile gönderilir; birkaç dakika sürebilir.",
+              "Aboneliğiniz kendiliğinden yenilenmez, kartınızdan onayınız olmadan ücret çekilmez.",
+              "Planınızı ve ödeme geçmişinizi hesap ayarlarınızdaki Abonelik bölümünden görebilirsiniz.",
+            ]
+          : [
+              "Your invoice is sent in a separate email; it can take a few minutes.",
+              "Your subscription does not renew automatically and your card is never charged without your confirmation.",
+              "You can see your plan and payment history in the Subscription section of your account settings.",
+            ],
+      )}
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#64748b;">${
+        tr
+          ? "Bir sorunuz mu var? Bu e-postaya yanıt vermek yerine info@pdfplatform.app adresine yazabilirsiniz."
+          : "Questions? Instead of replying to this email, write to info@pdfplatform.app."
       }</p>
     `,
     footerText: `${PRODUCT} — NB Global Studio`,
     productName: PRODUCT,
+    preheader: tr
+      ? `${planLabel} planınız şimdi aktif — ödemeniz için teşekkürler.`
+      : `Your ${planLabel} plan is now active — thank you for your payment.`,
   });
 
   const text = [
     subject,
     "",
-    `${tr ? "Plan" : "Plan"}: ${planName}`,
-    `${tr ? "Tutar" : "Amount"}: ${amount} ${currency}`,
-    ...(periodEnd ? [`${tr ? "Dönem bitişi" : "Period ends"}: ${periodEnd}`] : []),
+    tr
+      ? `Ödemeniz alındı ve ${planLabel} planınız aktif.`
+      : `We received your payment and your ${planLabel} plan is active.`,
+    "",
+    `Plan: ${planLabel}`,
+    `${tr ? "Ödenen tutar" : "Amount paid"}: ${amount} ${currency}`,
+    ...(periodEnd ? [`${tr ? "Erişim bitişi" : "Access until"}: ${periodEnd}`] : []),
+    "",
+    `${tr ? "Çalışma alanına git" : "Go to workspace"}: ${workspaceUrl}`,
+    "",
+    tr ? "Faturanız ayrı bir e-posta ile gönderilir." : "Your invoice is sent in a separate email.",
   ].join("\n");
 
   return { subject, html, text };

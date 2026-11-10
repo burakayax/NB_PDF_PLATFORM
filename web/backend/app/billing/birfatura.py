@@ -32,6 +32,7 @@ Gerekli env değişkenleri:
 from __future__ import annotations
 
 import base64
+import dataclasses
 import io
 import logging
 import os
@@ -56,6 +57,11 @@ _POLL_MAX = 30
 
 
 _TR_ASCII = str.maketrans("çÇğĞıİöÖşŞüÜ", "cCgGiIoOsSuU")
+
+
+# GİB UBL-TR kod listesi V1.29: 302 = "11/1-a Hizmet İhracatı"
+EXPORT_EXEMPTION = ("302", "11/1-a Hizmet İhracatı")
+EXPORT_INVOICE_NOTE = "KDVK 11/1-a kapsamında hizmet ihracatı"
 
 
 def _product_code(name: str) -> str:
@@ -593,6 +599,7 @@ class BirFaturaProvider(BillingProviderBase):
                 payment_info=payment_info,
                 reason=reason,
                 is_e_invoice=is_e_invoice,
+                exemption=EXPORT_EXEMPTION if self._export_istisna_enabled(customer_info) else None,
             )
         except Exception as exc:
             logger.error("birfatura: XML oluşturulamadı hata=%s", exc)
@@ -666,7 +673,12 @@ class BirFaturaProvider(BillingProviderBase):
         payment_info: PaymentInfo,
         reason: str,
         is_e_invoice: bool,
+        invoice_type_code: str = "IADE",
+        exemption: tuple[str, str] | None = None,
+        extra_notes: list[str] | None = None,
     ) -> str:
+        """UBL-TR Invoice XML. Varsayılan: IADE. invoice_type_code="ISTISNA" + exemption=(kod, ad)
+        verilirse KDV %0 ve istisna sebep kodu içeren istisna faturası üretir."""
         from xml.sax.saxutils import escape as _esc
 
         now_time = datetime.now().strftime("%H:%M:%S")
@@ -674,12 +686,22 @@ class BirFaturaProvider(BillingProviderBase):
         if currency in ("TRL", ""):
             currency = "TRY"
 
+        def _rate(it: InvoiceItem) -> float:
+            return 0 if exemption else it.vat_rate
+
         total_excl = round(sum(i.quantity * i.unit_price for i in items), 2)
         tax_amount = round(sum(
-            i.quantity * i.unit_price * (i.vat_rate / 100) for i in items
+            i.quantity * i.unit_price * (_rate(i) / 100) for i in items
         ), 2)
         total_incl = round(total_excl + tax_amount, 2)
-        vat_rate = items[0].vat_rate if items else 20
+        vat_rate = _rate(items[0]) if items else 20
+        exemption_xml = ""
+        if exemption:
+            ex_code, ex_name = _esc(exemption[0]), _esc(exemption[1])
+            exemption_xml = (
+                f"<cbc:TaxExemptionReasonCode>{ex_code}</cbc:TaxExemptionReasonCode>"
+                f"<cbc:TaxExemptionReason>{ex_code}-{ex_name}</cbc:TaxExemptionReason>"
+            )
 
         sup_vkn      = _esc(os.getenv("BIRFATURA_SUPPLIER_VKN", ""))
         sup_name     = _esc(os.getenv("BIRFATURA_SUPPLIER_NAME", os.getenv("COMPANY_NAME", "")))
@@ -693,6 +715,12 @@ class BirFaturaProvider(BillingProviderBase):
         cust_id_scheme = "VKN" if ci.tax_number else "TCKN"
         # Yurt içi bireysel, TC girilmemiş → GİB standart 11 haneli placeholder
         cust_id_value  = _esc(ci.tax_number or ci.national_id or ("" if ci.is_export else "11111111111"))
+        if ci.is_export and not (ci.tax_number or ci.national_id):
+            # Yurt dışı alıcı: yaygın uygulama — firma 2222222222 (VKN), gerçek kişi 11111111111 (TCKN)
+            if ci.contact_type == "company":
+                cust_id_scheme, cust_id_value = "VKN", "2222222222"
+            else:
+                cust_id_scheme, cust_id_value = "TCKN", "11111111111"
         cust_name      = _esc(ci.name)
         cust_address   = _esc(ci.address or "")
         cust_city      = _esc(ci.city or "")
@@ -727,6 +755,9 @@ class BirFaturaProvider(BillingProviderBase):
                 f" ETTN: {original_invoice_ettn}"
                 f" ({original_invoice_date})"
             )
+        notes_xml = f"<cbc:Note>{reason_esc}</cbc:Note>"
+        for extra in (extra_notes or []):
+            notes_xml += f"\n  <cbc:Note>{_esc(extra)}</cbc:Note>"
 
         cust_tax_scheme_xml = ""
         if ci.tax_number:
@@ -750,7 +781,7 @@ class BirFaturaProvider(BillingProviderBase):
         lines_xml = ""
         for idx, item in enumerate(items, start=1):
             line_excl = round(item.quantity * item.unit_price, 2)
-            line_tax  = round(line_excl * item.vat_rate / 100, 2)
+            line_tax  = round(line_excl * _rate(item) / 100, 2)
             item_name = _esc(item.name)
             item_desc = _esc(item.description or reason)
             lines_xml += f"""
@@ -763,8 +794,8 @@ class BirFaturaProvider(BillingProviderBase):
       <cac:TaxSubtotal>
         <cbc:TaxableAmount currencyID="{currency}">{line_excl:.2f}</cbc:TaxableAmount>
         <cbc:TaxAmount currencyID="{currency}">{line_tax:.2f}</cbc:TaxAmount>
-        <cbc:Percent>{item.vat_rate}</cbc:Percent>
-        <cac:TaxCategory>
+        <cbc:Percent>{_rate(item)}</cbc:Percent>
+        <cac:TaxCategory>{exemption_xml}
           <cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme>
         </cac:TaxCategory>
       </cac:TaxSubtotal>
@@ -801,8 +832,8 @@ class BirFaturaProvider(BillingProviderBase):
   <cbc:UUID>{doc_uuid}</cbc:UUID>
   <cbc:IssueDate>{issue_date}</cbc:IssueDate>
   <cbc:IssueTime>{now_time}</cbc:IssueTime>
-  <cbc:InvoiceTypeCode>IADE</cbc:InvoiceTypeCode>
-  <cbc:Note>{reason_esc}</cbc:Note>
+  <cbc:InvoiceTypeCode>{invoice_type_code}</cbc:InvoiceTypeCode>
+  {notes_xml}
   <cbc:DocumentCurrencyCode>{currency}</cbc:DocumentCurrencyCode>
   <cbc:LineCountNumeric>{len(items)}</cbc:LineCountNumeric>{billing_ref_xml}
   <cac:AdditionalDocumentReference>
@@ -883,7 +914,7 @@ class BirFaturaProvider(BillingProviderBase):
       <cbc:TaxableAmount currencyID="{currency}">{total_excl:.2f}</cbc:TaxableAmount>
       <cbc:TaxAmount currencyID="{currency}">{tax_amount:.2f}</cbc:TaxAmount>
       <cbc:Percent>{vat_rate}</cbc:Percent>
-      <cac:TaxCategory>
+      <cac:TaxCategory>{exemption_xml}
         <cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme>
       </cac:TaxCategory>
     </cac:TaxSubtotal>
@@ -919,6 +950,81 @@ class BirFaturaProvider(BillingProviderBase):
         return base64.b64encode(buf.getvalue()).decode("ascii")
 
     # ------------------------------------------------------------------
+    # Yurt dışı satış — İSTİSNA (hizmet ihracatı) faturası, SendDocument + UBL-TR XML
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _export_istisna_enabled(customer_info: CustomerInfo) -> bool:
+        """Yurt dışı müşteride istisna faturası (mali müşavir onaylı, bireysel+kurumsal) varsayılan AÇIK.
+        Acil kapatmak için BIRFATURA_EXPORT_ISTISNA=0 yazılır."""
+        return bool(customer_info.is_export) and os.getenv("BIRFATURA_EXPORT_ISTISNA", "1").strip().lower() not in (
+            "0", "false", "no", "off",
+        )
+
+    def _build_export_invoice_xml(
+        self,
+        doc_uuid: str,
+        issue_date: str,
+        customer_info: CustomerInfo,
+        items: list[InvoiceItem],
+        payment_info: PaymentInfo,
+    ) -> str:
+        code, name = EXPORT_EXEMPTION
+        order_code = _split_payment_id(payment_info.payment_id)[1]
+        return self._build_credit_note_xml(
+            doc_uuid=doc_uuid,
+            issue_date=issue_date,
+            original_invoice_ettn="",
+            original_invoice_no="",
+            original_invoice_date="",
+            customer_info=customer_info,
+            receiver_tag="",
+            items=items,
+            payment_info=payment_info,
+            reason=f"{EXPORT_INVOICE_NOTE} | Sipariş No: {order_code}",
+            is_e_invoice=False,
+            invoice_type_code="ISTISNA",
+            exemption=(code, name),
+            extra_notes=[f"Vergi İstisna Muafiyet Sebebi: {code}-{name}"],
+        )
+
+    def _send_export_invoice(
+        self,
+        customer_info: CustomerInfo,
+        items: list[InvoiceItem],
+        payment_info: PaymentInfo,
+    ) -> InvoiceResult:
+        today = payment_info.payment_date or date.today().isoformat()
+        doc_uuid = str(uuid.uuid4())
+        # Kalem açıklaması boşsa istisna ifadesi yazılsın
+        export_items = [
+            it if it.description else dataclasses.replace(it, description=EXPORT_INVOICE_NOTE)
+            for it in items
+        ]
+        xml_str = self._build_export_invoice_xml(doc_uuid, today, customer_info, export_items, payment_info)
+        payload: dict[str, Any] = {
+            "DocumentBytes": self._compress_xml(xml_str),
+            "SystemTypeCodes": "EARSIV",
+            "IsDocumentNoAuto": True,
+        }
+        data = self._post("SendDocument", payload)
+        result_data = self._check_api_response(data, "SendDocument ISTISNA")
+        invoice_no: str | None = None
+        pdf_link: str | None = None
+        if isinstance(result_data, dict):
+            invoice_no = result_data.get("invoiceNo") or result_data.get("InvoiceNo")
+            pdf_link = result_data.get("pdfLink") or result_data.get("PdfLink")
+        logger.info("birfatura: istisna (ihracat) faturası gönderildi uuid=%s invoiceNo=%s", doc_uuid, invoice_no)
+        return InvoiceResult(
+            success=True,
+            invoice_id=doc_uuid,
+            invoice_number=invoice_no,
+            pdf_url=pdf_link,
+            e_document_type="e_archive",
+            issued_at=today,
+        )
+
+    # ------------------------------------------------------------------
     # full_invoice_flow — tüm akışı yönetir
     # ------------------------------------------------------------------
 
@@ -929,8 +1035,11 @@ class BirFaturaProvider(BillingProviderBase):
         payment_info: PaymentInfo,
     ) -> InvoiceResult:
         try:
-            customer_id = self.find_or_create_customer(customer_info)
-            result = self._build_and_send_invoice(customer_info, customer_id, items, payment_info)
+            if self._export_istisna_enabled(customer_info):
+                result = self._send_export_invoice(customer_info, items, payment_info)
+            else:
+                customer_id = self.find_or_create_customer(customer_info)
+                result = self._build_and_send_invoice(customer_info, customer_id, items, payment_info)
             if not result.success:
                 return result
         except Exception as exc:
