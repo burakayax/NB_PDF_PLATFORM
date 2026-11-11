@@ -1,5 +1,4 @@
 import pytesseract
-from pdf2image import convert_from_path
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -47,11 +46,6 @@ else:
         "https://github.com/UB-Mannheim/tesseract/wiki"
     )
 base_dir = os.path.dirname(os.path.abspath(__file__))
-# Poppler: Windows'ta proje kökündeki Library/bin (conda bundle) kullanılır.
-# Linux/macOS'ta None → pdf2image sistem PATH'inden bulur (poppler-utils). Library/bin
-# dizini git'te var ama içi Windows DLL/exe → Linux'ta ASLA kullanılmamalı (aksi halde
-# pdfinfo bulunamaz). Bu yüzden yalnız Windows'ta set edilir.
-poppler_bin_path = os.path.join(base_dir, "..", "Library", "bin") if os.name == "nt" else None
 
 # Taranmış form / ekran görüntüsü PDF'ler için sayfa bölümleme (PSM 3: otomatik)
 _TESSERACT_CONFIG = r"--oem 3 --psm 3"

@@ -1385,15 +1385,12 @@ def pdf_to_images_zip(
     `_RASTER_PAGE_BATCH`); çözünürlük uzun belgelerde otomatik düşürülür
     (bkz. `_guvenli_raster_dpi`).
     """
-    from pdf2image import convert_from_path
+    from src.pdfcore.pdfium_io import render_pdf_pages
 
     fmt = (image_format or "jpg").lower()
     if fmt not in ("jpg", "jpeg", "png", "tif", "tiff"):
         raise Exception("Görüntü formatı jpg, png veya tiff olmalıdır.")
     ext = "png" if fmt == "png" else ("tiff" if fmt in ("tif", "tiff") else "jpg")
-    import src.pdf_engine as pe
-
-    poppler = getattr(pe, "poppler_bin_path", None) or None
     pwd = (password or "").strip()
     _open_pdf_reader(pdf_path, password=password)
     n = get_num_pages(pdf_path, password=password)
@@ -1401,12 +1398,6 @@ def pdf_to_images_zip(
     # Tek sayfa işlendiği için ek iş parçacığı kazanç sağlamaz, yalnızca bellek
     # tüketir: bilerek 1.
     guvenli_dpi = _guvenli_raster_dpi(n, int(dpi))
-    kw_base: dict = {"dpi": guvenli_dpi, "fmt": "png" if ext in ("png", "tiff") else "jpeg", "thread_count": 1}
-    if poppler and os.path.isdir(poppler):
-        kw_base["poppler_path"] = poppler
-    if pwd:
-        kw_base["userpw"] = pwd
-
     zip_path = os.path.join(workdir, "sayfalar.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         page_index = 0
@@ -1423,9 +1414,9 @@ def pdf_to_images_zip(
             ]
         toplam_cevrilecek = len(secili) if pages else n
         for start, end in parcalar:
-            kw = {**kw_base, "first_page": start, "last_page": end}
-            images = convert_from_path(pdf_path, **kw)
-            for im in images:
+            for _i, im in render_pdf_pages(
+                pdf_path, pwd or None, dpi=guvenli_dpi, pages=range(start - 1, end)
+            ):
                 page_index += 1
                 sayfa_no = start if pages else page_index
                 # Sayfa sayfa ilerleme: 150 sayfalık bir belgede işlem dakikayı
@@ -1861,13 +1852,11 @@ def pdf_to_pptx(
     dpi: int = PDF_EXPORT_DPI_WEB,
     progress_callback=None,
 ) -> bool:
-    from pdf2image import convert_from_path
+    from src.pdfcore.pdfium_io import render_pdf_pages
     from pptx import Presentation
     from pptx.util import Emu
     import pdfplumber
-    import src.pdf_engine as pe
 
-    poppler = getattr(pe, "poppler_bin_path", None) or None
     pwd = (password or "").strip()
     _open_pdf_reader(pdf_path, password=password)
     n = get_num_pages(pdf_path, password=password)
@@ -1876,12 +1865,6 @@ def pdf_to_pptx(
     # birkaç sayfayı birden açmak 512 MB'lık sunucuda süreci öldürüyor ve TÜM
     # servisi düşürüyordu. Uzun belgelerde çözünürlük de otomatik düşer.
     guvenli_dpi = _guvenli_raster_dpi(n, int(dpi))
-    kw_base: dict = {"dpi": guvenli_dpi, "fmt": "png", "thread_count": 1}
-    if poppler and os.path.isdir(poppler):
-        kw_base["poppler_path"] = poppler
-    if pwd:
-        kw_base["userpw"] = pwd
-
     # PDF'in gerçek sayfa boyutunu al (ilk sayfa referans)
     # pdfplumber sayfa boyutunu pt cinsinden verir; 1 pt = 12700 EMU
     PT_TO_EMU = 12700
@@ -1923,9 +1906,9 @@ def pdf_to_pptx(
     _done = 0
     for start in range(1, n + 1, _RASTER_PAGE_BATCH):
         end = min(start + _RASTER_PAGE_BATCH - 1, n)
-        kw = {**kw_base, "first_page": start, "last_page": end}
-        images = convert_from_path(pdf_path, **kw)
-        for im in images:
+        for _i, im in render_pdf_pages(
+            pdf_path, pwd or None, dpi=guvenli_dpi, pages=range(start - 1, end)
+        ):
             # Arka plan isinde kullaniciya GERCEK ilerleme gosterilir; islem
             # dakikalar surdugu icin donuk bir cubuk "takildi" izlenimi verir.
             _done += 1

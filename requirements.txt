@@ -12,7 +12,6 @@ pillow==12.1.1
 pypdf==6.9.1
 wrapt==2.1.2
 pytesseract
-pdf2image
 python-docx
 docx2pdf
 pywin32>=306; sys_platform == 'win32'

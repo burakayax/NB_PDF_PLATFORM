@@ -273,9 +273,6 @@ def test_word_to_pdf(assets):
 # ── Harici ikili gerektiren rasterizasyon/ofis ──────────────────────────────
 
 def test_pdf_to_image(assets):
-    # poppler (pdftoppm) gerekir → yoksa SKIP.
-    if not (shutil.which("pdftoppm") or shutil.which("pdftocairo")):
-        pytest.skip("poppler (pdftoppm) yok")
     zip_path = _run(lambda: ptx.pdf_to_images_zip(assets["pdf"], str(assets["dir"])))
     assert _nonempty(zip_path)
 
@@ -284,7 +281,7 @@ def test_ppt_to_pdf(assets):
     # LibreOffice gerekir → yoksa SKIP.
     if not (shutil.which("soffice") or shutil.which("libreoffice")):
         pytest.skip("LibreOffice (soffice) yok")
-    # pptx'i doğrudan python-pptx ile üret (pdf_to_pptx/poppler'a bağımlı kalma).
+    # pptx'i doğrudan python-pptx ile üret (pdf_to_pptx'e bağımlı kalma).
     from pptx import Presentation
     src_pptx = _out(assets, "deck.pptx")
     prs = Presentation()

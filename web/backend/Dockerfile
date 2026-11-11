@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED=1 \
     PDF_API_PORT=8000
 
 # Sistem bağımlılıkları (native Python runtime'da apt-get çalışmadığı için Docker şart):
-#   wkhtmltopdf  → HTML→PDF (subprocess) | tesseract-ocr(+tur) → pytesseract | poppler-utils → pdf2image
+#   wkhtmltopdf  → HTML→PDF (subprocess) | tesseract-ocr(+tur) → pytesseract
 #   ghostscript  → ocrmypdf | libcairo2 → pycairo/svglib | libgl1/libglib2.0-0 → opencv
 #   libreoffice-{writer,calc,impress} → word/excel/ppt → PDF (soffice --headless).
 #     Yalın kurulum: yalnız gerekli bileşenler + --no-install-recommends (tam meta paketten küçük).
@@ -23,7 +23,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       wkhtmltopdf \
       tesseract-ocr \
       tesseract-ocr-tur \
-      poppler-utils \
       ghostscript \
       libcairo2 \
       libgl1 \

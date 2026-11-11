@@ -165,12 +165,7 @@ class TestFiligran:
 
 class TestPdfGorselDonusumu:
     def _donustur(self, pdf: Path, tmp_path: Path, **kw):
-        try:
-            return ptx.pdf_to_images_zip(str(pdf), str(tmp_path), **kw)
-        except Exception as e:  # poppler yoksa atla
-            if "poppler" in str(e).lower() or "Unable to get page count" in str(e):
-                pytest.skip("poppler kurulu değil")
-            raise
+        return ptx.pdf_to_images_zip(str(pdf), str(tmp_path), **kw)
 
     def test_sayfa_secimi_ve_gercek_numara(self, agir_pdf: Path, tmp_path: Path):
         z = zipfile.ZipFile(self._donustur(agir_pdf, tmp_path, dpi=72, pages=[2, 4]))

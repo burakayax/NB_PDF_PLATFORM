@@ -18,7 +18,6 @@ Asagidaki Python kutuphaneleri ve harici programlar eksiksiz kurulmalidir.
 - pypdf==6.9.1
 - wrapt==2.1.2
 - pytesseract
-- pdf2image
 - python-docx
 - docx2pdf
 - pywin32
@@ -42,11 +41,6 @@ python -m pip install -r requirements.txt
   Kurulum yolu varsayilan olarak su sekilde bekleniyor:
   C:\Program Files\Tesseract-OCR\tesseract.exe
 
-- Poppler for Windows
-  pdf2image kullaniminda gerekir.
-  Projede su klasor bekleniyor:
-  Library\bin
-
 4. WINDOWS OZEL NOTLARI
 - Word/Excel otomasyonu icin Office uygulamalari tam kurulmus olmalidir.
 - Bazi sistemlerde pywin32 sonrasi terminalden su komut gerekebilir:
@@ -57,7 +51,6 @@ python -m pip install -r requirements.txt
 - Word kurulu mu?
 - Excel kurulu mu?
 - Tesseract yolu dogru mu?
-- Poppler dosyalari Library\bin klasorunde mi?
 - PDF dosyalari baskasi tarafindan acik mi?
 
 6. GELISTIRMEYE DEVAM EDERKEN

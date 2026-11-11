@@ -44,7 +44,6 @@ a = Analysis(
         "Crypto",
         "windnd",
         "pytesseract",
-        "pdf2image",
         "docx2pdf",
     ]
     + ctk_hidden,

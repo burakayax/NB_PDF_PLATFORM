@@ -95,7 +95,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libcairo2-dev pkg-config \
-            poppler-utils \
             tesseract-ocr \
             libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation
           # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.

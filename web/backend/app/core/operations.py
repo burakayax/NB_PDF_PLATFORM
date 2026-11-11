@@ -447,7 +447,6 @@ def operation_capabilities() -> dict:
         "environment": {
             "platform": sys.platform,
             "tesseract_cmd": getattr(pdf_engine.pytesseract.pytesseract, "tesseract_cmd", ""),
-            "poppler_path": str(getattr(pdf_engine, "poppler_bin_path", "")),
         },
     }
 

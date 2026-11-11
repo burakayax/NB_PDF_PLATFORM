@@ -19,5 +19,5 @@ pypdfium2 (çizim/metin/arama), pikepdf (yapı + içerik akışı), reportlab (y
 Bu dalın (`calisma/pymupdf-cikis`) merge'ü geri alınırsa `requirements.txt` dosyalarına `pymupdf` ve `pdf2docx` yeniden eklenmelidir.
 
 ## Hâlâ kalan lisans gri alanı
-- Ghostscript (AGPL) ve Poppler (GPL) ayrı program olarak çağrılıyor (kütüphane olarak bağlanmıyor). Bu "toplu dağıtım" sayılır ama
-  kesin hukuki görüş için avukata danışılmalı; gerekirse bu iki araç da kaldırılabilir (sıkıştırmada pikepdf+pdfium yolu zaten var).
+- Poppler (GPL) KALDIRILDI: PDF→Görsel ve PDF→PowerPoint artık pdfium ile sayfa çiziyor (pdf2image bağımlılığı, Docker/CI poppler-utils paketi çıkarıldı).
+- Ghostscript (AGPL) hâlâ sunucuda ayrı program olarak çağrılıyor (sıkıştırma + ocrmypdf). Kesin hukuki görüş için avukata danışılmalı; sıkıştırmada pikepdf+pdfium yolu zaten var.
