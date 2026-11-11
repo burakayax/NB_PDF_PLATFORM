@@ -248,7 +248,7 @@ type TiktokEnvelope = { data?: Record<string, unknown>; error?: { code?: string;
 /** TikTok hata kodlarının Türkçe açıklaması (panelde okunur olsun). Bilinmeyen kod ham gösterilir. */
 const ERROR_TR: Record<string, string> = {
   unaudited_client_can_only_post_to_private_accounts:
-    "TikTok uygulaması henüz denetimden geçmediği için video yalnızca “yalnız ben” gizliliğiyle paylaşılabilir.",
+    "TikTok uygulaması henüz denetimden geçmediği için yalnızca GİZLİ (özel) hesaplara paylaşım yapabilir. Paylaşım sırasında TikTok hesabını gizli yap: TikTok uygulaması → Profil → ☰ → Ayarlar ve gizlilik → Gizlilik → “Özel hesap” açık. Paylaşım bitince tekrar herkese açık yapabilirsin.",
   spam_risk_too_many_posts: "TikTok günlük paylaşım sınırına ulaşıldı (spam koruması). Yarın tekrar deneyin.",
   spam_risk_user_banned_from_posting: "Bu TikTok hesabı şu an paylaşım yapmaktan kısıtlanmış.",
   spam_risk_text: "TikTok açıklamayı spam olarak işaretledi; metni sadeleştirin.",
