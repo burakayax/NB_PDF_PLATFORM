@@ -93,6 +93,7 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const [target, setTarget] = useState<AdminPaymentRow | null>(null);
+  const [statusRow, setStatusRow] = useState<AdminPaymentRow | null>(null);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -326,17 +327,28 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
                   {r.invoiceNo ?? (r.invoiceStatus ? r.invoiceStatus : "—")}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {r.refundable ? (
-                    <button
-                      type="button"
-                      onClick={() => setTarget(r)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/40 px-3 py-1.5 text-[12px] font-semibold text-rose-200 hover:bg-rose-500/10"
-                    >
-                      <Undo2 className="h-3.5 w-3.5" /> İade et
-                    </button>
-                  ) : (
-                    <span className="text-[11px] text-slate-600">—</span>
-                  )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {r.provider === "paytr" && (
+                      <button
+                        type="button"
+                        onClick={() => setStatusRow(r)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.14] px-3 py-1.5 text-[12px] font-semibold text-slate-100 hover:bg-white/[0.06]"
+                      >
+                        PayTR durumunu sorgula
+                      </button>
+                    )}
+                    {r.refundable ? (
+                      <button
+                        type="button"
+                        onClick={() => setTarget(r)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/40 px-3 py-1.5 text-[12px] font-semibold text-rose-200 hover:bg-rose-500/10"
+                      >
+                        <Undo2 className="h-3.5 w-3.5" /> İade et
+                      </button>
+                    ) : r.provider !== "paytr" ? (
+                      <span className="text-[11px] text-slate-600">—</span>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -370,6 +382,8 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
           </div>
         </div>
       )}
+
+      {statusRow && <StatusDialog accessToken={accessToken} row={statusRow} onClose={() => setStatusRow(null)} />}
 
       {target && (
         <RefundDialog
@@ -427,6 +441,44 @@ function PaytrStatusView({ status }: { status: AdminPaytrStatus }) {
   );
 }
 
+function StatusDialog({ accessToken, row, onClose }: { accessToken: string; row: AdminPaymentRow; onClose: () => void }) {
+  const [busy, setBusy] = useState(true);
+  const [status, setStatus] = useState<AdminPaytrStatus | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      try {
+        const r = await fetchAdminPaytrStatus(accessToken, row.conversationId);
+        if (alive) setStatus(r);
+      } catch (e) {
+        if (alive) setErr(e instanceof Error ? e.message : "PayTR durumu sorgulanamadı.");
+      } finally {
+        if (alive) setBusy(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [accessToken, row.conversationId]);
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="PayTR durumu">
+      <div className="w-full max-w-md rounded-2xl border border-white/[0.12] bg-slate-900 p-5 shadow-2xl">
+        <h2 className="text-base font-bold text-white">PayTR durumu</h2>
+        <p className="mt-1 text-[12px] text-slate-400">{row.user.email} · sipariş {row.conversationId} (para hareketi yapmaz, yalnız sorgular)</p>
+        {busy && <p className="mt-3 flex items-center gap-2 text-[12.5px] text-slate-300"><Loader2 className="h-4 w-4 animate-spin" /> Sorgulanıyor…</p>}
+        {err && <p className="mt-3 text-[12px] text-rose-200">{err}</p>}
+        {status && <PaytrStatusView status={status} />}
+        <div className="mt-4 flex justify-end">
+          <button type="button" onClick={onClose} className="rounded-lg border border-white/[0.14] px-3 py-1.5 text-[12.5px] font-semibold text-slate-100 hover:bg-white/[0.06]">Kapat</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RefundDialog({
   accessToken,
   row,
@@ -445,25 +497,8 @@ function RefundDialog({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const [statusBusy, setStatusBusy] = useState(false);
-  const [status, setStatus] = useState<AdminPaytrStatus | null>(null);
-  const [statusErr, setStatusErr] = useState<string | null>(null);
-
   const outsideWindow = !row.withinRefundWindow;
   const canSubmit = reason.trim().length > 0 && (!outsideWindow || force) && !busy;
-
-  const checkStatus = async () => {
-    setStatusBusy(true);
-    setStatusErr(null);
-    setStatus(null);
-    try {
-      setStatus(await fetchAdminPaytrStatus(accessToken, row.conversationId));
-    } catch (e) {
-      setStatusErr(e instanceof Error ? e.message : "PayTR durumu sorgulanamadı.");
-    } finally {
-      setStatusBusy(false);
-    }
-  };
 
   const submit = async () => {
     setBusy(true);
@@ -492,24 +527,6 @@ function RefundDialog({
           Bu işlem geri alınamaz. {row.provider === "paytr" ? "Tutar müşterinin kartına PayTR üzerinden iade edilir. " : ""}
           Müşterinin planı Ücretsiz'e düşer.
         </p>
-
-        {row.provider === "paytr" && (
-          <div className="mt-3 rounded-lg border border-white/[0.1] bg-black/20 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[12px] text-slate-300">İade öncesi PayTR bu siparişi görüyor mu? (para hareketi yapmaz)</span>
-              <button
-                type="button"
-                onClick={() => void checkStatus()}
-                disabled={statusBusy || busy}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/[0.14] px-3 py-1.5 text-[12px] font-semibold text-slate-100 hover:bg-white/[0.06] disabled:opacity-50"
-              >
-                {statusBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />} PayTR durumunu sorgula
-              </button>
-            </div>
-            {statusErr && <p className="mt-2 text-[12px] text-rose-200">{statusErr}</p>}
-            {status && <PaytrStatusView status={status} />}
-          </div>
-        )}
 
         {outsideWindow && (
           <label className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-[12px] text-amber-100">
