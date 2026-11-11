@@ -1020,6 +1020,12 @@ class BirFaturaProvider(BillingProviderBase):
         items: list[InvoiceItem],
         payment_info: PaymentInfo,
     ) -> InvoiceResult:
+        # UBL XML'inde satıcı bilgileri zorunludur; eksikse GİB'e boş alanlı fatura göndermeyiz.
+        missing = [k for k in ("BIRFATURA_SUPPLIER_VKN", "BIRFATURA_SUPPLIER_ADDRESS", "BIRFATURA_SUPPLIER_CITY",
+                               "BIRFATURA_SUPPLIER_TAX_OFFICE")
+                   if not os.getenv(k, "").strip()]
+        if missing:
+            raise RuntimeError("İstisna faturası için satıcı ayarları eksik: " + ", ".join(missing))
         today = payment_info.payment_date or date.today().isoformat()
         doc_uuid = str(uuid.uuid4())
         # Kalem açıklaması boşsa istisna ifadesi yazılsın
