@@ -128,8 +128,7 @@ describe("PaymentsTab — ödemeler ve iade", () => {
       fields: { payment_amount: "129.00", currency: "TL", returns: [] },
     });
     render(<PaymentsTab accessToken="t" />);
-    fireEvent.click(await screen.findByText("İade et"));
-    fireEvent.click(screen.getByText("PayTR durumunu sorgula"));
+    fireEvent.click(await screen.findByText("PayTR durumunu sorgula"));
     expect(await screen.findByText("PayTR bu siparişi buluyor.")).toBeTruthy();
     expect(paytrStatus).toHaveBeenCalledWith("t", "oid-1");
     expect(screen.getByText("Evet (test)")).toBeTruthy();
@@ -140,14 +139,15 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     fetchPayments.mockResolvedValue(page([row()]));
     paytrStatus.mockResolvedValue({ ok: false, merchantOid: "abc", errNo: "004", errMsg: "merchant_oid ile islem bulunamadi" });
     const { unmount } = render(<PaymentsTab accessToken="t" />);
-    fireEvent.click(await screen.findByText("İade et"));
-    fireEvent.click(screen.getByText("PayTR durumunu sorgula"));
+    fireEvent.click(await screen.findByText("PayTR durumunu sorgula"));
     expect(await screen.findByText(/merchant_oid ile islem bulunamadi/)).toBeTruthy();
     unmount();
 
     fetchPayments.mockResolvedValue(page([row({ provider: "diger" })]));
     render(<PaymentsTab accessToken="t" />);
-    fireEvent.click(await screen.findByText("İade et"));
+    await screen.findByText("İade et");
+    expect(screen.queryByText("PayTR durumunu sorgula")).toBeNull();
+    fireEvent.click(screen.getByText("İade et"));
     expect(screen.queryByText("PayTR durumunu sorgula")).toBeNull();
   });
 
