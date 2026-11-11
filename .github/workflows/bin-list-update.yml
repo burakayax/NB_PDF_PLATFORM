@@ -1,0 +1,45 @@
+name: BIN listesi güncelleme
+
+# Her ayın 1'i 06:00 UTC'de kartın ilk 6 hanesi -> ülke listesini kaynaktan yeniler ve değişiklik varsa
+# İNCELEME İÇİN bir pull request açar. Kendiliğinden canlıya ALMAZ: Türkiye (TR) kayıtlarındaki
+# değişiklikler PR açıklamasında öne çıkarılır; birleştirmeden önce bakılmalıdır.
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Listeyi yenile
+        working-directory: web/api
+        run: node scripts/update-bin-list.mjs --report ../../bin-report.md
+
+      - name: Değişiklik varsa PR aç
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Yalnızca "# generated:" satırı (tarih) değiştiyse gerçek bir değişiklik yok say.
+          if git diff --quiet -I'^# generated:' -- web/api/data/bin-country.csv; then
+            echo "Kayıtlarda değişiklik yok."
+            exit 0
+          fi
+          BR="bin-list-$(date +%Y-%m)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BR"
+          git add web/api/data/bin-country.csv
+          git commit -m "chore(bin): BIN-ülke listesi aylık güncelleme"
+          git push --force origin "$BR"
+          gh pr create --base main --head "$BR" --title "BIN listesi aylık güncelleme" --body-file bin-report.md || gh pr edit "$BR" --body-file bin-report.md

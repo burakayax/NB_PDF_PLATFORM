@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-import { fetchAdminSettings, putAdminSettingsPatches } from "../../api/admin";
+import { fetchAdminCardListStatus, fetchAdminSettings, putAdminSettingsPatches, type AdminCardListStatus } from "../../api/admin";
 import { notifyRuntimeRefresh } from "../../lib/runtimeRefreshEvents";
 
 /**
@@ -50,6 +50,19 @@ export function PaymentSwitches({ accessToken }: { accessToken: string }) {
   const [stopped, setStopped] = useState<Record<FlagKey, boolean> | null>(null);
   const [busyKey, setBusyKey] = useState<FlagKey | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [binStatus, setBinStatus] = useState<AdminCardListStatus | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void fetchAdminCardListStatus(accessToken)
+      .then((r) => {
+        if (alive) setBinStatus(r);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [accessToken]);
 
   const load = useCallback(async () => {
     try {
@@ -121,6 +134,14 @@ export function PaymentSwitches({ accessToken }: { accessToken: string }) {
         })}
       </div>
       {err && <p className="mt-2 text-[12px] text-rose-200">{err}</p>}
+      {binStatus && (
+        <p className={`mt-3 text-[12px] leading-snug ${binStatus.stale ? "text-amber-200" : "text-slate-400"}`} data-testid="bin-status">
+          Kart (BIN) listesi: {binStatus.entries.toLocaleString("tr-TR")} kayıt
+          {binStatus.generatedAt ? ` · ${binStatus.ageDays ?? "?"} gün önce güncellendi` : " · hiç güncellenmedi"}
+          {` · son 30 günde kart ülkesi kaydı alınan ${binStatus.total30d} ödemenin ${binStatus.unknown30d}’i belirlenemedi`}
+          {binStatus.stale ? " — LİSTE BOŞ YA DA ESKİ: yurt dışı istisnası açılmadan önce güncelleyin (aylık otomatik güncelleme önerisi GitHub’da açılır)." : "."}
+        </p>
+      )}
     </section>
   );
 }

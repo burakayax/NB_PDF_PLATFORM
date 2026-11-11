@@ -4,7 +4,9 @@ import { Loader2, RefreshCw, Search, Undo2, X } from "lucide-react";
 import {
   fetchAdminPayments,
   fetchAdminPaytrStatus,
+  postAdminInvoiceAction,
   refundAdminPayment,
+  type AdminInvoiceAction,
   type AdminPaymentRow,
   type AdminPaymentsPage,
   type AdminPaytrStatus,
@@ -324,7 +326,7 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
                   <div className="mt-1 text-[10.5px] text-slate-500">{r.provider === "paytr" ? "PayTR" : "Diğer sağlayıcı"}</div>
                 </td>
                 <td className="px-4 py-3 text-slate-400">
-                  {r.invoiceNo ?? (r.invoiceStatus ? r.invoiceStatus : "—")}
+                  <InvoiceCell accessToken={accessToken} row={r} onChanged={() => void load()} />
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex flex-wrap items-center justify-end gap-2">
@@ -394,6 +396,93 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
           onDone={(r) => onRefunded(r, target)}
         />
       )}
+    </div>
+  );
+}
+
+const INVOICE_ACTION_LABEL: Record<AdminInvoiceAction, string> = {
+  AUTO: "Otomatiğe döndür",
+  VAT: "KDV'li kes (vadesinde)",
+  CANCEL: "Fatura kesme",
+  NOW: "Şimdi kes",
+  NOW_VAT: "Şimdi KDV'li kes",
+};
+
+function cardNote(country: string | null | undefined): string | null {
+  if (!country) return null;
+  if (country === "??") return "Kart: belirlenemedi";
+  return country === "TR" || country === "TURKEY" ? "Kart: yurt içi" : `Kart: yurt dışı (${country})`;
+}
+
+/** Fatura sütunu: ertelenmiş fatura durumu ve yönetici kararı (KDV'li kes / kesme / şimdi kes). */
+function InvoiceCell({ accessToken, row, onChanged }: { accessToken: string; row: AdminPaymentRow; onChanged: () => void }) {
+  const [busy, setBusy] = useState<AdminInvoiceAction | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
+  const act = async (a: AdminInvoiceAction) => {
+    setBusy(a);
+    setErr(null);
+    try {
+      const r = await postAdminInvoiceAction(accessToken, row.conversationId, a);
+      if (r.outcome === "paused") setErr("Fatura kesme DURDURULMUŞ: önce üstteki 'Fatura kesme' düğmesini açın.");
+      else if (r.outcome === "failed") setErr("Fatura kesilemedi (BirFatura hatası); sonraki saatlik turda yeniden denenir.");
+      else onChanged();
+      if (r.outcome === "paused" || r.outcome === "failed") onChanged();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "İşlem yapılamadı.");
+    } finally {
+      setBusy(null);
+      setConfirmCancel(false);
+    }
+  };
+
+  const btn = "rounded-md border border-white/[0.14] px-2 py-1 text-[11px] font-semibold text-slate-100 hover:bg-white/[0.06] disabled:opacity-50";
+  const card = cardNote(row.cardCountry);
+
+  if (row.invoiceNo) return <span>{row.invoiceNo}</span>;
+  if (row.status !== "completed") {
+    return <span>{row.invoiceStatus === "skipped_refunded" ? "İade: fatura kesilmedi" : row.invoiceStatus ?? "—"}</span>;
+  }
+  if (row.invoiceStatus === "issued") return <span>Kesildi</span>;
+  if (row.invoiceStatus === "processing") return <span>Kesiliyor…</span>;
+
+  const cancelled = row.invoiceStatus === "cancelled";
+  const due = row.invoiceDueAt ? dateTime(row.invoiceDueAt) : null;
+  const headline = cancelled
+    ? "Fatura kesilmeyecek (karar verildi)"
+    : row.invoiceStatus === "scheduled"
+      ? `${row.invoiceAction === "VAT" ? "KDV'li" : "Otomatik"} kesilecek: ${due ?? "—"}`
+      : "Fatura yok";
+
+  return (
+    <div className="min-w-[210px] space-y-1.5">
+      <div className="text-[11.5px] text-slate-300">{headline}</div>
+      {card && <div className="text-[11px] text-slate-500">{card}</div>}
+      <div className="flex flex-wrap gap-1.5">
+        {!cancelled && row.invoiceAction !== "VAT" && (
+          <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("VAT")}>{INVOICE_ACTION_LABEL.VAT}</button>
+        )}
+        {!cancelled && row.invoiceAction === "VAT" && (
+          <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("AUTO")}>{INVOICE_ACTION_LABEL.AUTO}</button>
+        )}
+        <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("NOW")}>
+          {busy === "NOW" && <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />}{INVOICE_ACTION_LABEL.NOW}
+        </button>
+        <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("NOW_VAT")}>
+          {busy === "NOW_VAT" && <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />}{INVOICE_ACTION_LABEL.NOW_VAT}
+        </button>
+        {cancelled ? (
+          <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("AUTO")}>Yeniden planla</button>
+        ) : confirmCancel ? (
+          <button type="button" className={`${btn} border-rose-400/50 text-rose-200`} disabled={busy !== null} onClick={() => void act("CANCEL")}>
+            Emin misiniz? Satış geçerliyse fatura kesmemek yasal risktir — evet, kesme
+          </button>
+        ) : (
+          <button type="button" className={`${btn} text-rose-200`} disabled={busy !== null} onClick={() => setConfirmCancel(true)}>{INVOICE_ACTION_LABEL.CANCEL}</button>
+        )}
+      </div>
+      {err && <div className="text-[11px] text-rose-200">{err}</div>}
     </div>
   );
 }

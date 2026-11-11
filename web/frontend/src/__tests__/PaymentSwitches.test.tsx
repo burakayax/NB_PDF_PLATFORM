@@ -3,9 +3,11 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 
 const fetchSettings = vi.fn();
 const putPatches = vi.fn();
+const binStatus = vi.fn();
 vi.mock("../api/admin", () => ({
   fetchAdminSettings: (...a: unknown[]) => fetchSettings(...a),
   putAdminSettingsPatches: (...a: unknown[]) => putPatches(...a),
+  fetchAdminCardListStatus: (...a: unknown[]) => binStatus(...a),
 }));
 vi.mock("../lib/runtimeRefreshEvents", () => ({ notifyRuntimeRefresh: vi.fn() }));
 
@@ -16,6 +18,7 @@ describe("PaymentSwitches (Ödemeler ve iade üst düğmeleri)", () => {
     fetchSettings.mockReset();
     putPatches.mockReset();
     putPatches.mockResolvedValue(undefined);
+    binStatus.mockReset().mockResolvedValue({ entries: 0, generatedAt: null, ageDays: null, stale: true, total30d: 4, unknown30d: 3, exemptionOpen: false });
   });
 
   it("kayıt yokken üçü de DURDURULMUŞ görünür (güvenli varsayılan)", async () => {
@@ -47,5 +50,14 @@ describe("PaymentSwitches (Ödemeler ve iade üst düğmeleri)", () => {
     fireEvent.click(screen.getByText("Fatura kesmeyi durdur"));
     await waitFor(() => expect(putPatches).toHaveBeenCalled());
     expect(putPatches.mock.calls[0][1]["global.flags"].featureFlags.invoicingPaused).toBe(true);
+  });
+
+  it("BIN listesi boş/eskiyse uyarır ve belirlenemedi sayısını gösterir", async () => {
+    fetchSettings.mockResolvedValue({});
+    render(<PaymentSwitches accessToken="t" />);
+    const el = await screen.findByTestId("bin-status");
+    expect(el.textContent).toMatch(/hiç güncellenmedi/);
+    expect(el.textContent).toMatch(/4 ödemenin 3/);
+    expect(el.textContent).toMatch(/LİSTE BOŞ YA DA ESKİ/);
   });
 });
