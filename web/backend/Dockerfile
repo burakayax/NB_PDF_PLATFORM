@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libcairo2 \
       libgl1 \
       libglib2.0-0 \
+      libatomic1 \
       libreoffice-writer \
       libreoffice-calc \
       libreoffice-impress \
