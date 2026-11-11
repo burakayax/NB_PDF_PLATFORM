@@ -10,6 +10,7 @@ import {
   type AdminPaytrStatus,
   type AdminRefundResult,
 } from "../../api/admin";
+import { PaymentSwitches } from "./PaymentSwitches";
 
 /**
  * Ödemeler ve iade — yönetim ekranı.
@@ -147,6 +148,8 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
           Kişiyi e-posta, ad, tarih ya da tutara göre bulun; satırdaki “İade et” ile iadeyi başlatın.
         </p>
       </div>
+
+      <PaymentSwitches accessToken={accessToken} />
 
       {notice && (
         <div
