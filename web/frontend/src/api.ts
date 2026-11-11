@@ -217,6 +217,8 @@ export type PdfElement = {
   ink?: [number, number, number, number];
   /** Görsel öğe: VEKTÖR çizimli amblem (taşınamaz; yalnız silinir). */
   vec?: boolean;
+  /** Görsel öğe: tek başına ÇİZGİ veya DİKDÖRTGEN (ayraç, kutu, alt çizgi) — yalnız silinir. */
+  shape?: boolean;
   /** Görsel öğe: PDF içindeki görsel nesne numarası (taşıma için). */
   xref?: number;
 };

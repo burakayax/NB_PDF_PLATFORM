@@ -1756,7 +1756,10 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     const mdx = ed?.dx ?? 0, mdy = ed?.dy ?? 0;
                     const sel = selected === el.id || multiSel.has(el.id);
                     if (el.type === "image") {
-                      const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
+                      // İnce çizgi/şekil: tıklanabilsin diye en az 10px'lik kutu, çizginin ORTASINA ortalanır.
+                      const minHit = el.shape ? 10 : 8;
+                      const wPx = Math.max((x1 - x0) * scale, minHit), hPx = Math.max((y1 - y0) * scale, minHit);
+                      const style = { left: el.shape ? x0 * scale - (wPx - (x1 - x0) * scale) / 2 : x0 * scale, top: el.shape ? y0 * scale - (hPx - (y1 - y0) * scale) / 2 : y0 * scale, width: wPx, height: hPx } as const;
                       // Silinmiş görsel → arka plan rengiyle kapat (tam sayfa görselde düz beyaz). Silgiyi bbox'tan ~3px taşır:
                       // amblem/logo kenarındaki ince hat çizgileri de örtülsün (indirmede zaten yok).
                       const oldRect = { left: style.left - 1, top: style.top - 1, width: style.width + 2, height: style.height + 2 };
@@ -1775,7 +1778,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                             onClick={(e) => { e.stopPropagation(); selectEl(el, e.shiftKey || e.ctrlKey || e.metaKey); }}
                             className={`absolute rounded-sm ${canMove ? "cursor-move" : "cursor-pointer"} ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`}
                             style={{ ...boxStyle, touchAction: canMove ? "none" : undefined }}
-                            title={el.vec ? (tr ? "Amblem — seç, sonra sil" : "Emblem — select, then delete") : canMove ? (tr ? "Görsel — seç, tutup taşı ya da sil" : "Image — select, drag to move, or delete") : (tr ? "Görsel — seç, sonra sil" : "Image — select, then delete")}>
+                            title={el.shape ? (tr ? "Çizgi / şekil — seç, sonra sil" : "Line / shape — select, then delete") : el.vec ? (tr ? "Amblem — seç, sonra sil" : "Emblem — select, then delete") : canMove ? (tr ? "Görsel — seç, tutup taşı ya da sil" : "Image — select, drag to move, or delete") : (tr ? "Görsel — seç, sonra sil" : "Image — select, then delete")}>
                             {sel && (
                               <button
                                 type="button"

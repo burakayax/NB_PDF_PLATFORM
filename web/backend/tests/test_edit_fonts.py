@@ -271,3 +271,46 @@ def test_logo_delete_keeps_same_logo_on_other_page():
                     headers=_AUTH, data={"edits": json.dumps([op])})
     out = fitz.open("pdf", r.content)
     assert not out[0].get_image_info() and len(out[1].get_image_info()) == 1
+
+
+def _cizgili_pdf() -> bytes:
+    from reportlab.pdfgen import canvas
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf)
+    c.drawString(50, 780, "TCKN")
+    c.line(240, 778, 500, 778)   # silinecek çizgi
+    c.line(50, 745, 545, 745)    # yakın komşu ayraç
+    c.rect(60, 600, 200, 60)     # kutu
+    c.line(100, 400, 102, 400)   # çok kısa kırıntı
+    c.save()
+    return buf.getvalue()
+
+
+def test_vector_lines_tek_cizgi_ve_kutu_bulunur_kirinti_atlanir():
+    import pikepdf
+
+    pdf = pikepdf.Pdf.open(io.BytesIO(_cizgili_pdf()))
+    found = ef.vector_lines(pdf, pdf.pages[0], [])
+    assert len(found) == 3
+    # Bir amblemin içinde kalan çizgi ayrıca listelenmez.
+    ust = [r for r in found if abs(r[1] - found[0][1]) < 1][0]
+    taken = [(ust[0] - 5, ust[1] - 5, ust[2] + 5, ust[3] + 5)]
+    assert len(ef.vector_lines(pdf, pdf.pages[0], taken)) == 2
+
+
+def test_analiz_cizgiyi_shape_olarak_verir_ve_silince_komsu_kalir():
+    import pikepdf
+    from app.core.edit_analyze import analyze_pdf
+    from src.pdfcore import content as ct
+
+    pdf = pikepdf.Pdf.open(io.BytesIO(_cizgili_pdf()))
+    els = analyze_pdf(pdf)["pages"][0]["elements"]
+    shapes = [e for e in els if e.get("shape")]
+    assert len(shapes) == 3 and all(e["vec"] and e["type"] == "image" for e in shapes)
+    hedef = min(shapes, key=lambda e: e["bbox"][1])["bbox"]  # sayfada en üstteki = TCKN altı çizgi
+    pad = 1.0
+    assert ct.remove_in_rects(pdf, pdf.pages[0], [(hedef[0] - pad, hedef[1] - pad, hedef[2] + pad, hedef[3] + pad)],
+                              text=False, paths=True)
+    kalan = ef.vector_lines(pdf, pdf.pages[0], [])
+    assert len(kalan) == 2

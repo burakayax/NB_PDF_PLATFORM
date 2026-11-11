@@ -212,10 +212,19 @@ def analyze_pdf(pdf: pikepdf.Pdf, *, want_ocr: bool = False, reader_factory: Any
                 **({"xref": int(im.xref)} if im.xref else {}),
             })
             ei += 1
+        emb_rects: list[tuple[float, float, float, float]] = []
         for vr in _ef.vector_emblems(pdf, page, img_rects):
+            emb_rects.append((vr[0], vr[1], vr[2], vr[3]))
             els.append({
                 "id": f"i{pi}_{ei}", "type": "image", "vec": True,
                 "bbox": [round(vr[0], 1), round(vr[1], 1), round(vr[2], 1), round(vr[3], 1)],
+            })
+            ei += 1
+        # Tek başına ÇİZGİ / DİKDÖRTGEN (ayraç, kutu, alt çizgi): seçilip silinebilsin.
+        for sr in _ef.vector_lines(pdf, page, list(img_rects) + emb_rects):
+            els.append({
+                "id": f"i{pi}_{ei}", "type": "image", "vec": True, "shape": True,
+                "bbox": [round(sr[0], 1), round(sr[1], 1), round(sr[2], 1), round(sr[3], 1)],
             })
             ei += 1
         pages.append({"width": round(pw, 1), "height": round(ph, 1), "elements": els})

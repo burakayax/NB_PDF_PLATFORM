@@ -555,7 +555,52 @@ def vector_emblems(pdf: Any, page: Any, image_rects: list[Any], max_clusters: in
     return res if len(res) <= max_clusters else []
 
 
-_FALLBACK_CSS = {"sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono"}
+def vector_lines(pdf: Any, page: Any, taken_rects: list[Any], max_items: int = 60) -> list[tuple[float, float, float, float]]:
+    """Tek başına duran ÇİZGİ ve DİKDÖRTGENLERİ (tablo/ayraç çizgisi, kutu, dolgu şeridi) bulur.
+
+    `vector_emblems` bunları bilerek atlar (sayfa kalabalıklaşmasın). Burada her biri AYRI bir
+    öğe olur; kullanıcı seçip silebilir. Atlananlar: bir görsel/amblemin içinde kalanlar (onlar
+    zaten o öğeyle silinir), sayfanın çoğunu kaplayan zemin dolguları, çok kısa kırıntılar,
+    eğri/çokgen şekiller (amblem işi). Çok sayıda çizgi çıkarsa (ızgara/grafik) hiçbiri
+    döndürülmez — arayüz boğulmasın."""
+    from src.pdfcore import content as _ct
+    from src.pdfcore.pages import page_visual_size
+
+    try:
+        sc = _ct.scan_page(pdf, page)
+    except Exception:
+        return []
+    pw, ph = page_visual_size(page)
+
+    def _area(r: Any) -> float:
+        return max(0.0, r[2] - r[0]) * max(0.0, r[3] - r[1])
+
+    def _inter(a: Any, b: Any) -> float:
+        return max(0.0, min(a[2], b[2]) - max(a[0], b[0])) * max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
+
+    uniq: list[tuple[float, float, float, float]] = []
+    for d in sc.paths:
+        kinds = d.kinds
+        if not kinds or any(k not in ("l", "re") for k in kinds) or kinds.count("l") >= 3:
+            continue  # eğri/çokgen = amblem/şekil (vector_emblems işi)
+        if d.fill_color is None and d.color is None:
+            continue
+        r = tuple(float(v) for v in d.rect)
+        if max(r[2] - r[0], r[3] - r[1]) < 8:
+            continue
+        if _area(r) > pw * ph * 0.6:
+            continue  # sayfa zemini
+        if any(t[0] <= r[0] and t[1] <= r[1] and t[2] >= r[2] and t[3] >= r[3] for t in taken_rects):
+            continue
+        if any(_area(r) > 0 and _inter(r, t) >= 0.8 * _area(r) for t in taken_rects):
+            continue
+        if any(abs(r[0] - u[0]) < 0.5 and abs(r[1] - u[1]) < 0.5 and abs(r[2] - u[2]) < 0.5 and abs(r[3] - u[3]) < 0.5 for u in uniq):
+            continue  # aynı yere çizilmiş yinelenen
+        uniq.append(r)  # type: ignore[arg-type]
+    return uniq if len(uniq) <= max_items else []
+
+
+_FALLBACK_CSS ={"sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono"}
 
 
 def wrap_missing_glyphs(html: str) -> str:
