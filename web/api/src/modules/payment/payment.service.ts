@@ -18,6 +18,7 @@ import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
 import { invoicingPaused, exportExemptionOpen } from "../../lib/feature-switches.js";
+import { captureCardEvidence, CARD_COUNTRY_UNKNOWN } from "./card-evidence.service.js";
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import { cvPassInvoiceLabel, cvPassNewExpiry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
@@ -858,6 +859,13 @@ async function triggerInvoiceGeneration(
   },
   retrieveResult: IyzicoRetrieveResult,
 ): Promise<void> {
+  // Kart kanıtı fatura durdurulmuş olsa da alınır (yalnız istisna anahtarı açıkken ve yabancı para biriminde).
+  const evidenceVerdict = await captureCardEvidence({
+    id: checkout.id,
+    conversationId: checkout.conversationId,
+    paymentCurrency: checkout.paymentCurrency,
+    iyzicoPaymentId: (await prisma.paymentCheckout.findUnique({ where: { id: checkout.id }, select: { iyzicoPaymentId: true } }))?.iyzicoPaymentId,
+  });
   if (await invoicingPaused()) {
     logger.warn("payment", `${PC_LOG} INVOICE_GENERATION_PAUSED açık — fatura kesilmedi`, {
       conversationId: checkout.conversationId,
@@ -903,11 +911,17 @@ async function triggerInvoiceGeneration(
       logger.warn("payment",`${PC_LOG} invoice: TR card on foreign currency — overriding to TR for KDV`, {
         conversationId: checkout.conversationId, cardCountry: cardCountryFromIyzico,
       });
+    } else if (!(await exportExemptionOpen())) {
+      countryCode = "TR";
+    } else if (evidenceVerdict !== "FOREIGN") {
+      // Kart yurt içi ya da BİLİNMİYOR → istisna yok, KDV'li fatura (şüphede vergiyi kaybetme).
+      countryCode = "TR";
+      logger.warn("payment",`${PC_LOG} invoice: kart ${evidenceVerdict ?? CARD_COUNTRY_UNKNOWN} — istisna uygulanmadı, KDV'li`, {
+        conversationId: checkout.conversationId,
+      });
     } else {
-      // Kart ülkesi yabancı ya da bilinmiyor → beyan edilen ülkeyi kullan
-      countryCode = (await exportExemptionOpen())
-        ? resolveEffectiveCountry(paymentCurr, checkout.customerCountry ?? user.billingCountryCode)
-        : "TR";
+      // Kart yurt dışı → beyan edilen fatura ülkesi kullanılır
+      countryCode = resolveEffectiveCountry(paymentCurr, checkout.customerCountry ?? user.billingCountryCode);
     }
     const { name, surname } = splitBuyerName(user as Parameters<typeof splitBuyerName>[0]);
     const fullName = user.companyName
@@ -1030,10 +1044,12 @@ async function triggerInvoiceGeneration(
       }
 
       if (data["success"] && data["invoice_id"]) {
-        const kdvR = checkout.kdvRate ?? 20;
+        // Ödeme KDV'siz alındı ama fatura KDV'li kesildi (kart yerli/bilinmiyor): KDV ödenen tutarın içinden ayrılır.
+        const forcedDomestic = countryCode === "TR" && (checkout.kdvRate ?? 0) === 0 && paymentCurr !== "TRY";
+        const kdvR = forcedDomestic ? 20 : checkout.kdvRate ?? 20;
         const grossAmt = String(actualPaidPrice);
-        const netAmt = checkout.netAmount ?? String(round2(actualPaidPrice / (1 + kdvR / 100)));
-        const kdvAmt = checkout.kdvAmount ?? String(round2(actualPaidPrice - parseFloat(netAmt)));
+        const netAmt = !forcedDomestic && checkout.netAmount ? checkout.netAmount : String(round2(actualPaidPrice / (1 + kdvR / 100)));
+        const kdvAmt = !forcedDomestic && checkout.kdvAmount ? checkout.kdvAmount : String(round2(actualPaidPrice - parseFloat(netAmt)));
         try {
           await prisma.invoice.upsert({
             where: { checkoutId: checkout.id },

@@ -3,6 +3,7 @@ import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import { getPaytrCredentials } from "../payment/paytr/paytr.service.js";
 import { queryPaytrStatus } from "../payment/paytr/paytr.client.js";
+import { readCardEvidence } from "../payment/card-evidence.service.js";
 
 /**
  * YÖNETİM — PayTR DURUM SORGUSU (salt okunur).
@@ -67,5 +68,12 @@ export async function adminPaytrStatusController(request: Request, response: Res
   const pan = String(result.raw.masked_pan ?? "");
   const bin = /^\d{6}/.exec(pan)?.[0];
   if (bin) fields.kart_bin = bin;
-  response.json({ ok: true, merchantOid, testMode: result.testMode, fields });
+  // Kayıtlı (şifreli saklanan) kart kanıtı: yalnız yönetici isteğinde çözülür.
+  let evidence: { bin: string | null; country: string | null; verdict: string } | null = null;
+  try {
+    evidence = await readCardEvidence(conversationId);
+  } catch {
+    evidence = null;
+  }
+  response.json({ ok: true, merchantOid, testMode: result.testMode, fields, savedEvidence: evidence });
 }

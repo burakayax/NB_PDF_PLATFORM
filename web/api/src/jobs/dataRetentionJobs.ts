@@ -209,6 +209,27 @@ async function archiveOldInvoices(): Promise<void> {
 }
 
 /**
+ * Kart kanıtı (şifreli BIN): ödeme/fatura kaydıyla aynı sürede (10 yıl) tutulur, sonra BIN silinir.
+ * Ülke sonucu ("TR"/"DE"/"??") kimlik belirtmediği için kayıtta kalır. Kişisel veri saklama politikası: Gizlilik §6.
+ */
+async function purgeExpiredCardBins(): Promise<void> {
+  const cutoff = daysAgo(INVOICE_ARCHIVE_DAYS);
+  const result = await prisma.paymentCheckout.updateMany({
+    where: { cardBin: { not: null }, createdAt: { lt: cutoff } },
+    data: { cardBin: null },
+  });
+  if (result.count > 0) {
+    await prisma.adminAuditLog.create({
+      data: {
+        userEmail: "system@retention",
+        action: "RETENTION_PURGE_CARD_BIN",
+        summary: `${result.count} kart BIN kaydı silindi (${INVOICE_ARCHIVE_DAYS} günden eski).`,
+      },
+    });
+  }
+}
+
+/**
  * Süresi dolmuş ticari ileti onay kanıtlarını siler.
  *
  * Kanıtın saklanması yükümlülük, süresiz saklanması ihlaldir.
@@ -268,5 +289,6 @@ export function registerDataRetentionJobs() {
     safeRun("purgeOldServiceHealth", purgeOldServiceHealth);
     safeRun("purgeExpiredConsentLogs", purgeExpiredConsentLogs);
     safeRun("purgeOldRatingComments", purgeOldRatingComments);
+    safeRun("purgeExpiredCardBins", purgeExpiredCardBins);
   });
 }

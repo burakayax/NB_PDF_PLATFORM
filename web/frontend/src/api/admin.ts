@@ -1728,7 +1728,14 @@ export async function fetchAdminPayments(accessToken: string, params: Record<str
 
 /** PayTR Durum Sorgu cevabı (salt okunur). ok=false: PayTR siparişi bulamadı / hata verdi. */
 export type AdminPaytrStatus =
-  | { ok: true; merchantOid: string; testMode: boolean; fields: Record<string, unknown> }
+  | {
+      ok: true;
+      merchantOid: string;
+      testMode: boolean;
+      fields: Record<string, unknown>;
+      /** Şifreli saklanan kart kanıtı (istek anında çözülür); kayıt yoksa null. */
+      savedEvidence?: { bin: string | null; country: string | null; verdict: "TR" | "FOREIGN" | "UNKNOWN" } | null;
+    }
   | { ok: false; merchantOid: string; errNo: string; errMsg: string };
 
 export async function fetchAdminPaytrStatus(accessToken: string, conversationId: string): Promise<AdminPaytrStatus> {
