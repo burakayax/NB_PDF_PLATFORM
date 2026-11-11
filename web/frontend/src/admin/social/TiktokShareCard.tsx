@@ -232,7 +232,7 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
               </select>
               {creator.privacyOptions.length === 1 && creator.privacyOptions[0] === "SELF_ONLY" ? (
                 <span className="mt-0.5 block text-[11px] text-amber-300/90">
-                  Uygulama TikTok denetiminden geçene kadar yalnızca “Yalnız ben” seçilebilir.
+                  Uygulama TikTok denetiminden geçene kadar yalnızca “Yalnız ben” seçilebilir ve TikTok hesabı paylaşım sırasında GİZLİ (özel hesap) olmalıdır.
                 </span>
               ) : null}
             </label>
