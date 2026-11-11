@@ -355,7 +355,7 @@ export function SignatureRequestTool({
       const blob = await imzaBelgesiniIndir(accessToken, istek.id);
       const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
       if (pencere) pencere.location.href = url;
-      else window.location.href = url;
+      else window.location.assign(url);
     } catch (e) {
       pencere?.close();
       setHata(e instanceof Error ? e.message : "");
