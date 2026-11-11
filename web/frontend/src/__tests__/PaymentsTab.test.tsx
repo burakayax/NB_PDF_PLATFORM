@@ -11,6 +11,8 @@ vi.mock("../api/admin", () => ({
   fetchAdminPaytrStatus: (...a: unknown[]) => paytrStatus(...a),
 }));
 
+vi.mock("../admin/payments/PaymentSwitches", () => ({ PaymentSwitches: () => null }));
+
 import { PaymentsTab } from "../admin/payments/PaymentsTab";
 
 function row(over: Partial<AdminPaymentRow> = {}): AdminPaymentRow {
