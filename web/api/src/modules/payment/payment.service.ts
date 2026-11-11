@@ -17,6 +17,7 @@ import {
 import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
+import { invoicingPaused, exportExemptionOpen } from "../../lib/feature-switches.js";
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import { cvPassInvoiceLabel, cvPassNewExpiry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
@@ -524,10 +525,10 @@ export async function createPaymentCheckoutSession(params: {
 
   // KDV hesabı — çok-sinyal güvenli taraf kuralı:
   //   TRY ödemesi → daima TR, USD + boş/TR adres → TR (safe harbor)
-  const customerCountry = resolveEffectiveCountry(
-    settlementCurrency,
-    user.billingCountryCode,
-  );
+  // İstisna anahtarı kapalıyken (varsayılan) yurt dışı adres de KDV'li: ülke TR sayılır.
+  const customerCountry = (await exportExemptionOpen())
+    ? resolveEffectiveCountry(settlementCurrency, user.billingCountryCode)
+    : "TR";
   // Fatura adresi eksikse ödeme sağlayıcısına gitmeden dur (VUK md. 230). Ekran da aynı denetimi yapar;
   // bu satır ekranı atlatan isteklere karşı sunucu tarafı güvencesidir.
   const missingAddress = missingInvoiceAddressFields(
@@ -834,10 +835,8 @@ async function resolveConversationIdFromToken(
 // Dahili fatura tetikleyici — abonelik aktivasyonunu asla engellemez
 // ---------------------------------------------------------------------------
 
-/** Acil durdurma: INVOICE_GENERATION_PAUSED=1 iken fatura ve iade faturası kesilmez (ödeme/plan akışı aynen çalışır). */
-export function invoicingPaused(): boolean {
-  return ["1", "true", "yes", "on"].includes((process.env.INVOICE_GENERATION_PAUSED ?? "").trim().toLowerCase());
-}
+// Fatura durdurma (env INVOICE_GENERATION_PAUSED=1 veya admin anahtarı invoicingPaused) → lib/feature-switches.ts
+export { invoicingPaused };
 
 async function triggerInvoiceGeneration(
   checkout: {
@@ -859,7 +858,7 @@ async function triggerInvoiceGeneration(
   },
   retrieveResult: IyzicoRetrieveResult,
 ): Promise<void> {
-  if (invoicingPaused()) {
+  if (await invoicingPaused()) {
     logger.warn("payment", `${PC_LOG} INVOICE_GENERATION_PAUSED açık — fatura kesilmedi`, {
       conversationId: checkout.conversationId,
     });
@@ -906,10 +905,9 @@ async function triggerInvoiceGeneration(
       });
     } else {
       // Kart ülkesi yabancı ya da bilinmiyor → beyan edilen ülkeyi kullan
-      countryCode = resolveEffectiveCountry(
-        paymentCurr,
-        checkout.customerCountry ?? user.billingCountryCode,
-      );
+      countryCode = (await exportExemptionOpen())
+        ? resolveEffectiveCountry(paymentCurr, checkout.customerCountry ?? user.billingCountryCode)
+        : "TR";
     }
     const { name, surname } = splitBuyerName(user as Parameters<typeof splitBuyerName>[0]);
     const fullName = user.companyName
@@ -1789,7 +1787,7 @@ async function triggerCreditNote(
   userId: string,
   reason: string,
 ): Promise<void> {
-  if (invoicingPaused()) {
+  if (await invoicingPaused()) {
     logger.warn("payment", `${REFUND_LOG} INVOICE_GENERATION_PAUSED açık — iade faturası kesilmedi`, { checkoutId });
     return;
   }
