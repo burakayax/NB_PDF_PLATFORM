@@ -62,6 +62,8 @@ _TR_ASCII = str.maketrans("çÇğĞıİöÖşŞüÜ", "cCgGiIoOsSuU")
 # GİB UBL-TR kod listesi V1.29: 302 = "11/1-a Hizmet İhracatı"
 EXPORT_EXEMPTION = ("302", "11/1-a Hizmet İhracatı")
 EXPORT_INVOICE_NOTE = "KDVK 11/1-a kapsamında hizmet ihracatı"
+# Yurt içi, T.C. Kimlik No girmeyen bireysel müşteri (11111111111 kullanılır) için fatura notu
+NO_TCKN_NOTE = "Müşteri nihai tüketici olup T.C. Kimlik Numarası beyanında bulunmamıştır."
 
 
 def _product_code(name: str) -> str:
@@ -115,9 +117,14 @@ class BirFaturaProvider(BillingProviderBase):
     )
     def _post(self, path: str, body: dict) -> dict:
         url = f"{self._base}/{path.lstrip('/')}"
-        logger.info("birfatura POST %s body=%s", url, body)
+        # Mükellef sorgusu TC/vergi no içerir; kişisel veri loga yazılmaz.
+        sensitive = path.lstrip("/").lower() == "getuserpk"
+        logger.info("birfatura POST %s body=%s", url, "<gizli>" if sensitive else body)
         resp = self._session.post(url, json=body, timeout=30)
-        logger.info("birfatura POST %s status=%s response=%s", url, resp.status_code, resp.text[:2000])
+        logger.info(
+            "birfatura POST %s status=%s response=%s", url, resp.status_code,
+            "<gizli>" if sensitive else resp.text[:2000],
+        )
         resp.raise_for_status()
         content_type = resp.headers.get("Content-Type", "")
         if "application/json" not in content_type:
@@ -141,35 +148,46 @@ class BirFaturaProvider(BillingProviderBase):
 
     def find_or_create_customer(self, customer_info: CustomerInfo) -> str:
         """
-        BirFatura'da ayrı müşteri kaydı yoktur; vergi nosunu döner.
-        E-fatura mükellefiyeti kontrol edilir ve customer_id olarak döner
-        (format: 'efatura:<receiver_tag>' veya 'earsiv:<email>').
+        BirFatura'da ayrı müşteri kaydı yoktur. Alıcının e-fatura mükellefiyeti GetUserPK ile
+        (vergi no VEYA TC kimlik no) sorgulanır; mükellefse 'efatura:<etiket>', değilse
+        'earsiv:<email>' döner. Yurt dışı alıcıda sorgu yapılmaz (e-Arşiv).
         """
-        if customer_info.tax_number:
+        ci = customer_info
+        kn = (ci.tax_number or ci.national_id or "").strip()
+        if kn and not ci.is_export:
             try:
-                receiver_tag = self._get_e_invoice_receiver_tag(customer_info.tax_number)
+                receiver_tag = self._get_e_invoice_receiver_tag(kn)
                 if receiver_tag:
-                    logger.info(
-                        "birfatura: e-fatura mükellefi bulundu vkn=%s tag=%s",
-                        customer_info.tax_number, receiver_tag,
-                    )
+                    logger.info("birfatura: alıcı e-fatura mükellefi, etiket=%s", receiver_tag)
                     return f"efatura:{receiver_tag}"
             except Exception as exc:
-                logger.warning("birfatura: GibUserList sorgulanamadı, e-arşiv kullanılacak hata=%s", exc)
+                logger.warning("birfatura: GetUserPK sorgulanamadı, e-arşiv kullanılacak hata=%s", exc)
 
         return f"earsiv:{customer_info.email}"
 
-    def _get_e_invoice_receiver_tag(self, tax_number: str) -> str | None:
-        """Vergi numarasına göre GİB e-fatura alıcı etiketini döner; yoksa None."""
-        data = self._post("GibUserList", {
-            "PkGbTypeCode": tax_number,
-            "PageNumber": 1,
-            "PageSize": 10,
-        })
-        result = self._check_api_response(data, "GibUserList")
-        if result and isinstance(result, list) and len(result) > 0:
-            # İlk kaydın identifier (PK etiketi) alanını döner
-            return result[0].get("identifier") or result[0].get("pkGbTurKod") or tax_number
+    def _get_e_invoice_receiver_tag(self, kn: str, on_date: date | None = None) -> str | None:
+        """Vergi/TC no için GİB e-fatura alıcı etiketini (GetUserPK) döner; mükellef değilse None.
+
+        Belge (SendDocument akışı): etiket oluşturulma tarihi (firstCreationTime) fatura tarihinden
+        ÖNCE ise alıcı e-fatura mükellefidir; aksi halde e-Arşiv kesilir."""
+        data = self._post("GetUserPK", {"kn": kn})
+        result = self._check_api_response(data, "GetUserPK")
+        if not (result and isinstance(result, list)):
+            return None
+        today = on_date or date.today()
+        for rec in result:
+            if not isinstance(rec, dict):
+                continue
+            tag = rec.get("identifier")
+            if not tag:
+                continue
+            created = str(rec.get("firstCreationTime") or "")[:10]
+            try:
+                if created and date.fromisoformat(created) > today:
+                    continue  # etiket fatura tarihinden sonra açılmış → henüz mükellef değildi
+            except ValueError:
+                pass
+            return str(tag)
         return None
 
     # ------------------------------------------------------------------
@@ -270,10 +288,16 @@ class BirFaturaProvider(BillingProviderBase):
         # Faturada sağlayıcı adı ve gerçek sipariş numarası görünsün diye ikisi ayrıştırılır.
         payment_provider, order_code = _split_payment_id(pi.payment_id)
         payment_note = f"Sipariş No: {order_code} | Ödeme: {payment_provider}"
+        no_tckn_domestic = (
+            not ci.is_export and not ci.tax_number and not ci.national_id
+        )
         invoice_explanation = (
             "PDF Platform - " + ", ".join(i.name for i in items)
             + f" | Ödeme: Kredi Kartı ({payment_provider}) | Sipariş: {order_code}"
-        )[:500]
+        )
+        if no_tckn_domestic:
+            invoice_explanation += f" | {NO_TCKN_NOTE}"
+        invoice_explanation = invoice_explanation[:500]
 
         order_details = []
         for item in items:
@@ -756,6 +780,8 @@ class BirFaturaProvider(BillingProviderBase):
                 f" ({original_invoice_date})"
             )
         notes_xml = f"<cbc:Note>{reason_esc}</cbc:Note>"
+        if not ci.is_export and not ci.tax_number and not ci.national_id:
+            notes_xml += f"\n  <cbc:Note>{_esc(NO_TCKN_NOTE)}</cbc:Note>"
         for extra in (extra_notes or []):
             notes_xml += f"\n  <cbc:Note>{_esc(extra)}</cbc:Note>"
 
