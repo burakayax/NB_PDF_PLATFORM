@@ -834,6 +834,11 @@ async function resolveConversationIdFromToken(
 // Dahili fatura tetikleyici — abonelik aktivasyonunu asla engellemez
 // ---------------------------------------------------------------------------
 
+/** Acil durdurma: INVOICE_GENERATION_PAUSED=1 iken fatura ve iade faturası kesilmez (ödeme/plan akışı aynen çalışır). */
+export function invoicingPaused(): boolean {
+  return ["1", "true", "yes", "on"].includes((process.env.INVOICE_GENERATION_PAUSED ?? "").trim().toLowerCase());
+}
+
 async function triggerInvoiceGeneration(
   checkout: {
     id: string;
@@ -854,6 +859,12 @@ async function triggerInvoiceGeneration(
   },
   retrieveResult: IyzicoRetrieveResult,
 ): Promise<void> {
+  if (invoicingPaused()) {
+    logger.warn("payment", `${PC_LOG} INVOICE_GENERATION_PAUSED açık — fatura kesilmedi`, {
+      conversationId: checkout.conversationId,
+    });
+    return;
+  }
   try {
     const user = await prisma.user.findUnique({
       where: { id: checkout.userId },
@@ -1778,6 +1789,10 @@ async function triggerCreditNote(
   userId: string,
   reason: string,
 ): Promise<void> {
+  if (invoicingPaused()) {
+    logger.warn("payment", `${REFUND_LOG} INVOICE_GENERATION_PAUSED açık — iade faturası kesilmedi`, { checkoutId });
+    return;
+  }
   // Orijinal fatura kaydını çek
   const invoice = await prisma.invoice.findUnique({
     where: { checkoutId },
