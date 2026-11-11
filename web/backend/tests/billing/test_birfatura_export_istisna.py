@@ -94,3 +94,66 @@ def test_bayrak_yazilmamissa_varsayilan_acik(provider, monkeypatch):
     with patch.object(provider, "_post", return_value={"Success": True, "Message": "ok", "Result": {}}) as m,             patch.object(provider, "publish_invoice", return_value=None):
         provider.full_invoice_flow(_cust(), ITEMS, PI)
     assert m.call_args_list[0][0][0] == "SendDocument"
+
+
+def test_tckn_vermeyen_yurt_ici_musteri_notu(provider):
+    from app.billing.birfatura import NO_TCKN_NOTE
+    sent = {}
+
+    def fake_post(path, body):
+        sent["body"] = body
+        return {"Success": True, "Message": "ok", "Result": {"invoiceNo": "A1", "pdfLink": "x"}}
+
+    items = [InvoiceItem(name="Pro", quantity=1, unit_price=332.5, vat_rate=20, unit="Ay")]
+    pi = PaymentInfo(payment_id="paytr:abc", amount_paid=399.0, currency="TRY", payment_date="2026-11-11")
+    nobody = CustomerInfo(name="Ada Test", email="a@b.co", address="x", city="Ankara")
+    withid = CustomerInfo(name="Ada Test", email="a@b.co", national_id="10000000146", address="x", city="Ankara")
+    with patch.object(provider, "_post", side_effect=fake_post):
+        provider._build_and_send_invoice(nobody, "earsiv:a@b.co", items, pi)
+        assert NO_TCKN_NOTE in sent["body"]["invoice"]["InvoiceExplanation"]
+        provider._build_and_send_invoice(withid, "earsiv:a@b.co", items, pi)
+        assert NO_TCKN_NOTE not in sent["body"]["invoice"]["InvoiceExplanation"]
+
+
+def _mukellef_post(records):
+    seen = {}
+
+    def fake(path, body):
+        seen["path"], seen["body"] = path, body
+        return {"Success": True, "Message": "ok", "Result": records}
+
+    return fake, seen
+
+
+def test_vkn_ve_tckn_getuserpk_ile_sorgulanir(provider):
+    rec = [{"identifier": "urn:mail:defaultpk@x.com", "firstCreationTime": "2020-01-01T00:00:00Z"}]
+    for kwargs in ({"tax_number": "1234567890"}, {"national_id": "10000000146"}):
+        fake, seen = _mukellef_post(rec)
+        ci = CustomerInfo(name="Ada", email="a@b.co", **kwargs)
+        with patch.object(provider, "_post", side_effect=fake):
+            assert provider.find_or_create_customer(ci) == "efatura:urn:mail:defaultpk@x.com"
+        assert seen["path"] == "GetUserPK"
+        assert seen["body"] == {"kn": kwargs.get("tax_number") or kwargs["national_id"]}
+
+
+def test_mukellef_degilse_earsiv(provider):
+    fake, _ = _mukellef_post([])
+    ci = CustomerInfo(name="Ada", email="a@b.co", national_id="10000000146")
+    with patch.object(provider, "_post", side_effect=fake):
+        assert provider.find_or_create_customer(ci) == "earsiv:a@b.co"
+
+
+def test_etiket_gelecekte_acilmissa_earsiv(provider):
+    fake, _ = _mukellef_post([{"identifier": "pk", "firstCreationTime": "2999-01-01T00:00:00Z"}])
+    ci = CustomerInfo(name="Ada", email="a@b.co", tax_number="1234567890")
+    with patch.object(provider, "_post", side_effect=fake):
+        assert provider.find_or_create_customer(ci) == "earsiv:a@b.co"
+
+
+def test_sorgu_hata_verirse_earsiv_ve_yurt_disinda_sorgu_yok(provider):
+    ci = CustomerInfo(name="Ada", email="a@b.co", national_id="10000000146")
+    with patch.object(provider, "_post", side_effect=RuntimeError("ag hatasi")):
+        assert provider.find_or_create_customer(ci) == "earsiv:a@b.co"
+    foreign = CustomerInfo(name="J", email="j@d.com", is_export=True)
+    with patch.object(provider, "_post", side_effect=AssertionError("sorgu yapilmamali")):
+        assert provider.find_or_create_customer(foreign) == "earsiv:j@d.com"
