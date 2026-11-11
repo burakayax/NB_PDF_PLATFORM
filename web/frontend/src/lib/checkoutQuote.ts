@@ -6,7 +6,8 @@ import type { PlanDefinition, PlanId } from "./planConfig";
  * rakamla AYNI olmak zorundadır; bu dosya o kuralın tek ön yüz kopyasıdır.
  *
  * TL fiyatlar KDV DAHİLDİR. Sunucu önce KDV'siz neti bulur, kupon/indirimi netten
- * düşer, KDV'yi indirimli net üzerine ekler. USD'de KDV yoktur (ihracat).
+ * düşer, KDV'yi indirimli net üzerine ekler. USD'de KDV yalnız İHRACAT İSTİSNASI AÇIKKEN yoktur;
+ * istisna kapalıyken (varsayılan) sunucu USD net fiyata da %20 KDV ekler — bu hesap da aynısını yapar.
  */
 
 export const KDV_RATE = 0.2;
@@ -85,11 +86,13 @@ export function buildCheckoutQuote(input: {
   extraSeats: number;
   seatsOnly: boolean;
   discountPercent: number | null;
+  /** Yurt dışı ihracat istisnası açık mı (admin anahtarı). Verilmezse KAPALI sayılır → USD'ye de KDV eklenir. */
+  exportExemption?: boolean;
 }): CheckoutQuote | null {
   const { plan, cycle, currency, seatsOnly } = input;
   if (!seatsOnly && !plan) return null;
   const yearly = cycle === "YEARLY";
-  const vatRate = currency === "TRY" ? KDV_RATE : 0;
+  const vatRate = currency === "TRY" || !input.exportExemption ? KDV_RATE : 0;
 
   // Plan bedeli (KDV hariç). Ek koltuk yalnız Business'ta satılır.
   let planNet = 0;

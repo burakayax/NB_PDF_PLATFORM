@@ -762,6 +762,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
   const editorLimits = useEditorLimits();
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
+  // İhracat istisnası yalnız admin anahtarı AÇIKÇA kapatılınca (=false) açıktır; varsayılan: herkese KDV'li.
+  const exportExemption = flags?.featureFlags?.exportExemptionDisabled === false;
   const comingSoon = !adminTestCheckout && (PRICES_HIDDEN || flags?.featureFlags?.paymentsDisabled !== false);
   // "Tüm ayrıcalıkları gör" popup'ı — hangi planın detayı açık.
   const [perksPlan, setPerksPlan] = useState<PlanId | null>(null);
@@ -926,9 +928,13 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
             ? tr
               ? "Gösterilen tüm fiyatlara %20 KDV dahildir."
               : "All prices shown include 20% VAT."
-            : tr
-              ? "Gösterilen fiyatlara KDV uygulanmaz (yurt dışı satışlarda ihracat istisnası)."
-              : "No VAT is charged on the prices shown (export exemption for customers outside Turkey)."}
+            : exportExemption
+              ? tr
+                ? "Yurt dışında yaşayıp yurt dışı kartla ödeyenlere KDV uygulanmaz (ihracat istisnası); kart yurt içi çıkarsa KDV’li faturalandırılır."
+                : "No VAT for customers abroad paying with a card issued abroad (export exemption); a domestic card is invoiced with VAT."
+              : tr
+                ? "Gösterilen fiyatlara %20 KDV ödeme ekranında eklenir."
+                : "20% VAT is added to the prices shown at checkout."}
         </p>
         )}
 

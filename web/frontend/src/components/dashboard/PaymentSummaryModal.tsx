@@ -8,7 +8,7 @@ import { useSettings } from "../../contexts/SettingsContext";
 import { fillEditorTokens, useEditorLimits } from "../../lib/editorLimits";
 import { confirmFakeCheckout, resolveFakePaymentRedirect } from "../../api/fakePayment";
 import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
-import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
+import { defaultCurrencyFromCountryCode, useCheckoutCurrency, type CheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { getSaasApiBase } from "../../api/saasBase";
 import { trackFunnelEvent } from "../../lib/analytics";
 import { saasAuthorizedFetch } from "../../api/subscription";
@@ -159,10 +159,35 @@ export function PaymentSummaryModal({
   const [exitIntentActive, setExitIntentActive] = useState(false);
 
   const tr = language === "tr";
-  const { currency: checkoutCurrency } = useCheckoutCurrency();
+  const { currency: geoCurrency } = useCheckoutCurrency();
+  // Para birimi (ve dolayısıyla KDV/istisna) ziyaretçinin konumuna değil, ödeme ekranında SEÇİLEN
+  // fatura ülkesine göre belirlenir. Kayıtlı ülke yoksa konum tahmini kullanılır.
+  const [billingCountry, setBillingCountry] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const token = readAccessToken() ?? accessToken;
+    void fetch(`${getSaasApiBase()}/api/billing/info`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
+    })
+      .then((r) => (r.ok ? (r.json() as Promise<{ billingCountryCode?: string | null }>) : null))
+      .then((info) => {
+        if (!cancelled) setBillingCountry(info?.billingCountryCode?.trim().toUpperCase() || null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, accessToken]);
+  const checkoutCurrency: CheckoutCurrency = billingCountry
+    ? defaultCurrencyFromCountryCode(billingCountry)
+    : geoCurrency;
 
   // Ana sayfa kartıyla AYNI fiyat: yönetim panelinde girilen TL tutarları uygulanır.
-  const { pricing } = useSettings();
+  const { pricing, flags } = useSettings();
+  // İhracat istisnası yalnız admin anahtarı AÇIKÇA kapatılınca (=false) açıktır; varsayılan: herkese KDV'li.
+  const exportExemption = flags?.featureFlags?.exportExemptionDisabled === false;
   const editorLimits = useEditorLimits();
   const plan = useMemo(() => {
     const base = PLANS.find((p) => p.id === planId);
@@ -188,18 +213,19 @@ export function PaymentSummaryModal({
     extraSeats,
     seatsOnly,
     discountPercent: promoApplied?.discountPercent ?? null,
+    exportExemption,
   });
   const fmtMoney = (n: number) =>
     n.toLocaleString(isTry ? "tr-TR" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const vatBreakdown =
-    quote && isTry
+    quote && (isTry || !exportExemption)
       ? {
           net: quote.listNet,
           discountAmount: quote.discountAmount,
           discountedNet: quote.net,
           discountedVat: quote.vat,
           discountedGross: quote.total,
-          fmt: fmtMoney,
+          fmt: (n: number) => (isTry ? `${fmtMoney(n)} ₺` : `$${fmtMoney(n)}`),
         }
       : null;
   const planPrice = quote ? `${seatSym}${fmtMoney(quote.total)}` : "";
@@ -476,32 +502,32 @@ export function PaymentSummaryModal({
                       {/* Hizmet bedeli (KDV hariç liste fiyatı) */}
                       <div className="flex items-baseline justify-between">
                         <span className="text-slate-400">{tr ? "Hizmet Bedeli (KDV hariç)" : "Service Fee (excl. VAT)"}</span>
-                        <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.net)} ₺</span>
+                        <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.net)}</span>
                       </div>
                       {/* İskonto — KDV Kanunu Md.25: faturada ayrıca gösterilmeli */}
                       {promoApplied && vatBreakdown.discountAmount > 0 && (
                         <div className="flex items-baseline justify-between text-emerald-400">
                           <span>{tr ? `İskonto (−%${promoApplied.discountPercent})` : `Discount (−${promoApplied.discountPercent}%)`}</span>
-                          <span className="tabular-nums">−{vatBreakdown.fmt(vatBreakdown.discountAmount)} ₺</span>
+                          <span className="tabular-nums">−{vatBreakdown.fmt(vatBreakdown.discountAmount)}</span>
                         </div>
                       )}
                       {/* Matrah = KDV hariç, iskonto sonrası fiyat */}
                       {promoApplied && (
                         <div className="flex items-baseline justify-between">
                           <span className="text-slate-400">{tr ? "Matrah (KDV hariç)" : "Taxable Amount (excl. VAT)"}</span>
-                          <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.discountedNet)} ₺</span>
+                          <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.discountedNet)}</span>
                         </div>
                       )}
                       {/* KDV — matrah üzerinden hesaplanır */}
                       <div className="flex items-baseline justify-between">
                         <span className="text-slate-400">{tr ? "KDV (%20)" : "VAT (20%)"}</span>
-                        <span className="tabular-nums text-slate-400">{vatBreakdown.fmt(vatBreakdown.discountedVat)} ₺</span>
+                        <span className="tabular-nums text-slate-400">{vatBreakdown.fmt(vatBreakdown.discountedVat)}</span>
                       </div>
                       <div className="mt-2 border-t border-white/[0.08] pt-2">
                         <div className="flex items-baseline justify-between">
                           <span className="font-semibold text-white">{tr ? "Ödenecek Tutar" : "Total Due"}</span>
                           <span className="text-[1.6rem] font-black tabular-nums leading-none text-white">
-                            {vatBreakdown.fmt(vatBreakdown.discountedGross)} ₺
+                            {vatBreakdown.fmt(vatBreakdown.discountedGross)}
                           </span>
                         </div>
                       </div>
@@ -517,7 +543,7 @@ export function PaymentSummaryModal({
                           <span>{planPrice} <span className="text-emerald-400 text-xl">−{promoApplied.discountPercent}%</span></span></>
                         ) : planPrice}
                       </p>
-                      {!isTry && (
+                      {!isTry && exportExemption && (
                         <p className="mt-1 text-[12px] text-slate-400">
                           {tr ? "KDV Muafiyeti: İhracat İstisnası" : "VAT Exemption: Export Exception"}
                         </p>
