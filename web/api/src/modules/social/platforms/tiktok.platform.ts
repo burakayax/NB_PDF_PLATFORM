@@ -11,7 +11,8 @@
  * kod değişikliği gerekmez. Paylaşım yalnızca yönetici taslağı onaylayınca (ya da otomatik mod
  * açıksa) çalışır.
  *
- * Anahtarlar: erişim anahtarı ~24 saat, yenileme anahtarı ~1 yıl yaşar.
+ * Anahtarlar (TikTok dokümanı): erişim anahtarı 2 saat, yenileme anahtarı 180 gün yaşar; her yenilemede
+ * yenileme anahtarı DEĞİŞİR (eskisi geçersiz olur).
  */
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
@@ -267,6 +268,11 @@ const ERROR_TR: Record<string, string> = {
   invalid_file_upload: "Video dosyası TikTok'a yüklenemedi.",
   invalid_publish_id: "TikTok paylaşım kaydı bulunamadı.",
   reached_active_user_cap: "TikTok uygulamasının günlük kullanıcı sınırına ulaşıldı.",
+  spam_risk: "TikTok bu isteği riskli/spam olarak işaretledi; tekrar denemeyin, içeriği ve açıklamayı gözden geçirin.",
+  auth_removed: "Hesap sahibi işlem sürerken uygulamanın erişimini kaldırdı; yeniden bağlanıp tekrar deneyin.",
+  internal: "TikTok tarafında geçici bir sorun var; biraz sonra tekrar deneyin.",
+  video_pull_failed: "TikTok videoyu adresinden çekemedi (bağlantı hatası ya da zaman aşımı).",
+  publish_cancelled: "Paylaşım iptal edildi.",
 };
 
 /** Hata kodunun Türkçe açıklaması; bilinmiyorsa null. */
@@ -376,7 +382,10 @@ export type TiktokPostOptions = {
   title: string;
   /** İstenen gizlilik düzeyi; hesap izin vermiyorsa ya da uygulama denetimsizse "yalnız ben"e düşülür. */
   privacy: string;
+  /** "Kendi markan": videoya "Tanıtım içeriği" etiketi. */
   brandOrganic: boolean;
+  /** "Markalı içerik" (üçüncü tarafı tanıtan ücretli ortaklık). Yalnızca elle paylaşım ekranından gelir. */
+  brandContent?: boolean;
   disableComment: boolean;
   disableDuet: boolean;
   disableStitch: boolean;
@@ -390,6 +399,10 @@ async function initUpload(
   allowed: string[],
 ): Promise<{ publishId: string; uploadUrl: string; privacy: string; downgraded: boolean }> {
   // Hesabın izin vermediği düzey istenmişse doğrudan "yalnız ben" (TikTok zaten reddederdi).
+  // TikTok kuralı: markalı içerik (ücretli ortaklık) "yalnız ben" olamaz.
+  if (opts.brandContent && opts.privacy === "SELF_ONLY") {
+    throw new Error("Markalı içeriğin görünürlüğü “Yalnız ben” olamaz (TikTok kuralı); başka bir gizlilik düzeyi seçin.");
+  }
   const wanted = opts.privacy !== "SELF_ONLY" && allowed.includes(opts.privacy) ? opts.privacy : "SELF_ONLY";
   const attempt = async (privacy: string) => {
     const data = await tiktokPost(
@@ -404,7 +417,7 @@ async function initUpload(
           disable_stitch: opts.disableStitch,
           // Kendi markamızı tanıtan içerik: TikTok videoya "Tanıtım içeriği" etiketi koyar.
           brand_organic_toggle: opts.brandOrganic,
-          brand_content_toggle: false,
+          brand_content_toggle: opts.brandContent === true,
         },
         source_info: { source: "FILE_UPLOAD", video_size: size, chunk_size: size, total_chunk_count: 1 },
       },
@@ -418,7 +431,7 @@ async function initUpload(
   try {
     return { ...(await attempt(wanted)), downgraded: opts.privacy !== "SELF_ONLY" && wanted === "SELF_ONLY" };
   } catch (err) {
-    if (wanted !== "SELF_ONLY" && err instanceof PlatformError && UNAUDITED.test(err.detail)) {
+    if (wanted !== "SELF_ONLY" && !opts.brandContent && err instanceof PlatformError && UNAUDITED.test(err.detail)) {
       return { ...(await attempt("SELF_ONLY")), downgraded: true };
     }
     throw err;
@@ -448,6 +461,24 @@ async function waitForPublish(
     }
   }
   return { status, postId, reason };
+}
+
+/** Panelin durum takibi için: tek seferlik `status/fetch` sorgusu (TikTok sınırı: dakikada 30). */
+export async function fetchTiktokPublishStatus(
+  secrets: Record<string, string>,
+  publishId: string,
+): Promise<{ status: string; postId: string | null; reason: string; message: string | null }> {
+  const accessToken = await freshAccessToken(secrets);
+  const data = await tiktokPost("/post/publish/status/fetch/", accessToken, { publish_id: publishId }, "Durum");
+  const status = typeof data.status === "string" ? data.status : "PROCESSING_UPLOAD";
+  const reason = typeof data.fail_reason === "string" ? data.fail_reason : "";
+  const ids = data.publicaly_available_post_id;
+  return {
+    status,
+    postId: Array.isArray(ids) && ids.length > 0 ? String(ids[0]) : null,
+    reason,
+    message: reason ? (describeTiktokError(reason) ?? reason) : null,
+  };
 }
 
 /** Testlerde bekleme süresini kısaltmak için. */
@@ -526,9 +557,10 @@ export const publishToTiktok: Publisher = async ({ body, imageUrl, item, secrets
     title: body,
     privacy: config.tiktokPublic ? "PUBLIC_TO_EVERYONE" : "SELF_ONLY",
     brandOrganic: config.tiktokBrandOrganic,
-    disableComment: false,
-    disableDuet: false,
-    disableStitch: false,
+    // TikTok kuralı: etkileşimler varsayılan KAPALI başlar; otomatik hatta kullanıcı açmadığı için kapalı gider.
+    disableComment: true,
+    disableDuet: true,
+    disableStitch: true,
   });
   logger.info("social", `TikTok videosu gönderildi (${result.status}, ${result.privacy}): ${item.title}`);
   return {
