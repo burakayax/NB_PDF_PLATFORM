@@ -159,7 +159,7 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-700/50 bg-slate-900/40 p-4">
+    <section className="space-y-4">
       <header className="flex items-center gap-3">
         {creator.avatarUrl ? (
           <img src={creator.avatarUrl} alt="" className="h-11 w-11 rounded-full border border-slate-700 object-cover" referrerPolicy="no-referrer" />

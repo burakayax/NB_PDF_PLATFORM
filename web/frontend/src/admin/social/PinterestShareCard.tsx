@@ -1,3 +1,4 @@
+import { CollapsibleSection } from "./CollapsibleSection";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Check, ExternalLink, Loader2, Plus, RefreshCw, Send } from "lucide-react";
 import {
@@ -336,7 +337,7 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-700/50 bg-slate-900/40 p-4">
+    <section className="space-y-3">
       <header>
         <p className="text-[11px] text-slate-400">Pinterest’e şu hesapla pinlenecek</p>
         <p className="text-sm font-semibold text-white">@{overview.username}</p>
@@ -347,6 +348,11 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
         ) : null}
       </header>
 
+      <CollapsibleSection
+        nested
+        title="Pano seçimi ve yeni pano"
+        summary={overview.boards.find((b) => b.id === boardId)?.name ?? "Pano seçilmedi"}
+      >
       <div className="space-y-2">
         <label className="block">
           <span className="text-xs font-medium text-slate-300">Pano</span>
@@ -384,9 +390,21 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
           <p className={`text-[11px] leading-relaxed ${boardMsg.ok ? "text-emerald-300" : "text-rose-300"}`}>{boardMsg.text}</p>
         ) : null}
       </div>
+      </CollapsibleSection>
 
-      <div className="space-y-2 rounded-xl border border-slate-700/50 bg-slate-950/30 p-3">
-        <p className="text-xs font-medium text-slate-300">Konuya göre panolar (otomatik seçilir)</p>
+      <CollapsibleSection
+        nested
+        title="Konuya göre panolar (otomatik seçilir)"
+        summary="Her pin konusuna göre 6 panodan birine gider"
+        badge={
+          setup && setup.missingCount > 0 ? (
+            <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-200">
+              {setup.missingCount} eksik
+            </span>
+          ) : null
+        }
+      >
+      <div className="space-y-2">
         <p className="text-[11px] leading-relaxed text-slate-500">
           Her pin, konusuna göre bu 6 panodan birine kendiliğinden gider. Önce hesaptaki panolar adla bulunur; eksik olanları senin
           onayınla oluşturulur. Seçilen pano ve nedeni her gönderinin yanında görünür.
@@ -493,7 +511,9 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
           </div>
         ) : null}
       </div>
+      </CollapsibleSection>
 
+      <CollapsibleSection nested defaultOpen title="Pin hazırla ve paylaş" summary="Araç seç, başlık/açıklama düzenle, pinle">
       {reels.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-700/60 px-4 py-5 text-center text-xs text-slate-400">
           Pinlenecek araç bulunamadı.
@@ -659,9 +679,23 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
           </div>
         </div>
       )}
+      </CollapsibleSection>
 
-      <div className="space-y-1.5 rounded-xl border border-slate-700/50 bg-slate-950/30 p-3">
-        <p className="text-xs font-medium text-slate-300">Kapak dosyası eksik videolar</p>
+      <CollapsibleSection
+        nested
+        title="Kapak dosyası eksik videolar"
+        summary={
+          missingCovers === null ? "Kontrol ediliyor…" : missingCovers.length === 0 ? "Tüm araçların kapağı var" : `${missingCovers.length} araçta kapak yok`
+        }
+        badge={
+          missingCovers && missingCovers.length > 0 ? (
+            <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-200">
+              {missingCovers.length} eksik
+            </span>
+          ) : null
+        }
+      >
+      <div className="space-y-1.5">
         {coversErr ? (
           <p className="text-[11px] text-rose-300">{coversErr}</p>
         ) : missingCovers === null ? (
@@ -688,6 +722,7 @@ export function PinterestShareCard({ accessToken, onChanged }: { accessToken: st
           </>
         )}
       </div>
+      </CollapsibleSection>
 
       <p className="flex items-start gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-200">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />

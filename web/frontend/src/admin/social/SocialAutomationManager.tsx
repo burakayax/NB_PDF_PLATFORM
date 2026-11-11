@@ -42,6 +42,7 @@ import {
   type SocialPostRow,
 } from "../../api/admin";
 import { AccountConnectCard } from "./AccountConnectCard";
+import { CollapsibleSection } from "./CollapsibleSection";
 import { TiktokShareCard } from "./TiktokShareCard";
 import { PinterestShareCard } from "./PinterestShareCard";
 import { PostPreviewCard } from "./PostPreviewCard";
@@ -760,10 +761,14 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
               }
             />
             {spec.platform === "TIKTOK" && accountByPlatform.get("TIKTOK")?.connected ? (
-              <TiktokShareCard accessToken={accessToken} />
+              <CollapsibleSection title="TikTok: video paylaşımı" summary="Hesap, gizlilik, etkileşim ve içerik açıklaması ile elle paylaşım">
+                <TiktokShareCard accessToken={accessToken} />
+              </CollapsibleSection>
             ) : null}
             {spec.platform === "PINTEREST" && accountByPlatform.get("PINTEREST")?.filledFields.includes("refreshToken") ? (
-              <PinterestShareCard accessToken={accessToken} onChanged={refresh} />
+              <CollapsibleSection title="Pinterest: pin paylaşımı ve panolar" summary="Panolar, konuya göre eşleştirme, pin hazırlama, eksik kapaklar">
+                <PinterestShareCard accessToken={accessToken} onChanged={refresh} />
+              </CollapsibleSection>
             ) : null}
             </div>
           ))}
