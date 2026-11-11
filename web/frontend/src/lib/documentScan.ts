@@ -94,6 +94,37 @@ async function klasikOlcum(s: ScannerType, canvas: HTMLCanvasElement): Promise<O
 }
 
 /**
+ * KADRAJI DOLDURAN SAYFA — dedektör kadrajın kenarına yapışık köşelerde kararsız:
+ * kâğıt kadrajı doldurunca (etrafta masa yok) canlı ölçümde köşeler her karede
+ * onlarca-yüzlerce piksel zıplıyordu (ölçüldü); kâğıdın etrafında boşluk varken
+ * aynı dedektör sabit kalıyordu. Çözüm: kareyi her kenardan %8 gri çerçeveyle
+ * genişlet, dedektörü genişletilmiş karede çalıştır, köşeleri geri kaydır.
+ */
+const KADRAJ_DOLGUSU = 0.08;
+
+function dolguluKare(canvas: HTMLCanvasElement): { kare: HTMLCanvasElement; dx: number; dy: number } {
+  const dx = Math.round(canvas.width * KADRAJ_DOLGUSU);
+  const dy = Math.round(canvas.height * KADRAJ_DOLGUSU);
+  const kare = document.createElement("canvas");
+  kare.width = canvas.width + 2 * dx;
+  kare.height = canvas.height + 2 * dy;
+  const g = kare.getContext("2d");
+  if (g) {
+    g.fillStyle = "#808080";
+    g.fillRect(0, 0, kare.width, kare.height);
+    g.drawImage(canvas, dx, dy);
+  }
+  return { kare, dx, dy };
+}
+
+function dolguyuGeriAl(q: Quad, dx: number, dy: number, w: number, h: number): Quad {
+  return q.map((p) => ({
+    x: Math.min(w, Math.max(0, p.x - dx)),
+    y: Math.min(h, Math.max(0, p.y - dy)),
+  })) as Quad;
+}
+
+/**
  * CANLI kare için belge köşeleri — önce klasik, bulunamazsa YAPAY SİNİR AĞI.
  *
  * NEDEN DEĞİŞTİ: Canlı önizlemede yalnızca klasik (kenar/kontur) dedektör
@@ -140,7 +171,7 @@ const KLASIK_GUVEN_ESIGI = 0.68;
  *   - model daha inmediyse klasik dedektör köprü görevi görür.
  * Sinir ağı bir kareyi kaçırırsa klasik sonuç yedek olarak değerlendirilir.
  */
-export async function olcumAl(canvas: HTMLCanvasElement): Promise<Olcum | null> {
+async function olcumAlHam(canvas: HTMLCanvasElement): Promise<Olcum | null> {
   const s = await getScanner();
   const { width: w, height: h } = canvas;
 
@@ -155,6 +186,14 @@ export async function olcumAl(canvas: HTMLCanvasElement): Promise<Olcum | null> 
   const k = await klasikOlcum(s, canvas);
   if (k && k.guven >= KLASIK_GUVEN_ESIGI && makulBelge(k.quad, w, h)) return k;
   return null;
+}
+
+/** Canlı kare ölçümü: kadrajı dolduran sayfada kararlı olsun diye dolgulu karede çalışır. */
+export async function olcumAl(canvas: HTMLCanvasElement): Promise<Olcum | null> {
+  const { kare, dx, dy } = dolguluKare(canvas);
+  const o = await olcumAlHam(kare);
+  if (!o) return null;
+  return { quad: dolguyuGeriAl(o.quad, dx, dy, canvas.width, canvas.height), guven: o.guven };
 }
 
 async function mlOlcum(s: ScannerType, canvas: HTMLCanvasElement): Promise<Olcum | null> {
@@ -197,7 +236,7 @@ export async function isitScanner(): Promise<void> {
   }
 }
 
-export async function detectDocumentQuad(
+async function detectDocumentQuadHam(
   canvas: HTMLCanvasElement,
   useMl = false,
 ): Promise<Quad | null> {
@@ -230,6 +269,16 @@ export async function detectDocumentQuad(
     }
   }
   return classicalQuad(s, canvas);
+}
+
+/** Çekim anında belge köşeleri; kadrajı dolduran sayfada kararlı olsun diye dolgulu karede çalışır. */
+export async function detectDocumentQuad(
+  canvas: HTMLCanvasElement,
+  useMl = false,
+): Promise<Quad | null> {
+  const { kare, dx, dy } = dolguluKare(canvas);
+  const q = await detectDocumentQuadHam(kare, useMl);
+  return q ? dolguyuGeriAl(q, dx, dy, canvas.width, canvas.height) : null;
 }
 
 /**
