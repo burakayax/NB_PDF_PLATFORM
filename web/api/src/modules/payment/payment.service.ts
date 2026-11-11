@@ -1791,6 +1791,10 @@ export async function processRefund(
         status: "refunded",
         refundedAt: new Date(),
         refundReason: reason.slice(0, 500),
+        // Fatura henüz kesilmediyse (ertelenmiş fatura) hiç kesilmeyecek; iade faturası da gerekmez.
+        ...(checkout.invoiceStatus === "scheduled" || checkout.invoiceStatus === null
+          ? { invoiceStatus: "skipped_refunded" }
+          : {}),
       },
     });
 

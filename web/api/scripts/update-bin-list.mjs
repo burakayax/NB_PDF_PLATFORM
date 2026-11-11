@@ -55,18 +55,32 @@ export function parseCsv(text) {
   return rows;
 }
 
-/** bins.csv içeriğinden Map<bin, ÜLKE> üretir. */
-export function extractBinCountries(csvText) {
+/**
+ * Türk bankası adı geçen ama ülkesi TR olmayan kayıtlar şüpheli sayılır (yurt dışı iştirakler meşru olabilir; ama
+ * "Yapı Kredi → ABD" gibi hatalı atıflar Türk kartına KDV'siz fatura riski doğurur). Bu kayıtlar listeden ÇIKARILIR:
+ * BIN "bilinmiyor" olur ve fatura KDV'li kesilir (güvenli taraf).
+ */
+const TURKISH_BANK_RE =
+  /GARANTI|AKBANK|IS BANKASI|YAPI VE KREDI|YAPI KREDI|ZIRAAT|HALKBANK|VAKIFBANK|VAKIFLAR|DENIZBANK|QNB|FINANSBANK|KUVEYT|ALBARAKA|SEKERBANK|ODEABANK|TURK EKONOMI|TURKIYE IS|ANADOLUBANK|FIBABANKA|TURKISH|TURKIYE/i;
+
+/** bins.csv içeriğinden Map<bin, ÜLKE> üretir. `stats.suspicious` şüpheli nedeniyle atılan kayıt sayısıdır. */
+export function extractBinCountries(csvText, stats = { suspicious: 0 }) {
   const rows = parseCsv(csvText);
   const header = (rows.shift() ?? []).map((h) => h.trim().toLowerCase());
   const iBin = header.indexOf("bin");
   const iCountry = header.indexOf("alpha_2");
+  const iIssuer = header.indexOf("issuer");
   if (iBin < 0 || iCountry < 0) throw new Error(`Beklenen sütunlar bulunamadı (bin, alpha_2). Başlık: ${header.join(",")}`);
   const map = new Map();
   for (const r of rows) {
     const bin = (r[iBin] ?? "").trim();
     const cc = (r[iCountry] ?? "").trim().toUpperCase();
-    if (/^\d{6,8}$/.test(bin) && /^[A-Z]{2}$/.test(cc)) map.set(bin, cc);
+    if (!(/^\d{6,8}$/.test(bin) && /^[A-Z]{2}$/.test(cc))) continue;
+    if (cc !== "TR" && iIssuer >= 0 && TURKISH_BANK_RE.test(r[iIssuer] ?? "")) {
+      stats.suspicious++;
+      continue;
+    }
+    map.set(bin, cc);
   }
   return map;
 }
@@ -119,7 +133,8 @@ async function main() {
       })
     : readFileSync(source, "utf8");
 
-  const newMap = extractBinCountries(csvText);
+  const stats = { suspicious: 0 };
+  const newMap = extractBinCountries(csvText, stats);
   if (newMap.size < 1000) throw new Error(`Şüpheli derecede az kayıt (${newMap.size}); mevcut liste korunuyor.`);
   const oldMap = readOld(out);
   const diff = diffReport(oldMap, newMap);
@@ -140,6 +155,7 @@ async function main() {
     "",
     `- Toplam kayıt: **${newMap.size}** (eski: ${oldMap.size}) · Türkiye (TR) kaydı: **${trCount}**`,
     `- Eklenen: ${diff.added} · Çıkarılan: ${diff.removed} · Ülkesi değişen: ${diff.changed}`,
+    `- Şüpheli diye listeden çıkarılan (Türk bankası adı geçen ama ülkesi TR olmayan): ${stats.suspicious} → bu BIN'ler "bilinmiyor" sayılır, KDV'li fatura kesilir`,
     "",
     diff.trChanges.length
       ? `### ⚠ Türkiye (TR) kayıtlarında değişiklik (${diff.trChanges.length}) — birleştirmeden önce inceleyin\n\n${diff.trChanges.slice(0, 200).map((l) => `- ${l}`).join("\n")}`

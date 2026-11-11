@@ -91,6 +91,12 @@ describe("processInvoiceNow", () => {
     expect(await svc.processInvoiceNow("c1", trigger)).toBe("issued");
     expect(trigger).not.toHaveBeenCalled();
   });
+  it("fatura kesilirken iade yapıldıysa yöneticiye iade faturası uyarısı gider", async () => {
+    h.co.findUnique.mockResolvedValueOnce(base).mockResolvedValueOnce({ status: "refunded", refundedAt: new Date() });
+    expect(await svc.processInvoiceNow("c1", vi.fn().mockResolvedValue("ok"))).toBe("issued");
+    expect(h.sendMail).toHaveBeenCalledTimes(1);
+    expect(h.sendMail.mock.calls[0][0].subject).toMatch(/iade faturası/);
+  });
   it("başarılıysa issued; otomatik kuralda forceDomestic=false", async () => {
     h.co.findUnique.mockResolvedValue(base);
     const trigger = vi.fn().mockResolvedValue("ok");

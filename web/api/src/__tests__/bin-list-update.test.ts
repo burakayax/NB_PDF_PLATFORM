@@ -18,6 +18,18 @@ describe("update-bin-list: CSV ayrıştırma ve fark raporu", () => {
     const m = mod.extractBinCountries("bin,alpha_2\n454360,tr\n41111,US\n123456,\n999999,USA\n12345678,DE\n");
     expect([...m.entries()]).toEqual([["454360", "TR"], ["12345678", "DE"]]);
   });
+  it("Türk bankası adı geçen ama ülkesi TR olmayan kayıtları şüpheli sayıp çıkarır (güvenli taraf)", () => {
+    const stats = { suspicious: 0 };
+    const csv = [
+      "bin,issuer,alpha_2",
+      "407046,YAPI VE KREDI BANKASI A.S.,US",
+      "454360,TURKIYE GARANTI BANKASI A. S.,TR",
+      "411111,JPMORGAN CHASE,US",
+    ].join("\n");
+    const m = mod.extractBinCountries(csv, stats);
+    expect([...m.entries()]).toEqual([["454360", "TR"], ["411111", "US"]]);
+    expect(stats.suspicious).toBe(1);
+  });
   it("beklenen sütunlar yoksa hata verir", () => {
     expect(() => mod.extractBinCountries("a,b\n1,2\n")).toThrow(/sütun/);
   });

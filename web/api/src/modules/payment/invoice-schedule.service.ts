@@ -151,6 +151,15 @@ export async function processInvoiceNow(checkoutId: string, trigger: InvoiceTrig
   const attempt = await trigger(c, retrieveShim(c), { forceDomestic: c.invoiceAction === "VAT" });
   if (attempt === "ok") {
     await finish("issued");
+    // Yarış: fatura kesilirken müşteri iade aldıysa iade faturası otomatik üretilmemiş olabilir → yöneticiye haber.
+    const after = await prisma.paymentCheckout.findUnique({ where: { id: c.id }, select: { status: true, refundedAt: true } });
+    if (after?.status === "refunded" || after?.refundedAt) {
+      await adminMail("Dikkat: fatura kesilirken iade yapıldı — iade faturası gerekebilir", [
+        `Sipariş no: ${c.conversationId}`,
+        "Müşteri tam fatura kesilirken iade aldı. Fatura kesildi ama iade faturası otomatik oluşturulmamış olabilir.",
+        "BirFatura panelinden bu faturaya iade faturası kesin.",
+      ]);
+    }
     return "issued";
   }
   await finish("scheduled"); // paused / failed: bir sonraki turda yeniden denenir

@@ -19,7 +19,7 @@ describe("createPaymentSuccessEmailTemplate", () => {
     expect(t.html).toContain("/workspace");
     expect(t.html).toContain("129.00 TRY");
     expect(t.html).toContain("10 Aralık 2026");
-    expect(t.html).toContain("Faturanız ayrı bir e-posta");
+    expect(t.html).toContain("en geç 7 gün içinde ayrı bir e-posta");
     expect(t.text).toContain("Plan: Başlangıç");
   });
 
