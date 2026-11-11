@@ -23,7 +23,7 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
 
   it("USD'de KDV yoktur: ödenecek tutar liste fiyatıdır", () => {
     for (const p of PLANS.filter((x) => x.id !== "FREE")) {
-      const q = buildCheckoutQuote({ ...base, plan: p, planId: p.id, cycle: "MONTHLY", currency: "USD" })!;
+      const q = buildCheckoutQuote({ ...base, plan: p, planId: p.id, cycle: "MONTHLY", currency: "USD", exportExemption: true })!;
       expect(q.vat).toBe(0);
       expect(q.total).toBeCloseTo(p.pricing.monthly.USD / 100, 2);
     }
@@ -37,8 +37,17 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
     expect(q.listTotal).toBe(399);
   });
 
+  it("istisna KAPALIYKEN (varsayılan) USD'ye de %20 KDV eklenir — sunucuyla aynı", () => {
+    const q = buildCheckoutQuote({ ...base, plan: plan("PRO"), planId: "PRO", cycle: "MONTHLY", currency: "USD" })!;
+    const net = plan("PRO").pricing.monthly.USD / 100;
+    expect(q.vatRate).toBe(0.2);
+    expect(q.net).toBeCloseTo(net, 2);
+    expect(q.vat).toBeCloseTo(Math.round(net * 0.2 * 100) / 100, 2);
+    expect(q.total).toBeCloseTo(q.net + q.vat, 2);
+  });
+
   it("USD iskontosu gerçekten uygulanır (Pro $11,99, %15)", () => {
-    const q = buildCheckoutQuote({ ...base, plan: plan("PRO"), planId: "PRO", cycle: "MONTHLY", currency: "USD", discountPercent: 15 })!;
+    const q = buildCheckoutQuote({ ...base, plan: plan("PRO"), planId: "PRO", cycle: "MONTHLY", currency: "USD", discountPercent: 15, exportExemption: true })!;
     expect(q.total).toBe(10.19);
     expect(q.listTotal).toBe(11.99);
   });
