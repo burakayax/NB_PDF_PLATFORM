@@ -61,6 +61,8 @@ export const FEATURE_FLAG_CATALOG = [
   { key: "contactForm", label: "İletişim formu", description: "Karşılama sayfasındaki iletişim bölümü." },
   { key: "workspaceTOOLS", label: "Çalışma alanı araçları", description: "Kapatıldığında üst düzeyde araçlara erişim kısıtlanabilir (istemci kontrolü)." },
   { key: "paymentsDisabled", label: "🔒 Ödemeleri kapat (ücretsiz lansman)", description: "AÇIK iken planlar 'Yakında' görünür ve hiçbir ödeme alınmaz (sandbox dahil). Güvenli varsayılan AÇIK. Şirket + gerçek iyzico hazır olunca BU ANAHTARI KAPAT." },
+  { key: "invoicingPaused", label: "🧾 Fatura kesmeyi durdur", description: "AÇIK iken ödeme ve plan normal çalışır ama fatura, iade faturası ve fatura e-postası OLUŞMAZ. Güvenli varsayılan AÇIK. BirFatura/e-imza hazır olunca KAPAT. (Render'daki INVOICE_GENERATION_PAUSED=1 de aynı işi yapar; ikisinden biri açıksa fatura kesilmez.)" },
+  { key: "exportExemptionDisabled", label: "🌍 Yurt dışı istisnasını durdur (herkese KDV'li)", description: "AÇIK iken yurt dışı adresli müşteriye de KDV'li fatura kesilir. Güvenli varsayılan AÇIK. Kartın yerli/yabancı olduğu netleşince ve muhasebeci onayından sonra KAPAT." },
 ] as const;
 
 export const BETA_FLAG_CATALOG = [
