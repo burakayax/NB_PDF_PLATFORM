@@ -13,6 +13,8 @@ email-validator>=2.0.0
 
 # PDF motoru (proje kökündeki src.pdf_engine): /api/pdf-to-word, sıkıştırma vb.
 pikepdf>=10
+numpy  # eskiden pdf2docx/PyMuPDF ile dolaylı geliyordu; taranmış belge/eğrilik düzeltme + testler doğrudan kullanır
+opencv-python-headless  # eskiden pdf2docx ile geliyordu; tasarımlı/hibrit taranmış PDF→Word ve belge tarama (cv2)
 pypdfium2>=5  # sayfa çizimi/metin/arama (Apache-2.0/BSD; PyMuPDF'nin yerine)
 fonttools>=4.40  # PDF Düzenle: doc.subset_fonts() — gömülen fontların yalnız kullanılan harfleri (çıktı ~30x küçük)
 pytesseract
