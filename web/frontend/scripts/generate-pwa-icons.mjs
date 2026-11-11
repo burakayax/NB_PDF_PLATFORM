@@ -1,4 +1,3 @@
-// ESKİ: yeni marka varlıkları scripts/brand/generate-brand-assets.py ile üretilir (vektör kaynak: scripts/brand/emblem.svg).
 // PWA ikon setini scripts/icon-source.png'den üretir.
 // Çalıştır: node scripts/generate-pwa-icons.mjs   (yalnızca ikon/marka değişince gerekir)
 // Tek bağımlılık: sharp  (yoksa: npm i -D sharp)
