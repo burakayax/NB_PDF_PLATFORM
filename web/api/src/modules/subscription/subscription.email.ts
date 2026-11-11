@@ -81,12 +81,12 @@ export function createPaymentSuccessEmailTemplate({
       ${checkList(
         tr
           ? [
-              "Faturanız ayrı bir e-posta ile gönderilir; birkaç dakika sürebilir.",
+              "Faturanız, ödeme tarihinizden itibaren en geç 7 gün içinde ayrı bir e-posta ile gönderilir. Bu süre içinde iade talep ederseniz fatura düzenlenmez.",
               "Aboneliğiniz kendiliğinden yenilenmez, kartınızdan onayınız olmadan ücret çekilmez.",
               "Planınızı ve ödeme geçmişinizi hesap ayarlarınızdaki Abonelik bölümünden görebilirsiniz.",
             ]
           : [
-              "Your invoice is sent in a separate email; it can take a few minutes.",
+              "Your invoice is sent in a separate email within 7 days of your payment at the latest. If you request a refund within that period, no invoice is issued.",
               "Your subscription does not renew automatically and your card is never charged without your confirmation.",
               "You can see your plan and payment history in the Subscription section of your account settings.",
             ],
