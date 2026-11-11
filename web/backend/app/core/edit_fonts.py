@@ -443,6 +443,53 @@ def vector_emblems(page: Any, image_rects: list[Any], max_clusters: int = 40) ->
     return res if len(res) <= max_clusters else []
 
 
+def vector_lines(page: Any, taken_rects: list[Any], max_items: int = 60) -> list[tuple[float, float, float, float]]:
+    """Tek başına duran ÇİZGİ ve DİKDÖRTGENLERİ (tablo/ayraç çizgisi, kutu, dolgu şeridi) bulur.
+
+    `vector_emblems` bunları bilerek atlar (sayfa kalabalıklaşmasın). Burada her biri AYRI bir
+    öğe olur; kullanıcı seçip silebilir. Atlananlar: bir görsel/amblemin içinde kalanlar (onlar
+    zaten o öğeyle silinir), sayfanın çoğunu kaplayan zemin dolguları, çok kısa kırıntılar.
+    Çok sayıda çizgi çıkarsa (ızgara/grafik) hiçbiri döndürülmez — arayüz boğulmasın."""
+    import pymupdf as fitz
+
+    try:
+        draws = page.get_drawings()
+    except Exception:
+        return []
+    pr = page.rect
+    res: list[fitz.Rect] = []
+    for d in draws:
+        items = d.get("items") or []
+        if not items:
+            continue
+        kinds = {it[0] for it in items}
+        if not kinds <= {"l", "re"}:
+            continue  # eğri/çokgen = amblem/şekil (vector_emblems işi)
+        if d.get("fill") is None and d.get("color") is None:
+            continue
+        r = fitz.Rect(d["rect"])
+        if r.is_empty and r.width == 0 and r.height == 0:
+            continue
+        long_side = max(r.width, r.height)
+        if long_side < 8:
+            continue
+        if r.width * r.height > pr.width * pr.height * 0.6:
+            continue  # sayfa zemini
+        if any((r & t).get_area() > 0 and (r & t).get_area() >= 0.8 * max(r.get_area(), 1e-6) for t in taken_rects):
+            continue
+        if any(t.contains(r) for t in taken_rects):
+            continue
+        res.append(r)
+    # Aynı yere çizilmiş yinelenenleri ele.
+    uniq: list[Any] = []
+    for r in res:
+        if not any(abs(r.x0 - u.x0) < 0.5 and abs(r.y0 - u.y0) < 0.5 and abs(r.x1 - u.x1) < 0.5 and abs(r.y1 - u.y1) < 0.5 for u in uniq):
+            uniq.append(r)
+    if len(uniq) > max_items:
+        return []
+    return [(r.x0, r.y0, r.x1, r.y1) for r in uniq]
+
+
 _FALLBACK_CSS = {"sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono"}
 
 

@@ -269,3 +269,17 @@ def test_logo_delete_keeps_same_logo_on_other_page():
                     headers=_AUTH, data={"edits": json.dumps([op])})
     out = fitz.open("pdf", r.content)
     assert not out[0].get_image_info() and len(out[1].get_image_info()) == 1
+
+
+def test_vector_lines_tek_cizgi_ve_kutu_bulunur_amblem_icindekiler_atlanir():
+    import pymupdf as fitz
+
+    doc = fitz.open()
+    pg = doc.new_page()
+    pg.draw_line((240, 60), (500, 60))            # ayraç çizgisi
+    pg.draw_rect(fitz.Rect(60, 180, 260, 240))    # kutu
+    pg.draw_line((100, 400), (102, 400))          # çok kısa kırıntı → atlanır
+    found = ef.vector_lines(pg, [])
+    assert len(found) == 2
+    # Bir amblemin içinde kalan çizgi ayrıca listelenmez.
+    assert ef.vector_lines(pg, [fitz.Rect(230, 50, 510, 70)]) == [found[1]] or len(ef.vector_lines(pg, [fitz.Rect(230, 50, 510, 70)])) == 1

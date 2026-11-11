@@ -1466,10 +1466,19 @@ async def tool_pdf_analyze(
                         })
                         ei += 1
                     # VEKTÖR amblem/logo (çizim komutlarından oluşan şekiller): görsel gibi seçilip silinebilsin.
+                    _emb_rects: list[Any] = []
                     for _vr in _ef.vector_emblems(page, _img_rects):
+                        _emb_rects.append(_fitz.Rect(*_vr))
                         els.append({
                             "id": f"i{pi}_{ei}", "type": "image", "vec": True,
                             "bbox": [round(_vr[0], 1), round(_vr[1], 1), round(_vr[2], 1), round(_vr[3], 1)],
+                        })
+                        ei += 1
+                    # Tek başına ÇİZGİ / DİKDÖRTGEN (ayraç, kutu, alt çizgi): seçilip silinebilsin.
+                    for _sr in _ef.vector_lines(page, _img_rects + _emb_rects):
+                        els.append({
+                            "id": f"i{pi}_{ei}", "type": "image", "vec": True, "shape": True,
+                            "bbox": [round(_sr[0], 1), round(_sr[1], 1), round(_sr[2], 1), round(_sr[3], 1)],
                         })
                         ei += 1
                     pages.append({
