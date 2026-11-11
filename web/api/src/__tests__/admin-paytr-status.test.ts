@@ -30,12 +30,13 @@ describe("adminPaytrStatusController", () => {
       paymentAmount: "129.00",
       currency: "TL",
       testMode: true,
-      raw: { payment_amount: "129.00", test_mode: "1", masked_pan: "4553****6747", auth_code: "123456", returns: [] },
+      raw: { payment_amount: "129.00", test_mode: "1", kart_marka: "WORLD", masked_pan: "455359AAA6747", auth_code: "123456", returns: [] },
     });
     const r = await call();
     expect(h.query).toHaveBeenCalledWith("abc123", expect.anything());
     expect(r).toMatchObject({ ok: true, merchantOid: "abc123", testMode: true });
     expect(r.fields).toMatchObject({ payment_amount: "129.00", test_mode: "1" });
+    expect(r.fields).toMatchObject({ kart_marka: "WORLD", kart_bin: "455359" });
     expect(r.fields.masked_pan).toBeUndefined();
     expect(r.fields.auth_code).toBeUndefined();
   });
