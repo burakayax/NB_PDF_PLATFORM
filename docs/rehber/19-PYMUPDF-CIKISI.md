@@ -21,3 +21,9 @@ Bu dalın (`calisma/pymupdf-cikis`) merge'ü geri alınırsa `requirements.txt` 
 ## Hâlâ kalan lisans gri alanı
 - Poppler (GPL) KALDIRILDI: PDF→Görsel ve PDF→PowerPoint artık pdfium ile sayfa çiziyor (pdf2image bağımlılığı, Docker/CI poppler-utils paketi çıkarıldı).
 - Ghostscript (AGPL) hâlâ sunucuda ayrı program olarak çağrılıyor (sıkıştırma + ocrmypdf). Kesin hukuki görüş için avukata danışılmalı; sıkıştırmada pikepdf+pdfium yolu zaten var.
+
+## Ölçümler (2026-11-11)
+- Word (kendi dönüştürücü / eski pdf2docx, görsel benzerlik, LibreOffice ile geri açılarak): matematik sınav kâğıdı 0,987/0,978; fatura 0,983/0,946; vergi levhası 0,988/0,943; 6 sayfalık yazılı 0,981/0,953; 12 sayfalık denetim raporu 0,961/0,917 (sayfa sayısı 12/18, orijinal 12). Yeni motor 13 dosyanın 12'sinde eşit/daha iyi görsel verdi; pdf2docx'in önde olduğu tek dosya (Güneş Sistemi, 0,993/0,995) fark ihmal edilebilir.
+- Metin eşleşmesi iki motorda da düşük kalan dosyalar: matematik kâğıdı (0,70/0,76), vergi levhası (0,58/0,63), vergi.pdf (0,54/0,54) — formül/özel yazı tipi/tablo düzeni; sorun yeni motora özgü değil.
+- Hız (204 sayfa, 5,3 MB): PDF→Word 158 sn (≈0,8 sn/sayfa, eski motordan yavaş), PDF→Görsel 6,7 sn, PDF→PPT 77 sn, Sıkıştır 5,5 sn. Tepe bellek 233–313 MB (sunucu 512 MB).
+- Poppler yerine pdfium (150 DPI): aynı piksel boyutu, görsel benzerlik 0,991–0,999, sayfa başına ≈0,01 sn (Poppler ≈0,2 sn).
