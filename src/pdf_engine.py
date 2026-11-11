@@ -3249,6 +3249,8 @@ _COMPRESS_GS_SETTINGS = {
 _COMPRESS_GS_DPI = {"extreme": 60}
 # pikepdf sonrası bu oran altında kazanım varsa GS devreye girer (0.45 = %45)
 _COMPRESS_GS_FALLBACK_THRESHOLD = 0.40
+# Ghostscript yokken sayfa-resme-çevirme yolu yalnız toplam metni bundan az belgelerde (taranmış) kullanılır.
+_COMPRESS_RENDER_MAX_TEXT_CHARS = 20
 
 
 def pdf_image_byte_ratio(input_path: str, password: Optional[str] = None) -> float:
@@ -3366,9 +3368,17 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
                     dpi_override=_COMPRESS_GS_DPI.get(quality),
                 )
             else:
-                # GS yok → PDFium sayfa render pipeline (metin aranabilirliği kaybolur
-                # ama görüntü ağırlıklı/tarama PDF'lerde en etkili sıkıştırma)
-                second_ok = _render_compress(second_input, second_out, open_password, quality)
+                # GS yok → PDFium sayfa render pipeline. Bu yol sayfayı resme çevirir:
+                # yazı seçilemez/aranamaz olur. Bu yüzden YALNIZCA metni olmayan
+                # (taranmış/resim) belgelerde kullanılır; metni olan belgede
+                # pikepdf sonucu yeterli sayılır (kalite > ekstra küçülme).
+                try:
+                    from src.pdfcore.pdfium_io import pdfium_text_stats
+                    _, _metin = pdfium_text_stats(second_input, open_password or None)
+                except Exception:
+                    _metin = 1  # emin değilsek metni koru
+                if _metin < _COMPRESS_RENDER_MAX_TEXT_CHARS:
+                    second_ok = _render_compress(second_input, second_out, open_password, quality)
 
             if second_ok:
                 second_size = os.path.getsize(second_out)
