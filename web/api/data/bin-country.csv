@@ -1,0 +1,4 @@
+# Kartın ilk 6 hanesi (BIN) -> kartı çıkaran bankanın ülkesi. Biçim: BIN,ÜLKE (ör. 454360,TR)
+# BU DOSYA ŞU AN BOŞTUR: gerçek bir BIN listesi eklenmeden hiçbir kart ülkesi bulunamaz,
+# her kart "bilinmiyor" sayılır ve herkese KDV'li fatura kesilir (güvenli taraf).
+# Liste kaynağı seçilirken lisans şartları kontrol edilmelidir.

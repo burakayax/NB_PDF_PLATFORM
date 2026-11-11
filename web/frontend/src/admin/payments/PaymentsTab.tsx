@@ -437,6 +437,21 @@ function PaytrStatusView({ status }: { status: AdminPaytrStatus }) {
           <dd>{returns.length === 0 ? "Yok" : `${returns.length} kayıt: ${JSON.stringify(returns)}`}</dd>
         </div>
       </dl>
+      <div className="mt-2 border-t border-white/[0.08] pt-2">
+        <p className="font-semibold text-slate-200">Kayıtlı kart kanıtı (şifreli saklanır, burada çözülür)</p>
+        {status.savedEvidence ? (
+          <dl className="mt-1 space-y-1">
+            <div className="flex justify-between gap-3"><dt className="text-slate-400">Kartın ilk 6 hanesi</dt><dd>{status.savedEvidence.bin ?? "—"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-slate-400">Bulunan ülke</dt><dd>{status.savedEvidence.country === "??" ? "belirlenemedi" : status.savedEvidence.country ?? "—"}</dd></div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-slate-400">Karar</dt>
+              <dd>{status.savedEvidence.verdict === "FOREIGN" ? "Yurt dışı kart" : status.savedEvidence.verdict === "TR" ? "Yurt içi kart → KDV'li" : "Belirlenemedi → KDV'li"}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="mt-1 text-slate-400">Bu ödeme için kart kanıtı kaydedilmemiş (yalnız yabancı para birimli ödemelerde ve istisna açıkken alınır).</p>
+        )}
+      </div>
     </div>
   );
 }

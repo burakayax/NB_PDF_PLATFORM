@@ -135,6 +135,21 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     expect(screen.getByText("Yok")).toBeTruthy();
   });
 
+  it("kayıtlı kart kanıtı varsa çözülmüş ilk 6 haneyi ve kararı gösterir", async () => {
+    fetchPayments.mockResolvedValue(page([row()]));
+    paytrStatus.mockResolvedValue({
+      ok: true,
+      merchantOid: "abc",
+      testMode: false,
+      fields: { currency: "USD" },
+      savedEvidence: { bin: "411111", country: "US", verdict: "FOREIGN" },
+    });
+    render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("PayTR durumunu sorgula"));
+    expect(await screen.findByText("411111")).toBeTruthy();
+    expect(screen.getByText("Yurt dışı kart")).toBeTruthy();
+  });
+
   it("PayTR siparişi bulamazsa hata kodunu olduğu gibi gösterir; PayTR dışı ödemede düğme yok", async () => {
     fetchPayments.mockResolvedValue(page([row()]));
     paytrStatus.mockResolvedValue({ ok: false, merchantOid: "abc", errNo: "004", errMsg: "merchant_oid ile islem bulunamadi" });

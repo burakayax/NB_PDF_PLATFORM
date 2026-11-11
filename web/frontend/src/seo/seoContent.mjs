@@ -2626,7 +2626,7 @@ export const PRICING_SEO = {
       },
       {
         q: "Ödeme nasıl alınıyor, fatura kesiliyor mu?",
-        a: "Ödemeler PayTR altyapısıyla alınır; kart bilgileriniz bizde saklanmaz. Türkiye'deki müşteriler için TL fiyatların tamamına %20 KDV dahildir; ayrıca ekleme yapılmaz. Yurt dışından yapılan alışverişlerde ihracat istisnası nedeniyle KDV uygulanmaz.",
+        a: "Ödemeler PayTR altyapısıyla alınır; kart bilgileriniz bizde saklanmaz. Türkiye'deki müşteriler için TL fiyatların tamamına %20 KDV dahildir; ayrıca ekleme yapılmaz. Yurt dışında yaşayıp yurt dışında çıkarılmış bir kartla ödeme yapan müşterilere hizmet ihracatı istisnası uygulanabilir; kartın yurt içi olduğu ya da ülkesinin belirlenemediği durumlarda fatura KDV’li düzenlenir.",
       },
     ],
   },
