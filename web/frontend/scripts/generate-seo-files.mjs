@@ -975,6 +975,7 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
         }
       } catch (e) {}
     </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
