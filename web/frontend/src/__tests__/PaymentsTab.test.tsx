@@ -5,10 +5,12 @@ import type { AdminPaymentRow, AdminPaymentsPage } from "../api/admin";
 const fetchPayments = vi.fn();
 const refund = vi.fn();
 const paytrStatus = vi.fn();
+const invoiceAction = vi.fn();
 vi.mock("../api/admin", () => ({
   fetchAdminPayments: (...a: unknown[]) => fetchPayments(...a),
   refundAdminPayment: (...a: unknown[]) => refund(...a),
   fetchAdminPaytrStatus: (...a: unknown[]) => paytrStatus(...a),
+  postAdminInvoiceAction: (...a: unknown[]) => invoiceAction(...a),
 }));
 
 vi.mock("../admin/payments/PaymentSwitches", () => ({ PaymentSwitches: () => null }));
@@ -58,6 +60,7 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     fetchPayments.mockReset();
     refund.mockReset();
     paytrStatus.mockReset();
+    invoiceAction.mockReset();
   });
 
   it("kullanıcı adı, e-posta, tutar ve durumu listeler", async () => {
@@ -175,5 +178,37 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     fireEvent.click(screen.getByText("İadeyi yap"));
     expect(await screen.findByText(/kayıt değiştirilmedi/)).toBeTruthy();
     expect(screen.getByText("İadeyi onayla")).toBeTruthy();
+  });
+
+  it("ertelenmiş fatura: vade ve kart notu görünür; KDV'li kes / şimdi kes karar uçlarını çağırır", async () => {
+    fetchPayments.mockResolvedValue(
+      page([row({ invoiceStatus: "scheduled", invoiceDueAt: "2026-11-18T10:00:00.000Z", cardCountry: "??" })]),
+    );
+    invoiceAction.mockResolvedValue({ ok: true, invoiceStatus: "scheduled", invoiceAction: "VAT" });
+    render(<PaymentsTab accessToken="t" />);
+    expect(await screen.findByText(/Otomatik kesilecek/)).toBeTruthy();
+    expect(screen.getByText("Kart: belirlenemedi")).toBeTruthy();
+    fireEvent.click(screen.getByText("KDV'li kes (vadesinde)"));
+    await waitFor(() => expect(invoiceAction).toHaveBeenCalledWith("t", "oid-1", "VAT"));
+    fireEvent.click(screen.getByText("Şimdi kes"));
+    await waitFor(() => expect(invoiceAction).toHaveBeenCalledWith("t", "oid-1", "NOW"));
+  });
+
+  it("fatura kesme kararı iki adımlıdır (yanlışlıkla basılamaz)", async () => {
+    fetchPayments.mockResolvedValue(page([row({ invoiceStatus: "scheduled", invoiceDueAt: "2026-11-18T10:00:00.000Z" })]));
+    invoiceAction.mockResolvedValue({ ok: true, invoiceStatus: "cancelled", invoiceAction: "CANCEL" });
+    render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("Fatura kesme"));
+    expect(invoiceAction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText(/Emin misiniz/));
+    await waitFor(() => expect(invoiceAction).toHaveBeenCalledWith("t", "oid-1", "CANCEL"));
+  });
+
+  it("fatura durdurulmuşken 'şimdi kes' sonucunu açıkça söyler", async () => {
+    fetchPayments.mockResolvedValue(page([row({ invoiceStatus: null })]));
+    invoiceAction.mockResolvedValue({ ok: true, invoiceStatus: "scheduled", invoiceAction: null, outcome: "paused" });
+    render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("Şimdi kes"));
+    expect(await screen.findByText(/DURDURULMUŞ/)).toBeTruthy();
   });
 });

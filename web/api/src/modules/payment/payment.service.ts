@@ -19,6 +19,7 @@ import { getPaymentPricesTry } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
 import { invoicingPaused, exportExemptionOpen } from "../../lib/feature-switches.js";
 import { captureCardEvidence, CARD_COUNTRY_UNKNOWN } from "./card-evidence.service.js";
+import { invoiceDelayHours, scheduleInvoiceRecord, reviewCardAtPayment } from "./invoice-schedule.service.js";
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import { cvPassInvoiceLabel, cvPassNewExpiry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
@@ -839,7 +840,9 @@ async function resolveConversationIdFromToken(
 // Fatura durdurma (env INVOICE_GENERATION_PAUSED=1 veya admin anahtarı invoicingPaused) → lib/feature-switches.ts
 export { invoicingPaused };
 
-async function triggerInvoiceGeneration(
+export type InvoiceAttempt = "ok" | "paused" | "failed";
+
+export async function triggerInvoiceGeneration(
   checkout: {
     id: string;
     userId: string;
@@ -858,7 +861,8 @@ async function triggerInvoiceGeneration(
     cvPassHours?: number | null;
   },
   retrieveResult: IyzicoRetrieveResult,
-): Promise<void> {
+  opts?: { forceDomestic?: boolean },
+): Promise<InvoiceAttempt> {
   // Kart kanıtı fatura durdurulmuş olsa da alınır (yalnız istisna anahtarı açıkken ve yabancı para biriminde).
   const evidenceVerdict = await captureCardEvidence({
     id: checkout.id,
@@ -870,8 +874,9 @@ async function triggerInvoiceGeneration(
     logger.warn("payment", `${PC_LOG} INVOICE_GENERATION_PAUSED açık — fatura kesilmedi`, {
       conversationId: checkout.conversationId,
     });
-    return;
+    return "paused";
   }
+  let outcome: InvoiceAttempt = "failed";
   try {
     const user = await prisma.user.findUnique({
       where: { id: checkout.userId },
@@ -892,7 +897,7 @@ async function triggerInvoiceGeneration(
         invoiceType: true,
       },
     });
-    if (!user) return;
+    if (!user) return "failed";
 
     // Çok-sinyal güvenli taraf: iyzico kart ülkesi + ödeme para birimi + beyan edilen ülke
     const cardCountryFromIyzico = (
@@ -902,7 +907,10 @@ async function triggerInvoiceGeneration(
     const paymentCurr = (checkout.paymentCurrency ?? "TRY").toUpperCase();
 
     let countryCode: string;
-    if (paymentCurr === "TRY") {
+    if (opts?.forceDomestic) {
+      // Yönetici "KDV'li kes" dedi → yurt içi müşteri gibi KDV'li fatura
+      countryCode = "TR";
+    } else if (paymentCurr === "TRY") {
       // TRY ödemesi → daima Türkiye
       countryCode = "TR";
     } else if (isTRCard) {
@@ -1031,6 +1039,7 @@ async function triggerInvoiceGeneration(
       const data = (await resp.json()) as Record<string, unknown>;
 
       if (data["success"]) {
+        outcome = "ok";
         logger.info("payment",`${PC_LOG} invoice generated`, {
           invoiceId: data["invoice_id"],
           invoiceNumber: data["invoice_number"],
@@ -1092,7 +1101,38 @@ async function triggerInvoiceGeneration(
       `${PC_LOG} triggerInvoiceGeneration error`,
       err instanceof Error ? err.message : err,
     );
+    return "failed";
   }
+  return outcome;
+}
+
+/**
+ * Fatura zamanlaması: bekleme süresi > 0 ise (varsayılan 156 saat) fatura "bekliyor" olarak kaydedilir ve
+ * saatlik iş vadesinde keser; iade olursa hiç kesilmez. 0 ise eski davranış (hemen kes).
+ */
+async function scheduleOrIssueInvoice(
+  pending: Parameters<typeof triggerInvoiceGeneration>[0] & { id: string; userId: string; priceTry: string },
+  result: IyzicoRetrieveResult,
+): Promise<void> {
+  const delayHours = invoiceDelayHours();
+  if (delayHours <= 0) {
+    await triggerInvoiceGeneration(pending, result);
+    return;
+  }
+  await scheduleInvoiceRecord(pending.id, delayHours);
+  const row = await prisma.paymentCheckout.findUnique({
+    where: { id: pending.id },
+    select: { invoiceDueAt: true, iyzicoPaymentId: true },
+  });
+  await reviewCardAtPayment({
+    id: pending.id,
+    userId: pending.userId,
+    conversationId: pending.conversationId,
+    paymentCurrency: pending.paymentCurrency,
+    priceTry: pending.priceTry,
+    invoiceDueAt: row?.invoiceDueAt ?? null,
+    iyzicoPaymentId: row?.iyzicoPaymentId ?? null,
+  });
 }
 
 function round2(n: number): number {
@@ -1334,7 +1374,7 @@ export async function fulfillPaidCheckout(
   }
 
   // Fire-and-forget fatura üretimi — abonelik aktivasyonunu asla engellemez
-  void triggerInvoiceGeneration(pending, result).catch((err) => {
+  void scheduleOrIssueInvoice(pending, result).catch((err) => {
     logger.error("payment",
       `${PC_LOG} invoice trigger başarısız (kritik değil)`,
       err instanceof Error ? err.message : err,

@@ -1701,6 +1701,12 @@ export type AdminPaymentRow = {
   provider: "paytr" | "diger";
   invoiceStatus: string | null;
   invoiceNo: string | null;
+  /** Ertelenmiş fatura: otomatik kesim zamanı (ISO). */
+  invoiceDueAt?: string | null;
+  /** Yönetici kararı: null = otomatik, "VAT" = KDV'li kes, "CANCEL" = kesme. */
+  invoiceAction?: string | null;
+  /** Kayıtlı kart ülkesi: "TR", "DE"…, "??" = belirlenemedi, null = kayıt yok. */
+  cardCountry?: string | null;
   user: { id: string; email: string; name: string };
   refundable: boolean;
   withinRefundWindow: boolean;
@@ -1742,6 +1748,37 @@ export async function fetchAdminPaytrStatus(accessToken: string, conversationId:
   const res = await adminFetch(accessToken, `/payments/${encodeURIComponent(conversationId)}/paytr-status`);
   if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "PayTR durumu sorgulanamadı.");
   return (await res.json()) as AdminPaytrStatus;
+}
+
+export type AdminCardListStatus = {
+  entries: number;
+  generatedAt: string | null;
+  ageDays: number | null;
+  stale: boolean;
+  total30d: number;
+  unknown30d: number;
+  exemptionOpen: boolean;
+};
+
+export async function fetchAdminCardListStatus(accessToken: string): Promise<AdminCardListStatus> {
+  const res = await adminFetch(accessToken, "/payments/card-list-status");
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "BIN listesi durumu okunamadı.");
+  return (await res.json()) as AdminCardListStatus;
+}
+
+export type AdminInvoiceAction = "AUTO" | "VAT" | "CANCEL" | "NOW" | "NOW_VAT";
+
+export async function postAdminInvoiceAction(
+  accessToken: string,
+  conversationId: string,
+  action: AdminInvoiceAction,
+): Promise<{ ok: true; invoiceStatus: string | null; invoiceAction: string | null; outcome?: string }> {
+  const res = await adminFetch(accessToken, `/payments/${encodeURIComponent(conversationId)}/invoice-action`, {
+    method: "POST",
+    body: JSON.stringify({ action }),
+  });
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "Fatura kararı kaydedilemedi.");
+  return (await res.json()) as { ok: true; invoiceStatus: string | null; invoiceAction: string | null; outcome?: string };
 }
 
 export type AdminRefundResult = {

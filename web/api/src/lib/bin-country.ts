@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 /**
@@ -54,4 +54,20 @@ export function lookupBinCountry(bin: string | null | undefined): string | null 
     if (hit) return hit;
   }
   return null;
+}
+
+/** Yönetici ekranı için liste durumu: kayıt sayısı ve oluşturulma tarihi (dosya başlığındaki `# generated:` satırı). */
+export function binListInfo(): { entries: number; generatedAt: string | null; exists: boolean } {
+  const p = binListPath();
+  const exists = existsSync(p);
+  let generatedAt: string | null = null;
+  if (exists) {
+    try {
+      const head = readFileSync(p, "utf8").slice(0, 2000);
+      generatedAt = /^#\s*generated:\s*(\S+)/m.exec(head)?.[1] ?? statSync(p).mtime.toISOString();
+    } catch {
+      generatedAt = null;
+    }
+  }
+  return { entries: loadMap().size, generatedAt, exists };
 }

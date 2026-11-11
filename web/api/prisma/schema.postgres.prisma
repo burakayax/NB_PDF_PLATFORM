@@ -354,6 +354,12 @@ model PaymentCheckout {
   invoiceStatus   String?  @map("invoice_status")
   cardCountry     String?  @map("card_country")
   cardBin         String?  @map("card_bin")
+  // Ertelenmiş fatura (VUK md. 231/5: hizmet ifasından en geç 7 gün): iade olursa kontör boşa gitmesin diye
+  // fatura ödemeden birkaç gün sonra kesilir. invoiceStatus: scheduled | processing | issued | cancelled | skipped_refunded
+  invoiceDueAt              DateTime? @map("invoice_due_at")
+  // Yönetici kararı: null = otomatik, "VAT" = KDV'li kes, "CANCEL" = fatura kesme
+  invoiceAction             String?   @map("invoice_action")
+  invoiceReviewNotifiedAt   DateTime? @map("invoice_review_notified_at")
   iyzicoPaymentId             String?  @map("iyzico_payment_id")
   iyzicoPaymentTransactionId  String?  @map("iyzico_payment_transaction_id")
 
@@ -365,6 +371,7 @@ model PaymentCheckout {
   @@index([organizationId])
   @@index([status])
   @@index([userId, status, createdAt])
+  @@index([invoiceStatus, invoiceDueAt])
 }
 
 // ─── Invoice ──────────────────────────────────────────────────────────────────
