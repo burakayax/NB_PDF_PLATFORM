@@ -32,6 +32,9 @@ def _xml_from_payload(payload):
 
 
 def _run(provider, cust, monkeypatch, enabled=True):
+    for k, v in (("BIRFATURA_SUPPLIER_VKN", "1234567801"), ("BIRFATURA_SUPPLIER_ADDRESS", "Adres 1"),
+                 ("BIRFATURA_SUPPLIER_CITY", "Ankara"), ("BIRFATURA_SUPPLIER_TAX_OFFICE", "Çankaya")):
+        monkeypatch.setenv(k, v)
     if enabled:
         monkeypatch.setenv("BIRFATURA_EXPORT_ISTISNA", "1")
     else:
@@ -90,6 +93,9 @@ def test_yurt_ici_musteri_etkilenmez(provider, monkeypatch):
 
 
 def test_bayrak_yazilmamissa_varsayilan_acik(provider, monkeypatch):
+    for k in ("BIRFATURA_SUPPLIER_VKN", "BIRFATURA_SUPPLIER_ADDRESS", "BIRFATURA_SUPPLIER_CITY",
+              "BIRFATURA_SUPPLIER_TAX_OFFICE"):
+        monkeypatch.setenv(k, "x")
     monkeypatch.delenv("BIRFATURA_EXPORT_ISTISNA", raising=False)
     with patch.object(provider, "_post", return_value={"Success": True, "Message": "ok", "Result": {}}) as m,             patch.object(provider, "publish_invoice", return_value=None):
         provider.full_invoice_flow(_cust(), ITEMS, PI)
@@ -157,3 +163,38 @@ def test_sorgu_hata_verirse_earsiv_ve_yurt_disinda_sorgu_yok(provider):
     foreign = CustomerInfo(name="J", email="j@d.com", is_export=True)
     with patch.object(provider, "_post", side_effect=AssertionError("sorgu yapilmamali")):
         assert provider.find_or_create_customer(foreign) == "earsiv:j@d.com"
+
+
+def test_iade_faturasi_yurt_disi_istisnali_ve_yurt_ici_tc_notlu(provider, monkeypatch):
+    """İade XML'i: yurt dışında istisna kodu + KDV 0; yurt içinde TC yoksa not, KDV %20."""
+    from app.billing.birfatura import NO_TCKN_NOTE
+
+    def build(cust, items, exemption):
+        return ET.fromstring(provider._build_credit_note_xml(
+            doc_uuid="u", issue_date="2026-11-11", original_invoice_ettn="e", original_invoice_no="EA12026000001553",
+            original_invoice_date="2026-11-10", customer_info=cust, receiver_tag="", items=items, payment_info=PI,
+            reason="Kullanıcı talebiyle iade", is_e_invoice=False, exemption=exemption,
+        ))
+
+    from app.billing.birfatura import EXPORT_EXEMPTION
+    root = build(_cust(), ITEMS, EXPORT_EXEMPTION)
+    assert root.findtext("cbc:InvoiceTypeCode", namespaces=NS) == "IADE"
+    assert root.findtext(".//cac:TaxCategory/cbc:TaxExemptionReasonCode", namespaces=NS) == "302"
+    assert root.findtext(".//cac:TaxTotal/cbc:TaxAmount", namespaces=NS) == "0.00"
+
+    tr_items = [InvoiceItem(name="Pro", quantity=1, unit_price=100.0, vat_rate=20, unit="Ay")]
+    tr = CustomerInfo(name="Ada Test", email="a@b.co", address="x", city="Ankara")
+    root = build(tr, tr_items, None)
+    assert root.findtext(".//cac:TaxTotal/cbc:TaxAmount", namespaces=NS) == "20.00"
+    assert root.find(".//cac:TaxCategory/cbc:TaxExemptionReasonCode", NS) is None
+    assert any(NO_TCKN_NOTE in (n.text or "") for n in root.findall("cbc:Note", NS))
+
+
+def test_satici_ayari_eksikse_istisna_faturasi_gonderilmez(provider, monkeypatch):
+    for k in ("BIRFATURA_SUPPLIER_VKN", "BIRFATURA_SUPPLIER_ADDRESS", "BIRFATURA_SUPPLIER_CITY",
+              "BIRFATURA_SUPPLIER_TAX_OFFICE"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("BIRFATURA_EXPORT_ISTISNA", "1")
+    with patch.object(provider, "_post", side_effect=AssertionError("gonderilmemeli")):
+        res = provider.full_invoice_flow(_cust(), ITEMS, PI)
+    assert not res.success and "BIRFATURA_SUPPLIER_VKN" in (res.error or "")
