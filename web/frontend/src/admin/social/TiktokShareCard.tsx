@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Check, Loader2, RefreshCw, Send } from "lucide-react";
 import {
   fetchSocialToolReels,
+  fetchTiktokPublishStatus,
   fetchTiktokCreator,
   shareToTiktok,
   type SocialToolReel,
@@ -36,7 +37,6 @@ function suggestedCaption(reel: SocialToolReel): string {
 
 export function TiktokShareCard({ accessToken }: { accessToken: string }) {
   const [creator, setCreator] = useState<TiktokCreator | null>(null);
-  const [brandDefault, setBrandDefault] = useState(true);
   const [reels, setReels] = useState<SocialToolReel[]>([]);
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
@@ -46,7 +46,11 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
   const [allowComment, setAllowComment] = useState(false);
   const [allowDuet, setAllowDuet] = useState(false);
   const [allowStitch, setAllowStitch] = useState(false);
-  const [brandOrganic, setBrandOrganic] = useState(true);
+  // TikTok kuralı: içerik tanıtımı ana düğmesi KAPALI başlar; açılınca en az bir kutu seçilmeli.
+  const [disclosure, setDisclosure] = useState(false);
+  const [yourBrand, setYourBrand] = useState(false);
+  const [brandedContent, setBrandedContent] = useState(false);
+  const [durationSec, setDurationSec] = useState<number | null>(null);
 
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -56,8 +60,6 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
     try {
       const [c, r] = await Promise.all([fetchTiktokCreator(accessToken), fetchSocialToolReels(accessToken)]);
       setCreator(c.creator);
-      setBrandDefault(c.brandOrganic);
-      setBrandOrganic(c.brandOrganic);
       const ready = r.reels.filter((x) => x.video !== null);
       setReels(ready);
       setReelId((current) => current || ready[0]?.id || "");
@@ -79,8 +81,18 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
     if (reel) setCaption(suggestedCaption(reel));
   }, [reel]);
 
+  // Markalı içerik (ücretli ortaklık) "Yalnız ben" olamaz: seçiliyse o gizlilik düzeyi kilitlenir.
+  const brandedBlocksPrivate = disclosure && brandedContent;
+  useEffect(() => {
+    if (brandedBlocksPrivate && privacy === "SELF_ONLY") setPrivacy("");
+  }, [brandedBlocksPrivate, privacy]);
+
+  const disclosureMissing = disclosure && !yourBrand && !brandedContent;
+  const tooLong = durationSec !== null && creator !== null && creator.maxVideoSeconds > 0 && durationSec > creator.maxVideoSeconds;
+  const canSubmit = !!video && !!privacy && !!caption.trim() && !disclosureMissing && !tooLong;
+
   async function submit() {
-    if (!video || !privacy || !caption.trim()) return;
+    if (!canSubmit || !video) return;
     setBusy(true);
     setResult(null);
     try {
@@ -88,16 +100,35 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
         videoUrl: video.url,
         title: caption,
         privacy,
-        brandOrganic,
+        brandOrganic: disclosure && yourBrand,
+        brandContent: disclosure && brandedContent,
         allowComment,
         allowDuet,
         allowStitch,
       });
       const where = r.privacy === "SELF_ONLY" ? "TikTok’ta Profil → Gizli videolar altında" : "TikTok profilinde";
-      setResult({
-        ok: true,
-        message: `Video TikTok’a gönderildi (durum: ${r.status}). ${where} görünür. ${r.warning ?? ""}`.trim(),
-      });
+      const describe = (status: string) =>
+        status === "PUBLISH_COMPLETE"
+          ? `Video TikTok’ta yayınlandı. ${where} görünür.`
+          : `Video TikTok’a gönderildi, işleniyor (durum: ${status}). İşlenmesi birkaç dakika sürebilir; sonra ${where} görünür.`;
+      setResult({ ok: true, message: `${describe(r.status)} ${r.warning ?? ""}`.trim() });
+      // Durum takibi: işlenme bitene (ya da hata verene) kadar ~5 dakika boyunca 10 sn'de bir sorulur.
+      if (r.status !== "PUBLISH_COMPLETE") {
+        for (let i = 0; i < 30; i++) {
+          await new Promise((res) => setTimeout(res, 10_000));
+          try {
+            const s = await fetchTiktokPublishStatus(accessToken, r.publishId);
+            if (s.status === "FAILED") {
+              setResult({ ok: false, message: `TikTok videoyu reddetti: ${s.message ?? "neden bildirilmedi"}` });
+              break;
+            }
+            setResult({ ok: true, message: `${describe(s.status)} ${r.warning ?? ""}`.trim() });
+            if (s.status === "PUBLISH_COMPLETE") break;
+          } catch {
+            /* geçici hata: bir sonraki turda tekrar dene */
+          }
+        }
+      }
     } catch (e) {
       setResult({ ok: false, message: e instanceof Error ? e.message : "Paylaşılamadı" });
     } finally {
@@ -157,6 +188,7 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
                 poster={reel ? `/reel-covers/${encodeURIComponent(reel.id)}.jpg` : undefined}
                 controls
                 preload="metadata"
+                onLoadedMetadata={(e) => setDurationSec(Number.isFinite(e.currentTarget.duration) ? e.currentTarget.duration : null)}
                 playsInline
               />
             ) : null}
@@ -188,11 +220,15 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
               <span className="text-xs font-medium text-slate-300">Bu videoyu kimler görebilir? (zorunlu)</span>
               <select className={`${fieldClass} mt-1`} value={privacy} onChange={(e) => setPrivacy(e.target.value)}>
                 <option value="">Seçin…</option>
-                {creator.privacyOptions.map((o) => (
-                  <option key={o} value={o}>
-                    {PRIVACY_LABEL[o] ?? o}
-                  </option>
-                ))}
+                {creator.privacyOptions.map((o) => {
+                  const locked = o === "SELF_ONLY" && brandedBlocksPrivate;
+                  return (
+                    <option key={o} value={o} disabled={locked} title={locked ? "Markalı içeriğin görünürlüğü özel olamaz." : undefined}>
+                      {PRIVACY_LABEL[o] ?? o}
+                      {locked ? " (markalı içerikte seçilemez)" : ""}
+                    </option>
+                  );
+                })}
               </select>
               {creator.privacyOptions.length === 1 && creator.privacyOptions[0] === "SELF_ONLY" ? (
                 <span className="mt-0.5 block text-[11px] text-amber-300/90">
@@ -223,45 +259,73 @@ export function TiktokShareCard({ accessToken }: { accessToken: string }) {
               ))}
             </fieldset>
 
-            <label className="flex items-start gap-2 text-xs text-slate-300">
-              <input type="checkbox" className="mt-0.5" checked={brandOrganic} onChange={(e) => setBrandOrganic(e.target.checked)} />
-              <span>
-                Bu video kendi markamızı tanıtıyor
-                <span className="block text-[11px] text-slate-500">
-                  İşaretliyse TikTok videoya “Tanıtım içeriği” etiketi koyar{brandDefault ? " (varsayılan: açık)" : ""}.
+            <div className="space-y-1.5">
+              <label className="flex items-start gap-2 text-xs text-slate-300">
+                <input type="checkbox" className="mt-0.5" checked={disclosure} onChange={(e) => setDisclosure(e.target.checked)} />
+                <span>
+                  İçeriği açıkla
+                  <span className="block text-[11px] text-slate-500">
+                    Bu video kendini, bir markayı, ürünü ya da hizmeti tanıtıyor mu? (Varsayılan: kapalı)
+                  </span>
                 </span>
-              </span>
-            </label>
+              </label>
+              {disclosure ? (
+                <div className="ml-6 space-y-1.5">
+                  <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <input type="checkbox" checked={yourBrand} onChange={(e) => setYourBrand(e.target.checked)} />
+                    Kendi markan
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-slate-300">
+                    <input type="checkbox" checked={brandedContent} onChange={(e) => setBrandedContent(e.target.checked)} />
+                    Markalı içerik
+                  </label>
+                  {disclosureMissing ? (
+                    <p className="text-[11px] text-amber-300/90">
+                      İçeriğinin kendini mi, üçüncü bir tarafı mı, yoksa ikisini birden mi tanıttığını belirtmelisin.
+                    </p>
+                  ) : brandedContent ? (
+                    <p className="text-[11px] text-slate-400">Videon “Ücretli ortaklık” olarak etiketlenecek.</p>
+                  ) : yourBrand ? (
+                    <p className="text-[11px] text-slate-400">Videon “Tanıtım içeriği” olarak etiketlenecek.</p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            {tooLong ? (
+              <p className="text-[11px] text-rose-300">
+                Video {Math.round(durationSec ?? 0)} sn; bu hesabın sınırı {creator.maxVideoSeconds} sn. Paylaşım yapılamaz.
+              </p>
+            ) : null}
 
             <p className="text-[11px] leading-relaxed text-slate-500">
-              Paylaş’a basarak{" "}
-              <a
-                className="text-cyan-300 underline"
-                href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                TikTok Müzik Kullanımı Onayı
-              </a>
-              {brandOrganic ? (
+              Paylaşarak TikTok’un{" "}
+              {disclosure && brandedContent ? (
                 <>
-                  {" "}
-                  ve{" "}
                   <a
                     className="text-cyan-300 underline"
                     href="https://www.tiktok.com/legal/page/global/bc-policy/en"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Markalı İçerik Politikası
-                  </a>
+                    Branded Content Policy
+                  </a>{" "}
+                  ve{" "}
                 </>
               ) : null}
-              ’nı kabul etmiş olursun. Video yüklenip işlenene kadar yaklaşık bir dakika sürebilir.
+              <a
+                className="text-cyan-300 underline"
+                href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Music Usage Confirmation
+              </a>{" "}
+              koşullarını kabul edersin. Video TikTok’a yalnızca Paylaş’a bastıktan sonra gönderilir; işlenmesi birkaç dakika sürebilir, sonra profilinde görünür.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" className={primaryButton} disabled={busy || !video || !privacy || !caption.trim()} onClick={() => void submit()}>
+              <button type="button" className={primaryButton} disabled={busy || !canSubmit} onClick={() => void submit()}>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 {busy ? "Gönderiliyor…" : "TikTok’ta paylaş"}
               </button>

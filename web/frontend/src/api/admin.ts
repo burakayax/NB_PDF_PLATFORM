@@ -1183,6 +1183,7 @@ export type TiktokShareBody = {
   title: string;
   privacy: string;
   brandOrganic: boolean;
+  brandContent?: boolean;
   allowComment: boolean;
   allowDuet: boolean;
   allowStitch: boolean;
@@ -1196,6 +1197,16 @@ export async function shareToTiktok(
   const r = await adminFetch(accessToken, "/social/tiktok/share", { method: "POST", body: JSON.stringify(body) });
   if (!r.ok) throw new Error(await errorMessageOf(r, "TikTok paylaşımı başarısız."));
   return r.json() as Promise<{ publishId: string; postId: string | null; status: string; privacy: string; warning: string | null }>;
+}
+
+/** Paylaşılan videonun TikTok'taki işlenme durumu (PUBLISH_COMPLETE / FAILED / işleniyor). */
+export async function fetchTiktokPublishStatus(
+  accessToken: string,
+  publishId: string,
+): Promise<{ status: string; postId: string | null; reason: string; message: string | null }> {
+  const r = await adminFetch(accessToken, `/social/tiktok/status?publishId=${encodeURIComponent(publishId)}`);
+  if (!r.ok) throw new Error(await errorMessageOf(r, "TikTok durumu okunamadı."));
+  return r.json() as Promise<{ status: string; postId: string | null; reason: string; message: string | null }>;
 }
 
 /** TikTok geliştirici sayfasına yazılacak geri dönüş adresi (sunucunun gerçekten kullandığı). */

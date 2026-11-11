@@ -26,6 +26,7 @@ import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
 import {
   buildTiktokAuthorizeUrl,
   createTiktokState,
+  fetchTiktokPublishStatus,
   loadTiktokCreator,
   postTiktokVideo,
   tiktokRedirectUri,
@@ -238,6 +239,7 @@ const tiktokShareSchema = z.object({
   title: z.string().min(1).max(2200),
   privacy: z.string().min(1).max(40),
   brandOrganic: z.boolean(),
+  brandContent: z.boolean().optional(),
   allowComment: z.boolean(),
   allowDuet: z.boolean(),
   allowStitch: z.boolean(),
@@ -259,6 +261,7 @@ socialRouter.post(
         title: body.title,
         privacy: body.privacy,
         brandOrganic: body.brandOrganic,
+        brandContent: body.brandContent === true,
         disableComment: !body.allowComment,
         disableDuet: !body.allowDuet,
         disableStitch: !body.allowStitch,
@@ -272,6 +275,21 @@ socialRouter.post(
       response.json(result);
     } catch (err) {
       throw new HttpError(502, err instanceof Error ? err.message : "TikTok paylaşımı başarısız");
+    }
+  }),
+);
+
+/** Elle paylaşılan videonun TikTok'taki işlenme durumu (panel birkaç saniyede bir sorar). */
+socialRouter.get(
+  "/tiktok/status",
+  asyncHandler(async (request, response) => {
+    const publishId = z.string().min(1).max(64).parse(request.query.publishId);
+    const secrets = await readAccountSecrets("TIKTOK");
+    if (!secrets?.refreshToken) throw new HttpError(400, "TikTok bağlı değil.");
+    try {
+      response.json(await fetchTiktokPublishStatus(secrets, publishId));
+    } catch (err) {
+      throw new HttpError(502, err instanceof Error ? err.message : "TikTok durumu okunamadı");
     }
   }),
 );
