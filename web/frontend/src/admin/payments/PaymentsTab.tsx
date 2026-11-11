@@ -390,6 +390,8 @@ const STATUS_FIELD_LABEL: Record<string, string> = {
   kesinti_tutari: "Kesinti",
   taksit: "Taksit",
   odeme_tipi: "Ödeme tipi",
+  kart_marka: "Kart markası",
+  kart_bin: "Kartın ilk 6 hanesi (BIN)",
 };
 
 /** PayTR Durum Sorgu cevabını yorumsuz, olduğu gibi gösterir (tahmin yok). */

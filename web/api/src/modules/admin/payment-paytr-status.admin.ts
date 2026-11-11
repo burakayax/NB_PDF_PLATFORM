@@ -11,7 +11,7 @@ import { queryPaytrStatus } from "../payment/paytr/paytr.client.js";
  * Seçilen ödemeyi PayTR "Durum Sorgu" servisinde (POST /odeme/durum-sorgu) sorgular ve cevabı
  * olduğu gibi (izinli alanlarla) döndürür: PayTR siparişi bulabiliyor mu, test mi canlı mı,
  * tutar, varsa iadeler. Veritabanını DEĞİŞTİRMEZ, para hareketi yapmaz.
- * Kart numarası/provizyon kodu gibi alanlar bilerek yanıta konmaz.
+ * Tam kart numarası/provizyon kodu bilerek yanıta konmaz; yalnız kart markası ve ilk 6 hane (BIN) gösterilir.
  */
 
 const SAFE_FIELDS = [
@@ -23,6 +23,7 @@ const SAFE_FIELDS = [
   "kesinti_tutari",
   "taksit",
   "odeme_tipi",
+  "kart_marka",
   "test_mode",
   "returns",
 ] as const;
@@ -62,5 +63,9 @@ export async function adminPaytrStatusController(request: Request, response: Res
   for (const k of SAFE_FIELDS) {
     if (result.raw[k] !== undefined) fields[k] = result.raw[k];
   }
+  // Kartın yerli/yabancı ayrımı için yalnız ilk 6 hane (BIN) gösterilir; tam maskeli numara ASLA döndürülmez.
+  const pan = String(result.raw.masked_pan ?? "");
+  const bin = /^\d{6}/.exec(pan)?.[0];
+  if (bin) fields.kart_bin = bin;
   response.json({ ok: true, merchantOid, testMode: result.testMode, fields });
 }
