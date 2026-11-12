@@ -75,6 +75,148 @@ function shortAgent(ua: string | null): string {
   return ua.length > 48 ? `${ua.slice(0, 48)}…` : ua;
 }
 
+type IysPending = {
+  pendingTotal: number;
+  batchSize: number;
+  until: string | null;
+  uploadedUntil: string | null;
+  rows: { email: string; granted: boolean; at: string }[];
+};
+
+/**
+ * İYS'ye yüklenecek yeni onaylar. İYS bizim sistemimize bağlanamadığı için
+ * izinler panelden CSV ile elle yükleniyor (3 iş günü içinde, en çok 50'şer).
+ */
+function IysUploadCard({ accessToken }: { accessToken: string }) {
+  const [p, setP] = useState<IysPending | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const auth = { authorization: `Bearer ${accessToken}` };
+
+  const load = useCallback(async () => {
+    try {
+      const res = await saasFetch("/api/admin/email-compliance/iys/pending", { headers: auth });
+      if (!res.ok) throw new Error(await res.text());
+      setP((await res.json()) as IysPending);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "İYS durumu yüklenemedi.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const download = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch(buildSaasApiUrl("/api/admin/email-compliance/iys/export"), {
+        headers: auth,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `iys-yukle-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setDownloaded(true);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Dosya indirilemedi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const markUploaded = async () => {
+    if (!p?.until) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await saasFetch("/api/admin/email-compliance/iys/mark-uploaded", {
+        method: "POST",
+        headers: { ...auth, "content-type": "application/json" },
+        body: JSON.stringify({ until: p.until }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setDownloaded(false);
+      await load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "İşaretlenemedi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const pending = p?.pendingTotal ?? 0;
+
+  return (
+    <div className={`${CARD} space-y-3 p-5`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-white">İYS'ye yüklenecek onaylar</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
+            Yeni onay ve ret kayıtları İYS'ye <b>3 iş günü içinde</b> bildirilmeli. Dosyayı indirin,
+            İYS panelinde <i>İzin Yönetimi → İzin Ekle → Dosyadan çoklu izin yükle</i> ile yükleyin,
+            sonra buradan "Yükledim" düğmesine basın. Tek dosyada en fazla 50 adres olur.
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => void download()}
+            disabled={busy || pending === 0}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            İYS dosyasını indir
+          </button>
+          <button
+            type="button"
+            onClick={() => void markUploaded()}
+            disabled={busy || !downloaded || pending === 0}
+            title={downloaded ? "" : "Önce dosyayı indirin"}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-400/20 disabled:opacity-40"
+          >
+            <Check className="h-4 w-4" />
+            İYS'ye yükledim
+          </button>
+        </div>
+      </div>
+
+      {msg ? <p className="text-sm text-amber-300">{msg}</p> : null}
+
+      {p ? (
+        pending === 0 ? (
+          <p className="text-sm text-emerald-300">Bekleyen onay yok — hepsi İYS'ye yüklendi.</p>
+        ) : (
+          <div className="text-sm text-slate-300">
+            <p>
+              <b className="text-white">{pending}</b> adres bekliyor
+              {pending > p.batchSize ? ` (bu dosyada ilk ${p.batchSize}; yükledikten sonra kalanı indirin)` : ""}
+              :
+            </p>
+            <ul className="mt-2 space-y-1 text-xs text-slate-400">
+              {p.rows.map((r) => (
+                <li key={r.email}>
+                  {r.granted ? "Onay" : "Ret"} · {r.email} · {formatDateTime(r.at)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      ) : null}
+    </div>
+  );
+}
+
 export function ConsentLogTab({ accessToken }: { accessToken: string }) {
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -203,6 +345,8 @@ export function ConsentLogTab({ accessToken }: { accessToken: string }) {
           </button>
         </div>
       </header>
+
+      <IysUploadCard accessToken={accessToken} />
 
       {error ? (
         <div className={`${CARD} flex items-start gap-3 p-4`}>
