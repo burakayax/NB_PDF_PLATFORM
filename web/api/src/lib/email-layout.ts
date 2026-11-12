@@ -14,21 +14,41 @@ import { senderIdentity } from "../modules/email/sender-identity.service.js";
  * veritabanında saklanır. Eksikse ticari e-posta HİÇ gönderilmez — gönderim
  * yolları `assertSenderIdentityComplete` ile korunuyor.
  */
+const ZWSP = "&#8203;";
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Altbilgideki adres/numara metni Gmail ve Apple Mail tarafından kendiliğinden
+ * bağlantıya çevrilir ve çoğu zaman yarısı mavi, yarısı düz görünür. Görünmez
+ * sıfır genişlikli boşluk, sayı gruplarının ve sözcüklerin arasına konarak
+ * bu otomatik algılamayı bozar; gözle görünen metin değişmez.
+ */
+function plainText(s: string): string {
+  return escapeHtml(s)
+    .replace(/(\d)(?=\d)/g, `$1${ZWSP}`)
+    .replace(/ /g, ` ${ZWSP}`);
+}
+
 function commercialIdentityLines(): string[] {
   const id = senderIdentity();
   const lines: string[] = [];
 
-  // Kimlik satırı: şirketse unvan + MERSİS, esnafsa ad soyad + T.C. no.
+  // Kimlik satırı: şirketse unvan + MERSİS, esnafsa ad soyad + vergi kimlik no.
   if (id.legalName && id.entityType === "company" && id.mersisNo) {
-    lines.push(`${id.legalName} · MERSİS: ${id.mersisNo}`);
+    lines.push(plainText(`${id.legalName} · MERSİS: ${id.mersisNo}`));
   } else if (id.legalName && id.entityType === "sole" && id.taxNo) {
-    lines.push(`${id.legalName} · Vergi Kimlik No: ${id.taxNo}`);
+    lines.push(plainText(`${id.legalName} · Vergi Kimlik No: ${id.taxNo}`));
   } else if (id.legalName) {
-    lines.push(id.legalName);
+    lines.push(plainText(id.legalName));
   }
 
   // İletişim satırı: en az biri yeterli, ikisi varsa ikisi de yazılır.
-  const contact = [id.phone, id.contactEmail].filter(Boolean).join(" · ");
+  const contact = [id.phone && plainText(id.phone), id.contactEmail && escapeHtml(id.contactEmail)]
+    .filter(Boolean)
+    .join(" · ");
   if (contact) lines.push(contact);
 
   return lines;
@@ -115,7 +135,7 @@ export function renderCorporateEmail({
   // zaten durur, çünkü eksik sayılıyor).
   const postalAddress = senderIdentity().postalAddress;
   const addressLine = unsubscribeUrl && postalAddress
-    ? `<div style="margin-top:6px;font-size:11px;line-height:1.6;color:${c.faint};">${postalAddress}</div>`
+    ? `<div style="margin-top:6px;font-size:11px;line-height:1.6;color:${c.faint};">${plainText(postalAddress)}</div>`
     : "";
 
   // Ticari iletide zorunlu kimlik bilgileri (Yönetmelik md.7) — unvan/MERSİS
@@ -125,8 +145,7 @@ export function renderCorporateEmail({
     ? commercialIdentityLines()
         .map(
           (line) =>
-            `<div style="margin-top:4px;font-size:11px;line-height:1.6;color:${c.faint};">${line}</div>`,
-        )
+            `<div style="margin-top:4px;font-size:11px;line-height:1.6;color:${c.faint};">${line}</div>`,        )
         .join("")
     : "";
 
@@ -154,7 +173,11 @@ export function renderCorporateEmail({
   <meta name="x-apple-disable-message-reformatting" />
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
   <title>${productName}</title>
+  <style>
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+  </style>
 </head>
 <body style="margin:0;padding:0;background-color:${c.page};font-family:${FONT};-webkit-text-size-adjust:100%;">
 ${preheaderHtml}
