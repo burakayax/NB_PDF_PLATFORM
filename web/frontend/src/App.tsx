@@ -9321,7 +9321,9 @@ function App() {
                                                 </span>
                                               ) : null}
                                               {item.inspecting ? (
-                                                <span>{W.inspecting}</span>
+                                                <span className="selected-file-card__inspecting">
+                                                  {W.inspecting}
+                                                </span>
                                               ) : null}
                                               {!item.inspecting &&
                                               item.corrupt ? (
