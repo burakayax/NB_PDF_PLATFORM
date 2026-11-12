@@ -12,6 +12,7 @@ import { TopUpModal } from "../tools/TopUpModal";
 import { Sparkles, Zap } from "lucide-react";
 import { readAccessToken } from "../../lib/accessTokenStore";
 import { ActiveSessionsPanel } from "./ActiveSessionsPanel";
+import { MarketingConsentCard } from "./MarketingConsentCard";
 
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -345,6 +346,9 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           </button>
         </form>
       </section>
+
+      {/* ── E-posta tercihleri (tanıtım izni) ───────────────────── */}
+      <MarketingConsentCard accessToken={aiToken} language={language} />
 
       {/* ── Plan ve yenileme / Ekip üyeliği ─────────────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
