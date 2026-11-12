@@ -15,7 +15,8 @@ on:
 # Aynı dalda üst üste push gelince eski (artık önemsiz) çalışma iptal edilir → dakika tasarrufu.
 # `main` HARİÇ: deploy'u taşıyan çalışma yarıda kesilmesin.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # main'de her çalışma kendi grubunda: takılı kalan bir çalışma sonrakileri engellemesin (iptal yine yok).
+  group: ci-${{ github.workflow }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
