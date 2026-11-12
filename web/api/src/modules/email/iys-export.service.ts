@@ -71,7 +71,39 @@ export async function writeUploadedUntil(until: Date): Promise<void> {
   });
 }
 
+/**
+ * Bildirim süresi: onay/ret en geç 3 İŞ GÜNÜ içinde İYS'ye girilmeli.
+ * Yalnız hafta sonları sayılmaz; resmî tatiller bilinmediği için sayılır
+ * (yani uyarı gerekenden GEÇ değil, gerekirse erken gelir — güvenli taraf).
+ */
+export function businessDaysElapsed(from: Date, now: Date): number {
+  const trDay = (d: Date) => {
+    const t = new Date(d.getTime() + 3 * 3600 * 1000);
+    return Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate());
+  };
+  const end = trDay(now);
+  let count = 0;
+  for (let day = trDay(from) + 86_400_000; day <= end; day += 86_400_000) {
+    const dow = new Date(day).getUTCDay();
+    if (dow !== 0 && dow !== 6) count++;
+  }
+  return count;
+}
+
+export type IysUrgency = "none" | "ok" | "warn" | "overdue";
+
+/** none: bekleyen yok · ok: vakit var · warn: son gün · overdue: süre doldu. */
+export function iysUrgency(oldestAt: Date | null, now: Date = new Date()): IysUrgency {
+  if (!oldestAt) return "none";
+  const days = businessDaysElapsed(oldestAt, now);
+  if (days >= 3) return "overdue";
+  if (days >= 2) return "warn";
+  return "ok";
+}
+
 export type PendingBatch = {
+  /** Bekleyenlerin en eski kaydının zamanı (süre hesabı bundan). */
+  oldestAt: Date | null;
   /** Bu dosyada gidecek satırlar (en fazla 50). */
   batch: IysRow[];
   /** Toplam bekleyen adres sayısı (dosyalara bölünmeden). */
@@ -91,6 +123,7 @@ export async function readPendingBatch(): Promise<PendingBatch> {
   const all = latestPerEmail(logs);
   const batch = all.slice(0, IYS_BATCH_SIZE);
   return {
+    oldestAt: logs.length ? logs[0]!.createdAt : null,
     batch,
     pendingTotal: all.length,
     until: batch.length ? batch[batch.length - 1]!.at : null,
