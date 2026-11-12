@@ -54,7 +54,7 @@ const identitySchema = z.object({
   legalName: z.string().max(200),
   entityType: z.enum(["company", "sole"]),
   mersisNo: z.string().max(40),
-  tckn: z.string().max(20),
+  taxNo: z.string().max(20),
   phone: z.string().max(40),
   contactEmail: z.string().max(200),
   postalAddress: z.string().max(500),

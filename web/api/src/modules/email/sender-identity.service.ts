@@ -26,12 +26,12 @@ import { logger } from "../../lib/file-log.js";
 export type SenderIdentity = {
   /** Şirketse ticaret unvanı, şahıs işletmesiyse ad soyad. */
   legalName: string;
-  /** "company" = unvan + MERSİS, "sole" = ad soyad + T.C. kimlik no. */
+  /** "company" = unvan + MERSİS, "sole" = ad soyad + vergi kimlik no. */
   entityType: "company" | "sole";
   /** Yalnız entityType "company" ise kullanılır. */
   mersisNo: string;
-  /** Yalnız entityType "sole" ise kullanılır. */
-  tckn: string;
+  /** Vergi kimlik numarası. Yalnız entityType "sole" ise kullanılır. */
+  taxNo: string;
   phone: string;
   contactEmail: string;
   postalAddress: string;
@@ -41,7 +41,7 @@ export const EMPTY_SENDER_IDENTITY: SenderIdentity = {
   legalName: "",
   entityType: "sole",
   mersisNo: "",
-  tckn: "",
+  taxNo: "",
   phone: "",
   contactEmail: "",
   postalAddress: "",
@@ -59,7 +59,9 @@ export function normalizeSenderIdentity(raw: unknown): SenderIdentity {
     entityType: o.entityType === "company" ? "company" : "sole",
     // Rakam dışındaki karakterler temizlenir: "1234 5678" ile "12345678" aynı.
     mersisNo: str(o.mersisNo).replace(/\D/g, ""),
-    tckn: str(o.tckn).replace(/\D/g, ""),
+    // Eski kayıtlardaki "tckn" alanı bilerek okunmaz: T.C. numarası e-postada
+    // gösterilmez, vergi kimlik numarası panelden yeniden girilir.
+    taxNo: str(o.taxNo).replace(/\D/g, ""),
     phone: str(o.phone),
     contactEmail: str(o.contactEmail),
     postalAddress: str(o.postalAddress),
@@ -129,8 +131,8 @@ export function missingSenderIdentityFields(identity: SenderIdentity = cached): 
   }
   if (identity.entityType === "company") {
     if (!identity.mersisNo) missing.push("MERSİS numarası");
-  } else if (!identity.tckn) {
-    missing.push("T.C. kimlik numarası");
+  } else if (!identity.taxNo) {
+    missing.push("Vergi kimlik numarası");
   }
   // İletişim bilgilerinden en az biri yeterli.
   if (!identity.phone && !identity.contactEmail) {

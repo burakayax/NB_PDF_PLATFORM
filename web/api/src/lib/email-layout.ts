@@ -7,7 +7,7 @@ import { senderIdentity } from "../modules/email/sender-identity.service.js";
  * Ticari İletişim ve Ticari Elektronik İletiler Hakkında Yönetmelik md.7,
  * tanıtım içeren her e-postada şunları arıyor:
  *   - Şirketse: ticaret unvanı + MERSİS numarası
- *   - Esnaf/şahıs işletmesiyse: ad soyad + T.C. kimlik numarası
+ *   - Esnaf/şahıs işletmesiyse: ad soyad + vergi kimlik numarası
  *   - Erişilebilir iletişim bilgilerinden EN AZ BİRİ (telefon / e-posta)
  *
  * Değerler yönetim panelinden girilir (E-postalar → Gönderen kimliği) ve
@@ -21,8 +21,8 @@ function commercialIdentityLines(): string[] {
   // Kimlik satırı: şirketse unvan + MERSİS, esnafsa ad soyad + T.C. no.
   if (id.legalName && id.entityType === "company" && id.mersisNo) {
     lines.push(`${id.legalName} · MERSİS: ${id.mersisNo}`);
-  } else if (id.legalName && id.entityType === "sole" && id.tckn) {
-    lines.push(`${id.legalName} · T.C. Kimlik No: ${id.tckn}`);
+  } else if (id.legalName && id.entityType === "sole" && id.taxNo) {
+    lines.push(`${id.legalName} · Vergi Kimlik No: ${id.taxNo}`);
   } else if (id.legalName) {
     lines.push(id.legalName);
   }
