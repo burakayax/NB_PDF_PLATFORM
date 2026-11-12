@@ -63,6 +63,8 @@ class PdfaDonusumTest(unittest.TestCase):
         self.assertEqual(seviye, "3b")
         # "always": aykırı öğe atılsa da çıktı üretilir (veraPDF çalışma anında yok).
         self.assertEqual(kw.get("publication_policy"), "always")
+        # Dijital imzalı belge de dönüşsün (imza geçersiz olur; araç açıklamasında yazılı).
+        self.assertTrue(kw.get("allow_signature_invalidation"))
 
     def test_atlanan_donusum_basarili_sayilmaz(self):
         # Kütüphane özgün dosyayı değiştirmeden kopyalarsa kullanıcıya PDF/A DENMEZ.

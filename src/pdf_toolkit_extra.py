@@ -2275,6 +2275,10 @@ def pdf_to_pdfa(
                 Path(output_path),
                 surum,
                 publication_policy="always",
+                # Dijital imzalı belge: PDF/A dönüşümü imzayı zaten geçersiz kılar (Ghostscript da
+                # öyle yapıyordu). İzin verilmezse kütüphane belgeyi hiç dönüştürmez; kullanıcı
+                # araç açıklamasında bu konuda uyarılır.
+                allow_signature_invalidation=True,
             )
         except Exception as exc:
             raise Exception(
