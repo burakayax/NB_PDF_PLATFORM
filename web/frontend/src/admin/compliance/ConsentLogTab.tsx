@@ -77,6 +77,7 @@ function shortAgent(ua: string | null): string {
 
 type IysPending = {
   pendingTotal: number;
+  urgency: "none" | "ok" | "warn" | "overdue";
   batchSize: number;
   until: string | null;
   uploadedUntil: string | null;
@@ -156,9 +157,21 @@ function IysUploadCard({ accessToken }: { accessToken: string }) {
   };
 
   const pending = p?.pendingTotal ?? 0;
+  const urgent = p?.urgency === "overdue" ? "border-red-400/40 bg-red-500/[0.06]"
+    : p?.urgency === "warn" ? "border-amber-400/40 bg-amber-500/[0.06]"
+    : "border-white/[0.08] bg-white/[0.02]";
 
   return (
-    <div className={`${CARD} space-y-3 p-5`}>
+    <div className={`rounded-2xl border ${urgent} space-y-3 p-5`}>
+      {p?.urgency === "overdue" ? (
+        <p className="text-sm font-semibold text-red-300">
+          3 iş günlük bildirim süresi doldu — hemen yükleyin.
+        </p>
+      ) : p?.urgency === "warn" ? (
+        <p className="text-sm font-semibold text-amber-300">
+          Bildirim süresinin son günü — bugün yükleyin.
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-base font-semibold text-white">İYS'ye yüklenecek onaylar</h3>

@@ -35,3 +35,22 @@ describe("İYS dışa aktarma", () => {
     expect(line).toBe("EPOSTA,a@x.com,1,HS_WEB,01-10-2026 12:30:00,");
   });
 });
+
+import { businessDaysElapsed, iysUrgency } from "../modules/email/iys-export.service.js";
+
+describe("İYS süre takibi", () => {
+  // 2026-11-13 Cuma
+  const fri = new Date("2026-11-13T12:00:00Z");
+  it("hafta sonunu saymaz", () => {
+    expect(businessDaysElapsed(fri, new Date("2026-11-14T12:00:00Z"))).toBe(0); // Cumartesi
+    expect(businessDaysElapsed(fri, new Date("2026-11-16T07:00:00Z"))).toBe(1); // Pazartesi
+    expect(businessDaysElapsed(fri, new Date("2026-11-17T07:00:00Z"))).toBe(2); // Salı
+    expect(businessDaysElapsed(fri, new Date("2026-11-18T07:00:00Z"))).toBe(3); // Çarşamba
+  });
+  it("aciliyet: bekleyen yok / vakit var / son gün / süre doldu", () => {
+    expect(iysUrgency(null)).toBe("none");
+    expect(iysUrgency(fri, new Date("2026-11-16T07:00:00Z"))).toBe("ok");
+    expect(iysUrgency(fri, new Date("2026-11-17T07:00:00Z"))).toBe("warn");
+    expect(iysUrgency(fri, new Date("2026-11-18T07:00:00Z"))).toBe("overdue");
+  });
+});

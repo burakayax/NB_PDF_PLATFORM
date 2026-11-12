@@ -22,6 +22,7 @@ import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { prisma } from "../../lib/prisma.js";
 import { logAdminAudit, type AdminActor } from "../admin/admin-audit.service.js";
 import {
+  iysUrgency,
   readPendingBatch,
   readUploadedUntil,
   toIysCsv,
@@ -213,6 +214,8 @@ emailComplianceAdminRouter.get(
     const p = await readPendingBatch();
     response.json({
       pendingTotal: p.pendingTotal,
+      urgency: iysUrgency(p.oldestAt),
+      oldestAt: p.oldestAt?.toISOString() ?? null,
       batchSize: p.batch.length,
       until: p.until?.toISOString() ?? null,
       uploadedUntil: p.uploadedUntil?.toISOString() ?? null,
