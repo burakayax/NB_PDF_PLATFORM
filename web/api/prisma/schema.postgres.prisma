@@ -400,6 +400,18 @@ model Invoice {
   creditNoteId         String?   @map("credit_note_id")
   creditNoteStatus     String?   @map("credit_note_status")
   creditNoteIssuedAt   DateTime? @map("credit_note_issued_at")
+  // İYİ NİYET İADESİ — kurumsal alıcı: müşteri bize İADE FATURASI keser, biz gelince parayı öderiz.
+  // returnStatus: requested (bekleniyor) → received (geldi, para iadesi yapılıyor) → refunded | (null)
+  returnStatus         String?   @map("return_status")
+  returnRequestedAt    DateTime? @map("return_requested_at")
+  returnReason         String?   @map("return_reason")
+  returnForce          Boolean   @default(false) @map("return_force")
+  returnInvoiceUuid    String?   @map("return_invoice_uuid")
+  returnInvoiceNo      String?   @map("return_invoice_no")
+  returnKdvAmount      String?   @map("return_kdv_amount")
+  returnReceivedAt     DateTime? @map("return_received_at")
+  returnReminderCount  Int       @default(0) @map("return_reminder_count")
+  returnLastCheckedAt  DateTime? @map("return_last_checked_at")
   // VUK Madde 253: faturalar 10 yıl saklanmalı. isArchived=true → arşivlendi (silinmez).
   isArchived  Boolean   @default(false) @map("is_archived")
   archivedAt  DateTime? @map("archived_at")
@@ -410,6 +422,7 @@ model Invoice {
   @@index([userId])
   @@index([status])
   @@index([isArchived, createdAt])
+  @@index([returnStatus])
   @@map("invoices")
 }
 

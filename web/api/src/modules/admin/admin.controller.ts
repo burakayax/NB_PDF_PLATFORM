@@ -988,69 +988,36 @@ export async function adminIssueRefundController(
   const { reason, forceOverrideWindow } = parsed.data;
   const actor = adminActor(request);
 
-  // forceOverrideWindow modunda pencere kontrolü atlanır — normal modda processRefund yapar
-  let result;
-  let providerRefunded = false;
-  if (forceOverrideWindow) {
-    // Pencere kontrolü olmadan doğrudan iade et
+  // Kesilmiş faturası olan KURUMSAL alıcı: para hemen iade edilmez; müşteriden iade faturası istenir,
+  // fatura gelince saatlik tur parayı otomatik öder (return-invoice.service.ts).
+  {
     const { prisma } = await import("../../lib/prisma.js");
-    const checkout = await prisma.paymentCheckout.findUnique({ where: { conversationId } });
-    if (!checkout) {
-      throw new HttpError(404, "Payment not found.");
-    }
-    if (checkout.status === "refunded") {
-      throw new HttpError(409, "Payment already refunded.");
-    }
-    if (checkout.status !== "completed") {
-      throw new HttpError(400, `Cannot refund a payment with status "${checkout.status}".`);
-    }
-    // PayTR ile alınmış ödemede önce PayTR'ye iade gönderilir; başarısızsa kayıt DEĞİŞMEZ.
-    const gw = await refundPaytrCheckoutIfApplicable(checkout);
-    if (gw && !gw.ok) {
-      throw new HttpError(502, `PayTR iadesi başarısız, kayıt değiştirilmedi: ${gw.error ?? "bilinmeyen hata"}`);
-    }
-    providerRefunded = gw !== null;
-    await prisma.$transaction(async (tx) => {
-      await tx.paymentCheckout.update({
-        where: { conversationId },
-        data: { status: "refunded", refundedAt: new Date(), refundReason: `[admin-force] ${reason}`.slice(0, 500) },
-      });
-      await tx.user.update({ where: { id: checkout.userId }, data: { plan: "FREE" } });
-      if (checkout.organizationId) {
-        await tx.organization.update({
-          where: { id: checkout.organizationId },
-          data: { plan: "FREE", subscriptionStatus: "canceled", subscriptionExpiry: null },
-        });
+    const co = await prisma.paymentCheckout.findUnique({ where: { conversationId } });
+    if (co && co.status === "completed") {
+      const { findCorporateIssuedInvoice, requestReturnInvoice } = await import("../payment/return-invoice.service.js");
+      const inv = await findCorporateIssuedInvoice(co.id);
+      if (inv) {
+        if (inv.returnStatus === "requested" || inv.returnStatus === "received") {
+          throw new HttpError(409, "Bu ödeme için müşteriden iade faturası zaten bekleniyor.");
+        }
+        await requestReturnInvoice(inv, reason, forceOverrideWindow);
+        await logAdminAudit(
+          actor,
+          "payment.refund.awaiting-return-invoice",
+          conversationId,
+          `Kurumsal alıcıdan iade faturası istendi conversationId=${conversationId}, reason: ${reason}`,
+          { conversationId, userId: co.userId, reason, forceOverrideWindow },
+        );
+        response.status(200).json({ ok: true, conversationId, userId: co.userId, awaitingReturnInvoice: true, providerRefunded: false });
+        return;
       }
-    });
-    result = { ok: true as const, conversationId, userId: checkout.userId, planBefore: checkout.plan };
-  } else {
-    result = await processRefund(conversationId, `admin: ${reason}`, async (c) => {
-      const gw = await refundPaytrCheckoutIfApplicable(c);
-      if (gw === null) return { ok: true }; // PayTR ödemesi değil: eski akış (iade elle yapılır)
-      providerRefunded = true;
-      return gw;
-    });
+    }
   }
 
-  if (!result.ok) {
-    if (result.reason === "provider_failed") {
-      throw new HttpError(502, `PayTR iadesi başarısız, kayıt değiştirilmedi: ${result.detail}`);
-    }
-    const statusMap: Record<string, number> = {
-      not_found: 404,
-      already_refunded: 409,
-      window_expired: 422,
-      not_completed: 400,
-    };
-    const reasonMsg: Record<string, string> = {
-      not_found: "Payment record not found.",
-      already_refunded: "This payment has already been refunded.",
-      window_expired: `Refund window of ${REFUND_WINDOW_DAYS} days has expired. Use forceOverrideWindow: true to override.`,
-      not_completed: "Cannot refund a payment that has not been completed.",
-    };
-    throw new HttpError(statusMap[result.reason] ?? 400, reasonMsg[result.reason] ?? "Refund failed.");
-  }
+  const { executeAdminRefund } = await import("../payment/admin-refund.service.js");
+  const done = await executeAdminRefund(conversationId, reason, Boolean(forceOverrideWindow));
+  const providerRefunded = done.providerRefunded;
+  const result = { ok: true as const, conversationId, userId: done.userId, planBefore: done.planBefore };
 
   await logAdminAudit(
     actor,

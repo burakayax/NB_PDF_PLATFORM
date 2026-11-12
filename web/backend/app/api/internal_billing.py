@@ -37,6 +37,47 @@ async def trigger_invoice(request: Request) -> JSONResponse:
         return JSONResponse(content={"success": False, "error": "internal_error"})
 
 
+@router.post("/return-invoices/incoming")
+async def list_incoming_return_invoices(request: Request) -> JSONResponse:
+    """
+    Gelen kutudaki IADE faturalarını listeler (kurumsal müşteri bize iade faturası kesince otomatik yakalanır).
+    Payload: {"sinceIso": "2026-11-01T00:00:00Z"} — boşsa son 30 gün.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        payload: dict[str, Any] = await request.json()
+    except Exception:
+        payload = {}
+    try:
+        provider = get_provider()
+        if not isinstance(provider, BirFaturaProvider):
+            return JSONResponse(content={"success": False, "error": "provider_unsupported", "items": []})
+        end = datetime.now(timezone.utc)
+        try:
+            start = datetime.fromisoformat(str(payload.get("sinceIso", "")).replace("Z", "+00:00"))
+        except Exception:
+            start = end - timedelta(days=30)
+        items = provider.list_incoming_return_invoices(start, end)
+        return JSONResponse(content={"success": True, "items": items})
+    except Exception as exc:
+        logger.exception("return_invoices: gelen kutu okunamadı")
+        return JSONResponse(content={"success": False, "error": str(exc)[:300], "items": []})
+
+
+@router.post("/invoice-pdf-link")
+async def invoice_pdf_link(request: Request) -> JSONResponse:
+    """Verilen belge UUID'si için BirFatura PDF bağlantısını döner (müşteriye e-posta eki için)."""
+    try:
+        payload: dict[str, Any] = await request.json()
+        provider = get_provider()
+        url = provider.get_invoice_pdf_url(str(payload.get("invoiceId", "")))
+        return JSONResponse(content={"success": True, "pdfUrl": url})
+    except Exception as exc:
+        logger.warning("invoice_pdf_link: alınamadı %s", exc)
+        return JSONResponse(content={"success": False, "error": str(exc)[:300]})
+
+
 @router.post("/credit-note")
 async def trigger_credit_note(request: Request) -> JSONResponse:
     """

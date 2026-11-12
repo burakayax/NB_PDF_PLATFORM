@@ -1841,154 +1841,23 @@ export async function processRefund(
 }
 
 // ---------------------------------------------------------------------------
-// triggerCreditNote — iade faturası oluşturur (Paraşüt)
+// triggerCreditNote — iade sonrası fatura işlemi.
+// KARAR (muhasebeci): satılan hizmet için biz ASLA iade faturası kesmeyiz.
+//  - Bireysel (e-arşiv): kesilmiş fatura İPTAL edilmelidir (ayın 20'sine kadar). Programla iptal ucu BirFatura'dan
+//    teyit edilene dek yönetici e-postayla uyarılır ve panelde "fatura iptali bekleniyor" görünür.
+//  - Kurumsal: karşı taraf bize iade faturası keser (return-invoice.service.ts); burada ek iş yoktur.
 // ---------------------------------------------------------------------------
 
 async function triggerCreditNote(
   checkoutId: string,
-  userId: string,
+  _userId: string,
   reason: string,
 ): Promise<void> {
-  if (await invoicingPaused()) {
-    logger.warn("payment", `${REFUND_LOG} INVOICE_GENERATION_PAUSED açık — iade faturası kesilmedi`, { checkoutId });
-    return;
-  }
-  // Orijinal fatura kaydını çek
-  const invoice = await prisma.invoice.findUnique({
-    where: { checkoutId },
-  });
-
-  if (!invoice?.externalId) {
-    logger.warn("payment",`${REFUND_LOG} credit-note: orijinal fatura bulunamadı checkoutId=${checkoutId}`);
-    return;
-  }
-
-  // Kullanıcı + fatura bilgilerini çek
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      firstName: true, lastName: true, name: true, email: true, phone: true,
-      billingAddressLine: true, city: true, billingCountryCode: true,
-      tcKimlikNo: true, taxId: true, taxOffice: true,
-      companyName: true, invoiceType: true,
-    },
-  });
-
-  if (!user) return;
-
-  const { name, surname } = splitBuyerName(user as Parameters<typeof splitBuyerName>[0]);
-  const fullName = user.companyName ? user.companyName : `${name} ${surname}`.trim();
-
-  let nationalId: string | null = null;
-  if (user.tcKimlikNo) {
-    try {
-      const { decryptField } = await import("../../lib/encryption.js");
-      nationalId = decryptField(user.tcKimlikNo);
-    } catch {
-      nationalId = null;
-    }
-  }
-
-  const isCorprate = user.invoiceType === "corporate";
-
-  // Checkout'tan plan adı ve iskonto bilgisini al
-  const checkout = await prisma.paymentCheckout.findUnique({
-    where: { id: checkoutId },
-    select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true, subscriptionDays: true, bonusAiCredits: true, cvPassHours: true },
-  });
-
-  // Top-up (ek AI) iadesi abonelik değil → kalem adı da öyle olmalı.
-  const productName = checkout?.cvPassHours != null
-    ? `${cvPassInvoiceLabel({ hours: checkout.cvPassHours })} İadesi`
-    : checkout?.bonusAiCredits != null
-    ? `Ek AI Hizmet Bedeli (${checkout.bonusAiCredits} kredi) İadesi`
-    : `${subscriptionInvoiceName({ plan: checkout?.plan, billingCycle: checkout?.billingCycle, subscriptionDays: checkout?.subscriptionDays })} İadesi`;
-
-  const paidPrice  = parseFloat(invoice.grossAmount);
-  // kdvRate: eski kayıtlarda sütun migration ile 0.0 set edilmiş olabilir.
-  // ?? operatörü 0'ı geçmez — yurt içi faturada 0 gelirse 20 kullan.
-  const kdvRate = invoice.kdvRate > 0
-    ? invoice.kdvRate
-    : (invoice.isExport ? 0 : 20);
-  const netAmount  = parseFloat(invoice.netAmount) || round2(paidPrice / (1 + kdvRate / 100));
-  const kdvAmount  = parseFloat(invoice.kdvAmount) || round2(paidPrice - netAmount);
-
-  const creditNotePayload = {
-    originalInvoiceId: invoice.externalId,
-    originalInvoiceEttn: invoice.externalId,    // BillingReference UUID
-    originalInvoiceNo: invoice.invoiceNo ?? "",
-    originalInvoiceDate: invoice.sentAt
-      ? invoice.sentAt.toISOString().split("T")[0]
-      : invoice.createdAt.toISOString().split("T")[0],
-    paymentId: checkoutId,
-    reason,
-    buyer: {
-      name,
-      surname,
-      email: user.email,
-      gsmNumber: gsmNumberForCheckout(user),
-      identityNumber: nationalId ?? "",
-      registrationAddress: decryptBillingField(user.billingAddressLine),
-      city: user.city ?? "",
-      country: invoice.customerCountry === "TR" ? "Turkey" : (invoice.customerCountry ?? "Turkey"),
-      invoiceType: user.invoiceType ?? "individual",
-      taxId: decryptBillingField(user.taxId),
-      taxOffice: user.taxOffice ?? "",
-    },
-    basketItems: [
-      {
-        name: productName,
-        netAmount,           // KDV hariç net tutar (iskonto sonrası)
-        kdvAmount,           // KDV tutarı
-        grossAmount: paidPrice,
-      },
-    ],
-    paidPrice,
-    currency: invoice.currency ?? "TRY",
-    kdvRate,
-    discountPercent: checkout?.discountPercent ?? 0,
-    originalNetAmount: checkout?.originalNetAmount ?? null,
-  };
-
-  const pdfBackendBase = process.env.PDF_BACKEND_URL ?? "http://127.0.0.1:8000";
-
-  try {
-    const resp = await fetch(`${pdfBackendBase}/api/internal/credit-note`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(creditNotePayload),
-      signal: AbortSignal.timeout(60_000),
-    });
-
-    const data = (await resp.json()) as Record<string, unknown>;
-    logger.info("payment",`${REFUND_LOG} credit-note result`, {
-      success: data["success"],
-      creditNoteId: data["creditNoteId"],
-      creditNoteNo: data["creditNoteNo"],
-    });
-
-    if (data["success"]) {
-      await prisma.invoice.update({
-        where: { checkoutId },
-        data: {
-          creditNoteId: String(data["creditNoteId"] ?? ""),
-          creditNoteStatus: "issued",
-          creditNoteIssuedAt: new Date(),
-        },
-      });
-    } else {
-      await prisma.invoice.update({
-        where: { checkoutId },
-        data: { creditNoteStatus: "failed" },
-      });
-    }
-  } catch (err) {
-    logger.error("payment",`${REFUND_LOG} credit-note fetch error`, err instanceof Error ? err.message : err);
-    await prisma.invoice.update({
-      where: { checkoutId },
-      data: { creditNoteStatus: "failed" },
-    }).catch(() => {});
-  }
+  const invoice = await prisma.invoice.findUnique({ where: { checkoutId } });
+  if (!invoice?.externalId) return; // fatura hiç kesilmemiş → yapılacak bir şey yok
+  if (invoice.returnStatus) return; // kurumsal iade-faturası akışı kendi durumunu yönetir
+  const { markInvoiceCancelNeeded } = await import("./return-invoice.service.js");
+  await markInvoiceCancelNeeded(invoice, reason);
 }
 
 /**
