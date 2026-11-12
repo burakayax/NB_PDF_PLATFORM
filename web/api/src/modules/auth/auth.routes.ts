@@ -24,6 +24,10 @@ import {
   updateProfileController,
   verifyEmailController,
 } from "./auth.controller.js";
+import {
+  getMarketingConsentController,
+  setMarketingConsentController,
+} from "../email/marketing-consent.controller.js";
 import { deleteAccountLimiter, forgotPasswordLimiter, loginLimiter, registerLimiter } from "./auth.rate-limit.js";
 import {
   forgotPasswordRequestController,
@@ -65,5 +69,8 @@ authRouter.patch("/profile", requireAuth, asyncHandler(updateProfileController))
 authRouter.patch("/password", requireAuth, asyncHandler(changePasswordController));
 // GDPR Article 20: machine-readable personal data export (rate-limited via deleteAccountLimiter)
 authRouter.get("/export-my-data", requireAuth, deleteAccountLimiter, asyncHandler(exportMyDataController));
+// Tanıtım e-postası izni: hesap ayarlarından onay / geri alma (kanıt defterine yazılır).
+authRouter.get("/marketing-consent", requireAuth, asyncHandler(getMarketingConsentController));
+authRouter.put("/marketing-consent", csrfOriginCheck, requireAuth, asyncHandler(setMarketingConsentController));
 authRouter.post("/change-password", requireAuth, asyncHandler(changePasswordPostController));
 authRouter.post("/set-password", requireAuth, asyncHandler(setInitialPasswordPostController));

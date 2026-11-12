@@ -61,6 +61,15 @@ export async function recordMarketingConsent(input: ConsentRecordInput): Promise
  * yanlış olur; bu yüzden metin değiştiğinde buradaki sürüm de artırılmalı ve
  * eski kayıtlar eski metinle kalmalıdır.
  */
+/**
+ * Hesap ayarlarındaki anahtarın yanında gösterilen metin. Ön yüzdeki
+ * `marketingConsentCopy` ile AYNI cümle olmalı; değişirse sürümü artır.
+ */
+export const SETTINGS_CONSENT_TEXT = {
+  tr: "v1 · Kampanya, ipucu ve yeniliklerden e-posta ile haberdar olmak istiyorum. (Hesap ayarlarından verildi.)",
+  en: "v1 · I'd like to receive emails about campaigns, tips and updates. (Given in account settings.)",
+} as const;
+
 export const SIGNUP_CONSENT_TEXT = {
   tr: "v1 · Kampanya, ipucu ve yeniliklerden e-posta ile haberdar olmak istiyorum. (İsteğe bağlı — istediğiniz zaman tek tıkla çıkabilirsiniz.)",
   en: "v1 · I'd like to receive emails about campaigns, tips and updates. (Optional — you can unsubscribe anytime with one click.)",
