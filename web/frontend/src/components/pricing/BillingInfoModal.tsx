@@ -413,7 +413,7 @@ export function BillingInfoModal({
         !form.taxOffice.trim()
       )
         return false;
-      if (!/^\d{10}$/.test(form.taxId.trim())) return false;
+      if (!/^\d{10,11}$/.test(form.taxId.trim())) return false;
     }
     if (
       isTurkish &&
@@ -679,7 +679,7 @@ export function BillingInfoModal({
                         className={inp}
                         type="text"
                         inputMode="numeric"
-                        maxLength={10}
+                        maxLength={11}
                         value={form.taxId}
                         onChange={(e) =>
                           setForm((p) => ({
@@ -687,7 +687,7 @@ export function BillingInfoModal({
                             taxId: e.target.value.replace(/\D/g, ""),
                           }))
                         }
-                        placeholder="10 haneli VKN"
+                        placeholder={tr ? "10 haneli VKN (şahıs işletmesi: 11 haneli T.C. Kimlik No)" : "10-digit tax ID (sole proprietors: 11-digit national ID)"}
                       />
                     </div>
                     <div>

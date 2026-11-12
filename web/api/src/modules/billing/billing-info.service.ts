@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { validateCorporateTaxId } from "../../lib/tax-id.js";
 import { encryptField, decryptField, maskTcNo } from "../../lib/encryption.js";
 import { missingInvoiceAddressFields } from "./invoice-address.js";
 
@@ -52,9 +53,8 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
   }
 
   if (input.invoiceType === "corporate" && input.taxId?.trim()) {
-    if (!/^\d{10}$/.test(input.taxId.trim())) {
-      throw new Error("Geçersiz Vergi Kimlik No formatı. 10 haneli olmalıdır.");
-    }
+    const taxIdError = validateCorporateTaxId(input.taxId);
+    if (taxIdError) throw new Error(taxIdError);
   }
 
   const missingAddress = missingInvoiceAddressFields(

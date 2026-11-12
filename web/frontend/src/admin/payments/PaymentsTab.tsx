@@ -13,6 +13,7 @@ import {
   type AdminRefundResult,
 } from "../../api/admin";
 import { ConfirmDialog, type ConfirmTone } from "./ConfirmDialog";
+import { PaymentsSummary } from "./PaymentsSummary";
 import { PaymentSwitches } from "./PaymentSwitches";
 
 /**
@@ -154,6 +155,8 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
       </div>
 
       <PaymentSwitches accessToken={accessToken} />
+
+      <PaymentsSummary accessToken={accessToken} />
 
       {notice && (
         <div

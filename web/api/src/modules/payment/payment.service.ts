@@ -2,6 +2,7 @@
  * YEDEK sağlayıcı — `PAYMENTS_PROVIDER=iyzico` ile seçilir (varsayılan paytr).
  * Do not add new features here. See `.cursor/plans/stripe-phase-1-systemmap_*.plan.md`.
  */
+import { invoicePaymentId, subscriptionInvoiceName } from "./invoice-labels.js";
 import { randomUUID } from "node:crypto";
 import { logger } from "../../lib/file-log.js";
 import type { User } from "@prisma/client";
@@ -968,9 +969,10 @@ export async function triggerInvoiceGeneration(
       "TRY";
 
     const invoicePayload = {
-      paymentId: String(
-        (retrieveResult as Record<string, unknown>).paymentId ??
-          checkout.conversationId,
+      // PayTR ödemesinde "paytr:<sipariş no>" gider; faturada sağlayıcı adı doğru yazılsın.
+      paymentId: invoicePaymentId(
+        checkout,
+        String((retrieveResult as Record<string, unknown>).paymentId ?? ""),
       ),
       status: "SUCCESS",
       customerCountry: countryCode,
@@ -1012,7 +1014,7 @@ export async function triggerInvoiceGeneration(
             }
           : {
               id: checkout.plan,
-              name: `PDF PLATFORM ${checkout.plan} Abonelik`,
+              name: subscriptionInvoiceName(checkout),
               category1: "Subscription",
               itemType: "VIRTUAL",
               price: actualPaidPrice,
@@ -1895,16 +1897,12 @@ async function triggerCreditNote(
     select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true, subscriptionDays: true, bonusAiCredits: true, cvPassHours: true },
   });
 
-  const planLabel = checkout?.plan ?? "PRO";
-  // billingCycle eski kayıtlarda MONTHLY default olabilir — subscriptionDays daha güvenilir
-  const isYearly = checkout?.billingCycle === "YEARLY" || (checkout?.subscriptionDays ?? 30) >= 365;
-  const billingLabel = isYearly ? "(1 yıl)" : "(1 ay)";
   // Top-up (ek AI) iadesi abonelik değil → kalem adı da öyle olmalı.
   const productName = checkout?.cvPassHours != null
     ? `${cvPassInvoiceLabel({ hours: checkout.cvPassHours })} İadesi`
     : checkout?.bonusAiCredits != null
     ? `Ek AI Hizmet Bedeli (${checkout.bonusAiCredits} kredi) İadesi`
-    : `PDF Platform ${planLabel} Abonelik ${billingLabel} İadesi`;
+    : `${subscriptionInvoiceName({ plan: checkout?.plan, billingCycle: checkout?.billingCycle, subscriptionDays: checkout?.subscriptionDays })} İadesi`;
 
   const paidPrice  = parseFloat(invoice.grossAmount);
   // kdvRate: eski kayıtlarda sütun migration ile 0.0 set edilmiş olabilir.
