@@ -2578,6 +2578,24 @@ textarea {
 }
 
 /* Metin ağırlıklı PDF uyarısı — beklentiyi baştan doğru kurar. */
+.selected-file-card__inspecting {
+  animation: selected-file-inspecting-blink 1.1s ease-in-out infinite;
+}
+@keyframes selected-file-inspecting-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .selected-file-card__inspecting {
+    animation: none;
+  }
+}
+
 .selected-file-card__compress-note {
   flex-basis: 100%;
   font-size: 11px;
