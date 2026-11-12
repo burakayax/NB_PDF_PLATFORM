@@ -2252,18 +2252,35 @@ def pdf_to_pdfa(
     except Exception as exc:  # kütüphane kurulu değil
         raise Exception("PDF/A dönüşümü bu sunucuda kullanılamıyor.") from exc
 
-    try:
-        sonuc = convert_to_pdfa(
-            Path(input_path),
-            Path(output_path),
-            surum,
-            publication_policy="always",
-        )
-    except Exception as exc:
-        raise Exception(
-            "Belge PDF/A biçimine dönüştürülemedi."
-            f" (Ayrıntı: {str(exc)[:200]})"
-        ) from exc
+    with tempfile.TemporaryDirectory() as gecici:
+        kaynak = Path(input_path)
+        # PDF/A şifrelemeye izin VERMEZ ve kütüphane şifreli belgeyi atlar. Açılış parolası
+        # istemeyen ama düzenleme/kopyalama kısıtı olan belgeler (çok yaygın) önce
+        # kısıtsız bir kopyaya çevrilir; Ghostscript bunu sessizce yapıyordu.
+        # Açılış parolası isteyen belgeyi çağıran taraf zaten çözmüş olmalıdır.
+        try:
+            import pikepdf
+
+            with pikepdf.open(str(kaynak)) as pdf:
+                if pdf.is_encrypted:
+                    cozulmus = Path(gecici) / "cozulmus.pdf"
+                    pdf.save(str(cozulmus), encryption=False)
+                    kaynak = cozulmus
+        except Exception:
+            pass  # açılamıyorsa özgün dosya kütüphaneye verilir; o kendi hatasını söyler
+
+        try:
+            sonuc = convert_to_pdfa(
+                kaynak,
+                Path(output_path),
+                surum,
+                publication_policy="always",
+            )
+        except Exception as exc:
+            raise Exception(
+                "Belge PDF/A biçimine dönüştürülemedi."
+                f" (Ayrıntı: {str(exc)[:200]})"
+            ) from exc
 
     # Kütüphane bazı durumlarda (ör. desteklenmeyen girdi) özgün dosyayı DEĞİŞTİRMEDEN
     # kopyalayıp başarı döner. Bu, kullanıcıya "PDF/A oldu" demek olurdu; reddediyoruz.
@@ -2275,6 +2292,8 @@ def pdf_to_pdfa(
         or os.path.getsize(output_path) < 64
     ):
         ayrinti = str(getattr(sonuc, "error", "") or "")[:200]
+        if not ayrinti and getattr(sonuc, "warnings", None):
+            ayrinti = str(sonuc.warnings[0])[:200]
         raise Exception(
             "Belge PDF/A biçimine dönüştürülemedi."
             + (f" (Ayrıntı: {ayrinti})" if ayrinti else "")

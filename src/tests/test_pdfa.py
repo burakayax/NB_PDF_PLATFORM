@@ -113,6 +113,25 @@ class PdfaGercekDonusumTest(unittest.TestCase):
                 ham = bytes(p.Root.Metadata.read_bytes()).decode("utf-8", "ignore")
             self.assertIn("pdfaid", ham)
 
+    def test_duzenleme_kisitli_belge_de_donusur(self):
+        # Açılış parolası istemeyen ama düzenleme/kopyalama kısıtlı (şifreli) belge:
+        # kütüphane bunu atlar; Ghostscript'siz geçişte kaybolan davranış geri getirildi.
+        import pikepdf
+
+        with tempfile.TemporaryDirectory() as d:
+            kaynak = os.path.join(d, "k.pdf")
+            cikti = os.path.join(d, "o.pdf")
+            pdf = pikepdf.new()
+            pdf.add_blank_page(page_size=(200, 200))
+            pdf.save(
+                kaynak,
+                encryption=pikepdf.Encryption(owner="sahip", user="", R=4),
+            )
+            bilgi = ptx.pdf_to_pdfa(kaynak, cikti, surum="2b")
+            self.assertEqual(bilgi["surum"], "2b")
+            with pikepdf.open(cikti) as p:
+                self.assertFalse(p.is_encrypted)
+
 
 if __name__ == "__main__":
     unittest.main()
