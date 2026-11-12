@@ -15,7 +15,7 @@ import { prisma } from "../../lib/prisma.js";
 import { logger } from "../../lib/file-log.js";
 
 /** Onayın/reddin hangi kanaldan geldiği. */
-export type ConsentSource = "signup" | "settings" | "unsubscribe_link" | "admin";
+export type ConsentSource = "signup" | "settings" | "unsubscribe_link" | "unsubscribe_page" | "admin";
 
 export type ConsentRecordInput = {
   userId: string;
