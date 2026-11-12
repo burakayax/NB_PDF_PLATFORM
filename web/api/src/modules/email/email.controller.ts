@@ -20,7 +20,7 @@ export async function unsubscribeController(req: Request, res: Response): Promis
 
   const title = ok ? "Abonelikten çıkarıldınız" : "Bağlantı geçersiz";
   const msg = ok
-    ? "Bundan sonra size tanıtım/pazarlama e-postası göndermeyeceğiz. İşlemsel e-postalar (hesap, fatura) gelmeye devam eder."
+    ? "Bundan sonra size tanıtım/pazarlama e-postası göndermeyeceğiz. İşlemsel e-postalar (hesap, fatura) gelmeye devam eder. Yanlışlıkla çıktıysanız, giriş yapıp Hesap ayarlarından tanıtım e-postası anahtarını yeniden açabilirsiniz."
     : "Abonelikten çıkış bağlantısı geçersiz ya da süresi dolmuş. Lütfen bize ulaşın.";
   res
     .status(200)
