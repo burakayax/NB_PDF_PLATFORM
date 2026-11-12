@@ -33,9 +33,9 @@ const BTN_ALT =
   "display:inline-block;padding:11px 22px;background:#fff;color:#1d4ed8;font-weight:700;font-size:14px;border:2px solid #1d4ed8;border-radius:10px;cursor:pointer;font-family:inherit;";
 
 /** "Yeniden abone ol" düğmesi — kendi formu; yalnız kullanıcının tıklamasıyla (POST) çalışır. */
-function resubscribeForm(token: string): string {
+function resubscribeForm(token: string, question = "Yanlışlıkla mı çıktınız?"): string {
   return `<form method="post" action="/api/email/unsubscribe/resubscribe" style="margin:22px 0 0;padding-top:20px;border-top:1px solid #e2e8f0;">
-    <p style="margin:0 0 10px;font-size:14px;color:#475569;">Yanlışlıkla mı çıktınız?</p>
+    <p style="margin:0 0 10px;font-size:14px;color:#475569;">${esc(question)}</p>
     <input type="hidden" name="token" value="${esc(token)}">
     <button type="submit" style="${BTN_ALT}">Yeniden abone ol</button>
   </form>`;
@@ -73,19 +73,34 @@ function feedbackForm(token: string): string {
  */
 export async function unsubscribeController(req: Request, res: Response): Promise<void> {
   const token = tokenOf(req);
-  const ok = await unsubscribeByToken(token, ctx(req));
+  const { status, hasReason } = await unsubscribeByToken(token, ctx(req));
 
   if (req.method === "POST") {
-    res.status(200).json({ ok });
+    res.status(200).json({ ok: status !== "invalid" });
     return;
   }
 
-  if (!ok) {
+  if (status === "invalid") {
     res.status(200).type("html").send(
       page(
         "Bağlantı geçersiz",
         `<h1 style="margin:0 0 12px;font-size:22px;color:#0f172a;">Bağlantı geçersiz</h1>
          <p style="margin:0;font-size:15px;line-height:1.7;color:#475569;">Abonelikten çıkış bağlantısı geçersiz ya da süresi dolmuş. Lütfen bize ulaşın.</p>${backLink()}`,
+      ),
+    );
+    return;
+  }
+
+  // Zaten listede değil: tekrar "çıkarıldınız" demek yanıltıcı olur. Durumu söyle,
+  // neden daha önce verilmediyse formu göster, "yeniden abone ol" seçeneğini sun.
+  if (status === "already") {
+    res.status(200).type("html").send(
+      page(
+        "Zaten listede değilsiniz",
+        `<h1 style="margin:0 0 12px;font-size:22px;color:#0f172a;">Zaten listede değilsiniz</h1>
+         <p style="margin:0;font-size:15px;line-height:1.7;color:#475569;">Bu e-posta adresi tanıtım/pazarlama e-postası listemizde değil, size tanıtım e-postası göndermiyoruz. İşlemsel e-postalar (hesap, fatura) gelmeye devam eder.</p>
+         ${hasReason ? "" : feedbackForm(token)}
+         ${resubscribeForm(token, "Tanıtım e-postalarını tekrar almak ister misiniz?")}`,
       ),
     );
     return;
@@ -106,7 +121,20 @@ export async function unsubscribeController(req: Request, res: Response): Promis
 export async function unsubscribeFeedbackController(req: Request, res: Response): Promise<void> {
   const token = tokenOf(req);
   const body = (req.body ?? {}) as { reason?: unknown; comment?: unknown };
-  const ok = await saveUnsubscribeFeedback(token, { reason: body.reason, comment: body.comment });
+  const result = await saveUnsubscribeFeedback(token, { reason: body.reason, comment: body.comment });
+  const ok = result === "ok";
+
+  if (result === "duplicate") {
+    res.status(200).type("html").send(
+      page(
+        "Geri bildiriminiz alındı",
+        `<h1 style="margin:0 0 12px;font-size:22px;color:#0f172a;">Geri bildiriminiz zaten alındı</h1>
+         <p style="margin:0;font-size:15px;line-height:1.7;color:#475569;">Daha önce gönderdiğiniz geri bildirim kayıtlı, teşekkür ederiz. Tanıtım e-postası listesinde değilsiniz.</p>
+         ${resubscribeForm(token)}${backLink()}`,
+      ),
+    );
+    return;
+  }
 
   res.status(ok ? 200 : 400).type("html").send(
     page(
@@ -123,7 +151,18 @@ export async function unsubscribeFeedbackController(req: Request, res: Response)
 
 /** "Yeniden abone ol": kullanıcının kendi tıklamasıyla tanıtım iznini geri açar. */
 export async function resubscribeController(req: Request, res: Response): Promise<void> {
-  const ok = await resubscribeByToken(tokenOf(req), ctx(req));
+  const result = await resubscribeByToken(tokenOf(req), ctx(req));
+  if (result === "already") {
+    res.status(200).type("html").send(
+      page(
+        "Zaten abonesiniz",
+        `<h1 style="margin:0 0 12px;font-size:22px;color:#0f172a;">Zaten abonesiniz</h1>
+         <p style="margin:0;font-size:15px;line-height:1.7;color:#475569;">Tanıtım e-postası aboneliğiniz zaten açık. İstediğiniz zaman her e-postanın altındaki bağlantıdan ya da Hesap ayarlarından çıkabilirsiniz.</p>${backLink()}`,
+      ),
+    );
+    return;
+  }
+  const ok = result === "done";
   res.status(ok ? 200 : 400).type("html").send(
     page(
       ok ? "Tekrar abone oldunuz" : "Bağlantı geçersiz",

@@ -47,17 +47,42 @@ export function unsubscribeUrlFor(userId: string): string {
  * Ret ANINDA işlenir. Mevzuat 3 iş günü sınırı koyuyor; beklemek için bir
  * sebep yok, gecikme yalnızca risk üretir.
  */
+export type UnsubscribeOutcome = {
+  /** invalid = token bozuk/kullanıcı yok; done = şimdi çıkarıldı; already = zaten listede değildi. */
+  status: "invalid" | "done" | "already";
+  /** Daha önce çıkış nedeni verilmiş mi (tekrar sormamak için). */
+  hasReason: boolean;
+};
+
+const REASON_PREFIX = "Ret nedeni:";
+
+async function latestOptOutRow(userId: string) {
+  return prisma.marketingConsentLog.findFirst({
+    where: { userId, granted: false, source: "unsubscribe_link" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, consentText: true },
+  });
+}
+
 export async function unsubscribeByToken(
   token: string,
   context?: { ip?: string | null; userAgent?: string | null },
-): Promise<boolean> {
+): Promise<UnsubscribeOutcome> {
   const userId = verifyUnsubscribeToken(token);
-  if (!userId) return false;
+  if (!userId) return { status: "invalid", hasReason: false };
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true },
+    select: { email: true, marketingConsent: true },
   });
+  if (!user) return { status: "invalid", hasReason: false };
+
+  // Zaten listede değilse tekrar işlem YAPMA: aynı bağlantıya art arda
+  // tıklamak (bot dahil) veritabanına yazı, deftere satır eklemesin.
+  if (!user.marketingConsent) {
+    const row = await latestOptOutRow(userId);
+    return { status: "already", hasReason: !!row?.consentText?.startsWith(REASON_PREFIX) };
+  }
 
   await prisma.user.updateMany({
     where: { id: userId },
@@ -66,7 +91,7 @@ export async function unsubscribeByToken(
 
   // Reddin işlendiğinin KANITI. "Çıktım ama e-posta gelmeye devam etti"
   // şikâyetinde tek savunma budur.
-  if (user?.email) {
+  if (user.email) {
     await recordMarketingConsent({
       userId,
       email: user.email,
@@ -77,7 +102,7 @@ export async function unsubscribeByToken(
     });
   }
 
-  return true;
+  return { status: "done", hasReason: false };
 }
 
 /** Çıkış sayfasında sorulan nedenler. Anahtar formdan gelir, etiket kayda ve e-postaya yazılır. */
@@ -109,27 +134,29 @@ const escapeHtml = (s: string) =>
 export async function saveUnsubscribeFeedback(
   token: string,
   input: { reason: unknown; comment: unknown },
-): Promise<boolean> {
+): Promise<"ok" | "invalid" | "duplicate"> {
   const userId = verifyUnsubscribeToken(token);
-  if (!userId || !isUnsubscribeReason(input.reason)) return false;
+  if (!userId || !isUnsubscribeReason(input.reason)) return "invalid";
 
   const label = UNSUBSCRIBE_REASONS[input.reason];
   const comment = typeof input.comment === "string" ? input.comment.trim().slice(0, 1000) : "";
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-  if (!user) return false;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, marketingConsent: true },
+  });
+  // Listede olan birinin "çıkış nedeni" olmaz.
+  if (!user || user.marketingConsent) return "invalid";
 
-  // Kanıt defterindeki en son çıkış satırına neden yazılır (migration gerektirmez).
+  // Her çıkış için TEK geri bildirim: ikincisi kaydedilmez, e-posta da gitmez
+  // (sayfayı art arda gönderen bot yönetici kutusunu dolduramasın).
   try {
-    const row = await prisma.marketingConsentLog.findFirst({
-      where: { userId, granted: false, source: "unsubscribe_link" },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
-    });
+    const row = await latestOptOutRow(userId);
+    if (row?.consentText?.startsWith(REASON_PREFIX)) return "duplicate";
     if (row) {
       await prisma.marketingConsentLog.update({
         where: { id: row.id },
-        data: { consentText: `Ret nedeni: ${label}${comment ? ` — ${comment}` : ""}` },
+        data: { consentText: `${REASON_PREFIX} ${label}${comment ? ` — ${comment}` : ""}` },
       });
     }
   } catch (err) {
@@ -152,7 +179,7 @@ export async function saveUnsubscribeFeedback(
   } catch (err) {
     logger.error("email-unsubscribe", "çıkış nedeni e-postası gönderilemedi", { detail: String(err) });
   }
-  return true;
+  return "ok";
 }
 
 /** Çıkış sayfasındaki "Yeniden abone ol" metni — kanıt defterine aynen yazılır. */
@@ -163,11 +190,16 @@ export const RESUBSCRIBE_CONSENT_TEXT =
 export async function resubscribeByToken(
   token: string,
   context?: { ip?: string | null; userAgent?: string | null },
-): Promise<boolean> {
+): Promise<"done" | "already" | "invalid"> {
   const userId = verifyUnsubscribeToken(token);
-  if (!userId) return false;
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-  if (!user) return false;
+  if (!userId) return "invalid";
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, marketingConsent: true },
+  });
+  if (!user) return "invalid";
+  // Zaten listedeyse tekrar yazma: deftere gereksiz onay satırı eklenmez.
+  if (user.marketingConsent) return "already";
 
   await prisma.user.update({
     where: { id: userId },
@@ -182,5 +214,5 @@ export async function resubscribeByToken(
     ip: context?.ip ?? null,
     userAgent: context?.userAgent ?? null,
   });
-  return true;
+  return "done";
 }
