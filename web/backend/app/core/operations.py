@@ -216,6 +216,49 @@ def cleanup_path(path: str | Path) -> None:
             logger.warning("cleanup_path: unlink başarısız: %s — %s", target, exc)
 
 
+# ---------------------------------------------------------------------------
+# AĞIR DÖNÜŞÜMLERDE SAYFA SINIRI
+#
+# Word ve PowerPoint dönüşümü sayfa başına ~1 sn sürer ve belleği sayfa sayısıyla
+# büyütür. Sunucu küçük (512 MB bellek, yarım işlemci): 3000+ sayfalık bir belge
+# dakikalarca çalışıp belleği doldurur, sunucu düşer ve sitedeki HERKES "PDF
+# sunucusuna ulaşılamadı" hatası alır. Bu yüzden iş başlamadan, açık bir mesajla
+# reddedilir. Sınırlar ortam değişkeniyle değiştirilebilir.
+# ---------------------------------------------------------------------------
+_AGIR_ISLEM_SAYFA_SINIRI = {
+    "pdf-to-word": ("NB_WORD_MAX_PAGES", 150, "Word'e dönüştürme"),
+    "pdf-to-ppt": ("NB_PPT_MAX_PAGES", 150, "PowerPoint'e dönüştürme"),
+}
+
+
+def ensure_page_limit(pdf_path: str | os.PathLike, password: str | None, tool: str) -> None:
+    """Belge sayfa sınırını aşıyorsa 413 ile açık bir mesaj verir (iş başlamadan).
+
+    Sayfa sayısı okunamazsa (ör. parola eksik) sessizce geçer; sonraki adımlar
+    kendi hatasını verir.
+    """
+    env_adi, varsayilan, ad = _AGIR_ISLEM_SAYFA_SINIRI[tool]
+    try:
+        limit = max(1, int(os.environ.get(env_adi, str(varsayilan))))
+    except ValueError:
+        limit = varsayilan
+    try:
+        from src.pdfcore import pdfium_page_count
+
+        sayfa = pdfium_page_count(str(pdf_path), (password or "").strip() or None)
+    except Exception:
+        return
+    if sayfa > limit:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"Bu belge {sayfa} sayfa. {ad} için en fazla {limit} sayfalık belgeler "
+                f"desteklenir; daha uzun belgeler sunucuyu aşırı yorar. Belgeyi "
+                f"«PDF Böl» aracıyla {limit} sayfalık parçalara ayırıp tekrar deneyin."
+            ),
+        )
+
+
 def cleanup_and_raise(
     workdir: Path,
     error: Exception,

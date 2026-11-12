@@ -24,6 +24,7 @@ from app.core.operations import (
     cleanup_and_raise,
     cleanup_path,
     create_workdir,
+    ensure_page_limit,
     format_derived_filename,
     parse_pages_text,
     save_upload,
@@ -1307,6 +1308,7 @@ async def tool_pdf_to_ppt(
         saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         _after_save_validate(saved, request, decision, file.filename)
         pwd = password.strip() or None
+        ensure_page_limit(saved, pwd, "pdf-to-ppt")
         sp = str(saved)
         user_id = await saas_current_user_id(token)
         out_n = format_derived_filename(file.filename or saved.name, "Sunum", "pptx")

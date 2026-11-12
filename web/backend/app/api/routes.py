@@ -29,6 +29,7 @@ from app.core.operations import (
     cleanup_and_raise,
     cleanup_path,
     create_workdir,
+    ensure_page_limit,
     create_zip_archive,
     download_response,
     format_split_page_filename,
@@ -568,6 +569,7 @@ async def pdf_to_word(
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         pwd = password.strip() or None
+        ensure_page_limit(saved_file, pwd, "pdf-to-word")
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
         output_path = workdir / output_name
@@ -779,6 +781,7 @@ async def pdf_to_word_start(
             client_ip="<from-route>",
         )
         pwd = password.strip() or None
+        ensure_page_limit(saved_file, pwd, "pdf-to-word")
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
         output_path = workdir / output_name
@@ -836,6 +839,7 @@ async def pdf_to_ppt_start(
             client_ip="<from-route>",
         )
         pwd = password.strip() or None
+        ensure_page_limit(saved_file, pwd, "pdf-to-ppt")
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Sunum", "pptx")
         output_path = workdir / output_name
