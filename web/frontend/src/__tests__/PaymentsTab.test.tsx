@@ -14,6 +14,7 @@ vi.mock("../api/admin", () => ({
 }));
 
 vi.mock("../admin/payments/PaymentSwitches", () => ({ PaymentSwitches: () => null }));
+vi.mock("../admin/payments/PaymentsSummary", () => ({ PaymentsSummary: () => null }));
 
 import { PaymentsTab } from "../admin/payments/PaymentsTab";
 

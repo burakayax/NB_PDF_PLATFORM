@@ -1,3 +1,4 @@
+import { invoicePaymentId } from "./invoice-labels.js";
 import { prisma } from "../../lib/prisma.js";
 import { env } from "../../config/env.js";
 import { sendMail } from "../../lib/mailer.js";
@@ -115,7 +116,7 @@ export async function reviewCardAtPayment(checkout: {
 const lateAlertSent = new Map<string, number>();
 
 function retrieveShim(c: CheckoutRow) {
-  return { paidPrice: c.priceTry, currency: c.paymentCurrency, paymentId: c.conversationId } as unknown;
+  return { paidPrice: c.priceTry, currency: c.paymentCurrency, paymentId: invoicePaymentId(c) } as unknown;
 }
 
 export type ProcessOutcome = "issued" | "cancelled" | "skipped_refunded" | "paused" | "failed" | "busy" | "not_found";

@@ -736,7 +736,8 @@ class BirFaturaProvider(BillingProviderBase):
         sup_email    = _esc(os.getenv("BIRFATURA_SUPPLIER_EMAIL", ""))
 
         ci = customer_info
-        cust_id_scheme = "VKN" if ci.tax_number else "TCKN"
+        # 10 haneli → VKN; 11 haneli vergi numarası (şahıs işletmesi, T.C. Kimlik No) → TCKN.
+        cust_id_scheme = "VKN" if (ci.tax_number and len(ci.tax_number.strip()) != 11) else "TCKN"
         # Yurt içi bireysel, TC girilmemiş → GİB standart 11 haneli placeholder
         cust_id_value  = _esc(ci.tax_number or ci.national_id or ("" if ci.is_export else "11111111111"))
         if ci.is_export and not (ci.tax_number or ci.national_id):

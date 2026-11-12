@@ -1766,6 +1766,41 @@ export async function fetchAdminCardListStatus(accessToken: string): Promise<Adm
   return (await res.json()) as AdminCardListStatus;
 }
 
+
+export type AdminSummaryGroup = "day" | "month" | "year";
+export type AdminSummaryRow = {
+  period: string;
+  paidCount: number;
+  paidTotal: number;
+  refundedCount: number;
+  refundedTotal: number;
+  netTotal: number;
+  kdvIssued: number;
+  kdvCredited: number;
+  kdvNet: number;
+  pendingKdvEstimate: number;
+  foreignCount: number;
+};
+export type AdminPaymentsSummary = {
+  group: AdminSummaryGroup;
+  from: string;
+  to: string;
+  rows: AdminSummaryRow[];
+  totals: AdminSummaryRow;
+  currentMonth: { period: string; kdvNet: number };
+  truncated: boolean;
+};
+
+export async function fetchAdminPaymentsSummary(
+  accessToken: string,
+  params: { from: string; to: string; group: AdminSummaryGroup },
+): Promise<AdminPaymentsSummary> {
+  const qs = new URLSearchParams({ from: params.from, to: params.to, group: params.group });
+  const res = await adminFetch(accessToken, `/payments/summary?${qs.toString()}`);
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "Özet tablosu okunamadı.");
+  return (await res.json()) as AdminPaymentsSummary;
+}
+
 export type AdminInvoiceAction = "AUTO" | "VAT" | "CANCEL" | "NOW" | "NOW_VAT";
 
 export async function postAdminInvoiceAction(
