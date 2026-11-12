@@ -5,7 +5,8 @@ import { planDefinitions } from "../modules/subscription/subscription.config.js"
 import { assertCommercialConsent } from "./commercial-email-gate.js";
 import { sendMail } from "./mailer.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
-import { emailT, type Locale } from "./email-i18n.js";
+import { emailT, greetingHtml, type Locale } from "./email-i18n.js";
+import { PLAN_LIMITS } from "./plan-catalogue.js";
 import { unsubscribeUrlFor } from "../modules/email/email-unsubscribe.service.js";
 import { emailUtm, withUtm } from "./utm.js";
 
@@ -181,22 +182,22 @@ export async function sendCheckoutRecoveryEmail(
   const name = escapeHtml(vars.name);
   const plan = escapeHtml(vars.planLabel);
 
-  const eyebrow = tr ? "Yükseltmen bekliyor" : "Your upgrade is waiting";
-  const title = tr ? "Bir adım kalmıştı" : "You were one step away";
+  const eyebrow = tr ? "Ödeme" : "Payment";
+  const title = tr ? "Plan geçişin tamamlanmadı" : "Your plan change was not completed";
   const intro = tr
-    ? `${plan} planına geçişini tamamlamadın — kaldığın yerden devam edebilirsin.`
-    : `You didn't finish upgrading to ${plan} — you can pick up right where you left off.`;
+    ? `${plan} planına geçişini tamamlamadın.`
+    : `You didn't finish switching to ${plan}.`;
   const p1 = tr
-    ? `${plan} planına geçişin neredeyse tamamdı; ödeme adımında yarıda kaldı. Hiçbir şey kaybolmadı — planını seçip birkaç saniyede tamamlayabilirsin.`
-    : `Your switch to ${plan} was almost done; it stopped at the payment step. Nothing is lost — pick your plan and finish in a few seconds.`;
+    ? `${plan} planına geçiş ödeme adımında yarıda kaldı; ödeme alınmadı. İstersen planlar sayfasından kaldığın yerden devam edebilirsin.`
+    : `Your switch to ${plan} stopped at the payment step; no payment was taken. If you wish, you can continue from the plans page.`;
   const p2 = tr
-    ? "Yükselttiğinde daha büyük dosyalar, daha fazla işlem ve yapay zekâ araçları anında açılır."
-    : "Once you upgrade, larger files, more operations and AI tools unlock instantly.";
-  const cta = tr ? "Yükseltmeyi tamamla" : "Complete your upgrade";
+    ? "Plan; dosya boyutu sınırını, aylık işlem hakkını ve yapay zekâ hakkını artırır. Ayrıntılar planlar sayfasındadır. Abonelik kendiliğinden yenilenmez."
+    : "A plan raises your file size limit, monthly operations and AI allowance. Details are on the plans page. Subscriptions never renew automatically.";
+  const cta = tr ? "Planlara dön" : "Back to plans";
 
   const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
   const bodyHtml = `
-    ${para(t.greeting(name))}
+    ${para(greetingHtml(locale, vars.name))}
     ${para(p1)}
     ${para(p2)}
     ${ctaButton(vars.ctaUrl, cta)}
@@ -211,7 +212,7 @@ export async function sendCheckoutRecoveryEmail(
     unsubscribeUrl,
   });
   const subject = commercialSubject(
-    tr ? `${vars.planLabel} yükseltmen yarım kaldı` : `Your ${vars.planLabel} upgrade is unfinished`,
+    tr ? `${vars.planLabel} plan geçişin tamamlanmadı` : `Your ${vars.planLabel} plan change was not completed`,
     locale,
   );
   await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${vars.ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
@@ -239,20 +240,28 @@ export async function sendLimitReachedEmail(
   const tr = locale === "tr";
   const name = escapeHtml(vars.name);
 
-  const eyebrow = tr ? "Limitine ulaştın" : "You hit your limit";
-  const title = tr ? "Bu ay için hakkın doldu 🚀" : "You're out for this month 🚀";
+  const F = PLAN_LIMITS.FREE;
+  const S = PLAN_LIMITS.STARTER;
+  const P = PLAN_LIMITS.PLUS;
+  const R = PLAN_LIMITS.PRO;
+  const eyebrow = tr ? "Aylık hak" : "Monthly allowance";
+  const title = tr ? "Bu ayki ücretsiz hakkın doldu" : "Your free allowance for this month is used";
   const intro = tr
-    ? "Ücretsiz aylık işlem hakkını kullandın — belli ki işine yarıyor."
-    : "You've used your free monthly operations — clearly it's working for you.";
+    ? `Ücretsiz hesaptaki aylık ${F.monthlyOperationLimit} sunucu işlemini kullandın.`
+    : `You've used the ${F.monthlyOperationLimit} monthly server operations of a free account.`;
   const p1 = tr
-    ? "Beklemek zorunda değilsin: yükselttiğinde günlük/aylık limit kalkar, daha büyük dosyalar ve yapay zekâ araçları da anında açılır."
-    : "No need to wait: upgrading removes the daily/monthly cap and instantly unlocks larger files and AI tools.";
-  const cta = tr ? "Limitsize geç" : "Go unlimited";
+    ? "Hakkın yeni ayda yenilenir. Cihazında çalışan araçlar (birleştirme, bölme, döndürme, sayfa silme ve sıralama, görselden PDF) hak tüketmez; onları kullanmaya devam edebilirsin."
+    : "Your allowance renews next month. Tools that run on your device (merge, split, rotate, delete and reorder pages, image to PDF) use no allowance, so you can keep using them.";
+  const p2 = tr
+    ? `Daha fazla sunucu işlemi gerekiyorsa: Başlangıç ayda ${S.monthlyOperationLimit.toLocaleString("tr-TR")}, Plus ayda ${P.monthlyOperationLimit.toLocaleString("tr-TR")}, Pro ayda ${R.monthlyOperationLimit.toLocaleString("tr-TR")} işlem verir; Plus ve üzerinde günlük sınır yoktur. Abonelik kendiliğinden yenilenmez.`
+    : `If you need more server operations: Starter gives ${S.monthlyOperationLimit.toLocaleString("en-US")}, Plus ${P.monthlyOperationLimit.toLocaleString("en-US")}, Pro ${R.monthlyOperationLimit.toLocaleString("en-US")} a month; Plus and above have no daily limit. Subscriptions never renew automatically.`;
+  const cta = tr ? "Planları gör" : "View plans";
 
   const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
   const bodyHtml = `
-    ${para(t.greeting(name))}
+    ${para(greetingHtml(locale, vars.name))}
     ${para(p1)}
+    ${para(p2)}
     ${ctaButton(vars.ctaUrl, cta)}
   `;
   const html = renderCorporateEmail({
@@ -265,7 +274,7 @@ export async function sendLimitReachedEmail(
     unsubscribeUrl,
   });
   const subject = commercialSubject(
-    tr ? "Aylık ücretsiz hakkın doldu — limitsize geç" : "Your free monthly quota is used up — go unlimited",
+    tr ? "Aylık ücretsiz işlem hakkın doldu" : "Your free monthly allowance is used up",
     locale,
   );
   await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${vars.ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });

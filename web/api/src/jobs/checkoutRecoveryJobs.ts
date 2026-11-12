@@ -113,7 +113,7 @@ async function runCheckoutRecovery(): Promise<void> {
     const planLabel = locale === "tr" ? label.tr : label.en;
     const origin = env.FRONTEND_ORIGIN.replace(/\/$/, "");
     const ctaUrl = withUtm(`${origin}/workspace?upgrade=1`, emailUtm("odeme-hatirlatma"));
-    const name = (u.firstName || u.name || (locale === "tr" ? "Merhaba" : "there")).trim();
+    const name = (u.firstName || u.name || "").trim();
 
     try {
       await sendCheckoutRecoveryEmail(u.email, { name, userId: r.userId, checkoutId: r.id, planLabel, ctaUrl, locale });
