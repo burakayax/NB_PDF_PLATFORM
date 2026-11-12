@@ -34,7 +34,7 @@ export const SITE_SETTING_KEYS = {
   EDITOR_LIMITS: "editor.limits",
   /**
    * Ticari e-postalarda görünen gönderen kimliği: JSON
-   * { legalName, entityType, mersisNo, tckn, phone, contactEmail, postalAddress }
+   * { legalName, entityType, mersisNo, taxNo, phone, contactEmail, postalAddress }
    * Ticari İletişim Yönetmeliği md.7 gereği zorunlu; eksikse gönderim durur.
    */
   EMAIL_SENDER_IDENTITY: "email.senderIdentity",

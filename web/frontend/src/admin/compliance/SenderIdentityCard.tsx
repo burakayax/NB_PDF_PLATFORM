@@ -27,7 +27,7 @@ type Identity = {
   legalName: string;
   entityType: "company" | "sole";
   mersisNo: string;
-  tckn: string;
+  taxNo: string;
   phone: string;
   contactEmail: string;
   postalAddress: string;
@@ -37,7 +37,7 @@ const EMPTY: Identity = {
   legalName: "",
   entityType: "sole",
   mersisNo: "",
-  tckn: "",
+  taxNo: "",
   phone: "",
   contactEmail: "",
   postalAddress: "",
@@ -192,7 +192,7 @@ export function SenderIdentityCard({ accessToken }: { accessToken: string }) {
         <p className="mt-1.5 text-xs text-slate-500">
           {isCompany
             ? "Şirketler için ticaret unvanı ve MERSİS numarası zorunlu."
-            : "Şahıs firmaları için ad soyad ve T.C. kimlik numarası zorunlu."}
+            : "Şahıs firmaları için ad soyad ve vergi kimlik numarası zorunlu."}
         </p>
       </div>
 
@@ -226,15 +226,15 @@ export function SenderIdentityCard({ accessToken }: { accessToken: string }) {
           </div>
         ) : (
           <div>
-            <label className={LABEL} htmlFor="si-tckn">
-              T.C. kimlik numarası
+            <label className={LABEL} htmlFor="si-taxNo">
+              Vergi kimlik numarası
             </label>
             <input
-              id="si-tckn"
+              id="si-taxNo"
               className={`${INPUT} mt-1.5`}
-              value={form.tckn}
-              onChange={(e) => set("tckn", e.target.value)}
-              placeholder="11 haneli kimlik numarası"
+              value={form.taxNo}
+              onChange={(e) => set("taxNo", e.target.value)}
+              placeholder="Vergi kimlik numarası"
               inputMode="numeric"
             />
           </div>
