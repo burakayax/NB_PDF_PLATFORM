@@ -11,6 +11,7 @@ import {
 } from "../modules/email/sender-identity.service.js";
 import type { Locale } from "../lib/email-i18n.js";
 import { emailUtm, withUtm } from "../lib/utm.js";
+import { arePaymentsEnabled } from "../modules/payment/payments-gate.middleware.js";
 import { PLAN_LIMITS } from "../lib/plan-catalogue.js";
 
 /**
@@ -47,6 +48,12 @@ async function runLimitReachedEmail(): Promise<void> {
   const missingIdentity = missingSenderIdentityFields();
   if (missingIdentity.length > 0) {
     logger.warn("limit-reached", `otomasyon atlandı — gönderen kimlik bilgileri eksik: ${missingIdentity.join(", ")}`);
+    return;
+  }
+
+  // DÜRÜSTLÜK: Ödemeler kapalıyken "planları gör" diyen e-posta gönderilmez.
+  if (!(await arePaymentsEnabled())) {
+    logger.info("limit-reached", "atlandı: ödemeler kapalı (yükseltme çağrısı yapılamaz)");
     return;
   }
 
@@ -88,7 +95,7 @@ async function runLimitReachedEmail(): Promise<void> {
       if (already) continue;
 
       const locale: Locale = u.preferredLanguage === "tr" ? "tr" : "en";
-      const name = (u.firstName || u.name || (locale === "tr" ? "Merhaba" : "there")).trim();
+      const name = (u.firstName || u.name || "").trim();
       const ctaUrl = withUtm(`${origin}/workspace?upgrade=1`, emailUtm("limit-doldu"));
       try {
         await sendLimitReachedEmail(u.email, { name, userId: u.id, periodKey, ctaUrl, locale });

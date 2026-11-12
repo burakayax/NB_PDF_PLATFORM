@@ -5,6 +5,7 @@ import { logError } from "../lib/app-logger.js";
 import { logger } from "../lib/file-log.js";
 import { readEmailAutomationConfig } from "../modules/marketing/email-automation.js";
 import { seedDefaultCampaigns, sendCampaignToUser } from "../modules/email/emailCampaign.service.js";
+import { arePaymentsEnabled } from "../modules/payment/payments-gate.middleware.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
 import {
   CommercialConsentError,
@@ -52,7 +53,18 @@ async function alreadySent(userId: string, campaignId: string): Promise<boolean>
   return existing != null;
 }
 
+/** Plan satın almaya yönlendiren kampanya mı? (yükseltme bağlantısı ya da kupon taşır) */
+function promotesPaidPlans(c: EmailCampaign): boolean {
+  return /upgrade/i.test(c.ctaUrl ?? "") || Boolean((c.couponCode ?? "").trim());
+}
+
 async function runCampaign(c: EmailCampaign): Promise<void> {
+  // DÜRÜSTLÜK: Ödemeler kapalıyken "planları gör / yükselt" diyen e-posta gönderilmez —
+  // kullanıcı satın alamayacağı bir şeye yönlendirilmiş olur.
+  if (promotesPaidPlans(c) && !(await arePaymentsEnabled())) {
+    logger.info("lifecycle", `campaign "${c.name}" atlandı: ödemeler kapalı (yükseltme çağrısı yapılamaz)`);
+    return;
+  }
   const { start, end } = dayWindow(c.triggerDays);
   const users = await prisma.user.findMany({
     where: {

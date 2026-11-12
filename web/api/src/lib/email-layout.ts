@@ -71,11 +71,13 @@ export const EMAIL_COLORS = {
   muted: "#64748b",
   faint: "#94a3b8",
   line: "#e2e8f0",
-  page: "#f1f5f9",
+  page: "#e8eef7",
   soft: "#f8fafc",
-  brand: "#4338ca",
-  brandDark: "#312e81",
-  brandSoft: "#eef2ff",
+  brand: "#1d4ed8",
+  brandDark: "#1e3a8a",
+  brandSoft: "#eff6ff",
+  /** Ana eylem düğmesi — mavi zeminde en çok göze çarpan renk. */
+  accent: "#ea580c",
   ok: "#047857",
 } as const;
 
@@ -105,8 +107,8 @@ export function renderCorporateEmail({
   const c = EMAIL_COLORS;
 
   const logoImg = resolvedLogo
-    ? `<img src="${resolvedLogo}" width="40" height="40" alt="${productName}" style="display:block;width:40px;height:40px;border:0;border-radius:9px;" />`
-    : `<div style="width:40px;height:40px;border-radius:9px;background:${c.brand};text-align:center;line-height:40px;font-size:11px;font-weight:700;letter-spacing:0.06em;color:#ffffff;">PDF</div>`;
+    ? `<img src="${resolvedLogo}" width="44" height="44" alt="${productName}" style="display:block;width:44px;height:44px;border:0;border-radius:11px;background:#ffffff;" />`
+    : `<div style="width:44px;height:44px;border-radius:11px;background:#ffffff;text-align:center;line-height:44px;font-size:12px;font-weight:700;letter-spacing:0.06em;color:${c.brand};">PDF</div>`;
 
   // Fiziksel posta adresi — CAN-SPAM (ABD) ve CASL (Kanada) tanıtım e-postalarında
   // ZORUNLU. Yönetim panelinden girilir; boşsa satır gizlenir (ve ticari gönderim
@@ -129,7 +131,7 @@ export function renderCorporateEmail({
     : "";
 
   const unsubscribeLine = unsubscribeUrl
-    ? `<div style="margin-top:12px;font-size:11px;line-height:1.6;color:${c.faint};">Bu bir tanıtım e-postasıdır. <a href="${unsubscribeUrl}" style="color:${c.muted};text-decoration:underline;">E-posta aboneliğinden çık</a>.</div>${identityLine}${addressLine}`
+    ? `<div style="margin-top:12px;font-size:12px;line-height:1.6;color:${c.muted};">Bu bir tanıtım e-postasıdır. <a href="${unsubscribeUrl}" style="color:${c.brand};font-weight:700;text-decoration:underline;">E-posta aboneliğinden çık</a>.</div>${identityLine}${addressLine}`
     : "";
 
   const preheaderHtml = preheader
@@ -158,59 +160,49 @@ export function renderCorporateEmail({
 ${preheaderHtml}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${c.page};border-collapse:collapse;">
   <tr>
-    <td align="center" style="padding:32px 12px;">
+    <td align="center" style="padding:28px 12px;">
 
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
-        style="max-width:600px;width:100%;background:#ffffff;border:1px solid ${c.line};border-radius:12px;border-collapse:separate;overflow:hidden;">
+        style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;border-collapse:separate;overflow:hidden;">
 
-        <!-- Marka şeridi -->
-        <tr><td style="height:4px;background-color:${c.brand};font-size:0;line-height:0;">&nbsp;</td></tr>
-
-        <!-- Üst bilgi: logo + marka -->
+        <!-- Üst bant: marka + başlık (mavi zemin; gradyan desteklemeyen istemcide düz mavi) -->
         <tr>
-          <td style="padding:24px 36px 18px;border-bottom:1px solid ${c.line};">
+          <td bgcolor="${c.brand}" style="background-color:${c.brand};background-image:linear-gradient(135deg,${c.brandDark} 0%,${c.brand} 55%,#4f46e5 100%);padding:26px 36px 34px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="vertical-align:middle;width:52px;">
+                <td style="vertical-align:middle;width:56px;">
                   <a href="${siteUrl}" target="_blank" style="text-decoration:none;">${logoImg}</a>
                 </td>
                 <td style="vertical-align:middle;">
                   <a href="${siteUrl}" target="_blank" style="text-decoration:none;">
-                    <div style="font-family:${FONT};font-size:16px;font-weight:700;color:${c.ink};letter-spacing:0.01em;">${productName}</div>
+                    <div style="font-family:${FONT};font-size:17px;font-weight:800;color:#ffffff;letter-spacing:0.02em;">${productName}</div>
                   </a>
-                  <div style="font-family:${FONT};font-size:12px;color:${c.muted};margin-top:2px;">Belge çözümleri · NB Global Studio</div>
                 </td>
                 <td align="right" style="vertical-align:middle;">
-                  <span style="display:inline-block;padding:5px 10px;border:1px solid ${c.line};border-radius:999px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${c.brand};">${eyebrow}</span>
+                  <span style="display:inline-block;padding:5px 11px;border:1px solid #93c5fd;border-radius:999px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#dbeafe;">${eyebrow}</span>
                 </td>
               </tr>
             </table>
-          </td>
-        </tr>
-
-        <!-- Başlık -->
-        <tr>
-          <td style="padding:32px 36px 8px;">
-            <h1 style="margin:0 0 12px;font-family:${FONT};font-size:26px;font-weight:700;line-height:1.25;color:${c.ink};">${title}</h1>
-            <p style="margin:0;font-family:${FONT};font-size:16px;line-height:1.65;color:${c.muted};">${intro}</p>
+            <h1 style="margin:28px 0 10px;font-family:${FONT};font-size:28px;font-weight:800;line-height:1.2;color:#ffffff;">${title}</h1>
+            <p style="margin:0;font-family:${FONT};font-size:16px;line-height:1.6;color:#dbeafe;">${intro}</p>
           </td>
         </tr>
 
         <!-- İçerik -->
         <tr>
-          <td style="padding:16px 36px 36px;font-family:${FONT};">
+          <td style="padding:30px 36px 38px;font-family:${FONT};">
             ${bodyHtml}
           </td>
         </tr>
 
         <!-- Alt bilgi -->
         <tr>
-          <td style="padding:24px 36px 28px;border-top:1px solid ${c.line};background-color:${c.soft};">
+          <td style="padding:22px 36px 26px;border-top:1px solid ${c.line};background-color:${c.soft};">
             <div style="font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.06em;color:${c.body};">NB GLOBAL STUDIO</div>
-            <div style="margin-top:6px;font-family:${FONT};font-size:12px;line-height:1.6;color:${c.muted};">${footerText}</div>
-            <div style="margin-top:12px;font-family:${FONT};font-size:12px;line-height:1.6;">${legalLinks}</div>
+            <div style="margin-top:4px;font-family:${FONT};font-size:12px;line-height:1.6;color:${c.muted};">${footerText}</div>
+            <div style="margin-top:10px;font-family:${FONT};font-size:12px;line-height:1.6;">${legalLinks}</div>
             ${unsubscribeLine}
-            <div style="margin-top:14px;font-family:${FONT};font-size:11px;line-height:1.5;color:${c.faint};">Bu e-posta otomatik olarak oluşturulmuştur. © ${new Date().getFullYear()} ${productName}</div>
+            <div style="margin-top:12px;font-family:${FONT};font-size:11px;line-height:1.5;color:${c.faint};">© ${new Date().getFullYear()} ${productName} · NB Global Studio</div>
           </td>
         </tr>
 
@@ -226,15 +218,15 @@ ${preheaderHtml}
 
 /**
  * Ana eylem düğmesi — "bulletproof": arka plan renkli tablo hücresinde, bu yüzden görsel engellense ya da
- * Outlook gibi CSS'i kısıtlayan istemcilerde de düğme görünür kalır. Tek vurgu rengi (marka indigo).
+ * Outlook gibi CSS'i kısıtlayan istemcilerde de düğme görünür kalır. Düğme turuncu (vurgu), üst bant mavi (marka).
  */
 export function ctaButton(url: string, label: string): string {
   const c = EMAIL_COLORS;
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 6px;">
     <tr>
-      <td align="center" bgcolor="${c.brand}" style="background-color:${c.brand};border-radius:8px;">
+      <td align="center" bgcolor="${c.accent}" style="background-color:${c.accent};border-radius:10px;">
         <a href="${url}" target="_blank"
-          style="display:inline-block;padding:14px 30px;font-family:${FONT};font-size:15px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:8px;">${label}</a>
+          style="display:inline-block;padding:15px 32px;font-family:${FONT};font-size:16px;font-weight:800;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px;">${label} &rarr;</a>
       </td>
     </tr>
   </table>`;
@@ -297,4 +289,33 @@ export function sectionTitle(text: string): string {
 /** Normal gövde paragrafı. */
 export function para(html: string): string {
   return `<p style="margin:0 0 14px;font-family:${FONT};font-size:15px;line-height:1.75;color:${EMAIL_COLORS.body};">${html}</p>`;
+}
+
+/**
+ * Numaralı özellik satırları — "araç + ne işe yarar + koşulu" listeleri için.
+ * Her satır: renkli numara rozeti, kalın başlık, altında açıklama. Düz tablo + satır içi CSS.
+ */
+export function featureRows(items: ReadonlyArray<{ title: string; text: string }>): string {
+  const c = EMAIL_COLORS;
+  const tints: ReadonlyArray<[string, string]> = [
+    ["#dbeafe", "#1d4ed8"],
+    ["#e0e7ff", "#4338ca"],
+    ["#ffedd5", "#c2410c"],
+  ];
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:8px 0 6px;">
+    ${items
+      .map((it, i) => {
+        const [bg, fg] = tints[i % tints.length];
+        return `<tr>
+      <td style="width:46px;padding:10px 0;vertical-align:top;">
+        <div style="width:34px;height:34px;border-radius:10px;background-color:${bg};text-align:center;line-height:34px;font-family:${FONT};font-size:15px;font-weight:800;color:${fg};">${i + 1}</div>
+      </td>
+      <td style="padding:10px 0;vertical-align:top;border-bottom:1px solid ${c.line};">
+        <div style="font-family:${FONT};font-size:16px;font-weight:700;line-height:1.35;color:${c.ink};">${it.title}</div>
+        <div style="margin-top:3px;font-family:${FONT};font-size:14px;line-height:1.65;color:${c.body};">${it.text}</div>
+      </td>
+    </tr>`;
+      })
+      .join("")}
+  </table>`;
 }

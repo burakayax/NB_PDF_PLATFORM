@@ -49,29 +49,29 @@ export const emailT = {
       },
       value: {
         eyebrow: "Yükseltme",
-        title: "Belgelerinizi yapay zekâyla konuşturun",
-        intro: "Cihazınızdaki araçlar sınırsız — asıl zaman kazancı yapay zekâda.",
-        body: "Hesabınıza tanımlanan ücretsiz yapay zekâ işlemleriniz bittiyse, Pro ile devam edebilirsiniz:",
+        title: "Yapay zekâ araçları hakkında",
+        intro: "Yapay zekâ araçları ücretlidir; koşulları aşağıda.",
+        body: "Yapay zekâ araçları için Başlangıç ya da üzeri bir plan veya satın alınmış kredi gerekir. Ücretsiz hesaba kayıtta bir kez tanımlanan hediye işlemler bittiyse devam etmek için plan seçebilirsin:",
         bullets: [
-          `<strong>Ayda ${AI_MONTHLY_CREDITS.PRO} yapay zekâ işlemi</strong> — uzun sözleşme ve raporları saniyeler içinde özetleyin`,
-          "<strong>Veri Çıkar</strong> — fatura ve tablolardan Excel'e hazır veri",
-          "<strong>Çeviri & Karşılaştırma</strong> — belgeleri çevirin, iki sürümün farkını bulun",
-          "<strong>Günlük işlem sınırı yok</strong>, toplu işlem, daha büyük dosyalar ve API erişimi",
+          `<strong>Pro: ayda ${AI_MONTHLY_CREDITS.PRO} yapay zekâ işlemi</strong> (Başlangıç ${AI_MONTHLY_CREDITS.STARTER}, Plus ${AI_MONTHLY_CREDITS.PLUS})`,
+          "<strong>Yapay zekâ araçları:</strong> PDF Özetle, Sohbet, Çeviri, Karşılaştırma, Veri Çıkar",
+          "<strong>Plus ve üzeri:</strong> günlük işlem sınırı yok",
+          "<strong>Toplu işlem ve API erişimi</strong> Pro ve üzeri planlardadır",
         ],
         cta: "Planları gör",
         footer: "Aboneliğiniz kendiliğinden yenilenmez.",
-        subject: (product: string) => `${product} ile belgelerde yapay zekânın gücü`,
+        subject: (product: string) => `${product} — yapay zekâ araçları ve planlar`,
       },
       winback: {
         eyebrow: "Size özel",
-        title: "Geri dönmeniz için küçük bir teşvik",
-        intro: "Hâlâ ücretsiz plandasınız — belki doğru an şimdidir.",
-        body: "Yükseltmeyi düşünüyorsanız, bu size özel indirim tam zamanı. PDF özetleme, faturadan veri çıkarma, çeviri ve toplu işlem — yapay zekâ araçlarının tamamı sizi bekliyor.",
+        title: "Plan seçenekleri",
+        intro: "Ücretsiz hesabın böyle kalabilir; ihtiyacın artarsa seçenekler var.",
+        body: "Ücretsiz hesapta cihazında çalışan araçlar sınırsızdır. Daha fazla sunucu işlemi ya da yapay zekâ araçları gerekirse planlara bakabilirsin.",
         bullets: undefined as string[] | undefined,
         couponLabel: "İndirim kodunuz",
         cta: "İndirimi kullan",
-        footer: "Bu teklif sınırlı süre geçerlidir. Aboneliğiniz kendiliğinden yenilenmez.",
-        subject: (product: string) => `${product} — size özel indirim hazır`,
+        footer: "Aboneliğiniz kendiliğinden yenilenmez.",
+        subject: (product: string) => `${product} — plan seçenekleri`,
       },
     },
 
@@ -160,29 +160,29 @@ export const emailT = {
       },
       value: {
         eyebrow: "Upgrade",
-        title: "Put AI to work on your documents",
-        intro: "The tools on your device are unlimited — the real time-saver is AI.",
-        body: "If you have used the free AI operations on your account, you can continue with Pro:",
+        title: "About the AI tools",
+        intro: "AI tools are paid; the conditions are below.",
+        body: "AI tools need a Starter-or-higher plan or purchased credits. If the free operations given once at sign-up are used up, you can pick a plan to continue:",
         bullets: [
-          `<strong>${AI_MONTHLY_CREDITS.PRO} AI operations a month</strong> — long contracts and reports summarized in seconds`,
-          "<strong>Extract Data</strong> — invoices and tables straight into Excel",
-          "<strong>Translate & Compare</strong> — translate docs, diff two versions",
-          "<strong>No daily limit</strong>, batch processing, larger files and API access",
+          `<strong>Pro: ${AI_MONTHLY_CREDITS.PRO} AI operations a month</strong> (Starter ${AI_MONTHLY_CREDITS.STARTER}, Plus ${AI_MONTHLY_CREDITS.PLUS})`,
+          "<strong>AI tools:</strong> Summarize, Chat, Translate, Compare, Extract Data",
+          "<strong>Plus and above:</strong> no daily limit",
+          "<strong>Batch processing and API access</strong> are on Pro and above",
         ],
         cta: "View plans",
         footer: "Subscriptions never renew automatically.",
-        subject: (product: string) => `The power of AI on your documents with ${product}`,
+        subject: (product: string) => `${product} — AI tools and plans`,
       },
       winback: {
         eyebrow: "Just for you",
-        title: "A little nudge to come back",
-        intro: "You're still on the free plan — maybe now is the right time.",
-        body: "If you've been thinking about upgrading, this discount is perfect timing. PDF summarization, data extraction from invoices, translation and batch processing — the full AI toolkit is waiting.",
+        title: "Plan options",
+        intro: "Your free account can stay as it is; options are here if your needs grow.",
+        body: "On a free account the tools that run on your device are unlimited. If you need more server operations or the AI tools, you can look at the plans.",
         bullets: undefined as string[] | undefined,
         couponLabel: "Your discount code",
         cta: "Use the discount",
-        footer: "This offer is valid for a limited time. Subscriptions never renew automatically.",
-        subject: (product: string) => `${product} — your personal discount is ready`,
+        footer: "Subscriptions never renew automatically.",
+        subject: (product: string) => `${product} — plan options`,
       },
     },
 
@@ -227,3 +227,15 @@ export const emailT = {
 } as const;
 
 export type EmailTranslations = typeof emailT.tr;
+
+/**
+ * Karşılama satırı. Ad bilinmiyorsa "Merhaba Merhaba," gibi saçma bir çıktı üretmemek için
+ * yalnızca "Merhaba," yazar. (Çağıranlar ad yoksa boş ya da eski yedek değerleri verebilir.)
+ */
+export function greetingHtml(locale: Locale, name: string | null | undefined): string {
+  const n = (name ?? "").trim();
+  const placeholder = n === "" || n === "Merhaba" || n === "there";
+  if (placeholder) return locale === "tr" ? "Merhaba," : "Hi,";
+  const safe = n.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return emailT[locale].greeting(safe);
+}
