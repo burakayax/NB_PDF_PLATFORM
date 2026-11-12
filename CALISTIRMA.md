@@ -143,6 +143,6 @@ Tarayıcı: **http://localhost:5173**
 
 - **PDF API (Uvicorn):** Uzun süren işlemler ve yavaş istemciler için `PDF_UVICORN_TIMEOUT_KEEP_ALIVE` ortam değişkeni ile `--timeout-keep-alive` ayarlanır (varsayılan **120** saniye). Örnek: `PDF_UVICORN_TIMEOUT_KEEP_ALIVE=300`.
 - **Ters vekil (Nginx vb.):** Üretimde `proxy_read_timeout` / `proxy_send_timeout` değerlerini (ör. **600s**) büyük dosyalar ve sıkıştırma süresine göre yükseltin; aksi halde 502/504 görülebilir.
-- **Ghostscript:** Daha agresif sıkıştırma için sistemde `gs` veya Windows’ta `gswin64c` kurulu olmalıdır; yoksa pikepdf yolu kullanılmaya devam eder.
+- **PDF/A:** `pip install --no-deps pdftopdfa==0.10.0` ayrıca kurulmalıdır (Ghostscript artık kullanılmıyor).
 
 Daha genel kurulum için bkz. **SETUP.md** ve **web/README.md**.

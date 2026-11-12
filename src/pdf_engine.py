@@ -2904,95 +2904,6 @@ def _tool_subprocess_timeout_sec() -> int:
     return max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "60")))
 
 
-def _resolve_ghostscript_executable() -> Optional[str]:
-    """Windows'ta önce ``gswin64c``; ortam: ``NB_GHOSTSCRIPT_EXE`` tam yol."""
-    override = (os.environ.get("NB_GHOSTSCRIPT_EXE") or "").strip()
-    if override and os.path.isfile(override):
-        return override
-    if platform.system() == "Windows":
-        for cand in (shutil.which("gswin64c"), shutil.which("gswin32c"), shutil.which("gs")):
-            if cand:
-                return cand
-        for pf_key in ("ProgramFiles", "ProgramFiles(x86)"):
-            pf = os.environ.get(pf_key, "")
-            if not pf:
-                continue
-            gs_root = os.path.join(pf, "gs")
-            if not os.path.isdir(gs_root):
-                continue
-            for ver in sorted(os.listdir(gs_root), reverse=True):
-                for exe_name in ("gswin64c.exe", "gswin32c.exe"):
-                    p = os.path.join(gs_root, ver, "bin", exe_name)
-                    if os.path.isfile(p):
-                        return p
-    w = shutil.which("gs")
-    return w
-
-
-def _ghostscript_compress_to_path(
-    input_path: str,
-    output_path: str,
-    *,
-    pdfsettings: str,
-    password: str,
-    timeout_sec: int,
-    dpi_override: Optional[int] = None,
-) -> bool:
-    """Ghostscript pdfwrite ile sıkıştırma; başarıda ``output_path`` yazar."""
-    exe = _resolve_ghostscript_executable()
-    if not exe:
-        return False
-    src_abs = os.path.abspath(input_path)
-    out_abs = os.path.abspath(output_path)
-    out_dir = os.path.dirname(out_abs) or "."
-    fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
-    os.close(fd)
-    tmp_keep: Optional[str] = tmp_out
-    try:
-        dpi_map = {"/printer": 300, "/ebook": 150, "/screen": 96, "/prepress": 300}
-        dpi = dpi_override or dpi_map.get(pdfsettings, 150)
-        cmd: List[str] = [
-            exe,
-            "-sDEVICE=pdfwrite",
-            "-dNOPAUSE",
-            "-dBATCH",
-            "-dQUIET",
-            "-dSAFER",
-            "-dCompatibilityLevel=1.5",
-            f"-dPDFSETTINGS={pdfsettings}",
-            "-dDetectDuplicateImages=true",
-            "-dCompressFonts=true",
-            "-dSubsetFonts=true",
-            "-dDownsampleColorImages=true",
-            "-dDownsampleGrayImages=true",
-            "-dColorImageDownsampleType=/Bicubic",
-            "-dGrayImageDownsampleType=/Bicubic",
-            f"-dColorImageResolution={dpi}",
-            f"-dGrayImageResolution={dpi}",
-            "-dMonoImageResolution=300",
-            "-dOptimize=true",
-            "-dFastWebView=true",
-            f"-sOutputFile={tmp_out}",
-            src_abs,
-        ]
-        if (password or "").strip():
-            cmd.insert(1, f"-sPDFPassword={password.strip()}")
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec)
-        if r.returncode != 0 or not os.path.isfile(tmp_out) or os.path.getsize(tmp_out) < 64:
-            return False
-        os.replace(tmp_out, out_abs)
-        tmp_keep = None
-        return True
-    except (subprocess.TimeoutExpired, OSError):
-        return False
-    finally:
-        if tmp_keep and os.path.isfile(tmp_keep):
-            try:
-                os.remove(tmp_keep)
-            except OSError:
-                pass
-
-
 def _pdf_page_count(path: str, password: str = "") -> int:
     """PDFium ile sayfa sayısını döndürür; hata olursa -1."""
     try:
@@ -3176,7 +3087,7 @@ def _fast_image_compress_pipeline(
 def _render_compress(
     input_path: str, output_path: str, open_password: str, quality: str = "auto"
 ) -> bool:
-    """PDFium ile sayfa bazlı render + JPEG yeniden kodlama (Ghostscript alternatifi).
+    """PDFium ile sayfa bazlı render + JPEG yeniden kodlama.
 
     Her sayfayı hedef DPI'de piksel olarak render eder, ardından yeni bir PDF içine
     JPEG stream olarak yerleştirir. Metin aranabilirliği kaybolur ama görüntü ağırlıklı
@@ -3237,19 +3148,9 @@ def _fmt_mb(n: int) -> str:
 
 
 # --- 7. PDF SIKIŞTIRMA ---
-# Kaliteye göre GS preset ve kazanım eşiği
-_COMPRESS_GS_SETTINGS = {
-    "extreme": "/screen",
-    "low":    "/screen",
-    "auto":   "/ebook",
-    "medium": "/ebook",
-    "high":   "/printer",
-}
-# GS görüntü çözünürlüğü (dpi) — preset'in varsayılanını ezer; yalnızca "extreme" için.
-_COMPRESS_GS_DPI = {"extreme": 60}
-# pikepdf sonrası bu oran altında kazanım varsa GS devreye girer (0.45 = %45)
-_COMPRESS_GS_FALLBACK_THRESHOLD = 0.40
-# Ghostscript yokken sayfa-resme-çevirme yolu yalnız toplam metni bundan az belgelerde (taranmış) kullanılır.
+# pikepdf sonrası bu oran altında kazanım varsa ikinci geçiş denenir (0.40 = %40)
+_COMPRESS_SECOND_PASS_THRESHOLD = 0.40
+# Sayfa-resme-çevirme yolu yalnız toplam metni bundan az belgelerde (taranmış) kullanılır.
 _COMPRESS_RENDER_MAX_TEXT_CHARS = 20
 
 
@@ -3287,15 +3188,12 @@ def pdf_image_byte_ratio(input_path: str, password: Optional[str] = None) -> flo
 
 
 def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None, quality: str = "auto") -> bool:
-    """İki aşamalı sıkıştırma: pikepdf+Pillow görüntü yeniden örnekleme + gerekirse Ghostscript.
+    """İki aşamalı sıkıştırma: pikepdf+Pillow görüntü yeniden örnekleme + gerekirse (yalnız taranmış belgede) sayfa render.
 
     Strateji:
       1. pikepdf + Pillow: görüntüleri hedef çözünürlüğe düşür, JPEG ile yeniden kodla.
-      2. pikepdf kazanımı hedef eşiğin altındaysa Ghostscript preset ile ikinci geçiş.
-         low    → /screen   (en agresif)
-         auto   → /ebook    (150 DPI, dengeli hız/kalite)
-         medium → /ebook
-         high   → /printer  (300 DPI, en kaliteli)
+      2. pikepdf kazanımı eşiğin altındaysa ve belgede metin yoksa (taranmış)
+         sayfa-render ile ikinci geçiş; metni olan belge resme ÇEVRİLMEZ.
     Her iki aşamada da en küçük sonuç seçilir.
     """
     # Geçici dosya adları try'dan ÖNCE tanımlanmalı: aşağıdaki `finally` bunları
@@ -3338,19 +3236,14 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
         if progress_callback:
             progress_callback(1, 2, "Görüntüler işlendi, akışlar optimize ediliyor...")
 
-        # --- 2. GS ikinci geçiş: pikepdf yeterince sıkıştıramadıysa veya "high" ise ---
+        # --- 2. İkinci geçiş: yalnız metni olmayan (taranmış) belgelerde sayfa render ---
         best_path: str = pike_out
         best_size: int = pike_size
-        need_second = False
 
-        # --- 2. İkinci geçiş: önce GS dene, yoksa sayfa render ---
-        # pikepdf yeterli kazanım sağlayamadıysa veya "high" kaliteyse ikinci geçiş zorunlu
-        need_second = (quality == "high") or (pike_ratio < _COMPRESS_GS_FALLBACK_THRESHOLD)
+        # pikepdf yeterli kazanım sağlayamadıysa veya "high" kaliteyse ikinci geçiş denenir
+        need_second = (quality == "high") or (pike_ratio < _COMPRESS_SECOND_PASS_THRESHOLD)
 
         if need_second:
-            gs_preset = _COMPRESS_GS_SETTINGS.get(quality, "/ebook")
-            gs_exe = _resolve_ghostscript_executable()
-
             fd2, second_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
             os.close(fd2)
             gs_keep = second_out
@@ -3358,27 +3251,17 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
             second_input = pike_out if pike_size < in_size else input_path
             second_ok = False
 
-            if gs_exe:
-                # GS kuruluysa tercih et
-                second_ok = _ghostscript_compress_to_path(
-                    second_input, second_out,
-                    pdfsettings=gs_preset,
-                    password=open_password,
-                    timeout_sec=timeout_sec,
-                    dpi_override=_COMPRESS_GS_DPI.get(quality),
-                )
-            else:
-                # GS yok → PDFium sayfa render pipeline. Bu yol sayfayı resme çevirir:
-                # yazı seçilemez/aranamaz olur. Bu yüzden YALNIZCA metni olmayan
-                # (taranmış/resim) belgelerde kullanılır; metni olan belgede
-                # pikepdf sonucu yeterli sayılır (kalite > ekstra küçülme).
-                try:
-                    from src.pdfcore.pdfium_io import pdfium_text_stats
-                    _, _metin = pdfium_text_stats(second_input, open_password or None)
-                except Exception:
-                    _metin = 1  # emin değilsek metni koru
-                if _metin < _COMPRESS_RENDER_MAX_TEXT_CHARS:
-                    second_ok = _render_compress(second_input, second_out, open_password, quality)
+            # PDFium sayfa render pipeline. Bu yol sayfayı resme çevirir: yazı
+            # seçilemez/aranamaz olur. Bu yüzden YALNIZCA metni olmayan
+            # (taranmış/resim) belgelerde kullanılır; metni olan belgede
+            # pikepdf sonucu yeterli sayılır (kalite > ekstra küçülme).
+            try:
+                from src.pdfcore.pdfium_io import pdfium_text_stats
+                _, _metin = pdfium_text_stats(second_input, open_password or None)
+            except Exception:
+                _metin = 1  # emin değilsek metni koru
+            if _metin < _COMPRESS_RENDER_MAX_TEXT_CHARS:
+                second_ok = _render_compress(second_input, second_out, open_password, quality)
 
             if second_ok:
                 second_size = os.path.getsize(second_out)
@@ -3400,7 +3283,7 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
 
         saved_pct = max(0, round((1 - best_size / in_size) * 100, 1))
         logger.info(
-            "compress_pdf done: %s → %s (%.1f%% saved, quality=%s, gs=%s)",
+            "compress_pdf done: %s → %s (%.1f%% saved, quality=%s, ikinci_gecis=%s)",
             _fmt_mb(in_size), _fmt_mb(best_size), saved_pct, quality, need_second,
         )
 
@@ -3428,7 +3311,7 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
 # DÜRÜSTLÜK KURALLARI:
 #  * Hedefe inilemezse bunu SÖYLERİZ ve en küçük sonucu veririz (boyutu tutturmak için
 #    sessizce okunmaz hale getirmeyiz).
-#  * Basamaklar metni korur. Ghostscript yoksa / bir basamak sayfaları sessizce
+#  * Basamaklar metni korur. Bir basamak sayfaları sessizce
 #    görüntüye çevirdiyse (metin kaybı) o aday REDDEDİLİR.
 #  * Sayfaları görüntüye çevirmek (yazı seçilemez olur) yalnızca kullanıcı açıkça
 #    izin verdiğinde ve metin-koruyan basamaklar yetmediğinde denenir.

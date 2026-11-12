@@ -1,16 +1,15 @@
 """
-PDF/A DÖNÜŞÜMÜ.
+PDF/A DÖNÜŞÜMÜ (pdftopdfa ile; Ghostscript kaldırıldı).
 
-Ghostscript her ortamda kurulu olmadığı için gerçek dönüşüm yerine DOĞRU KOMUTUN
-kurulduğu ve hata yollarının doğru davrandığı sabitlenir. Burada korunan en
-kritik ayar `-dPDFACompatibilityPolicy=1`: bu değer olmadan Ghostscript, PDF/A'ya
-aykırı öğeleri dosyada BIRAKIR ve çıktı PDF/A sayılmaz — kullanıcı uyumlu
-sandığı bir belgeyi kuruma gönderir, kurum reddeder.
+Korunan kritik davranış: kütüphane bazı durumlarda özgün dosyayı DEĞİŞTİRMEDEN
+kopyalayıp "başarılı" döner. Bu, kullanıcıya "PDF/A oldu" demek olurdu; kurum
+reddederdi. Bu yüzden "atlandı / hedef üretilmedi" sonuçları HATA sayılır.
 """
 
 import os
 import sys
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 
@@ -19,128 +18,100 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 from src import pdf_toolkit_extra as ptx
 
 
-class PdfaKomutTest(unittest.TestCase):
-    def komut(self, surum="2b", icc_var=True):
-        return ptx.pdfa_komutu("gs", surum, "/tmp/def.ps", "/tmp/in.pdf", "/tmp/out.pdf", icc_var)
+def _sahte_modul(sonuc=None, hata=None, cikti_yaz=True):
+    """`pdftopdfa` yerine geçen sahte modül."""
 
-    def test_aykiri_ogeler_atilir(self):
-        # Bu bayrak düşerse çıktı sessizce PDF/A olmaktan çıkar.
-        self.assertIn("-dPDFACompatibilityPolicy=1", self.komut())
+    def convert_to_pdfa(girdi, cikti, seviye, **kw):
+        convert_to_pdfa.cagri = (seviye, kw)
+        if hata:
+            raise hata
+        if cikti_yaz:
+            with open(cikti, "wb") as f:
+                f.write(b"%PDF-1.7\n" + b"x" * 200)
+        return sonuc
 
-    def test_surum_numarasi_dogru_gecilir(self):
-        self.assertIn("-dPDFA=1", self.komut("1b"))
-        self.assertIn("-dPDFA=2", self.komut("2b"))
-        self.assertIn("-dPDFA=3", self.komut("3b"))
-
-    def test_tanim_dosyasi_girdiden_ONCE_gelir(self):
-        # Ghostscript tanım dosyasını girdiden önce işlemelidir; sıra bozulursa
-        # çıktı niyeti belgeye eklenmez.
-        k = self.komut()
-        self.assertLess(k.index("/tmp/def.ps"), k.index("/tmp/in.pdf"))
-
-    def test_icc_varken_rgb_yoksa_cihazdan_bagimsiz(self):
-        self.assertIn("-sColorConversionStrategy=RGB", self.komut(icc_var=True))
-        self.assertIn(
-            "-sColorConversionStrategy=UseDeviceIndependentColor",
-            self.komut(icc_var=False),
-        )
-
-    def test_pdfwrite_cihazi_kullanilir(self):
-        self.assertIn("-sDEVICE=pdfwrite", self.komut())
+    m = types.ModuleType("pdftopdfa")
+    m.convert_to_pdfa = convert_to_pdfa
+    return m
 
 
-class PdfaTanimDosyasiTest(unittest.TestCase):
-    def test_icc_varsa_cikti_niyeti_yazilir(self):
-        with tempfile.TemporaryDirectory() as d:
-            icc = os.path.join(d, "srgb.icc")
-            open(icc, "wb").write(b"\x00")
-            yol = ptx._pdfa_tanim_dosyasi(d, icc)
-            icerik = open(yol, encoding="utf-8").read()
-            self.assertIn("/OutputIntent", icerik)
-            self.assertIn("/DestOutputProfile", icerik)
-
-    def test_ters_boluler_duzeltilir(self):
-        # PostScript'te ters bölü kaçış karakteridir; Windows yolu bozulmamalı.
-        with tempfile.TemporaryDirectory() as d:
-            yol = ptx._pdfa_tanim_dosyasi(d, "C:\\profiller\\srgb.icc")
-            icerik = open(yol, encoding="utf-8").read()
-            self.assertIn("C:/profiller/srgb.icc", icerik)
-            self.assertNotIn("\\profiller", icerik)
-
-    def test_icc_yoksa_niyet_yazilmaz(self):
-        with tempfile.TemporaryDirectory() as d:
-            icerik = open(ptx._pdfa_tanim_dosyasi(d, None), encoding="utf-8").read()
-            self.assertNotIn("/OutputIntent", icerik)
+def _sonuc(**kw):
+    d = dict(success=True, skipped=False, target_produced=True, error=None)
+    d.update(kw)
+    return types.SimpleNamespace(**d)
 
 
 class PdfaDonusumTest(unittest.TestCase):
     def test_gecersiz_surum_reddedilir(self):
-        with self.assertRaises(Exception) as c:
-            ptx.pdf_to_pdfa("in.pdf", "out.pdf", surum="4x")
-        self.assertIn("1b", str(c.exception))
+        for kotu in ("4x", "1b"):
+            with self.assertRaises(Exception) as c:
+                ptx.pdf_to_pdfa("in.pdf", "out.pdf", surum=kotu)
+            self.assertIn("2b", str(c.exception))
 
-    def test_ghostscript_yoksa_anlasilir_hata(self):
-        with patch.object(ptx.shutil, "which", return_value=None):
+    def test_kutuphane_yoksa_anlasilir_hata(self):
+        with patch.dict(sys.modules, {"pdftopdfa": None}):
             with self.assertRaises(Exception) as c:
                 ptx.pdf_to_pdfa("in.pdf", "out.pdf")
-            self.assertIn("Ghostscript", str(c.exception))
+        self.assertIn("kullanılamıyor", str(c.exception))
+
+    def test_basarili_donusumde_surum_bildirilir_ve_aykiri_ogeler_atilir(self):
+        mod = _sahte_modul(_sonuc())
+        with tempfile.TemporaryDirectory() as d, patch.dict(sys.modules, {"pdftopdfa": mod}):
+            sonuc = ptx.pdf_to_pdfa("in.pdf", os.path.join(d, "out.pdf"), surum="3b")
+        self.assertEqual(sonuc["surum"], "3b")
+        seviye, kw = mod.convert_to_pdfa.cagri
+        self.assertEqual(seviye, "3b")
+        # "always": aykırı öğe atılsa da çıktı üretilir (veraPDF çalışma anında yok).
+        self.assertEqual(kw.get("publication_policy"), "always")
+
+    def test_atlanan_donusum_basarili_sayilmaz(self):
+        # Kütüphane özgün dosyayı değiştirmeden kopyalarsa kullanıcıya PDF/A DENMEZ.
+        mod = _sahte_modul(_sonuc(skipped=True))
+        with tempfile.TemporaryDirectory() as d, patch.dict(sys.modules, {"pdftopdfa": mod}):
+            with self.assertRaises(Exception) as c:
+                ptx.pdf_to_pdfa("in.pdf", os.path.join(d, "out.pdf"))
+        self.assertIn("dönüştürülemedi", str(c.exception))
+
+    def test_hedef_uretilmediyse_basarili_sayilmaz(self):
+        mod = _sahte_modul(_sonuc(target_produced=False, error="x"))
+        with tempfile.TemporaryDirectory() as d, patch.dict(sys.modules, {"pdftopdfa": mod}):
+            with self.assertRaises(Exception) as c:
+                ptx.pdf_to_pdfa("in.pdf", os.path.join(d, "out.pdf"))
+        self.assertIn("dönüştürülemedi", str(c.exception))
 
     def test_bos_cikti_basarili_sayilmaz(self):
-        # Ghostscript 0 dönse bile üretilen dosya boşsa işlem başarısızdır.
-        class SahteProc:
-            returncode = 0
-            stderr = b""
+        mod = _sahte_modul(_sonuc(), cikti_yaz=False)
+        with tempfile.TemporaryDirectory() as d, patch.dict(sys.modules, {"pdftopdfa": mod}):
+            with self.assertRaises(Exception) as c:
+                ptx.pdf_to_pdfa("in.pdf", os.path.join(d, "out.pdf"))
+        self.assertIn("dönüştürülemedi", str(c.exception))
+
+    def test_kutuphane_hatasi_kullaniciya_anlasilir_gider(self):
+        mod = _sahte_modul(hata=RuntimeError("bozuk"))
+        with tempfile.TemporaryDirectory() as d, patch.dict(sys.modules, {"pdftopdfa": mod}):
+            with self.assertRaises(Exception) as c:
+                ptx.pdf_to_pdfa("in.pdf", os.path.join(d, "out.pdf"))
+        self.assertIn("dönüştürülemedi", str(c.exception))
+
+
+@unittest.skipUnless(
+    __import__("importlib").util.find_spec("pdftopdfa"), "pdftopdfa kurulu değil"
+)
+class PdfaGercekDonusumTest(unittest.TestCase):
+    def test_gercek_belge_pdfa_isaretlenir(self):
+        import pikepdf
 
         with tempfile.TemporaryDirectory() as d:
-            cikti = os.path.join(d, "out.pdf")
-            open(cikti, "wb").write(b"kisa")
-            with patch.object(ptx.shutil, "which", return_value="gs"), patch.object(
-                ptx, "_icc_profili_bul", return_value=None
-            ), patch.object(ptx.subprocess, "run", return_value=SahteProc()):
-                with self.assertRaises(Exception) as c:
-                    ptx.pdf_to_pdfa("in.pdf", cikti)
-            self.assertIn("dönüştürülemedi", str(c.exception))
-
-    def test_icc_yoksa_kullaniciya_uyari_dondurulur(self):
-        class SahteProc:
-            returncode = 0
-            stderr = b""
-
-        with tempfile.TemporaryDirectory() as d:
-            cikti = os.path.join(d, "out.pdf")
-
-            def sahte_run(komut, **kw):
-                open(cikti, "wb").write(b"%PDF-1.7\n" + b"x" * 200)
-                return SahteProc()
-
-            with patch.object(ptx.shutil, "which", return_value="gs"), patch.object(
-                ptx, "_icc_profili_bul", return_value=None
-            ), patch.object(ptx.subprocess, "run", side_effect=sahte_run):
-                sonuc = ptx.pdf_to_pdfa("in.pdf", cikti)
-            self.assertFalse(sonuc["cikti_niyeti"])
-            self.assertIsNotNone(sonuc["uyari"])
-
-    def test_basarili_donusumde_surum_bildirilir(self):
-        class SahteProc:
-            returncode = 0
-            stderr = b""
-
-        with tempfile.TemporaryDirectory() as d:
-            cikti = os.path.join(d, "out.pdf")
-            icc = os.path.join(d, "srgb.icc")
-            open(icc, "wb").write(b"\x00")
-
-            def sahte_run(komut, **kw):
-                open(cikti, "wb").write(b"%PDF-1.7\n" + b"x" * 200)
-                return SahteProc()
-
-            with patch.object(ptx.shutil, "which", return_value="gs"), patch.object(
-                ptx, "_icc_profili_bul", return_value=icc
-            ), patch.object(ptx.subprocess, "run", side_effect=sahte_run):
-                sonuc = ptx.pdf_to_pdfa("in.pdf", cikti, surum="3b")
-            self.assertEqual(sonuc["surum"], "3b")
-            self.assertTrue(sonuc["cikti_niyeti"])
-            self.assertIsNone(sonuc["uyari"])
+            kaynak = os.path.join(d, "k.pdf")
+            cikti = os.path.join(d, "o.pdf")
+            pdf = pikepdf.new()
+            pdf.add_blank_page(page_size=(200, 200))
+            pdf.save(kaynak)
+            bilgi = ptx.pdf_to_pdfa(kaynak, cikti, surum="2b")
+            self.assertEqual(bilgi["surum"], "2b")
+            with pikepdf.open(cikti) as p:
+                ham = bytes(p.Root.Metadata.read_bytes()).decode("utf-8", "ignore")
+            self.assertIn("pdfaid", ham)
 
 
 if __name__ == "__main__":

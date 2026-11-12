@@ -20,7 +20,7 @@ Bu dalın (`calisma/pymupdf-cikis`) merge'ü geri alınırsa `requirements.txt` 
 
 ## Hâlâ kalan lisans gri alanı
 - Poppler (GPL) KALDIRILDI: PDF→Görsel ve PDF→PowerPoint artık pdfium ile sayfa çiziyor (pdf2image bağımlılığı, Docker/CI poppler-utils paketi çıkarıldı).
-- Ghostscript (AGPL) hâlâ sunucuda ayrı program olarak çağrılıyor (sıkıştırma + ocrmypdf). Kesin hukuki görüş için avukata danışılmalı; sıkıştırmada pikepdf+pdfium yolu zaten var.
+- Ghostscript (AGPL) KALDIRILDI (2026-11-12): sıkıştırma yalnız pikepdf (+ taranmış belgede pdfium sayfa-render); PDF/A artık `pdftopdfa` (MPL-2.0+) ile (yalnız 2b/3b; 1b kalktı). Kullanılmayan `ocrmypdf` bağımlılığı da silindi (OCR zaten Tesseract/pytesseract). Örnek 11 belge veraPDF ile doğrulandı: dönüştürülmemiş kontrol dosyaları KALDI, dönüştürülenlerin hepsi GEÇTİ. Bilinen fark: ağır sıkıştırmada Ghostscript bazı dosyalarda pikepdf'ten daha çok küçültüyordu; bu kazanç kayboldu. Geri alma: Dockerfile'a `ghostscript` ekleyip bu commit'i geri al.
 
 ## Ölçümler (2026-11-11)
 - Word (kendi dönüştürücü / eski pdf2docx, görsel benzerlik, LibreOffice ile geri açılarak): matematik sınav kâğıdı 0,987/0,978; fatura 0,983/0,946; vergi levhası 0,988/0,943; 6 sayfalık yazılı 0,981/0,953; 12 sayfalık denetim raporu 0,961/0,917 (sayfa sayısı 12/18, orijinal 12). Yeni motor 13 dosyanın 12'sinde eşit/daha iyi görsel verdi; pdf2docx'in önde olduğu tek dosya (Güneş Sistemi, 0,993/0,995) fark ihmal edilebilir.

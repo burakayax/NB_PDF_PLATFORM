@@ -19,7 +19,11 @@ openpyxl
 reportlab
 pdfplumber
 pycryptodome
-ocrmypdf
+# PDF/A: pdftopdfa ayrıca kurulur -> pip install --no-deps pdftopdfa==0.10.0 (paddleocr bağımlılığı ağır ve kullanılmıyor)
+click
+colorama
+tqdm
+pdfminer.six
 
 # Güvenlik: setuptools PYSEC-2026-3447 (sdist Unicode normalization bypass) fix
 setuptools>=83.0.0

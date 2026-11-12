@@ -1421,11 +1421,11 @@ export const TOOL_SEO = {
       ["pdf/a dönüştürme", "pdfa çevirme", "pdf arşiv formatı", "pdf/a-1b", "pdf/a-2b", "ihale pdf formatı", "tez pdf/a", "e-arşiv pdf"],
       [
         { q: "PDF/A nedir, normal PDF'ten farkı ne?", a: "PDF/A, belgelerin uzun süreli saklanması için tanımlanmış ISO biçimidir. Normal PDF'ten farkı: yazı tipleri dosyanın içine gömülmek zorundadır, renkler cihazdan bağımsız tanımlanır, dış kaynağa bağlanma ve şifreleme yasaktır. Böylece belge yıllar sonra da aynı görünür." },
-        { q: "Hangi düzeyi seçmeliyim?", a: "Kurum özel olarak belirtmediyse PDF/A-2b uygundur. PDF/A-1b en katı ve en geniş desteklenen düzeydir; PDF/A-3b ise belgeye ek dosya (ör. XML fatura) iliştirilmesine izin verir." },
+        { q: "Hangi düzeyi seçmeliyim?", a: "Kurum özel olarak belirtmediyse PDF/A-2b uygundur. PDF/A-3b ise belgeye ek dosya (ör. XML fatura) iliştirilmesine izin verir." },
         { q: "Belgemin görünümü değişir mi?", a: "Sayfa düzeni ve içerik korunur. Standarda aykırı öğeler (ör. dış bağlantılı içerik) kaldırıldığı için çok nadiren küçük farklar olabilir; dosyayı indirdikten sonra bir kez kontrol etmeniz önerilir." },
         { q: "Şifreli PDF'i dönüştürebilir miyim?", a: "PDF/A şifrelemeye izin vermez. Şifrenizi girerseniz belge önce açılır, sonra arşiv biçimine çevrilir." },
         { q: "Dosya boyutu artar mı?", a: "Yazı tipleri belgenin içine gömüldüğü için dosya bir miktar büyüyebilir. Bu, biçimin gereğidir; belgenin kendi kendine yeter olmasını sağlar." },
-        { q: "PDF/A-1a ya da 2u seçebilir miyim?", a: "Bu araç temel (b) uyumluluk düzeylerini üretir. PDF/A-1a gibi düzeyler belgenin yapısal olarak etiketlenmiş olmasını da gerektirir; bu, dönüştürmeyle değil belge hazırlanırken sağlanır." },
+        { q: "PDF/A-1a ya da 2u seçebilir miyim?", a: "Bu araç PDF/A-2b ve PDF/A-3b üretir (PDF/A-1b desteklenmez). PDF/A-1a gibi düzeyler belgenin yapısal olarak etiketlenmiş olmasını da gerektirir; bu, dönüştürmeyle değil belge hazırlanırken sağlanır." },
       ],
     ),
     en: T(
@@ -1436,7 +1436,7 @@ export const TOOL_SEO = {
       ["convert pdf to pdfa", "pdf/a converter", "pdf archival format", "pdf/a-1b", "pdf/a-2b", "tender pdf format", "thesis pdf/a", "long term pdf archive"],
       [
         { q: "What is PDF/A and how is it different?", a: "PDF/A is the ISO format for long-term preservation. Unlike a regular PDF, fonts must be embedded, colours are defined device-independently, and external references and encryption are not allowed — so the document still looks the same years later." },
-        { q: "Which level should I pick?", a: "Unless your institution says otherwise, PDF/A-2b is a good default. PDF/A-1b is the strictest and most widely supported; PDF/A-3b additionally allows attached files (for example an XML invoice)." },
+        { q: "Which level should I pick?", a: "Unless your institution says otherwise, PDF/A-2b is a good default. PDF/A-3b additionally allows attached files (for example an XML invoice)." },
         { q: "Will my document look different?", a: "Layout and content are preserved. Because non-conformant elements (such as externally linked content) are dropped, there can rarely be small differences — it is worth checking the downloaded file once." },
         { q: "Can I convert an encrypted PDF?", a: "PDF/A does not allow encryption. If you enter the password, the document is unlocked first and then converted." },
         { q: "Will the file get bigger?", a: "It can grow somewhat because fonts are embedded. That is inherent to the format; it is what makes the document self-contained." },

@@ -8855,11 +8855,6 @@ function App() {
                                   ? "PDF/A-2b — önerilen (çoğu kurum)"
                                   : "PDF/A-2b — recommended (most institutions)"}
                               </option>
-                              <option value="1b">
-                                {language === "tr"
-                                  ? "PDF/A-1b — en katı, en geniş uyum"
-                                  : "PDF/A-1b — strictest, widest support"}
-                              </option>
                               <option value="3b">
                                 {language === "tr"
                                   ? "PDF/A-3b — ek dosya eklenebilen"

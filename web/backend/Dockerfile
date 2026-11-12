@@ -15,7 +15,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Sistem bağımlılıkları (native Python runtime'da apt-get çalışmadığı için Docker şart):
 #   wkhtmltopdf  → HTML→PDF (subprocess) | tesseract-ocr(+tur) → pytesseract
-#   ghostscript  → ocrmypdf | libcairo2 → pycairo/svglib | libgl1/libglib2.0-0 → opencv
+#   libcairo2 → pycairo/svglib | libgl1/libglib2.0-0 → opencv
 #   libreoffice-{writer,calc,impress} → word/excel/ppt → PDF (soffice --headless).
 #     Yalın kurulum: yalnız gerekli bileşenler + --no-install-recommends (tam meta paketten küçük).
 #     fonts-liberation → dönüşümlerde temel yazı tipleri (Arial/Times benzeri metrikler).
@@ -23,7 +23,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       wkhtmltopdf \
       tesseract-ocr \
       tesseract-ocr-tur \
-      ghostscript \
       libcairo2 \
       libgl1 \
       libglib2.0-0 \
@@ -57,6 +56,8 @@ RUN apt-get update \
 WORKDIR /app
 
 # Önce yalnızca requirements — Docker katman cache'i (kod değişince pip tekrar çalışmaz)
+# PDF/A için pdftopdfa (MPL-2.0+; Ghostscript yerine) --no-deps kurulur: paket paddleocr (ağır, kullanılmıyor) ister;
+# gerçekten gereken küçük paketler requirements.txt içinde.
 COPY web/backend/requirements.txt /app/web/backend/requirements.txt
 # pycairo gibi C-eklentileri kaynaktan derlenir: derleyici + cairo başlıkları +
 # pkg-config gerekir. Bunları kur, pip'i çalıştır, sonra AYNI katmanda kaldır
@@ -67,6 +68,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       pkg-config \
     && pip install --upgrade pip \
     && pip install -r /app/web/backend/requirements.txt \
+    && pip install --no-deps pdftopdfa==0.10.0 \
     && apt-get purge -y build-essential libcairo2-dev pkg-config \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*

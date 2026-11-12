@@ -1790,7 +1790,8 @@ async def tool_pdf_to_pdfa(
         sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         _after_save_validate(sp, request, decision, file.filename)
         surum = (version or "2b").strip().lower()
-        if surum not in {"1b", "2b", "3b"}:
+        # PDF/A-1b artık desteklenmiyor (Ghostscript kaldırıldı); eski istekler 2b'ye düşer.
+        if surum not in {"2b", "3b"}:
             surum = "2b"
         out_p = workdir / "arsiv.pdf"
         out_n = format_derived_filename(file.filename or "dosya.pdf", f"pdfa-{surum}", ".pdf")
