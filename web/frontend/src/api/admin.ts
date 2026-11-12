@@ -1701,6 +1701,9 @@ export type AdminPaymentRow = {
   provider: "paytr" | "diger";
   invoiceStatus: string | null;
   invoiceNo: string | null;
+  /** Kurumsal iade faturası akışı: requested | received | refunded | cancel_needed. */
+  returnStatus?: string | null;
+  returnInvoiceNo?: string | null;
   /** Ertelenmiş fatura: otomatik kesim zamanı (ISO). */
   invoiceDueAt?: string | null;
   /** Yönetici kararı: null = otomatik, "VAT" = KDV'li kes, "CANCEL" = kesme. */
@@ -1823,6 +1826,8 @@ export type AdminRefundResult = {
   refundedAt: string;
   /** true: para PayTR üzerinden otomatik iade edildi. false: iade elle yapılmalı. */
   providerRefunded: boolean;
+  /** true: alıcı kurumsal; para HENÜZ iade edilmedi, müşteriden iade faturası istendi. */
+  awaitingReturnInvoice?: boolean;
 };
 
 export async function refundAdminPayment(

@@ -66,6 +66,86 @@ EXPORT_INVOICE_NOTE = "KDVK 11/1-a kapsamında hizmet ihracatı"
 NO_TCKN_NOTE = "Müşteri nihai tüketici olup T.C. Kimlik Numarası beyanında bulunmamıştır."
 
 
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1] if isinstance(tag, str) else ""
+
+
+def _iter_xml_strings(node: Any):
+    """Yanıt ağacındaki XML metinlerini (düz, base64 veya zip) tek tek verir."""
+    if isinstance(node, dict):
+        for v in node.values():
+            yield from _iter_xml_strings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _iter_xml_strings(v)
+    elif isinstance(node, str):
+        s = node.strip()
+        if s.startswith("<") and "Invoice" in s[:3000]:
+            yield s
+        elif len(s) > 200 and "<" not in s[:20]:
+            try:
+                raw = base64.b64decode(s, validate=False)
+            except Exception:
+                return
+            if raw[:2] == b"PK":
+                try:
+                    with zipfile.ZipFile(io.BytesIO(raw)) as z:
+                        for name in z.namelist():
+                            txt = z.read(name).decode("utf-8", "ignore").strip()
+                            if txt.startswith("<") and "Invoice" in txt[:3000]:
+                                yield txt
+                except Exception:
+                    return
+            else:
+                txt = raw.decode("utf-8", "ignore").strip()
+                if txt.startswith("<") and "Invoice" in txt[:3000]:
+                    yield txt
+
+
+def parse_return_invoice_xml(xml: str) -> dict[str, Any] | None:
+    """
+    UBL-TR fatura XML'i IADE tipliyse özetini döner, değilse None.
+    Dönen: invoice_uuid, invoice_no, issue_date, original_invoice_no, original_invoice_uuid, kdv_amount (str).
+    Ad alanı (namespace) önekinden bağımsız çalışır.
+    """
+    try:
+        root = ET.fromstring(xml.encode("utf-8") if isinstance(xml, str) else xml)
+    except Exception:
+        return None
+    if _local(root.tag) != "Invoice":
+        return None
+
+    def first_text(parent: ET.Element, name: str, direct: bool = True) -> str:
+        it = list(parent) if direct else parent.iter()
+        for el in it:
+            if _local(el.tag) == name and (el.text or "").strip():
+                return el.text.strip()
+        return ""
+
+    if first_text(root, "InvoiceTypeCode").upper() != "IADE":
+        return None
+    kdv = ""
+    for el in root:
+        if _local(el.tag) == "TaxTotal":
+            kdv = first_text(el, "TaxAmount")
+            break
+    orig_no = orig_uuid = ""
+    for br in root.iter():
+        if _local(br.tag) == "BillingReference":
+            for ref in br.iter():
+                if _local(ref.tag) == "InvoiceDocumentReference":
+                    orig_no = orig_no or first_text(ref, "ID")
+                    orig_uuid = orig_uuid or first_text(ref, "UUID")
+    return {
+        "invoice_uuid": first_text(root, "UUID"),
+        "invoice_no": first_text(root, "ID"),
+        "issue_date": first_text(root, "IssueDate"),
+        "original_invoice_no": orig_no,
+        "original_invoice_uuid": orig_uuid,
+        "kdv_amount": kdv,
+    }
+
+
 def _product_code(name: str) -> str:
     """Ürün adından okunur, kararlı stok kodu: "PDF PLATFORM Pro (1 ay)" → "PDF-PLATFORM-PRO-1-AY"."""
     import re
@@ -556,6 +636,41 @@ class BirFaturaProvider(BillingProviderBase):
         except Exception as exc:
             logger.error("birfatura: fatura iptali başarısız uuid=%s hata=%s", invoice_id, exc)
             return False
+
+    # ------------------------------------------------------------------
+    # Gelen iade faturaları — kurumsal müşteri bize iade faturası keserse otomatik yakalanır
+    # ------------------------------------------------------------------
+
+    def list_incoming_return_invoices(self, start: datetime, end: datetime, max_pages: int = 10) -> list[dict[str, Any]]:
+        """
+        BirFatura gelen kutusunu (GetInBoxDocumentsWithDetail) tarar, yalnız IADE tipli faturaları döner.
+        Yanıt şeması belgelenmediği için ayrıştırma toleranslıdır: yanıtın içinde XML içeren her metin
+        (düz / base64 / zip) denenir. Dönen her kayıt parse_return_invoice_xml çıktısıdır.
+        """
+        found: dict[str, dict[str, Any]] = {}
+        for system_type in ("EFATURA", "EARSIV"):
+            for page in range(1, max_pages + 1):
+                body = {
+                    "systemType": system_type,
+                    "startDateTime": start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "endDateTime": end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "documentType": "INVOICE",
+                    "pageNumber": page,
+                }
+                try:
+                    data = self._post("GetInBoxDocumentsWithDetail", body)
+                    result = self._check_api_response(data, "GetInBoxDocumentsWithDetail")
+                except Exception as exc:
+                    logger.warning("birfatura: gelen kutu sorgulanamadı tip=%s sayfa=%s hata=%s", system_type, page, exc)
+                    break
+                xmls = list(_iter_xml_strings(result))
+                if not xmls:
+                    break
+                for xml in xmls:
+                    rec = parse_return_invoice_xml(xml)
+                    if rec and rec["invoice_uuid"] not in found:
+                        found[rec["invoice_uuid"]] = rec
+        return list(found.values())
 
     # ------------------------------------------------------------------
     # create_credit_note — iade faturası oluştur (SendDocument + UBL XML)

@@ -143,7 +143,7 @@ export async function adminPaymentsSummaryController(request: Request, response:
   const end = new Date(trDayStart(to).getTime() + 24 * 60 * 60 * 1000); // bitiş günü dahil
   if (end <= start) throw new HttpError(400, "Bitiş tarihi başlangıçtan önce olamaz.");
 
-  const [paid, refunds, invoices, creditNotes] = await Promise.all([
+  const [paid, refunds, invoices, creditNotes, returnInvs] = await Promise.all([
     prisma.paymentCheckout.findMany({
       where: { completedAt: { gte: start, lt: end } },
       select: { completedAt: true, priceTry: true, paymentCurrency: true, invoiceStatus: true, invoice: { select: { id: true } } },
@@ -164,6 +164,12 @@ export async function adminPaymentsSummaryController(request: Request, response:
       select: { creditNoteIssuedAt: true, kdvAmount: true, currency: true },
       take: MAX_ROWS,
     }),
+    // Kurumsal müşterinin bize kestiği (gelen) iade faturaları: KDV'si otomatik düşülür.
+    prisma.invoice.findMany({
+      where: { returnKdvAmount: { not: null }, returnReceivedAt: { gte: start, lt: end } },
+      select: { returnReceivedAt: true, returnKdvAmount: true, currency: true },
+      take: MAX_ROWS,
+    }),
   ]);
 
   const cur = (c: string | null | undefined) => (c ?? "TRY").trim().toUpperCase() || "TRY";
@@ -182,7 +188,8 @@ export async function adminPaymentsSummaryController(request: Request, response:
       invoices: invoices.map((i) => ({ at: i.createdAt, kdv: num(i.kdvAmount), currency: cur(i.currency) })),
       creditNotes: creditNotes
         .filter((c) => c.creditNoteIssuedAt)
-        .map((c) => ({ at: c.creditNoteIssuedAt as Date, kdv: num(c.kdvAmount), currency: cur(c.currency) })),
+        .map((c) => ({ at: c.creditNoteIssuedAt as Date, kdv: num(c.kdvAmount), currency: cur(c.currency) }))
+        .concat(returnInvs.filter((r) => r.returnReceivedAt).map((r) => ({ at: r.returnReceivedAt as Date, kdv: num(r.returnKdvAmount), currency: cur(r.currency) }))),
     },
     group,
   );
@@ -191,15 +198,24 @@ export async function adminPaymentsSummaryController(request: Request, response:
   const now = new Date();
   const monthKey = periodKey(now, "month");
   const monthStart = trDayStart(`${monthKey}-01`);
-  const [mInv, mCn] = await Promise.all([
+  const [mInv, mCn, mRet] = await Promise.all([
     prisma.invoice.findMany({ where: { createdAt: { gte: monthStart }, currency: "TRY" }, select: { kdvAmount: true }, take: MAX_ROWS }),
     prisma.invoice.findMany({
       where: { creditNoteStatus: "issued", creditNoteIssuedAt: { gte: monthStart }, currency: "TRY" },
       select: { kdvAmount: true },
       take: MAX_ROWS,
     }),
+    prisma.invoice.findMany({
+      where: { returnKdvAmount: { not: null }, returnReceivedAt: { gte: monthStart }, currency: "TRY" },
+      select: { returnKdvAmount: true },
+      take: MAX_ROWS,
+    }),
   ]);
-  const monthKdv = round2(mInv.reduce((a, i) => a + num(i.kdvAmount), 0) - mCn.reduce((a, i) => a + num(i.kdvAmount), 0));
+  const monthKdv = round2(
+    mInv.reduce((a, i) => a + num(i.kdvAmount), 0) -
+      mCn.reduce((a, i) => a + num(i.kdvAmount), 0) -
+      mRet.reduce((a, i) => a + num(i.returnKdvAmount), 0),
+  );
 
   response.json({
     group,
@@ -208,6 +224,6 @@ export async function adminPaymentsSummaryController(request: Request, response:
     rows: data.rows,
     totals: data.totals,
     currentMonth: { period: monthKey, kdvNet: monthKdv },
-    truncated: [paid, refunds, invoices, creditNotes].some((a) => a.length >= MAX_ROWS),
+    truncated: [paid, refunds, invoices, creditNotes, returnInvs].some((a) => a.length >= MAX_ROWS),
   });
 }

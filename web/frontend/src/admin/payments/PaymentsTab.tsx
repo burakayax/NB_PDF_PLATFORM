@@ -132,6 +132,14 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
 
   const onRefunded = (r: AdminRefundResult, row: AdminPaymentRow) => {
     setTarget(null);
+    if (r.awaitingReturnInvoice) {
+      setNotice({
+        ok: true,
+        text: `${row.user.email} kurumsal alıcı: kendisine fatura ekli e-posta gönderildi ve iade faturası istendi. İade faturası sisteme ulaşınca para otomatik iade edilecek.`,
+      });
+      void load();
+      return;
+    }
     setNotice({
       ok: r.providerRefunded,
       text: r.providerRefunded
@@ -448,7 +456,24 @@ function InvoiceCell({ accessToken, row, onChanged }: { accessToken: string; row
   const btnDanger = `${btnBase} border-rose-400/30 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20`;
   const card = cardNote(row.cardCountry);
 
-  if (row.invoiceNo) return <span>{row.invoiceNo}</span>;
+  const returnNote =
+    row.returnStatus === "requested"
+      ? "İade faturası bekleniyor"
+      : row.returnStatus === "received"
+        ? "İade faturası alındı, iade yapılıyor"
+        : row.returnStatus === "refunded" && row.returnInvoiceNo
+          ? `İade faturası: ${row.returnInvoiceNo}`
+          : row.returnStatus === "cancel_needed"
+            ? "Fatura İPTAL edilmeli (BirFatura panelinden)"
+            : null;
+  if (row.invoiceNo) {
+    return (
+      <div>
+        <span>{row.invoiceNo}</span>
+        {returnNote && <div className="mt-0.5 text-[11px] font-semibold text-amber-300">{returnNote}</div>}
+      </div>
+    );
+  }
   if (row.status !== "completed") {
     return <span>{row.invoiceStatus === "skipped_refunded" ? "İade: fatura kesilmedi" : row.invoiceStatus ?? "—"}</span>;
   }

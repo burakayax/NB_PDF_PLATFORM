@@ -74,7 +74,7 @@ export async function adminListPaymentsController(request: Request, response: Re
     take: MAX_SCAN + 1,
     include: {
       user: { select: { id: true, email: true, firstName: true, lastName: true, name: true } },
-      invoice: { select: { invoiceNo: true, status: true, customerName: true } },
+      invoice: { select: { invoiceNo: true, status: true, customerName: true, returnStatus: true, returnInvoiceNo: true } },
     },
   });
   const truncated = scanned.length > MAX_SCAN;
@@ -109,6 +109,8 @@ export async function adminListPaymentsController(request: Request, response: Re
           provider: c.iyzicoPaymentId?.startsWith("paytr:") ? "paytr" : "diger",
           invoiceStatus: c.invoice?.status ?? c.invoiceStatus ?? null,
           invoiceNo: c.invoice?.invoiceNo ?? null,
+          returnStatus: c.invoice?.returnStatus ?? null,
+          returnInvoiceNo: c.invoice?.returnInvoiceNo ?? null,
           invoiceDueAt: c.invoiceDueAt?.toISOString() ?? null,
           invoiceAction: c.invoiceAction ?? null,
           cardCountry: c.cardCountry ?? null,
