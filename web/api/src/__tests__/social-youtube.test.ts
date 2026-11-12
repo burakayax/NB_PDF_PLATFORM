@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { publishToYouTube, verifyYouTube } from "../modules/social/platforms/youtube.platform.js";
+import { publishToYouTube, thumbnailTiming, verifyYouTube } from "../modules/social/platforms/youtube.platform.js";
 
 const SECRETS = { clientId: "cid", clientSecret: "csec", refreshToken: "rtok" };
 const ITEM = { guid: "tool-reel:compress", lang: "tr" as const, title: "PDF Sıkıştır", summary: "", link: "https://x.test", publishedAt: 0, categories: [], images: {} };
@@ -9,6 +9,9 @@ const json = (body: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" }, ...init });
 
 afterEach(() => vi.unstubAllGlobals());
+
+thumbnailTiming.initialWait = 0;
+thumbnailTiming.retryBase = 0;
 
 describe("YouTube Shorts yayıncısı", () => {
   it("video değilse reddeder", async () => {
@@ -91,7 +94,7 @@ describe("YouTube Shorts yayıncısı", () => {
     expect(await verifyYouTube(SECRETS)).toBe("PDF Platform");
   });
 
-  it("küçük resim yüklenemezse paylaşım sürer ve nedeni uyarı olarak döner (403 tekrar denenmez)", async () => {
+  it("küçük resim yüklenemezse paylaşım sürer ve nedeni uyarı olarak döner (403 beş kez denenir)", async () => {
     let thumbCalls = 0;
     vi.stubGlobal("fetch", async (url: string) => {
       if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
@@ -108,7 +111,7 @@ describe("YouTube Shorts yayıncısı", () => {
     const out = await publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
     expect(out.externalId).toBe("vid7");
     expect(out.warning).toContain("403");
-    expect(thumbCalls).toBe(1);
+    expect(thumbCalls).toBe(5);
   });
 
   it("kapak görseli indirilemezse nedeni uyarı olarak döner", async () => {

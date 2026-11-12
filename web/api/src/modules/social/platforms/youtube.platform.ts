@@ -113,6 +113,9 @@ function toTags(terms: Terms | null): string[] {
  * Kapak adresi HEAD ile önceden SINANMAZ (bazı sunucular HEAD'e farklı yanıt verir ve kapak sessizce atlanıyordu):
  * doğrudan GET ile indirilir. Yükleme, video işlenirken gelen geçici hatalarda (404/429/5xx) birkaç kez denenir.
  */
+/** Bekleme süreleri (ms). Testlerde sıfırlanır. */
+export const thumbnailTiming = { initialWait: 20_000, retryBase: 15_000 };
+
 async function setThumbnail(accessToken: string, videoId: string, guid: string): Promise<string | null> {
   const toolId = toolIdFromGuid(guid);
   if (!toolId) return null;
@@ -127,7 +130,9 @@ async function setThumbnail(accessToken: string, videoId: string, guid: string):
     }
     const bytes = Buffer.from(await img.arrayBuffer());
     let last = "";
-    for (let attempt = 1; attempt <= 4; attempt++) {
+    // Video yüklenir yüklenmez küçük resim koymak YouTube'da (özellikle Shorts'ta) işlenme bitmeden 403/404 verebilir.
+    if (thumbnailTiming.initialWait > 0) await new Promise((r) => setTimeout(r, thumbnailTiming.initialWait));
+    for (let attempt = 1; attempt <= 5; attempt++) {
       const res = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`, {
         method: "POST",
         headers: { authorization: `Bearer ${accessToken}`, "content-type": "image/jpeg" },
@@ -136,11 +141,15 @@ async function setThumbnail(accessToken: string, videoId: string, guid: string):
       });
       if (res.ok) return null;
       last = `HTTP ${res.status}: ${(await res.text()).slice(0, 240)}`;
-      logger.warn("social", `YouTube küçük resmi yüklenemedi (deneme ${attempt}/4, ${last})`);
-      if (![404, 429, 500, 502, 503].includes(res.status)) break; // 403/400: bekleyip denemek işe yaramaz
-      await new Promise((r) => setTimeout(r, 8_000 * attempt));
+      logger.warn("social", `YouTube küçük resmi yüklenemedi (deneme ${attempt}/5, ${last})`);
+      // 403 da denenir: video işlenirken ya da yeni doğrulanmış kanalda geçici olarak dönebilir. Sadece 400 (bozuk görsel) denenmez.
+      if (![403, 404, 429, 500, 502, 503].includes(res.status)) break;
+      await new Promise((r) => setTimeout(r, thumbnailTiming.retryBase * attempt));
     }
-    return `YouTube küçük resmi yüklenemedi: ${last}`;
+    const hint = last.startsWith("HTTP 403")
+      ? " (403: kanal telefonla doğrulanmamış / özel küçük resim henüz etkinleşmemiş olabilir — doğrulamadan sonra 24 saate kadar sürebilir; Studio'dan elle küçük resim yüklemeyi dene)"
+      : "";
+    return `YouTube küçük resmi yüklenemedi: ${last}${hint}`;
   } catch (err) {
     const why = `YouTube küçük resmi yüklenemedi: ${String(err)}`;
     logger.warn("social", why);
