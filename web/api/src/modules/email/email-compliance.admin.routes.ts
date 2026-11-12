@@ -22,6 +22,12 @@ import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { prisma } from "../../lib/prisma.js";
 import { logAdminAudit, type AdminActor } from "../admin/admin-audit.service.js";
 import {
+  readPendingBatch,
+  readUploadedUntil,
+  toIysCsv,
+  writeUploadedUntil,
+} from "./iys-export.service.js";
+import {
   missingSenderIdentityFields,
   readSenderIdentity,
   writeSenderIdentity,
@@ -195,6 +201,67 @@ emailComplianceAdminRouter.get(
       `Onay kayıtları dışa aktarıldı (${rows.length} kayıt)`,
       { count: rows.length, query: q || null },
     );
+  }),
+);
+
+/* ─── İYS'ye yüklenecek onaylar ─────────────────────────────────────────── */
+
+/** Bekleyen onaylar: sayı + önizleme (e-postalar tam görünür; yalnız yönetici görür). */
+emailComplianceAdminRouter.get(
+  "/iys/pending",
+  asyncHandler(async (_request, response) => {
+    const p = await readPendingBatch();
+    response.json({
+      pendingTotal: p.pendingTotal,
+      batchSize: p.batch.length,
+      until: p.until?.toISOString() ?? null,
+      uploadedUntil: p.uploadedUntil?.toISOString() ?? null,
+      rows: p.batch.map((r) => ({
+        email: r.email,
+        granted: r.granted,
+        at: r.at.toISOString(),
+      })),
+    });
+  }),
+);
+
+/** İYS biçiminde CSV (en eski 50 adres). İndirmek işaretlemez. */
+emailComplianceAdminRouter.get(
+  "/iys/export",
+  asyncHandler(async (_request, response) => {
+    const p = await readPendingBatch();
+    if (p.batch.length === 0) throw new HttpError(404, "İYS'ye yüklenecek yeni onay yok.");
+    response.setHeader("Content-Type", "text/csv; charset=utf-8");
+    response.setHeader(
+      "Content-Disposition",
+      `attachment; filename="iys-yukle-${new Date().toISOString().slice(0, 10)}.csv"`,
+    );
+    response.send(toIysCsv(p.batch));
+  }),
+);
+
+const iysDoneSchema = z.object({ until: z.string().datetime() });
+
+/** "İYS'ye yükledim" — bu zamana kadarki kayıtlar bekleyenlerden çıkar. */
+emailComplianceAdminRouter.post(
+  "/iys/mark-uploaded",
+  asyncHandler(async (request, response) => {
+    const parsed = iysDoneSchema.safeParse(request.body);
+    if (!parsed.success) throw new HttpError(400, "Geçersiz zaman.");
+    const until = new Date(parsed.data.until);
+    const current = await readUploadedUntil();
+    // Geriye gitmeye izin yok: yüklenmiş kayıtlar yeniden bekleyen olmasın.
+    if (!current || until.getTime() > current.getTime()) {
+      await writeUploadedUntil(until);
+    }
+    await logAdminAudit(
+      adminActor(request),
+      "email.iys.mark_uploaded",
+      "iys_upload",
+      "Onaylar İYS'ye yüklendi olarak işaretlendi",
+      { until: until.toISOString() },
+    );
+    response.json({ ok: true });
   }),
 );
 
