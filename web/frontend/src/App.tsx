@@ -9006,57 +9006,11 @@ function App() {
 
                         {selectedFeature.id === "compress" ? (
                           <>
-                            {uploads.length <= 1 ? (
-                              <>
-                                <label className="field">
-                                  <span>{W.compressTargetLabel}</span>
-                                  <select
-                                    value={compressTargetKb}
-                                    onChange={(e) => {
-                                      const kb = Number(e.target.value) || 0;
-                                      setCompressTargetKb(kb);
-                                      if (!kb) setCompressAllowRaster(false);
-                                    }}
-                                  >
-                                    {COMPRESS_TARGET_PRESETS_KB.map((kb) => (
-                                      <option key={kb} value={kb}>
-                                        {kb === 0
-                                          ? W.compressTargetNone
-                                          : `${language === "tr" ? "En fazla" : "At most"} ${formatTargetKb(kb)}`}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <span className="field-hint">
-                                    {W.compressTargetHint}
-                                  </span>
-                                </label>
-                                {compressTargetKb > 0 ? (
-                                  <label className="field field--full field--checkbox">
-                                    <input
-                                      type="checkbox"
-                                      checked={compressAllowRaster}
-                                      onChange={(e) =>
-                                        setCompressAllowRaster(e.target.checked)
-                                      }
-                                    />
-                                    <span>{W.compressRasterLabel}</span>
-                                  </label>
-                                ) : null}
-                              </>
-                            ) : (
-                              <p className="field-hint">{W.compressTargetBatchNote}</p>
-                            )}
                             <label className="field">
                               <span>
                                 {language === "tr" ? "Kalite" : "Quality"}
                               </span>
                               <select
-                                disabled={compressTargetKb > 0 && uploads.length <= 1}
-                                title={
-                                  compressTargetKb > 0 && uploads.length <= 1
-                                    ? W.compressQualityDisabledByTarget
-                                    : undefined
-                                }
                                 value={compressQuality}
                                 onChange={(e) => {
                                   const val = e.target.value as

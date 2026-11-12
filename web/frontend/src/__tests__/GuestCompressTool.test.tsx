@@ -103,16 +103,14 @@ describe("GuestCompressTool — misafir hakkı ve dönüşüm", () => {
     await waitFor(() => expect(screen.getByText("Lütfen bir PDF dosyası seç.")).toBeTruthy());
   });
 
-  it("kalite ile hedef boyut birlikte seçilemez: ya kaliteye göre ya hedef boyuta göre", async () => {
+  it("yalnızca kalite seçilir: hedef boyut seçeneği yok", async () => {
     getAllowance.mockResolvedValue(FULL);
     renderTool();
     await screen.findByText(/günde 1 ücretsiz/);
     pickPdf();
     await screen.findByRole("button", { name: "PDF'i sıkıştır" });
-    // Varsayılan: kalite menüsü var, hedef boyut menüsü yok.
+    expect(screen.getAllByText("Kalite").length).toBeGreaterThan(0);
     expect(screen.queryByText("Hedef boyut")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Hedef boyuta göre" }));
-    expect(screen.getByText("Hedef boyut")).toBeTruthy();
-    expect(screen.queryByText("Kalite")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Hedef boyuta göre" })).toBeNull();
   });
 });

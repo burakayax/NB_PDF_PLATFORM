@@ -25,14 +25,12 @@ import { useToolPageContext } from "../common/toolPageContext";
  *   • sonuç ekranında ve hak bitince somut, doğru bir üyelik daveti vardır;
  *   • sıkıştırma SUNUCUDA çalışır → gizlilik cümlesi buna göre dürüsttür (lib/onDeviceTools.ts).
  *
- * Kalite ile hedef boyut BİRLİKTE seçilemez (hedef seçilince kaliteyi araç belirler); arayüz bunu
- * "ya kaliteye göre ya hedef boyuta göre" diye ayırır — Görsel Sıkıştır ile aynı dil.
+ * Hedef boyut seçeneği KALDIRILDI (Kasım 2026): yalnızca kalite seçilir.
  */
 
 /** Ücretsiz üyenin günlük hakkı. Kaynak: subscription.config.ts → FREE.dailyLimit (testle denetlenir). */
 export const MEMBER_DAILY_OPS = 3;
 
-type Mode = "quality" | "target";
 type Quality = "auto" | "low" | "medium";
 type Phase = "idle" | "running" | "done";
 
@@ -44,9 +42,6 @@ type Result = {
   targetKb: number;
   rasterized: boolean;
 };
-
-/** Hazır hedef boyutlar (KB) — çalışma alanındakiyle aynı seçenekler. */
-const TARGETS_KB = [100, 200, 500, 1024, 2048, 5120, 10240];
 
 function humanSize(b: number): string {
   if (b < 1024) return `${b} B`;
@@ -167,10 +162,7 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
 
   const [allowance, setAllowance] = useState<GuestCompressAllowance | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [mode, setMode] = useState<Mode>("quality");
   const [quality, setQuality] = useState<Quality>("auto");
-  const [targetKb, setTargetKb] = useState(1024);
-  const [raster, setRaster] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [percent, setPercent] = useState(0);
   const [message, setMessage] = useState("");
@@ -229,12 +221,12 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
     setPhase("running");
     setPercent(0);
     setMessage("");
-    trackGAEvent("guest_compress_started", { mode });
+    trackGAEvent("guest_compress_started", { mode: "quality" });
     try {
       const started = await startGuestCompress(file, {
         quality,
-        targetKb: mode === "target" ? targetKb : 0,
-        allowRasterize: mode === "target" && raster,
+        targetKb: 0,
+        allowRasterize: false,
       });
       if (aliveRef.current) setAllowance(started.allowance);
 
@@ -258,13 +250,13 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
             filename,
             inBytes: file.size,
             outBytes: blob.size,
-            targetKb: mode === "target" ? targetKb : 0,
+            targetKb: 0,
             rasterized,
           });
           setPhase("done");
           trackGAEvent("guest_compress_done", {
             saved_pct: Math.max(0, Math.round((1 - blob.size / file.size) * 100)),
-            mode,
+            mode: "quality",
           });
           return;
         }
@@ -283,7 +275,7 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
       }
       setError(e instanceof Error ? e.message : t.errGeneric);
     }
-  }, [file, phase, mode, quality, targetKb, raster, t]);
+  }, [file, phase, quality, t]);
 
   // Sonuç ekranı gösterildi → davet GÖSTERİMİ ölçülür (tıklama tek başına yetmez).
   const inviteShownRef = useRef(false);
@@ -443,62 +435,16 @@ export function GuestCompressTool({ language, onRegister, onLogin }: Props) {
               </div>
             </div>
 
-            {/* Ya kaliteye göre ya hedef boyuta göre: ikisi birlikte seçilemez. */}
-            <div className="field field--full">
-              <span>{t.howTitle}</span>
-              <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    { id: "quality" as Mode, label: t.byQuality },
-                    { id: "target" as Mode, label: t.byTarget },
-                  ] as const
-                ).map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setMode(m.id)}
-                    aria-pressed={mode === m.id}
-                    className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition ${
-                      mode === m.id
-                        ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-200"
-                        : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:border-white/20"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-              <span className="field-hint">{mode === "target" ? t.targetHint : t.qualityHint}</span>
-            </div>
-
-            {mode === "quality" ? (
-              <label className="field field--full">
-                <span>{t.quality}</span>
-                <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)}>
-                  <option value="auto">{t.qAuto}</option>
-                  <option value="low">{t.qLow}</option>
-                  <option value="medium">{t.qMed}</option>
-                </select>
-                <span className="field-hint">{t.qualityMore}</span>
-              </label>
-            ) : (
-              <>
-                <label className="field field--full">
-                  <span>{t.target}</span>
-                  <select value={targetKb} onChange={(e) => setTargetKb(Number(e.target.value))}>
-                    {TARGETS_KB.map((kb) => (
-                      <option key={kb} value={kb}>
-                        {t.atMost(kb)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="field field--full field--checkbox">
-                  <input type="checkbox" checked={raster} onChange={(e) => setRaster(e.target.checked)} />
-                  <span>{t.raster}</span>
-                </label>
-              </>
-            )}
+            <label className="field field--full">
+              <span>{t.quality}</span>
+              <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)}>
+                <option value="auto">{t.qAuto}</option>
+                <option value="low">{t.qLow}</option>
+                <option value="medium">{t.qMed}</option>
+              </select>
+              <span className="field-hint">{t.qualityHint}</span>
+              <span className="field-hint">{t.qualityMore}</span>
+            </label>
           </>
         )}
 

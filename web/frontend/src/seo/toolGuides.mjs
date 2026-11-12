@@ -88,7 +88,7 @@ const TOOL_GUIDE_CORE = {
     tr: {
       steps: [
         { title: "PDF'i yükleyin", x: "«Dosya Seç» ile küçültmek istediğiniz PDF'i seçin." },
-        { title: "Düzeyi ya da hedef boyutu seçin", x: "Sıkıştırma düzeyini seçin veya «Hedef boyut» menüsünden bir sınır belirleyin (örneğin 1 MB)." },
+        { title: "Sıkıştırma düzeyini seçin", x: "Kalite menüsünden düzeyi seçin: otomatik, düşük ya da orta." },
         { title: "Sıkıştırın", x: "İşlemi başlatın. Dosyanız şifreli aktarılır, sunucuda işlenir ve işlem sonrası silinir." },
         { title: "Sonucu kontrol edip indirin", x: "Sonuç ekranı dosyanın kaç MB'tan kaç MB'a indiğini gösterir; memnunsanız indirin." },
       ],
@@ -103,7 +103,7 @@ const TOOL_GUIDE_CORE = {
     en: {
       steps: [
         { title: "Upload the PDF", x: "Choose the PDF you want to shrink with «Choose file»." },
-        { title: "Pick a level or target size", x: "Select a compression level, or set a limit from the «Target size» menu (for example 1 MB)." },
+        { title: "Pick a compression level", x: "Choose a level from the Quality menu: automatic, low or medium." },
         { title: "Compress", x: "Start the process. Your file is sent over an encrypted connection, processed on the server and deleted afterwards." },
         { title: "Check and download", x: "The result screen shows how many MB the file went from and to; download it when you're happy." },
       ],

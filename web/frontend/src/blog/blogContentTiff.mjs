@@ -66,7 +66,7 @@ export const TIFF_POSTS = [
         { q: "Dosyam bir sunucuya yükleniyor mu?", a: "Hayır. Çevirme işlemi tarayıcınızda yapılır; dosya cihazınızdan çıkmaz." },
         { q: "Çevirince PDF'teki yazı seçilebilir olur mu?", a: "Hayır, tarama görüntü olarak kalır. Seçilebilir ve aranabilir metin için PDF'i OCR aracından geçirin." },
         { q: "Bir başvuru ekranı TIF'i kabul etmiyor, PDF istiyor. Ne yapmalıyım?", a: "TIF'i PDF'e çevirip yükleyin. Kabul edilen biçimler ve boyut sınırı kuruma göre değişir; ekrandaki açıklamayı esas alın." },
-        { q: "Çıkan PDF çok büyük, küçültebilir miyim?", a: "Evet, «PDF Sıkıştır» aracıyla hedef boyuta indirebilirsiniz." },
+        { q: "Çıkan PDF çok büyük, küçültebilir miyim?", a: "Evet, «PDF Sıkıştır» aracıyla dosya boyutunu küçültebilirsiniz." },
       ],
     },
     {
@@ -113,7 +113,7 @@ export const TIFF_POSTS = [
         { q: "Is my file uploaded to a server?", a: "No. The conversion runs in your browser and the file stays on your device." },
         { q: "Will the text in the PDF be selectable?", a: "No, the scan stays an image. Use the OCR tool for selectable, searchable text." },
         { q: "A form rejects TIF and wants a PDF. What should I do?", a: "Convert the TIF to PDF and upload that. Accepted formats and size limits vary by organisation, so follow what the form says." },
-        { q: "The PDF is too big. Can I shrink it?", a: "Yes, Compress PDF can bring it down to a target size." },
+        { q: "The PDF is too big. Can I shrink it?", a: "Yes, Compress PDF can make the file smaller." },
       ],
     },
   ),
