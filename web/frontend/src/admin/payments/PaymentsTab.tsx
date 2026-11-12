@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, RefreshCw, Search, Undo2, X } from "lucide-react";
+import { Ban, Loader2, Receipt, RefreshCw, RotateCcw, Search, Undo2, X, Zap } from "lucide-react";
 
 import {
   fetchAdminPayments,
@@ -12,6 +12,7 @@ import {
   type AdminPaytrStatus,
   type AdminRefundResult,
 } from "../../api/admin";
+import { ConfirmDialog, type ConfirmTone } from "./ConfirmDialog";
 import { PaymentSwitches } from "./PaymentSwitches";
 
 /**
@@ -418,7 +419,7 @@ function cardNote(country: string | null | undefined): string | null {
 function InvoiceCell({ accessToken, row, onChanged }: { accessToken: string; row: AdminPaymentRow; onChanged: () => void }) {
   const [busy, setBusy] = useState<AdminInvoiceAction | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [asking, setAsking] = useState<AdminInvoiceAction | null>(null);
 
   const act = async (a: AdminInvoiceAction) => {
     setBusy(a);
@@ -433,11 +434,15 @@ function InvoiceCell({ accessToken, row, onChanged }: { accessToken: string; row
       setErr(e instanceof Error ? e.message : "İşlem yapılamadı.");
     } finally {
       setBusy(null);
-      setConfirmCancel(false);
+      setAsking(null);
     }
   };
 
-  const btn = "rounded-md border border-white/[0.14] px-2 py-1 text-[11px] font-semibold text-slate-100 hover:bg-white/[0.06] disabled:opacity-50";
+  const btnBase =
+    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50";
+  const btnNeutral = `${btnBase} border-white/[0.12] bg-white/[0.04] text-slate-100 hover:bg-white/[0.1]`;
+  const btnPrimary = `${btnBase} border-cyan-400/30 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20`;
+  const btnDanger = `${btnBase} border-rose-400/30 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20`;
   const card = cardNote(row.cardCountry);
 
   if (row.invoiceNo) return <span>{row.invoiceNo}</span>;
@@ -461,31 +466,100 @@ function InvoiceCell({ accessToken, row, onChanged }: { accessToken: string; row
       {card && <div className="text-[11px] text-slate-500">{card}</div>}
       <div className="flex flex-wrap gap-1.5">
         {!cancelled && row.invoiceAction !== "VAT" && (
-          <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("VAT")}>{INVOICE_ACTION_LABEL.VAT}</button>
+          <button type="button" className={btnNeutral} disabled={busy !== null} onClick={() => setAsking("VAT")}>
+            <Receipt className="h-3 w-3" aria-hidden />{INVOICE_ACTION_LABEL.VAT}
+          </button>
         )}
         {!cancelled && row.invoiceAction === "VAT" && (
-          <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("AUTO")}>{INVOICE_ACTION_LABEL.AUTO}</button>
+          <button type="button" className={btnNeutral} disabled={busy !== null} onClick={() => setAsking("AUTO")}>
+            <RotateCcw className="h-3 w-3" aria-hidden />{INVOICE_ACTION_LABEL.AUTO}
+          </button>
         )}
-        <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("NOW")}>
-          {busy === "NOW" && <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />}{INVOICE_ACTION_LABEL.NOW}
+        <button type="button" className={btnPrimary} disabled={busy !== null} onClick={() => setAsking("NOW")}>
+          <Zap className="h-3 w-3" aria-hidden />{INVOICE_ACTION_LABEL.NOW}
         </button>
-        <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("NOW_VAT")}>
-          {busy === "NOW_VAT" && <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />}{INVOICE_ACTION_LABEL.NOW_VAT}
+        <button type="button" className={btnPrimary} disabled={busy !== null} onClick={() => setAsking("NOW_VAT")}>
+          <Zap className="h-3 w-3" aria-hidden />{INVOICE_ACTION_LABEL.NOW_VAT}
         </button>
         {cancelled ? (
-          <button type="button" className={btn} disabled={busy !== null} onClick={() => void act("AUTO")}>Yeniden planla</button>
-        ) : confirmCancel ? (
-          <button type="button" className={`${btn} border-rose-400/50 text-rose-200`} disabled={busy !== null} onClick={() => void act("CANCEL")}>
-            Emin misiniz? Satış geçerliyse fatura kesmemek yasal risktir — evet, kesme
+          <button type="button" className={btnNeutral} disabled={busy !== null} onClick={() => setAsking("AUTO")}>
+            <RotateCcw className="h-3 w-3" aria-hidden />Yeniden planla
           </button>
         ) : (
-          <button type="button" className={`${btn} text-rose-200`} disabled={busy !== null} onClick={() => setConfirmCancel(true)}>{INVOICE_ACTION_LABEL.CANCEL}</button>
+          <button type="button" className={btnDanger} disabled={busy !== null} onClick={() => setAsking("CANCEL")}>
+            <Ban className="h-3 w-3" aria-hidden />{INVOICE_ACTION_LABEL.CANCEL}
+          </button>
         )}
       </div>
       {err && <div className="text-[11px] text-rose-200">{err}</div>}
+      {asking && (
+        <ConfirmDialog
+          tone={INVOICE_CONFIRM[asking].tone}
+          title={INVOICE_CONFIRM[asking].title}
+          subtitle={`${row.user.email} · sipariş ${row.conversationId}`}
+          points={INVOICE_CONFIRM[asking].points}
+          confirmLabel={INVOICE_CONFIRM[asking].confirmLabel}
+          busy={busy !== null}
+          onCancel={() => setAsking(null)}
+          onConfirm={() => void act(asking)}
+        />
+      )}
     </div>
   );
 }
+
+/** Fatura karar düğmelerinin ortada açılan ikinci onay metinleri. */
+const INVOICE_CONFIRM: Record<AdminInvoiceAction, { tone: ConfirmTone; title: string; confirmLabel: string; points: string[] }> = {
+  AUTO: {
+    tone: "info",
+    title: "Otomatiğe döndürülsün mü?",
+    confirmLabel: "Evet, otomatiğe döndür",
+    points: [
+      "Daha önce verdiğiniz karar kaldırılır.",
+      "Fatura planlanan günde, kart ve adrese bakılarak sistem tarafından otomatik kesilir.",
+    ],
+  },
+  VAT: {
+    tone: "info",
+    title: "KDV'li kesilsin mi?",
+    confirmLabel: "Evet, KDV'li kes",
+    points: [
+      "Fatura yine planlanan günde (ödemeden yaklaşık 6,5 gün sonra) kesilir, ama KDV'li olur.",
+      "Müşterinin Türkiye'den olduğundan eminseniz doğru seçimdir.",
+      "Bu sürede iade olursa fatura hiç kesilmez.",
+    ],
+  },
+  NOW: {
+    tone: "warning",
+    title: "Fatura şimdi kesilsin mi?",
+    confirmLabel: "Evet, şimdi kes",
+    points: [
+      "Fatura hemen GİB'e iletilir; geri alınamaz.",
+      "KDV durumunu sistem kart ve adrese bakarak kendisi belirler.",
+      "7 günlük iade süresi dolmadan kesilirse, müşteri iade ederse iptal ya da iade faturası gerekir.",
+    ],
+  },
+  NOW_VAT: {
+    tone: "warning",
+    title: "Fatura şimdi ve KDV'li kesilsin mi?",
+    confirmLabel: "Evet, şimdi KDV'li kes",
+    points: [
+      "Fatura hemen GİB'e iletilir; geri alınamaz.",
+      "KDV mutlaka uygulanır (yurt içi müşteri gibi).",
+      "7 günlük iade süresi dolmadan kesilirse, müşteri iade ederse iptal ya da iade faturası gerekir.",
+    ],
+  },
+  CANCEL: {
+    tone: "danger",
+    title: "Bu satışa fatura kesilmesin mi?",
+    confirmLabel: "Evet, fatura kesme",
+    points: [
+      "Satış geçerliyse fatura kesmemek yasal risktir (fatura 7 gün içinde kesilmek zorundadır).",
+      "Yalnızca satış gerçekten iptal ya da iade edildiyse kullanın.",
+      "Sonradan vazgeçerseniz 'Yeniden planla' ile geri alabilirsiniz.",
+    ],
+  },
+};
 
 const STATUS_FIELD_LABEL: Record<string, string> = {
   payment_amount: "Sipariş tutarı",

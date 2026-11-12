@@ -189,9 +189,23 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     expect(await screen.findByText(/Otomatik kesilecek/)).toBeTruthy();
     expect(screen.getByText("Kart: belirlenemedi")).toBeTruthy();
     fireEvent.click(screen.getByText("KDV'li kes (vadesinde)"));
+    expect(invoiceAction).not.toHaveBeenCalled();
+    expect(screen.getByTestId("confirm-dialog")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("confirm-ok"));
     await waitFor(() => expect(invoiceAction).toHaveBeenCalledWith("t", "oid-1", "VAT"));
+    await waitFor(() => expect(screen.queryByTestId("confirm-dialog")).toBeNull());
     fireEvent.click(screen.getByText("Şimdi kes"));
+    fireEvent.click(screen.getByTestId("confirm-ok"));
     await waitFor(() => expect(invoiceAction).toHaveBeenCalledWith("t", "oid-1", "NOW"));
+  });
+
+  it("onay penceresinde Vazgeç dersen hiçbir işlem yapılmaz", async () => {
+    fetchPayments.mockResolvedValue(page([row({ invoiceStatus: "scheduled", invoiceDueAt: "2026-11-18T10:00:00.000Z" })]));
+    render(<PaymentsTab accessToken="t" />);
+    fireEvent.click(await screen.findByText("Fatura kesme"));
+    fireEvent.click(screen.getByTestId("confirm-cancel"));
+    expect(screen.queryByTestId("confirm-dialog")).toBeNull();
+    expect(invoiceAction).not.toHaveBeenCalled();
   });
 
   it("fatura kesme kararı iki adımlıdır (yanlışlıkla basılamaz)", async () => {
@@ -200,7 +214,8 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     render(<PaymentsTab accessToken="t" />);
     fireEvent.click(await screen.findByText("Fatura kesme"));
     expect(invoiceAction).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByText(/Emin misiniz/));
+    expect(screen.getByText("Bu satışa fatura kesilmesin mi?")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("confirm-ok"));
     await waitFor(() => expect(invoiceAction).toHaveBeenCalledWith("t", "oid-1", "CANCEL"));
   });
 
@@ -209,6 +224,7 @@ describe("PaymentsTab — ödemeler ve iade", () => {
     invoiceAction.mockResolvedValue({ ok: true, invoiceStatus: "scheduled", invoiceAction: null, outcome: "paused" });
     render(<PaymentsTab accessToken="t" />);
     fireEvent.click(await screen.findByText("Şimdi kes"));
+    fireEvent.click(screen.getByTestId("confirm-ok"));
     expect(await screen.findByText(/DURDURULMUŞ/)).toBeTruthy();
   });
 });

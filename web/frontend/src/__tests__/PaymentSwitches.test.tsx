@@ -36,6 +36,10 @@ describe("PaymentSwitches (Ödemeler ve iade üst düğmeleri)", () => {
     render(<PaymentSwitches accessToken="t" />);
     await waitFor(() => expect(screen.getByText("Ödemeleri aç")).toBeTruthy());
     fireEvent.click(screen.getByText("Ödemeleri aç"));
+    // ikinci onay: ortada açılan pencere; onaylanmadan hiçbir şey yazılmaz
+    expect(putPatches).not.toHaveBeenCalled();
+    expect(screen.getByText("Ödemeler açılsın mı?")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("confirm-ok"));
     await waitFor(() => expect(putPatches).toHaveBeenCalled());
     const body = putPatches.mock.calls[0][1]["global.flags"];
     expect(body.featureFlags).toEqual({ contactForm: true, invoicingPaused: true, paymentsDisabled: false });
@@ -50,6 +54,17 @@ describe("PaymentSwitches (Ödemeler ve iade üst düğmeleri)", () => {
     fireEvent.click(screen.getByText("Fatura kesmeyi durdur"));
     await waitFor(() => expect(putPatches).toHaveBeenCalled());
     expect(putPatches.mock.calls[0][1]["global.flags"].featureFlags.invoicingPaused).toBe(true);
+  });
+
+  it("açma sırasında Vazgeç denirse hiçbir şey kaydedilmez", async () => {
+    fetchSettings.mockResolvedValue({});
+    render(<PaymentSwitches accessToken="t" />);
+    await waitFor(() => expect(screen.getByText("İstisnayı aç")).toBeTruthy());
+    fireEvent.click(screen.getByText("İstisnayı aç"));
+    expect(screen.getByText("Yurt dışı KDV istisnası açılsın mı?")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("confirm-cancel"));
+    expect(screen.queryByTestId("confirm-dialog")).toBeNull();
+    expect(putPatches).not.toHaveBeenCalled();
   });
 
   it("BIN listesi boş/eskiyse uyarır ve belirlenemedi sayısını gösterir", async () => {
