@@ -1,4 +1,5 @@
 import { softenGiftLines, useAiNotOpen } from "../../lib/aiAvailability";
+import { Lock, ShieldCheck, RotateCcw, ArrowRight, Check, Tag } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { Language } from "../../i18n/landing";
 import type { PlanId } from "../../lib/planConfig";
@@ -425,16 +426,29 @@ export function PaymentSummaryModal({
     <>
       <div className="payment-summary-backdrop" role="presentation" onMouseDown={handleBackdropMouseDown}>
         <div
-          className={`payment-summary-modal payment-summary-modal--wide mx-auto flex h-[min(92dvh,760px)] max-h-[92dvh] w-full max-w-[min(520px,calc(100vw-20px))] flex-col overflow-hidden rounded-3xl border bg-gradient-to-b from-[#0d1120] to-[#060910] pb-0 text-center ring-1 ${accent.ring} ${accent.glow} shadow-[0_48px_120px_-40px_rgba(0,0,0,0.85)]`}
+          className={`payment-summary-modal payment-summary-modal--wide mx-auto flex h-[min(92dvh,760px)] max-h-[92dvh] w-full max-w-[min(520px,calc(100vw-20px))] flex-col overflow-hidden rounded-[28px] border bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] pb-0 text-center ring-1 ${accent.ring} ${accent.glow} shadow-[0_48px_120px_-40px_rgba(0,0,0,0.85)]`}
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => e.stopPropagation()}
         >
           {/* Plan header */}
-          <div className="relative shrink-0 px-6 pb-5 pt-6 sm:px-8 sm:pt-8">
+          <div className="relative shrink-0 overflow-hidden px-6 pb-5 pt-6 sm:px-8 sm:pt-7">
+            <div className="pointer-events-none absolute -right-14 -top-20 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute -left-16 top-8 h-36 w-36 rounded-full bg-blue-500/10 blur-3xl" aria-hidden />
+            <ol className="relative mb-4 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]" aria-label={tr ? "Adımlar" : "Steps"}>
+              <li className="flex items-center gap-2 text-emerald-300">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/30"><Check className="h-3.5 w-3.5" aria-hidden /></span>
+                {tr ? "Fatura bilgileri" : "Billing"}
+              </li>
+              <span className="h-px w-8 bg-white/15 sm:w-12" aria-hidden />
+              <li className="flex items-center gap-2 text-white" aria-current="step">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-[11px] shadow-[0_6px_16px_-4px_rgba(79,70,229,0.7)]">2</span>
+                {tr ? "Ödeme" : "Payment"}
+              </li>
+            </ol>
             <button
               type="button"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-lg text-slate-400 transition hover:bg-white/[0.1] hover:text-slate-200"
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-lg text-slate-400 transition hover:bg-white/[0.12] hover:text-white"
               aria-label={tr ? "Kapat" : "Close"}
               onClick={attemptClose}
             >
@@ -464,7 +478,7 @@ export function PaymentSummaryModal({
                 {tr ? plan.badge.textTr : plan.badge.textEn}
               </span>
             ) : null}
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h2 className="relative mt-3 bg-gradient-to-b from-white to-slate-300 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-[2rem]">
               {planName}
             </h2>
             <p className="mt-1 text-sm text-slate-400">
@@ -473,10 +487,10 @@ export function PaymentSummaryModal({
                 : (tr ? "Aylık abonelik — istediğiniz zaman iptal" : "Monthly subscription — cancel anytime")}
             </p>
             {/* Feature list */}
-            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+            <ul className="relative mt-4 flex flex-wrap justify-center gap-2">
               {features.map((f) => (
-                <li key={f} className="flex items-center gap-1.5 text-[12px] text-slate-300">
-                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent.dot}`} />
+                <li key={f} className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[12px] text-slate-200">
+                  <Check className="h-3 w-3 shrink-0 text-emerald-400" aria-hidden />
                   {f}
                 </li>
               ))}
@@ -520,7 +534,7 @@ export function PaymentSummaryModal({
                 ) : null}
 
                 {/* Price block — KDV dökümüyle */}
-                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-4">
+                <div className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-gradient-to-b from-white/[0.06] to-white/[0.02] px-5 py-5 shadow-[0_24px_60px_-30px_rgba(79,70,229,0.5),inset_0_1px_0_rgba(255,255,255,0.06)]">
                   {vatBreakdown ? (
                     <div className="space-y-1.5 text-sm">
                       {/* Hizmet bedeli (KDV hariç liste fiyatı) */}
@@ -583,13 +597,14 @@ export function PaymentSummaryModal({
 
                 {/* Promo code */}
                 <div className="mt-4">
-                  <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                  <label className="mb-1.5 flex items-center gap-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    <Tag className="h-3 w-3" aria-hidden />
                     {tr ? "Promosyon kodu" : "Promo code"}
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm font-semibold tracking-wider text-white placeholder-slate-600 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/15"
+                      className="min-w-0 flex-1 rounded-xl border border-white/[0.09] bg-white/[0.035] px-3.5 py-2.5 text-sm font-semibold tracking-wider text-white placeholder-slate-600 outline-none transition hover:border-white/[0.16] focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-4 focus:ring-indigo-500/10"
                       value={promoInput}
                       onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoApplied(null); }}
                       placeholder="CODE"
@@ -597,7 +612,7 @@ export function PaymentSummaryModal({
                     />
                     <button
                       type="button"
-                      className="rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.1] disabled:opacity-40"
+                      className="rounded-xl border border-indigo-400/30 bg-indigo-500/15 px-5 py-2.5 text-sm font-bold text-indigo-100 transition hover:bg-indigo-500/25 disabled:border-white/[0.08] disabled:bg-white/[0.04] disabled:text-slate-500"
                       disabled={applyingPromo || !promoInput.trim()}
                       onClick={() => void handleApplyPromo()}
                     >
@@ -615,7 +630,17 @@ export function PaymentSummaryModal({
                 </div>
 
                 {/* Trust row */}
-                <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[12px] text-slate-400">
+                <div className="mt-4 grid grid-cols-2 gap-2 text-[11.5px] text-slate-300">
+                  <div className="flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-2 py-2">
+                    <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden />
+                    {tr ? "Güvenli (SSL) ödeme" : "Secure (SSL) payment"}
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-2 py-2">
+                    <RotateCcw className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden />
+                    {tr ? "Kendiliğinden yenilenmez" : "No auto-renewal"}
+                  </div>
+                </div>
+                <div className="mt-2 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[12px] text-slate-400">
                   <PaytrBadge height={16} tr={tr} className="mr-2 align-middle" />
                   {tr
                     ? "güvenceli ödeme — kart bilgileriniz sitemizde saklanmaz"
@@ -627,12 +652,12 @@ export function PaymentSummaryModal({
 
           {/* Footer CTA */}
           {!successMessage ? (
-            <div className="shrink-0 border-t border-white/[0.07] bg-gradient-to-t from-[#060910]/95 to-[#0d1120]/90 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-8">
+            <div className="shrink-0 border-t border-white/[0.08] bg-gradient-to-t from-[#05070d] to-[#0b0f1f]/95 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-8">
               {/* Kullanım Koşulları + KVKK checkbox */}
-              <label className="mx-auto mb-2 flex max-w-lg cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+              <label className="mx-auto mb-2 flex max-w-lg cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3.5 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                  className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
                   checked={legalAccepted}
                   onChange={(e) => setLegalAccepted(e.target.checked)}
                   disabled={paying}
@@ -672,14 +697,19 @@ export function PaymentSummaryModal({
 
               <button
                 type="button"
-                className="mx-auto mt-3 flex w-full max-w-[28rem] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-[1.05rem] text-[16px] font-bold leading-tight tracking-tight text-white shadow-[0_16px_40px_-10px_rgba(79,70,229,0.6),0_2px_0_rgba(255,255,255,0.1)_inset] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060910] disabled:pointer-events-none disabled:opacity-40 sm:py-[1.15rem]"
+                className="group relative mx-auto mt-3 flex w-full max-w-[28rem] items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-6 py-[1.05rem] text-[16px] font-bold leading-tight tracking-tight text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.75),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 ring-white/10 transition duration-200 hover:-translate-y-px hover:shadow-[0_22px_52px_-12px_rgba(99,102,241,0.9),inset_0_1px_0_rgba(255,255,255,0.22)] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40 sm:py-[1.15rem]"
                 disabled={paying || !legalAccepted}
                 onClick={() => void handlePay()}
               >
+                <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition duration-700 group-hover:left-full group-hover:opacity-100" aria-hidden />
                 {paying ? (
                   <>{tr ? "İşleniyor…" : "Processing…"}</>
                 ) : (
-                  <>{tr ? "🔒 Güvenli ödemeye geç" : "🔒 Continue to secure payment"}</>
+                  <>
+                    <Lock className="h-[18px] w-[18px]" aria-hidden />
+                    {tr ? "Güvenli ödemeye geç" : "Continue to secure payment"}
+                    <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
+                  </>
                 )}
               </button>
               {isViteDev ? (

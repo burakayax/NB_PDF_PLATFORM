@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { User, Building2, MapPin, Phone, ShieldCheck, Lock, ArrowRight, ReceiptText } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
@@ -571,9 +572,18 @@ export function BillingInfoModal({
   if (!open) return null;
 
   const inp =
-    "w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/15";
+    "w-full rounded-xl border border-white/[0.09] bg-white/[0.035] px-3.5 py-2.5 text-[14px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] placeholder-slate-600 outline-none transition duration-150 hover:border-white/[0.16] hover:bg-white/[0.05] focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-4 focus:ring-indigo-500/10";
   const lbl =
-    "block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1";
+    "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400";
+  const sec = (icon: React.ReactNode, text: string) => (
+    <div className="flex items-center gap-2.5 pt-1.5">
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/25 to-blue-500/10 text-indigo-200 ring-1 ring-indigo-400/20">
+        {icon}
+      </span>
+      <h3 className="text-[13px] font-bold tracking-wide text-slate-100">{text}</h3>
+      <span className="h-px flex-1 bg-gradient-to-r from-white/[0.12] to-transparent" aria-hidden />
+    </div>
+  );
   const req = <span className="text-red-400 ml-0.5">*</span>;
   const bad = " !border-red-500/70 !bg-red-500/[0.06] focus:!border-red-500 focus:!ring-red-500/30";
   const fieldMsg = (k: string) =>
@@ -591,7 +601,7 @@ export function BillingInfoModal({
 
   return (
     <div
-      className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[500] flex items-center justify-center bg-black/75 p-3 backdrop-blur-md sm:p-4"
       role="dialog"
       aria-modal="true"
       onMouseDown={(e) => {
@@ -599,23 +609,37 @@ export function BillingInfoModal({
       }}
     >
       <div
-        className="relative flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0d1120] to-[#060910] shadow-[0_48px_120px_-40px_rgba(0,0,0,0.85)]"
+        className="relative flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="shrink-0 border-b border-white/[0.07] px-6 py-5">
+        <div className="relative shrink-0 overflow-hidden border-b border-white/[0.07] px-6 pb-5 pt-6 sm:px-9">
+          <div className="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute -left-20 top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" aria-hidden />
           <button
             type="button"
             aria-label={tr ? "Kapat" : "Close"}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-slate-400 hover:bg-white/[0.1]"
+            className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-lg text-slate-400 transition hover:bg-white/[0.12] hover:text-white"
             onClick={onClose}
           >
             ×
           </button>
-          <h2 className="text-lg font-bold text-white">
+          {/* Adım göstergesi */}
+          <ol className="relative mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]" aria-label={tr ? "Adımlar" : "Steps"}>
+            <li className="flex items-center gap-2 text-white" aria-current="step">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-[11px] shadow-[0_6px_16px_-4px_rgba(79,70,229,0.7)]">1</span>
+              {tr ? "Fatura bilgileri" : "Billing details"}
+            </li>
+            <span className="h-px w-8 bg-white/15 sm:w-14" aria-hidden />
+            <li className="flex items-center gap-2 text-slate-500">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-white/15 text-[11px]">2</span>
+              {tr ? "Ödeme" : "Payment"}
+            </li>
+          </ol>
+          <h2 className="relative bg-gradient-to-r from-white to-slate-300 bg-clip-text text-[22px] font-extrabold tracking-tight text-transparent sm:text-2xl">
             {tr ? "Fatura Bilgileri" : "Billing Information"}
           </h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="relative mt-1.5 max-w-xl text-[13px] leading-relaxed text-slate-400">
             {tr
               ? "Yasal e-arşiv fatura düzenlenebilmesi için aşağıdaki bilgiler gerekmektedir."
               : "Required to generate your legal e-invoice."}
@@ -623,13 +647,14 @@ export function BillingInfoModal({
         </div>
 
         {/* Body */}
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5 sm:px-9">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-6 sm:px-9">
           {loading ? (
             <div className="py-8 text-center text-sm text-slate-400">
               {tr ? "Yükleniyor…" : "Loading…"}
             </div>
           ) : (
             <>
+              {sec(<ReceiptText className="h-3.5 w-3.5" aria-hidden />, tr ? "Fatura türü ve kimlik" : "Invoice type & identity")}
               {/* FIX 2: Tam ülke listesi */}
               <div>
                 <label className={lbl}>
@@ -667,16 +692,19 @@ export function BillingInfoModal({
                   <label className={lbl}>
                     {tr ? "Fatura Türü" : "Invoice Type"}
                   </label>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/[0.08] bg-black/25 p-1.5" role="radiogroup">
                     {(["individual", "corporate"] as const).map((type) => (
                       <button
                         key={type}
                         type="button"
-                        className={`flex-1 rounded-xl border px-3 py-2 text-sm font-semibold transition ${form.invoiceType === type ? "border-blue-500/50 bg-blue-500/15 text-blue-300" : "border-white/[0.08] bg-white/[0.04] text-slate-400 hover:bg-white/[0.08]"}`}
+                        role="radio"
+                        aria-checked={form.invoiceType === type}
+                        className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition duration-150 ${form.invoiceType === type ? "bg-gradient-to-br from-indigo-500/90 to-blue-600/90 text-white shadow-[0_8px_22px_-8px_rgba(79,70,229,0.8)] ring-1 ring-white/15" : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"}`}
                         onClick={() =>
                           setForm((p) => ({ ...p, invoiceType: type }))
                         }
                       >
+                        {type === "individual" ? <User className="h-4 w-4" aria-hidden /> : <Building2 className="h-4 w-4" aria-hidden />}
                         {type === "individual"
                           ? tr
                             ? "Bireysel"
@@ -819,6 +847,7 @@ export function BillingInfoModal({
                 </>
               )}
 
+              {sec(<MapPin className="h-3.5 w-3.5" aria-hidden />, tr ? "Fatura adresi" : "Billing address")}
               {/* Adres */}
               <div>
                 <label className={lbl}>
@@ -945,6 +974,7 @@ export function BillingInfoModal({
                     : "Why we ask: because we sell from Turkey, Turkish tax law requires the buyer's name and address on every invoice. It is used only to issue your invoice, stored encrypted, and never shared for marketing."}
               </p>
 
+              {sec(<Phone className="h-3.5 w-3.5" aria-hidden />, tr ? "İletişim" : "Contact")}
               {/* Telefon — ülke kodu bayraklı açılır menüden seçilir, IP'den otomatik tespit edilir */}
               <div>
                 <label className={lbl}>{tr ? "Telefon" : "Phone"}</label>
@@ -957,6 +987,7 @@ export function BillingInfoModal({
                 {fieldMsg("phone")}
               </div>
 
+              {sec(<ShieldCheck className="h-3.5 w-3.5" aria-hidden />, tr ? "Onaylar" : "Consents")}
               {/* FIX 4: Geliştirilmiş KVKK bilgi metni */}
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[12px] leading-relaxed text-slate-400">
                 {tr ? (
@@ -1014,10 +1045,10 @@ export function BillingInfoModal({
                 </div>
 
                 {/* Ön bilgilendirme onayı */}
-                <label className="flex cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                    className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
                     checked={form.onBilgilendirmeAccepted}
                     onChange={(e) =>
                       setForm((p) => ({
@@ -1058,10 +1089,10 @@ export function BillingInfoModal({
                 </label>
 
                 {/* Mesafeli Satış Sözleşmesi — ön bilgilendirmeden AYRI onay (Yönetmelik: sözleşme ayrıca onaya sunulur) */}
-                <label className="flex cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                    className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
                     checked={form.contractAccepted}
                     onChange={(e) =>
                       setForm((p) => ({
@@ -1102,10 +1133,10 @@ export function BillingInfoModal({
                 </label>
 
                 {/* Blok C: Cayma hakkı feragati (zorunlu onay) */}
-                <label className="flex cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                    className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
                     checked={form.withdrawalWaived}
                     onChange={(e) =>
                       setForm((p) => ({
@@ -1135,10 +1166,10 @@ export function BillingInfoModal({
                 </label>
 
                 {/* Blok D: Reşit olma / yasal temsilci beyanı (TMK md. 16) */}
-                <label className="flex cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
+                    className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
                     checked={form.guardianDeclared}
                     onChange={(e) =>
                       setForm((p) => ({
@@ -1167,27 +1198,37 @@ export function BillingInfoModal({
                 </label>
               </div>
 
-              {error && <p className="text-[12px] text-red-400">{error}</p>}
+              {error && (
+                <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/[0.08] px-3.5 py-2.5 text-[12.5px] font-medium text-red-300">
+                  {error}
+                </p>
+              )}
             </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-white/[0.07] bg-gradient-to-t from-[#060910]/95 to-[#0d1120]/90 px-6 py-4">
+        <div className="shrink-0 border-t border-white/[0.08] bg-gradient-to-t from-[#05070d] to-[#0b0f1f]/95 px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-9">
           <button
             type="button"
-            className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-[1.05rem] text-[16px] font-bold text-white shadow-[0_16px_40px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
+            className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-6 py-[1.05rem] text-[16px] font-bold tracking-tight text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.75),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 ring-white/10 transition duration-200 hover:-translate-y-px hover:shadow-[0_22px_52px_-12px_rgba(99,102,241,0.9),inset_0_1px_0_rgba(255,255,255,0.22)] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40"
             disabled={saving || loading || !isValid()}
             onClick={() => void handleSubmit()}
           >
-            {saving
-              ? tr
-                ? "Kaydediliyor…"
-                : "Saving…"
-              : tr
-                ? "Devam Et ve Öde →"
-                : "Continue to Payment →"}
+            <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition duration-700 group-hover:left-full group-hover:opacity-100" aria-hidden />
+            {saving ? (
+              <>{tr ? "Kaydediliyor…" : "Saving…"}</>
+            ) : (
+              <>
+                {tr ? "Devam Et ve Öde" : "Continue to Payment"}
+                <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" aria-hidden />
+              </>
+            )}
           </button>
+          <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-[11.5px] text-slate-500">
+            <Lock className="h-3 w-3" aria-hidden />
+            {tr ? "Kart bilgileriniz sitemizde saklanmaz." : "Your card details are never stored on our servers."}
+          </p>
         </div>
       </div>
     </div>
