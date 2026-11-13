@@ -8,7 +8,7 @@ describe("vergi numarası (arayüz)", () => {
     expect(validateCorporateTaxId("1234567801")).toBeNull();
   });
   it("yanlış sağlama hanesi ve hane sayısı reddedilir", () => {
-    expect(validateCorporateTaxId("1234567890")).toMatch(/geçersiz/i);
+    expect(validateCorporateTaxId("5300847204")).toMatch(/geçersiz/i);
     expect(validateCorporateTaxId("12345")).toMatch(/10 haneli/);
   });
 });
