@@ -48,7 +48,7 @@ PDF PLATFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler, s�
 
 | Katman                   | Araçlar                                                                                                                    |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Masaüstü                 | Python 3.11+, CustomTkinter, PyPDF2, pikepdf, Pillow, Tesseract / Poppler (ortamınıza göre), isteğe bağlı Microsoft Office |
+| Masaüstü                 | Python 3.11+, CustomTkinter, PyPDF2, pikepdf, Pillow, Tesseract (ortamınıza göre), isteğe bağlı Microsoft Office |
 | Web arayüzü              | React, TypeScript, Vite, Tailwind CSS                                                                                      |
 | PDF web API              | Python, FastAPI, Uvicorn; mevcut `src/pdf_engine` motorunun yeniden kullanımı                                              |
 | - `PDF web API`          | Python, FastAPI, Uvicorn; mevcut `src/pdf_engine` motorunun yeniden kullanımı                                              |
@@ -59,7 +59,7 @@ PDF PLATFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler, s�
 
 1. Depoyu klonlayın.
 2. **Web (önerilen tek komut):** kökte `npm run install-all`, ardından `web/api/.env` ve `web/frontend/.env` dosyalarını `.env.example` dosyalarından oluşturup doldurun; `npm run prisma:push` ile veritabanını hazırlayın; `npm run dev` ile üç servisi birlikte başlatın.
-3. **Masaüstü:** `python -m pip install -r requirements.txt` ve harici bağımlılıklar (Tesseract, Poppler, Word/Excel) — ayrıntılar için `SETUP_NOTES.txt`.
+3. **Masaüstü:** `python -m pip install -r requirements.txt` ve harici bağımlılıklar (Tesseract, Word/Excel) — ayrıntılar için `SETUP_NOTES.txt`.
 4. Ayrıntılı adımlar: **[SETUP.md](SETUP.md)**, birlikte çalıştırma: **[CALISTIRMA.md](CALISTIRMA.md)**, web mimarisi: **[web/README.md](web/README.md)**.
 
 ### Veritabanı Migration Rehberi
@@ -112,7 +112,7 @@ Python / CustomTkinter / PyPDF2 / pikepdf (desktop); React / TypeScript / Vite /
 
 1. Clone the repo.
 2. **Web:** From the repo root run `npm run install-all`, copy `web/api/.env.example` → `web/api/.env` and `web/frontend/.env.example` → `web/frontend/.env`, run `npm run prisma:push`, then `npm run dev`.
-3. **Desktop:** `pip install -r requirements.txt` and follow **SETUP_NOTES.txt** for Tesseract, Poppler, and Office.
+3. **Desktop:** `pip install -r requirements.txt` and follow **SETUP_NOTES.txt** for Tesseract and Office.
 4. More detail: **SETUP.md**, run scripts: **CALISTIRMA.md**, web architecture: **web/README.md**.
 
 ### Database Migrations

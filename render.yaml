@@ -30,7 +30,7 @@ services:
     branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
     autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     # Docker runtime: native Python runtime'da apt-get çalışmaz (salt-okunur FS).
-    # Sistem araçları (tesseract/poppler/wkhtmltopdf/ghostscript) Dockerfile'da kurulur.
+    # Sistem araçları (tesseract/wkhtmltopdf/LibreOffice) Dockerfile'da kurulur.
     runtime: docker
     region: frankfurt         # EU kullanıcılarına yakın; değiştirilebilir
     plan: starter             # Starter (512MB): UYUMAZ → cold-start yok ("PDF kontrol

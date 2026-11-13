@@ -25,7 +25,7 @@ Bu dosya projeyi ilk kez kuracaklar için sade adımları anlatır.
 - **Python 3.11 veya üzeri** (önerilir)
 - `pip` (Python ile gelir)
 
-**Masaüstü uygulaması** için ek olarak Word, Excel, Tesseract, Poppler vb. gerekebilir; ayrıntılar için depodaki `SETUP_NOTES.txt` dosyasına bakın.
+**Masaüstü uygulaması** için ek olarak Word, Excel, Tesseract vb. gerekebilir; ayrıntılar için depodaki `SETUP_NOTES.txt` dosyasına bakın.
 
 ---
 
@@ -179,7 +179,7 @@ python -m pip install -r requirements.txt
 python -m src
 ```
 
-Ayrıntılı bağımlılıklar (Word, Excel, Tesseract, Poppler yolları) için **`SETUP_NOTES.txt`** dosyasına bakın.
+Ayrıntılı bağımlılıklar (Word, Excel, Tesseract yolları) için **`SETUP_NOTES.txt`** dosyasına bakın.
 
 ---
 

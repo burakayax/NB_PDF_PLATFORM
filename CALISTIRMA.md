@@ -135,7 +135,7 @@ Tarayıcı: **http://localhost:5173**
 
 | Durum               | Çözüm                                                                                                                        |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `pdf` hemen düşüyor | `web/.venv` ve `npm run install-all` ile Python bağımlılıklarını yükleyin; Tesseract/Poppler yolları için `SETUP_NOTES.txt`. |
+| `pdf` hemen düşüyor | `web/.venv` ve `npm run install-all` ile Python bağımlılıklarını yükleyin; Tesseract yolu için `SETUP_NOTES.txt`. |
 | `api` başlamıyor    | `web/api/.env` eksik veya hatalı; `JWT_*` en az 32 karakter, `ADMIN_EMAIL` dolu olsun.                                       |
 | Port meşgul         | 8000, 4000 veya 5173 kullanan uygulamayı kapatın veya ilgili projede portu değiştirin.                                       |
 

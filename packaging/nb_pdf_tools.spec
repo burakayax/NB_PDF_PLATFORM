@@ -20,7 +20,6 @@ a = Analysis(
     datas=[
         (os.path.join(PROJECT_ROOT, "assets"), "assets"),
         (os.path.join(SRC, "locales"), "locales"),
-        (os.path.join(PROJECT_ROOT, "Library", "bin"), "Library/bin"),
     ]
     + ctk_datas,
     hiddenimports=[

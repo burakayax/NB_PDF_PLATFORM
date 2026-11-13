@@ -43,7 +43,6 @@ PDF PLATFORM is a Windows desktop application designed to simplify common PDF wo
 - Windows environment
 - Python 3.13+
 - Tesseract OCR
-- Poppler
 - Microsoft Word for Word to PDF conversion
 
 ## Notes

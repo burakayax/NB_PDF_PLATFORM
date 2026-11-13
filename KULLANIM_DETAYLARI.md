@@ -145,7 +145,7 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
 4. `pyinstaller --onefile --windowed --name "NB_PDF_TOOLS" build_entry.py`
 5. Çıktı genelde **`dist/NB_PDF_TOOLS.exe`** olur.
 
-**Not:** Tesseract, Poppler, ikon dosyaları gibi ek dosyalar tam dağıtım için ayrıca paketlenmelidir; detay yine `MASAUSTU_BUILD.md` ve `SETUP_NOTES.txt` içindedir.
+**Not:** Tesseract, ikon dosyaları gibi ek dosyalar tam dağıtım için ayrıca paketlenmelidir; detay yine `MASAUSTU_BUILD.md` ve `SETUP_NOTES.txt` içindedir.
 
 ### Masaüstü sunucu adresi
 

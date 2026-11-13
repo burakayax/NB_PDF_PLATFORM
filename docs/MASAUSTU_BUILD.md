@@ -6,7 +6,7 @@ Bu depoda **hazır bir `build.bat` / `.spec` dosyası bulunmayabilir.** Windows�
 
 - Windows ve Python (projede önerilen sürüm: `SETUP_NOTES.txt` / `pyproject.toml`)
 - Proje kökünde: `python -m pip install -r requirements.txt`
-- Tesseract, Poppler (`Library\bin`), Word/Excel gibi **çalışma zamanı** bağımlılıkları — dağıtım paketine ayrıca eklemeniz veya kullanıcıya kurulum talimatı vermeniz gerekir
+- Tesseract, Word/Excel gibi **çalışma zamanı** bağımlılıkları — dağıtım paketine ayrıca eklemeniz veya kullanıcıya kurulum talimatı vermeniz gerekir
 
 ## Nasıl build edilir?
 
