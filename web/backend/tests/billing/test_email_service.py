@@ -63,10 +63,13 @@ def test_html_body_contains_date(customer, good_result):
     assert "2026-05-13" in html
 
 
-def test_html_body_contains_company_name(monkeypatch, customer, good_result):
-    monkeypatch.setenv("COMPANY_NAME", "TestŞirket")
+def test_html_body_marka_sabit_ve_nb_global_studio_yok(monkeypatch, customer, good_result):
+    # Ortam değişkeni ne olursa olsun müşteri "NB Global Studio" görmez; "PDF PLATFORM Fatura Departmanı" yazar.
+    monkeypatch.setenv("COMPANY_NAME", "NB Global Studio")
     html = _build_html_body(customer, good_result)
-    assert "TestŞirket" in html
+    assert "PDF PLATFORM" in html
+    assert "Fatura Departmanı" in html
+    assert "NB Global Studio" not in html
 
 
 # ---- send_invoice_email — başarısız sonuç ----
