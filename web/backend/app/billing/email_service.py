@@ -23,6 +23,15 @@ _MOCK_PDF_PREFIX = "https://mock-pdf-url"
 # Şablon yardımcıları
 # ---------------------------------------------------------------------------
 
+# Fatura e-postalarında marka sabittir: ortam değişkenindeki (COMPANY_NAME / EMAIL_FROM_NAME) "NB Global Studio"
+# müşteriye gösterilmez. Konu ve gönderen adı: "PDF PLATFORM Fatura Departmanı".
+_BRAND = "PDF PLATFORM"
+
+
+def _dept(locale: str = "tr") -> str:
+    return f"{_BRAND} Fatura Departmanı" if locale == "tr" else f"{_BRAND} Billing Department"
+
+
 def _logo_url() -> str:
     origin = os.getenv("FRONTEND_ORIGIN", "").rstrip("/")
     return f"{origin}/logo.png" if origin else ""
@@ -39,7 +48,7 @@ def _build_html_body(
 ) -> str:
     """Fatura e-postası — site/hesap e-postalarıyla aynı açık, kurumsal tasarım (tablo + satır içi CSS)."""
     esc = html_lib.escape
-    company = esc(os.getenv("COMPANY_NAME", "PDF PLATFORM"))
+    company = esc(_BRAND)
     origin = os.getenv("FRONTEND_ORIGIN", "").rstrip("/") or "https://www.pdfplatform.app"
     support = esc(os.getenv("SUPPORT_EMAIL", "info@pdfplatform.app"))
     pdf_url = invoice_result.pdf_url or ""
@@ -156,7 +165,7 @@ def _build_html_body(
                 </td>
                 <td style="vertical-align:middle;">
                   <div style="font-family:{font};font-size:16px;font-weight:700;color:{ink};letter-spacing:0.01em;">{company}</div>
-                  <div style="font-family:{font};font-size:12px;color:{muted};margin-top:2px;">NB Global Studio</div>
+                  <div style="font-family:{font};font-size:12px;color:{muted};margin-top:2px;">{esc(_dept(locale))}</div>
                 </td>
                 <td align="right" style="vertical-align:middle;">
                   <span style="display:inline-block;padding:5px 10px;border:1px solid {line};border-radius:999px;font-family:{font};font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:{brand};">{eyebrow}</span>
@@ -209,7 +218,7 @@ def _build_plain_body(
     invoice_result: InvoiceResult,
     locale: str = "tr",
 ) -> str:
-    company = os.getenv("COMPANY_NAME", "PDF PLATFORM")
+    company = _BRAND
     pdf_url = invoice_result.pdf_url or ""
     link_line = f"Link: {pdf_url}\n" if pdf_url and not pdf_url.startswith(_MOCK_PDF_PREFIX) else ""
 
@@ -258,7 +267,7 @@ def _send_via_smtp_no_attachment(
     username = os.environ["SMTP_USERNAME"]
     password = os.environ["SMTP_PASSWORD"]
     from_email = os.getenv("EMAIL_FROM", username)
-    from_name = os.getenv("EMAIL_FROM_NAME", os.getenv("COMPANY_NAME", "PDF PLATFORM"))
+    from_name = _dept("tr")
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -289,7 +298,7 @@ def _send_via_smtp(
     username = os.environ["SMTP_USERNAME"]
     password = os.environ["SMTP_PASSWORD"]
     from_email = os.getenv("EMAIL_FROM", username)
-    from_name = os.getenv("EMAIL_FROM_NAME", os.getenv("COMPANY_NAME", "PDF PLATFORM"))
+    from_name = _dept("tr")
 
     alt = MIMEMultipart("alternative")
     alt.attach(MIMEText(plain_body, "plain", "utf-8"))
@@ -326,7 +335,7 @@ def _send_via_sendgrid(
 
     api_key = os.environ["SENDGRID_API_KEY"]
     from_email = os.environ["EMAIL_FROM"]
-    from_name = os.getenv("EMAIL_FROM_NAME", os.getenv("COMPANY_NAME", "PDF PLATFORM"))
+    from_name = _dept("tr")
 
     payload: dict = {
         "personalizations": [{"to": [{"email": to_email}]}],
@@ -370,13 +379,12 @@ def send_invoice_email(
         return False
 
     try:
-        company = os.getenv("COMPANY_NAME", "PDF PLATFORM")
         invoice_number = invoice_result.invoice_number or "FATURA"
         if locale == "tr":
-            subject = f"{company} — Fatura #{invoice_number}"
+            subject = f"{_dept('tr')} — Fatura #{invoice_number}"
             filename = f"fatura_{invoice_number}.pdf"
         else:
-            subject = f"{company} — Invoice #{invoice_number}"
+            subject = f"{_dept('en')} — Invoice #{invoice_number}"
             filename = f"invoice_{invoice_number}.pdf"
 
         html_body = _build_html_body(customer_info, invoice_result, locale)
