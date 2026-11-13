@@ -3,6 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+
+# Türkiye sabit UTC+3 (yaz saati uygulaması yok). Sunucu UTC çalışır; fatura tarih/saati Türkiye saatiyle yazılmalı.
+_TR_TZ = timezone(timedelta(hours=3))
+
+
+def tr_now() -> datetime:
+    """Şu an, Türkiye saatiyle (fatura tarihi ve saati için)."""
+    return datetime.now(_TR_TZ)
 
 
 @dataclass
