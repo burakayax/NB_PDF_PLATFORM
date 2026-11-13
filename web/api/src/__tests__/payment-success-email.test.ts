@@ -30,3 +30,14 @@ describe("createPaymentSuccessEmailTemplate", () => {
     expect(t.html).not.toContain("Erişim bitişi");
   });
 });
+
+describe("satıcı bilgileri", () => {
+  it("e-postada satıcının vergi numarası yazar, T.C. kimlik no yazmaz", () => {
+    const t = createPaymentSuccessEmailTemplate({ planName: "PLUS", amount: "199.00", currency: "TRY", lang: "tr" });
+    for (const body of [t.html, t.text]) {
+      expect(body).toContain("Burak KAYA (NB Global Studio)");
+      expect(body).toContain("5300847203");
+      expect(body).toContain("Hızırbey Vergi Dairesi");
+    }
+  });
+});
