@@ -252,9 +252,9 @@ def ensure_page_limit(pdf_path: str | os.PathLike, password: str | None, tool: s
         raise HTTPException(
             status_code=413,
             detail=(
-                f"Bu belge {sayfa} sayfa. {ad} için en fazla {limit} sayfalık belgeler "
-                f"desteklenir; daha uzun belgeler sunucuyu aşırı yorar. Belgeyi "
-                f"«PDF Böl» aracıyla {limit} sayfalık parçalara ayırıp tekrar deneyin."
+                f"Bu belge {sayfa} sayfa. {ad} en fazla {limit} sayfalık belgelerde yapılabiliyor. "
+                f"Belgeyi «PDF Böl» aracıyla {limit} sayfalık parçalara ayırıp "
+                f"her parçayı ayrı ayrı dönüştürebilirsiniz."
             ),
         )
 
