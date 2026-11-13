@@ -6,6 +6,7 @@ import { NbPhoneInput } from "../common/NbPhoneInput";
 import { DISTANCE_SALES_DOCS_VERSION } from "../../content/legalVersion";
 import { readAccessToken } from "../../lib/accessTokenStore";
 import { getCountryCode } from "../../lib/geoCountry";
+import { validateCorporateTaxId } from "../../lib/taxId";
 
 interface BillingFormState {
   invoiceType: "individual" | "corporate";
@@ -340,6 +341,8 @@ export function BillingInfoModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Alan bazlı hata: kırmızı çerçeve + alanın hemen altında mesaj. */
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<BillingFormState>(EMPTY_FORM);
 
   const isTurkish = form.billingCountryCode === "TR";
@@ -349,6 +352,7 @@ export function BillingInfoModal({
     if (!open) return;
     setLoading(true);
     setError(null);
+    setFieldErrors({});
     fetchSavedBillingInfo(accessToken)
       .then((saved) => {
         if (saved) {
@@ -398,6 +402,24 @@ export function BillingInfoModal({
     }
   }, [open]);
 
+  // Yazdıkça hata temizlenir; vergi numarası 10/11 hane olunca anında doğrulanıp kırmızı gösterilir.
+  useEffect(() => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      for (const k of Object.keys(prev)) {
+        if (k !== "taxId" && String((form as unknown as Record<string, unknown>)[k] ?? "").trim()) delete next[k];
+      }
+      if (form.invoiceType === "corporate" && /^\d{10,11}$/.test(form.taxId)) {
+        const m = validateCorporateTaxId(form.taxId);
+        if (m) next.taxId = m;
+        else delete next.taxId;
+      } else if (prev.taxId && form.taxId.trim() && !/^\d{10,11}$/.test(form.taxId)) {
+        delete next.taxId;
+      }
+      return JSON.stringify(next) === JSON.stringify(prev) ? prev : next;
+    });
+  }, [form]);
+
   const isValid = useCallback(() => {
     if (!form.firstName.trim() || !form.lastName.trim()) return false;
     if (!form.billingAddressLine.trim()) return false;
@@ -413,7 +435,7 @@ export function BillingInfoModal({
         !form.taxOffice.trim()
       )
         return false;
-      if (!/^\d{10,11}$/.test(form.taxId.trim())) return false;
+      if (validateCorporateTaxId(form.taxId) !== null) return false;
     }
     if (
       isTurkish &&
@@ -428,6 +450,23 @@ export function BillingInfoModal({
 
   const handleSubmit = useCallback(async () => {
     if (!isValid()) {
+      const fe: Record<string, string> = {};
+      const need = tr ? "Bu alan zorunlu." : "This field is required.";
+      if (!form.firstName.trim()) fe.firstName = need;
+      if (!form.lastName.trim()) fe.lastName = need;
+      if (!form.billingAddressLine.trim()) fe.billingAddressLine = need;
+      if (!form.city.trim()) fe.city = need;
+      if (isTurkish && !form.billingDistrict.trim()) fe.billingDistrict = need;
+      if (isTurkish && form.invoiceType === "corporate") {
+        if (!form.companyName.trim()) fe.companyName = need;
+        if (!form.taxOffice.trim()) fe.taxOffice = need;
+        if (!form.taxId.trim()) fe.taxId = need;
+        else {
+          const m = validateCorporateTaxId(form.taxId);
+          if (m) fe.taxId = m;
+        }
+      }
+      setFieldErrors(fe);
       setError(
         tr
           ? "Lütfen tüm zorunlu alanları doldurun."
@@ -437,6 +476,7 @@ export function BillingInfoModal({
     }
     setSaving(true);
     setError(null);
+    setFieldErrors({});
     try {
       await saveBillingInfoApi(
         accessToken,
@@ -464,6 +504,13 @@ export function BillingInfoModal({
       );
       onComplete();
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      // Sunucu vergi numarasını reddettiyse hata ilgili alanda gösterilsin.
+      if (/vergi|t\.c\. kimlik|tax/i.test(msg) && form.invoiceType === "corporate") {
+        setFieldErrors({ taxId: msg });
+        setSaving(false);
+        return;
+      }
       setError(
         e instanceof Error
           ? e.message
@@ -483,6 +530,19 @@ export function BillingInfoModal({
   const lbl =
     "block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1";
   const req = <span className="text-red-400 ml-0.5">*</span>;
+  const bad = " !border-red-500/70 !bg-red-500/[0.06] focus:!border-red-500 focus:!ring-red-500/30";
+  const fieldMsg = (k: string) =>
+    fieldErrors[k] ? (
+      <p role="alert" className="mt-1 text-[12px] font-medium text-red-400">
+        {fieldErrors[k]}
+      </p>
+    ) : null;
+  const clearErr = (k: string) =>
+    setFieldErrors((e) => {
+      if (!e[k]) return e;
+      const { [k]: _drop, ...rest } = e;
+      return rest;
+    });
 
   return (
     <div
@@ -494,7 +554,7 @@ export function BillingInfoModal({
       }}
     >
       <div
-        className="relative flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0d1120] to-[#060910] shadow-[0_48px_120px_-40px_rgba(0,0,0,0.85)]"
+        className="relative flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#0d1120] to-[#060910] shadow-[0_48px_120px_-40px_rgba(0,0,0,0.85)]"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -518,7 +578,7 @@ export function BillingInfoModal({
         </div>
 
         {/* Body */}
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5 sm:px-9">
           {loading ? (
             <div className="py-8 text-center text-sm text-slate-400">
               {tr ? "Yükleniyor…" : "Loading…"}
@@ -593,7 +653,7 @@ export function BillingInfoModal({
                     {req}
                   </label>
                   <input
-                    className={inp}
+                    className={inp + (fieldErrors.firstName ? bad : "")}
                     type="text"
                     value={form.firstName}
                     onChange={(e) =>
@@ -601,6 +661,7 @@ export function BillingInfoModal({
                     }
                     placeholder={tr ? "Adınız" : "First name"}
                   />
+{fieldMsg("firstName")}
                 </div>
                 <div>
                   <label className={lbl}>
@@ -608,7 +669,7 @@ export function BillingInfoModal({
                     {req}
                   </label>
                   <input
-                    className={inp}
+                    className={inp + (fieldErrors.lastName ? bad : "")}
                     type="text"
                     value={form.lastName}
                     onChange={(e) =>
@@ -616,6 +677,7 @@ export function BillingInfoModal({
                     }
                     placeholder={tr ? "Soyadınız" : "Last name"}
                   />
+{fieldMsg("lastName")}
                 </div>
               </div>
 
@@ -660,7 +722,7 @@ export function BillingInfoModal({
                       {req}
                     </label>
                     <input
-                      className={inp}
+                      className={inp + (fieldErrors.companyName ? bad : "")}
                       type="text"
                       value={form.companyName}
                       onChange={(e) =>
@@ -668,6 +730,7 @@ export function BillingInfoModal({
                       }
                       placeholder={tr ? "Şirket ünvanı" : "Company name"}
                     />
+{fieldMsg("companyName")}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -676,7 +739,7 @@ export function BillingInfoModal({
                         {req}
                       </label>
                       <input
-                        className={inp}
+                        className={inp + (fieldErrors.taxId ? bad : "")}
                         type="text"
                         inputMode="numeric"
                         maxLength={11}
@@ -689,6 +752,7 @@ export function BillingInfoModal({
                         }
                         placeholder={tr ? "10 haneli VKN (şahıs işletmesi: 11 haneli T.C. Kimlik No)" : "10-digit tax ID (sole proprietors: 11-digit national ID)"}
                       />
+{fieldMsg("taxId")}
                     </div>
                     <div>
                       <label className={lbl}>
@@ -696,7 +760,7 @@ export function BillingInfoModal({
                         {req}
                       </label>
                       <input
-                        className={inp}
+                        className={inp + (fieldErrors.taxOffice ? bad : "")}
                         type="text"
                         value={form.taxOffice}
                         onChange={(e) =>
@@ -704,6 +768,7 @@ export function BillingInfoModal({
                         }
                         placeholder={tr ? "Vergi dairesi" : "Tax office"}
                       />
+{fieldMsg("taxOffice")}
                     </div>
                   </div>
                 </>
@@ -716,7 +781,7 @@ export function BillingInfoModal({
                   {req}
                 </label>
                 <input
-                  className={inp}
+                  className={inp + (fieldErrors.billingAddressLine ? bad : "")}
                   type="text"
                   value={form.billingAddressLine}
                   onChange={(e) =>
@@ -729,6 +794,7 @@ export function BillingInfoModal({
                     tr ? "Sokak, mahalle, bina no" : "Street address"
                   }
                 />
+{fieldMsg("billingAddressLine")}
               </div>
               <div className={`grid gap-3 ${isTurkish ? "grid-cols-3" : "grid-cols-2"}`}>
                 {isTurkish && (
@@ -738,7 +804,7 @@ export function BillingInfoModal({
                       {req}
                     </label>
                     <input
-                      className={inp}
+                      className={inp + (fieldErrors.billingDistrict ? bad : "")}
                       type="text"
                       value={form.billingDistrict}
                       onChange={(e) =>
@@ -747,6 +813,7 @@ export function BillingInfoModal({
                       placeholder={tr ? "Örn. Çankaya" : "District"}
                       autoComplete="address-level2"
                     />
+{fieldMsg("billingDistrict")}
                   </div>
                 )}
                 <div>
@@ -755,7 +822,7 @@ export function BillingInfoModal({
                     {req}
                   </label>
                   <input
-                    className={inp}
+                    className={inp + (fieldErrors.city ? bad : "")}
                     type="text"
                     value={form.city}
                     onChange={(e) =>
@@ -763,6 +830,7 @@ export function BillingInfoModal({
                     }
                     placeholder={tr ? "Şehir" : "City"}
                   />
+{fieldMsg("city")}
                 </div>
                 <div>
                   <label className={lbl}>
