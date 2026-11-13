@@ -6,8 +6,12 @@
  * - 11 haneli: T.C. Kimlik No — çoğu şahıs işletmesinin vergi numarasıdır.
  */
 
+/** BirFatura'nın herkese açık test (demo) vergi numarası: sağlama hanesi tutmaz ama test ortamında kullanılır. */
+export const BIRFATURA_TEST_VKN = "1234567801";
+
 export function isValidVkn(value: string): boolean {
   if (!/^\d{10}$/.test(value)) return false;
+  if (value === BIRFATURA_TEST_VKN) return true;
   const d = value.split("").map(Number);
   let sum = 0;
   for (let i = 0; i < 9; i++) {
