@@ -255,7 +255,7 @@ export function NbPhoneInput({
           onChange={(e) => handleInput(e.target.value)}
           placeholder={template}
           aria-invalid={ariaInvalid}
-          className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/15"
+          className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/15 aria-[invalid=true]:border-red-500/70 aria-[invalid=true]:bg-red-500/[0.06]"
         />
       </div>
 

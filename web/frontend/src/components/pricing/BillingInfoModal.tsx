@@ -6,6 +6,7 @@ import { NbPhoneInput } from "../common/NbPhoneInput";
 import { DISTANCE_SALES_DOCS_VERSION } from "../../content/legalVersion";
 import { readAccessToken } from "../../lib/accessTokenStore";
 import { getCountryCode } from "../../lib/geoCountry";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { validateCorporateTaxId } from "../../lib/taxId";
 
 interface BillingFormState {
@@ -416,9 +417,12 @@ export function BillingInfoModal({
       } else if (prev.taxId && form.taxId.trim() && !/^\d{10,11}$/.test(form.taxId)) {
         delete next.taxId;
       }
+      // Telefon: dolu ve geçersizse anında kırmızı (boş bırakılabilir).
+      if (form.phone.trim() && !isValidPhoneNumber(form.phone)) next.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 0532 123 45 67)." : "Invalid phone number. Check the country and number.";
+      else delete next.phone;
       return JSON.stringify(next) === JSON.stringify(prev) ? prev : next;
     });
-  }, [form]);
+  }, [form, tr]);
 
   const isValid = useCallback(() => {
     if (!form.firstName.trim() || !form.lastName.trim()) return false;
@@ -427,6 +431,7 @@ export function BillingInfoModal({
     // Yurt içi alıcıda ilçe zorunlu (VUK md. 230: eksiksiz adres). Yurt dışında ilçe kavramı ülkeye göre değişir.
     if (isTurkish && !form.billingDistrict.trim()) return false;
     if (!form.billingCountryCode) return false;
+    if (form.phone.trim() && !isValidPhoneNumber(form.phone)) return false;
     if (!form.onBilgilendirmeAccepted || !form.contractAccepted || !form.withdrawalWaived || !form.guardianDeclared) return false;
     if (isTurkish && form.invoiceType === "corporate") {
       if (
@@ -456,6 +461,7 @@ export function BillingInfoModal({
       if (!form.lastName.trim()) fe.lastName = need;
       if (!form.billingAddressLine.trim()) fe.billingAddressLine = need;
       if (!form.city.trim()) fe.city = need;
+      if (form.phone.trim() && !isValidPhoneNumber(form.phone)) fe.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 0532 123 45 67)." : "Invalid phone number. Check the country and number.";
       if (isTurkish && !form.billingDistrict.trim()) fe.billingDistrict = need;
       if (isTurkish && form.invoiceType === "corporate") {
         if (!form.companyName.trim()) fe.companyName = need;
@@ -506,6 +512,11 @@ export function BillingInfoModal({
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
       // Sunucu vergi numarasını reddettiyse hata ilgili alanda gösterilsin.
+      if (/telefon|phone/i.test(msg)) {
+        setFieldErrors({ phone: msg });
+        setSaving(false);
+        return;
+      }
       if (/vergi|t\.c\. kimlik|tax/i.test(msg) && form.invoiceType === "corporate") {
         setFieldErrors({ taxId: msg });
         setSaving(false);
@@ -867,7 +878,9 @@ export function BillingInfoModal({
                   language={language}
                   value={form.phone}
                   onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
+                  aria-invalid={fieldErrors.phone ? true : undefined}
                 />
+                {fieldMsg("phone")}
               </div>
 
               {/* FIX 4: Geliştirilmiş KVKK bilgi metni */}

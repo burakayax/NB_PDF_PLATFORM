@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { prisma } from "../../lib/prisma.js";
 import { validateCorporateTaxId } from "../../lib/tax-id.js";
 import { encryptField, decryptField, maskTcNo } from "../../lib/encryption.js";
@@ -67,6 +68,10 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
   );
   if (missingAddress.length > 0) {
     throw new Error("Fatura için açık adres, ilçe ve şehir bilgisi zorunludur.");
+  }
+
+  if (input.phone?.trim() && !isValidPhoneNumber(input.phone.trim())) {
+    throw new Error("Telefon numarası geçersiz; ülke kodunu ve numarayı kontrol edin.");
   }
 
   const now = new Date();
