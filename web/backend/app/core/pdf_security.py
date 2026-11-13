@@ -124,8 +124,8 @@ def validate_pdf_before_processing(
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    f"PDF çok fazla sayfa içeriyor ({page_count:,} sayfa). "
-                    f"En fazla {MAX_PDF_PAGES:,} sayfalı PDF'ler işlenebilir."
+                    f"Bu belge {page_count:,} sayfa. Bir belgede en fazla {MAX_PDF_PAGES:,} sayfa "
+                    f"işleyebiliyoruz. Belgeyi «PDF Böl» aracıyla parçalara ayırıp tekrar deneyin."
                 ),
             )
 

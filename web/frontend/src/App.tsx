@@ -253,6 +253,7 @@ import {
   type ToolProgressSuccessState,
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
+import { uploadLimitMessage } from "./lib/uploadLimits";
 import { DEFAULT_MINI_OPTIONS, type MiniToolOptions,
   buildToolFormData,
   buildBatchFormData,
@@ -462,6 +463,8 @@ type UploadItem = {
   mergePasswordVerified: boolean;
   /** Dosya bozuk, boş veya geçerli bir PDF değil */
   corrupt: boolean;
+  /** Sunucunun bildirdiği araç başına sayfa sınırları (yüklenirken uyarı için). */
+  pageLimits: Record<string, number> | null;
 };
 
 type Feature = WorkspaceFeatureUi;
@@ -3968,6 +3971,9 @@ function App() {
     (selectedFeature.id === "merge" &&
       uploads.some((u) => u.pageCount === 0)) ||
     toolFilesStillInspecting ||
+    uploads.some(
+      (u) => uploadLimitMessage(u, selectedFeatureId, language) !== null,
+    ) ||
     deleteWouldRemoveEveryPage;
 
   /**
@@ -5425,8 +5431,8 @@ function App() {
         "error",
         language === "tr" ? "Dosya çok büyük" : "File too large",
         language === "tr"
-          ? `Maksimum dosya boyutu ${fileSizeLimitMB} MB. Eklenmeyen dosya(lar): ${names}`
-          : `Maximum file size is ${fileSizeLimitMB} MB. Not added: ${names}`,
+          ? `Planınızda dosya başına en fazla ${fileSizeLimitMB} MB yüklenebilir. Eklenmeyen dosya(lar): ${names}`
+          : `Your plan allows files of up to ${fileSizeLimitMB} MB each. Not added: ${names}`,
       );
       // Uygun dosya da yoksa burada dur.
       if (sizeOkFiles.length === 0) {
@@ -7852,8 +7858,8 @@ function App() {
                                         ? "Dosya çok büyük"
                                         : "File too large",
                                       language === "tr"
-                                        ? `Maksimum dosya boyutu ${limitMB} MB. Eklenmeyen dosya(lar): ${names.join(", ")}`
-                                        : `Maximum file size is ${limitMB} MB. Not added: ${names.join(", ")}`,
+                                        ? `Planınızda dosya başına en fazla ${limitMB} MB yüklenebilir. Eklenmeyen dosya(lar): ${names.join(", ")}`
+                                        : `Your plan allows files of up to ${limitMB} MB each. Not added: ${names.join(", ")}`,
                                     );
                                   }}
                                 />
@@ -9332,7 +9338,30 @@ function App() {
                                               ) : null}
                                               {!item.inspecting &&
                                               !item.corrupt &&
-                                              !item.encrypted ? (
+                                              uploadLimitMessage(
+                                                item,
+                                                selectedFeatureId,
+                                                language,
+                                              ) ? (
+                                                <span
+                                                  role="alert"
+                                                  style={{ color: "#f87171", fontWeight: 600 }}
+                                                >
+                                                  {uploadLimitMessage(
+                                                    item,
+                                                    selectedFeatureId,
+                                                    language,
+                                                  )}
+                                                </span>
+                                              ) : null}
+                                              {!item.inspecting &&
+                                              !item.corrupt &&
+                                              !item.encrypted &&
+                                              !uploadLimitMessage(
+                                                item,
+                                                selectedFeatureId,
+                                                language,
+                                              ) ? (
                                                 <span>{W.ready}</span>
                                               ) : null}
                                             </div>

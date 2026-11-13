@@ -1237,6 +1237,8 @@ export async function inspectPdf(
         page_count: number | null;
         /** Dosyanın görüntü olan oranı (0-1). Sıkıştırma beklentisi bundan çıkar. */
         image_ratio?: number;
+        /** Araç başına sayfa sınırları (ör. "pdf-to-word": 150); yüklenirken uyarı için. */
+        page_limits?: Record<string, number>;
         inspect_error?: string | null;
         inspect_diagnostic?: Record<string, unknown>;
       };

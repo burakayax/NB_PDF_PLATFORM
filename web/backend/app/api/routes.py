@@ -30,6 +30,7 @@ from app.core.operations import (
     cleanup_path,
     create_workdir,
     ensure_page_limit,
+    page_limits,
     create_zip_archive,
     download_response,
     format_split_page_filename,
@@ -471,6 +472,7 @@ async def inspect_pdf(
             "corrupt": corrupt,
             "inspect_error": inspect_error,
             "inspect_diagnostic": encrypt_diag,
+            "page_limits": page_limits(),
         }
     except Exception as error:
         cleanup_and_raise(workdir, error)

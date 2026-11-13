@@ -54,3 +54,23 @@ def test_sayfa_sayisi_okunamazsa_sessizce_gecer(tmp_path):
     bozuk = tmp_path / "x.pdf"
     bozuk.write_bytes(b"degil")
     ensure_page_limit(str(bozuk), None, "pdf-to-word")
+
+
+def test_page_limits_arayuze_bildirilir(monkeypatch):
+    """Dosya yüklenirken uyarı gösterilebilsin diye sınırlar kontrol cevabında gelir."""
+    from app.core.operations import page_limits
+
+    monkeypatch.delenv("NB_WORD_MAX_PAGES", raising=False)
+    monkeypatch.setenv("NB_PPT_MAX_PAGES", "80")
+    assert page_limits() == {"pdf-to-word": 150, "pdf-to-ppt": 80}
+
+
+def test_sayfa_siniri_mesaji_kullanici_dilinde(monkeypatch, tmp_path):
+    from fastapi import HTTPException
+    import app.core.operations as ops
+
+    monkeypatch.setattr("src.pdfcore.pdfium_page_count", lambda *a, **k: 200)
+    with __import__("pytest").raises(HTTPException) as e:
+        ops.ensure_page_limit(tmp_path / "x.pdf", None, "pdf-to-word")
+    assert "sunucu" not in e.value.detail.lower()
+    assert "200 sayfa" in e.value.detail and "150" in e.value.detail

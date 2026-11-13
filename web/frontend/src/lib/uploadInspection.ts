@@ -23,6 +23,7 @@ type InspectableItem = {
   imageRatio: number | null;
   mergePasswordVerified: boolean;
   corrupt: boolean;
+  pageLimits?: Record<string, number> | null;
 };
 
 export type InspectUploadsOptions = {
@@ -67,6 +68,7 @@ export async function inspectUploadItems<T extends InspectableItem>(
             : null,
         mergePasswordVerified: false,
         corrupt: false,
+        pageLimits: result.page_limits ?? null,
       };
     } catch (err) {
       const L2 = ws(language);

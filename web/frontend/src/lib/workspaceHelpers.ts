@@ -18,6 +18,7 @@ export function createUploadItems(fileList: File[]) {
     imageRatio: null,
     mergePasswordVerified: false,
     corrupt: false,
+    pageLimits: null as Record<string, number> | null,
   }));
 }
 

@@ -128,7 +128,7 @@ async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = 
                 output.close()
                 target_path.unlink(missing_ok=True)
                 limit_mb = effective_max // (1024 * 1024)
-                raise HTTPException(status_code=413, detail=f"Dosya boyutu {limit_mb} MB sınırını aşıyor.")
+                raise HTTPException(status_code=413, detail=f"Bu dosya {limit_mb} MB'tan büyük. Planınızda dosya başına en fazla {limit_mb} MB yüklenebilir; dosyayı sıkıştırıp ya da bölüp tekrar deneyin.")
             output.write(chunk)
     await upload.close()
     return target_path
@@ -156,7 +156,7 @@ async def save_any_upload(upload: UploadFile, workdir: Path, filename: str | Non
                 output.close()
                 target_path.unlink(missing_ok=True)
                 limit_mb = effective_max // (1024 * 1024)
-                raise HTTPException(status_code=413, detail=f"Dosya boyutu {limit_mb} MB sınırını aşıyor.")
+                raise HTTPException(status_code=413, detail=f"Bu dosya {limit_mb} MB'tan büyük. Planınızda dosya başına en fazla {limit_mb} MB yüklenebilir; dosyayı sıkıştırıp ya da bölüp tekrar deneyin.")
             output.write(chunk)
     await upload.close()
     return target_path
@@ -187,7 +187,7 @@ async def save_office_upload(upload: UploadFile, workdir: Path, filename: str | 
                 output.close()
                 target_path.unlink(missing_ok=True)
                 limit_mb = effective_max // (1024 * 1024)
-                raise HTTPException(status_code=413, detail=f"Dosya boyutu {limit_mb} MB sınırını aşıyor.")
+                raise HTTPException(status_code=413, detail=f"Bu dosya {limit_mb} MB'tan büyük. Planınızda dosya başına en fazla {limit_mb} MB yüklenebilir; dosyayı sıkıştırıp ya da bölüp tekrar deneyin.")
             output.write(chunk)
     await upload.close()
     return target_path
@@ -231,17 +231,27 @@ _AGIR_ISLEM_SAYFA_SINIRI = {
 }
 
 
+def _sayfa_siniri(tool: str) -> int:
+    env_adi, varsayilan, _ad = _AGIR_ISLEM_SAYFA_SINIRI[tool]
+    try:
+        return max(1, int(os.environ.get(env_adi, str(varsayilan))))
+    except ValueError:
+        return varsayilan
+
+
+def page_limits() -> dict[str, int]:
+    """Araç başına sayfa sınırları (arayüz, dosya yüklenirken uyarı göstersin diye)."""
+    return {tool: _sayfa_siniri(tool) for tool in _AGIR_ISLEM_SAYFA_SINIRI}
+
+
 def ensure_page_limit(pdf_path: str | os.PathLike, password: str | None, tool: str) -> None:
     """Belge sayfa sınırını aşıyorsa 413 ile açık bir mesaj verir (iş başlamadan).
 
     Sayfa sayısı okunamazsa (ör. parola eksik) sessizce geçer; sonraki adımlar
     kendi hatasını verir.
     """
-    env_adi, varsayilan, ad = _AGIR_ISLEM_SAYFA_SINIRI[tool]
-    try:
-        limit = max(1, int(os.environ.get(env_adi, str(varsayilan))))
-    except ValueError:
-        limit = varsayilan
+    ad = _AGIR_ISLEM_SAYFA_SINIRI[tool][2]
+    limit = _sayfa_siniri(tool)
     try:
         from src.pdfcore import pdfium_page_count
 
