@@ -147,9 +147,16 @@ def parse_return_invoice_xml(xml: str) -> dict[str, Any] | None:
 
 
 def _product_code(name: str) -> str:
-    """Ürün adından okunur, kararlı stok kodu: "PDF PLATFORM Pro (1 ay)" → "PDF-PLATFORM-PRO-1-AY"."""
+    """
+    Stok kodu. Abonelikler sabit kısa kod alır: "Plus Abonelik (1 Aylık)" → PLUS1A, "(1 Yıllık)" → PLUS1Y
+    (Pro → PRO1A/PRO1Y …). Diğer kalemlerde (ek AI kredisi vb.) addan üretilen okunur kod kullanılır.
+    """
     import re
 
+    m = re.match(r"^\s*([^\W\d_]+) Abonelik \(1 (Ayl[ıi]k|Y[ıi]ll[ıi]k)\)", name, flags=re.IGNORECASE)
+    if m:
+        plan = re.sub(r"[^A-Z0-9]", "", m.group(1).translate(_TR_ASCII).upper())
+        return f"{plan}1{'A' if m.group(2).lower().startswith('ayl') else 'Y'}"
     code = re.sub(r"[^A-Z0-9]+", "-", name.translate(_TR_ASCII).upper()).strip("-")
     return (code or "HIZMET")[:40]
 
