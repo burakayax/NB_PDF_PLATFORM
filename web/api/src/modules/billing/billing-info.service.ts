@@ -98,6 +98,9 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     if (input.tcKimlikNo?.trim()) {
       // TC No asla plaintext saklanmaz
       updateData.tcKimlikNo = encryptField(input.tcKimlikNo.trim());
+    } else {
+      // Boş bırakıldı: T.C. Kimlik No isteğe bağlı; önceden kaydedilmiş (belki hatalı) numara temizlenir.
+      updateData.tcKimlikNo = null;
     }
   } else {
     updateData.companyName = input.companyName?.trim() || null;

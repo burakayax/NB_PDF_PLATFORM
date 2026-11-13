@@ -64,7 +64,15 @@ async function initializePlanPayment(
   );
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Payment init failed (${response.status}).`);
+    // Sunucu {"message": "..."} döner; kullanıcıya ham JSON değil yalnız mesaj gösterilir.
+    let msg = "";
+    try {
+      const j = JSON.parse(text) as { message?: unknown; error?: unknown };
+      msg = typeof j.message === "string" ? j.message : typeof j.error === "string" ? j.error : "";
+    } catch {
+      msg = text;
+    }
+    throw new Error(msg || `Payment init failed (${response.status}).`);
   }
   return response.json() as Promise<PlanCheckoutResponse>;
 }
@@ -122,6 +130,8 @@ type Props = {
   onClose: () => void;
   onPurchaseSuccess: () => void;
   onBeforeExternalCheckout?: () => void;
+  /** Verilirse üstte "Fatura bilgilerini düzenle" düğmesi çıkar (ödemeden önce geri dönüp bilgi değiştirmek için). */
+  onEditBilling?: () => void;
   /** E-posta CTA'sından gelen kupon kodu (?coupon=…) — modal açılınca otomatik doğrulanıp
    *  uygulanır; kullanıcı elle yazmak zorunda kalmaz. */
   initialCoupon?: string | null;
@@ -138,6 +148,7 @@ export function PaymentSummaryModal({
   onClose,
   onPurchaseSuccess,
   onBeforeExternalCheckout,
+  onEditBilling,
   initialCoupon,
 }: Props) {
   const aiNotOpen = useAiNotOpen();
@@ -429,6 +440,19 @@ export function PaymentSummaryModal({
             >
               ×
             </button>
+            {onEditBilling && !paying ? (
+              <div className="mb-3 pr-10 text-left">
+                <button
+                  type="button"
+                  data-testid="edit-billing"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[12px] font-semibold text-slate-200 transition hover:bg-white/[0.1]"
+                  onClick={onEditBilling}
+                >
+                  <span aria-hidden>←</span>
+                  {tr ? "Fatura bilgilerini düzenle" : "Edit billing details"}
+                </button>
+              </div>
+            ) : null}
             {seatsOnly ? (
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${accent.badge}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
