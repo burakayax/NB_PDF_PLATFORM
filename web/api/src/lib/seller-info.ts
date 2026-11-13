@@ -4,7 +4,7 @@
  * T.C. Kimlik No DEĞİL, Vergi Kimlik No yazılır.
  */
 export const SELLER = {
-  name: "Burak KAYA (NB Global Studio)",
+  name: "Burak KAYA (PDF Platform)",
   taxOffice: "Hızırbey Vergi Dairesi",
   taxNo: "5300847203",
   address: "Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon",
