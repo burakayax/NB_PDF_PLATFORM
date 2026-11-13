@@ -239,7 +239,7 @@ export async function initializePaymentsController(request: Request, response: R
     }
   }
 
-  // TC Kimlik No validasyonu — geçersiz TC ile ödeme başlatılamaz
+  // TC Kimlik No isteğe bağlı: kayıtlı numara geçersizse temizlenir (ödeme engellenmez)
   if (checkoutCurrency === "TRY") {
     const invoiceUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -251,10 +251,9 @@ export async function initializePaymentsController(request: Request, response: R
         const { decryptField } = await import("../../lib/encryption.js");
         const tc = decryptField(invoiceUser.tcKimlikNo);
         if (!isValidTckn(tc)) {
-          throw new HttpError(
-            400,
-            "Kayıtlı TC Kimlik Numaranız geçersiz. Lütfen profil sayfanızdan fatura bilgilerinizi güncelleyin.",
-          );
+          // T.C. Kimlik No isteğe bağlıdır: geçersiz kayıtlı numara ödemeyi ENGELLEMEZ; silinir ve fatura
+          // nihai tüketici (11111111111) adına kesilir. (Geçersiz numara BirFatura'da faturayı da bozardı.)
+          await prisma.user.update({ where: { id: userId }, data: { tcKimlikNo: null } });
         }
       } catch (err) {
         if (err instanceof HttpError) throw err;

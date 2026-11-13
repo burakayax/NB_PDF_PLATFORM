@@ -249,6 +249,12 @@ export function PlanUpgradeModal({
             showToast?.("success", tr ? "Plan güncellendi" : "Plan updated", "");
           }}
           onBeforeExternalCheckout={onBeforeExternalCheckout}
+          onEditBilling={() => {
+            // Ödeme özetinden geri dön: özeti gizle, fatura bilgileri penceresini aynı plan için yeniden aç.
+            setSummaryOpen(false);
+            setBillingInfoPlanId(selectedPlanId);
+            setBillingInfoOpen(true);
+          }}
         />
       ) : null}
     </>
