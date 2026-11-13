@@ -146,11 +146,8 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
     export_description = "İhracat İstisnası (KDV K. Mad. 12)" if is_export else ""
 
     def _billing_unit(name: str) -> str:
-        lower = name.lower()
-        if "yıl" in lower:
-            return "Yıl"
-        if "ay" in lower:
-            return "Ay"
+        # Miktar her zaman "1 Adet". Dönem (1 Aylık / 1 Yıllık) kalem ADINDA yazılır, birimde değil;
+        # aksi halde faturada miktar "1 Yıl" / "1 Ay" görünüyordu.
         return "Adet"
 
     if basket_items:
