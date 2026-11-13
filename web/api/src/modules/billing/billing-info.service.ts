@@ -1,3 +1,4 @@
+import { addressLineProblem, trLocationProblem, canonicalCity, canonicalDistrict } from "./address-check.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { prisma } from "../../lib/prisma.js";
 import { validateCorporateTaxId } from "../../lib/tax-id.js";
@@ -70,6 +71,14 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     throw new Error("Fatura için açık adres, ilçe ve şehir bilgisi zorunludur.");
   }
 
+  const countryForAddress = (input.billingCountryCode?.trim() || "TR").toUpperCase();
+  const lineProblem = addressLineProblem(input.billingAddressLine ?? "", countryForAddress);
+  if (lineProblem) throw new Error(lineProblem);
+  if (countryForAddress === "TR") {
+    const loc = trLocationProblem(input.city ?? "", input.billingDistrict ?? "");
+    if (loc) throw new Error(loc.city ?? loc.district ?? "İl ve ilçe geçersiz.");
+  }
+
   if (input.phone?.trim() && !isValidPhoneNumber(input.phone.trim())) {
     throw new Error("Telefon numarası geçersiz; ülke kodunu ve numarayı kontrol edin.");
   }
@@ -80,10 +89,13 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     billingAddressLine: input.billingAddressLine?.trim()
       ? encryptField(input.billingAddressLine.trim())
       : null,
-    city: input.city?.trim() || null,
+    // Türkiye'de il/ilçe resmi yazımıyla saklanır (BirFatura'ya da böyle gider).
+    city: (countryForAddress === "TR" ? canonicalCity(input.city ?? "") : null) ?? (input.city?.trim() || null),
     billingCountryCode: input.billingCountryCode?.trim().toUpperCase() || "TR",
     billingPostalCode: input.billingPostalCode?.trim() || null,
-    billingDistrict: input.billingDistrict?.trim() || null,
+    billingDistrict:
+      (countryForAddress === "TR" ? canonicalDistrict(input.city ?? "", input.billingDistrict ?? "") : null) ??
+      (input.billingDistrict?.trim() || null),
     phone: input.phone?.trim() ? encryptField(input.phone.trim()) : null,
     isKvkkConsented: true,
     kvkkConsentedAt: now,

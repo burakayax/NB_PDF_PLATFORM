@@ -8,6 +8,8 @@ import { readAccessToken } from "../../lib/accessTokenStore";
 import { getCountryCode } from "../../lib/geoCountry";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { validateCorporateTaxId } from "../../lib/taxId";
+import { addressLineProblem, trLocationProblem, canonicalCity, canonicalDistrict } from "../../lib/addressCheck";
+import { TR_LOCATIONS } from "../../lib/trLocations";
 
 interface BillingFormState {
   invoiceType: "individual" | "corporate";
@@ -367,8 +369,14 @@ export function BillingInfoModal({
             taxId: saved.taxId ?? "",
             taxOffice: saved.taxOffice ?? "",
             billingAddressLine: saved.billingAddressLine ?? "",
-            billingDistrict: saved.billingDistrict ?? "",
-            city: saved.city ?? "",
+            billingDistrict:
+              (saved.billingCountryCode ?? "TR") === "TR"
+                ? canonicalDistrict(saved.city ?? "", saved.billingDistrict ?? "") ?? ""
+                : saved.billingDistrict ?? "",
+            city:
+              (saved.billingCountryCode ?? "TR") === "TR"
+                ? canonicalCity(saved.city ?? "") ?? ""
+                : saved.city ?? "",
             // Kayıtlı ülke yoksa aşağıda IP'den tahmin edilir (yurt dışından gelen "Türkiye" ile başlamasın).
             billingCountryCode: saved.billingCountryCode ?? "TR",
             billingPostalCode: saved.billingPostalCode ?? "",
@@ -431,6 +439,8 @@ export function BillingInfoModal({
     // Yurt içi alıcıda ilçe zorunlu (VUK md. 230: eksiksiz adres). Yurt dışında ilçe kavramı ülkeye göre değişir.
     if (isTurkish && !form.billingDistrict.trim()) return false;
     if (!form.billingCountryCode) return false;
+    if (addressLineProblem(form.billingAddressLine, form.billingCountryCode)) return false;
+    if (isTurkish && trLocationProblem(form.city, form.billingDistrict)) return false;
     if (form.phone.trim() && !isValidPhoneNumber(form.phone)) return false;
     if (!form.onBilgilendirmeAccepted || !form.contractAccepted || !form.withdrawalWaived || !form.guardianDeclared) return false;
     if (isTurkish && form.invoiceType === "corporate") {
@@ -461,6 +471,15 @@ export function BillingInfoModal({
       if (!form.lastName.trim()) fe.lastName = need;
       if (!form.billingAddressLine.trim()) fe.billingAddressLine = need;
       if (!form.city.trim()) fe.city = need;
+      if (form.billingAddressLine.trim()) {
+        const ap = addressLineProblem(form.billingAddressLine, form.billingCountryCode);
+        if (ap) fe.billingAddressLine = ap;
+      }
+      if (isTurkish && form.city.trim() && form.billingDistrict.trim()) {
+        const lp = trLocationProblem(form.city, form.billingDistrict);
+        if (lp?.city) fe.city = lp.city;
+        if (lp?.district) fe.billingDistrict = lp.district;
+      }
       if (form.phone.trim() && !isValidPhoneNumber(form.phone)) fe.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 0532 123 45 67)." : "Invalid phone number. Check the country and number.";
       if (isTurkish && !form.billingDistrict.trim()) fe.billingDistrict = need;
       if (isTurkish && form.invoiceType === "corporate") {
@@ -512,6 +531,21 @@ export function BillingInfoModal({
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
       // Sunucu vergi numarasını reddettiyse hata ilgili alanda gösterilsin.
+      if (/açık adres|address looks/i.test(msg)) {
+        setFieldErrors({ billingAddressLine: msg });
+        setSaving(false);
+        return;
+      }
+      if (/listeden bir il/i.test(msg)) {
+        setFieldErrors({ city: msg });
+        setSaving(false);
+        return;
+      }
+      if (/ilçe seçin/i.test(msg)) {
+        setFieldErrors({ billingDistrict: msg });
+        setSaving(false);
+        return;
+      }
       if (/telefon|phone/i.test(msg)) {
         setFieldErrors({ phone: msg });
         setSaving(false);
@@ -801,48 +835,88 @@ export function BillingInfoModal({
                       billingAddressLine: e.target.value,
                     }))
                   }
+                  onBlur={() => {
+                    // Alandan çıkınca anlamsız adres (asdfsd gibi) hemen kırmızı gösterilir.
+                    const ap = form.billingAddressLine.trim() ? addressLineProblem(form.billingAddressLine, form.billingCountryCode) : null;
+                    setFieldErrors((e) => {
+                      const next = { ...e };
+                      if (ap) next.billingAddressLine = ap;
+                      else delete next.billingAddressLine;
+                      return next;
+                    });
+                  }}
                   placeholder={
-                    tr ? "Sokak, mahalle, bina no" : "Street address"
+                    tr ? "Mahalle, sokak/cadde, bina ve daire no" : "Street address and number"
                   }
                 />
-{fieldMsg("billingAddressLine")}
+                {fieldMsg("billingAddressLine")}
               </div>
-              <div className={`grid gap-3 ${isTurkish ? "grid-cols-3" : "grid-cols-2"}`}>
+              <div className={`grid gap-3 ${isTurkish ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+                <div>
+                  <label className={lbl}>
+                    {tr ? "Şehir" : "City"}
+                    {req}
+                  </label>
+                  {isTurkish ? (
+                    <select
+                      className={inp + " cursor-pointer bg-[#0d1120] text-white [color-scheme:dark]" + (fieldErrors.city ? bad : "")}
+                      value={form.city}
+                      autoComplete="address-level1"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        // İl değişince ilçe sıfırlanır (ilçe seçili ile ait olmalı).
+                        setForm((p) => ({ ...p, city: v, billingDistrict: "" }));
+                        setFieldErrors((er) => {
+                          const { city: _c, billingDistrict: _d, ...rest } = er;
+                          return rest;
+                        });
+                      }}
+                    >
+                      <option value="" style={{ backgroundColor: "#0d1120", color: "#ffffff" }}>
+                        {tr ? "İl seçin" : "Select province"}
+                      </option>
+                      {Object.keys(TR_LOCATIONS).map((c) => (
+                        <option key={c} value={c} style={{ backgroundColor: "#0d1120", color: "#ffffff" }}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className={inp + (fieldErrors.city ? bad : "")}
+                      type="text"
+                      value={form.city}
+                      onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+                      placeholder={tr ? "Şehir" : "City"}
+                    />
+                  )}
+                  {fieldMsg("city")}
+                </div>
                 {isTurkish && (
                   <div>
                     <label className={lbl}>
                       {tr ? "İlçe" : "District"}
                       {req}
                     </label>
-                    <input
-                      className={inp + (fieldErrors.billingDistrict ? bad : "")}
-                      type="text"
+                    <select
+                      className={inp + " cursor-pointer bg-[#0d1120] text-white [color-scheme:dark] disabled:cursor-not-allowed disabled:opacity-50" + (fieldErrors.billingDistrict ? bad : "")}
                       value={form.billingDistrict}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, billingDistrict: e.target.value }))
-                      }
-                      placeholder={tr ? "Örn. Çankaya" : "District"}
+                      disabled={!form.city}
                       autoComplete="address-level2"
-                    />
-{fieldMsg("billingDistrict")}
+                      onChange={(e) => setForm((p) => ({ ...p, billingDistrict: e.target.value }))}
+                    >
+                      <option value="" style={{ backgroundColor: "#0d1120", color: "#ffffff" }}>
+                        {form.city ? (tr ? "İlçe seçin" : "Select district") : (tr ? "Önce il seçin" : "Select province first")}
+                      </option>
+                      {(TR_LOCATIONS[form.city] ?? []).map((d) => (
+                        <option key={d} value={d} style={{ backgroundColor: "#0d1120", color: "#ffffff" }}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                    {fieldMsg("billingDistrict")}
                   </div>
                 )}
-                <div>
-                  <label className={lbl}>
-                    {tr ? "Şehir" : "City"}
-                    {req}
-                  </label>
-                  <input
-                    className={inp + (fieldErrors.city ? bad : "")}
-                    type="text"
-                    value={form.city}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, city: e.target.value }))
-                    }
-                    placeholder={tr ? "Şehir" : "City"}
-                  />
-{fieldMsg("city")}
-                </div>
                 <div>
                   <label className={lbl}>
                     {tr ? "Posta Kodu" : "Postal Code"}
