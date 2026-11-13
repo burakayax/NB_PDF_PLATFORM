@@ -56,6 +56,11 @@ def test_iyzico_payment_unchanged_order_code(provider):
 def test_helpers():
     assert _product_code("Ek AI Hizmet Bedeli (50 kredi)") == "EK-AI-HIZMET-BEDELI-50-KREDI"
     assert _product_code("") == "HIZMET"
+    assert _product_code("Plus Abonelik (1 Aylık)") == "PLUS1A"
+    assert _product_code("Plus Abonelik (1 Yıllık)") == "PLUS1Y"
+    assert _product_code("Pro Abonelik (1 Yıllık)") == "PRO1Y"
+    assert _product_code("Starter Abonelik (1 Aylık)") == "STARTER1A"
+    assert _product_code("Business Abonelik (1 Aylık)") == "BUSINESS1A"
     assert _split_payment_id("PAYTR:abc") == ("PayTR", "abc")
     assert _split_payment_id("") == ("iyzico", "")
 
