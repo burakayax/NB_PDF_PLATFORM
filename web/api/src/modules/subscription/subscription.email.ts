@@ -3,6 +3,7 @@ import { env } from "../../config/env.js";
 import { planDefinitions } from "./subscription.config.js";
 import { escapeHtml } from "../../lib/email-html.js";
 import type { Locale } from "../../lib/email-i18n.js";
+import { SELLER } from "../../lib/seller-info.js";
 
 const PRODUCT = "PDF PLATFORM";
 
@@ -77,6 +78,13 @@ export function createPaymentSuccessEmailTemplate({
       ${sectionTitle(tr ? "Ödeme özeti" : "Payment summary")}
       ${detailTable(rows)}
       ${ctaButton(workspaceUrl, tr ? "Çalışma alanına git" : "Go to workspace")}
+      ${sectionTitle(tr ? "Satıcı bilgileri" : "Seller details")}
+      ${detailTable([
+        { label: tr ? "Satıcı" : "Seller", value: escapeHtml(SELLER.name) },
+        { label: tr ? "Vergi dairesi / No" : "Tax office / No", value: escapeHtml(`${SELLER.taxOffice} — ${SELLER.taxNo}`) },
+        { label: tr ? "Adres" : "Address", value: escapeHtml(SELLER.address) },
+        { label: tr ? "İletişim" : "Contact", value: escapeHtml(`${SELLER.email} · ${SELLER.phone}`) },
+      ])}
       ${sectionTitle(tr ? "Bilmeniz gerekenler" : "Good to know")}
       ${checkList(
         tr
@@ -114,6 +122,11 @@ export function createPaymentSuccessEmailTemplate({
     `Plan: ${planLabel}`,
     `${tr ? "Ödenen tutar" : "Amount paid"}: ${amount} ${currency}`,
     ...(periodEnd ? [`${tr ? "Erişim bitişi" : "Access until"}: ${periodEnd}`] : []),
+    "",
+    `${tr ? "Satıcı" : "Seller"}: ${SELLER.name}`,
+    `${tr ? "Vergi dairesi / No" : "Tax office / No"}: ${SELLER.taxOffice} — ${SELLER.taxNo}`,
+    `${tr ? "Adres" : "Address"}: ${SELLER.address}`,
+    `${tr ? "İletişim" : "Contact"}: ${SELLER.email} · ${SELLER.phone}`,
     "",
     `${tr ? "Çalışma alanına git" : "Go to workspace"}: ${workspaceUrl}`,
     "",
