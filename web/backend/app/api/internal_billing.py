@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.billing import get_provider
 from app.billing.birfatura import BirFaturaProvider
-from app.billing.models import CustomerInfo, InvoiceItem, PaymentInfo
+from app.billing.models import CustomerInfo, InvoiceItem, PaymentInfo, tr_now
 from app.billing.parasut import ParasutProvider
 from app.billing.webhook_handler import handle_iyzico_webhook
 
@@ -204,7 +204,7 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
             payment_id=payment_id,
             amount_paid=paid_price,
             currency=currency,
-            payment_date=date.today().isoformat(),
+            payment_date=tr_now().date().isoformat(),
         )
 
         provider = get_provider()

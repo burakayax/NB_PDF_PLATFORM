@@ -47,7 +47,7 @@ import requests
 from tenacity import before_sleep_log, retry, stop_after_attempt, wait_exponential
 
 from .base import BillingProviderBase
-from .models import CustomerInfo, InvoiceItem, InvoiceResult, PaymentInfo
+from .models import CustomerInfo, InvoiceItem, InvoiceResult, PaymentInfo, tr_now
 
 logger = logging.getLogger(__name__)
 
@@ -299,8 +299,8 @@ class BirFaturaProvider(BillingProviderBase):
         SendBasicInvoiceFromModel ile fatura oluşturur ve GİB'e gönderir.
         Dönen UUID ile durum takibi yapılır.
         """
-        today = payment_info.payment_date or date.today().isoformat()
-        now_time = datetime.now().strftime("%H:%M:%S")
+        today = payment_info.payment_date or tr_now().date().isoformat()
+        now_time = tr_now().strftime("%H:%M:%S")
         invoice_datetime = f"{today} {now_time}"
         ci = customer_info
         pi = payment_info
@@ -700,7 +700,7 @@ class BirFaturaProvider(BillingProviderBase):
         receiver_tag = customer_id.split(":", 1)[1] if is_e_invoice else ""
         system_type = "EFATURA" if is_e_invoice else "EARSIV"
 
-        today = payment_info.payment_date or date.today().isoformat()
+        today = payment_info.payment_date or tr_now().date().isoformat()
         doc_uuid = str(uuid.uuid4())
 
         # original_invoice_no boş ya da 16 karakter değilse UUID ile BirFatura'dan sorgula
@@ -820,7 +820,7 @@ class BirFaturaProvider(BillingProviderBase):
         verilirse KDV %0 ve istisna sebep kodu içeren istisna faturası üretir."""
         from xml.sax.saxutils import escape as _esc
 
-        now_time = datetime.now().strftime("%H:%M:%S")
+        now_time = tr_now().strftime("%H:%M:%S")
         currency = (payment_info.currency or "TRY").upper()
         if currency in ("TRL", ""):
             currency = "TRY"
@@ -1142,7 +1142,7 @@ class BirFaturaProvider(BillingProviderBase):
                    if not os.getenv(k, "").strip()]
         if missing:
             raise RuntimeError("İstisna faturası için satıcı ayarları eksik: " + ", ".join(missing))
-        today = payment_info.payment_date or date.today().isoformat()
+        today = payment_info.payment_date or tr_now().date().isoformat()
         doc_uuid = str(uuid.uuid4())
         # Kalem açıklaması boşsa istisna ifadesi yazılsın
         export_items = [

@@ -8,7 +8,7 @@ from typing import Any
 
 from . import get_provider
 from .email_service import send_invoice_email
-from .models import CustomerInfo, InvoiceItem, PaymentInfo
+from .models import CustomerInfo, InvoiceItem, PaymentInfo, tr_now
 from .tcmb import get_rate
 
 logger = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
     _raw_currency = str(payload.get("currency", "TRY") or "TRY").upper()
     currency = "TRY" if _raw_currency in ("TRL", "TRY", "") else _raw_currency
     paid_price = float(payload.get("paidPrice") or payload.get("price", 0))
-    payment_date = date.today().isoformat()
+    payment_date = tr_now().date().isoformat()
 
     # Kupon / iskonto bilgisi — KDV Kanunu Md.25: faturada ayrıca gösterilmeli
     discount_percent = int(payload.get("discountPercent", 0) or 0)
