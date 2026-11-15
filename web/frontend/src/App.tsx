@@ -486,6 +486,16 @@ function isPathAllowedDuringMaintenance(pathname: string): boolean {
   return false;
 }
 
+// PDF'i başka biçime çeviren araçlar: tek PDF seçilince alta sayfa önizlemesi konmaz.
+const CONVERSION_FEATURES_WITHOUT_PREVIEW = new Set<string>([
+  "pdf-to-word",
+  "pdf-to-excel",
+  "pdf-to-ppt",
+  "pdf-to-image",
+  "pdf-to-text",
+  "pdf-to-pdfa",
+]);
+
 const pdfInspectionFeatures: FeatureId[] = [
   "split",
   "merge",
@@ -3997,7 +4007,9 @@ function App() {
     !!previewItem &&
     previewItem.file.type === "application/pdf" &&
     !previewItem.inspecting &&
-    selectedFeature.id !== "compress";
+    selectedFeature.id !== "compress" &&
+    // Dönüştürme araçlarında işlem tüm belgeye uygulanır; sayfaları göstermek bir şey katmıyor.
+    !CONVERSION_FEATURES_WITHOUT_PREVIEW.has(selectedFeature.id);
 
   /**
    * Yasal sayfa / Hakkımızda: açılırken en üstten başlar; "Geri dön"de kullanıcı ayrıldığı noktaya

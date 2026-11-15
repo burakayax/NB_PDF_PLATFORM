@@ -2579,6 +2579,9 @@ textarea {
 
 /* Metin ağırlıklı PDF uyarısı — beklentiyi baştan doğru kurar. */
 .selected-file-card__inspecting {
+  /* Sıcak (turuncu) ton: "bekleyin, kontrol sürüyor" hissi; yanıp sönerken okunur kalır. */
+  color: #fb923c;
+  font-weight: 600;
   animation: selected-file-inspecting-blink 1.1s ease-in-out infinite;
 }
 @keyframes selected-file-inspecting-blink {

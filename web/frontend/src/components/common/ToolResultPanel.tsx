@@ -91,6 +91,15 @@ function isShareSupported(blob: Blob, filename: string): boolean {
   }
 }
 
+/**
+ * "Aç" yeni sekmede açar; tarayıcı yalnız PDF, görsel ve düz metni gösterebilir.
+ * Word / PowerPoint / Excel / ZIP gibi dosyalarda "Aç" dosyayı sessizce İNDİRİRDİ
+ * (kullanıcı "aç dedim, indirdi" diye şaşırıyordu) — bu türlerde düğme hiç çıkmaz.
+ */
+function canOpenInBrowser(filename: string): boolean {
+  return /\.(pdf|png|jpe?g|webp|gif|svg|txt)$/i.test(filename.trim());
+}
+
 function downloadBlob(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -313,7 +322,7 @@ export function ToolResultPanel({
             <Share2 className="h-4 w-4" /> {t.share}
           </button>
         )}
-        {!hideOpen && (
+        {!hideOpen && canOpenInBrowser(filename) && (
           <button type="button" onClick={open} className={btnOpen}>
             <ExternalLink className="h-4 w-4" /> {t.open}
           </button>
