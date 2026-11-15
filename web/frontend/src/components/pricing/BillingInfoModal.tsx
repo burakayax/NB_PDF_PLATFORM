@@ -609,7 +609,7 @@ export function BillingInfoModal({
       }}
     >
       <div
-        className="relative flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
+        className="relative flex h-[min(94dvh,860px)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
