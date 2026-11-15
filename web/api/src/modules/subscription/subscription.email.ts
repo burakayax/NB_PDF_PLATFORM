@@ -78,13 +78,6 @@ export function createPaymentSuccessEmailTemplate({
       ${sectionTitle(tr ? "Ödeme özeti" : "Payment summary")}
       ${detailTable(rows)}
       ${ctaButton(workspaceUrl, tr ? "Çalışma alanına git" : "Go to workspace")}
-      ${sectionTitle(tr ? "Satıcı bilgileri" : "Seller details")}
-      ${detailTable([
-        { label: tr ? "Satıcı" : "Seller", value: escapeHtml(SELLER.name) },
-        { label: tr ? "Vergi dairesi / No" : "Tax office / No", value: escapeHtml(`${SELLER.taxOffice} — ${SELLER.taxNo}`) },
-        { label: tr ? "Adres" : "Address", value: escapeHtml(SELLER.address) },
-        { label: tr ? "İletişim" : "Contact", value: escapeHtml(`${SELLER.email} · ${SELLER.phone}`) },
-      ])}
       ${sectionTitle(tr ? "Bilmeniz gerekenler" : "Good to know")}
       ${checkList(
         tr
@@ -105,7 +98,7 @@ export function createPaymentSuccessEmailTemplate({
           : "Questions? Instead of replying to this email, write to info@pdfplatform.app."
       }</p>
     `,
-    footerText: `${PRODUCT} — NB Global Studio`,
+    footerText: escapeHtml(`${PRODUCT} · ${SELLER.name} · ${SELLER.taxOffice} V.D. ${SELLER.taxNo} · ${SELLER.address}`),
     productName: PRODUCT,
     preheader: tr
       ? `${planLabel} planınız şimdi aktif — ödemeniz için teşekkürler.`
@@ -123,14 +116,12 @@ export function createPaymentSuccessEmailTemplate({
     `${tr ? "Ödenen tutar" : "Amount paid"}: ${amount} ${currency}`,
     ...(periodEnd ? [`${tr ? "Erişim bitişi" : "Access until"}: ${periodEnd}`] : []),
     "",
-    `${tr ? "Satıcı" : "Seller"}: ${SELLER.name}`,
-    `${tr ? "Vergi dairesi / No" : "Tax office / No"}: ${SELLER.taxOffice} — ${SELLER.taxNo}`,
-    `${tr ? "Adres" : "Address"}: ${SELLER.address}`,
-    `${tr ? "İletişim" : "Contact"}: ${SELLER.email} · ${SELLER.phone}`,
     "",
     `${tr ? "Çalışma alanına git" : "Go to workspace"}: ${workspaceUrl}`,
     "",
     tr ? "Faturanız ayrı bir e-posta ile gönderilir." : "Your invoice is sent in a separate email.",
+    "",
+    `${SELLER.name} · ${SELLER.taxOffice} V.D. ${SELLER.taxNo} · ${SELLER.address}`,
   ].join("\n");
 
   return { subject, html, text };
