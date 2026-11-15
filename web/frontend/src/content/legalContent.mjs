@@ -317,7 +317,7 @@ export const legalDocuments = {
         {
           title: "4. Withdrawal Right Exception",
           paragraphs: [
-            "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal does not apply to digital content services whose performance has begun with the consumer's consent.",
+            "Pursuant to Article 15/1(h) of the Distance Sales Regulation, the right of withdrawal does not apply to services whose performance has begun with the consumer's consent.",
             "Once payment is completed and the service performance (subscription activation) has begun, you will not be able to exercise your right of withdrawal. If you accept this condition, you may proceed to payment.",
             "In case of technical issues or complete inability to use the service, please contact our support team.",
           ],
@@ -411,7 +411,7 @@ export const legalDocuments = {
           title: "9. Dispute Resolution and Competent Authority",
           paragraphs: [
             "The BUYER may send complaints about the order to info@pdfplatform.app or through the contact channels on the website.",
-            "Turkish law applies to disputes arising from this agreement. Where the BUYER is a consumer, the Consumer Arbitration Committee or Consumer Court at the BUYER's place of residence or where the consumer transaction took place is competent. Applying to the Consumer Arbitration Committee is mandatory for disputes below the monetary limit announced each year by the Ministry of Trade; the current limit is set by the communiqué published in the Official Gazette.",
+            "Turkish law applies to disputes arising from this agreement. Where the BUYER is a consumer, the Consumer Arbitration Committee or Consumer Court at the BUYER's place of residence or where the consumer transaction took place is competent. Applying to the Consumer Arbitration Committee is mandatory for disputes below the monetary limit announced each year by the Ministry of Trade; the current limit is set by the communiqué published in the Official Gazette. For disputes above that limit, applying to a mediator before filing a case with the Consumer Court is a precondition under Article 73/A of Law No. 6502.",
             "For disputes that are not consumer transactions, the courts and enforcement offices at the SELLER's place of business are competent.",
           ],
         },
@@ -908,7 +908,7 @@ export const legalDocuments = {
         {
           title: "4. Cayma Hakkı İstisnası",
           paragraphs: [
-            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; tüketicinin onayı ile ifasına başlanan dijital içerik niteliğindeki bu hizmet için cayma hakkı uygulanmaz.",
+            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-h uyarınca; tüketicinin onayı ile ifasına başlanan bu hizmet için cayma hakkı uygulanmaz.",
             "Ödeme tamamlandığında ve hizmetin ifasına (abonelik aktivasyonu) başlanması halinde cayma hakkınızı kullanamayacaksınız. Bu durumu onaylıyorsanız ödemeye devam edebilirsiniz.",
             "Kanuni cayma hakkı uygulanmasa da SATICI, ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar; iade, talebin ulaşmasından itibaren 3–5 iş günü içinde ödeme yöntemine yapılır.",
             "Teknik sorunlar veya hizmetin hiç kullanılamaması halinde destek ekibimizle iletişime geçebilirsiniz.",
@@ -1003,7 +1003,7 @@ export const legalDocuments = {
           title: "9. Uyuşmazlıkların Çözümü ve Yetkili Merci",
           paragraphs: [
             "ALICI, siparişe ilişkin şikâyetlerini info@pdfplatform.app adresine veya web sitesindeki iletişim kanallarına iletebilir.",
-            "Bu sözleşmeden doğan uyuşmazlıklarda Türk hukuku uygulanır. ALICI'nın tüketici sıfatını taşıdığı hallerde, ALICI'nın yerleşim yerindeki veya tüketici işleminin yapıldığı yerdeki Tüketici Hakem Heyeti ya da Tüketici Mahkemesi görevli ve yetkilidir. Her yıl Ticaret Bakanlığı tarafından ilan edilen parasal sınırın altındaki uyuşmazlıklarda Tüketici Hakem Heyetine başvuru zorunludur; güncel sınır Resmi Gazete'de yayımlanan tebliğle belirlenir.",
+            "Bu sözleşmeden doğan uyuşmazlıklarda Türk hukuku uygulanır. ALICI'nın tüketici sıfatını taşıdığı hallerde, ALICI'nın yerleşim yerindeki veya tüketici işleminin yapıldığı yerdeki Tüketici Hakem Heyeti ya da Tüketici Mahkemesi görevli ve yetkilidir. Her yıl Ticaret Bakanlığı tarafından ilan edilen parasal sınırın altındaki uyuşmazlıklarda Tüketici Hakem Heyetine başvuru zorunludur; güncel sınır Resmi Gazete'de yayımlanan tebliğle belirlenir. Bu sınırın üzerindeki uyuşmazlıklarda, 6502 sayılı Kanun md. 73/A uyarınca Tüketici Mahkemesine başvurmadan önce arabulucuya başvurulması dava şartıdır.",
             "Tüketici işlemi niteliği taşımayan uyuşmazlıklarda, SATICI'nın bulunduğu yerdeki mahkemeler ve icra daireleri yetkilidir.",
           ],
         },
