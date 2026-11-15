@@ -683,10 +683,6 @@ export function PaymentSummaryModal({
                       <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("terms")}>
                         Kullanım Koşullarını
                       </button>{" "}
-                      ve{" "}
-                      <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("kvkk")}>
-                        KVKK metnini
-                      </button>{" "}
                       okudum, kabul ediyorum.
                       <span className="mt-1.5 block text-[11px] text-slate-400">
                         Ön Bilgilendirme Formu, Mesafeli Satış Sözleşmesi ve cayma hakkı beyanınız bir önceki adımda kaydedilmiştir.
@@ -697,10 +693,6 @@ export function PaymentSummaryModal({
                       I have read and accept the{" "}
                       <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("terms")}>
                         Terms of Use
-                      </button>{" "}
-                      and{" "}
-                      <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("kvkk")}>
-                        KVKK disclosure
                       </button>.
                       <span className="mt-1.5 block text-[11px] text-slate-400">
                         Your Pre-Purchase Information Form, Distance Sales Agreement and withdrawal waiver were recorded in the previous step.

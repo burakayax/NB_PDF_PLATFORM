@@ -1005,7 +1005,15 @@ export function BillingInfoModal({
                     dahil hassas veriler{" "}
                     <strong className="text-slate-400">AES-256-GCM</strong>{" "}
                     şifrelemesiyle korunmaktadır. Verileriniz hiçbir koşulda
-                    üçüncü taraflarla ticari amaçla paylaşılmaz.
+                    üçüncü taraflarla ticari amaçla paylaşılmaz.{" "}
+                    <a
+                      href="/kvkk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-nb-accent underline underline-offset-2"
+                    >
+                      KVKK Aydınlatma Metninin tamamı
+                    </a>
                   </>
                 ) : (
                   <>
@@ -1017,7 +1025,15 @@ export function BillingInfoModal({
                     . Sensitive fields including national ID are protected with{" "}
                     <strong className="text-slate-400">AES-256-GCM</strong>{" "}
                     encryption. Your data is never shared with third parties for
-                    commercial purposes.
+                    commercial purposes.{" "}
+                    <a
+                      href="/kvkk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-nb-accent underline underline-offset-2"
+                    >
+                      Full KVKK disclosure
+                    </a>
                   </>
                 )}
               </div>
