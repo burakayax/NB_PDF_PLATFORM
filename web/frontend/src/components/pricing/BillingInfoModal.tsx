@@ -1061,16 +1061,29 @@ export function BillingInfoModal({
                     : "Under the Distance Contracts Regulation you have a 14-day right of withdrawal. However, because the subscription starts immediately upon payment, the right cannot be exercised for services performed instantly in electronic form or services started with your consent (Regulation Art. 15/1-ğ and 15/1-h). By giving the approval below you accept this."}
                 </div>
 
-                {/* Blok B: Gönüllü iade garantisi (bilgi) */}
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[11.5px] leading-relaxed text-slate-400">
-                  <p className="mb-1 font-semibold text-emerald-400/80">
+                {/* Blok B: Gönüllü iade garantisi — öne çıkan kutu */}
+                <div className="relative overflow-hidden rounded-2xl border border-emerald-400/35 bg-gradient-to-br from-emerald-500/[0.16] via-emerald-500/[0.07] to-transparent p-4 shadow-[0_10px_30px_-18px_rgba(16,185,129,0.6)]">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-xl ring-1 ring-emerald-300/30" aria-hidden>🛡️</span>
+                    <div>
+                      <p className="text-[15px] font-bold leading-tight text-emerald-200">
+                        {tr ? "7 Gün Tam İade Garantisi" : "7-Day Full Refund Guarantee"}
+                      </p>
+                      <p className="mt-0.5 text-[12px] font-semibold text-emerald-300/90">
+                        {tr ? "Kanun zorunlu kılmıyor; biz yine de veriyoruz." : "Not required by law; we offer it anyway."}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-2.5 text-[12px] leading-relaxed text-slate-300">
                     {tr
-                      ? "✓ 7 Günlük İade Garantisi"
-                      : "✓ 7-Day Refund Guarantee"}
+                      ? "Memnun kalmazsanız ilk 7 gün içinde kimseyle iletişime geçmenize gerek kalmadan, hesabınızdaki \"İptal Et ve Tam İade Al\" düğmesiyle ücretin tamamını geri alabilirsiniz. Bu, gönüllü taahhüdümüzdür."
+                      : "If you are not satisfied, within the first 7 days you can get your money back in full without contacting anyone, using the \"Cancel & Get Full Refund\" button in your account. This is our voluntary commitment."}
                   </p>
-                  {tr
-                    ? "Yasal zorunluluk olmaksızın, memnun kalmamanız halinde ilk 7 gün içinde kimseyle iletişime geçmenize gerek kalmadan, hesabınızdaki \"İptal Et ve Tam İade Al\" düğmesiyle tam iade alabilirsiniz. Bu gönüllü taahhüdümüzdür."
-                    : "As a voluntary commitment beyond legal requirements, if you are not satisfied you can get a full refund within the first 7 days, without contacting anyone, using the \"Cancel & Get Full Refund\" button in your account."}
+                  <p className="mt-1.5 text-[10.5px] leading-snug text-slate-500">
+                    {tr
+                      ? "Kötüye kullanımı önlemek için tekrarlayan iade taleplerinde sınırlama uygulanabilir."
+                      : "To prevent abuse, limits may apply to repeated refund requests."}
+                  </p>
                 </div>
 
                 {/* Ön bilgilendirme onayı */}
