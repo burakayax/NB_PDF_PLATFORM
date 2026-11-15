@@ -207,8 +207,8 @@ export const PLANS: PlanDefinition[] = [
     taglineTr: "Yapay zekâ ve API isteyenler için.",
     taglineEn: "For AI tools and API access.",
     badge: {
-      textTr: "Ayda 1.000 işlem",
-      textEn: "1,000 ops / month",
+      textTr: "Ayda 1.000 sunucu işlemi",
+      textEn: "1,000 server operations / month",
       color: "amber",
     },
     pricing: {
