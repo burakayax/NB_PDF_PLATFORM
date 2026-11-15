@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { User, Building2, MapPin, Phone, ShieldCheck, Lock, ArrowRight, ReceiptText } from "lucide-react";
+import { User, Building2, MapPin, ShieldCheck, Lock, ArrowRight, ReceiptText } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
@@ -609,11 +609,11 @@ export function BillingInfoModal({
       }}
     >
       <div
-        className="relative flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
+        className="relative flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative shrink-0 overflow-hidden border-b border-white/[0.07] px-6 pb-5 pt-6 sm:px-9">
+        <div className="relative shrink-0 overflow-hidden border-b border-white/[0.07] px-6 pb-4 pt-5 sm:px-9">
           <div className="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -left-20 top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" aria-hidden />
           <button
@@ -624,8 +624,11 @@ export function BillingInfoModal({
           >
             ×
           </button>
-          {/* Adım göstergesi */}
-          <ol className="relative mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]" aria-label={tr ? "Adımlar" : "Steps"}>
+          <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pr-12">
+          <h2 className="bg-gradient-to-r from-white to-slate-300 bg-clip-text text-[22px] font-extrabold tracking-tight text-transparent sm:text-2xl">
+            {tr ? "Fatura Bilgileri" : "Billing Information"}
+          </h2>
+          <ol className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]" aria-label={tr ? "Adımlar" : "Steps"}>
             <li className="flex items-center gap-2 text-white" aria-current="step">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-[11px] shadow-[0_6px_16px_-4px_rgba(79,70,229,0.7)]">1</span>
               {tr ? "Fatura bilgileri" : "Billing details"}
@@ -636,25 +639,24 @@ export function BillingInfoModal({
               {tr ? "Ödeme" : "Payment"}
             </li>
           </ol>
-          <h2 className="relative bg-gradient-to-r from-white to-slate-300 bg-clip-text text-[22px] font-extrabold tracking-tight text-transparent sm:text-2xl">
-            {tr ? "Fatura Bilgileri" : "Billing Information"}
-          </h2>
-          <p className="relative mt-1.5 max-w-xl text-[13px] leading-relaxed text-slate-400">
-            {tr
-              ? "Yasal e-arşiv fatura düzenlenebilmesi için aşağıdaki bilgiler gerekmektedir."
-              : "Required to generate your legal e-invoice."}
+          </div>
+          <p className="relative mt-1 text-[12.5px] text-slate-400">
+            {tr ? "Yasal e-arşiv fatura için gerekli." : "Required for your legal e-invoice."}
           </p>
         </div>
 
         {/* Body */}
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-6 sm:px-9">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5 sm:px-9">
           {loading ? (
             <div className="py-8 text-center text-sm text-slate-400">
               {tr ? "Yükleniyor…" : "Loading…"}
             </div>
           ) : (
             <>
+              <div className="grid items-start gap-x-12 gap-y-6 lg:grid-cols-2">
+              <div className="space-y-4">
               {sec(<ReceiptText className="h-3.5 w-3.5" aria-hidden />, tr ? "Fatura türü ve kimlik" : "Invoice type & identity")}
+              <div className="grid gap-4 sm:grid-cols-2">
               {/* FIX 2: Tam ülke listesi */}
               <div>
                 <label className={lbl}>
@@ -717,6 +719,7 @@ export function BillingInfoModal({
                   </div>
                 </div>
               )}
+              </div>
 
               {/* Ad / Soyad */}
               <div className="grid grid-cols-2 gap-3">
@@ -778,7 +781,7 @@ export function BillingInfoModal({
                     placeholder={tr ? "11 haneli TC Kimlik No (boş bırakabilirsiniz)" : "11-digit national ID (optional)"}
                     autoComplete="off"
                   />
-                  <p className="mt-1 text-[12px] text-slate-400">
+                  <p className="mt-1 text-[11px] leading-snug text-slate-400">
                     {tr
                       ? "İsteğe bağlıdır — boş bırakırsanız faturanız yasal olarak nihai tüketici (11111111111) adına düzenlenir. Girerseniz AES-256-GCM ile şifrelenir ve yalnızca e-arşiv fatura için kullanılır."
                       : "Optional — if left blank, your invoice is issued to a final consumer (11111111111) as permitted by law. If provided, it is encrypted with AES-256-GCM and used solely for e-invoice generation."}
@@ -964,7 +967,7 @@ export function BillingInfoModal({
                   />
                 </div>
               </div>
-              <p className="-mt-1 text-[12px] leading-relaxed text-slate-400">
+              <p className="-mt-1 text-[11px] leading-relaxed text-slate-400">
                 {tr
                   ? isTurkish
                     ? "Neden istiyoruz? Vergi Usul Kanunu (md. 230) gereği faturada alıcının adı-soyadı ve adresi bulunmak zorundadır. Adresinizi ilçe ve il bilgisiyle birlikte eksiksiz yazmanız faturanızın geçerli olmasını sağlar. Bu bilgi yalnızca fatura düzenlemek için kullanılır, şifreli saklanır ve üçüncü kişilerle pazarlama amacıyla paylaşılmaz."
@@ -974,7 +977,6 @@ export function BillingInfoModal({
                     : "Why we ask: because we sell from Turkey, Turkish tax law requires the buyer's name and address on every invoice. It is used only to issue your invoice, stored encrypted, and never shared for marketing."}
               </p>
 
-              {sec(<Phone className="h-3.5 w-3.5" aria-hidden />, tr ? "İletişim" : "Contact")}
               {/* Telefon — ülke kodu bayraklı açılır menüden seçilir, IP'den otomatik tespit edilir */}
               <div>
                 <label className={lbl}>{tr ? "Telefon" : "Phone"}</label>
@@ -987,9 +989,11 @@ export function BillingInfoModal({
                 {fieldMsg("phone")}
               </div>
 
+              </div>
+              <div className="space-y-3">
               {sec(<ShieldCheck className="h-3.5 w-3.5" aria-hidden />, tr ? "Onaylar" : "Consents")}
               {/* FIX 4: Geliştirilmiş KVKK bilgi metni */}
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[12px] leading-relaxed text-slate-400">
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11.5px] leading-relaxed text-slate-400">
                 {tr ? (
                   <>
                     Kişisel verileriniz,{" "}
@@ -1021,7 +1025,7 @@ export function BillingInfoModal({
               {/* FIX 3: Cayma hakkı — 3 blok yapısı */}
               <div className="space-y-3">
                 {/* Blok A: Yasal uyarı (bilgi) */}
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3 text-[12px] leading-relaxed text-slate-400">
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-3 text-[11.5px] leading-relaxed text-slate-400">
                   <p className="mb-1 font-semibold text-amber-400/80">
                     {tr
                       ? "⚠ Yasal Cayma Hakkı Bildirimi"
@@ -1033,7 +1037,7 @@ export function BillingInfoModal({
                 </div>
 
                 {/* Blok B: Gönüllü iade garantisi (bilgi) */}
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[12px] leading-relaxed text-slate-400">
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[11.5px] leading-relaxed text-slate-400">
                   <p className="mb-1 font-semibold text-emerald-400/80">
                     {tr
                       ? "✓ 7 Günlük İade Garantisi"
@@ -1045,7 +1049,7 @@ export function BillingInfoModal({
                 </div>
 
                 {/* Ön bilgilendirme onayı */}
-                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
                     className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
@@ -1089,7 +1093,7 @@ export function BillingInfoModal({
                 </label>
 
                 {/* Mesafeli Satış Sözleşmesi — ön bilgilendirmeden AYRI onay (Yönetmelik: sözleşme ayrıca onaya sunulur) */}
-                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
                     className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
@@ -1133,7 +1137,7 @@ export function BillingInfoModal({
                 </label>
 
                 {/* Blok C: Cayma hakkı feragati (zorunlu onay) */}
-                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
                     className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
@@ -1166,7 +1170,7 @@ export function BillingInfoModal({
                 </label>
 
                 {/* Blok D: Reşit olma / yasal temsilci beyanı (TMK md. 16) */}
-                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
+                <label className="flex cursor-pointer gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3 text-left text-[12px] leading-relaxed text-slate-400 transition duration-150 hover:border-white/[0.16] has-[:checked]:border-indigo-400/40 has-[:checked]:bg-indigo-500/[0.07]">
                   <input
                     type="checkbox"
                     className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer rounded-md border-white/20 bg-nb-bg-soft accent-indigo-500"
@@ -1196,6 +1200,9 @@ export function BillingInfoModal({
                     )}
                   </span>
                 </label>
+              </div>
+
+              </div>
               </div>
 
               {error && (
