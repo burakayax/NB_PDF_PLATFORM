@@ -782,16 +782,12 @@ export function AuthPage({
                     {tr ? (
                       <>
                         <button type="button" onClick={onOpenTerms} className="underline underline-offset-2 hover:text-white">Hizmet Şartları</button>
-                        {" ve "}
-                        <button type="button" onClick={onOpenPrivacy} className="underline underline-offset-2 hover:text-white">Gizlilik Politikası</button>
                         {"’nı okudum ve kabul ediyorum."} <span className="text-red-400">*</span>
                       </>
                     ) : (
                       <>
                         I have read and accept the{" "}
-                        <button type="button" onClick={onOpenTerms} className="underline underline-offset-2 hover:text-white">Terms of Service</button>
-                        {" and "}
-                        <button type="button" onClick={onOpenPrivacy} className="underline underline-offset-2 hover:text-white">Privacy Policy</button>. <span className="text-red-400">*</span>
+                        <button type="button" onClick={onOpenTerms} className="underline underline-offset-2 hover:text-white">Terms of Service</button>. <span className="text-red-400">*</span>
                       </>
                     )}
                   </span>
@@ -802,12 +798,15 @@ export function AuthPage({
                     {tr ? (
                       <>
                         <button type="button" onClick={onOpenKvkk} className="underline underline-offset-2 hover:text-white">KVKK Aydınlatma Metni</button>
-                        {"’ni okudum."} <span className="text-red-400">*</span>
+                        {" ve "}
+                        <button type="button" onClick={onOpenPrivacy} className="underline underline-offset-2 hover:text-white">Gizlilik Politikası</button>
+                        {"’nı okudum."} <span className="text-red-400">*</span>
                       </>
                     ) : (
                       <>
                         I have read the{" "}
-                        <button type="button" onClick={onOpenKvkk} className="underline underline-offset-2 hover:text-white">privacy (KVKK) notice</button>. <span className="text-red-400">*</span>
+                        <button type="button" onClick={onOpenKvkk} className="underline underline-offset-2 hover:text-white">privacy (KVKK) notice</button>{" and the "}
+                        <button type="button" onClick={onOpenPrivacy} className="underline underline-offset-2 hover:text-white">Privacy Policy</button>. <span className="text-red-400">*</span>
                       </>
                     )}
                   </span>
