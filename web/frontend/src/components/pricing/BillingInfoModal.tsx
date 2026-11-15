@@ -1040,8 +1040,8 @@ export function BillingInfoModal({
                       : "✓ 7-Day Refund Guarantee"}
                   </p>
                   {tr
-                    ? "Yasal zorunluluk olmaksızın, memnun kalmamanız halinde ilk 7 gün içinde destek ekibimize başvurarak tam iade talep edebilirsiniz. Bu gönüllü taahhüdümüzdür."
-                    : "As a voluntary commitment beyond legal requirements, if you are not satisfied you may request a full refund within the first 7 days by contacting our support team."}
+                    ? "Yasal zorunluluk olmaksızın, memnun kalmamanız halinde ilk 7 gün içinde kimseyle iletişime geçmenize gerek kalmadan, hesabınızdaki \"İptal Et ve Tam İade Al\" düğmesiyle tam iade alabilirsiniz. Bu gönüllü taahhüdümüzdür."
+                    : "As a voluntary commitment beyond legal requirements, if you are not satisfied you can get a full refund within the first 7 days, without contacting anyone, using the \"Cancel & Get Full Refund\" button in your account."}
                 </div>
 
                 {/* Ön bilgilendirme onayı */}
