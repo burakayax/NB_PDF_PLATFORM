@@ -473,7 +473,6 @@ export function PaymentSummaryModal({
             </ol>
             </div>
             <div className="relative mt-1.5 flex flex-wrap items-center gap-3">
-              <p className="text-[12.5px] text-slate-400">{tr ? "Siparişinizi kontrol edin, ardından güvenli ödemeye geçin." : "Review your order, then continue to secure payment."}</p>
               <button
                 type="button"
                 data-testid="edit-billing"
@@ -483,6 +482,7 @@ export function PaymentSummaryModal({
                 <span aria-hidden>←</span>
                 {tr ? "Fatura bilgilerini düzenle" : "Edit billing details"}
               </button>
+              <p className="text-[12.5px] text-slate-400">{tr ? "Siparişinizi kontrol edin, ardından güvenli ödemeye geçin." : "Review your order, then continue to secure payment."}</p>
             </div>
           </div>
 
@@ -639,8 +639,8 @@ export function PaymentSummaryModal({
                       )}
                       <p className="border-t border-white/[0.07] bg-black/20 px-5 py-3 text-center text-[12px] text-slate-400">
                         {billingCycle === "YEARLY"
-                          ? (tr ? "/ yıl · Tek dönemlik ödeme, kendiliğinden yenilenmez" : "/ yr · One-period payment, does not renew automatically")
-                          : (tr ? "/ ay · Tek dönemlik ödeme, kendiliğinden yenilenmez" : "/ mo · One-period payment, does not renew automatically")}
+                          ? (tr ? "1 yıllık üyelik için tek seferlik ödeme. Süre sonunda otomatik yenilenmez." : "One payment for a 1-year membership. It does not renew automatically.")
+                          : (tr ? "1 aylık üyelik için tek seferlik ödeme. Süre sonunda otomatik yenilenmez." : "One payment for a 1-month membership. It does not renew automatically.")}
                       </p>
                     </div>
 
