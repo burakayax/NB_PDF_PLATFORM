@@ -1009,8 +1009,9 @@ export function BillingInfoModal({
                     <strong className="text-slate-400">KVKK Madde 5/2-ç</strong>{" "}
                     (kanuni yükümlülük) kapsamında e-arşiv fatura düzenlenmesi
                     amacıyla işlenmekte ve{" "}
-                    <strong className="text-slate-400">VUK Madde 253</strong>{" "}
-                    gereği 10 yıl süreyle güvenle saklanmaktadır. TC Kimlik No
+                    <strong className="text-slate-400">VUK Madde 253</strong> ve{" "}
+                    <strong className="text-slate-400">TTK Madde 82</strong>{" "}
+                    gereği (uzun olan süre uygulanarak) 10 yıl süreyle saklanmaktadır. TC Kimlik No
                     dahil hassas veriler{" "}
                     <strong className="text-slate-400">AES-256-GCM</strong>{" "}
                     şifrelemesiyle korunmaktadır. Verileriniz hiçbir koşulda
@@ -1029,8 +1030,9 @@ export function BillingInfoModal({
                     under{" "}
                     <strong className="text-slate-400">KVKK Art. 5/2-ç</strong>{" "}
                     (legal obligation) and retained for 10 years per{" "}
-                    <strong className="text-slate-400">Tax Law Art. 253</strong>
-                    . Sensitive fields including national ID are protected with{" "}
+                    <strong className="text-slate-400">Tax Law Art. 253</strong>{" "}
+                    and <strong className="text-slate-400">Commercial Code Art. 82</strong>{" "}
+                    (the longer period applies). Sensitive fields including national ID are protected with{" "}
                     <strong className="text-slate-400">AES-256-GCM</strong>{" "}
                     encryption. Your data is never shared with third parties for
                     commercial purposes.{" "}
