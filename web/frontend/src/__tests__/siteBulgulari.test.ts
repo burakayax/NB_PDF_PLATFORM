@@ -3,7 +3,7 @@ import { softenGiftLine } from "../lib/aiAvailability";
 import { toolAccessBadge } from "../lib/toolAccess";
 import { accountPanelFromPath, ACCOUNT_PANEL_PATHS } from "../lib/accountPaths";
 import { touchifyDropText } from "../lib/touchCopy";
-import { ARAC_SAYISI, AI_COMING_SOON_SLUGS } from "../seo/seoContent.mjs";
+import { ARAC_SAYISI, AI_COMING_SOON_SLUGS, TOOL_SLUGS } from "../seo/seoContent.mjs";
 
 describe("AI açılana kadar vaatler", () => {
   it("hediye satırı AI kapalıyken 'açıldığında' diye zamanlanır; açıkken olduğu gibi kalır", () => {
