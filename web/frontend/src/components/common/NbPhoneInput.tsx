@@ -117,6 +117,8 @@ export function NbPhoneInput({
   );
   const [national, setNational] = useState("");
   const [open, setOpen] = useState(false);
+  // Liste altta yer yoksa yukarı açılır (kaydırma gerekmesin).
+  const [openUp, setOpenUp] = useState(false);
   const [search, setSearch] = useState("");
 
   // En son DIŞARI bildirdiğimiz E.164 — dış değer senkronu sırasında çatışmayı önler.
@@ -224,6 +226,16 @@ export function NbPhoneInput({
     emit(digits, c);
   }
 
+  function toggleOpen() {
+    if (!open && wrapRef.current) {
+      const rect = wrapRef.current.getBoundingClientRect();
+      const need = 330; // arama kutusu + liste
+      const below = window.innerHeight - rect.bottom;
+      setOpenUp(below < need && rect.top > below);
+    }
+    setOpen((o) => !o);
+  }
+
   const Flag = flags[country];
   const dialCode = (() => {
     try {
@@ -242,7 +254,7 @@ export function NbPhoneInput({
         <button
           type="button"
           disabled={disabled}
-          onClick={() => setOpen((o) => !o)}
+          onClick={toggleOpen}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-label={labels.country ?? "Country"}
@@ -286,7 +298,7 @@ export function NbPhoneInput({
 
       {/* Aranabilir ülke listesi */}
       {open && (
-        <div className="absolute left-0 top-full z-[600] mt-2 w-full max-w-sm overflow-hidden rounded-xl border border-white/[0.1] bg-[#0d1120] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)]">
+        <div className={`absolute left-0 z-[600] w-full max-w-sm ${openUp ? "bottom-full mb-2" : "top-full mt-2"} overflow-hidden rounded-xl border border-white/[0.1] bg-[#0d1120] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)]`}>
           <div className="border-b border-white/[0.07] p-2">
             <input
               ref={searchRef}
