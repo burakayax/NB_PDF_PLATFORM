@@ -1259,11 +1259,11 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── İNCELE / KÖŞE AYARI ── */}
           {phase === "review" && capturedUrl && (
             <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col p-4">
-              <div className="relative mx-auto w-full max-w-md select-none">
+              <div className={`relative mx-auto select-none ${editOpen ? "w-fit max-w-full" : "w-full max-w-md"}`}>
                 <img
                   src={capturedUrl}
                   alt=""
-                  className="block w-full rounded-xl"
+                  className={`block rounded-xl ${editOpen ? "max-h-[52dvh] w-auto max-w-full" : "w-full"}`}
                   style={{ filter: previewFilter === "none" ? undefined : previewFilter }}
                   draggable={false}
                 />
@@ -1396,20 +1396,11 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </p>
               )}
 
-              {/* Elle düzeltme açıkken ne yapılacağını yazıyoruz — kimse aramasın. */}
-              {manualEdit && (
-                <div className="mx-auto mt-3 w-full max-w-md rounded-xl border border-cyan-400/25 bg-cyan-500/[0.08] px-4 py-3 text-[12px] leading-relaxed text-cyan-100">
-                  {tr
-                    ? "Mavi yuvarlakları belgenin köşelerine sürükle."
-                    : "Drag the blue circles to the document's corners."}
-                  <button
-                    type="button"
-                    onClick={() => setQuad(fullFrameQuad(captured?.width ?? 0, captured?.height ?? 0))}
-                    className="ml-1 font-semibold underline decoration-cyan-300/50 underline-offset-2 transition hover:text-white"
-                  >
-                    {tr ? "Köşeleri sıfırla" : "Reset corners"}
-                  </button>
-                </div>
+              {/* Düzenleme açıkken kısa yönerge (köşe sıfırlama alt çubukta). */}
+              {editOpen && (
+                <p className="mx-auto mt-2 w-full max-w-md text-center text-[12px] text-cyan-200/90">
+                  {tr ? "Mavi yuvarlakları belgenin köşelerine sürükle." : "Drag the blue circles to the document's corners."}
+                </p>
               )}
 
               {/* İŞLEM ÇUBUĞU — ekranın altına YAPIŞIK.
@@ -1417,14 +1408,38 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   "Yeniden çek" görünmüyor, kullanıcı aşağı kaydırmak zorunda
                   kalıyordu. Artık her zaman parmağın altında. */}
               <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-white/[0.08] bg-[#0b1220]/85 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-md gap-2.5">
+                <div className="mx-auto flex w-full max-w-md gap-1.5 sm:gap-2.5">
+                  {editOpen ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setQuad(fullFrameQuad(captured?.width ?? 0, captured?.height ?? 0))}
+                        className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-2xl border border-white/15 bg-white/[0.04] px-2 py-3 text-[clamp(12px,3.6vw,14px)] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                      >
+                        <RotateCcw className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{tr ? "Köşeleri sıfırla" : "Reset corners"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditOpen(false);
+                          setManualEdit(false);
+                        }}
+                        className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-2 py-3 text-[clamp(12px,3.6vw,14px)] font-bold text-white transition hover:from-cyan-500 hover:to-blue-500"
+                      >
+                        <Check className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{tr ? "Bitti" : "Done"}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
                   <button
                     type="button"
                     onClick={retake}
-                    className="flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                    className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-2xl border border-white/15 bg-white/[0.04] px-1.5 py-3 text-[clamp(11px,3.4vw,13px)] sm:gap-2 sm:px-4 sm:py-3.5 font-semibold text-slate-200 transition hover:bg-white/[0.08]"
                   >
-                    <RotateCcw className="h-4 w-4" />
-                    {tr ? "Yeniden çek" : "Retake"}
+                    <RotateCcw className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                    <span className="truncate">{tr ? "Yeniden çek" : "Retake"}</span>
                   </button>
                   <button
                     type="button"
@@ -1433,24 +1448,26 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       setEditOpen(next);
                       setManualEdit(next);
                     }}
-                    className={`flex shrink-0 items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-[13px] font-semibold transition ${
+                    className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-2xl border px-1.5 py-3 text-[clamp(11px,3.4vw,13px)] sm:gap-2 sm:px-4 sm:py-3.5 font-semibold transition ${
                       editOpen
                         ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-100"
                         : "border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
                     }`}
                   >
-                    <Crop className="h-4 w-4" />
-                    {tr ? "Düzenle" : "Edit"}
+                    <Crop className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                    <span className="truncate">{tr ? "Düzenle" : "Edit"}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => void commitPage()}
                     disabled={busy || detecting || !quad}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:pointer-events-none disabled:opacity-40"
+                    className="flex min-w-0 flex-[1.4] items-center justify-center gap-1 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-1.5 py-3 text-[clamp(12px,3.6vw,14px)] font-bold sm:gap-2 sm:px-4 sm:py-3.5 text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:pointer-events-none disabled:opacity-40"
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    {tr ? "Sayfayı ekle" : "Add page"}
+                    {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : <Check className="h-4 w-4 shrink-0" />}
+                    <span className="truncate">{tr ? "Sayfayı ekle" : "Add page"}</span>
                   </button>
+                </>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -1569,13 +1586,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 onClick={() => setSettingsOpen((v) => !v)}
                 className="mx-auto mt-5 flex w-full max-w-md items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-[13px] text-slate-300 transition hover:bg-white/[0.06]"
               >
-                <span className="min-w-0 truncate">
-                  <span className="font-semibold">{tr ? "Ayarlar" : "Settings"}</span>
-                  <span className="ml-2 text-slate-400">
-                    {format.toUpperCase()}
-                    {format !== "png" ? ` · ${quality === "small" ? (tr ? "Küçük" : "Small") : quality === "high" ? (tr ? "Yüksek" : "High") : "Normal"}` : ""}
-                  </span>
-                </span>
+                <span className="min-w-0 truncate font-semibold">{tr ? "Gelişmiş ayarlar" : "Advanced settings"}</span>
                 <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${settingsOpen ? "rotate-90" : ""}`} />
               </button>
               {settingsOpen && (
