@@ -69,16 +69,12 @@ export function GoogleSignupPage() {
                 {tr ? (
                   <>
                     <a href="/terms" target="_blank" rel="noopener noreferrer" className={link}>Hizmet Şartları</a>
-                    {" ve "}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>Gizlilik Politikası</a>
                     {"’nı okudum ve kabul ediyorum."} <span className="text-red-400">*</span>
                   </>
                 ) : (
                   <>
                     I have read and accept the{" "}
-                    <a href="/en/terms" target="_blank" rel="noopener noreferrer" className={link}>Terms of Service</a>
-                    {" and "}
-                    <a href="/en/privacy" target="_blank" rel="noopener noreferrer" className={link}>Privacy Policy</a>. <span className="text-red-400">*</span>
+                    <a href="/en/terms" target="_blank" rel="noopener noreferrer" className={link}>Terms of Service</a>. <span className="text-red-400">*</span>
                   </>
                 )}
               </span>
@@ -89,11 +85,13 @@ export function GoogleSignupPage() {
                 {tr ? (
                   <>
                     <a href="/kvkk" target="_blank" rel="noopener noreferrer" className={link}>KVKK Aydınlatma Metni</a>
-                    {"’ni okudum."} <span className="text-red-400">*</span>
+                    {" ve "}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>Gizlilik Politikası</a>
+                    {"’nı okudum."} <span className="text-red-400">*</span>
                   </>
                 ) : (
                   <>
-                    I have read the <a href="/kvkk" target="_blank" rel="noopener noreferrer" className={link}>privacy (KVKK) notice</a>. <span className="text-red-400">*</span>
+                    I have read the <a href="/kvkk" target="_blank" rel="noopener noreferrer" className={link}>privacy (KVKK) notice</a> and the <a href="/en/privacy" target="_blank" rel="noopener noreferrer" className={link}>Privacy Policy</a>. <span className="text-red-400">*</span>
                   </>
                 )}
               </span>
