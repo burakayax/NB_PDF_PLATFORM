@@ -11,6 +11,7 @@ import { isValidPhoneNumber } from "libphonenumber-js";
 import { validateCorporateTaxId } from "../../lib/taxId";
 import { addressLineProblem, trLocationProblem, canonicalCity, canonicalDistrict } from "../../lib/addressCheck";
 import { TR_LOCATIONS } from "../../lib/trLocations";
+import { LegalDocumentBody, type LegalDocKey } from "../legal/LegalPage";
 
 interface BillingFormState {
   invoiceType: "individual" | "corporate";
@@ -344,6 +345,8 @@ export function BillingInfoModal({
   const tr = language === "tr";
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  /** Sözleşme/aydınlatma metinleri sayfadan çıkmadan bu pencerede açılır. */
+  const [legalDoc, setLegalDoc] = useState<LegalDocKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** Alan bazlı hata: kırmızı çerçeve + alanın hemen altında mesaj. */
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -598,6 +601,12 @@ export function BillingInfoModal({
       const { [k]: _drop, ...rest } = e;
       return rest;
     });
+
+  const LEGAL_TITLES = {
+    kvkk: tr ? "KVKK Aydınlatma Metni" : "KVKK Disclosure",
+    "on-bilgilendirme": tr ? "Ön Bilgilendirme Formu" : "Pre-Contract Information Form",
+    "mesafeli-satis": tr ? "Mesafeli Satış Sözleşmesi" : "Distance Sales Agreement",
+  } as Partial<Record<LegalDocKey, string>>;
 
   return (
     <div
@@ -1006,14 +1015,13 @@ export function BillingInfoModal({
                     <strong className="text-slate-400">AES-256-GCM</strong>{" "}
                     şifrelemesiyle korunmaktadır. Verileriniz hiçbir koşulda
                     üçüncü taraflarla ticari amaçla paylaşılmaz.{" "}
-                    <a
-                      href="/kvkk"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-nb-accent underline underline-offset-2"
-                    >
+                    <button
+ type="button"
+ className="text-nb-accent underline underline-offset-2"
+ onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalDoc("kvkk"); }}
+ >
                       KVKK Aydınlatma Metninin tamamı
-                    </a>
+                    </button>
                   </>
                 ) : (
                   <>
@@ -1026,14 +1034,13 @@ export function BillingInfoModal({
                     <strong className="text-slate-400">AES-256-GCM</strong>{" "}
                     encryption. Your data is never shared with third parties for
                     commercial purposes.{" "}
-                    <a
-                      href="/kvkk"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-nb-accent underline underline-offset-2"
-                    >
+                    <button
+ type="button"
+ className="text-nb-accent underline underline-offset-2"
+ onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalDoc("kvkk"); }}
+ >
                       Full KVKK disclosure
-                    </a>
+                    </button>
                   </>
                 )}
               </div>
@@ -1080,28 +1087,26 @@ export function BillingInfoModal({
                   <span>
                     {tr ? (
                       <>
-                        <a
-                          href="/legal/on-bilgilendirme"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-nb-accent underline underline-offset-2"
-                        >
+                        <button
+ type="button"
+ className="text-nb-accent underline underline-offset-2"
+ onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalDoc("on-bilgilendirme"); }}
+ >
                           Ön Bilgilendirme Formu
-                        </a>
+                        </button>
                         'nu okudum ve onaylıyorum.{" "}
                         <span className="text-red-400">*</span>
                       </>
                     ) : (
                       <>
                         I have read and accept the{" "}
-                        <a
-                          href="/legal/on-bilgilendirme"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-nb-accent underline underline-offset-2"
-                        >
+                        <button
+ type="button"
+ className="text-nb-accent underline underline-offset-2"
+ onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalDoc("on-bilgilendirme"); }}
+ >
                           Pre-Purchase Information Form
-                        </a>
+                        </button>
                         . <span className="text-red-400">*</span>
                       </>
                     )}
@@ -1124,28 +1129,26 @@ export function BillingInfoModal({
                   <span>
                     {tr ? (
                       <>
-                        <a
-                          href="/legal/mesafeli-satis"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-nb-accent underline underline-offset-2"
-                        >
+                        <button
+ type="button"
+ className="text-nb-accent underline underline-offset-2"
+ onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalDoc("mesafeli-satis"); }}
+ >
                           Mesafeli Satış Sözleşmesi
-                        </a>
+                        </button>
                         'ni okudum ve onaylıyorum.{" "}
                         <span className="text-red-400">*</span>
                       </>
                     ) : (
                       <>
                         I have read and accept the{" "}
-                        <a
-                          href="/legal/mesafeli-satis"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-nb-accent underline underline-offset-2"
-                        >
+                        <button
+ type="button"
+ className="text-nb-accent underline underline-offset-2"
+ onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalDoc("mesafeli-satis"); }}
+ >
                           Distance Sales Agreement
-                        </a>
+                        </button>
                         . <span className="text-red-400">*</span>
                       </>
                     )}
@@ -1253,6 +1256,33 @@ export function BillingInfoModal({
             {tr ? "Kart bilgileriniz sitemizde saklanmaz." : "Your card details are never stored on our servers."}
           </p>
         </div>
+        {legalDoc ? (
+          <div
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-6"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              if (e.target === e.currentTarget) setLegalDoc(null);
+            }}
+          >
+            <div className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/[0.12] bg-gradient-to-b from-[#0f1530] to-[#070a14] shadow-[0_40px_100px_-30px_rgba(0,0,0,0.9)]" onMouseDown={(e) => e.stopPropagation()}>
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.08] px-5 py-3.5">
+                <h2 className="text-sm font-bold text-slate-100">{(LEGAL_TITLES[legalDoc]) ?? ""}</h2>
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300 transition hover:bg-white/[0.12] hover:text-white"
+                  onClick={() => setLegalDoc(null)}
+                >
+                  {tr ? "Kapat" : "Close"}
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-left">
+                <LegalDocumentBody language={language} documentKey={legalDoc} />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
