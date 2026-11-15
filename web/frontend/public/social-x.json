@@ -4026,7 +4026,7 @@
     },
     {
       "id": "pdf-to-word",
-      "text": "PDF'i düzenlenebilir Word belgesine çevir. Kurulum gerekmez.",
+      "text": "PDF'teki bir satırı değiştirmek için her şeyi baştan mı yazıyorsun? PDF'ini Word'e çevir: dosyayı yükle, düzenlenebilir Word belgesi olarak indir, istediğin yeri düzelt.",
       "link": "https://www.pdfplatform.app/tools/pdf-to-word",
       "card": "/x-cards/product/pdf-to-word.png"
     },

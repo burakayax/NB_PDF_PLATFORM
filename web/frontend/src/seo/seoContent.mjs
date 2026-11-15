@@ -110,8 +110,8 @@ export const TOOL_SLUGS = [
 ];
 
 /**
- * Yapay zekâ araçları halka açılana kadar "Çok yakında" durumunda; sayıma KATILMAZ (kullanılamayan
- * aracı "var" diye saymak güven kırar). AI açıldığında bu listeyi boşalt; ARAC_SAYISI listeden türediği için kendiliğinden doğru kalır.
+ * Yapay zekâ araçları halka açılana kadar "Çok yakında" durumunda; araç SAYISINA DAHİLDİR (2026-11-15 kararı: sayı = katalogdaki tüm araçlar,
+ * yapay zekâ dahil). Rozet/vaat metinleri için kullanılır; AI açıldığında bu listeyi boşalt.
  */
 export const AI_COMING_SOON_SLUGS = [
   "pdf-ozetle",
@@ -134,7 +134,7 @@ export const AI_COMING_SOON_SLUGS = [
  * 46 araç sunarken Google'a ve ziyaretçiye "45 araç" diyordu. Artık listeden
  * türetiliyor, kendiliğinden doğru kalıyor.
  */
-export const ARAC_SAYISI = TOOL_SLUGS.length - AI_COMING_SOON_SLUGS.length;
+export const ARAC_SAYISI = TOOL_SLUGS.length;
 
 
 /**
