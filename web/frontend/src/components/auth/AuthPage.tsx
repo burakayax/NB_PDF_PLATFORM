@@ -689,7 +689,9 @@ export function AuthPage({
                   <FieldIcon Icon={Mail} />
                   <input
                     type="email"
-                    autoComplete="email"
+                    name="email"
+                    id="auth-email"
+                    autoComplete={mode === "login" ? "username" : "email"}
                     value={email}
                     onChange={(event) => { setEmail(event.target.value); setEmailErr(""); }}
                     className={(emailErr || serverEmailErr) ? inputClassName + inputErrorClassName : inputClassName}
@@ -724,6 +726,8 @@ export function AuthPage({
                 <FieldIcon Icon={Lock} />
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  id="auth-password"
                   aria-label={copy.shared.passwordLabel}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                   value={password}
