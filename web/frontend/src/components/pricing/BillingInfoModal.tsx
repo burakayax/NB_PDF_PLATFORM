@@ -430,7 +430,7 @@ export function BillingInfoModal({
         delete next.taxId;
       }
       // Telefon: dolu ve geçersizse anında kırmızı (boş bırakılabilir).
-      if (form.phone.trim() && !isValidPhoneNumber(form.phone)) next.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 0532 123 45 67)." : "Invalid phone number. Check the country and number.";
+      if (form.phone.trim() && !isValidPhoneNumber(form.phone)) next.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 532 123 45 67)." : "Invalid phone number. Check the country and number.";
       else delete next.phone;
       return JSON.stringify(next) === JSON.stringify(prev) ? prev : next;
     });
@@ -484,7 +484,7 @@ export function BillingInfoModal({
         if (lp?.city) fe.city = lp.city;
         if (lp?.district) fe.billingDistrict = lp.district;
       }
-      if (form.phone.trim() && !isValidPhoneNumber(form.phone)) fe.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 0532 123 45 67)." : "Invalid phone number. Check the country and number.";
+      if (form.phone.trim() && !isValidPhoneNumber(form.phone)) fe.phone = tr ? "Telefon numarası geçersiz. Ülke kodunu seçip numarayı kontrol edin (örn. Türkiye: 532 123 45 67)." : "Invalid phone number. Check the country and number.";
       if (isTurkish && !form.billingDistrict.trim()) fe.billingDistrict = need;
       if (isTurkish && form.invoiceType === "corporate") {
         if (!form.companyName.trim()) fe.companyName = need;

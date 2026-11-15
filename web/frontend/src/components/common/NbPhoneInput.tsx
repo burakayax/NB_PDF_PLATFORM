@@ -41,11 +41,36 @@ function onlyDigits(s: string): string {
   return s.replace(/\D/g, "");
 }
 
-/** Verilen ülke için ulusal formatta örnek numara (placeholder şablonu). */
+/**
+ * Ülkenin ulusal "başa eklenen" önekini (Türkiye'de 0) bulur. Ülke kodu zaten seçili
+ * olduğundan bu önek yazılmaz/gösterilmez; yazılırsa otomatik atılır.
+ */
+function trunkPrefix(country: CountryCode): string {
+  try {
+    const ex = getExampleNumber(country, examples);
+    if (!ex) return "";
+    const shown = onlyDigits(ex.formatNational());
+    const core = ex.nationalNumber;
+    return shown.length > core.length && shown.endsWith(core)
+      ? shown.slice(0, shown.length - core.length)
+      : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Baştaki ulusal öneki (örn. 0) atar. */
+function stripTrunk(digits: string, country: CountryCode): string {
+  const t = trunkPrefix(country);
+  return t && digits.startsWith(t) ? digits.slice(t.length) : digits;
+}
+
+/** Verilen ülke için ulusal formatta örnek numara (başındaki 0 olmadan). */
 function exampleTemplate(country: CountryCode): string {
   try {
     const ex = getExampleNumber(country, examples);
-    return ex ? ex.formatNational() : "";
+    if (!ex) return "";
+    return formatNational(ex.nationalNumber, country);
   } catch {
     return "";
   }
@@ -131,7 +156,7 @@ export function NbPhoneInput({
     const parsed = parsePhoneNumberFromString(v);
     if (parsed) {
       if (parsed.country) setCountry(parsed.country);
-      setNational(parsed.formatNational());
+      setNational(formatNational(parsed.nationalNumber, parsed.country ?? country));
       lastEmittedRef.current = v;
     }
   }, [value]);
@@ -185,7 +210,7 @@ export function NbPhoneInput({
   }
 
   function handleInput(raw: string) {
-    const digits = onlyDigits(raw);
+    const digits = stripTrunk(onlyDigits(raw), country);
     setNational(formatNational(digits, country));
     emit(digits, country);
   }
@@ -194,7 +219,7 @@ export function NbPhoneInput({
     setCountry(c);
     setOpen(false);
     // Mevcut numarayı yeni ülkeye göre yeniden biçimle ve yeni arama koduyla bildir.
-    const digits = onlyDigits(national);
+    const digits = stripTrunk(onlyDigits(national), c);
     setNational(formatNational(digits, c));
     emit(digits, c);
   }
