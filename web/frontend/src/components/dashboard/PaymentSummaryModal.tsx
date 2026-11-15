@@ -437,9 +437,9 @@ export function PaymentSummaryModal({
 
   return (
     <>
-      <div className="payment-summary-backdrop" role="presentation" onMouseDown={handleBackdropMouseDown}>
+      <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/75 p-3 backdrop-blur-md sm:p-4" role="presentation" onMouseDown={handleBackdropMouseDown}>
         <div
-          className="relative mx-auto flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
+          className="relative flex h-[min(94dvh,860px)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-b from-[#0e1326] via-[#0a0e1d] to-[#060910] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(99,102,241,0.08)]"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => e.stopPropagation()}
@@ -456,7 +456,10 @@ export function PaymentSummaryModal({
             >
               ×
             </button>
-            <div className="relative mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pr-12">
+            <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pr-12">
+            <h2 className="bg-gradient-to-r from-white to-slate-300 bg-clip-text text-[22px] font-extrabold tracking-tight text-transparent sm:text-2xl">
+              {tr ? "Ödeme Özeti" : "Payment Summary"}
+            </h2>
             <ol className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]" aria-label={tr ? "Adımlar" : "Steps"}>
               <li className="flex items-center gap-2 text-emerald-300">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/30"><Check className="h-3.5 w-3.5" aria-hidden /></span>
@@ -468,21 +471,19 @@ export function PaymentSummaryModal({
                 {tr ? "Ödeme" : "Payment"}
               </li>
             </ol>
-            {onEditBilling && !paying ? (
+            </div>
+            <div className="relative mt-1.5 flex flex-wrap items-center gap-3">
+              <p className="text-[12.5px] text-slate-400">{tr ? "Siparişinizi kontrol edin, ardından güvenli ödemeye geçin." : "Review your order, then continue to secure payment."}</p>
               <button
                 type="button"
                 data-testid="edit-billing"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[12px] font-semibold text-slate-200 transition hover:bg-white/[0.1]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-0.5 text-[11.5px] font-semibold text-slate-200 transition hover:bg-white/[0.1]"
                 onClick={onEditBilling}
               >
                 <span aria-hidden>←</span>
                 {tr ? "Fatura bilgilerini düzenle" : "Edit billing details"}
               </button>
-            ) : null}
             </div>
-            <h2 className="relative bg-gradient-to-r from-white to-slate-300 bg-clip-text text-[22px] font-extrabold tracking-tight text-transparent sm:text-2xl">
-              {tr ? "Ödeme Özeti" : "Payment Summary"}
-            </h2>
           </div>
 
           {/* Body */}
@@ -517,7 +518,7 @@ export function PaymentSummaryModal({
                   </div>
                 ) : null}
 
-                <div className="grid gap-6 md:grid-cols-[1fr_1.05fr] md:gap-8">
+                <div className="grid items-start gap-x-12 gap-y-6 lg:grid-cols-2">
                   {/* SOL: plan + promosyon */}
                   <div className="space-y-6">
                     <div className="space-y-4">
