@@ -611,6 +611,11 @@ model PageView {
   sessionId String
   language  Language?
   referrer  String?
+  /// Reklam/paylaşım bağlantısındaki etiketler (utm_source/medium/campaign; reklam tıklama kimliği
+  /// gclid/fbclid varsa google/facebook olarak türetilir). Ziyaretçinin NEREDEN geldiğini ayırır.
+  utmSource   String? @map("utm_source")
+  utmMedium   String? @map("utm_medium")
+  utmCampaign String? @map("utm_campaign")
   userAgent String?
   createdAt DateTime @default(now())
   userId    String?
@@ -619,6 +624,7 @@ model PageView {
   @@index([createdAt])
   @@index([view])
   @@index([userId])
+  @@index([sessionId])
 }
 
 /// Misafir/üye "yolculuk" olayı — kullanıcı yolculuğu (funnel) panelinin ham verisi.
@@ -1275,4 +1281,23 @@ model ServiceHealthEvent {
   @@index([component, at])
   @@index([at])
   @@map("service_health_events")
+}
+
+/// ABONELİK İPTAL NEDENİ — kullanıcı iptal ederken seçtiği (isteğe bağlı) neden. Ürün kararları için
+/// ("neden gidiyorlar?"); kişisel veri içermez, serbest not kısa tutulur. Kullanıcı silinse de kayıt kalır.
+model CancellationFeedback {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  /// İptal anındaki plan (FREE/STARTER/PLUS/PRO/BUSINESS).
+  plan      String
+  /// Seçilen neden kodu: too_expensive | not_using | missing_feature | found_alternative | quality | temporary | other | skipped
+  reason    String
+  note      String?
+  /// "refunded" (7 gün içinde iade) | "cancel_pending" (dönem sonunda biter).
+  action    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("cancellation_feedback")
 }

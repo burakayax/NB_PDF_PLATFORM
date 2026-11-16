@@ -69,7 +69,7 @@ import {
   adminIssueRefundController,
   adminResetRateLimitController,
 } from "./admin.controller.js";
-import { adminJourneySessionsController, adminJourneySummaryController } from "./journey/journey.controller.js";
+import { adminJourneyInsightsController, adminJourneySessionsController, adminJourneySummaryController } from "./journey/journey.controller.js";
 // SVG is intentionally excluded: SVG files can embed JavaScript and cause stored XSS.
 const ALLOWED_MIME = /^image\/(png|jpeg|gif|webp)$|^application\/pdf$/;
 const ALLOWED_EXT = /\.(png|jpe?g|gif|webp|pdf)$/i;
@@ -189,6 +189,7 @@ adminRouter.post("/rate-limit/reset/:userId", asyncHandler(adminResetRateLimitCo
 // Kullanıcı yolculuğu — misafir/üye huni takibi (bkz. journey/journey.service.ts)
 adminRouter.get("/journeys", asyncHandler(adminJourneySessionsController));
 adminRouter.get("/journeys/summary", asyncHandler(adminJourneySummaryController));
+adminRouter.get("/journeys/insights", asyncHandler(adminJourneyInsightsController));
 
 adminRouter.get("/marketing", asyncHandler(adminGetMarketingController));
 adminRouter.put("/marketing/automation", asyncHandler(adminPutMarketingAutomationController));

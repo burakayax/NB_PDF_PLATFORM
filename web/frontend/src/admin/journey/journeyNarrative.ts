@@ -94,6 +94,8 @@ export function eventToStoryLine(ev: { name: string; toolId: string | null; extr
       return { text: "Fiyatlandırma ekranını açtı", tone: "info" };
     case "select_plan":
       return { text: `${planLabel(extra?.plan)} planını seçti`, tone: "info" };
+    case "payment_started":
+      return { text: "Ödeme ekranında “Öde” butonuna bastı", tone: "info" };
     case "add_payment_info":
       return { text: "Ödeme bilgilerini girmeye başladı", tone: "info" };
     case "checkout_abandoned": {

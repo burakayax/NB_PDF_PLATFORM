@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { completeGoogleSignup } from "../../api/auth";
+import { trackFunnelEvent } from "../../lib/analytics";
 
 /**
  * GOOGLE İLE YENİ HESAP — onay ekranı. Google'dan dönen kişi sistemde yoksa hesap burada, zorunlu onaylar
@@ -36,6 +37,7 @@ export function GoogleSignupPage() {
     setError("");
     try {
       const r = await completeGoogleSignup({ token, termsAccepted: true, privacyNoticeRead: true, marketingConsent: marketing });
+      trackFunnelEvent("sign_up_completed", { method: "google" });
       window.location.replace(`/login-success?token=${encodeURIComponent(r.accessToken)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "Hesap açılamadı. Lütfen Google ile tekrar deneyin." : "Could not create the account. Please try Google sign-in again.");

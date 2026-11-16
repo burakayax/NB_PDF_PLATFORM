@@ -40,6 +40,17 @@ const inputClass =
 
 const PROFILE_DIRTY_DELAY_MS = 600;
 
+/** İptal nedenleri — kodlar sunucudaki CANCEL_REASONS ile AYNI (subscription.controller.ts). */
+const CANCEL_REASON_OPTIONS: Array<{ id: string; tr: string; en: string }> = [
+  { id: "too_expensive", tr: "Fiyatı yüksek buldum", en: "Too expensive" },
+  { id: "not_using", tr: "Yeterince kullanmıyorum", en: "I don't use it enough" },
+  { id: "missing_feature", tr: "İhtiyacım olan bir özellik yok", en: "A feature I need is missing" },
+  { id: "found_alternative", tr: "Başka bir araç buldum", en: "I found another tool" },
+  { id: "quality", tr: "Sonuçlardan memnun kalmadım", en: "Not happy with the results" },
+  { id: "temporary", tr: "Sadece kısa süreliğine lazımdı", en: "I only needed it briefly" },
+  { id: "other", tr: "Diğer", en: "Other" },
+];
+
 function planNameFromUser(plan: string): PlanName {
   if (plan === "FREE" || plan === "STARTER" || plan === "PLUS" || plan === "PRO" || plan === "BUSINESS") return plan;
   return "FREE";
@@ -115,6 +126,9 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const dirtyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [cancelConfirm, setCancelConfirm] = useState(false);
+  // İptal nedeni (isteğe bağlı): ürün kararları için kaydedilir; boş bırakılabilir.
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelNote, setCancelNote] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [setPwdNew, setSetPwdNew] = useState("");
@@ -197,6 +211,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ reason: cancelReason || undefined, note: cancelNote.trim() || undefined }),
       });
       const data = (await res.json()) as { ok?: boolean; action?: string; message?: string; error?: string };
       if (!res.ok || !data.ok) {
@@ -434,6 +449,28 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                     <p className="mt-1.5 text-xs text-slate-400">
                       {maybeRefundEligible ? p("cancelNoteRefund", lang) : p("cancelNoteNoRefund", lang)}
                     </p>
+                    <label className="mt-3 block text-xs font-semibold text-slate-300">
+                      {lang === "tr" ? "Neden ayrılıyorsunuz? (isteğe bağlı)" : "Why are you leaving? (optional)"}
+                      <select
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-white [color-scheme:dark]"
+                      >
+                        <option value="" className="bg-slate-900">{lang === "tr" ? "Seçmek istemiyorum" : "Prefer not to say"}</option>
+                        {CANCEL_REASON_OPTIONS.map((o) => (
+                          <option key={o.id} value={o.id} className="bg-slate-900">{lang === "tr" ? o.tr : o.en}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {cancelReason === "other" || cancelReason === "missing_feature" ? (
+                      <textarea
+                        value={cancelNote}
+                        onChange={(e) => setCancelNote(e.target.value.slice(0, 500))}
+                        rows={2}
+                        placeholder={lang === "tr" ? "Kısaca yazabilirsiniz (isteğe bağlı)" : "A short note (optional)"}
+                        className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-white placeholder:text-slate-500"
+                      />
+                    ) : null}
                     <div className="mt-3 flex gap-2">
                       <button
                         type="button"

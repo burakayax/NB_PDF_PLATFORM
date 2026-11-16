@@ -16,6 +16,37 @@ import {
 import { sendMail } from "../../lib/mailer.js";
 import { createSubscriptionCancelledEmailTemplate } from "./subscription.email.js";
 
+/** İptal nedeni (isteğe bağlı). Panelde okunur Türkçe etikete çevrilir (frontend admin/insights). */
+export const CANCEL_REASONS = [
+  "too_expensive",
+  "not_using",
+  "missing_feature",
+  "found_alternative",
+  "quality",
+  "temporary",
+  "other",
+] as const;
+
+/** İptal nedenini kaydeder. Başarısızlık iptali bozmaz (ölçüm ikincil). */
+async function saveCancellationFeedback(
+  request: Request,
+  userId: string,
+  plan: string,
+  action: "refunded" | "cancel_pending",
+): Promise<void> {
+  try {
+    const body = (request.body ?? {}) as { reason?: unknown; note?: unknown };
+    const reason =
+      typeof body.reason === "string" && (CANCEL_REASONS as readonly string[]).includes(body.reason)
+        ? body.reason
+        : "skipped";
+    const note = typeof body.note === "string" && body.note.trim() ? body.note.trim().slice(0, 500) : null;
+    await prisma.cancellationFeedback.create({ data: { userId, plan, reason, note, action } });
+  } catch (err) {
+    logger.error("subscription", "cancellation feedback kaydı başarısız (non-fatal)", { detail: String(err) });
+  }
+}
+
 /*
  * Daily-quota HTTP surface (``/assert-feature`` and ``/record-usage``) has
  * been removed along with the legacy daily-limit system. All tool gating
@@ -136,6 +167,7 @@ export async function cancelSubscriptionController(request: Request, response: R
 
     // İptal + iade bildirimi e-postası (non-fatal)
     void sendCancellationEmail(user.email, user.plan, user.preferredLanguage, true, undefined);
+    void saveCancellationFeedback(request, userId, user.plan, "refunded");
 
     response.json({ ok: true, action: "refunded", message: "Aboneliğiniz iptal edildi ve ücret iade edildi." });
   } else {
@@ -163,6 +195,7 @@ export async function cancelSubscriptionController(request: Request, response: R
       }
     }
     void sendCancellationEmail(user.email, user.plan, user.preferredLanguage, false, effective);
+    void saveCancellationFeedback(request, userId, user.plan, "cancel_pending");
 
     response.json({
       ok: true,

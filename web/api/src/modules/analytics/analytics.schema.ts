@@ -6,6 +6,9 @@ export const pageViewSchema = z.object({
   sessionId: z.string().trim().min(8).max(64),
   language: z.enum(["tr", "en"]).optional(),
   referrer: z.string().trim().max(500).optional(),
+  utmSource: z.string().trim().max(80).optional(),
+  utmMedium: z.string().trim().max(80).optional(),
+  utmCampaign: z.string().trim().max(120).optional(),
 });
 
 export type PageViewInput = z.infer<typeof pageViewSchema>;
