@@ -193,7 +193,21 @@ export async function olcumAl(canvas: HTMLCanvasElement): Promise<Olcum | null> 
   const { kare, dx, dy } = dolguluKare(canvas);
   const o = await olcumAlHam(kare);
   if (!o) return null;
-  return { quad: dolguyuGeriAl(o.quad, dx, dy, canvas.width, canvas.height), guven: o.guven };
+  const q = dolguyuGeriAl(o.quad, dx, dy, canvas.width, canvas.height);
+  // Gri dolgu, kameranın kendi kadrajını "gri zemin üstünde dikdörtgen" yapar;
+  // dedektör bunu belge sanıp (hiçbir şey yokken bile) kararlı bulur ve otomatik
+  // çekim hemen tetiklenir. Köşeleri kadraj köşelerine yapışık sonuç belge DEĞİLDİR.
+  const tx = canvas.width * 0.03;
+  const ty = canvas.height * 0.03;
+  const kadraj = [
+    { x: 0, y: 0 },
+    { x: canvas.width, y: 0 },
+    { x: canvas.width, y: canvas.height },
+    { x: 0, y: canvas.height },
+  ];
+  const koseYapisik = kadraj.filter((k) => q.some((p) => Math.abs(p.x - k.x) < tx && Math.abs(p.y - k.y) < ty)).length;
+  if (koseYapisik >= 3) return null;
+  return { quad: q, guven: o.guven };
 }
 
 async function mlOlcum(s: ScannerType, canvas: HTMLCanvasElement): Promise<Olcum | null> {
