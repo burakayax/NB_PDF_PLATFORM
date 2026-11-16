@@ -14,7 +14,7 @@ export const KDV_RATE = 0.2;
 /** Yıllık ödemede ek koltuklara uygulanan katsayı (10 ay fiyatına 12 ay ≈ %17) — sunucuyla AYNI. */
 export const YEARLY_SEAT_DISCOUNT = 0.83;
 /** Ek koltuk (kişi/ay) — `web/api/src/lib/plan-catalogue.ts` → EXTRA_SEAT_PRICE ile AYNI. TL KDV dahil. */
-export const EXTRA_SEAT_UNIT = { TRY: 219, USD: 7.99 } as const;
+export const EXTRA_SEAT_UNIT = { TRY: 299, USD: 9.99 } as const;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 

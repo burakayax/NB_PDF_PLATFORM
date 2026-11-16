@@ -85,8 +85,8 @@ const SPECIAL: Record<string, Special> = {
     tone: "account",
     suffix: { tr: "ayda 1 istek", en: "1 request/mo" },
     detail: {
-      tr: "Aylık imza isteği kontenjanı: ücretsiz üye 1, Başlangıç 3, Plus 10, Pro 20, Business sınırsız.",
-      en: "Monthly signature-request quota: Free 1, Starter 3, Plus 10, Pro 20, Business unlimited.",
+      tr: "Aylık imza isteği kontenjanı: ücretsiz üye 1, Başlangıç 3, Plus 10, Pro 20, Business ayda 300 (ekip havuzu, ek koltuk başına +60).",
+      en: "Monthly signature-request quota: Free 1, Starter 3, Plus 10, Pro 20, Business 300/month (team pool, +60 per extra seat).",
     },
   },
   // Kaynak: components/tools/AiRedactTool.tsx → gate (giriş + Başlangıç+ plan), ai.middleware.ts.

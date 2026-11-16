@@ -1,4 +1,8 @@
 /**
+ * KULLANIMDAN KALKTI (LEGACY) — GEÇERLİ FİYATLAR BURADA DEĞİL: `lib/plan-catalogue.ts`.
+ * Bu dosyadaki rakamlar eski "Bronz/Altın/Limitsiz" kredi akışına aittir; canlıda kullanılmaz
+ * (`credit-checkout.routes.ts` üretimde 410 döner) ve yalnız yerel sahte-ödeme sınamasında kalır.
+ *
  * Fixed global tier prices — no FX conversion. Same numbers used for iyzico checkout.
  * BRONZ = TIER_STARTER, ALTIN = TIER_PROFESSIONAL, LİMİTSİZ PRO = unlimited monthly.
  */

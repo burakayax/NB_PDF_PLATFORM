@@ -2,10 +2,14 @@ import { PRICES_HIDDEN } from "../../lib/priceVisibility";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
+import { EXTRA_SEAT_UNIT, YEARLY_SEAT_DISCOUNT } from "../../lib/checkoutQuote";
 
-const SEAT_PRICE_TRY = 219;  // ₺/kişi/ay (KDV dahil)
-const SEAT_PRICE_USD = 7.99; // $/kişi/ay
-const YEARLY_DISCOUNT = 0.83; // %17 tasarruf
+// Tek kaynak: sunucudaki `plan-catalogue.ts` → EXTRA_SEAT_PRICE (ön yüz kopyası checkoutQuote.ts'te).
+const SEAT_PRICE_TRY = EXTRA_SEAT_UNIT.TRY;  // ₺/kişi/ay (KDV dahil)
+const SEAT_PRICE_USD = EXTRA_SEAT_UNIT.USD;  // $/kişi/ay
+const YEARLY_DISCOUNT = YEARLY_SEAT_DISCOUNT; // %17 tasarruf
+/** Ekip en fazla 50 kişi: 5 dahil + 45 ek (sunucudaki BUSINESS_TEAM ile AYNI). */
+const MAX_EXTRA_SEATS = 45;
 
 type Props = {
   open: boolean;
@@ -76,7 +80,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
               <span className="w-8 text-center text-lg font-bold text-white">{newSeats}</span>
               <button
                 type="button"
-                onClick={() => setNewSeats((n) => Math.min(95 - currentExtraSeats, n + 1))}
+                onClick={() => setNewSeats((n) => Math.min(Math.max(1, MAX_EXTRA_SEATS - currentExtraSeats), n + 1))}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-lg font-bold"
               >
                 +

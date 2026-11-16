@@ -11,8 +11,10 @@
  * dahil olması yasal zorunluluk; müşteri ne görüyorsa onu öder. iyzico'ya
  * KDV hariç (net) tutar gider, bu yüzden `netFromGrossTry` ile çevrilir.
  *
- * USD fiyatları yurt dışı müşteriler içindir ve ihracat istisnası nedeniyle
- * KDV'siz, yani gösterilen tutar ödenen tutardır.
+ * USD fiyatları yurt dışı müşteriler içindir. İhracat istisnası yönetim panelindeki
+ * anahtarla açıksa (varsayılan KAPALI) KDV yoktur ve gösterilen tutar ödenen tutardır;
+ * KAPALIYKEN ödeme ekranı USD tutarın üstüne %20 KDV ekler (`lib/vat.ts`,
+ * `frontend/src/lib/checkoutQuote.ts` — ekran ve sunucu aynı hesabı yapar).
  */
 
 /** Türkiye KDV oranı (2023+). `lib/vat.ts` ile aynı olmak zorunda. */
@@ -33,7 +35,7 @@ export type PlanPrice = {
   /** TL, KDV DAHİL — müşteriye gösterilen ve ödenen tutar. */
   tryGrossMonthly: string;
   tryGrossYearly: string;
-  /** USD, vergisiz — yurt dışı müşteriye gösterilen ve ödenen tutar. */
+  /** USD — yurt dışı müşteriye gösterilen tutar (KDV: ihracat istisnası kapalıyken ödeme ekranında eklenir, açıkken yok). */
   usdMonthly: string;
   usdYearly: string;
 };
@@ -49,46 +51,53 @@ export type PlanPrice = {
  *  (gerçekte kullanım bunun çok altındadır) ödeme komisyonu sonrası en az %55
  *  brüt marj bırakır. `plan-catalogue.test.ts` bunu her derlemede doğrular.
  *
- *  Piyasa tarafı — iLovePDF 7 $/ay (Türkiye'de de dolar), Smallpdf Pro 15 $/ay,
- *  Adobe Acrobat Pro ~19,99 $/ay, yapay zekâlı ChatPDF tek başına 19,99 $/ay.
- *  Pro'muz 11,99 $: iLovePDF'in üstünde (bizde yapay zekâ var), yapay zekâ
- *  odaklı rakiplerin belirgin altında.
+ *  Piyasa tarafı (2026-09 ölçümü; güncel rakip tablosu için 2026-11-16 revizyonuna bakın) —
+ *  iLovePDF 7 $/ay, Smallpdf Pro 15 $/ay, Adobe Acrobat Pro ~19,99 $/ay, ChatPDF 19,99 $/ay.
+ *  (2026-11-16: iLovePDF resmi TR sayfasında Premium 9 $/ay; Pro 12,99 $ ile Smallpdf aralığında.)
  *
  *  Yıllık TL ≈ 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim). Yıllık
  *  tutarlar 12'ye TAM bölünür: ekranda "ayda X" yazıp X×12 ≠ yıllık tutar olmasın
  *  (ör. 2.290/12 = 190,83 → "191" görünüyor, 191×12 = 2.292). Yıllık USD rakip
- *  yıllık fiyatlarına (iLovePDF ~4 $/ay, Smallpdf ~9 $/ay) göre kurulur:
- *  Plus 50,04 $ (ayda 4,17), Pro 90,00 $ (ayda 7,50), Business 399,96 $ (ayda 33,33).
+ *  yıllık fiyatlarına (iLovePDF 60 $/yıl, Smallpdf ~108 $/yıl) göre kurulur
+ *  (güncel tutarlar aşağıdaki 2026-11-16 revizyonunda).
  *
  *  FİYAT REVİZYONU (2026-10-15): TL fiyatları dolar fiyatının ~%65-70'ine çekildi
  *  (Başlangıç 129, Plus 229, Pro 399, Business 1.099); eskiden ~%50'ydi. Pro 399 ₺
  *  kullanıcı kararıdır — sonradan zam kötü algılanacağı için ödemeler açılmadan
  *  önce yapıldı. Kur 60 ₺/$'ı aşarsa TL fiyatlar yeniden gözden geçirilmeli.
+ *
+ *  FİYAT REVİZYONU (2026-11-16, finans raporu "PDF_Platform_Fiyatlandirma_Finans_Raporu_2026-11-15"):
+ *  Ödemeler açılmadan ve en az 1 yıl değişmeyecek biçimde yeniden hesaplandı. TL (KDV dahil):
+ *  Başlangıç 129 (değişmedi), Plus 279, Pro 449, Business 1.499, ek koltuk 299. Dolar: Başlangıç 4,99,
+ *  Plus 7,99, Pro 12,99, Business 49,99, ek koltuk 9,99. Yıllık TL ≈ 10 ay (12'ye tam bölünür).
+ *  Yıllık USD de 12'ye TAM bölünür (rapordaki 59,99/99,99/499,99 yerine 60,00/99,96/499,92; fark ≤ 7 sent):
+ *  ekranda "ayda X" × 12 = yıllık tutar kuralı bozulmasın. Başlangıç yıllığı satılmaz (yalnız tanımlı).
+ *  Başa-baş: kur 50–70 aralığında ayda 27–35 ödeyen müşteri (rapor bölüm 8).
  */
 export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
   STARTER: {
     tryGrossMonthly: "129.00",
     tryGrossYearly: "1290.00",
-    usdMonthly: "3.99",
-    usdYearly: "39.99",
+    usdMonthly: "4.99",
+    usdYearly: "49.92",
   },
   PLUS: {
-    tryGrossMonthly: "229.00",
-    tryGrossYearly: "2292.00",
-    usdMonthly: "6.99",
-    usdYearly: "50.04",
+    tryGrossMonthly: "279.00",
+    tryGrossYearly: "2796.00",
+    usdMonthly: "7.99",
+    usdYearly: "60.00",
   },
   PRO: {
-    tryGrossMonthly: "399.00",
-    tryGrossYearly: "3996.00",
-    usdMonthly: "11.99",
-    usdYearly: "90.00",
+    tryGrossMonthly: "449.00",
+    tryGrossYearly: "4488.00",
+    usdMonthly: "12.99",
+    usdYearly: "99.96",
   },
   BUSINESS: {
-    tryGrossMonthly: "1099.00",
-    tryGrossYearly: "10992.00",
-    usdMonthly: "39.99",
-    usdYearly: "399.96",
+    tryGrossMonthly: "1499.00",
+    tryGrossYearly: "14988.00",
+    usdMonthly: "49.99",
+    usdYearly: "499.92",
   },
 };
 
@@ -110,8 +119,8 @@ export function yearlyGrossFromMonthly(monthlyGross: string): string {
 
 /** Business planına eklenen her ek koltuğun fiyatı (Business'ın koltuk başı fiyatıyla aynı hizada). */
 export const EXTRA_SEAT_PRICE = {
-  tryGrossMonthly: "219.00",
-  usdMonthly: "7.99",
+  tryGrossMonthly: "299.00",
+  usdMonthly: "9.99",
 } as const;
 
 /**
@@ -158,8 +167,48 @@ export const PLAN_LIMITS: Record<CataloguePlanId, PlanLimits> = {
   STARTER: { dailyOperationLimit: 25, monthlyOperationLimit: 250, fileSizeLimitMB: 100, batchLimit: 0 },
   PLUS: { dailyOperationLimit: null, monthlyOperationLimit: 600, fileSizeLimitMB: 250, batchLimit: 0 },
   PRO: { dailyOperationLimit: null, monthlyOperationLimit: 1000, fileSizeLimitMB: 500, batchLimit: 25 },
-  BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: UNLIMITED_MONTHLY_OPS, fileSizeLimitMB: 999999, batchLimit: 999 },
+  BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: 5000, fileSizeLimitMB: 1000, batchLimit: 100 },
 };
+
+/**
+ * BUSINESS EKİP SINIRLARI (2026-11-16, finans raporu Ek A) — "sınırsız" vaadi KALDIRILDI.
+ *
+ * NEDEN: Business tek başına sunucu kapasitesini tüketebilecek tek plandı (PDF sunucusu tek işçi,
+ * 512 MB). Sınırlar kapasiteyi korurken Pro'nun kişi başı 1.000 işlemiyle orantılı kalır.
+ * Cihazda çalışan araçlar (birleştir, böl, döndür…) sunucuya gitmez; bu sınırlara girmez ve
+ * sınırsız kalır. Sunucu işlemi, imza isteği ve ek koltuk tavanı EKİP HAVUZUDUR: ekibin tamamı
+ * (sahibi + üyeleri) aynı sayaçtan düşer. Havuz, ek koltukla büyür.
+ *
+ *  - Sunucu işlemi: ayda 5.000 (5 koltuk dahil) + ek koltuk başına 1.000
+ *  - Dosya boyutu: 1.000 MB (≈1 GB), toplu işlem: 100 dosya (PLAN_LIMITS.BUSINESS)
+ *  - İmza isteği: ayda 300 + ek koltuk başına 60
+ *  - Koltuk: 5 dahil, en fazla 50 (45 ek); fazlası özel teklif
+ * Ekranlardaki, e-postalardaki ve SEO sayfalarındaki metinler bu sayıları taşır;
+ * `plan-limits-sync.test.ts` ön yüz kopyasıyla ayrışmayı yakalar.
+ */
+export const BUSINESS_TEAM = {
+  includedSeats: 5,
+  maxTotalSeats: 50,
+  maxExtraSeats: 45,
+  /** Ek koltuk başına eklenen aylık sunucu işlemi. */
+  extraSeatMonthlyOps: 1000,
+  /** Ekip havuzu: ayda imza isteği (5 koltuk için). */
+  signatureRequestsBase: 300,
+  /** Ek koltuk başına eklenen aylık imza isteği. */
+  extraSeatSignatureRequests: 60,
+} as const;
+
+/** Business ekibinin aylık sunucu işlem havuzu (ek koltuk sayısına göre). */
+export function businessMonthlyOps(extraSeats: number): number {
+  const extra = Math.min(BUSINESS_TEAM.maxExtraSeats, Math.max(0, Math.trunc(extraSeats) || 0));
+  return PLAN_LIMITS.BUSINESS.monthlyOperationLimit + extra * BUSINESS_TEAM.extraSeatMonthlyOps;
+}
+
+/** Business ekibinin aylık imza isteği havuzu (ek koltuk sayısına göre). */
+export function businessMonthlySignatureRequests(extraSeats: number): number {
+  const extra = Math.min(BUSINESS_TEAM.maxExtraSeats, Math.max(0, Math.trunc(extraSeats) || 0));
+  return BUSINESS_TEAM.signatureRequestsBase + extra * BUSINESS_TEAM.extraSeatSignatureRequests;
+}
 
 /** Ölçülen en kötü durum: bir yapay zekâ hakkının bize maliyeti (USD). */
 export const AI_COST_PER_CREDIT_USD = 0.035;

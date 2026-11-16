@@ -2,7 +2,7 @@ import type { OrgRole, Organization, Plan } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import crypto from "crypto";
 import { sendMail } from "../../lib/mailer.js";
-import { PLAN_LIMITS } from "../../lib/plan-catalogue.js";
+import { BUSINESS_TEAM, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
 
 function generateSlug(name: string): string {
   return (
@@ -28,7 +28,7 @@ export async function createOrganizationForUser(
     STARTER:  { ...PLAN_LIMITS.STARTER,  watermarkEnabled: false, queuePriority: "LOW",     maxSeats: 1 },
     PLUS:     { ...PLAN_LIMITS.PLUS,     watermarkEnabled: false, queuePriority: "MEDIUM",  maxSeats: 1 },
     PRO:      { ...PLAN_LIMITS.PRO,      watermarkEnabled: false, queuePriority: "HIGH",    maxSeats: 1 },
-    BUSINESS: { ...PLAN_LIMITS.BUSINESS, watermarkEnabled: false, queuePriority: "HIGHEST", maxSeats: 999 },
+    BUSINESS: { ...PLAN_LIMITS.BUSINESS, watermarkEnabled: false, queuePriority: "HIGHEST", maxSeats: BUSINESS_TEAM.maxTotalSeats },
   };
   const limits = planConfig ?? PLAN_DEFAULTS[plan] ?? PLAN_DEFAULTS["FREE"];
 

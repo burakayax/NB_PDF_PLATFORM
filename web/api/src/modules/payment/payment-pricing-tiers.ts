@@ -1,3 +1,4 @@
+// KULLANIMDAN KALKTI (LEGACY): geçerli fiyatlar `lib/plan-catalogue.ts`'te; `/api/payments/pricing` artık bunu kullanmaz.
 import { CREDIT_PACK_CATALOG } from "../credit-checkout/credit-pack-pricing.js";
 import { formatMoney2, getTierOneTimePrice, getUnlimitedProPrice, type CheckoutCurrency } from "./pricing-matrix.js";
 

@@ -16,9 +16,9 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
     }
   });
 
-  it("Pro aylık 399 ₺: net 332,50 + KDV 66,50 = 399,00", () => {
+  it("Pro aylık 449 ₺: net 374,17 + KDV 74,83 = 449,00", () => {
     const q = buildCheckoutQuote({ ...base, plan: plan("PRO"), planId: "PRO", cycle: "MONTHLY", currency: "TRY" })!;
-    expect([q.net, q.vat, q.total]).toEqual([332.5, 66.5, 399]);
+    expect([q.net, q.vat, q.total]).toEqual([374.17, 74.83, 449]);
   });
 
   it("USD'de KDV yoktur: ödenecek tutar liste fiyatıdır", () => {
@@ -29,12 +29,12 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
     }
   });
 
-  it("iskonto netten düşer, KDV indirimli net üzerine eklenir (Pro 399 ₺, %15)", () => {
+  it("iskonto netten düşer, KDV indirimli net üzerine eklenir (Pro 449 ₺, %15)", () => {
     const q = buildCheckoutQuote({ ...base, plan: plan("PRO"), planId: "PRO", cycle: "MONTHLY", currency: "TRY", discountPercent: 15 })!;
-    expect(q.net).toBe(282.63); // 332,50 × 0,85
-    expect(q.vat).toBe(56.53);
-    expect(q.total).toBe(339.16);
-    expect(q.listTotal).toBe(399);
+    expect(q.net).toBe(318.04); // 374,17 × 0,85
+    expect(q.vat).toBe(63.61);
+    expect(q.total).toBe(381.65);
+    expect(q.listTotal).toBe(449);
   });
 
   it("istisna KAPALIYKEN (varsayılan) USD'ye de %20 KDV eklenir — sunucuyla aynı", () => {
@@ -46,31 +46,31 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
     expect(q.total).toBeCloseTo(q.net + q.vat, 2);
   });
 
-  it("USD iskontosu gerçekten uygulanır (Pro $11,99, %15)", () => {
+  it("USD iskontosu gerçekten uygulanır (Pro $12,99, %15)", () => {
     const q = buildCheckoutQuote({ ...base, plan: plan("PRO"), planId: "PRO", cycle: "MONTHLY", currency: "USD", discountPercent: 15, exportExemption: true })!;
-    expect(q.total).toBe(10.19);
-    expect(q.listTotal).toBe(11.99);
+    expect(q.total).toBe(11.04);
+    expect(q.listTotal).toBe(12.99);
   });
 
   it("yıllık Business + 3 ek koltuk: koltuklara %17 yıllık indirim de dahil", () => {
     const q = buildCheckoutQuote({ ...base, plan: plan("BUSINESS"), planId: "BUSINESS", cycle: "YEARLY", currency: "TRY", extraSeats: 3 })!;
-    // plan net 10.992/1,2 = 9.160 ; koltuk: 3 × 182,50 × 12 × 0,83 = 5.453,10
-    expect(q.net).toBe(14613.1);
-    expect(q.total).toBe(17535.72);
+    // plan net 14.988/1,2 = 12.490 ; koltuk: 3 × 249,17 × 12 × 0,83 = 7.445,20
+    expect(q.net).toBe(19935.2);
+    expect(q.total).toBe(23922.24);
   });
 
   it("yalnız koltuk satın alma: plan bedeli yok", () => {
     const q = buildCheckoutQuote({ ...base, plan: undefined, planId: "BUSINESS", cycle: "MONTHLY", currency: "TRY", extraSeats: 2, seatsOnly: true })!;
-    expect(q.net).toBe(365); // 2 × 182,50
-    expect(q.total).toBe(438); // 219 × 2
+    expect(q.net).toBe(498.34); // 2 × 249,17 (299/1,2)
+    expect(q.total).toBe(598.01); // 2 × 249,17 × 1,2 (sunucuyla aynı yuvarlama)
   });
 });
 
 describe("yönetim paneli fiyatı ve yıllık türetme", () => {
   it("yıllık = ~10 ay fiyatı, 12'nin tam katı", () => {
-    expect(yearlyGrossFromMonthly(229)).toBe(2292);
-    expect(yearlyGrossFromMonthly(399)).toBe(3996);
-    expect(yearlyGrossFromMonthly(1099)).toBe(10992);
+    expect(yearlyGrossFromMonthly(279)).toBe(2796);
+    expect(yearlyGrossFromMonthly(449)).toBe(4488);
+    expect(yearlyGrossFromMonthly(1499)).toBe(14988);
   });
 
   it("panelde Business aylık değişirse yıllık türetilir; Plus/Başlangıç etkilenmez", () => {
@@ -85,7 +85,7 @@ describe("yönetim paneli fiyatı ve yıllık türetme", () => {
 
   it("panel girdisi yoksa fiyatlar planConfig ile aynı kalır", () => {
     expect(applyTryPriceOverrides(PLANS, null)).toBe(PLANS);
-    const out = applyTryPriceOverrides(PLANS, { proMonthly: "399.00", proAnnual: "3996.00", businessMonthly: "1099.00" });
+    const out = applyTryPriceOverrides(PLANS, { proMonthly: "449.00", proAnnual: "4488.00", businessMonthly: "1499.00" });
     expect(out.map((p) => p.pricing)).toEqual(PLANS.map((p) => p.pricing));
   });
 });

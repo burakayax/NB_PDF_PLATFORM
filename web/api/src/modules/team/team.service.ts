@@ -9,7 +9,7 @@ import {
   sendWeeklyTeamSummaryEmail,
 } from "../email/teamEmails.js";
 
-const MONTHLY_OP_LIMIT = 1000;
+import { businessMonthlyOps } from "../../lib/plan-catalogue.js";
 
 export async function createTeamForOwner(ownerId: string, ownerName: string) {
   const existing = await prisma.team.findUnique({ where: { ownerId } });
@@ -289,17 +289,24 @@ export async function checkUsageAndNotify() {
   const teams = await prisma.team.findMany({
     where: { subscriptionStatus: "ACTIVE" },
     include: {
-      owner: { select: { email: true, firstName: true, lastName: true } },
-      members: {
-        where: { inviteStatus: "ACCEPTED" },
-        include: { activities: { where: { createdAt: { gte: monthStart } } } },
+      owner: {
+        select: {
+          email: true,
+          firstName: true,
+          lastName: true,
+          // Ekip havuzunun gerçek sayacı: sahibin org'u (üyelerin işlemleri de buraya düşer).
+          organization: { select: { currentMonthOperations: true, lastMonthlyReset: true } },
+        },
       },
     },
   });
 
   for (const team of teams) {
-    const usedOps = team.members.reduce((s, m) => s + m.activities.length, 0);
-    const usageRatio = usedOps / MONTHLY_OP_LIMIT;
+    const org = team.owner.organization;
+    // Sayaç ay başında tembel sıfırlanır; geçen aydan kalan sayı bu ayın kullanımı sayılmaz.
+    const usedOps = org && org.lastMonthlyReset >= monthStart ? org.currentMonthOperations : 0;
+    const poolLimit = businessMonthlyOps(team.extraSeats);
+    const usageRatio = usedOps / poolLimit;
     if (usageRatio >= 0.8 && usageRatio < 1.0) {
       const patronName = [team.owner.firstName, team.owner.lastName].filter(Boolean).join(" ") || team.owner.email;
       await sendUsageLimitWarningEmail({
@@ -307,7 +314,7 @@ export async function checkUsageAndNotify() {
         patronName,
         teamName: team.name,
         usedOps,
-        totalOps: MONTHLY_OP_LIMIT,
+        totalOps: poolLimit,
         usagePercent: Math.round(usageRatio * 100),
       });
     }

@@ -19,11 +19,16 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
   const plan = PLANS.find((p) => p.id === planId);
   if (!plan) return [];
 
+  const isBiz = planId === "BUSINESS";
   const monthly =
     plan.monthlyOpsLimit == null
       ? tr
         ? "Sınırsız işlem"
         : "Unlimited operations"
+      : isBiz
+        ? tr
+          ? `Ekip havuzu: ayda ${plan.monthlyOpsLimit.toLocaleString("tr-TR")} sunucu işlemi (+1.000 / ek koltuk)`
+          : `Team pool: ${plan.monthlyOpsLimit.toLocaleString("en-US")} server operations / month (+1,000 per extra seat)`
       : tr
         ? `Ayda ${plan.monthlyOpsLimit.toLocaleString("tr-TR")} işlem`
         : `${plan.monthlyOpsLimit.toLocaleString("en-US")} operations / month`;
@@ -33,8 +38,8 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
         ? "Çok yüksek dosya boyutu sınırı"
         : "Very high file size limit"
       : tr
-        ? `${plan.fileSizeMB} MB'a kadar dosya`
-        : `Files up to ${plan.fileSizeMB} MB`;
+        ? plan.fileSizeMB >= 1000 ? "1 GB'a kadar dosya" : `${plan.fileSizeMB} MB'a kadar dosya`
+        : plan.fileSizeMB >= 1000 ? "Files up to 1 GB" : `Files up to ${plan.fileSizeMB} MB`;
   const batch =
     plan.batchLimit === 0
       ? tr
@@ -67,7 +72,7 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
                 : "Your daily allowance renews every day and applies alongside the monthly quota.",
             }
           : {
-              label: tr ? "Sınırsız günlük kullanım" : "Unlimited daily usage",
+              label: plan.monthlyOpsLimit == null ? (tr ? "Sınırsız günlük kullanım" : "Unlimited daily usage") : (tr ? "Günlük sınır yok" : "No daily cap"),
               detail:
                 plan.monthlyOpsLimit == null
                   ? tr
@@ -147,7 +152,7 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
   ];
 
   // PDF Düzenle ve belge araçları: planlar arası en belirgin farklar burada.
-  const signatureQuota = { STARTER: 3, PLUS: 10, PRO: 20, BUSINESS: null }[planId as "STARTER" | "PLUS" | "PRO" | "BUSINESS"] ?? 1;
+  const signatureQuota = { STARTER: 3, PLUS: 10, PRO: 20, BUSINESS: 300 }[planId as "STARTER" | "PLUS" | "PRO" | "BUSINESS"] ?? 1;
   categories.push({
     icon: "✏️",
     title: tr ? "PDF Düzenle & Belge Araçları" : "Edit PDF & Document Tools",
@@ -179,7 +184,9 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
         label:
           signatureQuota === null
             ? tr ? "Sınırsız imza isteği" : "Unlimited signature requests"
-            : tr ? `Ayda ${signatureQuota} imza isteği` : `${signatureQuota} signature requests a month`,
+            : planId === "BUSINESS"
+              ? tr ? "Ekip havuzu: ayda 300 imza isteği (+60 / ek koltuk)" : "Team pool: 300 signature requests a month (+60 per extra seat)"
+              : tr ? `Ayda ${signatureQuota} imza isteği` : `${signatureQuota} signature requests a month`,
         detail: tr
           ? "Başkalarından PDF üzerinde imza isteyin. Ücretsiz üyede ayda 1 istek."
           : "Request signatures on a PDF from other people. Free members get 1 request a month.",
@@ -237,7 +244,7 @@ function getPerks(planId: PlanId, language: Language, el: EditorLimits): PerkCat
       title: tr ? "Ekip & Yönetim Paneli" : "Team & Admin Panel",
       perks: [
         {
-          label: tr ? "5+ kullanıcı, koltuk yönetimi" : "5+ users, seat management",
+          label: tr ? "5-50 kullanıcı, koltuk yönetimi" : "5-50 users, seat management",
           detail: tr
             ? "Ekip üyelerini davet et, koltuk ekle/çıkar, tek faturada yönet."
             : "Invite team members, add/remove seats, manage under one invoice.",

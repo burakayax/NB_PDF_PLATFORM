@@ -13,7 +13,7 @@ import { sidebarToolLabel } from "../../i18n/workspace";
 import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { useSettings } from "../../contexts/SettingsContext";
-import { applyTryPriceOverrides } from "../../lib/checkoutQuote";
+import { applyTryPriceOverrides, EXTRA_SEAT_UNIT } from "../../lib/checkoutQuote";
 import { POPULAR_BADGE_HIDDEN, PRICES_HIDDEN, priceComingSoonLabel } from "../../lib/priceVisibility";
 import { PaytrBadge } from "../common/PaytrBadge";
 
@@ -431,8 +431,10 @@ function MonthlyOnlyCard({
 }
 
 /** Pro and Business each manage their own billing cycle toggle internally. */
-const EXTRA_SEAT_PRICE_TRY = 21900; // kuruş (₺219/ay, KDV dahil)
-const EXTRA_SEAT_PRICE_USD = 799;   // kuruş ($7.99/ay)
+const EXTRA_SEAT_PRICE_TRY = EXTRA_SEAT_UNIT.TRY * 100; // kuruş (₺299/ay, KDV dahil)
+const EXTRA_SEAT_PRICE_USD = Math.round(EXTRA_SEAT_UNIT.USD * 100); // sent ($9.99/ay)
+/** Ekip en fazla 50 kişi: 5 dahil + 45 ek (sunucudaki BUSINESS_TEAM ile AYNI). */
+const MAX_EXTRA_SEATS = 45;
 /** Yıllık ödemede koltuklara da indirim uygulanır — sunucudaki (payments.controller) katsayıyla AYNI olmalı. */
 const YEARLY_SEAT_DISCOUNT = 0.83;
 
@@ -557,14 +559,14 @@ function CycleAwareCard({
           <p className="text-center text-xs font-semibold text-slate-200">
             {tr ? "Ekstra Kişi" : "Extra Seats"}{" "}
             <span className="text-violet-300">
-              {tr ? `(5 dahil +${extraSeats})` : `(5 included +${extraSeats})`}
+              {tr ? `(5 dahil +${extraSeats} · en çok 50 kişi)` : `(5 included +${extraSeats} · up to 50)`}
             </span>
           </p>
           {!pricesHidden && (
             <p className="mt-0.5 text-center text-[11px] text-slate-400">
               {tr
-                ? `+${currency === "TRY" ? "₺219" : "$7.99"}/kişi/ay`
-                : `+${currency === "TRY" ? "₺219" : "$7.99"}/seat/mo`}
+                ? `+${currency === "TRY" ? `₺${EXTRA_SEAT_UNIT.TRY}` : `$${EXTRA_SEAT_UNIT.USD}`}/kişi/ay · havuza +1.000 işlem`
+                : `+${currency === "TRY" ? `₺${EXTRA_SEAT_UNIT.TRY}` : `$${EXTRA_SEAT_UNIT.USD}`}/seat/mo · +1,000 operations to the pool`}
             </p>
           )}
           <div className="mt-2 flex items-center justify-center gap-3">
@@ -580,7 +582,7 @@ function CycleAwareCard({
             <button
               type="button"
               aria-label={tr ? "Ekstra kişiyi artır" : "Add one seat"}
-              onClick={() => setExtraSeats((n) => Math.min(95, n + 1))}
+              onClick={() => setExtraSeats((n) => Math.min(MAX_EXTRA_SEATS, n + 1))}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
             >
               +

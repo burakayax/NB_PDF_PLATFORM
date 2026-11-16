@@ -87,8 +87,9 @@ const price = req.body.price;  ← YANLIŞ! Frontend'e güvenme!
 ```typescript
 // ✅ DOĞRU (Sunucu taraflı fiyat):
 const PLAN_PRICES = {
-  PRO:      { monthly: '99.00',  annual: '990.00' },
-  BUSINESS: { monthly: '199.00', annual: '1990.00' }
+  // Örnek rakamlar; gerçek fiyatlar web/api/src/lib/plan-catalogue.ts'te.
+  PRO:      { monthly: '449.00',  annual: '4488.00' },
+  BUSINESS: { monthly: '1499.00', annual: '14988.00' }
 } as const;
 
 // Backend'de:

@@ -8,7 +8,7 @@ export async function canExecuteAsFree(
   fileCount: number,
   totalSizeMB: number,
 ): Promise<QuotaCheckResult> {
-  // Temporarily treat the user as if they have no team benefits
+  // Ekip yararı olmadan (kullanıcının kendi planı) kontrol — kota zaten aktif ekip üyesini havuza yönlendirir.
   return checkQuota(userId, toolType, fileCount, totalSizeMB);
 }
 
@@ -26,15 +26,8 @@ export async function canExecute(
     return { allowed: true, reason: "admin_bypass" };
   }
 
-  // 2. Team member check
-  if (user.isTeamMember && user.teamOwnerId) {
-    const team = await prisma.team.findUnique({ where: { ownerId: user.teamOwnerId } });
-    if (!team || team.subscriptionStatus !== "ACTIVE") {
-      return canExecuteAsFree(userId, toolType, fileCount, totalSizeMB);
-    }
-    return { allowed: true, reason: "team_member_business" };
-  }
-
-  // 3. Fall through to plan-based quota check
+  // 2. Plan tabanlı kota. Aktif Business ekibinin üyesi de buradan geçer: kota ekip HAVUZUNDAN
+  //    (Business sınırları) kontrol edilir; ekip aboneliği bitmişse üye kendi planına döner.
+  //    (Eskiden ekip üyeleri kotadan tümüyle muaf sayılıyordu — "sınırsız" vaadi.)
   return checkQuota(userId, toolType, fileCount, totalSizeMB);
 }

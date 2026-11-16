@@ -20,27 +20,35 @@ tüketiciye gösterilen fiyatın vergi dahil olması yasal zorunluluktur.
 | Plan | Aylık (TL) | Yıllık (TL) | Aylık (USD) | Yıllık (USD) | Yapay zekâ / ay |
 |---|---|---|---|---|---|
 | Ücretsiz | — | — | — | — | 0 |
-| Başlangıç | 129 ₺ | — | $3.99 | — | 5 |
-| Plus | 229 ₺ | 2.292 ₺ | $6.99 | $50.04 | 15 |
-| Pro | 399 ₺ | 3.996 ₺ | $11.99 | $90.00 | 40 |
-| Business | 1.099 ₺ | 10.992 ₺ | $39.99 | $399.96 | 100 |
-| Ek koltuk | 219 ₺ | — | $7.99 | — | — |
+| Başlangıç | 129 ₺ | — | $4.99 | — | 5 |
+| Plus | 279 ₺ | 2.796 ₺ | $7.99 | $60.00 | 15 |
+| Pro | 449 ₺ | 4.488 ₺ | $12.99 | $99.96 | 40 |
+| Business | 1.499 ₺ | 14.988 ₺ | $49.99 | $499.92 | 100 |
+| Ek koltuk | 299 ₺ | — | $9.99 | — | — |
+
+**Business sınırlı model (2026-11-16):** "sınırsız" kaldırıldı. Ekip havuzu: ayda 5.000 sunucu işlemi
+(+1.000 / ek koltuk), ayda 300 imza isteği (+60 / ek koltuk), tek seferde 100 dosya, dosya ≤ 1 GB,
+5 koltuk dahil, en çok 50 kişi (45 ek). Cihazında çalışan araçlar sayılmaz; yapay zekâ 100/ay. Ekibin tamamı
+(sahip + üyeler) aynı havuzdan düşer. Tek kaynak: `plan-catalogue.ts` → `PLAN_LIMITS.BUSINESS`, `BUSINESS_TEAM`.
+Sunucu kapasitesi kullanıcı arttıkça büyütülecek; sınırlar da ona göre gevşetilebilir.
 
 **Yıllık ödeme Plus, Pro ve Business'ta vardır.** TL'de yaklaşık 10 ay fiyatına 12
 ay (iki ay bedava); yıllık tutarlar 12'ye tam bölünür ki ekrandaki "ayda X" × 12
-yıllık tutara eşit çıksın (Plus 191 ×12 = 2.292, Pro 333 ×12 = 3.996, Business
-916 ×12 = 10.992). Dolarda Plus ve Pro yıllığı rakip yıllık fiyatlara göre daha
-cömert (Plus ayda $4,17, Pro ayda $7,50, Business ayda $33,33). Başlangıç yalnızca aylıktır; ekranda
+yıllık tutara eşit çıksın (Plus 233 ×12 = 2.796, Pro 374 ×12 = 4.488, Business
+1.249 ×12 = 14.988). Dolarda Plus ve Pro yıllığı rakip yıllık fiyatlara göre daha
+cömert (Plus ayda $5,00, Pro ayda $8,33, Business ayda $41,66). Başlangıç yalnızca aylıktır; ekranda
 yıllık seçeneği hiç gösterilmez ve ödeme tarafı yıllık isteği reddeder.
 
-**Fiyat revizyonu (2026-10-15):** TL fiyatlar dolar fiyatının yaklaşık %65-70'ine
-çekildi (eskiden ~%50: 99/179/299/799). Pro 399 ₺ kullanıcı kararıdır; sonradan
+**Fiyat revizyonu (2026-11-16):** 129/279/449/1.499 ₺ ve $4,99/7,99/12,99/49,99; ek koltuk 299 ₺/$9,99 (finans raporu). Yıllık USD 12'ye tam bölünür (60,00 / 99,96 / 499,92).
+
+**Eski revizyon (2026-10-15):** TL fiyatlar dolar fiyatının yaklaşık %65-70'ine
+çekildi (eskiden ~%50: 99/179/299/799). Pro 399 ₺ o günün kararıydı; sonradan
 zam kötü algılanacağı için ödemeler açılmadan önce yapıldı. Ek koltuk ekranda
 199 ₺/$5,99 gösterilirken sunucu 159 ₺/$7,99 tahsil ediyordu; artık ikisi de
-kataloğa bağlı (219 ₺/$7,99).
+kataloğa bağlı.
 
-Dolar fiyatları yurt dışı müşteriler içindir ve **KDV'siz**dir (ihracat
-istisnası): gösterilen tutar ödenen tutardır.
+Dolar fiyatları yurt dışı müşteriler içindir. İhracat istisnası AÇIKSA KDV yoktur ve gösterilen tutar ödenen
+tutardır; KAPALIYSA (varsayılan) ödeme ekranında gösterilen USD'ye %20 KDV eklenir.
 
 ## Bu fiyatlar neye göre belirlendi?
 
@@ -62,7 +70,7 @@ otomatik olarak reddedilir.
 | Adobe Acrobat Pro | ~$19.99 | |
 | ChatPDF (yalnız yapay zekâ) | $19.99 | Tek başına sohbet/özet |
 
-Pro'muz 11,99 $: iLovePDF'in üstünde (bizde yapay zekâ var), yapay zekâ odaklı
+Pro'muz 12,99 $: iLovePDF'in üstünde (bizde yapay zekâ var), yapay zekâ odaklı
 rakiplerin belirgin altında.
 
 ## Kur riski — düzenli bakılmalı
@@ -197,7 +205,7 @@ Kullanım Şartları'na "doğrulama kaydı taşımayan/değiştirilmiş dosyalar
 
 Kartlardan **kaldırılanlar:** "Hızlı işlem sırası" ve "Öncelikli sıra" — kuyruk önceliği veritabanında saklanıyor
 ama işlemleri sıralayan hiçbir kod yok, yani vaat doğru değildi. Eklenenler: Ücretsiz ve Başlangıç'ta aylık
-tavan (30 / 250), Pro'da aylık 1.000 işlem, Business'ta işlem sınırı yok. Pro rozeti "+%25 işlem" yerine
+tavan (30 / 250), Pro'da aylık 1.000 işlem, Business'ta ekip havuzu 5.000 işlem. Pro rozeti "+%25 işlem" yerine
 "Ayda 1.000 işlem" (Plus 600 → Pro 1.000 zaten +%67'ydi).
 
 **Canlıda kontrol:** Yönetim → Paket & fiyat'ta kayıtlı plan sınırları kod varsayılanını EZER. Ücretsiz plan dosya

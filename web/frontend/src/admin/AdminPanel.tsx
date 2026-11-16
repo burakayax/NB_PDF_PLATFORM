@@ -633,9 +633,9 @@ function groupFeatureKeysByCategory(
 
 function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
   const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
-  const [proPrice, setProPrice] = useState("399.00");
-  const [businessPrice, setBusinessPrice] = useState("1099.00");
-  const [proAnnualPrice, setProAnnualPrice] = useState("3996.00");
+  const [proPrice, setProPrice] = useState("449.00");
+  const [businessPrice, setBusinessPrice] = useState("1499.00");
+  const [proAnnualPrice, setProAnnualPrice] = useState("4488.00");
   const [pricingBusy, setPricingBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
@@ -870,7 +870,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                     </AdminField>
                     <AdminField
                       label="Günlük işlem limiti"
-                      description="Ücretsiz planda günlük kaç işlem yapılabileceği. Pro/Business için «Sınırsız» seçin."
+                      description="Ücretsiz planda günlük kaç işlem yapılabileceği. Ücretli planların günlük sınırı ayrı yönetilir (Business için fiyat kataloğundaki sınır geçerlidir)."
                     >
                       <label className="mb-3 flex cursor-pointer items-center gap-3 text-sm text-slate-200">
                         <input

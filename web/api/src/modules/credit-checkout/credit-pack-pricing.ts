@@ -1,4 +1,7 @@
 /**
+ * KULLANIMDAN KALKTI (LEGACY) — GEÇERLİ FİYATLAR BURADA DEĞİL: `lib/plan-catalogue.ts` (TOPUP_PACKS, PLAN_PRICES).
+ * Eski kredi akışının kataloğu; canlıda kullanılmaz (`credit-checkout.routes.ts` üretimde 410 döner).
+ *
  * Kredi paketi katalogu — `fake-payment.service` ile aynı tutar tutulmalı.
  */
 export const CREDIT_PACK_CATALOG: Record<

@@ -3,6 +3,7 @@ import { prisma } from "./prisma.js";
 import { createOrganizationForUser, revertExpiredOverride } from "../modules/organization/organization.service.js";
 import { getPlanDefinitionsResolved } from "../modules/subscription/plan-runtime.js";
 import { isFeatureKey } from "../modules/subscription/subscription.config.js";
+import { PLAN_LIMITS, businessMonthlyOps } from "./plan-catalogue.js";
 
 export interface QuotaCheckResult {
   allowed: boolean;
@@ -38,6 +39,66 @@ export const OPERATION_WEIGHTS: Readonly<Record<string, number>> = {
 export function operationWeight(toolType: string): number {
   const w = OPERATION_WEIGHTS[toolType];
   return Number.isInteger(w) && w >= 1 ? w : 1;
+}
+
+/**
+ * BUSINESS EKİP HAVUZU — etkin limitler (2026-11-16, finans raporu Ek A).
+ *
+ * Business'ta sunucu işlemi, dosya boyutu ve toplu işlem artık "sınırsız" DEĞİLDİR; sınırlar
+ * fiyat kataloğundan (plan-catalogue.ts) okunur ve ek koltukla büyüyen EKİP HAVUZUDUR: sahibi ve
+ * tüm ekip üyeleri aynı sayaçtan düşer. Veritabanındaki org satırında eski ("sınırsız") değer
+ * kalmış olsa bile Business için katalog geçerlidir — canlı veritabanını elle düzeltmeye gerek yok.
+ * Diğer planlarda org satırındaki değerler aynen geçerli kalır.
+ */
+export type EffectiveOrgLimits = { monthly: number; fileSizeLimitMB: number; batchLimit: number };
+
+export function effectiveOrgLimits(
+  org: Pick<Organization, "plan" | "monthlyOperationLimit" | "fileSizeLimitMB" | "batchLimit">,
+  extraSeats: number,
+  forceBusiness = false,
+): EffectiveOrgLimits {
+  if (forceBusiness || org.plan === "BUSINESS") {
+    return {
+      monthly: businessMonthlyOps(extraSeats),
+      fileSizeLimitMB: PLAN_LIMITS.BUSINESS.fileSizeLimitMB,
+      batchLimit: PLAN_LIMITS.BUSINESS.batchLimit,
+    };
+  }
+  return {
+    monthly: org.monthlyOperationLimit,
+    fileSizeLimitMB: org.fileSizeLimitMB,
+    batchLimit: org.batchLimit,
+  };
+}
+
+/** Org'un ekibinin (varsa) ek koltuk sayısı; ek koltuk havuzu büyütür. */
+async function extraSeatsForOrg(
+  db: Pick<typeof prisma, "team">,
+  orgId: string,
+): Promise<number> {
+  const team = await db.team.findFirst({
+    where: { owner: { organizationId: orgId } },
+    select: { extraSeats: true },
+  });
+  return team?.extraSeats ?? 0;
+}
+
+/**
+ * Aktif ekibin üyesiyse: işlemlerin düşeceği HAVUZ org'u (ekip sahibinin org'u). Üye değilse,
+ * ekip aboneliği bitmişse ya da sahibin org'u bulunamazsa null (üye kendi planına bakılır).
+ */
+async function teamPoolOrg(
+  db: Pick<typeof prisma, "team" | "user">,
+  user: Pick<User, "isTeamMember" | "teamOwnerId">,
+): Promise<Organization | null> {
+  if (!user.isTeamMember || !user.teamOwnerId) return null;
+  const team = await db.team.findUnique({ where: { ownerId: user.teamOwnerId } });
+  if (team?.subscriptionStatus !== "ACTIVE") return null;
+  const owner = await db.user.findUnique({
+    where: { id: user.teamOwnerId },
+    include: { organization: true },
+  });
+  return owner?.organization ?? null;
 }
 
 function getNextMidnightInTimezone(timezone: string): Date {
@@ -168,16 +229,11 @@ export async function checkQuota(
     };
   }
 
-  // Team member with active patron subscription gets business-level access
-  if (user.isTeamMember && user.teamOwnerId) {
-    const team = await prisma.team.findUnique({ where: { ownerId: user.teamOwnerId } });
-    if (team?.subscriptionStatus === "ACTIVE") {
-      return { allowed: true, reason: "team_member_business" };
-    }
-    // Patron expired — fall through to free-tier quota check below
-  }
+  // Aktif Business ekibinin üyesi: işlemler ekip sahibinin HAVUZUNDAN düşer (Business sınırları
+  // geçerlidir; "sınırsız" değil). Ekip aboneliği bitmişse üye kendi planının kotasına döner.
+  const poolOrg = await teamPoolOrg(prisma, user);
 
-  let org = user.organization;
+  let org = poolOrg ?? user.organization;
   if (!org) {
     org = await createOrganizationForUser(userId, user.name ?? user.email, "FREE");
   }
@@ -186,6 +242,11 @@ export async function checkQuota(
 
   let currentOrg = await resetDailyIfNeeded(org, timezone);
   currentOrg = await resetMonthlyIfNeeded(currentOrg, timezone);
+  const lim = effectiveOrgLimits(
+    currentOrg,
+    poolOrg || currentOrg.plan === "BUSINESS" ? await extraSeatsForOrg(prisma, currentOrg.id) : 0,
+    poolOrg !== null,
+  );
 
   // Check allowed tools
   {
@@ -194,7 +255,7 @@ export async function checkQuota(
     // ücretsiz üyeye Word→PDF / PDF→Word / PDF→JPG'yi açsa bile bu eski sütun indirmede 402 verip
     // "ücretli plana geç" penceresi çıkarıyordu.
     const planDefs = await getPlanDefinitionsResolved();
-    const planDef = planDefs[currentOrg.plan];
+    const planDef = planDefs[poolOrg ? "BUSINESS" : currentOrg.plan];
     if (planDef && isFeatureKey(toolType) && !planDef.allowedFeatures.includes(toolType)) {
       return {
         allowed: false,
@@ -204,7 +265,7 @@ export async function checkQuota(
   }
 
   // Check file size
-  if (totalSizeMB > currentOrg.fileSizeLimitMB) {
+  if (totalSizeMB > lim.fileSizeLimitMB) {
     return {
       allowed: false,
       reason: "file_size_exceeded",
@@ -213,13 +274,13 @@ export async function checkQuota(
 
   // Check batch
   if (fileCount > 1) {
-    if (currentOrg.batchLimit === 0) {
+    if (lim.batchLimit === 0) {
       return {
         allowed: false,
         reason: "batch_not_allowed_on_plan",
       };
     }
-    if (fileCount > currentOrg.batchLimit) {
+    if (fileCount > lim.batchLimit) {
       return {
         allowed: false,
         reason: "batch_limit_exceeded",
@@ -242,14 +303,14 @@ export async function checkQuota(
     }
   }
 
-  // Check monthly limit (unlimited = 999999)
-  if (currentOrg.monthlyOperationLimit < 999999) {
-    if (currentOrg.currentMonthOperations >= currentOrg.monthlyOperationLimit) {
+  // Check monthly limit (999999 = sınırsız; Business'ta artık sınır vardır — ekip havuzu)
+  if (lim.monthly < 999999) {
+    if (currentOrg.currentMonthOperations >= lim.monthly) {
       return {
         allowed: false,
         reason: "monthly_limit_reached",
         monthlyUsed: currentOrg.currentMonthOperations,
-        monthlyLimit: currentOrg.monthlyOperationLimit,
+        monthlyLimit: lim.monthly,
       };
     }
   }
@@ -259,11 +320,11 @@ export async function checkQuota(
     dailyUsed: currentOrg.currentDayOperations,
     dailyLimit: effDailyLimit,
     monthlyUsed: currentOrg.currentMonthOperations,
-    monthlyLimit: currentOrg.monthlyOperationLimit,
+    monthlyLimit: lim.monthly,
     // Politika: hiçbir planda görünür filigran/footer damgası YOK ("filigransız" markası).
     // DB'de eski org'larda watermarkEnabled=true kalmış olsa bile karar daima false döner.
     watermarkEnabled: false,
-    fileSizeLimitMB: currentOrg.fileSizeLimitMB,
+    fileSizeLimitMB: lim.fileSizeLimitMB,
   };
 }
 
@@ -279,11 +340,14 @@ export async function incrementQuota(
     include: { organization: true },
   });
 
-  if (!user || !user.organization || user.role === "ADMIN") return;
+  if (!user || user.role === "ADMIN") return;
+  // Aktif Business ekibinin üyesi: sayaç ekip havuzunda (sahibin org'u) tutulur.
+  const countOrg = (await teamPoolOrg(prisma, user)) ?? user.organization;
+  if (!countOrg) return;
 
   await prisma.$transaction([
     prisma.organization.update({
-      where: { id: user.organization.id },
+      where: { id: countOrg.id },
       data: {
         currentDayOperations: { increment: operationWeight(toolType) },
         currentMonthOperations: { increment: operationWeight(toolType) },
@@ -296,7 +360,7 @@ export async function incrementQuota(
     prisma.operationLog.create({
       data: {
         userId,
-        organizationId: user.organization.id,
+        organizationId: countOrg.id,
         toolType,
         fileCount,
         totalFileSizeMB,
@@ -348,12 +412,16 @@ export async function checkAndIncrementQuota(
       return { allowed: true, reason: "admin_bypass", fileSizeLimitMB: 999999, watermarkEnabled: false, batchLimit: 999, dailyUsed: 0, dailyLimit: null, monthlyUsed: 0, monthlyLimit: null };
     }
 
-    if (user.isTeamMember && user.teamOwnerId) {
-      const team = await tx.team.findUnique({ where: { ownerId: user.teamOwnerId } });
-      if (team?.subscriptionStatus === "ACTIVE") return { allowed: true, reason: "team_member_business" };
+    // Aktif Business ekibinin üyesi: sınırlar ve sayaç ekip sahibinin HAVUZUNDADIR (Business sınırları
+    // geçerli; ekip aboneliği bitmişse üye kendi planına döner). Yalnızca ekip sahibinin org kaydı
+    // bulunamayan nadir durumda eski davranış (izin) korunur.
+    const poolOrg = await teamPoolOrg(tx, user);
+    if (user.isTeamMember && user.teamOwnerId && !poolOrg) {
+      const t = await tx.team.findUnique({ where: { ownerId: user.teamOwnerId } });
+      if (t?.subscriptionStatus === "ACTIVE") return { allowed: true, reason: "team_member_business" };
     }
 
-    let org = user.organization;
+    let org = poolOrg ?? user.organization;
     if (!org) return { allowed: false, reason: "no_organization" };
 
     const timezone = user.timezone || "Europe/Istanbul";
@@ -364,11 +432,17 @@ export async function checkAndIncrementQuota(
       org = await tx.organization.update({ where: { id: org.id }, data: { currentMonthOperations: 0, lastMonthlyReset: new Date() } });
     }
 
-    if (totalSizeMB > org.fileSizeLimitMB) return { allowed: false, reason: "file_size_exceeded" };
+    const lim = effectiveOrgLimits(
+      org,
+      poolOrg || org.plan === "BUSINESS" ? await extraSeatsForOrg(tx, org.id) : 0,
+      poolOrg !== null,
+    );
+
+    if (totalSizeMB > lim.fileSizeLimitMB) return { allowed: false, reason: "file_size_exceeded" };
 
     if (fileCount > 1) {
-      if (org.batchLimit === 0) return { allowed: false, reason: "batch_not_allowed_on_plan" };
-      if (fileCount > org.batchLimit) return { allowed: false, reason: "batch_limit_exceeded" };
+      if (lim.batchLimit === 0) return { allowed: false, reason: "batch_not_allowed_on_plan" };
+      if (fileCount > lim.batchLimit) return { allowed: false, reason: "batch_limit_exceeded" };
     }
 
     const effDailyLimit = effectiveDailyLimit(org);
@@ -379,9 +453,9 @@ export async function checkAndIncrementQuota(
       }
     }
 
-    if (org.monthlyOperationLimit < 999999) {
-      if (org.currentMonthOperations >= org.monthlyOperationLimit) {
-        return { allowed: false, reason: "monthly_limit_reached", monthlyUsed: org.currentMonthOperations, monthlyLimit: org.monthlyOperationLimit };
+    if (lim.monthly < 999999) {
+      if (org.currentMonthOperations >= lim.monthly) {
+        return { allowed: false, reason: "monthly_limit_reached", monthlyUsed: org.currentMonthOperations, monthlyLimit: lim.monthly };
       }
     }
 
@@ -400,9 +474,9 @@ export async function checkAndIncrementQuota(
       dailyUsed: org.currentDayOperations + operationWeight(toolType),
       dailyLimit: effDailyLimit,
       monthlyUsed: org.currentMonthOperations + operationWeight(toolType),
-      monthlyLimit: org.monthlyOperationLimit,
+      monthlyLimit: lim.monthly,
       watermarkEnabled: false, // Politika: filigran tamamen kaldırıldı (tüm planlar)
-      fileSizeLimitMB: org.fileSizeLimitMB,
+      fileSizeLimitMB: lim.fileSizeLimitMB,
     };
   });
 }
@@ -499,23 +573,26 @@ export async function getQuotaSummary(userId: string) {
     };
   }
 
-  // Team member with active patron → Business-level unlimited display
-  if (user.isTeamMember && user.teamOwnerId) {
-    const team = await prisma.team.findUnique({ where: { ownerId: user.teamOwnerId } });
-    if (team?.subscriptionStatus === "ACTIVE") {
-      return {
-        plan: "BUSINESS" as const,
-        daily: { used: org.currentDayOperations, limit: 999999, resetAt },
-        monthly: { used: org.currentMonthOperations, limit: null },
-        watermarkEnabled: false,
-        batchLimit: 100,
-        fileSizeLimitMB: 500,
-        isAdmin: false,
-        overrideExpiresAt: null,
-        basePlan: null,
-      };
-    }
+  // Aktif Business ekibinin üyesi: ekip sahibinin HAVUZU gösterilir (sayaç ve sınırlar ortak).
+  const poolOrg = await teamPoolOrg(prisma, user);
+  if (poolOrg) {
+    let pool = await resetDailyIfNeeded(poolOrg, timezone);
+    pool = await resetMonthlyIfNeeded(pool, timezone);
+    const poolLim = effectiveOrgLimits(pool, await extraSeatsForOrg(prisma, pool.id), true);
+    return {
+      plan: "BUSINESS" as const,
+      daily: { used: pool.currentDayOperations, limit: null, resetAt },
+      monthly: { used: pool.currentMonthOperations, limit: poolLim.monthly },
+      watermarkEnabled: false,
+      batchLimit: poolLim.batchLimit,
+      fileSizeLimitMB: poolLim.fileSizeLimitMB,
+      isAdmin: false,
+      overrideExpiresAt: null,
+      basePlan: null,
+    };
   }
+
+  const lim = effectiveOrgLimits(org, org.plan === "BUSINESS" ? await extraSeatsForOrg(prisma, org.id) : 0);
 
   return {
     plan: org.plan,
@@ -526,11 +603,11 @@ export async function getQuotaSummary(userId: string) {
     },
     monthly: {
       used: org.currentMonthOperations,
-      limit: org.monthlyOperationLimit < 999999 ? org.monthlyOperationLimit : null,
+      limit: lim.monthly < 999999 ? lim.monthly : null,
     },
     watermarkEnabled: false, // Politika: filigran tamamen kaldırıldı (tüm planlar)
-    batchLimit: org.batchLimit,
-    fileSizeLimitMB: org.fileSizeLimitMB,
+    batchLimit: lim.batchLimit,
+    fileSizeLimitMB: lim.fileSizeLimitMB,
     isAdmin: false,
     // Süreli (geçici) plan aktifse: ne zaman bitip hangi plana döneceği.
     overrideExpiresAt: org.overrideExpiresAt?.toISOString() ?? null,

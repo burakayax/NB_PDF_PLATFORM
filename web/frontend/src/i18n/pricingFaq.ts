@@ -21,7 +21,7 @@ export const PRICING_FAQ_TR: PricingFaqItem[] = [
   },
   {
     question: "Pro ve Business arasındaki fark nedir?",
-    answer: "Pro bireysel güç kullanıcıları için optimize edilmiştir. Business ise çok kullanıcılı ekipler, kurumsal onay akışları ve organizasyon genelinde PDF yönetimi için tasarlanmıştır.",
+    answer: "Pro bireysel güç kullanıcıları için optimize edilmiştir. Business ise çok kullanıcılı ekipler içindir: 5 kişi dahildir (ek koltukla en çok 50 kişi), ekip ayda 5.000 sunucu işlemi ve 300 imza isteğini ortak havuzdan kullanır (ek koltuk başına +1.000 işlem, +60 imza isteği), tek seferde 100 dosya ve 1 GB'a kadar dosya işlenir. Cihazında çalışan araçlar sayılmaz.",
   },
   {
     question: "Yıllık plana geçince hemen mi uygulanır?",
@@ -52,7 +52,7 @@ export const PRICING_FAQ_EN: PricingFaqItem[] = [
   },
   {
     question: "What's the difference between Pro and Business?",
-    answer: "Pro is optimized for individual power users. Business is designed for multi-user teams, enterprise approval workflows, and organization-wide PDF management.",
+    answer: "Pro is optimized for individual power users. Business is built for teams: 5 seats are included (up to 50 with extra seats), and the team shares a pool of 5,000 server operations and 300 signature requests a month (+1,000 operations and +60 requests per extra seat), with 100 files per batch and files up to 1 GB. Tools that run on your device are not counted.",
   },
   {
     question: "Does switching to yearly take effect immediately?",

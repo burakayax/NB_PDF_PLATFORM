@@ -19,6 +19,7 @@ const requestUpdate = vi.fn();
 const eventCreate = vi.fn();
 const eventFindMany = vi.fn();
 const userFindUnique = vi.fn();
+const teamFindUnique = vi.fn();
 const gonderilenPostalar: { to: string; subject: string }[] = [];
 const imzaliBelgeUret = vi.fn(async () => new Uint8Array([1, 2, 3, 4]));
 
@@ -37,6 +38,7 @@ vi.mock("../lib/prisma.js", () => ({
       findMany: (...a: unknown[]) => eventFindMany(...a),
     },
     user: { findUnique: (...a: unknown[]) => userFindUnique(...a) },
+    team: { findUnique: (...a: unknown[]) => teamFindUnique(...a) },
   },
 }));
 vi.mock("../lib/mailer.js", () => ({
@@ -186,9 +188,23 @@ describe("aylık kontenjan", () => {
     expect(baslangic.getUTCMonth()).toBe(new Date().getUTCMonth());
   });
 
-  it("Business planda sınır yoktur", async () => {
+  it("Business ekip havuzudur: 300 + ek koltuk başına 60 (sınırsız DEĞİL)", async () => {
     userFindUnique.mockResolvedValue({
       email: "a@b.com", name: "A", firstName: "A", plan: "BUSINESS", role: "USER",
+      isTeamMember: false, teamOwnerId: null,
+    });
+    teamFindUnique.mockResolvedValue({ extraSeats: 2, members: [{ userId: "u2" }] });
+    requestCount.mockResolvedValue(100);
+    const k = await svc.imzaKontenjani("u1");
+    expect(k.sinir).toBe(420);
+    expect(k.kaldi).toBe(320);
+    // Sayım sahibi + kabul etmiş üyelerin tamamını kapsar.
+    expect(requestCount.mock.calls.at(-1)![0].where.ownerId.in).toEqual(["u1", "u2"]);
+  });
+
+  it("Yönetici sınırsızdır", async () => {
+    userFindUnique.mockResolvedValue({
+      email: "a@b.com", name: "A", firstName: "A", plan: "BUSINESS", role: "ADMIN",
     });
     requestCount.mockResolvedValue(500);
     const k = await svc.imzaKontenjani("u1");
