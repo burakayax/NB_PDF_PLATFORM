@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../../lib/http-error.js";
 import { adminJourneyQuerySchema, adminJourneySummaryQuerySchema } from "./journey.schema.js";
 import { getJourneyFunnelSummary, listJourneySessions } from "./journey.service.js";
+import { getJourneyInsights } from "./insights.service.js";
 
 export async function adminJourneySessionsController(request: Request, response: Response) {
   const parsed = adminJourneyQuerySchema.safeParse(request.query);
@@ -18,6 +19,14 @@ export async function adminJourneySessionsController(request: Request, response:
   });
 
   response.json(result);
+}
+
+export async function adminJourneyInsightsController(request: Request, response: Response) {
+  const parsed = adminJourneySummaryQuerySchema.safeParse(request.query);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid query.");
+  }
+  response.json(await getJourneyInsights(parsed.data.days));
 }
 
 export async function adminJourneySummaryController(request: Request, response: Response) {

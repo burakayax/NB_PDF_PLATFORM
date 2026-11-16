@@ -179,7 +179,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "cmd-emails", label: "E-postalar" },
       { id: "cmd-social", label: "Sosyal medya" },
       { id: "ratings", label: "Araç puanları" },
-      { id: "journeys", label: "Kullanıcı yolculuğu" },
+      { id: "journeys", label: "Ziyaretçiler ve satışlar" },
     ],
   },
   {
