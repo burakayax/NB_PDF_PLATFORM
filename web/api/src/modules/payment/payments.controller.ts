@@ -1,11 +1,10 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { PLAN_PRICES, EXTRA_SEAT_PRICE, YEARLY_BILLING_PLANS, netFromGrossTry, yearlyGrossFromMonthly, type PaidPlanId } from "../../lib/plan-catalogue.js";
+import { PLAN_PRICES, EXTRA_SEAT_PRICE, BUSINESS_TEAM, YEARLY_BILLING_PLANS, netFromGrossTry, yearlyGrossFromMonthly, type PaidPlanId } from "../../lib/plan-catalogue.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentCheckoutSession } from "./payment.service.js";
-import { getPublicTierPricingRows } from "./payment-pricing-tiers.js";
 import { isCheckoutCurrency, type CheckoutCurrency } from "./pricing-matrix.js";
 import { prisma } from "../../lib/prisma.js";
 import { validateCouponForUser } from "../coupon/coupon.service.js";
@@ -15,7 +14,8 @@ const planPaymentBodySchema = z.object({
   currency: z.enum(["TRY", "USD", "EUR"]).optional().default("TRY"),
   billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional().default("MONTHLY"),
   couponCode: z.string().optional().nullable(),
-  extraSeats: z.number().int().min(0).max(95).optional().default(0),
+  /** Ek koltuk: 5 dahil + en çok 45 ek = 50 kişi (BUSINESS_TEAM.maxExtraSeats); fazlası özel teklif. */
+  extraSeats: z.number().int().min(0).max(BUSINESS_TEAM.maxExtraSeats).optional().default(0),
   seatsOnly: z.boolean().optional().default(false),
   /** Ödeme penceresinde çıkış-niyeti (exit-intent) indirimini uygula. Sunucu uygunluğu yeniden doğrular. */
   applyExitIntentDiscount: z.boolean().optional().default(false),
@@ -126,6 +126,24 @@ export async function initializePaymentsController(request: Request, response: R
   }
 
   const { planId, billingCycle, couponCode, extraSeats, seatsOnly, applyExitIntentDiscount } = parsed.data;
+
+  // Koltuk tavanı (5 dahil + en çok 45 ek = 50 kişi). Yalnız-koltuk alımında mevcut ek koltuklarla
+  // toplam da bu tavanı aşamaz; ekibi olmayan biri yalnız koltuk satın alamaz.
+  if (seatsOnly) {
+    if (extraSeats < 1) {
+      throw new HttpError(400, "En az 1 ek koltuk seçmelisiniz.");
+    }
+    const ownTeam = await prisma.team.findUnique({ where: { ownerId: userId }, select: { extraSeats: true } });
+    if (!ownTeam) {
+      throw new HttpError(400, "Ek koltuk satın almak için önce Business planına sahip olmalısınız.");
+    }
+    if (ownTeam.extraSeats + extraSeats > BUSINESS_TEAM.maxExtraSeats) {
+      throw new HttpError(
+        400,
+        `Ekip en fazla ${BUSINESS_TEAM.maxTotalSeats} kişi olabilir (${BUSINESS_TEAM.includedSeats} dahil + ${BUSINESS_TEAM.maxExtraSeats} ek). Daha büyük ekipler için bizimle iletişime geçin.`,
+      );
+    }
+  }
 
   // Mesafeli Sözleşmeler Yönetmeliği m.7/1: ön bilgilerin edinildiği teyit edilmeden sözleşme
   // kurulmuş sayılmaz. Ekrandaki kontrol atlatılabildiği için onay kaydı SUNUCUDA da aranır.
@@ -294,14 +312,40 @@ export async function initializePaymentsController(request: Request, response: R
   });
 }
 
+/**
+ * GET /api/payments/pricing — herkese açık, GEÇERLİ plan fiyatları.
+ *
+ * Fiyatlar `lib/plan-catalogue.ts`'ten (TL'de yönetim panelindeki Pro/Business tutarlarıyla) okunur;
+ * ekranda görülen ve ödemede çekilen tutarla birebir aynıdır. TL fiyatlar KDV DAHİLDİR. Döviz
+ * fiyatlarında KDV, ihracat istisnası kapalıyken ödeme ekranında eklenir (bkz. `lib/vat.ts`).
+ * (Eskiden burada kullanımdan kalkmış "tier" fiyatları dönüyordu: 149/399/699 ₺.)
+ */
 export async function getPaymentsPricingPublicController(request: Request, response: Response): Promise<void> {
   const raw = request.query.currency;
   let c: CheckoutCurrency = "TRY";
   if (typeof raw === "string" && isCheckoutCurrency(raw)) {
     c = raw;
   }
+  const admin = await getPaymentPricesTry();
+  const plans = (["STARTER", "PLUS", "PRO", "BUSINESS"] as const).map((id) => {
+    if (c === "TRY") {
+      const monthly = id === "PRO" ? admin.PRO : id === "BUSINESS" ? admin.BUSINESS : PLAN_PRICES[id].tryGrossMonthly;
+      const yearly = !YEARLY_BILLING_PLANS.includes(id)
+        ? null
+        : id === "PRO"
+          ? admin.PRO_ANNUAL
+          : id === "BUSINESS"
+            ? yearlyGrossFromMonthly(admin.BUSINESS)
+            : PLAN_PRICES[id].tryGrossYearly;
+      return { id, monthly, yearly };
+    }
+    // EUR ekranda gösterilir ama ödeme USD bandıyla işlenir (bkz. initializePaymentsController).
+    return { id, monthly: PLAN_PRICES[id].usdMonthly, yearly: YEARLY_BILLING_PLANS.includes(id) ? PLAN_PRICES[id].usdYearly : null };
+  });
   response.status(200).json({
     currency: c,
-    tiers: getPublicTierPricingRows(c),
+    vatIncluded: c === "TRY",
+    plans,
+    extraSeatMonthly: c === "TRY" ? EXTRA_SEAT_PRICE.tryGrossMonthly : EXTRA_SEAT_PRICE.usdMonthly,
   });
 }

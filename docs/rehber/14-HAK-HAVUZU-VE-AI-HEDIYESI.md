@@ -3,7 +3,7 @@
 Son güncelleme: 2026-10-14
 
 ## 1. Günlük hak havuzu
-- Sunucuda işlenen araçlar (sıkıştır, Word/Excel dönüşümleri vb.) **ortak bir günlük havuzdan** harcar. Havuzun büyüklüğü plana göre değişir: ücretsiz 3, Başlangıç 25, Plus/Pro/Business günlük sınırsız.
+- Sunucuda işlenen araçlar (sıkıştır, Word/Excel dönüşümleri vb.) **ortak bir günlük havuzdan** harcar. Havuzun büyüklüğü plana göre değişir: ücretsiz 3, Başlangıç 25, Plus/Pro/Business günlük sınır yok (aylık sınır geçerli; Business: ekip havuzu ayda 5.000 işlem).
 - **Cihazda çalışan araçlar** (birleştir, böl, döndür, sil, sırala, görsel→PDF) havuzdan **düşmez**.
 - Çoğu işlem 1 hak sayar. Sunucuyu uzun süre meşgul edenler daha çok sayar:
   PDF→JPG **2**, PDF→PowerPoint **3** (canlıda 30 sayfalık örnekle ölçüldü: ~41 sn ve ~100 sn; Word→PDF 5–7 sn, sıkıştır 4 sn).

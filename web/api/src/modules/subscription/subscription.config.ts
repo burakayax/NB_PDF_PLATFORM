@@ -116,7 +116,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
   PLUS: {
     name: "PLUS",
     displayName: "Plus",
-    description: "Unlimited daily use with 600 monthly operations.",
+    description: "No daily cap, 600 server operations a month.",
     dailyLimit: PLAN_LIMITS.PLUS.dailyOperationLimit,
     allowedFeatures: [...featureCatalog],
     multiUser: false,
@@ -124,7 +124,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
   PRO: {
     name: "PRO",
     displayName: "Pro",
-    description: "Unlimited usage with 1000 monthly operations and priority support.",
+    description: "No daily cap, 1,000 server operations a month, batch processing and priority support.",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],
     multiUser: false,
@@ -132,7 +132,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
   BUSINESS: {
     name: "BUSINESS",
     displayName: "Business",
-    description: "Unlimited operations for teams.",
+    description: "For teams: a shared pool of 5,000 server operations a month (+1,000 per extra seat), 5 seats included.",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],
     multiUser: true,

@@ -19,8 +19,8 @@ const DESCRIPTIONS: Record<PlanName, { tr: string; en: string }> = {
     en: "Priority processing, the full toolkit, no daily cap and 1000 operations a month.",
   },
   BUSINESS: {
-    tr: "Bireysel ve küçük ekipler için sınırsız işlem ve tam araç seti (İşletme).",
-    en: "Unlimited operations and full toolkit for individuals (Business).",
+    tr: "Ekipler için tam araç seti: 5 kişi dahil, ayda 5.000 sunucu işlemi ortak havuzu (ek koltukla büyür).",
+    en: "Full toolkit for teams: 5 seats included and a shared pool of 5,000 server operations a month (grows with extra seats).",
   },
 };
 

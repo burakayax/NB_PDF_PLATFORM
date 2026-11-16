@@ -3,6 +3,7 @@ import rateLimit from "express-rate-limit";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { prisma } from "../../lib/prisma.js";
+import { BUSINESS_TEAM } from "../../lib/plan-catalogue.js";
 import {
   createTeamForOwner,
   inviteTeamMember,
@@ -293,7 +294,7 @@ teamRouter.patch("/seats", async (req, res) => {
     const userId = req.authUser!.id;
     const { extraSeats } = req.body as { extraSeats: number };
 
-    if (typeof extraSeats !== "number" || extraSeats < 0 || extraSeats > 95) {
+    if (!Number.isInteger(extraSeats) || extraSeats < 0 || extraSeats > BUSINESS_TEAM.maxExtraSeats) {
       res.status(400).json({ message: "Geçersiz koltuk sayısı." });
       return;
     }
@@ -304,6 +305,13 @@ teamRouter.patch("/seats", async (req, res) => {
     });
     if (!team) {
       res.status(404).json({ message: "Ekip bulunamadı." });
+      return;
+    }
+
+    // Bu uç YALNIZCA koltuk AZALTMAK içindir. Koltuk eklemek ödeme gerektirir (ödeme akışı sayıyı
+    // ödeme onaylanınca artırır); buradan artırmak ücretsiz koltuk vermek olurdu.
+    if (extraSeats > team.extraSeats) {
+      res.status(400).json({ message: "Koltuk eklemek için ödeme gerekir. Bu işlem yalnızca koltuk azaltmak içindir." });
       return;
     }
 

@@ -1,14 +1,50 @@
 import { createPrismaClient } from "../src/lib/prisma-client-factory.js";
+import { BUSINESS_TEAM, PLAN_LIMITS, PLAN_PRICES } from "../src/lib/plan-catalogue.js";
 
 const prisma = createPrismaClient();
+
+/**
+ * PlanConfig satırları fiyat kataloğundan (src/lib/plan-catalogue.ts) TÜRETİLİR — burada elle rakam
+ * tutulmaz (eskiden tutulup katalogla ayrışıyordu). Fiyatlar küçük birimdedir (kuruş / sent).
+ * TL fiyat KDV DAHİLDİR. EUR yalnız ekran içindir (~0,92 × USD).
+ */
+const minor = (amount: string) => Math.round(Number.parseFloat(amount) * 100);
+const eur = (usdMinor: number) => Math.round(usdMinor * 0.92);
+
+function planRow(
+  plan: "STARTER" | "PLUS" | "PRO" | "BUSINESS",
+  extra: { queuePriority: "LOW" | "MEDIUM" | "HIGH" | "HIGHEST"; maxSeats: number },
+) {
+  const price = PLAN_PRICES[plan];
+  const limits = PLAN_LIMITS[plan];
+  const monthlyUsd = minor(price.usdMonthly);
+  const yearlyUsd = minor(price.usdYearly);
+  return {
+    plan,
+    dailyOperationLimit: limits.dailyOperationLimit,
+    monthlyOperationLimit: limits.monthlyOperationLimit,
+    fileSizeLimitMB: limits.fileSizeLimitMB,
+    batchLimit: limits.batchLimit,
+    watermarkEnabled: false,
+    queuePriority: extra.queuePriority,
+    allowedTools: "all",
+    maxSeats: extra.maxSeats,
+    monthlyPriceTry: minor(price.tryGrossMonthly),
+    monthlyPriceUsd: monthlyUsd,
+    monthlyPriceEur: eur(monthlyUsd),
+    yearlyPriceTry: minor(price.tryGrossYearly),
+    yearlyPriceUsd: yearlyUsd,
+    yearlyPriceEur: eur(yearlyUsd),
+  };
+}
 
 const PLAN_CONFIGS = [
   {
     plan: "FREE" as const,
-    dailyOperationLimit: 3,
-    monthlyOperationLimit: 30,
-    fileSizeLimitMB: 80,
-    batchLimit: 0,
+    dailyOperationLimit: PLAN_LIMITS.FREE.dailyOperationLimit,
+    monthlyOperationLimit: PLAN_LIMITS.FREE.monthlyOperationLimit,
+    fileSizeLimitMB: PLAN_LIMITS.FREE.fileSizeLimitMB,
+    batchLimit: PLAN_LIMITS.FREE.batchLimit,
     watermarkEnabled: false,
     queuePriority: "LOW" as const,
     allowedTools: "merge,split,compress",
@@ -20,74 +56,11 @@ const PLAN_CONFIGS = [
     yearlyPriceUsd: 0,
     yearlyPriceEur: 0,
   },
-  {
-    plan: "STARTER" as const,
-    dailyOperationLimit: 25,
-    monthlyOperationLimit: 250,
-    fileSizeLimitMB: 100,
-    batchLimit: 2,
-    watermarkEnabled: false,
-    queuePriority: "LOW" as const,
-    allowedTools: "all",
-    maxSeats: 1,
-    monthlyPriceTry: 12900,
-    monthlyPriceUsd: 399,
-    monthlyPriceEur: 367,    // ~0.92 × 399
-    yearlyPriceTry: 129000,
-    yearlyPriceUsd: 3999,
-    yearlyPriceEur: 3679,    // ~0.92 × 3999
-  },
-  {
-    plan: "PLUS" as const,
-    dailyOperationLimit: null,
-    monthlyOperationLimit: 600,
-    fileSizeLimitMB: 250,
-    batchLimit: 5,
-    watermarkEnabled: false,
-    queuePriority: "MEDIUM" as const,
-    allowedTools: "all",
-    maxSeats: 1,
-    monthlyPriceTry: 22900,
-    monthlyPriceUsd: 699,
-    monthlyPriceEur: 643,    // ~0.92 × 699
-    yearlyPriceTry: 229200,
-    yearlyPriceUsd: 5004,
-    yearlyPriceEur: 4604,    // ~0.92 × 5004
-  },
-  {
-    plan: "PRO" as const,
-    dailyOperationLimit: null,
-    monthlyOperationLimit: 1000,
-    fileSizeLimitMB: 500,
-    batchLimit: 25,
-    watermarkEnabled: false,
-    queuePriority: "HIGH" as const,
-    allowedTools: "all",
-    maxSeats: 1,
-    monthlyPriceTry: 39900,
-    monthlyPriceUsd: 1199,
-    monthlyPriceEur: 1103,   // ~0.92 × 1199
-    yearlyPriceTry: 399600,
-    yearlyPriceUsd: 9000,
-    yearlyPriceEur: 8280,    // ~0.92 × 9000
-  },
-  {
-    plan: "BUSINESS" as const,
-    dailyOperationLimit: null,
-    monthlyOperationLimit: 999999,
-    fileSizeLimitMB: 999999,
-    batchLimit: 999,
-    watermarkEnabled: false,
-    queuePriority: "HIGHEST" as const,
-    allowedTools: "all",
-    maxSeats: 999,
-    monthlyPriceTry: 109900,
-    monthlyPriceUsd: 3999,
-    monthlyPriceEur: 3679,   // ~0.92 × 3999
-    yearlyPriceTry: 1099200,
-    yearlyPriceUsd: 39996,
-    yearlyPriceEur: 36796,   // ~0.92 × 39996
-  },
+  planRow("STARTER", { queuePriority: "LOW", maxSeats: 1 }),
+  planRow("PLUS", { queuePriority: "MEDIUM", maxSeats: 1 }),
+  planRow("PRO", { queuePriority: "HIGH", maxSeats: 1 }),
+  // Business: sunucu işlemi/dosya/toplu işlem artık SINIRLIDIR (ekip havuzu; ek koltukla büyür).
+  planRow("BUSINESS", { queuePriority: "HIGHEST", maxSeats: BUSINESS_TEAM.maxTotalSeats }),
 ];
 
 async function main() {

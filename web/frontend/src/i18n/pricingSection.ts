@@ -72,7 +72,7 @@ export function pricingSectionCopy(lang: Language) {
     featFree1: tr ? "Günlük sınırlı işlem" : "Limited daily operations",
     featFree2: tr ? "Çekirdek PDF araçları" : "Core PDF TOOLS",
     featFree3: tr ? "Web erişimi" : "Web access",
-    featPaid1: tr ? "Sınırsız işlem" : "Unlimited operations",
+    featPaid1: tr ? "Yüksek aylık işlem kotası" : "High monthly operation quota",
     featPaid2: tr ? "Tüm premium araçlar" : "All premium TOOLS",
     featPaid3: tr ? "Öncelikli işlem (Pro)" : "Priority processing (Pro)",
     featBasicNote: tr ? "Standart öncelik" : "Standard priority",

@@ -14,6 +14,10 @@ import type { FakePaymentProduct } from "./fake-payment.schema.js";
  * through `grantCredits` and optional `User.plan` / subscription updates.
  */
 
+/**
+ * YALNIZ YEREL SAHTE-ÖDEME SINAMASI. Buradaki tutarlar GERÇEK fiyat değildir (gerçek fiyatlar
+ * `lib/plan-catalogue.ts`); canlıda ödemeler kapalıyken bu uç plan veremez (app.ts).
+ */
 const PLAN_CATALOG: Record<
   FakePaymentProduct,
   {

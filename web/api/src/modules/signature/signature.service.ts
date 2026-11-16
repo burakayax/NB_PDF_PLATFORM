@@ -25,6 +25,7 @@
  */
 import { createHash } from "node:crypto";
 import { prisma } from "../../lib/prisma.js";
+import { businessMonthlySignatureRequests } from "../../lib/plan-catalogue.js";
 import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import { createUrlSafeToken, hashToken } from "../../lib/token.js";
@@ -60,12 +61,13 @@ const EN_BUYUK_BELGE = 15 * 1024 * 1024;
  * Ücretsiz planda 1: "tadına bakma" hakkı. Deneyemeyen kullanıcı, ödemeye değip
  * değmeyeceğini de bilemez.
  */
-const AYLIK_KONTENJAN: Record<string, number | null> = {
+const AYLIK_KONTENJAN: Record<string, number> = {
   FREE: 1,
   STARTER: 3,
   PLUS: 10,
   PRO: 20,
-  BUSINESS: null, // sınırsız
+  // BUSINESS burada YOK: ekip havuzudur (ayda 300 + ek koltuk başına 60; bkz. BUSINESS_TEAM) ve
+  // ekibin tamamı (sahibi + üyeleri) aynı sayaçtan düşer. Eskiden sınırsızdı.
 };
 
 function ayBasi(): Date {
@@ -81,21 +83,45 @@ export async function imzaKontenjani(ownerId: string): Promise<{
 }> {
   const kullanici = await prisma.user.findUnique({
     where: { id: ownerId },
-    select: { plan: true, role: true },
+    select: { plan: true, role: true, isTeamMember: true, teamOwnerId: true },
   });
-  // DİKKAT: Tabloda `null` "sınırsız" demek. `??` kullanılırsa null da "değer
-  // yok" sayılır ve Business planı 1 isteğe düşerdi (test yakaladı).
   const plan = kullanici?.plan ?? "FREE";
-  const sinir =
-    kullanici?.role === "ADMIN"
-      ? null
-      : plan in AYLIK_KONTENJAN
-        ? AYLIK_KONTENJAN[plan]!
-        : 1;
+
+  // Yönetici sınırsızdır (yalnızca yönetici; hiçbir ücretli plan sınırsız değildir).
+  if (kullanici?.role === "ADMIN") {
+    const kullanilan = await prisma.signatureRequest.count({
+      where: { ownerId, createdAt: { gte: ayBasi() } },
+    });
+    return { kullanilan, sinir: null, kaldi: null };
+  }
+
+  // BUSINESS: ekip havuzu. Sahibi ve kabul etmiş tüm üyelerin bu ay gönderdiği istekler toplanır;
+  // sınır ek koltukla büyür. Ekibi olmayan Business (ör. yönetici hediyesi) tek kişilik havuzdur.
+  if (plan === "BUSINESS") {
+    const havuzSahibi = kullanici?.isTeamMember && kullanici.teamOwnerId ? kullanici.teamOwnerId : ownerId;
+    const ekip = await prisma.team.findUnique({
+      where: { ownerId: havuzSahibi },
+      select: {
+        extraSeats: true,
+        members: { where: { inviteStatus: "ACCEPTED", userId: { not: null } }, select: { userId: true } },
+      },
+    });
+    const kimlikler = [
+      havuzSahibi,
+      ...((ekip?.members ?? []).map((m) => m.userId).filter((v): v is string => typeof v === "string")),
+    ];
+    const sinir = businessMonthlySignatureRequests(ekip?.extraSeats ?? 0);
+    const kullanilan = await prisma.signatureRequest.count({
+      where: { ownerId: { in: kimlikler }, createdAt: { gte: ayBasi() } },
+    });
+    return { kullanilan, sinir, kaldi: Math.max(0, sinir - kullanilan) };
+  }
+
+  const sinir = plan in AYLIK_KONTENJAN ? AYLIK_KONTENJAN[plan]! : 1;
   const kullanilan = await prisma.signatureRequest.count({
     where: { ownerId, createdAt: { gte: ayBasi() } },
   });
-  return { kullanilan, sinir, kaldi: sinir === null ? null : Math.max(0, sinir - kullanilan) };
+  return { kullanilan, sinir, kaldi: Math.max(0, sinir - kullanilan) };
 }
 
 export type IstekBilgisi = {
@@ -186,8 +212,8 @@ export async function imzaIstegiOlustur(
   if (kontenjan.sinir !== null && kontenjan.kullanilan >= kontenjan.sinir) {
     throw new HttpError(
       402,
-      `Bu ay için imza isteği hakkınız doldu (${kontenjan.sinir}). ` +
-        `Planınızı yükselterek daha fazla belge imzalatabilirsiniz.`,
+      `Bu ay için imza isteği hakkınız doldu (${kontenjan.sinir}). Hakkınız ay başında yenilenir. ` +
+        `Daha fazla belge imzalatmak için planınızı yükseltebilirsiniz (Business'ta ek koltuk eklemek de aylık hakkı büyütür).`,
     );
   }
 
