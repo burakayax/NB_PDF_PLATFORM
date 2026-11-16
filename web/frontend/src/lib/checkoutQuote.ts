@@ -18,9 +18,9 @@ export const EXTRA_SEAT_UNIT = { TRY: 299, USD: 9.99 } as const;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Aylık KDV dahil TL'den yıllık KDV dahil TL (~10 ay, 12'nin tam katı). Sunucudaki `yearlyGrossFromMonthly` ile AYNI. */
+/** Aylık KDV dahil TL'den yıllık KDV dahil TL (tam 10 ay fiyatı). Sunucudaki `yearlyGrossFromMonthly` ile AYNI. */
 export function yearlyGrossFromMonthly(monthlyTry: number): number {
-  return Math.round((monthlyTry * 10) / 12) * 12;
+  return Math.round(monthlyTry * 10 * 100) / 100;
 }
 
 /**

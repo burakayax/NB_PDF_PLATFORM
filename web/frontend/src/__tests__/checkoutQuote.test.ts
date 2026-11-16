@@ -54,9 +54,9 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
 
   it("yıllık Business + 3 ek koltuk: koltuklara %17 yıllık indirim de dahil", () => {
     const q = buildCheckoutQuote({ ...base, plan: plan("BUSINESS"), planId: "BUSINESS", cycle: "YEARLY", currency: "TRY", extraSeats: 3 })!;
-    // plan net 14.988/1,2 = 12.490 ; koltuk: 3 × 249,17 × 12 × 0,83 = 7.445,20
-    expect(q.net).toBe(19935.2);
-    expect(q.total).toBe(23922.24);
+    // plan net 14.990/1,2 = 12.491,67 ; koltuk: 3 × 249,17 × 12 × 0,83 = 7.445,20
+    expect(q.net).toBe(19936.87);
+    expect(q.total).toBe(23924.24);
   });
 
   it("yalnız koltuk satın alma: plan bedeli yok", () => {
@@ -67,10 +67,10 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
 });
 
 describe("yönetim paneli fiyatı ve yıllık türetme", () => {
-  it("yıllık = ~10 ay fiyatı, 12'nin tam katı", () => {
-    expect(yearlyGrossFromMonthly(279)).toBe(2796);
-    expect(yearlyGrossFromMonthly(449)).toBe(4488);
-    expect(yearlyGrossFromMonthly(1499)).toBe(14988);
+  it("yıllık = tam 10 ay fiyatı", () => {
+    expect(yearlyGrossFromMonthly(279)).toBe(2790);
+    expect(yearlyGrossFromMonthly(449)).toBe(4490);
+    expect(yearlyGrossFromMonthly(1499)).toBe(14990);
   });
 
   it("panelde Business aylık değişirse yıllık türetilir; Plus/Başlangıç etkilenmez", () => {
@@ -85,7 +85,7 @@ describe("yönetim paneli fiyatı ve yıllık türetme", () => {
 
   it("panel girdisi yoksa fiyatlar planConfig ile aynı kalır", () => {
     expect(applyTryPriceOverrides(PLANS, null)).toBe(PLANS);
-    const out = applyTryPriceOverrides(PLANS, { proMonthly: "449.00", proAnnual: "4488.00", businessMonthly: "1499.00" });
+    const out = applyTryPriceOverrides(PLANS, { proMonthly: "449.00", proAnnual: "4490.00", businessMonthly: "1499.00" });
     expect(out.map((p) => p.pricing)).toEqual(PLANS.map((p) => p.pricing));
   });
 });
