@@ -631,7 +631,7 @@ function CycleAwareCard({
           spinTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
           transformTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
         />
-        <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>
+        <span className="text-gray-400 text-sm">{isYearly ? (tr ? "/ ay (yaklaşık)" : "/ mo (approx.)") : (tr ? "/ ay" : "/ mo")}</span>
       </div>
 
       {/* Billing note */}
@@ -647,8 +647,8 @@ function CycleAwareCard({
               className="text-gray-400 text-xs"
             >
               {tr
-                ? `${fmt(yearlyTotal, currency)} yıllık faturalandırılır`
-                : `${fmt(yearlyTotal, currency)} billed annually`}
+                ? `Tek seferde ${fmt(yearlyTotal, currency)} yıllık faturalandırılır`
+                : `${fmt(yearlyTotal, currency)} billed once a year`}
             </motion.p>
           ) : (
             <motion.p

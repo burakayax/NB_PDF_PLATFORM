@@ -21,9 +21,9 @@ tüketiciye gösterilen fiyatın vergi dahil olması yasal zorunluluktur.
 |---|---|---|---|---|---|
 | Ücretsiz | — | — | — | — | 0 |
 | Başlangıç | 129 ₺ | — | $4.99 | — | 5 |
-| Plus | 279 ₺ | 2.796 ₺ | $7.99 | $60.00 | 15 |
-| Pro | 449 ₺ | 4.488 ₺ | $12.99 | $99.96 | 40 |
-| Business | 1.499 ₺ | 14.988 ₺ | $49.99 | $499.92 | 100 |
+| Plus | 279 ₺ | 2.790 ₺ | $7.99 | $59.99 | 15 |
+| Pro | 449 ₺ | 4.490 ₺ | $12.99 | $99.99 | 40 |
+| Business | 1.499 ₺ | 14.990 ₺ | $49.99 | $499.99 | 100 |
 | Ek koltuk | 299 ₺ | — | $9.99 | — | — |
 
 **Business sınırlı model (2026-11-16):** "sınırsız" kaldırıldı. Ekip havuzu: ayda 5.000 sunucu işlemi
@@ -31,15 +31,14 @@ tüketiciye gösterilen fiyatın vergi dahil olması yasal zorunluluktur.
 5 koltuk dahil, en çok 50 kişi (45 ek). Cihazında çalışan araçlar sayılmaz; yapay zekâ 100/ay. Ekibin tamamı
 (sahip + üyeler) aynı havuzdan düşer. Tek kaynak: `plan-catalogue.ts` → `PLAN_LIMITS.BUSINESS`, `BUSINESS_TEAM`.
 Sunucu kapasitesi kullanıcı arttıkça büyütülecek; sınırlar da ona göre gevşetilebilir.
-
-**Yıllık ödeme Plus, Pro ve Business'ta vardır.** TL'de yaklaşık 10 ay fiyatına 12
-ay (iki ay bedava); yıllık tutarlar 12'ye tam bölünür ki ekrandaki "ayda X" × 12
-yıllık tutara eşit çıksın (Plus 233 ×12 = 2.796, Pro 374 ×12 = 4.488, Business
-1.249 ×12 = 14.988). Dolarda Plus ve Pro yıllığı rakip yıllık fiyatlara göre daha
-cömert (Plus ayda $5,00, Pro ayda $8,33, Business ayda $41,66). Başlangıç yalnızca aylıktır; ekranda
+**Yıllık ödeme Plus, Pro ve Business'ta vardır.** TL'de TAM 10 ay fiyatına 12 ay (iki ay bedava):
+aylık × 10 = 2.790 / 4.490 / 14.990 ₺. Bu tutarlar 12'ye bölünmez; kartta büyük rakam "ayda yaklaşık"
+(₺233 / ₺374 / ₺1.249) olarak yazılır, altında kesin "Tek seferde ₺X yıllık faturalandırılır" görünür.
+Dolarda yıllık 59,99 / 99,99 / 499,99 $ (aylık fiyatlarla aynı ".99" çizgisi). Başlangıç yalnızca aylıktır;
+ekranda yıllık seçeneği hiç gösterilmez ve ödeme tarafı yıllık isteği reddeder.
 yıllık seçeneği hiç gösterilmez ve ödeme tarafı yıllık isteği reddeder.
 
-**Fiyat revizyonu (2026-11-16):** 129/279/449/1.499 ₺ ve $4,99/7,99/12,99/49,99; ek koltuk 299 ₺/$9,99 (finans raporu). Yıllık USD 12'ye tam bölünür (60,00 / 99,96 / 499,92).
+**Fiyat revizyonu (2026-11-16):** 129/279/449/1.499 ₺ ve $4,99/7,99/12,99/49,99; ek koltuk 299 ₺/$9,99 (finans raporu). Yıllık: TL = aylık × 10 (2.790 / 4.490 / 14.990), USD 59,99 / 99,99 / 499,99.
 
 **Eski revizyon (2026-10-15):** TL fiyatlar dolar fiyatının yaklaşık %65-70'ine
 çekildi (eskiden ~%50: 99/179/299/799). Pro 399 ₺ o günün kararıydı; sonradan
@@ -190,7 +189,7 @@ Kullanım Şartları'na "doğrulama kaydı taşımayan/değiştirilmiş dosyalar
   yıllık koltuk indirimi dahil; dolar tarafında iskonto artık gerçekten hesaplanıp gösteriliyor).
 - **Yönetim paneli fiyatı:** Ana sayfa kartı panelden girilen TL fiyatı gösteriyordu ama ödeme katalogdaki
   fiyatı çekiyordu. Artık ödeme de panel fiyatını kullanır (Pro aylık/yıllık, Business aylık; Business
-  yıllığı aylıktan türetilir: ~10 ay, 12'nin tam katı).
+  yıllığı aylıktan türetilir: tam 10 ay).
 - **Kredi paketi ve CV Geçişi:** Ekran para birimini dile göre seçiyordu, sunucu ise fatura ülkesine göre
   tahsil ediyor. Artık sunucu her pakete `chargeCurrency` ekler, ekran onu gösterir.
 - Testler: `plan-catalogue.test.ts` (net + KDV = gösterilen tutar), `checkoutQuote.test.ts`.

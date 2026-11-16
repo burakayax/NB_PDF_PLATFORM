@@ -55,9 +55,9 @@ export type PlanPrice = {
  *  iLovePDF 7 $/ay, Smallpdf Pro 15 $/ay, Adobe Acrobat Pro ~19,99 $/ay, ChatPDF 19,99 $/ay.
  *  (2026-11-16: iLovePDF resmi TR sayfasında Premium 9 $/ay; Pro 12,99 $ ile Smallpdf aralığında.)
  *
- *  Yıllık TL ≈ 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim). Yıllık
- *  tutarlar 12'ye TAM bölünür: ekranda "ayda X" yazıp X×12 ≠ yıllık tutar olmasın
- *  (ör. 2.290/12 = 190,83 → "191" görünüyor, 191×12 = 2.292). Yıllık USD rakip
+ *  Yıllık TL = TAM 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim; 2026-11-16'dan beri
+ *  aylık×10: 2.790 / 4.490 / 14.990). Tutar 12'ye bölünmez; ekranda "ayda ≈X" yaklaşık yazılır
+ *  ve asıl yıllık tutar ayrıca gösterilir. Yıllık USD rakip
  *  yıllık fiyatlarına (iLovePDF 60 $/yıl, Smallpdf ~108 $/yıl) göre kurulur
  *  (güncel tutarlar aşağıdaki 2026-11-16 revizyonunda).
  *
@@ -70,8 +70,8 @@ export type PlanPrice = {
  *  Ödemeler açılmadan ve en az 1 yıl değişmeyecek biçimde yeniden hesaplandı. TL (KDV dahil):
  *  Başlangıç 129 (değişmedi), Plus 279, Pro 449, Business 1.499, ek koltuk 299. Dolar: Başlangıç 4,99,
  *  Plus 7,99, Pro 12,99, Business 49,99, ek koltuk 9,99. Yıllık TL ≈ 10 ay (12'ye tam bölünür).
- *  Yıllık USD de 12'ye TAM bölünür (rapordaki 59,99/99,99/499,99 yerine 60,00/99,96/499,92; fark ≤ 7 sent):
- *  ekranda "ayda X" × 12 = yıllık tutar kuralı bozulmasın. Başlangıç yıllığı satılmaz (yalnız tanımlı).
+ *  Yıllık USD psikolojik fiyat: 59,99 / 99,99 / 499,99 (aylık fiyatlarla aynı ".99" çizgisi).
+ *  Başlangıç yıllığı satılmaz (yalnız tanımlı).
  *  Başa-baş: kur 50–70 aralığında ayda 27–35 ödeyen müşteri (rapor bölüm 8).
  */
 export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
@@ -83,27 +83,26 @@ export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
   },
   PLUS: {
     tryGrossMonthly: "279.00",
-    tryGrossYearly: "2796.00",
+    tryGrossYearly: "2790.00",
     usdMonthly: "7.99",
-    usdYearly: "60.00",
+    usdYearly: "59.99",
   },
   PRO: {
     tryGrossMonthly: "449.00",
-    tryGrossYearly: "4488.00",
+    tryGrossYearly: "4490.00",
     usdMonthly: "12.99",
-    usdYearly: "99.96",
+    usdYearly: "99.99",
   },
   BUSINESS: {
     tryGrossMonthly: "1499.00",
-    tryGrossYearly: "14988.00",
+    tryGrossYearly: "14990.00",
     usdMonthly: "49.99",
-    usdYearly: "499.92",
+    usdYearly: "499.99",
   },
 };
 
 /**
- * Aylık KDV dahil TL tutarından yıllık KDV dahil tutarı türetir: ~10 ay fiyatı,
- * 12'nin tam katı (ekrandaki "ayda X" × 12 = yıllık tutar olsun diye).
+ * Aylık KDV dahil TL tutarından yıllık KDV dahil tutarı türetir: TAM 10 ay fiyatı (aylık × 10).
  * Ön yüzdeki `yearlyGrossFromMonthly` (frontend/src/lib/checkoutQuote.ts) ile
  * AYNI kural; yönetim panelinden Business aylık fiyatı değişince yıllık bununla
  * türetilir. Katalogdaki Plus/Pro/Business yıllık tutarları bu kuralın çıktısıdır
@@ -114,7 +113,7 @@ export function yearlyGrossFromMonthly(monthlyGross: string): string {
   if (!Number.isFinite(m) || m <= 0) {
     throw new Error(`Geçersiz aylık tutar: ${monthlyGross}`);
   }
-  return (Math.round((m * 10) / 12) * 12).toFixed(2);
+  return (Math.round(m * 10 * 100) / 100).toFixed(2);
 }
 
 /** Business planına eklenen her ek koltuğun fiyatı (Business'ın koltuk başı fiyatıyla aynı hizada). */

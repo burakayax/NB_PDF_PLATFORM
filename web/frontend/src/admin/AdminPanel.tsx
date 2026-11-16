@@ -635,7 +635,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
   const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
   const [proPrice, setProPrice] = useState("449.00");
   const [businessPrice, setBusinessPrice] = useState("1499.00");
-  const [proAnnualPrice, setProAnnualPrice] = useState("4488.00");
+  const [proAnnualPrice, setProAnnualPrice] = useState("4490.00");
   const [pricingBusy, setPricingBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
