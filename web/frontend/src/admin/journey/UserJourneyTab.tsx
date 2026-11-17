@@ -148,6 +148,7 @@ function ToolsSection({ visits }: { visits: InsightVisit[] }) {
   const rows = useMemo(() => all.filter((r) => !q.trim() || r.name.toLowerCase().includes(q.trim().toLowerCase())), [all, q]);
   const columns: Array<Column<ToolRow>> = [
     { header: "Araç", cell: (r) => <span className="font-semibold text-white">{r.name}</span> },
+    { header: "Kullandı (sonuç ekranı geldi)", numeric: true, cell: (r) => r.used },
     { header: "Bitirdi (üye ol ekranı çıktı)", numeric: true, cell: (r) => r.finished },
     { header: "Üye olmaya tıkladı", numeric: true, cell: (r) => r.clicked },
     { header: "Hakkı bitti", numeric: true, cell: (r) => r.wall },
@@ -157,7 +158,7 @@ function ToolsSection({ visits }: { visits: InsightVisit[] }) {
     <Section
       id="araclar"
       title="Hangi araç ilgi çekiyor?"
-      help="Ziyaretçilerin hangi araçta bir işi sonuna kadar götürdüğü, hangi araçta hakkının bittiği ve hangi araçtan fiyat ekranına gittiği. Satış fırsatı en çok “hakkı bitti” ve “fiyat ekranını açtı” sütunlarında çıkar."
+      help="Ziyaretçilerin hangi aracı gerçekten kullandığı (sonuç ekranına ulaştığı; cihazda çalışan araçlar dahil), hangi araçta bir işi sonuna kadar götürdüğü, hangi araçta hakkının bittiği ve hangi araçtan fiyat ekranına gittiği. Satış fırsatı en çok “hakkı bitti” ve “fiyat ekranını açtı” sütunlarında çıkar."
       filters={<SearchFilter value={q} onChange={setQ} placeholder="Araç ara…" />}
     >
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.name} empty="Henüz araç kullanımı kaydı yok." />
