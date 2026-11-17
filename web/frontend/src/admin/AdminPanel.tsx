@@ -1,4 +1,4 @@
-﻿import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
   fetchAdminAppSettings,
   fetchAdminAuditLog,
@@ -7,7 +7,6 @@ import {
   fetchAdminMarketing,
   fetchAdminMediaList,
   fetchAdminOverview,
-  fetchAdminPlans,
   fetchAdminSettings,
   fetchAdminTOOLS,
   downloadAdminDownloadLogProof,
@@ -19,9 +18,6 @@ import {
   putAdminAppSettings,
   putAdminCms,
   putAdminEmailAutomation,
-  putAdminPackagesMarketing,
-  putAdminPlanPricing,
-  putAdminPlansOverride,
   putAdminSettingsPatches,
   putAdminTOOLSConfig,
   uploadAdminMedia,
@@ -35,7 +31,6 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../api/auth";
 import { getSaasApiBase } from "../api/saasBase";
 import { CMS_PREVIEW_QUERY, postAdminPreviewHighlight, writeCmsPreviewDraft } from "../lib/cmsPreview";
 import { WORKSPACE_TOOL_IDS } from "../lib/workspaceFeatures";
-import { STARTER_TOOL_IDS, PLANS } from "../lib/planConfig";
 import { TOOLS as TOOL_CATALOG } from "../lib/toolCatalog";
 import { resolveCmsAssetUrl } from "../lib/landingCmsMerge";
 import { landingTranslations } from "../i18n/landing";
@@ -49,28 +44,6 @@ const FREE_COUNT_DEFAULT = TOOLS.filter((t) => t.free).length;
  * ki admin siteden kopyalamak zorunda kalmadan gerçek metnin üzerinde değişiklik yapsın. */
 const LIVE = landingTranslations.tr;
 
-/** Plan Kartı CMS — plan başına iki-dilli metin. features'lar satır-sonu ile ayrılır. */
-type PlanCardEdit = { nameTr: string; nameEn: string; taglineTr: string; taglineEn: string; featuresTr: string; featuresEn: string };
-/** Ana sayfada özellik listesi olan planlar (FREE hariç). */
-const EDITABLE_PLAN_CARDS = ["STARTER", "PLUS", "PRO", "BUSINESS"] as const;
-const emptyPlanCard = (): PlanCardEdit => ({ nameTr: "", nameEn: "", taglineTr: "", taglineEn: "", featuresTr: "", featuresEn: "" });
-/** Kart alt-satırı planConfig'te yok; ana sayfadaki sabit metinler (pre-fill için). */
-const DEFAULT_TAGLINES: Record<string, { tr: string; en: string }> = {
-  STARTER: { tr: "Ara sıra dönüştürme yapanlar için.", en: "For occasional converters." },
-  PLUS: { tr: "Düzenli PDF işi olanlar için.", en: "For regular PDF work." },
-  PRO: { tr: "Yapay zekâ ve API isteyenler için.", en: "For AI tools and API access." },
-  BUSINESS: { tr: "Ekipler ve kurumlar için.", en: "For teams and organizations." },
-};
-/** Bir plan kartının CANLI varsayılan metni (kutu boşsa gösterilir → admin üzerine yazar). */
-function planCardDefault(id: string): PlanCardEdit {
-  const p = PLANS.find((x) => x.id === id);
-  const tg = DEFAULT_TAGLINES[id] ?? { tr: "", en: "" };
-  return {
-    nameTr: p?.nameTr ?? "", nameEn: p?.nameEn ?? "",
-    taglineTr: tg.tr, taglineEn: tg.en,
-    featuresTr: (p?.featuresTr ?? []).join("\n"), featuresEn: (p?.featuresEn ?? []).join("\n"),
-  };
-}
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
 import { AdminCouponManager } from "./coupons/AdminCouponManager";
@@ -110,12 +83,10 @@ import type { AdminUiMode } from "./adminTypes";
 export type { AdminUiMode } from "./adminTypes";
 import {
   AdminField,
-  AdminImpactCard,
   AdminMutedBox,
   AdminSaveStrip,
   AdminSection,
   AdminToggle,
-  ConfirmModal,
   adminInputClass,
   type AdminSaveStripState,
 } from "./mosaic/adminPrimitives";
@@ -126,6 +97,7 @@ import { ConsentLogTab } from "./compliance/ConsentLogTab";
 import { SystemControlTab } from "./SystemControlTab";
 import { AutoHealTab } from "./AutoHealTab";
 import { PaymentsTab } from "./payments/PaymentsTab";
+import { PackagesTab } from "./packages/PackagesTab";
 import { AdminToaster } from "./AdminToaster";
 import { readAccessToken } from "../lib/accessTokenStore";
 
@@ -559,7 +531,7 @@ export function AdminPanel({
         {tab === "cmd-emails" ? <EmailCampaignManager accessToken={accessToken} /> : null}
         {tab === "cmd-social" ? <SocialAutomationManager accessToken={accessToken} /> : null}
 
-        {tab === "packages" ? <PackagesTab accessToken={accessToken} uiMode={uiMode} /> : null}
+        {tab === "packages" ? <PackagesTab accessToken={accessToken} /> : null}
         {tab === "TOOLS" ? <TOOLSTab accessToken={accessToken} uiMode={uiMode} /> : null}
         {tab === "content" ? (
           <ContentTab
@@ -586,23 +558,7 @@ export function AdminPanel({
   );
 }
 
-type AdminPlansPayload = {
-  plans: Array<{
-    name: string;
-    displayName: string;
-    description: string;
-    dailyLimit: number | null;
-    allowedFeatures: string[];
-    multiUser: boolean;
-  }>;
-  checkoutStats: Record<string, { completed: number; pending: number }>;
-  marketing: unknown;
-  plansOverride: unknown;
-  paymentPrices?: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string };
-};
-
-// ── Araç kategorisine göre grupla — "İzin verilen araçlar" tablosunu
-// taranabilir yapmak için (bkz. pdf-tools-section.tsx'teki aynı kategoriler). ──
+// ── Araç kategorisine göre grupla (Araçlar sekmesindeki liste için). ──
 const PACKAGE_TOOL_CATEGORY_LABEL: Record<string, string> = {
   ai: "Yapay Zekâ",
   edit: "Düzenle",
@@ -629,604 +585,6 @@ function groupFeatureKeysByCategory(
     label: PACKAGE_TOOL_CATEGORY_LABEL[c] ?? "Diğer",
     keys: buckets.get(c)!,
   }));
-}
-
-function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
-  const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
-  const [proPrice, setProPrice] = useState("449.00");
-  const [businessPrice, setBusinessPrice] = useState("1499.00");
-  const [proAnnualPrice, setProAnnualPrice] = useState("4490.00");
-  const [pricingBusy, setPricingBusy] = useState(false);
-  const marketingExtraRef = useRef<Record<string, unknown>>({});
-  const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
-  // Plan Kartı CMS — plan başına TR/EN isim/açıklama/özellik (ana sayfa fiyat kartlarını yönetir).
-  const [planCards, setPlanCards] = useState<Record<string, PlanCardEdit>>({});
-  const [vitrinBusy, setVitrinBusy] = useState(false);
-  const [vitrinPlan, setVitrinPlan] = useState<(typeof EDITABLE_PLAN_CARDS)[number]>("STARTER");
-  const [msg, setMsg] = useState<string | null>(null);
-  const [loadTick, setLoadTick] = useState(0);
-  type PlanForm = {
-    displayName: string;
-    description: string;
-    dailyUnlimited: boolean;
-    dailyLimit: number;
-    features: string[];
-    multiUser: boolean;
-  };
-  const [planForms, setPlanForms] = useState<Record<string, PlanForm> | null>(null);
-  const [featureCatalogList, setFeatureCatalogList] = useState<string[]>([]);
-  const [planFormsBusy, setPlanFormsBusy] = useState(false);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const d = (await fetchAdminPlans(accessToken)) as AdminPlansPayload;
-        setPayload(d);
-        if (d.paymentPrices) {
-          setProPrice(d.paymentPrices.PRO);
-          setBusinessPrice(d.paymentPrices.BUSINESS);
-          if (d.paymentPrices.PRO_ANNUAL) setProAnnualPrice(d.paymentPrices.PRO_ANNUAL);
-        }
-        const m = d.marketing;
-        const mObj =
-          m && typeof m === "object" && m !== null ? (m as Record<string, unknown>) : {};
-        const cardsObj =
-          mObj.cards && typeof mObj.cards === "object" && !Array.isArray(mObj.cards)
-            ? (mObj.cards as Record<string, unknown>)
-            : null;
-        const savedStarter = cardsObj?.starterTools;
-        setCardStarterTools(
-          Array.isArray(savedStarter) && savedStarter.length
-            ? savedStarter.filter((x): x is string => typeof x === "string")
-            : [...STARTER_TOOL_IDS],
-        );
-        // Plan kartları — kayıtlı iki-dilli metinleri düzenleyiciye doldur.
-        const savedPlanCards = cardsObj?.planCards;
-        const pcRec = savedPlanCards && typeof savedPlanCards === "object" && !Array.isArray(savedPlanCards)
-          ? (savedPlanCards as Record<string, Record<string, unknown>>) : {};
-        const nextPc: Record<string, PlanCardEdit> = {};
-        for (const id of EDITABLE_PLAN_CARDS) {
-          const c = pcRec[id] ?? {};
-          const def = planCardDefault(id);
-          const arr = (v: unknown) => Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").join("\n") : "";
-          const s = (v: unknown, fb: string) => (typeof v === "string" && v.trim() ? v : fb);
-          const a = (v: unknown, fb: string) => { const j = arr(v); return j.trim() ? j : fb; };
-          // Kayıtlı değer varsa onu, yoksa CANLI varsayılanı göster (kutular dolu gelir).
-          nextPc[id] = {
-            nameTr: s(c.nameTr, def.nameTr), nameEn: s(c.nameEn, def.nameEn),
-            taglineTr: s(c.taglineTr, def.taglineTr), taglineEn: s(c.taglineEn, def.taglineEn),
-            featuresTr: a(c.featuresTr, def.featuresTr), featuresEn: a(c.featuresEn, def.featuresEn),
-          };
-        }
-        setPlanCards(nextPc);
-        // Kart/planCards kaydederken diğer marketing anahtarlarını korumak için sakla.
-        marketingExtraRef.current = { ...mObj };
-        const ov = d.plansOverride;
-        const ovRec = ov && typeof ov === "object" && !Array.isArray(ov) ? (ov as Record<string, unknown>) : {};
-        const keys = Array.from(new Set((d.plans ?? []).flatMap((p) => p.allowedFeatures))).sort();
-        setFeatureCatalogList(keys);
-        const names = ["FREE", "PRO", "BUSINESS"] as const;
-        const next: Record<string, PlanForm> = {};
-        for (const name of names) {
-          const p = d.plans?.find((x) => x.name === name);
-          const o = ovRec[name] as Record<string, unknown> | undefined;
-          const rawDl = o && "dailyLimit" in o ? o.dailyLimit : p?.dailyLimit ?? null;
-          next[name] = {
-            displayName: String(o?.displayName ?? p?.displayName ?? name),
-            description: String(o?.description ?? p?.description ?? ""),
-            dailyUnlimited: rawDl === null,
-            dailyLimit: typeof rawDl === "number" ? rawDl : typeof p?.dailyLimit === "number" ? p.dailyLimit : 5,
-            features: Array.isArray(o?.allowedFeatures)
-              ? [...(o.allowedFeatures as string[])]
-              : [...(p?.allowedFeatures ?? [])],
-            multiUser: Boolean(o?.multiUser ?? p?.multiUser),
-          };
-        }
-        setPlanForms(next);
-        setMsg(null);
-      } catch {
-        setMsg("Planlar yüklenemedi");
-      }
-    })();
-  }, [accessToken, loadTick]);
-
-  const advanced = uiMode === "advanced";
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-white">Paketler ve ödeme</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-400">
-            Bu bölüm kullanıcıların gerçek <strong className="text-slate-200">erişim/haklarını</strong> (hangi araçlar açık, limitler) ve <strong className="text-slate-200">ödeme (checkout) tutarını</strong> belirler.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setLoadTick((t) => t + 1)}
-          className="rounded-xl border border-white/[0.12] px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.05]"
-        >
-          Sunucudan yenile
-        </button>
-      </div>
-
-      {/* Bu sekme ÜÇ FARKLI ŞEYİ bir arada yönetir — karışıklığın asıl kaynağı
-          bu üçünün birbirinden ayrı, birbirini otomatik güncellemeyen şeyler
-          olması. Aşağıdaki numaralı bölümler bu sıraya göre dizilmiştir. */}
-      <div className="rounded-2xl border border-sky-400/25 bg-sky-500/[0.06] px-4 py-3.5 text-[13px] leading-relaxed text-sky-100/90">
-        <p className="font-bold text-sky-200">🔗 Bu sayfada 3 farklı şey var, birbirini otomatik güncellemez:</p>
-        <ul className="mt-2 space-y-1.5 text-sky-100/80">
-          <li>
-            <strong className="text-sky-100">1) Gerçekte ne açık, ne kapalı</strong> — bir kullanıcı hangi araçları
-            kullanabiliyor, günde kaç işlem hakkı var. Bunu değiştirmek <strong>anında siteye yansır.</strong>
-          </li>
-          <li>
-            <strong className="text-sky-100">2) Gerçekte ne kadar tahsil ediliyor</strong> — ödeme ekranında
-            müşteriden alınan ₺ tutarı.
-          </li>
-          <li>
-            <strong className="text-sky-100">3) Ana sayfada ne YAZIYOR (vitrin)</strong> — fiyat kartlarındaki isim,
-            açıklama ve madde listesi. <strong>Bu yalnızca metindir</strong> — buradan bir araç eklemek/kaldırmak
-            kullanıcının gerçek erişimini DEĞİŞTİRMEZ; sadece karttaki yazıyı değiştirir. Gerçek erişimi (1)'den
-            yönetin, kart yazısını da ona göre siz güncelleyin.
-          </li>
-          <li className="pt-1 text-amber-200/90">
-            ⚠ <strong>1'deki sayılarla 3'teki kart yazısı birbirinden bağımsız ilerleyebilir</strong> — bir aracı
-            (1)'den kapatırsanız kart (3) hâlâ "açık" yazmaya devam eder, elle güncellemeniz gerekir.
-          </li>
-        </ul>
-      </div>
-
-      {advanced ? (
-        <div className="flex flex-wrap gap-3">
-          {(payload?.plans ?? []).map((p) => {
-            const st = payload?.checkoutStats?.[p.name] ?? { completed: 0, pending: 0 };
-            return (
-              <div
-                key={p.name}
-                className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-black/25 px-3.5 py-2.5"
-              >
-                <span className="text-[10.5px] font-bold uppercase tracking-[0.15em] text-slate-400">{p.name}</span>
-                <span className="text-[12.5px] text-slate-300">
-                  <span className="font-semibold text-emerald-300">{st.completed}</span> ödeme tamamlandı
-                </span>
-                {st.pending > 0 ? (
-                  <span className="text-[12.5px] text-amber-200/80">{st.pending} beklemede</span>
-                ) : null}
-              </div>
-            );
-          })}
-          <p className="flex items-center text-[11.5px] text-slate-500">Son kayıtlı ödeme durumu, salt okunur</p>
-        </div>
-      ) : null}
-
-      {planForms && advanced ? (
-        <AdminSection
-          title="1) Gerçekte ne açık, ne kapalı"
-          description="Görünen ad, açıklama, günlük işlem limiti ve hangi PDF araçlarının açık olduğunu buradan yönetin. Kaydettiğinizde sunucu ve site birkaç saniye içinde güncellenir — bu GERÇEK erişimdir."
-          variant="violet"
-        >
-          <p className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-2.5 text-[12px] leading-relaxed text-slate-400">
-            Yalnızca <strong className="text-slate-300">FREE, PRO ve BUSINESS</strong> planlarının kuralları
-            buradan düzenlenir. <strong className="text-slate-300">STARTER ve PLUS</strong> planları da satışta,
-            ama onların araç/limit kuralları şu an yalnızca kod içinde tanımlı — bu ekrandan değiştirilemiyor
-            (yalnızca kart metinlerini aşağıdaki "3) Vitrin" bölümünden düzenleyebilirsiniz).
-          </p>
-          <div className="space-y-8">
-            {(["FREE", "PRO", "BUSINESS"] as const).map((planKey) => {
-              const f = planForms[planKey];
-              return (
-                <div key={planKey} className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-violet-300/90">{planKey}</p>
-                  <div className="mt-4 grid gap-5 sm:grid-cols-2">
-                    <AdminField
-                      label="Paket adı (ekranda)"
-                      description="Kullanıcının gördüğü kısa isim (ör. Ücretsiz, Pro)."
-                    >
-                      <input
-                        className={adminInputClass}
-                        value={f.displayName}
-                        onChange={(e) =>
-                          setPlanForms((prev) =>
-                            prev ? { ...prev, [planKey]: { ...prev[planKey], displayName: e.target.value } } : prev,
-                          )
-                        }
-                      />
-                    </AdminField>
-                    <AdminField
-                      label="Çoklu kullanıcı (Business)"
-                      description="İş hesapları için; tek kullanıcı paketlerinde kapalı tutun."
-                    >
-                      <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-200">
-                        <input
-                          type="checkbox"
-                          checked={f.multiUser}
-                          onChange={(e) =>
-                            setPlanForms((prev) =>
-                              prev ? { ...prev, [planKey]: { ...prev[planKey], multiUser: e.target.checked } } : prev,
-                            )
-                          }
-                          className="h-4 w-4 rounded border-white/25 bg-black/50"
-                        />
-                        Bu pakette çoklu kullanıcı yapısı
-                      </label>
-                    </AdminField>
-                    <AdminField
-                      label="Açıklama"
-                      description="Abonelik veya plan seçim ekranında gösterilen kısa metin."
-                      htmlFor={`desc-${planKey}`}
-                    >
-                      <textarea
-                        id={`desc-${planKey}`}
-                        rows={3}
-                        className={adminInputClass}
-                        value={f.description}
-                        onChange={(e) =>
-                          setPlanForms((prev) =>
-                            prev ? { ...prev, [planKey]: { ...prev[planKey], description: e.target.value } } : prev,
-                          )
-                        }
-                      />
-                    </AdminField>
-                    <AdminField
-                      label="Günlük işlem limiti"
-                      description="Ücretsiz planda günlük kaç işlem yapılabileceği. Ücretli planların günlük sınırı ayrı yönetilir (Business için fiyat kataloğundaki sınır geçerlidir)."
-                    >
-                      <label className="mb-3 flex cursor-pointer items-center gap-3 text-sm text-slate-200">
-                        <input
-                          type="checkbox"
-                          checked={f.dailyUnlimited}
-                          onChange={(e) =>
-                            setPlanForms((prev) =>
-                              prev
-                                ? { ...prev, [planKey]: { ...prev[planKey], dailyUnlimited: e.target.checked } }
-                                : prev,
-                            )
-                          }
-                          className="h-4 w-4 rounded border-white/25 bg-black/50"
-                        />
-                        Sınırsız (günlük limit yok)
-                      </label>
-                      {!f.dailyUnlimited ? (
-                        <input
-                          type="number"
-                          min={1}
-                          className={adminInputClass}
-                          value={f.dailyLimit}
-                          onChange={(e) =>
-                            setPlanForms((prev) =>
-                              prev
-                                ? {
-                                    ...prev,
-                                    [planKey]: { ...prev[planKey], dailyLimit: Math.max(1, Number(e.target.value) || 1) },
-                                  }
-                                : prev,
-                            )
-                          }
-                        />
-                      ) : null}
-                    </AdminField>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* TEK matris — önceden her paket kendi 30+ onay kutusunu tekrar
-              ediyordu (100+ kutu, taranamaz). Tek tabloda araç satırda,
-              paket sütunda — karşılaştırmak da kolaylaşır. */}
-          <AdminField
-            label="İzin verilen araçlar — üç paket bir arada"
-            description="Her satır bir araç; işaretli sütun o pakette aracın açık olduğu anlamına gelir. Kapalı olanlar uygulamada gizlenir veya engellenir."
-          >
-            <div className="mt-2 overflow-x-auto rounded-xl border border-white/[0.08]">
-              <table className="w-full min-w-[420px] text-left text-[12.5px]">
-                <thead className="border-b border-white/[0.08] bg-black/30 text-slate-400">
-                  <tr>
-                    <th className="px-3 py-2 font-semibold">Araç</th>
-                    <th className="px-3 py-2 text-center font-semibold">FREE</th>
-                    <th className="px-3 py-2 text-center font-semibold">PRO</th>
-                    <th className="px-3 py-2 text-center font-semibold">BUSINESS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupFeatureKeysByCategory(featureCatalogList).map((group) => (
-                    <Fragment key={group.cat}>
-                      <tr className="bg-white/[0.03]">
-                        <td colSpan={4} className="px-3 py-1.5 text-[10.5px] font-bold uppercase tracking-wider text-violet-300/80">
-                          {group.label}
-                        </td>
-                      </tr>
-                      {group.keys.map((fk) => (
-                        <tr key={fk} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                          <td className="px-3 py-2 text-slate-200">{pdfToolLabelTr(fk)}</td>
-                          {(["FREE", "PRO", "BUSINESS"] as const).map((planKey) => (
-                            <td key={planKey} className="px-3 py-2 text-center">
-                              <input
-                                type="checkbox"
-                                checked={planForms[planKey].features.includes(fk)}
-                                onChange={() => {
-                                  setPlanForms((prev) => {
-                                    if (!prev) return prev;
-                                    const cur = prev[planKey];
-                                    const set = new Set(cur.features);
-                                    if (set.has(fk)) set.delete(fk);
-                                    else set.add(fk);
-                                    return { ...prev, [planKey]: { ...cur, features: [...set] } };
-                                  });
-                                }}
-                                className="h-3.5 w-3.5 cursor-pointer rounded border-white/25"
-                              />
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </AdminField>
-
-          <button
-            type="button"
-            disabled={planFormsBusy}
-            onClick={async () => {
-              if (!planForms || !payload) return;
-              setPlanFormsBusy(true);
-              setMsg(null);
-              try {
-                const existing =
-                  payload.plansOverride && typeof payload.plansOverride === "object" && !Array.isArray(payload.plansOverride)
-                    ? { ...(payload.plansOverride as Record<string, unknown>) }
-                    : {};
-                for (const name of ["FREE", "PRO", "BUSINESS"] as const) {
-                  const pf = planForms[name];
-                  existing[name] = {
-                    displayName: pf.displayName,
-                    description: pf.description,
-                    dailyLimit: pf.dailyUnlimited ? null : pf.dailyLimit,
-                    allowedFeatures: pf.features,
-                    multiUser: pf.multiUser,
-                  };
-                }
-                await putAdminPlansOverride(accessToken, existing);
-                setMsg("Plan tanımları kaydedildi.");
-                notifyRuntimeRefresh();
-                setLoadTick((t) => t + 1);
-              } catch (e) {
-                setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
-              } finally {
-                setPlanFormsBusy(false);
-              }
-            }}
-            className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-600 disabled:opacity-40"
-          >
-            {planFormsBusy ? "Kaydediliyor…" : "Paket kurallarını kaydet"}
-          </button>
-        </AdminSection>
-      ) : null}
-
-      <AdminSection
-        title="2) Gerçekte ne kadar tahsil ediliyor"
-        description="Ödeme ekranında müşteriden TAHSİL edilen tutar (KDV dahil). Ana sayfadaki «3) Vitrin» kartında yazan aylık fiyat ile BURADAKİ tutar AYNI olmalı — ikisi ayrı yerlerde tutulur, biri diğerini otomatik güncellemez. Pro yıllık, yıllık toplam tutardır (12 ay için tek seferde). Ondalık için nokta kullanın: 249.00"
-        variant="emerald"
-      >
-        {(() => {
-          const parse = (s: string) => {
-            const n = Number.parseFloat(s.replace(",", "."));
-            return Number.isFinite(n) ? n : 0;
-          };
-          const proM = parse(proPrice);
-          const proA = parse(proAnnualPrice);
-          const proYearFull = proM * 12;
-          const annualSave = proYearFull - proA;
-          const annualPct = proYearFull > 0 ? Math.round((annualSave / proYearFull) * 100) : 0;
-          const fmt = (n: number) => `₺${Math.round(n).toLocaleString("tr-TR")}`;
-          return (
-            <>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <AdminField label="Pro — aylık (KDV dahil)" description="Müşterinin göreceği ve ödeyeceği tutar. KDV bu tutarın içindedir.">
-                  <input
-                    value={proPrice}
-                    onChange={(e) => setProPrice(e.target.value)}
-                    className={`${adminInputClass} font-mono`}
-                    inputMode="decimal"
-                  />
-                </AdminField>
-                <AdminField label="Pro — yıllık, toplam (KDV dahil)" description="Yılda tek seferde tahsil edilen, KDV dahil tutar. Boş bırakılamaz.">
-                  <input
-                    value={proAnnualPrice}
-                    onChange={(e) => setProAnnualPrice(e.target.value)}
-                    className={`${adminInputClass} font-mono`}
-                    inputMode="decimal"
-                  />
-                </AdminField>
-                <AdminField label="Business — aylık (KDV dahil)" description="Müşterinin göreceği ve ödeyeceği tutar; KDV içindedir. (Yıllık yok.)">
-                  <input
-                    value={businessPrice}
-                    onChange={(e) => setBusinessPrice(e.target.value)}
-                    className={`${adminInputClass} font-mono`}
-                    inputMode="decimal"
-                  />
-                </AdminField>
-              </div>
-
-              {/* Canlı önizleme — müşteri ne öder, yıllık indirim ne kadar */}
-              <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-4 py-3 text-[13px] leading-relaxed text-emerald-100/90">
-                <p className="font-bold text-emerald-200">Müşteri ne görecek?</p>
-                <ul className="mt-1.5 space-y-1 text-emerald-100/80">
-                  <li>• Pro aylık: <strong>{fmt(proM)}/ay</strong> · Business aylık: <strong>{fmt(parse(businessPrice))}/ay</strong></li>
-                  <li>
-                    • Pro yıllık: <strong>{fmt(proA)}/yıl</strong>{" "}
-                    {annualSave > 0 ? (
-                      <span className="text-emerald-300">
-                        (aylık {fmt(proA / 12)} — 12×aylığa göre {fmt(annualSave)} / %{annualPct} indirim)
-                      </span>
-                    ) : (
-                      <span className="text-amber-300">(yıllık, aylık×12'den ucuz değil — indirim görünmez)</span>
-                    )}
-                  </li>
-                </ul>
-              </div>
-
-              <button
-                type="button"
-                disabled={pricingBusy}
-                onClick={async () => {
-                  setPricingBusy(true);
-                  setMsg(null);
-                  try {
-                    await putAdminPlanPricing(accessToken, {
-                      PRO: proPrice.trim(),
-                      BUSINESS: businessPrice.trim(),
-                      PRO_ANNUAL: proAnnualPrice.trim(),
-                    });
-                    setMsg("Fiyatlar kaydedildi. Ödeme ve plan listesi birkaç saniye içinde yeni tutarları kullanır.");
-                    notifyRuntimeRefresh();
-                  } catch (e) {
-                    setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
-                  } finally {
-                    setPricingBusy(false);
-                  }
-                }}
-                className="mt-4 rounded-xl bg-emerald-600/70 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-40"
-              >
-                {pricingBusy ? "Kaydediliyor…" : "Fiyatları kaydet"}
-              </button>
-            </>
-          );
-        })()}
-      </AdminSection>
-
-      <AdminSection
-        title="3) Ana sayfada ne YAZIYOR (vitrin)"
-        description="Fiyat sayfasındaki kartların adı, kısa açıklaması ve madde listesi (TR + EN). Boş alan varsayılan metni kullanır."
-        variant="amber"
-      >
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-amber-200">
-          Vitrin — gerçek erişimi değiştirmez
-        </span>
-
-        {/* Plan seçici — 4 kartı art arda dizip sayfayı uzatmak yerine
-            tek seferde birini göster. */}
-        <div className="flex flex-wrap gap-2">
-          {EDITABLE_PLAN_CARDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setVitrinPlan(id)}
-              className={`rounded-lg px-3.5 py-1.5 text-[12.5px] font-bold transition ${
-                vitrinPlan === id
-                  ? "bg-amber-500 text-black"
-                  : "border border-white/[0.12] bg-black/25 text-slate-300 hover:bg-white/[0.06]"
-              }`}
-            >
-              {id}
-            </button>
-          ))}
-        </div>
-
-        {(() => {
-          const id = vitrinPlan;
-          const e = planCards[id] ?? emptyPlanCard();
-          const setPc = (patch: Partial<PlanCardEdit>) =>
-            setPlanCards((prev) => ({ ...prev, [id]: { ...emptyPlanCard(), ...prev[id], ...patch } }));
-          return (
-            <div className="rounded-xl border border-white/[0.07] bg-black/20 p-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <AdminField label="İsim (TR)"><input className={cmsInputClass} value={e.nameTr} onChange={(ev) => setPc({ nameTr: ev.target.value })} /></AdminField>
-                <AdminField label="Name (EN)"><input className={cmsInputClass} value={e.nameEn} onChange={(ev) => setPc({ nameEn: ev.target.value })} /></AdminField>
-                <AdminField label="Kısa açıklama (TR)"><input className={cmsInputClass} value={e.taglineTr} onChange={(ev) => setPc({ taglineTr: ev.target.value })} /></AdminField>
-                <AdminField label="Tagline (EN)"><input className={cmsInputClass} value={e.taglineEn} onChange={(ev) => setPc({ taglineEn: ev.target.value })} /></AdminField>
-                <AdminField label="Özellikler (TR) — her satır bir madde"><textarea className={`${cmsInputClass} min-h-[110px]`} value={e.featuresTr} onChange={(ev) => setPc({ featuresTr: ev.target.value })} /></AdminField>
-                <AdminField label="Features (EN) — one per line"><textarea className={`${cmsInputClass} min-h-[110px]`} value={e.featuresEn} onChange={(ev) => setPc({ featuresEn: ev.target.value })} /></AdminField>
-              </div>
-
-              {id === "STARTER" ? (
-                <div className="mt-5 border-t border-white/[0.06] pt-4">
-                  <p className="text-xs font-semibold text-slate-300">Kartta listelenen araçlar</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                    Yalnızca Başlangıç kartının araç sayısını/adlarını değiştirir — gerçek erişim yukarıdaki
-                    "1)"den yönetilir.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <span className="rounded-lg bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-200">
-                      Seçili: {cardStarterTools.length} araç
-                    </span>
-                    <button type="button" onClick={() => setCardStarterTools([...STARTER_TOOL_IDS])} className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/[0.05]">Varsayılana dön</button>
-                    <button type="button" onClick={() => setCardStarterTools([...featureCatalogList])} className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/[0.05]">Tümünü seç</button>
-                    <button type="button" onClick={() => setCardStarterTools([])} className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/[0.05]">Temizle</button>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {featureCatalogList.map((fk) => (
-                      <label key={`card-${fk}`} className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-[12px] text-slate-200">
-                        <input
-                          type="checkbox"
-                          checked={cardStarterTools.includes(fk)}
-                          onChange={() => {
-                            setCardStarterTools((prev) => {
-                              const set = new Set(prev);
-                              if (set.has(fk)) set.delete(fk);
-                              else set.add(fk);
-                              return [...set];
-                            });
-                          }}
-                          className="h-3.5 w-3.5 rounded border-white/25"
-                        />
-                        <span>{pdfToolLabelTr(fk)}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          );
-        })()}
-
-        <button
-          type="button"
-          disabled={vitrinBusy}
-          onClick={async () => {
-            setVitrinBusy(true);
-            setMsg(null);
-            try {
-              const pcOut: Record<string, unknown> = {};
-              for (const id of EDITABLE_PLAN_CARDS) {
-                const e = planCards[id] ?? emptyPlanCard();
-                const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
-                pcOut[id] = {
-                  nameTr: e.nameTr.trim(), nameEn: e.nameEn.trim(),
-                  taglineTr: e.taglineTr.trim(), taglineEn: e.taglineEn.trim(),
-                  featuresTr: lines(e.featuresTr), featuresEn: lines(e.featuresEn),
-                };
-              }
-              const prevCards =
-                marketingExtraRef.current.cards && typeof marketingExtraRef.current.cards === "object" && !Array.isArray(marketingExtraRef.current.cards)
-                  ? (marketingExtraRef.current.cards as Record<string, unknown>) : {};
-              const merged = {
-                ...marketingExtraRef.current,
-                cards: { ...prevCards, starterTools: cardStarterTools, planCards: pcOut },
-              };
-              await putAdminPackagesMarketing(accessToken, merged);
-              marketingExtraRef.current = { ...merged };
-              setMsg("Vitrin kaydedildi. Ana sayfa birkaç saniye içinde güncellenir.");
-              notifyRuntimeRefresh();
-            } catch (e) {
-              setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
-            } finally {
-              setVitrinBusy(false);
-            }
-          }}
-          className="mt-4 rounded-xl bg-amber-600/80 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-40"
-        >
-          {vitrinBusy ? "Kaydediliyor…" : "Vitrini kaydet"}
-        </button>
-      </AdminSection>
-
-      {msg ? <p className="text-xs text-slate-400">{msg}</p> : null}
-    </div>
-  );
 }
 
 function cmsDeepClone(obj: Record<string, unknown>): Record<string, unknown> {

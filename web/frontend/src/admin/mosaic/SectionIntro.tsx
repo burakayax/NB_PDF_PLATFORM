@@ -39,8 +39,8 @@ const INTRO: Record<string, { icon: LucideIcon; title: string; what: string; how
   packages: {
     icon: Package,
     title: "Paket & fiyat",
-    what: "Plan fiyatlarını (Pro / Business), para birimlerini ve her planın özelliklerini düzenler.",
-    how: "Fiyat değişiklikleri fiyatlandırma sayfasına yansır.",
+    what: "Beş planın fiyatını ve limitini görürsünüz; Pro/Business TL fiyatını, hangi araç hangi pakette açık olduğunu ve ana sayfadaki fiyat kartı yazılarını düzenlersiniz.",
+    how: "Üç sekme var: Fiyatlar, Erişim ve limitler, Ana sayfa kartları. Kaydetmeden önce altta değişiklik çubuğu çıkar.",
   },
   TOOLS: {
     icon: Wrench,
