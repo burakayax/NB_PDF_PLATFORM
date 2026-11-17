@@ -101,14 +101,16 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   useEffect(() => {
     if (!gosterilir) return;
     let fallback: number | null = window.setTimeout(() => setVisible(true), FALLBACK_DELAY_MS);
+    let afterDownload: number | null = null;
     const onDownloaded = () => {
       if (fallback) window.clearTimeout(fallback);
       fallback = null;
-      window.setTimeout(() => setVisible(true), AFTER_DOWNLOAD_DELAY_MS);
+      afterDownload = window.setTimeout(() => setVisible(true), AFTER_DOWNLOAD_DELAY_MS);
     };
     window.addEventListener("nb:file-downloaded", onDownloaded);
     return () => {
       if (fallback) window.clearTimeout(fallback);
+      if (afterDownload) window.clearTimeout(afterDownload);
       window.removeEventListener("nb:file-downloaded", onDownloaded);
     };
   }, [gosterilir]);
@@ -148,10 +150,12 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
    */
   const bildirildiRef = useRef(false);
   useEffect(() => {
-    if (!visible || bildirildiRef.current) return;
+    // `gosterilir` şart: oturum bilgisi geç yüklenen (zaten üye) kullanıcıda kart çizilmez; çizilmeyen kart
+    // "gösterildi" diye sayılmamalı (yönetim ekranında üye kişiye "üye olma ekranı gösterildi" yazıyordu).
+    if (!visible || !gosterilir || bildirildiRef.current) return;
     bildirildiRef.current = true;
     trackFunnelEvent("sign_up_cta_shown", { source });
-  }, [visible, source]);
+  }, [visible, gosterilir, source]);
 
   if (!gosterilir || !visible) return null;
 
