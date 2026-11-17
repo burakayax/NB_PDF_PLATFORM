@@ -125,10 +125,14 @@ services:
     # Güvenlik: eMudhra sertifika ihlali + Node.js TLS/Brotli açıkları (Render duyurusu,
     # 2026-10-21). Yamalı sürümler: 22.23.4 / 24.22.1 / 26.12.1 veya sonrası. CI ile aynı major (24).
     # Yeni yama çıkınca bu sürümü yükseltmeyi unutma.
-    # PostgreSQL şeması (schema.postgres.prisma) ile generate + db push.
-    # Not: migrations/ klasörü SQLite diyalektinde olduğu için Postgres'e
-    # uygulanamaz; bunun yerine db push şemayı doğrudan Neon'a senkronlar.
-    buildCommand: npm ci && npx prisma generate --schema prisma/schema.postgres.prisma && npm run build && npx prisma db push --schema prisma/schema.postgres.prisma --accept-data-loss && npm run prisma:seed
+    # PostgreSQL şeması (schema.postgres.prisma) ile generate + GÜVENLİ migration.
+    # Eskiden `prisma db push --accept-data-loss` vardı: şemadan kalkan alan/tablo verisiyle birlikte
+    # sormadan silinirdi. Artık scripts/prod-db-migrate.mjs yalnız elle yazılmış migration'ları
+    # (prisma/migrations-postgres) uygular; veri silecek/uyumsuz bir durumda deploy DURUR ve eski sürüm
+    # çalışmaya devam eder. (SQLite defteri prisma/migrations yalnız yerel geliştirme içindir.)
+    # GERİ ALMA: eski satıra dönmek için `node scripts/prod-db-migrate.mjs` yerine
+    # `npx prisma db push --schema prisma/schema.postgres.prisma --accept-data-loss` yazılır (önerilmez).
+    buildCommand: npm ci && npx prisma generate --schema prisma/schema.postgres.prisma && npm run build && node scripts/prod-db-migrate.mjs && npm run prisma:seed
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:

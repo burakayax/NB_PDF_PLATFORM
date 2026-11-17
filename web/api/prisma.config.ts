@@ -19,7 +19,8 @@ const url =
 export default defineConfig({
   schema: path.join("prisma", isPostgres ? "schema.postgres.prisma" : "schema.prisma"),
   migrations: {
-    path: path.join("prisma", "migrations"),
+    // Üretim (PostgreSQL) kendi defterini kullanır: SQLite defteri (migrations/) Postgres'e uygun DEĞİL.
+    path: path.join("prisma", isPostgres ? "migrations-postgres" : "migrations"),
     seed: "tsx prisma/seed.ts",
   },
   datasource: { url },
