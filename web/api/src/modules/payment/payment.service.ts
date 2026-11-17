@@ -18,7 +18,7 @@ import {
 import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPriceBook } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
-import { invoicingPaused, exportExemptionOpen } from "../../lib/feature-switches.js";
+import { invoicingPaused, exportExemptionOpen, foreignPaymentsOpen, FOREIGN_PAYMENTS_CLOSED_MESSAGE } from "../../lib/feature-switches.js";
 import { captureCardEvidence, CARD_COUNTRY_UNKNOWN } from "./card-evidence.service.js";
 import { invoiceDelayHours, scheduleInvoiceRecord, reviewCardAtPayment } from "./invoice-schedule.service.js";
 import { decryptField } from "../../lib/encryption.js";
@@ -501,6 +501,10 @@ export async function createPaymentCheckoutSession(params: {
   const netPrice = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
     params.priceTryOverride != null ? (params.checkoutCurrency ?? "TRY") : "TRY";
+  // Yurt dışı (dolar/EUR) ödeme anahtarı kapalıysa hiçbir ödeme türü (abonelik, kredi, CV geçişi) başlamaz.
+  if (settlementCurrency !== "TRY" && !(await foreignPaymentsOpen())) {
+    throw new HttpError(403, FOREIGN_PAYMENTS_CLOSED_MESSAGE);
+  }
   const iyziCurrency = iyzicoFx(settlementCurrency);
 
   const user = await prisma.user.findUnique({

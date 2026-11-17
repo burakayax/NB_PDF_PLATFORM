@@ -200,6 +200,8 @@ export function PaymentSummaryModal({
   const { pricing, flags } = useSettings();
   // İhracat istisnası yalnız admin anahtarı AÇIKÇA kapatılınca (=false) açıktır; varsayılan: herkese KDV'li.
   const exportExemption = flags?.featureFlags?.exportExemptionDisabled === false;
+  // Yurt dışı (dolar) ödemesi yalnız anahtar AÇIKÇA false ise açık; aksi halde kapalı (sunucuyla aynı kural).
+  const foreignOpen = flags?.featureFlags?.foreignPaymentsDisabled === false;
   const editorLimits = useEditorLimits();
   const plan = useMemo(() => {
     const base = PLANS.find((p) => p.id === planId);
@@ -706,10 +708,18 @@ export function PaymentSummaryModal({
                 </span>
               </label>
 
+              {!isTry && !foreignOpen ? (
+                <p className="rounded-xl border border-amber-400/30 bg-amber-500/[0.08] px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-200" role="status">
+                  {tr
+                    ? "Şimdilik yalnızca Türkiye'den ödeme alıyoruz. Yurt dışı ödemeleri yakında açılacak; ücretsiz araçları kullanmaya devam edebilirsiniz."
+                    : "We currently accept payments from Turkey only. International payments will open soon; you can keep using the free tools meanwhile."}
+                </p>
+              ) : null}
+
               <button
                 type="button"
                 className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-6 py-[1.05rem] text-[16px] font-bold tracking-tight text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.75),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 ring-white/10 transition duration-200 hover:-translate-y-px hover:shadow-[0_22px_52px_-12px_rgba(99,102,241,0.9),inset_0_1px_0_rgba(255,255,255,0.22)] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40"
-                disabled={paying || !legalAccepted}
+                disabled={paying || !legalAccepted || (!isTry && !foreignOpen)}
                 onClick={() => void handlePay()}
               >
                 <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition duration-700 group-hover:left-full group-hover:opacity-100" aria-hidden />
