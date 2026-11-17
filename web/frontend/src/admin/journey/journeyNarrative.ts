@@ -1,3 +1,4 @@
+import { toolDisplayName } from "../../lib/teamActivity";
 /**
  * OLAY → OKUNABİLİR TÜRKÇE CÜMLE.
  *
@@ -76,6 +77,10 @@ export type StoryLine = {
 export function eventToStoryLine(ev: { name: string; toolId: string | null; extra: string | null }): StoryLine {
   const extra = parseExtra(ev.extra);
   switch (ev.name) {
+    case "tool_used": {
+      const where = parseExtra(ev.extra ?? null)?.on_device === true ? "cihazında" : "sunucuda";
+      return { text: `${ev.toolId ? (toolDisplayName(ev.toolId, "tr") || toolLabel(ev.toolId)) : "Bir aracı"} aracını kullandı (${where} işlendi)`, tone: "info" };
+    }
     case "sign_up_cta_shown":
       return { text: `${toolLabel(ev.toolId)} işlemini başarıyla tamamladı → üye olma ekranı gösterildi`, tone: "success" };
     case "sign_up_cta_dismissed":

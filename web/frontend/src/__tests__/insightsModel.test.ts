@@ -118,3 +118,14 @@ describe("sayfa listesi", () => {
     expect(rows[0]).toMatchObject({ path: "/tools/x", visitors: 2, views: 3 });
   });
 });
+
+describe("araç kullanımı olayı", () => {
+  it("tool_used olayı 'Kullandı' sütununa sayılır", async () => {
+    const { toolRows } = await import("../admin/journey/insightsModel");
+    const v = { id: "a", firstSeenAt: "", lastSeenAt: "", userId: null, who: null, isMember: false, referrer: null, utmSource: null, utmMedium: null, utmCampaign: null, landingPath: "/", pageCount: 1, pages: [], events: [
+      { name: "tool_used", toolId: "compress", extra: null, createdAt: "" },
+      { name: "tool_used", toolId: "compress", extra: null, createdAt: "" },
+    ] } as never;
+    expect(toolRows([v])[0].used).toBe(2);
+  });
+});

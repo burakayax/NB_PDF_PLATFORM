@@ -358,7 +358,7 @@ export function sourceRows(visits: InsightVisit[], payers: InsightPayer[]): Sour
   return [...map.values()].sort((a, b) => b.visitors - a.visitors || b.bought - a.bought);
 }
 
-export type ToolRow = { id: string; name: string; finished: number; clicked: number; wall: number; pricing: number };
+export type ToolRow = { id: string; name: string; used: number; finished: number; clicked: number; wall: number; pricing: number };
 
 export function toolRows(visits: InsightVisit[]): ToolRow[] {
   const map = new Map<string, ToolRow>();
@@ -367,14 +367,17 @@ export function toolRows(visits: InsightVisit[]): ToolRow[] {
     const name = plainToolName(raw);
     let r = map.get(name);
     if (!r) {
-      r = { id: raw, name, finished: 0, clicked: 0, wall: 0, pricing: 0 };
+      r = { id: raw, name, used: 0, finished: 0, clicked: 0, wall: 0, pricing: 0 };
       map.set(name, r);
     }
     return r;
   };
   for (const v of visits) {
     for (const e of v.events) {
-      if (e.name === "sign_up_cta_shown") {
+      if (e.name === "tool_used") {
+        const r = get(e.toolId);
+        if (r) r.used += 1;
+      } else if (e.name === "sign_up_cta_shown") {
         const r = get(e.toolId);
         if (r) r.finished += 1;
       } else if (e.name === "sign_up_cta_click") {
@@ -390,7 +393,7 @@ export function toolRows(visits: InsightVisit[]): ToolRow[] {
       }
     }
   }
-  return [...map.values()].sort((a, b) => b.finished + b.wall + b.pricing - (a.finished + a.wall + a.pricing));
+  return [...map.values()].sort((a, b) => b.used + b.finished + b.wall + b.pricing - (a.used + a.finished + a.wall + a.pricing));
 }
 
 // ─── Baktığı sayfalar ────────────────────────────────────────────────────────
