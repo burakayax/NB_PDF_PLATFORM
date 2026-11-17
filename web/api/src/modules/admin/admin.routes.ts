@@ -52,6 +52,7 @@ import {
   adminPutCmsController,
   adminPutPackagesMarketingController,
   adminPutPaymentPricesController,
+  adminPutPlanLimitsController,
   adminPutPlansOverrideController,
   adminPutToolRegistryController,
   adminPutTOOLSController,
@@ -137,6 +138,7 @@ adminRouter.put("/cms", asyncHandler(adminPutCmsController));
 
 adminRouter.get("/plans", asyncHandler(adminPlansController));
 adminRouter.put("/plans/pricing", asyncHandler(adminPutPaymentPricesController));
+adminRouter.put("/plans/limits", asyncHandler(adminPutPlanLimitsController));
 adminRouter.put("/plans/override", asyncHandler(adminPutPlansOverrideController));
 adminRouter.put("/packages/marketing", asyncHandler(adminPutPackagesMarketingController));
 

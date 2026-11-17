@@ -1,4 +1,13 @@
-import { EXTRA_SEAT_PRICE, PLAN_PRICES, type PaidPlanId, type PlanPrice } from "./plan-catalogue.js";
+import {
+  AI_MONTHLY_CREDITS,
+  EXTRA_SEAT_PRICE,
+  PLAN_LIMITS,
+  PLAN_PRICES,
+  type CataloguePlanId,
+  type PaidPlanId,
+  type PlanLimits,
+  type PlanPrice,
+} from "./plan-catalogue.js";
 import { getSetting, registerPackagesMergedInvalidator, setSetting } from "./site-config.service.js";
 import { SITE_SETTING_KEYS } from "./site-setting-keys.js";
 
@@ -73,11 +82,74 @@ function mergePriceBook(raw: unknown): PriceBook {
   return out;
 }
 
+/**
+ * LİMİT DEFTERİ — plan başına günlük/aylık sunucu işlemi, dosya boyutu, toplu işlem ve aylık yapay zekâ hakkı.
+ * Varsayılan `plan-catalogue.ts`'tir. Panelde KAYDEDİLEN alanlar (`saved`) kota kontrolünde geçerlidir;
+ * hiç kaydedilmemiş alan eskisi gibi kodu/veritabanı satırını izler (kayıtsız plan davranışı DEĞİŞMEZ).
+ * Business'ta aylık işlem, 5 koltuğun HAVUZUDUR (ek koltuk başına +1.000 kodda sabittir).
+ */
+export type LimitRow = PlanLimits & { aiMonthlyCredits: number };
+export type LimitBook = Record<CataloguePlanId, LimitRow>;
+export type SavedLimits = Partial<Record<CataloguePlanId, Partial<LimitRow>>>;
+export const LIMIT_PLAN_IDS: CataloguePlanId[] = ["FREE", "STARTER", "PLUS", "PRO", "BUSINESS"];
+
+const isInt = (v: unknown, min: number, max: number): v is number =>
+  typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
+
+/** Tek bir limit alanını doğrular; geçersizse `undefined` (alan yok sayılır). */
+function cleanLimitField(field: keyof LimitRow, v: unknown): number | null | undefined {
+  switch (field) {
+    case "dailyOperationLimit":
+      return v === null ? null : isInt(v, 0, 100_000) ? v : undefined;
+    case "monthlyOperationLimit":
+      return isInt(v, 1, 999_999) ? v : undefined;
+    case "fileSizeLimitMB":
+      return isInt(v, 1, 10_000) ? v : undefined;
+    case "batchLimit":
+      return isInt(v, 0, 1_000) ? v : undefined;
+    case "aiMonthlyCredits":
+      return isInt(v, 0, 100_000) ? v : undefined;
+  }
+}
+const LIMIT_FIELDS: Array<keyof LimitRow> = ["dailyOperationLimit", "monthlyOperationLimit", "fileSizeLimitMB", "batchLimit", "aiMonthlyCredits"];
+
+export function defaultLimitBook(): LimitBook {
+  const out = {} as LimitBook;
+  for (const id of LIMIT_PLAN_IDS) out[id] = { ...PLAN_LIMITS[id], aiMonthlyCredits: AI_MONTHLY_CREDITS[id] };
+  return out;
+}
+
+/** Kayıtlı ham değerden yalnız GEÇERLİ alanları süzer. Ücretsiz planın yapay zekâ hakkı panelden değişmez. */
+function sanitizeSavedLimits(raw: unknown): SavedLimits {
+  const out: SavedLimits = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const id of LIMIT_PLAN_IDS) {
+    const row = (raw as Record<string, unknown>)[id];
+    if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+    const clean: Partial<LimitRow> = {};
+    for (const f of LIMIT_FIELDS) {
+      if (id === "FREE" && f === "aiMonthlyCredits") continue;
+      if (!hasOwn(row, f)) continue;
+      const v = cleanLimitField(f, (row as Record<string, unknown>)[f]);
+      if (v !== undefined) (clean as Record<string, unknown>)[f] = v;
+    }
+    if (Object.keys(clean).length) out[id] = clean;
+  }
+  return out;
+}
+
+function mergeLimitBook(saved: SavedLimits): LimitBook {
+  const out = defaultLimitBook();
+  for (const id of LIMIT_PLAN_IDS) Object.assign(out[id], saved[id] ?? {});
+  return out;
+}
+
 type UnifiedPackagesShape = {
   plansOverride?: unknown;
   marketing?: unknown;
   prices?: Partial<Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>>;
   priceBook?: unknown;
+  limitBook?: unknown;
 };
 
 let mergedCache: { at: number; v: ResolvedPackagesConfig } | null = null;
@@ -112,6 +184,10 @@ export type ResolvedPackagesConfig = {
   /** Geriye dönük kısa görünüm: fiyat defterinden türetilir (TL, KDV dahil). */
   prices: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>;
   priceBook: PriceBook;
+  /** Panelde kayıtlı olanlar + kod varsayılanları (ekranda gösterilen tam görünüm). */
+  limitBook: LimitBook;
+  /** YALNIZ panelde kaydedilmiş limit alanları — kota kontrolü bunları uygular. */
+  savedLimits: SavedLimits;
 };
 
 async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> {
@@ -152,7 +228,26 @@ async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> 
     PRO_ANNUAL: priceBook.plans.PRO.tryGrossYearly,
   };
 
-  return { plansOverride, marketing, prices, priceBook };
+  const savedLimits = sanitizeSavedLimits(unified.limitBook);
+  // ESKİ yol: Ücretsiz günlük hak "Erişim" formundan plansOverride.FREE.dailyLimit olarak kaydediliyordu.
+  // Yeni defterde kayıt yoksa o değer korunur (davranış kaybolmasın).
+  const legacyFreeDaily = (plansOverride.FREE as Record<string, unknown> | undefined)?.dailyLimit;
+  if (savedLimits.FREE?.dailyOperationLimit === undefined) {
+    const v = cleanLimitField("dailyOperationLimit", legacyFreeDaily);
+    if (v !== undefined) savedLimits.FREE = { ...(savedLimits.FREE ?? {}), dailyOperationLimit: v };
+  }
+  const limitBook = mergeLimitBook(savedLimits);
+
+  return { plansOverride, marketing, prices, priceBook, limitBook, savedLimits };
+}
+
+/** Kota kontrolü için: yalnız panelde kaydedilmiş limitler. Okunamazsa null (kayıtlı satırlar kullanılır). */
+export async function getSavedLimits(): Promise<SavedLimits | null> {
+  try {
+    return (await getResolvedPackagesConfig()).savedLimits;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -184,6 +279,7 @@ export async function upsertPackagesConfigPartial(patch: {
   marketing?: unknown;
   prices?: Partial<Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>>;
   priceBook?: PriceBookPatch;
+  limitBook?: Partial<Record<CataloguePlanId, Partial<LimitRow>>>;
 }): Promise<void> {
   const base = await readUnifiedRowForWrite();
   const next: Record<string, unknown> = { ...base };
@@ -234,6 +330,22 @@ export async function upsertPackagesConfigPartial(patch: {
       throw new Error("Invalid price.");
     }
     next.priceBook = cur;
+  }
+  if (patch.limitBook !== undefined) {
+    // Yama doğrulanır: geçersiz alan sessizce atılmaz, hata verir (yanlış rakam kaydedilmesin).
+    const cur = sanitizeSavedLimits(next.limitBook);
+    for (const id of LIMIT_PLAN_IDS) {
+      const row = patch.limitBook[id];
+      if (!row) continue;
+      for (const f of LIMIT_FIELDS) {
+        if (!hasOwn(row, f)) continue;
+        if (id === "FREE" && f === "aiMonthlyCredits") continue;
+        const v = cleanLimitField(f, (row as Record<string, unknown>)[f]);
+        if (v === undefined) throw new Error(`Invalid limit: ${id}.${f}`);
+        cur[id] = { ...(cur[id] ?? {}), [f]: v };
+      }
+    }
+    next.limitBook = cur;
   }
   await setSetting(SITE_SETTING_KEYS.PACKAGES_CONFIG, next);
 }

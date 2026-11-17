@@ -1,6 +1,7 @@
 import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
-import { upsertPackagesConfigPartial, type PriceBookPatch } from "../../lib/packages-config.service.js";
+import { upsertPackagesConfigPartial, type LimitRow, type PriceBookPatch } from "../../lib/packages-config.service.js";
+import type { CataloguePlanId } from "../../lib/plan-catalogue.js";
 import { getSettingDirect, setSettingFromAdminPatch } from "../../lib/site-config.service.js";
 import { PACKAGES_RELATED_KEYS, SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { HttpError } from "../../lib/http-error.js";
@@ -134,6 +135,7 @@ export async function auditedPackagesPartial(
     marketing?: unknown;
     prices?: Partial<Record<"PRO" | "BUSINESS", string>>;
     priceBook?: PriceBookPatch;
+    limitBook?: Partial<Record<CataloguePlanId, Partial<LimitRow>>>;
   },
   actor: AdminActor,
   action: string,

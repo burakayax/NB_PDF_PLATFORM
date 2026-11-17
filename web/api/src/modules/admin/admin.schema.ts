@@ -83,6 +83,28 @@ export const adminPaymentPricesBodySchema = z.object({
   extraSeat: z.object({ tryGrossMonthly: priceStr, usdMonthly: priceStr }).partial().optional(),
 });
 
+/** Limit defteri: plan başına günlük/aylık sunucu işlemi, dosya boyutu, toplu işlem, aylık yapay zekâ hakkı. Gönderilmeyen alan korunur. */
+const limitRowSchema = z
+  .object({
+    dailyOperationLimit: z.number().int().min(0).max(100_000).nullable(),
+    monthlyOperationLimit: z.number().int().min(1).max(999_999),
+    fileSizeLimitMB: z.number().int().min(1).max(10_000),
+    batchLimit: z.number().int().min(0).max(1_000),
+    aiMonthlyCredits: z.number().int().min(0).max(100_000),
+  })
+  .partial();
+export const adminPlanLimitsBodySchema = z.object({
+  limits: z
+    .object({
+      FREE: limitRowSchema,
+      STARTER: limitRowSchema,
+      PLUS: limitRowSchema,
+      PRO: limitRowSchema,
+      BUSINESS: limitRowSchema,
+    })
+    .partial(),
+});
+
 export const adminBlockedEmailBodySchema = z.object({
   email: z.string().email(),
   reason: z.string().max(500).optional(),

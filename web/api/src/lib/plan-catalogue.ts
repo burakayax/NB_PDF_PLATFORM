@@ -198,9 +198,9 @@ export const BUSINESS_TEAM = {
 } as const;
 
 /** Business ekibinin aylık sunucu işlem havuzu (ek koltuk sayısına göre). */
-export function businessMonthlyOps(extraSeats: number): number {
+export function businessMonthlyOps(extraSeats: number, base: number = PLAN_LIMITS.BUSINESS.monthlyOperationLimit): number {
   const extra = Math.min(BUSINESS_TEAM.maxExtraSeats, Math.max(0, Math.trunc(extraSeats) || 0));
-  return PLAN_LIMITS.BUSINESS.monthlyOperationLimit + extra * BUSINESS_TEAM.extraSeatMonthlyOps;
+  return base + extra * BUSINESS_TEAM.extraSeatMonthlyOps;
 }
 
 /** Business ekibinin aylık imza isteği havuzu (ek koltuk sayısına göre). */

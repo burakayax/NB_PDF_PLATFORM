@@ -13,6 +13,7 @@ import type { Locale } from "../lib/email-i18n.js";
 import { emailUtm, withUtm } from "../lib/utm.js";
 import { arePaymentsEnabled } from "../modules/payment/payments-gate.middleware.js";
 import { PLAN_LIMITS } from "../lib/plan-catalogue.js";
+import { getSavedLimits } from "../lib/packages-config.service.js";
 
 /**
  * "Aylık limitine ulaştın" davranış-tetikli yükseltme e-postası.
@@ -27,7 +28,6 @@ import { PLAN_LIMITS } from "../lib/plan-catalogue.js";
  * Dedup: takvim ayı başına bir kez (AdminAuditLog `email.limit_reached.{YYYY-MM}`).
  */
 
-const FREE_MONTHLY_LIMIT = PLAN_LIMITS.FREE.monthlyOperationLimit;
 
 function safeRun(name: string, fn: () => Promise<void>) {
   fn().catch((err) => {
@@ -57,6 +57,8 @@ async function runLimitReachedEmail(): Promise<void> {
     return;
   }
 
+  // Ücretsiz aylık hak: panelde kaydedilmişse o, yoksa katalog.
+  const FREE_MONTHLY_LIMIT = (await getSavedLimits())?.FREE?.monthlyOperationLimit ?? PLAN_LIMITS.FREE.monthlyOperationLimit;
   const now = new Date();
   // Sayaç "bu aya ait" mi? lastMonthlyReset ay başından yeni olmalı (bayat sayacı ele).
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
