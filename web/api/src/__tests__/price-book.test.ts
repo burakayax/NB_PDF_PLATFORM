@@ -31,7 +31,7 @@ describe("fiyat defteri", () => {
     const { priceBook, prices } = await getResolvedPackagesConfig();
     expect(priceBook.plans).toEqual(PLAN_PRICES);
     expect(priceBook.extraSeat).toEqual(EXTRA_SEAT_PRICE);
-    expect(prices).toEqual({ PRO: "449.00", BUSINESS: "1499.00", PRO_ANNUAL: "4490.00" });
+    expect(prices).toEqual({ PRO: "449.00", BUSINESS: "1499.00", PRO_ANNUAL: "3600.00" });
   });
 
   it("ESKİ kayıtlı Pro/Business fiyatı yeni varsayılanı ezmez", async () => {
@@ -49,7 +49,7 @@ describe("fiyat defteri", () => {
     const { priceBook } = await getResolvedPackagesConfig();
     expect(priceBook.plans.PLUS.tryGrossMonthly).toBe("299.00");
     expect(priceBook.plans.PLUS.usdMonthly).toBe("8.49");
-    expect(priceBook.plans.PLUS.tryGrossYearly).toBe("2790.00");
+    expect(priceBook.plans.PLUS.tryGrossYearly).toBe("2400.00");
     expect(priceBook.extraSeat).toEqual({ tryGrossMonthly: "299.00", usdMonthly: "10.99" });
   });
 

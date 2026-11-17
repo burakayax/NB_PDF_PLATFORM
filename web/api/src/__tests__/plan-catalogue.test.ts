@@ -32,7 +32,6 @@ import {
   YEARLY_BILLING_PLANS,
   KDV_RATE,
   netFromGrossTry,
-  yearlyGrossFromMonthly,
   type PaidPlanId,
 } from "../lib/plan-catalogue.js";
 
@@ -154,24 +153,18 @@ describe("fiyat merdiveni", () => {
     expect([...YEARLY_BILLING_PLANS].sort()).toEqual(["BUSINESS", "PLUS", "PRO"]);
   });
 
-  it("TL yıllık tutar tam aylığın 10 katıdır (iki ay bedava)", () => {
-    // Ekranda Business yıllığı bir dönem 12 katla hesaplanıyordu; ödeme ise 10
-    // katı çekiyordu. Ayrıca ekranda "ayda X" yazıp X×12 yıllık tutardan farklı
-    // çıkmasın diye yıllık tutar 12'nin tam katıdır (10 katından en fazla 6 ₺ sapar).
+  it("TL ve USD yıllık tutar 12'ye tam bölünür (ekranda 'ayda X' tam rakam olsun, yaklaşık yazılmasın)", () => {
     for (const plan of YEARLY_BILLING_PLANS) {
       const p = PLAN_PRICES[plan];
-      const yearly = Number.parseFloat(p.tryGrossYearly);
-      expect(yearly, `${plan} TL yıllık = aylık × 10`).toBe(Number.parseFloat(p.tryGrossMonthly) * 10);
+      expect(minor(p.tryGrossYearly) % 1200, `${plan} TL yıllık`).toBe(0);
+      expect(minor(p.usdYearly) % 1200, `${plan} USD yıllık`).toBe(0);
     }
   });
 
-  it("katalogdaki TL yıllık tutarlar, aylıktan türetme kuralının çıktısıdır", () => {
-    // Yönetim panelinde Business aylık fiyatı değişince yıllık bu kuralla türetilir;
-    // katalog da aynı kuralla üretilmiş olmalı ki panel değişmeyince fark çıkmasın.
-    for (const plan of YEARLY_BILLING_PLANS) {
-      const p = PLAN_PRICES[plan];
-      expect(yearlyGrossFromMonthly(p.tryGrossMonthly), plan).toBe(p.tryGrossYearly);
-    }
+  it("yıllık TL tutarlar kararlaştırılan rakamlardır", () => {
+    expect(PLAN_PRICES.PLUS.tryGrossYearly).toBe("2400.00");
+    expect(PLAN_PRICES.PRO.tryGrossYearly).toBe("3600.00");
+    expect(PLAN_PRICES.BUSINESS.tryGrossYearly).toBe("15000.00");
   });
 
   it.each(PAID)("%s: net + KDV, müşterinin gördüğü KDV dahil tutara tam eşittir (aylık ve yıllık)", (plan) => {
@@ -184,11 +177,10 @@ describe("fiyat merdiveni", () => {
     }
   });
 
-  it("USD yıllık tutar psikolojik fiyattır (.99) ve aylığın 10-12 katı aralığındadır", () => {
+  it("USD yıllık tutar, aylığın 12 katından düşüktür", () => {
     for (const plan of YEARLY_BILLING_PLANS) {
       const y = PLAN_PRICES[plan].usdYearly;
       const m = Number.parseFloat(PLAN_PRICES[plan].usdMonthly);
-      expect(y.endsWith(".99"), `${plan} USD yıllık .99 ile bitmeli`).toBe(true);
       expect(Number.parseFloat(y)).toBeLessThan(m * 12);
     }
   });

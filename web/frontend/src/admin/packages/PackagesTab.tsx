@@ -129,8 +129,6 @@ const fmtTry = (n: number): string =>
   `₺${n.toLocaleString("tr-TR", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 const fmtUsd = (s: string): string => `$${s}`;
 const fmtNum = (n: number): string => n.toLocaleString("tr-TR");
-/** Aylık KDV dahil TL'den yıllık KDV dahil TL: tam 10 ay (sunucudaki `yearlyGrossFromMonthly` ile aynı kural). */
-const yearlyFromMonthly = (m: number): number => Math.round(m * 10 * 100) / 100;
 
 const CATEGORY_LABEL: Record<string, string> = {
   ai: "Yapay Zekâ",
@@ -655,13 +653,11 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                         <>
                           <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Türkiye · yıllık (KDV dahil)</p>
                           <PriceInput symbol="₺" value={row.tryGrossYearly} onChange={(v) => setPrice(paid, "tryGrossYearly", v)} />
-                          <button
-                            type="button"
-                            onClick={() => setPrice(paid, "tryGrossYearly", yearlyFromMonthly(m).toFixed(2))}
-                            className="mt-1 text-left text-[11.5px] font-semibold text-cyan-300 hover:underline"
-                          >
-                            Aylık × 10 uygula ({fmtTry(yearlyFromMonthly(m))})
-                          </button>
+                          {Math.round(num(row.tryGrossYearly) * 100) % 1200 !== 0 && (
+                            <p className="mt-1 text-[11.5px] font-semibold text-amber-300">
+                              Dikkat: 12&apos;ye tam bölünmüyor; kartta &quot;ayda&quot; rakamı küsuratlı çıkar. Tam sayı için 12&apos;nin katı girin.
+                            </p>
+                          )}
                         </>
                       ) : (
                         <p className="mt-3 text-[12px] text-slate-500">Yıllık satılmıyor (yalnız aylık)</p>
@@ -678,7 +674,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
 
                       <dl className="mt-4 space-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
                         <Row label="Yıllık indirim" value={yearlySold ? `%${disc}` : "—"} />
-                        <Row label="Ayda yaklaşık (yıllık)" value={yearlySold ? fmtTry(Math.round((y / 12) * 100) / 100) : "—"} />
+                        <Row label="Ayda (yıllık öderse)" value={yearlySold ? fmtTry(Math.round((y / 12) * 100) / 100) : "—"} />
                         <Row label="KDV hariç aylık" value={fmtTry(Math.round((m / (1 + vat)) * 100) / 100)} />
                       </dl>
                     </>

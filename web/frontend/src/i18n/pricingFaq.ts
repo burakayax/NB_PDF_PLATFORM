@@ -25,11 +25,11 @@ export const PRICING_FAQ_TR: PricingFaqItem[] = [
   },
   {
     question: "Yıllık plana geçince hemen mi uygulanır?",
-    answer: "Evet. Yıllık plana geçiş anında aktif olur ve yıllık toplam ücret tek seferinde tahsil edilir. Kalan aylık ücret orantılı olarak hesaplanır.",
+    answer: "Evet. Yıllık plana geçiş anında aktif olur ve yıllık toplam ücret tek seferinde tahsil edilir.",
   },
   {
     question: "İşlenen dosyalarım ne kadar süre saklanıyor?",
-    answer: "Web uygulamasında işlenen dosyalar 1 saat sonra kalıcı olarak silinir. Yakında çıkacak Windows masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek — tüm işlem cihazınızda gerçekleşecek.",
+    answer: "Web uygulamasında sunucuda işlenen dosyalar işlem biter bitmez silinir; çıktı dosyası indirebilmeniz için en fazla 24 saat saklanır. Yakında çıkacak Windows masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek — tüm işlem cihazınızda gerçekleşecek.",
   },
 ];
 
@@ -56,10 +56,10 @@ export const PRICING_FAQ_EN: PricingFaqItem[] = [
   },
   {
     question: "Does switching to yearly take effect immediately?",
-    answer: "Yes. Switching to yearly is instant and the annual total is charged in one payment. Any remaining monthly balance is calculated on a pro-rated basis.",
+    answer: "Yes. Switching to yearly is instant and the annual total is charged in one payment.",
   },
   {
     question: "How long are my processed files stored?",
-    answer: "Files processed via the web app are permanently deleted after 1 hour. With the upcoming Windows desktop app, files will never leave your device — all processing happens locally.",
+    answer: "Files processed on our server are deleted as soon as processing ends; the output file is kept for up to 24 hours so you can download it. With the upcoming Windows desktop app, files will never leave your device — all processing happens locally.",
   },
 ];
