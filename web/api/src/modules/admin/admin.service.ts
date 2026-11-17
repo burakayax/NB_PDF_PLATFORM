@@ -16,6 +16,15 @@ import { auditedPackagesPartial, auditedPatchSetting, logAdminAudit } from "./ad
 import { isAdminEmail, resolveRoleFromEmail } from "../../lib/role-policy.js";
 import { getPaymentPricesTry } from "../payment/payment-pricing.js";
 import { featureCatalog } from "../subscription/subscription.config.js";
+import {
+  AI_MONTHLY_CREDITS,
+  BUSINESS_TEAM,
+  EXTRA_SEAT_PRICE,
+  KDV_RATE,
+  PLAN_LIMITS,
+  PLAN_PRICES,
+  YEARLY_BILLING_PLANS,
+} from "../../lib/plan-catalogue.js";
 import { getPlanDefinitionsResolved, invalidatePlanRuntimeCache } from "../subscription/plan-runtime.js";
 import { updatePlanConfigAndPropagate } from "../organization/organization.service.js";
 import { getJourneyFunnelSummary } from "./journey/journey.service.js";
@@ -859,7 +868,7 @@ export async function putPlansOverride(override: unknown, actor: AdminActor) {
   await auditedPackagesPartial({ plansOverride: override }, actor, "plans.override", "Plan override kaydedildi");
 
   // Propagate dailyLimit changes to PlanConfig + all Organization records
-  const PLANS: Plan[] = ["FREE", "PLUS", "PRO", "BUSINESS"];
+  const PLANS: Plan[] = ["FREE", "STARTER", "PLUS", "PRO", "BUSINESS"];
   if (override && typeof override === "object" && !Array.isArray(override)) {
     const ov = override as Record<string, unknown>;
     for (const plan of PLANS) {
@@ -948,7 +957,7 @@ export async function getPlansAdminPayload() {
   });
 
   const checkoutStats: Record<string, { completed: number; pending: number }> = {};
-  for (const p of ["FREE", "PRO", "BUSINESS"] as const) {
+  for (const p of ["FREE", "STARTER", "PLUS", "PRO", "BUSINESS"] as const) {
     checkoutStats[p] = { completed: 0, pending: 0 };
   }
   for (const row of byPlan) {
@@ -967,7 +976,27 @@ export async function getPlansAdminPayload() {
 
   const paymentPrices = await getPaymentPricesTry();
 
-  return { plans, checkoutStats, marketing: marketingParsed, plansOverride, paymentPrices };
+  // Kodda tanımlı (varsayılan) fiyat ve limitler — yönetim ekranı bunları "şu an kayıtlı olan" ile karşılaştırıp
+  // sapmayı gösterir ve tek tuşla katalog değerine döndürür. Salt okunur.
+  const catalogue = {
+    prices: PLAN_PRICES,
+    limits: PLAN_LIMITS,
+    aiMonthlyCredits: AI_MONTHLY_CREDITS,
+    extraSeat: EXTRA_SEAT_PRICE,
+    team: BUSINESS_TEAM,
+    yearlyPlans: YEARLY_BILLING_PLANS,
+    vatRate: KDV_RATE,
+  };
+
+  return {
+    plans,
+    checkoutStats,
+    marketing: marketingParsed,
+    plansOverride,
+    paymentPrices,
+    catalogue,
+    featureCatalog: [...featureCatalog],
+  };
 }
 
 export async function putPackagesMarketing(marketing: unknown, actor: AdminActor) {
