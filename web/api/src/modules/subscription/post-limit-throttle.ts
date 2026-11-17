@@ -63,6 +63,7 @@ export const DEFAULT_POST_LIMIT_THROTTLE_RUNTIME: PostLimitThrottleRuntime = {
     "flip-pdf": 0.85,
     "alternate-mix-pdf": 0.95,
     "deskew-pdf": 1.4,
+    "pdf-yatay-yap": 1.0,
     "form-doldur": 0.85,
     "ustveri-temizle": 0.85,
     "pdf-to-pdfa": 0.8,

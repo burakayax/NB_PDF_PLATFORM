@@ -91,6 +91,7 @@ export const TOOL_BOARD: Record<string, PinBoardKey> = {
   "sayfa-duzeni": "pdf-duzenleme",
   "resize-pdf": "pdf-duzenleme",
   "flip-pdf": "pdf-duzenleme",
+  "pdf-yatay-yap": "pdf-duzenleme",
   "flatten-pdf": "pdf-duzenleme",
   "grayscale-pdf": "pdf-duzenleme",
   "repair-pdf": "pdf-duzenleme",

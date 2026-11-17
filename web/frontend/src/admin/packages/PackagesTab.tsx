@@ -3,10 +3,11 @@ import { AlertTriangle, Check, RefreshCw, Search } from "lucide-react";
 import {
   fetchAdminPlans,
   putAdminPackagesMarketing,
+  putAdminPlanLimits,
   putAdminPlanPricing,
   putAdminPlansOverride,
 } from "../../api/admin";
-import { PLANS, STARTER_TOOL_IDS } from "../../lib/planConfig";
+import { PLANS } from "../../lib/planConfig";
 import { TOOLS as TOOL_CATALOG } from "../../lib/toolCatalog";
 import { notifyRuntimeRefresh } from "../../lib/runtimeRefreshEvents";
 import { pdfToolLabelTr } from "../lib/pdfToolLabels";
@@ -21,6 +22,7 @@ type PaidKey = Exclude<PlanKey, "FREE">;
 
 type PlanPrice = { tryGrossMonthly: string; tryGrossYearly: string; usdMonthly: string; usdYearly: string };
 type PlanLimit = { dailyOperationLimit: number | null; monthlyOperationLimit: number; fileSizeLimitMB: number; batchLimit: number };
+type LimitRowData = PlanLimit & { aiMonthlyCredits: number };
 
 type Payload = {
   plans: Array<{ name: string; displayName: string; description: string; dailyLimit: number | null; allowedFeatures: string[]; multiUser: boolean }>;
@@ -30,6 +32,8 @@ type Payload = {
   paymentPrices?: { PRO: string; BUSINESS: string; PRO_ANNUAL: string };
   /** Şu an GEÇERLİ fiyat defteri (panelde kayıtlı değer ya da kod varsayılanı). */
   priceBook?: { plans: Record<PaidKey, PlanPrice>; extraSeat: { tryGrossMonthly: string; usdMonthly: string } };
+  /** Şu an GEÇERLİ limitler (panelde kayıtlı değer ya da kod varsayılanı). */
+  limitBook?: Record<PlanKey, LimitRowData>;
   featureCatalog?: string[];
   catalogue?: {
     prices: Record<PaidKey, PlanPrice>;
@@ -46,19 +50,40 @@ type PriceField = keyof PlanPrice;
 type BookForm = { plans: Record<PaidKey, PlanPrice>; extraSeat: { tryGrossMonthly: string; usdMonthly: string } };
 const PAID_KEYS: PaidKey[] = ["STARTER", "PLUS", "PRO", "BUSINESS"];
 
-type PlanForm = {
-  displayName: string;
-  description: string;
-  dailyUnlimited: boolean;
-  dailyLimit: number;
-  features: string[];
-  multiUser: boolean;
-};
+type PlanForm = { features: string[] };
+
+/** Limit formu: sayılar metin olarak tutulur (yazarken boş kalabilsin), kaydederken sayıya çevrilir. */
+type LimitForm = { dailyUnlimited: boolean; daily: string; monthly: string; fileMB: string; batch: string; ai: string };
+const limitFormFrom = (r: LimitRowData): LimitForm => ({
+  dailyUnlimited: r.dailyOperationLimit === null,
+  daily: String(r.dailyOperationLimit ?? 25),
+  monthly: String(r.monthlyOperationLimit),
+  fileMB: String(r.fileSizeLimitMB),
+  batch: String(r.batchLimit),
+  ai: String(r.aiMonthlyCredits),
+});
+const limitRowFrom = (f: LimitForm): LimitRowData => ({
+  dailyOperationLimit: f.dailyUnlimited ? null : Math.round(num(f.daily)),
+  monthlyOperationLimit: Math.round(num(f.monthly)),
+  fileSizeLimitMB: Math.round(num(f.fileMB)),
+  batchLimit: Math.round(num(f.batch)),
+  aiMonthlyCredits: Math.round(num(f.ai)),
+});
+/** Aralık dışındaysa hata metni döner. */
+function limitError(r: LimitRowData, free: boolean): string | null {
+  if (r.dailyOperationLimit !== null && !(r.dailyOperationLimit >= 0 && r.dailyOperationLimit <= 100000)) return "günlük işlem 0–100.000 olmalı";
+  if (!(r.monthlyOperationLimit >= 1 && r.monthlyOperationLimit <= 999999)) return "aylık işlem 1–999.999 olmalı";
+  if (!(r.fileSizeLimitMB >= 1 && r.fileSizeLimitMB <= 10000)) return "dosya boyutu 1–10.000 MB olmalı";
+  if (!(r.batchLimit >= 0 && r.batchLimit <= 1000)) return "toplu işlem 0–1.000 olmalı";
+  if (!free && !(r.aiMonthlyCredits >= 0 && r.aiMonthlyCredits <= 100000)) return "yapay zekâ hakkı 0–100.000 olmalı";
+  return null;
+}
 
 type PlanCardEdit = { nameTr: string; nameEn: string; taglineTr: string; taglineEn: string; featuresTr: string; featuresEn: string };
-const EDITABLE_PLAN_CARDS = ["STARTER", "PLUS", "PRO", "BUSINESS"] as const;
+const EDITABLE_PLAN_CARDS = ["FREE", "STARTER", "PLUS", "PRO", "BUSINESS"] as const;
 const emptyPlanCard = (): PlanCardEdit => ({ nameTr: "", nameEn: "", taglineTr: "", taglineEn: "", featuresTr: "", featuresEn: "" });
 const DEFAULT_TAGLINES: Record<string, { tr: string; en: string }> = {
+  FREE: { tr: "Başla, kart gerekmez.", en: "Get started, no card required." },
   STARTER: { tr: "Ara sıra dönüştürme yapanlar için.", en: "For occasional converters." },
   PLUS: { tr: "Düzenli PDF işi olanlar için.", en: "For regular PDF work." },
   PRO: { tr: "Yapay zekâ ve API isteyenler için.", en: "For AI tools and API access." },
@@ -104,8 +129,6 @@ const fmtTry = (n: number): string =>
   `₺${n.toLocaleString("tr-TR", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 const fmtUsd = (s: string): string => `$${s}`;
 const fmtNum = (n: number): string => n.toLocaleString("tr-TR");
-/** Aylık KDV dahil TL'den yıllık KDV dahil TL: tam 10 ay (sunucudaki `yearlyGrossFromMonthly` ile aynı kural). */
-const yearlyFromMonthly = (m: number): number => Math.round(m * 10 * 100) / 100;
 
 const CATEGORY_LABEL: Record<string, string> = {
   ai: "Yapay Zekâ",
@@ -224,7 +247,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   const [payload, setPayload] = useState<Payload | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [loadTick, setLoadTick] = useState(0);
-  const [tab, setTab] = useState<"prices" | "access" | "vitrin">("prices");
+  const [tab, setTab] = useState<"prices" | "limits" | "access" | "vitrin">("prices");
 
   // Fiyatlar
   const [book, setBook] = useState<BookForm | null>(null);
@@ -235,15 +258,19 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   // Erişim
   const [planForms, setPlanForms] = useState<Record<PlanKey, PlanForm> | null>(null);
   const savedForms = useRef<string>("");
-  const [formPlan, setFormPlan] = useState<PlanKey>("FREE");
   const [accessBusy, setAccessBusy] = useState(false);
+
+  // Limitler
+  const [limitForms, setLimitForms] = useState<Record<PlanKey, LimitForm> | null>(null);
+  const savedLimitForms = useRef<string>("");
+  const [limitsBusy, setLimitsBusy] = useState(false);
+  const [confirmLimits, setConfirmLimits] = useState(false);
   const [toolQuery, setToolQuery] = useState("");
 
   // Vitrin
   const [planCards, setPlanCards] = useState<Record<string, PlanCardEdit>>({});
-  const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
   const savedVitrin = useRef<string>("");
-  const [vitrinPlan, setVitrinPlan] = useState<(typeof EDITABLE_PLAN_CARDS)[number]>("STARTER");
+  const [vitrinPlan, setVitrinPlan] = useState<(typeof EDITABLE_PLAN_CARDS)[number]>("FREE");
   const [vitrinBusy, setVitrinBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
 
@@ -274,9 +301,6 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         const m = d.marketing;
         const mObj = m && typeof m === "object" ? (m as Record<string, unknown>) : {};
         const cardsObj = mObj.cards && typeof mObj.cards === "object" && !Array.isArray(mObj.cards) ? (mObj.cards as Record<string, unknown>) : null;
-        const savedStarter = cardsObj?.starterTools;
-        const starter = Array.isArray(savedStarter) && savedStarter.length ? savedStarter.filter((x): x is string => typeof x === "string") : [...STARTER_TOOL_IDS];
-        setCardStarterTools(starter);
         const savedPc = cardsObj?.planCards;
         const pcRec = savedPc && typeof savedPc === "object" && !Array.isArray(savedPc) ? (savedPc as Record<string, Record<string, unknown>>) : {};
         const nextPc: Record<string, PlanCardEdit> = {};
@@ -296,7 +320,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
           };
         }
         setPlanCards(nextPc);
-        savedVitrin.current = JSON.stringify({ nextPc, starter });
+        savedVitrin.current = JSON.stringify({ nextPc });
         marketingExtraRef.current = { ...mObj };
 
         // Erişim formları — 5 planın tamamı
@@ -306,18 +330,25 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         for (const name of PLAN_KEYS) {
           const p = d.plans?.find((x) => x.name === name);
           const o = ovRec[name] as Record<string, unknown> | undefined;
-          const rawDl = o && "dailyLimit" in o ? o.dailyLimit : (p?.dailyLimit ?? null);
           next[name] = {
-            displayName: String(o?.displayName ?? p?.displayName ?? name),
-            description: String(o?.description ?? p?.description ?? ""),
-            dailyUnlimited: rawDl === null,
-            dailyLimit: typeof rawDl === "number" ? rawDl : typeof p?.dailyLimit === "number" ? p.dailyLimit : 5,
             features: Array.isArray(o?.allowedFeatures) ? [...(o.allowedFeatures as string[])] : [...(p?.allowedFeatures ?? [])],
-            multiUser: Boolean(o?.multiUser ?? p?.multiUser),
           };
         }
         setPlanForms(next);
         savedForms.current = JSON.stringify(next);
+
+        // Limitler — şu an geçerli defter (yoksa kod varsayılanı)
+        const lb = d.limitBook;
+        const lc = d.catalogue;
+        if (lb || lc) {
+          const lf = {} as Record<PlanKey, LimitForm>;
+          for (const name of PLAN_KEYS) {
+            const row = lb?.[name] ?? (lc ? { ...lc.limits[name], aiMonthlyCredits: lc.aiMonthlyCredits[name] } : null);
+            if (row) lf[name] = limitFormFrom(row);
+          }
+          setLimitForms(lf);
+          savedLimitForms.current = JSON.stringify(lf);
+        }
       } catch (e) {
         if (!cancelled) setLoadErr(e instanceof Error ? e.message : "Planlar yüklenemedi");
       }
@@ -335,7 +366,8 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   /* Değişiklik durumları */
   const pricesDirty = book ? JSON.stringify(book) !== savedBook.current : false;
   const accessDirty = planForms ? JSON.stringify(planForms) !== savedForms.current : false;
-  const vitrinDirty = JSON.stringify({ nextPc: planCards, starter: cardStarterTools }) !== savedVitrin.current;
+  const limitsDirty = limitForms ? JSON.stringify(limitForms) !== savedLimitForms.current : false;
+  const vitrinDirty = JSON.stringify({ nextPc: planCards }) !== savedVitrin.current;
 
   /* Panelde kayıtlı fiyat, kod varsayılanından farklı mı? (bilgi amaçlı) */
   const drift = useMemo(() => {
@@ -405,15 +437,8 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         const changed = !before || JSON.stringify(before[name]) !== JSON.stringify(pf);
         // Dokunulmamış planın koddaki varsayılanı dondurulmasın.
         if (!changed && !prev) continue;
-        const entry: Record<string, unknown> = {
-          displayName: pf.displayName,
-          description: pf.description,
-          allowedFeatures: pf.features,
-          multiUser: pf.multiUser,
-        };
-        if (name === "FREE") entry.dailyLimit = pf.dailyUnlimited ? null : pf.dailyLimit;
-        else if (prev && "dailyLimit" in prev) entry.dailyLimit = prev.dailyLimit;
-        existing[name] = entry;
+        // Yalnız araç listesi değişir; daha önce kayıtlı diğer alanlar olduğu gibi korunur.
+        existing[name] = { ...(prev ?? {}), allowedFeatures: pf.features };
       }
       await putAdminPlansOverride(accessToken, existing);
       emitAdminToast({ type: "success", message: "Erişim kuralları kaydedildi. Siteye birkaç saniye içinde yansır." });
@@ -425,6 +450,50 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
       setAccessBusy(false);
     }
   };
+
+  const saveLimits = async () => {
+    if (!limitForms) return;
+    const before = savedLimitForms.current ? (JSON.parse(savedLimitForms.current) as Record<PlanKey, LimitForm>) : null;
+    const body: Partial<Record<PlanKey, LimitRowData>> = {};
+    for (const name of PLAN_KEYS) {
+      if (before && JSON.stringify(before[name]) === JSON.stringify(limitForms[name])) continue; // dokunulmayan plan kodu izlemeye devam eder
+      const row = limitRowFrom(limitForms[name]);
+      const err = limitError(row, name === "FREE");
+      if (err) {
+        emitAdminToast({ type: "error", message: `${PLAN_LABEL[name]}: ${err}.` });
+        setConfirmLimits(false);
+        return;
+      }
+      body[name] = row;
+    }
+    setLimitsBusy(true);
+    try {
+      await putAdminPlanLimits(accessToken, body);
+      emitAdminToast({ type: "success", message: "Limitler kaydedildi. Yeni işlemlerden itibaren geçerli olur." });
+      notifyRuntimeRefresh();
+      setConfirmLimits(false);
+      reload();
+    } catch (e) {
+      emitAdminToast({ type: "error", message: e instanceof Error ? e.message : "Limitler kaydedilemedi" });
+    } finally {
+      setLimitsBusy(false);
+    }
+  };
+
+  const discardLimits = () => {
+    if (savedLimitForms.current) setLimitForms(JSON.parse(savedLimitForms.current) as Record<PlanKey, LimitForm>);
+  };
+
+  /** Koddaki güncel limitleri forma yükler; kaydedilene kadar canlıya geçmez. */
+  const loadCodeLimits = () => {
+    if (!cat) return;
+    const lf = {} as Record<PlanKey, LimitForm>;
+    for (const name of PLAN_KEYS) lf[name] = limitFormFrom({ ...cat.limits[name], aiMonthlyCredits: cat.aiMonthlyCredits[name] });
+    setLimitForms(lf);
+  };
+
+  const patchLimit = (plan: PlanKey, patch: Partial<LimitForm>) =>
+    setLimitForms((prev) => (prev ? { ...prev, [plan]: { ...prev[plan], ...patch } } : prev));
 
   const discardAccess = () => {
     if (savedForms.current) setPlanForms(JSON.parse(savedForms.current) as Record<PlanKey, PlanForm>);
@@ -450,7 +519,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         marketingExtraRef.current.cards && typeof marketingExtraRef.current.cards === "object" && !Array.isArray(marketingExtraRef.current.cards)
           ? (marketingExtraRef.current.cards as Record<string, unknown>)
           : {};
-      const merged = { ...marketingExtraRef.current, cards: { ...prevCards, starterTools: cardStarterTools, planCards: pcOut } };
+      const merged = { ...marketingExtraRef.current, cards: { ...prevCards, planCards: pcOut } };
       await putAdminPackagesMarketing(accessToken, merged);
       emitAdminToast({ type: "success", message: "Fiyat kartı yazıları kaydedildi. Ana sayfa birkaç saniye içinde güncellenir." });
       notifyRuntimeRefresh();
@@ -465,9 +534,6 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   const discardVitrin = () => reload();
 
   /* ───────── Görünüm ───────── */
-
-  const patchForm = (plan: PlanKey, patch: Partial<PlanForm>) =>
-    setPlanForms((prev) => (prev ? { ...prev, [plan]: { ...prev[plan], ...patch } } : prev));
 
   const toggleFeature = (plan: PlanKey, fk: string) =>
     setPlanForms((prev) => {
@@ -500,7 +566,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
       </div>
     );
   }
-  if (!payload || !planForms || !cat) {
+  if (!payload || !planForms || !cat || !limitForms) {
     return <p className="px-2 py-10 text-center text-sm text-slate-400">Paket ve fiyat bilgileri yükleniyor…</p>;
   }
 
@@ -516,7 +582,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-300/80">Satış ayarları</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Paket ve fiyat</h2>
           <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-slate-400">
-            Müşterinin ne ödediğini, hangi pakette hangi araçların açık olduğunu ve ana sayfadaki fiyat kartlarında ne yazdığını buradan yönetirsiniz.
+            Müşterinin ne ödediğini, her paketin işlem limitlerini, hangi pakette hangi araçların açık olduğunu ve ana sayfadaki fiyat kartlarında ne yazdığını buradan yönetirsiniz.
           </p>
         </div>
         <GhostButton onClick={reload}>
@@ -531,7 +597,8 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         onChange={setTab}
         items={[
           { id: "prices", label: "Fiyatlar", badge: pricesDirty ? "!" : null },
-          { id: "access", label: "Erişim ve limitler", badge: accessDirty ? "!" : null },
+          { id: "limits", label: "Limitler", badge: limitsDirty ? "!" : null },
+          { id: "access", label: "Araç erişimi", badge: accessDirty ? "!" : null },
           { id: "vitrin", label: "Ana sayfa kartları", badge: vitrinDirty ? "!" : null },
         ]}
       />
@@ -560,7 +627,8 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
             {PLAN_KEYS.map((k) => {
               const a = ACCENT[k];
               const st = payload.checkoutStats?.[k] ?? { completed: 0, pending: 0 };
-              const lim = cat.limits[k];
+              const lf = limitForms[k];
+              const lim = limitRowFrom(lf);
               const paid = k !== "FREE" ? (k as PaidKey) : null;
               const row = paid ? book.plans[paid] : null;
               const yearlySold = paid ? cat.yearlyPlans.includes(paid) : false;
@@ -585,13 +653,11 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                         <>
                           <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Türkiye · yıllık (KDV dahil)</p>
                           <PriceInput symbol="₺" value={row.tryGrossYearly} onChange={(v) => setPrice(paid, "tryGrossYearly", v)} />
-                          <button
-                            type="button"
-                            onClick={() => setPrice(paid, "tryGrossYearly", yearlyFromMonthly(m).toFixed(2))}
-                            className="mt-1 text-left text-[11.5px] font-semibold text-cyan-300 hover:underline"
-                          >
-                            Aylık × 10 uygula ({fmtTry(yearlyFromMonthly(m))})
-                          </button>
+                          {Math.round(num(row.tryGrossYearly) * 100) % 1200 !== 0 && (
+                            <p className="mt-1 text-[11.5px] font-semibold text-amber-300">
+                              Dikkat: 12&apos;ye tam bölünmüyor; kartta &quot;ayda&quot; rakamı küsuratlı çıkar. Tam sayı için 12&apos;nin katı girin.
+                            </p>
+                          )}
                         </>
                       ) : (
                         <p className="mt-3 text-[12px] text-slate-500">Yıllık satılmıyor (yalnız aylık)</p>
@@ -608,7 +674,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
 
                       <dl className="mt-4 space-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
                         <Row label="Yıllık indirim" value={yearlySold ? `%${disc}` : "—"} />
-                        <Row label="Ayda yaklaşık (yıllık)" value={yearlySold ? fmtTry(Math.round(y / 12)) : "—"} />
+                        <Row label="Ayda (yıllık öderse)" value={yearlySold ? fmtTry(Math.round((y / 12) * 100) / 100) : "—"} />
                         <Row label="KDV hariç aylık" value={fmtTry(Math.round((m / (1 + vat)) * 100) / 100)} />
                       </dl>
                     </>
@@ -621,7 +687,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                     <Row label="Günlük işlem" value={lim.dailyOperationLimit == null ? "Sınır yok" : fmtNum(lim.dailyOperationLimit)} />
                     <Row label="Dosya boyutu" value={`${fmtNum(lim.fileSizeLimitMB)} MB`} />
                     <Row label="Toplu işlem" value={lim.batchLimit > 0 ? `${lim.batchLimit} dosya` : "Yok"} />
-                    <Row label="Yapay zekâ hakkı" value={`${cat.aiMonthlyCredits[k]} / ay`} />
+                    <Row label="Yapay zekâ hakkı" value={`${lim.aiMonthlyCredits} / ay`} />
                   </dl>
 
                   <div className="mt-auto pt-3">
@@ -650,7 +716,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                 <PriceInput symbol="$" value={book.extraSeat.usdMonthly} onChange={(v) => setBook((p) => (p ? { ...p, extraSeat: { ...p.extraSeat, usdMonthly: v } } : p))} />
               </div>
               <Stat label="Dahil koltuk" value={`${cat.team.includedSeats} kişi`} sub={`En çok ${cat.team.maxTotalSeats} kişi`} />
-              <Stat label="Havuz" value={`${fmtNum(cat.limits.BUSINESS.monthlyOperationLimit)} işlem / ay`} sub={`Ek koltuk başına +${fmtNum(cat.team.extraSeatMonthlyOps)} · imza ${cat.team.signatureRequestsBase}/ay (+${cat.team.extraSeatSignatureRequests})`} />
+              <Stat label="Havuz" value={`${fmtNum(limitRowFrom(limitForms.BUSINESS).monthlyOperationLimit)} işlem / ay`} sub={`Ek koltuk başına +${fmtNum(cat.team.extraSeatMonthlyOps)} · imza ${cat.team.signatureRequestsBase}/ay (+${cat.team.extraSeatSignatureRequests})`} />
             </div>
           </Panel>
 
@@ -673,90 +739,115 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         </div>
       ) : null}
 
+      {/* ═════════════ LİMİTLER ═════════════ */}
+      {tab === "limits" ? (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] px-4 py-3 text-[13px] leading-relaxed text-cyan-100/85">
+            <strong className="text-cyan-200">Bu bölüm gerçek limitleri belirler.</strong> Sunucuda işlenen araçlar (sıkıştırma, Word ↔ PDF, OCR, yapay zekâ…) bu sayılara göre çalışır;
+            cihazda çalışan araçlar (birleştir, böl, döndür…) sunucuya gitmediği için sınırsızdır. Kaydettiğiniz değer yeni işlemlerden itibaren geçerlidir; yalnız değiştirdiğiniz
+            paketler sabitlenir, dokunmadıklarınız kodu izlemeye devam eder.
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[12.5px] text-slate-400">Altındaki “Kod: …” notu, kodda tanımlı varsayılandan farklı olduğunu gösterir.</p>
+            <GhostButton onClick={loadCodeLimits}>Kod değerlerini yükle</GhostButton>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+            {PLAN_KEYS.map((k) => {
+              const f = limitForms[k];
+              const code = cat.limits[k];
+              const codeAi = cat.aiMonthlyCredits[k];
+              const err = limitError(limitRowFrom(f), k === "FREE");
+              return (
+                <div key={k} className={`${SURFACE} ${ACCENT[k].ring} flex flex-col gap-4 p-4`}>
+                  <span className={`inline-flex w-fit items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${ACCENT[k].chip}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${ACCENT[k].dot}`} />
+                    {PLAN_LABEL[k]}
+                  </span>
+
+                  <LimitField
+                    label="Günlük sunucu işlemi"
+                    value={f.daily}
+                    disabled={f.dailyUnlimited}
+                    suffix="işlem / gün"
+                    onChange={(v) => patchLimit(k, { daily: v })}
+                    codeNote={(code.dailyOperationLimit === null) !== f.dailyUnlimited || (!f.dailyUnlimited && code.dailyOperationLimit !== Math.round(num(f.daily))) ? `Kod: ${code.dailyOperationLimit === null ? "sınır yok" : fmtNum(code.dailyOperationLimit)}` : null}
+                    extra={
+                      <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-[12px] text-slate-300">
+                        <input type="checkbox" checked={f.dailyUnlimited} onChange={(e) => patchLimit(k, { dailyUnlimited: e.target.checked })} className="h-3.5 w-3.5 rounded border-white/25 accent-cyan-500" />
+                        Günlük sınır yok
+                      </label>
+                    }
+                  />
+                  <LimitField
+                    label={k === "BUSINESS" ? "Aylık sunucu işlemi (5 koltuk havuzu)" : "Aylık sunucu işlemi"}
+                    value={f.monthly}
+                    suffix="işlem / ay"
+                    hint={k === "BUSINESS" ? `Ek koltuk başına +${fmtNum(cat.team.extraSeatMonthlyOps)} (kodda sabit). 999999 = sınırsız.` : "999999 yazarsanız sınırsız olur."}
+                    onChange={(v) => patchLimit(k, { monthly: v })}
+                    codeNote={code.monthlyOperationLimit !== Math.round(num(f.monthly)) ? `Kod: ${fmtNum(code.monthlyOperationLimit)}` : null}
+                  />
+                  <LimitField
+                    label="Dosya boyutu sınırı"
+                    value={f.fileMB}
+                    suffix="MB"
+                    onChange={(v) => patchLimit(k, { fileMB: v })}
+                    codeNote={code.fileSizeLimitMB !== Math.round(num(f.fileMB)) ? `Kod: ${fmtNum(code.fileSizeLimitMB)} MB` : null}
+                  />
+                  <LimitField
+                    label="Toplu işlem (tek seferde dosya sayısı)"
+                    value={f.batch}
+                    suffix="dosya"
+                    hint="0 = toplu işlem kapalı (tek dosya)."
+                    onChange={(v) => patchLimit(k, { batch: v })}
+                    codeNote={code.batchLimit !== Math.round(num(f.batch)) ? `Kod: ${code.batchLimit}` : null}
+                  />
+                  <LimitField
+                    label="Yapay zekâ hakkı"
+                    value={k === "FREE" ? "0" : f.ai}
+                    suffix="hak / ay"
+                    disabled={k === "FREE"}
+                    hint={k === "FREE" ? "Ücretsiz üyeye hediye krediyle verilir; aylık hak yoktur." : undefined}
+                    onChange={(v) => patchLimit(k, { ai: v })}
+                    codeNote={k !== "FREE" && codeAi !== Math.round(num(f.ai)) ? `Kod: ${codeAi}` : null}
+                  />
+                  {err ? <p className="text-[12px] font-semibold text-rose-300">Düzeltin: {err}.</p> : null}
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-[12px] leading-relaxed text-slate-500">
+            Ana sayfadaki kart yazıları, e-postalar ve SEO sayfalarındaki metinlerde geçen sayılar bu ekrandan değişmez; limiti değiştirirseniz “Ana sayfa kartları” sekmesindeki ilgili madde metnini de
+            güncelleyin. Kullanıcıya özel günlük hak, kullanıcı detayından verilmeye devam eder ve plan limitinin yerine geçer.
+          </p>
+
+          <SaveBar dirty={limitsDirty} busy={limitsBusy} onSave={() => setConfirmLimits(true)} onDiscard={discardLimits} label="Limitleri kaydet" />
+
+          <ConfirmModal
+            open={confirmLimits}
+            title="Limitler canlıya geçsin mi?"
+            message={`Aylık sunucu işlemi — Ücretsiz ${fmtNum(Math.round(num(limitForms.FREE.monthly)))}, Başlangıç ${fmtNum(Math.round(num(limitForms.STARTER.monthly)))}, Plus ${fmtNum(Math.round(num(limitForms.PLUS.monthly)))}, Pro ${fmtNum(Math.round(num(limitForms.PRO.monthly)))}, Business ${fmtNum(Math.round(num(limitForms.BUSINESS.monthly)))}. Kaydettiğiniz anda yeni işlemler bu sınırlara göre kontrol edilir; kullanıcı ekranındaki kalan hak sayıları da değişir.`}
+            confirmLabel="Evet, kaydet"
+            busy={limitsBusy}
+            onConfirm={saveLimits}
+            onClose={() => setConfirmLimits(false)}
+          />
+        </div>
+      ) : null}
+
       {/* ═════════════ ERİŞİM VE LİMİTLER ═════════════ */}
       {tab === "access" ? (
         <div className="space-y-6">
           <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] px-4 py-3 text-[13px] leading-relaxed text-cyan-100/85">
             <strong className="text-cyan-200">Bu bölüm gerçek erişimi belirler.</strong> Kaydettiğinizde kullanıcılar hangi aracı kullanabildiğini hemen bu kurala göre görür.
-            Ana sayfadaki kart yazıları ayrıdır ve bir sonraki sekmeden elle güncellenir.
+            Başlangıç kartındaki “Hangileri?” listesi de buradan otomatik oluşur. Kart yazıları ayrıdır ve “Ana sayfa kartları” sekmesinden yönetilir.
           </div>
-
-          <Panel title="Paket bilgileri" help="Bir paket seçin; adını, açıklamasını ve ücretsiz plandaki günlük işlem sınırını düzenleyin.">
-            <div className="mb-4 flex flex-wrap gap-2">
-              {PLAN_KEYS.map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setFormPlan(k)}
-                  className={`rounded-xl px-4 py-2 text-[13px] font-bold transition ${
-                    formPlan === k ? `${ACCENT[k].chip} ring-1 ring-white/20` : "border border-white/[0.1] text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {PLAN_LABEL[k]}
-                </button>
-              ))}
-            </div>
-            {(() => {
-              const f = planForms[formPlan];
-              return (
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <AdminField label="Paket adı (ekranda)" description="Kullanıcının hesabında gördüğü kısa ad.">
-                    <input className={adminInputClass} value={f.displayName} onChange={(e) => patchForm(formPlan, { displayName: e.target.value })} />
-                  </AdminField>
-                  <AdminField label="Ekip yapısı" description="Yalnızca çok kişili paketlerde (Business) açık olmalı.">
-                    <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-200">
-                      <input
-                        type="checkbox"
-                        checked={f.multiUser}
-                        onChange={(e) => patchForm(formPlan, { multiUser: e.target.checked })}
-                        className="h-4 w-4 rounded border-white/25 bg-black/50"
-                      />
-                      Bu pakette birden çok kullanıcı olabilir
-                    </label>
-                  </AdminField>
-                  <AdminField label="Açıklama" description="Plan seçim ekranında görünen kısa metin.">
-                    <textarea rows={3} className={adminInputClass} value={f.description} onChange={(e) => patchForm(formPlan, { description: e.target.value })} />
-                  </AdminField>
-                  <AdminField
-                    label="Günlük işlem sınırı"
-                    description={formPlan === "FREE" ? "Ücretsiz üyenin günde kaç sunucu işlemi yapabileceği." : "Ücretli paketlerin günlük/aylık sınırı kodda tanımlıdır; burada değişmez."}
-                  >
-                    {formPlan === "FREE" ? (
-                      <>
-                        <label className="mb-3 flex cursor-pointer items-center gap-3 text-sm text-slate-200">
-                          <input
-                            type="checkbox"
-                            checked={f.dailyUnlimited}
-                            onChange={(e) => patchForm(formPlan, { dailyUnlimited: e.target.checked })}
-                            className="h-4 w-4 rounded border-white/25 bg-black/50"
-                          />
-                          Günlük sınır yok
-                        </label>
-                        {!f.dailyUnlimited ? (
-                          <input
-                            type="number"
-                            min={1}
-                            className={adminInputClass}
-                            value={f.dailyLimit}
-                            onChange={(e) => patchForm(formPlan, { dailyLimit: Math.max(1, Number(e.target.value) || 1) })}
-                          />
-                        ) : null}
-                      </>
-                    ) : (
-                      <p className="text-sm text-slate-300">
-                        {cat.limits[formPlan].dailyOperationLimit == null ? "Günlük sınır yok" : `${cat.limits[formPlan].dailyOperationLimit} işlem / gün`} ·{" "}
-                        {cat.limits[formPlan].monthlyOperationLimit >= 999999 ? "aylık sınırsız" : `${fmtNum(cat.limits[formPlan].monthlyOperationLimit)} işlem / ay`}
-                      </p>
-                    )}
-                  </AdminField>
-                </div>
-              );
-            })()}
-          </Panel>
 
           <Panel
             title="Hangi araç hangi pakette açık?"
-            help="Satırlar araç, sütunlar paket. İşaretli kutu, o pakette aracın açık olduğu anlamına gelir. Kapalı araç uygulamada kilitli görünür."
+            help="Satırlar araç, sütunlar paket. İşaretli kutu, o pakette aracın açık olduğu anlamına gelir; kapalı araç uygulamada kilitli görünür. Kategori satırındaki düğmeler o kategorinin tamamını açar/kapatır."
             right={
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
@@ -770,43 +861,73 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
               </div>
             }
           >
-            <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
-              <table className="w-full min-w-[640px] text-left text-[12.5px]">
-                <thead className="border-b border-white/[0.08] bg-black/30">
+            {/* Özet: her pakette kaç araç açık */}
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {PLAN_KEYS.map((k) => {
+                const on = planForms[k].features.filter((f) => featureKeys.includes(f)).length;
+                return (
+                  <div key={k} className={`rounded-xl border bg-black/20 px-3 py-2.5 ${ACCENT[k].ring}`}>
+                    <p className={`text-[11px] font-black uppercase tracking-wide ${ACCENT[k].text}`}>{PLAN_LABEL[k]}</p>
+                    <p className="mt-0.5 text-lg font-black tabular-nums text-white">
+                      {on}
+                      <span className="text-[12px] font-semibold text-slate-500"> / {featureKeys.length} araç</span>
+                    </p>
+                    <div className="mt-1.5 flex gap-2">
+                      <button type="button" onClick={() => setAllFeatures(k, featureKeys, true)} className="text-[10.5px] font-semibold text-cyan-300 hover:underline">
+                        hepsini aç
+                      </button>
+                      <button type="button" onClick={() => setAllFeatures(k, featureKeys, false)} className="text-[10.5px] font-semibold text-slate-400 hover:underline">
+                        hepsini kapat
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="max-h-[70vh] overflow-auto rounded-xl border border-white/[0.08]">
+              <table className="w-full min-w-[680px] text-left text-[12.5px]">
+                <thead className="sticky top-0 z-10 border-b border-white/[0.08] bg-slate-950/95 backdrop-blur">
                   <tr>
                     <th className="px-3 py-3 font-semibold text-slate-400">Araç</th>
-                    {PLAN_KEYS.map((k) => {
-                      const on = planForms[k].features.filter((f) => featureKeys.includes(f)).length;
-                      return (
-                        <th key={k} className="px-2 py-2 text-center">
-                          <span className={`block text-[11px] font-black uppercase tracking-wide ${ACCENT[k].text}`}>{PLAN_LABEL[k]}</span>
-                          <span className="block text-[11px] font-medium text-slate-500">
-                            {on}/{featureKeys.length}
-                          </span>
-                          <span className="mt-1 flex justify-center gap-1.5">
-                            <button type="button" onClick={() => setAllFeatures(k, featureKeys, true)} className="text-[10.5px] font-semibold text-cyan-300 hover:underline">
-                              hepsi
-                            </button>
-                            <span className="text-slate-600">·</span>
-                            <button type="button" onClick={() => setAllFeatures(k, featureKeys, false)} className="text-[10.5px] font-semibold text-slate-400 hover:underline">
-                              hiçbiri
-                            </button>
-                          </span>
-                        </th>
-                      );
-                    })}
+                    {PLAN_KEYS.map((k) => (
+                      <th key={k} className="w-24 px-2 py-3 text-center">
+                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide ${ACCENT[k].text}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${ACCENT[k].dot}`} />
+                          {PLAN_LABEL[k]}
+                        </span>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {groupByCategory(featureKeys.filter((fk) => !toolQuery.trim() || pdfToolLabelTr(fk).toLocaleLowerCase("tr").includes(toolQuery.trim().toLocaleLowerCase("tr")))).map((g) => (
                     <Fragment key={g.cat}>
-                      <tr className="bg-white/[0.03]">
-                        <td colSpan={PLAN_KEYS.length + 1} className="px-3 py-1.5 text-[10.5px] font-bold uppercase tracking-wider text-cyan-300/80">
-                          {g.label}
+                      <tr className="bg-cyan-500/[0.06]">
+                        <td className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-cyan-200">
+                          {g.label} <span className="font-semibold normal-case tracking-normal text-slate-500">· {g.keys.length} araç</span>
                         </td>
+                        {PLAN_KEYS.map((k) => {
+                          const on = g.keys.filter((fk) => planForms[k].features.includes(fk)).length;
+                          const all = on === g.keys.length;
+                          return (
+                            <td key={k} className="px-2 py-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => setAllFeatures(k, g.keys, !all)}
+                                title={all ? "Bu kategoriyi bu pakette kapat" : "Bu kategoriyi bu pakette aç"}
+                                className={`rounded-md px-1.5 py-0.5 text-[10.5px] font-bold tabular-nums transition ${
+                                  all ? "bg-emerald-500/15 text-emerald-300" : on === 0 ? "bg-white/[0.05] text-slate-500" : "bg-amber-500/15 text-amber-200"
+                                } hover:ring-1 hover:ring-white/25`}
+                              >
+                                {on}/{g.keys.length}
+                              </button>
+                            </td>
+                          );
+                        })}
                       </tr>
                       {g.keys.map((fk) => (
-                        <tr key={fk} className="border-b border-white/[0.04] hover:bg-white/[0.025]">
+                        <tr key={fk} className="border-b border-white/[0.04] hover:bg-white/[0.03]">
                           <td className="px-3 py-2 text-slate-200">{pdfToolLabelTr(fk)}</td>
                           {PLAN_KEYS.map((k) => (
                             <td key={k} className="px-2 py-2 text-center">
@@ -814,6 +935,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                                 type="checkbox"
                                 checked={planForms[k].features.includes(fk)}
                                 onChange={() => toggleFeature(k, fk)}
+                                aria-label={`${pdfToolLabelTr(fk)} — ${PLAN_LABEL[k]}`}
                                 className="h-4 w-4 cursor-pointer rounded border-white/25 accent-cyan-500"
                               />
                             </td>
@@ -836,10 +958,10 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         <div className="space-y-6">
           <div className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.06] px-4 py-3 text-[13px] leading-relaxed text-amber-100/90">
             <strong className="text-amber-200">Bu sekme yalnızca yazıdır.</strong> Fiyat kartlarındaki ad, kısa açıklama ve madde listesini değiştirir; kullanıcının gerçek erişimini ve ödediği tutarı
-            değiştirmez. Bir aracı “Erişim ve limitler”den kapatırsanız kart yazısını burada elle güncellemeniz gerekir.
+            değiştirmez. Limit veya araç erişimini değiştirirseniz ilgili kart maddesini burada elle güncelleyin. Başlangıç kartındaki “Hangileri?” araç listesi ise “Araç erişimi” sekmesinden otomatik oluşur.
           </div>
 
-          <Panel title="Fiyat kartı yazıları (Türkçe + İngilizce)" help="Boş bırakılan alan sitedeki güncel varsayılan metni kullanır.">
+          <Panel title="Fiyat kartı yazıları (Türkçe + İngilizce)" help="Her paketin ana sayfadaki kartında görünen ad, kısa açıklama ve madde listesi. Boş bırakılan alan sitedeki güncel varsayılan metni kullanır.">
             <div className="mb-4 flex flex-wrap gap-2">
               {EDITABLE_PLAN_CARDS.map((id) => (
                 <button
@@ -881,38 +1003,6 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                     </AdminField>
                   </div>
 
-                  {id === "STARTER" ? (
-                    <div className="mt-6 border-t border-white/[0.06] pt-5">
-                      <p className="text-sm font-bold text-slate-200">Başlangıç kartında listelenen araçlar</p>
-                      <p className="mt-1 text-[12px] text-slate-500">Yalnızca karttaki liste değişir; gerçek erişim “Erişim ve limitler”den yönetilir.</p>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-200">Seçili: {cardStarterTools.length} araç</span>
-                        <GhostButton onClick={() => setCardStarterTools([...STARTER_TOOL_IDS])}>Varsayılana dön</GhostButton>
-                        <GhostButton onClick={() => setCardStarterTools([...featureKeys])}>Tümünü seç</GhostButton>
-                        <GhostButton onClick={() => setCardStarterTools([])}>Temizle</GhostButton>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {featureKeys.map((fk) => (
-                          <label key={`card-${fk}`} className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-[12px] text-slate-200">
-                            <input
-                              type="checkbox"
-                              checked={cardStarterTools.includes(fk)}
-                              onChange={() =>
-                                setCardStarterTools((prev) => {
-                                  const set = new Set(prev);
-                                  if (set.has(fk)) set.delete(fk);
-                                  else set.add(fk);
-                                  return [...set];
-                                })
-                              }
-                              className="h-3.5 w-3.5 rounded border-white/25 accent-cyan-500"
-                            />
-                            {pdfToolLabelTr(fk)}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
                 </>
               );
             })()}
@@ -921,6 +1011,47 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
           <SaveBar dirty={vitrinDirty} busy={vitrinBusy} onSave={() => void saveVitrin()} onDiscard={discardVitrin} label="Kart yazılarını kaydet" />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function LimitField({
+  label,
+  value,
+  onChange,
+  suffix,
+  hint,
+  disabled,
+  codeNote,
+  extra,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  suffix: string;
+  hint?: string;
+  disabled?: boolean;
+  codeNote?: string | null;
+  extra?: ReactNode;
+}) {
+  return (
+    <div>
+      <p className="text-[11.5px] font-semibold text-slate-400">{label}</p>
+      <div className="mt-1 flex items-center gap-2">
+        <input
+          type="number"
+          min={0}
+          inputMode="numeric"
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-xl border border-white/[0.1] bg-black/30 px-3 py-2 text-[15px] font-bold tabular-nums text-white outline-none focus:border-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+        />
+        <span className="shrink-0 text-[11.5px] text-slate-500">{suffix}</span>
+      </div>
+      {extra}
+      {hint ? <p className="mt-1 text-[11.5px] leading-snug text-slate-500">{hint}</p> : null}
+      {codeNote ? <p className="mt-1 text-[11.5px] font-semibold text-amber-300/90">{codeNote}</p> : null}
     </div>
   );
 }

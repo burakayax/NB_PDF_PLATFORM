@@ -28,7 +28,7 @@ export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseInte
     PRICES_HIDDEN
       ? "Yakında"
       : effectiveCurrency === "TRY"
-      ? `₺${Math.round(n).toLocaleString("tr-TR")}`
+      ? `₺${(Math.round(n * 100) / 100).toLocaleString("tr-TR", { minimumFractionDigits: Number.isInteger(Math.round(n * 100) / 100) ? 0 : 2, maximumFractionDigits: 2 })}`
       : `$${n.toFixed(2)}`;
 
   const [newSeats, setNewSeats] = useState(1);

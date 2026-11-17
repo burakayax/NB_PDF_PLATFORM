@@ -433,6 +433,20 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "pdf-yatay-yap": S(
+    [
+      PICK_TR(),
+      { title: "Yerleşimi seç", detail: "«Otomatik» önerilir. «Yan yana» içeriği iki sütuna dizer, «Sığdır» sayfayı olduğu gibi yatay sayfaya küçültür." },
+      { title: "«Yatay Yap» düğmesine bas", detail: "Yazı, tablo ve görseller yeniden yazılmaz; aynen yatay sayfaya yerleştirilir. Rakam ve harflerde değişiklik olmaz." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Choose the layout", detail: "«Auto» is recommended. «Side by side» flows the content into two columns, «Fit» shrinks the page onto a landscape sheet as it is." },
+      { title: "Click «Make Landscape»", detail: "Text, tables and images are not retyped; they are placed onto the landscape sheet exactly as they are." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "alternate-mix-pdf": S(
     [
       { title: "İki (ya da daha fazla) PDF seç", detail: "İlk seçtiğin belgenin sayfaları 1., 3., 5. sıraya; ikincinin sayfaları 2., 4., 6. sıraya yerleşir." },

@@ -4009,6 +4009,123 @@
         "/x-cards/fact/tiff-pdf-cevirme-cok-sayfali-tif-2.png",
         "/x-cards/fact/tiff-pdf-cevirme-cok-sayfali-tif-3.png"
       ]
+    },
+    "https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa": {
+      "slug": "pdf-yatay-yapma-dikey-pdf-yatay-sayfa",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "PDF'i Yatay Yapma",
+      "tips": [
+        {
+          "title": "Döndürmek yetmez",
+          "text": "Döndürme sayfayı yan yatırır; sayfa dikey kalır, yazı yan durur. Okumak için başınızı eğmeniz gerekir"
+        },
+        {
+          "title": "Yatay sayfaya yerleştirmek",
+          "text": "İçerik geniş bir sayfaya oturur, yazı normal yönde okunur. Sayfanın kendisi taşınır, yeniden yazılmaz"
+        },
+        {
+          "title": "Üç yerleşim",
+          "text": "Otomatik çoğu belgeye yeter. Yan yana içeriği iki sütuna akıtır, Sığdır her sayfayı tek parça yerleştirir"
+        },
+        {
+          "title": "Rakamlar değişmez",
+          "text": "OCR ya da yapay zekâ yok. Metin ve görsel olduğu gibi taşınır; yalnız konum ve ölçek değişir"
+        },
+        {
+          "title": "Kontrol edin",
+          "text": "Sayfa sırasına, bölünen tabloların devamına ve yazı boyutuna bakın. Taranmış bulanık sayfa netleşmez"
+        }
+      ],
+      "card": "/x-cards/tip/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/pdf-yatay-yapma-dikey-pdf-yatay-sayfa-1.png",
+        "/x-cards/fact/pdf-yatay-yapma-dikey-pdf-yatay-sayfa-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf": {
+      "slug": "dikey-sayfada-kucuk-kalan-tablo-yatay-pdf",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Dikey Sayfada Küçük Kalan Tablo Nasıl Okunur Hâle Gelir?",
+      "tips": [
+        {
+          "title": "Neden küçük kalıyor?",
+          "text": "Geniş tablo dikey sayfanın genişliğine sığdırılınca küçülür. Altta ve üstte kullanılmayan boşluk kalır"
+        },
+        {
+          "title": "Döndürmek çözmez",
+          "text": "Tablo bu kez dikey sayfanın kısa kenarına yatık düşer. Yazı yine küçük kalır"
+        },
+        {
+          "title": "Yatay sayfaya alın",
+          "text": "Araç asıl içeriği bulur, boş kenarları atar ve genişliğe oturtur. Denediğimiz taranmış planda yazı yaklaşık 1,3 kat büyüdü"
+        },
+        {
+          "title": "Rakamlar yeniden yazılmaz",
+          "text": "Görüntü ya da metin olduğu gibi taşınır. Netlik de aynı kalır: bulanık tarama daha net olmaz"
+        },
+        {
+          "title": "Önemli belgede kontrol",
+          "text": "Özgün ile sonucu yan yana açıp birkaç satırı karşılaştırın"
+        }
+      ],
+      "card": "/x-cards/tip/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf-1.png",
+        "/x-cards/fact/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf-2.png"
+      ]
+    },
+    "https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu": {
+      "slug": "dikey-yatay-karisik-pdf-sayfa-yonu",
+      "topic": "pdf",
+      "tags": [
+        "#PDF"
+      ],
+      "hook": "Dikey ve Yatay Sayfaların Karıştığı PDF'i Düzene Sokmak",
+      "tips": [
+        {
+          "title": "Nereden gelir?",
+          "text": "Farklı dosyaları birleştirince, yatay tablo sayfası eklenince ya da taramada bazı sayfalar yan girince"
+        },
+        {
+          "title": "Yataylara dokunulmaz",
+          "text": "Zaten yatay olan sayfalar olduğu gibi kalır. Yalnız dikey sayfalar yatay düzene alınır"
+        },
+        {
+          "title": "Sıra bozulmaz",
+          "text": "Sayfa sırası aynı kalır. Araya giren yatay sayfa, dikey sayfaların akışını böler ve yerinde durur"
+        },
+        {
+          "title": "Sayfa sayısı azalabilir",
+          "text": "İki dikey sayfanın içeriği tek yatay sayfaya iki sütun olarak sığabilir"
+        },
+        {
+          "title": "Sadece yön lazımsa",
+          "text": "Tüm sayfaları yalnızca çevirmek istiyorsanız PDF Döndür yeterli. İçeriği yatay sayfaya yerleştirmek için PDF Yatay Yap"
+        }
+      ],
+      "card": "/x-cards/tip/dikey-yatay-karisik-pdf-sayfa-yonu.png",
+      "factTips": [
+        1,
+        2
+      ],
+      "factCards": [
+        "/x-cards/fact/dikey-yatay-karisik-pdf-sayfa-yonu-1.png",
+        "/x-cards/fact/dikey-yatay-karisik-pdf-sayfa-yonu-2.png"
+      ]
     }
   },
   "products": [

@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 const putPricing = vi.fn(async () => undefined);
 const putOverride = vi.fn(async () => undefined);
+const putLimits = vi.fn(async () => undefined);
 
 vi.mock("../api/admin", () => ({
   fetchAdminPlans: vi.fn(async () => ({
@@ -19,13 +20,13 @@ vi.mock("../api/admin", () => ({
     marketing: {},
     plansOverride: {},
     // Panelde ESKİ bir Pro fiyatı kayıtlı → sapma uyarısı çıkmalı
-    paymentPrices: { PRO: "399.00", BUSINESS: "1499.00", PRO_ANNUAL: "4490.00" },
+    paymentPrices: { PRO: "399.00", BUSINESS: "1499.00", PRO_ANNUAL: "3600.00" },
     priceBook: {
       plans: {
         STARTER: { tryGrossMonthly: "129.00", tryGrossYearly: "1290.00", usdMonthly: "4.99", usdYearly: "49.92" },
-        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2790.00", usdMonthly: "7.99", usdYearly: "59.99" },
-        PRO: { tryGrossMonthly: "399.00", tryGrossYearly: "4490.00", usdMonthly: "12.99", usdYearly: "99.99" },
-        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "14990.00", usdMonthly: "49.99", usdYearly: "499.99" },
+        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2400.00", usdMonthly: "7.99", usdYearly: "72.00" },
+        PRO: { tryGrossMonthly: "399.00", tryGrossYearly: "3600.00", usdMonthly: "12.99", usdYearly: "108.00" },
+        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "15000.00", usdMonthly: "49.99", usdYearly: "504.00" },
       },
       extraSeat: { tryGrossMonthly: "299.00", usdMonthly: "9.99" },
     },
@@ -33,9 +34,9 @@ vi.mock("../api/admin", () => ({
     catalogue: {
       prices: {
         STARTER: { tryGrossMonthly: "129.00", tryGrossYearly: "1290.00", usdMonthly: "4.99", usdYearly: "49.92" },
-        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2790.00", usdMonthly: "7.99", usdYearly: "59.99" },
-        PRO: { tryGrossMonthly: "449.00", tryGrossYearly: "4490.00", usdMonthly: "12.99", usdYearly: "99.99" },
-        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "14990.00", usdMonthly: "49.99", usdYearly: "499.99" },
+        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2400.00", usdMonthly: "7.99", usdYearly: "72.00" },
+        PRO: { tryGrossMonthly: "449.00", tryGrossYearly: "3600.00", usdMonthly: "12.99", usdYearly: "108.00" },
+        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "15000.00", usdMonthly: "49.99", usdYearly: "504.00" },
       },
       limits: {
         FREE: { dailyOperationLimit: 3, monthlyOperationLimit: 30, fileSizeLimitMB: 80, batchLimit: 0 },
@@ -53,6 +54,7 @@ vi.mock("../api/admin", () => ({
   })),
   putAdminPlanPricing: (...a: unknown[]) => putPricing(...(a as [])),
   putAdminPlansOverride: (...a: unknown[]) => putOverride(...(a as [])),
+  putAdminPlanLimits: (...a: unknown[]) => putLimits(...(a as [])),
   putAdminPackagesMarketing: vi.fn(async () => undefined),
 }));
 
@@ -62,6 +64,7 @@ describe("Paket ve fiyat ekranı", () => {
   beforeEach(() => {
     putPricing.mockClear();
     putOverride.mockClear();
+    putLimits.mockClear();
   });
 
   it("beş planın hepsini ve TL + USD fiyatlarını gösterir; kodla farklı kaydı uyarır", async () => {
@@ -94,7 +97,7 @@ describe("Paket ve fiyat ekranı", () => {
     expect(body.plans.PRO.tryGrossMonthly).toBe("449.00");
     expect(body.plans.PLUS.usdMonthly).toBe("8.49");
     expect(body.plans.STARTER.tryGrossMonthly).toBe("129.00");
-    expect(body.plans.BUSINESS.usdYearly).toBe("499.99");
+    expect(body.plans.BUSINESS.usdYearly).toBe("504.00");
     expect(body.extraSeat).toEqual({ tryGrossMonthly: "299.00", usdMonthly: "9.99" });
   });
 
@@ -102,7 +105,7 @@ describe("Paket ve fiyat ekranı", () => {
     const user = userEvent.setup();
     render(<PackagesTab accessToken="t" />);
     await screen.findByText("Paket ve fiyat");
-    await user.click(screen.getByText("Erişim ve limitler"));
+    await user.click(screen.getByText("Araç erişimi"));
     expect(screen.getByText("Hangi araç hangi pakette açık?")).toBeTruthy();
     const boxes = screen.getAllByRole("checkbox");
     // "Sayfa ayır" (split) satırı: 5 plan kutusu; Plus'ınkini aç
@@ -110,11 +113,41 @@ describe("Paket ve fiyat ekranı", () => {
     const rowBoxes = splitRow.querySelectorAll("input[type=checkbox]");
     expect(rowBoxes.length).toBe(5);
     expect(boxes.length).toBeGreaterThan(5);
+    expect(screen.queryByText("Paket bilgileri")).toBeNull(); // işe yaramayan ad/açıklama alanları kaldırıldı
     await user.click(rowBoxes[2] as HTMLElement);
     await user.click(screen.getByText("Erişim kurallarını kaydet"));
     await waitFor(() => expect(putOverride).toHaveBeenCalledTimes(1));
     const sent = (putOverride.mock.calls[0] as unknown[])[1] as Record<string, { allowedFeatures: string[] }>;
     expect(Object.keys(sent)).toEqual(["PLUS"]); // dokunulmayan planlar dondurulmaz
     expect(sent.PLUS.allowedFeatures).toContain("split");
+  });
+
+  it("limitler sekmesi tüm sayıları gösterir; değişen planın limitleri kaydedilir", async () => {
+    const user = userEvent.setup();
+    render(<PackagesTab accessToken="t" />);
+    await screen.findByText("Paket ve fiyat");
+    await user.click(screen.getByText("Limitler"));
+    expect(screen.getAllByText("Aylık sunucu işlemi").length).toBeGreaterThan(0);
+    const monthly = screen.getAllByDisplayValue("250")[0]!; // Başlangıç aylık (ilk kart)
+    await user.clear(monthly);
+    await user.type(monthly, "400");
+    expect(screen.getByText("Kod: 250")).toBeTruthy();
+    await user.click(screen.getByText("Limitleri kaydet"));
+    await user.click(await screen.findByText("Evet, kaydet"));
+    await waitFor(() => expect(putLimits).toHaveBeenCalledTimes(1));
+    const sent = (putLimits.mock.calls[0] as unknown[])[1] as Record<string, Record<string, unknown>>;
+    expect(Object.keys(sent)).toEqual(["STARTER"]); // dokunulmayan planlar kodu izlemeye devam eder
+    expect(sent.STARTER.monthlyOperationLimit).toBe(400);
+    expect(sent.STARTER.dailyOperationLimit).toBe(25);
+    expect(sent.STARTER.aiMonthlyCredits).toBe(5);
+  });
+
+  it("ana sayfa kartları: Ücretsiz kart da düzenlenebilir, Başlangıç araç listesi elle tutulmaz", async () => {
+    const user = userEvent.setup();
+    render(<PackagesTab accessToken="t" />);
+    await screen.findByText("Paket ve fiyat");
+    await user.click(screen.getByText("Ana sayfa kartları"));
+    expect(screen.getAllByText("Ücretsiz").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Başlangıç kartında listelenen araçlar")).toBeNull();
   });
 });

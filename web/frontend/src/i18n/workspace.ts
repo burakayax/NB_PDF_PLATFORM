@@ -22,6 +22,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",
+  "pdf-yatay-yap",
   "alternate-mix-pdf",
   "deskew-pdf",
   "form-doldur",
@@ -67,7 +68,7 @@ export const TOOL_CATEGORY_LABELS: Record<
 export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   {
     id: "organize",
-    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf", "resize-pdf", "flip-pdf", "alternate-mix-pdf", "sayfa-duzeni"],
+    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf", "resize-pdf", "flip-pdf", "pdf-yatay-yap", "alternate-mix-pdf", "sayfa-duzeni"],
   },
   {
     id: "convert",
@@ -158,6 +159,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "grayscale-pdf": { tr: "PDF Siyah-Beyaz Yap", en: "Grayscale PDF" },
   "resize-pdf": { tr: "PDF Sayfa Boyutunu Değiştir", en: "Resize PDF Pages" },
   "flip-pdf": { tr: "PDF Çevir (Ayna)", en: "Flip PDF" },
+  "pdf-yatay-yap": { tr: "PDF Yatay Yap", en: "PDF to Landscape" },
   "alternate-mix-pdf": { tr: "PDF Sırayla Birleştir", en: "Alternate & Mix PDF" },
   "deskew-pdf": { tr: "PDF Eğri Taramayı Düzelt", en: "Deskew PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
@@ -740,6 +742,13 @@ export function featureCopy(
         ? "Sayfaları yatay veya dikey ayna gibi çevirir."
         : "Mirrors pages horizontally or vertically.",
       button: tr ? "Sayfaları Çevir" : "Flip Pages",
+    },
+    "pdf-yatay-yap": {
+      title: tr ? "PDF Yatay Yap" : "PDF to Landscape",
+      description: tr
+        ? "Dikey PDF'i içeriği bozmadan yatay sayfaya yerleştirir; sadece döndürmez."
+        : "Places portrait PDF pages onto landscape sheets without altering the content; not just a rotation.",
+      button: tr ? "Yatay Yap" : "Make Landscape",
     },
     "alternate-mix-pdf": {
       title: tr ? "PDF Sırayla Birleştir" : "Alternate & Mix PDF",

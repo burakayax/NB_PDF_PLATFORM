@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   ScanLine,
   FlipHorizontal2,
+  RectangleHorizontal,
   Scaling,
   Contrast,
   Shuffle,
@@ -94,6 +95,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "grayscale-pdf", icon: <Contrast className="h-5 w-5" />, tr: "PDF Siyah-Beyaz Yap", en: "Grayscale PDF" },
       { id: "resize-pdf", icon: <Scaling className="h-5 w-5" />, tr: "PDF Sayfa Boyutunu Değiştir", en: "Resize PDF Pages" },
       { id: "flip-pdf", icon: <FlipHorizontal2 className="h-5 w-5" />, tr: "PDF Çevir (Ayna)", en: "Flip PDF" },
+      { id: "pdf-yatay-yap", icon: <RectangleHorizontal className="h-5 w-5" />, tr: "PDF Yatay Yap", en: "PDF to Landscape" },
       { id: "alternate-mix-pdf", icon: <Shuffle className="h-5 w-5" />, tr: "PDF Sırayla Birleştir", en: "Alternate & Mix PDF" },
       { id: "deskew-pdf", icon: <ScanLine className="h-5 w-5" />, tr: "PDF Eğri Taramayı Düzelt", en: "Deskew PDF" },
       { id: "flatten-pdf", icon: <Combine className="h-5 w-5" />, tr: "PDF Düzleştir", en: "Flatten PDF" },

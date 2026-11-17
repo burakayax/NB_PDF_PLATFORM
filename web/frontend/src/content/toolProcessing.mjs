@@ -83,6 +83,7 @@ const ROWS = [
   ["grayscale-pdf", "Siyah-Beyaz Yap", "Grayscale", "server", "", ""],
   ["resize-pdf", "PDF Boyutlandır", "Resize PDF", "server", "", ""],
   ["flip-pdf", "Sayfaları Çevir", "Flip Pages", "server", "", ""],
+  ["pdf-yatay-yap", "PDF Yatay Yap", "PDF to Landscape", "server", "", ""],
   ["alternate-mix-pdf", "Sırayla Birleştir", "Interleave", "server", "", ""],
   ["deskew-pdf", "Eğri Taramayı Düzelt", "Deskew PDF", "server", "", ""],
   ["flatten-pdf", "PDF Düzleştir", "Flatten PDF", "server", "", ""],

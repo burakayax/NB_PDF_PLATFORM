@@ -37,7 +37,7 @@ function yearlySavingsPct(plan: PlanDefinition, currency: Currency): number {
   const monthly = faceValue(plan.pricing.monthly[currency]);
   const yearlyMonthlyEq = faceValue(plan.pricing.yearly[currency]) / 12;
   if (monthly === 0) return 0;
-  return Math.round((1 - yearlyMonthlyEq / monthly) * 100);
+  return Math.floor((1 - yearlyMonthlyEq / monthly) * 100);
 }
 
 // ─── Per-card Billing Toggle ──────────────────────────────────────────────────
@@ -230,7 +230,7 @@ function FreeCard({
     >
       <div className="text-2xl mb-3">🆓</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
-      <p className="text-gray-400 text-sm mb-5">{tr ? "Başla, kart gerekmez." : "Get started, no card required."}</p>
+      <p className="text-gray-400 text-sm mb-5">{(tr ? plan.taglineTr : plan.taglineEn) || (tr ? "Başla, kart gerekmez." : "Get started, no card required.")}</p>
       <div className="mb-6 flex items-baseline gap-1.5">
         <span className="text-4xl lg:text-5xl font-black text-white">{freeLabel}</span>
         <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>
@@ -502,7 +502,7 @@ function CycleAwareCard({
         isPlus
           ? "border border-blue-500/50 bg-gradient-to-b from-blue-950/60 to-slate-950/60 shadow-2xl shadow-blue-500/15 ring-1 ring-blue-500/20"
           : isPro
-          ? "border border-amber-500/25 bg-white/[0.03] hover:border-amber-500/40 hover:bg-white/[0.05]"
+          ? "nb-pro-pulse border border-amber-500/50 bg-white/[0.04] hover:bg-white/[0.06]"
           : "border border-violet-500/25 bg-white/[0.03] hover:border-violet-500/40 hover:bg-white/[0.05]"
       }`}
     >
@@ -626,12 +626,17 @@ function CycleAwareCard({
         <span className="text-gray-400 text-lg font-semibold">{sym}</span>
         <NumberFlow
           value={displayPrice}
-          format={{ maximumFractionDigits: currency === "USD" ? 2 : 0 }}
+          // Yıllık tutarlar 12'ye tam bölünür (₺2.400 / 12 = ₺200); küsuratlı bir fiyat girilirse kuruşlu gösterilir,
+          // yuvarlanıp yanlış toplam gösterilmez.
+          format={{
+            minimumFractionDigits: currency === "TRY" && !Number.isInteger(displayPrice) ? 2 : 0,
+            maximumFractionDigits: currency === "USD" || !Number.isInteger(displayPrice) ? 2 : 0,
+          }}
           className="text-4xl lg:text-5xl font-black text-white tabular-nums"
           spinTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
           transformTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
         />
-        <span className="text-gray-400 text-sm">{isYearly ? (tr ? "/ ay (yaklaşık)" : "/ mo (approx.)") : (tr ? "/ ay" : "/ mo")}</span>
+        <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>
       </div>
 
       {/* Billing note */}
@@ -799,7 +804,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
       };
     };
     // Fiyat bağlama ödeme özetiyle ve sunucuyla AYNI kuraldır (lib/checkoutQuote.ts):
-    // Business yıllığı aylıktan türetilir (~10 ay, 12'nin tam katı); 12 ile çarpılırsa
+    // Business yıllığı sabit tutardır (15.000); 12 ile çarpılırsa
     // ekranda indirimsiz tutar görünür ama ödemede indirimli tutar çekilir.
     // {editorFree} gibi yer tutucular yönetim panelindeki PDF Düzenle haklarıyla doldurulur.
     const fill = (p: PlanDefinition): PlanDefinition => ({
@@ -818,6 +823,12 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.07)_0%,transparent_70%)]" />
 
       <style>{`
+        @keyframes nb-pro-pulse {
+          0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0), 0 0 14px 0 rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+          50% { box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 0 34px 4px rgba(245,158,11,0.35); border-color: rgba(251,191,36,0.9); }
+        }
+        .nb-pro-pulse { animation: nb-pro-pulse 2.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .nb-pro-pulse { animation: none; } }
         @keyframes shimmer {
           0%,100% { transform: translateX(-150%) skewX(-12deg); }
           50% { transform: translateX(250%) skewX(-12deg); }

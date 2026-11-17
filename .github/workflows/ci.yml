@@ -269,6 +269,74 @@ jobs:
       - name: Full report (advisory)
         run: ruff check web/backend/app src || true
 
+  # ─── PostgreSQL migration denetimi (üretim defteri) ──────────────────────
+  # Üretim PostgreSQL'dir; SQLite testleri onu yakalamaz. Burada gerçek bir Postgres'te:
+  #  A) defter boş veritabanına sorunsuz uygulanıyor mu,
+  #  B) defter ile şema arasında fark var mı (şemaya alan ekleyip defter yazmayı unutmayı yakalar),
+  #  C) eski (db push ile kurulmuş) veritabanı güvenle hizalanıp deploy betiği çalışıyor mu.
+  api-postgres-migrations:
+    name: PostgreSQL Migration Check (web/api)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: main_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGBASE: postgresql://postgres:test@localhost:5432
+    defaults:
+      run:
+        working-directory: web/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Boş veritabanları oluştur
+        run: |
+          for d in fresh legacy; do
+            PGPASSWORD=test psql -h localhost -U postgres -c "CREATE DATABASE $d"
+          done
+
+      - name: "A) Defter boş Postgres'e uygulanıyor mu"
+        env:
+          DATABASE_URL: ${{ env.PGBASE }}/fresh
+        run: npx prisma migrate deploy
+
+      - name: "B) Defter uygulanmış veritabanı ile şema arasında fark yok mu"
+        env:
+          DATABASE_URL: ${{ env.PGBASE }}/fresh
+        run: |
+          # A adımında defter uygulandı; şimdi o veritabanı şemayla karşılaştırılır.
+          # Şemaya alan eklenip defter yazılmadıysa burada fark çıkar ve kontrol kırmızı olur.
+          npx prisma migrate diff             --from-config-datasource             --to-schema prisma/schema.postgres.prisma             --exit-code
+
+      - name: "C) Eski (db push) veritabanı → deploy betiği"
+        env:
+          DATABASE_URL: ${{ env.PGBASE }}/legacy
+        run: |
+          npx prisma db push --schema prisma/schema.postgres.prisma
+          node scripts/prod-db-migrate.mjs
+          # İkinci çalıştırma de sorunsuz olmalı (zaten uygulanmış)
+          node scripts/prod-db-migrate.mjs
+
   # ─── TypeScript Tip Denetimi (Auth API) ──────────────────────────────────
   api-typecheck:
     name: TypeScript Type Check (web/api)
@@ -481,6 +549,7 @@ jobs:
       - api-unit-tests
       - node-security-frontend
       - api-typecheck
+      - api-postgres-migrations
       - frontend-component-tests
       - frontend-typecheck
       - frontend-e2e

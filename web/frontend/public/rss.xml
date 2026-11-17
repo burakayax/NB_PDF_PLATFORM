@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Wed, 04 Nov 2026 16:05:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 17 Nov 2026 16:07:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,92 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>Dikey Sayfada Küçük Kalan Tablo Nasıl Okunur Hâle Gelir?</title>
+      <link>https://www.pdfplatform.app/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf</guid>
+      <pubDate>Tue, 17 Nov 2026 16:07:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/wide-table-tiny-in-portrait-pdf" />
+      <description><![CDATA[Geniş tablo dikey sayfanın ortasında ince bir şerit gibi duruyor, üstte ve altta boşluk var. Yazıyı yeniden yazmadan nasıl büyütürsünüz?]]></description>
+      <content:encoded><![CDATA[<p>Bankadan ya da bir kurum ekranından aldığınız ödeme planı, hesap dökümü veya geniş bir tablo çoğu zaman yatay hazırlanmıştır; ama PDF'e dikey sayfa olarak basılır. Sonuç: tablo sayfanın ortasında ince bir şerit olur, üstte ve altta büyük boşluk kalır, yazılar zor okunur.</p>
+<h2>Neden böyle oluyor?</h2>
+<p>Yazdırma ya da tarama sırasında sayfa yönü dikey seçili kalır. Geniş içerik sayfanın genişliğine sığdırılır ve küçülür; yüksekliği az olduğu için altta ve üstte kullanılmayan alan kalır. Sayfayı döndürmek de çözmez: bu kez tablo dikey sayfanın kısa kenarına yatık düşer.</p>
+<h2>Çözüm: içeriği yatay sayfaya yerleştirmek</h2>
+<p>«PDF Yatay Yap» aracı, sayfadaki asıl içeriği bulur, boş kenarları atar ve içeriği yatay sayfanın genişliğine oturtur. Yazı bu sayede belirgin biçimde büyür (denediğimiz taranmış bir ödeme planında yaklaşık 1,3 kat). İçerik yeniden yazılmaz; taranmış bir belgede resmin kendisi, metinli bir belgede metnin kendisi taşınır.</p>
+<ol><li><strong>PDF'i ekleyin</strong> — Tabloyu içeren dikey PDF'i araca bırakın.</li><li><strong>«Otomatik» yerleşimi bırakın</strong> — İçerik geniş olduğu için sayfa, yatay sayfaya sığdırılır.</li><li><strong>Yatay Yap'a basın</strong> — Sonuç yatay sayfada, yazılar normal yönde ve daha büyük çıkar.</li><li><strong>Rakamları kontrol edin</strong> — Özgün ile sonucu yan yana açıp birkaç satırı karşılaştırın.</li></ol>
+<p><strong>PDF Yatay Yap</strong> — Geniş tabloyu yatay sayfada okunur boyuta getirin. <a href="https://www.pdfplatform.app/tools/pdf-yatay-yap">Aracı aç</a></p>
+<h2>Taranmış dökümlerde dikkat</h2>
+<ul><li>Resmin kendi çözünürlüğü değişmez. Bulanık bir tarama büyütüldüğünde biraz yumuşak görünebilir; daha net olmaz.</li><li>Yazıyı temiz ve seçilebilir hâle getirmek istiyorsanız, sonucu «Aranabilir PDF (OCR)» aracından geçirebilirsiniz. OCR sonucunu rakamlarda mutlaka kontrol edin.</li></ul>
+<blockquote><p>Rakamları değiştirmeden büyütmek ile rakamları yeniden okuyup tablo hâline getirmek farklı şeylerdir. Bu araç ilkini yapar: görüntüyü ya da metni olduğu gibi taşır, yeniden üretmez.</p></blockquote>
+<h2>Metinli (dijital) PDF'lerde</h2>
+<p>Dijital bir tabloda yazılar vektör olarak kalır, büyütünce de keskin çıkar. Tablo bir sayfaya sığmayacak kadar uzunsa «Yan yana» yerleşimi tabloyu çizgi üzerinden iki sütuna böler; satırlar ortadan kesilmez.</p>]]></content:encoded>
+      <category>Tablo</category>
+      <category>Tarama</category>
+      <category>PDF Yatay Yap</category>
+      <enclosure url="https://www.pdfplatform.app/covers/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf.png" type="image/png" length="88548" />
+      <media:content url="https://www.pdfplatform.app/covers/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf.png" />
+    </item>
+    <item>
+      <title>PDF&apos;i Yatay Yapma: Döndürmek Yetmediğinde</title>
+      <link>https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa</guid>
+      <pubDate>Tue, 17 Nov 2026 14:49:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/make-pdf-landscape-without-rotating" />
+      <description><![CDATA[PDF'i yatay yap dediğinizde çoğu araç sayfayı 90° çevirir ve yazı yan yatar. İçeriği yatay sayfaya gerçekten yerleştirmek için neler yapabilirsiniz?]]></description>
+      <content:encoded><![CDATA[<p>«PDF'i yatay yap» diye aratıp bulduğunuz araçların çoğu aslında sayfayı 90° döndürür. Sayfa hâlâ dikeydir; yalnızca yazı yan yatmıştır ve okumak için ekranı ya da başınızı eğmeniz gerekir. İçeriği gerçekten yatay bir sayfaya yerleştirmek ise başka bir iştir.</p>
+<h2>Döndürmek ile yatay sayfaya yerleştirmek aynı şey değil</h2>
+<p>Döndürme, sayfanın kendisini çevirir: kâğıt aynı kalır, içerik onunla birlikte yan döner. Yatay sayfaya yerleştirmede ise sayfa boyutu değişir. Yeni sayfa geniştir, yazılar normal yönde okunur ve içerik bu geniş alana oturur. Dikey bir A4'ün içeriğini yatay A4'e almak, sayfayı yan yatırmaktan farklı bir sonuç verir.</p>
+<h2>Hangi durumda hangisi?</h2>
+<ul><li>Sayfanın içeriği zaten yan yazılmışsa (taramada dönük girmiş, tablo yan basılmış): döndürmek yeterlidir.</li><li>İçerik normal yönde ama geniş bir tablo ya da düzen dikey sayfada küçük kalıyorsa: yatay sayfaya yerleştirmek daha okunur sonuç verir.</li><li>Metin dolu çok sayfalı bir belgeyi yatay ekranda ya da projeksiyonda okuyacaksanız: içeriğin iki sütuna akması rahat okuma sağlar.</li><li>Zaten yatay sayfalarla dikeyler karışıksa: yalnızca dikeyleri dönüştürmek gerekir.</li></ul>
+<h2>Adım adım: içeriği yatay sayfaya yerleştirmek</h2>
+<ol><li><strong>PDF'i ekleyin</strong> — Dikey PDF'i araca bırakın. Parolalıysa parolayı girin.</li><li><strong>Yerleşimi seçin</strong> — «Otomatik» çoğu belgede uygundur. «Yan yana» içeriği iki sütuna akıtır; «Sığdır» her sayfayı tek parça olarak yatay sayfaya yerleştirir.</li><li><strong>Yatay Yap'a basın</strong> — Yazı, tablo ve görseller yeniden yazılmaz; sayfanın kendisi yeni sayfaya taşınır.</li><li><strong>Önizleyin ve indirin</strong> — Sonucu gözden geçirin, uygunsa indirin.</li></ol>
+<p><strong>PDF Yatay Yap</strong> — Dikey PDF'inizi içeriği bozmadan yatay sayfaya yerleştirin. <a href="https://www.pdfplatform.app/tools/pdf-yatay-yap">Aracı aç</a></p>
+<h2>Rakam ve harfler değişir mi?</h2>
+<p>Bu araç yazıyı okuyup yeniden üretmez; OCR ya da yapay zekâ kullanmaz. Sayfanın içeriği olduğu gibi taşınır, yalnızca konum ve ölçek değişir. Bu yüzden tablodaki bir rakamın yanlış yazılması ya da bir satırın düşmesi gibi bir risk yoktur. Yine de önemli bir belgede çıktıyı özgün dosyayla göz ucuyla karşılaştırmak iyi bir alışkanlıktır.</p>
+<h2>Dönüştürdükten sonra kontrol listesi</h2>
+<ul><li>Sayfa sırası doğru mu, bölünen bir tablonun devamı sonraki sütunda mı?</li><li>Yazı boyutu okunur mu? Küçültme gerektiren sayfalarda yazı küçülür.</li><li>Form alanları ve bağlantılar çalışıyor mu?</li><li>Taranmış bir belgeyse resmin kendi netliği değişmez; bulanık tarama bu işlemle netleşmez.</li></ul>
+<blockquote><p>Yan yana düzende bir sayfa iki sütuna bölünürse, o sayfanın metni dosyada iki parça olarak bulunur. Ekranda tek görünür; ama arama ya da kopyalamada o sayfanın kelimeleri çift çıkabilir.</p></blockquote>]]></content:encoded>
+      <category>PDF Yatay Yap</category>
+      <category>Sayfa Yönü</category>
+      <category>PDF Araçları</category>
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" type="image/png" length="103139" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" />
+    </item>
+    <item>
+      <title>Dikey ve Yatay Sayfaların Karıştığı PDF&apos;i Düzene Sokmak</title>
+      <link>https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu</guid>
+      <pubDate>Tue, 17 Nov 2026 09:22:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/fix-mixed-orientation-pdf-pages" />
+      <description><![CDATA[Birleştirdiğiniz dosyada sayfa yönleri karıştı. Sadece dikey olanları yatay düzene alıp yatay olanlara dokunmamak mümkün mü?]]></description>
+      <content:encoded><![CDATA[<p>Farklı kaynaklardan gelen dosyaları birleştirdiğinizde bir PDF'te dikey ve yatay sayfalar yan yana durabilir. Ekranda ya da projeksiyonda gezinirken bazı sayfalarda ekranı eğmek, bazılarında düz bakmak gerekir. Tüm belgeyi tek yöne getirmek isterseniz yatay sayfalara dokunmadan yalnız dikeyleri dönüştürmek yeterlidir.</p>
+<h2>Sayfa yönü karışıklığı nereden gelir?</h2>
+<ul><li>Dikey bir rapora yatay bir tablo ya da grafik sayfasının eklenmesi.</li><li>Birden çok kaynaktan gelen PDF'lerin tek dosyada birleştirilmesi.</li><li>Taramalarda bazı sayfaların yan, bazılarının dik girmesi.</li></ul>
+<h2>Yalnız dikey sayfaları dönüştürmek</h2>
+<p>«PDF Yatay Yap» aracı, sayfa yatay ise ona dokunmaz ve olduğu gibi bırakır. Yalnız dikey sayfalar yatay düzene alınır; sayfa sırası değişmez. Ardışık dikey sayfalar tek bir akış olarak yan yana iki sütuna dizilir, araya giren bir yatay sayfa ise akışı böler ve yerinde kalır.</p>
+<ol><li><strong>PDF'i ekleyin</strong> — Karışık yönlü dosyayı araca bırakın.</li><li><strong>Yerleşimi seçin</strong> — «Otomatik» ya da «Yan yana»; yatay sayfalar her iki durumda da korunur.</li><li><strong>Yatay Yap'a basın</strong> — Sonuçta dikey sayfalar yatay düzene girmiş, yatay sayfalar aynı yerinde kalmış olur.</li><li><strong>Sırayı kontrol edin</strong> — Sayfa sırasının özgün dosyayla aynı olduğunu önizlemede doğrulayın.</li></ol>
+<p><strong>PDF Yatay Yap</strong> — Karışık yönlü PDF'te yalnız dikey sayfaları yatay düzene alın. <a href="https://www.pdfplatform.app/tools/pdf-yatay-yap">Aracı aç</a></p>
+<h2>Bilmeniz gerekenler</h2>
+<ul><li>Sayfa sayısı değişebilir: iki dikey sayfanın içeriği tek yatay sayfaya sığabilir.</li><li>Bir yatay sayfa, onun öncesindeki ve sonrasındaki dikey sayfaların akışını böler; bu iki grup ayrı akış olarak yerleştirilir.</li><li>Boş sayfalar olduğu gibi bırakılır.</li><li>Form alanları ve bağlantılar yeni konumlarında çalışmaya devam eder.</li></ul>
+<blockquote><p>Tüm sayfaların yalnızca yönünü değiştirmek istiyorsanız «PDF Döndür» aracı yeterlidir. «PDF Yatay Yap» içeriği yatay sayfaya yerleştirmek istediğinizde işe yarar.</p></blockquote>]]></content:encoded>
+      <category>Sayfa Yönü</category>
+      <category>PDF Düzenleme</category>
+      <category>PDF Yatay Yap</category>
+      <enclosure url="https://www.pdfplatform.app/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png" type="image/png" length="58893" />
+      <media:content url="https://www.pdfplatform.app/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/dikey-yatay-karisik-pdf-sayfa-yonu.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/dikey-yatay-karisik-pdf-sayfa-yonu.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png" />
+    </item>
     <item>
       <title>TIFF&apos;i PDF&apos;e Çevirme: Çok Sayfalı TIF Taramaları</title>
       <link>https://www.pdfplatform.app/blog/tiff-pdf-cevirme-cok-sayfali-tif</link>
@@ -1416,7 +1502,7 @@
 <p>Fark şurada: Sejda'da saatlik sınır TÜM araçları kapsar, sayfa düzenleme dahil. Bizde sayfa işlemleri hiç sayılmaz, çünkü bize maliyeti yoktur. Ücretsiz kullanıcının en sık yaptığı işler de zaten bunlardır.</p>
 <p><strong>PDF Birleştir</strong> — Saatlik sınır yok, üyelik yok — tarayıcınızda çalışır, dosyanız yüklenmez. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
 <h2>Hangisini seçmelisiniz?</h2>
-<ul><li>Sayfa düzenleme yapıyorsanız (birleştir, böl, döndür, sil, sırala): tarayıcıda çalışan araç sınırsızdır ve dosyanız yüklenmez.</li><li>PDF metnini düzenlemeniz gerekiyorsa: ikisinde de var. Sejda bu işi uzun süredir yapıyor; bizde de gerçek metin düzenleme bulunuyor.</li><li>Yılda birkaç kez yoğun iş yapıyorsanız: Sejda'nın haftalık 5 dolarlık kartı muhtemelen en ucuz yoldur — bizde böyle bir seçenek yok.</li><li>Masaüstü programı istiyorsanız: Sejda'nın var, bizim yok.</li><li>Düzenli olarak çok belge işliyorsanız: aylık maliyetleri karşılaştırın — Sejda Web aylık 7,50 dolar, PDF Platform Plus 6,99 dolar.</li></ul>
+<ul><li>Sayfa düzenleme yapıyorsanız (birleştir, böl, döndür, sil, sırala): tarayıcıda çalışan araç sınırsızdır ve dosyanız yüklenmez.</li><li>PDF metnini düzenlemeniz gerekiyorsa: ikisinde de var. Sejda bu işi uzun süredir yapıyor; bizde de gerçek metin düzenleme bulunuyor.</li><li>Yılda birkaç kez yoğun iş yapıyorsanız: Sejda'nın haftalık 5 dolarlık kartı muhtemelen en ucuz yoldur — bizde böyle bir seçenek yok.</li><li>Masaüstü programı istiyorsanız: Sejda'nın var, bizim yok.</li><li>Düzenli olarak çok belge işliyorsanız: aylık maliyetleri karşılaştırın — Sejda Web aylık 7,50 dolar, PDF Platform Plus 7,99 dolar.</li></ul>
 <p>Kısacası bu bir «hangisi daha iyi» sorusu değil. Sejda, sunucuda çalışan güçlü bir araç takımı ve esnek ödeme seçenekleri sunuyor. Biz, sayfa işlemlerini sunucudan çıkararak o işlerdeki sınırı tamamen ortadan kaldırıyoruz. İhtiyacınız hangisiyse onu seçin.</p>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>PDF Araçları</category>
@@ -1537,7 +1623,7 @@
 <p>Bu, görsel (ıslak imza görünümlü) bir elektronik imzadır ve yanında sürecin kaydı bulunur. Ticari belgelerin büyük bölümünde kullanılan yaklaşım budur.</p>
 <p>Ama nitelikli elektronik imza AYRI bir hukuki kategoridir ve yetkilendirilmiş bir hizmet sağlayıcıdan alınmış sertifika gerektirir. Bunu sunmuyoruz. Noter onayı gerektiren, resmî makama sunulacak ya da mevzuatın nitelikli imza şart koştuğu belgelerde bu araç doğru seçim değildir — DocuSign'ın nitelikli imza seçenekleri ya da yerel bir e-imza sağlayıcısı gerekir.</p>
 <h2>Maliyet karşılaştırması</h2>
-<ul><li>DocuSign Personal: aylık 11 dolar, ayda 5 belge.</li><li>PDF Platform Plus: aylık 6,99 dolar, aylık 600 işlem hakkı ve tüm araçlar. İmza isteme Plus ve üzeri planlarda bulunur.</li></ul>
+<ul><li>DocuSign Personal: aylık 11 dolar, ayda 5 belge.</li><li>PDF Platform Plus: aylık 7,99 dolar, aylık 600 işlem hakkı ve tüm araçlar. İmza isteme Plus ve üzeri planlarda bulunur.</li></ul>
 <p>Rakamları karşılaştırırken elmayla elmayı karşılaştırdığınızdan emin olun: DocuSign'ın paketi imza etrafında kurulmuş bir iş akışı ürünü; buradaki paket, içinde imza isteme de bulunan bir belge araç takımı. İhtiyacınız yalnızca imzaysa ikincisi daha ucuza geliyor; ihtiyacınız kurumsal bir imza altyapısıysa ilki daha fazlasını veriyor.</p>
 <p><strong>İmza İste</strong> — Belgeyi yükleyin, e-posta adresini girin — karşı taraf hesap açmadan imzalasın, denetim sertifikası belgeye eklensin. <a href="https://www.pdfplatform.app/tools/imza-iste">Aracı aç</a></p>
 <h2>Hangisini seçmelisiniz?</h2>
@@ -3371,44 +3457,6 @@
       <media:content url="https://www.pdfplatform.app/covers/square/yabanci-dildeki-sozlesmeyi-anlama.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/yabanci-dildeki-sozlesmeyi-anlama.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/yabanci-dildeki-sozlesmeyi-anlama.png" />
-    </item>
-    <item>
-      <title>PDF Şifresini Kaldırma ve PDF&apos;e Şifre Koyma</title>
-      <link>https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma</guid>
-      <pubDate>Fri, 03 Jul 2026 09:39:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/remove-pdf-password" />
-      <description><![CDATA[Bir PDF'i her açışta şifre sormasından bıktıysanız ya da hassas bir belgeyi korumak istiyorsanız, ikisi de birkaç adımlık işler. İşte doğru yol.]]></description>
-      <content:encoded><![CDATA[<p>PDF şifresiyle ilgili iki farklı ihtiyaç vardır: bildiğiniz şifreyi kalıcı olarak kaldırmak ya da bir belgeye şifre ekleyerek onu korumak. İkisini de ayrı araçlarla yapabilirsiniz.</p>
-<h2>Şifreyi kaldırma (kilidi açma)</h2>
-<p>Sürekli şifre soran bir PDF'i her açışta parola girmeden kullanmak isterseniz, PDF Kilidini Aç aracıyla şifreyi kalıcı olarak kaldırabilirsiniz. Bunun için belgenin şifresini bilmeniz gerekir.</p>
-<ol><li><strong>PDF'i yükleyin</strong> — PDF Kilidini Aç aracına şifreli belgenizi ekleyin.</li><li><strong>Şifreyi girin</strong> — Belgenin mevcut şifresini girin — yalnız yetkili olduğunuz belgelerde.</li><li><strong>Şifresiz dosyayı indirin</strong> — Araç şifreyi kaldırır; artık her açışta parola sorulmaz.</li></ol>
-<p><strong>PDF Kilidini Aç</strong> — Bildiğiniz şifreyi kaldırıp PDF'i serbestçe kullanın. <a href="https://www.pdfplatform.app/tools/unlock-pdf">Aracı aç</a></p>
-<h2>PDF'e şifre koyma (koruma)</h2>
-<p>Tam tersi: hassas bir sözleşme, sağlık raporu ya da mali belgeyi paylaşırken korumak isterseniz Şifrele aracıyla PDF'e açılış şifresi ekleyebilirsiniz. Böylece dosyayı yalnızca şifreyi bilenler açar.</p>
-<p><strong>PDF Şifrele</strong> — Hassas belgenize açılış şifresi ekleyin. <a href="https://www.pdfplatform.app/tools/encrypt">Şifrele aracı</a></p>
-<blockquote><p>Yalnızca sahibi olduğunuz ya da açıkça yetkilendirildiğiniz belgelerin şifresini kaldırın.</p></blockquote>
-<h2>PDF'te iki farklı parola vardır</h2>
-<p>Karışıklığın çoğu, PDF standardının iki ayrı parola tanımlamasından kaynaklanır ve ikisi çok farklı şeyler yapar.</p>
-<ul><li>Açılış (kullanıcı) parolası: belgeyi açmak için gerekir. Parola olmadan dosya hiç görüntülenemez; içerik gerçekten şifrelidir.</li><li>İzin (sahip) parolası: belge parolasız açılır, ancak yazdırma, kopyalama ya da düzenleme kısıtlanmıştır. Bu kısıtlama, görüntüleyici programın uymayı kabul ettiği bir işarettir — şifreleme kadar güçlü değildir.</li></ul>
-<p>Bu yüzden «PDF'im şifreli ama açılıyor» diyen kullanıcı aslında ikinci türle karşı karşıyadır. Belgeyi serbestçe kullanabilmek için kaldırılması gereken de çoğu zaman budur.</p>
-<h2>Hangi parolayı seçmeli?</h2>
-<p>Bir belgeyi korumaya karar verirken soru şudur: içeriğin görülmesini mi engellemek istiyorsunuz, yoksa görülebilsin ama çoğaltılmasın mı? Sağlık raporu, mali tablo ya da kimlik bilgisi içeren belgelerde açılış parolası gerekir; parolası olmayan hiç kimse belgeyi açamaz. Bir teklifi ya da katalogu paylaşırken ise genellikle amaç düzenlenmesini önlemektir; orada izin parolası yeterli olur.</p>
-<h2>Parolayı karşı tarafa nasıl iletmeli?</h2>
-<p>Şifreli dosyayı ve parolasını aynı e-postada göndermek, korumayı anlamsız kılar; o e-postaya erişen herkes ikisine birden erişmiş olur. Yaygın ve doğru uygulama, dosyayı e-postayla, parolayı başka bir kanaldan (telefon, kısa mesaj ya da farklı bir uygulama) iletmektir. Kurumsal yazışmalarda bu, çoğu bilgi güvenliği politikasının açık şartıdır.</p>
-<ul><li>Parolayı dosya adına yazmayın: «sozlesme-1234.pdf» korumayı boşa çıkarır.</li><li>Aynı parolayı her belgede kullanmayın.</li><li>Doğum tarihi, TC numarası gibi tahmin edilebilir diziler seçmeyin.</li><li>Parolayı unutursanız belgenin açılamayacağını unutmayın — yedeğini saklayın.</li></ul>
-<h2>Parolayı bilmiyorsanız</h2>
-<p>Açılış parolası bilinmeyen bir belgeyi açmanın meşru bir yolu yoktur; bu bir eksiklik değil, korumanın tasarım amacıdır. Belge size aitse ve parolayı unuttuysanız, dosyayı gönderen kişiden ya da oluşturan programdan yeniden almak tek yoldur. Başkasına ait bir belgenin korumasını aşmaya çalışmak ise hem etik hem hukuki sorun doğurur.</p>
-<h2>Parola kaldırıldıktan sonra</h2>
-<p>Parolası kaldırılmış dosya artık korumasızdır; bulut yedeği, ortak klasör ya da e-posta kutusunda kaldığında herkes açabilir. Parolayı yalnızca belgeyi işleyeceğiniz süre için kaldırın, işiniz bitince korumasız kopyayı silin. Belgeyi tekrar paylaşacaksanız yeniden parola eklemek en temiz yoldur.</p>]]></content:encoded>
-      <category>Güvenlik</category>
-      <category>Şifre</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-sifre-kaldirma-koyma.png" type="image/png" length="44444" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-sifre-kaldirma-koyma.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-sifre-kaldirma-koyma.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-sifre-kaldirma-koyma.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-sifre-kaldirma-koyma.png" />
     </item>
   </channel>
 </rss>

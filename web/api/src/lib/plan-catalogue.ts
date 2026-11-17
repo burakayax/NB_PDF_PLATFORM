@@ -55,11 +55,9 @@ export type PlanPrice = {
  *  iLovePDF 7 $/ay, Smallpdf Pro 15 $/ay, Adobe Acrobat Pro ~19,99 $/ay, ChatPDF 19,99 $/ay.
  *  (2026-11-16: iLovePDF resmi TR sayfasında Premium 9 $/ay; Pro 12,99 $ ile Smallpdf aralığında.)
  *
- *  Yıllık TL = TAM 10 ay fiyatına 12 ay (iki ay bedava, ~%17 indirim; 2026-11-16'dan beri
- *  aylık×10: 2.790 / 4.490 / 14.990). Tutar 12'ye bölünmez; ekranda "ayda ≈X" yaklaşık yazılır
- *  ve asıl yıllık tutar ayrıca gösterilir. Yıllık USD rakip
- *  yıllık fiyatlarına (iLovePDF 60 $/yıl, Smallpdf ~108 $/yıl) göre kurulur
- *  (güncel tutarlar aşağıdaki 2026-11-16 revizyonunda).
+ *  Yıllık TL (KDV dahil, 12'ye tam bölünür; ekranda "ayda X" TAM rakam yazılır, "yaklaşık" yok):
+ *  Plus 2.400 (ayda 200), Pro 3.600 (ayda 300), Business 15.000 (ayda 1.250). Yıllık USD de 12'ye
+ *  tam bölünür: Plus 72 (ayda 6), Pro 108 (ayda 9), Business 504 (ayda 42).
  *
  *  FİYAT REVİZYONU (2026-10-15): TL fiyatları dolar fiyatının ~%65-70'ine çekildi
  *  (Başlangıç 129, Plus 229, Pro 399, Business 1.099); eskiden ~%50'ydi. Pro 399 ₺
@@ -69,8 +67,8 @@ export type PlanPrice = {
  *  FİYAT REVİZYONU (2026-11-16, finans raporu "PDF_Platform_Fiyatlandirma_Finans_Raporu_2026-11-15"):
  *  Ödemeler açılmadan ve en az 1 yıl değişmeyecek biçimde yeniden hesaplandı. TL (KDV dahil):
  *  Başlangıç 129 (değişmedi), Plus 279, Pro 449, Business 1.499, ek koltuk 299. Dolar: Başlangıç 4,99,
- *  Plus 7,99, Pro 12,99, Business 49,99, ek koltuk 9,99. Yıllık TL ≈ 10 ay (12'ye tam bölünür).
- *  Yıllık USD psikolojik fiyat: 59,99 / 99,99 / 499,99 (aylık fiyatlarla aynı ".99" çizgisi).
+ *  Plus 7,99, Pro 12,99, Business 49,99, ek koltuk 9,99.
+ *  FİYAT REVİZYONU (2026-11-17): yıllık fiyatlar tam sayı aylığa bölünecek şekilde değişti (yukarıda).
  *  Başlangıç yıllığı satılmaz (yalnız tanımlı).
  *  Başa-baş: kur 50–70 aralığında ayda 27–35 ödeyen müşteri (rapor bölüm 8).
  */
@@ -83,38 +81,23 @@ export const PLAN_PRICES: Record<PaidPlanId, PlanPrice> = {
   },
   PLUS: {
     tryGrossMonthly: "279.00",
-    tryGrossYearly: "2790.00",
+    tryGrossYearly: "2400.00",
     usdMonthly: "7.99",
-    usdYearly: "59.99",
+    usdYearly: "72.00",
   },
   PRO: {
     tryGrossMonthly: "449.00",
-    tryGrossYearly: "4490.00",
+    tryGrossYearly: "3600.00",
     usdMonthly: "12.99",
-    usdYearly: "99.99",
+    usdYearly: "108.00",
   },
   BUSINESS: {
     tryGrossMonthly: "1499.00",
-    tryGrossYearly: "14990.00",
+    tryGrossYearly: "15000.00",
     usdMonthly: "49.99",
-    usdYearly: "499.99",
+    usdYearly: "504.00",
   },
 };
-
-/**
- * Aylık KDV dahil TL tutarından yıllık KDV dahil tutarı türetir: TAM 10 ay fiyatı (aylık × 10).
- * Ön yüzdeki `yearlyGrossFromMonthly` (frontend/src/lib/checkoutQuote.ts) ile
- * AYNI kural; yönetim panelinden Business aylık fiyatı değişince yıllık bununla
- * türetilir. Katalogdaki Plus/Pro/Business yıllık tutarları bu kuralın çıktısıdır
- * (`plan-catalogue.test.ts` doğrular).
- */
-export function yearlyGrossFromMonthly(monthlyGross: string): string {
-  const m = Number.parseFloat(monthlyGross.replace(",", "."));
-  if (!Number.isFinite(m) || m <= 0) {
-    throw new Error(`Geçersiz aylık tutar: ${monthlyGross}`);
-  }
-  return (Math.round(m * 10 * 100) / 100).toFixed(2);
-}
 
 /** Business planına eklenen her ek koltuğun fiyatı (Business'ın koltuk başı fiyatıyla aynı hizada). */
 export const EXTRA_SEAT_PRICE = {
@@ -198,9 +181,9 @@ export const BUSINESS_TEAM = {
 } as const;
 
 /** Business ekibinin aylık sunucu işlem havuzu (ek koltuk sayısına göre). */
-export function businessMonthlyOps(extraSeats: number): number {
+export function businessMonthlyOps(extraSeats: number, base: number = PLAN_LIMITS.BUSINESS.monthlyOperationLimit): number {
   const extra = Math.min(BUSINESS_TEAM.maxExtraSeats, Math.max(0, Math.trunc(extraSeats) || 0));
-  return PLAN_LIMITS.BUSINESS.monthlyOperationLimit + extra * BUSINESS_TEAM.extraSeatMonthlyOps;
+  return base + extra * BUSINESS_TEAM.extraSeatMonthlyOps;
 }
 
 /** Business ekibinin aylık imza isteği havuzu (ek koltuk sayısına göre). */

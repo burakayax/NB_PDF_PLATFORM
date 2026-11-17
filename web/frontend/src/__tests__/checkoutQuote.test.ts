@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PLANS } from "../lib/planConfig";
-import { applyTryPriceOverrides, buildCheckoutQuote, yearlyGrossFromMonthly } from "../lib/checkoutQuote";
+import { applyTryPriceOverrides, buildCheckoutQuote } from "../lib/checkoutQuote";
 
 const plan = (id: string) => PLANS.find((p) => p.id === id)!;
 const base = { extraSeats: 0, seatsOnly: false, discountPercent: null };
@@ -54,9 +54,9 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
 
   it("yıllık Business + 3 ek koltuk: koltuklara %17 yıllık indirim de dahil", () => {
     const q = buildCheckoutQuote({ ...base, plan: plan("BUSINESS"), planId: "BUSINESS", cycle: "YEARLY", currency: "TRY", extraSeats: 3 })!;
-    // plan net 14.990/1,2 = 12.491,67 ; koltuk: 3 × 249,17 × 12 × 0,83 = 7.445,20
-    expect(q.net).toBe(19936.87);
-    expect(q.total).toBe(23924.24);
+    // plan net 15.000/1,2 = 12.500,00 ; koltuk: 3 × 249,17 × 12 × 0,83 = 7.445,20
+    expect(q.net).toBe(19945.2);
+    expect(q.total).toBe(23934.24);
   });
 
   it("yalnız koltuk satın alma: plan bedeli yok", () => {
@@ -67,25 +67,19 @@ describe("ödeme özeti = sunucunun tahsil ettiği tutar", () => {
 });
 
 describe("yönetim paneli fiyatı ve yıllık türetme", () => {
-  it("yıllık = tam 10 ay fiyatı", () => {
-    expect(yearlyGrossFromMonthly(279)).toBe(2790);
-    expect(yearlyGrossFromMonthly(449)).toBe(4490);
-    expect(yearlyGrossFromMonthly(1499)).toBe(14990);
-  });
-
-  it("panelde Business aylık değişirse yıllık türetilir; Plus/Başlangıç etkilenmez", () => {
+  it("panelde Business aylık değişirse yıllık sabit kalır; Plus/Başlangıç etkilenmez", () => {
     const out = applyTryPriceOverrides(PLANS, { proMonthly: "349.00", proAnnual: "3500.00", businessMonthly: "999.00" });
     const get = (id: string) => out.find((p) => p.id === id)!;
     expect(get("PRO").pricing.monthly.TRY).toBe(34900);
     expect(get("PRO").pricing.yearly.TRY).toBe(350000);
     expect(get("BUSINESS").pricing.monthly.TRY).toBe(99900);
-    expect(get("BUSINESS").pricing.yearly.TRY).toBe(yearlyGrossFromMonthly(999) * 100);
+    expect(get("BUSINESS").pricing.yearly.TRY).toBe(PLANS.find((p) => p.id === "BUSINESS")!.pricing.yearly.TRY);
     expect(get("PLUS")).toBe(PLANS.find((p) => p.id === "PLUS"));
   });
 
   it("panel girdisi yoksa fiyatlar planConfig ile aynı kalır", () => {
     expect(applyTryPriceOverrides(PLANS, null)).toBe(PLANS);
-    const out = applyTryPriceOverrides(PLANS, { proMonthly: "449.00", proAnnual: "4490.00", businessMonthly: "1499.00" });
+    const out = applyTryPriceOverrides(PLANS, { proMonthly: "449.00", proAnnual: "3600.00", businessMonthly: "1499.00" });
     expect(out.map((p) => p.pricing)).toEqual(PLANS.map((p) => p.pricing));
   });
 });

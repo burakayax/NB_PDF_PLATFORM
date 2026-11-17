@@ -29,14 +29,11 @@ export async function createPaymentController(request: Request, response: Respon
     throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request body.");
   }
 
-  const session = await createPaymentCheckoutSession({
-    userId,
-    plan: parsed.data.plan,
-    billing: parsed.data.billing ?? "monthly",
-    clientIp: getClientIp(request),
-  });
-
-  response.status(200).json(session);
+  // ESKİ uç: onay (ön bilgilendirme / mesafeli satış) denetimi ve kupon/koltuk hesabı yoktur.
+  // Ekran yalnız /api/payments/initialize kullanır; bu uç kapatıldı.
+  void parsed;
+  void getClientIp;
+  throw new HttpError(410, "Bu ödeme adresi kullanımdan kalktı. Lütfen ödemeyi sitedeki ödeme ekranından başlatın.");
 }
 
 /** POST /api/payment/topup — ek AI kredisi (top-up) satın alma. Abonelik checkout'unu

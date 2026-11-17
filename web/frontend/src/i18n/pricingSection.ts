@@ -5,11 +5,11 @@ export function pricingSectionCopy(lang: Language) {
   const tr = lang === "tr";
   return {
     saveAnnual: (pct: number) =>
-      tr ? `Yıllık faturalamada ~%${pct} tasarruf` : `Save ~${pct}% vs paying monthly`,
+      tr ? `Yıllık faturalamada %${pct} tasarruf` : `Save ${pct}% vs paying monthly`,
     mostPopular: tr ? "En popüler" : "Most Popular",
     /** @param amount e.g. "2.63 TRY" or "2.63 ₺" */
     onlyPerDay: (amount: string) =>
-      tr ? `Günde yalnızca ~${amount}` : `Only ~${amount}/day`,
+      tr ? `Günde yalnızca ${amount}` : `Only ${amount}/day`,
     trustCancel: tr ? "Otomatik yenileme yok" : "No auto-renewal",
     trustSecure: tr ? "Güvenli ödeme" : "Secure payment",
     trustRefund: tr ? "7 gün para iade garantisi" : "7-day money-back guarantee",

@@ -44,3 +44,16 @@ export async function invoicingPaused(): Promise<boolean> {
 export async function exportExemptionOpen(): Promise<boolean> {
   return (await readFeatureFlag("exportExemptionDisabled")) === false;
 }
+
+/**
+ * Yurt dışı (dolar/EUR) ödeme alınsın mı?
+ * `foreignPaymentsDisabled` "durdur" anlamlıdır (diğer anahtarlar gibi): kayıt yoksa ya da true ise KAPALI;
+ * yalnız AÇIKÇA `false` yazılırsa yurt dışı ödeme açılır. Türkiye (TL) ödemesini etkilemez.
+ */
+export async function foreignPaymentsOpen(): Promise<boolean> {
+  return (await readFeatureFlag("foreignPaymentsDisabled")) === false;
+}
+
+export const FOREIGN_PAYMENTS_CLOSED_MESSAGE =
+  "Şimdilik yalnızca Türkiye'den ödeme alıyoruz. Yurt dışı ödemeleri yakında açılacak; o zamana kadar ücretsiz araçları kullanmaya devam edebilirsiniz. / " +
+  "We currently accept payments from Turkey only. International payments will open soon; you can keep using the free tools meanwhile.";

@@ -32,6 +32,7 @@ export const featureCatalog = [
   "flip-pdf",
   "alternate-mix-pdf",
   "deskew-pdf",
+  "pdf-yatay-yap",
   "form-doldur",
   "ustveri-temizle",
   "pdf-to-pdfa",

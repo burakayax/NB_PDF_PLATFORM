@@ -206,6 +206,14 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     fallbackFilename: "cevrilmis.pdf",
   },
   {
+    id: "pdf-yatay-yap",
+    icon: "🖼️",
+    endpoint: "pdf-yatay-yap",
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    fallbackFilename: "yatay.pdf",
+  },
+  {
     id: "alternate-mix-pdf",
     icon: "🔀",
     endpoint: "alternate-mix-pdf",
@@ -276,6 +284,7 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",
+  "pdf-yatay-yap",
   "alternate-mix-pdf",
   "deskew-pdf",
   "extract-images",

@@ -674,6 +674,43 @@ export const TOOL_GUIDE_EXTRA = {
     },
   },
 
+  "pdf-yatay-yap": {
+    tr: {
+      steps: [
+        { title: "PDF'i yükleyin", x: "Yatay yapmak istediğiniz dikey PDF'i «Dosya Seç» ile seçin." },
+        { title: "Yerleşimi seçin", x: "«Otomatik» çoğu belgede en iyisidir. İçeriği iki sütuna akıtmak için «Yan yana», sayfayı olduğu gibi küçültmek için «Sığdır» seçin." },
+        { title: "Yatay Yap'a basın", x: "Yazı, tablo ve görseller yeniden yazılmadan yatay sayfaya yerleştirilir." },
+        { title: "Kontrol edip indirin", x: "Sonucu önizlemede gözden geçirin. Dosya işlem için sunucuya yüklenir ve işlem bitince silinir; yatay kopyayı kaydedin." },
+      ],
+      useCases: [
+        { title: "Geniş tablolu belgeler", x: "Dikey sayfada küçücük kalan banka dökümü, ödeme planı ya da tabloyu yatay sayfada okunur boyuta getirin." },
+        { title: "Sunum ve ekran okuma", x: "Dikey bir raporu yatay ekranda ya da projeksiyonda baş yan yatırmadan okuyun." },
+        { title: "Karışık yönlü belgeler", x: "Dikey ve yatay sayfaların karıştığı dosyada yalnız dikey sayfaları yatay düzene alın; yataylar olduğu gibi kalır." },
+      ],
+      faq: [
+        { q: "Bu araç döndürmeden farklı mı?", a: "Evet. Döndürme sayfayı yan yatırır; bu araç içeriği yatay sayfaya yerleştirir ve yazı normal yönde okunur." },
+        { q: "Rakam ve harflerde hata olur mu?", a: "Hayır. İçerik yeniden yazılmaz; sayfanın kendisi taşınır, yalnızca konum ve ölçek değişir." },
+      ],
+    },
+    en: {
+      steps: [
+        { title: "Upload the PDF", x: "Choose the portrait PDF you want to make landscape with «Choose file»." },
+        { title: "Pick the layout", x: "«Auto» is best for most documents. Choose «Side by side» to flow content into two columns, or «Fit» to shrink the page onto a landscape sheet as it is." },
+        { title: "Press Make Landscape", x: "Text, tables and images are placed on the landscape sheet without being retyped." },
+        { title: "Check and download", x: "Review the result in the preview. The file is uploaded for processing and deleted when it finishes; save the landscape copy." },
+      ],
+      useCases: [
+        { title: "Wide-table documents", x: "Bring a bank statement, payment plan or table that is tiny on a portrait page up to a readable size on a landscape sheet." },
+        { title: "Presenting and screen reading", x: "Read a portrait report on a landscape screen or projector without tilting your head." },
+        { title: "Mixed-orientation files", x: "In a file that mixes portrait and landscape pages, convert only the portrait ones; landscape pages stay as they are." },
+      ],
+      faq: [
+        { q: "Is this different from rotating?", a: "Yes. Rotating lays the page on its side; this tool places the content on a landscape sheet and the text reads normally." },
+        { q: "Can digits or letters be wrong afterwards?", a: "No. The content is not retyped; the page itself is moved and only position and scale change." },
+      ],
+    },
+  },
+
   "page-numbers": {
     tr: {
       steps: [

@@ -1943,6 +1943,49 @@ async def tool_resize_pdf(
             cleanup_path(workdir)
 
 
+@router.post("/pdf-yatay-yap")
+@limiter.limit("20/minute")
+async def tool_pdf_yatay_yap(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+    layout: str = Form("auto"),
+):
+    """Dikey sayfaları yatay sayfa düzenine yerleştirir (içerik yeniden çizilmez/yazılmaz)."""
+    decision = await entitlement_check(token, "pdf-yatay-yap")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        out_p = workdir / "yatay.pdf"
+        pwd = (password or "").strip() or None
+        mod = (layout or "auto").strip().lower()
+        if mod not in ("auto", "fit", "split"):
+            mod = "auto"
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "yatay", ".pdf")
+
+        def _run():
+            from src.pdf_yatay_duzen import yatay_duzene_cevir
+
+            yatay_duzene_cevir(str(sp), str(out_p), mod=mod, sifre=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "pdf-yatay-yap")
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-yatay-yap")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
 @router.post("/flip-pdf")
 @limiter.limit("20/minute")
 async def tool_flip_pdf(

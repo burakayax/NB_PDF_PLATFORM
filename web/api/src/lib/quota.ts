@@ -4,6 +4,7 @@ import { createOrganizationForUser, revertExpiredOverride } from "../modules/org
 import { getPlanDefinitionsResolved } from "../modules/subscription/plan-runtime.js";
 import { isFeatureKey } from "../modules/subscription/subscription.config.js";
 import { PLAN_LIMITS, businessMonthlyOps } from "./plan-catalogue.js";
+import { getSavedLimits, type SavedLimits } from "./packages-config.service.js";
 
 export interface QuotaCheckResult {
   allowed: boolean;
@@ -56,18 +57,22 @@ export function effectiveOrgLimits(
   org: Pick<Organization, "plan" | "monthlyOperationLimit" | "fileSizeLimitMB" | "batchLimit">,
   extraSeats: number,
   forceBusiness = false,
+  saved: SavedLimits | null = null,
 ): EffectiveOrgLimits {
+  // `saved`: yönetim panelinde KAYDEDİLMİŞ limitler (varsa satırdaki/koddaki değeri ezer).
   if (forceBusiness || org.plan === "BUSINESS") {
+    const b = saved?.BUSINESS;
     return {
-      monthly: businessMonthlyOps(extraSeats),
-      fileSizeLimitMB: PLAN_LIMITS.BUSINESS.fileSizeLimitMB,
-      batchLimit: PLAN_LIMITS.BUSINESS.batchLimit,
+      monthly: businessMonthlyOps(extraSeats, b?.monthlyOperationLimit ?? PLAN_LIMITS.BUSINESS.monthlyOperationLimit),
+      fileSizeLimitMB: b?.fileSizeLimitMB ?? PLAN_LIMITS.BUSINESS.fileSizeLimitMB,
+      batchLimit: b?.batchLimit ?? PLAN_LIMITS.BUSINESS.batchLimit,
     };
   }
+  const p = saved?.[org.plan as keyof SavedLimits];
   return {
-    monthly: org.monthlyOperationLimit,
-    fileSizeLimitMB: org.fileSizeLimitMB,
-    batchLimit: org.batchLimit,
+    monthly: p?.monthlyOperationLimit ?? org.monthlyOperationLimit,
+    fileSizeLimitMB: p?.fileSizeLimitMB ?? org.fileSizeLimitMB,
+    batchLimit: p?.batchLimit ?? org.batchLimit,
   };
 }
 
@@ -176,10 +181,15 @@ async function resetDailyIfNeeded(
 function effectiveDailyLimit(
   org: Pick<
     Organization,
-    "customDailyLimit" | "dailyOperationLimit" | "bonusDailyOperations"
+    "plan" | "customDailyLimit" | "dailyOperationLimit" | "bonusDailyOperations"
   >,
+  saved: SavedLimits | null = null,
 ): number | null {
-  const base = org.customDailyLimit ?? org.dailyOperationLimit;
+  // Sıra: kullanıcıya özel limit > panelde kayıtlı plan limiti > satırdaki plan limiti.
+  const savedPlan = saved?.[org.plan as keyof SavedLimits];
+  const planDaily =
+    savedPlan && savedPlan.dailyOperationLimit !== undefined ? savedPlan.dailyOperationLimit : org.dailyOperationLimit;
+  const base = org.customDailyLimit ?? planDaily;
   if (base === null || base === undefined) {
     return null;
   }
@@ -242,10 +252,12 @@ export async function checkQuota(
 
   let currentOrg = await resetDailyIfNeeded(org, timezone);
   currentOrg = await resetMonthlyIfNeeded(currentOrg, timezone);
+  const savedLimits = await getSavedLimits();
   const lim = effectiveOrgLimits(
     currentOrg,
     poolOrg || currentOrg.plan === "BUSINESS" ? await extraSeatsForOrg(prisma, currentOrg.id) : 0,
     poolOrg !== null,
+    savedLimits,
   );
 
   // Check allowed tools
@@ -289,7 +301,7 @@ export async function checkQuota(
   }
 
   // Check daily limit (kullanıcıya özel limit + bugünlük bonus dahil)
-  const effDailyLimit = effectiveDailyLimit(currentOrg);
+  const effDailyLimit = effectiveDailyLimit(currentOrg, savedLimits);
   if (effDailyLimit !== null) {
     if (currentOrg.currentDayOperations >= effDailyLimit) {
       const resetAt = getNextMidnightInTimezone(timezone);
@@ -432,10 +444,12 @@ export async function checkAndIncrementQuota(
       org = await tx.organization.update({ where: { id: org.id }, data: { currentMonthOperations: 0, lastMonthlyReset: new Date() } });
     }
 
+    const savedLimits = await getSavedLimits();
     const lim = effectiveOrgLimits(
       org,
       poolOrg || org.plan === "BUSINESS" ? await extraSeatsForOrg(tx, org.id) : 0,
       poolOrg !== null,
+      savedLimits,
     );
 
     if (totalSizeMB > lim.fileSizeLimitMB) return { allowed: false, reason: "file_size_exceeded" };
@@ -445,7 +459,7 @@ export async function checkAndIncrementQuota(
       if (fileCount > lim.batchLimit) return { allowed: false, reason: "batch_limit_exceeded" };
     }
 
-    const effDailyLimit = effectiveDailyLimit(org);
+    const effDailyLimit = effectiveDailyLimit(org, savedLimits);
     if (effDailyLimit !== null) {
       if (org.currentDayOperations >= effDailyLimit) {
         const resetAt = getNextMidnightInTimezone(timezone);
@@ -509,7 +523,7 @@ export async function grantBonusOpsToday(userId: string, amount: number) {
     bonusBefore,
     bonusAfter: updated.bonusDailyOperations,
     usedToday: updated.currentDayOperations,
-    effectiveDailyLimit: effectiveDailyLimit(updated),
+    effectiveDailyLimit: effectiveDailyLimit(updated, await getSavedLimits()),
   };
 }
 
@@ -534,7 +548,7 @@ export async function setCustomDailyLimit(userId: string, limit: number | null) 
   return {
     customDailyLimit: updated.customDailyLimit,
     planDailyLimit: updated.dailyOperationLimit,
-    effectiveDailyLimit: effectiveDailyLimit(updated),
+    effectiveDailyLimit: effectiveDailyLimit(updated, await getSavedLimits()),
     usedToday: updated.currentDayOperations,
   };
 }
@@ -578,7 +592,7 @@ export async function getQuotaSummary(userId: string) {
   if (poolOrg) {
     let pool = await resetDailyIfNeeded(poolOrg, timezone);
     pool = await resetMonthlyIfNeeded(pool, timezone);
-    const poolLim = effectiveOrgLimits(pool, await extraSeatsForOrg(prisma, pool.id), true);
+    const poolLim = effectiveOrgLimits(pool, await extraSeatsForOrg(prisma, pool.id), true, await getSavedLimits());
     return {
       plan: "BUSINESS" as const,
       daily: { used: pool.currentDayOperations, limit: null, resetAt },
@@ -592,13 +606,14 @@ export async function getQuotaSummary(userId: string) {
     };
   }
 
-  const lim = effectiveOrgLimits(org, org.plan === "BUSINESS" ? await extraSeatsForOrg(prisma, org.id) : 0);
+  const savedLimits = await getSavedLimits();
+  const lim = effectiveOrgLimits(org, org.plan === "BUSINESS" ? await extraSeatsForOrg(prisma, org.id) : 0, false, savedLimits);
 
   return {
     plan: org.plan,
     daily: {
       used: org.currentDayOperations,
-      limit: effectiveDailyLimit(org),
+      limit: effectiveDailyLimit(org, savedLimits),
       resetAt,
     },
     monthly: {

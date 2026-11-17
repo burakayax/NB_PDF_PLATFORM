@@ -517,6 +517,7 @@ const pdfInspectionFeatures: FeatureId[] = [
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",
+  "pdf-yatay-yap",
   "alternate-mix-pdf",
   "deskew-pdf",
   "pdf-to-pdfa",
@@ -2359,6 +2360,7 @@ function App() {
             "grayscale-pdf": "PDF Siyah-Beyaz Yap",
             "resize-pdf": "PDF Sayfa Boyutunu Değiştir",
             "flip-pdf": "PDF Çevir (Ayna)",
+            "pdf-yatay-yap": "PDF Yatay Yap",
             "alternate-mix-pdf": "PDF Sırayla Birleştir",
             "deskew-pdf": "PDF Eğri Taramayı Düzelt",
             "pdf-to-pdfa": "PDF'ten PDF/A'ya (Arşiv)",
@@ -3634,6 +3636,7 @@ function App() {
     "grayscale-pdf",
     "resize-pdf",
     "flip-pdf",
+    "pdf-yatay-yap",
     "deskew-pdf",
     "split",
     "pdf-to-word",
@@ -3652,6 +3655,7 @@ function App() {
     "grayscale-pdf",
     "resize-pdf",
     "flip-pdf",
+    "pdf-yatay-yap",
     "alternate-mix-pdf",
     "deskew-pdf",
     "pdf-to-pdfa",
@@ -8785,6 +8789,35 @@ function App() {
                               />
                             </label>
                           </>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-yatay-yap" ? (
+                          <div className="field">
+                            <span>{language === "tr" ? "Yerleşim" : "Layout"}</span>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              {(
+                                [
+                                  ["auto", language === "tr" ? "Otomatik" : "Auto"],
+                                  ["split", language === "tr" ? "Yan yana (iki sütun)" : "Side by side (two columns)"],
+                                  ["fit", language === "tr" ? "Sığdır" : "Fit"],
+                                ] as const
+                              ).map(([deger, etiket]) => (
+                                <button
+                                  key={deger}
+                                  type="button"
+                                  className={miniOptions.landscapeLayout === deger ? "primary-action" : "secondary-action"}
+                                  onClick={() => setMiniOptions((m) => ({ ...m, landscapeLayout: deger }))}
+                                >
+                                  {etiket}
+                                </button>
+                              ))}
+                            </div>
+                            <small>
+                              {language === "tr"
+                                ? "İçerik yeniden yazılmaz, aynen taşınır. Zaten yatay olan sayfalara dokunulmaz."
+                                : "Content is never retyped, only moved. Pages that are already landscape are left untouched."}
+                            </small>
+                          </div>
                         ) : null}
 
                         {selectedFeature.id === "flip-pdf" ? (

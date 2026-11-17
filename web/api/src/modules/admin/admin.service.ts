@@ -7,7 +7,7 @@ import { normalizeEmailForStorage } from "../../lib/email-identity-normalize.js"
 import { HttpError } from "../../lib/http-error.js";
 import { hashPassword } from "../../lib/password.js";
 import { prisma } from "../../lib/prisma.js";
-import { getResolvedPackagesConfig } from "../../lib/packages-config.service.js";
+import { getResolvedPackagesConfig, type LimitRow } from "../../lib/packages-config.service.js";
 import { applyTemporaryPlan } from "../organization/organization.service.js";
 import { getSetting, setSetting } from "../../lib/site-config.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
@@ -819,6 +819,17 @@ export async function adminPutPaymentPrices(
   }
 }
 
+export async function adminPutPlanLimits(
+  body: { limits: Partial<Record<"FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS", Partial<LimitRow>>> },
+  actor: AdminActor,
+) {
+  try {
+    await auditedPackagesPartial({ limitBook: body.limits }, actor, "plans.limits", "Paket limitleri güncellendi");
+  } catch {
+    throw new HttpError(400, "Invalid limit values.");
+  }
+}
+
 export async function getAllSiteSettings(): Promise<Record<string, unknown>> {
   const rows = await prisma.siteSetting.findMany();
   const out: Record<string, unknown> = {};
@@ -989,6 +1000,8 @@ export async function getPlansAdminPayload() {
     plansOverride,
     paymentPrices,
     priceBook,
+    limitBook: pkg.limitBook,
+    savedLimits: pkg.savedLimits,
     catalogue,
     featureCatalog: [...featureCatalog],
   };

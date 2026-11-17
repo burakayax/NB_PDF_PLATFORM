@@ -20,13 +20,22 @@ export function billingPeriodLabel(input: { billingCycle?: string | null; subscr
   return yearly ? "1 Yıllık" : "1 Aylık";
 }
 
-/** Örn. "Plus Abonelik (1 Aylık)". */
+/**
+ * Örn. "Plus Abonelik (1 Aylık)". Business'ta ek koltuk varsa kalem adında yazılır, çünkü
+ * tutar koltukları da kapsar ("Business + 3 Ek Koltuk"); yalnız koltuk alımında "3 Ek Koltuk".
+ */
 export function subscriptionInvoiceName(input: {
   plan: string | null | undefined;
   billingCycle?: string | null;
   subscriptionDays?: number | null;
+  extraSeats?: number | null;
+  seatsOnly?: boolean | null;
 }): string {
-  return `${planInvoiceLabel(input.plan)} Abonelik (${billingPeriodLabel(input)})`;
+  const period = billingPeriodLabel(input);
+  const seats = Math.max(0, Math.floor(input.extraSeats ?? 0));
+  if (input.seatsOnly && seats > 0) return `${seats} Ek Koltuk (${period})`;
+  if (seats > 0) return `${planInvoiceLabel(input.plan)} Abonelik + ${seats} Ek Koltuk (${period})`;
+  return `${planInvoiceLabel(input.plan)} Abonelik (${period})`;
 }
 
 /**

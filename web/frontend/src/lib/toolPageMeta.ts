@@ -327,6 +327,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Mirror PDF pages horizontally or vertically.",
     },
   },
+  "pdf-yatay-yap": {
+    tr: {
+      title: "PDF yatay yap: dikey PDF'i yatay sayfaya çevir | PDF Platform",
+      description:
+        "Dikey PDF'i sadece döndürmeden yatay sayfaya yerleştirin: yazı, tablo ve görseller aynen kalır, sayfa iki sütun hâlinde yatay düzene oturur. Tarayıcıdan, kurulumsuz.",
+    },
+    en: {
+      title: "PDF to landscape: portrait PDF to landscape pages | PDF Platform",
+      description:
+        "Place portrait PDF pages onto landscape sheets without just rotating them: text, tables and images stay exactly as they are, laid out in two columns.",
+    },
+  },
   "alternate-mix-pdf": {
     tr: {
       title: "PDF dönüşümlü birleştirme | PDF Platform",
