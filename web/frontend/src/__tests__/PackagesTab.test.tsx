@@ -20,13 +20,13 @@ vi.mock("../api/admin", () => ({
     marketing: {},
     plansOverride: {},
     // Panelde ESKİ bir Pro fiyatı kayıtlı → sapma uyarısı çıkmalı
-    paymentPrices: { PRO: "399.00", BUSINESS: "1499.00", PRO_ANNUAL: "4490.00" },
+    paymentPrices: { PRO: "399.00", BUSINESS: "1499.00", PRO_ANNUAL: "3600.00" },
     priceBook: {
       plans: {
         STARTER: { tryGrossMonthly: "129.00", tryGrossYearly: "1290.00", usdMonthly: "4.99", usdYearly: "49.92" },
-        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2790.00", usdMonthly: "7.99", usdYearly: "59.99" },
-        PRO: { tryGrossMonthly: "399.00", tryGrossYearly: "4490.00", usdMonthly: "12.99", usdYearly: "99.99" },
-        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "14990.00", usdMonthly: "49.99", usdYearly: "499.99" },
+        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2400.00", usdMonthly: "7.99", usdYearly: "72.00" },
+        PRO: { tryGrossMonthly: "399.00", tryGrossYearly: "3600.00", usdMonthly: "12.99", usdYearly: "108.00" },
+        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "15000.00", usdMonthly: "49.99", usdYearly: "504.00" },
       },
       extraSeat: { tryGrossMonthly: "299.00", usdMonthly: "9.99" },
     },
@@ -34,9 +34,9 @@ vi.mock("../api/admin", () => ({
     catalogue: {
       prices: {
         STARTER: { tryGrossMonthly: "129.00", tryGrossYearly: "1290.00", usdMonthly: "4.99", usdYearly: "49.92" },
-        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2790.00", usdMonthly: "7.99", usdYearly: "59.99" },
-        PRO: { tryGrossMonthly: "449.00", tryGrossYearly: "4490.00", usdMonthly: "12.99", usdYearly: "99.99" },
-        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "14990.00", usdMonthly: "49.99", usdYearly: "499.99" },
+        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2400.00", usdMonthly: "7.99", usdYearly: "72.00" },
+        PRO: { tryGrossMonthly: "449.00", tryGrossYearly: "3600.00", usdMonthly: "12.99", usdYearly: "108.00" },
+        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "15000.00", usdMonthly: "49.99", usdYearly: "504.00" },
       },
       limits: {
         FREE: { dailyOperationLimit: 3, monthlyOperationLimit: 30, fileSizeLimitMB: 80, batchLimit: 0 },
@@ -97,7 +97,7 @@ describe("Paket ve fiyat ekranı", () => {
     expect(body.plans.PRO.tryGrossMonthly).toBe("449.00");
     expect(body.plans.PLUS.usdMonthly).toBe("8.49");
     expect(body.plans.STARTER.tryGrossMonthly).toBe("129.00");
-    expect(body.plans.BUSINESS.usdYearly).toBe("499.99");
+    expect(body.plans.BUSINESS.usdYearly).toBe("504.00");
     expect(body.extraSeat).toEqual({ tryGrossMonthly: "299.00", usdMonthly: "9.99" });
   });
 

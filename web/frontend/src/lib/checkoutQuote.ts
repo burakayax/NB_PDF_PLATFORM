@@ -11,7 +11,7 @@ import type { PlanDefinition, PlanId } from "./planConfig";
  */
 
 export const KDV_RATE = 0.2;
-/** Yıllık ödemede ek koltuklara uygulanan katsayı (10 ay fiyatına 12 ay ≈ %17) — sunucuyla AYNI. */
+/** Yıllık ödemede ek koltuklara uygulanan katsayı (10 ay fiyatına 12 ay, %17 indirim) — sunucuyla AYNI. */
 export const YEARLY_SEAT_DISCOUNT = 0.83;
 /** Ek koltuk (kişi/ay) — `web/api/src/lib/plan-catalogue.ts` → EXTRA_SEAT_PRICE ile AYNI. TL KDV dahil. */
 export const EXTRA_SEAT_UNIT = { TRY: 299, USD: 9.99 } as const;
@@ -58,15 +58,10 @@ export function seatUnitFrom(book: ServerPriceBook | null | undefined): { TRY: n
   return { TRY: t > 0 ? t : EXTRA_SEAT_UNIT.TRY, USD: u > 0 ? u : EXTRA_SEAT_UNIT.USD };
 }
 
-/** Aylık KDV dahil TL'den yıllık KDV dahil TL (tam 10 ay fiyatı). Sunucudaki `yearlyGrossFromMonthly` ile AYNI. */
-export function yearlyGrossFromMonthly(monthlyTry: number): number {
-  return Math.round(monthlyTry * 10 * 100) / 100;
-}
-
 /**
  * Yönetim panelindeki (Paketler) TL fiyatlarını plan listesine uygular. Ana sayfa kartı
  * ve ödeme özeti AYNI fonksiyonu kullanır; sunucu da aynı değerleri tahsil eder.
- * Yalnız TL, yalnız Pro (aylık+yıllık) ve Business (aylık; yıllık türetilir).
+ * Yalnız TL, yalnız Pro (aylık+yıllık) ve Business (yalnız aylık; yıllık sabit kalır).
  */
 export function applyTryPriceOverrides(
   plans: PlanDefinition[],
@@ -95,7 +90,7 @@ export function applyTryPriceOverrides(
         ...p,
         pricing: {
           monthly: { ...p.pricing.monthly, TRY: bizM },
-          yearly: { ...p.pricing.yearly, TRY: yearlyGrossFromMonthly(bizM / 100) * 100 },
+          yearly: p.pricing.yearly,
         },
       };
     }

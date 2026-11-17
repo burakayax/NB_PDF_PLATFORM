@@ -21,7 +21,7 @@ import { SITE_SETTING_KEYS } from "./site-setting-keys.js";
 export const DEFAULT_PAYMENT_PRICES_TRY: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string> = {
   BUSINESS: PLAN_PRICES.BUSINESS.tryGrossMonthly,
   PRO: PLAN_PRICES.PRO.tryGrossMonthly,
-  // Yıllık PRO = 10 ay fiyatına (2 ay bedava, ~%17 indirim). Yıllık TOPLAM tutar.
+  // Yıllık PRO tutarı (KDV dahil, 12 aya bölünür). Yıllık TOPLAM tutar.
   PRO_ANNUAL: PLAN_PRICES.PRO.tryGrossYearly,
 };
 

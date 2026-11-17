@@ -14,7 +14,7 @@ export function upgradeModalCopy(lang: Language) {
     planAnnual: tr ? "Pro (yıllık)" : "Pro (annual)",
     mostPopular: tr ? "En popüler" : "Most Popular",
     saveAnnual: (pct: number) =>
-      tr ? `~%${pct} tasarruf` : `Save ~${pct}%`,
+      tr ? `%${pct} tasarruf` : `Save ${pct}%`,
     freeBullets: tr
       ? ["Günlük sınırlı işlem", "Temel araçlar", "Web erişimi"]
       : ["Limited daily operations", "Core TOOLS", "Web access"],

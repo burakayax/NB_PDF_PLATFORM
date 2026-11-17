@@ -37,7 +37,7 @@ function yearlySavingsPct(plan: PlanDefinition, currency: Currency): number {
   const monthly = faceValue(plan.pricing.monthly[currency]);
   const yearlyMonthlyEq = faceValue(plan.pricing.yearly[currency]) / 12;
   if (monthly === 0) return 0;
-  return Math.round((1 - yearlyMonthlyEq / monthly) * 100);
+  return Math.floor((1 - yearlyMonthlyEq / monthly) * 100);
 }
 
 // ─── Per-card Billing Toggle ──────────────────────────────────────────────────
@@ -626,8 +626,8 @@ function CycleAwareCard({
         <span className="text-gray-400 text-lg font-semibold">{sym}</span>
         <NumberFlow
           value={displayPrice}
-          // Yıllık planda aylık karşılık tam bölümdür (₺2.790 / 12 = ₺232,50); yuvarlayıp ₺233 yazmak
-          // "233 × 12 = 2.796" farkı yaratıyordu. Kuruşlu sonuç artık kuruşlu gösterilir.
+          // Yıllık tutarlar 12'ye tam bölünür (₺2.400 / 12 = ₺200); küsuratlı bir fiyat girilirse kuruşlu gösterilir,
+          // yuvarlanıp yanlış toplam gösterilmez.
           format={{
             minimumFractionDigits: currency === "TRY" && !Number.isInteger(displayPrice) ? 2 : 0,
             maximumFractionDigits: currency === "USD" || !Number.isInteger(displayPrice) ? 2 : 0,
@@ -636,7 +636,7 @@ function CycleAwareCard({
           spinTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
           transformTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
         />
-        <span className="text-gray-400 text-sm">{isYearly ? (tr ? "/ ay (yaklaşık)" : "/ mo (approx.)") : (tr ? "/ ay" : "/ mo")}</span>
+        <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>
       </div>
 
       {/* Billing note */}
@@ -804,7 +804,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
       };
     };
     // Fiyat bağlama ödeme özetiyle ve sunucuyla AYNI kuraldır (lib/checkoutQuote.ts):
-    // Business yıllığı aylıktan türetilir (~10 ay, 12'nin tam katı); 12 ile çarpılırsa
+    // Business yıllığı sabit tutardır (15.000); 12 ile çarpılırsa
     // ekranda indirimsiz tutar görünür ama ödemede indirimli tutar çekilir.
     // {editorFree} gibi yer tutucular yönetim panelindeki PDF Düzenle haklarıyla doldurulur.
     const fill = (p: PlanDefinition): PlanDefinition => ({
