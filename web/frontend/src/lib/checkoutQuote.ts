@@ -18,6 +18,46 @@ export const EXTRA_SEAT_UNIT = { TRY: 299, USD: 9.99 } as const;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/** Sunucudaki fiyat defteri (`/api/public/runtime` -> pricing.planPrices / extraSeat). Tutarlar metin: "449.00". */
+export type PlanPriceRow = { tryGrossMonthly: string; tryGrossYearly: string; usdMonthly: string; usdYearly: string };
+export type ServerPriceBook = {
+  planPrices?: Partial<Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", PlanPriceRow>>;
+  extraSeat?: { tryGrossMonthly: string; usdMonthly: string };
+};
+
+const minor = (s: string | undefined): number | null => {
+  const n = Math.round(Number.parseFloat(String(s ?? "")) * 100);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+/**
+ * Yönetim panelindeki FİYAT DEFTERİNİ (tüm ücretli planlar, TL + USD) plan listesine uygular.
+ * Sunucu aynı defterden tahsil eder; ana sayfa kartı, ödeme özeti ve ek koltuk ekranı bunu kullanır.
+ * Defter yoksa (eski sunucu / yüklenmedi) plan listesi olduğu gibi kalır.
+ */
+export function applyPriceBook(plans: PlanDefinition[], book: ServerPriceBook | null | undefined): PlanDefinition[] {
+  const rows = book?.planPrices;
+  if (!rows) return plans;
+  return plans.map((p) => {
+    const r = rows[p.id as "STARTER" | "PLUS" | "PRO" | "BUSINESS"];
+    if (!r) return p;
+    return {
+      ...p,
+      pricing: {
+        monthly: { TRY: minor(r.tryGrossMonthly) ?? p.pricing.monthly.TRY, USD: minor(r.usdMonthly) ?? p.pricing.monthly.USD },
+        yearly: { TRY: minor(r.tryGrossYearly) ?? p.pricing.yearly.TRY, USD: minor(r.usdYearly) ?? p.pricing.yearly.USD },
+      },
+    };
+  });
+}
+
+/** Ek koltuk birim fiyatı (KDV dahil TL / USD); defter yoksa koddaki varsayılan. */
+export function seatUnitFrom(book: ServerPriceBook | null | undefined): { TRY: number; USD: number } {
+  const t = Number.parseFloat(book?.extraSeat?.tryGrossMonthly ?? "");
+  const u = Number.parseFloat(book?.extraSeat?.usdMonthly ?? "");
+  return { TRY: t > 0 ? t : EXTRA_SEAT_UNIT.TRY, USD: u > 0 ? u : EXTRA_SEAT_UNIT.USD };
+}
+
 /** Aylık KDV dahil TL'den yıllık KDV dahil TL (tam 10 ay fiyatı). Sunucudaki `yearlyGrossFromMonthly` ile AYNI. */
 export function yearlyGrossFromMonthly(monthlyTry: number): number {
   return Math.round(monthlyTry * 10 * 100) / 100;
@@ -88,6 +128,8 @@ export function buildCheckoutQuote(input: {
   discountPercent: number | null;
   /** Yurt dışı ihracat istisnası açık mı (admin anahtarı). Verilmezse KAPALI sayılır → USD'ye de KDV eklenir. */
   exportExemption?: boolean;
+  /** Sunucudaki güncel ek koltuk fiyatı (verilmezse koddaki varsayılan). */
+  seatUnit?: { TRY: number; USD: number };
 }): CheckoutQuote | null {
   const { plan, cycle, currency, seatsOnly } = input;
   if (!seatsOnly && !plan) return null;
@@ -102,7 +144,7 @@ export function buildCheckoutQuote(input: {
     planNet = currency === "TRY" ? round2(gross / (1 + KDV_RATE)) : gross;
   }
   const seatCount = seatsOnly || input.planId === "BUSINESS" ? input.extraSeats : 0;
-  const seatUnitGross = EXTRA_SEAT_UNIT[currency];
+  const seatUnitGross = (input.seatUnit ?? EXTRA_SEAT_UNIT)[currency];
   const seatUnitNet = currency === "TRY" ? round2(seatUnitGross / (1 + KDV_RATE)) : seatUnitGross;
   const seatMonthly = seatCount * seatUnitNet;
   const seatTotal = yearly ? round2(seatMonthly * 12 * YEARLY_SEAT_DISCOUNT) : seatMonthly;

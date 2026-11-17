@@ -28,6 +28,8 @@ type Payload = {
   marketing: unknown;
   plansOverride: unknown;
   paymentPrices?: { PRO: string; BUSINESS: string; PRO_ANNUAL: string };
+  /** Şu an GEÇERLİ fiyat defteri (panelde kayıtlı değer ya da kod varsayılanı). */
+  priceBook?: { plans: Record<PaidKey, PlanPrice>; extraSeat: { tryGrossMonthly: string; usdMonthly: string } };
   featureCatalog?: string[];
   catalogue?: {
     prices: Record<PaidKey, PlanPrice>;
@@ -39,6 +41,10 @@ type Payload = {
     vatRate: number;
   };
 };
+
+type PriceField = keyof PlanPrice;
+type BookForm = { plans: Record<PaidKey, PlanPrice>; extraSeat: { tryGrossMonthly: string; usdMonthly: string } };
+const PAID_KEYS: PaidKey[] = ["STARTER", "PLUS", "PRO", "BUSINESS"];
 
 type PlanForm = {
   displayName: string;
@@ -221,10 +227,8 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   const [tab, setTab] = useState<"prices" | "access" | "vitrin">("prices");
 
   // Fiyatlar
-  const [proPrice, setProPrice] = useState("");
-  const [proAnnual, setProAnnual] = useState("");
-  const [businessPrice, setBusinessPrice] = useState("");
-  const savedPrices = useRef({ PRO: "", PRO_ANNUAL: "", BUSINESS: "" });
+  const [book, setBook] = useState<BookForm | null>(null);
+  const savedBook = useRef<string>("");
   const [pricesBusy, setPricesBusy] = useState(false);
   const [confirmPrices, setConfirmPrices] = useState(false);
 
@@ -258,15 +262,13 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         setPayload(d);
         setLoadErr(null);
 
-        const pp = d.paymentPrices;
-        const cat = d.catalogue?.prices;
-        const pro = pp?.PRO ?? cat?.PRO.tryGrossMonthly ?? "";
-        const proA = pp?.PRO_ANNUAL ?? cat?.PRO.tryGrossYearly ?? "";
-        const biz = pp?.BUSINESS ?? cat?.BUSINESS.tryGrossMonthly ?? "";
-        setProPrice(pro);
-        setProAnnual(proA);
-        setBusinessPrice(biz);
-        savedPrices.current = { PRO: pro, PRO_ANNUAL: proA, BUSINESS: biz };
+        const cat0 = d.catalogue?.prices;
+        const src = d.priceBook ?? (cat0 && d.catalogue ? { plans: cat0, extraSeat: d.catalogue.extraSeat } : null);
+        if (src) {
+          const b: BookForm = JSON.parse(JSON.stringify(src)) as BookForm;
+          setBook(b);
+          savedBook.current = JSON.stringify(b);
+        }
 
         // Vitrin
         const m = d.marketing;
@@ -331,40 +333,39 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   const vat = cat?.vatRate ?? 0.2;
 
   /* Değişiklik durumları */
-  const pricesDirty =
-    proPrice.trim() !== savedPrices.current.PRO ||
-    proAnnual.trim() !== savedPrices.current.PRO_ANNUAL ||
-    businessPrice.trim() !== savedPrices.current.BUSINESS;
+  const pricesDirty = book ? JSON.stringify(book) !== savedBook.current : false;
   const accessDirty = planForms ? JSON.stringify(planForms) !== savedForms.current : false;
   const vitrinDirty = JSON.stringify({ nextPc: planCards, starter: cardStarterTools }) !== savedVitrin.current;
 
-  /* Sapma: panelde kayıtlı fiyat ≠ koddaki fiyat */
+  /* Panelde kayıtlı fiyat, kod varsayılanından farklı mı? (bilgi amaçlı) */
   const drift = useMemo(() => {
-    if (!cat) return [] as Array<{ label: string; saved: string; code: string }>;
-    const rows: Array<{ label: string; saved: string; code: string }> = [];
-    const chk = (label: string, saved: string, code: string) => {
-      if (saved && Math.abs(num(saved) - num(code)) > 0.004) rows.push({ label, saved: fmtTry(num(saved)), code: fmtTry(num(code)) });
-    };
-    chk("Pro aylık", savedPrices.current.PRO, cat.prices.PRO.tryGrossMonthly);
-    chk("Pro yıllık", savedPrices.current.PRO_ANNUAL, cat.prices.PRO.tryGrossYearly);
-    chk("Business aylık", savedPrices.current.BUSINESS, cat.prices.BUSINESS.tryGrossMonthly);
+    if (!cat || !payload?.priceBook) return [] as string[];
+    const rows: string[] = [];
+    const lbl: Record<PriceField, string> = { tryGrossMonthly: "TL aylık", tryGrossYearly: "TL yıllık", usdMonthly: "$ aylık", usdYearly: "$ yıllık" };
+    for (const k of PAID_KEYS) {
+      for (const f of Object.keys(lbl) as PriceField[]) {
+        if (Math.abs(num(payload.priceBook.plans[k][f]) - num(cat.prices[k][f])) > 0.004) rows.push(`${PLAN_LABEL[k]} ${lbl[f]}`);
+      }
+    }
+    if (Math.abs(num(payload.priceBook.extraSeat.tryGrossMonthly) - num(cat.extraSeat.tryGrossMonthly)) > 0.004) rows.push("Ek koltuk TL");
+    if (Math.abs(num(payload.priceBook.extraSeat.usdMonthly) - num(cat.extraSeat.usdMonthly)) > 0.004) rows.push("Ek koltuk $");
     return rows;
-    // savedPrices bir ref; yükleme sonrası payload değişince yeniden hesaplanır.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat, payload]);
 
   /* ───────── Kaydetme işlemleri ───────── */
 
   const savePrices = async () => {
-    const vals = { PRO: num(proPrice), PRO_ANNUAL: num(proAnnual), BUSINESS: num(businessPrice) };
-    if (vals.PRO <= 0 || vals.PRO_ANNUAL <= 0 || vals.BUSINESS <= 0) {
-      emitAdminToast({ type: "error", message: "Fiyatlar sıfırdan büyük bir sayı olmalı (örn. 449.00)." });
+    if (!book) return;
+    const bad = PAID_KEYS.some((k) => (Object.keys(book.plans[k]) as PriceField[]).some((f) => num(book.plans[k][f]) <= 0)) ||
+      num(book.extraSeat.tryGrossMonthly) <= 0 || num(book.extraSeat.usdMonthly) <= 0;
+    if (bad) {
+      emitAdminToast({ type: "error", message: "Tüm fiyatlar sıfırdan büyük bir sayı olmalı (örn. 449.00)." });
       setConfirmPrices(false);
       return;
     }
     setPricesBusy(true);
     try {
-      await putAdminPlanPricing(accessToken, { PRO: proPrice.trim(), BUSINESS: businessPrice.trim(), PRO_ANNUAL: proAnnual.trim() });
+      await putAdminPlanPricing(accessToken, { plans: book.plans, extraSeat: book.extraSeat });
       emitAdminToast({ type: "success", message: "Fiyatlar kaydedildi. Ödeme ve fiyat kartları birkaç saniye içinde yeni tutarı kullanır." });
       notifyRuntimeRefresh();
       setConfirmPrices(false);
@@ -377,17 +378,17 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
   };
 
   const discardPrices = () => {
-    setProPrice(savedPrices.current.PRO);
-    setProAnnual(savedPrices.current.PRO_ANNUAL);
-    setBusinessPrice(savedPrices.current.BUSINESS);
+    if (savedBook.current) setBook(JSON.parse(savedBook.current) as BookForm);
   };
 
+  /** Koddaki güncel (resmî) fiyatları forma yükler; kaydedilene kadar canlıya geçmez. */
   const loadCodePrices = () => {
     if (!cat) return;
-    setProPrice(cat.prices.PRO.tryGrossMonthly);
-    setProAnnual(cat.prices.PRO.tryGrossYearly);
-    setBusinessPrice(cat.prices.BUSINESS.tryGrossMonthly);
+    setBook({ plans: JSON.parse(JSON.stringify(cat.prices)) as Record<PaidKey, PlanPrice>, extraSeat: { ...cat.extraSeat } });
   };
+
+  const setPrice = (k: PaidKey, f: PriceField, v: string) =>
+    setBook((prev) => (prev ? { ...prev, plans: { ...prev.plans, [k]: { ...prev.plans[k], [f]: v } } } : prev));
 
   const saveAccess = async () => {
     if (!planForms || !payload) return;
@@ -503,18 +504,9 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
     return <p className="px-2 py-10 text-center text-sm text-slate-400">Paket ve fiyat bilgileri yükleniyor…</p>;
   }
 
-  const proM = num(proPrice);
-  const proA = num(proAnnual);
-  const bizM = num(businessPrice);
-  const bizA = yearlyFromMonthly(bizM);
-
-  /** Plan kartında gösterilen güncel (panelde yazan) TL tutarlar. */
-  const tryOf = (k: PaidKey): { m: number; y: number | null; editable: boolean } => {
-    const yearly = cat.yearlyPlans.includes(k);
-    if (k === "PRO") return { m: proM, y: proA, editable: true };
-    if (k === "BUSINESS") return { m: bizM, y: bizA, editable: true };
-    return { m: num(cat.prices[k].tryGrossMonthly), y: yearly ? num(cat.prices[k].tryGrossYearly) : null, editable: false };
-  };
+  if (!book) {
+    return <p className="px-2 py-10 text-center text-sm text-slate-400">Fiyatlar yükleniyor…</p>;
+  }
 
   return (
     <div className="space-y-6">
@@ -538,7 +530,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
         value={tab}
         onChange={setTab}
         items={[
-          { id: "prices", label: "Fiyatlar", badge: pricesDirty ? "!" : drift.length ? String(drift.length) : null },
+          { id: "prices", label: "Fiyatlar", badge: pricesDirty ? "!" : null },
           { id: "access", label: "Erişim ve limitler", badge: accessDirty ? "!" : null },
           { id: "vitrin", label: "Ana sayfa kartları", badge: vitrinDirty ? "!" : null },
         ]}
@@ -552,33 +544,29 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
                 <div className="text-[13px] leading-relaxed text-amber-100/90">
-                  <p className="font-bold text-amber-200">Panelde kayıtlı fiyat, koddaki güncel fiyattan farklı.</p>
+                  <p className="font-bold text-amber-200">Bazı fiyatlar, kodda tanımlı güncel fiyattan farklı.</p>
                   <p className="mt-1">
-                    Müşteri <strong>panelde yazanı</strong> öder. Bu eski bir kayıt olabilir:{" "}
-                    {drift.map((d, i) => (
-                      <span key={d.label}>
-                        {i > 0 ? " · " : ""}
-                        {d.label}: panelde <strong>{d.saved}</strong>, kodda <strong>{d.code}</strong>
-                      </span>
-                    ))}
-                    .
+                    Müşteri <strong>burada yazanı</strong> öder. Farklı olanlar: {drift.join(", ")}. Bilerek değiştirdiyseniz sorun yok; eski bir kayıtsa
+                    “Güncel fiyatları yükle” ile düzeltip kaydedin.
                   </p>
                 </div>
               </div>
-              <GhostButton onClick={loadCodePrices}>Kod fiyatlarını yükle</GhostButton>
+              <GhostButton onClick={loadCodePrices}>Güncel fiyatları yükle</GhostButton>
             </div>
           ) : null}
 
           {/* Plan kartları */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             {PLAN_KEYS.map((k) => {
               const a = ACCENT[k];
               const st = payload.checkoutStats?.[k] ?? { completed: 0, pending: 0 };
               const lim = cat.limits[k];
-              const isPaid = k !== "FREE";
-              const t = isPaid ? tryOf(k as PaidKey) : null;
-              const net = t ? t.m / (1 + vat) : 0;
-              const disc = t && t.y != null && t.m > 0 ? Math.round((1 - t.y / (t.m * 12)) * 100) : 0;
+              const paid = k !== "FREE" ? (k as PaidKey) : null;
+              const row = paid ? book.plans[paid] : null;
+              const yearlySold = paid ? cat.yearlyPlans.includes(paid) : false;
+              const m = row ? num(row.tryGrossMonthly) : 0;
+              const y = row ? num(row.tryGrossYearly) : 0;
+              const disc = row && yearlySold && m > 0 ? Math.round((1 - y / (m * 12)) * 100) : 0;
               return (
                 <div key={k} className={`${SURFACE} ${a.ring} flex flex-col p-4`}>
                   <div className="flex items-center justify-between">
@@ -586,48 +574,42 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
                       <span className={`h-1.5 w-1.5 rounded-full ${a.dot}`} />
                       {PLAN_LABEL[k]}
                     </span>
-                    {isPaid ? (
-                      <span className="text-[10.5px] font-semibold text-slate-500">{t?.editable ? "Panelden değişir" : "Kodda tanımlı"}</span>
-                    ) : null}
                   </div>
 
-                  {isPaid && t ? (
+                  {paid && row ? (
                     <>
-                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Aylık (KDV dahil)</p>
-                      {k === "PRO" ? (
-                        <PriceInput value={proPrice} onChange={setProPrice} />
-                      ) : k === "BUSINESS" ? (
-                        <PriceInput value={businessPrice} onChange={setBusinessPrice} />
-                      ) : (
-                        <p className="mt-1 text-[26px] font-black leading-none tabular-nums text-white">{fmtTry(t.m)}</p>
-                      )}
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Türkiye · aylık (KDV dahil)</p>
+                      <PriceInput symbol="₺" value={row.tryGrossMonthly} onChange={(v) => setPrice(paid, "tryGrossMonthly", v)} />
 
-                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Yıllık (KDV dahil)</p>
-                      {t.y == null ? (
-                        <p className="mt-1 text-[13px] text-slate-500">Satılmıyor (yalnız aylık)</p>
-                      ) : k === "PRO" ? (
+                      {yearlySold ? (
                         <>
-                          <PriceInput value={proAnnual} onChange={setProAnnual} />
+                          <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Türkiye · yıllık (KDV dahil)</p>
+                          <PriceInput symbol="₺" value={row.tryGrossYearly} onChange={(v) => setPrice(paid, "tryGrossYearly", v)} />
                           <button
                             type="button"
-                            onClick={() => setProAnnual(yearlyFromMonthly(proM).toFixed(2))}
-                            className="mt-1.5 text-left text-[11.5px] font-semibold text-cyan-300 hover:underline"
+                            onClick={() => setPrice(paid, "tryGrossYearly", yearlyFromMonthly(m).toFixed(2))}
+                            className="mt-1 text-left text-[11.5px] font-semibold text-cyan-300 hover:underline"
                           >
-                            Aylık × 10 uygula ({fmtTry(yearlyFromMonthly(proM))})
+                            Aylık × 10 uygula ({fmtTry(yearlyFromMonthly(m))})
                           </button>
                         </>
                       ) : (
-                        <>
-                          <p className="mt-1 text-[22px] font-black leading-none tabular-nums text-white">{fmtTry(t.y)}</p>
-                          {k === "BUSINESS" ? <p className="mt-1 text-[11.5px] text-slate-500">Otomatik: aylık × 10</p> : null}
-                        </>
+                        <p className="mt-3 text-[12px] text-slate-500">Yıllık satılmıyor (yalnız aylık)</p>
                       )}
 
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Yurt dışı · aylık (USD)</p>
+                      <PriceInput symbol="$" value={row.usdMonthly} onChange={(v) => setPrice(paid, "usdMonthly", v)} />
+                      {yearlySold ? (
+                        <>
+                          <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Yurt dışı · yıllık (USD)</p>
+                          <PriceInput symbol="$" value={row.usdYearly} onChange={(v) => setPrice(paid, "usdYearly", v)} />
+                        </>
+                      ) : null}
+
                       <dl className="mt-4 space-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
-                        <Row label="Yıllık indirim" value={t.y != null ? `%${disc}` : "—"} />
-                        <Row label="Ayda yaklaşık (yıllık)" value={t.y != null ? fmtTry(Math.round(t.y / 12)) : "—"} />
-                        <Row label="KDV hariç aylık" value={fmtTry(Math.round(net * 100) / 100)} />
-                        <Row label="Dolar (aylık / yıllık)" value={`${fmtUsd(cat.prices[k as PaidKey].usdMonthly)} / ${t.y != null ? fmtUsd(cat.prices[k as PaidKey].usdYearly) : "—"}`} />
+                        <Row label="Yıllık indirim" value={yearlySold ? `%${disc}` : "—"} />
+                        <Row label="Ayda yaklaşık (yıllık)" value={yearlySold ? fmtTry(Math.round(y / 12)) : "—"} />
+                        <Row label="KDV hariç aylık" value={fmtTry(Math.round((m / (1 + vat)) * 100) / 100)} />
                       </dl>
                     </>
                   ) : (
@@ -656,19 +638,25 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
           {/* Ek koltuk + ekip havuzu */}
           <Panel
             title="Business ekip havuzu ve ek koltuk"
-            help="Business planı bir ekip havuzudur: tüm üyeler aynı aylık sayaçtan düşer. Aşağıdaki değerler kodda tanımlıdır; değişiklik gerekirse birlikte güncellenmesi gerekir (ekranlar, e-postalar, ödeme)."
+            help="Ek koltuk fiyatı buradan değişir. Havuz sayıları (5 dahil koltuk, işlem ve imza havuzu) kodda tanımlıdır; ekranlar, e-postalar ve ödeme aynı sayıları taşıdığı için birlikte güncellenmeleri gerekir."
           >
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+                <p className="text-[11.5px] font-semibold text-slate-500">Ek koltuk · TL / ay (KDV dahil)</p>
+                <PriceInput symbol="₺" value={book.extraSeat.tryGrossMonthly} onChange={(v) => setBook((p) => (p ? { ...p, extraSeat: { ...p.extraSeat, tryGrossMonthly: v } } : p))} />
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+                <p className="text-[11.5px] font-semibold text-slate-500">Ek koltuk · USD / ay</p>
+                <PriceInput symbol="$" value={book.extraSeat.usdMonthly} onChange={(v) => setBook((p) => (p ? { ...p, extraSeat: { ...p.extraSeat, usdMonthly: v } } : p))} />
+              </div>
               <Stat label="Dahil koltuk" value={`${cat.team.includedSeats} kişi`} sub={`En çok ${cat.team.maxTotalSeats} kişi`} />
-              <Stat label="Ek koltuk fiyatı" value={`${fmtTry(num(cat.extraSeat.tryGrossMonthly))} / ay`} sub={`${fmtUsd(cat.extraSeat.usdMonthly)} / ay`} />
-              <Stat label="Havuz: sunucu işlemi" value={`${fmtNum(cat.limits.BUSINESS.monthlyOperationLimit)} / ay`} sub={`Ek koltuk başına +${fmtNum(cat.team.extraSeatMonthlyOps)}`} />
-              <Stat label="Havuz: imza isteği" value={`${fmtNum(cat.team.signatureRequestsBase)} / ay`} sub={`Ek koltuk başına +${cat.team.extraSeatSignatureRequests}`} />
+              <Stat label="Havuz" value={`${fmtNum(cat.limits.BUSINESS.monthlyOperationLimit)} işlem / ay`} sub={`Ek koltuk başına +${fmtNum(cat.team.extraSeatMonthlyOps)} · imza ${cat.team.signatureRequestsBase}/ay (+${cat.team.extraSeatSignatureRequests})`} />
             </div>
           </Panel>
 
           <p className="text-[12px] leading-relaxed text-slate-500">
-            Başlangıç ve Plus fiyatları ile tüm dolar fiyatları kodda sabittir (ekranda güvenle görünsün, kimse yanlışlıkla değiştirmesin diye). Pro ve Business TL fiyatları bu ekrandan
-            değişir. Yıllık Business fiyatı her zaman aylığın 10 katıdır.
+            Tüm fiyatlar buradan değişir ve ödeme ekranı, ana sayfa kartları ile fatura aynı tutarı kullanır. Varsayılan değerler koddaki güncel fiyatlardır; hiç kayıt yapmasanız da
+            müşteri bunları görür. Türkiye fiyatları KDV dahildir; yurt dışı (USD) fiyatlara KDV, ihracat istisnası kapalıyken ödeme ekranında eklenir.
           </p>
 
           <SaveBar dirty={pricesDirty} busy={pricesBusy} onSave={() => setConfirmPrices(true)} onDiscard={discardPrices} label="Fiyatları kaydet" />
@@ -676,7 +664,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
           <ConfirmModal
             open={confirmPrices}
             title="Fiyatlar canlıya geçsin mi?"
-            message={`Pro aylık ${fmtTry(proM)}, Pro yıllık ${fmtTry(proA)}, Business aylık ${fmtTry(bizM)} (yıllık ${fmtTry(bizA)}). Kaydettiğiniz anda ödeme ekranı ve fiyat kartları bu tutarları kullanır.`}
+            message={`Başlangıç ${fmtTry(num(book.plans.STARTER.tryGrossMonthly))}, Plus ${fmtTry(num(book.plans.PLUS.tryGrossMonthly))}, Pro ${fmtTry(num(book.plans.PRO.tryGrossMonthly))}, Business ${fmtTry(num(book.plans.BUSINESS.tryGrossMonthly))} (aylık, KDV dahil). Dolar: $${book.plans.STARTER.usdMonthly} / $${book.plans.PLUS.usdMonthly} / $${book.plans.PRO.usdMonthly} / $${book.plans.BUSINESS.usdMonthly}. Kaydettiğiniz anda ödeme ekranı ve fiyat kartları bu tutarları kullanır.`}
             confirmLabel="Evet, kaydet"
             busy={pricesBusy}
             onConfirm={savePrices}
@@ -956,16 +944,16 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-function PriceInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function PriceInput({ value, onChange, symbol }: { value: string; onChange: (v: string) => void; symbol: string }) {
   return (
     <div className="mt-1 flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-black/30 px-3 py-1.5 focus-within:border-cyan-400/70">
-      <span className="text-lg font-black text-slate-400">₺</span>
+      <span className="text-base font-black text-slate-400">{symbol}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         inputMode="decimal"
-        aria-label="Fiyat"
-        className="w-full min-w-0 bg-transparent text-xl font-black tabular-nums text-white outline-none"
+        aria-label={`Fiyat (${symbol})`}
+        className="w-full min-w-0 bg-transparent text-lg font-black tabular-nums text-white outline-none"
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { PLAN_PRICES, EXTRA_SEAT_PRICE, BUSINESS_TEAM, YEARLY_BILLING_PLANS, netFromGrossTry, yearlyGrossFromMonthly, type PaidPlanId } from "../../lib/plan-catalogue.js";
-import { getPaymentPricesTry } from "./payment-pricing.js";
+import { BUSINESS_TEAM, YEARLY_BILLING_PLANS, netFromGrossTry, type PaidPlanId } from "../../lib/plan-catalogue.js";
+import { getPriceBook } from "./payment-pricing.js";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentCheckoutSession } from "./payment.service.js";
@@ -79,23 +79,6 @@ export async function getExitIntentOfferController(request: Request, response: R
  *
  * USD tarafında ihracat istisnası nedeniyle KDV %0'dır; net = brüt.
  */
-const PLAN_PRICES_TRY: Record<PaidPlanId, { monthly: string; yearly: string }> = {
-  STARTER: { monthly: netFromGrossTry(PLAN_PRICES.STARTER.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.STARTER.tryGrossYearly) },
-  PLUS: { monthly: netFromGrossTry(PLAN_PRICES.PLUS.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.PLUS.tryGrossYearly) },
-  PRO: { monthly: netFromGrossTry(PLAN_PRICES.PRO.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.PRO.tryGrossYearly) },
-  BUSINESS: { monthly: netFromGrossTry(PLAN_PRICES.BUSINESS.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.BUSINESS.tryGrossYearly) },
-};
-
-const PLAN_PRICES_USD: Record<PaidPlanId, { monthly: string; yearly: string }> = {
-  STARTER: { monthly: PLAN_PRICES.STARTER.usdMonthly, yearly: PLAN_PRICES.STARTER.usdYearly },
-  PLUS: { monthly: PLAN_PRICES.PLUS.usdMonthly, yearly: PLAN_PRICES.PLUS.usdYearly },
-  PRO: { monthly: PLAN_PRICES.PRO.usdMonthly, yearly: PLAN_PRICES.PRO.usdYearly },
-  BUSINESS: { monthly: PLAN_PRICES.BUSINESS.usdMonthly, yearly: PLAN_PRICES.BUSINESS.usdYearly },
-};
-
-const EXTRA_SEAT_PRICE_TRY = Number.parseFloat(netFromGrossTry(EXTRA_SEAT_PRICE.tryGrossMonthly));
-const EXTRA_SEAT_PRICE_USD = Number.parseFloat(EXTRA_SEAT_PRICE.usdMonthly);
-
 const BASKET_NAMES_TR: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", string> = {
   STARTER: "PDF PLATFORM Başlangıç",
   PLUS: "PDF PLATFORM Plus",
@@ -197,22 +180,22 @@ export async function initializePaymentsController(request: Request, response: R
   // AYNI tutarı çekmeli. Panel yalnız Pro aylık/yıllık ve Business aylık için
   // tutar girilmesine izin verir; Business yıllığı bundan türetilir (ön yüzle aynı kural). Panelde
   // elle girilmemişse bu değerler katalogla birebir aynıdır.
+  // Fiyatlar yönetim panelindeki FİYAT DEFTERİNDEN (varsayılan: plan-catalogue.ts) okunur;
+  // ekranda görülen tutar ile tahsil edilen tutar aynı kaynaktan gelir.
+  const book = await getPriceBook();
   let priceObj: { monthly: string; yearly: string };
   if (checkoutCurrency === "USD") {
-    priceObj = PLAN_PRICES_USD[planId];
+    priceObj = { monthly: book.plans[planId].usdMonthly, yearly: book.plans[planId].usdYearly };
   } else {
-    const admin = await getPaymentPricesTry();
-    const grossMonthly =
-      planId === "PRO" ? admin.PRO : planId === "BUSINESS" ? admin.BUSINESS : PLAN_PRICES[planId].tryGrossMonthly;
-    const grossYearly =
-      planId === "PRO"
-        ? admin.PRO_ANNUAL
-        : planId === "BUSINESS"
-          ? yearlyGrossFromMonthly(admin.BUSINESS)
-          : PLAN_PRICES[planId].tryGrossYearly;
-    priceObj = { monthly: netFromGrossTry(grossMonthly), yearly: netFromGrossTry(grossYearly) };
+    priceObj = {
+      monthly: netFromGrossTry(book.plans[planId].tryGrossMonthly),
+      yearly: netFromGrossTry(book.plans[planId].tryGrossYearly),
+    };
   }
-  const seatUnitPrice = checkoutCurrency === "USD" ? EXTRA_SEAT_PRICE_USD : EXTRA_SEAT_PRICE_TRY;
+  const seatUnitPrice =
+    checkoutCurrency === "USD"
+      ? Number.parseFloat(book.extraSeat.usdMonthly)
+      : Number.parseFloat(netFromGrossTry(book.extraSeat.tryGrossMonthly));
   const seatMonthlyTotal = (extraSeats ?? 0) * seatUnitPrice;
   // Yıllık koltuklarda %17 indirim (10 ay fiyatına 12 ay = aylık * 12 * 0.83)
   const YEARLY_SEAT_DISCOUNT = 0.83;
@@ -326,26 +309,18 @@ export async function getPaymentsPricingPublicController(request: Request, respo
   if (typeof raw === "string" && isCheckoutCurrency(raw)) {
     c = raw;
   }
-  const admin = await getPaymentPricesTry();
+  const book = await getPriceBook();
   const plans = (["STARTER", "PLUS", "PRO", "BUSINESS"] as const).map((id) => {
-    if (c === "TRY") {
-      const monthly = id === "PRO" ? admin.PRO : id === "BUSINESS" ? admin.BUSINESS : PLAN_PRICES[id].tryGrossMonthly;
-      const yearly = !YEARLY_BILLING_PLANS.includes(id)
-        ? null
-        : id === "PRO"
-          ? admin.PRO_ANNUAL
-          : id === "BUSINESS"
-            ? yearlyGrossFromMonthly(admin.BUSINESS)
-            : PLAN_PRICES[id].tryGrossYearly;
-      return { id, monthly, yearly };
-    }
+    const row = book.plans[id];
+    const yearlyOk = YEARLY_BILLING_PLANS.includes(id);
+    if (c === "TRY") return { id, monthly: row.tryGrossMonthly, yearly: yearlyOk ? row.tryGrossYearly : null };
     // EUR ekranda gösterilir ama ödeme USD bandıyla işlenir (bkz. initializePaymentsController).
-    return { id, monthly: PLAN_PRICES[id].usdMonthly, yearly: YEARLY_BILLING_PLANS.includes(id) ? PLAN_PRICES[id].usdYearly : null };
+    return { id, monthly: row.usdMonthly, yearly: yearlyOk ? row.usdYearly : null };
   });
   response.status(200).json({
     currency: c,
     vatIncluded: c === "TRY",
     plans,
-    extraSeatMonthly: c === "TRY" ? EXTRA_SEAT_PRICE.tryGrossMonthly : EXTRA_SEAT_PRICE.usdMonthly,
+    extraSeatMonthly: c === "TRY" ? book.extraSeat.tryGrossMonthly : book.extraSeat.usdMonthly,
   });
 }

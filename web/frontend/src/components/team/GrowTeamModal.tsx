@@ -2,11 +2,10 @@ import { PRICES_HIDDEN } from "../../lib/priceVisibility";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
-import { EXTRA_SEAT_UNIT, YEARLY_SEAT_DISCOUNT } from "../../lib/checkoutQuote";
+import { seatUnitFrom, YEARLY_SEAT_DISCOUNT } from "../../lib/checkoutQuote";
+import { useSettings } from "../../contexts/SettingsContext";
 
-// Tek kaynak: sunucudaki `plan-catalogue.ts` → EXTRA_SEAT_PRICE (ön yüz kopyası checkoutQuote.ts'te).
-const SEAT_PRICE_TRY = EXTRA_SEAT_UNIT.TRY;  // ₺/kişi/ay (KDV dahil)
-const SEAT_PRICE_USD = EXTRA_SEAT_UNIT.USD;  // $/kişi/ay
+// Ek koltuk fiyatı yönetim panelindeki fiyat defterinden gelir (varsayılan: plan-catalogue.ts -> EXTRA_SEAT_PRICE).
 const YEARLY_DISCOUNT = YEARLY_SEAT_DISCOUNT; // %17 tasarruf
 /** Ekip en fazla 50 kişi: 5 dahil + 45 ek (sunucudaki BUSINESS_TEAM ile AYNI). */
 const MAX_EXTRA_SEATS = 45;
@@ -20,8 +19,10 @@ type Props = {
 
 export function GrowTeamModal({ open, onClose, currentExtraSeats, onPurchaseIntent }: Props) {
   const { currency } = useCheckoutCurrency();
+  const { pricing } = useSettings();
+  const seatUnits = seatUnitFrom(pricing);
   const effectiveCurrency = currency === "TRY" ? "TRY" : "USD";
-  const unitPrice = effectiveCurrency === "TRY" ? SEAT_PRICE_TRY : SEAT_PRICE_USD;
+  const unitPrice = effectiveCurrency === "TRY" ? seatUnits.TRY : seatUnits.USD;
   const sym = effectiveCurrency === "TRY" ? "₺" : "$";
   const fmt = (n: number) =>
     PRICES_HIDDEN

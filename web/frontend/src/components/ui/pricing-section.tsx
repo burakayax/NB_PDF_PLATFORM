@@ -13,7 +13,7 @@ import { sidebarToolLabel } from "../../i18n/workspace";
 import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { useSettings } from "../../contexts/SettingsContext";
-import { applyTryPriceOverrides, EXTRA_SEAT_UNIT } from "../../lib/checkoutQuote";
+import { applyPriceBook, applyTryPriceOverrides, seatUnitFrom } from "../../lib/checkoutQuote";
 import { POPULAR_BADGE_HIDDEN, PRICES_HIDDEN, priceComingSoonLabel } from "../../lib/priceVisibility";
 import { PaytrBadge } from "../common/PaytrBadge";
 
@@ -431,8 +431,6 @@ function MonthlyOnlyCard({
 }
 
 /** Pro and Business each manage their own billing cycle toggle internally. */
-const EXTRA_SEAT_PRICE_TRY = EXTRA_SEAT_UNIT.TRY * 100; // kuruş (₺299/ay, KDV dahil)
-const EXTRA_SEAT_PRICE_USD = Math.round(EXTRA_SEAT_UNIT.USD * 100); // sent ($9.99/ay)
 /** Ekip en fazla 50 kişi: 5 dahil + 45 ek (sunucudaki BUSINESS_TEAM ile AYNI). */
 const MAX_EXTRA_SEATS = 45;
 /** Yıllık ödemede koltuklara da indirim uygulanır — sunucudaki (payments.controller) katsayıyla AYNI olmalı. */
@@ -480,7 +478,9 @@ function CycleAwareCard({
   const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
 
   const baseMonthlyPrice = monthlyEquivPrice(plan, currency, cycle);
-  const extraSeatUnitPrice = faceValue(currency === "TRY" ? EXTRA_SEAT_PRICE_TRY : EXTRA_SEAT_PRICE_USD);
+  const { pricing: serverPricing } = useSettings();
+  const seatUnits = seatUnitFrom(serverPricing); // ek koltuk: yönetim panelindeki fiyat defteri
+  const extraSeatUnitPrice = faceValue(currency === "TRY" ? Math.round(seatUnits.TRY * 100) : Math.round(seatUnits.USD * 100));
   const extraSeatTotal = isBusiness
     ? extraSeats * extraSeatUnitPrice * (cycle === "YEARLY" ? YEARLY_SEAT_DISCOUNT : 1)
     : 0;
@@ -565,8 +565,8 @@ function CycleAwareCard({
           {!pricesHidden && (
             <p className="mt-0.5 text-center text-[11px] text-slate-400">
               {tr
-                ? `+${currency === "TRY" ? `₺${EXTRA_SEAT_UNIT.TRY}` : `$${EXTRA_SEAT_UNIT.USD}`}/kişi/ay · havuza +1.000 işlem`
-                : `+${currency === "TRY" ? `₺${EXTRA_SEAT_UNIT.TRY}` : `$${EXTRA_SEAT_UNIT.USD}`}/seat/mo · +1,000 operations to the pool`}
+                ? `+${currency === "TRY" ? `₺${seatUnits.TRY}` : `$${seatUnits.USD}`}/kişi/ay · havuza +1.000 işlem`
+                : `+${currency === "TRY" ? `₺${seatUnits.TRY}` : `$${seatUnits.USD}`}/seat/mo · +1,000 operations to the pool`}
             </p>
           )}
           <div className="mt-2 flex items-center justify-center gap-3">
@@ -807,7 +807,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
       featuresTr: p.featuresTr.map((f) => fillEditorTokens(f, editorLimits)),
       featuresEn: p.featuresEn.map((f) => fillEditorTokens(f, editorLimits)),
     });
-    return applyTryPriceOverrides(PLANS.map(withCard).map(fill), pricing?.tryPrices);
+    const filled = PLANS.map(withCard).map(fill);
+    return pricing?.planPrices ? applyPriceBook(filled, pricing) : applyTryPriceOverrides(filled, pricing?.tryPrices);
   }, [pricing, cards, editorLimits]);
   const [free, starter, plus, pro, business] = plansAdjusted;
 

@@ -14,7 +14,7 @@ import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import type { AdminActor } from "./admin-audit.service.js";
 import { auditedPackagesPartial, auditedPatchSetting, logAdminAudit } from "./admin-audit.service.js";
 import { isAdminEmail, resolveRoleFromEmail } from "../../lib/role-policy.js";
-import { getPaymentPricesTry } from "../payment/payment-pricing.js";
+import { getPaymentPricesTry, getPriceBook } from "../payment/payment-pricing.js";
 import { featureCatalog } from "../subscription/subscription.config.js";
 import {
   AI_MONTHLY_CREDITS,
@@ -806,21 +806,14 @@ export async function adminRemoveBlockedEmailRaw(email: string) {
 }
 
 export async function adminPutPaymentPrices(
-  prices: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string },
+  body: {
+    plans?: Partial<Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", Partial<Record<"tryGrossMonthly" | "tryGrossYearly" | "usdMonthly" | "usdYearly", string>>>>;
+    extraSeat?: Partial<Record<"tryGrossMonthly" | "usdMonthly", string>>;
+  },
   actor: AdminActor,
 ) {
   try {
-    const patch: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string } = {
-      PRO: prices.PRO,
-      BUSINESS: prices.BUSINESS,
-    };
-    if (prices.PRO_ANNUAL !== undefined) patch.PRO_ANNUAL = prices.PRO_ANNUAL;
-    await auditedPackagesPartial(
-      { prices: patch },
-      actor,
-      "plans.pricing",
-      "Ödeme fiyatları güncellendi",
-    );
+    await auditedPackagesPartial({ priceBook: body }, actor, "plans.pricing", "Ödeme fiyatları güncellendi");
   } catch {
     throw new HttpError(400, "Invalid price values. Use positive numbers (e.g. 199.99).");
   }
@@ -975,6 +968,7 @@ export async function getPlansAdminPayload() {
   const marketingParsed = pkg.marketing;
 
   const paymentPrices = await getPaymentPricesTry();
+  const priceBook = await getPriceBook();
 
   // Kodda tanımlı (varsayılan) fiyat ve limitler — yönetim ekranı bunları "şu an kayıtlı olan" ile karşılaştırıp
   // sapmayı gösterir ve tek tuşla katalog değerine döndürür. Salt okunur.
@@ -994,6 +988,7 @@ export async function getPlansAdminPayload() {
     marketing: marketingParsed,
     plansOverride,
     paymentPrices,
+    priceBook,
     catalogue,
     featureCatalog: [...featureCatalog],
   };

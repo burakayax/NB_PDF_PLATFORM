@@ -11,7 +11,7 @@ import { buildRecordPastLimitCopy, buildSummaryUpgradeHint } from "./conversion-
 import { getResolvedTOOLSBusinessConfig } from "./tools-config-runtime.js";
 import { computeUsageSoftWarnings, mergeUsageSoftWarnings } from "./usage-soft-warnings.js";
 import { featureCatalog, type FeatureKey } from "./subscription.config.js";
-import { getPaymentPricesTry } from "../payment/payment-pricing.js";
+import { getPriceBook } from "../payment/payment-pricing.js";
 import { isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
 import { getPlanDefinitionsResolved } from "./plan-runtime.js";
 import {
@@ -127,12 +127,11 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
 
 async function serializePlanCatalog() {
   const defs = await getPlanDefinitionsResolved();
-  const prices = await getPaymentPricesTry();
+  const book = await getPriceBook();
   return Object.values(defs).map((plan) => ({
     ...plan,
-    monthlyPriceTry:
-      plan.name === "FREE" ? null : (prices[plan.name as "PRO" | "BUSINESS"] ?? null),
-    annualPriceTry: plan.name === "PRO" ? prices.PRO_ANNUAL : null,
+    monthlyPriceTry: plan.name === "FREE" ? null : book.plans[plan.name as "STARTER" | "PLUS" | "PRO" | "BUSINESS"].tryGrossMonthly,
+    annualPriceTry: plan.name === "FREE" ? null : book.plans[plan.name as "STARTER" | "PLUS" | "PRO" | "BUSINESS"].tryGrossYearly,
   }));
 }
 

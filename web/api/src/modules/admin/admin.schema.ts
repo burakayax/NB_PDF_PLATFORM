@@ -59,11 +59,28 @@ export const adminDeleteUserQuerySchema = z.object({
     .transform((v) => v === "true" || v === "1"),
 });
 
+const priceStr = z.string().min(1).max(32);
+const planPriceSchema = z
+  .object({
+    tryGrossMonthly: priceStr,
+    tryGrossYearly: priceStr,
+    usdMonthly: priceStr,
+    usdYearly: priceStr,
+  })
+  .partial();
+
+/** Fiyat defteri: her ücretli planın TL (KDV dahil) + USD fiyatı ve ek koltuk. Gönderilmeyen alan korunur. */
 export const adminPaymentPricesBodySchema = z.object({
-  PRO: z.string().min(1).max(32),
-  BUSINESS: z.string().min(1).max(32),
-  // Pro yıllık toplam tutar (opsiyonel — gönderilmezse mevcut değer korunur).
-  PRO_ANNUAL: z.string().min(1).max(32).optional(),
+  plans: z
+    .object({
+      STARTER: planPriceSchema,
+      PLUS: planPriceSchema,
+      PRO: planPriceSchema,
+      BUSINESS: planPriceSchema,
+    })
+    .partial()
+    .optional(),
+  extraSeat: z.object({ tryGrossMonthly: priceStr, usdMonthly: priceStr }).partial().optional(),
 });
 
 export const adminBlockedEmailBodySchema = z.object({

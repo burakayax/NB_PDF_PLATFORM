@@ -16,7 +16,7 @@ import {
   normalizeIyzicoMoneyString,
 } from "../credit-checkout/credit-pack-pricing.js";
 import type { CheckoutCurrency } from "./pricing-matrix.js";
-import { getPaymentPricesTry } from "./payment-pricing.js";
+import { getPriceBook } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
 import { invoicingPaused, exportExemptionOpen } from "../../lib/feature-switches.js";
 import { captureCardEvidence, CARD_COUNTRY_UNKNOWN } from "./card-evidence.service.js";
@@ -492,19 +492,11 @@ export async function createPaymentCheckoutSession(params: {
   paymentPageUrl?: string;
   conversationId: string;
 }> {
-  const prices = await getPaymentPricesTry();
-  const isAnnualPro = params.plan === "PRO" && params.billing === "annual";
-  const subscriptionDays =
-    params.subscriptionDaysOverride ?? (isAnnualPro ? 365 : 30);
-  const rawFromCatalog =
-    params.priceTryOverride ??
-    (params.plan === "BUSINESS"
-      ? prices.BUSINESS
-      : params.plan === "PLUS"
-        ? prices.PRO
-        : isAnnualPro
-          ? prices.PRO_ANNUAL
-          : prices.PRO);
+  const book = await getPriceBook();
+  const isAnnualPlan = params.billing === "annual";
+  const subscriptionDays = params.subscriptionDaysOverride ?? (isAnnualPlan ? 365 : 30);
+  const planRow = book.plans[params.plan as "STARTER" | "PLUS" | "PRO" | "BUSINESS"] ?? book.plans.PRO;
+  const rawFromCatalog = params.priceTryOverride ?? (isAnnualPlan ? planRow.tryGrossYearly : planRow.tryGrossMonthly);
   // netPrice = katalog fiyati (KDV haric)
   const netPrice = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
@@ -567,7 +559,7 @@ export async function createPaymentCheckoutSession(params: {
       ? "PDF PLATFORM Business (1 ay)"
       : params.plan === "PLUS"
         ? "PDF PLATFORM Plus (1 ay)"
-        : isAnnualPro
+        : (params.plan === "PRO" && isAnnualPlan)
           ? "PDF PLATFORM PRO (1 yıl)"
           : "PDF PLATFORM PRO (1 ay)";
   })();
