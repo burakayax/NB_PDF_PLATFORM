@@ -626,7 +626,12 @@ function CycleAwareCard({
         <span className="text-gray-400 text-lg font-semibold">{sym}</span>
         <NumberFlow
           value={displayPrice}
-          format={{ maximumFractionDigits: currency === "USD" ? 2 : 0 }}
+          // Yıllık planda aylık karşılık tam bölümdür (₺2.790 / 12 = ₺232,50); yuvarlayıp ₺233 yazmak
+          // "233 × 12 = 2.796" farkı yaratıyordu. Kuruşlu sonuç artık kuruşlu gösterilir.
+          format={{
+            minimumFractionDigits: currency === "TRY" && !Number.isInteger(displayPrice) ? 2 : 0,
+            maximumFractionDigits: currency === "USD" || !Number.isInteger(displayPrice) ? 2 : 0,
+          }}
           className="text-4xl lg:text-5xl font-black text-white tabular-nums"
           spinTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}
           transformTiming={{ duration: 500, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }}

@@ -678,7 +678,7 @@ export function PackagesTab({ accessToken }: { accessToken: string; uiMode?: unk
 
                       <dl className="mt-4 space-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
                         <Row label="Yıllık indirim" value={yearlySold ? `%${disc}` : "—"} />
-                        <Row label="Ayda yaklaşık (yıllık)" value={yearlySold ? fmtTry(Math.round(y / 12)) : "—"} />
+                        <Row label="Ayda yaklaşık (yıllık)" value={yearlySold ? fmtTry(Math.round((y / 12) * 100) / 100) : "—"} />
                         <Row label="KDV hariç aylık" value={fmtTry(Math.round((m / (1 + vat)) * 100) / 100)} />
                       </dl>
                     </>
