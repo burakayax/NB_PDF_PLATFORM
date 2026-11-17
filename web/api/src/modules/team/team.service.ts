@@ -10,6 +10,7 @@ import {
 } from "../email/teamEmails.js";
 
 import { businessMonthlyOps } from "../../lib/plan-catalogue.js";
+import { getSavedLimits } from "../../lib/packages-config.service.js";
 
 export async function createTeamForOwner(ownerId: string, ownerName: string) {
   const existing = await prisma.team.findUnique({ where: { ownerId } });
@@ -301,11 +302,12 @@ export async function checkUsageAndNotify() {
     },
   });
 
+  const savedBusinessBase = (await getSavedLimits())?.BUSINESS?.monthlyOperationLimit;
   for (const team of teams) {
     const org = team.owner.organization;
     // Sayaç ay başında tembel sıfırlanır; geçen aydan kalan sayı bu ayın kullanımı sayılmaz.
     const usedOps = org && org.lastMonthlyReset >= monthStart ? org.currentMonthOperations : 0;
-    const poolLimit = businessMonthlyOps(team.extraSeats);
+    const poolLimit = businessMonthlyOps(team.extraSeats, savedBusinessBase);
     const usageRatio = usedOps / poolLimit;
     if (usageRatio >= 0.8 && usageRatio < 1.0) {
       const patronName = [team.owner.firstName, team.owner.lastName].filter(Boolean).join(" ") || team.owner.email;

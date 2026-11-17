@@ -271,27 +271,27 @@ export async function getPublicCardsConfig(): Promise<PublicCardsConfig> {
 }
 
 async function getPublicCardsConfigBase(): Promise<PublicCardsConfig> {
-  const starterDefault = [...planDefinitions.STARTER.allowedFeatures] as string[];
+  // "Hangileri?" listesi artık elle tutulmaz: Başlangıç planının GERÇEK araç erişiminden (panel "Araç erişimi") gelir.
+  let starterTools = [...planDefinitions.STARTER.allowedFeatures] as string[];
+  try {
+    const defs = await getPlanDefinitionsResolved();
+    if (defs.STARTER.allowedFeatures.length) starterTools = [...defs.STARTER.allowedFeatures] as string[];
+  } catch {
+    /* varsayılan liste */
+  }
   try {
     const { marketing } = await getResolvedPackagesConfig();
     if (marketing && typeof marketing === "object" && !Array.isArray(marketing)) {
       const cards = (marketing as Record<string, unknown>).cards;
       if (cards && typeof cards === "object" && !Array.isArray(cards)) {
-        const cardsRec = cards as Record<string, unknown>;
-        const st = cardsRec.starterTools;
-        const planCards = sanitizePlanCards(cardsRec.planCards);
-        let starterTools = starterDefault;
-        if (Array.isArray(st)) {
-          const filtered = st.filter((x): x is string => typeof x === "string" && isFeatureKey(x));
-          if (filtered.length) starterTools = filtered;
-        }
+        const planCards = sanitizePlanCards((cards as Record<string, unknown>).planCards);
         return { starterTools, planCards };
       }
     }
   } catch {
     /* fall through to default */
   }
-  return { starterTools: starterDefault };
+  return { starterTools };
 }
 
 export async function getPublicRuntimePayload(request: Request) {

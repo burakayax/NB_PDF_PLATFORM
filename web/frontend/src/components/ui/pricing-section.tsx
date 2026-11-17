@@ -230,7 +230,7 @@ function FreeCard({
     >
       <div className="text-2xl mb-3">🆓</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
-      <p className="text-gray-400 text-sm mb-5">{tr ? "Başla, kart gerekmez." : "Get started, no card required."}</p>
+      <p className="text-gray-400 text-sm mb-5">{(tr ? plan.taglineTr : plan.taglineEn) || (tr ? "Başla, kart gerekmez." : "Get started, no card required.")}</p>
       <div className="mb-6 flex items-baseline gap-1.5">
         <span className="text-4xl lg:text-5xl font-black text-white">{freeLabel}</span>
         <span className="text-gray-400 text-sm">{tr ? "/ ay" : "/ mo"}</span>

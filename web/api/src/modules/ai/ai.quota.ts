@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { env } from "../../config/env.js";
 import { TOPUP_PACKS as TOPUP_PACKS_LIST } from "../../lib/plan-catalogue.js";
+import { getSavedLimits } from "../../lib/packages-config.service.js";
 
 /** Geçerli ay anahtarı, ör. "2026-07" (UTC). */
 export function currentYearMonth(d = new Date()): string {
@@ -27,6 +28,17 @@ export function aiLimitForPlan(
   if (plan === "PLUS") return env.AI_MONTHLY_LIMIT_PLUS;
   if (plan === "STARTER") return env.AI_MONTHLY_LIMIT_STARTER;
   return 0;
+}
+
+/**
+ * Aylık AI hakkı — önce yönetim panelinde kaydedilmiş değer, yoksa `aiLimitForPlan` (ortam ayarı / katalog).
+ * Panel okunamazsa eski davranışa düşer.
+ */
+export async function resolveAiLimit(plan: string | undefined, role: string | undefined): Promise<number | null> {
+  const base = aiLimitForPlan(plan, role);
+  if (base === null || !plan || plan === "FREE") return base;
+  const saved = (await getSavedLimits())?.[plan as "STARTER" | "PLUS" | "PRO" | "BUSINESS"]?.aiMonthlyCredits;
+  return typeof saved === "number" ? saved : base;
 }
 
 export type AiQuota = {
@@ -59,7 +71,7 @@ export async function getAiQuota(
   plan?: string,
   role?: string,
 ): Promise<AiQuota> {
-  const limit = aiLimitForPlan(plan, role);
+  const limit = await resolveAiLimit(plan, role);
   const yearMonth = currentYearMonth();
   const [row, user] = await Promise.all([
     prisma.aiUsage.findUnique({ where: { userId_yearMonth: { userId, yearMonth } } }),
@@ -87,7 +99,7 @@ export async function hasAiQuota(
   plan?: string,
   role?: string,
 ): Promise<boolean> {
-  const limit = aiLimitForPlan(plan, role);
+  const limit = await resolveAiLimit(plan, role);
   if (limit === null) return true; // admin sınırsız
   const q = await getAiQuota(userId, plan, role);
   return (q.remaining ?? 0) > 0;
@@ -121,7 +133,7 @@ export async function reserveAiQuota(
 ): Promise<boolean> {
   const need = Math.max(1, Math.floor(units));
   const yearMonth = currentYearMonth();
-  const limit = aiLimitForPlan(plan, role);
+  const limit = await resolveAiLimit(plan, role);
 
   // Sınırsız (admin): yalnızca sayaç ilerlet.
   if (limit === null) {
@@ -232,7 +244,7 @@ export async function refundAiQuota(
 ): Promise<void> {
   const back = Math.max(1, Math.floor(units));
   const yearMonth = currentYearMonth();
-  const limit = aiLimitForPlan(plan, role);
+  const limit = await resolveAiLimit(plan, role);
   if (limit === null) {
     await prisma.aiUsage.updateMany({
       where: { userId, yearMonth, count: { gte: back } },

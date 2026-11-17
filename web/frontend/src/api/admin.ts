@@ -335,6 +335,28 @@ export async function putAdminPlanPricing(
   }
 }
 
+export type AdminLimitRow = {
+  dailyOperationLimit: number | null;
+  monthlyOperationLimit: number;
+  fileSizeLimitMB: number;
+  batchLimit: number;
+  aiMonthlyCredits: number;
+};
+
+/** Plan başına sunucu işlemi / dosya boyutu / toplu işlem / yapay zekâ limitlerini kaydeder (gönderilmeyen plan korunur). */
+export async function putAdminPlanLimits(
+  accessToken: string,
+  limits: Partial<Record<"FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS", Partial<AdminLimitRow>>>,
+): Promise<void> {
+  const r = await adminFetch(accessToken, "/plans/limits", {
+    method: "PUT",
+    body: JSON.stringify({ limits }),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+}
+
 export async function createAdminUser(
   accessToken: string,
   body: {

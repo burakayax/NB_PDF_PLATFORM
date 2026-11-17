@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { getSavedLimits } from "../../lib/packages-config.service.js";
 import { AI_TOOL_CATALOG } from "../ai/ai-tool-switch.js";
 import type { Express } from "express";
 import { HttpError } from "../../lib/http-error.js";
@@ -27,6 +28,7 @@ import {
   adminListUsersQuerySchema,
   adminPatchSettingsSchema,
   adminPaymentPricesBodySchema,
+  adminPlanLimitsBodySchema,
   adminResetBodySchema,
   adminRevisionsQuerySchema,
   adminGrantTempPlanSchema,
@@ -47,6 +49,7 @@ import {
 import {
   adminAddBlockedEmailRaw,
   adminPutPaymentPrices,
+  adminPutPlanLimits,
   adminRemoveBlockedEmailRaw,
   buildUsageExportCsv,
   createUserForAdmin,
@@ -276,10 +279,13 @@ export async function adminGetUserDetailController(
     .sort((x, y) => y.count - x.count);
   // Günlük kullanım hakkı paneli için özet (efektif = (özel ?? plan) + bugünkü bonus).
   const org = user.organization;
-  const base = org?.customDailyLimit ?? org?.dailyOperationLimit ?? null;
+  // Plan günlük hakkı: panelde kayıtlı limit varsa o, yoksa kayıtlı satır değeri.
+  const savedPlanDaily = (await getSavedLimits())?.[user.plan as "FREE"]?.dailyOperationLimit;
+  const planDaily = savedPlanDaily !== undefined ? savedPlanDaily : (org?.dailyOperationLimit ?? null);
+  const base = org?.customDailyLimit ?? planDaily;
   const usage = org
     ? {
-        planDailyLimit: org.dailyOperationLimit,
+        planDailyLimit: planDaily,
         customDailyLimit: org.customDailyLimit,
         bonusDailyOperations: org.bonusDailyOperations,
         currentDayOperations: org.currentDayOperations,
@@ -368,6 +374,15 @@ export async function adminPutPaymentPricesController(
     );
   }
   await adminPutPaymentPrices(parsed.data, adminActor(request));
+  response.json({ ok: true });
+}
+
+export async function adminPutPlanLimitsController(request: Request, response: Response) {
+  const parsed = adminPlanLimitsBodySchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  await adminPutPlanLimits(parsed.data, adminActor(request));
   response.json({ ok: true });
 }
 
