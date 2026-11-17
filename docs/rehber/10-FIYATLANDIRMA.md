@@ -247,3 +247,11 @@ Aynı düzeltme kredi paketi iadesine de uygulandı (önceden kredi paketi iades
 `prisma db push` ile otomatik eklenir. **Açmadan önce iyzico sandbox'ta bir CV Geçişi alıp** (a) tutarın ekrandakiyle aynı
 çıktığını, (b) şablonların açıldığını, (c) iadede kilitlendiğini kontrol et. Canlı iyzico akışı henüz denenmedi.
 SEO metinlerine ("CV Geçişi ile açılır") ödeme açılınca eklenmelidir; şimdilik yazılmadı.
+
+## Yönetim panelinden fiyat değiştirme (2026-11-17)
+Panel → **Paket ve fiyat → Fiyatlar**: Başlangıç, Plus, Pro, Business için TL (KDV dahil) aylık/yıllık, USD aylık/yıllık ve ek koltuk fiyatı
+buradan değişir. Ödeme, ana sayfa kartları, ödeme özeti ve ek koltuk ekranı AYNI "fiyat defterinden" okur.
+- **Varsayılan = koddaki güncel fiyatlar** (`web/api/src/lib/plan-catalogue.ts`). Panelde hiç kayıt yapılmazsa müşteri bunları görür/öder.
+- Eski sistemde kaydedilmiş Pro/Business TL fiyatları artık OKUNMAZ (eski kayıt yeni fiyatı ezmesin diye). Yeni defter panelden kaydedilince geçerli olur.
+- Panelde kayıtlı fiyat koddakinden farklıysa ekranda sarı uyarı çıkar; "Güncel fiyatları yükle" ile koddakilere dönülür (kaydedilene kadar canlıya geçmez).
+- Geri alma: "Güncel fiyatları yükle" → "Fiyatları kaydet".

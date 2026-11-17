@@ -20,6 +20,15 @@ vi.mock("../api/admin", () => ({
     plansOverride: {},
     // Panelde ESKİ bir Pro fiyatı kayıtlı → sapma uyarısı çıkmalı
     paymentPrices: { PRO: "399.00", BUSINESS: "1499.00", PRO_ANNUAL: "4490.00" },
+    priceBook: {
+      plans: {
+        STARTER: { tryGrossMonthly: "129.00", tryGrossYearly: "1290.00", usdMonthly: "4.99", usdYearly: "49.92" },
+        PLUS: { tryGrossMonthly: "279.00", tryGrossYearly: "2790.00", usdMonthly: "7.99", usdYearly: "59.99" },
+        PRO: { tryGrossMonthly: "399.00", tryGrossYearly: "4490.00", usdMonthly: "12.99", usdYearly: "99.99" },
+        BUSINESS: { tryGrossMonthly: "1499.00", tryGrossYearly: "14990.00", usdMonthly: "49.99", usdYearly: "499.99" },
+      },
+      extraSeat: { tryGrossMonthly: "299.00", usdMonthly: "9.99" },
+    },
     featureCatalog: ["merge", "compress", "split"],
     catalogue: {
       prices: {
@@ -55,26 +64,38 @@ describe("Paket ve fiyat ekranı", () => {
     putOverride.mockClear();
   });
 
-  it("beş planın hepsini ve fiyatlarını gösterir; eski panel fiyatını uyarır", async () => {
+  it("beş planın hepsini ve TL + USD fiyatlarını gösterir; kodla farklı kaydı uyarır", async () => {
     render(<PackagesTab accessToken="t" />);
     await screen.findByText("Paket ve fiyat");
     for (const n of ["Ücretsiz", "Başlangıç", "Plus", "Pro", "Business"]) {
       expect(screen.getAllByText(n).length).toBeGreaterThan(0);
     }
-    expect(screen.getByText("₺129")).toBeTruthy(); // Başlangıç — kodda
-    expect(screen.getByText("₺279")).toBeTruthy(); // Plus — kodda
-    expect(screen.getByText(/koddaki güncel fiyattan farklı/)).toBeTruthy();
+    expect(screen.getByDisplayValue("129.00")).toBeTruthy(); // Başlangıç TL — artık düzenlenebilir
+    expect(screen.getByDisplayValue("7.99")).toBeTruthy(); // Plus USD
+    expect(screen.getByDisplayValue("9.99")).toBeTruthy(); // ek koltuk USD
+    expect(screen.getByText(/koddaki? tanımlı güncel fiyattan farklı|kodda tanımlı güncel fiyattan farklı/)).toBeTruthy();
   });
 
-  it("fiyat değişince kaydetme onay ister ve Pro/Business/yıllık değerleri gönderir", async () => {
+  it("Plus USD fiyatı değiştirilip kaydedilir; tüm planların TL+USD defteri gönderilir", async () => {
     const user = userEvent.setup();
     render(<PackagesTab accessToken="t" />);
     await screen.findByText("Paket ve fiyat");
-    await user.click(screen.getByText("Kod fiyatlarını yükle"));
+    await user.click(screen.getByText("Güncel fiyatları yükle")); // eski Pro 399 → koddaki 449
+    const plusUsd = screen.getByDisplayValue("7.99");
+    await user.clear(plusUsd);
+    await user.type(plusUsd, "8.49");
     await user.click(screen.getByText("Fiyatları kaydet"));
     await user.click(await screen.findByText("Evet, kaydet"));
     await waitFor(() => expect(putPricing).toHaveBeenCalledTimes(1));
-    expect(putPricing.mock.calls[0]).toEqual(["t", { PRO: "449.00", BUSINESS: "1499.00", PRO_ANNUAL: "4490.00" }]);
+    const body = (putPricing.mock.calls[0] as unknown[])[1] as {
+      plans: Record<string, Record<string, string>>;
+      extraSeat: Record<string, string>;
+    };
+    expect(body.plans.PRO.tryGrossMonthly).toBe("449.00");
+    expect(body.plans.PLUS.usdMonthly).toBe("8.49");
+    expect(body.plans.STARTER.tryGrossMonthly).toBe("129.00");
+    expect(body.plans.BUSINESS.usdYearly).toBe("499.99");
+    expect(body.extraSeat).toEqual({ tryGrossMonthly: "299.00", usdMonthly: "9.99" });
   });
 
   it("erişim sekmesi beş plan sütunu gösterir ve yalnız değişen planı kaydeder", async () => {

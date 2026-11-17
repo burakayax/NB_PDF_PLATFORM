@@ -1,5 +1,4 @@
 import { readEditorLimits } from "../editor-limits/editor-limits.config.js";
-import { PLAN_PRICES } from "../../lib/plan-catalogue.js";
 import type { Request } from "express";
 import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
@@ -8,7 +7,7 @@ import { getSetting } from "../../lib/site-config.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { DEFAULT_GLOBAL_NOTIFICATIONS } from "../admin/admin-system-defaults.js";
 import { getCmsContent } from "../admin/admin.service.js";
-import { getPaymentPricesTry } from "../payment/payment-pricing.js";
+import { getPriceBook, type PriceBook } from "../payment/payment-pricing.js";
 import { getPlanDefinitionsResolved } from "../subscription/plan-runtime.js";
 import { getResolvedPackagesConfig } from "../../lib/packages-config.service.js";
 import { planDefinitions, isFeatureKey } from "../subscription/subscription.config.js";
@@ -145,26 +144,14 @@ export async function getPublicCmsPayload() {
 
 export async function getPublicPlansPayload() {
   const defs = await getPlanDefinitionsResolved();
-  const prices = await getPaymentPricesTry();
+  const book = await getPriceBook();
   const plans = Object.values(defs).map((p) => ({
     ...p,
-    monthlyPriceTry:
-      p.name === "FREE" ? null : (prices[p.name as "PRO" | "BUSINESS"] ?? null),
-    annualPriceTry: p.name === "PRO" ? prices.PRO_ANNUAL : null,
+    monthlyPriceTry: p.name === "FREE" ? null : book.plans[p.name as keyof PriceBook["plans"]].tryGrossMonthly,
+    annualPriceTry: p.name === "FREE" ? null : book.plans[p.name as keyof PriceBook["plans"]].tryGrossYearly,
   }));
   return { plans };
 }
-
-/**
- * Yurt dışı ziyaretçiye gösterilen USD fiyatları — fiyat kataloğundan.
- * `basicMonthly` alan adı Business planını taşır (tarihsel ad, TL tarafındaki
- * `businessMonthly` ile eşleşir).
- */
-const USD_MARKETING = {
-  basicMonthly: PLAN_PRICES.BUSINESS.usdMonthly,
-  proMonthly: PLAN_PRICES.PRO.usdMonthly,
-  proAnnual: PLAN_PRICES.PRO.usdYearly,
-} as const;
 
 function annualSavingsPercent(monthly: number, annualPrice: number): number {
   const yearAtMonthly = monthly * 12;
@@ -179,30 +166,35 @@ export type PublicPricingPayload = {
   detectedCountry: string | null;
   checkoutCurrency: "TRY";
   tryPrices: { businessMonthly: string; proMonthly: string; proAnnual: string };
-  usdDisplay: typeof USD_MARKETING;
+  usdDisplay: { basicMonthly: string; proMonthly: string; proAnnual: string };
+  /** Tüm ücretli planların güncel fiyatları (TL KDV dahil, USD) + ek koltuk. Ekranlar bunu kullanır. */
+  planPrices: PriceBook["plans"];
+  extraSeat: PriceBook["extraSeat"];
   annualSavePercent: number;
   internationalCheckoutNote: { en: string; tr: string };
 };
 
-export function buildPublicPricingPayload(prices: Awaited<ReturnType<typeof getPaymentPricesTry>>, request: Request): PublicPricingPayload {
+export function buildPublicPricingPayload(book: PriceBook, request: Request): PublicPricingPayload {
   const { pricingRegion, country } = inferPricingRegionFromRequest(request);
-  const tryProM = Number.parseFloat(prices.PRO);
-  const tryProA = Number.parseFloat(prices.PRO_ANNUAL);
-  const saveTry = annualSavingsPercent(tryProM, tryProA);
-  const saveUsd = annualSavingsPercent(
-    Number.parseFloat(USD_MARKETING.proMonthly),
-    Number.parseFloat(USD_MARKETING.proAnnual),
-  );
+  const saveTry = annualSavingsPercent(Number.parseFloat(book.plans.PRO.tryGrossMonthly), Number.parseFloat(book.plans.PRO.tryGrossYearly));
+  const saveUsd = annualSavingsPercent(Number.parseFloat(book.plans.PRO.usdMonthly), Number.parseFloat(book.plans.PRO.usdYearly));
   return {
     pricingRegion,
     detectedCountry: country,
     checkoutCurrency: "TRY",
     tryPrices: {
-      businessMonthly: prices.BUSINESS,
-      proMonthly: prices.PRO,
-      proAnnual: prices.PRO_ANNUAL,
+      businessMonthly: book.plans.BUSINESS.tryGrossMonthly,
+      proMonthly: book.plans.PRO.tryGrossMonthly,
+      proAnnual: book.plans.PRO.tryGrossYearly,
     },
-    usdDisplay: USD_MARKETING,
+    // `basicMonthly` alan adı Business planını taşır (tarihsel ad; TL'deki `businessMonthly` ile eşleşir).
+    usdDisplay: {
+      basicMonthly: book.plans.BUSINESS.usdMonthly,
+      proMonthly: book.plans.PRO.usdMonthly,
+      proAnnual: book.plans.PRO.usdYearly,
+    },
+    planPrices: book.plans,
+    extraSeat: book.extraSeat,
     annualSavePercent: pricingRegion === "TR" ? saveTry : saveUsd,
     internationalCheckoutNote: {
       en: "Checkout is processed in Turkish Lira (TRY) via our payment partner; your bank may show an equivalent in your currency.",
@@ -308,7 +300,7 @@ export async function getPublicRuntimePayload(request: Request) {
     getPublicSiteConfig(),
     getPublicPlansPayload(),
     getPublicTOOLSSlice(),
-    getPaymentPricesTry(),
+    getPriceBook(),
     getPublicCardsConfig(),
   ]);
   const pricing = buildPublicPricingPayload(tryPrices, request);

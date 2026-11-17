@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, typ
 import type { Language } from "../../i18n/landing";
 import type { PlanId } from "../../lib/planConfig";
 import { PLANS } from "../../lib/planConfig";
-import { applyTryPriceOverrides, buildCheckoutQuote, EXTRA_SEAT_UNIT } from "../../lib/checkoutQuote";
+import { applyPriceBook, applyTryPriceOverrides, buildCheckoutQuote, seatUnitFrom } from "../../lib/checkoutQuote";
 import { useSettings } from "../../contexts/SettingsContext";
 import { fillEditorTokens, useEditorLimits } from "../../lib/editorLimits";
 import { confirmFakeCheckout, resolveFakePaymentRedirect } from "../../api/fakePayment";
@@ -203,11 +203,14 @@ export function PaymentSummaryModal({
   const editorLimits = useEditorLimits();
   const plan = useMemo(() => {
     const base = PLANS.find((p) => p.id === planId);
-    return base ? applyTryPriceOverrides([base], pricing?.tryPrices)[0] : undefined;
+    if (!base) return undefined;
+    // Tam fiyat defteri varsa (TL + USD, tüm planlar) onu, yoksa eski Pro/Business TL bilgisini uygula.
+    return pricing?.planPrices ? applyPriceBook([base], pricing)[0] : applyTryPriceOverrides([base], pricing?.tryPrices)[0];
   }, [planId, pricing]);
   const isTry = checkoutCurrency === "TRY";
 
-  const seatUnit = isTry ? EXTRA_SEAT_UNIT.TRY : EXTRA_SEAT_UNIT.USD;
+  const seatUnits = seatUnitFrom(pricing);
+  const seatUnit = isTry ? seatUnits.TRY : seatUnits.USD;
   const seatSym = isTry ? "₺" : "$";
 
   const planName = seatsOnly
@@ -226,6 +229,7 @@ export function PaymentSummaryModal({
     seatsOnly,
     discountPercent: promoApplied?.discountPercent ?? null,
     exportExemption,
+    seatUnit: seatUnits,
   });
   const fmtMoney = (n: number) =>
     n.toLocaleString(isTry ? "tr-TR" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

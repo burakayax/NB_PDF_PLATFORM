@@ -53,6 +53,9 @@ export type PublicPricingPayload = {
   checkoutCurrency: "TRY";
   tryPrices: { businessMonthly: string; proMonthly: string; proAnnual: string };
   usdDisplay: { basicMonthly: string; proMonthly: string; proAnnual: string };
+  /** Tüm ücretli planların güncel fiyatları (yönetim panelinden; TL KDV dahil, USD). */
+  planPrices?: Partial<Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { tryGrossMonthly: string; tryGrossYearly: string; usdMonthly: string; usdYearly: string }>>;
+  extraSeat?: { tryGrossMonthly: string; usdMonthly: string };
   annualSavePercent: number;
   internationalCheckoutNote: { en: string; tr: string };
 };

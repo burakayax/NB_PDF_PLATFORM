@@ -1,4 +1,4 @@
-import { PLAN_PRICES } from "./plan-catalogue.js";
+import { EXTRA_SEAT_PRICE, PLAN_PRICES, type PaidPlanId, type PlanPrice } from "./plan-catalogue.js";
 import { getSetting, registerPackagesMergedInvalidator, setSetting } from "./site-config.service.js";
 import { SITE_SETTING_KEYS } from "./site-setting-keys.js";
 
@@ -16,10 +16,68 @@ export const DEFAULT_PAYMENT_PRICES_TRY: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL
   PRO_ANNUAL: PLAN_PRICES.PRO.tryGrossYearly,
 };
 
+/**
+ * FİYAT DEFTERİ — tüm ücretli planların TL (KDV dahil) ve USD fiyatları + ek koltuk.
+ * Varsayılanı `plan-catalogue.ts`'tir; yönetim panelinde kayıtlı değer varsa o geçerlidir.
+ * ESKİ `prices` (yalnız Pro/Business) kaydı artık OKUNMAZ: eski bir kayıt yeni katalog
+ * fiyatını sessizce ezmesin diye. Yönetim paneli yeni defteri yazar.
+ */
+export type PriceBook = {
+  plans: Record<PaidPlanId, PlanPrice>;
+  extraSeat: { tryGrossMonthly: string; usdMonthly: string };
+};
+export type PriceBookPatch = {
+  plans?: Partial<Record<PaidPlanId, Partial<PlanPrice>>>;
+  extraSeat?: Partial<PriceBook["extraSeat"]>;
+};
+const PAID_IDS: PaidPlanId[] = ["STARTER", "PLUS", "PRO", "BUSINESS"];
+const PRICE_FIELDS: Array<keyof PlanPrice> = ["tryGrossMonthly", "tryGrossYearly", "usdMonthly", "usdYearly"];
+
+export function defaultPriceBook(): PriceBook {
+  const plans = {} as Record<PaidPlanId, PlanPrice>;
+  for (const id of PAID_IDS) plans[id] = { ...PLAN_PRICES[id] };
+  return { plans, extraSeat: { ...EXTRA_SEAT_PRICE } };
+}
+
+function mergePriceBook(raw: unknown): PriceBook {
+  const out = defaultPriceBook();
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  const r = raw as { plans?: Record<string, Record<string, unknown>>; extraSeat?: Record<string, unknown> };
+  for (const id of PAID_IDS) {
+    const row = r.plans?.[id];
+    if (!row || typeof row !== "object") continue;
+    for (const f of PRICE_FIELDS) {
+      const v = row[f];
+      if (typeof v !== "string") continue;
+      try {
+        const n = parsePriceToFixed2(v);
+        if (Number.parseFloat(n) > 0) out.plans[id][f] = n;
+      } catch {
+        /* keep default */
+      }
+    }
+  }
+  const seat = r.extraSeat;
+  if (seat && typeof seat === "object") {
+    for (const f of ["tryGrossMonthly", "usdMonthly"] as const) {
+      const v = seat[f];
+      if (typeof v !== "string") continue;
+      try {
+        const n = parsePriceToFixed2(v);
+        if (Number.parseFloat(n) > 0) out.extraSeat[f] = n;
+      } catch {
+        /* keep default */
+      }
+    }
+  }
+  return out;
+}
+
 type UnifiedPackagesShape = {
   plansOverride?: unknown;
   marketing?: unknown;
   prices?: Partial<Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>>;
+  priceBook?: unknown;
 };
 
 let mergedCache: { at: number; v: ResolvedPackagesConfig } | null = null;
@@ -48,50 +106,21 @@ function parsePriceToFixed2(raw: string): string {
   return n.toFixed(2);
 }
 
-function mergePricesFromUnknown(raw: unknown): Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string> {
-  const out = { ...DEFAULT_PAYMENT_PRICES_TRY };
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return out;
-  }
-  const p = raw as Record<string, unknown>;
-  if (typeof p.PRO === "string") {
-    try {
-      out.PRO = parsePriceToFixed2(p.PRO);
-    } catch {
-      /* keep default */
-    }
-  }
-  if (typeof p.BUSINESS === "string") {
-    try {
-      out.BUSINESS = parsePriceToFixed2(p.BUSINESS);
-    } catch {
-      /* keep default */
-    }
-  }
-  if (typeof p.PRO_ANNUAL === "string") {
-    try {
-      out.PRO_ANNUAL = parsePriceToFixed2(p.PRO_ANNUAL);
-    } catch {
-      /* keep default */
-    }
-  }
-  return out;
-}
-
 export type ResolvedPackagesConfig = {
   plansOverride: Record<string, unknown>;
   marketing: unknown;
+  /** Geriye dönük kısa görünüm: fiyat defterinden türetilir (TL, KDV dahil). */
   prices: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>;
+  priceBook: PriceBook;
 };
 
 async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> {
   // Dört anahtar AYNI ANDA istenir: getSetting bunları tek `WHERE key IN (...)` sorgusunda toplar.
   // Eskiden eski (legacy) anahtarlar sırayla bekleniyordu → her biri ayrı sorgu (Sentry "N+1 sorgu").
-  const [unifiedRaw, legacyPlans, legacyMarketing, legacyPrices] = await Promise.all([
+  const [unifiedRaw, legacyPlans, legacyMarketing] = await Promise.all([
     getSetting(SITE_SETTING_KEYS.PACKAGES_CONFIG),
     getSetting(SITE_SETTING_KEYS.PLANS_OVERRIDE_LEGACY),
     getSetting(SITE_SETTING_KEYS.PACKAGES_MARKETING_LEGACY),
-    getSetting(SITE_SETTING_KEYS.PAYMENT_PRICES_LEGACY),
   ]);
   const unified =
     unifiedRaw != null && typeof unifiedRaw === "object" && !Array.isArray(unifiedRaw)
@@ -116,15 +145,14 @@ async function computeResolvedPackagesConfig(): Promise<ResolvedPackagesConfig> 
     marketing = legacyMarketing ?? {};
   }
 
-  let prices: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>;
-  if (hasOwn(unified as object, "prices")) {
-    prices = mergePricesFromUnknown(unified.prices);
-  } else {
-    const leg = legacyPrices;
-    prices = mergePricesFromUnknown(leg);
-  }
+  const priceBook = mergePriceBook(unified.priceBook);
+  const prices = {
+    PRO: priceBook.plans.PRO.tryGrossMonthly,
+    BUSINESS: priceBook.plans.BUSINESS.tryGrossMonthly,
+    PRO_ANNUAL: priceBook.plans.PRO.tryGrossYearly,
+  };
 
-  return { plansOverride, marketing, prices };
+  return { plansOverride, marketing, prices, priceBook };
 }
 
 /**
@@ -155,6 +183,7 @@ export async function upsertPackagesConfigPartial(patch: {
   plansOverride?: unknown;
   marketing?: unknown;
   prices?: Partial<Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string>>;
+  priceBook?: PriceBookPatch;
 }): Promise<void> {
   const base = await readUnifiedRowForWrite();
   const next: Record<string, unknown> = { ...base };
@@ -181,17 +210,37 @@ export async function upsertPackagesConfigPartial(patch: {
     }
     next.prices = merged;
   }
+  if (patch.priceBook !== undefined) {
+    // Kayıtlı defteri ve gelen yamayı üst üste bindir; yalnız GEÇERLİ sayılar yazılır.
+    const cur = mergePriceBook(next.priceBook);
+    for (const id of PAID_IDS) {
+      const row = patch.priceBook.plans?.[id];
+      if (!row) continue;
+      for (const f of PRICE_FIELDS) {
+        const v = row[f];
+        if (v !== undefined) cur.plans[id][f] = parsePriceToFixed2(v);
+      }
+    }
+    for (const f of ["tryGrossMonthly", "usdMonthly"] as const) {
+      const v = patch.priceBook.extraSeat?.[f];
+      if (v !== undefined) cur.extraSeat[f] = parsePriceToFixed2(v);
+    }
+    for (const id of PAID_IDS) {
+      for (const f of PRICE_FIELDS) {
+        if (!(Number.parseFloat(cur.plans[id][f]) > 0)) throw new Error("Invalid price.");
+      }
+    }
+    if (!(Number.parseFloat(cur.extraSeat.tryGrossMonthly) > 0 && Number.parseFloat(cur.extraSeat.usdMonthly) > 0)) {
+      throw new Error("Invalid price.");
+    }
+    next.priceBook = cur;
+  }
   await setSetting(SITE_SETTING_KEYS.PACKAGES_CONFIG, next);
 }
 
 export async function putPaymentPricesTry(prices: Record<"PRO" | "BUSINESS", string>) {
-  const cur = await computeResolvedPackagesConfig();
   await upsertPackagesConfigPartial({
-    prices: {
-      PRO: parsePriceToFixed2(prices.PRO),
-      BUSINESS: parsePriceToFixed2(prices.BUSINESS),
-      PRO_ANNUAL: cur.prices.PRO_ANNUAL,
-    },
+    priceBook: { plans: { PRO: { tryGrossMonthly: prices.PRO }, BUSINESS: { tryGrossMonthly: prices.BUSINESS } } },
   });
 }
 

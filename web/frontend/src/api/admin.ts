@@ -316,7 +316,16 @@ export async function deleteAdminBlockedEmail(accessToken: string, email: string
   }
 }
 
-export async function putAdminPlanPricing(accessToken: string, prices: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string }): Promise<void> {
+export type AdminPriceRow = { tryGrossMonthly: string; tryGrossYearly: string; usdMonthly: string; usdYearly: string };
+
+/** Fiyat defteri: tüm ücretli planların TL (KDV dahil) + USD fiyatı ve ek koltuk. */
+export async function putAdminPlanPricing(
+  accessToken: string,
+  prices: {
+    plans?: Partial<Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", Partial<AdminPriceRow>>>;
+    extraSeat?: Partial<{ tryGrossMonthly: string; usdMonthly: string }>;
+  },
+): Promise<void> {
   const r = await adminFetch(accessToken, "/plans/pricing", {
     method: "PUT",
     body: JSON.stringify(prices),
