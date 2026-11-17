@@ -102,3 +102,19 @@ describe("sayımlar", () => {
     expect(rows.find((r) => r.name === "Google")).toMatchObject({ visitors: 1, bought: 1 });
   });
 });
+
+describe("sayfa listesi", () => {
+  it("adresi okunur ada çevirir", async () => {
+    const { pageLabel } = await import("../admin/journey/insightsModel");
+    expect(pageLabel("/")).toBe("Ana sayfa");
+    expect(pageLabel("/tools/pdf-sikistir")).toBe("Araç: pdf sikistir");
+    expect(pageLabel("/blog/pdf-nedir/?utm_source=x")).toBe("Blog: pdf nedir");
+  });
+  it("hangi sayfaya kaç farklı kişi baktığını sayar", async () => {
+    const { pageRows } = await import("../admin/journey/insightsModel");
+    const mk = (id: string, pages: Array<[string, number]>) =>
+      ({ id, firstSeenAt: "", lastSeenAt: "", userId: null, who: null, isMember: false, referrer: null, utmSource: null, utmMedium: null, utmCampaign: null, landingPath: "/", pageCount: 1, events: [], pages: pages.map(([path, views]) => ({ path, views, at: "" })) }) as never;
+    const rows = pageRows([mk("a", [["/tools/x", 2], ["/", 1]]), mk("b", [["/tools/x", 1]])]);
+    expect(rows[0]).toMatchObject({ path: "/tools/x", visitors: 2, views: 3 });
+  });
+});
