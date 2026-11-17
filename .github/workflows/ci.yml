@@ -309,9 +309,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Boş veritabanı + gölge veritabanı oluştur
+      - name: Boş veritabanları oluştur
         run: |
-          for d in fresh legacy shadow; do
+          for d in fresh legacy; do
             PGPASSWORD=test psql -h localhost -U postgres -c "CREATE DATABASE $d"
           done
 
@@ -320,11 +320,13 @@ jobs:
           DATABASE_URL: ${{ env.PGBASE }}/fresh
         run: npx prisma migrate deploy
 
-      - name: "B) Defter ile şema arasında fark yok mu"
+      - name: "B) Defter uygulanmış veritabanı ile şema arasında fark yok mu"
         env:
           DATABASE_URL: ${{ env.PGBASE }}/fresh
         run: |
-          npx prisma migrate diff             --from-migrations prisma/migrations-postgres             --to-schema prisma/schema.postgres.prisma             --shadow-database-url "$PGBASE/shadow"             --exit-code
+          # A adımında defter uygulandı; şimdi o veritabanı şemayla karşılaştırılır.
+          # Şemaya alan eklenip defter yazılmadıysa burada fark çıkar ve kontrol kırmızı olur.
+          npx prisma migrate diff             --from-config-datasource             --to-schema prisma/schema.postgres.prisma             --exit-code
 
       - name: "C) Eski (db push) veritabanı → deploy betiği"
         env:
