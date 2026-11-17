@@ -502,7 +502,7 @@ function CycleAwareCard({
         isPlus
           ? "border border-blue-500/50 bg-gradient-to-b from-blue-950/60 to-slate-950/60 shadow-2xl shadow-blue-500/15 ring-1 ring-blue-500/20"
           : isPro
-          ? "border border-amber-500/25 bg-white/[0.03] hover:border-amber-500/40 hover:bg-white/[0.05]"
+          ? "nb-pro-pulse border border-amber-500/50 bg-white/[0.04] hover:bg-white/[0.06]"
           : "border border-violet-500/25 bg-white/[0.03] hover:border-violet-500/40 hover:bg-white/[0.05]"
       }`}
     >
@@ -823,6 +823,12 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan, on
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.07)_0%,transparent_70%)]" />
 
       <style>{`
+        @keyframes nb-pro-pulse {
+          0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0), 0 0 14px 0 rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+          50% { box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 0 34px 4px rgba(245,158,11,0.35); border-color: rgba(251,191,36,0.9); }
+        }
+        .nb-pro-pulse { animation: nb-pro-pulse 2.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .nb-pro-pulse { animation: none; } }
         @keyframes shimmer {
           0%,100% { transform: translateX(-150%) skewX(-12deg); }
           50% { transform: translateX(250%) skewX(-12deg); }
