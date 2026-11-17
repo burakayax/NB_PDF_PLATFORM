@@ -23,7 +23,7 @@ import { captureCardEvidence, CARD_COUNTRY_UNKNOWN } from "./card-evidence.servi
 import { invoiceDelayHours, scheduleInvoiceRecord, reviewCardAtPayment } from "./invoice-schedule.service.js";
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
-import { cvPassInvoiceLabel, cvPassNewExpiry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
+import { cvPassInvoiceLabel, cvPassNewExpiry, netFromGrossTry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
 import { missingInvoiceAddressFields } from "../billing/invoice-address.js";
 import { getPaytrCredentials, isPaytrSelected, startPaytrSession } from "./paytr/paytr.service.js";
 import { queryPaytrStatus, requestPaytrRefund, summarizePaytrReturns, toKurus } from "./paytr/paytr.client.js";
@@ -496,8 +496,10 @@ export async function createPaymentCheckoutSession(params: {
   const isAnnualPlan = params.billing === "annual";
   const subscriptionDays = params.subscriptionDaysOverride ?? (isAnnualPlan ? 365 : 30);
   const planRow = book.plans[params.plan as "STARTER" | "PLUS" | "PRO" | "BUSINESS"] ?? book.plans.PRO;
-  const rawFromCatalog = params.priceTryOverride ?? (isAnnualPlan ? planRow.tryGrossYearly : planRow.tryGrossMonthly);
-  // netPrice = katalog fiyati (KDV haric)
+  // Katalog fiyatı KDV DAHİLDİR; override verilmediyse önce KDV hariç nete çevrilir (yoksa KDV iki kez eklenirdi).
+  const rawFromCatalog =
+    params.priceTryOverride ?? netFromGrossTry(isAnnualPlan ? planRow.tryGrossYearly : planRow.tryGrossMonthly);
+  // netPrice = KDV hariç tutar
   const netPrice = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
     params.priceTryOverride != null ? (params.checkoutCurrency ?? "TRY") : "TRY";
@@ -1010,7 +1012,7 @@ export async function triggerInvoiceGeneration(
             }
           : {
               id: checkout.plan,
-              name: subscriptionInvoiceName(checkout),
+              name: subscriptionInvoiceName(checkout),  // koltuk bilgisi de ad içinde (bkz. invoice-labels)
               category1: "Subscription",
               itemType: "VIRTUAL",
               price: actualPaidPrice,

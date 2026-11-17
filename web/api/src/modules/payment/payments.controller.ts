@@ -178,7 +178,7 @@ export async function initializePaymentsController(request: Request, response: R
   }
   // TL: ana sayfada GÖRÜLEN fiyat yönetim panelindeki (Paketler) tutardır; ödeme de
   // AYNI tutarı çekmeli. Panel yalnız Pro aylık/yıllık ve Business aylık için
-  // tutar girilmesine izin verir; Business yıllığı bundan türetilir (ön yüzle aynı kural). Panelde
+  // tutar girilmesine izin verir; Business yıllığı sabit tutardır. Panelde
   // elle girilmemişse bu değerler katalogla birebir aynıdır.
   // Fiyatlar yönetim panelindeki FİYAT DEFTERİNDEN (varsayılan: plan-catalogue.ts) okunur;
   // ekranda görülen tutar ile tahsil edilen tutar aynı kaynaktan gelir.
@@ -277,7 +277,9 @@ export async function initializePaymentsController(request: Request, response: R
     priceTryOverride,
     checkoutCurrency,
     subscriptionDaysOverride,
-    basketItemName: seatsOnly ? undefined : `${BASKET_NAMES_TR[planId]} (${isYearly ? "1 yıl" : "1 ay"})`, // seatsOnly: basket adı payment.service içinde otomatik üretilir
+    basketItemName: seatsOnly
+      ? undefined
+      : `${BASKET_NAMES_TR[planId]}${(extraSeats ?? 0) > 0 ? ` + ${extraSeats} Ek Koltuk` : ""} (${isYearly ? "1 yıl" : "1 ay"})`, // seatsOnly: basket adı payment.service içinde otomatik üretilir
     couponId: appliedCouponId,
     discountPercent: appliedDiscountPercent,
     // İskonto uygulandıysa (kupon VEYA exit-intent) liste fiyatını gönder → faturada iskonto satırı.
