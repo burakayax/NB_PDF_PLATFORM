@@ -6,8 +6,8 @@ import { notifyRuntimeRefresh } from "../../lib/runtimeRefreshEvents";
 import { ConfirmDialog, type ConfirmTone } from "./ConfirmDialog";
 
 /**
- * Ödemeler ve iade sekmesinin üstündeki üç ana anahtar (global.flags.featureFlags).
- * Üçü de "durdur" anlamlıdır: anahtar yoksa ya da true ise DURDURULMUŞ; yalnız açıkça false → çalışır.
+ * Ödemeler ve iade sekmesinin üstündeki ana anahtarlar (global.flags.featureFlags).
+ * Hepsi "durdur" anlamlıdır: anahtar yoksa ya da true ise DURDURULMUŞ; yalnız açıkça false → çalışır.
  * DURDURMAK anında kaydedilir (acil durumda hızlı olsun); AÇMAK ise ortada açılan ikinci onay penceresinden geçer.
  * Kayıt sırasında diğer bayraklar (yapay zekâ durumları vb.) ezilmez.
  */
@@ -69,6 +69,25 @@ const SWITCHES = [
       ],
     },
   },
+  {
+    key: "foreignPaymentsDisabled",
+    title: "Yurt dışı (dolar) ödemesi",
+    onText: "KAPALI — yurt dışı adresli müşteri ödeme yapamaz; ödeme ekranında bilgi mesajı görür (Türkiye'den TL ödemesi etkilenmez)",
+    offText: "AÇIK — yurt dışı adresli müşteri dolarla ödeyebilir",
+    openLabel: "Yurt dışı ödemeyi aç",
+    closeLabel: "Yurt dışı ödemeyi kapat",
+    Icon: Globe2,
+    confirm: {
+      tone: "danger" as ConfirmTone,
+      title: "Yurt dışı ödemesi açılsın mı?",
+      confirmLabel: "Evet, yurt dışı ödemeyi aç",
+      points: [
+        "Yabancı adresli müşteriler dolarla GERÇEK para ödeyebilir.",
+        "PayTR'den yabancı kart ve USD izni yazılı olarak gelmeden açmayın.",
+        "Yurt dışı KDV istisnası ayrı bir anahtardır; muhasebeci onayı olmadan onu da açmayın.",
+      ],
+    },
+  },
 ] as const;
 
 type FlagKey = (typeof SWITCHES)[number]["key"];
@@ -108,6 +127,7 @@ export function PaymentSwitches({ accessToken }: { accessToken: string }) {
         paymentsDisabled: ff.paymentsDisabled !== false,
         invoicingPaused: ff.invoicingPaused !== false,
         exportExemptionDisabled: ff.exportExemptionDisabled !== false,
+        foreignPaymentsDisabled: ff.foreignPaymentsDisabled !== false,
       });
       setErr(null);
     } catch (e) {
