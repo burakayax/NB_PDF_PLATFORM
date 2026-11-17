@@ -10,7 +10,7 @@
     <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
     <language>en-US</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Wed, 04 Nov 2026 16:05:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 17 Nov 2026 16:07:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,92 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/en/blog</link>
     </image>
+    <item>
+      <title>Wide Table Tiny on a Portrait PDF Page? Make It Readable</title>
+      <link>https://www.pdfplatform.app/en/blog/wide-table-tiny-in-portrait-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/wide-table-tiny-in-portrait-pdf</guid>
+      <pubDate>Tue, 17 Nov 2026 16:07:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf" />
+      <description><![CDATA[The wide table sits as a thin strip in the middle of a portrait page with empty space above and below. How to enlarge it without retyping anything.]]></description>
+      <content:encoded><![CDATA[<p>A payment schedule, account statement or wide table from a bank or an official screen is usually laid out landscape, but it gets printed to PDF on a portrait page. The result: the table is a thin strip in the middle of the page, with large empty areas above and below, and the text is hard to read.</p>
+<h2>Why does this happen?</h2>
+<p>The page orientation stays on portrait when printing or scanning. The wide content is fitted to the page width and shrinks; because it is not tall, unused space is left above and below. Rotating the page does not fix it either: the table then lies along the short side of the portrait page.</p>
+<h2>The fix: place the content on a landscape sheet</h2>
+<p>The «PDF to Landscape» tool finds the real content on the page, trims the empty margins and fits the content to the width of a landscape sheet. The text grows noticeably (about 1.3 times on a scanned payment schedule we tried). Nothing is retyped: in a scanned document the image itself is moved, in a digital document the text itself.</p>
+<ol><li><strong>Add the PDF</strong> — Drop the portrait PDF containing the table into the tool.</li><li><strong>Leave the layout on «Auto»</strong> — Because the content is wide, the page is fitted onto a landscape sheet.</li><li><strong>Press Make Landscape</strong> — The result is a landscape page with upright, larger text.</li><li><strong>Check the numbers</strong> — Open the original and the result side by side and compare a few rows.</li></ol>
+<p><strong>PDF to Landscape</strong> — Bring a wide table up to a readable size on a landscape sheet. <a href="https://www.pdfplatform.app/en/tools/portrait-to-landscape-pdf">Open the tool</a></p>
+<h2>Things to watch on scanned statements</h2>
+<ul><li>The image's own resolution does not change. A blurry scan may look slightly soft when enlarged; it will not get sharper.</li><li>If you want clean, selectable text, run the result through the «Searchable PDF (OCR)» tool, and always check the digits in the OCR output.</li></ul>
+<blockquote><p>Enlarging numbers without changing them is different from re-reading them and rebuilding a table. This tool does the first: it moves the image or the text as it is and does not regenerate it.</p></blockquote>
+<h2>For digital (text) PDFs</h2>
+<p>In a digital table the text stays vector, so it is sharp when enlarged. If the table is too long for one sheet, the «Side by side» layout splits it into two columns along a table line; rows are not cut in half.</p>]]></content:encoded>
+      <category>Tables</category>
+      <category>Scanning</category>
+      <category>PDF to Landscape</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/wide-table-tiny-in-portrait-pdf.png" type="image/png" length="77850" />
+      <media:content url="https://www.pdfplatform.app/en/covers/wide-table-tiny-in-portrait-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/wide-table-tiny-in-portrait-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/wide-table-tiny-in-portrait-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/wide-table-tiny-in-portrait-pdf.png" />
+    </item>
+    <item>
+      <title>Make a PDF Landscape: When Rotating Is Not Enough</title>
+      <link>https://www.pdfplatform.app/en/blog/make-pdf-landscape-without-rotating</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/make-pdf-landscape-without-rotating</guid>
+      <pubDate>Tue, 17 Nov 2026 14:49:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa" />
+      <description><![CDATA[Most «make PDF landscape» tools just rotate the page by 90° and leave the text on its side. Here is how to really place the content on a landscape sheet.]]></description>
+      <content:encoded><![CDATA[<p>Search for «make a PDF landscape» and most of what you find simply rotates the page 90°. The page is still portrait; the text just lies on its side and you tilt your head or your screen to read it. Putting the content onto a genuinely landscape page is a different job.</p>
+<h2>Rotating and re-laying out are not the same</h2>
+<p>Rotation turns the page itself: the sheet stays the same shape and the content turns with it. Placing the content on a landscape sheet changes the page shape. The new sheet is wide, the text reads upright, and the content settles into that wide area. Moving a portrait A4's content onto a landscape A4 gives a different result than laying the page on its side.</p>
+<h2>Which one for which situation?</h2>
+<ul><li>The content itself is sideways (scanned turned, a table printed rotated): rotating is enough.</li><li>The content is upright but a wide table or layout is tiny on a portrait page: placing it on a landscape sheet reads better.</li><li>A long text document you will read on a landscape screen or projector: flowing the content into two columns is more comfortable.</li><li>A file that mixes landscape and portrait pages: only the portrait ones need converting.</li></ul>
+<h2>Step by step: placing content on a landscape sheet</h2>
+<ol><li><strong>Add the PDF</strong> — Drop the portrait PDF into the tool. Enter the password if it has one.</li><li><strong>Pick a layout</strong> — «Auto» suits most documents. «Side by side» flows content into two columns; «Fit» places each page whole on a landscape sheet.</li><li><strong>Press Make Landscape</strong> — Text, tables and images are not retyped; the page itself is moved to the new sheet.</li><li><strong>Preview and download</strong> — Review the result and download it if it looks right.</li></ol>
+<p><strong>PDF to Landscape</strong> — Place your portrait PDF on landscape pages without altering the content. <a href="https://www.pdfplatform.app/en/tools/portrait-to-landscape-pdf">Open the tool</a></p>
+<h2>Can letters or digits change?</h2>
+<p>The tool does not read and regenerate your text; it uses no OCR and no AI. The page content is moved as it is and only position and scale change. So there is no risk of a digit being mistyped or a row being dropped. For an important document it is still a good habit to compare the output with the original at a glance.</p>
+<h2>Checklist after converting</h2>
+<ul><li>Is the page order right, and does a table that was split continue in the next column?</li><li>Is the text size readable? Pages that need shrinking get smaller text.</li><li>Do form fields and links still work?</li><li>For a scanned document the image's own sharpness does not change; a blurry scan does not become crisp.</li></ul>
+<blockquote><p>In side-by-side layout, if a page is split across two columns, that page's text is stored as two parts. It looks single on screen, but search or copy may return that page's words twice.</p></blockquote>]]></content:encoded>
+      <category>PDF to Landscape</category>
+      <category>Page Orientation</category>
+      <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/make-pdf-landscape-without-rotating.png" type="image/png" length="102122" />
+      <media:content url="https://www.pdfplatform.app/en/covers/make-pdf-landscape-without-rotating.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/make-pdf-landscape-without-rotating.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/make-pdf-landscape-without-rotating.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/make-pdf-landscape-without-rotating.png" />
+    </item>
+    <item>
+      <title>Fixing a PDF That Mixes Portrait and Landscape Pages</title>
+      <link>https://www.pdfplatform.app/en/blog/fix-mixed-orientation-pdf-pages</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/fix-mixed-orientation-pdf-pages</guid>
+      <pubDate>Tue, 17 Nov 2026 09:22:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu" />
+      <description><![CDATA[Your merged file ended up with mixed page orientations. Can you convert just the portrait ones and leave the landscape pages alone?]]></description>
+      <content:encoded><![CDATA[<p>Merge files from different sources and one PDF can end up with portrait and landscape pages side by side. Scrolling on a screen or a projector, you tilt your head on some pages and look straight on others. If you want one orientation throughout, converting only the portrait pages while leaving the landscape ones alone is enough.</p>
+<h2>Where does mixed orientation come from?</h2>
+<ul><li>A landscape table or chart page added to a portrait report.</li><li>PDFs from several sources merged into one file.</li><li>Scans where some pages came in sideways and others upright.</li></ul>
+<h2>Converting only the portrait pages</h2>
+<p>The «PDF to Landscape» tool leaves a page untouched if it is already landscape. Only portrait pages move to a landscape layout and the page order does not change. Consecutive portrait pages are laid out as one flow in two columns; a landscape page in between breaks the flow and stays where it is.</p>
+<ol><li><strong>Add the PDF</strong> — Drop the mixed-orientation file into the tool.</li><li><strong>Pick a layout</strong> — «Auto» or «Side by side»; landscape pages are kept in both cases.</li><li><strong>Press Make Landscape</strong> — Portrait pages are converted and landscape pages stay where they were.</li><li><strong>Check the order</strong> — Confirm in the preview that the page order matches the original.</li></ol>
+<p><strong>PDF to Landscape</strong> — Convert only the portrait pages of a mixed-orientation PDF. <a href="https://www.pdfplatform.app/en/tools/portrait-to-landscape-pdf">Open the tool</a></p>
+<h2>Good to know</h2>
+<ul><li>The page count can change: two portrait pages of content may fit on one landscape sheet.</li><li>A landscape page splits the flow of the portrait pages before and after it; those two groups are laid out as separate flows.</li><li>Empty pages are left as they are.</li><li>Form fields and links keep working in their new positions.</li></ul>
+<blockquote><p>If you only want to change the orientation of every page, the «Rotate PDF» tool is enough. «PDF to Landscape» is for when you want the content placed on a landscape sheet.</p></blockquote>]]></content:encoded>
+      <category>Page Orientation</category>
+      <category>PDF Editing</category>
+      <category>PDF to Landscape</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/fix-mixed-orientation-pdf-pages.png" type="image/png" length="56290" />
+      <media:content url="https://www.pdfplatform.app/en/covers/fix-mixed-orientation-pdf-pages.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/fix-mixed-orientation-pdf-pages.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/fix-mixed-orientation-pdf-pages.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/fix-mixed-orientation-pdf-pages.png" />
+    </item>
     <item>
       <title>Convert TIFF to PDF: Multi-Page TIF Scans Explained</title>
       <link>https://www.pdfplatform.app/en/blog/convert-multi-page-tiff-to-pdf</link>
@@ -3301,43 +3387,6 @@
       <media:content url="https://www.pdfplatform.app/en/covers/square/understand-a-foreign-language-contract.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/en/covers/tall/understand-a-foreign-language-contract.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/understand-a-foreign-language-contract.png" />
-    </item>
-    <item>
-      <title>PDF Passwords: How to Remove or Add One Safely</title>
-      <link>https://www.pdfplatform.app/en/blog/remove-pdf-password</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/remove-pdf-password</guid>
-      <pubDate>Fri, 03 Jul 2026 09:39:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma" />
-      <description><![CDATA[A PDF can carry two very different kinds of password. Knowing which one you are dealing with decides what to remove, what to add and how to send it.]]></description>
-      <content:encoded><![CDATA[<p>People ask about PDF passwords for two opposite reasons: they want a password they already know gone for good, or they want to put one on a document before sharing it. Separate tools handle each, and a little background avoids the usual confusion.</p>
-<h2>Two passwords, two strengths</h2>
-<ul><li>Open (user) password: needed to open the file at all. Without it the document cannot be viewed, because the content is genuinely encrypted.</li><li>Permissions (owner) password: the file opens without a prompt, but printing, copying or editing is restricted. That restriction is a flag the viewer chooses to respect, which is far weaker than encryption.</li></ul>
-<p>Someone who says their PDF is protected yet opens fine is dealing with the second kind, and that is usually the one that has to go before they can work with the document.</p>
-<h2>Removing a password you know</h2>
-<p>If a PDF asks for a password every time, the Unlock PDF tool removes it permanently. You must know the current password.</p>
-<ol><li><strong>Upload the PDF</strong> — Add your password-protected document to the Unlock PDF tool.</li><li><strong>Enter the password</strong> — Type the current password, and only for documents you are authorized to open.</li><li><strong>Download the unlocked file</strong> — The password is gone, so there is no prompt on each opening.</li></ol>
-<p><strong>Unlock PDF</strong> — Remove a password you know and use the PDF freely. <a href="https://www.pdfplatform.app/en/tools/unlock-pdf">Open the tool</a></p>
-<h2>Adding a password</h2>
-<p>To protect a contract, medical report or financial document before sharing it, the Encrypt tool adds an open password so only people who know it can open the file.</p>
-<p><strong>Encrypt PDF</strong> — Add an open password to your sensitive document. <a href="https://www.pdfplatform.app/en/tools/encrypt">Encrypt tool</a></p>
-<blockquote><p>Only remove passwords from documents you own or are explicitly authorized to unlock.</p></blockquote>
-<h2>Which kind should you add?</h2>
-<p>Decide whether you want to stop people seeing the content or only stop them reusing it. Medical reports, financial statements and anything with identity data need an open password. A proposal or catalogue usually only needs protection against editing, and a permissions password is enough.</p>
-<h2>Sending the password safely</h2>
-<p>Putting the file and its password in the same email makes the protection pointless, because anyone who reads that email gets both. Send the file by email and the password by another channel, such as a phone call, a text message or a different app. Most corporate information-security policies require exactly this.</p>
-<ul><li>Do not put the password in the file name; contract-1234.pdf defeats the purpose.</li><li>Do not reuse one password across documents.</li><li>Avoid guessable strings such as birthdays or ID numbers.</li><li>If you forget the password the document cannot be opened, so keep a backup.</li></ul>
-<h2>If you do not know the password</h2>
-<p>There is no legitimate way to open a file whose open password you do not know. That is the design of the protection, not a flaw. If the document is yours, ask the sender or the program that created it. Trying to defeat protection on someone else's document creates ethical and legal problems.</p>
-<h2>Clean up afterwards</h2>
-<p>An unlocked file is unprotected, and anyone can open it from a cloud backup, shared folder or mailbox. Keep the password off only as long as you need to work, delete the unprotected copy afterwards and add a password again if you share the document.</p>]]></content:encoded>
-      <category>Security</category>
-      <category>Password</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/remove-pdf-password.png" type="image/png" length="47026" />
-      <media:content url="https://www.pdfplatform.app/en/covers/remove-pdf-password.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/remove-pdf-password.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/remove-pdf-password.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/remove-pdf-password.png" />
     </item>
   </channel>
 </rss>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde</title>
+    <meta name="description" content="Dikey PDF&#39;i yatay yapmanın iki yolu: sayfayı döndürmek ve içeriği yatay sayfaya yerleştirmek. Farkları, hangisinin ne zaman işe yaradığı ve kontrol listesi." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/make-pdf-landscape-without-rotating" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde" />
+    <meta property="og:description" content="Dikey PDF&#39;i yatay yapmanın iki yolu: sayfayı döndürmek ve içeriği yatay sayfaya yerleştirmek. Farkları, hangisinin ne zaman işe yaradığı ve kontrol listesi." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde" />
+    <meta name="twitter:description" content="Dikey PDF&#39;i yatay yapmanın iki yolu: sayfayı döndürmek ve içeriği yatay sayfaya yerleştirmek. Farkları, hangisinin ne zaman işe yaradığı ve kontrol listesi." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" />
+    <meta name="twitter:image:alt" content="PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde" />
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve toplam 75 araç. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"PDF'i Yatay Yapma: Döndürmek Yetmediğinde","item":"https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF'i Yatay Yapma: Döndürmek Yetmediğinde","description":"Dikey PDF'i yatay yapmanın iki yolu: sayfayı döndürmek ve içeriği yatay sayfaya yerleştirmek. Farkları, hangisinin ne zaman işe yaradığı ve kontrol listesi.","datePublished":"2026-11-17","dateModified":"2026-11-17","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"PDF'i Yatay Yapma: Döndürmek Yetmediğinde","description":"Dikey PDF'i yatay yapmanın iki yolu: sayfayı döndürmek ve içeriği yatay sayfaya yerleştirmek. Farkları, hangisinin ne zaman işe yaradığı ve kontrol listesi.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"PDF'i ekleyin","text":"Dikey PDF'i araca bırakın. Parolalıysa parolayı girin."},{"@type":"HowToStep","position":2,"name":"Yerleşimi seçin","text":"«Otomatik» çoğu belgede uygundur. «Yan yana» içeriği iki sütuna akıtır; «Sığdır» her sayfayı tek parça olarak yatay sayfaya yerleştirir."},{"@type":"HowToStep","position":3,"name":"Yatay Yap'a basın","text":"Yazı, tablo ve görseller yeniden yazılmaz; sayfanın kendisi yeni sayfaya taşınır."},{"@type":"HowToStep","position":4,"name":"Önizleyin ve indirin","text":"Sonucu gözden geçirin, uygunsa indirin."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF'i yatay yapmak ile döndürmek arasındaki fark nedir?","acceptedAnswer":{"@type":"Answer","text":"Döndürme sayfayı yan yatırır, sayfa dikey kalır. Yatay yapmada içerik yatay bir sayfaya yerleşir ve yazı normal yönde okunur."}},{"@type":"Question","name":"Yazıda ya da rakamlarda değişiklik olur mu?","acceptedAnswer":{"@type":"Answer","text":"Hayır. İçerik yeniden yazılmaz; sayfa olduğu gibi taşınır."}},{"@type":"Question","name":"Taranmış PDF'lerde çalışır mı?","acceptedAnswer":{"@type":"Answer","text":"Evet. Taranmış sayfalar da yerleştirilir; resmin çözünürlüğü değişmez."}},{"@type":"Question","name":"Zaten yatay olan sayfalara ne olur?","acceptedAnswer":{"@type":"Answer","text":"Dokunulmaz. Karışık belgelerde yalnız dikey sayfalar dönüştürülür."}},{"@type":"Question","name":"Bu araç hangi planlarda var?","acceptedAnswer":{"@type":"Answer","text":"Plus, Pro ve Business planlarına dahildir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde</h1><p class="seo-intro">PDF&#39;i yatay yap dediğinizde çoğu araç sayfayı 90° çevirir ve yazı yan yatar. İçeriği yatay sayfaya gerçekten yerleştirmek için neler yapabilirsiniz?</p><figure class="seo-cover"><img src="/covers/pdf-yatay-yapma-dikey-pdf-yatay-sayfa.png" width="1200" height="630" loading="lazy" decoding="async" alt="PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde" /></figure><article class="seo-article"><p class="seo-lead">«PDF&#39;i yatay yap» diye aratıp bulduğunuz araçların çoğu aslında sayfayı 90° döndürür. Sayfa hâlâ dikeydir; yalnızca yazı yan yatmıştır ve okumak için ekranı ya da başınızı eğmeniz gerekir. İçeriği gerçekten yatay bir sayfaya yerleştirmek ise başka bir iştir.</p><h2>Döndürmek ile yatay sayfaya yerleştirmek aynı şey değil</h2><p>Döndürme, sayfanın kendisini çevirir: kâğıt aynı kalır, içerik onunla birlikte yan döner. Yatay sayfaya yerleştirmede ise sayfa boyutu değişir. Yeni sayfa geniştir, yazılar normal yönde okunur ve içerik bu geniş alana oturur. Dikey bir A4&#39;ün içeriğini yatay A4&#39;e almak, sayfayı yan yatırmaktan farklı bir sonuç verir.</p><h2>Hangi durumda hangisi?</h2><ul><li>Sayfanın içeriği zaten yan yazılmışsa (taramada dönük girmiş, tablo yan basılmış): döndürmek yeterlidir.</li><li>İçerik normal yönde ama geniş bir tablo ya da düzen dikey sayfada küçük kalıyorsa: yatay sayfaya yerleştirmek daha okunur sonuç verir.</li><li>Metin dolu çok sayfalı bir belgeyi yatay ekranda ya da projeksiyonda okuyacaksanız: içeriğin iki sütuna akması rahat okuma sağlar.</li><li>Zaten yatay sayfalarla dikeyler karışıksa: yalnızca dikeyleri dönüştürmek gerekir.</li></ul><h2>Adım adım: içeriği yatay sayfaya yerleştirmek</h2><ol><li><strong>PDF&#39;i ekleyin:</strong> Dikey PDF&#39;i araca bırakın. Parolalıysa parolayı girin.</li><li><strong>Yerleşimi seçin:</strong> «Otomatik» çoğu belgede uygundur. «Yan yana» içeriği iki sütuna akıtır; «Sığdır» her sayfayı tek parça olarak yatay sayfaya yerleştirir.</li><li><strong>Yatay Yap&#39;a basın:</strong> Yazı, tablo ve görseller yeniden yazılmaz; sayfanın kendisi yeni sayfaya taşınır.</li><li><strong>Önizleyin ve indirin:</strong> Sonucu gözden geçirin, uygunsa indirin.</li></ol><p><a href="/tools/pdf-yatay-yap"><strong>PDF Yatay Yap</strong> — Dikey PDF&#39;inizi içeriği bozmadan yatay sayfaya yerleştirin.</a></p><h2>Rakam ve harfler değişir mi?</h2><p>Bu araç yazıyı okuyup yeniden üretmez; OCR ya da yapay zekâ kullanmaz. Sayfanın içeriği olduğu gibi taşınır, yalnızca konum ve ölçek değişir. Bu yüzden tablodaki bir rakamın yanlış yazılması ya da bir satırın düşmesi gibi bir risk yoktur. Yine de önemli bir belgede çıktıyı özgün dosyayla göz ucuyla karşılaştırmak iyi bir alışkanlıktır.</p><h2>Dönüştürdükten sonra kontrol listesi</h2><ul><li>Sayfa sırası doğru mu, bölünen bir tablonun devamı sonraki sütunda mı?</li><li>Yazı boyutu okunur mu? Küçültme gerektiren sayfalarda yazı küçülür.</li><li>Form alanları ve bağlantılar çalışıyor mu?</li><li>Taranmış bir belgeyse resmin kendi netliği değişmez; bulanık tarama bu işlemle netleşmez.</li></ul><p>Yan yana düzende bir sayfa iki sütuna bölünürse, o sayfanın metni dosyada iki parça olarak bulunur. Ekranda tek görünür; ama arama ya da kopyalamada o sayfanın kelimeleri çift çıkabilir.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/pdf-yatay-yap">PDF Yatay Yap</a></li><li><a href="/tools/rotate-pdf">PDF Döndürme</a></li><li><a href="/tools/resize-pdf">PDF Sayfa Boyutunu Değiştir Değiştirme</a></li></ul></nav><nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul><li><a href="/blog/dikey-yatay-karisik-pdf-sayfa-yonu">Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak</a></li><li><a href="/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf">Dikey Sayfada Küçük Kalan Tablo Nasıl Okunur Hâle Gelir?</a></li><li><a href="/blog/pdf-kirpma-kenar-boslugu-kesme">PDF Kırpma: İstediğiniz Alanı Seçip Kesin (Ücretsiz)</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF&#39;i yatay yapmak ile döndürmek arasındaki fark nedir?</h3><p>Döndürme sayfayı yan yatırır, sayfa dikey kalır. Yatay yapmada içerik yatay bir sayfaya yerleşir ve yazı normal yönde okunur.</p></div><div class="seo-faq-item"><h3>Yazıda ya da rakamlarda değişiklik olur mu?</h3><p>Hayır. İçerik yeniden yazılmaz; sayfa olduğu gibi taşınır.</p></div><div class="seo-faq-item"><h3>Taranmış PDF&#39;lerde çalışır mı?</h3><p>Evet. Taranmış sayfalar da yerleştirilir; resmin çözünürlüğü değişmez.</p></div><div class="seo-faq-item"><h3>Zaten yatay olan sayfalara ne olur?</h3><p>Dokunulmaz. Karışık belgelerde yalnız dikey sayfalar dönüştürülür.</p></div><div class="seo-faq-item"><h3>Bu araç hangi planlarda var?</h3><p>Plus, Pro ve Business planlarına dahildir.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/about">Hakkımızda</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

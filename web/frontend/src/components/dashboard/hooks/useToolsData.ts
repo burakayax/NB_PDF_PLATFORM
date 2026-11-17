@@ -22,6 +22,7 @@ const PRO_TOOLS: Set<FeatureKey> = new Set([
   "grayscale-pdf",
   "resize-pdf",
   "flip-pdf",
+  "pdf-yatay-yap",
   "alternate-mix-pdf",
   "deskew-pdf",
   // NOT: form-doldur, ustveri-temizle ve sayfa-duzeni ücretsizdir (cihazda

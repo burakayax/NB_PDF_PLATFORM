@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   ScanLine,
   FlipHorizontal2,
+  RectangleHorizontal,
   Scaling,
   Contrast,
   Shuffle,
@@ -59,6 +60,7 @@ const byId: Record<FeatureKey, LucideIcon> = {
   "grayscale-pdf": Contrast,
   "resize-pdf": Scaling,
   "flip-pdf": FlipHorizontal2,
+  "pdf-yatay-yap": RectangleHorizontal,
   "alternate-mix-pdf": Shuffle,
   "deskew-pdf": ScanLine,
   "form-doldur": FileText,
@@ -96,6 +98,7 @@ const colorById: Record<FeatureKey, string> = {
   "grayscale-pdf": "text-sky-300",
   "resize-pdf": "text-orange-400",
   "flip-pdf": "text-fuchsia-400",
+  "pdf-yatay-yap": "text-amber-400",
   "alternate-mix-pdf": "text-violet-400",
   "deskew-pdf": "text-cyan-400",
   "form-doldur": "text-emerald-400",

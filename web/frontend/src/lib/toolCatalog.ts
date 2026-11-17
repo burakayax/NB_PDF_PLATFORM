@@ -18,6 +18,7 @@ import {
   Shuffle,
   Scaling,
   FlipHorizontal2,
+  RectangleHorizontal,
   ArrowRightLeft,
   Camera,
   Combine,
@@ -293,6 +294,11 @@ export const TOOLS: Tool[] = [
     id: "flip-pdf", cat: "edit", Icon: FlipHorizontal2,
     tr: { name: "PDF Çevir (Ayna)", desc: "Sayfaları yatay veya dikey ayna gibi çevirir." },
     en: { name: "Flip PDF", desc: "Mirrors pages horizontally or vertically." },
+  },
+  {
+    id: "pdf-yatay-yap", cat: "edit", Icon: RectangleHorizontal,
+    tr: { name: "PDF Yatay Yap", desc: "Dikey PDF'i içeriği bozmadan yatay sayfaya yerleştirir; sadece döndürmez." },
+    en: { name: "PDF to Landscape", desc: "Places portrait PDF pages onto landscape sheets without altering the content; not just a rotation." },
   },
   {
     id: "alternate-mix-pdf", cat: "edit", Icon: Shuffle,
@@ -581,6 +587,7 @@ export const TOOL_HUE: Record<string, HueId> = {
   "grayscale-pdf": "sky",
   "resize-pdf": "orange",
   "flip-pdf": "fuchsia",
+  "pdf-yatay-yap": "amber",
   "alternate-mix-pdf": "violet",
   "deskew-pdf": "cyan",
   "form-doldur": "emerald",

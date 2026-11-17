@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak</title>
+    <meta name="description" content="PDF&#39;te bazı sayfalar dikey, bazıları yatay ise okumak zorlaşır. Yatay sayfalara dokunmadan yalnız dikey olanları yatay düzene alma yolu ve sayfa sırası." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/fix-mixed-orientation-pdf-pages" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak" />
+    <meta property="og:description" content="PDF&#39;te bazı sayfalar dikey, bazıları yatay ise okumak zorlaşır. Yatay sayfalara dokunmadan yalnız dikey olanları yatay düzene alma yolu ve sayfa sırası." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak" />
+    <meta name="twitter:description" content="PDF&#39;te bazı sayfalar dikey, bazıları yatay ise okumak zorlaşır. Yatay sayfalara dokunmadan yalnız dikey olanları yatay düzene alma yolu ve sayfa sırası." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png" />
+    <meta name="twitter:image:alt" content="Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak" />
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve toplam 75 araç. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/blog"},{"@type":"ListItem","position":3,"name":"Dikey ve Yatay Sayfaların Karıştığı PDF'i Düzene Sokmak","item":"https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Dikey ve Yatay Sayfaların Karıştığı PDF'i Düzene Sokmak","description":"PDF'te bazı sayfalar dikey, bazıları yatay ise okumak zorlaşır. Yatay sayfalara dokunmadan yalnız dikey olanları yatay düzene alma yolu ve sayfa sırası.","datePublished":"2026-11-17","dateModified":"2026-11-17","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Dikey ve Yatay Sayfaların Karıştığı PDF'i Düzene Sokmak","description":"PDF'te bazı sayfalar dikey, bazıları yatay ise okumak zorlaşır. Yatay sayfalara dokunmadan yalnız dikey olanları yatay düzene alma yolu ve sayfa sırası.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"PDF'i ekleyin","text":"Karışık yönlü dosyayı araca bırakın."},{"@type":"HowToStep","position":2,"name":"Yerleşimi seçin","text":"«Otomatik» ya da «Yan yana»; yatay sayfalar her iki durumda da korunur."},{"@type":"HowToStep","position":3,"name":"Yatay Yap'a basın","text":"Sonuçta dikey sayfalar yatay düzene girmiş, yatay sayfalar aynı yerinde kalmış olur."},{"@type":"HowToStep","position":4,"name":"Sırayı kontrol edin","text":"Sayfa sırasının özgün dosyayla aynı olduğunu önizlemede doğrulayın."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Yatay sayfalar da değişir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Zaten yatay olan sayfalar olduğu gibi kalır."}},{"@type":"Question","name":"Sayfa sırası bozulur mu?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Sıra korunur; yatay sayfalar yerinde kalır."}},{"@type":"Question","name":"Çıktının sayfa sayısı neden azalabilir?","acceptedAnswer":{"@type":"Answer","text":"İki dikey sayfanın içeriği tek yatay sayfaya iki sütun olarak sığabildiği için."}},{"@type":"Question","name":"Bunun yerine sadece döndürebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet, «PDF Döndür» aracı sayfaları çevirir; ama içerik yatay sayfaya yerleşmez, yazı yan yatar."}},{"@type":"Question","name":"Bu araç hangi planlarda var?","acceptedAnswer":{"@type":"Answer","text":"Plus, Pro ve Business planlarına dahildir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak</h1><p class="seo-intro">Birleştirdiğiniz dosyada sayfa yönleri karıştı. Sadece dikey olanları yatay düzene alıp yatay olanlara dokunmamak mümkün mü?</p><figure class="seo-cover"><img src="/covers/dikey-yatay-karisik-pdf-sayfa-yonu.png" width="1200" height="630" loading="lazy" decoding="async" alt="Dikey ve Yatay Sayfaların Karıştığı PDF&#39;i Düzene Sokmak" /></figure><article class="seo-article"><p class="seo-lead">Farklı kaynaklardan gelen dosyaları birleştirdiğinizde bir PDF&#39;te dikey ve yatay sayfalar yan yana durabilir. Ekranda ya da projeksiyonda gezinirken bazı sayfalarda ekranı eğmek, bazılarında düz bakmak gerekir. Tüm belgeyi tek yöne getirmek isterseniz yatay sayfalara dokunmadan yalnız dikeyleri dönüştürmek yeterlidir.</p><h2>Sayfa yönü karışıklığı nereden gelir?</h2><ul><li>Dikey bir rapora yatay bir tablo ya da grafik sayfasının eklenmesi.</li><li>Birden çok kaynaktan gelen PDF&#39;lerin tek dosyada birleştirilmesi.</li><li>Taramalarda bazı sayfaların yan, bazılarının dik girmesi.</li></ul><h2>Yalnız dikey sayfaları dönüştürmek</h2><p>«PDF Yatay Yap» aracı, sayfa yatay ise ona dokunmaz ve olduğu gibi bırakır. Yalnız dikey sayfalar yatay düzene alınır; sayfa sırası değişmez. Ardışık dikey sayfalar tek bir akış olarak yan yana iki sütuna dizilir, araya giren bir yatay sayfa ise akışı böler ve yerinde kalır.</p><ol><li><strong>PDF&#39;i ekleyin:</strong> Karışık yönlü dosyayı araca bırakın.</li><li><strong>Yerleşimi seçin:</strong> «Otomatik» ya da «Yan yana»; yatay sayfalar her iki durumda da korunur.</li><li><strong>Yatay Yap&#39;a basın:</strong> Sonuçta dikey sayfalar yatay düzene girmiş, yatay sayfalar aynı yerinde kalmış olur.</li><li><strong>Sırayı kontrol edin:</strong> Sayfa sırasının özgün dosyayla aynı olduğunu önizlemede doğrulayın.</li></ol><p><a href="/tools/pdf-yatay-yap"><strong>PDF Yatay Yap</strong> — Karışık yönlü PDF&#39;te yalnız dikey sayfaları yatay düzene alın.</a></p><h2>Bilmeniz gerekenler</h2><ul><li>Sayfa sayısı değişebilir: iki dikey sayfanın içeriği tek yatay sayfaya sığabilir.</li><li>Bir yatay sayfa, onun öncesindeki ve sonrasındaki dikey sayfaların akışını böler; bu iki grup ayrı akış olarak yerleştirilir.</li><li>Boş sayfalar olduğu gibi bırakılır.</li><li>Form alanları ve bağlantılar yeni konumlarında çalışmaya devam eder.</li></ul><p>Tüm sayfaların yalnızca yönünü değiştirmek istiyorsanız «PDF Döndür» aracı yeterlidir. «PDF Yatay Yap» içeriği yatay sayfaya yerleştirmek istediğinizde işe yarar.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/pdf-yatay-yap">PDF Yatay Yap</a></li><li><a href="/tools/rotate-pdf">PDF Döndürme</a></li><li><a href="/tools/merge-pdf">PDF Birleştirme</a></li></ul></nav><nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul><li><a href="/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa">PDF&#39;i Yatay Yapma: Döndürmek Yetmediğinde</a></li><li><a href="/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf">Dikey Sayfada Küçük Kalan Tablo Nasıl Okunur Hâle Gelir?</a></li><li><a href="/blog/edevlet-belgelerini-tek-pdf-yapma">e-Devlet Belgelerini Tek PDF&#39;te Birleştirme</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Yatay sayfalar da değişir mi?</h3><p>Hayır. Zaten yatay olan sayfalar olduğu gibi kalır.</p></div><div class="seo-faq-item"><h3>Sayfa sırası bozulur mu?</h3><p>Hayır. Sıra korunur; yatay sayfalar yerinde kalır.</p></div><div class="seo-faq-item"><h3>Çıktının sayfa sayısı neden azalabilir?</h3><p>İki dikey sayfanın içeriği tek yatay sayfaya iki sütun olarak sığabildiği için.</p></div><div class="seo-faq-item"><h3>Bunun yerine sadece döndürebilir miyim?</h3><p>Evet, «PDF Döndür» aracı sayfaları çevirir; ama içerik yatay sayfaya yerleşmez, yazı yan yatar.</p></div><div class="seo-faq-item"><h3>Bu araç hangi planlarda var?</h3><p>Plus, Pro ve Business planlarına dahildir.</p></div></section><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/about">Hakkımızda</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -23,6 +23,7 @@ export type MiniToolOptions = {
   flipDirection: "horizontal" | "vertical";
   flipFrom: string;
   flipTo: string;
+  landscapeLayout: "auto" | "fit" | "split";
   mixReverse: boolean;
 };
 
@@ -36,6 +37,7 @@ export const DEFAULT_MINI_OPTIONS: MiniToolOptions = {
   flipDirection: "horizontal",
   flipFrom: "1",
   flipTo: "",
+  landscapeLayout: "auto",
   mixReverse: false,
 };
 
@@ -261,6 +263,12 @@ export function buildToolFormData(
         formData.append("direction", m.flipDirection);
         formData.append("from_page", m.flipFrom.trim() || "1");
         formData.append("to_page", m.flipTo.trim() || "0");
+        if (s.password.trim()) formData.append("password", s.password.trim());
+        break;
+      }
+      case "pdf-yatay-yap": {
+        const m = s.miniOptions ?? DEFAULT_MINI_OPTIONS;
+        formData.append("layout", m.landscapeLayout);
         if (s.password.trim()) formData.append("password", s.password.trim());
         break;
       }

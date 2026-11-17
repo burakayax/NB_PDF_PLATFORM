@@ -39,6 +39,7 @@ const DEFAULT_TOOL_REGISTRY: readonly { id: string; strategy: string }[] = [
   { id: "flip-pdf", strategy: "per_run" },
   { id: "alternate-mix-pdf", strategy: "per_run" },
   { id: "deskew-pdf", strategy: "per_run" },
+  { id: "pdf-yatay-yap", strategy: "per_run" },
   { id: "form-doldur", strategy: "per_run" },
   { id: "ustveri-temizle", strategy: "per_run" },
   { id: "pdf-to-pdfa", strategy: "per_run" },

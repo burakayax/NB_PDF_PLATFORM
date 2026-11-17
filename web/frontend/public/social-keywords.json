@@ -1,4 +1,148 @@
 {
+  "https://www.pdfplatform.app/blog/dikey-yatay-karisik-pdf-sayfa-yonu": {
+    "tr": [
+      "Sayfa Yönü",
+      "PDF Düzenleme",
+      "PDF Yatay Yap",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "Page Orientation",
+      "PDF Editing",
+      "PDF to Landscape",
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
+  "https://www.pdfplatform.app/en/blog/fix-mixed-orientation-pdf-pages": {
+    "tr": [
+      "Sayfa Yönü",
+      "PDF Düzenleme",
+      "PDF Yatay Yap",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "Page Orientation",
+      "PDF Editing",
+      "PDF to Landscape",
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
+  "https://www.pdfplatform.app/blog/dikey-sayfada-kucuk-kalan-tablo-yatay-pdf": {
+    "tr": [
+      "Tablo",
+      "Tarama",
+      "PDF Yatay Yap",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "Tables",
+      "Scanning",
+      "PDF to Landscape",
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
+  "https://www.pdfplatform.app/en/blog/wide-table-tiny-in-portrait-pdf": {
+    "tr": [
+      "Tablo",
+      "Tarama",
+      "PDF Yatay Yap",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "Tables",
+      "Scanning",
+      "PDF to Landscape",
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
+  "https://www.pdfplatform.app/blog/pdf-yatay-yapma-dikey-pdf-yatay-sayfa": {
+    "tr": [
+      "PDF Yatay Yap",
+      "Sayfa Yönü",
+      "PDF Araçları",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "PDF to Landscape",
+      "Page Orientation",
+      "PDF Tools",
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
+  "https://www.pdfplatform.app/en/blog/make-pdf-landscape-without-rotating": {
+    "tr": [
+      "PDF Yatay Yap",
+      "Sayfa Yönü",
+      "PDF Araçları",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "PDF to Landscape",
+      "Page Orientation",
+      "PDF Tools",
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
   "https://www.pdfplatform.app/blog/tiff-pdf-cevirme-cok-sayfali-tif": {
     "tr": [
       "TIFF",
@@ -5968,6 +6112,44 @@
       "reverse pdf horizontally"
     ],
     "tool": "/tools/flip-pdf"
+  },
+  "https://www.pdfplatform.app/tools/pdf-yatay-yap": {
+    "tr": [
+      "pdf yatay yap",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
+  },
+  "https://www.pdfplatform.app/en/tools/portrait-to-landscape-pdf": {
+    "tr": [
+      "pdf yatay yap",
+      "pdf dikey yatay çevir",
+      "pdf sayfayı yatay yap",
+      "pdf yatay yapma",
+      "dikey pdf yatay sayfa",
+      "pdf landscape yap",
+      "pdf dikeyden yataya"
+    ],
+    "en": [
+      "pdf portrait to landscape",
+      "make pdf landscape",
+      "convert pdf to landscape",
+      "change pdf orientation",
+      "pdf vertical to horizontal"
+    ],
+    "tool": "/tools/pdf-yatay-yap"
   },
   "https://www.pdfplatform.app/tools/alternate-mix-pdf": {
     "tr": [

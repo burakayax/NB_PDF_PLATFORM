@@ -35,6 +35,7 @@ const GATED_TOOL_LABELS: Record<string, { tr: string; en: string }> = {
   "grayscale-pdf": { tr: "PDF Siyah-Beyaz Yap", en: "Grayscale PDF" },
   "resize-pdf": { tr: "PDF Sayfa Boyutunu Değiştir", en: "Resize PDF Pages" },
   "flip-pdf": { tr: "PDF Çevir (Ayna)", en: "Flip PDF" },
+  "pdf-yatay-yap": { tr: "PDF Yatay Yap", en: "PDF to Landscape" },
   "alternate-mix-pdf": { tr: "PDF Sırayla Birleştir", en: "Alternate & Mix PDF" },
   "deskew-pdf": { tr: "PDF Eğri Taramayı Düzelt", en: "Deskew PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },

@@ -247,3 +247,27 @@ def test_egri_tarama_dijital_pdf_anlasilir_hata(yakala):
     r = client.post("/api/deskew-pdf", headers=_AUTH, files={"file": ("a.pdf", _pdf_bayt(2), "application/pdf")})
     assert r.status_code >= 400
     assert "taranmış" in r.text
+
+
+def test_pdf_yatay_yap_ucu_yerlesim_secenekleri(yakala):
+    import pdfplumber
+
+    # Her sayfada tek kısa satır var: fit sayfa sayısını korur, split hepsini tek sütuna akıtır,
+    # auto bu geniş-kısa içeriği "sığdır" sayar.
+    for yerlesim, beklenen_sayfa in (("fit", 4), ("split", 1), ("auto", 4)):
+        r = client.post(
+            "/api/pdf-yatay-yap", headers=_AUTH, files={"file": ("a.pdf", _pdf_bayt(4), "application/pdf")},
+            data={"layout": yerlesim},
+        )
+        assert r.status_code == 200, r.text
+        with pdfplumber.open(str(yakala)) as p:
+            assert len(p.pages) == beklenen_sayfa, yerlesim
+            assert all(pg.width > pg.height for pg in p.pages)
+
+
+def test_pdf_yatay_yap_gecersiz_yerlesim_otomatige_doner(yakala):
+    r = client.post(
+        "/api/pdf-yatay-yap", headers=_AUTH, files={"file": ("a.pdf", _pdf_bayt(1), "application/pdf")},
+        data={"layout": "uydurma"},
+    )
+    assert r.status_code == 200, r.text

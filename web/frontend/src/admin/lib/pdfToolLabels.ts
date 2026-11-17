@@ -24,6 +24,7 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "grayscale-pdf": "PDF Siyah-Beyaz Yap",
   "resize-pdf": "PDF Sayfa Boyutunu Değiştir",
   "flip-pdf": "PDF Çevir (Ayna)",
+  "pdf-yatay-yap": "PDF Yatay Yap",
   "alternate-mix-pdf": "PDF Sırayla Birleştir",
   "deskew-pdf": "PDF Eğri Taramayı Düzelt",
   "form-doldur": "PDF Form Doldur",

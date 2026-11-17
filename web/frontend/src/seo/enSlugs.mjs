@@ -1,6 +1,7 @@
 import { CV_PROFESSION_EN_SLUGS } from "../blog/blogContentCv3.mjs";
 import { QR_TOC_EN_SLUGS } from "../blog/blogContentQrToc.mjs";
 import { TIFF_EN_SLUGS } from "../blog/blogContentTiff.mjs";
+import { YATAY_EN_SLUGS } from "../blog/blogContentYatay.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 //  İNGİLİZCE URL SLUG'LARI — TEK GERÇEK KAYNAK
 // ─────────────────────────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ import { TIFF_EN_SLUGS } from "../blog/blogContentTiff.mjs";
 
 /** TR araç slug'ı → EN araç slug'ı. Listede olmayan slug zaten İngilizce. */
 export const EN_TOOL_SLUGS = {
+  "pdf-yatay-yap": "portrait-to-landscape-pdf",
   "gorsel-sikistir": "compress-image",
   "gorsel-boyutlandir": "resize-image",
   "pdf-kesit-al": "crop-pdf-to-image",
@@ -52,6 +54,7 @@ export const EN_BLOG_SLUGS = {
   ...CV_PROFESSION_EN_SLUGS,
   ...QR_TOC_EN_SLUGS,
   ...TIFF_EN_SLUGS,
+  ...YATAY_EN_SLUGS,
   "cv-nasil-hazirlanir": "how-to-write-a-cv",
   "ats-uyumlu-cv-nasil-yazilir": "ats-friendly-cv",
   "cv-is-ilanina-gore-nasil-uyarlanir": "tailor-cv-to-job-ad",

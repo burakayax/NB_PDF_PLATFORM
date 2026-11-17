@@ -58,6 +58,7 @@ function isFeatureKey(v: unknown): v is FeatureKey {
     "grayscale-pdf",
     "resize-pdf",
     "flip-pdf",
+    "pdf-yatay-yap",
     "alternate-mix-pdf",
     "deskew-pdf",
     "form-doldur",
