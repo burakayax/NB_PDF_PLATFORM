@@ -9,6 +9,7 @@ import { isCmsPreviewActive, readCmsPreviewDraft } from "../lib/cmsPreview";
 import { persistMaintenanceHint } from "../lib/maintenanceHint";
 import { RUNTIME_REFRESH_BROADCAST, RUNTIME_REFRESH_EVENT } from "../lib/runtimeRefreshEvents";
 import { STARTER_TOOL_IDS } from "../lib/planConfig";
+import { applyPricesHiddenFlag } from "../lib/priceVisibility";
 import { BRAND_SOCIAL_LINKS, resolveSocialLinks } from "../lib/socialLinks";
 
 const defaultNotifications: SystemNotificationsPayload = {
@@ -97,6 +98,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           maintenanceMode: viteMaintenance || raw.flags.maintenanceMode === true,
         },
       };
+      applyPricesHiddenFlag(data.flags.featureFlags);
       setPayload(data);
       persistMaintenanceHint(data.flags.maintenanceMode === true);
     } catch (e) {
