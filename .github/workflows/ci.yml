@@ -20,10 +20,40 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # ─── Değişen dosya denetimi ──────────────────────────────────────────────────
+  # Yalnız belge/not değişen PR'larda ağır kontroller atlanır (dakika tasarrufu).
+  # Atlanan iş GitHub'ta "geçti" sayılır, zorunlu kontroller PR'ı bloklamaz.
+  # Emin olunamazsa (hata, push, kod/iş akışı değişikliği) HER ZAMAN çalıştırılır.
+  changes:
+    name: Changed files
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.f.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: f
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          [ "$EVENT" = "pull_request" ] || exit 0
+          files=$(git diff --name-only HEAD^1 HEAD) || exit 0
+          [ -n "$files" ] || exit 0
+          # Belge dışında en az bir dosya varsa kod değişmiş sayılır.
+          if echo "$files" | grep -v -E '\.md$|^docs/|^sosyal medya/|^_screenshots/' | grep -q .; then
+            exit 0
+          fi
+          echo "Yalnız belge değişti; ağır kontroller atlanıyor."
+          echo "code=false" >> "$GITHUB_OUTPUT"
+
   # ─── Python Güvenlik Taraması ────────────────────────────────────────────────
   python-security:
     name: Python Security Scan
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -105,6 +135,8 @@ jobs:
     name: Python Unit Tests
     # ubuntu-latest 26.04'e geçti ve o sürümde wkhtmltopdf paketi yok; testler tanıdık 24.04 ortamında koşar.
     runs-on: ubuntu-24.04
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     # Takılan test (ör. fork kilitlenmesi) deploy'u 40 dk bekletmesin — net hata ile dur.
     timeout-minutes: 35
     steps:
@@ -159,6 +191,8 @@ jobs:
   node-security-api:
     name: Node Security Scan (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -186,6 +220,8 @@ jobs:
   api-unit-tests:
     name: TypeScript Unit Tests (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -220,6 +256,8 @@ jobs:
   node-security-frontend:
     name: Node Security Scan (web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -250,6 +288,8 @@ jobs:
   lint-node:
     name: Lint (web/api + web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -278,6 +318,8 @@ jobs:
   lint-python:
     name: Lint (Python)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -306,6 +348,8 @@ jobs:
   api-postgres-migrations:
     name: PostgreSQL Migration Check (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     timeout-minutes: 10
     services:
       postgres:
@@ -370,6 +414,8 @@ jobs:
   api-typecheck:
     name: TypeScript Type Check (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -396,6 +442,8 @@ jobs:
   frontend-component-tests:
     name: Frontend Component Tests (web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -430,6 +478,8 @@ jobs:
   frontend-typecheck:
     name: TypeScript Type Check (web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -469,6 +519,8 @@ jobs:
   playwright-version:
     name: Playwright sürümünü belirle
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     outputs:
       version: ${{ steps.read.outputs.version }}
     steps:
@@ -491,7 +543,8 @@ jobs:
     name: Frontend E2E Tests (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: playwright-version
+    needs: [changes, playwright-version]
+    if: needs.changes.outputs.code == 'true'
     # Resmi Playwright imajı: Chromium + tüm sistem bağımlılıkları HAZIR gelir.
     # Böylece her çalıştırmada ~170MB tarayıcı indirme/install adımı (ve onun
     # takılması) tamamen ortadan kalkar. Etiket artık elle yazılmıyor; yukarıdaki
