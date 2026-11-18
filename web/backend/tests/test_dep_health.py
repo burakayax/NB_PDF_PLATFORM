@@ -54,3 +54,17 @@ def test_result_is_cached_briefly():
     assert dep_health.gotenberg_status("http://x", getter=getter, now=now) == "up"
     assert n["c"] == 2
     _reset()
+
+
+def test_semasiz_adres_http_ile_denenir():
+    """Render 'host:port' verir; şema eklenmeden istek atılırsa hep 'down' çıkardı."""
+    from app.core import dep_health
+
+    gorulen = []
+
+    def sahte(url, timeout):
+        gorulen.append(url)
+        return 200
+
+    assert dep_health.gotenberg_status("nb-gotenberg:3000", getter=sahte, use_cache=False) == "up"
+    assert gorulen == ["http://nb-gotenberg:3000/health"]
