@@ -64,14 +64,34 @@ jobs:
           cache: "pip"
           cache-dependency-path: web/backend/requirements.txt
 
+      # Paket sunucusu bazen çok yavaşlıyor (131 MB LibreOffice vb.; normalde ~1 dk, kötü günde >15 dk).
+      # Kalıcı çözüm üç katman: (1) indirilen .deb dosyaları önbelleğe alınır — önbellek varsa ağa hiç çıkılmaz;
+      # (2) her deneme kısa ve sınırlı, takılırsa kesilir; (3) 2. denemeden itibaren yedek sunucuya (archive.ubuntu.com) geçilir.
+      - name: Restore apt package cache
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-debs
+          key: apt-debs-ubuntu24-${{ hashFiles('.github/workflows/ci.yml') }}
+
       - name: Install system dependencies
-        # Paket sunucusu bazen yanıt vermeyip adımı dakikalarca asılı bırakıyor; her deneme 4 dk ile sınırlı, 3 deneme.
         run: |
+          mkdir -p ~/apt-debs/partial
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-debs"
+          PKGS="libcairo2-dev pkg-config tesseract-ocr libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation"
+          ok=0
           for i in 1 2 3; do
-            timeout 240 bash -c 'sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update && sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y libcairo2-dev pkg-config' && break
-            echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
-            [ "$i" = 3 ] && exit 1
+            if [ "$i" -ge 2 ]; then
+              echo "yedek sunucuya geciliyor (deneme $i)"
+              sudo sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#g' /etc/apt/sources.list /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+            fi
+            if timeout 300 bash -c "$APT update && $APT install -y $PKGS"; then ok=1; break; fi
+            echo "apt denemesi $i basarisiz; tekrar deneniyor"; sleep 5
           done
+          [ "$ok" = 1 ] || exit 1
+          # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
+          timeout 120 $APT install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
+          # Önbelleğe yalnız .deb dosyaları gider (kilit/kısmi dosyalar değil).
+          sudo chown -R "$USER" ~/apt-debs; rm -rf ~/apt-debs/partial ~/apt-debs/lock
 
       - name: Install dependencies
         working-directory: web/backend
