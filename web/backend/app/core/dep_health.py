@@ -36,6 +36,9 @@ def gotenberg_status(
     base = (base_url if base_url is not None else os.environ.get("GOTENBERG_URL", "")).strip().rstrip("/")
     if not base:
         return "not_configured"
+    # Render adresi "host:port" olarak verir (şema yok); requests şemasız adresi reddeder.
+    if not base.startswith(("http://", "https://")):
+        base = f"http://{base}"
 
     t = now()
     if use_cache and t - float(_cache["at"]) < _CACHE_SECONDS and _cache["value"] is not None:
