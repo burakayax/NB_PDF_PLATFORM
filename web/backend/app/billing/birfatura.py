@@ -52,6 +52,7 @@ from .models import CustomerInfo, InvoiceItem, InvoiceResult, PaymentInfo, tr_no
 logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE = "https://uygulama.edonustur.com/api/OutEBelgeV2"
+_LOG_SAFE_PATHS = frozenset({"getoutboxdocumentstatuseswithuuids", "getpdflinkbyuuid"})
 _POLL_INTERVAL = 10
 _POLL_MAX = 30
 
@@ -204,8 +205,9 @@ class BirFaturaProvider(BillingProviderBase):
     )
     def _post(self, path: str, body: dict) -> dict:
         url = f"{self._base}/{path.lstrip('/')}"
-        # Mükellef sorgusu TC/vergi no içerir; kişisel veri loga yazılmaz.
-        sensitive = path.lstrip("/").lower() == "getuserpk"
+        # TC/vergi no, ad, adres içeren istek/yanıtlar (mükellef sorgusu, fatura gövdesi, UBL belgesi, gelen kutusu)
+        # loga YAZILMAZ; yalnız durum ve PDF bağlantısı sorguları (kişisel veri taşımaz) ayrıntılı loglanır.
+        sensitive = path.lstrip("/").lower() not in _LOG_SAFE_PATHS
         logger.info("birfatura POST %s body=%s", url, "<gizli>" if sensitive else body)
         resp = self._session.post(url, json=body, timeout=30)
         logger.info(
