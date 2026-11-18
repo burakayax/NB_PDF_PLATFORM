@@ -486,7 +486,7 @@ export const legalDocuments = {
           paragraphs: [
             "PDF Platform is a digital service; no physical goods are shipped. There is therefore no shipping, delivery to an address or delivery fee.",
             "As soon as your payment is confirmed, the subscription you bought (or extra AI credits, CV Pass, extra seats) is activated automatically on your account, usually within seconds and with no waiting period.",
-            "If your payment was received but the service did not activate on your account, write to info@pdfplatform.app and we will fix it promptly. Your invoice is sent to your e-mail address as an e-archive invoice within the legal period.",
+            "If your payment was received but the service did not activate on your account, write to info@pdfplatform.app and we will fix it promptly. Your invoice is issued as an e-invoice or an e-archive invoice, depending on whether the buyer is registered as an e-invoice taxpayer, and is delivered within the legal period (e-archive invoices are sent to your e-mail address).",
           ],
         },
       ],
@@ -1086,7 +1086,7 @@ export const legalDocuments = {
           paragraphs: [
             "PDF Platform dijital bir hizmettir; fiziksel ürün gönderilmez. Bu nedenle kargo, adrese teslimat ya da teslimat bedeli yoktur.",
             "Ödemeniz onaylandığı anda satın aldığınız abonelik (veya ek yapay zekâ kredisi, CV Geçişi, ek koltuk) hesabınızda otomatik olarak etkinleştirilir; bu genellikle birkaç saniye içinde olur ve herhangi bir bekleme süresi yoktur.",
-            "Ödemeniz alındığı hâlde hizmet hesabınızda etkinleşmediyse info@pdfplatform.app adresine yazın; en kısa sürede çözülür. Faturanız e-arşiv fatura olarak, yasal süre içinde e-posta adresinize iletilir.",
+            "Ödemeniz alındığı hâlde hizmet hesabınızda etkinleşmediyse info@pdfplatform.app adresine yazın; en kısa sürede çözülür. Faturanız, alıcının e-fatura mükellefi olup olmadığına göre e-fatura veya e-arşiv fatura olarak düzenlenir ve yasal süre içinde iletilir (e-arşiv faturalar e-posta adresinize gönderilir).",
           ],
         },
       ],
