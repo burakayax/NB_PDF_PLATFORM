@@ -3,6 +3,7 @@ import { adminFinancialExportController } from "./financial-export.admin.js";
 import { adminListPaymentsController } from "./payments-list.admin.js";
 import { adminPaymentsSummaryController } from "./payments-summary.admin.js";
 import { adminPaytrStatusController } from "./payment-paytr-status.admin.js";
+import { adminResetTestPaymentsController } from "./payment-test-reset.admin.js";
 import { adminCardListStatusController } from "./payment-card-list-status.admin.js";
 import { adminInvoiceActionController } from "./payment-invoice-action.admin.js";
 import { adminServiceStatusController } from "./service-status.admin.js";
@@ -183,6 +184,7 @@ adminRouter.get("/payments", asyncHandler(adminListPaymentsController));
 adminRouter.get("/payments/summary", asyncHandler(adminPaymentsSummaryController));
 adminRouter.get("/payments/card-list-status", asyncHandler(adminCardListStatusController));
 adminRouter.get("/payments/:conversationId/paytr-status", asyncHandler(adminPaytrStatusController));
+adminRouter.post("/payments/reset-test-data", asyncHandler(adminResetTestPaymentsController));
 adminRouter.post("/payments/:conversationId/refund", asyncHandler(adminIssueRefundController));
 adminRouter.post("/payments/:conversationId/invoice-action", asyncHandler(adminInvoiceActionController));
 
