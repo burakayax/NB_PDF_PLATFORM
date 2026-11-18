@@ -113,3 +113,8 @@ web/frontend/public/social-x.json
 
 # Elle yükleme paketleri (videolar büyük; depoya girmez)
 sosyal medya/yayin-paketi/*/
+
+# SQLite yan dosyalari (calisma aninda olusur, depoya girmez)
+*.db-shm
+*.db-wal
+web/backend/tmp/
