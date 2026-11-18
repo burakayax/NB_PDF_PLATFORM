@@ -12,7 +12,7 @@ import { getResolvedTOOLSBusinessConfig } from "./tools-config-runtime.js";
 import { computeUsageSoftWarnings, mergeUsageSoftWarnings } from "./usage-soft-warnings.js";
 import { featureCatalog, type FeatureKey } from "./subscription.config.js";
 import { getPriceBook } from "../payment/payment-pricing.js";
-import { isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
+import { isFeatureAdminOnly, isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
 import { getPlanDefinitionsResolved } from "./plan-runtime.js";
 import {
   computeBehaviorStressMultiplier,
@@ -284,6 +284,9 @@ export async function assertSubscriptionAllowsOperation(userId: string, featureK
 
   if (await isFeatureGloballyDisabled(featureKey)) {
     throw new HttpError(503, "This tool is temporarily unavailable.");
+  }
+  if (await isFeatureAdminOnly(featureKey)) {
+    throw new HttpError(403, "This tool is not available to the public yet.");
   }
 
   const defs = await getPlanDefinitionsResolved();

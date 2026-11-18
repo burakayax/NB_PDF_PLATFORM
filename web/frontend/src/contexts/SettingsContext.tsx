@@ -51,7 +51,7 @@ const defaultPayload: PublicRuntimePayload = {
     socialLinks: [...BRAND_SOCIAL_LINKS],
   },
   plans: [],
-  TOOLSPublic: { disabledFeatures: [], displayFreeDailyLimit: null },
+  TOOLSPublic: { disabledFeatures: [], adminOnlyFeatures: [], displayFreeDailyLimit: null },
   pricing: defaultPricing,
   cards: { starterTools: [...STARTER_TOOL_IDS] },
   flags: { maintenanceMode: false, betaFeatures: {}, featureFlags: {} },
