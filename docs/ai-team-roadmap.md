@@ -66,3 +66,7 @@ Bu belge her adımda güncellenir. Kodu değiştiren her iş ayrı dalda pull re
 3. **Her deploy'da çalışan seed:** plan limitlerini koddaki değerlere geri çeker; panelden elle değişen günlük limit geri dönebilir.
 4. **Ödeme sağlayıcıları (PayTR, iyzico) ve fatura (BirFatura):** dış servis, canlı anahtarlarla çalışıyor; sandbox ile canlı arasında test ortamı yok.
 5. **Tek kişilik süreç:** hata anında Render panelini bilen tek kişi var; geri alma kılavuzu eski.
+
+## Not: Panelden medya yükleme
+
+Panelden medya yüklemeden önce `MEDIA_STORAGE=s3` ve kalıcı bir medya kovası kurulmalı; aksi halde yüklenen dosyalar her deploy'da silinir.
