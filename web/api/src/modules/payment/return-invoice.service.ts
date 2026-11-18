@@ -64,7 +64,12 @@ async function fetchInvoicePdf(externalId: string): Promise<Buffer | null> {
   try {
     const r = await fetch(`${pdfBackendBase()}/api/internal/invoice-pdf-link`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...((process.env.INTERNAL_SERVICE_SECRET ?? "").trim()
+          ? { "X-Internal-Secret": (process.env.INTERNAL_SERVICE_SECRET ?? "").trim() }
+          : {}),
+      },
       body: JSON.stringify({ invoiceId: externalId }),
       signal: AbortSignal.timeout(45_000),
     });
@@ -152,7 +157,12 @@ async function listIncoming(sinceIso: string): Promise<IncomingReturnInvoice[] |
   try {
     const r = await fetch(`${pdfBackendBase()}/api/internal/return-invoices/incoming`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...((process.env.INTERNAL_SERVICE_SECRET ?? "").trim()
+          ? { "X-Internal-Secret": (process.env.INTERNAL_SERVICE_SECRET ?? "").trim() }
+          : {}),
+      },
       body: JSON.stringify({ sinceIso }),
       signal: AbortSignal.timeout(90_000),
     });
