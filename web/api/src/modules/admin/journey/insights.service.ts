@@ -17,10 +17,14 @@ import { parseToolUsageCountsJson } from "../../subscription/user-behavior.servi
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_ROWS = 60_000;
 const MAX_VISITS = 5_000;
+/** Bir ziyarette ayrı ayrı kaç farklı sayfa listelenir (yük küçük kalsın). */
+const MAX_PAGES_PER_VISIT = 30;
 const MAX_PAYERS = 300;
 const MAX_CANCELLATIONS = 300;
 
 export type InsightEvent = { name: string; toolId: string | null; extra: string | null; createdAt: string };
+
+export type InsightPage = { path: string; views: number; at: string };
 
 export type InsightVisit = {
   id: string;
@@ -35,6 +39,8 @@ export type InsightVisit = {
   utmCampaign: string | null;
   landingPath: string | null;
   pageCount: number;
+  /** Baktığı farklı sayfalar (ilk bakış sırasıyla): adres, kaç kez, ilk bakış zamanı. */
+  pages: InsightPage[];
   events: InsightEvent[];
 };
 
@@ -230,6 +236,7 @@ export async function getJourneyInsights(days: number): Promise<InsightsPayload>
         utmCampaign: null,
         landingPath: null,
         pageCount: 0,
+        pages: [],
         events: [],
       };
       bySession.set(sessionId, v);
@@ -245,6 +252,10 @@ export async function getJourneyInsights(days: number): Promise<InsightsPayload>
     if (pv.userId && adminIds.has(pv.userId)) adminSessions.add(pv.sessionId);
     const v = touch(pv.sessionId, pv.createdAt);
     v.pageCount += 1;
+    const cleanPath = (pv.path.split("?")[0] || "/").replace(/(.)\/+$/, "$1");
+    const seen = v.pages.find((p) => p.path === cleanPath);
+    if (seen) seen.views += 1;
+    else if (v.pages.length < MAX_PAGES_PER_VISIT) v.pages.push({ path: cleanPath, views: 1, at: pv.createdAt.toISOString() });
     if (v.landingPath === null) {
       v.landingPath = pv.path;
       v.referrer = pv.referrer;
