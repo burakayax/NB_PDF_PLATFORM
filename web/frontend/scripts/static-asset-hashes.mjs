@@ -41,9 +41,7 @@ export function currentHashes() {
       const rel = path.relative(PUBLIC_DIR, file).split(path.sep).join("/");
       let data = readFileSync(file);
       // Metin dosyalarında Windows (CRLF) ile Linux (LF) satır sonu farkı parmak izini bozmasın.
-      if (/\.(css|txt|json|md)$/i.test(file)) data = Buffer.from(data.toString("utf8").replace(/
-/g, "
-"));
+      if (/\.(css|txt|json|md)$/i.test(file)) data = Buffer.from(data.toString("utf8").replaceAll(String.fromCharCode(13, 10), String.fromCharCode(10)));
       result[rel] = createHash("sha256").update(data).digest("hex");
     }
   }
