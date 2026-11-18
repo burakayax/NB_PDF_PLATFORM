@@ -273,6 +273,7 @@ import {
 import { readAccessToken } from "./lib/accessTokenStore";
 import { WorkspaceToolShell, ToolHeadline } from "./components/common/WorkspaceToolShell";
 import { ToolPageContext } from "./components/common/toolPageContext";
+import { AdminTwoFactorGate } from "./admin/AdminTwoFactorGate";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -6836,19 +6837,25 @@ function App() {
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
         <Suspense fallback={<PageSkeleton />}>
-          <AdminPanel
+          <AdminTwoFactorGate
             accessToken={accessToken}
             userEmail={user?.email ?? "admin"}
-            onExit={() => {
-              setView("web");
-              window.history.replaceState(
-                {},
-                "",
-                workspacePathForFeature("split"),
-              );
-            }}
             onLogout={() => void handleLogout()}
-          />
+          >
+            <AdminPanel
+              accessToken={accessToken}
+              userEmail={user?.email ?? "admin"}
+              onExit={() => {
+                setView("web");
+                window.history.replaceState(
+                  {},
+                  "",
+                  workspacePathForFeature("split"),
+                );
+              }}
+              onLogout={() => void handleLogout()}
+            />
+          </AdminTwoFactorGate>
         </Suspense>
       </>
     );
