@@ -8,6 +8,8 @@ import { toolLabel } from "./journeyNarrative";
 
 export type InsightEvent = { name: string; toolId: string | null; extra: string | null; createdAt: string };
 
+export type InsightPage = { path: string; views: number; at: string };
+
 export type InsightVisit = {
   id: string;
   firstSeenAt: string;
@@ -21,6 +23,8 @@ export type InsightVisit = {
   utmCampaign: string | null;
   landingPath: string | null;
   pageCount: number;
+  /** Baktığı farklı sayfalar: adres, kaç kez, ilk bakış zamanı (eski sunucu yanıtında olmayabilir). */
+  pages?: InsightPage[];
   events: InsightEvent[];
 };
 
@@ -354,7 +358,7 @@ export function sourceRows(visits: InsightVisit[], payers: InsightPayer[]): Sour
   return [...map.values()].sort((a, b) => b.visitors - a.visitors || b.bought - a.bought);
 }
 
-export type ToolRow = { id: string; name: string; finished: number; clicked: number; wall: number; pricing: number };
+export type ToolRow = { id: string; name: string; used: number; finished: number; clicked: number; wall: number; pricing: number };
 
 export function toolRows(visits: InsightVisit[]): ToolRow[] {
   const map = new Map<string, ToolRow>();
@@ -363,14 +367,17 @@ export function toolRows(visits: InsightVisit[]): ToolRow[] {
     const name = plainToolName(raw);
     let r = map.get(name);
     if (!r) {
-      r = { id: raw, name, finished: 0, clicked: 0, wall: 0, pricing: 0 };
+      r = { id: raw, name, used: 0, finished: 0, clicked: 0, wall: 0, pricing: 0 };
       map.set(name, r);
     }
     return r;
   };
   for (const v of visits) {
     for (const e of v.events) {
-      if (e.name === "sign_up_cta_shown") {
+      if (e.name === "tool_used") {
+        const r = get(e.toolId);
+        if (r) r.used += 1;
+      } else if (e.name === "sign_up_cta_shown") {
         const r = get(e.toolId);
         if (r) r.finished += 1;
       } else if (e.name === "sign_up_cta_click") {
@@ -386,5 +393,37 @@ export function toolRows(visits: InsightVisit[]): ToolRow[] {
       }
     }
   }
-  return [...map.values()].sort((a, b) => b.finished + b.wall + b.pricing - (a.finished + a.wall + a.pricing));
+  return [...map.values()].sort((a, b) => b.used + b.finished + b.wall + b.pricing - (a.used + a.finished + a.wall + a.pricing));
+}
+
+// ─── Baktığı sayfalar ────────────────────────────────────────────────────────
+
+/** Sayfa adresini okunur ada çevirir: "/tools/pdf-sikistir" → "Araç: pdf sikistir"; "/" → "Ana sayfa". */
+export function pageLabel(path: string): string {
+  const p = (path || "/").split("?")[0].replace(/\/+$/, "") || "/";
+  if (p === "/") return "Ana sayfa";
+  const seg = p.split("/").filter(Boolean);
+  const pretty = (s: string) => decodeURIComponent(s).replace(/[-_]/g, " ");
+  if (seg[0] === "tools" && seg[1]) return `Araç: ${pretty(seg[1])}`;
+  if (seg[0] === "en" && seg[1] === "tools" && seg[2]) return `Araç (EN): ${pretty(seg[2])}`;
+  if (seg[0] === "blog" && seg[1]) return `Blog: ${pretty(seg[1])}`;
+  if (seg[0] === "en" && seg[1] === "blog" && seg[2]) return `Blog (EN): ${pretty(seg[2])}`;
+  if (seg[0] === "pricing") return "Fiyatlar";
+  return p;
+}
+
+export type PageRow = { path: string; name: string; visitors: number; views: number };
+
+/** Hangi sayfaya kaç farklı ziyaretçi baktı (en çok bakılan üstte). */
+export function pageRows(visits: InsightVisit[]): PageRow[] {
+  const map = new Map<string, PageRow>();
+  for (const v of visits) {
+    for (const pg of v.pages ?? []) {
+      const r = map.get(pg.path) ?? { path: pg.path, name: pageLabel(pg.path), visitors: 0, views: 0 };
+      r.visitors += 1;
+      r.views += pg.views;
+      map.set(pg.path, r);
+    }
+  }
+  return [...map.values()].sort((a, b) => b.visitors - a.visitors || b.views - a.views);
 }
