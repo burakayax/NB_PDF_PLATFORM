@@ -198,3 +198,22 @@ def test_satici_ayari_eksikse_istisna_faturasi_gonderilmez(provider, monkeypatch
     with patch.object(provider, "_post", side_effect=AssertionError("gonderilmemeli")):
         res = provider.full_invoice_flow(_cust(), ITEMS, PI)
     assert not res.success and "BIRFATURA_SUPPLIER_VKN" in (res.error or "")
+
+
+def test_satici_kimlik_semasi_vkn_mi_tckn_mi(monkeypatch):
+    """10 haneli no VKN, 11 haneli (şahıs işletmesi) TCKN olarak yazılır."""
+    import re
+    from app.billing import birfatura as bf
+    from app.billing.models import CustomerInfo, InvoiceItem, PaymentInfo
+
+    monkeypatch.setenv("BIRFATURA_API_KEY", "k")
+    monkeypatch.setenv("BIRFATURA_SECRET_KEY", "s")
+    monkeypatch.setenv("BIRFATURA_SUPPLIER_NAME", "Test Kisi")
+    ci = CustomerInfo(name="A", email="a@x.com", country="DE", is_export=True)
+    items = [InvoiceItem(name="x", quantity=1, unit_price=10.0, vat_rate=0)]
+    pay = PaymentInfo(payment_id="p", amount_paid=10.0, currency="USD", payment_date="2026-11-18")
+    for vkn, scheme in (("5300847203", "VKN"), ("12345678901", "TCKN")):
+        monkeypatch.setenv("BIRFATURA_SUPPLIER_VKN", vkn)
+        xml = bf.BirFaturaProvider()._build_export_invoice_xml("u-1", "2026-11-18", ci, items, pay)
+        assert f'<cbc:ID schemeID="{scheme}">{vkn}</cbc:ID>' in xml
+        assert not re.search(rf'schemeID="{"TCKN" if scheme == "VKN" else "VKN"}">{vkn}<', xml)
