@@ -593,6 +593,49 @@ services:
       - path: "/assets/*"
         name: Cache-Control
         value: "public, max-age=31536000, immutable"
+      # ── Büyük, nadiren değişen dosyalar (bant genişliği tasarrufu) ──────────────
+      # Bu klasörlerde dosya adı içerikle değişmiyor (hash'siz). Önbellek süresi bu yüzden
+      # KİLİTLİ değil, sınırlı: kaynak değişirse dosya ADINA sürüm eklenir (örn. modnet-v2.onnx);
+      # eski ad en geç süre dolunca tazelenir. HTML ve /api yolları bu kurallara GİRMEZ.
+      # Model/çalışma dosyaları: derlemede indirilir (git'te yok) → 7 gün.
+      - path: "/tts-tr/*"
+        name: Cache-Control
+        value: "public, max-age=604800"
+      - path: "/photo-ai/*"
+        name: Cache-Control
+        value: "public, max-age=604800"
+      - path: "/tesseract/*"
+        name: Cache-Control
+        value: "public, max-age=604800"
+      - path: "/scanic-ml/*"
+        name: Cache-Control
+        value: "public, max-age=604800"
+      # Yazı tipleri git'te izlenir, içerik değişirse CI durur (scripts/static-asset-hashes.mjs) → 30 gün.
+      - path: "/fonts/*"
+        name: Cache-Control
+        value: "public, max-age=2592000"
+      # Sosyal medya / kapak görselleri: derlemede yeniden üretilebilir → 1 gün.
+      - path: "/social/*"
+        name: Cache-Control
+        value: "public, max-age=86400"
+      - path: "/covers/*"
+        name: Cache-Control
+        value: "public, max-age=86400"
+      - path: "/x-cards/*"
+        name: Cache-Control
+        value: "public, max-age=86400"
+      - path: "/reel-covers/*"
+        name: Cache-Control
+        value: "public, max-age=86400"
+      - path: "/icons/*"
+        name: Cache-Control
+        value: "public, max-age=604800"
+      - path: "/screenshots/*"
+        name: Cache-Control
+        value: "public, max-age=86400"
+      - path: "/demo/*"
+        name: Cache-Control
+        value: "public, max-age=86400"
       # index.html ve SEO HTML'leri asla cache'lenmemeli (yeni deploy hemen yansır)
       - path: "/index.html"
         name: Cache-Control
