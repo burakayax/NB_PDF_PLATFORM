@@ -159,12 +159,12 @@ jobs:
 
       - name: Install system dependencies
         # Paket sunucusu bazen yanıt vermeyip adımı 14 dk asılı bırakıyor (normalde ~1 dk).
-        # Her deneme 8 dk ile sınırlı (yavaş sunucuda 131 MB inmesi için), 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
+        # LibreOffice burada KURULMAZ (451 MB; sunucu yavaşlayınca testi saatlerce bekletiyordu). Onu gerektiren testler atlanır, ayrı "python-office-tests" işinde çalışır. Her deneme 8 dk ile sınırlı, 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
         run: |
           mkdir -p "$HOME/apt-archives/partial"
           APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-archives"
           for i in 1 2 3; do
-            timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr               libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation" && break
+            timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr fonts-liberation" && break
             echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
             [ "$i" = 3 ] && exit 1
           done
@@ -194,6 +194,70 @@ jobs:
             --cov=app \
             --cov-report=term-missing \
             --cov-fail-under=12 \
+            -q
+
+  python-office-tests:
+    name: Python Office Tests (LibreOffice, zorunlu değil)
+    # ubuntu-latest 26.04'e geçti ve o sürümde wkhtmltopdf paketi yok; testler tanıdık 24.04 ortamında koşar.
+    runs-on: ubuntu-24.04
+    needs: changes
+    # Yalnız ana dala birleştikten sonra çalışır; PR'ı bekletmez. Başarısızlık deploy'u engellemez.
+    if: needs.changes.outputs.code == 'true' && github.event_name == 'push'
+    continue-on-error: true
+    # Takılan test (ör. fork kilitlenmesi) deploy'u 40 dk bekletmesin — net hata ile dur.
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: web/backend/requirements.txt
+
+      - name: Sistem paketleri önbelleği (apt)
+        # İndirilen .deb dosyaları saklanır; paket sunucusu yavaşlasa bile ikinci çalışmadan itibaren yeniden indirilmez.
+        # Anahtarı değiştirmek (v1 -> v2) önbelleği sıfırlar. Önbellek bozuksa apt kendi indirir; test sonucu etkilenmez.
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-archives
+          key: apt-ubuntu24.04-py-office-v1
+
+      - name: Install system dependencies
+        # Paket sunucusu bazen yanıt vermeyip adımı 14 dk asılı bırakıyor (normalde ~1 dk).
+        # Her deneme 8 dk ile sınırlı (yavaş sunucuda 131 MB inmesi için), 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
+        run: |
+          mkdir -p "$HOME/apt-archives/partial"
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-archives"
+          for i in 1 2 3; do
+            timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr               libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation" && break
+            echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
+            [ "$i" = 3 ] && exit 1
+          done
+          # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
+          timeout 120 $APT install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
+
+      - name: Install dependencies
+        working-directory: web/backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-asyncio pytest-timeout
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: web/backend
+        env:
+          NB_RESULT_STORE_DIR: /tmp/test-result-store
+        run: |
+          # Kapsam eşiği regresyon koruması içindir (tüm app/ paketi ölçülür).
+          # Mevcut taban ~%14; güvenlik-kritik modüller (pdf_security, result_store,
+          # billing) tam test edilir. Hedef: kapsamı kademeli %40+'a çıkarmak.
+          # --timeout: takılan TEK test 2 dk sonra adıyla başarısız olur; bütün iş 15 dk beklenip
+          # adsız "iptal edildi" demesin.
+          pytest tests/pdf/test_tools_smoke.py \
+            --timeout=120 \
+            --tb=short \
             -q
 
   # ─── Node Güvenlik Taraması (Auth API) ───────────────────────────────────
