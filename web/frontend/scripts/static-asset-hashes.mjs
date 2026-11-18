@@ -39,7 +39,12 @@ export function currentHashes() {
     if (!existsSync(root)) continue;
     for (const file of walk(root).sort()) {
       const rel = path.relative(PUBLIC_DIR, file).split(path.sep).join("/");
-      result[rel] = createHash("sha256").update(readFileSync(file)).digest("hex");
+      let data = readFileSync(file);
+      // Metin dosyalarında Windows (CRLF) ile Linux (LF) satır sonu farkı parmak izini bozmasın.
+      if (/\.(css|txt|json|md)$/i.test(file)) data = Buffer.from(data.toString("utf8").replace(/
+/g, "
+"));
+      result[rel] = createHash("sha256").update(data).digest("hex");
     }
   }
   return result;
