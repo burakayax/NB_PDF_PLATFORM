@@ -1,181 +1,78 @@
-# RB-11 — Kötü Deployment / Rollback
+# RB-11 — Kötü Deploy / Geri Alma (Render)
 
-> **Kritiklik:** 🔴 KRİTİK — Yeni deploy sonrası site kırık
-> **Tipik çözüm süresi:** 2-10 dakika
-> **Altın kural:** "Eğer şüphelisin, geri al." Rollback her zaman daha hızlıdır.
+> **Ne zaman:** Yeni sürüm canlıya çıktıktan sonra site bozuldu, ödeme çalışmıyor, sayfalar açılmıyor ya da hata sayısı bir anda arttı.
+> **Altın kural:** Şüphen varsa önce geri al, nedenini sonra ara. Geri alma birkaç dakika sürer.
+> **Not:** Eski sürüm bu belgede kendi sunucusu (`systemctl`, `git checkout`) için yazılmıştı. Proje Render'a taşındığı için geçersizdi; bu sürüm onun yerine geçer. Render ekranlarındaki düğme adları zamanla değişebilir. İlk gerçek kullanımda ekranı bir kez teyit edin.
 
----
+## Önce karar: sorun nerede?
 
-## 🔍 Belirtiler
+| Belirti | Büyük ihtimalle | Ne yapılır |
+|---|---|---|
+| Site hiç açılmıyor ya da beyaz sayfa | Ön yüz (statik site) | Adım 2: `nb-pdf-frontend` geri al |
+| Giriş, üyelik, ödeme, panel çalışmıyor | `nb-auth-api` | Adım 2: `nb-auth-api` geri al |
+| PDF araçları hata veriyor | `nb-pdf-api` (veya `nb-gotenberg`) | Adım 2: ilgili servisi geri al |
+| Veriler yanlış, kayıtlar eksik/bozuk | Veritabanı | Adım 4: veritabanı geri dönüşü (önce durdur) |
 
-- Yeni deploy'dan sonra hata başladı
-- Tüm kullanıcılar aynı hatayı görüyor
-- "Internal Server Error" sayısı arttı
-- TypeScript/Python başlatma hatası var
+Emin değilseniz: UptimeRobot e-postasına, Sentry'ye ve `https://api.pdfplatform.app/api/health/db` adresine bakın. Bu adres `db: up` dönüyorsa sorun büyük ihtimalle veritabanında değildir.
 
----
+## Adım 1 — Yeni sürüm mü bozdu? (1 dk)
 
-## ✅ Adım 1: Gerçekten Deploy Mı Bozdu?
+1. GitHub → **Actions** → en üstteki "CI" çalışması: ne zaman çıktı?
+2. Hatanın başladığı saat bu saatle örtüşüyorsa sürüm bozmuş demektir.
+3. Hangi PR'ın birleştiğini not edin (geri alma ve sonrası için lazım).
 
-```bash
-# Son commit neydi?
-git log --oneline -5
+## Adım 2 — Kodu geri al (Render, 2–5 dk)
 
-# Deploy zamanı ile hata başlangıcı örtüşüyor mu?
-# Log'da ilk hata ne zaman çıktı:
-grep '"level":"error"' /var/log/nb-pdf-platform/api.log | tail -5
-# Zaman damgasına bak
-```
+Her servis için ayrı yapılır. Sorunlu servisi seçin: `nb-pdf-frontend`, `nb-auth-api`, `nb-pdf-api`, `nb-gotenberg`.
 
----
+1. Render paneli → servis → **Events** (ya da Deploys) sekmesi.
+2. Listede **son çalışan başarılı sürümü** bulun (sorunlu sürümden bir önceki).
+3. O sürümün yanındaki **Rollback** düğmesine basın ve onaylayın.
+4. Durumun **Live** olmasını bekleyin.
+5. Kontrol: site açılıyor mu, `https://api.pdfplatform.app/api/health` 200 veriyor mu?
 
-## 🚨 HIZLI ROLLBACK (En Hızlı Yol)
+Bilmeniz gerekenler:
+- Rollback yalnızca **kodu** eski haline getirir. Veritabanındaki değişiklikler geri gitmez (bkz. Adım 4).
+- Render önceki derlemeyi yeniden çalıştırır. Bu sırada yeni bir veritabanı güncellemesi çalışmaması gerekir; ilk kullanımda günlüğe (Logs) bakarak teyit edin.
+- Render, geri alınan serviste otomatik kurulumu kapatabilir. Bizde zaten kurulumu CI tetikler; ama **sonraki birleştirme bozuk kodu yeniden canlıya çıkarır.** Bu yüzden Adım 3 şart.
 
-```bash
-# === ROLLBACK PROSEDÜRÜ ===
+## Adım 3 — Bozan değişikliği kalıcı olarak geri al (PR ile)
 
-# 1. Önceki commit'e geri dön:
-git log --oneline -10
-# Hangi commit çalışıyordu? O commit hash'ini al (örn: abc1234)
+`main` dalına doğrudan push yoktur; geri alma da pull request ile yapılır.
 
-git checkout abc1234  # Çalışan eski versiyona geç
+1. GitHub → birleştirilmiş PR sayfası → **Revert** düğmesi. GitHub otomatik bir "geri alma" PR'ı açar.
+2. CI yeşil olunca sahibi onaylar ve birleştirir. Bu yeni bir deploy tetikler.
+3. Render'da tüm servislerin **Live** olduğunu doğrulayın.
 
-# 2. Node.js API'yi yeniden build et:
-cd web/api
-npm run build
+Acil durumda ve CI beklenemeyecekse: GitHub → Settings → Rules → "main koruma" kuralını geçici **Disabled** yapın, işlem bitince hemen **Active** yapın. Bu yalnızca sahibin kararıyla yapılır ve işlem sonunda yol haritası belgesine not düşülür.
 
-# 3. Servisi yeniden başlat:
-sudo systemctl restart nb-api
+## Adım 4 — Veritabanı geri dönüşü (yalnızca veri bozulduysa)
 
-# 4. Test et:
-curl -s https://siteadın.com/api/health
-# 200 gelmeli
+Bu adım en riskli olandır. **Önce yazmayı durdurun**, sonra geri dönün.
 
-# 5. Python PDF API değişti mi? (değiştiyse onu da rollback et)
-cd web/backend
-# Değişiklik varsa servisi yeniden başlat:
-sudo systemctl restart nb-pdf-api
+1. `nb-auth-api` servisini **Suspend** edin (yeni kayıt yazılmasın).
+2. Render paneli → veritabanı → **Recovery** (zamana göre geri dönüş; Render şu an son 3 gün).
+3. Bozulmadan **hemen önceki** bir zaman seçin. Render bu işlemi mevcut veritabanının üzerine yazmaz; **yeni bir veritabanı** oluşturur.
+4. Yeni veritabanı hazır olunca, `nb-auth-api` ortam değişkenlerinde `DATABASE_URL` değerini yeni veritabanının adresiyle değiştirin (değeri hiçbir yere yazmayın).
+5. Servisi **Resume** edin, kurulumun bitmesini bekleyin.
+6. Kontrol: `https://api.pdfplatform.app/api/health/db` → `db: up`; panelden son siparişlere ve üye sayısına bakın.
+7. Eski veritabanını **silmeyin**; her şeyin doğru olduğundan emin olana kadar saklayın.
 
-# 6. Ana branch'e geri dön (kod rollback EDERKEN branch değiştirir):
-# Rollback'tan sonra main branch'te olman gerekiyor:
-git checkout main  # ya da master
-```
+Önemli: geri dönüş noktasından sonra gelen siparişler/üyelikler yeni veritabanında olmayacaktır. İlgili ödeme sağlayıcı (PayTR/iyzico) kayıtlarından kontrol edilip elle düzeltilir.
 
----
+Elle aldığınız yedek dosyası (`.dat`/pg_dump) için geri yükleme ayrı bir işlemdir; yardım isteyin, kendiniz denemeyin.
 
-## ✅ Adım 2: Neden Bozuldu? (Acil Düzeltme Sonrası)
+## Adım 5 — Sonrası
 
-```bash
-# Servis başlatma hatalarına bak:
-journalctl -u nb-api -n 100 --no-pager | grep -E "error|Error|FATAL"
-journalctl -u nb-pdf-api -n 100 --no-pager | grep -E "error|Error|FATAL"
+- [ ] Site, giriş, ödeme ekranı ve bir PDF aracı elle denendi
+- [ ] UptimeRobot yeşil
+- [ ] Sentry'de yeni hata akışı durdu
+- [ ] Revert PR'ı birleştirildi (Adım 3)
+- [ ] Ne olduğu ve neden olduğu `docs/ai-team-roadmap.md` veya olay notlarına yazıldı
 
-# TypeScript derleme hatası mı?
-cd web/api && npx tsc --noEmit 2>&1 | head -20
+## Yapılmaması gerekenler
 
-# Python syntax hatası mı?
-cd web/backend && python -m py_compile app/main.py app/core/*.py 2>&1
-
-# .env değişkeni eksik mi?
-grep "missing\|undefined\|not found" /var/log/nb-pdf-platform/api.log | tail -10
-```
-
----
-
-## 🛠️ Güvenli Deployment Prosedürü (Gelecek İçin)
-
-**Bu prosedürü her deploy'dan önce uygula:**
-
-```bash
-#!/bin/bash
-# deploy.sh — Güvenli deployment scripti
-
-set -e  # Herhangi bir hata olursa dur
-
-echo "=== DEPLOY BAŞLIYOR ==="
-echo "Zaman: $(date)"
-echo "Son commit: $(git log --oneline -1)"
-
-# 1. Çalışan kodu yedekle
-echo "--- Yedekleniyor ---"
-git stash 2>/dev/null || true
-CURRENT_COMMIT=$(git rev-parse HEAD)
-echo "Yedek commit: $CURRENT_COMMIT"
-
-# 2. Yeni kodu çek
-echo "--- Kod güncelleniyor ---"
-git pull origin main
-
-# 3. Derleme testleri
-echo "--- TypeScript kontrolü ---"
-cd web/api && npx tsc --noEmit
-cd ..
-
-echo "--- Python sözdizimi kontrolü ---"
-cd web/backend && python -m py_compile app/main.py
-cd ..
-
-# 4. Bağımlılıkları yükle
-echo "--- Bağımlılıklar yükleniyor ---"
-cd web/api && npm ci --production
-cd ..
-
-# 5. Servisleri yeniden başlat
-echo "--- Servisler yeniden başlatılıyor ---"
-sudo systemctl restart nb-api
-sleep 5
-
-# 6. Health check
-echo "--- Sağlık kontrolü ---"
-HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/api/health)
-if [ "$HEALTH" != "200" ]; then
-  echo "HATA: Health check başarısız! Rollback yapılıyor..."
-  git checkout $CURRENT_COMMIT
-  cd web/api && npm run build
-  sudo systemctl restart nb-api
-  echo "Rollback tamamlandı: $CURRENT_COMMIT"
-  exit 1
-fi
-
-echo "=== DEPLOY BAŞARILI ==="
-echo "Commit: $(git log --oneline -1)"
-```
-
----
-
-## 📋 Deploy Öncesi Kontrol Listesi
-
-```
-Deployment yapmadan önce:
-[ ] TypeScript hatasız derleniyor: npm run build (web/api)
-[ ] Python sözdizimi hatasız: py_compile
-[ ] npm audit geçiyor: npm audit --audit-level=high
-[ ] Veritabanı migration gerekiyor mu? (schema.prisma değişti mi?)
-    → npx prisma migrate deploy (üretimde)
-    → Bu GERİ ALINAMAZ! Dikkat!
-[ ] .env değişkeni eklendi mi? (yeni env var varsa sunucuda da ekle)
-[ ] Küçük trafik saatinde deploy yap (gece yarısı, sabah erken)
-```
-
----
-
-## 🔴 ASLA YAPMA LİSTESİ
-
-```
-✗ Doğrudan production'da kod düzenleme
-✗ git push --force (main/master branch)
-✗ npm install yerine npm ci yapmamak (version farklılıkları)
-✗ Test etmeden .env değiştirme
-✗ Yedek almadan veritabanı migration
-✗ Birden fazla büyük değişikliği aynı anda deploy etme
-✗ "Küçük değişiklik test etmeye gerek yok" diye düşünme
-```
-
----
-
-## 🎯 Deployment Sıklığı Önerisi
-
-**MVP aşaması için:**
-- Günde 1-2 deploy maksimum
-- Cuma akşamı deploy YAPMA (hafta sonu sorun çözecek kimse yok)
-- Büyük değişiklikler için: Pazartesi sabahı deploy et, gün boyunca izle
+- `main`'e doğrudan push veya `--force` (zaten engelli)
+- Veritabanını "temizlemek" için komut çalıştırmak
+- Anahtarları sohbet/belgeye yazmak
+- Hangi servisin bozduğunu bilmeden hepsini birden geri almak
