@@ -36,6 +36,7 @@ import dataclasses
 import io
 import logging
 import os
+import re
 import time
 import uuid
 import zipfile
@@ -53,6 +54,12 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE = "https://uygulama.edonustur.com/api/OutEBelgeV2"
 _LOG_SAFE_PATHS = frozenset({"getoutboxdocumentstatuseswithuuids", "getpdflinkbyuuid"})
+_ID_RE = re.compile(r"(?<!\d)\d{10,11}(?!\d)")
+
+
+def _redact(text: object) -> str:
+    """Metindeki 10/11 haneli numaraları (VKN/TCKN) maskeler; log, hata kaydı ve Sentry'ye kişisel numara düşmesin."""
+    return _ID_RE.sub("<no-gizli>", str(text))
 _POLL_INTERVAL = 10
 _POLL_MAX = 30
 
@@ -219,7 +226,7 @@ class BirFaturaProvider(BillingProviderBase):
         if "application/json" not in content_type:
             raise RuntimeError(
                 f"BirFatura JSON yanıt beklendi, {content_type!r} geldi "
-                f"(url={resp.url}, status={resp.status_code}): {resp.text[:500]}"
+                f"(url={resp.url}, status={resp.status_code}): {_redact(resp.text[:500])}"
             )
         return resp.json()
 
@@ -228,7 +235,7 @@ class BirFaturaProvider(BillingProviderBase):
         if not data.get("Success", False):
             msg = data.get("Message", "Bilinmeyen hata")
             code = data.get("Code", "")
-            raise RuntimeError(f"BirFatura {endpoint} başarısız: [{code}] {msg}")
+            raise RuntimeError(f"BirFatura {endpoint} başarısız: [{code}] {_redact(msg)}")
         return data.get("Result")
 
     # ------------------------------------------------------------------
@@ -487,7 +494,7 @@ class BirFaturaProvider(BillingProviderBase):
             if not self._is_valid_tckn(ci.national_id):
                 logger.warning(
                     "birfatura: TCKN checksum hatalı — BirFatura 9.900₺ üzeri faturalarda reddedebilir "
-                    "national_id=%s", ci.national_id[:3] + "****" + ci.national_id[-2:],
+                    "(numara loga yazılmaz)",
                 )
         elif not ci.is_export:
             # Bireysel yurt içi, TC girilmemiş — GİB standart placeholder (11 hane)
@@ -1202,8 +1209,8 @@ class BirFaturaProvider(BillingProviderBase):
             if not result.success:
                 return result
         except Exception as exc:
-            logger.error("birfatura: fatura oluşturma başarısız hata=%s", exc)
-            return InvoiceResult(success=False, error=str(exc))
+            logger.error("birfatura: fatura oluşturma başarısız hata=%s", _redact(exc))
+            return InvoiceResult(success=False, error=_redact(exc))
 
         # Durum bekle (hata olursa faturayı engelleme)
         initial_pdf_url = result.pdf_url
