@@ -149,11 +149,20 @@ jobs:
           cache: "pip"
           cache-dependency-path: web/backend/requirements.txt
 
+      - name: Sistem paketleri önbelleği (apt)
+        # İndirilen .deb dosyaları saklanır; paket sunucusu yavaşlasa bile ikinci çalışmadan itibaren yeniden indirilmez.
+        # Anahtarı değiştirmek (v1 -> v2) önbelleği sıfırlar. Önbellek bozuksa apt kendi indirir; test sonucu etkilenmez.
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-archives
+          key: apt-ubuntu24.04-py-tests-v1
+
       - name: Install system dependencies
         # Paket sunucusu bazen yanıt vermeyip adımı 14 dk asılı bırakıyor (normalde ~1 dk).
         # Her deneme 8 dk ile sınırlı (yavaş sunucuda 131 MB inmesi için), 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
         run: |
-          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20"
+          mkdir -p "$HOME/apt-archives/partial"
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-archives"
           for i in 1 2 3; do
             timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr               libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation" && break
             echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
