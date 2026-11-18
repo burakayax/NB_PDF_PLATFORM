@@ -437,7 +437,7 @@ export const legalDocuments = {
       summary:
         "How subscriptions are cancelled, when refunds are available and how refunds are paid. This page summarizes the refund rules in the Distance Sales Agreement and the Pre-Purchase Information Form in one place.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "30 October 2026",
+      effectiveDate: "18 November 2026",
       sections: [
         {
           title: "1. Cancelling your subscription",
@@ -479,6 +479,14 @@ export const legalDocuments = {
           paragraphs: [
             "If the service cannot be used at all, contact our support team; compensation (extra time or a refund) is assessed case by case. Wilful misuse of the service may exclude a refund.",
             "For complaints write to info@pdfplatform.app. As a consumer you may also apply to the Consumer Arbitration Committee or the Consumer Court.",
+          ],
+        },
+        {
+          title: "7. Delivery and shipping",
+          paragraphs: [
+            "PDF Platform is a digital service; no physical goods are shipped. There is therefore no shipping, delivery to an address or delivery fee.",
+            "As soon as your payment is confirmed, the subscription you bought (or extra AI credits, CV Pass, extra seats) is activated automatically on your account, usually within seconds and with no waiting period.",
+            "If your payment was received but the service did not activate on your account, write to info@pdfplatform.app and we will fix it promptly. Your invoice is sent to your e-mail address as an e-archive invoice within the legal period.",
           ],
         },
       ],
@@ -1029,7 +1037,7 @@ export const legalDocuments = {
       summary:
         "Aboneliğin nasıl iptal edildiği, iadenin hangi durumlarda yapıldığı ve iadenin nasıl ödendiği. Bu sayfa, Mesafeli Satış Sözleşmesi ile Ön Bilgilendirme Formu'ndaki iade kurallarını tek yerde özetler.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "30 Ekim 2026",
+      effectiveDate: "18 Kasım 2026",
       sections: [
         {
           title: "1. Aboneliği iptal etme",
@@ -1071,6 +1079,14 @@ export const legalDocuments = {
           paragraphs: [
             "Hizmetin tamamen kullanılamaması halinde destek ekibimizle iletişime geçebilirsiniz; telafi (ek süre veya iade) duruma göre değerlendirilir. Hizmetin kasten kötüye kullanılması halinde iade yapılmayabilir.",
             "Şikâyetleriniz için info@pdfplatform.app adresine yazabilirsiniz. Tüketici olarak Tüketici Hakem Heyeti'ne ve Tüketici Mahkemesi'ne başvurma hakkınız saklıdır.",
+          ],
+        },
+        {
+          title: "7. Teslimat ve kargo koşulları",
+          paragraphs: [
+            "PDF Platform dijital bir hizmettir; fiziksel ürün gönderilmez. Bu nedenle kargo, adrese teslimat ya da teslimat bedeli yoktur.",
+            "Ödemeniz onaylandığı anda satın aldığınız abonelik (veya ek yapay zekâ kredisi, CV Geçişi, ek koltuk) hesabınızda otomatik olarak etkinleştirilir; bu genellikle birkaç saniye içinde olur ve herhangi bir bekleme süresi yoktur.",
+            "Ödemeniz alındığı hâlde hizmet hesabınızda etkinleşmediyse info@pdfplatform.app adresine yazın; en kısa sürede çözülür. Faturanız e-arşiv fatura olarak, yasal süre içinde e-posta adresinize iletilir.",
           ],
         },
       ],
