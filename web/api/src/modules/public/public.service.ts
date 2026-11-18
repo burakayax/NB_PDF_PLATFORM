@@ -205,12 +205,15 @@ export function buildPublicPricingPayload(book: PriceBook, request: Request): Pu
 
 export type PublicTOOLSSlice = {
   disabledFeatures: string[];
+  /** Yalnız yöneticinin gördüğü araçlar; arayüz yönetici olmayanlara bunları gizler. */
+  adminOnlyFeatures: string[];
   displayFreeDailyLimit: number | null;
 };
 
 export async function getPublicTOOLSSlice(): Promise<PublicTOOLSSlice> {
   const raw = await getSetting(SITE_SETTING_KEYS.TOOLS_CONFIG);
   const disabled: string[] = [];
+  const adminOnly: string[] = [];
   let displayFreeDailyLimit: number | null = null;
   if (raw != null && typeof raw === "object" && !Array.isArray(raw)) {
     const o = raw as Record<string, unknown>;
@@ -221,11 +224,18 @@ export async function getPublicTOOLSSlice(): Promise<PublicTOOLSSlice> {
         }
       }
     }
+    if (Array.isArray(o.adminOnlyFeatures)) {
+      for (const x of o.adminOnlyFeatures) {
+        if (typeof x === "string" && x.trim()) {
+          adminOnly.push(x.trim());
+        }
+      }
+    }
     if (typeof o.displayFreeDailyLimit === "number" && Number.isFinite(o.displayFreeDailyLimit)) {
       displayFreeDailyLimit = o.displayFreeDailyLimit;
     }
   }
-  return { disabledFeatures: disabled, displayFreeDailyLimit };
+  return { disabledFeatures: disabled, adminOnlyFeatures: adminOnly, displayFreeDailyLimit };
 }
 
 /**

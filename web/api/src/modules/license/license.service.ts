@@ -21,7 +21,7 @@ import {
 import { mergeUsageSoftWarnings } from "../subscription/usage-soft-warnings.js";
 import type { PlanDefinition } from "../subscription/subscription.config.js";
 import type { FeatureKey } from "../subscription/subscription.config.js";
-import { isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
+import { isFeatureAdminOnly, isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
 import { getPlanDefinitionsResolved } from "../subscription/plan-runtime.js";
 import type { DesktopAuthorizeInput } from "./license.schema.js";
 
@@ -300,6 +300,9 @@ export async function authorizeDesktopOperation(userId: string, input: DesktopAu
   const entitlements = buildEntitlements(effectivePlan, currentUsage?.operationsCount ?? 0, defs, TOOLSCfg);
   if (await isFeatureGloballyDisabled(input.featureKey as FeatureKey)) {
     throw new HttpError(503, "This tool is temporarily unavailable.");
+  }
+  if (await isFeatureAdminOnly(input.featureKey as FeatureKey)) {
+    throw new HttpError(403, "This tool is not available to the public yet.");
   }
   assertDesktopOperationAllowed(input, entitlements);
 

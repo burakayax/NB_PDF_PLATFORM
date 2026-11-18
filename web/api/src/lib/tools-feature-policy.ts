@@ -8,3 +8,12 @@ export async function isFeatureGloballyDisabled(featureKey: FeatureKey): Promise
   const cfg = await getResolvedTOOLSBusinessConfig();
   return cfg.globallyDisabledFeatures.has(featureKey);
 }
+
+/**
+ * `TOOLS.config.adminOnlyFeatures` — henüz herkese açılmamış, yalnız yöneticinin kullanabildiği araçlar.
+ * Çağıran, yönetici kontrolünü KENDİSİ önce yapmalıdır (yönetici bu kapıdan geçmez).
+ */
+export async function isFeatureAdminOnly(featureKey: FeatureKey): Promise<boolean> {
+  const cfg = await getResolvedTOOLSBusinessConfig();
+  return cfg.adminOnlyFeatures.has(featureKey);
+}
