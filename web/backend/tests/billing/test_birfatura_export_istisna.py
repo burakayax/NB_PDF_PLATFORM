@@ -217,3 +217,25 @@ def test_satici_kimlik_semasi_vkn_mi_tckn_mi(monkeypatch):
         xml = bf.BirFaturaProvider()._build_export_invoice_xml("u-1", "2026-11-18", ci, items, pay)
         assert f'<cbc:ID schemeID="{scheme}">{vkn}</cbc:ID>' in xml
         assert not re.search(rf'schemeID="{"TCKN" if scheme == "VKN" else "VKN"}">{vkn}<', xml)
+
+
+def test_kisisel_veri_iceren_birfatura_istekleri_loga_yazilmaz(monkeypatch, caplog):
+    """Fatura gövdesi / UBL / mükellef sorgusu loga düşmez; durum sorgusu düşer."""
+    import logging
+    from unittest.mock import MagicMock
+    from app.billing import birfatura as bf
+
+    monkeypatch.setenv("BIRFATURA_API_KEY", "k")
+    monkeypatch.setenv("BIRFATURA_SECRET_KEY", "s")
+    prov = bf.BirFaturaProvider()
+    resp = MagicMock(status_code=200, text="{\"ok\":1}", headers={"Content-Type": "application/json"})
+    resp.json.return_value = {"Success": True, "Result": {}}
+    prov._session = MagicMock()
+    prov._session.post.return_value = resp
+    caplog.set_level(logging.INFO)
+    prov._post("SendBasicInvoiceFromModel", {"identityNumber": "12345678901"})
+    prov._post("SendDocument", {"document": "TC12345678901"})
+    prov._post("GetOutBoxDocumentStatusesWithUUIDs", {"uuids": ["abc"]})
+    text = caplog.text
+    assert "12345678901" not in text
+    assert "abc" in text
