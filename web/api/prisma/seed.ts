@@ -1,5 +1,6 @@
 import { createPrismaClient } from "../src/lib/prisma-client-factory.js";
 import { BUSINESS_TEAM, PLAN_LIMITS, PLAN_PRICES } from "../src/lib/plan-catalogue.js";
+import { applySavedLimits, extractSavedLimitOverrides, type SavedLimitOverrides } from "../src/lib/seed-limit-overrides.js";
 
 const prisma = createPrismaClient();
 
@@ -63,10 +64,39 @@ const PLAN_CONFIGS = [
   planRow("BUSINESS", { queuePriority: "HIGHEST", maxSeats: BUSINESS_TEAM.maxTotalSeats }),
 ];
 
+/**
+ * Panelde (Paket ve fiyat → Limitler) KAYDEDİLMİŞ limitleri okur. Okunamazsa boş döner: seed kodun
+ * varsayılanlarıyla eskisi gibi çalışır (asla çökmez, asla bozuk veri yazmaz).
+ */
+async function loadSavedLimits(): Promise<SavedLimitOverrides> {
+  try {
+    const rows = await prisma.siteSetting.findMany({ where: { key: { in: ["packages.config", "plans.override"] } } });
+    const parse = (key: string): unknown => {
+      const raw = rows.find((r) => r.key === key)?.value;
+      if (!raw?.trim()) return null;
+      try {
+        return JSON.parse(raw) as unknown;
+      } catch {
+        return null;
+      }
+    };
+    return extractSavedLimitOverrides(parse("packages.config"), parse("plans.override"));
+  } catch (e) {
+    console.warn("⚠️  Panel limitleri okunamadı; kodun varsayılanları kullanılacak:", e instanceof Error ? e.message : e);
+    return {};
+  }
+}
+
 async function main() {
   console.log("🌱 PlanConfig seed başlıyor...");
+  const savedLimits = await loadSavedLimits();
 
-  for (const config of PLAN_CONFIGS) {
+  for (const codeConfig of PLAN_CONFIGS) {
+    // Panel kazanır, kod varsayılandır: panelde kayıtlı limit koddakinin yerine geçer.
+    const { config, changed } = applySavedLimits(codeConfig.plan, codeConfig, savedLimits);
+    if (changed.length > 0) {
+      console.log(`    ↳ ${config.plan}: panelde kayıtlı limit korundu (${changed.join(", ")})`);
+    }
     await prisma.planConfig.upsert({
       where: { plan: config.plan },
       update: config,
