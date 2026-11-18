@@ -636,8 +636,45 @@ jobs:
       - frontend-typecheck
       - frontend-e2e
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Render pipeline dakikası sınırlı: yalnız dosyası değişen servis deploy edilir.
+      # EMİN OLUNAMAZSA (hata, bilinmeyen dosya, ortak dosya) üç servis de deploy edilir.
+      #   frontend  <- web/frontend/**
+      #   auth-api  <- web/api/**
+      #   pdf-api   <- web/backend/** ve src/** (imaj src/'yi de içerir)
+      #   hiçbiri   <- yalnız belge/masaüstü paketleme dosyaları
+      - name: Hangi servisler değişti
+        id: scope
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -u
+          echo "auth=true" >> "$GITHUB_OUTPUT"; echo "pdf=true" >> "$GITHUB_OUTPUT"; echo "frontend=true" >> "$GITHUB_OUTPUT"
+          base="$BEFORE"
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || echo "$base" | grep -q '^0*$'; then base="HEAD^1"; fi
+          files=$(git diff --name-only "$base" HEAD 2>/dev/null) || { echo "Fark okunamadı; hepsi deploy edilecek."; exit 0; }
+          [ -n "$files" ] || { echo "Fark boş; hepsi deploy edilecek."; exit 0; }
+          auth=false; pdf=false; fe=false
+          while IFS= read -r f; do
+            case "$f" in
+              web/frontend/*) fe=true ;;
+              web/api/*) auth=true ;;
+              web/backend/*|src/*) pdf=true ;;
+              *.md|docs/*|"sosyal medya/"*|_screenshots/*|installer/*|packaging/*|release/*) ;;
+              *) auth=true; pdf=true; fe=true ;;   # ortak/bilinmeyen dosya: hepsi
+            esac
+          done <<< "$files"
+          echo "auth=$auth" > "$GITHUB_OUTPUT"; echo "pdf=$pdf" >> "$GITHUB_OUTPUT"; echo "frontend=$fe" >> "$GITHUB_OUTPUT"
+          echo "Deploy kapsamı -> auth-api=$auth pdf-api=$pdf frontend=$fe"
+
       - name: Trigger Render deploy hooks
         env:
+          DEPLOY_AUTH: ${{ steps.scope.outputs.auth }}
+          DEPLOY_PDF: ${{ steps.scope.outputs.pdf }}
+          DEPLOY_FRONTEND: ${{ steps.scope.outputs.frontend }}
           HOOK_AUTH: ${{ secrets.RENDER_DEPLOY_HOOK_AUTH }}
           HOOK_PDF: ${{ secrets.RENDER_DEPLOY_HOOK_PDF }}
           HOOK_FRONTEND: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
@@ -656,9 +693,9 @@ jobs:
             fi
           }
           rc=0
-          trigger "auth-api"  "$HOOK_AUTH"     || rc=1
-          trigger "pdf-api"   "$HOOK_PDF"      || rc=1
-          trigger "frontend"  "$HOOK_FRONTEND" || rc=1
+          if [ "$DEPLOY_AUTH" = "true" ];     then trigger "auth-api"  "$HOOK_AUTH"     || rc=1; else echo "auth-api: değişiklik yok, atlandı"; fi
+          if [ "$DEPLOY_PDF" = "true" ];      then trigger "pdf-api"   "$HOOK_PDF"      || rc=1; else echo "pdf-api: değişiklik yok, atlandı"; fi
+          if [ "$DEPLOY_FRONTEND" = "true" ]; then trigger "frontend"  "$HOOK_FRONTEND" || rc=1; else echo "frontend: değişiklik yok, atlandı"; fi
           exit $rc
 
       # ─── Sentry: release + commit bağlama + "production" deploy işareti ─────────
