@@ -30,6 +30,11 @@ import {
 } from "../email/marketing-consent.controller.js";
 import { deleteAccountLimiter, forgotPasswordLimiter, loginLimiter, registerLimiter } from "./auth.rate-limit.js";
 import {
+  adminTwoFactorSendController,
+  adminTwoFactorStatusController,
+  adminTwoFactorVerifyController,
+} from "./admin-2fa.controller.js";
+import {
   forgotPasswordRequestController,
   forgotPasswordResetController,
   forgotPasswordVerifyController,
@@ -47,8 +52,12 @@ authRouter.post("/forgot-password/verify-code", forgotPasswordLimiter, asyncHand
 authRouter.post("/forgot-password/reset", forgotPasswordLimiter, asyncHandler(forgotPasswordResetController));
 authRouter.post("/register", registerLimiter, asyncHandler(registerController));
 authRouter.post("/login", loginLimiter, asyncHandler(loginController));
-// Admin login: no rate limiting (admin'ler protected, attempts logged)
-authRouter.post("/nbadmin", asyncHandler(loginController));
+// Admin girişi: IP sınırı + hesap kilidi + bot doğrulaması; panele erişim ayrıca e-posta koduyla (admin-2fa) korunur.
+authRouter.post("/nbadmin", loginLimiter, asyncHandler(loginController));
+// Yönetici ikinci doğrulama (e-posta kodu): durum / kod gönder / kodu doğrula.
+authRouter.get("/admin-2fa/status", requireAuth, asyncHandler(adminTwoFactorStatusController));
+authRouter.post("/admin-2fa/send", csrfOriginCheck, requireAuth, loginLimiter, asyncHandler(adminTwoFactorSendController));
+authRouter.post("/admin-2fa/verify", csrfOriginCheck, requireAuth, loginLimiter, asyncHandler(adminTwoFactorVerifyController));
 authRouter.post("/refresh", csrfOriginCheck, asyncHandler(refreshController));
 authRouter.post("/logout", csrfOriginCheck, asyncHandler(logoutController));
 // Kimlik doğrulama gerektiren endpoint'lere açık requireAuth eklendi (defense-in-depth).
