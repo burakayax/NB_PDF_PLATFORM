@@ -850,6 +850,8 @@ class BirFaturaProvider(BillingProviderBase):
             )
 
         sup_vkn      = _esc(os.getenv("BIRFATURA_SUPPLIER_VKN", ""))
+        # 10 haneli → VKN (şirket); 11 haneli → TCKN (şahıs işletmesi, vergi no = T.C. Kimlik No).
+        sup_scheme   = "TCKN" if len((os.getenv("BIRFATURA_SUPPLIER_VKN", "") or "").strip()) == 11 else "VKN"
         sup_name     = _esc(os.getenv("BIRFATURA_SUPPLIER_NAME", os.getenv("COMPANY_NAME", "")))
         sup_address  = _esc(os.getenv("BIRFATURA_SUPPLIER_ADDRESS", ""))
         sup_city     = _esc(os.getenv("BIRFATURA_SUPPLIER_CITY", ""))
@@ -1008,7 +1010,7 @@ class BirFaturaProvider(BillingProviderBase):
   <cac:Signature>
     <cbc:ID schemeID="VKN_TCKN">{sup_vkn}</cbc:ID>
     <cac:SignatoryParty>
-      <cac:PartyIdentification><cbc:ID schemeID="VKN">{sup_vkn}</cbc:ID></cac:PartyIdentification>
+      <cac:PartyIdentification><cbc:ID schemeID="{sup_scheme}">{sup_vkn}</cbc:ID></cac:PartyIdentification>
       <cac:PostalAddress>
         <cbc:StreetName>{sup_address}</cbc:StreetName>
         <cbc:CitySubdivisionName/>
@@ -1022,7 +1024,7 @@ class BirFaturaProvider(BillingProviderBase):
   </cac:Signature>
   <cac:AccountingSupplierParty>
     <cac:Party>
-      <cac:PartyIdentification><cbc:ID schemeID="VKN">{sup_vkn}</cbc:ID></cac:PartyIdentification>
+      <cac:PartyIdentification><cbc:ID schemeID="{sup_scheme}">{sup_vkn}</cbc:ID></cac:PartyIdentification>
       <cac:PartyName><cbc:Name>{sup_name}</cbc:Name></cac:PartyName>
       <cac:PostalAddress>
         <cbc:StreetName>{sup_address}</cbc:StreetName>
