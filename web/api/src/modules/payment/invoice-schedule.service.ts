@@ -113,6 +113,25 @@ export async function reviewCardAtPayment(checkout: {
   }
 }
 
+/**
+ * Fatura kesme DURDURULMUŞKEN gerçek bir ödeme alındığında yöneticiye haber verir: fatura "bekliyor" kalır,
+ * kaybolmaz; ama yasal 7 gün içinde faturalama açılmalıdır. ASLA hata fırlatmaz.
+ */
+export async function notifyInvoicePausedAtPayment(c: { conversationId: string; priceTry: string; paymentCurrency?: string | null }, now = new Date()): Promise<void> {
+  try {
+    const deadline = new Date(now.getTime() + LEGAL_INVOICE_DAYS * 24 * HOUR_MS);
+    await adminMail("Fatura kesme KAPALI iken ödeme alındı — süre işliyor", [
+      "Yönetim panelinde 'Fatura kesme' durdurulmuş. Bu ödemenin faturası kaybolmadı, 'bekliyor' durumunda.",
+      `Tutar: ${c.priceTry} ${c.paymentCurrency ?? ""}`.trim(),
+      `Yasal son fatura tarihi (7 gün): ${deadline.toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })}`,
+      "BirFatura anahtarları gerçeğiyle değiştirildikten sonra panelden 'Fatura kesmeyi aç' deyin; bekleyenler saatlik turda kesilir.",
+      `Sipariş no: ${c.conversationId}`,
+    ]);
+  } catch {
+    /* bildirim asla ödemeyi bozmamalı */
+  }
+}
+
 const lateAlertSent = new Map<string, number>();
 
 function retrieveShim(c: CheckoutRow) {
@@ -164,7 +183,7 @@ export async function processInvoiceNow(checkoutId: string, trigger: InvoiceTrig
     return "issued";
   }
   await finish("scheduled"); // paused / failed: bir sonraki turda yeniden denenir
-  if (attempt === "failed") {
+  if (attempt === "failed" || attempt === "paused") {
     const deadline = (c.completedAt ?? c.createdAt).getTime() + LEGAL_INVOICE_DAYS * 24 * HOUR_MS;
     const last = lateAlertSent.get(c.id) ?? 0;
     if (Date.now() > deadline - 12 * HOUR_MS && Date.now() - last > 12 * HOUR_MS) {
@@ -172,10 +191,12 @@ export async function processInvoiceNow(checkoutId: string, trigger: InvoiceTrig
       await adminMail("ACİL: Fatura kesilemedi, yasal 7 gün süre dolmak üzere", [
         `Sipariş no: ${c.conversationId}`,
         `Yasal son tarih: ${new Date(deadline).toLocaleString("tr-TR")}`,
-        "Fatura kesme denemesi başarısız oldu. BirFatura bağlantısını ve anahtarlarını kontrol edin; gerekirse faturayı elle kesin.",
+        attempt === "paused"
+          ? "Panelde 'Fatura kesme' DURDURULMUŞ. Süre dolmadan 'Fatura kesmeyi aç' deyin (BirFatura anahtarları gerçek olmalı)."
+          : "Fatura kesme denemesi başarısız oldu. BirFatura bağlantısını ve anahtarlarını kontrol edin; gerekirse faturayı elle kesin.",
       ]);
     }
-    return "failed";
+    return attempt === "failed" ? "failed" : "paused";
   }
   return "paused";
 }
