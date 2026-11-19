@@ -1221,6 +1221,9 @@ model AiRequestLog {
   inputSha256  String?   @map("input_sha256")
   outputSha256 String?   @map("output_sha256")
   clientIp     String?   @map("client_ip")
+  model        String?   @map("model")
+  inputTokens  Int?      @map("input_tokens")
+  outputTokens Int?      @map("output_tokens")
   createdAt    DateTime  @default(now()) @map("created_at")
   finishedAt   DateTime? @map("finished_at")
 

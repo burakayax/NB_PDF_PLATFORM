@@ -324,10 +324,14 @@ const iyzicoKeysOk = Boolean(
   raw.IYZICO_SECRET_KEY?.trim() &&
   iyzicoUriMerged,
 );
-/** Kredi paketi: iyzico yerine anında onay (fake) — dev varsayılanı, veya açık bayrak, veya anahtar eksik. */
+/**
+ * Kredi paketi: iyzico yerine anında onay (fake) — açık bayrak, dev varsayılanı, ya da (YALNIZ üretim dışında)
+ * iyzico anahtarı yok. Üretimde anahtar eksikliği artık fake'e yol AÇMAZ: ödeme sağlayıcısı PAYMENTS_PROVIDER ile
+ * seçilir (PayTR) ve iyzico anahtarları silinse bile sunucu açılışta düşmez.
+ */
 const creditCheckoutUseFake =
   raw.CREDIT_CHECKOUT_USE_FAKE === "true" ||
-  !iyzicoKeysOk ||
+  (raw.NODE_ENV !== "production" && !iyzicoKeysOk) ||
   (raw.NODE_ENV === "development" &&
     raw.CREDIT_CHECKOUT_IYZICO_IN_DEV !== "true");
 
