@@ -44,6 +44,7 @@ export async function fetchPublicSiteConfig(): Promise<PublicSiteConfig> {
 
 export type PublicTOOLSPublicSlice = {
   disabledFeatures: string[];
+  adminOnlyFeatures?: string[];
   displayFreeDailyLimit: number | null;
 };
 

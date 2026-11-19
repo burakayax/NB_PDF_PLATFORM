@@ -1,0 +1,43 @@
+# Kritik dosyaların sahibi: burakayax
+# Bu dosyalara dokunan her pull request sahibin onayını ister.
+# NOT: Onay şartı ancak GitHub'daki "main koruma" kuralında
+# "Kod sahibi onayı" açılınca zorunlu olur (sahibin ayrıca onayı bekleniyor).
+# Aksi halde bu dosya yalnızca incelemeyi isteyen kişi olarak sahibi gösterir.
+
+# --- Ödeme ve fatura ---
+/web/api/src/modules/payment/ @burakayax
+/web/api/src/modules/credit-checkout/ @burakayax
+/web/api/src/modules/fake-payment/ @burakayax
+/web/api/src/modules/admin/payment-* @burakayax
+/web/api/src/modules/admin/payments-* @burakayax
+/web/api/src/lib/feature-switches.ts @burakayax
+/web/backend/app/billing/ @burakayax
+
+# --- Giriş, yetki, üyelik ---
+/web/api/src/modules/auth/ @burakayax
+/web/api/src/modules/entitlement/ @burakayax
+/web/api/src/modules/subscription/ @burakayax
+/web/api/src/middleware/ @burakayax
+
+# --- Veritabanı şeması ve güncelleme betikleri ---
+/web/api/prisma/ @burakayax
+/web/api/prisma.config.ts @burakayax
+/web/api/scripts/prod-db-migrate.mjs @burakayax
+
+# --- Fiyat, plan, limit, kupon ---
+/web/api/src/lib/plan-catalogue.ts @burakayax
+/web/api/src/lib/quota.ts @burakayax
+/web/api/src/modules/coupon/ @burakayax
+/web/frontend/src/lib/planConfig.ts @burakayax
+/web/frontend/src/lib/checkoutQuote.ts @burakayax
+/web/frontend/src/components/ui/pricing-section.tsx @burakayax
+
+# --- Yasal metinler (KVKK, sözleşmeler, sürüm) ---
+/web/frontend/src/content/legalContent.mjs @burakayax
+/web/frontend/src/content/legalVersion.ts @burakayax
+/web/api/src/lib/legal-version.ts @burakayax
+/docs/legal/ @burakayax
+
+# --- Canlıya çıkış ayarları ---
+/render.yaml @burakayax
+/.github/ @burakayax

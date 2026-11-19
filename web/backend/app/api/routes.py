@@ -234,6 +234,18 @@ def health(request: Request):
     }
 
 
+@router.get("/health/deps")
+@limiter.exempt
+def health_deps():
+    """Dışarıdan izleme için: Office dönüştürücü (Gotenberg) ayakta mı? Hassas bilgi döndürmez."""
+    from app.core.dep_health import gotenberg_status
+
+    g = gotenberg_status()
+    if g == "down":
+        return JSONResponse(status_code=503, content={"status": "degraded", "gotenberg": "down"})
+    return {"status": "ok", "gotenberg": g}
+
+
 @router.get("/capabilities")
 def capabilities():
     import shutil

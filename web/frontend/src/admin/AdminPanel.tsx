@@ -954,6 +954,42 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
 
       {advanced ? (
       <AdminSection
+        title="Yalnız yönetici görsün"
+        description="İşaretlediğiniz araç yalnızca yönetici hesabında görünür ve çalışır; diğer kullanıcılara listede hiç gösterilmez, istek gelirse sunucu reddeder. Yeni bir aracı herkese açmadan önce denemek için kullanın. Kaydedince etkili olur; işareti kaldırınca araç herkese açılır."
+        variant="amber"
+      >
+        <div className="flex flex-wrap gap-2">
+          {catalog.map((fk) => {
+            const only = Array.isArray(full.adminOnlyFeatures) ? full.adminOnlyFeatures : [];
+            const on = only.includes(fk);
+            return (
+              <label
+                key={fk}
+                className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[12px] ${
+                  on ? "border-amber-500/40 bg-amber-500/15 text-amber-100" : "border-white/[0.08] bg-black/25 text-slate-200"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => {
+                    const set = new Set(only);
+                    if (on) set.delete(fk);
+                    else set.add(fk);
+                    setFull({ ...full, adminOnlyFeatures: [...set] });
+                  }}
+                  className="h-3.5 w-3.5 rounded border-white/30"
+                />
+                {pdfToolLabelTr(fk)}
+              </label>
+            );
+          })}
+        </div>
+      </AdminSection>
+      ) : null}
+
+      {advanced ? (
+      <AdminSection
         title="Herkese kapatılacak araçlar"
         description="İşaretlediğiniz araç web ve masaüstünde geçici olarak kullanılamaz (bakım veya pilot için). Paket bazlı izinler «Plan ve fiyatlandırma» sekmesindedir."
         variant="amber"
