@@ -319,3 +319,45 @@ export async function dailySummary(ymd: string): Promise<GscDaySummary> {
     return { available: false, reason: e instanceof Error ? e.message.slice(0, 80) : "bilinmeyen hata" };
   }
 }
+
+// ─── Ajanlar için dönem raporu (salt okunur) ───────────────────────────────
+
+export type GscPeriodReport =
+  | { available: false; reason: string }
+  | {
+      available: true;
+      from: string;
+      to: string;
+      clicks: number;
+      impressions: number;
+      avgPosition: number;
+      pages: Array<{ page: string; clicks: number; impressions: number; position: number }>;
+      queries: Array<{ query: string; clicks: number; impressions: number; position: number }>;
+    };
+
+/** İki tarih arasındaki toplam + ilk 50 sayfa + ilk 80 sorgu. Hata olursa fırlatmaz. */
+export async function periodReport(from: string, to: string): Promise<GscPeriodReport> {
+  if (!isGscConfigured()) return { available: false, reason: "Search Console tanımlı değil" };
+  try {
+    const token = await accessToken();
+    const [total, pg, q] = await Promise.all([
+      gscQuery(token, { startDate: from, endDate: to, rowLimit: 1 }),
+      gscQuery(token, { startDate: from, endDate: to, dimensions: ["page"], rowLimit: 50 }),
+      gscQuery(token, { startDate: from, endDate: to, dimensions: ["query"], rowLimit: 80 }),
+    ]);
+    const r1 = (n: number | undefined) => Math.round((n ?? 0) * 10) / 10;
+    const t = total[0] ?? {};
+    return {
+      available: true,
+      from,
+      to,
+      clicks: t.clicks ?? 0,
+      impressions: t.impressions ?? 0,
+      avgPosition: r1(t.position),
+      pages: pg.map((r) => ({ page: String(r.keys?.[0] ?? "").replace(/^https?:\/\/[^/]+/, "").slice(0, 120), clicks: r.clicks ?? 0, impressions: r.impressions ?? 0, position: r1(r.position) })),
+      queries: q.map((r) => ({ query: String(r.keys?.[0] ?? "").slice(0, 100), clicks: r.clicks ?? 0, impressions: r.impressions ?? 0, position: r1(r.position) })),
+    };
+  } catch (e) {
+    return { available: false, reason: e instanceof Error ? e.message.slice(0, 80) : "bilinmeyen hata" };
+  }
+}

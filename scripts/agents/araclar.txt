@@ -1,0 +1,2 @@
+PDF Platform araçları (herkese açık): PDF birleştir, böl, sıkıştır, döndür, sayfa sil/düzenle, PDF'i Word/Excel/PowerPoint/JPG'ye çevir, görselden PDF, OCR, filigran, sayfa numarası, PDF düzenle, belge tarayıcı (mobil), CV oluştur, fotoğraf stüdyosu, kimlik/pasaport sayfası, UDF araçları, PDF özetle ve sohbet (yapay zekâ), sözleşme denetçisi.
+Gizlilik: birleştir, böl, döndür, sayfa sil, düzenle ve görselden PDF araçları dosyayı cihazda işler (yükleme yok).

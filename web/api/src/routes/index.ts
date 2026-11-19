@@ -2,6 +2,7 @@ import { Router } from "express";
 import { accessRouter } from "../modules/access/access.routes.js";
 import { asyncHandler } from "../lib/async-handler.js";
 import { nightlySummaryController } from "../modules/nightly-summary/nightly-summary.js";
+import { agentGscController, agentSocialPostsController, agentMailController } from "../modules/agent-data/agent-data.js";
 import { adminRouter } from "../modules/admin/admin.routes.js";
 import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
 import { authRouter } from "../modules/auth/auth.routes.js";
@@ -99,6 +100,10 @@ apiRouter.use("/admin/editor-limits", editorLimitsAdminRouter);
 apiRouter.use("/admin", adminRouter);
 // Gecelik özet: yalnız Bearer token ile (NIGHTLY_SUMMARY_TOKEN tanımlı değilse uç kapalı/404). Kişisel veri yok.
 apiRouter.get("/internal/nightly-summary", asyncHandler(nightlySummaryController));
+// Yapay zekâ ajanları: salt-okunur veri + yönetici e-postası; yalnız AGENT_DATA_TOKEN ile (yoksa 404).
+apiRouter.get("/internal/agent/gsc", asyncHandler(agentGscController));
+apiRouter.get("/internal/agent/social-posts", asyncHandler(agentSocialPostsController));
+apiRouter.post("/internal/agent/mail", asyncHandler(agentMailController));
 apiRouter.use("/analytics", analyticsRouter);
 // TikTok geri dönüşü girişsizdir (imzalı state ile korunur); genel /auth'tan ÖNCE bağlanmalı.
 apiRouter.use("/auth/tiktok", tiktokCallbackRouter);
