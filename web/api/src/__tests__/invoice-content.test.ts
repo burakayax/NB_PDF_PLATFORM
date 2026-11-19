@@ -70,6 +70,8 @@ describe("ödeme / iade / KDV özeti", () => {
       kdvNet: 46.5,
       foreignCount: 1,
       pendingKdvEstimate: 20,
+      pendingCount: 1,
+      pendingTotal: 120,
     });
     expect(totals.kdvNet).toBe(46.5);
   });
