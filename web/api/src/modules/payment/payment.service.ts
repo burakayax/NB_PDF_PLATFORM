@@ -1025,7 +1025,12 @@ export async function triggerInvoiceGeneration(
 
     const resp = await fetch(`${pdfBackendBase}/api/internal/invoice`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...((process.env.INTERNAL_SERVICE_SECRET ?? "").trim()
+          ? { "X-Internal-Secret": (process.env.INTERNAL_SERVICE_SECRET ?? "").trim() }
+          : {}),
+      },
       body: JSON.stringify(invoicePayload),
       signal: AbortSignal.timeout(90_000),
     });

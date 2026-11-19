@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import hmac
 import logging
+import os
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.billing import get_provider
@@ -17,7 +19,28 @@ from app.billing.webhook_handler import handle_iyzico_webhook
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+
+
+def require_internal_secret(request: Request) -> None:
+    """Yalnızca ana sunucudan (Node) gelen çağrılara izin verir.
+
+    Bu uçlar fatura keser / iade faturası keser; internetten herkese açık adreste durduğu için
+    ortak sır (X-Internal-Secret = INTERNAL_SERVICE_SECRET) olmadan HİÇBİR çağrı kabul edilmez.
+    Sır tanımsızsa: canlıda (Render) kapalı kalır; yalnız yerel geliştirmede serbesttir.
+    """
+    expected = (os.getenv("INTERNAL_SERVICE_SECRET") or "").strip()
+    if not expected:
+        if os.getenv("RENDER"):
+            logger.error("internal_billing: INTERNAL_SERVICE_SECRET tanımsız — çağrı reddedildi")
+            raise HTTPException(status_code=503, detail="internal_secret_not_configured")
+        return
+    provided = (request.headers.get("x-internal-secret") or "").strip()
+    if not provided or not hmac.compare_digest(provided.encode("utf-8"), expected.encode("utf-8")):
+        logger.warning("internal_billing: geçersiz/eksik iç sır path=%s", request.url.path)
+        raise HTTPException(status_code=403, detail="forbidden")
+
+
+router = APIRouter(dependencies=[Depends(require_internal_secret)])
 
 
 @router.post("/invoice")

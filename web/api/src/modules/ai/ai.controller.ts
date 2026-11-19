@@ -1,3 +1,4 @@
+import { adminSecondFactorOk } from "../../middleware/admin.middleware.js";
 import { createHash } from "node:crypto";
 import type { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js";
@@ -143,6 +144,8 @@ export async function topupGrantController(req: Request, res: Response): Promise
   const u = req.authUser;
   if (!u) throw new HttpError(401, "Oturum gerekli.");
   if (u.role !== "ADMIN") throw new HttpError(403, "Bu işlem yalnız admin içindir.");
+  // Kredi verme parayla ölçülür: yönetim paneliyle aynı e-posta kodu kapısından geçmeden yapılamaz.
+  if (!adminSecondFactorOk(req)) throw new HttpError(403, "Yönetici e-posta doğrulaması gerekli. Yönetim panelini açıp kodu girin.");
   const packId = typeof req.body?.packId === "string" ? req.body.packId : "";
   const pack = topupPackById(packId);
   if (!pack) throw new HttpError(400, "Geçersiz paket.");
