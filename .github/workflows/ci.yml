@@ -170,6 +170,9 @@ jobs:
           done
           # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
           timeout 120 $APT install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
+          # apt yönetici olarak çalıştığı için bıraktığı kilit/partial dosyaları root sahipli kalıyor; önbellek kaydı
+          # ("tar: Permission denied") sessizce düşüyordu. Sahipliği düzelt ki önbellek gerçekten kaydedilsin.
+          sudo chown -R "$(id -u):$(id -g)" "$HOME/apt-archives"
 
       - name: Install dependencies
         working-directory: web/backend
@@ -237,6 +240,9 @@ jobs:
           done
           # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
           timeout 120 $APT install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
+          # apt yönetici olarak çalıştığı için bıraktığı kilit/partial dosyaları root sahipli kalıyor; önbellek kaydı
+          # ("tar: Permission denied") sessizce düşüyordu. Sahipliği düzelt ki önbellek gerçekten kaydedilsin.
+          sudo chown -R "$(id -u):$(id -g)" "$HOME/apt-archives"
 
       - name: Install dependencies
         working-directory: web/backend
