@@ -27,11 +27,11 @@ const PRICE = {
 };
 
 const AGENTS = {
-  durum: { file: "ajan-durum-son.md", model: "claude-haiku-5-5", title: "Günlük site durumu", max: 1500 },
-  seo: { file: "ajan-seo-son.md", model: "claude-sonnet-5-5", title: "Haftalık SEO", max: 2500 },
-  sosyal: { file: "ajan-sosyal-son.md", model: "claude-sonnet-5-5", title: "Haftalık sosyal medya planı", max: 3500 },
-  finans: { file: "ajan-finans-son.md", model: "claude-haiku-5-5", title: "Aylık finans raporu", max: 2000 },
-  ozet: { file: "ajan-yonetici-son.md", model: "claude-haiku-5-5", title: "Yönetici sabah özeti", max: 1200 },
+  durum: { file: "ajan-durum-son.md", model: "claude-haiku-5-5", title: "Günlük site durumu", max: 4000 },
+  seo: { file: "ajan-seo-son.md", model: "claude-sonnet-5-5", title: "Haftalık SEO", max: 6000 },
+  sosyal: { file: "ajan-sosyal-son.md", model: "claude-sonnet-5-5", title: "Haftalık sosyal medya planı", max: 8000 },
+  finans: { file: "ajan-finans-son.md", model: "claude-haiku-5-5", title: "Aylık finans raporu", max: 4000 },
+  ozet: { file: "ajan-yonetici-son.md", model: "claude-haiku-5-5", title: "Yönetici sabah özeti", max: 3000 },
 };
 
 const GENEL_KURAL = `Sen PDF Platform (pdfplatform.app) sahibinin salt-okunur analiz ajanısın. Türkçe, sade, kısa yaz; sahibin programlama bilgisi yok.
@@ -143,12 +143,14 @@ async function main() {
     if (!res.ok) throw new Error(`Claude HTTP ${res.status}`);
     const j = await res.json();
     const text = (j.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-    if (!text) throw new Error("boş yanıt");
+    if (!text) throw new Error(`boş yanıt (durum: ${j.stop_reason ?? "?"}, parçalar: ${(j.content || []).map((b) => b.type).join(",") || "yok"})`);
+    const kesildi = j.stop_reason === "max_tokens";
     const inTok = j.usage?.input_tokens ?? 0;
     const outTok = j.usage?.output_tokens ?? 0;
     const usd = cost(def.model, inTok, outTok);
     ledger.push({ date: today, ym, agent: AGENT, model: def.model, inTok, outTok, usd });
     let body = `# ${def.title} — ${today}\n\n${text}\n`;
+    if (kesildi) body += "\n⚠️ Not: yanıt uzunluk sınırına takıldı, rapor eksik olabilir.\n";
     body += `\n---\nToken: ${inTok} giriş / ${outTok} çıkış · Model: ${def.model} · Bu çalışma ≈ $${usd.toFixed(4)} (tahmini) · Bu ay ajanların toplamı ≈ $${monthTotal(ledger, ym).toFixed(3)}\n`;
     fs.writeFileSync(outFile, body);
     fs.writeFileSync(path.join(OUT, "ajan-maliyet.json"), JSON.stringify(ledger.slice(-400)));
