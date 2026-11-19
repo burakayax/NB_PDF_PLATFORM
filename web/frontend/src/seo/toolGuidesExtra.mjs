@@ -758,6 +758,9 @@ export const TOOL_GUIDE_EXTRA = {
       ],
       useCases: [
         { title: "Letter belgeyi A4'e getirmek", x: "Yurt dışından gelen Letter boyutlu belgeyi Türkiye'deki yazıcılara uygun A4 yapın." },
+        { title: "A4 (210 × 297 mm)", x: "Türkiye ve Avrupa'nın standart yazıcı kâğıdı. Dilekçe, resmî evrak ve çoğu başvuru portalı A4 ister." },
+        { title: "A5 (148 × 210 mm)", x: "A4'ün yarısı; kitapçık, broşür ve not defteri için. İçerik yaklaşık %71 küçülür." },
+        { title: "Letter (8,5 × 11 inç)", x: "ABD ve Kanada standardı. A4'e göre biraz geniş ve kısa; yurt dışından gelen belgeleri bu boyuta ya da A4'e çevirebilirsiniz." },
         { title: "Küçük kitapçık hazırlamak", x: "A4 belgeyi A5 sayfalara indirip kitapçık biçiminde basın." },
         { title: "Portal gereksinimi", x: "Belirli bir sayfa boyutu isteyen sisteme yükleyeceğiniz dosyayı ayarlayın." },
       ],
@@ -775,6 +778,9 @@ export const TOOL_GUIDE_EXTRA = {
       ],
       useCases: [
         { title: "Turning a Letter document into A4", x: "Make a US Letter file suit printers that use A4." },
+        { title: "A4 (210 × 297 mm)", x: "The standard paper in Europe and most of the world. Petitions, official forms and many application portals ask for A4." },
+        { title: "A5 (148 × 210 mm)", x: "Half of A4; good for booklets, leaflets and notebooks. Content scales to about 71%." },
+        { title: "Letter (8.5 × 11 in)", x: "The US and Canada standard. A little wider and shorter than A4; convert documents to or from it as needed." },
         { title: "Making a small booklet", x: "Reduce an A4 document to A5 pages and print it as a booklet." },
         { title: "A portal requirement", x: "Adjust a file for a system that demands a specific page size." },
       ],

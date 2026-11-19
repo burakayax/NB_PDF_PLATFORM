@@ -53,7 +53,7 @@ Biçim: "## Hafta planı" tablo ya da madde, sonra "## Neden bu konular".`,
 Biçim: "## Özet", "## Karşılaştırma tablosu", "## ⚠️ Dikkat".`,
   ozet: `GÖREV: Yönetici sabah özeti için YAPISAL VERİ. Girdi: diğer ajanların son çıktıları (Markdown). YALNIZCA şu biçimde geçerli JSON döndür, başka metin yazma:
 {"dikkat": ["kısa madde", ...], "seoOneriler": ["en çok 3 öneri"], "sosyal": [{"tarih":"","platform":"","konu":"","durum":"Planlandı"}], "finansNotu": "..." veya null, "finansTablo": [["Ölçüt","Bu ay","Önceki ay","Değişim"], ...] veya null}
-KURALLAR: "dikkat" yalnız GERÇEKTEN dikkat gerektiren şeyleri içerir (hata, kesinti, düşüş, ⚠️ ile işaretlenmiş sorun); yoksa boş dizi. Veri yokluğunu (örn. geçen ay özeti yok) dikkat maddesi YAPMA. "sosyal" satırları sosyal planından alınır (tarih, platform, konu kısa; durum: Planlandı). finans için önceki ay verisi yoksa finansTablo null ve finansNotu: "Gecelik raporlar Kasım 2026'da başladı; ilk aylık finans raporu 1 Aralık'ta gelecek." Rakamları uydurma, yalnız girdidekini kullan. Kişisel veri (e-posta, isim) yazma.`,
+KURALLAR: "dikkat" EN ÇOK 3 madde olur ve yalnız sahibin BUGÜN bir şey yapması gereken ya da sitedeki GERÇEK bir sorunu (hata, kesinti, ödeme sorunu, ciddi trafik/sıralama düşüşü) içerir. ASLA yazma: veri listesinin kısaltıldığı/sınırlı olduğu notları, "rapor uzunluk sınırına takıldı" notları, aylık finans raporunun olmaması, sosyal paylaşımların DRAFT/MANUAL durumu ya da yayın zamanının boş olması (sahip paylaşımları elle yapar, bu normaldir), 1-3 tıklamalık küçük sayfa dalgalanmaları. Etiket-konu uyumsuzluğu dikkat maddesi değildir, yalnız sosyal ajan raporunda yer alır. "dikkat" yalnız GERÇEKTEN dikkat gerektiren şeyleri içerir (hata, kesinti, düşüş, ⚠️ ile işaretlenmiş sorun); yoksa boş dizi. Veri yokluğunu (örn. geçen ay özeti yok) dikkat maddesi YAPMA. "sosyal" satırları sosyal planından alınır (tarih, platform, konu kısa; durum: Planlandı). finans için önceki ay verisi yoksa finansTablo null ve finansNotu: "Gecelik raporlar Kasım 2026'da başladı; ilk aylık finans raporu 1 Aralık'ta gelecek." Rakamları uydurma, yalnız girdidekini kullan. Kişisel veri (e-posta, isim) yazma.`,
 };
 
 function readIf(p) {
@@ -147,7 +147,7 @@ async function composeMail(llmText, today, footer) {
   try { gsc = await api("/api/internal/agent/gsc"); } catch { gsc = null; }
   const attention = [...llm.attention];
   if (now && now.verified === false) attention.unshift("Gecelik özet sayıları iki yöntemde tutmuyor; rakamlara güvenmeden önce kontrol edin.");
-  for (const k of ["durum", "seo", "sosyal", "finans"]) {
+  for (const k of ["durum", "seo", "sosyal"]) {
     const txt = readIf(path.join(VERI, AGENTS[k].file));
     if (!txt) attention.push(`${AGENTS[k].title} çıktısı bulunamadı.`);
     else if (/üretilemedi/.test(txt)) attention.unshift(`${AGENTS[k].title} raporu üretilemedi.`);
