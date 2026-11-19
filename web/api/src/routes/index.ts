@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { accessRouter } from "../modules/access/access.routes.js";
+import { asyncHandler } from "../lib/async-handler.js";
+import { nightlySummaryController } from "../modules/nightly-summary/nightly-summary.js";
 import { adminRouter } from "../modules/admin/admin.routes.js";
 import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
 import { authRouter } from "../modules/auth/auth.routes.js";
@@ -95,6 +97,8 @@ apiRouter.use("/admin/guest-compress", guestCompressAdminRouter);
 apiRouter.use("/admin/autoheal", autoHealAdminRouter);
 apiRouter.use("/admin/editor-limits", editorLimitsAdminRouter);
 apiRouter.use("/admin", adminRouter);
+// Gecelik özet: yalnız Bearer token ile (NIGHTLY_SUMMARY_TOKEN tanımlı değilse uç kapalı/404). Kişisel veri yok.
+apiRouter.get("/internal/nightly-summary", asyncHandler(nightlySummaryController));
 apiRouter.use("/analytics", analyticsRouter);
 // TikTok geri dönüşü girişsizdir (imzalı state ile korunur); genel /auth'tan ÖNCE bağlanmalı.
 apiRouter.use("/auth/tiktok", tiktokCallbackRouter);

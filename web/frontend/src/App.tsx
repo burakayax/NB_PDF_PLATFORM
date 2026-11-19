@@ -1327,9 +1327,12 @@ function App() {
       buildWorkspaceFeaturesFromCms(
         language,
         cms,
-        TOOLSPublic.disabledFeatures,
+        // Yalnız yönetici görsün: yönetici olmayanlara bu araçlar listeden tamamen gizlenir.
+        user?.role === "ADMIN"
+          ? TOOLSPublic.disabledFeatures
+          : [...TOOLSPublic.disabledFeatures, ...(TOOLSPublic.adminOnlyFeatures ?? [])],
       ),
-    [language, cms, TOOLSPublic.disabledFeatures],
+    [language, cms, TOOLSPublic.disabledFeatures, TOOLSPublic.adminOnlyFeatures, user?.role],
   );
 
   const selectedFeature = useMemo((): Feature => {
