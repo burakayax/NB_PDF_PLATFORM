@@ -69,6 +69,11 @@ Bu belge her adımda güncellenir. Kodu değiştiren her iş ayrı dalda pull re
 - **Reklam ajanı**, Google Ads / Meta bağlantısı kurulunca ele alınacak.
 - **Yazılım bakım ajanı** ayrıca planlanacak.
 
+## Yenileme takvimi
+
+- **Ajan API anahtarını (ANTHROPIC_AGENT_API_KEY) 20 Kasım 2027'den önce yenile.** Anthropic Console'da "ajanlar" workspace'inde yeni anahtar üret, GitHub Secrets'taki değeri değiştir, eskisini sil.
+- Not: Console, GitHub Actions için saklanan anahtar yerine "Workload Identity Federation" öneriyor. Değerlendirme yapıldı; şimdilik mevcut anahtarla devam (bkz. ilgili mesaj/PR).
+
 ## Sistemin en kırılgan 5 noktası (2026-11-18)
 
 1. **Canlı veritabanı (Render Postgres):** tek veritabanı; yedek ve geri dönüş Render'ın 3 günlük penceresine bağlı. Test ortamı yok.
