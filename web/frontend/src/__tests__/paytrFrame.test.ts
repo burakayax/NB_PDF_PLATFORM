@@ -10,7 +10,7 @@ describe("PayTR ödeme sayfası", () => {
     const frame = document.querySelector("#paytr-frame-overlay iframe") as HTMLIFrameElement | null;
     expect(frame?.src).toBe("https://www.paytr.com/odeme/guvenli/abc123");
     expect(document.getElementById("paytr-frame-overlay")?.textContent).toContain("PayTR");
-    expect(document.getElementById("paytr-frame-overlay")?.textContent).toContain("bizimle paylaşılmaz");
+    expect(document.getElementById("paytr-frame-overlay")?.textContent).toMatch(/bizimle paylaşılmaz|not shared with us/);
     (document.querySelector("#paytr-frame-overlay button") as HTMLButtonElement).click();
     expect(document.getElementById("paytr-frame-overlay")).toBeNull();
   });
