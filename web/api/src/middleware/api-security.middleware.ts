@@ -371,6 +371,8 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/entitlement/internal/guest-compress/config" && method === "GET") return true;
   if (p === "/entitlement/internal/guest-compress/usage" && method === "POST") return true;
   if (p === "/entitlement/internal/service-event" && method === "POST") return true;
+  // Gecelik özet (GitHub Actions): JWT yok; kendi Bearer token (NIGHTLY_SUMMARY_TOKEN) kontrolü controller'da.
+  if (p === "/internal/nightly-summary" && method === "GET") return true;
   if (p.startsWith("/auth/")) {
     if (p === "/auth/register" && method === "POST") return true;
     if (p === "/auth/login" && method === "POST") return true;
