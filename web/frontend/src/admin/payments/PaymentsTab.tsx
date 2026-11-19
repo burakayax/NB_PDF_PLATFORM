@@ -35,12 +35,14 @@ const STATUS_LABEL: Record<string, string> = {
   refunded: "İade edildi",
   pending: "Bekliyor",
   failed: "Başarısız",
+  expired: "Süresi doldu",
 };
 const STATUS_STYLE: Record<string, string> = {
   completed: "bg-emerald-500/15 text-emerald-300",
   refunded: "bg-violet-500/15 text-violet-300",
   pending: "bg-amber-500/15 text-amber-300",
   failed: "bg-rose-500/15 text-rose-300",
+  expired: "bg-slate-500/15 text-slate-300",
 };
 const KIND_LABEL: Record<string, string> = {
   plan: "Abonelik",
@@ -198,6 +200,7 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
               <option value="refunded" className="bg-slate-900">İade edildi</option>
               <option value="pending" className="bg-slate-900">Bekliyor</option>
               <option value="failed" className="bg-slate-900">Başarısız</option>
+              <option value="expired" className="bg-slate-900">Süresi doldu</option>
             </select>
           </div>
           <div>
