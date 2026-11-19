@@ -106,7 +106,7 @@ export const legalDocuments = {
       summary:
         "This Privacy Policy describes how Burak KAYA (NB Global Studio) collects, uses, stores, and protects personal information when you use PDF Platform (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "9 November 2026",
+      effectiveDate: "19 November 2026",
       sections: [
         {
           title: "1. Data controller",
@@ -118,6 +118,7 @@ export const legalDocuments = {
           title: "2. Personal data we collect",
           paragraphs: [
             "Account and identity: email address, authentication identifiers (including hashed passwords or OAuth provider linkage where applicable), account role, subscription or plan identifiers, preferred language, and timestamps related to account activity.",
+            "Invoice details: the name or company name, billing address, city, country, mobile number and email address you provide at checkout; for a corporate invoice, your tax identification number and tax office; for an individual invoice, your Turkish ID number (only if you provide it). Our invoicing provider BirFatura issues the invoice; these details are sent to it so that the legal invoice can be issued. Turkish ID and tax numbers are stored encrypted in your account and are never written to logs or error records.",
             "Usage and product data: feature usage, operational logs needed for security and reliability, and—if you opt in—basic analytics events from the web client (such as page or screen identifiers and session context).",
             "Support and communications: content you send via contact or support channels, including your email address and message text.",
             "Tool ratings and feedback: when you rate a tool, your star rating and (for low ratings) the short comment you write are stored. This record is not linked to your identity: your name, email or account details are not stored. To stop the same person rating the same tool repeatedly, an irreversible signature is derived from your IP address and browser information; the raw IP is not stored. As a result we cannot trace a rating back to the person who left it, and for the same reason a request to delete one specific rating cannot be fulfilled. Please do not type personal information into the comment box.",
@@ -164,7 +165,7 @@ export const legalDocuments = {
         {
           title: "5. Sharing and processors",
           paragraphs: [
-            "To run the service we use the following groups of providers, who process only the data needed for their task and on our instructions: server, database and web-app hosting (Render, Vercel); file and output storage (cloud storage); email delivery (Google); payments (PayTR — your card details never reach us and are processed directly by PayTR); AI (Anthropic); and, only with your consent, analytics (Google Analytics) and error monitoring (Sentry).",
+            "To run the service we use the following groups of providers, who process only the data needed for their task and on our instructions: server, database and web-app hosting (Render, Vercel); file and output storage (cloud storage — Cloudflare R2); automated-use verification at sign-in and sign-up (Cloudflare Turnstile); email delivery and “Sign in with Google” (Google); payments (PayTR — your card details never reach us and are processed directly by PayTR); invoicing (BirFatura — the name or company name, address, email, phone and tax / Turkish ID number needed for the legal invoice are sent to this provider); AI (Anthropic); and, only with your consent, analytics (Google Analytics) and error monitoring (Sentry).",
             "AI processor: our AI-powered features rely on Anthropic (Anthropic PBC, United States). Text extracted from your document is sent to Anthropic solely to generate your result; per Anthropic's API terms it is not used to train models, though the provider may retain it for up to 30 days for safety review only. Only the document text is sent, not the file itself.",
             "We do not sell your personal data. We may disclose information if required by law, to protect rights and safety, or in connection with a merger or asset transfer subject to continued protection of your information.",
           ],
@@ -193,7 +194,7 @@ export const legalDocuments = {
             "Download logs: 90 days from the date of creation (including IP address and browser information); after that the IP address and browser information are erased, and the record is deleted one year after creation.",
             "Output file fingerprints (a SHA-256 hash, size, tool and plan of files produced on our servers; never the file content), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
             "AI request records (tool, time, credits used, outcome and SHA-256 digests of the input and result; never the document text or the result itself), used to resolve refund and billing disputes: 1 year from creation, then deleted.",
-            "Invoices and billing records: 10 years. Turkish Tax Procedure Law (VUK) Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; we apply the longer period.",
+            "Invoices and billing records: 10 years. Turkish Tax Procedure Law (VUK) Article 253 requires 5 years and Turkish Commercial Code Article 82 requires 10 years; we apply the longer period. The Turkish ID number you give for an invoice is deleted with your account; the tax number is kept (encrypted) for the same period as part of the invoice record. Invoice records held by the invoicing provider and the Revenue Administration are subject to the applicable legislation.",
             "Card evidence (for payments in a foreign currency: the first 6 digits of the card — encrypted — and the result “domestic / foreign / undetermined”): kept for the same period as the related payment and invoice record (10 years) to prove the VAT treatment applied; after that period the 6 digits are deleted. It is decrypted only for an authorised administrator when needed to answer an audit or a dispute.",
             "Analytics data: 13 months (aligned with Google Analytics 4 default retention).",
             "Error and diagnostic logs: 30 days.",
@@ -221,7 +222,7 @@ export const legalDocuments = {
         {
           title: "8. International transfers",
           paragraphs: [
-            "Some of our providers process data outside Türkiye: our AI provider Anthropic (United States), our hosting providers and, only with your consent, our analytics and error-monitoring providers. These transfers fall under Article 9 of Turkish Law No. 6698. For AI tools, a transfer happens only when you choose to use an AI tool and only for the document text; for tools that run on your device, your file never leaves your device. For information about the safeguards behind these transfers, write to info@pdfplatform.app",
+            "Some of our providers process data outside Türkiye: our AI provider Anthropic (United States; document text only), Google (United States; email address and sign-in details, for email delivery and “Sign in with Google”), our hosting and storage providers Render (our servers are in Frankfurt, Germany), Vercel and Cloudflare (account and service data, output files, and IP address and browser details for sign-in verification) and, only with your consent, our analytics (Google Analytics) and error-monitoring (Sentry) providers. Our payment (PayTR) and invoicing (BirFatura) providers are companies established in Türkiye. These transfers fall under Article 9 of Turkish Law No. 6698. For AI tools, a transfer happens only when you choose to use an AI tool and only for the document text; for tools that run on your device, your file never leaves your device. For information about the safeguards behind these transfers, write to info@pdfplatform.app",
           ],
         },
         {
@@ -254,13 +255,15 @@ export const legalDocuments = {
       summary:
         "This notice summarizes how Burak KAYA (NB Global Studio) processes personal data in PDF Platform checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via PayTR). It complements—not replaces—the Privacy Policy and Terms.",
       effectiveDateLabel: "Effective date",
-      effectiveDate: "9 November 2026",
+      effectiveDate: "19 November 2026",
       sections: [
         {
           title: "1. Processing grounds",
           paragraphs: [
             "Purchasing bundles/subscriptions requires identity-ish fields (name, address, mobile) for fraud prevention, statutory invoicing obligations where applicable, and to satisfy payment-provider contractual controls.",
             "We store such fields with your account profile and transmit only what PayTR requires to render its hosted checkout form; card credentials never touch our servers.",
+            "Invoicing: the legal invoice is issued by our invoicing provider BirFatura. For this, your name or company name, address, email, phone and tax identification number (corporate invoice) or Turkish ID number (individual invoice, only if you provide it) are sent to BirFatura and processed to issue and submit the invoice to the Revenue Administration (KVKK Art. 5/2-ç). Turkish ID and tax numbers are stored encrypted on our systems; the ID number is deleted with your account, and the tax number is kept encrypted with the invoice record for 10 years.",
+            "Recipients and transfers abroad (KVKK Art. 9): Anthropic (United States) receives document text only if you use an AI tool; Google (United States) handles email delivery and “Sign in with Google” (and analytics only with your consent); Render (servers in Frankfurt, Germany), Cloudflare and Vercel host the service, output files and sign-in verification; Sentry receives error diagnostics only with your consent. These transfers are limited to the stated purposes and the minimum data required; for information about the safeguards, write to info@pdfplatform.app",
             "Card evidence (foreign-currency payments only): after payment, from the masked card information PayTR can pass to us, we take only the first 6 digits of the card (bank identification number – BIN) and the card brand, and derive the issuing bank’s country from them. We never receive, store or see the remaining digits, the CVV or the expiry date. The 6 digits are stored encrypted, together with the result “domestic / foreign / undetermined”. Purpose: to determine whether the export-of-services VAT exemption (VAT Law Article 11/1-a) can apply — it requires the service to be provided to a customer abroad and payment to come from abroad — and to prove that decision in a tax audit or dispute (KVKK Art. 5/2-ç and 5/2-e). If your card is domestic or its country cannot be determined, the invoice is issued with VAT. The information is checked against a list held on our own servers and is not sent to any third party, and it is never used for marketing or profiling. Retention: 10 years with the related payment and invoice record, then deleted.",
           ],
         },
@@ -642,7 +645,7 @@ export const legalDocuments = {
       summary:
         "Bu Gizlilik Politikası, PDF Platform’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda Burak KAYA’nın (NB Global Studio) kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "9 Kasım 2026",
+      effectiveDate: "19 Kasım 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",
@@ -654,6 +657,7 @@ export const legalDocuments = {
           title: "2. Topladığımız kişisel veriler",
           paragraphs: [
             "Hesap ve kimlik: e-posta adresi, kimlik doğrulama tanımlayıcıları (karma parolalar veya OAuth sağlayıcı bağlantısı dahil), hesap rolü, abonelik veya plan bilgisi, tercih edilen dil ve hesap etkinliğiyle ilgili zaman damgaları.",
+            "Fatura bilgileri: ödeme sırasında verdiğiniz ad, soyad veya unvan, fatura adresi, şehir, ülke, cep telefonu ve e-posta adresiniz; kurumsal fatura için vergi kimlik numarası ve vergi dairesi, bireysel fatura için (yalnızca bildirmeniz hâlinde) T.C. kimlik numaranız. Faturayı fatura entegratörümüz BirFatura düzenler; bu bilgiler yasal faturanın düzenlenebilmesi için ona iletilir. T.C. kimlik ve vergi numaraları hesabınızda şifrelenmiş olarak saklanır ve günlük/hata kayıtlarına yazılmaz.",
             "Kullanım ve ürün verileri: güvenlik ve güvenilirlik için gerekli operasyon günlükleri; açık rızanızla web istemcisinden temel analitik olayları (örneğin sayfa veya ekran tanımlayıcıları ve oturum bağlamı).",
             "Destek ve iletişim: iletişim veya destek kanalları aracılığıyla gönderdiğiniz içerik, e-posta adresiniz ve mesaj metni.",
             "Araç puanları ve geri bildirim: Bir araca yıldız verdiğinizde puanınız ve (düşük puanlarda) yazdığınız kısa açıklama kaydedilir. Bu kayıt kimliğinizle ilişkilendirilmez: adınız, e-postanız veya hesap bilginiz saklanmaz. Aynı aracın aynı kişi tarafından tekrar tekrar puanlanmasını önlemek için IP adresiniz ve tarayıcı bilginizden geri döndürülemez bir imza üretilir; ham IP adresi saklanmaz. Bu nedenle belirli bir puanı geri izleyip sahibine ulaşmamız teknik olarak mümkün değildir; tek bir puanın silinmesi talebi de aynı sebeple karşılanamaz. Lütfen açıklama kutusuna kişisel bilgi yazmayınız.",
@@ -700,7 +704,7 @@ export const legalDocuments = {
         {
           title: "5. Paylaşım ve işleyenler",
           paragraphs: [
-            "Hizmeti çalıştırmak için şu hizmet sağlayıcı gruplarından yararlanırız ve yalnızca görevleri için gerekli veriyi talimatlarımız çerçevesinde işlemelerini sağlarız: sunucu, veritabanı ve web arayüzü barındırma (Render, Vercel); dosya ve çıktı depolama (bulut depolama); e-posta gönderimi (Google); ödeme (PayTR — kart bilgileriniz bize ulaşmaz, doğrudan PayTR’de işlenir); yapay zekâ (Anthropic); yalnızca onayınızla analitik (Google Analytics) ve hata izleme (Sentry).",
+            "Hizmeti çalıştırmak için şu hizmet sağlayıcı gruplarından yararlanırız ve yalnızca görevleri için gerekli veriyi talimatlarımız çerçevesinde işlemelerini sağlarız: sunucu, veritabanı ve web arayüzü barındırma (Render, Vercel); dosya ve çıktı depolama (bulut depolama — Cloudflare R2); giriş ve kayıtta otomatik kullanım doğrulaması (Cloudflare Turnstile); e-posta gönderimi ve “Google ile giriş” (Google); ödeme (PayTR — kart bilgileriniz bize ulaşmaz, doğrudan PayTR’de işlenir); fatura düzenleme (BirFatura — yasal fatura için gerekli ad veya unvan, adres, e-posta, telefon ve vergi/T.C. kimlik numarası bu sağlayıcıya iletilir); yapay zekâ (Anthropic); yalnızca onayınızla analitik (Google Analytics) ve hata izleme (Sentry).",
             "Yapay zekâ işleyeni: Yapay zekâ destekli özelliklerimiz Anthropic (Anthropic PBC, ABD) altyapısını kullanır. Yapay zekâ araçlarına gönderdiğiniz belge metni yalnızca sonucunuzu üretmek amacıyla Anthropic'e iletilir; Anthropic'in API şartları gereği modellerin eğitiminde kullanılmaz; ancak sağlayıcı bu veriyi yalnızca güvenlik denetimi amacıyla en fazla 30 gün saklayabilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
             "Kişisel verilerinizi satmayız. Yasal zorunluluk, hakların ve güvenliğin korunması veya birleşme veya varlık devri (verilerinizin korunmasının sürmesi koşuluyla) hallerinde bilgi açıklanabilir.",
           ],
@@ -731,7 +735,7 @@ export const legalDocuments = {
             "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün (IP adresi ve tarayıcı bilgisi dahil); sonrasında IP adresi ve tarayıcı bilgisi silinir, kayıt oluşturulmasından 1 yıl sonra tamamen silinir.",
             "Çıktı dosyası parmak izleri (sunucumuzda üretilen dosyanın SHA-256 özeti, boyutu, aracı ve planı; dosya içeriği asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
             "Yapay zekâ istek kayıtları (araç, zaman, düşülen hak, sonuç durumu ile girdi ve sonucun SHA-256 özeti; belge metni ve sonucun kendisi asla saklanmaz): iade ve fatura uyuşmazlıklarının çözümü için oluşturulma tarihinden itibaren 1 yıl, ardından silinir.",
-            "Fatura ve ödeme kayıtları: 10 yıl. Vergi Usul Kanunu (VUK) Madde 253 5 yıl, Türk Ticaret Kanunu (TTK) Madde 82 10 yıl saklamayı gerektirir; uzun olan süre uygulanır.",
+            "Fatura ve ödeme kayıtları: 10 yıl. Vergi Usul Kanunu (VUK) Madde 253 5 yıl, Türk Ticaret Kanunu (TTK) Madde 82 10 yıl saklamayı gerektirir; uzun olan süre uygulanır. Fatura için verdiğiniz T.C. kimlik numarası hesabınızla birlikte silinir; vergi numarası, fatura kaydının parçası olarak (şifreli) aynı süre saklanır. Fatura entegratöründeki ve Gelir İdaresi Başkanlığı’ndaki fatura kayıtları ilgili mevzuata tabidir.",
             "Kart kanıtı (yabancı para birimli ödemelerde kartın ilk 6 hanesi — şifreli — ve “yurt içi / yurt dışı / belirlenemedi” sonucu): vergi uygulamasının ispatı için ilgili ödeme ve fatura kaydıyla aynı süre (10 yıl); süre dolduğunda ilk 6 hane silinir. Bu bilgi yalnızca yetkili yönetici tarafından, bir incelemeye veya uyuşmazlığa yanıt vermek gerektiğinde şifresi çözülerek görüntülenir.",
             "Analitik veriler: 13 ay (Google Analytics 4 varsayılan saklama süresiyle uyumlu).",
             "Hata ve tanı günlükleri: 30 gün.",
@@ -758,7 +762,7 @@ export const legalDocuments = {
         {
           title: "8. Uluslararası aktarım",
           paragraphs: [
-            "Hizmet sağlayıcılarımızın bir kısmı verileri Türkiye dışında işler: yapay zekâ sağlayıcımız Anthropic (ABD), barındırma sağlayıcılarımız ve, yalnızca onayınızla, analitik ve hata izleme sağlayıcılarımız. Bu aktarımlar 6698 sayılı Kanun’un 9. maddesi kapsamındadır. Yapay zekâ araçlarında aktarım yalnızca siz bir yapay zekâ aracını kullanmayı seçtiğinizde ve yalnızca belge metni için gerçekleşir; cihazda çalışan araçlarda dosyanız cihazınızdan çıkmaz. Aktarıma ilişkin güvence mekanizmaları hakkında bilgi almak için info@pdfplatform.app adresine yazabilirsiniz.",
+            "Hizmet sağlayıcılarımızın bir kısmı verileri Türkiye dışında işler: yapay zekâ sağlayıcımız Anthropic (ABD; yalnızca belge metni), e-posta ve “Google ile giriş” için Google (ABD; e-posta adresi ve giriş bilgileri), barındırma ve depolama sağlayıcılarımız Render (sunucularımız Frankfurt, Almanya’dadır), Vercel ve Cloudflare (hesap ve hizmet verileri, çıktı dosyaları, giriş doğrulaması için IP adresi ve tarayıcı bilgisi) ve, yalnızca onayınızla, analitik (Google Analytics) ve hata izleme (Sentry) sağlayıcılarımız. Ödeme (PayTR) ve fatura (BirFatura) sağlayıcılarımız Türkiye’de yerleşik şirketlerdir. Bu aktarımlar 6698 sayılı Kanun’un 9. maddesi kapsamındadır. Yapay zekâ araçlarında aktarım yalnızca siz bir yapay zekâ aracını kullanmayı seçtiğinizde ve yalnızca belge metni için gerçekleşir; cihazda çalışan araçlarda dosyanız cihazınızdan çıkmaz. Aktarıma ilişkin güvence mekanizmaları hakkında bilgi almak için info@pdfplatform.app adresine yazabilirsiniz.",
           ],
         },
         {
@@ -791,7 +795,7 @@ export const legalDocuments = {
       summary:
         "NB Global Studio markasının sahibi Burak KAYA olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamındaki veri sorumlusu sıfatıyla kişisel verilerinizin güvenliği ve gizliliği konusundaki sorumluluğumuzun bilinciyle hareket etmekteyiz. Bu Aydınlatma Metni, hangi kişisel verilerinizi, hangi amaçlarla, hangi hukuki sebeple işlediğimizi ve KVKK madde 11 kapsamındaki haklarınızı açıklamaktadır.",
       effectiveDateLabel: "Yürürlük tarihi",
-      effectiveDate: "9 Kasım 2026",
+      effectiveDate: "19 Kasım 2026",
       sections: [
         {
           title: "1. Veri Sorumlusu",
@@ -804,7 +808,7 @@ export const legalDocuments = {
           title: "2. İşlenen Kişisel Veriler",
           paragraphs: [
             "Kimlik ve iletişim bilgileri: Ad, soyad, e-posta adresi; hesap oluşturma ve kimlik doğrulama süreçlerinde işlenir.",
-            "Ödeme ve fatura bilgileri: Ad, soyad, adres, posta kodu, şehir, ülke, cep telefonu; ödeme altyapısı sağlayıcısına (PayTR) iletilerek güvenli tahsilat ve fatura düzenlenmesi amacıyla işlenir. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan PayTR’nin PCI DSS uyumlu altyapısında işlenir.",
+            "Ödeme ve fatura bilgileri: Ad, soyad veya unvan, adres, posta kodu, şehir, ülke, cep telefonu, e-posta; kurumsal faturada vergi kimlik numarası ve vergi dairesi, bireysel faturada (bildirmeniz hâlinde) T.C. kimlik numarası; ödeme altyapısı sağlayıcısına (PayTR) iletilerek güvenli tahsilat amacıyla, fatura entegratörümüze (BirFatura) iletilerek yasal fatura düzenlenmesi amacıyla işlenir. T.C. kimlik ve vergi numaraları sistemimizde şifrelenmiş olarak saklanır. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan PayTR’nin PCI DSS uyumlu altyapısında işlenir.",
             "Kart kanıtı (yalnızca yabancı para birimiyle yapılan ödemelerde): Ödeme tamamlandıktan sonra, ödeme kuruluşumuz PayTR’nin bize iletebildiği maskeli kart bilgisinden yalnızca kartın ilk 6 hanesi (banka kimlik numarası – BIN) ve kart markası alınır; ilk 6 haneden kartı çıkaran bankanın ülkesi belirlenir. Kart numarasının kalan hanelerini, CVV’yi ve son kullanma tarihini hiçbir şekilde almaz, kaydetmez ve görmeyiz. İlk 6 hane sistemimizde şifrelenmiş olarak, kartın ülkesi ise “yurt içi / yurt dışı / belirlenemedi” sonucuyla birlikte saklanır.",
             "Teknik ve kullanım verileri: IP adresi, tarayıcı/cihaz bilgisi, oturum bilgileri; güvenlik, sahteciliğin önlenmesi ve sistem performansı amaçlarıyla işlenir.",
             "Yüklenen belgeler: PDF ve diğer dosyalar işlem için geçici olarak sunucularımızda tutulur; işlem tamamlandıktan kısa süre sonra otomatik olarak silinir. Yapısal araçlarda (birleştirme, dönüştürme vb.) belge içeriğine anlamsal analiz uygulanmaz.",
@@ -824,7 +828,7 @@ export const legalDocuments = {
           paragraphs: [
             "Sözleşmenin kurulması ve ifası (KVKK md. 5/2-c): Hesap oluşturma, ödeme işlemi, abonelik yönetimi ve hizmetlerin sunulması.",
             "Meşru menfaat (KVKK md. 5/2-f): Hizmetin güvenliğinin sağlanması, dolandırıcılık ve kötüye kullanımın önlenmesi, sistem performansı.",
-            "Hukuki yükümlülüğün yerine getirilmesi (KVKK md. 5/2-ç): Vergi mevzuatı ve diğer kanuni yükümlülükler kapsamında fatura ve kayıt tutma.",
+            "Hukuki yükümlülüğün yerine getirilmesi (KVKK md. 5/2-ç): Vergi mevzuatı ve diğer kanuni yükümlülükler kapsamında fatura ve kayıt tutma; fatura için T.C. kimlik / vergi kimlik numarasının işlenmesi bu kapsamdadır.",
             "Bir hakkın tesisi, kullanılması veya korunması (KVKK md. 5/2-e): İade, itiraz ve fatura uyuşmazlıklarında ispat için ödeme öncesi onay kayıtlarının (sözleşme onayı, cayma hakkı feragati, reşit olma / yasal temsilci beyanı) saklanması.",
             "Kart kanıtının işlenme amacı — hukuki yükümlülük ve hakkın korunması (KVKK md. 5/2-ç ve 5/2-e): Yurt dışındaki müşteriye sunulan hizmette KDV Kanunu md. 11/1-a (hizmet ihracatı) istisnasının uygulanıp uygulanmayacağını belirlemek için kartın yurt içi mi yurt dışı mı olduğunun tespiti. İstisna yalnızca hizmetin yurt dışındaki müşteriye yapılması ve ödemenin yurt dışından gelmesi hâlinde uygulanabildiğinden, bu bilgi vergi mevzuatına uygun fatura düzenlemek için gereklidir. Aynı bilgi, bir vergi incelemesinde ya da uyuşmazlıkta “faturanın neden KDV’siz/KDV’li düzenlendiğini” ispat etmek için saklanır. Kartınız yurt içi çıkmışsa ya da ülkesi belirlenemezse fatura KDV’li düzenlenir. Bu bilgi pazarlama, profilleme veya başka hiçbir amaçla kullanılmaz.",
             "Yapay zekâ destekli araçların sunulması (KVKK md. 5/2-c — sözleşmenin ifası): Bir yapay zekâ aracını kullanmayı seçtiğinizde, talebinizi yerine getirmek üzere belge metninizin yapay zekâ sağlayıcısına aktarılarak sonuç üretilmesi. Bu aktarımın yurt dışına yapılması ayrıca md. 9 kapsamında değerlendirilir (4. bölüm).",
@@ -836,11 +840,14 @@ export const legalDocuments = {
           paragraphs: [
             "Kişisel verileriniz; hizmetlerimizin sunulabilmesi için ihtiyaç duyulan ölçüde aşağıdaki alıcı gruplarına aktarılabilir:",
             "Ödeme kuruluşu (PayTR): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
+            "Fatura entegratörü (BirFatura): Yasal fatura (e-fatura / e-arşiv) düzenlenmesi ve Gelir İdaresi Başkanlığı sistemine iletilmesi amacıyla ad, soyad veya unvan, adres, e-posta, telefon ve vergi kimlik / T.C. kimlik numarası aktarılır.",
             "Kart ülkesinin belirlenmesi: Kartın ilk 6 hanesi, kendi sunucumuzdaki bir listeyle eşleştirilir; bu bilgi hiçbir üçüncü kişiye, banka listesi sağlayıcısına veya dış servise gönderilmez.",
             "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca siz bir yapay zekâ aracını kullanmayı seçtiğinizde gerçekleşir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz (yalnızca güvenlik denetimi için en fazla 30 gün saklanabilir). Aktarıma ilişkin güvence mekanizmaları hakkında bilgi için info@pdfplatform.app adresine başvurabilirsiniz.",
-            "Bulut altyapısı ve barındırma hizmet sağlayıcıları (Render, Vercel ve bulut depolama): Hizmetin çalıştırıldığı sunucu, veritabanı ve depolama altyapısını sunan şirketler; bunların bir kısmı Türkiye dışındadır ve yalnızca hizmeti çalıştırmak için gereken sınırlı erişime sahiptir.",
-            "E-posta hizmeti (Google): Doğrulama, güvenlik ve işlem e-postalarının iletilmesi için e-posta adresiniz.",
+            "Bulut altyapısı ve barındırma hizmet sağlayıcıları (Render, Vercel, Cloudflare ve bulut depolama): Hizmetin çalıştırıldığı sunucu, veritabanı ve depolama altyapısını sunan şirketler; bunların bir kısmı Türkiye dışındadır ve yalnızca hizmeti çalıştırmak için gereken sınırlı erişime sahiptir.",
+            "E-posta ve oturum açma hizmeti (Google): Doğrulama, güvenlik ve işlem e-postalarının iletilmesi için e-posta adresiniz; “Google ile giriş” seçeneğini kullanırsanız Google hesabınızdan e-posta adresiniz, adınız ve profil fotoğrafınız.",
+            "Giriş doğrulaması (Cloudflare Turnstile): Giriş ve kayıt sırasında otomatik (bot) kullanımı ayırt etmek için IP adresiniz ve tarayıcı bilgileriniz.",
             "Analitik ve hata izleme sağlayıcıları (yalnızca onayınızla — Google Analytics, Sentry): Ürün iyileştirme ve hata giderme amacıyla kullanım ve tanı verileri.",
+            "Yurt dışına aktarım özeti (KVKK md. 9): Anthropic (ABD) — belge metni, yalnızca yapay zekâ aracı kullanırsanız; Google (ABD) — e-posta adresi ve “Google ile giriş” bilgileri, onayınızla analitik; Render (sunucular Frankfurt, Almanya’da), Cloudflare ve Vercel — hizmetin barındırılması, çıktı dosyaları ve giriş doğrulaması; Sentry — yalnızca onayınızla hata tanı verileri. Aktarımlar yalnızca belirtilen amaçlarla ve gerekli olan en az veriyle yapılır; güvence mekanizmaları hakkında bilgi için info@pdfplatform.app adresine başvurabilirsiniz.",
             "Yasal zorunluluk: Mahkeme kararı veya yetkili kamu kurumu talebi halinde ilgili makamlarla paylaşılabilir.",
           ],
         },
@@ -848,7 +855,7 @@ export const legalDocuments = {
           title: "5. Kişisel Verilerin Saklanma Süresi",
           paragraphs: [
             "Hesap bilgileri: Hesabınız aktif olduğu süre boyunca ve hesap silme talebinin ardından en fazla 30 gün.",
-            "Ödeme ve fatura kayıtları: 10 yıl (VUK md. 253 uyarınca 5 yıl, TTK md. 82 uyarınca 10 yıl; uzun olan süre uygulanır).",
+            "Ödeme ve fatura kayıtları: 10 yıl (VUK md. 253 uyarınca 5 yıl, TTK md. 82 uyarınca 10 yıl; uzun olan süre uygulanır). T.C. kimlik numarası hesabınızla birlikte silinir; vergi numarası fatura kaydıyla birlikte (şifreli) aynı süre saklanır.",
             "Teknik günlükler (log): IP adresi ve tarayıcı bilgisi en fazla 90 gün; kimliksiz kayıt iskeleti 1 yıl; güvenlik ihlali şüphesi varsa ilgili soruşturma tamamlanana kadar.",
             "Yüklenen belgeler: Yüklediğiniz dosya işlem biter bitmez silinir; çıktı dosyası en fazla 24 saat tutulur ve otomatik olarak silinir (Belge Tarayıcı'daki «Hesabıma kaydet» taramaları ile «İmza İste» belgeleri bu kuralın istisnasıdır; siz silene veya hesabınız silinene kadar saklanır).",
           ],
