@@ -71,6 +71,14 @@ Bu belge her adımda güncellenir. Kodu değiştiren her iş ayrı dalda pull re
 4. **Ödeme sağlayıcıları (PayTR, iyzico) ve fatura (BirFatura):** dış servis, canlı anahtarlarla çalışıyor; sandbox ile canlı arasında test ortamı yok.
 5. **Tek kişilik süreç:** hata anında Render panelini bilen tek kişi var; geri alma kılavuzu eski.
 
+## Not: Panelden medya yükleme
+
+Panelden medya yüklemeden önce `MEDIA_STORAGE=s3` ve kalıcı bir medya kovası kurulmalı; aksi halde yüklenen dosyalar her deploy'da silinir.
+
+## Not: Eski depo kovasi silinecek
+
+Eski R2 hesabındaki kova, taşıma tarihinden (18 Kasım 2026) 7 gün sonra, **25 Kasım 2026** tarihinde silinecek. Eski S3 değerleri o tarihe kadar saklanıyor (geri dönüş için).
+
 ## Açık PR'lar (sahibin onayını bekliyor)
 
 | PR | Konu |
