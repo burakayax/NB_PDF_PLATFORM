@@ -9,6 +9,7 @@ describe("PayTR ödeme sayfası", () => {
     launchIyzicoCheckout({ checkoutFormContent: "", paymentPageUrl: "https://www.paytr.com/odeme/guvenli/abc123" });
     const frame = document.querySelector("#paytr-frame-overlay iframe") as HTMLIFrameElement | null;
     expect(frame?.src).toBe("https://www.paytr.com/odeme/guvenli/abc123");
+    expect(document.getElementById("paytr-frame-overlay")?.textContent).toContain("PayTR");
     (document.querySelector("#paytr-frame-overlay button") as HTMLButtonElement).click();
     expect(document.getElementById("paytr-frame-overlay")).toBeNull();
   });
