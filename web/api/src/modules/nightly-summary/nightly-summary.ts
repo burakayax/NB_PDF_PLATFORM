@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import { buildSummary, trDayStart } from "../admin/payments-summary.admin.js";
+import { estimateCostUsd } from "../ai/ai-usage.js";
 import { loadServiceStatus } from "../../lib/service-health.js";
 import { dailySummary as gscDailySummary } from "../social/gsc.service.js";
 
@@ -159,6 +160,14 @@ export async function buildNightlySummary(ymd: string) {
   const verified = checks.every((c) => c.ok);
 
   const aiTotal = aiByOp.reduce((a, g) => a + g._count._all, 0);
+  const aiModels = await prisma.aiRequestLog.groupBy({
+    by: ["model"],
+    where: { createdAt: day, userId: notAdmin, inputTokens: { not: null } },
+    _count: { _all: true },
+    _sum: { inputTokens: true, outputTokens: true },
+  });
+  const costs = aiModels.map((m) => (m.model ? estimateCostUsd(m.model, m._sum.inputTokens ?? 0, m._sum.outputTokens ?? 0) : null));
+  const aiCostUsd = aiModels.length > 0 && costs.every((c) => c !== null) ? Math.round(costs.reduce((x, c) => x + (c ?? 0), 0) * 10000) / 10000 : null;
   const components = serviceStatus?.components;
   const serverFailures = serviceStatus ? serviceStatus.failures.reduce((a, f) => a + f.count, 0) : null;
 
@@ -204,8 +213,11 @@ export async function buildNightlySummary(ymd: string) {
       requests: aiTotal,
       units: aiByOp.reduce((a, g) => a + (g._sum.units ?? 0), 0),
       byTool: aiByOp.map((g) => ({ tool: g.op, count: g._count._all })),
-      estimatedCost: null as null,
-      costNote: "İstek başına token/maliyet kaydı tutulmuyor; yalnız istek ve birim sayısı",
+      byModel: aiModels.map((m) => ({ model: m.model ?? "bilinmiyor", requests: m._count._all, inputTokens: m._sum.inputTokens ?? 0, outputTokens: m._sum.outputTokens ?? 0 })),
+      estimatedCost: aiCostUsd,
+      costNote: aiCostUsd === null
+        ? "Maliyet hesaplanamadı: AI_PRICE_USD_PER_MTOK (model başına 1 milyon token USD fiyatı) tanımlı değil ya da kayıt yok; token sayıları byModel alanında"
+        : "Tahmini USD; token kaydı yalnız bu özellik açıldıktan sonraki isteklerde vardır",
     },
     health: {
       clientErrors,

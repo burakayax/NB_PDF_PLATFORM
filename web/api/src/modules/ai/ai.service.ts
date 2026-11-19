@@ -1,4 +1,5 @@
 import { env } from "../../config/env.js";
+import { recordClaudeUsage } from "./ai-usage.js";
 import { getSetting } from "../../lib/site-config.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 
@@ -133,7 +134,8 @@ export async function callClaude(
     throw new Error(`Claude API ${res.status}: ${detail.slice(0, 300)}`);
   }
   // Düşünen modellerde ilk blok `thinking` olabilir: yalnızca METİN bloklarını birleştir.
-  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
+  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }>; model?: string; usage?: { input_tokens?: number; output_tokens?: number } };
+  recordClaudeUsage(data);
   return (data.content ?? [])
     .filter((b) => (b.type ?? "text") === "text" && typeof b.text === "string")
     .map((b) => b.text as string)

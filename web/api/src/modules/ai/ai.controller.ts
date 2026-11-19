@@ -1,5 +1,6 @@
 import { adminSecondFactorOk } from "../../middleware/admin.middleware.js";
 import { createHash } from "node:crypto";
+import { trackAiUsage, type AiUsage } from "./ai-usage.js";
 import type { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js";
 import { chargeCurrencyForCountry } from "../../lib/plan-catalogue.js";
@@ -85,13 +86,16 @@ async function runWithQuota<T>(
     return { ok: false };
   }
   const logId = await openAiLedger(req, op, units);
+  let usage: AiUsage | null = null;
   try {
-    const value = await work();
-    await closeAiLedger(logId, "DONE", false, value);
+    const value = await trackAiUsage(work, (u) => {
+      usage = u;
+    });
+    await closeAiLedger(logId, "DONE", false, value, usage);
     return { ok: true, value };
   } catch (error) {
     await releaseQuota(req, units);
-    await closeAiLedger(logId, "FAILED", true);
+    await closeAiLedger(logId, "FAILED", true, undefined, usage);
     throw error;
   }
 }
@@ -115,12 +119,18 @@ async function openAiLedger(req: Request, op: string, units: number): Promise<st
   }
 }
 
-async function closeAiLedger(id: string | null, status: "DONE" | "FAILED", refunded: boolean, output?: unknown): Promise<void> {
+async function closeAiLedger(id: string | null, status: "DONE" | "FAILED", refunded: boolean, output?: unknown, usage?: AiUsage | null): Promise<void> {
   if (!id) return;
   try {
     await prisma.aiRequestLog.update({
       where: { id },
-      data: { status, refunded, outputSha256: output === undefined ? null : sha(output), finishedAt: new Date() },
+      data: {
+        status,
+        refunded,
+        outputSha256: output === undefined ? null : sha(output),
+        finishedAt: new Date(),
+        ...(usage && usage.calls > 0 ? { model: usage.model, inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } : {}),
+      },
     });
   } catch {
     /* defter hatası işi etkilemez */
