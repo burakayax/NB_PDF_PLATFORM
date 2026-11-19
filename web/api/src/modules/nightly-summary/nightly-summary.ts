@@ -107,15 +107,17 @@ export async function buildNightlySummary(ymd: string) {
   const chg = (k: keyof DayCore) => change(core[k], prevCores[0][k], prevCores.map((c) => c[k]));
 
   const viewWhere = { createdAt: day, OR: [{ userId: null }, { userId: notAdmin }] };
+  const paidPlanTotal = await prisma.user.count({ where: { createdAt: { lt: end }, id: notAdmin, plan: { not: "FREE" } } });
   const [
-    totalUsers, planGroups, activeSubscribers, newSubscriptions,
+    totalUsers, planGroups, paidSubscribers, newSubscriptions,
     paidRows, refundRows, paidCount2, refundCount2, pendingPayments,
     opsFailed, topTools, clientErrors,
     topPages, aiByOp, cancelGroups, serviceStatus, gotenberg, gsc,
   ] = await Promise.all([
     prisma.user.count({ where: { createdAt: { lt: end }, id: notAdmin } }),
     prisma.user.groupBy({ by: ["plan"], where: { createdAt: { lt: end }, id: notAdmin }, _count: { _all: true } }),
-    prisma.user.count({ where: { createdAt: { lt: end }, id: notAdmin, plan: { not: "FREE" } } }),
+    // Ücretli abonelik: ücretli plandadır VE iadesiz tamamlanmış gerçek bir plan ödemesi vardır.
+    prisma.user.count({ where: { createdAt: { lt: end }, id: notAdmin, plan: { not: "FREE" }, paymentCheckouts: { some: { completedAt: { not: null }, refundedAt: null, bonusAiCredits: null, cvPassHours: null, seatsOnly: false } } } }),
     prisma.paymentCheckout.count({ where: { completedAt: day, userId: notAdmin, bonusAiCredits: null, cvPassHours: null, seatsOnly: false } }),
     prisma.paymentCheckout.findMany({
       where: { completedAt: day, userId: notAdmin },
@@ -182,7 +184,9 @@ export async function buildNightlySummary(ymd: string) {
     users: { new: core.newUsers, total: totalUsers, active: core.activeUsers },
     plans: Object.fromEntries(planGroups.map((g) => [g.plan, g._count._all])),
     subscriptions: {
-      activeSubscribers,
+      paidSubscribers,
+      manualPlans: paidPlanTotal - paidSubscribers,
+      planNote: "Ücretli abonelik = gerçek ödemesi olanlar. Elle verilen plan = ücretli plandadır ama ödemesi yok (yönetici yükseltmesi). Gelir ve satış yalnız ücretli aboneliktir.",
       newSubscriptions,
       cancellations: cancelGroups.reduce((a, g) => a + g._count._all, 0),
       cancellationReasons: Object.fromEntries(cancelGroups.map((g) => [g.reason, g._count._all])),
@@ -253,7 +257,7 @@ export function renderMarkdown(s: NightlySummary): string {
   L.push("## Üyeler", `- Yeni üye: ${t(s.changes.newUsers)}`, `- Giriş yapan: ${t(s.changes.activeUsers)}`, `- Toplam üye (gün sonu): ${s.users.total}`);
   L.push(`- Plan dağılımı: ${Object.entries(s.plans).map(([k, v]) => `${k} ${v}`).join(", ") || "-"}`, "");
   const reasons = Object.entries(s.subscriptions.cancellationReasons).map(([k, v]) => `${k}: ${v}`).join(", ");
-  L.push("## Abonelik ve satış", `- Aktif abone: ${s.subscriptions.activeSubscribers}`, `- Yeni abonelik: ${s.subscriptions.newSubscriptions}`, `- İptal: ${s.subscriptions.cancellations}${reasons ? ` (${reasons})` : ""}`);
+  L.push("## Abonelik ve satış", `- Ücretli abonelik: ${s.subscriptions.paidSubscribers}`, `- Elle verilen plan: ${s.subscriptions.manualPlans}`, `- Yeni abonelik: ${s.subscriptions.newSubscriptions}`, `- İptal: ${s.subscriptions.cancellations}${reasons ? ` (${reasons})` : ""}`);
   L.push(`- Ödeme: ${t(s.changes.paidOrders)}; tutar ${s.sales.paidTotalTRY} TL; iade ${s.sales.refundCountTRY} adet; net ${s.sales.netTotalTRY} TL`, `- Bekleyen ödeme: ${s.sales.pendingCheckouts}`, "");
   L.push("## Trafik", `- Sayfa görüntüleme: ${t(s.changes.pageViews)}`, `- Tekil ziyaretçi: ${t(s.changes.uniqueVisitors)}`, `- En çok bakılan: ${s.traffic.topPages.map((p) => `${p.path} (${p.views})`).join(", ") || "-"}`, "");
   L.push("## Google aramaları");

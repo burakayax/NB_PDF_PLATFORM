@@ -12,6 +12,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { buildMail, parseLlmJson } from "./mail.mjs";
 
 const AGENT = process.argv[2];
 const VERI = process.env.AGENT_VERI || "veri"; // indirilmiş kova içeriği
@@ -28,7 +29,7 @@ const PRICE = {
 
 const AGENTS = {
   durum: { file: "ajan-durum-son.md", model: "claude-haiku-5-5", title: "Günlük site durumu", max: 4000 },
-  seo: { file: "ajan-seo-son.md", model: "claude-sonnet-5-5", title: "Haftalık SEO", max: 6000 },
+  seo: { file: "ajan-seo-son.md", model: "claude-sonnet-5-5", title: "Haftalık SEO", max: 9000 },
   sosyal: { file: "ajan-sosyal-son.md", model: "claude-sonnet-5-5", title: "Haftalık sosyal medya planı", max: 8000 },
   finans: { file: "ajan-finans-son.md", model: "claude-haiku-5-5", title: "Aylık finans raporu", max: 4000 },
   ozet: { file: "ajan-yonetici-son.md", model: "claude-haiku-5-5", title: "Yönetici sabah özeti", max: 3000 },
@@ -36,7 +37,9 @@ const AGENTS = {
 
 const GENEL_KURAL = `Sen PDF Platform (pdfplatform.app) sahibinin salt-okunur analiz ajanısın. Türkçe, sade, kısa yaz; sahibin programlama bilgisi yok.
 KURALLAR: Yalnızca sana verilen veriyi kullan; rakamları aynen alıntıla, uydurma. Veri yoksa "veri yok" de. Hukuki/vergi tavsiyesi verme, vergi takvimi uydurma.
-Kişisel veri yazma. Sorun varsa satırın başına ⚠️ koy. Kod, ayar ya da site değişikliği yapamazsın; sadece rapor/öneri yazarsın.`;
+Kişisel veri (e-posta, isim) YAZMA. Sorun varsa satırın başına ⚠️ koy. Kod, ayar ya da site değişikliği yapamazsın; sadece rapor/öneri yazarsın.
+Sahibinden veri ya da dosya isteme. Geçmiş veri yokluğunu "uyarı" (⚠️) olarak gösterme.
+ABONELİK DİLİ: "Aktif abonelik" ifadesini tek başına KULLANMA. Özet verisinde "Ücretli abonelik" (gerçek ödemesi olanlar) ve "Elle verilen plan" (yönetici yükseltmesi, ödeme yok) ayrı satırlardır; ayrı yaz. Gelir ve satış hesaplarında yalnız ücretli abonelikleri say.`;
 
 const PROMPTS = {
   durum: `GÖREV: Günlük site durumu. Aşağıda son gecelik özet (JSON) ve önceki günlerin özetleri var. Dünü bir önceki günle ve son 7 günün ortalamasıyla karşılaştır; önemli değişimleri ve hataları yaz. Sorun varsa ⚠️.
@@ -44,10 +47,13 @@ Biçim: "## Özet" (3-5 madde), "## Değişimler", "## ⚠️ Dikkat" (yoksa "Yo
   seo: `GÖREV: Haftalık SEO. Search Console verisi: son 7 gün ("current") ve önceki 7 gün ("previous"). Tıklama/gösterim/sıra değişimini, yükselen-düşen sayfa ve sorguları karşılaştır. 3-5 SOMUT öneri yaz (hangi sayfa/sorgu, ne yapılmalı, neden). Veri azsa bunu açıkça söyle; abartma.
 Biçim: "## Bu hafta", "## Öne çıkanlar", "## Öneriler" (numaralı).`,
   sosyal: `GÖREV: Haftalık sosyal medya planı. Girdi: son paylaşımlar (tekrar etme), SEO verisi (öne çıkan sorgu/sayfalar) ve sitenin araçları. 5-7 paylaşımlık hafta planı yaz: her biri için gün+saat (TR), platform, paylaşım metni, görsel fikri, bağlanacak sayfa. Son 45 günde işlenen aynı konuyu tekrarlama. ASLA paylaşım yapmazsın; yalnız plan yazarsın.
+ETİKET KURALI: Her paylaşımdaki etiketler (#) paylaşımın KONUSUYLA eşleşmeli. Örneğin PDF→Excel paylaşımına alakasız etiket (#edevlet, #TabloModelleri gibi) koyma; yalnız o aracı/konuyu doğrudan tarif eden etiketler kullan. Emin değilsen etiketi azalt.
 Biçim: "## Hafta planı" tablo ya da madde, sonra "## Neden bu konular".`,
-  finans: `GÖREV: Aylık finans raporu. Girdi: geçen ayın ve ondan önceki ayın gecelik özetleri. Gelir (TL ve yabancı para AYRI), ödeme/iade adedi, yeni abonelik, iptal ve nedenleri, aktif abonelik, sitenin yapay zekâ maliyetini (özette varsa) hesapla ve önceki ayla karşılaştır. Toplamları özetlerdeki günlük değerlerden topla; hesabını göster. Vergi takvimi UYDURMA.
+  finans: `GÖREV: Aylık finans raporu. Girdi: geçen ayın ve ondan önceki ayın gecelik özetleri. Gelir (TL ve yabancı para AYRI), ödeme/iade adedi, yeni abonelik, iptal ve nedenleri, aktif abonelik, sitenin yapay zekâ maliyetini (özette varsa) hesapla ve önceki ayla karşılaştır. Toplamları özetlerdeki günlük değerlerden topla; hesabını göster. Vergi takvimi UYDURMA. Önceki ay verisi yoksa bunu uyarı olarak gösterme ve veri isteme; bunun yerine şu bilgi notunu yaz: "Gecelik raporlar Kasım 2026'da başladı; ilk aylık finans karşılaştırması verisi oluştukça gelecek (ilk tam aylık rapor 1 Aralık'ta)." Ekim ve Eylül verisi hiç olmayacak, bu normaldir. Eldeki gün sayısını ve tutarları yine de özetle.
 Biçim: "## Özet", "## Karşılaştırma tablosu", "## ⚠️ Dikkat".`,
-  ozet: `GÖREV: Yönetici sabah özeti. Girdi: diğer ajanların son çıktıları. Sahibe TEK kısa e-posta metni yaz: en üstte "Dikkat edilecekler" (⚠️ olanlar; yoksa "Bugün acil bir şey yok"), sonra her ajandan 1-2 satır. 200 kelimeyi geçme. Bir ajanın çıktısı 2 günden eskiyse veya yoksa belirt.`,
+  ozet: `GÖREV: Yönetici sabah özeti için YAPISAL VERİ. Girdi: diğer ajanların son çıktıları (Markdown). YALNIZCA şu biçimde geçerli JSON döndür, başka metin yazma:
+{"dikkat": ["kısa madde", ...], "seoOneriler": ["en çok 3 öneri"], "sosyal": [{"tarih":"","platform":"","konu":"","durum":"Planlandı"}], "finansNotu": "..." veya null, "finansTablo": [["Ölçüt","Bu ay","Önceki ay","Değişim"], ...] veya null}
+KURALLAR: "dikkat" yalnız GERÇEKTEN dikkat gerektiren şeyleri içerir (hata, kesinti, düşüş, ⚠️ ile işaretlenmiş sorun); yoksa boş dizi. Veri yokluğunu (örn. geçen ay özeti yok) dikkat maddesi YAPMA. "sosyal" satırları sosyal planından alınır (tarih, platform, konu kısa; durum: Planlandı). finans için önceki ay verisi yoksa finansTablo null ve finansNotu: "Gecelik raporlar Kasım 2026'da başladı; ilk aylık finans raporu 1 Aralık'ta gelecek." Rakamları uydurma, yalnız girdidekini kullan. Kişisel veri (e-posta, isim) yazma.`,
 };
 
 function readIf(p) {
@@ -115,8 +121,38 @@ function cost(model, inTok, outTok) {
   return p ? (inTok * p.in + outTok * p.out) / 1e6 : 0;
 }
 
+// Aylık tahmin: ajan başına ortalama çalışma maliyeti x aylık çalışma sayısı (günlük 30, haftalık ~4,33, aylık 1).
+const RUNS_PER_MONTH = { durum: 30, ozet: 30, seo: 4.33, sosyal: 4.33, finans: 1 };
+function monthEstimate(ledger) {
+  let total = 0;
+  for (const [agent, runs] of Object.entries(RUNS_PER_MONTH)) {
+    const rows = ledger.filter((r) => r.agent === agent);
+    if (rows.length === 0) continue;
+    total += (rows.reduce((a, r) => a + r.usd, 0) / rows.length) * runs;
+  }
+  return total;
+}
+
 function monthTotal(ledger, ym) {
   return ledger.filter((r) => r.ym === ym).reduce((a, r) => a + r.usd, 0);
+}
+
+async function composeMail(llmText, today, footer) {
+  const llm = parseLlmJson(llmText);
+  const files = listSummaries();
+  const read = (f) => { try { return JSON.parse(readIf(f)); } catch { return null; } };
+  const now = files.length ? read(files[files.length - 1]) : null;
+  const prev = files.length > 1 ? read(files[files.length - 2]) : null;
+  let gsc = null;
+  try { gsc = await api("/api/internal/agent/gsc"); } catch { gsc = null; }
+  const attention = [...llm.attention];
+  if (now && now.verified === false) attention.unshift("Gecelik özet sayıları iki yöntemde tutmuyor; rakamlara güvenmeden önce kontrol edin.");
+  for (const k of ["durum", "seo", "sosyal", "finans"]) {
+    const txt = readIf(path.join(VERI, AGENTS[k].file));
+    if (!txt) attention.push(`${AGENTS[k].title} çıktısı bulunamadı.`);
+    else if (/üretilemedi/.test(txt)) attention.unshift(`${AGENTS[k].title} raporu üretilemedi.`);
+  }
+  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, footer });
 }
 
 async function main() {
@@ -149,15 +185,19 @@ async function main() {
     const outTok = j.usage?.output_tokens ?? 0;
     const usd = cost(def.model, inTok, outTok);
     ledger.push({ date: today, ym, agent: AGENT, model: def.model, inTok, outTok, usd });
-    let body = `# ${def.title} — ${today}\n\n${text}\n`;
+    const footer = `Token: ${inTok} giriş / ${outTok} çıkış · Model: ${def.model} · Bu özet ≈ $${usd.toFixed(4)} (tahmini)\n`
+      + `Ay başından bu yana ajan toplamı: $${monthTotal(ledger, ym).toFixed(3)} (ayın 1'inden bugüne kadar gerçekleşen çalışmaların tahmini maliyeti)\n`
+      + `Aylık tahmin (günlük ve haftalık çalışmalara göre): ≈ $${monthEstimate(ledger).toFixed(2)}`;
+    const mail = AGENT === "ozet" ? await composeMail(text, today, footer) : null;
+    let body = mail ? `${mail.text}\n` : `# ${def.title} — ${today}\n\n${text}\n`;
     if (kesildi) body += "\n⚠️ Not: yanıt uzunluk sınırına takıldı, rapor eksik olabilir.\n";
-    body += `\n---\nToken: ${inTok} giriş / ${outTok} çıkış · Model: ${def.model} · Bu çalışma ≈ $${usd.toFixed(4)} (tahmini) · Bu ay ajanların toplamı ≈ $${monthTotal(ledger, ym).toFixed(3)}\n`;
+    if (!mail) body += `\n---\nToken: ${inTok} giriş / ${outTok} çıkış · Model: ${def.model} · Bu çalışma ≈ $${usd.toFixed(4)} (tahmini) · Ay başından bu yana ajan toplamı: $${monthTotal(ledger, ym).toFixed(3)}\n`;
     fs.writeFileSync(outFile, body);
     fs.writeFileSync(path.join(OUT, "ajan-maliyet.json"), JSON.stringify(ledger.slice(-400)));
 
     if (AGENT === "ozet") {
       const subject = `Sabah özeti — ${today}`;
-      await api("/api/internal/agent/mail", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ subject, text: body }) });
+      await api("/api/internal/agent/mail", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ subject, text: mail.text, html: mail.html }) });
       console.log("E-posta gönderildi");
     }
     console.log(`${def.title} tamam (${inTok}/${outTok} token)`);

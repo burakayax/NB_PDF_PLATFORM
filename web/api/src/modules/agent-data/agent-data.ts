@@ -88,9 +88,11 @@ let mailsToday = { day: "", n: 0 };
 /** Yönetici sabah özeti e-postası: alıcı SABİT (yönetici), günde en fazla 10 gönderim. */
 export async function agentMailController(request: Request, response: Response): Promise<void> {
   if (!guard(request, response)) return;
-  const body = (request.body ?? {}) as { subject?: unknown; text?: unknown };
+  const body = (request.body ?? {}) as { subject?: unknown; text?: unknown; html?: unknown };
   const subject = typeof body.subject === "string" ? body.subject.trim().slice(0, 150) : "";
   const text = typeof body.text === "string" ? body.text.trim().slice(0, 20000) : "";
+  // İsteğe bağlı HTML sürümü (yalnız ajan token'ıyla ve yalnız yöneticiye gider); 60 KB ile sınırlı.
+  const customHtml = typeof body.html === "string" ? body.html.trim().slice(0, 60000) : "";
   if (!subject || !text) {
     response.status(400).json({ error: "subject_and_text_required" });
     return;
@@ -103,7 +105,7 @@ export async function agentMailController(request: Request, response: Response):
   }
   mailsToday.n += 1;
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;white-space:pre-wrap">${esc(text)}</div>`;
+  const html = customHtml || `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;white-space:pre-wrap">${esc(text)}</div>`;
   try {
     await sendMail({ to: env.ADMIN_EMAIL, subject, html, text });
     response.status(200).json({ ok: true });
