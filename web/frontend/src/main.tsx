@@ -17,6 +17,16 @@ import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/use
 import { getSaasApiBase } from "./api/saasBase";
 import { isKnownAppPath } from "./lib/appNavigation";
 import "./styles/app.css";
+
+// PayTR ödeme sayfası iframe içinde açılır; ödeme bitince PayTR bizim dönüş adresimizi (/workspace?payment=...)
+// aynı iframe'in İÇİNDE yükler. Uygulama iframe içinde kalmasın diye üst pencereyi o adrese götür.
+try {
+  if (window.top && window.top !== window.self && /[?&]payment=(success|failed)/.test(window.location.search)) {
+    window.top.location.replace(window.location.href);
+  }
+} catch {
+  /* üst pencereye erişilemezse normal çalış */
+}
 import "./styles/readability.css";
 import "./styles/theme-light.css";
 
