@@ -11,7 +11,14 @@ export function openPaytrFrame(url: string): void {
   overlay.setAttribute("aria-modal", "true");
   overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#fff;display:flex;flex-direction:column;";
   const bar = document.createElement("div");
-  bar.style.cssText = "display:flex;justify-content:flex-end;padding:8px 12px;background:#0f172a;";
+  bar.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;background:#0f172a;";
+  const en = !/^tr/i.test(document.documentElement.lang || navigator.language || "tr");
+  const label = document.createElement("span");
+  label.textContent = en
+    ? "Secure payment — processed by PayTR (licensed payment institution)"
+    : "Güvenli ödeme — ödemeniz PayTR altyapısında işlenir";
+  label.style.cssText = "color:#e2e8f0;font-size:13px;line-height:1.3;";
+  bar.appendChild(label);
   const close = document.createElement("button");
   close.type = "button";
   close.textContent = "Kapat / Close";
