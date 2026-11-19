@@ -21,7 +21,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const querySchema = z.object({
   q: z.string().trim().max(200).optional(),
-  status: z.enum(["all", "completed", "refunded", "pending", "failed"]).optional().default("all"),
+  status: z.enum(["all", "completed", "refunded", "pending", "failed", "expired"]).optional().default("all"),
   plan: z.enum(["all", "FREE", "STARTER", "PLUS", "PRO", "BUSINESS"]).optional().default("all"),
   kind: z.enum(["all", "plan", "topup", "cvpass", "seats"]).optional().default("all"),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
