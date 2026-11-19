@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Download, ExternalLink, FileCheck2, Share2, X } from "lucide-react";
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
-import { trackGAEvent } from "../../lib/analytics";
+import { trackFunnelEvent, trackGAEvent } from "../../lib/analytics";
 import { NATIVE_SAVE_DIALOG } from "../../api";
 
 /**
@@ -163,7 +163,11 @@ export function ToolResultPanel({
       file_type: isPdf ? "pdf" : "other",
       on_device: processedOnDevice,
     });
-  }, [isPdf, processedOnDevice]);
+    // Yönetim paneli "Ziyaretçiler ve satışlar": hangi aracın GERÇEKTEN kullanıldığı (sonuç ekranı geldi).
+    // Araç kimliği yoksa adres çubuğundaki son parça kullanılır. Dosya adı/içeriği asla gönderilmez.
+    const slug = ratingToolSlug ?? window.location.pathname.split("/").filter(Boolean).pop() ?? "";
+    if (slug) trackFunnelEvent("tool_used", { source: slug.slice(0, 60), on_device: processedOnDevice });
+  }, [isPdf, processedOnDevice, ratingToolSlug]);
 
   /**
    * Düğmenin üç hâli var: önce "İndir", kayıt başarılı olunca kısa süre

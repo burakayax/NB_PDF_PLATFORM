@@ -21,6 +21,8 @@ export type TOOLSConversionOverrides = {
 export type ResolvedTOOLSBusinessConfig = {
   conversion: TOOLSConversionOverrides;
   globallyDisabledFeatures: Set<FeatureKey>;
+  /** Yalnızca yöneticilerin kullanabildiği (herkese henüz açılmamış) araçlar. */
+  adminOnlyFeatures: Set<FeatureKey>;
   postLimitThrottle: PostLimitThrottleRuntime;
   conversionMessaging: ConversionMessagingThresholds;
   /** 0–1: ücretsiz kotaya yaklaşırken yumuşak uyarı (ör. 0.8 = %80). */
@@ -49,12 +51,12 @@ function parseConversionFromTOOLSConfig(raw: unknown): TOOLSConversionOverrides 
   return out;
 }
 
-function parseDisabledFeatures(raw: unknown): Set<FeatureKey> {
+function parseDisabledFeatures(raw: unknown, field: "disabledFeatures" | "adminOnlyFeatures" = "disabledFeatures"): Set<FeatureKey> {
   const out = new Set<FeatureKey>();
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     return out;
   }
-  const dis = (raw as Record<string, unknown>).disabledFeatures;
+  const dis = (raw as Record<string, unknown>)[field];
   if (!Array.isArray(dis)) {
     return out;
   }
@@ -207,6 +209,7 @@ function parseResolvedFromRoot(raw: unknown): ResolvedTOOLSBusinessConfig {
   return {
     conversion: parseConversionFromTOOLSConfig(raw),
     globallyDisabledFeatures: parseDisabledFeatures(raw),
+    adminOnlyFeatures: parseDisabledFeatures(raw, "adminOnlyFeatures"),
     postLimitThrottle: parsePostLimitThrottleRuntime(postRaw),
     conversionMessaging: parseConversionMessaging(
       raw != null && typeof raw === "object" && !Array.isArray(raw)

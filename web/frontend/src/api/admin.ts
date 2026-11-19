@@ -1874,3 +1874,26 @@ export async function refundAdminPayment(
   if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "İade yapılamadı.");
   return (await res.json()) as AdminRefundResult;
 }
+
+export type TestResetCounts = {
+  payments: number;
+  invoices: number;
+  couponUses: number;
+  usersWithBonusCredits: number;
+  usersWithCvPass: number;
+  teamsWithExtraSeats: number;
+  otherUsersPaymentsKept: number;
+};
+
+/** Yönetici hesaplarına ait TEST ödemelerini önizler (confirm yok) ya da siler (confirm="SIL"). Geri alınamaz. */
+export async function resetAdminTestPayments(
+  accessToken: string,
+  confirm?: "SIL",
+): Promise<{ deleted: boolean; counts: TestResetCounts }> {
+  const res = await adminFetch(accessToken, "/payments/reset-test-data", {
+    method: "POST",
+    body: JSON.stringify(confirm ? { confirm } : {}),
+  });
+  if (!res.ok) throw new Error(readAdminErrorMessage(await res.text()) || "İşlem yapılamadı.");
+  return (await res.json()) as { deleted: boolean; counts: TestResetCounts };
+}

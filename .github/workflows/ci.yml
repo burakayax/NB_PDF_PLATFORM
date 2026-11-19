@@ -20,10 +20,40 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # ─── Değişen dosya denetimi ──────────────────────────────────────────────────
+  # Yalnız belge/not değişen PR'larda ağır kontroller atlanır (dakika tasarrufu).
+  # Atlanan iş GitHub'ta "geçti" sayılır, zorunlu kontroller PR'ı bloklamaz.
+  # Emin olunamazsa (hata, push, kod/iş akışı değişikliği) HER ZAMAN çalıştırılır.
+  changes:
+    name: Changed files
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.f.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: f
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          [ "$EVENT" = "pull_request" ] || exit 0
+          files=$(git diff --name-only HEAD^1 HEAD) || exit 0
+          [ -n "$files" ] || exit 0
+          # Belge dışında en az bir dosya varsa kod değişmiş sayılır.
+          if echo "$files" | grep -v -E '\.md$|^docs/|^sosyal medya/|^_screenshots/' | grep -q .; then
+            exit 0
+          fi
+          echo "Yalnız belge değişti; ağır kontroller atlanıyor."
+          echo "code=false" >> "$GITHUB_OUTPUT"
+
   # ─── Python Güvenlik Taraması ────────────────────────────────────────────────
   python-security:
     name: Python Security Scan
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -34,14 +64,34 @@ jobs:
           cache: "pip"
           cache-dependency-path: web/backend/requirements.txt
 
+      # Paket sunucusu bazen çok yavaşlıyor (131 MB LibreOffice vb.; normalde ~1 dk, kötü günde >15 dk).
+      # Kalıcı çözüm üç katman: (1) indirilen .deb dosyaları önbelleğe alınır — önbellek varsa ağa hiç çıkılmaz;
+      # (2) her deneme kısa ve sınırlı, takılırsa kesilir; (3) 2. denemeden itibaren yedek sunucuya (archive.ubuntu.com) geçilir.
+      - name: Restore apt package cache
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-debs
+          key: apt-debs-ubuntu24-${{ hashFiles('.github/workflows/ci.yml') }}
+
       - name: Install system dependencies
-        # Paket sunucusu bazen yanıt vermeyip adımı dakikalarca asılı bırakıyor; her deneme 4 dk ile sınırlı, 3 deneme.
         run: |
+          mkdir -p ~/apt-debs/partial
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-debs"
+          PKGS="libcairo2-dev pkg-config tesseract-ocr libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation"
+          ok=0
           for i in 1 2 3; do
-            timeout 240 bash -c 'sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update && sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y libcairo2-dev pkg-config' && break
-            echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
-            [ "$i" = 3 ] && exit 1
+            if [ "$i" -ge 2 ]; then
+              echo "yedek sunucuya geciliyor (deneme $i)"
+              sudo sed -i 's#http://azure.archive.ubuntu.com#http://archive.ubuntu.com#g' /etc/apt/sources.list /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+            fi
+            if timeout 300 bash -c "$APT update && $APT install -y $PKGS"; then ok=1; break; fi
+            echo "apt denemesi $i basarisiz; tekrar deneniyor"; sleep 5
           done
+          [ "$ok" = 1 ] || exit 1
+          # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
+          timeout 120 $APT install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
+          # Önbelleğe yalnız .deb dosyaları gider (kilit/kısmi dosyalar değil).
+          sudo chown -R "$USER" ~/apt-debs; rm -rf ~/apt-debs/partial ~/apt-debs/lock
 
       - name: Install dependencies
         working-directory: web/backend
@@ -85,6 +135,8 @@ jobs:
     name: Python Unit Tests
     # ubuntu-latest 26.04'e geçti ve o sürümde wkhtmltopdf paketi yok; testler tanıdık 24.04 ortamında koşar.
     runs-on: ubuntu-24.04
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     # Takılan test (ör. fork kilitlenmesi) deploy'u 40 dk bekletmesin — net hata ile dur.
     timeout-minutes: 35
     steps:
@@ -97,13 +149,22 @@ jobs:
           cache: "pip"
           cache-dependency-path: web/backend/requirements.txt
 
+      - name: Sistem paketleri önbelleği (apt)
+        # İndirilen .deb dosyaları saklanır; paket sunucusu yavaşlasa bile ikinci çalışmadan itibaren yeniden indirilmez.
+        # Anahtarı değiştirmek (v1 -> v2) önbelleği sıfırlar. Önbellek bozuksa apt kendi indirir; test sonucu etkilenmez.
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-archives
+          key: apt-ubuntu24.04-py-tests-v1
+
       - name: Install system dependencies
         # Paket sunucusu bazen yanıt vermeyip adımı 14 dk asılı bırakıyor (normalde ~1 dk).
-        # Her deneme 8 dk ile sınırlı (yavaş sunucuda 131 MB inmesi için), 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
+        # LibreOffice burada KURULMAZ (451 MB; sunucu yavaşlayınca testi saatlerce bekletiyordu). Onu gerektiren testler atlanır, ayrı "python-office-tests" işinde çalışır. Her deneme 8 dk ile sınırlı, 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
         run: |
-          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20"
+          mkdir -p "$HOME/apt-archives/partial"
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-archives"
           for i in 1 2 3; do
-            timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr               libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation" && break
+            timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr fonts-liberation" && break
             echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
             [ "$i" = 3 ] && exit 1
           done
@@ -135,10 +196,76 @@ jobs:
             --cov-fail-under=12 \
             -q
 
+  python-office-tests:
+    name: Python Office Tests (LibreOffice, zorunlu değil)
+    # ubuntu-latest 26.04'e geçti ve o sürümde wkhtmltopdf paketi yok; testler tanıdık 24.04 ortamında koşar.
+    runs-on: ubuntu-24.04
+    needs: changes
+    # Yalnız ana dala birleştikten sonra çalışır; PR'ı bekletmez. Başarısızlık deploy'u engellemez.
+    if: needs.changes.outputs.code == 'true' && github.event_name == 'push'
+    continue-on-error: true
+    # Takılan test (ör. fork kilitlenmesi) deploy'u 40 dk bekletmesin — net hata ile dur.
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: web/backend/requirements.txt
+
+      - name: Sistem paketleri önbelleği (apt)
+        # İndirilen .deb dosyaları saklanır; paket sunucusu yavaşlasa bile ikinci çalışmadan itibaren yeniden indirilmez.
+        # Anahtarı değiştirmek (v1 -> v2) önbelleği sıfırlar. Önbellek bozuksa apt kendi indirir; test sonucu etkilenmez.
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-archives
+          key: apt-ubuntu24.04-py-office-v1
+
+      - name: Install system dependencies
+        # Paket sunucusu bazen yanıt vermeyip adımı 14 dk asılı bırakıyor (normalde ~1 dk).
+        # Her deneme 8 dk ile sınırlı (yavaş sunucuda 131 MB inmesi için), 3 deneme; yarım inen paketler devam eder; takılırsa kesilip yeniden denenir.
+        run: |
+          mkdir -p "$HOME/apt-archives/partial"
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Dir::Cache::archives=$HOME/apt-archives"
+          for i in 1 2 3; do
+            timeout 480 bash -c "$APT update && $APT install -y               libcairo2-dev pkg-config tesseract-ocr               libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation" && break
+            echo "apt denemesi $i başarısız; tekrar deneniyor"; sleep 5
+            [ "$i" = 3 ] && exit 1
+          done
+          # wkhtmltopdf yalnız yedek motor (yoksa uygulama xhtml2pdf'e düşer); paket yoksa CI düşmesin.
+          timeout 120 $APT install -y wkhtmltopdf || echo "wkhtmltopdf kurulamadi; yedek motor kullanilacak"
+
+      - name: Install dependencies
+        working-directory: web/backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-asyncio pytest-timeout
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: web/backend
+        env:
+          NB_RESULT_STORE_DIR: /tmp/test-result-store
+        run: |
+          # Kapsam eşiği regresyon koruması içindir (tüm app/ paketi ölçülür).
+          # Mevcut taban ~%14; güvenlik-kritik modüller (pdf_security, result_store,
+          # billing) tam test edilir. Hedef: kapsamı kademeli %40+'a çıkarmak.
+          # --timeout: takılan TEK test 2 dk sonra adıyla başarısız olur; bütün iş 15 dk beklenip
+          # adsız "iptal edildi" demesin.
+          pytest tests/pdf/test_tools_smoke.py \
+            --timeout=120 \
+            --tb=short \
+            -q
+
   # ─── Node Güvenlik Taraması (Auth API) ───────────────────────────────────
   node-security-api:
     name: Node Security Scan (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -166,6 +293,8 @@ jobs:
   api-unit-tests:
     name: TypeScript Unit Tests (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -200,6 +329,8 @@ jobs:
   node-security-frontend:
     name: Node Security Scan (web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -230,6 +361,8 @@ jobs:
   lint-node:
     name: Lint (web/api + web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -258,6 +391,8 @@ jobs:
   lint-python:
     name: Lint (Python)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -286,6 +421,8 @@ jobs:
   api-postgres-migrations:
     name: PostgreSQL Migration Check (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     timeout-minutes: 10
     services:
       postgres:
@@ -350,6 +487,8 @@ jobs:
   api-typecheck:
     name: TypeScript Type Check (web/api)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -376,6 +515,8 @@ jobs:
   frontend-component-tests:
     name: Frontend Component Tests (web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -410,6 +551,8 @@ jobs:
   frontend-typecheck:
     name: TypeScript Type Check (web/frontend)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -449,6 +592,8 @@ jobs:
   playwright-version:
     name: Playwright sürümünü belirle
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     outputs:
       version: ${{ steps.read.outputs.version }}
     steps:
@@ -471,7 +616,8 @@ jobs:
     name: Frontend E2E Tests (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: playwright-version
+    needs: [changes, playwright-version]
+    if: needs.changes.outputs.code == 'true'
     # Resmi Playwright imajı: Chromium + tüm sistem bağımlılıkları HAZIR gelir.
     # Böylece her çalıştırmada ~170MB tarayıcı indirme/install adımı (ve onun
     # takılması) tamamen ortadan kalkar. Etiket artık elle yazılmıyor; yukarıdaki
@@ -563,8 +709,45 @@ jobs:
       - frontend-typecheck
       - frontend-e2e
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Render pipeline dakikası sınırlı: yalnız dosyası değişen servis deploy edilir.
+      # EMİN OLUNAMAZSA (hata, bilinmeyen dosya, ortak dosya) üç servis de deploy edilir.
+      #   frontend  <- web/frontend/**
+      #   auth-api  <- web/api/**
+      #   pdf-api   <- web/backend/** ve src/** (imaj src/'yi de içerir)
+      #   hiçbiri   <- yalnız belge/masaüstü paketleme dosyaları
+      - name: Hangi servisler değişti
+        id: scope
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -u
+          echo "auth=true" >> "$GITHUB_OUTPUT"; echo "pdf=true" >> "$GITHUB_OUTPUT"; echo "frontend=true" >> "$GITHUB_OUTPUT"
+          base="$BEFORE"
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null || echo "$base" | grep -q '^0*$'; then base="HEAD^1"; fi
+          files=$(git diff --name-only "$base" HEAD 2>/dev/null) || { echo "Fark okunamadı; hepsi deploy edilecek."; exit 0; }
+          [ -n "$files" ] || { echo "Fark boş; hepsi deploy edilecek."; exit 0; }
+          auth=false; pdf=false; fe=false
+          while IFS= read -r f; do
+            case "$f" in
+              web/frontend/*) fe=true ;;
+              web/api/*) auth=true ;;
+              web/backend/*|src/*) pdf=true ;;
+              *.md|docs/*|"sosyal medya/"*|_screenshots/*|installer/*|packaging/*|release/*) ;;
+              *) auth=true; pdf=true; fe=true ;;   # ortak/bilinmeyen dosya: hepsi
+            esac
+          done <<< "$files"
+          echo "auth=$auth" > "$GITHUB_OUTPUT"; echo "pdf=$pdf" >> "$GITHUB_OUTPUT"; echo "frontend=$fe" >> "$GITHUB_OUTPUT"
+          echo "Deploy kapsamı -> auth-api=$auth pdf-api=$pdf frontend=$fe"
+
       - name: Trigger Render deploy hooks
         env:
+          DEPLOY_AUTH: ${{ steps.scope.outputs.auth }}
+          DEPLOY_PDF: ${{ steps.scope.outputs.pdf }}
+          DEPLOY_FRONTEND: ${{ steps.scope.outputs.frontend }}
           HOOK_AUTH: ${{ secrets.RENDER_DEPLOY_HOOK_AUTH }}
           HOOK_PDF: ${{ secrets.RENDER_DEPLOY_HOOK_PDF }}
           HOOK_FRONTEND: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
@@ -583,9 +766,9 @@ jobs:
             fi
           }
           rc=0
-          trigger "auth-api"  "$HOOK_AUTH"     || rc=1
-          trigger "pdf-api"   "$HOOK_PDF"      || rc=1
-          trigger "frontend"  "$HOOK_FRONTEND" || rc=1
+          if [ "$DEPLOY_AUTH" = "true" ];     then trigger "auth-api"  "$HOOK_AUTH"     || rc=1; else echo "auth-api: değişiklik yok, atlandı"; fi
+          if [ "$DEPLOY_PDF" = "true" ];      then trigger "pdf-api"   "$HOOK_PDF"      || rc=1; else echo "pdf-api: değişiklik yok, atlandı"; fi
+          if [ "$DEPLOY_FRONTEND" = "true" ]; then trigger "frontend"  "$HOOK_FRONTEND" || rc=1; else echo "frontend: değişiklik yok, atlandı"; fi
           exit $rc
 
       # ─── Sentry: release + commit bağlama + "production" deploy işareti ─────────

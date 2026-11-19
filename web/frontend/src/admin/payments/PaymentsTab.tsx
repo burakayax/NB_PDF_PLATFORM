@@ -15,6 +15,7 @@ import {
 import { ConfirmDialog, type ConfirmTone } from "./ConfirmDialog";
 import { PaymentsSummary } from "./PaymentsSummary";
 import { PaymentSwitches } from "./PaymentSwitches";
+import { TestDataReset } from "./TestDataReset";
 
 /**
  * Ödemeler ve iade — yönetim ekranı.
@@ -163,6 +164,8 @@ export function PaymentsTab({ accessToken }: { accessToken: string }) {
       </div>
 
       <PaymentSwitches accessToken={accessToken} />
+
+      <TestDataReset accessToken={accessToken} />
 
       <PaymentsSummary accessToken={accessToken} />
 
