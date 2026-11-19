@@ -67,7 +67,7 @@ Bu belge her adımda güncellenir. Kodu değiştiren her iş ayrı dalda pull re
 
 1. **Canlı veritabanı (Render Postgres):** tek veritabanı; yedek ve geri dönüş Render'ın 3 günlük penceresine bağlı. Test ortamı yok.
 2. **Deploy = birleştirme:** `main`'e giren her şey, CI yeşilse otomatik canlıya çıkar. Birleştirme onayı tek koruma.
-3. **Her deploy'da çalışan seed:** inceleme sonucu (PR #78): yeni "Limitler" sekmesi korunuyor; eski yoldan (`plansOverride.dailyLimit`) yazılan limit geri dönebilir. Düzeltme sahibinin onayını bekliyor.
+3. **Her deploy'da çalışan seed:** inceleme sonucu (PR #78): yeni "Limitler" sekmesi korunuyor; eski yoldan (`plansOverride.dailyLimit`) yazılan limit geri dönebilir. **Düzeltme PR #84 ile birleşti ve doğrulandı (2026-11-19):** panelde değiştirilen limit deploy sonrası korundu.
 4. **Ödeme sağlayıcıları (PayTR, iyzico) ve fatura (BirFatura):** dış servis, canlı anahtarlarla çalışıyor; sandbox ile canlı arasında test ortamı yok.
 5. **Tek kişilik süreç:** hata anında Render panelini bilen tek kişi var; geri alma kılavuzu eski.
 
