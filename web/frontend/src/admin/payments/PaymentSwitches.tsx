@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { CreditCard, FileText, Globe2, Loader2 } from "lucide-react";
+import { CreditCard, FileText, Globe2, Loader2, Tag } from "lucide-react";
 
 import { fetchAdminCardListStatus, fetchAdminSettings, putAdminSettingsPatches, type AdminCardListStatus } from "../../api/admin";
 import { notifyRuntimeRefresh } from "../../lib/runtimeRefreshEvents";
@@ -28,6 +28,25 @@ const SWITCHES = [
         "Açtığınız anda kullanıcılar GERÇEK para ödeyebilir.",
         "Fatura kesme durdurulmuşsa alınan ödemeler faturasız kalır.",
         "Önce e-imza, BirFatura ve iade akışının hazır olduğundan emin olun.",
+      ],
+    },
+  },
+  {
+    key: "pricesHidden",
+    title: "Fiyatlar (sitede)",
+    onText: "GİZLİ — fiyat yerine “Yakında” yazar (ödeme alınamaz)",
+    offText: "GÖRÜNÜR — fiyatlar herkese gösterilir",
+    openLabel: "Fiyatları göster",
+    closeLabel: "Fiyatları gizle",
+    Icon: Tag,
+    confirm: {
+      tone: "warning" as ConfirmTone,
+      title: "Fiyatlar sitede gösterilsin mi?",
+      confirmLabel: "Evet, fiyatları göster",
+      points: [
+        "Fiyat sayfası, kredi paketleri ve ek koltuk ekranlarında rakamlar herkese görünür.",
+        "Ödemeler ayrı bir anahtardır: fiyatlar görünse de 'Ödemeler' kapalıysa kimse ödeme yapamaz.",
+        "PayTR incelemesi için fiyatların görünür olması gerekir.",
       ],
     },
   },
@@ -125,6 +144,7 @@ export function PaymentSwitches({ accessToken }: { accessToken: string }) {
       const ff = readFeatureFlags(all["global.flags"]);
       setStopped({
         paymentsDisabled: ff.paymentsDisabled !== false,
+        pricesHidden: ff.pricesHidden !== false,
         invoicingPaused: ff.invoicingPaused !== false,
         exportExemptionDisabled: ff.exportExemptionDisabled !== false,
         foreignPaymentsDisabled: ff.foreignPaymentsDisabled !== false,
