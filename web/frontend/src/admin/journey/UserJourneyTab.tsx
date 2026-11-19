@@ -36,6 +36,9 @@ import {
   stepRows,
   toolRows,
   visitStage,
+  pageRows,
+  pageLabel,
+  type PageRow,
   type Audience,
   type InsightCancellation,
   type InsightPayer,
@@ -145,6 +148,7 @@ function ToolsSection({ visits }: { visits: InsightVisit[] }) {
   const rows = useMemo(() => all.filter((r) => !q.trim() || r.name.toLowerCase().includes(q.trim().toLowerCase())), [all, q]);
   const columns: Array<Column<ToolRow>> = [
     { header: "Araç", cell: (r) => <span className="font-semibold text-white">{r.name}</span> },
+    { header: "Kullandı (sonuç ekranı geldi)", numeric: true, cell: (r) => r.used },
     { header: "Bitirdi (üye ol ekranı çıktı)", numeric: true, cell: (r) => r.finished },
     { header: "Üye olmaya tıkladı", numeric: true, cell: (r) => r.clicked },
     { header: "Hakkı bitti", numeric: true, cell: (r) => r.wall },
@@ -154,10 +158,37 @@ function ToolsSection({ visits }: { visits: InsightVisit[] }) {
     <Section
       id="araclar"
       title="Hangi araç ilgi çekiyor?"
-      help="Ziyaretçilerin hangi araçta bir işi sonuna kadar götürdüğü, hangi araçta hakkının bittiği ve hangi araçtan fiyat ekranına gittiği. Satış fırsatı en çok “hakkı bitti” ve “fiyat ekranını açtı” sütunlarında çıkar."
+      help="Ziyaretçilerin hangi aracı gerçekten kullandığı (sonuç ekranına ulaştığı; cihazda çalışan araçlar dahil), hangi araçta bir işi sonuna kadar götürdüğü, hangi araçta hakkının bittiği ve hangi araçtan fiyat ekranına gittiği. Satış fırsatı en çok “hakkı bitti” ve “fiyat ekranını açtı” sütunlarında çıkar."
       filters={<SearchFilter value={q} onChange={setQ} placeholder="Araç ara…" />}
     >
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.name} empty="Henüz araç kullanımı kaydı yok." />
+    </Section>
+  );
+}
+
+// ─── Hangi sayfalara bakıldı ─────────────────────────────────────────────────
+
+function PagesSection({ visits }: { visits: InsightVisit[] }) {
+  const [q, setQ] = useState("");
+  const all = useMemo(() => pageRows(visits), [visits]);
+  const rows = useMemo(
+    () => all.filter((r) => !q.trim() || `${r.name} ${r.path}`.toLowerCase().includes(q.trim().toLowerCase())),
+    [all, q],
+  );
+  const columns: Array<Column<PageRow>> = [
+    { header: "Sayfa", cell: (r) => <span className="font-semibold text-white">{r.name}</span> },
+    { header: "Adres", cell: (r) => <span className="text-slate-400">{r.path}</span> },
+    { header: "Kaç kişi baktı", numeric: true, cell: (r) => r.visitors },
+    { header: "Toplam bakış", numeric: true, cell: (r) => r.views },
+  ];
+  return (
+    <Section
+      id="sayfalar"
+      title="En çok bakılan sayfalar ve araçlar"
+      help="Ziyaretçilerin hangi sayfalara ve araç sayfalarına baktığı. Reklam verirken hangi araca yönleneceğinizi buradan seçebilirsiniz. Üstteki “Kimler” süzgeci (misafir / üye) bu tabloyu da değiştirir. Not: bir kişi için en fazla 30 farklı sayfa tutulur."
+      filters={<SearchFilter value={q} onChange={setQ} placeholder="Sayfa ara…" />}
+    >
+      <DataTable columns={columns} rows={rows} rowKey={(r) => r.path} empty="Henüz sayfa kaydı yok." pageSize={25} />
     </Section>
   );
 }
@@ -461,9 +492,25 @@ function VisitorsSection({ visits }: { visits: InsightVisit[] }) {
         pageSize={25}
         onRowClick={(v) => setOpen((cur) => (cur === v.id ? null : v.id))}
         expanded={open}
-        renderExpanded={(v) =>
-          v.events.length === 0 ? (
-            <p className="text-[12.5px] text-slate-400">Bu ziyaretçi sadece sayfalara baktı; üye ol, fiyat ya da ödeme ekranıyla ilgili bir şey yapmadı.</p>
+        renderExpanded={(v) => (
+          <>
+            <div className="mb-3">
+              <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-wide text-slate-500">Baktığı sayfalar</p>
+              {(v.pages ?? []).length === 0 ? (
+                <p className="text-[12.5px] text-slate-500">Sayfa kaydı yok.</p>
+              ) : (
+                <ul className="flex flex-wrap gap-1.5">
+                  {(v.pages ?? []).map((pg) => (
+                    <li key={pg.path} className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[12px] text-slate-300" title={pg.path}>
+                      {pageLabel(pg.path)}
+                      {pg.views > 1 ? <span className="ml-1 text-slate-500">×{pg.views}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          {v.events.length === 0 ? (
+            <p className="text-[12.5px] text-slate-400">Üye ol, fiyat ya da ödeme ekranıyla ilgili bir olay yok.</p>
           ) : (
             <ol className="space-y-1.5 border-l border-white/[0.08] pl-3.5">
               {v.events.map((ev, i) => {
@@ -476,8 +523,9 @@ function VisitorsSection({ visits }: { visits: InsightVisit[] }) {
                 );
               })}
             </ol>
-          )
-        }
+          )}
+          </>
+        )}
       />
     </Section>
   );
@@ -619,6 +667,7 @@ export function UserJourneyTab({ accessToken }: { accessToken: string }) {
       <StepsSection visits={visits} />
       <SourcesSection visits={visits} payers={data?.payers ?? []} />
       <ToolsSection visits={visits} />
+      <PagesSection visits={visits} />
       <PayersSection payers={data?.payers ?? []} audience={audience} />
       <AbandonedSection visits={visits} />
       <CancellationsSection items={data?.cancellations ?? []} audience={audience} />

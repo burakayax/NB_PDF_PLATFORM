@@ -36,6 +36,7 @@ import dataclasses
 import io
 import logging
 import os
+import re
 import time
 import uuid
 import zipfile
@@ -52,6 +53,13 @@ from .models import CustomerInfo, InvoiceItem, InvoiceResult, PaymentInfo, tr_no
 logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE = "https://uygulama.edonustur.com/api/OutEBelgeV2"
+_LOG_SAFE_PATHS = frozenset({"getoutboxdocumentstatuseswithuuids", "getpdflinkbyuuid"})
+_ID_RE = re.compile(r"(?<!\d)\d{10,11}(?!\d)")
+
+
+def _redact(text: object) -> str:
+    """Metindeki 10/11 haneli numaraları (VKN/TCKN) maskeler; log, hata kaydı ve Sentry'ye kişisel numara düşmesin."""
+    return _ID_RE.sub("<no-gizli>", str(text))
 _POLL_INTERVAL = 10
 _POLL_MAX = 30
 
@@ -204,8 +212,9 @@ class BirFaturaProvider(BillingProviderBase):
     )
     def _post(self, path: str, body: dict) -> dict:
         url = f"{self._base}/{path.lstrip('/')}"
-        # Mükellef sorgusu TC/vergi no içerir; kişisel veri loga yazılmaz.
-        sensitive = path.lstrip("/").lower() == "getuserpk"
+        # TC/vergi no, ad, adres içeren istek/yanıtlar (mükellef sorgusu, fatura gövdesi, UBL belgesi, gelen kutusu)
+        # loga YAZILMAZ; yalnız durum ve PDF bağlantısı sorguları (kişisel veri taşımaz) ayrıntılı loglanır.
+        sensitive = path.lstrip("/").lower() not in _LOG_SAFE_PATHS
         logger.info("birfatura POST %s body=%s", url, "<gizli>" if sensitive else body)
         resp = self._session.post(url, json=body, timeout=30)
         logger.info(
@@ -217,7 +226,7 @@ class BirFaturaProvider(BillingProviderBase):
         if "application/json" not in content_type:
             raise RuntimeError(
                 f"BirFatura JSON yanıt beklendi, {content_type!r} geldi "
-                f"(url={resp.url}, status={resp.status_code}): {resp.text[:500]}"
+                f"(url={resp.url}, status={resp.status_code}): {_redact(resp.text[:500])}"
             )
         return resp.json()
 
@@ -226,7 +235,7 @@ class BirFaturaProvider(BillingProviderBase):
         if not data.get("Success", False):
             msg = data.get("Message", "Bilinmeyen hata")
             code = data.get("Code", "")
-            raise RuntimeError(f"BirFatura {endpoint} başarısız: [{code}] {msg}")
+            raise RuntimeError(f"BirFatura {endpoint} başarısız: [{code}] {_redact(msg)}")
         return data.get("Result")
 
     # ------------------------------------------------------------------
@@ -485,7 +494,7 @@ class BirFaturaProvider(BillingProviderBase):
             if not self._is_valid_tckn(ci.national_id):
                 logger.warning(
                     "birfatura: TCKN checksum hatalı — BirFatura 9.900₺ üzeri faturalarda reddedebilir "
-                    "national_id=%s", ci.national_id[:3] + "****" + ci.national_id[-2:],
+                    "(numara loga yazılmaz)",
                 )
         elif not ci.is_export:
             # Bireysel yurt içi, TC girilmemiş — GİB standart placeholder (11 hane)
@@ -850,6 +859,8 @@ class BirFaturaProvider(BillingProviderBase):
             )
 
         sup_vkn      = _esc(os.getenv("BIRFATURA_SUPPLIER_VKN", ""))
+        # 10 haneli → VKN (şirket); 11 haneli → TCKN (şahıs işletmesi, vergi no = T.C. Kimlik No).
+        sup_scheme   = "TCKN" if len((os.getenv("BIRFATURA_SUPPLIER_VKN", "") or "").strip()) == 11 else "VKN"
         sup_name     = _esc(os.getenv("BIRFATURA_SUPPLIER_NAME", os.getenv("COMPANY_NAME", "")))
         sup_address  = _esc(os.getenv("BIRFATURA_SUPPLIER_ADDRESS", ""))
         sup_city     = _esc(os.getenv("BIRFATURA_SUPPLIER_CITY", ""))
@@ -1008,7 +1019,7 @@ class BirFaturaProvider(BillingProviderBase):
   <cac:Signature>
     <cbc:ID schemeID="VKN_TCKN">{sup_vkn}</cbc:ID>
     <cac:SignatoryParty>
-      <cac:PartyIdentification><cbc:ID schemeID="VKN">{sup_vkn}</cbc:ID></cac:PartyIdentification>
+      <cac:PartyIdentification><cbc:ID schemeID="{sup_scheme}">{sup_vkn}</cbc:ID></cac:PartyIdentification>
       <cac:PostalAddress>
         <cbc:StreetName>{sup_address}</cbc:StreetName>
         <cbc:CitySubdivisionName/>
@@ -1022,7 +1033,7 @@ class BirFaturaProvider(BillingProviderBase):
   </cac:Signature>
   <cac:AccountingSupplierParty>
     <cac:Party>
-      <cac:PartyIdentification><cbc:ID schemeID="VKN">{sup_vkn}</cbc:ID></cac:PartyIdentification>
+      <cac:PartyIdentification><cbc:ID schemeID="{sup_scheme}">{sup_vkn}</cbc:ID></cac:PartyIdentification>
       <cac:PartyName><cbc:Name>{sup_name}</cbc:Name></cac:PartyName>
       <cac:PostalAddress>
         <cbc:StreetName>{sup_address}</cbc:StreetName>
@@ -1198,8 +1209,8 @@ class BirFaturaProvider(BillingProviderBase):
             if not result.success:
                 return result
         except Exception as exc:
-            logger.error("birfatura: fatura oluşturma başarısız hata=%s", exc)
-            return InvoiceResult(success=False, error=str(exc))
+            logger.error("birfatura: fatura oluşturma başarısız hata=%s", _redact(exc))
+            return InvoiceResult(success=False, error=_redact(exc))
 
         # Durum bekle (hata olursa faturayı engelleme)
         initial_pdf_url = result.pdf_url

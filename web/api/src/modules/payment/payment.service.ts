@@ -20,7 +20,7 @@ import { getPriceBook } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
 import { invoicingPaused, exportExemptionOpen, foreignPaymentsOpen, FOREIGN_PAYMENTS_CLOSED_MESSAGE } from "../../lib/feature-switches.js";
 import { captureCardEvidence, CARD_COUNTRY_UNKNOWN } from "./card-evidence.service.js";
-import { invoiceDelayHours, scheduleInvoiceRecord, reviewCardAtPayment } from "./invoice-schedule.service.js";
+import { invoiceDelayHours, scheduleInvoiceRecord, reviewCardAtPayment, notifyInvoicePausedAtPayment } from "./invoice-schedule.service.js";
 import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import { cvPassInvoiceLabel, cvPassNewExpiry, netFromGrossTry, PLAN_LIMITS } from "../../lib/plan-catalogue.js";
@@ -1025,7 +1025,12 @@ export async function triggerInvoiceGeneration(
 
     const resp = await fetch(`${pdfBackendBase}/api/internal/invoice`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...((process.env.INTERNAL_SERVICE_SECRET ?? "").trim()
+          ? { "X-Internal-Secret": (process.env.INTERNAL_SERVICE_SECRET ?? "").trim() }
+          : {}),
+      },
       body: JSON.stringify(invoicePayload),
       signal: AbortSignal.timeout(90_000),
     });
@@ -1120,6 +1125,9 @@ async function scheduleOrIssueInvoice(
     return;
   }
   await scheduleInvoiceRecord(pending.id, delayHours);
+  if (await invoicingPaused()) {
+    await notifyInvoicePausedAtPayment(pending);
+  }
   const row = await prisma.paymentCheckout.findUnique({
     where: { id: pending.id },
     select: { invoiceDueAt: true, iyzicoPaymentId: true },

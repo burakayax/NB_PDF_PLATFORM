@@ -5,7 +5,16 @@
  * görünmez; yerine "Yakında" yazılır. Fiyat araştırması bitip fiyatlar belli olunca yalnız bunu
  * `false` yapmak yeter (fiyat verisi ve hesaplar yerinde durur, silinmedi).
  */
-export const PRICES_HIDDEN = true;
+export let PRICES_HIDDEN = true;
+
+/**
+ * Yönetim panelindeki "Fiyatlar" anahtarı (global.flags.featureFlags.pricesHidden) çalışma zamanında bunu günceller.
+ * Güvenli varsayılan: anahtar yoksa fiyatlar GİZLİ; yalnız açıkça `false` yazılırsa görünür.
+ * (ES "canlı bağlama": bu dosyayı içe aktaran bileşenler güncel değeri görür.)
+ */
+export function applyPricesHiddenFlag(featureFlags?: Record<string, boolean> | null): void {
+  PRICES_HIDDEN = featureFlags?.pricesHidden !== false;
+}
 
 /** Rakamın yerine gösterilecek metin. */
 export function priceComingSoonLabel(tr: boolean): string {

@@ -1,0 +1,53 @@
+name: Gecelik ozet
+
+# Her gece 03:00 (Türkiye) özet sayılarını alır ve ÖZEL R2 kovasına yazar.
+# Çıktı ASLA depoya, iş günlüğüne ya da "artifact"a yazılmaz (depo herkese açık).
+# Yalnız zamanlama ve elle başlatma ile çalışır; pull_request/push ile ASLA tetiklenmez.
+on:
+  schedule:
+    - cron: "0 0 * * *" # 00:00 UTC = 03:00 TR
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gecelik-ozet
+  cancel-in-progress: false
+
+jobs:
+  ozet:
+    name: Gecelik ozet -> R2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ozeti al ve R2'ye yaz
+        env:
+          OZET_API_TOKEN: ${{ secrets.OZET_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.OZET_R2_YAZMA_ANAHTAR_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OZET_R2_YAZMA_GIZLI }}
+          OZET_R2_ACCOUNT_ID: ${{ secrets.OZET_R2_ACCOUNT_ID }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          set +x
+          set -euo pipefail
+          for v in OZET_API_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY OZET_R2_ACCOUNT_ID; do
+            if [ -z "${!v}" ]; then echo "::error::Gerekli gizli deger tanimli degil: $v"; exit 1; fi
+          done
+          out="$RUNNER_TEMP/ozet.json"
+          # Değerler ekrana basılmaz: yanıt dosyaya yazılır, yalnız HTTP kodu görünür.
+          code=$(curl -sS --max-time 90 --retry 3 --retry-delay 20 --retry-all-errors \
+            -o "$out" -w "%{http_code}" \
+            -H "Authorization: Bearer ${OZET_API_TOKEN}" \
+            "https://api.pdfplatform.app/api/internal/nightly-summary")
+          echo "Ozet ucu HTTP $code"
+          if [ "$code" != "200" ]; then echo "::error::Ozet alinamadi (HTTP $code)"; rm -f "$out"; exit 1; fi
+          # Biçim denetimi (içerik basılmaz)
+          jq -e '.date and (.verified|type=="boolean") and .users and .sales' "$out" >/dev/null || { echo "::error::Ozet bicimi beklenen gibi degil"; rm -f "$out"; exit 1; }
+          date=$(jq -r '.date' "$out")
+          ym="${date:0:7}"; y="${date:0:4}"; m="${date:5:2}"
+          ep="https://${OZET_R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3 cp "$out" "s3://nb-gecelik-ozet/ozet/${y}/${m}/ozet-${date}.json" --endpoint-url "$ep" --content-type application/json --only-show-errors
+          aws s3 cp "$out" "s3://nb-gecelik-ozet/ozet-son.json" --endpoint-url "$ep" --content-type application/json --only-show-errors
+          echo "Ozet yazildi: ozet-${date}.json (dogrulama: $(jq -r '.verified' "$out"))"
+          rm -f "$out"

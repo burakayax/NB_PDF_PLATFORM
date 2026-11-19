@@ -12,6 +12,7 @@ import {
 import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
 import { tryNormalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
+import { ADMIN_2FA_COOKIE } from "./admin-2fa.service.js";
 import { HttpError } from "../../lib/http-error.js";
 import {
   captchaEnabled,
@@ -119,7 +120,7 @@ function cookieDomainForApiHost(): string | undefined {
   }
 }
 
-function getCookieOptions(session?: { persistent: boolean; expiresAt: Date }): CookieOptions {
+export function getCookieOptions(session?: { persistent: boolean; expiresAt: Date }): CookieOptions {
   const crossSiteSplit = hostsDifferentProduction();
   const opts: CookieOptions = {
     httpOnly: true,
@@ -498,6 +499,8 @@ export async function logoutController(request: Request, response: Response) {
   await logoutUser(refreshToken);
 
   clearCookieMatching(response, REFRESH_COOKIE_NAME, getCookieOptions());
+  // Yönetici e-posta doğrulaması kanıtı da çıkışta silinir.
+  clearCookieMatching(response, ADMIN_2FA_COOKIE, { ...getCookieOptions(), path: "/" });
   response.status(204).send();
 }
 
