@@ -18,7 +18,14 @@ export function openPaytrFrame(url: string): void {
     ? "Secure payment — processed by PayTR (licensed payment institution)"
     : "Güvenli ödeme — ödemeniz PayTR altyapısında işlenir";
   label.style.cssText = "color:#e2e8f0;font-size:13px;line-height:1.3;";
-  bar.appendChild(label);
+  const logo = document.createElement("img");
+  logo.src = "/paytr-logo-white.svg";
+  logo.alt = "PayTR";
+  logo.style.cssText = "height:18px;width:auto;flex:none;";
+  const brand = document.createElement("div");
+  brand.style.cssText = "display:flex;align-items:center;gap:10px;min-width:0;";
+  brand.append(logo, label);
+  bar.appendChild(brand);
   const close = document.createElement("button");
   close.type = "button";
   close.textContent = "Kapat / Close";
