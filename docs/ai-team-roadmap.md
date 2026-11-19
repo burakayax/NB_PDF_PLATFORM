@@ -63,6 +63,12 @@ Bu belge her adımda güncellenir. Kodu değiştiren her iş ayrı dalda pull re
 | Düşük riskli işlerde (metin, SEO, blog) hızlandırılmış inceleme | ⬜ |
 | Ödeme/giriş/şema/fiyat/yasal alanlar her zaman insan onayında kalır | ⬜ |
 
+## Sonraya bırakılan ajanlar (2026-11-19 kararı)
+
+- **Müşteri destek ajanı en sona bırakıldı.** Basit sorular Haiku, karmaşık olanlar Sonnet ile yanıtlanacak; cevaplar onaysız gönderilmez.
+- **Reklam ajanı**, Google Ads / Meta bağlantısı kurulunca ele alınacak.
+- **Yazılım bakım ajanı** ayrıca planlanacak.
+
 ## Sistemin en kırılgan 5 noktası (2026-11-18)
 
 1. **Canlı veritabanı (Render Postgres):** tek veritabanı; yedek ve geri dönüş Render'ın 3 günlük penceresine bağlı. Test ortamı yok.
