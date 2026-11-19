@@ -217,7 +217,7 @@ export async function buildNightlySummary(ymd: string) {
       estimatedCost: aiCostUsd,
       costNote: aiCostUsd === null
         ? "Maliyet hesaplanamadı: AI_PRICE_USD_PER_MTOK (model başına 1 milyon token USD fiyatı) tanımlı değil ya da kayıt yok; token sayıları byModel alanında"
-        : "Tahmini USD; token kaydı yalnız bu özellik açıldıktan sonraki isteklerde vardır",
+        : "TAHMİNİ USD (kesin fatura değil): giriş/çıkış token'ı x model fiyatı. Haiku'da 100.000 token üstü istek fiyatı ve önbellek (cache) yazma/okuma ayrıca hesaplanmıyor; Sözleşme Denetçisi ve sosyal medya anahtar kelime çağrıları bu deftere yazılmıyor; token kaydı yalnız özellik açıldıktan sonraki isteklerde var",
     },
     health: {
       clientErrors,
