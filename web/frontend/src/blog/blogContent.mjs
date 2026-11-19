@@ -3461,13 +3461,15 @@ export const BLOG_POSTS = [
       tool: "/tools/image-to-pdf",
     },
     {
-      title: "CamScanner'a Ücretsiz Alternatif: Tarayıcıda Tarama",
+      title: "CamScanner Ücretsiz mi? Filigransız Ücretsiz Alternatif",
       description:
-        "Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi.",
+        "CamScanner ücretsiz mi, filigran koyuyor mu? Kurulumsuz, filigransız ve buluta yüklemeden belge tarayın: cihazınızda işleyen ücretsiz alternatif.",
       excerpt:
         "Belge tarama uygulamaları pratik ama çoğu reklam gösterir, çıktıya filigran koyar ya da dosyanızı buluta yükler. Tarayıcıda çalışan, cihazınızda işleyen ve temel özellikleri ücretsiz olan bir alternatifi tanıtıyoruz.",
       blocks: [
         { t: "lead", x: "CamScanner gibi tarama uygulamaları işi görür; ama birçoğu üyelik ister, ücretsiz sürümde çıktıya filigran koyar, reklam gösterir ve belgelerinizi işlemek için kendi bulutlarına yükler. Hassas belgeler söz konusuysa bu son madde tek başına yeterince rahatsız edici." },
+        { t: "h2", x: "CamScanner ücretsiz: en çok merak edilenler" },
+        { t: "p", x: "«CamScanner ücretsiz» diye arayanlar çoğunlukla üç şeyi öğrenmek ister: ücretsiz sürümün sınırları, çıktıda filigran olup olmadığı ve belgelerin nereye gittiği. Tarama uygulamalarının ücretsiz sürümlerinde sınır ya da çıktıda işaret görülebilir, koşullar da zamanla değişir; uygulamanın güncel şartlarını okuyun. Aşağıdaki tarayıcı tabanlı çözümde temel tarama ücretsiz kalır, çıktıya zorunlu filigran konmaz ve her şey cihazınızda işlenir." },
 
         { t: "h2", x: "Tarayıcıda + cihazda ne değişiyor?" },
         { t: "p", x: "PDF Platform'un belge tarayıcısı telefon tarayıcınızda açılır — kurulum yok. Daha önemlisi, tüm işlem cihazınızda çalışır: kamera görüntüsü, otomatik kenar bulma, perspektif düzeltme ve PDF oluşturma. Belgeniz herhangi bir sunucuya yüklenmez, çıktıya zorunlu filigran konmaz." },
@@ -3487,6 +3489,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Ara sıra bir belge tarayan ama telefonuna bir uygulama daha kurmak istemeyen; kimlik, sözleşme, fatura gibi belgeleri buluta yüklemeden dijitalleştirmek isteyen herkes için. Bir bağlantıdan açılır, işini görür ve belgeniz sizde kalır." },
       ],
       faq: [
+        { q: "CamScanner ücretsiz mi?", a: "Tarama uygulamalarının ücretsiz sürümlerinin sınırları ve çıktı kuralları zamanla değişebilir; güncel koşulları uygulamanın kendi sayfasından kontrol edin. Filigransız ve üyeliksiz bir seçenek arıyorsanız PDF Platform belge tarayıcısı cihazınızda çalışır ve temel tarama ücretsizdir." },
         { q: "Ücretsiz bir CamScanner alternatifi var mı?", a: "Evet. PDF Platform'un belge tarayıcısı tarayıcıda çalışır; tarama, perspektif düzeltme, filtreler, PDF oluşturma ve paylaşma ücretsizdir ve çıktıya zorunlu filigran koymaz." },
         { q: "Belgelerim buluta yüklenir mi?", a: "Hayır. Tüm tarama ve PDF oluşturma işlemi cihazınızda çalışır; belgeniz sunucuya gönderilmez." },
         { q: "Çıktıda filigran olur mu?", a: "Hayır. Oluşturduğunuz PDF'e zorunlu filigran eklenmez." },
@@ -3494,13 +3497,15 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "CamScanner Alternative: Free, Watermark-Free, Private",
+      title: "CamScanner Free? A Free, Watermark-Free, Private Alternative",
       description:
-        "Compare app-based scanning with a browser scanner that works on your device: no install, no forced watermark, no cloud upload, clear free and Pro split.",
+        "Is CamScanner free, and does it watermark? A free browser scanner that works on your device: no install, no forced watermark, no cloud upload.",
       excerpt:
         "Scanner apps are handy, but many show ads, stamp the output or send your pages to their cloud. Here is an honest look at the alternative and its limits.",
       blocks: [
         { t: "lead", x: "Apps such as CamScanner get the job done, but many ask for an account, watermark the free output, show ads and upload your documents to their own cloud for processing. When the pages are sensitive, that last point alone is unsettling." },
+        { t: "h2", x: "CamScanner free: what people usually want to know" },
+        { t: "p", x: "People searching for «CamScanner free» usually want three answers: what the free version limits, whether the output carries a watermark, and where the documents go. Free tiers of scanning apps commonly come with limits or a mark on the output, and terms change, so read the app's current conditions. The browser scanner below keeps basic scanning free, adds no forced watermark and processes everything on your device." },
         { t: "h2", x: "What browser plus on-device changes" },
         { t: "p", x: "The PDF Platform scanner opens in your phone's browser, so there is nothing to install. More importantly, everything runs on your device: the camera image, automatic edge detection, perspective correction and PDF creation. Your document is never uploaded to a server, and no forced watermark is added to the output." },
         { t: "h2", x: "A plain comparison" },
@@ -3514,6 +3519,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "It suits anyone who scans now and then and does not want another app, and anyone who wants to digitize IDs, contracts and invoices without uploading them to a cloud. It opens from a link, does the job, and the document stays with you." },
       ],
       faq: [
+        { q: "Is CamScanner free?", a: "The limits and output rules of any scanning app's free version can change, so check the current terms on the app's own page. If you want a free option with no forced watermark and no account, the PDF Platform scanner runs on your device with basic scanning free." },
         { q: "Is there a free CamScanner alternative?", a: "Yes. The PDF Platform document scanner runs in the browser. Scanning, perspective correction, filters, PDF creation and sharing are free, and it adds no forced watermark to the output." },
         { q: "Are my documents uploaded to the cloud?", a: "No. All scanning and PDF creation runs on your device, and your document is never sent to a server." },
         { q: "Will there be a watermark on the output?", a: "No. No forced watermark is added to the PDF you create." },
