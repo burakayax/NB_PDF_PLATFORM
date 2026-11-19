@@ -37,7 +37,12 @@ export function openPaytrFrame(url: string): void {
   frame.title = "PayTR";
   frame.setAttribute("allow", "payment");
   frame.style.cssText = "flex:1;width:100%;border:0;background:#fff;";
-  overlay.append(bar, frame);
+  const note = document.createElement("div");
+  note.textContent = en
+    ? "Your card details are processed by PayTR and are not shared with us."
+    : "Kart bilgileriniz PayTR tarafından işlenir, bizimle paylaşılmaz.";
+  note.style.cssText = "padding:8px 12px;background:#0f172a;color:#cbd5e1;font-size:12px;text-align:center;line-height:1.3;";
+  overlay.append(bar, frame, note);
   document.body.appendChild(overlay);
 }
 
