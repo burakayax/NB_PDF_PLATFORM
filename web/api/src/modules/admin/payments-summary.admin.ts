@@ -57,6 +57,9 @@ export type SummaryRow = {
   kdvCredited: number;
   kdvNet: number;
   pendingKdvEstimate: number;
+  /** Faturası henüz kesilmemiş (kesilecek) ödeme adedi ve tutarı. */
+  pendingCount: number;
+  pendingTotal: number;
   foreignCount: number;
 };
 
@@ -71,6 +74,8 @@ const emptyRow = (period: string): SummaryRow => ({
   kdvCredited: 0,
   kdvNet: 0,
   pendingKdvEstimate: 0,
+  pendingCount: 0,
+  pendingTotal: 0,
   foreignCount: 0,
 });
 
@@ -102,7 +107,11 @@ export function buildSummary(input: SummaryInput, group: SummaryGroup, kdvRatePc
     r.paidCount += 1;
     r.paidTotal += p.amount;
     // Faturası henüz kesilmemiş ama kesilecek ödemenin tahmini KDV'si (KDV dahil tutardan).
-    if (!p.invoiced && p.scheduled) r.pendingKdvEstimate += p.amount - p.amount / (1 + kdvRatePct / 100);
+    if (!p.invoiced && p.scheduled) {
+      r.pendingCount += 1;
+      r.pendingTotal += p.amount;
+      r.pendingKdvEstimate += p.amount - p.amount / (1 + kdvRatePct / 100);
+    }
   }
   for (const x of input.refunds) {
     if (x.currency !== "TRY") continue;

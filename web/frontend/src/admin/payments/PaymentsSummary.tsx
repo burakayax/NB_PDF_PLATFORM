@@ -71,7 +71,7 @@ export function PaymentsSummary({ accessToken }: { accessToken: string }) {
           <h3 className="flex items-center gap-2 text-[14px] font-bold text-white">
             <CalendarRange className="h-4 w-4 text-cyan-300" aria-hidden /> Ödeme, iade ve KDV özeti
           </h3>
-          <p className="mt-0.5 text-[11.5px] text-slate-400">Türkiye saatiyle. KDV, kesilmiş faturalardan hesaplanır (iade faturaları düşülür).</p>
+          <p className="mt-0.5 text-[11.5px] text-slate-400">Türkiye saatiyle. "Ödeme" parayı aldığımız tutardır. "Kesilen KDV" ve "Ödenecek KDV" yalnız faturası KESİLMİŞ ödemeleri sayar (iade faturaları düşülür); faturası henüz kesilmemiş ödemeler ayrı "Fatura bekleyen" sütunundadır.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input type="date" aria-label="Başlangıç" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className={field} />
@@ -113,9 +113,9 @@ export function PaymentsSummary({ accessToken }: { accessToken: string }) {
           <p className="text-[11px] text-slate-400">{data ? `Kesilen ${tl(data.totals.kdvIssued)} − iade ${tl(data.totals.kdvCredited)}` : ""}</p>
         </div>
         <div className="rounded-xl border border-white/[0.08] bg-black/20 p-3.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Faturası bekleyen tahmini KDV</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Faturası bekleyen ödemelerin KDV'si</p>
           <p className="mt-1 text-[22px] font-bold tracking-tight text-white">{data ? tl(data.totals.pendingKdvEstimate) : "…"}</p>
-          <p className="text-[11px] text-slate-400">Henüz kesilmedi; toplama katılmaz</p>
+          <p className="text-[11px] text-slate-400">{data ? `${data.totals.pendingCount} ödeme · ${tl(data.totals.pendingTotal)} · ` : ""}Fatura kesilince kesinleşir, "ödenecek KDV"ye o zaman girer. Tutar KDV dahildir (%20).</p>
         </div>
       </div>
 
@@ -127,20 +127,21 @@ export function PaymentsSummary({ accessToken }: { accessToken: string }) {
               <th className="px-3 py-2 text-right">Ödeme</th>
               <th className="px-3 py-2 text-right">İade</th>
               <th className="px-3 py-2 text-right">Net</th>
-              <th className="px-3 py-2 text-right">Kesilen KDV</th>
+              <th className="px-3 py-2 text-right">Kesilen fatura KDV</th>
               <th className="px-3 py-2 text-right">İade KDV</th>
-              <th className="px-3 py-2 text-right">Ödenecek KDV</th>
+              <th className="px-3 py-2 text-right">Ödenecek KDV (kesilenler)</th>
+              <th className="px-3 py-2 text-right">Fatura bekleyen (adet · tutar · KDV)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.05] text-slate-200">
             {busy && !data && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />Yükleniyor…</td>
+                <td colSpan={8} className="px-3 py-4 text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin" />Yükleniyor…</td>
               </tr>
             )}
             {data && data.rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-slate-400">Bu aralıkta kayıt yok.</td>
+                <td colSpan={8} className="px-3 py-4 text-slate-400">Bu aralıkta kayıt yok.</td>
               </tr>
             )}
             {data?.rows.map((r) => (
@@ -152,6 +153,7 @@ export function PaymentsSummary({ accessToken }: { accessToken: string }) {
                 <td className="px-3 py-2 text-right">{tl(r.kdvIssued)}</td>
                 <td className="px-3 py-2 text-right">{tl(r.kdvCredited)}</td>
                 <td className="px-3 py-2 text-right font-semibold text-amber-200">{tl(r.kdvNet)}</td>
+                <td className="px-3 py-2 text-right text-slate-300">{r.pendingCount} · {tl(r.pendingTotal)} · {tl(r.pendingKdvEstimate)}</td>
               </tr>
             ))}
           </tbody>
@@ -165,6 +167,7 @@ export function PaymentsSummary({ accessToken }: { accessToken: string }) {
                 <td className="px-3 py-2 text-right font-semibold">{tl(data.totals.kdvIssued)}</td>
                 <td className="px-3 py-2 text-right font-semibold">{tl(data.totals.kdvCredited)}</td>
                 <td className="px-3 py-2 text-right font-bold text-amber-200">{tl(data.totals.kdvNet)}</td>
+                <td className="px-3 py-2 text-right font-semibold">{data.totals.pendingCount} · {tl(data.totals.pendingTotal)} · {tl(data.totals.pendingKdvEstimate)}</td>
               </tr>
             </tfoot>
           )}
