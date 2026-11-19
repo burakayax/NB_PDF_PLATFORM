@@ -70,7 +70,7 @@ const TH = "text-align:left;padding:6px 8px;background:#f1f5f9;color:#334155;fon
 const TD = "padding:6px 8px;font-size:13px;color:#0f172a;border-bottom:1px solid #eef2f7;word-break:break-word;overflow-wrap:anywhere";
 
 function tableHtml(head, rows) {
-  const th = head.map((h) => `<th style="${TH}">${esc(h)}</th>`).join("");
+  const th = head.map((h, i) => `<th style="${TH}${i > 0 ? ";text-align:right" : ""}">${esc(h)}</th>`).join("");
   const tr = rows.map((r) => `<tr>${r.map((c, i) => `<td style="${TD}${i > 0 ? ";text-align:right" : ""}">${esc(c)}</td>`).join("")}</tr>`).join("");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;table-layout:fixed;width:100%;margin:6px 0 14px"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
 }
