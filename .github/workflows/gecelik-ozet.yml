@@ -49,5 +49,15 @@ jobs:
           ep="https://${OZET_R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           aws s3 cp "$out" "s3://nb-gecelik-ozet/ozet/${y}/${m}/ozet-${date}.json" --endpoint-url "$ep" --content-type application/json --only-show-errors
           aws s3 cp "$out" "s3://nb-gecelik-ozet/ozet-son.json" --endpoint-url "$ep" --content-type application/json --only-show-errors
+          # Okunabilir Turkce ozet (ayni kova, ayni gun); icerik yine ekrana basilmaz
+          md="$RUNNER_TEMP/ozet.md"
+          mdcode=$(curl -sS --max-time 90 --retry 3 --retry-delay 20 --retry-all-errors             -o "$md" -w "%{http_code}"             -H "Authorization: Bearer ${OZET_API_TOKEN}"             "https://api.pdfplatform.app/api/internal/nightly-summary?format=md&date=${date}")
+          if [ "$mdcode" = "200" ]; then
+            aws s3 cp "$md" "s3://nb-gecelik-ozet/ozet/${y}/${m}/ozet-${date}.md" --endpoint-url "$ep" --content-type "text/markdown; charset=utf-8" --only-show-errors
+            aws s3 cp "$md" "s3://nb-gecelik-ozet/ozet-son.md" --endpoint-url "$ep" --content-type "text/markdown; charset=utf-8" --only-show-errors
+            echo "Okunabilir ozet yazildi: ozet-${date}.md"
+          else
+            echo "::warning::Okunabilir ozet alinamadi (HTTP $mdcode); JSON yazildi"
+          fi
           echo "Ozet yazildi: ozet-${date}.json (dogrulama: $(jq -r '.verified' "$out"))"
-          rm -f "$out"
+          rm -f "$out" "$md"

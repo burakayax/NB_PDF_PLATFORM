@@ -256,3 +256,66 @@ export async function searchEvidence(pageUrl: string, topicWords: string[]): Pro
     return [];
   }
 }
+
+// ─── Gecelik özet için günlük görünüm ─────────────────────────────────────────
+
+export type GscDaySummary =
+  | { available: false; reason: string }
+  | {
+      available: true;
+      date: string;
+      clicks: number;
+      impressions: number;
+      avgPosition: number;
+      topQueries: Array<{ query: string; clicks: number; impressions: number }>;
+      topPages: Array<{ page: string; clicks: number; impressions: number }>;
+    };
+
+async function gscQuery(token: string, body: Record<string, unknown>): Promise<Array<{ keys?: string[]; clicks?: number; impressions?: number; position?: number }>> {
+  const endpoint = `${API_ROOT}/${encodeURIComponent(env.GSC_SITE_URL)}/searchAnalytics/query`;
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({ type: "web", ...body }),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Search Console HTTP ${res.status}`);
+  const json = (await res.json()) as { rows?: Array<{ keys?: string[]; clicks?: number; impressions?: number; position?: number }> };
+  return Array.isArray(json.rows) ? json.rows : [];
+}
+
+/**
+ * Verilen güne (yoksa son 5 gün içindeki en yeni veri gününe) ait tıklama/gösterim/sıra ve ilk 5 sorgu + sayfa.
+ * Search Console verisi 1-3 gün gecikir; bu yüzden "en son mevcut gün" döner. Hata olursa özet bozulmaz.
+ */
+export async function dailySummary(ymd: string): Promise<GscDaySummary> {
+  if (!isGscConfigured()) return { available: false, reason: "Search Console tanımlı değil" };
+  try {
+    const token = await accessToken();
+    const end = new Date(new Date(`${ymd}T00:00:00.000Z`).getTime());
+    const start = new Date(end.getTime() - 5 * 24 * 60 * 60 * 1000);
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const days = await gscQuery(token, { startDate: iso(start), endDate: iso(end), dimensions: ["date"], rowLimit: 10 });
+    const dates = days.map((r) => r.keys?.[0] ?? "").filter(Boolean).sort();
+    const date = dates.includes(ymd) ? ymd : dates[dates.length - 1];
+    if (!date) return { available: false, reason: "Son günlerde veri yok" };
+    const [total, q, pg] = await Promise.all([
+      gscQuery(token, { startDate: date, endDate: date, rowLimit: 1 }),
+      gscQuery(token, { startDate: date, endDate: date, dimensions: ["query"], rowLimit: 5 }),
+      gscQuery(token, { startDate: date, endDate: date, dimensions: ["page"], rowLimit: 5 }),
+    ]);
+    const t = total[0] ?? {};
+    const round1 = (n: number | undefined) => Math.round((n ?? 0) * 10) / 10;
+    return {
+      available: true,
+      date,
+      clicks: t.clicks ?? 0,
+      impressions: t.impressions ?? 0,
+      avgPosition: round1(t.position),
+      topQueries: q.map((r) => ({ query: String(r.keys?.[0] ?? "").slice(0, 80), clicks: r.clicks ?? 0, impressions: r.impressions ?? 0 })),
+      topPages: pg.map((r) => ({ page: String(r.keys?.[0] ?? "").replace(/^https?:\/\/[^/]+/, "").slice(0, 100), clicks: r.clicks ?? 0, impressions: r.impressions ?? 0 })),
+    };
+  } catch (e) {
+    return { available: false, reason: e instanceof Error ? e.message.slice(0, 80) : "bilinmeyen hata" };
+  }
+}
