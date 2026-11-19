@@ -310,20 +310,20 @@ export const CV_PHOTO_POSTS = [
     {
       slug: "biyometrik-fotograf-olculeri-ve-kurallari",
       date: "2026-10-07",
-      updated: "2026-10-07",
+      updated: "2026-11-19",
       readMinutes: 6,
       tags: { tr: ["Biyometrik Fotoğraf", "Pasaport", "Vize"], en: ["Biometric Photo", "Passport", "Visa"] },
       accent: "violet",
       tool: "/tools/ai-fotograf-studyosu",
     },
     {
-      title: "Biyometrik Fotoğraf Ölçüleri ve Kuralları (2026)",
+      title: "Biyometrik Fotoğraf Ölçüleri: 50×60 mm, 35×45 mm (2026)",
       description:
-        "Kimlik, pasaport, ehliyet ve vize için biyometrik fotoğraf ölçüleri: Türkiye 50×60, Schengen 35×45, ABD 2×2 inç ve baş oranı kuralları.",
+        "Biyometrik fotoğraf ölçüleri mm olarak: Türkiye 50×60 mm, Schengen 35×45 mm, ABD 51×51 mm (2×2 inç), Kanada 50×70 mm; baş oranı ve arka plan kuralları.",
       excerpt:
         "Kimlik, pasaport ve vize fotoğrafı reddedilmesin: ülkelere göre ölçüler, baş oranları, arka plan ve sık yapılan hatalar tek yazıda.",
       blocks: [
-        { t: "lead", x: "Biyometrik fotoğraf, yüz tanıma sistemlerinin de kullanabileceği biçimde, belirli ölçü ve kurallara göre çekilmiş resmî belge fotoğrafıdır. Ölçü, arka plan veya baş oranındaki küçük bir sapma başvurunun reddedilmesine yol açabilir. Aşağıdaki tablo yaygın ölçüleri özetler." },
+        { t: "lead", x: "Biyometrik fotoğraf, yüz tanıma sistemlerinin de kullanabileceği biçimde, belirli ölçü ve kurallara göre çekilmiş resmî belge fotoğrafıdır. Ölçü, arka plan veya baş oranındaki küçük bir sapma başvurunun reddedilmesine yol açabilir. Aşağıdaki liste yaygın ölçüleri milimetre (mm) cinsinden özetler." },
         { t: "h2", x: "Yaygın ölçüler" },
         { t: "ul", items: [
           "Türkiye (kimlik kartı, pasaport, ehliyet): 50×60 mm, düz beyaz arka plan; yüz fotoğrafın yaklaşık %70–80'ini kaplar.",
@@ -351,6 +351,7 @@ export const CV_PHOTO_POSTS = [
           { title: "Uygunluk listesini okuyun", x: "Baş oranı, ifade ve ışık için uyarılar gösterilir; gerekirse yeniden çekin." },
           { title: "Boyut sınırı varsa yazın", x: "e-Devlet gibi portallar KB sınırı koyabilir; en fazla boyutu girin, araç dosyayı sığdırır." },
         ] },
+        { t: "p", x: "Aynı fotoğrafı evde çekmek, CV'ye koymak ya da LinkedIn profili için hazırlamak istiyorsanız yazının altındaki ilgili rehberlere bakın: vesikalık fotoğraf evde nasıl çekilir, CV fotoğrafı nasıl olmalı ve LinkedIn profil fotoğrafı ipuçları." },
         { t: "cta", title: "AI Fotoğraf Stüdyosu", x: "Biyometrik ölçülere kırpar, arka planı değiştirir ve baskı sayfası hazırlar. Fotoğraf cihazınızdan çıkmaz.", btn: "Fotoğrafı hazırla", tool: "/tools/ai-fotograf-studyosu" },
         { t: "p", x: "Baskı için 10×15 cm fotoğraf kâğıdına aynı fotoğraftan birçok kopya diziliş seçeneği vardır; yazdırırken “%100 / gerçek boyut” seçip sayfayı küçültmediğinizden emin olun." },
       ],
@@ -362,13 +363,13 @@ export const CV_PHOTO_POSTS = [
       ],
     },
     {
-      title: "Biometric Photo Sizes and Rules by Country (2026)",
+      title: "Biometric Photo Sizes in mm: 50×60, 35×45, 2×2 in (2026)",
       description:
-        "Biometric photo sizes for ID, passport, driving licence and visa: Turkey 50×60, Schengen 35×45, US 2×2 in, plus head-size and background rules.",
+        "Biometric photo sizes in mm: Turkey 50×60 mm, Schengen 35×45 mm, US 51×51 mm (2×2 in), Canada 50×70 mm, plus head-size and background rules.",
       excerpt:
         "Don't get your ID, passport or visa photo rejected: sizes, head proportions, backgrounds and the usual mistakes by country in one post.",
       blocks: [
-        { t: "lead", x: "A biometric photo is an official document photo taken to specific size and rules so that face-recognition systems can use it too. A small deviation in size, background or head proportion can get an application rejected. The list below summarises common sizes." },
+        { t: "lead", x: "A biometric photo is an official document photo taken to specific size and rules so that face-recognition systems can use it too. A small deviation in size, background or head proportion can get an application rejected. The list below gives common sizes in millimetres (mm)." },
         { t: "h2", x: "Common sizes" },
         { t: "ul", items: [
           "Turkey (ID card, passport, driving licence): 50×60 mm, plain white background; the face covers roughly 70–80% of the photo.",
@@ -396,6 +397,7 @@ export const CV_PHOTO_POSTS = [
           { title: "Read the suitability list", x: "Warnings for head size, expression and light are shown; retake if needed." },
           { title: "Set a size limit if required", x: "Portals may cap file size in KB; enter the maximum and the tool fits the file." },
         ] },
+        { t: "p", x: "If you also want to take the photo at home, use it on a CV or prepare it for LinkedIn, see the related guides below: how to take an ID photo at home, what a CV photo should look like and LinkedIn profile photo tips." },
         { t: "cta", title: "AI Photo Studio", x: "Crops to biometric sizes, swaps the background and prepares a print sheet. The photo never leaves your device.", btn: "Prepare the photo", tool: "/tools/ai-fotograf-studyosu" },
         { t: "p", x: "For printing, you can lay out many copies on 10×15 cm photo paper; choose “100% / actual size” when printing so the sheet isn't scaled down." },
       ],

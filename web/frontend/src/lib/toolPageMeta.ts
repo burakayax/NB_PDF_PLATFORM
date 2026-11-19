@@ -310,9 +310,9 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "PDF'i A4, A5 veya Letter boyutuna ya da özel ölçüye çevirin.",
     },
     en: {
-      title: "Convert PDF to A4 / A5 / Letter | PDF Platform",
+      title: "Resize PDF: A3 to A4, A4 to Letter | PDF Platform",
       description:
-        "Convert a PDF to A4, A5 or Letter size, or a custom size.",
+        "Resize a PDF: A3 to A4, A4 to Letter, Letter to A4 or A5, or a custom size.",
     },
   },
   "flip-pdf": {
