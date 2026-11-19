@@ -1813,6 +1813,8 @@ export type AdminSummaryRow = {
   kdvCredited: number;
   kdvNet: number;
   pendingKdvEstimate: number;
+  pendingCount: number;
+  pendingTotal: number;
   foreignCount: number;
 };
 export type AdminPaymentsSummary = {

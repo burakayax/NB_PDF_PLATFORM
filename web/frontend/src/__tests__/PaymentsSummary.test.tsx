@@ -17,6 +17,8 @@ const row = (over = {}) => ({
   kdvCredited: 20,
   kdvNet: 46.5,
   pendingKdvEstimate: 20,
+  pendingCount: 1,
+  pendingTotal: 120,
   foreignCount: 1,
   ...over,
 });

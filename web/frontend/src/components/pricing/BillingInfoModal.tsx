@@ -696,6 +696,13 @@ export function BillingInfoModal({
                   ))}
                 </select>
               </div>
+              {!isTurkish && (
+                <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[12px] leading-relaxed text-amber-200 sm:col-span-2">
+                  {tr
+                    ? "KDV istisnası için geçerli bir yurt dışı fatura adresi ve yurt dışında çıkarılmış bir kart gerekir. Aksi hâlde faturanıza KDV eklenir."
+                    : "VAT exemption requires a valid billing address outside Türkiye and a card issued outside Türkiye. Otherwise VAT will be added to your invoice."}
+                </p>
+              )}
 
               {/* Fatura türü — yalnızca Türk kullanıcılar */}
               {isTurkish && (
