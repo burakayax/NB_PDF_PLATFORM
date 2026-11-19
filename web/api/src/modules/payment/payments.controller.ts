@@ -3,7 +3,7 @@ import { z } from "zod";
 import { BUSINESS_TEAM, YEARLY_BILLING_PLANS, netFromGrossTry, type PaidPlanId } from "../../lib/plan-catalogue.js";
 import { getPriceBook } from "./payment-pricing.js";
 import { HttpError } from "../../lib/http-error.js";
-import { getClientIp } from "../../middleware/api-security.middleware.js";
+import { getPaymentClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentCheckoutSession } from "./payment.service.js";
 import { isCheckoutCurrency, type CheckoutCurrency } from "./pricing-matrix.js";
 import { prisma } from "../../lib/prisma.js";
@@ -273,7 +273,7 @@ export async function initializePaymentsController(request: Request, response: R
     userId,
     plan: planId,
     billing,
-    clientIp: getClientIp(request),
+    clientIp: getPaymentClientIp(request),
     priceTryOverride,
     checkoutCurrency,
     subscriptionDaysOverride,

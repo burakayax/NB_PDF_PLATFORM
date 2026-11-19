@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { logger } from "../../lib/file-log.js";
 import express from "express";
 import { HttpError } from "../../lib/http-error.js";
-import { getClientIp } from "../../middleware/api-security.middleware.js";
+import { getClientIp, getPaymentClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentBodySchema } from "./payment.schema.js";
 import { prisma } from "../../lib/prisma.js";
 import { topupPackById, topupInvoiceLabel } from "../ai/ai.quota.js";
@@ -72,7 +72,7 @@ export async function createTopupCheckoutController(request: Request, response: 
     userId,
     plan: placeholderPlan,
     billing: "monthly",
-    clientIp: getClientIp(request),
+    clientIp: getPaymentClientIp(request),
     priceTryOverride: price,
     checkoutCurrency,
     topupCredits: pack.credits,
@@ -122,7 +122,7 @@ export async function createCvPassCheckoutController(request: Request, response:
     userId,
     plan: placeholderPlan,
     billing: "monthly",
-    clientIp: getClientIp(request),
+    clientIp: getPaymentClientIp(request),
     priceTryOverride: price,
     checkoutCurrency,
     cvPassHours: pass.hours,

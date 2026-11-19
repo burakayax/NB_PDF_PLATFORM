@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { timingSafeEqual } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
@@ -16,6 +17,19 @@ import {
 import { requireAuth } from "./auth.middleware.js";
 
 /** Express req.ip / socket; proxy güvenilirse X-Forwarded-For ile uyumludur. */
+/**
+ * Ödeme sağlayıcısına (PayTR) bildirilecek gerçek ziyaretçi IP'si.
+ * NEDEN: Site Cloudflare arkasında; TRUST_PROXY=1 iken `request.ip` Cloudflare kenar adresi çıkar.
+ * PayTR canlı modda ödeme sayfasını bildirilen IP ile açılana kadar bağlar, uyuşmazsa "sayfa geçersiz" der.
+ * Cloudflare'in eklediği `CF-Connecting-IP` varsa o kullanılır (geçerli IP biçimindeyse); yoksa `request.ip`.
+ */
+export function getPaymentClientIp(request: Request): string {
+  const cf = request.headers["cf-connecting-ip"];
+  const v = typeof cf === "string" ? cf.trim() : "";
+  if (v && isIP(v) !== 0) return v;
+  return getClientIp(request);
+}
+
 export function getClientIp(request: Request): string {
   const raw = request.ip || request.socket?.remoteAddress || "";
   return String(raw).replace(/^::ffff:/, "") || "unknown";

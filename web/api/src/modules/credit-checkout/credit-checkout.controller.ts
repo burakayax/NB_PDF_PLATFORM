@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { HttpError } from "../../lib/http-error.js";
-import { getClientIp } from "../../middleware/api-security.middleware.js";
+import { getPaymentClientIp } from "../../middleware/api-security.middleware.js";
 import {
   previewCreditPackCheckout,
   startCreditPackCheckoutFromToken,
@@ -53,7 +53,7 @@ export async function creditCheckoutStartController(request: Request, response: 
   }
   const result = await startCreditPackCheckoutFromToken({
     userId,
-    clientIp: getClientIp(request),
+    clientIp: getPaymentClientIp(request),
     pricingToken: parsed.data.pricingToken,
   });
   response.status(200).json(result);
