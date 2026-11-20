@@ -5,7 +5,7 @@ name: Gecelik ozet
 # Yalnız zamanlama ve elle başlatma ile çalışır; pull_request/push ile ASLA tetiklenmez.
 on:
   schedule:
-    - cron: "0 0 * * *" # 00:00 UTC = 03:00 TR
+    - cron: "17 0 * * *" # 00:17 UTC = 03:17 TR (tam saat basi GitHub'da cok yogun, gecikiyor)
   workflow_dispatch:
 
 permissions:

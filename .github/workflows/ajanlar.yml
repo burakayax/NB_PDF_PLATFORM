@@ -3,18 +3,20 @@ name: Yapay zeka ajanlari
 # Zamanlanmis, SALT OKUNUR ajanlar. Cikti ASLA depoya/is gunlugune/artifact'a yazilmaz; ozel R2 kovasina gider.
 # Yalniz zamanlama ve elle baslatma ile calisir; pull_request/push ile ASLA tetiklenmez.
 # Saatler UTC (TR = UTC+3):
-#   Ajan 1 durum   07:30 TR = 04:30 UTC (her gun)
-#   Ajan 2 seo     07:00 TR = 04:00 UTC (pazartesi)
-#   Ajan 3 sosyal  07:15 TR = 04:15 UTC (pazartesi)
-#   Ajan 4 finans  07:45 TR = 04:45 UTC (ayin 1'i)
-#   Ajan 5 ozet    08:00 TR = 05:00 UTC (her gun)
+#   Ajan 1 durum   07:37 TR = 04:37 UTC (her gun)
+#   Ajan 2 seo     07:07 TR = 04:07 UTC (pazartesi)
+#   Ajan 3 sosyal  07:23 TR = 04:23 UTC (pazartesi)
+#   Ajan 4 finans  07:47 TR = 04:47 UTC (ayin 1'i)
+#   Ajan 5 ozet    08:19 TR = 05:19 UTC (her gun)
+# Dakikalar bilerek "tuhaf": GitHub tam saat ve yarim saat basinda cok yogun oldugundan
+# zamanlanmis isleri saatlerce geciktirebiliyor (19-20 Kasim 2026'da ~9 saat). Sira korunur.
 on:
   schedule:
-    - cron: "30 4 * * *"
-    - cron: "0 4 * * 1"
-    - cron: "15 4 * * 1"
-    - cron: "45 4 1 * *"
-    - cron: "0 5 * * *"
+    - cron: "37 4 * * *"
+    - cron: "7 4 * * 1"
+    - cron: "23 4 * * 1"
+    - cron: "47 4 1 * *"
+    - cron: "19 5 * * *"
   workflow_dispatch:
     inputs:
       ajan:
