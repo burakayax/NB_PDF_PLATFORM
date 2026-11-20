@@ -5610,7 +5610,7 @@ export const BLOG_POSTS = [
         ] },
 
         { t: "h2", x: "Neden \"cihazda işleme\" fark yaratır?" },
-        { t: "p", x: "Bir araç işlemi tarayıcında yapıyorsa üç şey kazanırsın: gizlilik (dosya internete gitmez), hız (yükleme/indirme beklemezsin, anında sonuç) ve çevrimdışı çalışma (bir kez açıldıktan sonra bağlantı kesilse de çalışır). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez." },
+        { t: "p", x: "Bir araç işlemi tarayıcında yapıyorsa iki şey kazanırsın: gizlilik (dosya internete gitmez) ve hız (yükleme/indirme beklemezsin, anında sonuç). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez." },
 
         { t: "cta", title: "PDF Araçlarını Dene", x: "Birleştir, böl, kırp, döndür — dosyan cihazından çıkmadan, üyeliksiz ve ücretsiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
 
@@ -5657,7 +5657,7 @@ export const BLOG_POSTS = [
           "Coverage: just merging, or also split, crop, rotate, convert and sign, whichever you will actually need?",
         ] },
         { t: "h2", x: "Why on-device matters" },
-        { t: "p", x: "If a tool runs the operation in your browser you gain three things: privacy, because the file does not go online; speed, because there is no upload or download wait; and offline use, since once the page has loaded it works even if your connection drops. On PDF Platform, structural tools such as merge, split, crop, rotate, delete pages, reorder and image to PDF run entirely on your device." },
+        { t: "p", x: "If a tool runs the operation in your browser you gain two things: privacy, because your files never leave your device, and speed, because there is no upload or download wait. On PDF Platform, structural tools such as merge, split, crop, rotate, delete pages, reorder and image to PDF run entirely on your device." },
         { t: "cta", title: "Try the PDF Tools", x: "Merge, split, crop and rotate without your file leaving your device, with no sign-up, free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
         { t: "h2", x: "What can run locally and what cannot" },
         { t: "p", x: "Not everything can run in a browser, and the right tool is the one that tells you the split clearly. The general rule:" },
