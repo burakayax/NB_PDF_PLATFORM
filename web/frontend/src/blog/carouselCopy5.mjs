@@ -4,7 +4,7 @@ export const COPY_5 = {
     hook: "PDF'inizi işlerken dosya sunucuya gitmesin",
     slides: [
       ["Çoğu araç ne yapıyor?", "Dosyanızı sunucusuna yükler, orada işler, sonucu geri verir. Sözleşme ya da kimlik için bu, tanımadığınız bir sunucuda kopyası oluşması demektir."],
-      ["«Cihazda işleme» ne demek?", "İşin tamamı tarayıcınızın içinde yapılır; dosya internete gönderilmez. Yükleme beklemezsiniz, çevrimdışı da çalışır."],
+      ["«Cihazda işleme» ne demek?", "İşin tamamı tarayıcınızın içinde yapılır; dosya internete gönderilmez. Yükleme beklemezsiniz."],
       ["Hangileri cihazda?", "Birleştirme, bölme, döndürme, sayfa silme, sıralama, görselden PDF, imza, işaretleme ve belge tarama."],
       ["Her iş cihazda olmuyor", "Word ve Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır."],
       ["Nasıl sınarsınız?", "İşlemi internet bağlantısı kesikken deneyin. Tamamlanıyorsa dosya hiçbir yere gitmemiştir."],
