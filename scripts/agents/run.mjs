@@ -13,6 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { buildMail, parseLlmJson } from "./mail.mjs";
+import { collect, mailLine } from "./bakim-rules.mjs";
 
 const AGENT = process.argv[2];
 const VERI = process.env.AGENT_VERI || "veri"; // indirilmiş kova içeriği
@@ -20,6 +21,8 @@ const OUT = process.env.AGENT_OUT || "cikti";
 const API = process.env.AGENT_API_BASE || "https://api.pdfplatform.app";
 const KEY = process.env.ANTHROPIC_AGENT_API_KEY || "";
 const TOKEN = process.env.AGENT_DATA_TOKEN || "";
+const GH_TOKEN = process.env.GH_TOKEN || ""; // yalnız herkese açık verileri okurken istek sınırı için
+let bakimData = null; // bakım ajanı kural çıktısı (yapay zekâ dışı)
 
 // USD / 1M token (sahibin verdiği tablo). Yeni model eklenirse buraya yazılır.
 const PRICE = {
@@ -33,6 +36,7 @@ const AGENTS = {
   sosyal: { file: "ajan-sosyal-son.md", model: "claude-sonnet-5-5", title: "Haftalık sosyal medya planı", max: 8000 },
   finans: { file: "ajan-finans-son.md", model: "claude-haiku-5-5", title: "Aylık finans raporu", max: 4000 },
   ozet: { file: "ajan-yonetici-son.md", model: "claude-haiku-5-5", title: "Yönetici sabah özeti", max: 3000 },
+  bakim: { file: "ajan-bakim-son.md", model: "claude-haiku-5-5", title: "Haftalık yazılım bakımı (gölge)", max: 3500 },
 };
 
 const GENEL_KURAL = `Sen PDF Platform (pdfplatform.app) sahibinin salt-okunur analiz ajanısın. Türkçe, sade, kısa yaz; sahibin programlama bilgisi yok.
@@ -42,6 +46,7 @@ Sahibinden veri ya da dosya isteme. Geçmiş veri yokluğunu "uyarı" (⚠️) o
 ABONELİK DİLİ: "Aktif abonelik" ifadesini tek başına KULLANMA. Özet verisinde "Ücretli abonelik" (gerçek ödemesi olanlar) ve "Elle verilen plan" (yönetici yükseltmesi, ödeme yok) ayrı satırlardır; ayrı yaz. Gelir ve satış hesaplarında yalnız ücretli abonelikleri say.`;
 
 const PROMPTS = {
+  bakim: `GÖREV: Haftalık yazılım bakım raporu (GÖLGE MODU: hiçbir şey yapılmadı, yapılmayacak). Girdi: açık Dependabot güncellemelerinin KURAL TABANLI sınıflandırması (JSON; gruplar zaten kurallarla belirlendi, sen değiştirme). Sahibe (programlama bilgisi yok) sade Türkçe rapor yaz: önce 2-3 cümlelik genel durum, sonra her grup için kaç güncelleme olduğu ve neden o grupta olduğu (teknik terimi kısa açıkla), sonra "## Ne yapardım" (yalnız girdideki yapardim satırlarına dayan, yeni karar üretme). "ciEski": true olanlar için CI sonucunun eski olabileceğini belirt. PR numaralarını yaz. Birleştir/onayla gibi bir karar verme; yalnız anlat.`,
   durum: `GÖREV: Günlük site durumu. Aşağıda son gecelik özet (JSON) ve önceki günlerin özetleri var. Dünü bir önceki günle ve son 7 günün ortalamasıyla karşılaştır; önemli değişimleri ve hataları yaz. Sorun varsa ⚠️.
 Biçim: "## Özet" (3-5 madde), "## Değişimler", "## ⚠️ Dikkat" (yoksa "Yok").`,
   seo: `GÖREV: Haftalık SEO. Search Console verisi: son 7 gün ("current") ve önceki 7 gün ("previous"). Tıklama/gösterim/sıra değişimini, yükselen-düşen sayfa ve sorguları karşılaştır. 3-5 SOMUT öneri yaz (hangi sayfa/sorgu, ne yapılmalı, neden). Veri azsa bunu açıkça söyle; abartma.
@@ -105,6 +110,10 @@ async function buildInput() {
     const pick = (ym) => files.filter((f) => dateOf(f).startsWith(ym)).map((f) => `### ${dateOf(f)}\n${clip(readIf(f), 6000)}`).join("\n");
     return `GEÇEN AY (${ymOf(cur)}):\n${pick(ymOf(cur)) || "veri yok"}\n\nÖNCEKİ AY (${ymOf(prev)}):\n${pick(ymOf(prev)) || "veri yok"}`;
   }
+  if (AGENT === "bakim") {
+    bakimData = await collect({ token: GH_TOKEN });
+    return JSON.stringify(bakimData);
+  }
   if (AGENT === "ozet") {
     const parts = [];
     for (const k of ["durum", "seo", "sosyal", "finans"]) {
@@ -122,7 +131,7 @@ function cost(model, inTok, outTok) {
 }
 
 // Aylık tahmin: ajan başına ortalama çalışma maliyeti x aylık çalışma sayısı (günlük 30, haftalık ~4,33, aylık 1).
-const RUNS_PER_MONTH = { durum: 30, ozet: 30, seo: 4.33, sosyal: 4.33, finans: 1 };
+const RUNS_PER_MONTH = { durum: 30, ozet: 30, seo: 4.33, sosyal: 4.33, finans: 1, bakim: 4.33 };
 function monthEstimate(ledger) {
   let total = 0;
   for (const [agent, runs] of Object.entries(RUNS_PER_MONTH)) {
@@ -152,12 +161,14 @@ async function composeMail(llmText, today, footer) {
     if (!txt) attention.push(`${AGENTS[k].title} çıktısı bulunamadı.`);
     else if (/üretilemedi/.test(txt)) attention.unshift(`${AGENTS[k].title} raporu üretilemedi.`);
   }
-  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, footer });
+  let maintenance = null;
+  try { maintenance = mailLine(JSON.parse(readIf(path.join(VERI, "ajan-bakim-son.json")))); } catch { maintenance = null; }
+  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, maintenance, footer });
 }
 
 async function main() {
   const def = AGENTS[AGENT];
-  if (!def) { console.error("Kullanım: run.mjs durum|seo|sosyal|finans|ozet"); process.exit(2); }
+  if (!def) { console.error("Kullanım: run.mjs durum|seo|sosyal|finans|ozet|bakim"); process.exit(2); }
   fs.mkdirSync(OUT, { recursive: true });
   const outFile = path.join(OUT, def.file);
   const ledgerPath = path.join(VERI, "ajan-maliyet.json");
@@ -168,7 +179,7 @@ async function main() {
 
   try {
     if (!KEY) throw new Error("ANTHROPIC_AGENT_API_KEY tanımlı değil");
-    if (AGENT !== "durum" && AGENT !== "finans" && AGENT !== "ozet" && !TOKEN) throw new Error("AGENT_DATA_TOKEN tanımlı değil");
+    if (AGENT !== "durum" && AGENT !== "finans" && AGENT !== "ozet" && AGENT !== "bakim" && !TOKEN) throw new Error("AGENT_DATA_TOKEN tanımlı değil");
     const input = await buildInput();
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -193,6 +204,7 @@ async function main() {
     if (kesildi) body += "\n⚠️ Not: yanıt uzunluk sınırına takıldı, rapor eksik olabilir.\n";
     if (!mail) body += `\n---\nToken: ${inTok} giriş / ${outTok} çıkış · Model: ${def.model} · Bu çalışma ≈ $${usd.toFixed(4)} (tahmini) · Ay başından bu yana ajan toplamı: $${monthTotal(ledger, ym).toFixed(3)}\n`;
     fs.writeFileSync(outFile, body);
+    if (bakimData) fs.writeFileSync(path.join(OUT, "ajan-bakim-son.json"), JSON.stringify(bakimData));
     fs.writeFileSync(path.join(OUT, "ajan-maliyet.json"), JSON.stringify(ledger.slice(-400)));
 
     if (AGENT === "ozet") {
