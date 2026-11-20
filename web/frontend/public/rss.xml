@@ -1544,7 +1544,7 @@
 <ol><li><strong>Telefonun tarayıcısında açın</strong> — Uygulama indirmenize gerek yok. Sayfayı açıp «Belge tara» deyin ve kamera iznini verin.</li><li><strong>Kamerayı belgeye tutun</strong> — Kenarlar otomatik bulunur. Eğri açıdan çekseniz de sonuç düzleştirilir.</li><li><strong>PDF olarak indirin</strong> — Birden çok sayfa taradıysanız tek PDF'te birleşir. İsterseniz doğrudan paylaşabilirsiniz.</li></ol>
 <h2>Neyi kaybedersiniz?</h2>
 <p>Dürüst bir karşılaştırma için bunu da söylemek gerek. Tarayıcıda çalışan bir araç, kurulu bir uygulamanın her şeyini vermez:</p>
-<ul><li>Cihazlar arası senkronizasyon yok. Taramalar bulutta birikmez; PDF'i siz kaydeder ya da paylaşırsınız.</li><li>Ana ekrandan açılan yerel bir uygulama değil. Siteyi ana ekrana ekleyip uygulama gibi kullanabilirsiniz ama mağazadan kurulan bir uygulama değildir.</li><li>İlk açılışta internet gerekir. Sonrasında tarama işlemi bağlantı olmadan da çalışır, çünkü işlem zaten cihazda yapılıyor.</li></ul>
+<ul><li>Cihazlar arası senkronizasyon yok. Taramalar bulutta birikmez; PDF'i siz kaydeder ya da paylaşırsınız.</li><li>Ana ekrandan açılan yerel bir uygulama değil. Siteyi ana ekrana ekleyip uygulama gibi kullanabilirsiniz ama mağazadan kurulan bir uygulama değildir.</li><li>Sayfayı açmak için internet gerekir. Tarama işlemi cihazınızda yapılır, belgeleriniz hiçbir yere yüklenmez.</li></ul>
 <p>Bulutta birikmesini istiyorsanız Microsoft'un önerdiği OneDrive doğru seçimdir. Belgenin cihazdan çıkmamasını istiyorsanız burası.</p>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Belge Tarama</category>
@@ -2018,7 +2018,7 @@
 <ul><li>Belge hassassa (sözleşme, kimlik, sağlık raporu, müşteri verisi) ve iş sayfa düzenlemeyse: cihazda çalışan aracı seçin. Dosyanın hiç yüklenmemesi, "sonra siliyoruz" sözünden her zaman daha güçlüdür.</li><li>Masaüstü programı istiyorsanız: biz tarayıcıda çalışıyoruz, aradığınız bu değilse başka yere bakın.</li><li>Ara sıra birkaç dosya işliyorsanız: ücretsiz plan yeter ve çıktıda filigran olmadığı için sonucu olduğu gibi kullanabilirsiniz.</li><li>Türkçe belgelerle çalışıyorsanız: arayüz, yazı tanıma ve yapay zekâ araçları Türkçeyi sonradan eklenmiş bir çeviri katmanı olarak değil, birinci dil olarak ele alır.</li></ul>
 <h2>İddiayı kendiniz sınayın</h2>
 <p>"Dosyanız cihazınızdan çıkmıyor" cümlesini bize inanarak kabul etmenize gerek yok. Otuz saniyede kendiniz doğrulayabilirsiniz:</p>
-<ol><li><strong>Birleştirme aracını açın</strong> — Üye olmanıza gerek yok. Birleştirmek istediğiniz birkaç PDF'i seçin.</li><li><strong>İnternet bağlantınızı kesin</strong> — Wi-Fi'ı kapatın ya da kabloyu çıkarın. Sayfayı yenilemeyin.</li><li><strong>Birleştirmeyi çalıştırın</strong> — İşlem tamamlanır ve dosyanızı indirirsiniz. İnternet yokken çalışıyorsa, dosyanız hiçbir yere gitmiyor demektir.</li></ol>]]></content:encoded>
+<ol><li><strong>Birleştirme aracını açın</strong> — Üye olmanıza gerek yok. Birleştirmek istediğiniz birkaç PDF'i seçin.</li><li><strong>Ağ sekmesini açın</strong> — Tarayıcıda F12 tuşuna basın ve Ağ (Network) sekmesini açın. Sayfayı yenilemeyin.</li><li><strong>Birleştirmeyi çalıştırın</strong> — İşlem tamamlanır ve dosyanızı indirirsiniz. Listede PDF dosyanızı gönderen bir yükleme isteği görünmüyorsa, dosyanız hiçbir yere gitmiyor demektir.</li></ol>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Gizlilik</category>
       <category>PDF Araçları</category>
@@ -2263,7 +2263,7 @@
       <description><![CDATA[Bir PDF'i birleştirmek için onu tanımadığınız bir sunucuya yüklemek zorunda mısınız? Hayır. Yapısal PDF işlemlerinin çoğu tamamen tarayıcınızda yapılabilir — dosyanız internete hiç gönderilmeden.]]></description>
       <content:encoded><![CDATA[<p>Çoğu online PDF aracının çalışma şekli şu: dosyanızı sunucularına yükler, orada işler, sonucu geri verir. Ama sözleşme, kimlik, fatura gibi belgeler için bu, dosyanızın tanımadığınız bir sunucuda bir kopyasının oluşması demektir. Oysa yapısal PDF işlemlerinin çoğu için buna gerek yok.</p>
 <h2>"Cihazda işleme" ne demek?</h2>
-<p>Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu üç şey demektir: gizlilik (dosya sizde kalır), hız (yükleme/indirme beklenmez, anında sonuç) ve çevrimdışı çalışabilme.</p>
+<p>Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu iki şey demektir: gizlilik (dosya sizde kalır) ve hız (yükleme/indirme beklenmez, anında sonuç).</p>
 <h2>Tarayıcınızda çalışan araçlar</h2>
 <ul><li>Birleştir, Böl, Döndür, Sayfa Sil, Sayfaları Sırala — hepsi cihazınızda.</li><li>Görselden PDF, PDF'e imza atma ve yorumlama — cihazınızda.</li><li>Belge Tarayıcı — kamera görüntüsü de dahil, tamamen cihazınızda.</li></ul>
 <p><strong>Cihazda Birleştir</strong> — PDF'lerinizi sunucuya yüklemeden, tarayıcınızda birleştirin. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>

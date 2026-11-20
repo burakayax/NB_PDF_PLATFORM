@@ -562,7 +562,7 @@ export const BLOG_POSTS = [
         { t: "h2", x: "Which jobs never needed a server" },
         { t: "p", x: "Merging, splitting, rotating, cropping, deleting and reordering pages only rearrange what is already inside the file. A modern browser can do that locally, so the file never leaves your device and there is no per-task cost to the provider, which means nothing to count." },
         { t: "p", x: "On PDF Platform these page tools run in your browser, with no hourly cap, no daily cap and no account, up to 80 MB per file." },
-        { t: "tip", x: "Test the claim yourself: open the merge tool, switch your Wi-Fi off, and run a merge. If it completes, the work happened on your own machine." },
+        { t: "tip", x: "Test the claim yourself: open the merge tool, open your browser's Network tab (F12) and run a merge. If no request uploads your file, the work happened on your own machine." },
 
         { t: "h2", x: "Where we have limits too" },
         { t: "p", x: "Conversion to Word, OCR and compression run on our servers, so the free plan has a daily allowance for them. The difference from Sejda is only where the limit falls: page operations, the jobs free users run most often, are never counted here." },
@@ -809,7 +809,7 @@ export const BLOG_POSTS = [
         { q: "PDF24 Mac'te çalışıyor mu?", a: "Çevrimiçi araçları (PDF24 Tools) Mac'te tarayıcıdan çalışır. Kurulan sürüm olan PDF24 Creator ise yalnızca Windows içindir; Mac ve Linux sürümü yoktur." },
         { q: "PDF24 dosyalarımı sunucuya yüklüyor mu?", a: "Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24'ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows'taki Creator sürümü çevrimdışı çalıştığı için yüklemez." },
         { q: "Mac veya Linux'ta dosyamı yüklemeden PDF işleyebilir miyim?", a: "Evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez." },
-        { q: "Dosyamın yüklenmediğini nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
+        { q: "Dosyamın yüklenmediğini nasıl doğrularım?", a: "Tarayıcınızın geliştirici araçlarında Ağ (Network) sekmesini açıp aracı kullanın. Cihazda çalışan araçlar dosyanızı sunucuya göndermez, bu yüzden dosya yükleme isteği görmezsiniz. Sunucu gerektiren araçlarda (dönüştürme, OCR, yapay zekâ) yükleme isteği görürsünüz." },
         { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günde 3 işlem hakkı verir." },
       ],
     },
@@ -864,7 +864,7 @@ export const BLOG_POSTS = [
         { q: "Does PDF24 work on a Mac?", a: "The online tools (PDF24 Tools) work on a Mac in the browser. The installed version, PDF24 Creator, is Windows-only, with no Mac or Linux build." },
         { q: "Does PDF24 upload my files?", a: "With the online tools, yes. The file goes to PDF24's servers to be processed and, in their words, is removed after a short time. The Windows Creator version works offline and does not upload." },
         { q: "Can I process PDFs on Mac or Linux without uploading them?", a: "Yes. On PDF Platform, merging, splitting, rotating, cropping, deleting and reordering pages, image-to-PDF, signing and annotation all run in your browser regardless of operating system, with no upload." },
-        { q: "How can I verify nothing is uploaded?", a: "Disconnect from the internet and try the tool. On-device tools keep working without a connection; anything that needs a server will not." },
+        { q: "How can I verify nothing is uploaded?", a: "Open your browser's developer tools, switch to the Network tab and run the tool. On-device tools send no file upload request, while tools that need a server (conversion, OCR, AI) do." },
         { q: "Is it free?", a: "The on-device tools are free, unlimited and need no account, and no watermark is added to the output. Tools that need a server (conversion, OCR) come with a small daily allowance on the free plan." },
       ],
     },
@@ -934,7 +934,7 @@ export const BLOG_POSTS = [
         { t: "ul", items: [
           "Cihazlar arası senkronizasyon yok. Taramalar bulutta birikmez; PDF'i siz kaydeder ya da paylaşırsınız.",
           "Ana ekrandan açılan yerel bir uygulama değil. Siteyi ana ekrana ekleyip uygulama gibi kullanabilirsiniz ama mağazadan kurulan bir uygulama değildir.",
-          "İlk açılışta internet gerekir. Sonrasında tarama işlemi bağlantı olmadan da çalışır, çünkü işlem zaten cihazda yapılıyor.",
+          "Sayfayı açmak için internet gerekir. Tarama işlemi cihazınızda yapılır, belgeleriniz hiçbir yere yüklenmez.",
         ] },
         { t: "p", x: "Bulutta birikmesini istiyorsanız Microsoft'un önerdiği OneDrive doğru seçimdir. Belgenin cihazdan çıkmamasını istiyorsanız burası." },
       ],
@@ -1274,7 +1274,7 @@ export const BLOG_POSTS = [
         ] },
         { t: "cta", title: "Merge PDF", x: "Add your files, set the order and download one PDF for free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
         { t: "h2", x: "Quick tips" },
-        { t: "ul", items: ["Turning JPG or PNG images into a PDF? Use the Image to PDF tool.", "Need only some pages? Split them out first with the Split tool.", "It works even offline, because everything happens on your device."] },
+        { t: "ul", items: ["Turning JPG or PNG images into a PDF? Use the Image to PDF tool.", "Need only some pages? Split them out first with the Split tool.", "Everything happens on your device, so the file is not uploaded."] },
         { t: "tip", x: "A password-protected PDF has to be unlocked first with the Unlock PDF tool before it can be merged." },
         { t: "h2", x: "Ordering mistakes cost more than technical ones" },
         { t: "p", x: "Computers sort file names by characters, not by numbers, so annex-10 lands before annex-2. Look over the order once after adding the files; that is quicker than rebuilding a merged document." },
@@ -2532,7 +2532,7 @@ export const BLOG_POSTS = [
           "Keeping only the section you need.",
         ] },
         { t: "h2", x: "Why on-device deletion is better" },
-        { t: "p", x: "Many online tools upload your file to their servers. Used as a guest, page deletion here runs entirely in your browser, so the file never travels over the internet. That is better for privacy and for speed, since there is no upload wait and it even works offline." },
+        { t: "p", x: "Many online tools upload your file to their servers. Used as a guest, page deletion here runs entirely in your browser, so the file never travels over the internet. That is better for privacy and for speed, since there is no upload wait." },
         { t: "h2", x: "Three steps" },
         { t: "steps", items: [
           { title: "Open the PDF", x: "Drop it into the Delete Pages tool. Every page appears as a thumbnail." },
@@ -4589,7 +4589,7 @@ export const BLOG_POSTS = [
       blocks: [
         { t: "lead", x: "Çoğu online PDF aracının çalışma şekli şu: dosyanızı sunucularına yükler, orada işler, sonucu geri verir. Ama sözleşme, kimlik, fatura gibi belgeler için bu, dosyanızın tanımadığınız bir sunucuda bir kopyasının oluşması demektir. Oysa yapısal PDF işlemlerinin çoğu için buna gerek yok." },
         { t: "h2", x: "\"Cihazda işleme\" ne demek?" },
-        { t: "p", x: "Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu üç şey demektir: gizlilik (dosya sizde kalır), hız (yükleme/indirme beklenmez, anında sonuç) ve çevrimdışı çalışabilme." },
+        { t: "p", x: "Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu iki şey demektir: gizlilik (dosya sizde kalır) ve hız (yükleme/indirme beklenmez, anında sonuç)." },
         { t: "h2", x: "Tarayıcınızda çalışan araçlar" },
         { t: "ul", items: [
           "Birleştir, Böl, Döndür, Sayfa Sil, Sayfaları Sırala — hepsi cihazınızda.",
@@ -4619,7 +4619,7 @@ export const BLOG_POSTS = [
         {"q": "Sunucuda işlenen dosyalar ne oluyor?", "a": "İşlem tamamlandıktan sonra sunucuda tutulmaz. Yine de en güvenli belge, hiç gönderilmeyen belgedir; mümkün olan işlemleri cihazda yapmak bu yüzden tercih edilir."},
         { q: "PDF'i sunucuya yüklemeden işleyebilir miyim?", a: "Evet. Birleştirme, bölme, döndürme, sayfa silme/sıralama, görselden PDF, imza, yorumlama ve belge tarama gibi yapısal işlemler tamamen tarayıcınızda çalışır; dosya internete gönderilmez." },
         { q: "Hangi araçlar sunucuda çalışır?", a: "Word/Excel/PowerPoint dönüşümü, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır. Yapay zekâ araçlarında dosya yüklenmez; yalnızca cihazda çıkarılan metin işlenir." },
-        { q: "Cihazda işleme neden daha hızlı?", a: "Dosya yüklenip indirilmediği için bekleme olmaz; işlem tarayıcınızda anında yapılır ve çevrimdışıyken bile çalışabilir." },
+        { q: "Cihazda işleme neden daha hızlı?", a: "Dosya yüklenip indirilmediği için bekleme olmaz; işlem tarayıcınızda anında yapılır." },
       ],
     },
     {
@@ -4631,7 +4631,7 @@ export const BLOG_POSTS = [
       blocks: [
         { t: "lead", x: "Most online PDF tools work the same way: your file is uploaded to their servers, processed there and handed back. For contracts, IDs and invoices that means a copy of your file lands on a server you do not control. For most structural PDF operations, that is unnecessary." },
         { t: "h2", x: "What on-device means" },
-        { t: "p", x: "On-device, or client-side, processing means the whole job happens inside your browser and the file is never sent over the internet. That gives you three things: privacy, because the file stays with you; speed, because there is no upload or download wait; and the ability to work offline." },
+        { t: "p", x: "On-device, or client-side, processing means the whole job happens inside your browser and the file is never sent over the internet. That gives you two things: privacy, because the file stays with you, and speed, because there is no upload or download wait." },
         { t: "h2", x: "Test any tool in thirty seconds" },
         { t: "p", x: "A privacy claim means something when it can be tested. Try the operation with your connection switched off. If it completes, the file never left your device, because there was nothing to send. That test gives a more definite answer than any privacy page." },
         { t: "h2", x: "What 'deleted after an hour' really means" },
@@ -4661,7 +4661,7 @@ export const BLOG_POSTS = [
         { q: "What happens to files processed on a server?", a: "They are not retained after processing finishes. Even so, the safest document is one never sent, which is why local processing is preferred wherever possible." },
         { q: "Can I process a PDF without uploading it to a server?", a: "Yes. Structural operations such as merging, splitting, rotating, deleting and reordering pages, images to PDF, signing, annotating and document scanning run entirely in your browser, and the file is not sent to the internet." },
         { q: "Which tools run on the server?", a: "Heavy jobs such as Word, Excel and PowerPoint conversion, OCR and compression run on the server. With AI tools the file is not uploaded; only the text extracted on your device is processed." },
-        { q: "Why is on-device processing faster?", a: "Because the file is not uploaded and downloaded, there is no wait. The operation happens instantly in your browser and can even work offline." },
+        { q: "Why is on-device processing faster?", a: "Because the file is not uploaded and downloaded, there is no wait. The operation happens instantly in your browser." },
       ],
     },
   ),
@@ -4713,7 +4713,7 @@ export const BLOG_POSTS = [
       faq: [
         {"q": "Sonuç dosyası telefonda nereye kaydediliyor?", "a": "İndirilenler klasörüne düşer. Oradan paylaş menüsüyle e-postaya, mesajlaşma uygulamasına ya da bulut hesabınıza gönderebilirsiniz."},
         {"q": "iPhone ve Android arasında fark var mı?", "a": "İşlemler tarayıcıda çalıştığı için ikisinde de aynı şekilde kullanılır. Dosya seçme ve indirme ekranlarının görünümü işletim sistemine göre değişir."},
-        {"q": "Telefonda çalışırken internet gerekli mi?", "a": "Sayfa işlemleri cihazda çalıştığı için sayfa bir kez açıldıktan sonra bağlantı kesilse de tamamlanabilir. Dönüştürme ve yapay zekâ işlemleri için bağlantı gerekir."},
+        {"q": "Telefonda çalışırken internet gerekli mi?", "a": "Sayfayı açmak için internet gerekir. Sayfa işlemleri cihazınızda yapılır ve dosyanız yüklenmez. Dönüştürme ve yapay zekâ işlemleri için ayrıca sunucuya bağlantı gerekir."},
         {"q": "Çıktıya filigran ekleniyor mu?", "a": "Hayır. İndirdiğiniz dosyada görünür filigran bulunmaz."},
         { q: "Telefonda PDF birleştirmek için uygulama gerekir mi?", a: "Hayır. PDF birleştirme, sayfa silme/döndürme ve belge tarama gibi işlemler doğrudan telefon tarayıcında, cihazında çalışır; uygulama yüklemene gerek yoktur." },
         { q: "Dosyam telefonda güvende mi?", a: "Yapısal işlemler (birleştir, böl, döndür, tara) tamamen cihazında yapılır; dosya internete gönderilmez. Yalnızca dönüştürme/OCR gibi ağır işler sunucuda çalışır." },
@@ -4906,8 +4906,8 @@ export const BLOG_POSTS = [
         { t: "p", x: "\"Dosyanız cihazınızdan çıkmıyor\" cümlesini bize inanarak kabul etmenize gerek yok. Otuz saniyede kendiniz doğrulayabilirsiniz:" },
         { t: "steps", items: [
           { title: "Birleştirme aracını açın", x: "Üye olmanıza gerek yok. Birleştirmek istediğiniz birkaç PDF'i seçin." },
-          { title: "İnternet bağlantınızı kesin", x: "Wi-Fi'ı kapatın ya da kabloyu çıkarın. Sayfayı yenilemeyin." },
-          { title: "Birleştirmeyi çalıştırın", x: "İşlem tamamlanır ve dosyanızı indirirsiniz. İnternet yokken çalışıyorsa, dosyanız hiçbir yere gitmiyor demektir." },
+          { title: "Ağ sekmesini açın", x: "Tarayıcıda F12 tuşuna basın ve Ağ (Network) sekmesini açın. Sayfayı yenilemeyin." },
+          { title: "Birleştirmeyi çalıştırın", x: "İşlem tamamlanır ve dosyanızı indirirsiniz. Listede PDF dosyanızı gönderen bir yükleme isteği görünmüyorsa, dosyanız hiçbir yere gitmiyor demektir." },
         ] },
       ],
       faq: [
@@ -4916,7 +4916,7 @@ export const BLOG_POSTS = [
         { q: "Ücretsiz çıktıya filigran ekleniyor mu?", a: "Hayır. PDF Platform ücretsiz çıktılara zorunlu filigran eklemez." },
         { q: "Üye olmadan kullanabilir miyim?", a: "Evet. Temel araçlar üyelik veya kurulum gerektirmez; doğrudan tarayıcıda çalışırsınız." },
         { q: "Masaüstü uygulaması var mı?", a: "Hayır. PDF Platform tarayıcıda çalışır. Telefonda ana ekrana eklenip uygulama gibi kullanılabilir, ancak ayrı bir masaüstü programı bulunmuyor." },
-        { q: "Dosyamın cihazdan çıkmadığını nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
+        { q: "Dosyamın cihazdan çıkmadığını nasıl doğrularım?", a: "Tarayıcınızın geliştirici araçlarında Ağ (Network) sekmesini açıp aracı kullanın. Cihazda çalışan araçlar dosyanızı sunucuya göndermez, bu yüzden dosya yükleme isteği görmezsiniz. Sunucu gerektiren araçlarda (dönüştürme, OCR, yapay zekâ) yükleme isteği görürsünüz." },
       ],
     },
     {
@@ -4967,8 +4967,8 @@ export const BLOG_POSTS = [
         { t: "p", x: "You do not have to take 'your file stays on your device' on trust. You can check it in thirty seconds:" },
         { t: "steps", items: [
           { title: "Open the merge tool", x: "No account needed. Pick a couple of PDFs you want to merge." },
-          { title: "Disconnect from the internet", x: "Turn off Wi-Fi or unplug the cable. Do not reload the page." },
-          { title: "Run the merge", x: "It completes and you download your file. If it works with no connection, your file is not going anywhere." },
+          { title: "Open the Network tab", x: "Press F12 in your browser and open the Network tab. Do not reload the page." },
+          { title: "Run the merge", x: "It completes and you download your file. If no request in the list uploads your PDF, your file is not going anywhere." },
         ] },
       ],
       faq: [
@@ -4977,7 +4977,7 @@ export const BLOG_POSTS = [
         { q: "Is a watermark added to the free output?", a: "No. PDF Platform does not add a forced watermark to free output." },
         { q: "Can I use it without an account?", a: "Yes. The basic tools need no account or installation, and you work directly in the browser." },
         { q: "Is there a desktop app?", a: "No. PDF Platform runs in the browser. You can add it to your phone's home screen and use it like an app, but there is no separate desktop program." },
-        { q: "How can I verify my file never leaves my device?", a: "Disconnect from the internet and try the tool. On-device tools keep working without a connection, while anything that needs a server will not." },
+        { q: "How can I verify my file never leaves my device?", a: "Open your browser's developer tools, switch to the Network tab and run the tool. On-device tools send no file upload request, while tools that need a server (conversion, OCR, AI) do." },
       ],
     },
   ),
