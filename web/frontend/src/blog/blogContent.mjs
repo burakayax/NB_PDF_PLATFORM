@@ -992,7 +992,7 @@ export const BLOG_POSTS = [
         { t: "ul", items: [
           "No sync between devices. Scans do not pile up in a cloud; you save or share the PDF yourself.",
           "It is not a store-installed app. You can add the site to your home screen and use it like one.",
-          "You need a connection the first time. Afterwards the scanning works offline, because the work was always on your device.",
+          "You need a connection to open the page. The scanning itself happens on your device, so your documents are not uploaded anywhere.",
         ] },
         { t: "p", x: "If you want scans collected in a cloud, Microsoft's OneDrive suggestion is the right call. If you want documents to stay on your phone, this is." },
       ],
