@@ -525,7 +525,7 @@ export const BLOG_POSTS = [
       faq: [
         { q: "Sejda'nın ücretsiz sınırı nedir?", a: "Saatte 3 işlem. Ayrıca araç başına sayfa sınırı (sayfa düzenlemede 50, çoğu araçta 200) ve dosya boyutu sınırı (çoğu araçta 50 MB, sıkıştırmada 100 MB) bulunuyor. Üyelik gerekmiyor." },
         { q: "Saatlik sınır olmayan bir alternatif var mı?", a: "Sayfa işlemleri için evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama tarayıcınızda çalışır; saatlik ya da günlük sınır yoktur ve üyelik gerekmez." },
-        { q: "Dönüştürmede de sınırsız mı?", a: "Hayır. Word'e çevirme ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır; OCR ise cihazınızda çalışır. Bu araçlarda biz de sınırlıyız." },
+        { q: "Dönüştürmede de sınırsız mı?", a: "Hayır. Word'e çevirme ve sıkıştırma sunucuda çalışır ve ücretsiz planda günde 3 işlem hakkı vardır; OCR ise cihazınızda çalışır. Bu araçlarda biz de sınırlıyız." },
         { q: "Sejda'da olup sizde olmayan ne var?", a: "Masaüstü sürümü ve haftalık geçiş kartı. Tek seferlik yoğun bir iş için 5 dolarlık haftalık kart, bizde karşılığı olmayan kullanışlı bir seçenek." },
         { q: "PDF metnini düzenleyebiliyor musunuz?", a: "Evet. PDF Düzenle aracı belgedeki mevcut metni gerçekten değiştirir ve siler; bu işlem sunucuda yapılır." },
       ],
@@ -791,7 +791,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Burada da açık olalım, çünkü PDF24'ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:" },
         { t: "ul", items: [
           "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.",
-          "Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.",
+          "Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günde 3 işlem hakkı verir; fazlası ücretli planlardadır.",
         ] },
         { t: "p", x: "Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR'de durum farklıdır — bunu bilerek seçin." },
 
@@ -810,7 +810,7 @@ export const BLOG_POSTS = [
         { q: "PDF24 dosyalarımı sunucuya yüklüyor mu?", a: "Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24'ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows'taki Creator sürümü çevrimdışı çalıştığı için yüklemez." },
         { q: "Mac veya Linux'ta dosyamı yüklemeden PDF işleyebilir miyim?", a: "Evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez." },
         { q: "Dosyamın yüklenmediğini nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
-        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir." },
+        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günde 3 işlem hakkı verir." },
       ],
     },
     {

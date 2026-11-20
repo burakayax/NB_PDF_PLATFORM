@@ -1830,7 +1830,7 @@ function Faq({ language }: { language: Language }) {
           {
             question: "PDF'lerimi yüklediğimde verilerim güvende mi?",
             answer:
-              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir işlem biter bitmez silinir; çıktı dosyası en fazla 24 saat saklanır. Birleştir, böl, döndür gibi yaklaşık 20 araç ise dosyanı hiç yüklemeden tarayıcında çalışır.",
+              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir işlem biter bitmez silinir; çıktı dosyası en fazla 24 saat saklanır. Birleştir, böl, döndür gibi 40'tan fazla araç ise dosyanı hiç yüklemeden tarayıcında çalışır.",
           },
           {
             question: "Masaüstü uygulaması çevrimdışı çalışacak mı?",
@@ -1862,7 +1862,7 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Is my data secure when I upload PDFs?",
             answer:
-              "Yes. Files are transferred over encrypted connections and deleted as soon as processing ends; output files are kept for 24 hours at most. About 20 tools, such as merge, split and rotate, run in your browser without uploading your file at all.",
+              "Yes. Files are transferred over encrypted connections and deleted as soon as processing ends; output files are kept for 24 hours at most. More than 40 tools, such as merge, split and rotate, run in your browser without uploading your file at all.",
           },
           {
             question: "Will the desktop app work offline?",

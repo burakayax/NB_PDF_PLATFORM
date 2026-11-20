@@ -333,7 +333,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       kicker: "Pricing",
       title: "Start free, pay for what you need.",
       description:
-        "Tools that run on your device are free and unlimited. Choose a monthly plan for regular use, or an AI credit pack for a one-off job. Checkout runs through our secure payment partner: TRY in Turkey (VAT included), USD elsewhere.",
+        "Tools that run on your device are free and unlimited. Choose a monthly plan for regular use, or an AI credit pack for a one-off job. Checkout runs through our secure payment partner: Checkout is in TRY (VAT included). International card payments are coming soon.",
       plans: [],
     },
 
@@ -660,7 +660,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       kicker: "Fiyatlandırma",
       title: "Ücretsiz başlayın, ihtiyacınız kadar ödeyin.",
       description:
-        "Cihazınızda çalışan araçlar ücretsiz ve sınırsızdır. Düzenli kullanım için aylık plan, tek seferlik iş için yapay zekâ kredi paketi var. Ödeme güvenli iş ortağımız üzerinden yapılır: Türkiye'de TL (KDV dahil), yurt dışında USD.",
+        "Cihazınızda çalışan araçlar ücretsiz ve sınırsızdır. Düzenli kullanım için aylık plan, tek seferlik iş için yapay zekâ kredi paketi var. Ödeme güvenli iş ortağımız üzerinden yapılır: Ödeme TL ile yapılır (KDV dahil). Yurt dışı kart ödemeleri yakında açılacak.",
       plans: [],
     },
 
