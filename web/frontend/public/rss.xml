@@ -1580,7 +1580,7 @@
 <blockquote><p>İddiayı sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir.</p></blockquote>
 <h2>Neyin ücretsiz olduğu</h2>
 <p>Burada da açık olalım, çünkü PDF24'ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:</p>
-<ul><li>Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.</li><li>Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.</li></ul>
+<ul><li>Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.</li><li>Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günde 3 işlem hakkı verir; fazlası ücretli planlardadır.</li></ul>
 <p>Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR'de durum farklıdır — bunu bilerek seçin.</p>
 <p><strong>PDF Birleştir</strong> — Mac, Linux, Windows fark etmez — tarayıcınızda çalışır, dosyanız yüklenmez. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
 <h2>Hangisini seçmelisiniz?</h2>
@@ -1760,7 +1760,7 @@
 <h2>İyi bir ücretsiz PDF aracında aranacak 6 şey</h2>
 <ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcında mı (cihazında) işleniyor? Hassas belgeler için cihazda işleme en güvenlisidir.</li><li>Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu? Profesyonel bir belge için bu can sıkıcıdır.</li><li>Üyelik zorunluluğu: Basit bir birleştirme için hesap açmak gerekiyor mu?</li><li>Günlük/işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemen ya da ödeme yapman isteniyor mu?</li><li>Kurulum: Tarayıcıda mı çalışıyor, yoksa program/eklenti mi istiyor?</li><li>Kapsam: Sadece birleştirme mi, yoksa böl/kırp/döndür/dönüştür/imza gibi ihtiyaç duyacağın araçlar da var mı?</li></ul>
 <h2>Neden "cihazda işleme" fark yaratır?</h2>
-<p>Bir araç işlemi tarayıcında yapıyorsa üç şey kazanırsın: gizlilik (dosya internete gitmez), hız (yükleme/indirme beklemezsin, anında sonuç) ve çevrimdışı çalışma (bir kez açıldıktan sonra bağlantı kesilse de çalışır). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez.</p>
+<p>Bir araç işlemi tarayıcında yapıyorsa iki şey kazanırsın: gizlilik (dosya internete gitmez) ve hız (yükleme/indirme beklemezsin, anında sonuç). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez.</p>
 <p><strong>PDF Araçlarını Dene</strong> — Birleştir, böl, kırp, döndür — dosyan cihazından çıkmadan, üyeliksiz ve ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
 <h2>Hangi işlem cihazda yapılabilir, hangisi sunucu ister?</h2>
 <p>Dürüst olmak gerekir: her işlem tarayıcıda yapılamaz. Doğru araç, bu ayrımı sana açıkça söyleyendir. Genel kural:</p>

@@ -525,7 +525,7 @@ export const BLOG_POSTS = [
       faq: [
         { q: "Sejda'nın ücretsiz sınırı nedir?", a: "Saatte 3 işlem. Ayrıca araç başına sayfa sınırı (sayfa düzenlemede 50, çoğu araçta 200) ve dosya boyutu sınırı (çoğu araçta 50 MB, sıkıştırmada 100 MB) bulunuyor. Üyelik gerekmiyor." },
         { q: "Saatlik sınır olmayan bir alternatif var mı?", a: "Sayfa işlemleri için evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama tarayıcınızda çalışır; saatlik ya da günlük sınır yoktur ve üyelik gerekmez." },
-        { q: "Dönüştürmede de sınırsız mı?", a: "Hayır. Word'e çevirme ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır; OCR ise cihazınızda çalışır. Bu araçlarda biz de sınırlıyız." },
+        { q: "Dönüştürmede de sınırsız mı?", a: "Hayır. Word'e çevirme ve sıkıştırma sunucuda çalışır ve ücretsiz planda günde 3 işlem hakkı vardır; OCR ise cihazınızda çalışır. Bu araçlarda biz de sınırlıyız." },
         { q: "Sejda'da olup sizde olmayan ne var?", a: "Masaüstü sürümü ve haftalık geçiş kartı. Tek seferlik yoğun bir iş için 5 dolarlık haftalık kart, bizde karşılığı olmayan kullanışlı bir seçenek." },
         { q: "PDF metnini düzenleyebiliyor musunuz?", a: "Evet. PDF Düzenle aracı belgedeki mevcut metni gerçekten değiştirir ve siler; bu işlem sunucuda yapılır." },
       ],
@@ -791,7 +791,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Burada da açık olalım, çünkü PDF24'ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:" },
         { t: "ul", items: [
           "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.",
-          "Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.",
+          "Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günde 3 işlem hakkı verir; fazlası ücretli planlardadır.",
         ] },
         { t: "p", x: "Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR'de durum farklıdır — bunu bilerek seçin." },
 
@@ -810,7 +810,7 @@ export const BLOG_POSTS = [
         { q: "PDF24 dosyalarımı sunucuya yüklüyor mu?", a: "Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24'ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows'taki Creator sürümü çevrimdışı çalıştığı için yüklemez." },
         { q: "Mac veya Linux'ta dosyamı yüklemeden PDF işleyebilir miyim?", a: "Evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez." },
         { q: "Dosyamın yüklenmediğini nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
-        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günlük bir işlem hakkı verir." },
+        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, sıkıştırma) ücretsiz plan günde 3 işlem hakkı verir." },
       ],
     },
     {
@@ -5610,7 +5610,7 @@ export const BLOG_POSTS = [
         ] },
 
         { t: "h2", x: "Neden \"cihazda işleme\" fark yaratır?" },
-        { t: "p", x: "Bir araç işlemi tarayıcında yapıyorsa üç şey kazanırsın: gizlilik (dosya internete gitmez), hız (yükleme/indirme beklemezsin, anında sonuç) ve çevrimdışı çalışma (bir kez açıldıktan sonra bağlantı kesilse de çalışır). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez." },
+        { t: "p", x: "Bir araç işlemi tarayıcında yapıyorsa iki şey kazanırsın: gizlilik (dosya internete gitmez) ve hız (yükleme/indirme beklemezsin, anında sonuç). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez." },
 
         { t: "cta", title: "PDF Araçlarını Dene", x: "Birleştir, böl, kırp, döndür — dosyan cihazından çıkmadan, üyeliksiz ve ücretsiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
 
@@ -5657,7 +5657,7 @@ export const BLOG_POSTS = [
           "Coverage: just merging, or also split, crop, rotate, convert and sign, whichever you will actually need?",
         ] },
         { t: "h2", x: "Why on-device matters" },
-        { t: "p", x: "If a tool runs the operation in your browser you gain three things: privacy, because the file does not go online; speed, because there is no upload or download wait; and offline use, since once the page has loaded it works even if your connection drops. On PDF Platform, structural tools such as merge, split, crop, rotate, delete pages, reorder and image to PDF run entirely on your device." },
+        { t: "p", x: "If a tool runs the operation in your browser you gain two things: privacy, because your files never leave your device, and speed, because there is no upload or download wait. On PDF Platform, structural tools such as merge, split, crop, rotate, delete pages, reorder and image to PDF run entirely on your device." },
         { t: "cta", title: "Try the PDF Tools", x: "Merge, split, crop and rotate without your file leaving your device, with no sign-up, free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
         { t: "h2", x: "What can run locally and what cannot" },
         { t: "p", x: "Not everything can run in a browser, and the right tool is the one that tells you the split clearly. The general rule:" },

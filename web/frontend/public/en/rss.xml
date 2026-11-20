@@ -1737,7 +1737,7 @@
 <h2>Six checks</h2>
 <ol><li>Privacy: is the file uploaded to a server, or processed in your browser? On-device is safest for sensitive documents.</li><li>Forced watermark: is a stamp added to the free output? That is annoying on a professional document.</li><li>Sign-up requirement: does a simple merge need an account?</li><li>Usage limit: are you asked to wait or pay after a set number of free tasks?</li><li>Installation: does it run in the browser, or need a program or plugin?</li><li>Coverage: just merging, or also split, crop, rotate, convert and sign, whichever you will actually need?</li></ol>
 <h2>Why on-device matters</h2>
-<p>If a tool runs the operation in your browser you gain three things: privacy, because the file does not go online; speed, because there is no upload or download wait; and offline use, since once the page has loaded it works even if your connection drops. On PDF Platform, structural tools such as merge, split, crop, rotate, delete pages, reorder and image to PDF run entirely on your device.</p>
+<p>If a tool runs the operation in your browser you gain two things: privacy, because your files never leave your device, and speed, because there is no upload or download wait. On PDF Platform, structural tools such as merge, split, crop, rotate, delete pages, reorder and image to PDF run entirely on your device.</p>
 <p><strong>Try the PDF Tools</strong> — Merge, split, crop and rotate without your file leaving your device, with no sign-up, free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
 <h2>What can run locally and what cannot</h2>
 <p>Not everything can run in a browser, and the right tool is the one that tells you the split clearly. The general rule:</p>
