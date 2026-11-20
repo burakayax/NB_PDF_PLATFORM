@@ -50,11 +50,11 @@ jobs:
         run: |
           if [ -n "$MANUEL" ]; then a="$MANUEL"; else
             case "$SCHEDULE" in
-              "30 4 * * *") a=durum ;;
-              "0 4 * * 1") a=seo ;;
-              "15 4 * * 1") a=sosyal ;;
-              "45 4 1 * *") a=finans ;;
-              "0 5 * * *") a=ozet ;;
+              "37 4 * * *") a=durum ;;
+              "7 4 * * 1") a=seo ;;
+              "23 4 * * 1") a=sosyal ;;
+              "47 4 1 * *") a=finans ;;
+              "19 5 * * *") a=ozet ;;
               *) echo "::error::Bilinmeyen zamanlama"; exit 1 ;;
             esac
           fi
