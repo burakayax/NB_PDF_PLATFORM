@@ -32,6 +32,35 @@ Kod: `cloudflare/bekci-worker.mjs` dosyasının TAMAMI.
    Ertesi sabahki özette "Çöküş bekçisi (gölge)" satırı "Son 24 saatte N kontrol, 0 başarısız" demeli.
 6. Bu Worker'a **route/alan adı EKLEME**; dışarıdan hiçbir adres vermez.
 
+## Asistan için kontrol listesi (tarayıcıdan kurulum yapacak kişi/asistan okusun)
+**Önce:** Bu PR birleşmiş olmalı. Kod, herkese açık depoda şu adreste durur:
+`https://raw.githubusercontent.com/burakayax/NB_PDF_PLATFORM/main/cloudflare/bekci-worker.mjs`
+(Sayfadaki yazının TAMAMINI kopyala; kısaltma, düzenleme yapma.)
+
+**Girilecek değerler (birebir):**
+| Alan | Değer |
+|---|---|
+| Worker adı | `pdfplatform-bekci` |
+| R2 bağlantısı → Variable name | `BUCKET` |
+| R2 bağlantısı → Bucket | `nb-gecelik-ozet` |
+| Cron Trigger | `*/5 * * * *` |
+| Route / Domain / Custom domain | **HİÇBİRİ EKLENMEZ** |
+| Değişken/gizli anahtar (Variables, Secrets) | **HİÇBİRİ EKLENMEZ** |
+
+**Yapılmayacaklar (dur ve Burak'a sor):**
+- Hesap şifresi, API token'ı ya da anahtar oluşturma/girme. Gerekmiyor.
+- Herhangi bir yerde ödeme, plan yükseltme ya da kart bilgisi isteyen ekran çıkarsa DUR. Ücretsiz plan yeterli, bir şey satın alınmaz.
+- Başka bir Worker'a, route'a, DNS kaydına ya da `pdfplatform-404` Worker'ına dokunma.
+- Deploy hata verirse (ör. kodda birden fazla `export` yüzünden) ekranı Burak'a göster; ben uyarlarım.
+
+**Kurulum bitti sayılır, çünkü:**
+1. Worker sayfasında **Triggers** altında `*/5 * * * *` cron'u görünür.
+2. **Bindings** altında `BUCKET → nb-gecelik-ozet` görünür.
+3. Cloudflare → **R2 → nb-gecelik-ozet** içinde, en geç 10 dakika sonra `bekci/` klasörü ve içinde `kayit.json` ile `durum.json` oluşur. (Dosyanın içini açıp başkasına gösterme; yalnızca varlığını doğrula.)
+4. Ertesi sabahki özet e-postasında "Çöküş bekçisi (gölge)" bölümü "Son 24 saatte N kontrol, 0 başarısız. Gölge modu: hiçbir şey yapılmadı." gibi görünür.
+
+**Bir şey ters giderse:** Worker → Triggers → cron'u sil. Siteye etkisi yoktur.
+
 ## Ek maliyet
 Ücretsiz plan yeterli (günde ~290 çalışma; Worker, R2 ve cron ücretsiz kullanım sınırlarının çok altında).
 Yeni hesap, ücretli plan, e-posta hizmeti ya da anahtar gerekmez.
