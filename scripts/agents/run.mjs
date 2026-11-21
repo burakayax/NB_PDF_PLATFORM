@@ -14,6 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { buildMail, parseLlmJson } from "./mail.mjs";
 import { collect, mailLine } from "./bakim-rules.mjs";
+import { bekciOzet } from "./bekci-ozet.mjs";
 
 const AGENT = process.argv[2];
 const VERI = process.env.AGENT_VERI || "veri"; // indirilmiş kova içeriği
@@ -161,9 +162,15 @@ async function composeMail(llmText, today, footer) {
     if (!txt) attention.push(`${AGENTS[k].title} çıktısı bulunamadı.`);
     else if (/üretilemedi/.test(txt)) attention.unshift(`${AGENTS[k].title} raporu üretilemedi.`);
   }
+  let watchdog = null;
+  try {
+    const b = bekciOzet(JSON.parse(readIf(path.join(VERI, "bekci-kayit.json")) || "null"));
+    watchdog = b.satir;
+    attention.push(...b.dikkat);
+  } catch { watchdog = null; }
   let maintenance = null;
   try { maintenance = mailLine(JSON.parse(readIf(path.join(VERI, "ajan-bakim-son.json")))); } catch { maintenance = null; }
-  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, maintenance, footer });
+  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, maintenance, watchdog, footer });
 }
 
 async function main() {

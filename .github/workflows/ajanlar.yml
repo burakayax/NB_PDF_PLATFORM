@@ -76,6 +76,16 @@ jobs:
           for f in ajan-durum-son.md ajan-seo-son.md ajan-sosyal-son.md ajan-finans-son.md ajan-bakim-son.json ajan-maliyet.json; do
             aws s3 cp "s3://nb-gecelik-ozet/$f" "veri/$f" --endpoint-url "$ep" --only-show-errors || true
           done
+      - name: Bekci kaydini indir (salt okuma; yoksa sorun degil)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OZET_R2_YAZMA_ANAHTAR_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OZET_R2_YAZMA_GIZLI }}
+          OZET_R2_ACCOUNT_ID: ${{ secrets.OZET_R2_ACCOUNT_ID }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          set +x
+          ep="https://${OZET_R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3 cp "s3://nb-gecelik-ozet/bekci/kayit.json" "veri/bekci-kayit.json" --endpoint-url "$ep" --only-show-errors || true
       - name: Ajani calistir
         id: run
         env:
