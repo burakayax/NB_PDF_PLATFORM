@@ -8,6 +8,7 @@ name: Yapay zeka ajanlari
 #   Ajan 3 sosyal  07:23 TR = 04:23 UTC (pazartesi)
 #   Ajan 4 finans  07:47 TR = 04:47 UTC (ayin 1'i)
 #   Ajan 5 ozet    08:19 TR = 05:19 UTC (her gun)
+#   Ajan 6 bakim   07:53 TR = 04:53 UTC (pazartesi; GOLGE: yalniz rapor, hicbir sey yapmaz)
 # Dakikalar bilerek "tuhaf": GitHub tam saat ve yarim saat basinda cok yogun oldugundan
 # zamanlanmis isleri saatlerce geciktirebiliyor (19-20 Kasim 2026'da ~9 saat). Sira korunur.
 on:
@@ -17,13 +18,14 @@ on:
     - cron: "23 4 * * 1"
     - cron: "47 4 1 * *"
     - cron: "19 5 * * *"
+    - cron: "53 4 * * 1"
   workflow_dispatch:
     inputs:
       ajan:
         description: "Calistirilacak ajan"
         required: true
         type: choice
-        options: [durum, seo, sosyal, finans, ozet]
+        options: [durum, seo, sosyal, finans, ozet, bakim]
 
 permissions:
   contents: read
@@ -55,6 +57,7 @@ jobs:
               "23 4 * * 1") a=sosyal ;;
               "47 4 1 * *") a=finans ;;
               "19 5 * * *") a=ozet ;;
+              "53 4 * * 1") a=bakim ;;
               *) echo "::error::Bilinmeyen zamanlama"; exit 1 ;;
             esac
           fi
@@ -70,7 +73,7 @@ jobs:
           ep="https://${OZET_R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           mkdir -p veri cikti
           aws s3 sync s3://nb-gecelik-ozet/ozet veri/ozet --endpoint-url "$ep" --exclude "*" --include "*.json" --only-show-errors
-          for f in ajan-durum-son.md ajan-seo-son.md ajan-sosyal-son.md ajan-finans-son.md ajan-maliyet.json; do
+          for f in ajan-durum-son.md ajan-seo-son.md ajan-sosyal-son.md ajan-finans-son.md ajan-bakim-son.json ajan-maliyet.json; do
             aws s3 cp "s3://nb-gecelik-ozet/$f" "veri/$f" --endpoint-url "$ep" --only-show-errors || true
           done
       - name: Ajani calistir
@@ -79,6 +82,7 @@ jobs:
           ANTHROPIC_AGENT_API_KEY: ${{ secrets.ANTHROPIC_AGENT_API_KEY }}
           AGENT_DATA_TOKEN: ${{ secrets.AGENT_DATA_TOKEN }}
           AGENT: ${{ steps.sec.outputs.ajan }}
+          GH_TOKEN: ${{ github.token }}
           AGENT_VERI: veri
           AGENT_OUT: cikti
         run: |

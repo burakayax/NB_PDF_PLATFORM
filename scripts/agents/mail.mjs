@@ -92,6 +92,7 @@ const H = (t) => `<h2 style="font-size:15px;margin:18px 0 4px;color:#0f172a">${e
  * @param {Array<{tarih:string,platform:string,konu:string,durum:string}>} p.social
  * @param {string|null} p.financeNote
  * @param {string[][]|null} p.financeTable  ilk satır başlık
+ * @param {string|null} [p.maintenance]  yazılım bakımı (gölge) tek satır özeti; yoksa bölüm çıkmaz
  * @param {string} p.footer
  */
 export function buildMail(p) {
@@ -122,6 +123,7 @@ export function buildMail(p) {
   html += p.financeTable && p.financeTable.length > 1
     ? tableHtml(p.financeTable[0], p.financeTable.slice(1))
     : `<p style="font-size:13px;color:#475569">${esc(p.financeNote || "Gecelik raporlar Kasım 2026'da başladı; ilk aylık finans raporu 1 Aralık'ta gelecek.")}</p>`;
+  if (p.maintenance) html += H("Yazılım bakımı (gölge)") + `<p style="font-size:13px;color:#475569">${esc(p.maintenance)}</p>`;
   html += `<p style="margin:18px 0 0;font-size:11px;color:#94a3b8">${esc(p.footer).replace(/\n/g, "<br>")}</p></div>`;
 
   // ---- Düz metin ----
@@ -138,6 +140,7 @@ export function buildMail(p) {
   t.push(social.length ? tableText(["Tarih", "Platform", "Konu", "Durum"], social.map((s) => [s.tarih, s.platform, s.konu, s.durum])) : "Bu hafta için plan satırı yok.", "");
   t.push("AYLIK FİNANS");
   t.push(p.financeTable && p.financeTable.length > 1 ? tableText(p.financeTable[0], p.financeTable.slice(1)) : p.financeNote || "Gecelik raporlar Kasım 2026'da başladı; ilk aylık finans raporu 1 Aralık'ta gelecek.", "");
+  if (p.maintenance) t.push("YAZILIM BAKIMI (GÖLGE)", p.maintenance, "");
   t.push("—", p.footer);
 
   return { html, text: t.join("\n") };
