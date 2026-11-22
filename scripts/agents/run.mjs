@@ -15,6 +15,7 @@ import path from "node:path";
 import { buildMail, parseLlmJson } from "./mail.mjs";
 import { collect, mailLine } from "./bakim-rules.mjs";
 import { bekciOzet } from "./bekci-ozet.mjs";
+import { parseYapilanlar, bekleyenler, seoBlok, mailSatirlari } from "./yapilanlar.mjs";
 
 const AGENT = process.argv[2];
 const VERI = process.env.AGENT_VERI || "veri"; // indirilmiş kova içeriği
@@ -50,7 +51,7 @@ const PROMPTS = {
   bakim: `GÖREV: Haftalık yazılım bakım raporu (GÖLGE MODU: hiçbir şey yapılmadı, yapılmayacak). Girdi: açık Dependabot güncellemelerinin KURAL TABANLI sınıflandırması (JSON; gruplar zaten kurallarla belirlendi, sen değiştirme). Sahibe (programlama bilgisi yok) sade Türkçe rapor yaz: önce 2-3 cümlelik genel durum, sonra her grup için kaç güncelleme olduğu ve neden o grupta olduğu (teknik terimi kısa açıkla), sonra "## Ne yapardım" (yalnız girdideki yapardim satırlarına dayan, yeni karar üretme). "ciEski": true olanlar için CI sonucunun eski olabileceğini belirt. PR numaralarını yaz. Birleştir/onayla gibi bir karar verme; yalnız anlat.`,
   durum: `GÖREV: Günlük site durumu. Aşağıda son gecelik özet (JSON) ve önceki günlerin özetleri var. Dünü bir önceki günle ve son 7 günün ortalamasıyla karşılaştır; önemli değişimleri ve hataları yaz. Sorun varsa ⚠️.
 Biçim: "## Özet" (3-5 madde), "## Değişimler", "## ⚠️ Dikkat" (yoksa "Yok").`,
-  seo: `GÖREV: Haftalık SEO. Search Console verisi: son 7 gün ("current") ve önceki 7 gün ("previous"). Tıklama/gösterim/sıra değişimini, yükselen-düşen sayfa ve sorguları karşılaştır. 3-5 SOMUT öneri yaz (hangi sayfa/sorgu, ne yapılmalı, neden). Veri azsa bunu açıkça söyle; abartma.
+  seo: `GÖREV: Haftalık SEO. Search Console verisi: son 7 gün ("current") ve önceki 7 gün ("previous"). Tıklama/gösterim/sıra değişimini, yükselen-düşen sayfa ve sorguları karşılaştır. 3-5 SOMUT öneri yaz (hangi sayfa/sorgu, ne yapılmalı, neden). Veri azsa bunu açıkça söyle; abartma. Veride "ZATEN YAPILAN DEĞİŞİKLİKLER" bölümü varsa o sayfalar için YENİ ÖNERİ YAZMA; yalnız "## Yapıldı, sonuç bekleniyor" başlığı altında kısaca an (hangi sayfa, ne zaman yapıldı).
 Biçim: "## Bu hafta", "## Öne çıkanlar", "## Öneriler" (numaralı).`,
   sosyal: `GÖREV: Haftalık sosyal medya planı. Girdi: son paylaşımlar (tekrar etme), SEO verisi (öne çıkan sorgu/sayfalar) ve sitenin araçları. 5-7 paylaşımlık hafta planı yaz: her biri için gün+saat (TR), platform, paylaşım metni, görsel fikri, bağlanacak sayfa. Son 45 günde işlenen aynı konuyu tekrarlama. ASLA paylaşım yapmazsın; yalnız plan yazarsın.
 ETİKET KURALI: Her paylaşımdaki etiketler (#) paylaşımın KONUSUYLA eşleşmeli. Örneğin PDF→Excel paylaşımına alakasız etiket (#edevlet, #TabloModelleri gibi) koyma; yalnız o aracı/konuyu doğrudan tarif eden etiketler kullan. Emin değilsen etiketi azalt.
@@ -96,7 +97,8 @@ async function buildInput() {
     return last.map((f) => `### ${dateOf(f)}\n${clip(readIf(f), 9000)}`).join("\n\n");
   }
   if (AGENT === "seo") {
-    return "SEARCH CONSOLE:\n" + JSON.stringify(await api("/api/internal/agent/gsc"));
+    const yapilan = seoBlok(parseYapilanlar(readIf("scripts/agents/yapilanlar.txt")));
+    return "SEARCH CONSOLE:\n" + JSON.stringify(await api("/api/internal/agent/gsc")) + yapilan;
   }
   if (AGENT === "sosyal") {
     const [gsc, posts] = await Promise.all([api("/api/internal/agent/gsc"), api("/api/internal/agent/social-posts?days=45")]);
@@ -162,6 +164,7 @@ async function composeMail(llmText, today, footer) {
     if (!txt) attention.push(`${AGENTS[k].title} çıktısı bulunamadı.`);
     else if (/üretilemedi/.test(txt)) attention.unshift(`${AGENTS[k].title} raporu üretilemedi.`);
   }
+  const done = mailSatirlari(bekleyenler(parseYapilanlar(readIf("scripts/agents/yapilanlar.txt"))));
   let watchdog = null;
   try {
     const b = bekciOzet(JSON.parse(readIf(path.join(VERI, "bekci-kayit.json")) || "null"));
@@ -170,7 +173,7 @@ async function composeMail(llmText, today, footer) {
   } catch { watchdog = null; }
   let maintenance = null;
   try { maintenance = mailLine(JSON.parse(readIf(path.join(VERI, "ajan-bakim-son.json")))); } catch { maintenance = null; }
-  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, maintenance, watchdog, footer });
+  return buildMail({ date: today, attention, now, prev, gsc, seoTips: llm.seoTips, social: llm.social, financeNote: llm.financeNote, financeTable: llm.financeTable, maintenance, watchdog, done, footer });
 }
 
 async function main() {

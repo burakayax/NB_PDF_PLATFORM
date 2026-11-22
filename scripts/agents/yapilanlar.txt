@@ -1,0 +1,8 @@
+# SEO'da ZATEN YAPILAN değişiklikler. Her satır: tarih | sayfa | ne yapıldı
+# Yeni bir SEO değişikliği yayınlandığında buraya tek satır eklenir (PR'ın içinde).
+# SEO ajanı bu sayfalar için aynı öneriyi tekrar yazmaz; sabah e-postası 21 gün boyunca
+# "Yapıldı, sonuç bekleniyor" olarak gösterir (Google'ın işlemesi 2-3 hafta sürebilir).
+2026-11-19 | PDF Boyutlandır (Türkçe sayfa) | Başlık, açıklama ve SSS A4, A5, Letter ifadeleriyle güncellendi.
+2026-11-19 | /en/tools/resize-pdf | Başlık, açıklama, ilk paragraf ve SSS "A3 to A4" ve "A4 to Letter" ifadeleriyle güncellendi.
+2026-11-19 | /blog/biyometrik-fotograf-olculeri-ve-kurallari | Başlık ve meta açıklama ölçüleri (mm) içerecek şekilde güncellendi; ilgili fotoğraf yazılarına iç link cümlesi eklendi.
+2026-11-19 | /blog/camscanner-ucretsiz-gizli-alternatif | Başlık "CamScanner ücretsiz" ifadesine göre değişti; yeni bölüm ve SSS eklendi.
