@@ -6193,6 +6193,11 @@ export const BLOG_POSTS = [
       blocks: [
         { t: "lead", x: "Duruşma günü yaklaşıyor, dilekçeniz hazır, ekleri taradınız ve UYAP dosyayı kabul etmiyor. Hata mesajı da işe yaramıyor — sistem çoğu zaman sorunun boyut olduğunu açıkça söylemez. Bu yazı, hatanın gerçek sebebini nasıl bulacağınızı ve dosyayı nasıl sınırın altına indireceğinizi anlatıyor." },
 
+        { t: "h2", x: "«Görüntülemek istediğiniz evrakın boyutu çok büyük» uyarısı ne demek?" },
+        { t: "p", x: "UYAP'ta bir evrakı açmaya çalışırken şu iletiyi görebilirsiniz: «Görüntülemek istediğiniz evrakın boyutu çok büyük! Lütfen evrakı sisteminize kaydederek görüntüleyiniz.» Bu bir yükleme hatası değil, görüntüleme uyarısıdır: evrak, ekranda önizleme olarak açılamayacak kadar büyük bulunmuştur." },
+        { t: "p", x: "Mesajın önerdiği yol doğrudur: evrakı bilgisayarınıza kaydedin ve oradan açın. Kaydettiğiniz dosya UDF ise UDF Görüntüleyici ile tarayıcıda açabilir ya da UDF to PDF aracıyla PDF'e çevirip her programda okuyabilirsiniz." },
+        { t: "tip", x: "Aynı durum sizin yüklediğiniz dosyalar için de geçerlidir: büyük dosya karşı tarafın açmasını da zorlaştırır. Aşağıdaki adımlarla ekleri küçük tutmak, hem yüklemeyi hem okumayı kolaylaştırır." },
+
         { t: "h2", x: "Önce sebebi doğru teşhis edin" },
         { t: "p", x: "Yükleme hatasının pratikte üç kaynağı olur ve çözümleri birbirinden tamamen farklıdır:" },
         { t: "ul", items: [
@@ -6240,6 +6245,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Bu dört kontrol bir dakika sürer ve son gün yaşanan yükleme krizlerinin çoğunu baştan önler." },
       ],
       faq: [
+        { q: "UYAP'ta «Görüntülemek istediğiniz evrakın boyutu çok büyük» uyarısı ne demek?", a: "Evrak ekranda önizlenemeyecek kadar büyük olduğunda çıkan bir görüntüleme uyarısıdır. İletinin kendisi çözümü söyler: evrakı sisteminize (bilgisayarınıza) kaydedip oradan açın. Dosya UDF ise UDF Görüntüleyici ile açabilir veya UDF to PDF ile PDF'e çevirebilirsiniz." },
         { q: "UYAP'a yüklenecek dosya en fazla kaç MB olmalı?", a: "Sınır işlem türüne ve kuruma göre değişir; UDF dosyalarında uygulamada 10 MB'lık bir üst sınır bildiriliyor, bazı başvuru türlerinde dosya başına 40 MB'a kadar izin verilebiliyor. Güncel rakam için yükleme ekranındaki açıklamayı esas alın." },
         { q: "Sıkıştırma belgenin okunaklılığını bozar mı?", a: "Dengeli düzeyde bozmaz. Taranmış belgelerde en büyük kazanç görsellerden gelir ve metin okunaklı kalır. İndirdikten sonra en küçük puntolu sayfayı kontrol edin; bulanıklaştıysa bir alt düzeye geçin." },
         { q: "Dosyam neden bu kadar büyük?", a: "Neredeyse her zaman taranmış ekler yüzünden. Renkli ve yüksek çözünürlüklü tarama, ya da telefonla çekilmiş fotoğraflar bir sayfayı tek başına birkaç megabayta çıkarır." },
