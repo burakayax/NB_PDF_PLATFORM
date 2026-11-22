@@ -6,4 +6,3 @@
 2026-11-19 | /en/tools/resize-pdf | Başlık, açıklama, ilk paragraf ve SSS "A3 to A4" ve "A4 to Letter" ifadeleriyle güncellendi.
 2026-11-19 | /blog/biyometrik-fotograf-olculeri-ve-kurallari | Başlık ve meta açıklama ölçüleri (mm) içerecek şekilde güncellendi; ilgili fotoğraf yazılarına iç link cümlesi eklendi.
 2026-11-19 | /blog/camscanner-ucretsiz-gizli-alternatif | Başlık "CamScanner ücretsiz" ifadesine göre değişti; yeni bölüm ve SSS eklendi.
-2026-11-22 | / ve /en | Ana sayfa başlığı marka adıyla başlayacak şekilde değişti ("PDF Platform: ..."); hazır HTML'deki Organization sameAs listesi sosyal hesaplarla dolduruldu (daha önce boştu).
