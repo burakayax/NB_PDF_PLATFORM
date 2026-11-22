@@ -38,6 +38,7 @@ import {
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
+import { BRAND_SOCIAL_LINKS } from "../src/seo/brandSocialLinks.mjs";
 import { relatedBlogPosts } from "../src/seo/relatedPosts.mjs";
 import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "../src/seo/toolRatings.mjs";
 import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
@@ -475,7 +476,7 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
       contactType: "customer support",
       availableLanguage: ["Turkish", "English"],
     },
-    sameAs: [],
+    sameAs: [...BRAND_SOCIAL_LINKS],
   });
 
   if (meta.includeSoftware) {
