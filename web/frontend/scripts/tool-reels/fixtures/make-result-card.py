@@ -10,20 +10,30 @@ import sys
 import zipfile
 
 import pypdfium2 as pdfium
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 src, out, fonts = sys.argv[1], sys.argv[2], sys.argv[3]
-W, H = 960, 700
+W, H = 960, 900
 bold = ImageFont.truetype(os.path.join(fonts, "Roboto-Bold.ttf"), 40)
 small = ImageFont.truetype(os.path.join(fonts, "Roboto-Bold.ttf"), 30)
 ext = os.path.splitext(src)[1].lower()
 thumbs, caption = [], ""
 
 
-def pdf_pages(doc, limit=3):
+def trim_white(im, pad=14):
+    """Sayfadaki boş beyaz kenarları kırpar: tablo/içerik kartı doldursun."""
+    diff = ImageChops.difference(im, Image.new("RGB", im.size, (255, 255, 255)))
+    box = diff.getbbox()
+    if not box:
+        return im
+    l, t, r, b = box
+    return im.crop((max(l - pad, 0), max(t - pad, 0), min(r + pad, im.width), min(b + pad, im.height)))
+
+
+def pdf_pages(doc, limit=1):
     res = []
     for i in range(min(limit, len(doc))):
-        res.append(doc[i].render(scale=1.2).to_pil().convert("RGB"))
+        res.append(trim_white(doc[i].render(scale=2.5).to_pil().convert("RGB")))
     return res
 
 
@@ -49,7 +59,7 @@ d = ImageDraw.Draw(card)
 n = len(thumbs)
 gap = 28
 tw = (W - 2 * 48 - gap * (n - 1)) // n
-th = 500
+th = H - 48 - 150
 x = 48
 for im in thumbs:
     im.thumbnail((tw, th))

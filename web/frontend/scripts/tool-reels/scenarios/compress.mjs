@@ -105,6 +105,7 @@ export default {
     await wait(1716);
 
     await st.showResultButtons();
-    return { formBox, loadedBox, resultBox, swapAt, btnBoxFinal, estText };
+    const stat = { big: m[5], small: `${num(m[1])} ${m[2]} → ${num(m[3])} ${m[4]}` };
+    return { formBox, loadedBox, resultBox, swapAt, btnBoxFinal, estText, stat };
   },
 };

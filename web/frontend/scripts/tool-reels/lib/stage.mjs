@@ -31,6 +31,11 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   const now = () => +((Date.now() - t0) / 1000).toFixed(2);
   const events = [];
   let startT = 0;
+  // Tıklama anları (videoda tık sesi için): sayfadaki her fare basışı kayda geçer.
+  const clicks = [];
+  await pg.exposeFunction("__clk", () => {
+    if (startT) clicks.push(+(now() - startT).toFixed(2));
+  });
   // Ekrandaki anlatım: üstte adım başlığı, altta 0-2 satır açıklama (ilk satır vurgulu).
   const say = (label, title, l1 = "", l2 = "", accent = "") => {
     events.push({ t: +(now() - startT).toFixed(2), label, title, l1, l2, accent });
@@ -76,6 +81,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
       let mx = -100, my = -100;
       addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; c.style.transform = `translate(${mx}px,${my}px)`; }, true);
       addEventListener("mousedown", () => {
+        if (window.__clk) window.__clk();
         ring.style.transition = "none";
         ring.style.opacity = "1";
         ring.style.transform = `translate(${mx}px,${my}px) scale(.3)`;
@@ -292,7 +298,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   async function finish(extra) {
     zoomOff();
     const end = frozenEnd ?? +(now() - startT).toFixed(2);
-    writeFileSync(`${workDir}/timeline.json`, JSON.stringify({ events, end, start: startT, zooms, cuts, VW, VH, ...extra }));
+    writeFileSync(`${workDir}/timeline.json`, JSON.stringify({ events, end, start: startT, zooms, cuts, clicks, VW, VH, ...extra }));
     await ctx.close();
     await browser.close();
     return end;

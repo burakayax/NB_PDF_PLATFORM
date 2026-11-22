@@ -113,11 +113,11 @@ await stage.finish(extra);
 mkdirSync(dirname(out), { recursive: true });
 // Aynı çekimden iki sürüm: yalnız son karedeki yönlendirme cümlesi farklı.
 //   out          → Instagram (açıklamadaki adres tıklanmaz: "Bağlantı profilde")
-//   out-aciklama → YouTube + Facebook (açıklamadaki adres tıklanır: "Bağlantı açıklamada")
+//   out-aciklama → YouTube + Facebook ("Bağlantı aşağıda": YouTube'da açıklamada, Facebook'ta ilk yorumda)
 const { total } = compose({ workDir, out, intro: scenario.intro, publicDir, linkLine: "Bağlantı profilde" });
 copyFileSync(out, out); // varlık denetimi (yazılmadıysa hata verir)
 const outCaption = resolve(arg("out-aciklama", out.replace(/\.mp4$/, "-aciklama.mp4")));
-compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı açıklamada" });
+compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı aşağıda" });
 copyFileSync(outCaption, outCaption);
 // Facebook Reels kuralı: 7-20 sn. Süre kayıttan geliyor; kaliteyi bozmamak için kesilmez, yalnız uyarılır.
 if (total > 20 || total < 7) {

@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { availableReelCover, reelCoverUrl, toolIdFromGuid } from "../modules/social/platforms/reel-cover.js";
 import { publishFacebookReel } from "../modules/social/platforms/facebook-reels.js";
+import { reelCommentTiming } from "../modules/social/platforms/facebook-comment.js";
 import { env } from "../config/env.js";
 import { publishInstagramReel } from "../modules/social/platforms/instagram-reels.js";
 
 afterEach(() => vi.unstubAllGlobals());
+// Gerçek bekleme süreleri testi yavaşlatmasın.
+reelCommentTiming.initialWait = 0;
+reelCommentTiming.retryBase = 0;
 
 const ITEM = { guid: "tool-reel:merge", lang: "tr" as const, title: "PDF Birleştirme", summary: "", link: "x", publishedAt: 0, categories: [], images: {} };
 const SECRETS = { igUserId: "1", pageAccessToken: "T" };
@@ -70,6 +74,35 @@ describe("Reels kapağı", () => {
       );
       expect(out.externalId).toBe("v1");
       expect(calls.some((c) => c.startsWith("POST") && c.includes("/v1/thumbnails"))).toBe(true);
+    }
+  });
+  it("Facebook Reels: ilk yorum geçici hatadan sonra eklenir; eklenemezse nedeni uyarı olarak döner", async () => {
+    for (const failures of [2, 99]) {
+      let commentTries = 0;
+      vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
+        if (url.includes("/reel-covers/")) return new Response(new Uint8Array([1]), { status: 200, headers: { "content-type": "image/jpeg" } });
+        if (url.includes("/thumbnails")) return new Response(JSON.stringify({ success: true }));
+        if (url.endsWith("/v1/comments")) {
+          commentTries++;
+          return commentTries <= failures ? new Response(JSON.stringify({ error: { message: "video isleniyor" } }), { status: 400 }) : new Response(JSON.stringify({ id: "c1" }));
+        }
+        if (url.includes("upload_phase") || init?.body?.toString().includes("upload_phase=start")) return new Response(JSON.stringify({ video_id: "v1", upload_url: "https://up.test/x" }));
+        if (url.startsWith("https://up.test")) return new Response(JSON.stringify({ success: true }));
+        if (url.includes("fields=status")) return new Response(JSON.stringify({ status: { video_status: "ready" } }));
+        return new Response(JSON.stringify({ success: true }));
+      });
+      const out = await publishFacebookReel(
+        { body: "b", item: ITEM, secrets: { pageId: "P", pageAccessToken: "T" } },
+        "https://x.test/v.mp4",
+      );
+      expect(out.externalId).toBe("v1");
+      if (failures === 2) {
+        expect(commentTries).toBe(3);
+        expect(out.warning).toBeUndefined();
+      } else {
+        expect(commentTries).toBe(5);
+        expect(out.warning).toContain("ilk yorum");
+      }
     }
   });
 });
