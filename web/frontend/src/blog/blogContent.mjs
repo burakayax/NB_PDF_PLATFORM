@@ -4180,6 +4180,14 @@ export const BLOG_POSTS = [
         { t: "cta", title: "Sayfa Numarası Ekle", x: "PDF'inize konum ve biçim seçerek sayfa numarası ekleyin.", btn: "Aracı aç", tool: "/tools/page-numbers" },
         { t: "h2", x: "İpucu" },
         { t: "tip", x: "Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur." },
+        { t: "h2", x: "Kapağı atlayarak numaralandırma (örnekli)" },
+        { t: "p", x: "Aracın «Hangi sayfalara» alanına ilk ve son sayfayı, «Numaraya başlama» alanına ilk numarayı yazabilirsiniz. Numara, seçtiğiniz aralığın ilk sayfasında başlama değerinden başlar; aralık dışındaki sayfalara numara eklenmez. Son sayfa boş bırakılırsa belgenin sonuna kadar gider." },
+        { t: "p", x: "Örnek: 12 sayfalık bir belgede 1. sayfa kapak. Kapak numarasız kalsın istiyorsanız iki yol var:" },
+        { t: "ul", items: [
+          "İlk sayfa 2, numaraya başlama 1: kapak boş kalır, 2. sayfada «1» yazar, son sayfada «11» yazar. İçerik 1'den başlasın isteyen raporlar için.",
+          "İlk sayfa 2, numaraya başlama 2: kapak boş kalır, numaralar sayfanın PDF'teki sırasıyla aynı olur (2. sayfada «2»). İçindekiler tablosundaki sayfa numaralarının PDF görüntüleyicisindeki sıraya uymasını istiyorsanız bu daha rahattır.",
+        ] },
+        { t: "tip", x: "«3 / 10» ve «Sayfa 3 / 10» biçimlerinde ikinci sayı, kapak dahil belgenin toplam sayfa sayısıdır. 12 sayfalık belgede kapağı atlayıp 1'den başlarsanız son sayfada «11 / 12» görünür; bunu istemiyorsanız sade rakamı ya da «Sayfa 3» biçimini seçin." },
         {"t": "h2", "x": "Hangi numara biçimini seçmeli?"},
         {"t": "p", "x": "Biçim, belgenin türüne göre değişir. Kural koyan bir standart yok ama okuyucunun beklentisi var: resmî bir evrakta süslü bir numaralandırma dikkat dağıtır, uzun bir raporda ise yalın bir rakam yetersiz kalabilir."},
         {"t": "ul", "items": ["Sade rakam (1, 2, 3): rapor, sunum çıktısı ve günlük belgelerin çoğu için en güvenli seçim.", "«Sayfa 1» biçimi: okuyucunun belgeyi basılı hâlde takip edeceği durumlarda yön duygusunu güçlendirir.", "«1 / 12» biçimi: sözleşme ve teklif gibi eksiksizliğin kanıtlanması gereken belgelerde tercih edilir; karşı taraf sayfa eksik mi anlar.", "Roma rakamı (i, ii, iii): önsöz, içindekiler ve teşekkür gibi ön bölümlerde kullanılır; asıl metin 1'den yeniden başlar."]},
@@ -4195,7 +4203,9 @@ export const BLOG_POSTS = [
         {"t": "ul", "items": ["Numaraları ekledikten sonra sayfa eklemek — numaralar içerikle kayar.", "Kapağı da numaralandırmak — resmî belgelerde amatörce durur.", "Belge zaten numaralıyken ikinci bir numara katmanı eklemek; önce mevcut numaraya bakın.", "Çift taraflı basılacak bir belgede numarayı tek tarafa göre hizalamak."]},
       ],
       faq: [
-        {"q": "Numaralandırmayı ikinci sayfadan başlatabilir miyim?", "a": "Kapağın numarasız kalması istenen belgelerde yaygın yöntem, numaralandırmayı içerik sayfasından başlatmaktır. Alternatif olarak kapağı ayırıp numaralandırma bittikten sonra belgeye geri ekleyebilirsiniz."},
+        {"q": "Numaralandırmayı ikinci sayfadan başlatabilir miyim?", "a": "Evet. Araçtaki «Hangi sayfalara» alanına ilk sayfa olarak 2 yazın. Numara 1'den mi yoksa 2'den mi başlasın, «Numaraya başlama» alanıyla belirlersiniz. Kapağı ayırıp sonradan geri eklemenize gerek kalmaz."},
+        {"q": "Sayfa numarasını sonradan silebilir ya da değiştirebilir miyim?", "a": "Bu araç yalnızca numara ekler; belgede önceden basılı bir numarayı silmez veya değiştirmez. Yanlış numaralı bir çıktı aldıysanız numarasız asıl dosyaya dönüp doğru ayarlarla yeniden numaralandırın."},
+        {"q": "Numaralar yazdırırken de görünür mü?", "a": "Evet. Numara sayfanın kendisine işlenir; yazıcıdan çıktı alırken de, dosyayı başka bir programda açtığınızda da görünür. Ayrıca bir yazdırma ayarı gerekmez."},
         {"q": "Belgede zaten sayfa numarası varsa ne olur?", "a": "Yeni numara mevcut olanın üzerine değil, seçtiğiniz konuma eklenir; iki numara yan yana görünebilir. Bu durumda ya konumu farklı seçin ya da belgeyi numarasız sürümünden yeniden hazırlayın."},
         {"q": "Numara eklemek dosya boyutunu büyütür mü?", "a": "Kayda değer ölçüde büyütmez. Eklenen şey her sayfada birkaç karakterlik metindir; taranmış bir belgede bu, dosya boyutunun yanında fark edilmeyecek kadar küçüktür."},
         {"q": "Yatay (manzara) sayfalarda numara doğru yerleşir mi?", "a": "Numara sayfanın kendi yönüne göre yerleştirilir; yatay sayfada da alt ya da üst kenarda görünür. Karışık yönlü belgelerde numaralandırmadan önce sayfa yönlerini gözden geçirmek iyi olur."},
@@ -6193,6 +6203,11 @@ export const BLOG_POSTS = [
       blocks: [
         { t: "lead", x: "Duruşma günü yaklaşıyor, dilekçeniz hazır, ekleri taradınız ve UYAP dosyayı kabul etmiyor. Hata mesajı da işe yaramıyor — sistem çoğu zaman sorunun boyut olduğunu açıkça söylemez. Bu yazı, hatanın gerçek sebebini nasıl bulacağınızı ve dosyayı nasıl sınırın altına indireceğinizi anlatıyor." },
 
+        { t: "h2", x: "«Görüntülemek istediğiniz evrakın boyutu çok büyük» uyarısı ne demek?" },
+        { t: "p", x: "UYAP'ta bir evrakı açmaya çalışırken şu iletiyi görebilirsiniz: «Görüntülemek istediğiniz evrakın boyutu çok büyük! Lütfen evrakı sisteminize kaydederek görüntüleyiniz.» Bu bir yükleme hatası değil, görüntüleme uyarısıdır: evrak, ekranda önizleme olarak açılamayacak kadar büyük bulunmuştur." },
+        { t: "p", x: "Mesajın önerdiği yol doğrudur: evrakı bilgisayarınıza kaydedin ve oradan açın. Kaydettiğiniz dosya UDF ise UDF Görüntüleyici ile tarayıcıda açabilir ya da UDF to PDF aracıyla PDF'e çevirip her programda okuyabilirsiniz." },
+        { t: "tip", x: "Aynı durum sizin yüklediğiniz dosyalar için de geçerlidir: büyük dosya karşı tarafın açmasını da zorlaştırır. Aşağıdaki adımlarla ekleri küçük tutmak, hem yüklemeyi hem okumayı kolaylaştırır." },
+
         { t: "h2", x: "Önce sebebi doğru teşhis edin" },
         { t: "p", x: "Yükleme hatasının pratikte üç kaynağı olur ve çözümleri birbirinden tamamen farklıdır:" },
         { t: "ul", items: [
@@ -6240,6 +6255,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Bu dört kontrol bir dakika sürer ve son gün yaşanan yükleme krizlerinin çoğunu baştan önler." },
       ],
       faq: [
+        { q: "UYAP'ta «Görüntülemek istediğiniz evrakın boyutu çok büyük» uyarısı ne demek?", a: "Evrak ekranda önizlenemeyecek kadar büyük olduğunda çıkan bir görüntüleme uyarısıdır. İletinin kendisi çözümü söyler: evrakı sisteminize (bilgisayarınıza) kaydedip oradan açın. Dosya UDF ise UDF Görüntüleyici ile açabilir veya UDF to PDF ile PDF'e çevirebilirsiniz." },
         { q: "UYAP'a yüklenecek dosya en fazla kaç MB olmalı?", a: "Sınır işlem türüne ve kuruma göre değişir; UDF dosyalarında uygulamada 10 MB'lık bir üst sınır bildiriliyor, bazı başvuru türlerinde dosya başına 40 MB'a kadar izin verilebiliyor. Güncel rakam için yükleme ekranındaki açıklamayı esas alın." },
         { q: "Sıkıştırma belgenin okunaklılığını bozar mı?", a: "Dengeli düzeyde bozmaz. Taranmış belgelerde en büyük kazanç görsellerden gelir ve metin okunaklı kalır. İndirdikten sonra en küçük puntolu sayfayı kontrol edin; bulanıklaştıysa bir alt düzeye geçin." },
         { q: "Dosyam neden bu kadar büyük?", a: "Neredeyse her zaman taranmış ekler yüzünden. Renkli ve yüksek çözünürlüklü tarama, ya da telefonla çekilmiş fotoğraflar bir sayfayı tek başına birkaç megabayta çıkarır." },
@@ -6351,6 +6367,16 @@ export const BLOG_POSTS = [
         { t: "p", x: "Bu ayrımın altını çizmek gerekiyor. UDF dosyasındaki elektronik imza, belgenin o dosyadaki hâline aittir. PDF'ye çevirdiğinizde elinizde belgenin okunabilir bir kopyası olur — imzanın kendisi taşınmaz." },
         { t: "p", x: "Yani: okumak, arşivlemek, müvekkile göndermek, avukat arkadaşınıza danışmak için PDF kopya tamamen uygundur. Resmî bir işlemde ibraz edecekseniz imzalı UDF aslını kullanmaya devam edin." },
 
+        { t: "h2", x: "Telefonda UDF dosyası açma" },
+        { t: "p", x: "UDF'yi telefondan açmak için uygulama aramanıza gerek yok: dönüştürme tarayıcıda çalıştığı için Android ve iPhone'da aynı yol işler. Telefonunuzun tarayıcısında UDF aracını açın, «dosya seç» ile UYAP'tan indirdiğiniz .udf dosyasını (genellikle İndirilenler klasöründedir) seçin ve «PDF'e çevir» deyin. Çıkan PDF'i telefonun kendi PDF görüntüleyicisinde okuyabilir, e-posta ya da mesajlaşma uygulamasıyla paylaşabilirsiniz." },
+        { t: "h2", x: "Birden fazla UDF'yi tek PDF yapmak" },
+        { t: "p", x: "Aracın kendisi birden fazla UDF'yi ayrı ayrı PDF'ye çevirir (en fazla 20 dosya; birden fazlaysa tek ZIP içinde iner). Hepsini tek bir PDF'te toplamak istiyorsanız iki adım yeterli:" },
+        { t: "steps", items: [
+          { title: "UDF'leri PDF'ye çevirin", x: "Dosyaları aynı anda bırakıp çevirin; ZIP'i açıp PDF'leri çıkarın." },
+          { title: "PDF Birleştir ile sıralayıp birleştirin", x: "PDF'leri PDF Birleştir aracına ekleyin, sırayı belgelerin okunma sırasına göre ayarlayın ve tek dosya olarak indirin." },
+        ] },
+        { t: "p", x: "Birleştirme de tarayıcınızda çalışır ve dosyanız sunucuya yüklenmez. Hatırlatma: tek PDF'te birleştirdiğiniz belgeler imzalı UDF asıllarının yerini tutmaz; resmî ibraz için asılları kullanın." },
+
         { t: "h2", x: "UDF ile sık karşılaşılan diğer sorunlar" },
         { t: "ul", items: [
           "Dosya bozuk görünüyor: indirme yarıda kesilmiş olabilir. UYAP'tan yeniden indirin.",
@@ -6368,11 +6394,13 @@ export const BLOG_POSTS = [
         { q: "Program kurmadan UDF açmanın yolu var mı?", a: "Evet. UDF dosyasını tarayıcıda PDF'ye çevirebilirsiniz; UYAP Doküman Editörü ya da Java kurulumu gerekmez, işlem cihazınızda yapılır." },
         { q: "PDF'ye çevirince elektronik imza korunur mu?", a: "Hayır. Çıktı belgenin okunabilir bir kopyasıdır ve UDF dosyasındaki elektronik imzayı taşımaz. Resmî ibraz için imzalı UDF aslını kullanın." },
         { q: "Belgem güvende mi?", a: "Dönüştürme tamamen tarayıcınızda yapılır; dosya sunucuya gönderilmez. Adli evrak kişisel veri taşıdığı için bu araçta işlem bilerek cihazda tutulur." },
+        { q: "UDF dosyası telefonda nasıl açılır?", a: "Telefonun tarayıcısında UDF aracını açıp «dosya seç» ile .udf dosyasını seçin ve PDF'e çevirin. Android ve iPhone'da aynı şekilde çalışır; uygulama kurmak gerekmez. Çıkan PDF'i telefonun PDF görüntüleyicisinde okuyabilirsiniz." },
+        { q: "Birden fazla UDF dosyasını tek PDF'te birleştirebilir miyim?", a: "Evet, iki adımda: önce UDF'leri PDF'ye çevirin (birden fazlaysa ZIP olarak iner), sonra PDF'leri PDF Birleştir aracıyla sıralayıp tek dosya yapın. Birleşik PDF okunabilir bir kopyadır; imzalı UDF aslının yerini tutmaz." },
         { q: "Birden fazla UDF'yi tek seferde çevirebilir miyim?", a: "Evet. En fazla 20 dosya ekleyebilirsiniz; tek dosya PDF olarak, birden fazla dosya tek ZIP içinde iner." },
       ],
     },
     {
-      title: "What Is a .udf File? Read UYAP Documents as PDF",
+      title: "How to Open a .udf File (UYAP) and Convert It to PDF",
       description:
         "Received a .udf document from Turkey's judiciary system and nothing opens it? Learn what UDF is and how to convert it to a readable PDF on your own device.",
       excerpt:
