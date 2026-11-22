@@ -93,6 +93,7 @@ const H = (t) => `<h2 style="font-size:15px;margin:18px 0 4px;color:#0f172a">${e
  * @param {string|null} p.financeNote
  * @param {string[][]|null} p.financeTable  ilk satır başlık
  * @param {string|null} [p.maintenance]  yazılım bakımı (gölge) tek satır özeti; yoksa bölüm çıkmaz
+ * @param {string[]} [p.done]  "Yapıldı, sonuç bekleniyor" SEO satırları (yapilanlar.txt, son 21 gün)
  * @param {string|null} [p.watchdog]  çöküş bekçisi (gölge) özeti; yoksa bölüm çıkmaz
  * @param {string} p.footer
  */
@@ -116,6 +117,7 @@ export function buildMail(p) {
   html += H("Haftalık SEO");
   html += seo ? tableHtml(["Ölçüt", "Bu hafta", "Geçen hafta", "Değişim"], seo) : `<p style="font-size:13px;color:#64748b">Search Console verisi alınamadı.</p>`;
   if (tips.length) html += `<ol style="margin:0 0 10px;padding-left:20px;font-size:13px">${tips.map((t) => `<li style="margin:3px 0">${esc(t)}</li>`).join("")}</ol>`;
+  if ((p.done || []).length) html += `<p style="font-size:13px;color:#475569;margin:4px 0 10px"><strong>Yapıldı, sonuç bekleniyor:</strong> ${esc(p.done.join(", "))}</p>`;
   html += H("Sosyal medya planı");
   html += social.length
     ? tableHtml(["Tarih", "Platform", "Konu", "Durum"], social.map((s) => [s.tarih, s.platform, s.konu, s.durum]))
@@ -138,6 +140,7 @@ export function buildMail(p) {
   t.push("HAFTALIK SEO");
   t.push(seo ? tableText(["Ölçüt", "Bu hafta", "Geçen hafta", "Değişim"], seo) : "Search Console verisi alınamadı.");
   if (tips.length) t.push(tips.map((x, i) => `${i + 1}. ${x}`).join("\n"));
+  if ((p.done || []).length) t.push("", `Yapıldı, sonuç bekleniyor: ${p.done.join(", ")}`);
   t.push("", "SOSYAL MEDYA PLANI");
   t.push(social.length ? tableText(["Tarih", "Platform", "Konu", "Durum"], social.map((s) => [s.tarih, s.platform, s.konu, s.durum])) : "Bu hafta için plan satırı yok.", "");
   t.push("AYLIK FİNANS");
