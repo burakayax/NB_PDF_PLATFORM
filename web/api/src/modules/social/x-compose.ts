@@ -5,7 +5,8 @@
  * 1. Ana gönderiye LİNK konmaz. Gönderi yayınlanınca aynı gönderiye YANIT olarak link atılır ("Detaylı rehber 👇 <link>").
  * 2. Ana gönderi linke tıklamadan da işe yarar: yazının en faydalı 2–4 ipucu madde madde. 280'i aşarsa thread (1/3, 2/3…);
  *    link yine en son yanıtta. Sonda okuyucuya kısa bir soru.
- * 3. Gönderi başına en fazla 1 hashtag, konuya özel (#CV, #İşArama, #PDF, #Mülakat…). Genel etiket yok.
+ * 3. Gönderi başına 2 etiket (uygunsa 3), KONUYA ÖZEL: önce yazının kendi konusu (slug: #Word, #PDFSıkıştırma, #KVKK…),
+ *    sonra ana konu (#CV, #Sözleşme…). Genel etiket yalnız konu bulunamazsa. (2026-11-22: eskiden 1 etiketti, hep #PDF çıkıyordu.)
  * 4. Haftalık döngü: blog ipucu ×2 · ürün ×2 · anket ×1 · "Bunu biliyor muydunuz?" ×1.
  *
  * İPUÇLARI UYDURULMAZ: yazının kendi bölüm başlıklarıdır (`/social-x.json`, bkz. frontend/scripts/generate-social-x.mjs).
@@ -83,25 +84,115 @@ export const questionFor = (topic: string, seed: string): string => {
   return list[hash(seed) % list.length] as string;
 };
 
-/** En fazla 1 etiket, konuya özel; yoksa hiç. */
-export const tagFor = (tags: string[], seed: string): string => (tags.length ? (tags[hash(seed) % tags.length] as string) : "");
+export const MAX_TAGS = 3;
+
+/** Yazının adresinden (slug) çıkan konuya özel etiketler. İlk eşleşenler önce gelir. */
+const SLUG_TAGS: [RegExp, string][] = [
+  [/word/, "#Word"],
+  [/excel|ekstre|fatura/, "#Excel"],
+  [/powerpoint/, "#PowerPoint"],
+  [/ocr|taranmis/, "#OCR"],
+  [/sikistir|kucult|boyut/, "#PDFSıkıştırma"],
+  [/birlestir/, "#PDFBirleştirme"],
+  [/bolme|ayirma/, "#PDFBölme"],
+  [/imza/, "#eİmza"],
+  [/sifre/, "#PDFŞifre"],
+  [/kvkk|gizleme|hassas/, "#KVKK"],
+  [/filigran/, "#Filigran"],
+  [/qr|vcard/, "#QRKod"],
+  [/udf|uyap/, "#UYAP"],
+  [/(^|-)ats(-|$)/, "#ATS"],
+  [/linkedin/, "#LinkedIn"],
+  [/on-yazi/, "#ÖnYazı"],
+  [/mulakat/, "#Mülakat"],
+  [/vize/, "#Vize"],
+  [/ihale/, "#İhale"],
+  [/kira/, "#KiraSözleşmesi"],
+  [/vesikalik/, "#VesikalıkFotoğraf"],
+  [/biyometrik/, "#BiyometrikFotoğraf"],
+  [/osym/, "#ÖSYM"],
+  [/(^|-)ai(-|$)|yapay-zeka|ozetleme/, "#YapayZeka"],
+  [/telefon|mobil/, "#Mobil"],
+  [/alternatif/, "#PDFAraçları"],
+  [/gizlilik/, "#Gizlilik"],
+  [/jpg|gorsel|resim|tiff/, "#Görsel"],
+  [/duzenle|duzenleme|metin-duzenleme/, "#PDFDüzenleme"],
+  [/dondur|yatay|yon/, "#PDFDöndürme"],
+  [/cevir|donustur/, "#PDFDönüştürme"],
+  [/form-doldur/, "#PDFForm"],
+  [/karsilastir/, "#PDFKarşılaştırma"],
+  [/onar/, "#PDFOnarma"],
+  [/sayfa-sil/, "#PDFSayfaSilme"],
+  [/numara/, "#SayfaNumarası"],
+  [/kirp|kesit/, "#PDFKırpma"],
+  [/ceviri|dile-cevirme|dildeki/, "#Çeviri"],
+  [/tara|belge-tarama|camscanner|lens/, "#BelgeTarama"],
+  [/yer-imi|icindekiler/, "#PDFYerİmi"],
+  [/ucretsiz/, "#ÜcretsizPDF"],
+  [/yapay|ai-ile/, "#YapayZeka"],
+];
+
+/** Ürün kimliğinden etiketler (ürün gönderileri). */
+const PRODUCT_TAGS: Record<string, string[]> = {
+  compress: ["#PDFSıkıştırma", "#PDF"],
+  merge: ["#PDFBirleştirme", "#PDF"],
+  "pdf-to-word": ["#Word", "#PDF"],
+  "cv-olustur": ["#CV", "#İşArama"],
+  "image-to-pdf": ["#JPG", "#PDF"],
+  "belge-tara": ["#BelgeTarama", "#PDF"],
+  encrypt: ["#PDFŞifre", "#Güvenlik"],
+  "grayscale-pdf": ["#PDF", "#Baskı"],
+};
+
+/**
+ * Konuya özel 2 (bazen 3) etiket: önce `extra`, sonra yazının kendi konusu (slug), sonra ana konu etiketleri; tekrar yok.
+ * 3. etiket yalnız yeterli aday varsa ve tohuma göre seçilir (akış hep aynı sayıda etiketle dolmasın).
+ */
+export function tagsFor(input: { slug?: string; tags: string[]; seed: string; extra?: string[] }): string[] {
+  const fold = (t: string) => t.toLocaleLowerCase("tr");
+  const seen = new Set<string>();
+  const cands: string[] = [];
+  const add = (t: string) => {
+    if (!t || seen.has(fold(t))) return;
+    seen.add(fold(t));
+    cands.push(t);
+  };
+  for (const t of input.extra ?? []) add(t);
+  const slug = (input.slug ?? "").toLocaleLowerCase("tr");
+  let hits = 0;
+  for (const [re, tag] of SLUG_TAGS) {
+    if (hits >= 2) break;
+    if (re.test(slug)) {
+      add(tag);
+      hits++;
+    }
+  }
+  for (const t of input.tags) add(t);
+  const want = cands.length >= 3 && hash(input.seed) % 2 === 0 ? 3 : 2;
+  return cands.slice(0, Math.min(want, MAX_TAGS));
+}
 
 /** Açıklama cümlesi tek başına anlamlı mı? Şablon yer tutucular ("X yerine…", "Örnek madde") ayıklanır. */
 const usableText = (text: string): boolean => Boolean(text) && !/\bX\b|Örnek madde/i.test(text);
 
 /**
- * Açıklamanın ilk anlamlı parçası (":" ya da cümle sonuna kadar), en fazla `max` karakter. Kesik cümle ÜRETMEZ:
- * parça sığmıyorsa boş döner ve madde yalnız başlıkla yazılır.
+ * Açıklamanın ilk TAM cümlesi, en fazla `max` karakter. ".docx" gibi sözcük içi noktada kesmez (cümle sonu = nokta + boşluk
+ * + büyük harf). Sığmıyorsa son virgül/noktalı virgülde biter; hiçbiri yoksa boş döner (madde yalnız başlıkla yazılır).
+ * Yarım cümle ÜRETMEZ.
  */
-function clauseOf(text: string, max = 95): string {
+function clauseOf(text: string, max = 140): string {
   if (!usableText(text)) return "";
-  const m = /^[^:.;]+/.exec(text.trim());
-  const c = (m?.[0] ?? "").trim();
-  return c && c.length <= max ? c : "";
+  const t = text.trim().replace(/\s+/g, " ");
+  const m = /^.+?(?:[.!?](?=\s+[A-ZÇĞİÖÜŞ0-9])|$)/.exec(t);
+  const sentence = (m?.[0] ?? "").replace(/[.\s]+$/, "").trim();
+  if (sentence && sentence.length <= max) return sentence;
+  const cut = sentence.slice(0, max);
+  const at = Math.max(cut.lastIndexOf(";"), cut.lastIndexOf(", "));
+  return at >= 40 ? cut.slice(0, at).trim() : "";
 }
 
-const tipLine = (t: XTip): string => {
-  const c = clauseOf(t.text);
+const tipLine = (t: XTip, max = 140): string => {
+  const c = clauseOf(t.text, max);
   const sep = /[?!]$/.test(t.title) ? " " : ": ";
   return c && !t.title.toLocaleLowerCase("tr").includes(c.toLocaleLowerCase("tr")) ? `${t.title}${sep}${c}` : t.title;
 };
@@ -131,18 +222,39 @@ export function composeTipPost(input: { post: XPostData; link: string; seed: str
   const chosen = post.tips
     .map((t, i) => ({ t, i, good: clauseOf(t.text) !== "" }))
     .sort((a, b) => Number(b.good) - Number(a.good) || a.i - b.i)
-    .slice(0, 3)
+    .slice(0, 4)
     .sort((a, b) => a.i - b.i);
-  const bullets = chosen.map(({ t }) => `• ${clip(tipLine(t), 150)}`);
+  const lineOf = (t: XTip, max: number) => `• ${clip(tipLine(t, max), 200)}`;
+  const allBullets = chosen.map(({ t }) => lineOf(t, 140));
   const question = questionFor(post.topic, seed);
-  const tag = tagFor(post.tags, seed);
-  const tail = `${question}${tag ? ` ${tag}` : ""}`;
+  const tags = tagsFor({ slug: post.slug, tags: post.tags, seed });
   const hook = clip(post.hook, 110);
+  const tailWith = (list: string[]) => `${question}${list.length ? ` ${list.join(" ")}` : ""}`;
+  const tail = tailWith(tags);
 
-  const single = `${hook}\n\n${bullets.join("\n")}\n\n${tail}`;
+  // Önce en dolu TEK gönderi (thread erişimi düşürür): madde sayısı ve cümle uzunluğu kademeli kısılır, cümle yine tam kalır.
+  // Etiketler sığdığı kadar (en az 1) kalır.
+  let single: string | null = null;
+  const attempts: [number, number][] = [[3, 130], [3, 110], [4, 70], [3, 90], [3, 70], [2, 140], [2, 100]];
+  // Önce en az 2 etiketle dene (konuya özel etiket istenen şey); olmazsa 1 etikete razı ol.
+  for (const minTags of [Math.min(2, tags.length), 1]) {
+    for (const [n, max] of attempts) {
+      const picked = chosen.slice(0, n);
+      // Açıklaması olan madde bu kısaltmada açıklamasız (yalnız başlık) kalıyorsa deneme geçersiz: bilgi vermez.
+      if (picked.some(({ t }) => clauseOf(t.text, max) === "" && clauseOf(t.text, 140) !== "")) continue;
+      const b = picked.map(({ t }) => lineOf(t, max));
+      for (let k = tags.length; k >= minTags && !single; k--) {
+        const text = `${hook}\n\n${b.join("\n")}\n\n${tailWith(tags.slice(0, k))}`;
+        if (xLength(text) <= X_LIMIT) single = text;
+      }
+      if (single) break;
+    }
+    if (single) break;
+  }
+  const bullets = allBullets.slice(0, 3);
   const RESERVE = 8; // "\n\n1/3"
   let parts: string[];
-  if (xLength(single) <= X_LIMIT) {
+  if (single) {
     parts = [single];
   } else {
     parts = [];
@@ -169,9 +281,19 @@ export function composeTipPost(input: { post: XPostData; link: string; seed: str
 /** Ürün gönderisi: özellik metni + (en fazla 1 etiket). Link yanıtta. */
 export function composeProductPost(input: { product: XProduct; seed: string }): XPlan {
   const { product, seed } = input;
-  const tag = tagFor(["#PDF"], seed);
+  const tags = tagsFor({ tags: ["#PDF"], seed, extra: PRODUCT_TAGS[product.id] });
   const text = `${clip(product.text, X_LIMIT - 8)}`;
-  const withTag = xLength(`${text} ${tag}`) <= X_LIMIT ? `${text} ${tag}` : text;
+  // Metin kendi etiketini taşıyorsa (ör. "#PDF") yenisi eklenmez; sığdığı kadar etiket konur.
+  const own = (text.match(/#[^\s#]+/gu) ?? []).map((t) => t.toLocaleLowerCase("tr"));
+  let withTag = text;
+  for (let k = tags.length; k >= 1; k--) {
+    const add = tags.slice(0, k).filter((t) => !own.includes(t.toLocaleLowerCase("tr")));
+    const cand = add.length ? `${text} ${add.join(" ")}` : text;
+    if (xLength(cand) <= X_LIMIT) {
+      withTag = cand;
+      break;
+    }
+  }
   const link = withUtm(product.link, socialUtm("X", "urun"));
   return { kind: "tweets", parts: [withTag], replyLink: `Hemen dene 👇 ${link}` };
 }
@@ -181,10 +303,19 @@ export function composeFactPost(input: { post: XPostData; tipIndex: number; seed
   const { post, tipIndex, seed } = input;
   const tip = post.tips[tipIndex] ?? post.tips[0];
   const body = tip ? tipLine(tip) : post.hook;
-  const tag = tagFor(post.tags, seed);
+  const tags = tagsFor({ slug: post.slug, tags: post.tags, seed });
   const question = questionFor(post.topic, seed);
-  let text = `Bunu biliyor muydunuz?\n\n${clip(body, 170)}\n\n${question}${tag ? ` ${tag}` : ""}`;
-  if (xLength(text) > X_LIMIT) text = `Bunu biliyor muydunuz?\n\n${clip(body, 170)}${tag ? `\n\n${tag}` : ""}`;
+  const head = `Bunu biliyor muydunuz?\n\n${clip(body, 200)}`;
+  let text = head;
+  for (let k = tags.length; k >= 0; k--) {
+    const tagStr = tags.slice(0, k).join(" ");
+    const cand = `${head}\n\n${question}${tagStr ? ` ${tagStr}` : ""}`;
+    if (xLength(cand) <= X_LIMIT) {
+      text = cand;
+      break;
+    }
+  }
+  if (xLength(text) > X_LIMIT) text = clip(head, X_LIMIT);
   return { kind: "tweets", parts: [text], replyLink: null };
 }
 
@@ -231,6 +362,6 @@ export function checkXPlan(plan: XPlan): string[] {
   for (const p of all) if (xLength(p) > X_LIMIT) problems.push(`parça ${xLength(p)} karakter`);
   for (const p of plan.parts) if (/https?:\/\//.test(p)) problems.push("ana gönderide/thread'de link var");
   const tags = plan.parts.join(" ").match(/#[^\s#]+/gu) ?? [];
-  if (tags.length > 1) problems.push(`birden fazla etiket: ${tags.join(" ")}`);
+  if (tags.length > MAX_TAGS) problems.push(`en fazla ${MAX_TAGS} etiket: ${tags.join(" ")}`);
   return problems;
 }
