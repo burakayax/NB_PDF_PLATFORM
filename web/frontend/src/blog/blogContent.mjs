@@ -6384,7 +6384,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "What Is a .udf File? Read UYAP Documents as PDF",
+      title: "How to Open a .udf File (UYAP) and Convert It to PDF",
       description:
         "Received a .udf document from Turkey's judiciary system and nothing opens it? Learn what UDF is and how to convert it to a readable PDF on your own device.",
       excerpt:
