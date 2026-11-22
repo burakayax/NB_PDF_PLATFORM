@@ -1,7 +1,7 @@
 import type { SocialPlatform } from "@prisma/client";
 import type { Publisher, Verifier } from "./common.js";
 import { publishToX, verifyX } from "./x.platform.js";
-import { publishToLinkedIn } from "./linkedin.platform.js";
+import { publishToLinkedIn, verifyLinkedIn } from "./linkedin.platform.js";
 import { publishToFacebook, publishToInstagram, verifyFacebook, verifyInstagram } from "./meta.platform.js";
 import { publishToPinterest, verifyPinterest } from "./pinterest.platform.js";
 import { publishToYouTube, verifyYouTube } from "./youtube.platform.js";
@@ -24,6 +24,7 @@ export const PUBLISHERS: Record<SocialPlatform, Publisher> = {
  */
 export const VERIFIERS: Partial<Record<SocialPlatform, Verifier>> = {
   X: verifyX,
+  LINKEDIN: verifyLinkedIn,
   FACEBOOK: verifyFacebook,
   INSTAGRAM: verifyInstagram,
   PINTEREST: verifyPinterest,
