@@ -6351,6 +6351,16 @@ export const BLOG_POSTS = [
         { t: "p", x: "Bu ayrımın altını çizmek gerekiyor. UDF dosyasındaki elektronik imza, belgenin o dosyadaki hâline aittir. PDF'ye çevirdiğinizde elinizde belgenin okunabilir bir kopyası olur — imzanın kendisi taşınmaz." },
         { t: "p", x: "Yani: okumak, arşivlemek, müvekkile göndermek, avukat arkadaşınıza danışmak için PDF kopya tamamen uygundur. Resmî bir işlemde ibraz edecekseniz imzalı UDF aslını kullanmaya devam edin." },
 
+        { t: "h2", x: "Telefonda UDF dosyası açma" },
+        { t: "p", x: "UDF'yi telefondan açmak için uygulama aramanıza gerek yok: dönüştürme tarayıcıda çalıştığı için Android ve iPhone'da aynı yol işler. Telefonunuzun tarayıcısında UDF aracını açın, «dosya seç» ile UYAP'tan indirdiğiniz .udf dosyasını (genellikle İndirilenler klasöründedir) seçin ve «PDF'e çevir» deyin. Çıkan PDF'i telefonun kendi PDF görüntüleyicisinde okuyabilir, e-posta ya da mesajlaşma uygulamasıyla paylaşabilirsiniz." },
+        { t: "h2", x: "Birden fazla UDF'yi tek PDF yapmak" },
+        { t: "p", x: "Aracın kendisi birden fazla UDF'yi ayrı ayrı PDF'ye çevirir (en fazla 20 dosya; birden fazlaysa tek ZIP içinde iner). Hepsini tek bir PDF'te toplamak istiyorsanız iki adım yeterli:" },
+        { t: "steps", items: [
+          { title: "UDF'leri PDF'ye çevirin", x: "Dosyaları aynı anda bırakıp çevirin; ZIP'i açıp PDF'leri çıkarın." },
+          { title: "PDF Birleştir ile sıralayıp birleştirin", x: "PDF'leri PDF Birleştir aracına ekleyin, sırayı belgelerin okunma sırasına göre ayarlayın ve tek dosya olarak indirin." },
+        ] },
+        { t: "p", x: "Birleştirme de tarayıcınızda çalışır ve dosyanız sunucuya yüklenmez. Hatırlatma: tek PDF'te birleştirdiğiniz belgeler imzalı UDF asıllarının yerini tutmaz; resmî ibraz için asılları kullanın." },
+
         { t: "h2", x: "UDF ile sık karşılaşılan diğer sorunlar" },
         { t: "ul", items: [
           "Dosya bozuk görünüyor: indirme yarıda kesilmiş olabilir. UYAP'tan yeniden indirin.",
@@ -6368,6 +6378,8 @@ export const BLOG_POSTS = [
         { q: "Program kurmadan UDF açmanın yolu var mı?", a: "Evet. UDF dosyasını tarayıcıda PDF'ye çevirebilirsiniz; UYAP Doküman Editörü ya da Java kurulumu gerekmez, işlem cihazınızda yapılır." },
         { q: "PDF'ye çevirince elektronik imza korunur mu?", a: "Hayır. Çıktı belgenin okunabilir bir kopyasıdır ve UDF dosyasındaki elektronik imzayı taşımaz. Resmî ibraz için imzalı UDF aslını kullanın." },
         { q: "Belgem güvende mi?", a: "Dönüştürme tamamen tarayıcınızda yapılır; dosya sunucuya gönderilmez. Adli evrak kişisel veri taşıdığı için bu araçta işlem bilerek cihazda tutulur." },
+        { q: "UDF dosyası telefonda nasıl açılır?", a: "Telefonun tarayıcısında UDF aracını açıp «dosya seç» ile .udf dosyasını seçin ve PDF'e çevirin. Android ve iPhone'da aynı şekilde çalışır; uygulama kurmak gerekmez. Çıkan PDF'i telefonun PDF görüntüleyicisinde okuyabilirsiniz." },
+        { q: "Birden fazla UDF dosyasını tek PDF'te birleştirebilir miyim?", a: "Evet, iki adımda: önce UDF'leri PDF'ye çevirin (birden fazlaysa ZIP olarak iner), sonra PDF'leri PDF Birleştir aracıyla sıralayıp tek dosya yapın. Birleşik PDF okunabilir bir kopyadır; imzalı UDF aslının yerini tutmaz." },
         { q: "Birden fazla UDF'yi tek seferde çevirebilir miyim?", a: "Evet. En fazla 20 dosya ekleyebilirsiniz; tek dosya PDF olarak, birden fazla dosya tek ZIP içinde iner." },
       ],
     },
