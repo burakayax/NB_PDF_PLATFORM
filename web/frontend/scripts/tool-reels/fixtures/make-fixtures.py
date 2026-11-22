@@ -354,8 +354,40 @@ from openpyxl import Workbook
 wb = Workbook()
 ws = wb.active
 ws.title = "Satışlar"
-for row in (("Ay", "Gelir", "Gider"), ("Ocak", 120000, 80000), ("Şubat", 135000, 82000), ("Mart", 150000, 91000), ("Nisan", 142000, 88000)):
-    ws.append(row)
+# Gerçek bir iş tablosu gibi: renkli başlık, zebra satırlar, kenarlık, para biçimi, toplam satırı.
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+ws.append(("Ay", "Bölge", "Gelir", "Gider", "Kâr"))
+months = ("Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık")
+regions = ("İstanbul", "Ankara", "İzmir")
+base = (120000, 135000, 150000, 142000, 158000, 171000, 166000, 149000, 163000, 177000, 184000, 196000)
+n = 0
+for mi, m in enumerate(months):
+    for ri, rg in enumerate(regions):
+        gelir = base[mi] - ri * 21000 + (mi * 7 + ri * 13) % 9 * 1000
+        gider = int(gelir * (0.58 + ((mi + ri) % 4) * 0.03))
+        n += 1
+        ws.append((m, rg, gelir, gider, "=C%d-D%d" % (n + 1, n + 1)))
+last = n + 1
+ws.append(("Toplam", "", "=SUM(C2:C%d)" % last, "=SUM(D2:D%d)" % last, "=SUM(E2:E%d)" % last))
+thin = Side(style="thin", color="B6C2D9")
+for row in ws.iter_rows(min_row=1, max_row=last + 1, max_col=5):
+    for cell in row:
+        cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+        if cell.row == 1:
+            cell.fill = PatternFill("solid", fgColor="1F4E9C")
+            cell.font = Font(bold=True, color="FFFFFF", size=12)
+            cell.alignment = Alignment(horizontal="center")
+        elif cell.row == last + 1:
+            cell.fill = PatternFill("solid", fgColor="FFE699")
+            cell.font = Font(bold=True, size=12)
+        elif cell.row % 2 == 0:
+            cell.fill = PatternFill("solid", fgColor="E8EEFA")
+        if cell.column >= 3 and cell.row > 1:
+            cell.number_format = '#,##0 "TL"'
+for col, w in zip("ABCDE", (14, 14, 18, 18, 18)):
+    ws.column_dimensions[col].width = w
+ws.freeze_panes = "A2"
 wb.save(S + "/Satis-Tablosu.xlsx")
 
 from pptx import Presentation

@@ -61,7 +61,7 @@ export default {
     say(`ADIM ${hasEst ? 3 : 2} / ${N}`, "İstersen hedef boyut belirle", "100 KB'den 10 MB'a kadar", "bir sınır seçebilirsin", "");
     await wait(450);
     await moveTo(hm.sp.x, hm.rowC(hm.selIdx));
-    await wait(400);
+    await wait(650);
     await pg.mouse.click(hm.sp.x, hm.rowC(hm.selIdx));
     await closeMenu();
     await wait(200);
@@ -72,7 +72,7 @@ export default {
     say(`ADIM 4 / ${N}`, "Kaliteyi seç", "Agresif, Dengeli ya da Kaliteli", "Önerimiz: Otomatik", "");
     await wait(450);
     await moveTo(km.sp.x, km.rowC(km.selIdx));
-    await wait(400);
+    await wait(650);
     await pg.mouse.click(km.sp.x, km.rowC(km.selIdx));
     await closeMenu();
     await wait(200);

@@ -76,7 +76,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
         '<svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.6L21 10.8z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>';
       const ring = document.createElement("div");
       ring.style.cssText =
-        "position:fixed;left:0;top:0;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:4px solid rgba(56,189,248,.95);z-index:2147483646;pointer-events:none;opacity:0";
+        "position:fixed;left:0;top:0;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:7px solid rgba(56,189,248,.95);background:rgba(56,189,248,.18);z-index:2147483646;pointer-events:none;opacity:0";
       document.documentElement.append(ring, c);
       let mx = -100, my = -100;
       addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; c.style.transform = `translate(${mx}px,${my}px)`; }, true);
@@ -84,13 +84,15 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
         if (window.__clk) window.__clk();
         ring.style.transition = "none";
         ring.style.opacity = "1";
-        ring.style.transform = `translate(${mx}px,${my}px) scale(.3)`;
+        ring.style.transform = `translate(${mx}px,${my}px) scale(.25)`;
+        c.style.transform = `translate(${mx}px,${my}px) scale(.78)`;
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          ring.style.transition = "transform .45s ease-out, opacity .45s ease-out";
+          ring.style.transition = "transform .85s ease-out, opacity .85s ease-out";
           ring.style.opacity = "0";
-          ring.style.transform = `translate(${mx}px,${my}px) scale(1.15)`;
+          ring.style.transform = `translate(${mx}px,${my}px) scale(1.5)`;
         }));
       }, true);
+      addEventListener("mouseup", () => { c.style.transform = `translate(${mx}px,${my}px)`; }, true);
       window.__hl = (x, y, w, h) => {
         let r = document.getElementById("fake-hl");
         if (!r) {
@@ -126,6 +128,12 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     if (document.documentElement) add(); else addEventListener("DOMContentLoaded", add);
   });
   const wait = (ms) => pg.waitForTimeout(ms);
+  // Tıklama videoda fark edilsin: her fare tıklamasından sonra halka efekti için kısa bekleme.
+  const mouseClick = pg.mouse.click.bind(pg.mouse);
+  pg.mouse.click = async (...a) => {
+    await mouseClick(...a);
+    await pg.waitForTimeout(550);
+  };
   const box = async (loc) => loc.boundingBox();
   const center = async (loc) => {
     const bb = await box(loc);

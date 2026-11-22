@@ -62,6 +62,10 @@ tw = (W - 2 * 48 - gap * (n - 1)) // n
 th = H - 48 - 150
 x = 48
 for im in thumbs:
+    # Küçük içerik (ör. kısa tablo) kartı doldursun diye gerekirse BÜYÜTÜLÜR (en fazla 3 kat).
+    k = min(tw / im.width, th / im.height, 3.0)
+    if k > 1:
+        im = im.resize((int(im.width * k), int(im.height * k)), Image.LANCZOS)
     im.thumbnail((tw, th))
     ox = x + (tw - im.width) // 2
     oy = 48 + (th - im.height) // 2
