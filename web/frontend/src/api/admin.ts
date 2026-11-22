@@ -1474,8 +1474,10 @@ export type SocialToolReel = {
   guid: string;
   /** Hazır video; yoksa null (paylaşım zamanı yaklaşınca kendiliğinden üretilir, paylaşılınca silinir). */
   video: { id: string; url: string; seconds: number; createdAt: string } | null;
-  /** YouTube + Facebook sürümü (son karede "Bağlantı açıklamada"); yoksa null. */
+  /** YouTube sürümü (son karede "Bağlantı açıklamada"); yoksa null. */
   captionVideo?: { id: string; url: string; seconds: number; createdAt: string } | null;
+  /** Facebook sürümü (son karede "Bağlantı yorumlarda"); yoksa null. */
+  commentVideo?: { id: string; url: string; seconds: number; createdAt: string } | null;
   tr: { title: string; summary: string; link: string };
   en: { title: string; summary: string; link: string };
   /** Bu videonun gönderiye çevrildiği kayıtlar (en yeni önce). */

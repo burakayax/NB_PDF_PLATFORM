@@ -10,6 +10,7 @@ import type { FeedItem } from "../modules/social/social.types.js";
 
 const VIDEO_URL = "https://api.example.test/api/public/tool-reels/compress-1791728774504.mp4";
 const CAPTION_URL = "https://api.example.test/api/public/tool-reels/compress-aciklama-1791728774900.mp4";
+const COMMENT_URL = "https://api.example.test/api/public/tool-reels/compress-yorum-1791728774900.mp4";
 
 const ITEM: FeedItem = {
   guid: "https://example.test/blog/yazi",
@@ -29,6 +30,7 @@ let dayPostCount = 1;
 let reelPostCount = 0;
 let fresh: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
 let freshCaption: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
+let freshComment: { id: string; url: string; seconds: number; createdAt: Date } | null = null;
 const cleanup = vi.fn(async () => 0);
 
 vi.mock("../lib/prisma.js", () => ({
@@ -63,10 +65,10 @@ vi.mock("../modules/social/tool-reels.service.js", async (importOriginal) => {
     ...actual,
     pickDueToolReel: vi.fn(async () => due),
     unusedFreshVideoFor: vi.fn(async (_t: string, _n?: Date, variant?: string) =>
-      variant === "caption" ? freshCaption : fresh,
+      variant === "caption" ? freshCaption : variant === "comment" ? freshComment : fresh,
     ),
     latestVideoFor: vi.fn(async (_t: string, _a: number, _n?: Date, variant?: string) =>
-      variant === "caption" ? freshCaption : fresh,
+      variant === "caption" ? freshCaption : variant === "comment" ? freshComment : fresh,
     ),
     cleanupToolVideos: cleanup,
   };
@@ -94,6 +96,7 @@ beforeEach(() => {
   due = { id: "compress" };
   fresh = { id: "compress-1791728774504", url: VIDEO_URL, seconds: 27, createdAt: new Date() };
   freshCaption = null;
+  freshComment = null;
 });
 
 describe("araç videosu otomatik sırası", () => {
@@ -154,8 +157,9 @@ describe("araç videosu otomatik sırası", () => {
     expect(pin?.imageUrl).toBe(VIDEO_URL);
   });
 
-  it("iki sürüm hazırsa: Instagram 'profilde' videosunu, Facebook + YouTube 'açıklamada' videosunu alır", async () => {
+  it("üç sürüm hazırsa: Instagram/TikTok 'profilde', YouTube 'açıklamada', Facebook 'yorumlarda' videosunu alır", async () => {
     freshCaption = { id: "compress-aciklama-1791728774900", url: CAPTION_URL, seconds: 27, createdAt: new Date() };
+    freshComment = { id: "compress-yorum-1791728774900", url: COMMENT_URL, seconds: 27, createdAt: new Date() };
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
     await queueDailyPosts(new Date(), false);
@@ -164,11 +168,20 @@ describe("araç videosu otomatik sırası", () => {
     expect(urlOf("INSTAGRAM")).toBe(VIDEO_URL);
     // TikTok da Instagram gibi "Bağlantı profilde" sürümünü kullanır (açıklamadaki adres tıklanmaz).
     expect(urlOf("TIKTOK")).toBe(VIDEO_URL);
-    expect(urlOf("FACEBOOK")).toBe(CAPTION_URL);
+    expect(urlOf("FACEBOOK")).toBe(COMMENT_URL);
     expect(urlOf("YOUTUBE")).toBe(CAPTION_URL);
   });
 
-  it("'açıklamada' sürümü yoksa: Facebook + YouTube Instagram sürümüyle gider (gönderi kaybolmaz)", async () => {
+  it("'yorumlarda' sürümü yoksa: Facebook 'açıklamada' sürümüyle gider (gönderi kaybolmaz)", async () => {
+    freshCaption = { id: "compress-aciklama-1791728774900", url: CAPTION_URL, seconds: 27, createdAt: new Date() };
+    const { queueDailyPosts } = await import("../modules/social/social.service.js");
+
+    await queueDailyPosts(new Date(), false);
+
+    expect(toolPosts().find((p) => p.platform === "FACEBOOK")?.imageUrl).toBe(CAPTION_URL);
+  });
+
+  it("hiçbir ek sürüm yoksa: Facebook + YouTube Instagram sürümüyle gider (gönderi kaybolmaz)", async () => {
     const { queueDailyPosts } = await import("../modules/social/social.service.js");
 
     await queueDailyPosts(new Date(), false);

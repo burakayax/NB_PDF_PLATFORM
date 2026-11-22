@@ -33,7 +33,7 @@ const ghostButton =
 const primaryButton =
   "inline-flex h-9 items-center gap-2 rounded-xl bg-cyan-600 px-4 text-xs font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:bg-cyan-500 disabled:opacity-40";
 
-type VariantKey = "profile" | "caption";
+type VariantKey = "profile" | "caption" | "comment";
 
 const VARIANT_INFO: Record<VariantKey, { label: string; platforms: string; note: string }> = {
   profile: {
@@ -42,9 +42,14 @@ const VARIANT_INFO: Record<VariantKey, { label: string; platforms: string; note:
     note: "Son karede “Bağlantı profilde” yazar. İkisinde de açıklamadaki bağlantı tıklanmaz; bu sürüm Instagram ve TikTok taslaklarına otomatik eklenir.",
   },
   caption: {
-    label: "YouTube · Facebook",
-    platforms: "YouTube ve Facebook",
+    label: "YouTube",
+    platforms: "YouTube",
     note: "Son karede “Bağlantı açıklamada” yazar; açıklamadaki adres tıklanır.",
+  },
+  comment: {
+    label: "Facebook",
+    platforms: "Facebook",
+    note: "Son karede “Bağlantı yorumlarda” yazar; bağlantı gönderinin ilk yorumu olarak eklenir.",
   },
 };
 
@@ -210,14 +215,16 @@ export function ToolReelsPanel({
         {readyReels.map((reel) => (
           <article key={reel.id} className="overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900/40">
             {(() => {
-              const variant: VariantKey = variantById[reel.id] === "caption" && reel.captionVideo ? "caption" : "profile";
-              const shown = variant === "caption" ? reel.captionVideo : reel.video;
+              const chosen = variantById[reel.id];
+              const variant: VariantKey =
+                chosen === "caption" && reel.captionVideo ? "caption" : chosen === "comment" && reel.commentVideo ? "comment" : "profile";
+              const shown = variant === "caption" ? reel.captionVideo : variant === "comment" ? reel.commentVideo : reel.video;
               const info = VARIANT_INFO[variant];
               return (
                 <>
-                  {reel.captionVideo ? (
+                  {reel.captionVideo || reel.commentVideo ? (
                     <div className="flex gap-1 bg-slate-950/60 p-2">
-                      {(Object.keys(VARIANT_INFO) as VariantKey[]).map((k) => (
+                      {(Object.keys(VARIANT_INFO) as VariantKey[]).filter((k) => k === "profile" || (k === "caption" ? reel.captionVideo : reel.commentVideo)).map((k) => (
                         <button
                           key={k}
                           type="button"
@@ -265,10 +272,10 @@ export function ToolReelsPanel({
                         <button
                           type="button"
                           className={ghostButton}
-                          onClick={() => void downloadVideo(shown.url, `${reel.id}-${variant === "caption" ? "aciklama" : "profil"}.mp4`)}
+                          onClick={() => void downloadVideo(shown.url, `${reel.id}-${variant === "caption" ? "aciklama" : variant === "comment" ? "yorum" : "profil"}.mp4`)}
                         >
                           <Download className="h-3.5 w-3.5" />
-                          {variant === "caption" ? "YouTube / Facebook için indir" : "Instagram için indir"}
+                          {variant === "caption" ? "YouTube için indir" : variant === "comment" ? "Facebook için indir" : "Instagram için indir"}
                         </button>
                         <button
                           type="button"

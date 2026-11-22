@@ -69,7 +69,7 @@ if (!scenario.files.every((f) => existsSync(`${workDir}/fixtures/${f}`))) {
   const python = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
   const r = spawnSync(
     python,
-    ["-I", resolve(here, "fixtures/make-fixtures.py"), `${workDir}/fixtures`, resolve(publicDir, "fonts")],
+    ["-I", resolve(here, "fixtures/make-fixtures.py"), `${workDir}/fixtures`, resolve(publicDir, "fonts"), ...(scenario.files.includes("Arsiv-Taramasi-2025.pdf") ? ["big"] : [])],
     { stdio: "inherit" },
   );
   if (r.status !== 0) throw new Error("Örnek belgeler üretilemedi");
@@ -111,16 +111,20 @@ try {
 await stage.finish(extra);
 
 mkdirSync(dirname(out), { recursive: true });
-// Aynı çekimden iki sürüm: yalnız son karedeki yönlendirme cümlesi farklı.
-//   out          → Instagram (açıklamadaki adres tıklanmaz: "Bağlantı profilde")
-//   out-aciklama → YouTube + Facebook ("Bağlantı aşağıda": YouTube'da açıklamada, Facebook'ta ilk yorumda)
+// Aynı çekimden üç sürüm: yalnız son karedeki yönlendirme cümlesi farklı.
+//   out          → Instagram + TikTok (açıklamadaki adres tıklanmaz: "Bağlantı profilde")
+//   out-aciklama → YouTube (açıklamadaki adres tıklanır: "Bağlantı açıklamada")
+//   out-yorum    → Facebook (bağlantı ilk yoruma konur: "Bağlantı yorumlarda")
 const { total } = compose({ workDir, out, intro: scenario.intro, publicDir, linkLine: "Bağlantı profilde" });
 copyFileSync(out, out); // varlık denetimi (yazılmadıysa hata verir)
 const outCaption = resolve(arg("out-aciklama", out.replace(/\.mp4$/, "-aciklama.mp4")));
-compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı aşağıda" });
+compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı açıklamada" });
 copyFileSync(outCaption, outCaption);
+const outComment = resolve(arg("out-yorum", out.replace(/\.mp4$/, "-yorum.mp4")));
+compose({ workDir, out: outComment, intro: scenario.intro, publicDir, linkLine: "Bağlantı yorumlarda" });
+copyFileSync(outComment, outComment);
 // Facebook Reels kuralı: 7-20 sn. Süre kayıttan geliyor; kaliteyi bozmamak için kesilmez, yalnız uyarılır.
 if (total > 20 || total < 7) {
   console.warn(`UYARI: video ${total.toFixed(1)} sn; Facebook Reels hedefi 7-20 sn. Senaryoyu kısaltmayı düşün.`);
 }
-console.log(JSON.stringify({ ok: true, tool: toolId, out, outCaption, seconds: Math.round(total) }));
+console.log(JSON.stringify({ ok: true, tool: toolId, out, outCaption, outComment, seconds: Math.round(total) }));

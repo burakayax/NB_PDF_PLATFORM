@@ -35,28 +35,37 @@ export type ToolReel = ToolReelCatalogEntry & {
   guid: string;
   /** Instagram + TikTok sürümü (son karede "Bağlantı profilde"). */
   video: ToolReelVideoInfo | null;
-  /** YouTube + Facebook sürümü (son karede "Bağlantı açıklamada"). */
+  /** YouTube sürümü (son karede "Bağlantı açıklamada"). */
   captionVideo: ToolReelVideoInfo | null;
+  /** Facebook sürümü (son karede "Bağlantı yorumlarda"; bağlantı ilk yorum olarak eklenir). */
+  commentVideo: ToolReelVideoInfo | null;
 };
 
 /**
- * Aynı çekimin iki sürümü vardır; yalnız son karedeki yönlendirme cümlesi farklıdır.
- *   profile → Instagram: açıklamadaki adres tıklanmaz, bağlantı profildedir.
- *   caption → YouTube + Facebook: açıklamadaki adres tıklanır.
+ * Aynı çekimin üç sürümü vardır; yalnız son karedeki yönlendirme cümlesi farklıdır.
+ *   profile → Instagram + TikTok: açıklamadaki adres tıklanmaz, "Bağlantı profilde".
+ *   caption → YouTube: açıklamadaki adres tıklanır, "Bağlantı açıklamada".
+ *   comment → Facebook: bağlantı ilk yoruma konur, "Bağlantı yorumlarda".
  * Veritabanı şeması değişmesin diye sürüm kimlikten okunur: açıklama sürümünün kimliği
- * `<araç>-aciklama-<ms>`, profil sürümününki eskisi gibi `<araç>-<ms>`.
+ * `<araç>-aciklama-<ms>`, yorum sürümününki `<araç>-yorum-<ms>`, profil sürümününki eskisi gibi `<araç>-<ms>`.
  */
-export type ReelVariant = "profile" | "caption";
+export type ReelVariant = "profile" | "caption" | "comment";
 const CAPTION_MARK = "-aciklama-";
+const COMMENT_MARK = "-yorum-";
 
-export const variantOfId = (videoId: string): ReelVariant => (videoId.includes(CAPTION_MARK) ? "caption" : "profile");
+export const variantOfId = (videoId: string): ReelVariant =>
+  videoId.includes(CAPTION_MARK) ? "caption" : videoId.includes(COMMENT_MARK) ? "comment" : "profile";
 
 /** Gönderinin hangi ağı hangi sürümü kullanır? */
 export const variantForPlatform = (platform: string): ReelVariant =>
-  platform === "INSTAGRAM" || platform === "TIKTOK" ? "profile" : "caption";
+  platform === "INSTAGRAM" || platform === "TIKTOK" ? "profile" : platform === "FACEBOOK" ? "comment" : "caption";
 
 const variantWhere = (variant: ReelVariant) =>
-  variant === "caption" ? { id: { contains: CAPTION_MARK } } : { id: { not: { contains: CAPTION_MARK } } };
+  variant === "caption"
+    ? { id: { contains: CAPTION_MARK } }
+    : variant === "comment"
+      ? { id: { contains: COMMENT_MARK } }
+      : { AND: [{ id: { not: { contains: CAPTION_MARK } } }, { id: { not: { contains: COMMENT_MARK } } }] };
 
 export const toolReelGuid = (toolId: string): string => `${TOOL_REEL_PREFIX}${toolId}`;
 
@@ -84,11 +93,13 @@ export async function loadToolReels(): Promise<ToolReel[]> {
   return TOOL_REEL_CATALOG.map((entry) => {
     const latest = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "profile");
     const latestCaption = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "caption");
+    const latestComment = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "comment");
     return {
       ...entry,
       guid: toolReelGuid(entry.id),
       video: latest ? infoOf(latest) : null,
       captionVideo: latestCaption ? infoOf(latestCaption) : null,
+      commentVideo: latestComment ? infoOf(latestComment) : null,
     };
   });
 }
@@ -126,7 +137,8 @@ export async function saveToolVideo(
   seconds: number,
   variant: ReelVariant = "profile",
 ): Promise<ToolReelVideoInfo> {
-  const id = variant === "caption" ? `${toolId}${CAPTION_MARK}${Date.now()}` : `${toolId}-${Date.now()}`;
+  const mark = variant === "caption" ? CAPTION_MARK : variant === "comment" ? COMMENT_MARK : "-";
+  const id = `${toolId}${mark}${Date.now()}`;
   const row = await prisma.socialToolVideo.create({
     data: { id, toolId, data, sizeBytes: data.length, seconds },
     select: { id: true, seconds: true, createdAt: true },

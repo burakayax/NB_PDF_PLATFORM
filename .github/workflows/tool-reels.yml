@@ -7,9 +7,10 @@ name: Arac videosu uretimi
 # turu videoyu Instagram + Facebook Reels'e çevirir; paylaşılınca API videoyu siler (bu iş hiçbir
 # şey saklamaz). Yapay zekâ kullanan araçlar bu işe EKLENMEZ (kredi/ücret keser).
 #
-# İKİ SÜRÜM: Aynı çekimden iki video çıkar, yalnız son karedeki cümle farklıdır.
+# ÜÇ SÜRÜM: Aynı çekimden iki video çıkar, yalnız son karedeki cümle farklıdır.
 #   reel.mp4          → Instagram          ("Bağlantı profilde"; açıklamadaki adres tıklanmaz)
-#   reel-aciklama.mp4 → YouTube + Facebook ("Bağlantı açıklamada"; açıklamadaki adres tıklanır)
+#   reel-aciklama.mp4 → YouTube ("Bağlantı açıklamada"; açıklamadaki adres tıklanır)
+#   reel-yorum.mp4    → Facebook ("Bağlantı yorumlarda"; bağlantı ilk yoruma konur)
 #
 # GEREKLİ GİZLİ ANAHTARLAR (GitHub → Settings → Secrets and variables → Actions):
 #   TOOL_REEL_API_BASE     Kimlik API'nin dışarıdan erişilen kökü, ör. https://api.pdfplatform.app
@@ -112,7 +113,7 @@ jobs:
         if: steps.need.outputs.needed == 'true'
         run: |
           set -euo pipefail
-          for F in reel.mp4 reel-aciklama.mp4; do
+          for F in reel.mp4 reel-aciklama.mp4 reel-yorum.mp4; do
             V="$RUNNER_TEMP/$F"
             echo "== $F =="
             ls -l "$V"
@@ -139,6 +140,7 @@ jobs:
           path: |
             ${{ runner.temp }}/reel.mp4
             ${{ runner.temp }}/reel-aciklama.mp4
+            ${{ runner.temp }}/reel-yorum.mp4
           if-no-files-found: ignore
           retention-days: 2
 
@@ -159,6 +161,13 @@ jobs:
             -H "content-type: video/mp4" \
             -H "x-video-seconds: $(cat "$RUNNER_TEMP/reel.seconds")" \
             --data-binary "@$RUNNER_TEMP/reel-aciklama.mp4" \
+            "${API_BASE%/}/api/tool-reel-factory/${{ steps.need.outputs.tool }}/video"
+          curl -fsS --max-time 300 -X PUT \
+            -H "x-factory-key: ${FACTORY_KEY}" \
+            -H "x-video-variant: comment" \
+            -H "content-type: video/mp4" \
+            -H "x-video-seconds: $(cat "$RUNNER_TEMP/reel.seconds")" \
+            --data-binary "@$RUNNER_TEMP/reel-yorum.mp4" \
             "${API_BASE%/}/api/tool-reel-factory/${{ steps.need.outputs.tool }}/video"
 
       - name: Hata ekran goruntusu

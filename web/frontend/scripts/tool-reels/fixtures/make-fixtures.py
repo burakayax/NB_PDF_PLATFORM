@@ -208,6 +208,27 @@ T(p, (46, 490), "İletişim: info@atlaslojistik.example · 0850 000 00 00", 12, 
 doc.save(S + "/Faaliyet-Raporu-2025.pdf", deflate=True)
 print(len(doc), "sayfa")
 
+# ── PDF Sıkıştır için ~100 MB'lık tarama arşivi (yalnız "big" istenince; üretimi uzun sürer) ──
+if len(sys.argv) > 3 and sys.argv[3] == "big":
+    TARGET = 100 * 1024 * 1024
+    big = fitz.open()
+    total, n = 0, 0
+    makers = [skyline, mountains, lambda: abstract((20, 60, 140), (10, 20, 60), (80, 160, 255)),
+              lambda: abstract((120, 40, 40), (50, 15, 30), (255, 140, 120)), lambda: mountains((255, 190, 130), (255, 235, 200))]
+    while total < TARGET:
+        base = makers[n % len(makers)]().resize((3300, 2062), Image.LANCZOS)
+        page_img = Image.new("RGB", (3300, 4680), (252, 252, 250))
+        page_img.paste(base, (0, 0))
+        page_img.paste(base.transpose(Image.FLIP_LEFT_RIGHT).resize((3300, 2062)), (0, 2200))
+        page_img = noise(page_img, 0.16)  # tarama gürültüsü: JPEG'i şişirir, sıkıştırma farkı belirgin olur
+        data = jpg(page_img, 97)
+        pg = big.new_page(width=595, height=842)
+        pg.insert_image(fitz.Rect(0, 0, 595, 842), stream=data)
+        total += len(data)
+        n += 1
+    big.save(S + "/Arsiv-Taramasi-2025.pdf", deflate=True)
+    print("büyük arşiv:", n, "sayfa", round(total / 1048576), "MB")
+
 
 # ── PDF Birleştir için küçük belgeler ─────────────────────────────────────────
 for name, title, pages in [("Sozlesme", "Hizmet Sözleşmesi", 3), ("Fatura", "Fatura No: 2026-0412", 2), ("Ekler", "Ekler ve Belgeler", 2)]:

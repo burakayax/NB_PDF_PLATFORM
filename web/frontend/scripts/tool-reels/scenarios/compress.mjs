@@ -1,18 +1,18 @@
-/** PDF Sıkıştır: dosya seç → beklenen küçülme → hedef boyut → kalite → sıkıştır → sonuç. */
+/** PDF Sıkıştır: dosya seç → beklenen küçülme → kalite → sıkıştır → sonuç. */
 
 export default {
   id: "compress",
   toolPath: "/tools/compress",
   intro: { title: "PDF Sıkıştırma", sub: "Büyük PDF dosyalarını küçült" },
-  /** Gösterilen belge; make-fixtures.py üretir. */
-  files: ["Faaliyet-Raporu-2025.pdf"],
+  /** Gösterilen belge (~100 MB tarama arşivi: etkileyici bir küçülme); make-fixtures.py "big" ile üretir. */
+  files: ["Arsiv-Taramasi-2025.pdf"],
 
   async run(st, { fixtures, processing }) {
     const { pg, wait, box, center, say, hl, hlText, hlOff, moveTo, openMenu, closeMenu } = st;
     const bbf = await pg.locator("form.tool-form").boundingBox();
     const formBox = { x: bbf.x, y: bbf.y, w: bbf.width, h: bbf.height };
     st.begin();
-    const N = 5;
+    const N = 4;
 
     say(`ADIM 1 / ${N}`, "Dosyanı seç ya da alana sürükle", "Saniyeler içinde", "şifreli aktarım", "");
     await wait(450);
@@ -31,8 +31,8 @@ export default {
     }
     if (!chooser) throw new Error("Dosya seçme penceresi açılmadı");
     await wait(200);
-    await chooser.setFiles(fixtures("Faaliyet-Raporu-2025.pdf"));
-    await pg.getByText("Faaliyet-Raporu-2025.pdf").first().waitFor({ timeout: 30000 });
+    await chooser.setFiles(fixtures("Arsiv-Taramasi-2025.pdf"));
+    await pg.getByText("Arsiv-Taramasi-2025.pdf").first().waitFor({ timeout: 30000 });
     await wait(250);
     const bbl = await pg.locator("form.tool-form").boundingBox();
     const loadedBox = { x: bbl.x, y: bbl.y, w: bbl.width, h: bbl.height };
@@ -55,21 +55,10 @@ export default {
       await wait(1000);
     }
 
-    // Hedef boyut: açık menü tek adımda gösterilir, seçenekler sayfadan okunur.
-    const hsel = pg.getByText("Hedef boyut", { exact: true }).locator("xpath=ancestor::label[1]").locator("select");
-    const hm = await openMenu(hsel);
-    say(`ADIM ${hasEst ? 3 : 2} / ${N}`, "İstersen hedef boyut belirle", "100 KB'den 10 MB'a kadar", "bir sınır seçebilirsin", "");
-    await wait(450);
-    await moveTo(hm.sp.x, hm.rowC(hm.selIdx));
-    await wait(650);
-    await pg.mouse.click(hm.sp.x, hm.rowC(hm.selIdx));
-    await closeMenu();
-    await wait(200);
-
     // Kalite
     const ksel = pg.getByText("Kalite", { exact: true }).locator("xpath=ancestor::label[1]").locator("select");
     const km = await openMenu(ksel);
-    say(`ADIM 4 / ${N}`, "Kaliteyi seç", "Agresif, Dengeli ya da Kaliteli", "Önerimiz: Otomatik", "");
+    say(`ADIM 3 / ${N}`, "Kaliteyi seç", "Agresif, Dengeli ya da Kaliteli", "Önerimiz: Otomatik", "");
     await wait(450);
     await moveTo(km.sp.x, km.rowC(km.selIdx));
     await wait(650);
@@ -84,11 +73,11 @@ export default {
     const bp = await center(btn);
     await moveTo(bp.x, bp.y);
     await hl(btn, 8);
-    say(`ADIM 5 / ${N}`, "Sıkıştır'a bas", "", "", "");
+    say(`ADIM 4 / ${N}`, "Sıkıştır'a bas", "", "", "");
     await wait(900);
     await hlOff();
     await pg.mouse.click(bp.x, bp.y);
-    say(`ADIM 5 / ${N}`, "Birkaç saniye sürer…", processing[0], processing[1], "");
+    say(`ADIM 4 / ${N}`, "Birkaç saniye sürer…", processing[0], processing[1], "");
     // Sunucunun gerçek işleme süresi videoya girmez: ilk 1,6 sn gösterilir, kalanı kesilir.
     st.cutOpen(1.6);
     await pg.getByText(/Yeniden yükleme yapmadan/i).first().waitFor({ timeout: 90000 });
