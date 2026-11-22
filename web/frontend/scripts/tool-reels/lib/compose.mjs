@@ -42,10 +42,10 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
 
   const even = (n) => Math.round(n / 2) * 2;
   const D = T.end;
-  const I = 3.2; // giriş kartı
-  const O = 5.0; // kapanış kartı
+  const I = 2.0; // giriş kartı
+  const O = 3.0; // kapanış kartı
   const hasRes = !!(sonuc || T.stat);
-  const R = hasRes ? 6.5 : 0; // sonuç sahnesi (indirilen dosyanın gerçek görünümü)
+  const R = hasRes ? 3.8 : 0; // sonuç sahnesi (indirilen dosyanın gerçek görünümü)
   const TOTAL = +(I + D + R + O).toFixed(2);
 
   // ---- Kesim (araç bölümü) ----

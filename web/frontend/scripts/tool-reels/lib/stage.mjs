@@ -229,9 +229,9 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
     await pg.evaluate(([x, y, w, h]) => window.__hl(x, y, w, h), [ub.x - 10, ub.y - 10, ub.width + 20, ub.height + 20]);
     await moveTo(ub.x + ub.width / 2, ub.y + ub.height / 2);
     say("SONUÇ", "Sonucu al", "İndir · Paylaş · Aç · Kapat", "cihazına indir, uygulamayla paylaş, yeni sekmede aç ya da kapat", "");
-    await wait(4200);
+    await wait(1900);
     await hlOff();
-    await wait(400);
+    await wait(250);
   }
 
   /** Sonuç ekranının üst konumu (kurgu, geçişte bu noktadan keser). Gerekirse sayfa görünür alana kaydırılır. */
