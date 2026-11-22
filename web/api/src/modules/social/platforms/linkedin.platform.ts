@@ -14,11 +14,15 @@ import { logger } from "../../../lib/file-log.js";
 import { carouselSlidesFor } from "../carousel.service.js";
 import { isReelUrl } from "../reels.service.js";
 import { PlatformError, coverAltText, downloadImage, requestJson, requireSecret } from "./common.js";
-import type { Publisher } from "./common.js";
+import type { Publisher, Verifier } from "./common.js";
 
 const API = "https://api.linkedin.com/rest";
-/** LinkedIn sürümü başlıkta ZORUNLU; eksikse istek 426 ile reddedilir. */
-const LINKEDIN_VERSION = "202405";
+/**
+ * LinkedIn sürümü başlıkta ZORUNLU; eksikse 400, süresi dolmuşsa 426 (NONEXISTENT_VERSION) döner.
+ * Her sürüm yaklaşık 1 yıl desteklenir → EN GEÇ yılda bir güncelle (en yeni: learn.microsoft.com/linkedin/marketing/versioning).
+ * 202405 Kasım 2026'da kapanmıştı; 2026-11-22'de 202609'a geçildi.
+ */
+const LINKEDIN_VERSION = "202609";
 
 function headers(token: string): Record<string, string> {
   return {
@@ -81,6 +85,40 @@ async function uploadDocument(token: string, owner: string, slideUrls: string[])
   if (!put.ok) throw new PlatformError("LinkedIn belge yükleme", put.status, await put.text());
   return value.document;
 }
+
+/**
+ * Bağlantı sınaması: şirket sayfasını okumayı dener.
+ * 401 = erişim anahtarı geçersiz/süresi dolmuş. 403 = anahtar geçerli ama okuma yetkisi yok
+ * (yalnız paylaşım yetkisi verilmişse olağan) → anahtar kabul edilmiş sayılır.
+ */
+export const verifyLinkedIn: Verifier = async (secrets) => {
+  const token = requireSecret(secrets, "accessToken", "LinkedIn Access Token");
+  const orgId = requireSecret(secrets, "organizationId", "LinkedIn Şirket Sayfası ID").replace(/\D/g, "");
+  if (!orgId) throw new Error("LinkedIn Şirket Sayfası ID yalnızca sayı olmalı");
+
+  const res = await fetch(`${API}/organizations/${orgId}`, {
+    headers: headers(token),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const text = await res.text();
+
+  if (res.ok) {
+    let name = "";
+    try {
+      name = String((JSON.parse(text) as { localizedName?: string }).localizedName ?? "");
+    } catch {
+      /* gövde okunamadı: ad olmadan devam */
+    }
+    return name ? `${name} (sayfa ${orgId})` : `şirket sayfası ${orgId}`;
+  }
+  if (res.status === 401) {
+    throw new PlatformError("LinkedIn", 401, `Erişim anahtarı geçersiz ya da süresi dolmuş (LinkedIn anahtarları 60 gün geçerlidir). ${text}`);
+  }
+  if (res.status === 403) {
+    return `erişim anahtarı geçerli, sayfa ${orgId} okunamadı (yalnız paylaşım yetkisi varsa olağan; kesin kanıt gerçek bir gönderidir)`;
+  }
+  throw new PlatformError("LinkedIn", res.status, text);
+};
 
 export const publishToLinkedIn: Publisher = async ({ body, imageUrl, item, secrets }) => {
   const token = requireSecret(secrets, "accessToken", "LinkedIn Access Token");
