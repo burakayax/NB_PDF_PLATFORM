@@ -14,7 +14,7 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 export const CV_PROFESSION_SLUGS = {
   sales: ["satis-danismani-cv-ornegi", "sales-representative-cv-example", "Satış Danışmanı", "Sales Representative"],
   accounting: ["muhasebeci-cv-ornegi", "accountant-cv-example", "Muhasebeci", "Accountant"],
-  software: ["yazilim-gelistirici-cv-ornegi", "software-developer-cv-example", "Yazılım Geliştirici", "Software Developer"],
+  software: ["yazilim-gelistirici-cv-ornegi", "software-developer-cv-example", "Yazılımcı", "Software Developer"],
   teacher: ["ogretmen-cv-ornegi", "teacher-cv-example", "Öğretmen", "Teacher"],
   health: ["hemsire-cv-ornegi", "nurse-cv-example", "Hemşire", "Nurse"],
   support: ["musteri-temsilcisi-cv-ornegi", "customer-service-cv-example", "Müşteri Temsilcisi", "Customer Service Representative"],
@@ -22,7 +22,7 @@ export const CV_PROFESSION_SLUGS = {
   marketing: ["dijital-pazarlama-uzmani-cv-ornegi", "digital-marketing-cv-example", "Dijital Pazarlama Uzmanı", "Digital Marketing Specialist"],
   engineer: ["muhendis-cv-ornegi", "engineer-cv-example", "Mühendis", "Engineer"],
   hospitality: ["garson-otel-restoran-cv-ornegi", "hospitality-server-cv-example", "Garson / Otel / Restoran Çalışanı", "Hospitality & Restaurant Worker"],
-  logistics: ["depo-lojistik-cv-ornegi", "warehouse-logistics-cv-example", "Depo ve Lojistik Çalışanı", "Warehouse & Logistics Associate"],
+  logistics: ["depo-lojistik-cv-ornegi", "warehouse-logistics-cv-example", "Lojistik ve Depo Çalışanı", "Warehouse & Logistics Associate"],
   manager: ["yonetici-cv-ornegi", "manager-cv-example", "Yönetici", "Manager"],
   design: ["grafik-tasarimci-cv-ornegi", "graphic-designer-cv-example", "Grafik Tasarımcı", "Graphic Designer"],
   admin: ["ofis-asistani-cv-ornegi", "office-administrator-cv-example", "Ofis Asistanı / Sekreter", "Office Administrator"],

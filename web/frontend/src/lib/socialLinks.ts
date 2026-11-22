@@ -1,4 +1,5 @@
 import { socialPlatformFromUrl } from "../components/common/socialIcons";
+import { BRAND_SOCIAL_LINKS } from "../seo/brandSocialLinks.mjs";
 
 /**
  * Markanın resmi sosyal medya profilleri (alt bilgi + Organization sameAs).
@@ -7,15 +8,7 @@ import { socialPlatformFromUrl } from "../components/common/socialIcons";
  * LinkedIn kişisel profile gidiyordu). Aynı ağ için BURADAKİ adres geçerlidir; panelde başka
  * bir ağ (ör. GitHub) varsa korunur.
  */
-export const BRAND_SOCIAL_LINKS: readonly string[] = [
-  "https://www.instagram.com/pdfplatformapp",
-  "https://www.facebook.com/pdfplatform",
-  "https://x.com/pdfplatformapp",
-  "https://www.linkedin.com/company/pdfplatform",
-  "https://www.youtube.com/@pdfplatformapp",
-  "https://www.tiktok.com/@pdfplatformapp",
-  "https://tr.pinterest.com/pdfplatformapp",
-];
+export { BRAND_SOCIAL_LINKS };
 
 export function resolveSocialLinks(configured: readonly string[] | undefined): string[] {
   const owned = new Set(BRAND_SOCIAL_LINKS.map(socialPlatformFromUrl));

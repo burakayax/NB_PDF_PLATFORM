@@ -2600,7 +2600,9 @@ export const LANDING_SEO = {
      * Ayrıca araç sayısı yazılıyor: sayılan üç-dört aracı okuyan kişi sitede
      * yalnızca onların olduğunu sanıyordu (kullanıcı bildirdi).
      */
-    title: markaEkle(`PDF Birleştirme, Word'e Çevirme ve Küçültme — ${ARAC_SAYISI} Araç`),
+    // Marka başa alındı: markaEkle sığmayınca markayı düşürüyordu; 'pdf platform' aramasında
+    // Google başlıkta markayı hiç görmüyordu. Anahtar kelimeler (birleştir, Word, küçült) korunur.
+    title: `${BRAND}: PDF Birleştir, Word'e Çevir, Küçült — ${ARAC_SAYISI} Araç`,
     description:
       `PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve toplam ${ARAC_SAYISI} araç. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.`,
     h1: `PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — ${ARAC_SAYISI} PDF Aracı Tek Platformda`,
@@ -2618,7 +2620,7 @@ export const LANDING_SEO = {
   en: {
     // Ölçüldü (en): pdf to word → pdf to jpg → pdf to excel → pdf editor →
     // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
-    title: markaEkle(`PDF to Word, Merge & Compress — ${ARAC_SAYISI} PDF Tools`),
+    title: `${BRAND}: Merge, Compress & PDF to Word — ${ARAC_SAYISI} PDF Tools`,
     description:
       `PDF to Word, merge, compress, PDF to JPG, edit and ${ARAC_SAYISI} tools in total. Free, no sign-up; merge runs in your browser and your files never leave your device.`,
     h1: "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
