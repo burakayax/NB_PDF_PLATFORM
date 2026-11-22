@@ -53,9 +53,13 @@ const ITEM: FeedItem = {
 };
 const input = () => ({ body: "metin", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetModules();
   process.env.FRONTEND_ORIGIN = ORIGIN;
+  // Reels ilk yorumu gerçekte 10 sn bekler; testi yavaşlatmasın (modül sıfırlandığı için her seferinde ayarlanır).
+  const comment = await import("../modules/social/platforms/facebook-comment.js");
+  comment.reelCommentTiming.initialWait = 0;
+  comment.reelCommentTiming.retryBase = 0;
 });
 afterEach(() => {
   vi.unstubAllGlobals();
