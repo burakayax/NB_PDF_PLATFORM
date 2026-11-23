@@ -197,21 +197,28 @@ app.use("/api", apiRouter);
 // rate-limiter'ı var; yalnız IP-bazlı abuse bloğu eklenir (defense-in-depth).
 app.use("/v1", abuseBlockMiddleware, v1Router);
 
-registerTeamJobs();
+// Yalnız kendi veritabanını düzenleyen, zararsız görevler her ortamda çalışır.
 registerDataRetentionJobs();
-registerHealthMonitorJobs();
-registerErrorTriageJobs();
-registerInvoiceScheduleJobs();
-registerReturnInvoiceJobs();
-registerIysReminderJobs();
-registerSubscriptionJobs();
-registerLifecycleEmailJobs();
-registerCheckoutRecoveryJobs();
 registerCheckoutExpiryJobs();
-registerLimitReachedEmailJobs();
 registerPlanOverrideJobs();
-registerSocialPostJobs();
-registerContractReviewJobs();
+
+// E-posta atan / dış servise (fatura, yapay zeka, sosyal medya) istek yapan görevler YALNIZ canlıda
+// çalışır. Yerel geliştirme veritabanındaki deneme hesaplarına gerçek e-posta gitmesin, yerel açılış
+// yanlış alarm veya masraf üretmesin diye (İYS hatırlatması buna yol açmıştı).
+if (env.NODE_ENV === "production") {
+  registerTeamJobs();
+  registerHealthMonitorJobs();
+  registerErrorTriageJobs();
+  registerInvoiceScheduleJobs();
+  registerReturnInvoiceJobs();
+  registerIysReminderJobs();
+  registerSubscriptionJobs();
+  registerLifecycleEmailJobs();
+  registerCheckoutRecoveryJobs();
+  registerLimitReachedEmailJobs();
+  registerSocialPostJobs();
+  registerContractReviewJobs();
+}
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.
