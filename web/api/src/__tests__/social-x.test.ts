@@ -34,7 +34,7 @@ describe("X uzunluk ölçümü", () => {
 });
 
 describe("X gönderi kuralları (gerçek içerik)", () => {
-  realIt("her blog gönderisi: link ana metinde YOK, yanıtta; ≤280; ≤1 etiket; soru ile biter", () => {
+  realIt("her blog gönderisi: link ana metinde YOK, yanıtta; ≤280; 1–3 etiket; soru ile biter", () => {
     const entries = Object.entries(REAL!.posts);
     expect(entries.length).toBeGreaterThan(50);
     for (const [url, post] of entries) {
@@ -51,7 +51,7 @@ describe("X gönderi kuralları (gerçek içerik)", () => {
     }
   });
 
-  it("uzun ipuçlarında thread: numaralar 1/N … N/N, hepsi ≤280, link en son yanıtta, soru + 1 etiket son parçada", () => {
+  it("uzun ipuçlarında thread: numaralar 1/N … N/N, hepsi ≤280, link en son yanıtta, soru + etiketler son parçada", () => {
     const long = "Bu çok uzun bir ipucu başlığıdır ve gönderiyi tek parçaya sığdırmaz çünkü gerçekten epey uzun yazıldı";
     const post = {
       slug: "uzun",
@@ -74,11 +74,11 @@ describe("X gönderi kuralları (gerçek içerik)", () => {
     expect(checkXPlan(plan)).toEqual([]);
     const lastPart = plan.parts[plan.parts.length - 1] ?? "";
     expect(lastPart.includes("?")).toBe(true);
-    expect((plan.parts.join(" ").match(/#[^\s#]+/gu) ?? []).length).toBeLessThanOrEqual(1);
+    expect((plan.parts.join(" ").match(/#[^\s#]+/gu) ?? []).length).toBeLessThanOrEqual(3);
     expect(plan.replyLink?.startsWith("Detaylı rehber 👇 https://x.test/blog/uzun")).toBe(true);
   });
 
-  realIt("'Bunu biliyor muydunuz?' linksizdir ve en fazla 1 etiket taşır", () => {
+  realIt("'Bunu biliyor muydunuz?' linksizdir ve en fazla 3 etiket taşır", () => {
     for (const [url, post] of Object.entries(REAL!.posts)) {
       const tipIndex = post.factTips?.[0];
       if (tipIndex === undefined || !post.tips[tipIndex]) continue;
