@@ -103,6 +103,7 @@ export const EN_BLOG_SLUGS = {
   "ihale-dosyasi-pdf-hazirlama": "prepare-a-tender-submission-as-pdf",
   "bordro-sayfalarini-ayirma": "split-payslips-per-employee",
   "osym-sinav-basvurusu-fotograf-boyutu": "exam-application-photo-size",
+  "fotograf-kb-kucultme-20-50-100-kb": "reduce-photo-size-kb-application-form",
   "uyap-karari-word-e-aktarma": "court-decision-from-uyap-into-word",
   "universite-kayit-evraklarini-hazirlama": "prepare-university-enrolment-documents",
   "word-pdf-cevirme": "convert-word-to-pdf",
