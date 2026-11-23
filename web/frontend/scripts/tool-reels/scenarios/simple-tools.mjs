@@ -81,7 +81,12 @@ export const SIMPLE = {
   "excel-to-pdf": simpleTool({
     id: "excel-to-pdf",
     toolPath: "/tools/excel-to-pdf",
-    intro: { title: "Excel → PDF", sub: "Tabloyu bozmadan PDF yap" },
+    intro: {
+      title: "Excel → PDF",
+      sub: "Tabloyu bozmadan PDF yap",
+      resultFirst: { top: "Excel tablon PDF olunca", sub: "böyle görünür", bottom: "Renk ve düzen aynı", bottom2: "tek tıkla, bozulmadan" },
+    },
+    resultHold: 1800,
     files: ["Satis-Tablosu.xlsx"],
     pick: { l1: "Excel dosyanı yükle", l2: "" },
     button: btn(/PDF.e Çevir/),

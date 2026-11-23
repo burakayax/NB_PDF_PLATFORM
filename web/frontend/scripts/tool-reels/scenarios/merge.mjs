@@ -1,11 +1,17 @@
 /** PDF Birleştir: üç dosya seç → sırayı ayarla → birleştir → sonuç (cihazda işlenir). */
 
+import { makeResultCard } from "../lib/result-card.mjs";
+
 const FILES = ["Sozlesme.pdf", "Fatura.pdf", "Ekler.pdf"];
 
 export default {
   id: "merge",
   toolPath: "/tools/merge",
-  intro: { title: "PDF Birleştirme", sub: "Birden çok PDF'i tek dosyada topla" },
+  intro: {
+    title: "PDF Birleştirme",
+    sub: "Birden çok PDF'i tek dosyada topla",
+    resultFirst: { top: "3 PDF tek dosya olunca", sub: "böyle görünür", bottom: "Tek dosya, tek tıkla" },
+  },
   files: FILES,
 
   async run(st, { fixtures, processing }) {
@@ -86,6 +92,14 @@ export default {
     await wait(2300);
 
     await st.showResultButtons();
-    return { formBox, loadedBox: formBox, resultBox, swapAt, btnBoxFinal, estText: "" };
+    // Sonuç görüntüsü (videonun açılışında gösterilir): indirilen birleşik PDF'nin ilk sayfası.
+    let resultCard = null;
+    st.freeze();
+    try {
+      resultCard = makeResultCard({ file: await st.captureResult(), workDir: st.workDir });
+    } catch (e) {
+      console.log("SONUC-SAHNESI atlandı:", e.message);
+    }
+    return { resultCard, formBox, loadedBox: formBox, resultBox, swapAt, btnBoxFinal, estText: "" };
   },
 };

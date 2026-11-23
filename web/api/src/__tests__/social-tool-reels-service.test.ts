@@ -26,12 +26,18 @@ vi.mock("../lib/prisma.js", () => ({
         async ({
           where,
         }: {
-          where: { toolId: string; createdAt: { gte: Date }; id?: { contains?: string; not?: { contains: string } } };
+          where: {
+            toolId: string;
+            createdAt: { gte: Date };
+            id?: { contains?: string; not?: { contains: string } };
+            AND?: { id: { not: { contains: string } } }[];
+          };
         }) =>
         videos
           .filter((v) => v.toolId === where.toolId && v.createdAt >= where.createdAt.gte)
           .filter((v) => !where.id?.contains || v.id.includes(where.id.contains))
           .filter((v) => !where.id?.not || !v.id.includes(where.id.not.contains))
+          .filter((v) => (where.AND ?? []).every((c) => !v.id.includes(c.id.not.contains)))
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null,
       ),
       delete: vi.fn(async ({ where }: { where: { id: string } }) => {
@@ -127,10 +133,11 @@ describe("taze ve kullanılmamış video", () => {
     expect(await unusedFreshVideoFor("merge", NOW)).toBeNull();
   });
 
-  it("iki sürüm ayrı aranır: 'profilde' (Instagram) ve 'açıklamada' (YouTube + Facebook)", async () => {
+  it("üç sürüm ayrı aranır: 'profilde' (Instagram/TikTok), 'açıklamada' (YouTube), 'yorumlarda' (Facebook)", async () => {
     videos = [
       video("merge-1000000000002", "merge", 5 * HOUR),
       video("merge-aciklama-1000000000003", "merge", 4 * HOUR), // daha yeni; yine de profil aramasına girmez
+      video("merge-yorum-1000000000004", "merge", 3 * HOUR), // en yeni; yine de profil/açıklama aramasına girmez
     ];
     const { unusedFreshVideoFor, variantForPlatform, variantOfId } = await import(
       "../modules/social/tool-reels.service.js"
@@ -138,11 +145,14 @@ describe("taze ve kullanılmamış video", () => {
 
     expect((await unusedFreshVideoFor("merge", NOW, "profile"))?.id).toBe("merge-1000000000002");
     expect((await unusedFreshVideoFor("merge", NOW, "caption"))?.id).toBe("merge-aciklama-1000000000003");
+    expect((await unusedFreshVideoFor("merge", NOW, "comment"))?.id).toBe("merge-yorum-1000000000004");
     expect(variantOfId("merge-aciklama-1000000000003")).toBe("caption");
+    expect(variantOfId("merge-yorum-1000000000004")).toBe("comment");
     expect(variantOfId("merge-1000000000002")).toBe("profile");
     expect(variantForPlatform("INSTAGRAM")).toBe("profile");
     expect(variantForPlatform("YOUTUBE")).toBe("caption");
-    expect(variantForPlatform("FACEBOOK")).toBe("caption");
+    expect(variantForPlatform("FACEBOOK")).toBe("comment");
+    expect(variantForPlatform("TIKTOK")).toBe("profile");
   });
 
   it("36 saatten eski video taze sayılmaz", async () => {

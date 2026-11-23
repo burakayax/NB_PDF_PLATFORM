@@ -148,7 +148,7 @@ export function simpleTool(cfg) {
   return {
     id: cfg.id,
     toolPath: cfg.toolPath,
-    intro: cfg.intro,
+    intro: { ...cfg.intro, resultFirst: cfg.intro.resultFirst ?? { top: cfg.intro.title, sub: cfg.intro.sub, bottom: cfg.resultLine ?? "Dosyan hazır" } },
     files: cfg.files,
     readySelector: cfg.readySelector,
 
@@ -224,16 +224,21 @@ export function simpleTool(cfg) {
       const confirmBtn = pg.getByRole("button", { name: /^(Evet, devam|Evet|Devam et)$/ }).first();
       const deadline = Date.now() + (cfg.timeout ?? 120000);
       let confirmed = false;
+      // Sunucunun gerçek işleme süresi videoya girmez: ilk 1,8 sn gösterilir, kalanı kesilir.
+      st.cutOpen(1.8);
       for (;;) {
         if (await resultLoc.isVisible().catch(() => false)) break;
         if (!confirmed && (await confirmBtn.isVisible().catch(() => false))) {
           confirmed = true;
+          st.cutClose();
           await wait(1200);
           await clickAt(st, confirmBtn, { hl: false, hold: 900 });
+          st.cutOpen(1.0);
         }
         if (Date.now() > deadline) throw new Error("Sonuç ekranı gelmedi (zaman aşımı)");
         await wait(400);
       }
+      st.cutClose();
       const swapAt = +(st.now() - st.startAt()).toFixed(2);
       await wait(250);
       const resultBox = await st.resultTop(resultRe);
@@ -243,7 +248,7 @@ export function simpleTool(cfg) {
         : ["İşlem tamam", cfg.resultLine ?? "", `${processing[0]} · ${processing[1]}`];
       say("SONUÇ", t1, l1, l2, "green");
       await moveTo(700, 330);
-      await wait(4200);
+      await wait(cfg.resultHold ?? 2000);
       await st.showResultButtons();
       // Sonuç sahnesi: sonucu videoya SONRADAN eklemek için dosyayı indirip küçük resim kartı üretir (video süresi dondurulur).
       let resultCard = null;

@@ -867,10 +867,12 @@ export async function queueToolReel(
     platforms?: SocialPlatform[];
     repeat?: boolean;
     /**
-     * YouTube + Facebook için "Bağlantı açıklamada" sürümü. Verilmezse en yeni sürüm aranır; `null`
+     * YouTube için "Bağlantı açıklamada" sürümü. Verilmezse en yeni sürüm aranır; `null`
      * (otomatik turda sürüm henüz hazır değil) ya da hiç bulunmazsa Instagram sürümü kullanılır.
      */
     captionVideo?: ToolReelVideoInfo | null;
+    /** Facebook için "Bağlantı yorumlarda" sürümü (aynı kural: verilmezse aranır, yoksa yedek sürüm). */
+    commentVideo?: ToolReelVideoInfo | null;
     /** Genel onay bekleme (`hold`) açık olsa bile bu ağların gönderisi taslak kalmaz, kuyruğa girer. */
     directPlatforms?: SocialPlatform[];
   },
@@ -894,7 +896,14 @@ export async function queueToolReel(
       ? await latestVideoFor(toolId, MANUAL_MAX_AGE_MS, scheduledAt, "caption")
       : options.captionVideo;
   if (!captionVideo) {
-    logger.warn("social", `${toolId}: "açıklamada" sürümü yok; YouTube/Facebook Instagram sürümüyle gidiyor`);
+    logger.warn("social", `${toolId}: "açıklamada" sürümü yok; YouTube Instagram sürümüyle gidiyor`);
+  }
+  const commentVideo =
+    options?.commentVideo === undefined
+      ? await latestVideoFor(toolId, MANUAL_MAX_AGE_MS, scheduledAt, "comment")
+      : options.commentVideo;
+  if (!commentVideo) {
+    logger.warn("social", `${toolId}: "yorumlarda" sürümü yok; Facebook yedek sürümle gidiyor`);
   }
   const config = await readSocialConfig();
   const dayKey = calendarDayKey(scheduledAt, config.timeZone);
@@ -916,8 +925,14 @@ export async function queueToolReel(
     const manual = !accounts.has(platform);
     const direct = options?.directPlatforms?.includes(platform) === true;
     const status = manual ? "MANUAL" : hold && !direct ? "DRAFT" : "QUEUED";
-    // Instagram + TikTok "profilde" sürümünü, YouTube + Facebook "açıklamada" sürümünü paylaşır.
-    const media = variantForPlatform(platform) === "caption" ? (captionVideo ?? usable) : usable;
+    // Instagram + TikTok "profilde", YouTube "açıklamada", Facebook "yorumlarda" sürümünü kullanır.
+    const variantOfPlatform = variantForPlatform(platform);
+    const media =
+      variantOfPlatform === "caption"
+        ? (captionVideo ?? usable)
+        : variantOfPlatform === "comment"
+          ? (commentVideo ?? captionVideo ?? usable)
+          : usable;
     // Tekrar hazırlıkta: bu video için bu ağda zaten bekleyen bir gönderi varsa ikincisi açılmaz.
     if (options?.repeat) {
       const waiting = await prisma.socialPost.count({
@@ -1029,8 +1044,10 @@ async function maybeQueueToolReel(scheduledAt: Date, hold: boolean, result: Queu
     return;
   }
   const captionVideo = await unusedFreshVideoFor(due.id, scheduledAt, "caption");
+  const commentVideo = await unusedFreshVideoFor(due.id, scheduledAt, "comment");
   const queued = await queueToolReel(due.id, scheduledAt, hold || !config.reelsAutoPublish, video, {
     captionVideo,
+    commentVideo,
     directPlatforms: directPublishPlatforms(config, hold),
   });
   result.queued.push(...queued.queued);
@@ -1068,8 +1085,10 @@ export async function catchUpToolReel(now: Date = new Date()): Promise<QueueResu
   if (!video) return result;
 
   const captionVideo = await unusedFreshVideoFor(due.id, scheduledAt, "caption");
+  const commentVideo = await unusedFreshVideoFor(due.id, scheduledAt, "comment");
   const queued = await queueToolReel(due.id, scheduledAt, !config.reelsAutoPublish, video, {
     captionVideo,
+    commentVideo,
     directPlatforms: directPublishPlatforms(config, false),
   });
   result.queued.push(...queued.queued);
