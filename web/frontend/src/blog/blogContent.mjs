@@ -7018,7 +7018,7 @@ export const BLOG_POSTS = [
       tool: "/tools/gorsel-boyutlandir",
     },
     {
-      title: "ÖSYM Fotoğraf Boyutu: 300×400 Piksel ve 60 KB",
+      title: "ÖSYM ve Sınav Başvurusu Fotoğraf Boyutu: Piksel ve KB Ayarı",
       description:
         "Sınav başvurusunda fotoğraf yüklenmiyor mu? İstenen piksel ölçüsünü ve dosya boyutunu tutturmanın adım adım yolu — kurulum gerekmeden.",
       excerpt:
@@ -7027,7 +7027,7 @@ export const BLOG_POSTS = [
         { t: "lead", x: "Sınav başvurusunun son günü, formu doldurdunuz ve sıra fotoğrafa geldi. Sistem fotoğrafı kabul etmiyor. Hata mesajı da genelde açıklayıcı değil. Sorun neredeyse her zaman iki şeyden birindedir: fotoğrafın piksel ölçüsü ya da dosya boyutu isteneni tutmuyordur." },
 
         { t: "h2", x: "İstenen ölçüler" },
-        { t: "p", x: "Sınav başvurularında fotoğraf için yaygın olarak şu şartlar aranır:" },
+        { t: "p", x: "ÖSYM'nin kılavuzu piksel ya da KB değeri yayımlamıyor; başvuru ekranı ne istiyorsa o esastır. Sınav başvurularında yaygın görülen şartlar şöyledir, bunları örnek olarak alın ve kendi ekranınızdakiyle karşılaştırın:" },
         { t: "ul", items: [
           "Piksel ölçüsü: 300 × 400 (genişlik × yükseklik).",
           "Dosya boyutu: en fazla 60 KB.",
@@ -7064,7 +7064,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Şunu tekrar etmekte fayda var: bir aracın fotoğrafı doğru ölçüye getirmesi, fotoğrafın biyometrik şartları karşıladığı anlamına gelmez. Arka plan, yüzün konumu ve ifade gibi şartlar fotoğrafın çekimiyle ilgilidir." },
       ],
       faq: [
-        { q: "Sınav başvurusunda fotoğraf kaç piksel olmalı?", a: "Yaygın olarak 300 × 400 piksel ve en fazla 60 KB, JPG biçiminde istenir. Şartlar değişebildiği için başvuru ekranındaki açıklamayı esas alın." },
+        { q: "Sınav başvurusunda fotoğraf kaç piksel olmalı?", a: "Sınav başvurularında yaygın olarak 300 × 400 piksel ve en fazla 60 KB, JPG biçiminde istenir; ancak bu bir örnektir ve ÖSYM kılavuzu bu değerleri yayımlamaz. Şartlar değiştiği için başvuru ekranındaki açıklamayı esas alın." },
         { q: "Fotoğrafım doğru ölçüde ama dosya boyutu büyük, ne yapmalıyım?", a: "Piksel ölçüsü ile dosya boyutu farklı şeylerdir. Ölçüyü koruyup fotoğrafı ayrıca sıkıştırın; vesikalık boyutta %70 kalite genellikle hem sınırın altına iner hem yüzü net bırakır." },
         { q: "Telefon fotoğrafımı doğrudan kullanabilir miyim?", a: "Önce kırpmanız gerekir. Kamera fotoğrafı 4:3 ya da 16:9 orandadır; vesikalık 3:4 orandadır. Yüz merkezde olacak şekilde kırpıp sonra boyutlandırın." },
         { q: "Küçük bir fotoğrafı büyütebilir miyim?", a: "Büyütebilirsiniz ama sonuç bulanık olur; kaybolan ayrıntı geri gelmez. Mümkünse fotoğrafın yüksek çözünürlüklü aslından başlayın." },
@@ -7080,7 +7080,7 @@ export const BLOG_POSTS = [
       blocks: [
         { t: "lead", x: "It is the last day of applications, the form is filled in and you have reached the photo. The system will not accept it, and the error is rarely informative. In almost every case the pixel dimensions or the file size do not match what was asked for." },
         { t: "h2", x: "A typical requirement" },
-        { t: "p", x: "Turkish exam applications commonly ask for:" },
+        { t: "p", x: "The official exam guide does not publish pixel or KB values; the application screen is what counts. These are commonly seen conditions, so treat them as an example and compare them with your own screen:" },
         { t: "ul", items: [
           "Pixel dimensions: 300 x 400 (width by height).",
           "File size: 60 KB at most.",
@@ -7112,7 +7112,7 @@ export const BLOG_POSTS = [
         { t: "p", x: "Worth repeating: a tool that brings a photo to the right size does not make it biometrically compliant. Background, the position of the face and the expression all depend on how the photo was taken." },
       ],
       faq: [
-        { q: "What pixel size should an exam application photo be?", a: "Commonly 300 x 400 pixels, at most 60 KB, in JPG format. Requirements change, so rely on the note shown on the application screen." },
+        { q: "What pixel size should an exam application photo be?", a: "Commonly 300 x 400 pixels, at most 60 KB, in JPG format, but this is an example, not an official figure. Requirements change, so rely on the note shown on the application screen." },
         { q: "My photo is the right size but the file is too big. What now?", a: "Pixel dimensions and file size are different things. Keep the dimensions and compress the photo separately; at passport-photo size, 70% quality usually gets under the limit while keeping the face sharp." },
         { q: "Can I use my phone photo directly?", a: "You need to crop it first. Camera photos are 4:3 or 16:9 while a passport photo is 3:4. Crop with the face centred, then resize." },
         { q: "Can I enlarge a small photo?", a: "You can, but the result will be blurry, because lost detail does not return. Start from the highest-resolution original you have." },

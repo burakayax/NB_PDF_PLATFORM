@@ -3,7 +3,7 @@ export const COPY_2 = {
   "osym-sinav-basvurusu-fotograf-boyutu": {
     hook: "Sınav başvurusunda fotoğraf yüklenmiyor mu?",
     slides: [
-      ["İstenen şartlar", "Yaygın şart: 300×400 piksel, en fazla 60 KB, JPG, son altı ayda çekilmiş, beyaz arka planlı. Başvuru ekranındaki açıklama her zaman esastır."],
+      ["İstenen şartlar", "Örnek şart (kılavuz yayımlamaz): 300×400 piksel, en fazla 60 KB, JPG, son altı ayda çekilmiş, beyaz arka planlı. Başvuru ekranındaki açıklama her zaman esastır."],
       ["Piksel ile KB aynı şey değil", "Piksel ölçüsü fotoğrafın eni ve boyu. Dosya boyutu KB. 300×400 bir fotoğraf yine de 400 KB tutabilir."],
       ["Önce kırpın, sonra küçültün", "Telefon fotoğrafı 4:3 ya da 16:9, vesikalık ise 3:4. Önce 3:4'e kırpın, yüz ortada kalsın; sonra 300×400'e getirin."],
       ["Hâlâ büyükse", "Dosyayı sıkıştırın ve kaliteyi kademeli düşürün. Sonra fotoğrafı tam boyutta açıp yüzün net olduğunu kontrol edin."],
