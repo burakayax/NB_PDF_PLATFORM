@@ -126,4 +126,27 @@ describe("YouTube Shorts yayıncısı", () => {
     const out = await publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
     expect(out.warning).toContain("HTTP 404");
   });
+  it("küçük resim, video yüklemesi BİTTİKTEN sonra gider; video işlenirken gelen 404 sonrası yeniden denenir ve eklenir", async () => {
+    const order: string[] = [];
+    let thumbCalls = 0;
+    vi.stubGlobal("fetch", async (url: string) => {
+      if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
+      if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
+      if (url === "https://upload.test/s1") {
+        order.push("video-yuklendi");
+        return json({ id: "vid5", status: { privacyStatus: "public" } });
+      }
+      if (url.endsWith("/reel-covers/compress.jpg")) return new Response(new Uint8Array([9, 9]), { status: 200, headers: { "content-type": "image/jpeg" } });
+      if (url.includes("thumbnails/set")) {
+        order.push("kapak");
+        thumbCalls++;
+        return thumbCalls <= 2 ? new Response("video bulunamadi", { status: 404 }) : json({ items: [] });
+      }
+      throw new Error(`beklenmeyen: ${url}`);
+    });
+    const out = await publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
+    expect(order).toEqual(["video-yuklendi", "kapak", "kapak", "kapak"]);
+    expect(out.warning).toBeUndefined();
+  });
 });

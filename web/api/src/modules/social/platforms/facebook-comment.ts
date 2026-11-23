@@ -22,17 +22,30 @@ export function firstCommentText(link: string, guid: string): string {
   return `Adım adım anlatımı burada bulabilirsin 👉 ${url}`;
 }
 
+/**
+ * Yeniden deneme ayarı. Reels'te video yayınlandıktan sonra bir süre yorum kabul etmeyebilir (işleniyor);
+ * bu yüzden Reels daha uzun bekler ve daha çok dener. Testlerde sıfırlanabilir.
+ */
+export type CommentTiming = { initialWait: number; retryBase: number; attempts: number };
+export const feedCommentTiming: CommentTiming = { initialWait: 0, retryBase: 3000, attempts: 2 };
+export const reelCommentTiming: CommentTiming = { initialWait: 10_000, retryBase: 12_000, attempts: 5 };
+
+/**
+ * @returns yorum eklenemediyse NEDENİ (panelde uyarı olarak görünür), eklendiyse null.
+ */
 export async function postFirstComment(
   objectId: string | null,
   token: string,
   link: string,
   guid: string,
-): Promise<void> {
-  if (!objectId) return;
+  timing: CommentTiming = feedCommentTiming,
+): Promise<string | null> {
+  if (!objectId) return null;
   // Metinde "Link ilk yorumda" yazıyor; yorum eksik kalırsa okuyucu bağlantısız kalır.
-  // Bu yüzden geçici hatalarda bir kez daha denenir (gönderi tekrarlanmaz, yalnız yorum).
+  // Bu yüzden geçici hatalarda tekrar denenir (gönderi tekrarlanmaz, yalnız yorum).
   let lastErr: unknown;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  if (timing.initialWait > 0) await new Promise((r) => setTimeout(r, timing.initialWait));
+  for (let attempt = 0; attempt < timing.attempts; attempt++) {
     try {
       const params = new URLSearchParams();
       params.set("access_token", token);
@@ -42,11 +55,12 @@ export async function postFirstComment(
         headers: { "content-type": "application/x-www-form-urlencoded" },
         body: params.toString(),
       });
-      return;
+      return null;
     } catch (err) {
       lastErr = err;
-      if (attempt === 0) await new Promise((r) => setTimeout(r, 3000));
+      if (attempt < timing.attempts - 1) await new Promise((r) => setTimeout(r, timing.retryBase * (attempt + 1)));
     }
   }
   logger.warn("social", `Facebook ilk yorum eklenemedi (${objectId}): ${String(lastErr)}`);
+  return `Facebook ilk yorum (bağlantı) eklenemedi: ${String(lastErr).slice(0, 300)} — Sayfa erişim anahtarında yorum izni (pages_manage_engagement) var mı?`;
 }

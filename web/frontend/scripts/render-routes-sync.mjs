@@ -282,10 +282,13 @@ async function main() {
   // motoru en çok oralara giriyor, yanlış/eski araç adresleri de en sık oralarda.
   // Blog için joker kural korunuyor (bilinen tek bedeli: olmayan bir blog
   // adresinde boş sayfa — nadir bir durum, slug'lar sabit).
-  const gruplar = [
-    ["/tools", "tools"],
-    ["/en/tools", "en/tools"],
-  ];
+  // KOTA ÇÖZÜMÜ (2026-11-23): araç sayfası sayısı 75'e çıkınca "TR + EN sayfa başına
+  // kural" 244'e ulaştı ve 200 sınırı aşıldı; yeni 22 araç × 2 dil sayfası kuralsız
+  // kalıp ana sayfa kopyası döndü (canonical = ana sayfa). Çözüm: yalnız İNGİLİZCE
+  // araç sayfaları tek joker kuralla karşılanır (75 kural → 1). Bedeli: /en/tools/ altında
+  // OLMAYAN bir adres boş sayfa döner; eski adresler yukarıdaki 301'lerle zaten
+  // yönlendiriliyor. Türkçe araç sayfaları sayfa başına kuralla kalır (404 davranışı korunur).
+  const gruplar = [["/tools", "tools"]];
   const sayfaKurallari = [];
   for (const [onek, klasor] of gruplar) {
     for (const slug of sayfalar(klasor)) {
@@ -296,6 +299,11 @@ async function main() {
       });
     }
   }
+  sayfaKurallari.push({
+    type: "rewrite",
+    source: "/en/tools/:slug",
+    destination: "/en/tools/:slug/index.html",
+  });
 
   // 2a) API belge sayfası: /pdf-api/docs sitemap'te slash'sız yazılı ama kuralı yoktu;
   //     ana sayfa kopyası dönüyordu (Google'da "kopya" sinyali). 2026-10-06.

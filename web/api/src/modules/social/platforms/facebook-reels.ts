@@ -13,7 +13,7 @@
 import { logger } from "../../../lib/file-log.js";
 import { PublishStageError, requestJson, requireSecret } from "./common.js";
 import type { PublishInput } from "./common.js";
-import { postFirstComment } from "./facebook-comment.js";
+import { postFirstComment, reelCommentTiming } from "./facebook-comment.js";
 import { availableReelCover } from "./reel-cover.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
@@ -122,8 +122,8 @@ export async function publishFacebookReel(
     );
     logger.info("social", `Facebook Reels yayınlandı: ${item.title}`);
     await setReelCover(videoId, token, item.guid);
-    await postFirstComment(videoId, token, item.link, item.guid);
-    return { externalId: videoId, externalUrl: `https://www.facebook.com/reel/${videoId}` };
+    const warning = await postFirstComment(videoId, token, item.link, item.guid, reelCommentTiming);
+    return { externalId: videoId, externalUrl: `https://www.facebook.com/reel/${videoId}`, ...(warning ? { warning } : {}) };
   } catch (err) {
     throw new PublishStageError(err instanceof Error ? err.message : String(err));
   }

@@ -108,9 +108,13 @@ toolReelFactoryRouter.get(
       response.json({ needed: false, reason: "bu paylaşım gününde araç videosu sırası değil" });
       return;
     }
-    // İki sürüm de hazır olmalı (Instagram + YouTube/Facebook); biri eksikse ikisi birlikte yeniden üretilir.
+    // Üç sürüm de hazır olmalı (Instagram/TikTok, YouTube, Facebook); biri eksikse hepsi birlikte yeniden üretilir.
     const at = runAt.getTime() > now.getTime() ? runAt : now;
-    if ((await unusedFreshVideoFor(due.id, at, "profile")) && (await unusedFreshVideoFor(due.id, at, "caption"))) {
+    if (
+      (await unusedFreshVideoFor(due.id, at, "profile")) &&
+      (await unusedFreshVideoFor(due.id, at, "caption")) &&
+      (await unusedFreshVideoFor(due.id, at, "comment"))
+    ) {
       response.json({ needed: false, tool: due.id, reason: "video zaten hazır" });
       return;
     }
@@ -129,7 +133,8 @@ toolReelFactoryRouter.put(
     // MP4 imzası: 4. baytta "ftyp". Rastgele bir dosya adres olarak sunulmasın.
     if (body.subarray(4, 8).toString("latin1") !== "ftyp") throw new HttpError(400, "Dosya MP4 değil.");
     const seconds = Math.max(0, Math.round(Number(request.headers["x-video-seconds"]) || 0));
-    const variant = String(request.headers["x-video-variant"] ?? "") === "caption" ? "caption" : "profile";
+    const variantHeader = String(request.headers["x-video-variant"] ?? "");
+    const variant = variantHeader === "caption" ? "caption" : variantHeader === "comment" ? "comment" : "profile";
     const video = await saveToolVideo(toolId, body, seconds, variant);
     logger.info("social", `Araç videosu yüklendi: ${video.id} (${Math.round(body.length / 1024)} KB)`);
     response.json({ id: video.id, url: video.url, seconds: video.seconds });
