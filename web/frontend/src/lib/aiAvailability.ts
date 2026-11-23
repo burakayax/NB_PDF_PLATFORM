@@ -1,5 +1,5 @@
 import { useOptionalSettings } from "../contexts/SettingsContext";
-import { AI_COMING_SOON_SLUGS } from "../seo/seoContent.mjs";
+import { AI_COMING_SOON_SLUGS } from "../seo/seoLight.mjs";
 
 /**
  * Yapay zekâ araçları halka henüz açık değilse (ödemeler kapalıyken "Çok yakında") true.

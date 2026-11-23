@@ -35,7 +35,7 @@ import { TOOLS as TOOL_CATALOG } from "../lib/toolCatalog";
 import { resolveCmsAssetUrl } from "../lib/landingCmsMerge";
 import { landingTranslations } from "../i18n/landing";
 import { fillToolCount } from "../lib/useToolCount";
-import { ARAC_SAYISI } from "../seo/seoContent.mjs";
+import { ARAC_SAYISI } from "../seo/seoLight.mjs";
 import { TOOLS } from "../lib/toolCatalog";
 
 const FREE_COUNT_DEFAULT = TOOLS.filter((t) => t.free).length;

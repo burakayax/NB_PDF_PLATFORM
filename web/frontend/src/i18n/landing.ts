@@ -1,4 +1,4 @@
-import { ARAC_SAYISI } from "../seo/seoContent.mjs";
+import { ARAC_SAYISI } from "../seo/seoLight.mjs";
 import { PRICING_FAQ_TR, PRICING_FAQ_EN } from "./pricingFaq";
 
 export type Language = "tr" | "en";

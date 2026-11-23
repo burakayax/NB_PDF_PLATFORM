@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { ArrowRight, Code2, FileText, Languages, KeyRound, Table2, Zap, ShieldCheck } from "lucide-react";
 import type { Language } from "../i18n/landing";
-import { API_SEO } from "../seo/seoContent.mjs";
+import { API_SEO } from "../seo/seoLight.mjs";
 
 type Props = {
   language: Language;

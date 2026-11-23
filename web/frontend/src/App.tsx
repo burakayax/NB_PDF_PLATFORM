@@ -128,7 +128,7 @@ const PdfHub = lazyWithRetry(() =>
 import { WorkspaceFooter } from "./components/common/WorkspaceFooter";
 import { clearAllScans, clearScannedPdf, peekScannedPdf, purgeExpiredScans, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
-import { getToolSeo } from "./seo/seoContent.mjs";
+import { getToolSeo, useToolSeoReady } from "./seo/toolSeoRuntime";
 import {
   PdfEncryptedError,
 } from "./lib/clientPdfWorker";
@@ -540,6 +540,7 @@ const pdfInspectionFeatures: FeatureId[] = [
 
 
 function App() {
+  useToolSeoReady(); // araç SEO metinleri ana sayfada geç indirilir; gelince yeniden çiz
   const { language, setLanguage, setLanguageAuto, detectInitialLanguage } =
     usePreferredLanguage();
   const {

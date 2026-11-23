@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Language } from "../i18n/landing";
-import { API_DOCS_SEO } from "../seo/seoContent.mjs";
+import { API_DOCS_SEO } from "../seo/seoLight.mjs";
 
 /**
  * API dokümantasyonu.

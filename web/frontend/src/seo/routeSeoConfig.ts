@@ -5,7 +5,8 @@ import { toolSlugForFeature } from "../lib/toolRoutes";
 import type { FeatureKey } from "../api/subscription";
 // Tek gerçek SEO içerik kaynağı — statik prerender (generate-seo-files.mjs) ile
 // runtime'ın aynı metni kullanmasını garanti eder.
-import { getToolSeo, LANDING_SEO, LEGAL_SEO, PRICING_SEO } from "./seoContent.mjs";
+import { LANDING_SEO, LEGAL_SEO, PRICING_SEO } from "./seoLight.mjs";
+import { getToolSeo } from "./toolSeoRuntime";
 import { toolSlugToTr } from "./enSlugs.mjs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
