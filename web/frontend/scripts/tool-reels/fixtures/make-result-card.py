@@ -52,7 +52,20 @@ elif ext == ".pdf":
     thumbs = pdf_pages(doc)
     caption = f"{len(doc)} sayfalık PDF hazır"
 else:
-    sys.exit(3)
+    # Önizlenemeyen türler (Word, PowerPoint, metin...): türün renginde, gerçek dosya adı ve boyutuyla belge simgesi.
+    colors = {".docx": "#2563eb", ".doc": "#2563eb", ".pptx": "#ea580c", ".ppt": "#ea580c", ".xlsx": "#16a34a",
+              ".xls": "#16a34a", ".txt": "#64748b", ".udf": "#7c3aed", ".html": "#db2777", ".csv": "#16a34a"}
+    col = colors.get(ext, "#0ea5e9")
+    ic = Image.new("RGB", (460, 600), "#ffffff")
+    di = ImageDraw.Draw(ic)
+    di.rectangle((0, 0, 460, 150), fill=col)
+    di.text((230, 75), ext.lstrip(".").upper(), font=ImageFont.truetype(os.path.join(fonts, "Roboto-Bold.ttf"), 84), fill="#ffffff", anchor="mm")
+    for i, wd in enumerate([360, 330, 360, 300, 360, 340, 360, 260, 340, 200]):
+        di.rounded_rectangle((50, 200 + i * 38, 50 + wd, 218 + i * 38), 9, fill="#dbe3ef")
+    thumbs = [ic]
+    kb = os.path.getsize(src) / 1024
+    size = f"{kb / 1024:.1f} MB".replace(".", ",") if kb >= 1024 else f"{kb:.0f} KB"
+    caption = f"{ext.lstrip('.').upper()} dosyası hazır · {size}"
 
 card = Image.new("RGB", (W, H), "#0d1630")
 d = ImageDraw.Draw(card)

@@ -148,7 +148,7 @@ export function simpleTool(cfg) {
   return {
     id: cfg.id,
     toolPath: cfg.toolPath,
-    intro: cfg.intro,
+    intro: { ...cfg.intro, resultFirst: cfg.intro.resultFirst ?? { top: cfg.intro.title, sub: cfg.intro.sub, bottom: cfg.resultLine ?? "Dosyan hazır" } },
     files: cfg.files,
     readySelector: cfg.readySelector,
 
@@ -248,7 +248,7 @@ export function simpleTool(cfg) {
         : ["İşlem tamam", cfg.resultLine ?? "", `${processing[0]} · ${processing[1]}`];
       say("SONUÇ", t1, l1, l2, "green");
       await moveTo(700, 330);
-      await wait(cfg.resultHold ?? 4200);
+      await wait(cfg.resultHold ?? 2000);
       await st.showResultButtons();
       // Sonuç sahnesi: sonucu videoya SONRADAN eklemek için dosyayı indirip küçük resim kartı üretir (video süresi dondurulur).
       let resultCard = null;

@@ -281,9 +281,15 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   /** "İndir" düğmesine basıp inen dosyayı `${workDir}/result/` altına kaydeder; yolunu döndürür. */
   async function captureResult() {
     const btn = pg.locator("button", { hasText: /^\s*İndir\s*$/ }).first();
+    const got = armCapture();
+    await btn.click({ timeout: 8000 });
+    return got;
+  }
+  /** Bir SONRAKİ indirmeyi yakalamaya hazırlanır (indirme, senaryonun kendi tıklamasıyla başlar); dosya yolunu verecek söz döner. */
+  function armCapture() {
     rmSync(`${workDir}/result`, { recursive: true, force: true });
     mkdirSync(`${workDir}/result`, { recursive: true });
-    const got = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const t = setTimeout(() => reject(new Error("indirme başlamadı")), 30000);
       onDownload = (d) => {
         clearTimeout(t);
@@ -292,8 +298,6 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
         d.saveAs(p).then(() => resolve(p), reject);
       };
     });
-    await btn.click({ timeout: 8000 });
-    return got;
   }
 
   /** Videoya girecek kısmın başlangıcı. */
@@ -315,6 +319,6 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   return {
     pg, VW, VH, wait, box, center, say, hl, hlText, hlOff, moveTo, zoomOn, zoomOff, openMenu, closeMenu,
     showResultButtons, resultTop, loginAndOpenTool, begin, finish, now, startAt: () => startT, events,
-    cutOpen, cutClose, freeze, captureResult, workDir,
+    cutOpen, cutClose, freeze, captureResult, armCapture, workDir,
   };
 }

@@ -43,7 +43,8 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   const even = (n) => Math.round(n / 2) * 2;
   const D = T.end;
   // "Önce sonuç" kurgusu: video, bitmiş dosyanın/rakamın gösterildiği 3,4 sn'lik bir açılışla başlar; sonda ayrı sonuç sahnesi yok.
-  const RF = intro.resultFirst && (sonuc || T.stat) ? intro.resultFirst : null;
+  // Tüm araç videoları bu düzeni kullanır; sonuç görüntüsü/rakamı yoksa eski (tanıtım kartlı) düzene düşer.
+  const RF = sonuc || T.stat ? (intro.resultFirst ?? { top: intro.title, sub: intro.sub, bottom: "İşte sonuç" }) : null;
   const I = RF ? 3.4 : 2.0; // giriş kartı
   const O = 3.0; // kapanış kartı
   const hasRes = !RF && !!(sonuc || T.stat);
