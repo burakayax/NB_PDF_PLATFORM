@@ -19,8 +19,8 @@ export const TOOL_REEL_ABOUT: Record<string, ToolReelAbout> = {
     en: "Handy when you have several PDFs — invoices, pages, attachments — and want one file. Drag the files into the order you want and get a single PDF. Ideal for applications and sending supporting documents.",
   },
   "cv-olustur": {
-    tr: "Sıfırdan CV tasarlamakla uğraşma: şablonu seç, bilgilerini gir, CV'n yanında canlı şekillensin. ATS röntgeni, başvuru sistemlerinin CV'ni okuyup okuyamayacağını gösterir. Sonuç PDF olarak iner, iş başvurusuna hazırdır.",
-    en: "Skip designing a CV from scratch: pick a template, enter your details and watch it take shape live. The ATS X-ray shows whether recruiting systems can read your CV. It downloads as a PDF, ready for job applications.",
+    tr: "Sıfırdan CV tasarlamakla uğraşma: şablonu seç, bilgilerini gir, CV'n yanında canlı şekillensin. Yerleşik bir kontrol, başvuru sistemlerinin CV'ni okuyup okuyamayacağını gösterir. Sonuç PDF olarak iner, iş başvurusuna hazırdır.",
+    en: "Skip designing a CV from scratch: pick a template, enter your details and watch it take shape live. A built-in check shows whether recruiting systems can read your CV. It downloads as a PDF, ready for job applications.",
   },
   "grayscale-pdf": {
     tr: "Renkli bir belgeyi siyah-beyaza çevirir. Yazıcıda renkli mürekkep harcamamak, belgeyi sadeleştirmek ya da fotokopi gibi görünmesini istemek için kullanılır. Metin seçilebilir kalır.",
