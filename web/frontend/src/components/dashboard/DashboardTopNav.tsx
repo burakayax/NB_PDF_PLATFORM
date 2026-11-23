@@ -215,7 +215,7 @@ export function DashboardTopNav({
     const assets = cms?.assets as { logoUrl?: string } | undefined;
     return (
       resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ??
-      "/navbar-logo.png"
+      "/navbar-logo.webp"
     );
   }, [cms]);
   const showCreditsCenter =

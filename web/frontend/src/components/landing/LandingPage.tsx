@@ -17,16 +17,9 @@ import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
 import { GuestToolCore, type Picked as GuestPickedFile } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
-import { AiPdfTool } from "../tools/AiPdfTool";
-import { AiBatchTool } from "../tools/AiBatchTool";
-import { AiCompareTool } from "../tools/AiCompareTool";
-import { ContractReviewTool } from "../tools/ContractReviewTool";
-import { AiRedactTool } from "../tools/AiRedactTool";
 
-import { PdfEditor } from "../tools/PdfEditor";
 import { lazyWithRetry } from "../../lib/lazyWithRetry";
 
-import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolVisual } from "../common/ToolUploadPanel";
@@ -140,6 +133,42 @@ import { usePwaInstall } from "../../pwa/usePwaInstall";
 // Belge tarayıcı ağır bir bileşendir (kamera + görüntü işleme). Doğrudan içe
 // aktarılırsa ana pakete girer ve açılış sayfasının ilk yüklenmesini yavaşlatır.
 // Yalnızca tarayıcı penceresi açıldığında indirilir.
+// Ağır araçlar (pdf-lib/pdfjs/OCR çeker): ana sayfa açılışında değil, araç seçilince yüklenir.
+const AiPdfTool = lazyWithRetry(() =>
+  import("../tools/AiPdfTool").then((module) => ({
+    default: module.AiPdfTool,
+  })),
+);
+const AiBatchTool = lazyWithRetry(() =>
+  import("../tools/AiBatchTool").then((module) => ({
+    default: module.AiBatchTool,
+  })),
+);
+const AiCompareTool = lazyWithRetry(() =>
+  import("../tools/AiCompareTool").then((module) => ({
+    default: module.AiCompareTool,
+  })),
+);
+const ContractReviewTool = lazyWithRetry(() =>
+  import("../tools/ContractReviewTool").then((module) => ({
+    default: module.ContractReviewTool,
+  })),
+);
+const AiRedactTool = lazyWithRetry(() =>
+  import("../tools/AiRedactTool").then((module) => ({
+    default: module.AiRedactTool,
+  })),
+);
+const PdfEditor = lazyWithRetry(() =>
+  import("../tools/PdfEditor").then((module) => ({
+    default: module.PdfEditor,
+  })),
+);
+const ImageCompressTool = lazyWithRetry(() =>
+  import("../tools/ImageCompressTool").then((module) => ({
+    default: module.ImageCompressTool,
+  })),
+);
 const DocumentScanner = lazyWithRetry(() =>
   import("../tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
 );
@@ -1136,7 +1165,9 @@ function Hero({
               // → hideHeader). GuestToolCore/GuestPageToolCore bunu zaten hardcode
               // ediyor, o yüzden yalnızca WorkspaceUploadField kullanan araçları sarıyoruz.
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
-                <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
+                <Suspense fallback={<HeroToolSkeleton />}>
+<PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
+</Suspense>
               </ToolPageContext.Provider>
             ) : pageTool === "sayfa-duzeni" ? (
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
@@ -1205,29 +1236,35 @@ function Hero({
                 </Suspense>
               </ToolPageContext.Provider>
             ) : aiTool === "batch" ? (
-              <AiBatchTool
+              <Suspense fallback={<HeroToolSkeleton />}>
+<AiBatchTool
                 language={language}
                 accessToken={accessToken}
                 onLogin={onLogin}
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+</Suspense>
             ) : aiTool === "compare" ? (
-              <AiCompareTool
+              <Suspense fallback={<HeroToolSkeleton />}>
+<AiCompareTool
                 language={language}
                 accessToken={accessToken}
                 onLogin={onLogin}
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+</Suspense>
             ) : aiTool === "contract" ? (
-              <ContractReviewTool
+              <Suspense fallback={<HeroToolSkeleton />}>
+<ContractReviewTool
                 language={language}
                 accessToken={accessToken}
                 onLogin={onLogin}
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+</Suspense>
             ) : aiTool === "photo" ? (
               <Suspense fallback={<HeroToolSkeleton />}>
                 <PhotoStudioTool
@@ -1239,15 +1276,18 @@ function Hero({
                 />
               </Suspense>
             ) : aiTool === "redact" ? (
-              <AiRedactTool
+              <Suspense fallback={<HeroToolSkeleton />}>
+<AiRedactTool
                 language={language}
                 accessToken={accessToken}
                 onLogin={onLogin}
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+</Suspense>
             ) : aiTool ? (
-              <AiPdfTool
+              <Suspense fallback={<HeroToolSkeleton />}>
+<AiPdfTool
                 key={aiTool}
                 mode={aiTool}
                 language={language}
@@ -1256,9 +1296,12 @@ function Hero({
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+</Suspense>
             ) : freeTool === "gorsel-sikistir" ? (
               <ToolPageContext.Provider value={{ describesTool: true, showBenefitsAnyway: true }}>
-                <ImageCompressTool language={language} />
+                <Suspense fallback={<HeroToolSkeleton />}>
+<ImageCompressTool language={language} />
+</Suspense>
               </ToolPageContext.Provider>
             ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} initialFile={scannedFile} />

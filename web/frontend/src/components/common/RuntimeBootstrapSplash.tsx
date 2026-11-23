@@ -31,7 +31,10 @@ export function RuntimeBootstrapSplash() {
           aria-hidden="true"
         />
         <img
-          src="/navbar-logo.png"
+          src="/navbar-logo.webp"
+          width={187}
+          height={64}
+          fetchPriority="high"
           alt="PDF Platform"
           className="relative h-16 w-auto object-contain drop-shadow-[0_8px_28px_rgba(34,211,238,0.25)]"
         />

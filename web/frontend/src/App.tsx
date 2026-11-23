@@ -85,7 +85,12 @@ import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
-import { DashboardScannedDocs } from "./components/dashboard/DashboardScannedDocs";
+// PDF okuyucu + OCR motorunu çeken ağır bileşenler: ana sayfa açılışında yüklenmesin (yalnızca kullanılınca gelir).
+const DashboardScannedDocs = lazyWithRetry(() =>
+  import("./components/dashboard/DashboardScannedDocs").then((module) => ({
+    default: module.DashboardScannedDocs,
+  })),
+);
 import { PaymentSuccessModal } from "./components/dashboard/PaymentSuccessModal";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
 import { isFeatureLockedByPlan } from "./lib/planGate";
@@ -115,7 +120,11 @@ const ToolFilePreview = lazyWithRetry(() =>
 );
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
-import { PdfHub } from "./components/tools/PdfHub";
+const PdfHub = lazyWithRetry(() =>
+  import("./components/tools/PdfHub").then((module) => ({
+    default: module.PdfHub,
+  })),
+);
 import { WorkspaceFooter } from "./components/common/WorkspaceFooter";
 import { clearAllScans, clearScannedPdf, peekScannedPdf, purgeExpiredScans, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
@@ -5757,6 +5766,7 @@ function App() {
   // PDF Merkezi — PWA "PDF ile aç" (file_handlers) ile gelen PDF; state varken her şeyden önce.
   if (pdfHubFile) {
     return (
+      <Suspense fallback={<PageSkeleton />}>
       <PdfHub
         file={pdfHubFile}
         language={language}
@@ -5770,6 +5780,7 @@ function App() {
           setUpgradeModalOpen(true);
         }}
       />
+      </Suspense>
     );
   }
 
@@ -7655,12 +7666,14 @@ function App() {
                       : "Scan on your phone → «Save to my account» → download, share, or open in a PDF tool here."}
                   </p>
                 </div>
-                <DashboardScannedDocs
-                  language={language}
-                  accessToken={accessToken}
-                  onPickTool={(file, toolId) => void handleScannerPick(file, toolId)}
-                  lockedFeatures={lockedFeatures}
-                />
+                <Suspense fallback={<PageSkeleton />}>
+                  <DashboardScannedDocs
+                    language={language}
+                    accessToken={accessToken}
+                    onPickTool={(file, toolId) => void handleScannerPick(file, toolId)}
+                    lockedFeatures={lockedFeatures}
+                  />
+                </Suspense>
               </section>
             ) : null}
 
