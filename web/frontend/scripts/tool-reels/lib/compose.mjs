@@ -42,9 +42,11 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
 
   const even = (n) => Math.round(n / 2) * 2;
   const D = T.end;
-  const I = 2.0; // giriş kartı
+  // "Önce sonuç" kurgusu: video, bitmiş dosyanın/rakamın gösterildiği 3,4 sn'lik bir açılışla başlar; sonda ayrı sonuç sahnesi yok.
+  const RF = intro.resultFirst && (sonuc || T.stat) ? intro.resultFirst : null;
+  const I = RF ? 3.4 : 2.0; // giriş kartı
   const O = 3.0; // kapanış kartı
-  const hasRes = !!(sonuc || T.stat);
+  const hasRes = !RF && !!(sonuc || T.stat);
   const R = hasRes ? 3.8 : 0; // sonuç sahnesi (indirilen dosyanın gerçek görünümü)
   const TOTAL = +(I + D + R + O).toFixed(2);
 
@@ -136,23 +138,36 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   // alan adı (sağ üst, logonun yanında)
   writeFileSync(`${S}/domain.txt`, "pdfplatform.app", "utf8");
   filters.push(
-    `drawtext=${fontfile}:textfile=domain.txt:fontcolor=${ACC}:fontsize=44:x=1020-text_w:y=186:enable='between(t,${MS},${(ME + R).toFixed(2)})'`,
+    `drawtext=${fontfile}:textfile=domain.txt:fontcolor=${ACC}:fontsize=44:x=1020-text_w:y=186:enable='between(t,${RF ? 0 : MS},${(ME + R).toFixed(2)})'`,
   );
 
   T.events.forEach((e, i) => {
     const a = +(MS + e.t).toFixed(2);
     const b = +(MS + (i + 1 < T.events.length ? T.events[i + 1].t : D)).toFixed(2);
-    text(e.label, "0x7dd3fc", 28, 1262, a, b);
+    if (!RF) text(e.label, "0x7dd3fc", 28, 1262, a, b);
     text(e.title, "white", 56, 1298, a, b);
     text(e.l1, e.accent === "green" ? GREEN : ACC, 50, 1372, a, b);
     text(e.l2, e.accent === "green" ? "white" : SOFT, 40, 1430, a, b);
   });
 
   // ---- Giriş kartı ----
-  text(intro.hook ?? "Adım adım nasıl yapılır?", ACC, 50, 560, 0, I, 0.6);
-  text(intro.title, "white", 96, 960, 0, I, 0.6);
-  text("pdfplatform.app", ACC, 66, 1075, 0, I, 0.6);
-  text(intro.sub, SOFT, 46, 1175, 0, I, 0.6);
+  if (RF) {
+    // Açılış: önce sonuç. Üstte kısa başlık, ortada gerçek çıktı kartı, altta rakam ya da tek cümlelik söz.
+    text(RF.top, "white", 78, 300, 0, I, 0.3);
+    if (RF.sub) text(RF.sub, "0x7dd3fc", 52, 410, 0, I, 0.3);
+    if (T.stat) {
+      text(T.stat.big, GREEN, sonuc ? 130 : 220, sonuc ? 1440 : 640, 0.4, I, 0.3);
+      text(T.stat.small, "white", sonuc ? 40 : 56, sonuc ? 1600 : 1000, 0.4, I, 0.3);
+    } else {
+      text(RF.bottom, GREEN, 76, 1450, 0.4, I, 0.3);
+      if (RF.bottom2) text(RF.bottom2, "white", 44, 1580, 0.4, I, 0.3);
+    }
+  } else {
+    text(intro.hook ?? "Adım adım nasıl yapılır?", ACC, 50, 560, 0, I, 0.6);
+    text(intro.title, "white", 96, 960, 0, I, 0.6);
+    text("pdfplatform.app", ACC, 66, 1075, 0, I, 0.6);
+    text(intro.sub, SOFT, 46, 1175, 0, I, 0.6);
+  }
   // ---- Kapanış kartı ----
   const RS = +ME.toFixed(2), RE = +(ME + R).toFixed(2);
   if (hasRes) {
@@ -210,6 +225,8 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   // ---- Girdi sırası: 0 arka plan, 1 kayıt, 2 müzik, 3-5 logolar, 6 sonuç kartı (varsa), sonra çerçeve katmanları ----
   let nextIn = sonuc ? 7 : 6;
   const IN = { glow: nextIn++, fr1: nextIn++, fr2: nextIn++, mk1: nextIn++, mk2: nextIn++, pbar: nextIn++, cta: nextIn++, sfx: nextIn++ };
+  const LS = RF ? 0 : MS; // küçük logonun belirdiği an
+  const CS = RF ? 0 : RS, CE = RF ? I : RE; // sonuç kartının görüldüğü aralık
   const OSs = +(MS + swap).toFixed(2); // ikinci bölümün başladığı an (mutlak)
   const SW = OSs;
 
@@ -231,15 +248,15 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
     `[a2][m2]alphamerge,setpts=PTS+${MS}/TB,fade=t=in:st=${SW}:d=0.3:alpha=1[v2]`,
     // logolar
     `[3:v]scale=800:-1,format=rgba,fade=t=in:st=0:d=0.6:alpha=1,fade=t=out:st=${(I - 0.6).toFixed(2)}:d=0.6:alpha=1[lgi]`,
-    `[4:v]scale=300:-1,format=rgba,setpts=PTS+${MS}/TB,fade=t=in:st=${MS}:d=0.6:alpha=1[lgt]`,
+    `[4:v]scale=300:-1,format=rgba,setpts=PTS+${LS}/TB,fade=t=in:st=${LS}:d=0.6:alpha=1[lgt]`,
     `[5:v]scale=800:-1,format=rgba,setpts=PTS+${OS}/TB,fade=t=in:st=${OS}:d=0.6:alpha=1[lgo]`,
     // birleştirme
     `[g2][v1]overlay=x=${VX1}:y=${VY1}:enable='between(t,${MS},${SW})':eof_action=pass[b1]`,
     `[b1][v2]overlay=x=${VX2}:y=${VY2}:enable='between(t,${SW},${ME})':eof_action=pass[b2]`,
-    `[b2][lgi]overlay=140:640:enable='between(t,0,${I})':eof_action=pass[b3]`,
-    `[b3][lgt]overlay=60:150:enable='between(t,${MS},${RE})':eof_action=pass[b4]`,
-    sonuc ? `[6:v]scale=980:-1,format=rgba,setpts=PTS+${RS}/TB,fade=t=in:st=${RS}:d=0.5:alpha=1,fade=t=out:st=${(RE - 0.5).toFixed(2)}:d=0.5:alpha=1[rc]` : "",
-    sonuc ? `[b4][rc]overlay=x=(W-w)/2:y=500:enable='between(t,${RS},${RE})':eof_action=pass[b4r]` : "",
+    `[b2][lgi]overlay=140:640:enable='${RF ? "lt(t,0)" : `between(t,0,${I})`}':eof_action=pass[b3]`,
+    `[b3][lgt]overlay=60:150:enable='between(t,${LS},${RE})':eof_action=pass[b4]`,
+    sonuc ? `[6:v]scale=980:-1,format=rgba,setpts=PTS+${CS}/TB,fade=t=in:st=${CS}:d=0.5:alpha=1,fade=t=out:st=${(CE - 0.5).toFixed(2)}:d=0.5:alpha=1[rc]` : "",
+    sonuc ? `[b4][rc]overlay=x=(W-w)/2:y=${RF ? 520 : 500}:enable='between(t,${CS},${CE})':eof_action=pass[b4r]` : "",
     `[${sonuc ? "b4r" : "b4"}][lgo]overlay=140:600:enable='between(t,${OS},${OE})':eof_action=pass[b5a]`,
     // kapanış düğmesi
     `[${IN.cta}:v]scale=840:-1,format=rgba,setpts=PTS+${OS}/TB,fade=t=in:st=${(OS + 0.5).toFixed(2)}:d=0.6:alpha=1[cta]`,
@@ -258,8 +275,8 @@ export function compose({ workDir: S, out: OUT, intro, publicDir, linkLine = "Ba
   const clickTimes = (T.clicks ?? []).map((c) => +(MS + adj(c)).toFixed(2));
   const sfxFile = makeSfx(ffmpeg, S, TOTAL, {
     clicks: clickTimes,
-    whooshes: [MS - 0.25, SW - 0.1, ...(sonuc ? [RS - 0.1] : []), OS - 0.1],
-    chimes: [SW + 0.2, ...(sonuc ? [RS + 0.6] : [])],
+    whooshes: [MS - 0.25, SW - 0.1, ...(sonuc && !RF ? [RS - 0.1] : []), OS - 0.1],
+    chimes: [...(RF ? [0.5] : []), SW + 0.2, ...(sonuc && !RF ? [RS + 0.6] : [])],
   });
   if (!sfxFile) throw new Error("Efekt izi üretilemedi");
   const music = makeMusic(ffmpeg, S, TOTAL);
