@@ -1869,6 +1869,9 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     const ed = edits.get(el.id);
                     const activeCover = selected === el.id || multiSel.has(el.id) || (!!ed && !isDecoOnly(el, ed)) || shift > 0.5 || underDeletedImg.has(el.id);
                     if (!activeCover) return null;
+                    // Yazısı boşaltılmış metin silinmiş bir görselin (rozet/zemin) altındaysa kapak çizilmez:
+                    // eski (görselden örneklenen) renkle kalan kapak, görsel silinince geride çizgi/bant gibi kalıyordu.
+                    if (underDeletedImg.has(el.id) && ed && typeof ed.text === "string" && ed.text.trim() === "") return null;
                     const [x0, , x1] = el.bbox;
                     const [cy0, cy1] = coverY(el);
                     const cx0 = el.ink ? Math.min(x0, el.ink[0]) : x0, cx1 = el.ink ? Math.max(x1, el.ink[2]) : x1;
@@ -1890,6 +1893,8 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                       // Silinmiş görsel → arka plan rengiyle kapat (tam sayfa görselde düz beyaz). Silgiyi bbox'tan ~3px taşır:
                       // amblem/logo kenarındaki ince hat çizgileri de örtülsün (indirmede zaten yok).
                       const oldRect = { left: style.left - 1, top: style.top - 1, width: style.width + 2, height: style.height + 2 };
+                      // İnce çizgi: tıklama kutusu (10px) değil gerçek çizgi kalınlığı örtülür; yoksa komşu yazının üst/altı da boyanır.
+                      if (del && el.shape) return <FillPatch key={el.id} src={canvasRef.current} rect={{ left: x0 * scale - 1.5, top: y0 * scale - 1.5, width: (x1 - x0) * scale + 3, height: Math.max((y1 - y0) * scale, 1) + 3 }} />;
                       if (del) return <FillPatch key={el.id} src={canvasRef.current} rect={oldRect} />;
                       // Tam sayfa/arka plan görseli: sürükleme-seçim (marquee) bunun üstünden de başlayabilsin, taşınmasın.
                       const bgImg = !!pgInfo && (x1 - x0) * (y1 - y0) > pgInfo.width * pgInfo.height * 0.5;
