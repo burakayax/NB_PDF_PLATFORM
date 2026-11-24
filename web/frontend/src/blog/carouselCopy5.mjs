@@ -6,7 +6,7 @@ export const COPY_5 = {
       ["Çoğu araç ne yapıyor?", "Dosyanızı sunucusuna yükler, orada işler, sonucu geri verir. Sözleşme ya da kimlik için bu, tanımadığınız bir sunucuda kopyası oluşması demektir."],
       ["«Cihazda işleme» ne demek?", "İşin tamamı tarayıcınızın içinde yapılır; dosya internete gönderilmez. Yükleme beklemezsiniz."],
       ["Hangileri cihazda?", "Birleştirme, bölme, döndürme, sayfa silme, sıralama, görselden PDF, imza, işaretleme ve belge tarama."],
-      ["Her iş cihazda olmuyor", "Word ve Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır."],
+      ["Her iş cihazda olmuyor", "Word ve Excel'e dönüştürme ve sıkıştırma gibi ağır işler sunucuda yapılır."],
       ["Nasıl sınarsınız?", "İşlemi internet bağlantısı kesikken deneyin. Tamamlanıyorsa dosya hiçbir yere gitmemiştir."],
       ["«1 saat sonra siliniyor» ne demek?", "Dürüst bir vaat ama dosya silinene kadar sunucuda durur ve ağdan geçer. Kimlik, sağlık, mali ve hukuki belgelerde mümkünse cihazda işleyin."],
     ],

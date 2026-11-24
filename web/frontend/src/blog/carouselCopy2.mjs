@@ -102,7 +102,7 @@ export const COPY_2 = {
       ["Sejda'nın iyi olduğu yerler", "Metni gerçekten düzenleyebilen az sayıdaki çevrimiçi araçtan biri, masaüstü sürümü var, haftalık 5 dolarlık geçiş kartı esnek."],
       ["Sayfa işleri sunucu istemez", "Birleştirme, bölme, döndürme, kırpma, silme, sıralama tarayıcıda yapılabilir. Dosya yüklenmez, sayacak bir sunucu işi de kalmaz."],
       ["Bizde nasıl?", "Bu araçlar PDF Platform'da tarayıcıda çalışır: saatlik ve günlük sınır yok, üyelik yok, dosya başına 80 MB'a kadar."],
-      ["Dürüst olalım", "Word'e çevirme, OCR ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük hak var. Bu araçlarda biz de sınırlıyız."],
+      ["Dürüst olalım", "Word'e çevirme ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük hak var. Bu araçlarda biz de sınırlıyız."],
       ["Kendiniz deneyin", "Birleştirme aracını açın, interneti kesin, birleştirin. Tamamlanıyorsa işlem cihazınızda yapılıyor demektir."],
     ],
   },

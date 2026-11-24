@@ -337,7 +337,7 @@ export const TOOL_SEO = {
   "word-to-pdf": {
     tr: T(
       "Word'den PDF'e Dönüştürme — online ücretsiz",
-      "Word belgelerini online PDF'e dönüştürün. Düzen ve yazı tipleri korunur — tarayıcıda hızlı ve ücretsiz Word'den PDF dönüşümü.",
+      "Word belgelerini online PDF'e dönüştürün. Düzen ve yazı tipleri korunur — hızlı Word'den PDF dönüşümü, ücretsiz üyelikle günlük hak dahilinde.",
       "Word'den PDF'e Dönüştürme",
       "DOC ve DOCX belgelerini baskıya hazır, her cihazda aynı görünen PDF'e dönüştürün. Yazı tipleri ve sayfa düzeni birebir korunur.",
       ["word'den pdf'e", "word pdf dönüştürme", "word to pdf", "docx pdf yapma"],
@@ -345,13 +345,13 @@ export const TOOL_SEO = {
         { q: "Word belgesini PDF'e nasıl dönüştürürüm?", a: "DOC/DOCX dosyanızı yükleyin ve dönüştür deyin. Düzen ve yazı tipleri korunarak PDF anında hazırlanır." },
         { q: "PDF her cihazda aynı görünür mü?", a: "Evet. PDF sabit düzenlidir; yazı tipleri gömülür ve belge tüm cihazlarda aynı görünür." },
         { q: "DOCX ve DOC dosyalarının ikisini de dönüştürebilir miyim?", a: "Evet. Hem eski .doc hem yeni .docx Word belgeleri desteklenir; ikisi de tek tıkla PDF olur." },
-        { q: "Word'den PDF'e dönüştürmek ücretsiz mi?", a: "Evet. Belgenizi yükleyin, PDF'i anında oluşturup indirin — üyelik veya kurulum gerekmez." },
+        { q: "Word'den PDF'e dönüştürmek ücretsiz mi?", a: "Evet, ücretsiz üyelikle günlük hakkınız dahilinde. Belgenizi yükleyin, PDF'i anında oluşturup indirin — kurulum gerekmez." },
         { q: "Yazı tipleri ve biçimlendirme korunur mu?", a: "Evet. Yazı tipleri gömülür; başlıklar, tablolar, madde işaretleri ve düzen orijinal Word belgesiyle aynı kalır." },
       ],
     ),
     en: T(
       "Word to PDF converter online",
-      "Convert Word documents to PDF online. Preserve layout and fonts — fast, free Word to PDF conversion, no install needed.",
+      "Convert Word documents to PDF online. Preserve layout and fonts — fast Word to PDF conversion with a free account, no install needed.",
       "Word to PDF",
       "Convert DOC and DOCX documents into print-ready PDFs that look identical on every device. Fonts and page layout are preserved exactly.",
       ["word to pdf", "docx to pdf", "convert word to pdf"],
@@ -359,7 +359,7 @@ export const TOOL_SEO = {
         { q: "How do I convert a Word document to PDF?", a: "Upload your DOC/DOCX and click convert. The PDF is created instantly with layout and fonts preserved." },
         { q: "Will the PDF look the same on every device?", a: "Yes. PDF is fixed-layout; fonts are embedded and the document looks identical everywhere." },
         { q: "Can I convert both DOCX and DOC files?", a: "Yes. Both legacy .doc and modern .docx Word documents are supported and convert to PDF in one click." },
-        { q: "Is Word to PDF conversion free?", a: "Yes. Upload your document, create the PDF instantly, and download it — no account or installation needed." },
+        { q: "Is Word to PDF conversion free?", a: "Yes, with a free account within your daily allowance. Upload your document, create the PDF instantly, and download it — no installation needed." },
         { q: "Are fonts and formatting preserved?", a: "Yes. Fonts are embedded, and headings, tables, bullet lists, and layout stay identical to the original Word document." },
       ],
     ),
@@ -368,7 +368,7 @@ export const TOOL_SEO = {
   "excel-to-pdf": {
     tr: T(
       "Excel'den PDF'e Dönüştürme — tabloları koru",
-      "Excel tablolarınızı paylaşılabilir, baskıya hazır PDF'e dönüştürün. Hücreler ve düzen korunur — online ve ücretsiz.",
+      "Excel tablolarınızı paylaşılabilir, baskıya hazır PDF'e dönüştürün. Hücreler ve düzen korunur — online.",
       "Excel'den PDF'e Dönüştürme",
       "XLS ve XLSX elektronik tablolarınızı, hücre düzeni ve biçimlendirme korunarak temiz PDF sayfalarına aktarın. Raporları kolayca paylaşın.",
       ["excel'den pdf'e", "excel pdf dönüştürme", "excel to pdf", "xlsx pdf yapma"],
@@ -382,7 +382,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Excel to PDF converter online",
-      "Convert Excel spreadsheets to shareable, print-ready PDF. Cells and layout preserved — free online tool.",
+      "Convert Excel spreadsheets to shareable, print-ready PDF. Cells and layout preserved — online tool.",
       "Excel to PDF",
       "Export XLS and XLSX spreadsheets to clean PDF pages with cell layout and formatting preserved. Share reports with anyone.",
       ["excel to pdf", "xlsx to pdf", "spreadsheet to pdf"],
@@ -408,7 +408,7 @@ export const TOOL_SEO = {
         { q: "Çıkan verileri Excel'de düzenleyebilir miyim?", a: "Evet. Çıktı hücre bazlıdır; formül ekleyebilir, sıralayabilir ve analiz edebilirsiniz." },
         { q: "Birden fazla tablosu olan PDF'i dönüştürebilir miyim?", a: "Evet. Sayfalardaki tablolar tespit edilip hücrelere ayrılır; her tablo Excel'de düzenlenebilir olur." },
         { q: "Taranmış (görsel) tabloyu Excel'e çevirebilir miyim?", a: "Metin katmanı olan PDF'ler en iyi sonucu verir; taranmış tablolar için önce OCR gerekir." },
-        { q: "PDF'ten Excel'e dönüştürmek ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, düzenlenebilir .xlsx dosyasını saniyeler içinde indirin." },
+        { q: "PDF'ten Excel'e dönüştürmek ücretsiz mi?", a: "Ücretsiz üyelikte kapalıdır; Plus ve üzeri planlara dahildir. PDF'inizi yükleyin, düzenlenebilir .xlsx dosyasını saniyeler içinde indirin." },
       ],
     ),
     en: T(
@@ -422,7 +422,7 @@ export const TOOL_SEO = {
         { q: "Can I edit the extracted data in Excel?", a: "Yes. The output is cell-based, so you can add formulas, sort and analyze it." },
         { q: "Can I convert a PDF with multiple tables?", a: "Yes. Tables across pages are detected and split into cells, so each table is editable in Excel." },
         { q: "Can I convert a scanned (image) table to Excel?", a: "PDFs with a text layer work best; scanned tables need OCR first." },
-        { q: "Is PDF to Excel conversion free?", a: "Yes. Upload your PDF and download the editable .xlsx in seconds." },
+        { q: "Is PDF to Excel conversion free?", a: "Not on the free account; it is included in Plus and above. Upload your PDF and download the editable .xlsx in seconds." },
       ],
     ),
   },
@@ -439,7 +439,7 @@ export const TOOL_SEO = {
         { q: "Slaytları sonradan düzenleyebilir miyim?", a: "Evet. Çıktı PowerPoint'te açılır ve metin/öğeler düzenlenebilir." },
         { q: "Her PDF sayfası bir slayt mı olur?", a: "Evet. Her sayfa bir slayda dönüştürülür; sunum sırası PDF ile aynı kalır." },
         { q: "Çıktıyı Google Slaytlar'da açabilir miyim?", a: "Evet. Dosya standart .pptx'tir; PowerPoint, Google Slaytlar ve Keynote ile uyumludur." },
-        { q: "PDF'ten PowerPoint'e dönüştürmek ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, düzenlenebilir .pptx sunumu saniyeler içinde indirin." },
+        { q: "PDF'ten PowerPoint'e dönüştürmek ücretsiz mi?", a: "Ücretsiz üyelikte kapalıdır; Plus ve üzeri planlara dahildir. PDF'inizi yükleyin, düzenlenebilir .pptx sunumu saniyeler içinde indirin." },
       ],
     ),
     en: T(
@@ -453,7 +453,7 @@ export const TOOL_SEO = {
         { q: "Can I edit the slides afterwards?", a: "Yes. The output opens in PowerPoint with editable text and elements." },
         { q: "Does each PDF page become a slide?", a: "Yes. Each page is converted into one slide, keeping the same order as the PDF." },
         { q: "Can I open the output in Google Slides?", a: "Yes. The file is a standard .pptx, compatible with PowerPoint, Google Slides, and Keynote." },
-        { q: "Is PDF to PowerPoint conversion free?", a: "Yes. Upload your PDF and download an editable .pptx presentation in seconds." },
+        { q: "Is PDF to PowerPoint conversion free?", a: "Not on the free account; it is included in Plus and above. Upload your PDF and download an editable .pptx presentation in seconds." },
       ],
     ),
   },
@@ -461,7 +461,7 @@ export const TOOL_SEO = {
   "ppt-to-pdf": {
     tr: T(
       "PowerPoint'ten PDF'e Dönüştürme",
-      "PPT ve PPTX sunumlarını tek bir PDF'e dönüştürün. Slaytlar her cihazda aynı görünür — online ve ücretsiz.",
+      "PPT ve PPTX sunumlarını tek bir PDF'e dönüştürün. Slaytlar her cihazda aynı görünür — online.",
       "PowerPoint'ten PDF'e Dönüştürme",
       "PPT/PPTX sunumlarınızı tek, taşınabilir bir PDF'e dönüştürün. Slayt tasarımı korunur; belgeyi her cihazda güvenle paylaşın.",
       ["powerpoint'ten pdf'e", "ppt pdf dönüştürme", "ppt to pdf", "sunum pdf yapma"],
@@ -475,7 +475,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "PowerPoint to PDF converter",
-      "Convert PPT and PPTX presentations into one PDF. Slides look the same on every device — free and online.",
+      "Convert PPT and PPTX presentations into one PDF. Slides look the same on every device — online.",
       "PowerPoint to PDF",
       "Convert your PPT/PPTX presentations into a single portable PDF. Slide design is preserved so you can share it safely on any device.",
       ["ppt to pdf", "pptx to pdf", "presentation to pdf"],
@@ -501,7 +501,7 @@ export const TOOL_SEO = {
         { q: "Görsel çözünürlüğünü seçebilir miyim?", a: "Evet. Ekran (150 DPI), Normal (300 DPI) ve Baskı (400 DPI) arasından seçersiniz. Seçtiğiniz çözünürlük dosyanın içine de yazılır; yazdırırken ya da tasarım programında açtığınızda doğru fiziksel boyut görünür." },
         { q: "Yalnızca belirli sayfaları görsele dönüştürebilir miyim?", a: "Evet. \"1-3, 5\" gibi sayfa aralığı yazın; yalnızca o sayfalar görsele çevrilir. Boş bırakırsanız tüm sayfalar çevrilir. Dosya adındaki numara belgedeki gerçek sayfa numarasıdır." },
         { q: "Görseller JPG mi PNG mi TIFF mi olur?", a: "Üçünü de alabilirsiniz: küçük dosya için JPG, keskin metin ve şeffaflık için PNG, baskı ve arşiv işleri için TIFF." },
-        { q: "PDF'ten görsele dönüştürmek ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, sayfaları yüksek çözünürlüklü görsel olarak indirin — üyelik gerekmez." },
+        { q: "PDF'ten görsele dönüştürmek ücretsiz mi?", a: "Evet, ücretsiz üyelikle günlük hakkınız dahilinde. PDF'inizi yükleyin, sayfaları yüksek çözünürlüklü görsel olarak indirin." },
       ],
     ),
     en: T(
@@ -515,7 +515,7 @@ export const TOOL_SEO = {
         { q: "Can I choose the image resolution?", a: "Yes. Pick Screen (150 DPI), Normal (300 DPI) or Print (400 DPI). The chosen resolution is also written into the file, so it shows the correct physical size when printed or opened in a design app." },
         { q: "Can I convert only specific pages to images?", a: "Yes. Type a page range such as \"1-3, 5\" and only those pages are converted. Leave it empty to convert every page. The number in each file name is the real page number of the document." },
         { q: "Are the images JPG, PNG or TIFF?", a: "You can get all three: JPG for small files, PNG for sharp text and transparency, TIFF for print and archive work." },
-        { q: "Is PDF to image conversion free?", a: "Yes. Upload your PDF and download the pages as high-resolution images — no account required." },
+        { q: "Is PDF to image conversion free?", a: "Yes, with a free account within your daily allowance. Upload your PDF and download the pages as high-resolution images." },
       ],
     ),
   },
@@ -565,13 +565,13 @@ export const TOOL_SEO = {
       [
         { q: "Telefonla belge taramak için uygulama gerekir mi?", a: "Hayır. Sayfayı telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli; kamerayı belgeye doğrultun, kenarlar otomatik bulunur ve PDF oluşur. Kurulum veya üyelik gerekmez." },
         { q: "Taradığım belge sunucuya yüklenir mi?", a: "Hayır. Kamera görüntüsü, otomatik kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez." },
-        { q: "Otomatik çekim (telefonu tutunca kendi çekmesi) var mı?", a: "Evet, Pro planda. Telefonu belgenin üstünde tuttuğunuzda kenarlar canlı bulunur ve görüntü sabitlenince fotoğraf kendiliğinden çekilir; deklanşöre basmanız gerekmez. Ücretsiz planda fotoğrafı siz çekersiniz, kenarlar çekimden sonra otomatik bulunur." },
-        { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa, gölge temizleme ve aranabilir PDF (OCR) Pro özellikleridir." },
+        { q: "Otomatik çekim (telefonu tutunca kendi çekmesi) var mı?", a: "Evet, ücretli planlarda. Telefonu belgenin üstünde tuttuğunuzda kenarlar canlı bulunur ve görüntü sabitlenince fotoğraf kendiliğinden çekilir; deklanşöre basmanız gerekmez. Ücretsiz planda fotoğrafı siz çekersiniz, kenarlar çekimden sonra otomatik bulunur." },
+        { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa, gölge temizleme ve aranabilir PDF (OCR) ücretli plan özellikleridir." },
         { q: "Taranan belgenin kalitesi nasıl artırılıyor?", a: "Araç perspektifi düzeltir (eğik çekimi düzleştirir), kenarları kırpar ve kontrastı iyileştirir; sonuç tarayıcıdan çıkmış gibi net olur." },
         { q: "Bilgisayardan da tarama yapabilir miyim?", a: "Evet. Telefon kamerasının yanı sıra bilgisayarınızdaki fotoğrafları da yükleyip belge PDF'ine dönüştürebilirsiniz." },
         { q: "Fotoğraftan belge taraması nasıl yapılır?", a: "Galerinizdeki ya da bilgisayarınızdaki belge fotoğrafını yükleyin. Kenarlar otomatik bulunur, eğik çekim düzeltilir ve fotoğraf, taranmış gibi düz bir PDF sayfasına dönüşür." },
         { q: "Online belge tarama için ne gerekir?", a: "Yalnızca bir tarayıcı. Sayfayı açıp kamera iznini verirsiniz; belgeyi çerçeveye aldığınızda tarama başlar. Uygulama indirmeniz ya da hesap açmanız gerekmez." },
-        { q: "Belge tarama uygulaması yerine kullanabilir miyim?", a: "Evet, kurulum istemeyen işler için. Tarama cihazınızda yapıldığı için belgeniz bir sunucuya yüklenmez. Ücretsizde tek taramada 3 sayfa alınır; daha fazlası ve OCR Pro özelliğidir." },
+        { q: "Belge tarama uygulaması yerine kullanabilir miyim?", a: "Evet, kurulum istemeyen işler için. Tarama cihazınızda yapıldığı için belgeniz bir sunucuya yüklenmez. Ücretsizde tek taramada 3 sayfa alınır; daha fazlası ve OCR ücretli plan özelliğidir." },
       ],
     ),
     en: T(
@@ -583,13 +583,13 @@ export const TOOL_SEO = {
       [
         { q: "Do I need an app to scan documents with my phone?", a: "No. Just open the page in your phone browser and tap «Scan document»; point the camera at the document, edges are detected automatically and a PDF is created. No install or sign-up needed." },
         { q: "Is my scanned document uploaded to a server?", a: "No. The camera frame, automatic edge detection and PDF creation all run on your device; your document is never sent to the internet." },
-        { q: "Is there automatic capture?", a: "Yes, on the Pro plan. Hold the phone over the document and the edges are tracked live; as soon as the view is steady the photo is taken for you — no shutter tap. On the free plan you take the photo and the edges are detected right after." },
-        { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages, shadow removal and searchable PDF (OCR) are Pro features." },
+        { q: "Is there automatic capture?", a: "Yes, on paid plans. Hold the phone over the document and the edges are tracked live; as soon as the view is steady the photo is taken for you — no shutter tap. On the free plan you take the photo and the edges are detected right after." },
+        { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages, shadow removal and searchable PDF (OCR) are paid-plan features." },
         { q: "How is the scan quality improved?", a: "The tool corrects perspective (flattens angled shots), crops the edges, and boosts contrast, so the result looks as crisp as a real scanner." },
         { q: "Can I scan from a computer too?", a: "Yes. Besides the phone camera, you can upload photos from your computer and turn them into a document PDF." },
         { q: "How do I scan a document from a photo?", a: "Upload the photo from your gallery or computer. The edges are found automatically, a tilted shot is straightened, and the photo becomes a flat PDF page that looks scanned." },
         { q: "What do I need to scan a document online?", a: "Only a browser. Open the page, allow camera access and frame the document; scanning starts from there. There is no app to download and no account to create." },
-        { q: "Can this replace a document scanner app?", a: "For jobs where you do not want to install anything, yes. The scan happens on your device, so the document is not uploaded to a server. The free plan takes 3 pages per scan; more pages and OCR are Pro features." },
+        { q: "Can this replace a document scanner app?", a: "For jobs where you do not want to install anything, yes. The scan happens on your device, so the document is not uploaded to a server. The free plan takes 3 pages per scan; more pages and OCR are paid-plan features." },
       ],
     ),
   },
@@ -637,7 +637,7 @@ export const TOOL_SEO = {
         { q: "Sayfa düzeni korunur mu?", a: "Evet. İçerik render edilip PDF'e yazıldığı için görünüm büyük ölçüde korunur." },
         { q: "URL yerine kendi HTML kodumu yapıştırabilir miyim?", a: "Evet. Bir web adresi girebilir ya da doğrudan HTML içeriğinizi yapıştırıp PDF'e dönüştürebilirsiniz." },
         { q: "Görseller ve CSS stilleri PDF'e aktarılır mı?", a: "Evet. Sayfa gerçek bir tarayıcı gibi render edilir; görseller, yazı tipleri ve CSS düzeni PDF'e yansır." },
-        { q: "HTML'den PDF'e dönüştürmek ücretsiz mi?", a: "Evet. Adresi veya kodu girin, sabit düzenli PDF'i saniyeler içinde indirin — kurulum gerekmez." },
+        { q: "HTML'den PDF'e dönüştürmek ücretsiz mi?", a: "Ücretsiz üyelikte kapalıdır; Plus ve üzeri planlara dahildir. Adresi veya kodu girin, sabit düzenli PDF'i saniyeler içinde indirin — kurulum gerekmez." },
       ],
     ),
     en: T(
@@ -651,7 +651,7 @@ export const TOOL_SEO = {
         { q: "Is the page layout preserved?", a: "Yes. Content is rendered and written to PDF, so the appearance is largely preserved." },
         { q: "Can I paste my own HTML instead of a URL?", a: "Yes. Enter a web address, or paste your HTML content directly and convert it to PDF." },
         { q: "Are images and CSS styles included in the PDF?", a: "Yes. The page is rendered like a real browser, so images, fonts, and CSS layout carry into the PDF." },
-        { q: "Is HTML to PDF conversion free?", a: "Yes. Enter the URL or code and download a fixed-layout PDF in seconds — no installation needed." },
+        { q: "Is HTML to PDF conversion free?", a: "Not on the free account; it is included in Plus and above. Enter the URL or code and download a fixed-layout PDF in seconds — no installation needed." },
       ],
     ),
   },
@@ -690,7 +690,7 @@ export const TOOL_SEO = {
   watermark: {
     tr: T(
       "PDF Filigran Ekleme — metin veya logo",
-      "PDF'e metin veya görsel filigran ekleyin. Belgelerinizi 'GİZLİ', 'TASLAK' veya logonuzla işaretleyin — online ve ücretsiz.",
+      "PDF'e metin veya görsel filigran ekleyin. Belgelerinizi 'GİZLİ', 'TASLAK' veya logonuzla işaretleyin — online.",
       "PDF Filigran Ekleme",
       "PDF sayfalarına metin filigranı ekleyin; rengini, yazı tipini, açısını, boyutunu ve şeffaflığını ayarlayın, hangi sayfalara uygulanacağını seçin. Türkçe karakterler (İ, Ş, Ğ, ı) doğru çıkar. Belgelerinizi telif, taslak veya gizlilik amacıyla işaretleyin.",
       ["pdf filigran ekleme", "pdf watermark", "pdf damgalama", "pdf'e logo ekleme"],
@@ -704,7 +704,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Add Watermark to PDF — text or logo",
-      "Add a text or image watermark to your PDF. Mark documents as 'CONFIDENTIAL', 'DRAFT' or with your logo — free online.",
+      "Add a text or image watermark to your PDF. Mark documents as 'CONFIDENTIAL', 'DRAFT' or with your logo — online.",
       "Add Watermark to PDF",
       "Add a text watermark across PDF pages and set its color, font, angle, size and opacity, and choose which pages it applies to. Turkish characters (İ, Ş, Ğ, ı) come out correctly. Mark documents for copyright, draft or confidentiality.",
       ["add watermark to pdf", "pdf watermark", "stamp pdf", "logo on pdf"],
@@ -721,7 +721,7 @@ export const TOOL_SEO = {
   "page-numbers": {
     tr: T(
       "PDF Sayfa Numarası Ekleme",
-      "PDF'e profesyonel sayfa numaraları ekleyin. Başlık veya dipnotta konum ve biçim seçin — online ve ücretsiz.",
+      "PDF'e profesyonel sayfa numaraları ekleyin. Başlık veya dipnotta konum ve biçim seçin — online.",
       "PDF Sayfa Numarası Ekleme",
       "PDF belgenize okunaklı sayfa numaraları ekleyin. Numaraları üst bilgi veya alt bilgide konumlandırın; başlangıç değerini ve biçimini ayarlayın.",
       ["pdf sayfa numarası ekleme", "pdf numaralandırma", "pdf page numbers", "pdf üst bilgi alt bilgi ekleme", "pdf header footer ekleme", "pdf bates numarası", "pdf sıfırlı sayfa numarası"],
@@ -738,7 +738,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Add Page Numbers to PDF",
-      "Add professional page numbers to your PDF. Choose position and format in the header or footer — free online tool.",
+      "Add professional page numbers to your PDF. Choose position and format in the header or footer — online tool.",
       "Add Page Numbers to PDF",
       "Stamp readable page numbers onto your PDF. Position numbers in the header or footer and set the starting value and format.",
       ["add page numbers to pdf", "number pdf pages", "pdf pagination", "add header and footer to pdf", "pdf bates numbering"],
@@ -758,7 +758,7 @@ export const TOOL_SEO = {
   "repair-pdf": {
     tr: T(
       "PDF Onarma — bozuk dosyayı kurtar",
-      "Açılmayan veya bozuk PDF dosyalarını onarmayı deneyin. İçeriği yeniden paketleyip kurtarın — online ve ücretsiz.",
+      "Açılmayan veya bozuk PDF dosyalarını onarmayı deneyin. İçeriği yeniden paketleyip kurtarın — online.",
       "PDF Onarma",
       "Açılmayan, hasarlı veya bozuk PDF dosyalarını yeniden paketleyerek kurtarmayı deneyin. Erişilebilir içeriği yeni, geçerli bir PDF olarak indirin.",
       ["pdf onarma", "bozuk pdf düzeltme", "pdf kurtarma", "repair pdf"],
@@ -773,7 +773,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Repair PDF — recover a corrupted file",
-      "Try to repair PDFs that won't open or are corrupted. Re-package and recover the content — free and online.",
+      "Try to repair PDFs that won't open or are corrupted. Re-package and recover the content — online.",
       "Repair PDF",
       "Try to recover PDFs that won't open or are damaged by re-packaging them. Download the accessible content as a new, valid PDF.",
       ["repair pdf", "fix corrupted pdf", "recover pdf"],
@@ -791,7 +791,7 @@ export const TOOL_SEO = {
   encrypt: {
     tr: T(
       "PDF Şifreleme — parola ile koruyun",
-      "PDF'inize açılış parolası ekleyerek erişimi kısıtlayın. Hassas belgeleri şifreleyerek güvende tutun — online ve ücretsiz.",
+      "PDF'inize açılış parolası ekleyerek erişimi kısıtlayın. Hassas belgeleri şifreleyerek güvende tutun — online.",
       "PDF Şifreleme ve Parola Koruma",
       "PDF belgenize bir açılış parolası ekleyerek yetkisiz erişimi engelleyin. Sözleşme, fatura ve hassas belgelerinizi şifreleyerek güvenle paylaşın.",
       ["pdf şifreleme", "pdf parola koruma", "pdf'e şifre ekleme", "encrypt pdf"],
@@ -805,7 +805,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Encrypt PDF — password protect your file",
-      "Add an open password to your PDF to restrict access. Encrypt sensitive documents to keep them secure — free online.",
+      "Add an open password to your PDF to restrict access. Encrypt sensitive documents to keep them secure — online.",
       "Encrypt & Password Protect PDF",
       "Add an open password to your PDF to block unauthorized access. Encrypt contracts, invoices and sensitive documents and share them safely.",
       ["encrypt pdf", "password protect pdf", "add password to pdf"],
@@ -831,7 +831,7 @@ export const TOOL_SEO = {
         { q: "Taranmış PDF'ten metin çıkar mı?", a: "Metin katmanı olan PDF'ler en iyi sonucu verir; taranmış görüntülerde metin sınırlı olabilir." },
         { q: "Çıkarılan metni kopyalayıp düzenleyebilir miyim?", a: "Evet. Çıktı düz metin (.txt) dosyasıdır; her metin düzenleyicide açıp kopyalayabilir ve düzenleyebilirsiniz." },
         { q: "Biçimlendirme ve düzen korunur mu?", a: "Metin içeriği çıkarılır; renk, yazı tipi ve sayfa düzeni gibi biçimlendirme .txt'de yer almaz." },
-        { q: "PDF'ten metin çıkarmak ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, metni .txt olarak saniyeler içinde indirin — üyelik gerekmez." },
+        { q: "PDF'ten metin çıkarmak ücretsiz mi?", a: "Evet, ücretsiz üyelikle günlük hakkınız dahilinde. PDF'inizi yükleyin, metni .txt olarak saniyeler içinde indirin." },
       ],
     ),
     en: T(
@@ -845,7 +845,7 @@ export const TOOL_SEO = {
         { q: "Does it extract text from scanned PDFs?", a: "PDFs with a text layer give the best results; scanned images may have limited text." },
         { q: "Can I copy and edit the extracted text?", a: "Yes. The output is a plain text (.txt) file you can open, copy, and edit in any text editor." },
         { q: "Is formatting and layout preserved?", a: "The text content is extracted; formatting such as color, fonts, and page layout is not included in .txt." },
-        { q: "Is extracting text from PDF free?", a: "Yes. Upload your PDF and download the text as .txt in seconds — no account required." },
+        { q: "Is extracting text from PDF free?", a: "Yes, with a free account within your daily allowance. Upload your PDF and download the text as .txt in seconds." },
       ],
     ),
   },
@@ -941,7 +941,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Flip PDF Online — Mirror Pages Horizontally or Vertically",
-      "Flip PDF pages online like a mirror, horizontally or vertically — all pages or only the ones you pick. Fast, free and simple.",
+      "Flip PDF pages online like a mirror, horizontally or vertically — all pages or only the ones you pick. Fast and simple.",
       "Flip PDF Pages (Mirror)",
       "Flip PDF pages left-to-right (horizontal) or upside-down (vertical). Use it to fix pages scanned the wrong way or to prepare mirror prints.",
       ["flip pdf", "mirror pdf", "flip pdf pages", "reverse pdf horizontally"],
@@ -1059,7 +1059,7 @@ export const TOOL_SEO = {
   "flatten-pdf": {
     tr: T(
       "PDF Düzleştirme — formları sabitle",
-      "PDF form alanlarını ve açıklamaları sayfaya kalıcı olarak gömün. Düzenlenemez, sabit bir PDF oluşturun — online ve ücretsiz.",
+      "PDF form alanlarını ve açıklamaları sayfaya kalıcı olarak gömün. Düzenlenemez, sabit bir PDF oluşturun — online.",
       "PDF Düzleştirme",
       "Doldurulmuş form alanlarını, imzaları ve açıklamaları sayfaya kalıcı olarak gömün. İçeriğin değiştirilemediği, her yerde aynı görünen sabit bir PDF üretin.",
       ["pdf düzleştirme", "pdf flatten", "pdf form sabitleme", "pdf formları gömme"],
@@ -1073,7 +1073,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Flatten PDF — lock in form fields",
-      "Permanently embed PDF form fields and annotations into the page. Create a non-editable, fixed PDF — free online.",
+      "Permanently embed PDF form fields and annotations into the page. Create a non-editable, fixed PDF — online.",
       "Flatten PDF",
       "Permanently embed filled form fields, signatures and annotations into the page. Produce a fixed PDF whose content can't be changed and looks identical everywhere.",
       ["flatten pdf", "lock pdf form", "embed pdf annotations"],
@@ -1090,7 +1090,7 @@ export const TOOL_SEO = {
   "extract-images": {
     tr: T(
       "PDF'ten Görsel Çıkarma — gömülü resimleri indir",
-      "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarın, tek tıkla ZIP olarak indirin — online ve ücretsiz.",
+      "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarın, tek tıkla ZIP olarak indirin — online.",
       "PDF'ten Görsel Çıkarma",
       "PDF dosyasının içine gömülü tüm fotoğrafları, logoları ve resimleri özgün formatında (JPG/PNG) tek tek çıkarır ve bir ZIP arşivinde toplar. Sayfaları ekran görüntüsü gibi resme çevirmez; dokümandaki asıl görsel dosyalarını kayıpsız ayıklar.",
       ["pdf resim çıkarma", "pdf görsel çıkarma", "pdf içinden fotoğraf çıkarma", "pdf resimleri kaydetme", "pdf logo çıkarma"],
@@ -1104,7 +1104,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Extract Images from PDF — download embedded pictures",
-      "Pull embedded photos and logos out of a PDF at original quality and download them as a ZIP — free online.",
+      "Pull embedded photos and logos out of a PDF at original quality and download them as a ZIP — online.",
       "Extract Images from PDF",
       "Extracts every embedded photo, logo and picture from a PDF in its original format (JPG/PNG) and bundles them into a single ZIP archive. It does not rasterize pages like a screenshot — it pulls the actual image files out of the document without quality loss.",
       ["extract images from pdf", "pdf image extractor", "save pictures from pdf", "get images out of pdf", "pdf photo extract"],
@@ -1310,7 +1310,7 @@ export const TOOL_SEO = {
 
   "pdf-to-pdfa": {
     tr: T(
-      "PDF/A Dönüştürme — Arşiv Biçimi (Online, Ücretsiz)",
+      "PDF/A Dönüştürme — Arşiv Biçimi (Online)",
       "Belgenizi kurumların istediği ISO arşiv biçimi PDF/A'ya çevirin. Yazı tipleri belgeye gömülür; dosya yıllar sonra da aynı görünür. 1b, 2b, 3b.",
       "PDF'i PDF/A Arşiv Biçimine Çevir",
       "Kamu ihalelerinde, e-arşiv yükümlülüklerinde, mahkeme dosyalarında ve üniversite tez tesliminde belgenin PDF/A olması istenir. PDF/A, belgenin uzun yıllar sonra da AYNI görünmesini garanti eden ISO standardıdır: kullanılan yazı tipleri dosyanın içine gömülür (o yazı tipi karşı bilgisayarda yoksa bile metin bozulmaz), renkler cihazdan bağımsız tanımlanır, dış kaynaklara bağlanma ve şifreleme kaldırılır. Belgenizi yükleyin, kurumun istediği uyumluluk düzeyini seçin (çoğu yerde PDF/A-2b yeterlidir) ve arşivlik dosyanızı indirin.",
@@ -1325,7 +1325,7 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Convert PDF to PDF/A — Archival Format (Online, Free)",
+      "Convert PDF to PDF/A — Archival Format (Online)",
       "Convert your document to PDF/A, the ISO archival format institutions ask for. Fonts are embedded so the file looks the same years from now.",
       "Convert PDF to the PDF/A Archival Format",
       "Public tenders, e-archiving rules, court filings and university thesis submissions often require PDF/A. PDF/A is the ISO standard that guarantees a document still looks the SAME many years later: the fonts it uses are embedded in the file (so text stays intact even if the font is missing on the other computer), colours are defined device-independently, and external dependencies and encryption are removed. Upload your document, pick the conformance level your institution asks for (PDF/A-2b is enough in most cases) and download the archival file.",
@@ -1418,7 +1418,7 @@ export const TOOL_SEO = {
   "ustveri-temizle": {
     tr: T(
       "PDF Üstveri Temizleme — Gizli Bilgileri Sil (Cihazda)",
-      "PDF'inizde kalan yazar adı, üreten program, tarihler, XMP bloğu ve fotoğrafların GPS konumunu silin. Dosyanız cihazınızdan çıkmaz; üyeliksiz ve ücretsiz.",
+      "PDF'inizde kalan yazar adı, üreten program, tarihler, XMP bloğu ve fotoğrafların GPS konumunu silin. Dosyanız cihazınızdan çıkmaz; ücretsiz üyelikle kullanılır.",
       "PDF'teki Gizli Bilgileri Temizle",
       "Bir PDF, sayfada görünenin dışında iz taşır: belgeyi hazırlayanın ADI, kullandığı program, oluşturma ve değiştirme tarihleri, XML biçimli XMP bloğu ve belgenin benzersiz kimliği. İçinde fotoğraf varsa o fotoğrafların EXIF bilgisi — makine modeli, çekim tarihi ve GPS KONUMU — dosyada durmaya devam eder. Özgeçmiş, teklif, sözleşme ya da resmî başvuru gönderirken bunlar karşı tarafa gider. Bu araç önce belgede ne olduğunu gösterir, sonra hepsini siler. Tüm işlem tarayıcınızda yapılır — belgeniz SUNUCUYA GİTMEZ.",
       ["pdf üstveri temizleme", "pdf metadata silme", "pdf yazar bilgisi kaldırma", "pdf exif temizleme", "pdf gizli bilgi silme", "pdf anonimleştirme", "pdf gps konum silme"],
@@ -1434,7 +1434,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Remove PDF Metadata — Strip Hidden Data (On-device)",
-      "Remove the author name, producing software, dates, XMP block and photo GPS location left in your PDF. Your file never leaves your device — free, no sign-up.",
+      "Remove the author name, producing software, dates, XMP block and photo GPS location left in your PDF. Your file never leaves your device — free with an account.",
       "Strip Hidden Data From Your PDF",
       "A PDF carries more than what you see on the page: the NAME of whoever prepared it, the software used, creation and modification dates, an XML-based XMP block and a unique document ID. If it contains photos, their EXIF data — camera model, capture date and GPS LOCATION — stays inside the file too. All of that travels with your CV, quote, contract or official application. This tool first shows you what is in the document, then strips it. Everything happens in your browser — your document is NEVER uploaded.",
       ["remove pdf metadata", "strip pdf metadata", "pdf metadata remover", "remove author from pdf", "pdf exif removal", "anonymize pdf", "remove gps from pdf"],
@@ -1452,9 +1452,9 @@ export const TOOL_SEO = {
 
   "form-doldur": {
     tr: T(
-      "PDF Form Doldurma — Online, Üyeliksiz, Cihazda",
+      "PDF Form Doldurma — Online, Cihazda",
       "Doldurulabilir PDF formlarını tarayıcınızda doldurun. Alanlar otomatik bulunur, Türkçe karakterler bozulmaz — dosyanız cihazınızdan çıkmaz.",
-      "PDF Form Doldurma — Cihazında, Üyeliksiz",
+      "PDF Form Doldurma — Cihazında",
       "Başvuru, sözleşme, izin ve kurum formlarını bilgisayarınızda doldurun. Dosyayı seçtiğiniz anda formun alanları (metin kutuları, onay kutuları, açılır listeler) otomatik bulunur ve karşınıza gelir; doldurup indirirsiniz. «Kilitle» seçeneğiyle alanlar kalıcı içeriğe dönüşür, karşı taraf yazdıklarınızı değiştiremez. Türkçe harfler (ğ, ş, İ, ı) kaybolmadan yazılır. Tüm işlem tarayıcınızda gerçekleşir — belgeniz SUNUCUYA GİTMEZ; kimlik ve başvuru belgelerinde bu fark önemlidir.",
       ["pdf form doldurma", "pdf form doldur", "doldurulabilir pdf", "online form doldurma", "pdf form doldurma ücretsiz", "pdf başvuru formu doldurma", "acroform doldurma"],
       [
@@ -1467,7 +1467,7 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Fill PDF Form — Online, No Sign-up, On-device",
+      "Fill PDF Form — Online, On-device",
       "Fill fillable PDF forms in your browser. Fields are detected automatically and accented characters are preserved — your file never leaves your device.",
       "Fill a PDF Form — On Your Device, Private",
       "Fill applications, contracts, consent and agency forms on your own computer. The moment you pick a file, its fields (text boxes, checkboxes, dropdowns) are detected and listed for you; fill them in and download. With «Lock after filling», the fields become permanent content so the recipient cannot change what you wrote. Everything happens in your browser — your document is NEVER uploaded, which matters for identity and application paperwork.",
@@ -1758,7 +1758,7 @@ export const TOOL_SEO = {
         { q: "CV için hangi fotoğraf ölçüsü uygun?", a: "Çoğu CV şablonu dikey 3:4 portre ya da kare alan kullanır. CV portre ve CV kare ön ayarları, yüzü kadrajın yaklaşık yarısında tutan ferah bir kadraj üretir; LinkedIn için kare 800×800 ön ayarı da vardır." },
         { q: "Telefonla çektiğim fotoğraf olur mu?", a: "Evet. Düz bir duvarın önünde, pencere ışığıyla, kameraya karşıdan ve göz hizasında çekilmiş bir fotoğraf yeterlidir. Çok karanlık, bulanık ya da yüzün kısmen kapalı olduğu fotoğraflarda araç sizi uyarır." },
         { q: "Aynı fotoğraftan birden fazla ölçü alabilir miyim?", a: "Evet. Birden fazla ölçüyü işaretleyip hepsini tek ZIP dosyası olarak indirebilirsiniz. 10×15 cm ya da A4 baskı sayfası seçerseniz fotoğraf kâğıda gerçek boyutunda dizilir." },
-        { q: "Bu araç ücretsiz mi?", a: "Yapay zekâ araçları gibi Pro üyelere açılır. Çok yakında kullanıma sunulacak." },
+        { q: "Bu araç ücretsiz mi?", a: "Yapay zekâ araçları gibi ücretli planlara (Başlangıç ve üzeri) açılacak. Çok yakında kullanıma sunulacak." },
       ],
     ),
     en: T(
@@ -1775,7 +1775,7 @@ export const TOOL_SEO = {
         { q: "What photo size works for a CV?", a: "Most CV templates use a 3:4 portrait or a square. The CV portrait and CV square presets keep the face at about half the frame with comfortable space around it; an 800×800 LinkedIn preset is included." },
         { q: "Can I use a photo taken with my phone?", a: "Yes. A photo taken front-on at eye level, in window light in front of a plain wall, is enough. If the image is too dark, blurry or the face is partly covered the tool warns you." },
         { q: "Can I get several sizes from one photo?", a: "Yes. Tick several sizes and download them together as one ZIP. If you pick a 10×15 cm or A4 print sheet, copies are laid out at true size." },
-        { q: "Is it free?", a: "Like the other AI tools it is for Pro members, and it is opening very soon." },
+        { q: "Is it free?", a: "Like the other AI tools it will be for paid plans (Starter and above), and it is opening very soon." },
       ],
     ),
   },
@@ -1785,17 +1785,17 @@ export const TOOL_SEO = {
       "CV Oluştur — Hazır Şablonlar, PDF İndir",
       "30 hazır CV şablonu (Europass tarzı dahil): bilgilerinizi girin, CV canlı oluşsun. ATS röntgeni, ilan eşleştirici, Word/PDF indirme ve yapay zekâ asistanı.",
       "Online CV Oluşturun — Canlı Önizlemeli Hazır Şablonlar",
-      "Bir şablon seçin, sağdaki forma bilgilerinizi yazın; CV'niz solda anında şekillensin. Adınızı yazdığınız an CV'nin üzerinde görürsünüz. Fotoğraf ekleyebilir, rengi ve yazı boyutunu değiştirebilir, Türkçe ya da İngilizce başlıklar seçebilirsiniz. Boş bıraktığınız bölümler önizlemede soluk görünür ama indirdiğiniz PDF'e hiç eklenmez; böylece \"Referanslar\" gibi başlıklar boş kalmaz. PDF'teki yazılar seçilebilir gerçek metindir, başvuru sistemleri (ATS) okuyabilir. Bilgileriniz yalnızca tarayıcınızda işlenir. Dört şablon ücretsiz üyelikle kullanılır; diğer şablonlar Pro üyelere özeldir. Toplam 30 şablon arasında tek sütunlu, kenar çubuklu, bantlı, zaman çizgili ve Europass tarzı tarih sütunlu düzenler vardır. Analiz sekmesi tutarlılık hatalarını, zayıf ifadeleri ve iş ilanındaki eksik anahtar kelimeleri gösterir; ATS röntgeni PDF'inizin başvuru sistemlerince nasıl okunduğunu denetler. Tek sayfaya sığdır, Word ve düz metin olarak indirme ve fotoğrafı yapay zekâ ile CV'ye uygun hazırlama da araçta yer alır. İndirdiğiniz PDF'i daha sonra geri yükleyip kaldığınız yerden düzenleyebilirsiniz. Yapay Zekâ sekmesi (Pro) özet ve madde önerir, CV'yi ilana göre uyarlar, ön yazı hazırlar ve eski CV'nizi içe aktarır. İsterseniz boş şablonu indirip kendiniz de doldurabilirsiniz.",
+      "Bir şablon seçin, sağdaki forma bilgilerinizi yazın; CV'niz solda anında şekillensin. Adınızı yazdığınız an CV'nin üzerinde görürsünüz. Fotoğraf ekleyebilir, rengi ve yazı boyutunu değiştirebilir, Türkçe ya da İngilizce başlıklar seçebilirsiniz. Boş bıraktığınız bölümler önizlemede soluk görünür ama indirdiğiniz PDF'e hiç eklenmez; böylece \"Referanslar\" gibi başlıklar boş kalmaz. PDF'teki yazılar seçilebilir gerçek metindir, başvuru sistemleri (ATS) okuyabilir. Bilgileriniz yalnızca tarayıcınızda işlenir. Dört şablon ücretsiz üyelikle kullanılır; diğer şablonlar Pro üyelere özeldir. Toplam 30 şablon arasında tek sütunlu, kenar çubuklu, bantlı, zaman çizgili ve Europass tarzı tarih sütunlu düzenler vardır. Analiz sekmesi tutarlılık hatalarını, zayıf ifadeleri ve iş ilanındaki eksik anahtar kelimeleri gösterir; ATS röntgeni PDF'inizin başvuru sistemlerince nasıl okunduğunu denetler. Tek sayfaya sığdır, Word ve düz metin olarak indirme ve fotoğrafı yapay zekâ ile CV'ye uygun hazırlama da araçta yer alır. İndirdiğiniz PDF'i daha sonra geri yükleyip kaldığınız yerden düzenleyebilirsiniz. Yapay Zekâ sekmesi (ücretli plan) özet ve madde önerir, CV'yi ilana göre uyarlar, ön yazı hazırlar ve eski CV'nizi içe aktarır. İsterseniz boş şablonu indirip kendiniz de doldurabilirsiniz.",
       ["cv oluşturma", "online cv hazırlama", "ücretsiz cv şablonu", "cv örnekleri", "ats uyumlu cv", "cv şablonu indir", "özgeçmiş hazırlama", "cv maker türkçe", "europass cv", "ön yazı hazırlama", "cv word indir", "cv ats kontrolü"],
       [
-        { q: "CV oluşturmak ücretsiz mi?", a: "Ücretsiz üyelikle dört şablonu sınırsız kullanabilirsiniz. Diğer şablonlar Pro üyelere özeldir; ücretsiz kullanıcılar bu şablonları örnek içerikle, soluk önizlemede görür." },
+        { q: "CV oluşturmak ücretsiz mi?", a: "Ücretsiz üyelikle dört şablonu sınırsız kullanabilirsiniz. Diğer şablonlar ücretli planlara (ya da CV Geçişi'ne) özeldir; ücretsiz kullanıcılar bu şablonları örnek içerikle, soluk önizlemede görür." },
         { q: "Boş bıraktığım alanlar CV'de görünür mü?", a: "Hayır. Önizlemede boş alanlar soluk yer tutucu olarak görünür ki neyi doldurabileceğinizi bilin; ancak PDF'e boş alan ya da boş bölüm eklenmez. \"PDF görünümü\"ne geçerek sonucu önceden görebilirsiniz." },
         { q: "CV'me fotoğraf ekleyebilir miyim?", a: "Evet. Fotoğraf yükleyip sürükleyerek konumlandırır, yakınlaştırırsınız. İsterseniz fotoğrafsız CV de oluşturabilirsiniz. Fotoğrafı CV'ye uygun hazırlamak için AI Fotoğraf Stüdyosu'nu kullanabilirsiniz." },
         { q: "CV'm başvuru sistemlerine (ATS) uygun mu?", a: "PDF'teki yazılar resim değil gerçek metindir; Türkçe karakterler yazı tipine gömülüdür. Analiz sekmesindeki ATS röntgeni PDF'inizi gerçekten okuyup adınızın ilk satırda olup olmadığını, e-posta ve telefonun tanınıp tanınmadığını, başlıkların anlaşılıp anlaşılmadığını ve sayfanın sütunlu olup olmadığını gösterir. En sade yerleşim için Sade şablonunu öneririz; sütunlu şablonlarda röntgen sizi uyarır." },
-        { q: "CV'mi iş ilanına göre nasıl uyarlarım?", a: "Analiz sekmesine ilan metnini yapıştırın; ilandaki anahtar kelimelerden hangilerinin CV'nizde geçtiğini, hangilerinin eksik olduğunu görürsünüz (cihazınızda çalışır). Yapay Zekâ sekmesindeki \"İlana göre uyarla\" (Pro) CV'nizin ayrı bir kopyasını düzenler; özgün CV bozulmaz ve CV'nizde olmayan rakam ya da bilgi uydurulmaz." },
+        { q: "CV'mi iş ilanına göre nasıl uyarlarım?", a: "Analiz sekmesine ilan metnini yapıştırın; ilandaki anahtar kelimelerden hangilerinin CV'nizde geçtiğini, hangilerinin eksik olduğunu görürsünüz (cihazınızda çalışır). Yapay Zekâ sekmesindeki \"İlana göre uyarla\" (ücretli plan) CV'nizin ayrı bir kopyasını düzenler; özgün CV bozulmaz ve CV'nizde olmayan rakam ya da bilgi uydurulmaz." },
         { q: "Europass tarzı CV var mı?", a: "Evet. Tarihlerin solda, ayrıntıların sağda durduğu üç şablon vardır: Europass Tarzı, Tarih Sütunlu Serif ve Tarih Sütunlu Petrol. Bunlar resmî Europass dosyası üretmez; ondan esinlenen bir düzendir." },
-        { q: "Ön yazı hazırlayabilir miyim?", a: "Evet. Yapay Zekâ sekmesinde (Pro) ilan, şirket ve pozisyonu girip ton seçerek taslak alırsınız; metni düzenleyip CV şablonunuzla aynı tasarımda PDF olarak indirirsiniz. Taslağı göndermeden önce kontrol etmelisiniz." },
-        { q: "Word olarak indirebilir miyim? Eski CV'mi içe aktarabilir miyim?", a: "CV'nizi PDF, Word (.docx) ve düz metin (.txt) olarak indirebilirsiniz. Eski CV'nizi (PDF, Word veya metin) Yapay Zekâ sekmesinden içe aktarabilirsiniz (Pro); taranmış PDF'lerde metin cihazınızda OCR ile okunur ve CV yeni bir kayıt olarak eklenir." },
+        { q: "Ön yazı hazırlayabilir miyim?", a: "Evet. Yapay Zekâ sekmesinde (ücretli plan) ilan, şirket ve pozisyonu girip ton seçerek taslak alırsınız; metni düzenleyip CV şablonunuzla aynı tasarımda PDF olarak indirirsiniz. Taslağı göndermeden önce kontrol etmelisiniz." },
+        { q: "Word olarak indirebilir miyim? Eski CV'mi içe aktarabilir miyim?", a: "CV'nizi PDF, Word (.docx) ve düz metin (.txt) olarak indirebilirsiniz. Eski CV'nizi (PDF, Word veya metin) Yapay Zekâ sekmesinden içe aktarabilirsiniz (ücretli plan); taranmış PDF'lerde metin cihazınızda OCR ile okunur ve CV yeni bir kayıt olarak eklenir." },
         { q: "Fotoğrafımı CV için nasıl hazırlarım?", a: "Fotoğraf yükledikten sonra \"AI ile hazırla\" düğmesi arka planı değiştirir, yüzü şablonun fotoğraf alanına göre kadrajlar ve ışığı dengeler. İşlem cihazınızda yapılır; fotoğraf sunucuya gönderilmez." },
         { q: "Bilgilerim sunucuya gönderiliyor mu?", a: "Hayır. CV'niz tarayıcınızda hazırlanır; sunucumuza gönderilmez ve hiçbir yerde saklanmaz. Hazır olunca PDF'i indirirsiniz; aynı PDF'i sonra geri yükleyip düzenlemeye devam edebilirsiniz." },
         { q: "CV kaç sayfa olur?", a: "İçeriğe göre kendiliğinden sayfalanır. Bir deneyim kalemi ya da başlık sayfa sonunda ikiye bölünmez; sonraki sayfaya taşınır." },
@@ -1811,13 +1811,13 @@ export const TOOL_SEO = {
       ["resume builder", "cv builder online", "ats resume checker", "free resume templates", "resume keyword matcher", "one page resume", "resume pdf download", "resume to word", "europass style cv", "job ad keyword check", "private resume builder", "resume maker no upload"],
       [
         { q: "What does the ATS X-ray actually check?", a: "It reads your exported PDF back as plain text, the way a hiring system would, and reports four things: whether your name is the first line, whether your email and phone number are recognised, whether your section headings are understood, and whether the page is multi-column. Multi-column templates trigger a warning; the Plain template gives the simplest reading order." },
-        { q: "How do I match my resume to a specific job posting?", a: "Paste the ad into the Analysis tab. You get a list of the ad's keywords that already appear in your resume and those that do not, and the comparison runs on your device. In the AI tab (Pro), \"Tailor to a job ad\" works on a separate copy, so your original stays intact and no numbers or facts that are not in your resume are invented." },
-        { q: "Do I have to pay to download?", a: "No payment is needed for the four templates included with a free account. The other templates are Pro; free users can open them faded with sample content, but not export them." },
+        { q: "How do I match my resume to a specific job posting?", a: "Paste the ad into the Analysis tab. You get a list of the ad's keywords that already appear in your resume and those that do not, and the comparison runs on your device. In the AI tab (paid plan), \"Tailor to a job ad\" works on a separate copy, so your original stays intact and no numbers or facts that are not in your resume are invented." },
+        { q: "Do I have to pay to download?", a: "No payment is needed for the four templates included with a free account. The other templates need a paid plan or a CV pass; free users can open them faded with sample content, but not export them." },
         { q: "Why are some sections missing from my PDF?", a: "On purpose. Empty fields show as faded placeholders in the preview so you can see what is available, but the PDF leaves out any empty field or section. Switch to PDF view to preview the exact result." },
         { q: "Should I put a photo on my resume?", a: "That depends on the country and the employer, and it is optional here. You can drag and zoom a photo into place or leave it out entirely. If you add one, the AI Photo Studio can prepare it for the template's photo slot." },
-        { q: "Can I get a Word file or reuse an older resume?", a: "You can export PDF, Word (.docx) and plain text. To start from an old resume, import a PDF, Word or text file in the AI tab (Pro); scanned PDFs are read with on-device OCR, and the result is saved as a new entry rather than overwriting anything." },
+        { q: "Can I get a Word file or reuse an older resume?", a: "You can export PDF, Word (.docx) and plain text. To start from an old resume, import a PDF, Word or text file in the AI tab (paid plan); scanned PDFs are read with on-device OCR, and the result is saved as a new entry rather than overwriting anything." },
         { q: "Is there a Europass-like layout?", a: "Three templates place dates in a left column with details on the right: Europass Style, Dated Serif and Dated Teal. They imitate the look, not the official Europass file format." },
-        { q: "Can it write a cover letter?", a: "In the AI tab (Pro) you enter the posting, the company and the role, choose a tone and receive a draft. Edit it and download it as a PDF using the same design as your resume. Always review the draft before sending it." },
+        { q: "Can it write a cover letter?", a: "In the AI tab (paid plan) you enter the posting, the company and the role, choose a tone and receive a draft. Edit it and download it as a PDF using the same design as your resume. Always review the draft before sending it." },
         { q: "Where is my data stored?", a: "The resume is assembled in your browser and the draft lives only on this device; nothing is sent to our servers. The AI photo preparation also runs on your device." },
         { q: "How many pages will my resume be?", a: "Pages are added as needed. A job entry or heading is never cut in half at a page break; it moves to the next page. Use Fit to one page if you want a single sheet." },
         { q: "Can I build a resume in English if I am in Turkey, or the reverse?", a: "Yes. Choose the document language under Look & language: section headings and date formats follow it. The text you type can be in any language, and Turkish characters are embedded in the fonts." },
