@@ -7,11 +7,8 @@
 
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
-export const YATAY_EN_SLUGS = {
-  "pdf-yatay-yapma-dikey-pdf-yatay-sayfa": "make-pdf-landscape-without-rotating",
-  "dikey-sayfada-kucuk-kalan-tablo-yatay-pdf": "wide-table-tiny-in-portrait-pdf",
-  "dikey-yatay-karisik-pdf-sayfa-yonu": "fix-mixed-orientation-pdf-pages",
-};
+import { YATAY_EN_SLUGS } from "./blogSlugTables.mjs";
+export { YATAY_EN_SLUGS };
 
 export const YATAY_POSTS = [
   post(

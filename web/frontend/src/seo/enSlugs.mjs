@@ -1,8 +1,8 @@
-import { CV_PROFESSION_EN_SLUGS } from "../blog/blogContentCv3.mjs";
-import { QR_TOC_EN_SLUGS } from "../blog/blogContentQrToc.mjs";
-import { TIFF_EN_SLUGS } from "../blog/blogContentTiff.mjs";
-import { YATAY_EN_SLUGS } from "../blog/blogContentYatay.mjs";
-import { PDF_HEDEF_EN_SLUGS } from "../blog/blogContentPdfHedef.mjs";
+import { CV_PROFESSION_EN_SLUGS } from "../blog/blogSlugTables.mjs";
+import { QR_TOC_EN_SLUGS } from "../blog/blogSlugTables.mjs";
+import { TIFF_EN_SLUGS } from "../blog/blogSlugTables.mjs";
+import { YATAY_EN_SLUGS } from "../blog/blogSlugTables.mjs";
+import { PDF_HEDEF_EN_SLUGS } from "../blog/blogSlugTables.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 //  İNGİLİZCE URL SLUG'LARI — TEK GERÇEK KAYNAK
 // ─────────────────────────────────────────────────────────────────────────────

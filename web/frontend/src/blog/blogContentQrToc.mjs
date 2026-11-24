@@ -6,11 +6,8 @@
 
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
-export const QR_TOC_EN_SLUGS = {
-  "pdf-ye-qr-kod-ekleme-rehberi": "add-qr-code-to-pdf-guide",
-  "kartvizit-qr-kod-vcard-nasil-yapilir": "business-card-vcard-qr-code",
-  "dava-dosyasi-ihale-icindekiler-yer-imi": "case-file-tender-table-of-contents-bookmarks",
-};
+import { QR_TOC_EN_SLUGS } from "./blogSlugTables.mjs";
+export { QR_TOC_EN_SLUGS };
 
 export const QR_TOC_POSTS = [
   post(
