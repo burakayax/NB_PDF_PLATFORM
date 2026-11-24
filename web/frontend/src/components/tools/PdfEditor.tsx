@@ -497,7 +497,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [selected, setSelected] = useState<string | null>(null);
   const [addMode, setAddMode] = useState(false);
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
-  const [drawColor, setDrawColor] = useState("#111827");
+  const [drawColor, setDrawColor] = useState("#000000");
   const [drawWidth, setDrawWidth] = useState(2);
   const [drawFillOn, setDrawFillOn] = useState(false);
   const [drawFillColor, setDrawFillColor] = useState("#fde68a");
@@ -2028,7 +2028,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <span key={k} className="relative">
                   <button type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
                     onClick={() => { if (k === "arrow" && selShapeTool === "arrow" && drawTool !== "arrow") { setArrowPick((v) => !v); return; } setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
-                    className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
+                    className={`inline-flex h-7 w-6 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
                     <Ico className="h-3.5 w-3.5" />
                   </button>
                   {k === "arrow" && (drawTool === "arrow" || selShapeTool === "arrow") && arrowPick && (
@@ -2040,6 +2040,12 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                         </button>
                       ))}
                     </div>
+                  )}
+                  {k === "table" && (drawTool === "table" || selShapeTool === "table") && !tablePick && (
+                    <button type="button" onClick={() => { setTablePick(true); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
+                      className="absolute left-0 top-full z-[200] mt-1.5 inline-flex h-7 items-center whitespace-nowrap rounded-lg border border-white/15 bg-slate-900 px-2 text-[12px] font-semibold tabular-nums text-slate-100 shadow-lg hover:bg-slate-800">
+                      {tableRows} × {tableCols}
+                    </button>
                   )}
                   {k === "table" && (drawTool === "table" || selShapeTool === "table") && tablePick && (
                     <div className="absolute left-0 top-full z-[200] mt-1.5 rounded-xl border border-white/15 bg-slate-900 p-2.5 shadow-2xl" onMouseLeave={() => setTableHov(null)}>
@@ -2056,22 +2062,29 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                   )}
                 </span>
               ))}
-              <input type="color" value={drawColor} onChange={(e) => { setDrawColor(e.target.value); restyleSel({ color: e.target.value }); }} title={tr ? "Çizgi rengi" : "Line color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />
               <select value={drawWidth} onChange={(e) => { const w = Number(e.target.value); setDrawWidth(w); restyleSel({ width: w }); }} title={tr ? "Çizgi kalınlığı" : "Line width"} className="h-7 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100 [color-scheme:dark]">
                 {[1, 2, 3, 5, 8].map((w) => <option key={w} value={w} className="bg-slate-900">{w} pt</option>)}
               </select>
-              <label className="flex items-center gap-1 text-[11px] text-slate-300" title={tr ? "İçini boya" : "Fill"}>
-                <input type="checkbox" checked={drawFillOn} onChange={(e) => { setDrawFillOn(e.target.checked); restyleSel({ fill: e.target.checked ? drawFillColor : null }); }} />{tr ? "Dolgu" : "Fill"}
-              </label>
-              {drawFillOn && <input type="color" value={drawFillColor} onChange={(e) => { setDrawFillColor(e.target.value); restyleSel({ fill: e.target.value }); }} title={tr ? "Dolgu rengi" : "Fill color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />}
-              {(drawTool === "table" || selShapeTool === "table") && (
-                <span className="relative">
-                  <button type="button" onClick={() => { setTablePick((v) => !v); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
-                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-2 text-[12px] font-semibold tabular-nums text-slate-100 hover:bg-slate-800">
-                    {tableRows} × {tableCols}
-                  </button>
-                </span>
-              )}
+              {/* KENAR ve DOLGU rengi: hazır renk kutuları + özel renk. Varsayılan: kenar siyah, dolgu boş. */}
+              <span className="flex items-center gap-1" title={tr ? "Kenar (çizgi) rengi" : "Border (line) color"}>
+                <span className="text-[11px] font-semibold text-slate-400">{tr ? "Kenar" : "Border"}</span>
+                {["#000000", "#dc2626", "#2563eb", "#16a34a"].map((c) => (
+                  <button key={c} type="button" aria-label={c} title={c} onClick={() => { setDrawColor(c); restyleSel({ color: c }); }}
+                    className={`h-3.5 w-3.5 rounded-[4px] border ${drawColor.toLowerCase() === c ? "border-white ring-2 ring-cyan-300" : "border-white/30"}`} style={{ backgroundColor: c }} />
+                ))}
+                <input type="color" value={drawColor} onChange={(e) => { setDrawColor(e.target.value); restyleSel({ color: e.target.value }); }} title={tr ? "Özel kenar rengi" : "Custom border color"} className="h-4 w-4 cursor-pointer rounded border border-white/20 bg-transparent p-0" />
+              </span>
+              <span className="flex items-center gap-1" title={tr ? "Dolgu (iç) rengi" : "Fill color"}>
+                <span className="text-[11px] font-semibold text-slate-400">{tr ? "Dolgu" : "Fill"}</span>
+                <button type="button" aria-label={tr ? "Dolgu yok" : "No fill"} title={tr ? "Dolgu yok" : "No fill"} onClick={() => { setDrawFillOn(false); restyleSel({ fill: null }); }}
+                  className={`h-3.5 w-3.5 rounded-[4px] border ${!drawFillOn ? "border-white ring-2 ring-cyan-300" : "border-white/30"}`}
+                  style={{ background: "linear-gradient(to top right, transparent 44%, #ef4444 44%, #ef4444 56%, transparent 56%), #ffffff" }} />
+                {["#fde68a", "#fecaca", "#bfdbfe", "#bbf7d0"].map((c) => (
+                  <button key={c} type="button" aria-label={c} title={c} onClick={() => { setDrawFillOn(true); setDrawFillColor(c); restyleSel({ fill: c }); }}
+                    className={`h-3.5 w-3.5 rounded-[4px] border ${drawFillOn && drawFillColor.toLowerCase() === c ? "border-white ring-2 ring-cyan-300" : "border-white/30"}`} style={{ backgroundColor: c }} />
+                ))}
+                <input type="color" value={drawFillColor} onChange={(e) => { setDrawFillOn(true); setDrawFillColor(e.target.value); restyleSel({ fill: e.target.value }); }} title={tr ? "Özel dolgu rengi" : "Custom fill color"} className="h-4 w-4 cursor-pointer rounded border border-white/20 bg-transparent p-0" />
+              </span>
             </div>
 
             {/* Biçimlendirme araçları HER ZAMAN görünür; metin seçili değilken PASİF (soluk). */}
