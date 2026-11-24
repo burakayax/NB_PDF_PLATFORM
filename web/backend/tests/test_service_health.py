@@ -62,7 +62,7 @@ def test_no_secret_means_no_call(monkeypatch):
 
 def test_heartbeat_body_carries_boot_id_and_inflight_paths_only():
     service_health._inflight.clear()
-    h = service_health.inflight_start("/api/pdf-to-word/0123456789abcdef0123456789abcdef", 48_000)
+    h = service_health.inflight_start("/api/pdf-to-word/0123456789abcdef0123456789abcdef", 48_000, "tok123")
     try:
         body = service_health._heartbeat_body()
     finally:
@@ -70,7 +70,7 @@ def test_heartbeat_body_carries_boot_id_and_inflight_paths_only():
     assert body["bootId"] == service_health.BOOT_ID
     assert body["inflight"][0]["tool"] == "/api/pdf-to-word/:id"
     assert body["inflight"][0]["sizeKb"] == 48_000
-    assert set(body["inflight"][0]) == {"tool", "ageSec", "sizeKb"}
+    assert set(body["inflight"][0]) == {"tool", "ageSec", "sizeKb", "token"}
     assert service_health._inflight == {}
 
 

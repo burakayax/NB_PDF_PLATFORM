@@ -256,7 +256,7 @@ async def track_tool_calls(request: Request, call_next):
         size_kb = None
     auth = request.headers.get("authorization") or ""
     token = auth[7:].strip() if auth.lower().startswith("bearer ") else None
-    handle = service_health.inflight_start(path, size_kb)
+    handle = service_health.inflight_start(path, size_kb, token)
     started = time.monotonic()
     status = 500
     try:

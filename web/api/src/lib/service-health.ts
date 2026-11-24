@@ -1,4 +1,5 @@
 import { prisma } from "./prisma.js";
+import { verifyAccessToken } from "./jwt.js";
 
 /**
  * HİZMET SAĞLIK KAYDI — kendi kesinti/hata kaydımız (dış izleyiciden bağımsız).
@@ -100,10 +101,11 @@ export type PdfHeartbeatExtra = {
   bootId?: string;
   rssMb?: number;
   /** O anda sürmekte olan işlemler (yol, yaş sn, boyut KB). Süreç ölürse "neyin ortasında öldü" bilgisi bundan gelir. */
-  inflight?: Array<{ tool: string; ageSec: number; sizeKb?: number | null }>;
+  inflight?: Array<{ tool: string; ageSec: number; sizeKb?: number | null; token?: string }>;
 };
 let lastBootId: string | null = null;
-let lastInflight: NonNullable<PdfHeartbeatExtra["inflight"]> = [];
+/** Son kalp atışındaki sürmekte olan işlemler; oturum anahtarı BURADA doğrulanıp yalnız kullanıcı kimliğine çevrilir, saklanmaz. */
+let lastInflight: Array<{ tool: string; ageSec: number; sizeKb: number | null; userId: string | null }> = [];
 let lastRssMb: number | null = null;
 
 /** Son kalp atışındaki bellek kullanımı (MB); hiç gelmediyse null. */
@@ -119,13 +121,45 @@ export async function notePdfHeartbeat(ok = true, latencyMs?: number, now = Date
   if (extra?.bootId) {
     if (lastBootId !== null && lastBootId !== extra.bootId) {
       const ne = lastInflight.length
-        ? ` Kapanmadan önceki son kalp atışında sürmekte olan işlemler: ${lastInflight.map((i) => `${i.tool} (${i.ageSec} sn${i.sizeKb ? `, ${i.sizeKb} KB` : ""})`).join("; ")}.`
+        ? ` Kapanmadan önceki son kalp atışında sürmekte olan işlemler: ${lastInflight.map((i) => `${i.tool} (${i.userId ? "üye" : "misafir"}, ${i.ageSec} sn${i.sizeKb ? `, ${i.sizeKb} KB` : ""})`).join("; ")}.`
         : " Kapanmadan önceki son kalp atışında sürmekte olan işlem yoktu.";
       await recordRestart("pdf", `PDF API yeniden başladı (olası bellek aşımı).${ne}`.slice(0, 300), now);
+      // Yarıda kalan işlemleri araç kaydına da yaz: panelde araç, kişi (e-posta), boyut ve "yarıda kaldı" nedeniyle görünsün.
+      for (const i of lastInflight) {
+        try {
+          await prisma.toolCallLog.create({
+            data: {
+              at: new Date(now),
+              tool: i.tool,
+              userId: i.userId,
+              guest: i.userId === null,
+              status: 502,
+              ok: false,
+              reason: "Sunucu yeniden başladı; işlem yarıda kaldı (olası bellek aşımı)",
+              durationMs: i.ageSec * 1000,
+              sizeKb: i.sizeKb,
+            },
+          });
+        } catch {
+          /* kayıt asla işi bozmaz */
+        }
+      }
     }
     lastBootId = extra.bootId;
   }
-  if (extra?.inflight) lastInflight = extra.inflight.slice(0, 10);
+  if (extra?.inflight) {
+    lastInflight = extra.inflight.slice(0, 10).map((i) => {
+      let userId: string | null = null;
+      if (i.token) {
+        try {
+          userId = verifyAccessToken(i.token).sub ?? null;
+        } catch {
+          userId = null;
+        }
+      }
+      return { tool: i.tool, ageSec: i.ageSec, sizeKb: i.sizeKb ?? null, userId };
+    });
+  }
 }
 
 /** Yeniden başlatma olayını yazar (kısa kesintiler çalışma oranında görünmediği için ayrı kayıt). */

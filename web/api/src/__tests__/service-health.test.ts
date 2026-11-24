@@ -182,13 +182,19 @@ describe("araç çağrısı kaydı ve yeniden başlatma", () => {
   });
 
   it("kalp atışında süreç kimliği değişince 'restart' kaydı, sürmekte olan işlemlerle birlikte yazılır", async () => {
-    await notePdfHeartbeat(true, undefined, T0, { bootId: "A", inflight: [{ tool: "/api/pdf-to-word", ageSec: 40, sizeKb: 48000 }] });
+    await notePdfHeartbeat(true, undefined, T0, { bootId: "A", inflight: [{ tool: "/api/pdf-to-word", ageSec: 40, sizeKb: 48000, token: "good" }] });
     m.create.mockClear();
+    m.toolCreate.mockClear();
     await notePdfHeartbeat(true, undefined, T0 + 120_000, { bootId: "B" });
     const kinds = m.create.mock.calls.map((c) => (c as unknown as [{ data: { kind: string; detail?: string } }])[0].data);
     const restart = kinds.find((k) => k.kind === "restart");
     expect(restart?.detail).toContain("/api/pdf-to-word");
     expect(restart?.detail).toContain("48000 KB");
+    expect(restart?.detail).toContain("üye");
+    // Yarıda kalan işlem, kullanıcı kimliğiyle araç kaydına da yazılır (anahtar saklanmaz).
+    const row = (m.toolCreate.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data;
+    expect(row).toMatchObject({ tool: "/api/pdf-to-word", userId: "user-1", guest: false, ok: false, status: 502, sizeKb: 48000, durationMs: 40000 });
+    expect(JSON.stringify(row)).not.toContain("good");
   });
 
   it("aynı süreç kimliğinde yeniden başlatma kaydı yazılmaz", async () => {

@@ -68,20 +68,21 @@ async def report_http_failure(path: str, status: int) -> None:
 # ── Sürmekte olan işlemler + araç çağrısı kaydı ───────────────────────────────────────────────
 # Dosya içeriği/adı tutulmaz; yalnız yol (kimlikler maskeli), boyut ve süre. Süreç bellek aşımıyla öldürülürse
 # "o sırada hangi işlem sürüyordu" bilgisi son kalp atışından okunur.
-_inflight: dict[int, tuple[str, float, int | None]] = {}
+_inflight: dict[int, tuple[str, float, int | None, str | None]] = {}
 _inflight_seq = 0
 _last_early_beat = 0.0
 _tool_post_sem: asyncio.Semaphore | None = None
-_EARLY_BEAT_MIN_KB = 5 * 1024  # 5 MB ve üstü yüklemelerde kalp atışı hemen gönderilir (OOM'dan önce iz kalsın)
+_EARLY_BEAT_MIN_KB = 0  # Her araç isteğinde kalp atışı hemen gönderilir (OOM'dan önce iz kalsın); 2 sn'de bir sınırlı
+_EARLY_BEAT_THROTTLE_SEC = 2.0
 
 
-def inflight_start(path: str, size_kb: int | None) -> int:
+def inflight_start(path: str, size_kb: int | None, token: str | None = None) -> int:
     global _inflight_seq
     _inflight_seq += 1
-    _inflight[_inflight_seq] = (normalize_path(path), time.monotonic(), size_kb)
+    _inflight[_inflight_seq] = (normalize_path(path), time.monotonic(), size_kb, token[:4000] if token else None)
     if len(_inflight) > 200:  # bellek koruması
         _inflight.pop(next(iter(_inflight)), None)
-    if size_kb is not None and size_kb >= _EARLY_BEAT_MIN_KB:
+    if (size_kb or 0) >= _EARLY_BEAT_MIN_KB:
         _schedule_early_beat()
     return _inflight_seq
 
@@ -93,7 +94,7 @@ def inflight_end(handle: int) -> None:
 def _schedule_early_beat() -> None:
     global _last_early_beat
     now = time.monotonic()
-    if now - _last_early_beat < 5.0:
+    if now - _last_early_beat < _EARLY_BEAT_THROTTLE_SEC:
         return
     _last_early_beat = now
     try:
@@ -116,10 +117,12 @@ def _rss_mb() -> float | None:
 
 def _heartbeat_body() -> dict[str, Any]:
     now = time.monotonic()
-    inflight = [
-        {"tool": t, "ageSec": int(now - started), "sizeKb": kb}
-        for (t, started, kb) in sorted(_inflight.values(), key=lambda v: v[1])[:10]
-    ]
+    inflight = []
+    for (t, started, kb, tok) in sorted(_inflight.values(), key=lambda v: v[1])[:10]:
+        item: dict[str, Any] = {"tool": t, "ageSec": int(now - started), "sizeKb": kb}
+        if tok:
+            item["token"] = tok  # Node'da doğrulanıp yalnız kullanıcı kimliği çıkarılır; saklanmaz
+        inflight.append(item)
     body: dict[str, Any] = {"kind": "heartbeat", "component": "pdf", "ok": True, "bootId": BOOT_ID, "inflight": inflight}
     rss = _rss_mb()
     if rss is not None:

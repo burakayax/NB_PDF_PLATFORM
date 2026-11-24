@@ -413,6 +413,7 @@ const serviceEventSchema = z.object({
         tool: z.string().max(200),
         ageSec: z.number().min(0).max(100_000),
         sizeKb: z.number().min(0).max(10_000_000).nullable().optional(),
+        token: z.string().max(4000).optional(),
       }),
     )
     .max(20)
@@ -439,7 +440,7 @@ export async function serviceEventController(request: Request, response: Respons
     await notePdfHeartbeat(body.ok !== false, body.latencyMs, Date.now(), {
       ...(body.bootId ? { bootId: body.bootId } : {}),
       ...(body.rssMb !== undefined ? { rssMb: body.rssMb } : {}),
-      ...(body.inflight ? { inflight: body.inflight.map((i) => ({ tool: i.tool, ageSec: i.ageSec, sizeKb: i.sizeKb ?? null })) } : {}),
+      ...(body.inflight ? { inflight: body.inflight.map((i) => ({ tool: i.tool, ageSec: i.ageSec, sizeKb: i.sizeKb ?? null, ...(i.token ? { token: i.token } : {}) })) } : {}),
     });
   } else if (body.kind === "tool_call") {
     if (body.path && body.status) {
