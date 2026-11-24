@@ -16,24 +16,20 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CookieNotice } from "../components/common/CookieNotice";
 
-// legalDocuments mock — gerçek uzun metni kullanmaya gerek yok
-vi.mock("../content/legal", () => ({
-  legalDocuments: {
+// cookieNoticeCopy mock — gerçek uzun metni kullanmaya gerek yok
+vi.mock("../content/cookieNoticeCopy.mjs", () => ({
+  cookieNoticeCopy: {
     tr: {
-      cookieNotice: {
-        title: "Çerez Bildirimi",
-        description: "Bu site çerez kullanır.",
-        accept: "Kabul Et",
-        learnMore: "Gizlilik politikası",
-      },
+      title: "Çerez Bildirimi",
+      description: "Bu site çerez kullanır.",
+      accept: "Kabul Et",
+      learnMore: "Gizlilik politikası",
     },
     en: {
-      cookieNotice: {
-        title: "Cookie Notice",
-        description: "This site uses cookies.",
-        accept: "Accept",
-        learnMore: "Privacy policy",
-      },
+      title: "Cookie Notice",
+      description: "This site uses cookies.",
+      accept: "Accept",
+      learnMore: "Privacy policy",
     },
   },
 }));
