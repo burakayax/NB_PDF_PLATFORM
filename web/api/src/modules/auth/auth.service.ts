@@ -591,6 +591,28 @@ export async function registerUser(
     where: { email: input.email },
   });
 
+  // Doğrulama e-postası ulaşmadığı için onaysız kalmış hesap: şifre/ad DEĞİŞMEDEN yeni doğrulama bağlantısı gönderilir.
+  // (Aynı adresle tekrar kayıt olmak "bağlantıyı tekrar gönder" işlevi görür; onaylı hesaplarda eski davranış: 409.)
+  if (existingUser && !existingUser.isVerified && existingUser.authProvider === "local" && !options?.skipEmailVerification) {
+    const rawToken = await createEmailVerificationToken(existingUser.id);
+    await prisma.user.update({ where: { id: existingUser.id }, data: { verificationToken: rawToken } });
+    try {
+      await sendVerificationEmail(existingUser, rawToken);
+    } catch (error) {
+      authLog.error("register: verification email resend failed (user kept)", {
+        userId: existingUser.id,
+        error: String(error),
+      });
+      throw new HttpError(503, "We could not send the verification email. Please try again in a few minutes.");
+    }
+    authLog.info("register: verification email re-sent to unverified user", { userId: existingUser.id });
+    return {
+      message: "Verification email sent. Please verify your email before signing in.",
+      verificationRequired: true,
+      user: toPublicUser(existingUser),
+    };
+  }
+
   if (existingUser) {
     authLog.warn("register rejected: email already exists", {
       email: input.email,
@@ -695,15 +717,16 @@ export async function registerUser(
       if (error instanceof Error) {
         logger.error("auth",error.stack);
       }
-      authLog.error("register: verification email failed, rolling back user", {
+      // Kullanıcı SİLİNMEZ: yönetim panelinde "E-posta onayı bekliyor" olarak görünür (kayıt kanıtı kalır) ve kişi
+      // aynı adresle tekrar kayıt olarak yeni doğrulama bağlantısı alabilir (yukarıdaki dal).
+      authLog.error("register: verification email failed (user kept as unverified)", {
         userId: user.id,
         email: user.email,
         error: String(error),
       });
-      await prisma.user.delete({ where: { id: user.id } });
       throw new HttpError(
         503,
-        "We could not send the verification email. Please try again later.",
+        "Your account was created, but we could not send the verification email. Please register again with the same email in a few minutes to receive a new link.",
       );
     }
   }

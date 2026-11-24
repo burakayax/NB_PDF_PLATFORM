@@ -45,7 +45,7 @@ function userStatus(
     return { label: "Kara liste", className: "bg-rose-500/20 text-rose-200 ring-rose-500/35" };
   }
   if (!u.isVerified) {
-    return { label: "Onaysız", className: "bg-amber-500/20 text-amber-100 ring-amber-500/35" };
+    return { label: "E-posta onayı bekliyor", className: "bg-amber-500/20 text-amber-100 ring-amber-500/35" };
   }
   if (u.plan === "FREE") {
     return { label: "Ücretsiz", className: "bg-slate-500/20 text-slate-200 ring-slate-500/35" };
@@ -438,6 +438,9 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
                         )}
                       </div>
                       <p className="truncate font-mono text-[11px] text-slate-400">{u.email}</p>
+                      <p className={`text-[10px] font-semibold ${u.isVerified ? "text-emerald-300" : "text-amber-300"}`}>
+                        {u.isVerified ? "✓ E-posta onaylandı" : "⏳ E-posta onayı bekliyor"}
+                      </p>
                       {ownerRow && (
                         <p className="truncate text-[10px] text-cyan-600">
                           ↳ {ownerRow.name || ownerRow.email}
