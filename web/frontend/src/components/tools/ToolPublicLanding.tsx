@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getToolSeo } from "../../seo/seoContent.mjs";
+import { getToolSeo, useToolSeoReady } from "../../seo/toolSeoRuntime";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolScore } from "../common/ToolScore";
 import type { Language } from "../../i18n/landing";
@@ -28,6 +28,7 @@ export function ToolPublicLanding({
   onLogin,
 }: ToolPublicLandingProps) {
   const tr = language === "tr";
+  useToolSeoReady(); // araç metinleri geç yüklenirse yeniden çiz
   const seo = getToolSeo(slug, language);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 

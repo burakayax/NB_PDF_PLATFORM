@@ -332,6 +332,11 @@ export default defineConfig(({ command, mode, isPreview }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            // Derleyici yardımcıları (ör. defineProperty) ana pakette de kullanılır; kuralsız bırakılınca
+            // 350 KB'lık pdfjs parçasının içine düşüp ana sayfaya pdfjs'i de yüklettiriyordu.
+            if (/@oxc-project[+/]runtime/.test(id)) {
+              return "oxc-helpers";
+            }
             if (id.includes("node_modules/pdfjs-dist")) {
               return "pdfjs";
             }

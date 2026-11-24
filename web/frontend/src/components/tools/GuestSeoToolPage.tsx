@@ -8,7 +8,8 @@ import {
   getRelatedToolLinks,
   getGuideSlugsForTool,
   getToolGuide,
-} from "../../seo/seoContent.mjs";
+  useToolSeoReady,
+} from "../../seo/toolSeoRuntime";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolScore } from "../common/ToolScore";
 import { SiteFooter } from "../common/SiteFooter";
@@ -46,6 +47,7 @@ export { ON_DEVICE_SEO_TOOLS };
 
 export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, wide, isAuthenticated, onOpenApp, userName, overlay }: Props) {
   const tr = language === "tr";
+  useToolSeoReady(); // araç metinleri geç yüklenirse yeniden çiz
   const seo = getToolSeo(slug, language);
   const guide = getToolGuide(slug, language) as {
     steps: Array<{ title: string; x: string }>;

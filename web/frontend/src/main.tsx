@@ -11,7 +11,8 @@ import { getCountryCode } from "./lib/geoCountry";
 import { NotFoundPage } from "./components/common/NotFoundPage";
 import { SignDocumentPage } from "./components/tools/SignDocumentPage";
 import { GoogleSignupPage } from "./components/auth/GoogleSignupPage";
-import { TOOL_SLUGS } from "./seo/seoContent.mjs";
+import { TOOL_SLUGS } from "./seo/seoLight.mjs";
+import { isLandingPath, loadToolSeo } from "./seo/toolSeoRuntime";
 import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/usePreferredLanguage";
 import { getSaasApiBase } from "./api/saasBase";
@@ -155,17 +156,35 @@ if (googleKayitSayfasi) {
     </React.StrictMode>,
   );
 } else {
-  kok.render(
-  <React.StrictMode>
-    <GlobalErrorBoundary>
-      <BrowserRouter>
-        <SettingsProvider>
-          <App />
-          <BackToTopButton />
-          <PwaPrompts />
-        </SettingsProvider>
-      </BrowserRouter>
-    </GlobalErrorBoundary>
-  </React.StrictMode>,
-  );
+  const uygulamayiCiz = () =>
+    kok.render(
+      <React.StrictMode>
+        <GlobalErrorBoundary>
+          <BrowserRouter>
+            <SettingsProvider>
+              <App />
+              <BackToTopButton />
+              <PwaPrompts />
+            </SettingsProvider>
+          </BrowserRouter>
+        </GlobalErrorBoundary>
+      </React.StrictMode>,
+    );
+
+  if (isLandingPath(window.location.pathname)) {
+    // Ana sayfa: ağır araç metinleri açılışı geciktirmesin; çizimden sonra arka planda, ya da ziyaretçi
+    // ilk etkileşimi yaptığında (hangisi önce) indirilir.
+    uygulamayiCiz();
+    const arkaPlandaYukle = () => void loadToolSeo().catch(() => undefined);
+    window.addEventListener("load", () => window.setTimeout(arkaPlandaYukle, 800), { once: true });
+    for (const olay of ["pointerdown", "keydown", "touchstart"] as const) {
+      window.addEventListener(olay, arkaPlandaYukle, { once: true, passive: true, capture: true });
+    }
+  } else {
+    // Araç sayfası / çalışma alanı: "bu araç var mı" kontrolleri boş veriyle çalışmasın diye önce veri gelir.
+    // Hazır HTML (ön-çizim) bu sırada görünmeye devam eder. İndirme başarısız olsa bile uygulama açılır.
+    void loadToolSeo()
+      .catch(() => undefined)
+      .then(uygulamayiCiz);
+  }
 }
