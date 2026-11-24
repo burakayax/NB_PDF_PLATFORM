@@ -28,6 +28,7 @@ import { CV_PROFESSION_CAROUSELS } from "./blogContentCv3.mjs";
 import { QR_TOC_CAROUSELS } from "./blogContentQrToc.mjs";
 import { TIFF_CAROUSELS } from "./blogContentTiff.mjs";
 import { YATAY_CAROUSELS } from "./blogContentYatay.mjs";
+import { PDF_HEDEF_CAROUSELS } from "./blogContentPdfHedef.mjs";
 
 export const CURATED_CAROUSELS = {
   ...COPY_1,
@@ -42,6 +43,7 @@ export const CURATED_CAROUSELS = {
   ...QR_TOC_CAROUSELS,
   ...TIFF_CAROUSELS,
   ...YATAY_CAROUSELS,
+  ...PDF_HEDEF_CAROUSELS,
 };
 
 /** @returns {{ hook: string, slides: Array<{title:string,text:string}> } | null} */
