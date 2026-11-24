@@ -76,7 +76,29 @@ type Added = { id: string; page: number; bbox: [number, number, number, number];
 // Kullanıcının eklediği resim — bbox (PDF pt, döndürülmemiş), aspect (w/h), açı (derece).
 // Çizim araçları: şekil/serbest çizim/tablo ŞEFFAF PNG olarak üretilir ve «eklenen görsel» gibi taşınır/boyutlanır/silinir.
 type DrawTool = "rect" | "square" | "ellipse" | "line" | "arrow" | "free" | "table";
-type DrawOpts = { color: string; width: number; fill: string | null; rows: number; cols: number };
+type ArrowStyle = "open" | "filled" | "double" | "dashed" | "dot";
+const ARROW_STYLES: { k: ArrowStyle; tr: string; en: string }[] = [
+  { k: "open", tr: "Düz ok", en: "Open arrow" },
+  { k: "filled", tr: "Dolu uçlu ok", en: "Filled arrow" },
+  { k: "double", tr: "Çift yönlü ok", en: "Double arrow" },
+  { k: "dashed", tr: "Kesikli ok", en: "Dashed arrow" },
+  { k: "dot", tr: "Noktadan başlayan ok", en: "Dot-start arrow" },
+];
+// Seçicideki küçük örnek çizim (40×16).
+function ArrowIcon({ style }: { style: ArrowStyle }) {
+  const head = (x: number, dir: 1 | -1, filled: boolean) => filled
+    ? <polygon points={`${x},8 ${x - 7 * dir},4 ${x - 7 * dir},12`} fill="currentColor" />
+    : <polyline points={`${x - 6 * dir},3.5 ${x},8 ${x - 6 * dir},12.5`} fill="none" />;
+  return (
+    <svg width="40" height="16" viewBox="0 0 40 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1={style === "double" ? 5 : 3} y1="8" x2={style === "double" ? 35 : 37} y2="8" strokeDasharray={style === "dashed" ? "4 3" : undefined} />
+      {head(37, 1, style === "filled")}
+      {style === "double" && head(3, -1, false)}
+      {style === "dot" && <circle cx="4" cy="8" r="2.6" fill="currentColor" />}
+    </svg>
+  );
+}
+type DrawOpts = { color: string; width: number; fill: string | null; rows: number; cols: number; arrow: ArrowStyle };
 type Pt = [number, number];
 // Fare noktalarından (sayfa pt) şeklin geometri kutusu; kare modunda kenarlar eşitlenir.
 function drawGeom(tool: DrawTool, pts: Pt[]): { x0: number; y0: number; x1: number; y1: number } {
@@ -94,7 +116,7 @@ function renderShapePng(tool: DrawTool, pts: Pt[], o: DrawOpts): { dataUrl: stri
   const g = drawGeom(tool, pts);
   const gw = g.x1 - g.x0, gh = g.y1 - g.y0;
   if (Math.max(gw, gh) < 3) return null; // tıklama = çizim sayılmaz
-  const pad = o.width / 2 + 1 + (tool === "arrow" ? Math.max(8, o.width * 4) * 0.5 : 0);
+  const pad = o.width / 2 + 1 + (tool === "arrow" ? Math.max(8, o.width * 4) * 0.5 + (o.arrow === "dot" ? o.width * 1.6 : 0) : 0);
   const bx0 = g.x0 - pad, by0 = g.y0 - pad, W = gw + pad * 2, H = gh + pad * 2;
   const k = Math.min(4, 4000 / Math.max(W, H));
   const cv = document.createElement("canvas");
@@ -120,13 +142,22 @@ function renderShapePng(tool: DrawTool, pts: Pt[], o: DrawOpts): { dataUrl: stri
   } else if (tool === "line" || tool === "arrow") {
     const a = pts[0], b = pts[pts.length - 1];
     const ax = X(a[0]), ay = Y(a[1]), bx = X(b[0]), by = Y(b[1]);
+    const dashed = tool === "arrow" && o.arrow === "dashed";
+    if (dashed) c.setLineDash([o.width * 3 * k, o.width * 2.5 * k]);
     c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+    c.setLineDash([]);
     if (tool === "arrow") {
       const ang = Math.atan2(by - ay, bx - ax), hl = Math.max(8, o.width * 4) * k;
-      c.beginPath();
-      c.moveTo(bx - hl * Math.cos(ang - Math.PI / 6), by - hl * Math.sin(ang - Math.PI / 6)); c.lineTo(bx, by);
-      c.lineTo(bx - hl * Math.cos(ang + Math.PI / 6), by - hl * Math.sin(ang + Math.PI / 6));
-      c.stroke();
+      const head = (tx: number, ty: number, a: number, filled: boolean) => {
+        c.beginPath();
+        c.moveTo(tx - hl * Math.cos(a - Math.PI / 6), ty - hl * Math.sin(a - Math.PI / 6)); c.lineTo(tx, ty);
+        c.lineTo(tx - hl * Math.cos(a + Math.PI / 6), ty - hl * Math.sin(a + Math.PI / 6));
+        if (filled) { c.closePath(); c.fillStyle = o.color; c.fill(); }
+        c.stroke();
+      };
+      head(bx, by, ang, o.arrow === "filled");
+      if (o.arrow === "double") head(ax, ay, ang + Math.PI, false);
+      if (o.arrow === "dot") { c.beginPath(); c.arc(ax, ay, Math.max(2, o.width * 1.6) * k, 0, Math.PI * 2); c.fillStyle = o.color; c.fill(); }
     }
   } else if (tool === "free") {
     c.beginPath(); c.moveTo(X(pts[0][0]), Y(pts[0][1]));
@@ -447,6 +478,8 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [drawFillColor, setDrawFillColor] = useState("#fde68a");
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
+  const [arrowStyle, setArrowStyle] = useState<ArrowStyle>("open");
+  const [arrowPick, setArrowPick] = useState(false);
   const [tablePick, setTablePick] = useState(false); // tablo boyutu seçici (aşağı açılır ızgara)
   const [tableHov, setTableHov] = useState<{ r: number; c: number } | null>(null);
   const [draft, setDraft] = useState<Pt[] | null>(null);
@@ -1078,7 +1111,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   }
 
   // Çizim katmanı: sürükleyerek çiz → bırakınca şeffaf PNG olarak sayfaya eklenir (seçili, taşınabilir).
-  const drawOpts = (): DrawOpts => ({ color: drawColor, width: drawWidth, fill: drawFillOn ? drawFillColor : null, rows: tableRows, cols: tableCols });
+  const drawOpts = (): DrawOpts => ({ color: drawColor, width: drawWidth, fill: drawFillOn ? drawFillColor : null, rows: tableRows, cols: tableCols, arrow: arrowStyle });
   function drawPt(e: React.PointerEvent): Pt {
     const b = drawLayerRef.current!.getBoundingClientRect();
     return [(e.clientX - b.left) / scale, (e.clientY - b.top) / scale];
@@ -1372,7 +1405,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         if (e.key === "x" || e.key === "X") deleteSelection();
         return;
       }
-      if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); setDrawTool(null); setDraft(null); setTablePick(false); return; }
+      if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); setDrawTool(null); setDraft(null); setTablePick(false); setArrowPick(false); return; }
       if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (editing) return;
       if (!selTargets().length) return;
@@ -1943,7 +1976,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 ["table", Table2, tr ? "Tablo" : "Table"],
               ] as [DrawTool, typeof Square, string][]).map(([k, Ico, label]) => (
                 <button key={k} type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
-                  onClick={() => { setTablePick(k === "table" && drawTool !== "table"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
+                  onClick={() => { setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
                   className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
                   <Ico className="h-3.5 w-3.5" />
                 </button>
@@ -1956,6 +1989,24 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <input type="checkbox" checked={drawFillOn} onChange={(e) => setDrawFillOn(e.target.checked)} />{tr ? "Dolgu" : "Fill"}
               </label>
               {drawFillOn && <input type="color" value={drawFillColor} onChange={(e) => setDrawFillColor(e.target.value)} title={tr ? "Dolgu rengi" : "Fill color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />}
+              {drawTool === "arrow" && (
+                <span className="relative">
+                  <button type="button" onClick={() => setArrowPick((v) => !v)} title={tr ? "Ok çeşidini seç" : "Choose arrow style"}
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-1.5 text-slate-100 hover:bg-slate-800">
+                    <ArrowIcon style={arrowStyle} /><span className="text-[10px] text-slate-400">▾</span>
+                  </button>
+                  {arrowPick && (
+                    <div className="absolute left-0 top-full z-[200] mt-1.5 w-64 whitespace-nowrap rounded-xl border border-white/15 bg-slate-900 p-1.5 shadow-2xl">
+                      {ARROW_STYLES.map((a) => (
+                        <button key={a.k} type="button" onClick={() => { setArrowStyle(a.k); setArrowPick(false); }}
+                          className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition hover:bg-white/[0.08] ${arrowStyle === a.k ? "bg-cyan-500/15 text-cyan-100" : "text-slate-200"}`}>
+                          <ArrowIcon style={a.k} />{tr ? a.tr : a.en}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </span>
+              )}
               {drawTool === "table" && (
                 <span className="relative">
                   <button type="button" onClick={() => { setTablePick((v) => !v); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
@@ -2121,7 +2172,11 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                             </g>
                           )}
                           {drawTool === "ellipse" && <ellipse cx={(x0 + x1) / 2} cy={(y0 + y1) / 2} rx={(x1 - x0) / 2} ry={(y1 - y0) / 2} {...common} />}
-                          {(drawTool === "line" || drawTool === "arrow") && <line x1={draft[0][0] * scale} y1={draft[0][1] * scale} x2={draft[draft.length - 1][0] * scale} y2={draft[draft.length - 1][1] * scale} {...common} />}
+                          {drawTool === "arrow" && (() => {
+                            const r = renderShapePng("arrow", draft, drawOpts());
+                            return r ? <image href={r.dataUrl} x={r.bbox[0] * scale} y={r.bbox[1] * scale} width={(r.bbox[2] - r.bbox[0]) * scale} height={(r.bbox[3] - r.bbox[1]) * scale} /> : null;
+                          })()}
+                          {drawTool === "line" && <line x1={draft[0][0] * scale} y1={draft[0][1] * scale} x2={draft[draft.length - 1][0] * scale} y2={draft[draft.length - 1][1] * scale} {...common} />}
                           {drawTool === "free" && <polyline points={draft.map((q) => `${q[0] * scale},${q[1] * scale}`).join(" ")} {...common} />}
                         </svg>
                       );
