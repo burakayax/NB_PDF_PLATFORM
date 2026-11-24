@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -235,6 +236,41 @@ async def report_server_errors(request: Request, call_next):
         except Exception:  # noqa: BLE001 — bildirim asla yanıtı bozmamalı
             pass
     return response
+
+
+_TOOL_CALL_SKIP_PREFIXES = ("/api/health", "/api/internal", "/api/auth")
+
+
+@app.middleware("http")
+async def track_tool_calls(request: Request, call_next):
+    """Her POST /api araç isteğini kaydeder: yol, durum, süre, boyut ve (Node'da doğrulanacak) oturum anahtarı.
+    Sürmekte olan işlemler kalp atışına eklenir (bellek aşımında hangi işlemin sürdüğü görünsün). İçerik/dosya adı tutulmaz."""
+    path = request.url.path
+    if request.method != "POST" or not path.startswith("/api/") or path.startswith(_TOOL_CALL_SKIP_PREFIXES):
+        return await call_next(request)
+    from app.core import service_health
+
+    try:
+        size_kb = int(request.headers.get("content-length", "")) // 1024
+    except ValueError:
+        size_kb = None
+    auth = request.headers.get("authorization") or ""
+    token = auth[7:].strip() if auth.lower().startswith("bearer ") else None
+    handle = service_health.inflight_start(path, size_kb)
+    started = time.monotonic()
+    status = 500
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        return response
+    finally:
+        service_health.inflight_end(handle)
+        try:
+            asyncio.create_task(
+                service_health.report_tool_call(path, status, (time.monotonic() - started) * 1000, size_kb, token)
+            )
+        except Exception:  # noqa: BLE001 — kayıt asla yanıtı bozmamalı
+            pass
 
 
 @app.middleware("http")
