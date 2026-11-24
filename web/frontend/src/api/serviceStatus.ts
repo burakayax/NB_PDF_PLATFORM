@@ -15,8 +15,10 @@ export type ComponentStatus = {
 export type ServiceStatus = {
   from: string;
   to: string;
-  components: { api: ComponentStatus; db: ComponentStatus; pdf: ComponentStatus };
+  components: { api: ComponentStatus; db: ComponentStatus; pdf: ComponentStatus; gotenberg: ComponentStatus };
   failures: Array<{ path: string; status: number; count: number; first: string; last: string }>;
+  /** Yeniden başlatmalar (bellek aşımı dahil). Kısa kesintiler çalışma oranında görünmez; burada görünür. */
+  restarts: Array<{ at: string; component: string; detail: string | null }>;
 };
 
 async function adminGet(accessToken: string, path: string): Promise<Response> {
@@ -27,6 +29,24 @@ async function adminGet(accessToken: string, path: string): Promise<Response> {
       credentials: "include",
     }),
   );
+}
+
+export type ToolCallsResponse = {
+  hours: number;
+  total: number;
+  summary: Array<{ tool: string; total: number; ok: number; error: number; members: number; guestCalls: number; avgMs: number | null; topReason: string | null; lastAt: string }>;
+  items: Array<{ id: string; at: string; tool: string; who: string; guest: boolean; verified: boolean | null; status: number; ok: boolean; reason: string | null; durationMs: number | null; sizeKb: number | null }>;
+};
+
+export async function fetchToolCalls(
+  accessToken: string,
+  q: { hours: number; outcome: "all" | "ok" | "error"; tool: string; page: number },
+): Promise<ToolCallsResponse> {
+  const p = new URLSearchParams({ hours: String(q.hours), outcome: q.outcome, page: String(q.page) });
+  if (q.tool) p.set("tool", q.tool);
+  const r = await adminGet(accessToken, `/tool-calls?${p.toString()}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<ToolCallsResponse>;
 }
 
 export async function fetchServiceStatus(accessToken: string, days: number): Promise<ServiceStatus> {

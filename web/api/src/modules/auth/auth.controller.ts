@@ -32,6 +32,7 @@ import {
   deleteAccountSchema,
   preferredLanguageSchema,
   registerSchema,
+  resendVerificationSchema,
   updateProfileSchema,
 } from "./auth.schema.js";
 import {
@@ -56,6 +57,7 @@ import {
   logoutUser,
   refreshSession,
   registerUser,
+  resendVerificationEmail,
   signInWithGoogle,
   GoogleTermsRequiredError,
   type AuthSessionResult,
@@ -1247,4 +1249,16 @@ export async function googleSignupCompleteController(request: Request, response:
   }
   response.cookie(REFRESH_COOKIE_NAME, session.refreshToken, getCookieOptions(session.cookie));
   response.status(200).json({ accessToken: session.accessToken });
+}
+
+/** POST /api/auth/resend-verification — yanıt, hesabın var olup olmadığını belli etmez. */
+export async function resendVerificationController(request: Request, response: Response) {
+  const parsed = resendVerificationSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Please enter a valid email address.");
+  }
+  await resendVerificationEmail(parsed.data.email);
+  response.status(200).json({
+    message: "If this address belongs to an account awaiting verification, a new verification email has been sent.",
+  });
 }

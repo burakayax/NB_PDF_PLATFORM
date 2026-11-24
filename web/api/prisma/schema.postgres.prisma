@@ -1286,6 +1286,27 @@ model ServiceHealthEvent {
   @@map("service_health_events")
 }
 
+/// SUNUCU ARAÇ ÇAĞRISI KAYDI — PDF API'ye gelen her araç isteği: hangi araç, kim (üye kimliği ya da misafir), sonuç ve
+/// durum kodu, süre, dosya boyutu. Dosya içeriği/adı, IP ve e-posta YAZILMAZ. 30 gün saklanır (dataRetentionJobs).
+/// Kullanıcı silinse de kayıt kalır (kimlik artık eşleşmez, "silinmiş üye" görünür); bu yüzden ilişki tanımlı değil.
+model ToolCallLog {
+  id         String   @id @default(cuid())
+  at         DateTime @default(now())
+  tool       String   @map("tool")
+  userId     String?  @map("user_id")
+  guest      Boolean  @default(false) @map("guest")
+  status     Int      @map("status")
+  ok         Boolean  @map("ok")
+  reason     String?  @map("reason")
+  durationMs Int?     @map("duration_ms")
+  sizeKb     Int?     @map("size_kb")
+
+  @@index([at])
+  @@index([tool, at])
+  @@index([userId, at])
+  @@map("tool_call_logs")
+}
+
 /// ABONELİK İPTAL NEDENİ — kullanıcı iptal ederken seçtiği (isteğe bağlı) neden. Ürün kararları için
 /// ("neden gidiyorlar?"); kişisel veri içermez, serbest not kısa tutulur. Kullanıcı silinse de kayıt kalır.
 model CancellationFeedback {

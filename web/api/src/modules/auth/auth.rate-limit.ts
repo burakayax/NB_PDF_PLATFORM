@@ -36,6 +36,20 @@ export const registerLimiter = rateLimit({
   },
 });
 
+/** POST /api/auth/resend-verification: IP başına 10 dakikada en fazla 5 istek (hesap başına sınırlar serviste ayrıca uygulanır). */
+export const resendVerificationLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+  validate: { default: false },
+  keyGenerator: (req) => `resend-verify:${req.ip ?? "unknown"}`,
+  message: {
+    message: "Çok fazla deneme. Lütfen biraz bekleyip tekrar deneyin.",
+  },
+});
+
 /**
  * DELETE /api/auth/me: authenticated user ID + IP çifti başına dakikada en fazla 1 istek.
  * Kaba kuvvet saldırısını ve kazara çift silmeyi önler.

@@ -18,6 +18,7 @@ import {
   revokeOtherSessionsController,
   refreshController,
   registerController,
+  resendVerificationController,
   updatePreferredLanguageController,
   changePasswordPostController,
   setInitialPasswordPostController,
@@ -28,7 +29,7 @@ import {
   getMarketingConsentController,
   setMarketingConsentController,
 } from "../email/marketing-consent.controller.js";
-import { deleteAccountLimiter, forgotPasswordLimiter, loginLimiter, registerLimiter } from "./auth.rate-limit.js";
+import { deleteAccountLimiter, forgotPasswordLimiter, loginLimiter, registerLimiter, resendVerificationLimiter } from "./auth.rate-limit.js";
 import {
   adminTwoFactorSendController,
   adminTwoFactorStatusController,
@@ -51,6 +52,7 @@ authRouter.post("/forgot-password/request", forgotPasswordLimiter, asyncHandler(
 authRouter.post("/forgot-password/verify-code", forgotPasswordLimiter, asyncHandler(forgotPasswordVerifyController));
 authRouter.post("/forgot-password/reset", forgotPasswordLimiter, asyncHandler(forgotPasswordResetController));
 authRouter.post("/register", registerLimiter, asyncHandler(registerController));
+authRouter.post("/resend-verification", resendVerificationLimiter, asyncHandler(resendVerificationController));
 authRouter.post("/login", loginLimiter, asyncHandler(loginController));
 // Admin girişi: IP sınırı + hesap kilidi + bot doğrulaması; panele erişim ayrıca e-posta koduyla (admin-2fa) korunur.
 authRouter.post("/nbadmin", loginLimiter, asyncHandler(loginController));
