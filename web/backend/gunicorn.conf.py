@@ -21,15 +21,24 @@ worker_connections = 1000
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", "660"))
 keepalive = 5
 
-_log_dir = os.environ.get("LOG_DIR", "/tmp/nb-pdf-logs")
-os.makedirs(_log_dir, exist_ok=True)
-accesslog = os.path.join(_log_dir, "gunicorn-access.log")
-errorlog = os.path.join(_log_dir, "gunicorn-error.log")
+# LOGLAR: Render yalnız konsola (stdout/stderr) yazılanı gösterir. Önceden hata ve erişim günlükleri /tmp altındaki
+# DOSYALARA yazılıyor ve capture_output uygulamanın tüm konsol çıktısını da o dosyaya yönlendiriyordu; bu yüzden Render'da
+# (bellek aşımı gibi) olaylarda hiçbir uygulama satırı görünmüyordu. Artık "-" = konsol.
+# Yerelde dosyaya yazmak isterseniz LOG_DIR tanımlayın (eski davranış).
+_log_dir = os.environ.get("LOG_DIR", "").strip()
+if _log_dir:
+    os.makedirs(_log_dir, exist_ok=True)
+    accesslog = os.path.join(_log_dir, "gunicorn-access.log")
+    errorlog = os.path.join(_log_dir, "gunicorn-error.log")
+else:
+    accesslog = "-"
+    errorlog = "-"
 loglevel = "info"
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+# Erişim satırı: yol (SORGU DİZESİ YOK) + durum + süre. IP ve tarayıcı bilgisi bilerek yazılmaz.
+access_log_format = '%(t)s "%(m)s %(U)s" %(s)s %(b)s %(L)ss'
 
-# Bulut ortamlarında loglar aynı zamanda stdout/stderr'e de yazılır
-capture_output = True
+# Konsol çıktısını dosyaya YÖNLENDİRME: Render konsolu okur.
+capture_output = False
 enable_stdio_inheritance = True
 
 max_requests = 1000
