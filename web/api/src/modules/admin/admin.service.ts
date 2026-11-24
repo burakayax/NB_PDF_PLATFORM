@@ -200,7 +200,12 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       distinct: ["userId"],
     }),
     prisma.pageView.findMany({
-      where: { createdAt: { gte: activePresenceSince } },
+      // Yönetici kendi gezintisiyle "canlı oturum" sayısını şişirmesin: misafirler (userId yok) ve yönetici
+      // OLMAYAN üyeler sayılır. (NOT: ... yerine OR kullanıldı; NULL userId satırlarını SQL'de düşürmemek için.)
+      where: {
+        createdAt: { gte: activePresenceSince },
+        OR: [{ userId: null }, { user: { role: { not: "ADMIN" } } }],
+      },
       select: { userId: true, sessionId: true },
     }),
   ]);
