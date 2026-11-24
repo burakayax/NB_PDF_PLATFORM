@@ -25,6 +25,7 @@ import type { KeywordSet } from "./keywords.service.js";
 import type { SocialPlatform } from "@prisma/client";
 import { linkKindOf, socialLink } from "./social-link.js";
 import { instagramHashtags } from "./instagram-tags.js";
+import { FACEBOOK_LINK_HINT } from "./facebook-kind.js";
 import type { FacebookKind } from "./facebook-kind.js";
 
 /** İki dilli gönderide blokları ayıran çizgi. */
@@ -86,10 +87,12 @@ belge yönetimi ve verimlilik açısından yaz; 4-6 kısa satır, emoji yok ya d
 FACEBOOK AYRI YAZILIR (FB_TR, yalnız Türkçe): Facebook sayfasında Türk okuyucuyla konuşur gibi yaz.
 - İLK SATIR kanca: en fazla 10-12 kelime; bir sorunu söyleyen ya da merak uyandıran cümle (örn. "CV'n 5 MB olunca e-postan geri mi dönüyor?").
 - Toplam 60-120 kelime, kısa paragraflar, en fazla 2-3 emoji.
-- SON SATIR gerçek, cevaplanabilir bir soru olsun (örn. "Sen CV'ni Word mü PDF mi gönderiyorsun?").
+- Her gönderi soruyla bitmek ZORUNDA DEĞİL. Soru yalnızca doğal duruyorsa sor; çoğu gönderi faydalı bir bilgiyle bitsin.
+  Soru sorarsan konuya özgü, cevaplanabilir olsun ve istemin sonundaki "KULLANILMIŞ SORULAR" listesindekilerin hiçbirini (benzerini de) tekrar etme.
+  Genel kalıp sorular ("Sen ne düşünüyorsun?", "Sence bu iş neden hâlâ bu kadar zor?") YASAK.
 - "Beğen, paylaş, etiketle, yorum yaz" gibi etkileşim dilenen ifade YASAK.
 - Arama motoru kelimesi doldurma, "Konu terimleri"ni listeleme; doğal, konuşur gibi yaz.
-- Bağlantı, "link ilk yorumda" cümlesi ve etiket YAZMA; sistem ekler.
+- Bağlantı, "link ilk yorumda" cümlesi ve etiket YAZMA; sistem ekler (gerekirse).
 
 Yanıtı YALNIZCA şu JSON biçiminde ver, başka hiçbir şey yazma:
 {"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"...","LI_TR":"...","FB_TR":"...","IG_TR":"..."}`;
@@ -344,14 +347,32 @@ type LangSide = {
   tags: string[];
 };
 
-/** Facebook şablon metninin sonundaki soru; bağlantıdan sabit seçilir (aynı soru art arda gelmesin). */
+/**
+ * Facebook şablon metninin sonundaki soru (yalnız model kullanılamadığında). Daha önce kullanılan
+ * bir soru bir daha seçilmez; hepsi kullanıldıysa gönderi soru olmadan biter.
+ */
 const FB_QUESTIONS = [
-  "Sen bu işi şimdiye kadar nasıl hallettin?",
-  "Sende en çok hangi PDF işi vakit alıyor?",
-  "Bu sorunla sen de karşılaştın mı?",
-  "Sen hangi yöntemi kullanıyorsun?",
-  "Sence bu iş neden hâlâ bu kadar zor?",
+  "Dosyanı en son hangi boyuta kadar küçültmen gerekti?",
+  "Başvuru dosyanda en çok hangi belge seni yordu?",
+  "Bu adımı sen de atlayıp sonradan pişman oldun mu?",
+  "PDF'ni telefondan mı bilgisayardan mı hazırlıyorsun?",
+  "Sende dosya yükleme hatası en çok hangi sitede çıkıyor?",
+  "Bu yöntemi daha önce denedin mi?",
 ];
+
+/** Metnin SON satırı soruysa o soruyu döndürür (kullanılmış sorular kaydı için). */
+export function closingQuestionOf(body: string): string | null {
+  const lines = body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#") && !l.startsWith("Link ilk yorumda"));
+  const last = lines[lines.length - 1];
+  return last && /\?[\s\p{Extended_Pictographic}️]*$/u.test(last) ? last : null;
+}
+
+function normQuestion(q: string): string {
+  return q.toLocaleLowerCase("tr").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+}
 
 /** Her ağın metni yoruma çağıran bir soruyla biter; model yazmadıysa buradan eklenir. */
 const COMMENT_QUESTIONS: Record<"general" | "professional", string[]> = {
@@ -417,13 +438,16 @@ export function ensureSaveLine(body: string, room: number): string {
 }
 
 /** Facebook'ta bağlantı metne değil ilk yoruma gider; metinde yalnızca yönlendirme satırı durur. */
-const FB_LINK_HINT = "Link ilk yorumda 👇";
+const FB_LINK_HINT = FACEBOOK_LINK_HINT;
 
-function facebookQuestion(side: LangSide): string {
+function facebookQuestion(side: LangSide, used: string[] = []): string {
+  const taken = new Set(used.map(normQuestion));
+  const free = FB_QUESTIONS.filter((q) => !taken.has(normQuestion(q)));
+  if (free.length === 0) return "";
   let hash = 0;
   const stable = side.link.split("?")[0] ?? side.link;
   for (let i = 0; i < stable.length; i++) hash = (hash * 31 + stable.charCodeAt(i)) >>> 0;
-  return FB_QUESTIONS[hash % FB_QUESTIONS.length] ?? "";
+  return free[hash % free.length] ?? "";
 }
 
 /** Bir dil için şablon bloğu (model kullanılamadığında). */
@@ -434,13 +458,15 @@ function fallbackBlock(
   tagCount: number,
   igTagText?: string,
   platform?: SocialPlatform,
+  fb: FacebookOptions = {},
 ): string {
   const isFb = platform === "FACEBOOK";
   const tags = igTagText ?? tagsFor(side, tagCount, platform);
   const linkText = linkLine(side, style);
   const link = linkText ? `\n\n${linkText}` : "";
-  // Facebook: sonda bir soru + "link ilk yorumda" yönlendirmesi (bağlantı ilk yoruma gider).
-  const fbTail = isFb ? `\n\n${facebookQuestion(side)}\n\n${FB_LINK_HINT}` : "";
+  // Facebook: kullanılmamış bir soru (kalmadıysa soru yok) + yalnız 4 gönderiden birinde "link ilk yorumda".
+  const fbQuestion = isFb ? facebookQuestion(side, fb.usedQuestions) : "";
+  const fbTail = isFb ? `${fbQuestion ? `\n\n${fbQuestion}` : ""}${fb.withLink ? `\n\n${FB_LINK_HINT}` : ""}` : "";
   const tail = `${fbTail}${link}${tags ? `\n\n${tags}` : ""}`;
   // Instagram: kanca ilk satır (≤125 karakter), sonda harekete çağrı.
   const lead =
@@ -453,12 +479,12 @@ function fallbackBlock(
 }
 
 /** Model kullanılamadığında devreye giren sade şablon. */
-function fallbackBody(sides: LangSide[], platform: SocialPlatform, avoid?: string[]): string {
+function fallbackBody(sides: LangSide[], platform: SocialPlatform, avoid?: string[], fb: FacebookOptions = {}): string {
   const spec = PLATFORM_SPECS[platform];
   const per = Math.floor(effectiveMax(platform, sides) / sides.length);
   return sides
     .map((side, i) =>
-      fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i), platform === "INSTAGRAM" ? igTagText(side, avoid) : undefined, platform),
+      fallbackBlock(side, per, spec.linkStyle, tagCountFor(platform, sides.length, i), platform === "INSTAGRAM" ? igTagText(side, avoid) : undefined, platform, fb),
     )
     .join(LANG_SEPARATOR);
 }
@@ -481,14 +507,24 @@ export type CopyRequest = {
   avoidTags?: string[];
   /** Facebook metninin türü (içerik karışımı); verilmezse "tip". */
   fbKind?: FacebookKind;
+  /** Bu Facebook gönderisi "Link ilk yorumda" taşısın mı? (4 gönderiden biri.) */
+  fbWithLink?: boolean;
+  /** Daha önce kullanılmış kapanış soruları: yeni metin bunları tekrar etmez. */
+  fbUsedQuestions?: string[];
 };
 
+/** Facebook'a özgü üretim ayarları (bağlantı payı, kullanılmış sorular). */
+export type FacebookOptions = { withLink?: boolean; usedQuestions?: string[] };
+
 const FB_KIND_NOTE: Record<FacebookKind, string> = {
-  tip: "FB_TR türü: İPUCU. Yazının işe yarar tek bir fikrini söyle.",
-  problem:
-    "FB_TR türü: SORUN→ÇÖZÜM. İlk satır okuyucunun yaşadığı somut sorun (örn. 'e-Devlet belgesi çok büyük, yüklenmiyor'); ortada çözümü tek cümleyle anlat.",
-  engage:
-    "FB_TR türü: ETKİLEŞİM. Konuyla ilgili iki seçenekli kısa bir soru kur ('A mı B mi?'); gövde en fazla 3 kısa satır; çözüm anlatma.",
+  tip: "FB_TR biçimi: KISA İPUCU. Yazının işe yarar tek bir fikrini söyle.",
+  list: "FB_TR biçimi: 3 MADDELİK LİSTE. Kancadan sonra '1.' '2.' '3.' ile üç kısa, uygulanabilir madde; başka paragraf yok.",
+  beforeafter:
+    "FB_TR biçimi: ÖNCE/SONRA. 'Önce:' ile eski zahmetli yolu, 'Sonra:' ile yeni kolay yolu iki kısa satırda karşılaştır; sayı ya da somut fark ver (yazıda olmayan sayı uydurma).",
+  mistake:
+    "FB_TR biçimi: SIK YAPILAN HATA. İlk satır hatayı söylesin ('Çoğu kişi PDF'i ... yapıyor.'); sonra neden sorun olduğunu ve doğrusunu kısaca anlat.",
+  story:
+    "FB_TR biçimi: MİNİ HİKÂYE. 2-4 cümlelik gerçekçi bir durum anlat ('Dün bir arkadaşım...' gibi yaşanmış gibi yazma; 'Diyelim ki bir öğrenci...' ya da 'Bir iş başvurusunda...' gibi genel bir örnek kur); sonunda çıkan dersi söyle.",
 };
 
 /** Bir gönderide hangi dil(ler) yer alacak? */
@@ -571,7 +607,7 @@ function buildBlock(
   platform: SocialPlatform,
   tagCount: number,
   avoid?: string[],
-  noLinkHint = false,
+  withLinkHint = false,
 ): string {
   const spec = PLATFORM_SPECS[platform];
   const clean = sanitizeHashtags(body, side.lang)
@@ -581,7 +617,7 @@ function buildBlock(
   const tags = platform === "INSTAGRAM" ? igTagText(side, avoid) : tagsFor(side, tagCount, platform);
   const parts = [clean];
   const link = linkLine(side, spec.linkStyle);
-  if (platform === "FACEBOOK" && !noLinkHint) parts.push(FB_LINK_HINT);
+  if (platform === "FACEBOOK" && withLinkHint) parts.push(FB_LINK_HINT);
   if (link) parts.push(link);
   if (tags) parts.push(tags);
   return parts.filter(Boolean).join("\n\n");
@@ -596,7 +632,8 @@ function buildBlock(
  */
 export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPlatform, string>> {
   const result = {} as Record<SocialPlatform, string>;
-  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p, req.avoidTags);
+  const fbOpts: FacebookOptions = { withLink: req.fbWithLink ?? false, usedQuestions: req.fbUsedQuestions ?? [] };
+  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p, req.avoidTags, fbOpts);
 
   if (req.templateOnly || !isAiConfigured() || req.platforms.length === 0) return result;
 
@@ -644,7 +681,9 @@ Uzunluklar:
 - LI_TR: en fazla ${Number.isFinite(liRoom) ? liRoom : 1200} karakter (profesyonel ton).
 - FB_TR: en fazla 800 karakter (60-120 kelime).
 - IG_TR: en fazla ${Number.isFinite(igRoom) ? igRoom : 900} karakter (kaydedilecek ipucu listesi).
-${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
+${FB_KIND_NOTE[req.fbKind ?? "tip"]}
+KULLANILMIŞ SORULAR (FB_TR kapanışında bunları ve benzerlerini KULLANMA):
+${(req.fbUsedQuestions ?? []).slice(0, 40).map((q) => `- ${q}`).join("\n") || "- (yok)"}`;
 
   let raw: string;
   try {
@@ -677,11 +716,18 @@ ${FB_KIND_NOTE[req.fbKind ?? "tip"]}`;
     const blocks = sides.map((side, i) => {
       const body = bodies[kind][side.lang];
       if (!body) return "";
-      // Facebook'un metni zaten soruyla biter (istem + şablon); diğerlerinde soru zorunlu.
+      // Facebook'ta soru isteğe bağlı (kullanılmış soru tekrar edilmez); diğerlerinde soru zorunlu.
       // Instagram'da yorum sorusu yerine kaydetme çağrısı zorunlu.
       if (p === "INSTAGRAM") return buildBlock(ensureSaveLine(body, bodyRoom(req, p)), side, p, tagCountFor(p, sides.length, i), req.avoidTags);
-      const withQ = p === "FACEBOOK" ? body : ensureQuestion(body, side, bodyRoom(req, p), kind === "li" ? "professional" : "general");
-      return buildBlock(withQ, side, p, tagCountFor(p, sides.length, i), req.avoidTags, p === "FACEBOOK" && req.fbKind === "engage");
+      if (p === "FACEBOOK") {
+        // Model, listedeki bir soruyu yine de yazdıysa o satır atılır.
+        const q = closingQuestionOf(body);
+        const taken = new Set((req.fbUsedQuestions ?? []).map(normQuestion));
+        const cleaned = q && taken.has(normQuestion(q)) ? body.trim().split("\n").slice(0, -1).join("\n").trim() : body;
+        return buildBlock(cleaned || body, side, p, tagCountFor(p, sides.length, i), req.avoidTags, req.fbWithLink ?? false);
+      }
+      const withQ = ensureQuestion(body, side, bodyRoom(req, p), kind === "li" ? "professional" : "general");
+      return buildBlock(withQ, side, p, tagCountFor(p, sides.length, i), req.avoidTags);
     });
     // Bir dil için metin gelmediyse o platformda şablon korunur.
     if (blocks.some((b) => !b)) continue;

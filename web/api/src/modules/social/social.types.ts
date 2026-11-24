@@ -151,10 +151,11 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     // Facebook'un gerçek sınırı 63.206; ama metin Instagram ve LinkedIn ile
     // ORTAK olduğu için pratikte en dar sınır (Instagram 2.200) belirleyici.
     maxChars: 2200,
-    imageRequired: false,
+    // Her gönderide görsel olsun (görselsiz gönderi atlanır, metin tek başına yayınlanmaz).
+    imageRequired: true,
     imageFormat: "wide",
-    // 3-5 konuya özel etiket (genel havuz kullanılmaz).
-    hashtagCount: 4,
+    // En fazla 3 etiket, hepsi konuya özel (genel havuz kullanılmaz).
+    hashtagCount: 3,
     // Dış bağlantılı gönderinin erişimi düşüyor: bağlantı metne değil İLK YORUMA konur.
     linkStyle: "none",
     // Facebook yalnız Türkçe: karışık dil kitle dağıtımını bozuyor.

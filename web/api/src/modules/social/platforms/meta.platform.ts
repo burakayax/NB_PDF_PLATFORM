@@ -12,6 +12,7 @@ import { isReelUrl } from "../reels.service.js";
 import { PublishStageError, coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 import { postFirstComment } from "./facebook-comment.js";
+import { FACEBOOK_LINK_HINT } from "../facebook-kind.js";
 import { publishFacebookReel } from "./facebook-reels.js";
 import { publishInstagramReel } from "./instagram-reels.js";
 
@@ -64,7 +65,8 @@ export const publishToFacebook: Publisher = async (input) => {
   });
 
   const id = (json.post_id as string | undefined) ?? (json.id as string | undefined) ?? null;
-  await postFirstComment(id, token, item.link, item.guid);
+  // Bağlantı yalnız metinde "Link ilk yorumda" yazan gönderilerde (4'te 1) yoruma eklenir.
+  if (body.includes(FACEBOOK_LINK_HINT)) await postFirstComment(id, token, item.link, item.guid);
   return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null };
 };
 
@@ -110,7 +112,7 @@ async function publishFacebookCarousel(
       body: post.toString(),
     });
     const id = (json.id as string | undefined) ?? null;
-    await postFirstComment(id, token, item.link, item.guid);
+    if (body.includes(FACEBOOK_LINK_HINT)) await postFirstComment(id, token, item.link, item.guid);
     return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null, slides: slideUrls };
   } catch (err) {
     throw new PublishStageError(err instanceof Error ? err.message : String(err));
