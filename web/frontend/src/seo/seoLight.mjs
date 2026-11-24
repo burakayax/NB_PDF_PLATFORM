@@ -197,7 +197,7 @@ export const LANDING_SEO = {
     intro:
       "PDF Platform brings PDF merge, split, compress, Word/Excel/PowerPoint conversion, watermarking and encryption into one platform. Tools like merge and image-to-PDF need no account and run entirely in your browser — your files never leave your device, processing is instant and free up to 80 MB. No installation required.",
     faq: [
-      { q: "Do I need an account to merge PDF files?", a: "No. You can use basic tools like merge and image-to-PDF for free and without any sign-up or account. An account is only needed to save your history, for advanced server tools like Word/Excel conversion and OCR, and for larger files." },
+      { q: "Do I need an account to merge PDF files?", a: "No. You can use basic tools like merge and image-to-PDF for free and without any sign-up or account. An account is only needed to save your history, for tools like Word/Excel conversion and OCR, and for larger files." },
       { q: "Are my files safe? Are they uploaded to a server?", a: "For tools like merge and image-to-PDF your files are processed entirely IN YOUR BROWSER (on your device) — they are never sent to a server and never leave your computer, so they're 100% private. Server-based tools like conversion don't retain content and use encrypted connections." },
       { q: "How do I merge PDF files online for free?", a: "Drag and drop your files, set the order, and click merge. The combined PDF is prepared on your device in seconds and downloads automatically — no sign-up, no installation, your file never goes to a server." },
       { q: "Can I convert PDF to Word without losing formatting?", a: "Yes. The PDF converter in PDF Platform preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing." },
@@ -276,7 +276,7 @@ export const PRICING_SEO = {
       },
       {
         q: "What does a paid plan unlock?",
-        a: "Daily limits rise or disappear for server-side work: conversion to Word and Excel, OCR, compression, and the AI tools for summarizing, translating, extracting data and comparing documents. On-device tools are unlimited on every plan.",
+        a: "Daily limits rise or disappear for server-side work: conversion to Word and Excel, compression, and the AI tools for summarizing, translating, extracting data and comparing documents. On-device tools are unlimited on every plan.",
       },
       {
         q: "Are there watermarks on the output?",

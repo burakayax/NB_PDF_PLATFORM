@@ -229,7 +229,7 @@ const TOOL_GUIDE_CORE = {
       ],
       faq: [
         { q: "Can I turn the images back into a PDF?", a: "Yes. The JPG to PDF tool combines JPG, PNG and WebP images into one PDF." },
-        { q: "Can I use it on a phone?", a: "Yes. The tool runs in your browser, so it works on phones and tablets without installing anything." },
+        { q: "Can I use it on a phone?", a: "Yes. The tool is web-based, so it works on phones and tablets without installing anything." },
       ],
     },
   },
