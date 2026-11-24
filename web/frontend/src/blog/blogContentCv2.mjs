@@ -196,7 +196,7 @@ export const CV_TOOL_POSTS = [
     {
       slug: "cv-on-yazi-nasil-yazilir",
       date: "2026-10-08",
-      updated: "2026-10-08",
+      updated: "2026-11-24",
       readMinutes: 6,
       tags: { tr: ["Ön Yazı", "CV", "İş Başvurusu"], en: ["Cover Letter", "CV", "Job Application"] },
       accent: "emerald",
@@ -205,11 +205,14 @@ export const CV_TOOL_POSTS = [
     {
       title: "Ön Yazı (Cover Letter) Nasıl Yazılır? Örnek Yapı ve İpuçları",
       description:
-        "Kısa, somut ve ilana özel bir ön yazının yapısı: açılış, kanıt, motivasyon ve kapanış. CV'nizle aynı tasarımda PDF olarak hazırlama.",
+        "Cover letter (ön yazı) nedir, nasıl yazılır? Açılış, kanıt, motivasyon ve kapanış yapısı; CV'nizle aynı tasarımda PDF olarak hazırlama.",
       excerpt:
         "İyi bir ön yazı CV'nin tekrarı değildir; CV'nin söylemediğini söyler. Dört paragrafta hazırlanacak bir yapı.",
       blocks: [
-        { t: "lead", x: "Ön yazı, CV'nizin yanında işverene \"neden bu iş, neden ben\" sorusunu yanıtladığınız kısa mektuptur. CV'nizi tekrar etmek yerine, onu bağlama oturtur." },
+        { t: "lead", x: "Ön yazı (İngilizcesiyle cover letter), CV'nizin yanında işverene \"neden bu iş, neden ben\" sorusunu yanıtladığınız kısa mektuptur. CV'nizi tekrar etmek yerine, onu bağlama oturtur." },
+        { t: "h2", x: "Cover letter nedir?" },
+        { t: "p", x: "Cover letter, Türkçede ön yazı ya da niyet mektubu olarak da geçer: iş başvurusuna CV ile birlikte eklenen, tek sayfalık kısa bir mektuptur. CV geçmişinizi listeler; cover letter ise bu pozisyona neden başvurduğunuzu ve deneyiminizin ilana nasıl karşılık geldiğini anlatır." },
+        { t: "p", x: "Yurt dışı başvurularında ve İngilizce ilanlarda çoğunlukla istenir; Türkiye'deki ilanlarda her zaman istenmez ama eklendiğinde fark yaratabilir. İlan \"cover letter\" ya da \"ön yazı\" istiyorsa mutlaka ekleyin." },
         { t: "h2", x: "Dört paragraflık yapı" },
         { t: "ol", items: [
           "Açılış: Hangi pozisyona başvurduğunuzu ve sizi neyin ilgilendirdiğini bir iki cümleyle söyleyin.",
@@ -235,6 +238,7 @@ export const CV_TOOL_POSTS = [
         { t: "cta", title: "CV Oluştur", x: "Ön yazı taslağını hazırlayın, düzenleyin ve CV'nizle aynı tasarımda PDF olarak indirin.", btn: "Ön yazı hazırla", tool: "/tools/cv-olustur" },
       ],
       faq: [
+        { q: "Cover letter nedir?", a: "Cover letter, Türkçedeki adıyla ön yazı ya da niyet mektubudur: CV'nizle birlikte gönderdiğiniz, pozisyona neden başvurduğunuzu ve deneyiminizin ilanla nasıl örtüştüğünü anlatan tek sayfalık kısa mektup." },
         { q: "Ön yazı zorunlu mu?", a: "İlan istiyorsa evet. İstemiyorsa da iyi bir ön yazı fark yaratabilir; özellikle kariyer değişikliği ya da CV'de açıklanması gereken durumlarda faydalıdır." },
         { q: "Ön yazı ne kadar olmalı?", a: "Tek sayfa, yaklaşık 250–350 kelime ve dört kısa paragraf çoğu başvuru için yeterlidir." },
         { q: "Yapay zekâ ön yazıda bilgi uydurur mu?", a: "Uydurmaması için istem ve kod kontrolleri vardır; CV'nizde olmayan rakam ya da kavram çıkarsa uyarılırsınız. Yine de göndermeden önce her cümleyi kontrol etmelisiniz." },
@@ -249,6 +253,9 @@ export const CV_TOOL_POSTS = [
         "A good cover letter doesn't repeat the CV; it says what the CV doesn't. A four-paragraph structure.",
       blocks: [
         { t: "lead", x: "A cover letter is the short letter alongside your CV where you answer \"why this job, why me\". Rather than repeating the CV, it puts it in context." },
+        { t: "h2", x: "What is a cover letter?" },
+        { t: "p", x: "A cover letter (called an \"ön yazı\" in Turkish) is a one-page letter sent with your CV. The CV lists your history; the cover letter explains why you are applying for this role and how your experience answers the ad." },
+        { t: "p", x: "It is most often requested for applications abroad and in English-language postings. If the ad asks for one, always include it; if not, a good one can still help." },
         { t: "h2", x: "A four-paragraph structure" },
         { t: "ol", items: [
           "Opening: say which role you're applying for and what interests you, in a sentence or two.",

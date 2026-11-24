@@ -6453,16 +6453,16 @@ export const BLOG_POSTS = [
     {
       slug: "edevlet-belgelerini-tek-pdf-yapma",
       date: "2026-09-22",
-      updated: "2026-09-22",
+      updated: "2026-11-24",
       readMinutes: 6,
       tags: { tr: ["e-Devlet", "Resmî Evrak", "Birleştirme"], en: ["e-Government", "Official Documents", "Merge"] },
       accent: "sky",
       tool: "/tools/merge-pdf",
     },
     {
-      title: "e-Devlet Belgelerini Tek PDF'te Birleştirme",
+      title: "e-Devlet Belgelerini Tek PDF Yap: Adli Sicil, İkametgâh, SGK",
       description:
-        "e-Devlet'ten indirdiğiniz belgeleri tek dosyada toplamanın doğru yolu: karekodu bozmadan birleştirme, sıralama ve boyutu sınırın altında tutma.",
+        "İkametgâh, adli sicil, nüfus kayıt örneği ve SGK dökümünü karekodu bozmadan tek PDF yapın; sıralama ve boyutu sınırın altında tutma rehberi.",
       excerpt:
         "Bir başvuru için e-Devlet'ten beş ayrı belge indirdiniz ve karşı taraf «hepsini tek PDF olarak gönderin» diyor. Bu işin bir inceliği var: barkodlu belgelerin doğrulanabilirliğini bozmamak.",
       blocks: [
