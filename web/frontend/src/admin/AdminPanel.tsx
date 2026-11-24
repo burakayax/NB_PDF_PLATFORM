@@ -55,6 +55,7 @@ import { pdfToolLabelTr } from "./lib/pdfToolLabels";
 import { CampaignEditor } from "./marketing/CampaignEditor";
 import { DisputeAdminSection } from "./DisputeAdminSection";
 import { ServiceStatusSection } from "./ServiceStatusSection";
+import { ToolCallsSection } from "./ToolCallsSection";
 import { ContractReviewAdminSection } from "./ContractReviewAdminSection";
 import {
   BolumBasligi,
@@ -550,7 +551,13 @@ export function AdminPanel({
         {tab === "ratings" ? <ToolRatingsTab accessToken={accessToken} /> : null}
         {tab === "journeys" ? <UserJourneyTab accessToken={accessToken} /> : null}
         {tab === "consents" ? <ConsentLogTab accessToken={accessToken} /> : null}
-        {tab === "autoheal" ? <AutoHealTab accessToken={accessToken} /> : null}
+        {tab === "autoheal" ? (
+          <div className="space-y-6">
+            <ServiceStatusSection accessToken={accessToken} />
+            <ToolCallsSection accessToken={accessToken} />
+            <AutoHealTab accessToken={accessToken} />
+          </div>
+        ) : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
       <AdminToaster />
@@ -2453,6 +2460,7 @@ function AnalyticsTab({
 
         <ContractReviewAdminSection accessToken={accessToken} />
         <ServiceStatusSection accessToken={accessToken} />
+        <ToolCallsSection accessToken={accessToken} />
         <DisputeAdminSection accessToken={accessToken} />
 
         {advanced && (
