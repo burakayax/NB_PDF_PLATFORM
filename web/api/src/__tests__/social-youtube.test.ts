@@ -34,7 +34,7 @@ describe("YouTube Shorts yayıncısı", () => {
     expect(out).toMatchObject({ externalId: "vid123", externalUrl: "https://www.youtube.com/shorts/vid123" });
     const start = calls.find((c) => c.url.includes("uploadType=resumable"));
     const meta = JSON.parse(String(start?.init?.body));
-    expect(meta.snippet.title).toBe("PDF Sıkıştır");
+    expect(meta.snippet.title).toBe("“Dosya çok büyük” hatası mı alıyorsun? PDF'i küçült");
     expect(meta.snippet.description).toContain("#Shorts");
     // Zengin açıklama: iki dilde araç bağlantısı, konu satırları, en fazla 10 etiket, 5.000 sınırının altında.
     const desc: string = meta.snippet.description;

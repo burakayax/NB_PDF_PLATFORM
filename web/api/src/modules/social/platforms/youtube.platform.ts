@@ -19,6 +19,7 @@ import { isReelUrl } from "../reels.service.js";
 import { toolVideoKeywords } from "../keywords.service.js";
 import { findCatalogEntry, toolReelBody } from "../tool-reels.service.js";
 import { reelCoverUrl, toolIdFromGuid } from "./reel-cover.js";
+import { youtubeTitleFor } from "../tool-reel-youtube-titles.js";
 import { socialUtm, withUtm } from "../../../lib/utm.js";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -252,7 +253,8 @@ export const publishToYouTube: Publisher = async ({ body, imageUrl, item, secret
     },
     body: JSON.stringify({
       snippet: {
-        title: toTitle(item.title),
+        // Başlık: araca özel sorun/vaat cümlesi; tanımsızsa katalog başlığı. Tam araç adı açıklamanın ilk satırında kalır.
+        title: toTitle(youtubeTitleFor(toolIdFromGuid(item.guid)) ?? item.title),
         description: buildDescription(item.guid, body, terms),
         categoryId: CATEGORY_ID,
         tags: toTags(terms),
