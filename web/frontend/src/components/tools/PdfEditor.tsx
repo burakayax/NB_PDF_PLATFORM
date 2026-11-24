@@ -1410,6 +1410,18 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editorOpen, added, addedImages, current, analysis, scale, edits, selected, multiSel]);
 
+  // Alt + fare tekerleği: yakınlaştır / uzaklaştır (%50–%300).
+  useEffect(() => {
+    if (!editorOpen) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.altKey || !e.deltaY) return;
+      e.preventDefault();
+      setZoom((z) => Math.min(3, Math.max(0.5, Math.round((z + (e.deltaY < 0 ? 0.1 : -0.1)) * 100) / 100)));
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [editorOpen]);
+
   // Klavye: Ctrl+A tümünü seç · Delete/Backspace sil · Ctrl+Z son silmeyi geri al · Esc seçimi bırak.
   useEffect(() => {
     if (!editorOpen) return;
@@ -2015,7 +2027,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               ] as [DrawTool, typeof Square, string][]).map(([k, Ico, label]) => (
                 <span key={k} className="relative">
                   <button type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
-                    onClick={() => { setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
+                    onClick={() => { if (k === "arrow" && selShapeTool === "arrow" && drawTool !== "arrow") { setArrowPick((v) => !v); return; } setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
                     className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
                     <Ico className="h-3.5 w-3.5" />
                   </button>
@@ -2052,14 +2064,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <input type="checkbox" checked={drawFillOn} onChange={(e) => { setDrawFillOn(e.target.checked); restyleSel({ fill: e.target.checked ? drawFillColor : null }); }} />{tr ? "Dolgu" : "Fill"}
               </label>
               {drawFillOn && <input type="color" value={drawFillColor} onChange={(e) => { setDrawFillColor(e.target.value); restyleSel({ fill: e.target.value }); }} title={tr ? "Dolgu rengi" : "Fill color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />}
-              {(drawTool === "arrow" || selShapeTool === "arrow") && (
-                <span className="relative">
-                  <button type="button" onClick={() => setArrowPick((v) => !v)} title={tr ? "Ok çeşidini seç" : "Choose arrow style"}
-                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-1.5 text-slate-100 hover:bg-slate-800">
-                    <ArrowIcon style={arrowStyle} /><span className="text-[10px] text-slate-400">▾</span>
-                  </button>
-                </span>
-              )}
               {(drawTool === "table" || selShapeTool === "table") && (
                 <span className="relative">
                   <button type="button" onClick={() => { setTablePick((v) => !v); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
@@ -2139,9 +2143,9 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
 
             <div className={`${grp} ml-auto`}>
               <div data-tour="editor-zoom" className="flex items-center gap-1">
-                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır (Alt + fare tekerleği)" : "Zoom out (Alt + mouse wheel)"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-16 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
-                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır (Alt + fare tekerleği)" : "Zoom in (Alt + mouse wheel)"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
                 <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
             </div>
@@ -2186,6 +2190,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <Info className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{tr ? "Önizleme notu: Bir yazıyı düzenlerken beliren beyaz örtü üst/alt çizgilere taşabilir — bu yalnızca önizlemedir; indirdiğiniz PDF'te o çizgiler korunur." : "Preview note: while editing a line, the white cover may overlap the lines above/below — this is preview only; those lines are kept in the downloaded PDF."}</p>
               </div>
+              <p className="mx-auto mb-3 max-w-xl text-center text-[12px] text-slate-400">{tr ? "İpucu: Alt tuşuna basılı tutup fare tekerleğini çevirerek yakınlaştırıp uzaklaştırabilirsiniz." : "Tip: hold Alt and scroll the mouse wheel to zoom in and out."}</p>
               {addMode && (
                 <div className="mx-auto mb-3 flex max-w-xl items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/[0.12] px-3 py-2 text-[12.5px] font-semibold text-cyan-100">
                   <Type className="h-4 w-4 shrink-0" />{tr ? "Yazı eklemek için sayfada bir yere tıklayın." : "Click anywhere on the page to add text."}
