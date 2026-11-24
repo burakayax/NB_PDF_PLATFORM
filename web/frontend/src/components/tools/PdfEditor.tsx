@@ -446,6 +446,8 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [drawFillColor, setDrawFillColor] = useState("#fde68a");
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
+  const [tablePick, setTablePick] = useState(false); // tablo boyutu seçici (aşağı açılır ızgara)
+  const [tableHov, setTableHov] = useState<{ r: number; c: number } | null>(null);
   const [draft, setDraft] = useState<Pt[] | null>(null);
   const drawLayerRef = useRef<HTMLDivElement>(null);
   const draftRef = useRef<Pt[] | null>(null); // olaylar art arda gelince state yetişmesin diye eşzamanlı kopya
@@ -1291,7 +1293,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         setSelected(ids[0] ?? null);
         return;
       }
-      if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); setDrawTool(null); setDraft(null); return; }
+      if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); setDrawTool(null); setDraft(null); setTablePick(false); return; }
       if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (editing) return;
       if (!selTargets().length) return;
@@ -1862,7 +1864,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 ["table", Table2, tr ? "Tablo" : "Table"],
               ] as [DrawTool, typeof Square, string][]).map(([k, Ico, label]) => (
                 <button key={k} type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
-                  onClick={() => { setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
+                  onClick={() => { setTablePick(k === "table" && drawTool !== "table"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
                   className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
                   <Ico className="h-3.5 w-3.5" />
                 </button>
@@ -1876,10 +1878,25 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               </label>
               {drawFillOn && <input type="color" value={drawFillColor} onChange={(e) => setDrawFillColor(e.target.value)} title={tr ? "Dolgu rengi" : "Fill color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />}
               {drawTool === "table" && (
-                <span className="flex items-center gap-1 text-[11px] text-slate-300">
-                  <input type="number" min={1} max={30} value={tableRows} onChange={(e) => setTableRows(Math.max(1, Math.min(30, Number(e.target.value) || 1)))} title={tr ? "Satır" : "Rows"} className="h-7 w-11 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100" />
-                  ×
-                  <input type="number" min={1} max={30} value={tableCols} onChange={(e) => setTableCols(Math.max(1, Math.min(30, Number(e.target.value) || 1)))} title={tr ? "Sütun" : "Columns"} className="h-7 w-11 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100" />
+                <span className="relative">
+                  <button type="button" onClick={() => { setTablePick((v) => !v); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-2 text-[12px] font-semibold tabular-nums text-slate-100 hover:bg-slate-800">
+                    {tableRows} × {tableCols}
+                  </button>
+                  {tablePick && (
+                    <div className="absolute left-0 top-full z-[200] mt-1.5 rounded-xl border border-white/15 bg-slate-900 p-2.5 shadow-2xl" onMouseLeave={() => setTableHov(null)}>
+                      <p className="mb-1.5 text-center text-[12px] font-semibold tabular-nums text-cyan-200">{tableHov ? `${tableHov.r} × ${tableHov.c}` : (tr ? "Satır × sütun seçin" : "Pick rows × columns")}</p>
+                      <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(10, 18px)" }}>
+                        {Array.from({ length: 80 }, (_, n) => {
+                          const r = Math.floor(n / 10) + 1, c = (n % 10) + 1;
+                          const on = tableHov ? r <= tableHov.r && c <= tableHov.c : r <= tableRows && c <= tableCols;
+                          return <button key={n} type="button" aria-label={`${r} × ${c}`} onMouseEnter={() => setTableHov({ r, c })} onClick={() => { setTableRows(r); setTableCols(c); setTablePick(false); setTableHov(null); }}
+                            className={`h-[18px] w-[18px] rounded-[3px] border ${on ? "border-cyan-300 bg-cyan-400/40" : "border-white/20 bg-white/[0.04]"}`} />;
+                        })}
+                      </div>
+                      <p className="mt-1.5 text-center text-[11px] text-slate-400">{tr ? "Seçince sayfada sürükleyerek çizin" : "Then drag on the page to draw"}</p>
+                    </div>
+                  )}
                 </span>
               )}
             </div>
