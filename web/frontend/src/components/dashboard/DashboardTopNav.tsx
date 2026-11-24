@@ -14,19 +14,15 @@ import { DailyPoolChip, type DailyPool } from "./DailyPoolChip";
 import { TopUpModal } from "../tools/TopUpModal";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
-import rawFlags from "react-phone-number-input/flags";
+import { MiniFlag } from "../common/MiniFlag";
 
 // Emoji bayraklar Windows'ta harf olarak görünür → gerçek SVG bayraklar kullanılır.
-type FlagComponent = ComponentType<{ title?: string }>;
-const flagComponents = rawFlags as unknown as Record<string, FlagComponent | undefined>;
 
 /** Küçük, yuvarlatılmış SVG bayrak (react-phone-number-input flag seti). */
 function FlagGlyph({ country, title }: { country: string; title?: string }) {
-  const Flag = flagComponents[country];
-  if (!Flag) return null;
   return (
     <span className="flex h-3.5 w-5 shrink-0 items-center overflow-hidden rounded-[2px] ring-1 ring-white/10">
-      <Flag title={title} />
+      <MiniFlag country={country} title={title} />
     </span>
   );
 }
