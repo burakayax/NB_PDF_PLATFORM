@@ -194,11 +194,17 @@ function FillPatch({ src, rect }: {
   src: HTMLCanvasElement | null; rect: { left: number; top: number; width: number; height: number };
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [box, setBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   useEffect(() => {
     const out = ref.current;
     if (!src || !out) return;
+    // Kutu sayfa dışına taşabilir (ör. üst kenarı sayfanın üstünde kalan logo): SAĞ/ALT kenarı sayfaya kırp,
+    // sol/üst kırpılınca da boyutu küçült → örnekleme ve yerleşim aynı bölgede kalır (yoksa aşağıdaki yazı satırları
+    // kenar şeridine karışıp yamada anlamsız çizgiler çıkıyordu).
     const L = Math.max(1, Math.floor(rect.left)), T = Math.max(1, Math.floor(rect.top));
-    const W = Math.max(1, Math.min(src.width - L - 1, Math.ceil(rect.width))), H = Math.max(1, Math.min(src.height - T - 1, Math.ceil(rect.height)));
+    const R = Math.min(src.width - 1, Math.ceil(rect.left + rect.width)), B = Math.min(src.height - 1, Math.ceil(rect.top + rect.height));
+    const W = Math.max(1, R - L), H = Math.max(1, B - T);
+    setBox({ left: L, top: T, width: W, height: H });
     const sctx = src.getContext("2d", { willReadFrequently: true });
     const octx = out.getContext("2d");
     if (!sctx || !octx) return;
@@ -207,8 +213,23 @@ function FillPatch({ src, rect }: {
     // karmaşık, kirli bir zemin veriyordu → beyaz bırak (sunucuda da görsel kalkınca sayfa beyaz kalır).
     if (W * H > src.width * src.height * 0.5) { octx.fillStyle = "#ffffff"; octx.fillRect(0, 0, W, H); return; }
     // Kenar şeritleri (kutunun hemen DIŞI): sol/sağ sütun, üst/alt satır.
-    const left = sctx.getImageData(L - 1, T, 1, H).data, right = sctx.getImageData(L + W, T, 1, H).data;
-    const top = sctx.getImageData(L, T - 1, W, 1).data, bottom = sctx.getImageData(L, T + H, W, 1).data;
+    // Şeritler medyan süzgeçten geçer: kutuya yakın duran yazı/çizgi kenarı şeride girince (ör. logonun hemen
+    // altındaki satır) tek tek pikseller yamaya dikey/yatay çizgi olarak yayılıyordu; dar çıkıntı silinir, degrade kalır.
+    const medStrip = (d: Uint8ClampedArray): Uint8ClampedArray => {
+      const n = d.length / 4, r = Math.max(3, Math.round(n * 0.35));
+      const out = new Uint8ClampedArray(d.length);
+      for (let k = 0; k < 3; k++) {
+        for (let i = 0; i < n; i++) {
+          const win: number[] = [];
+          for (let j = Math.max(0, i - r); j <= Math.min(n - 1, i + r); j++) win.push(d[j * 4 + k]);
+          win.sort((a, b) => a - b);
+          out[i * 4 + k] = win[win.length >> 1];
+        }
+      }
+      return out;
+    };
+    const left = medStrip(sctx.getImageData(L - 1, T, 1, H).data), right = medStrip(sctx.getImageData(L + W, T, 1, H).data);
+    const top = medStrip(sctx.getImageData(L, T - 1, W, 1).data), bottom = medStrip(sctx.getImageData(L, T + H, W, 1).data);
     // Bir kenar diğerlerinden çok farklıysa (ör. logo bandın tam kenarında → dışı beyaz sayfa) o kenar
     // YOK sayılır; yoksa önizleme bantta açık renkli bir geçiş gösteriyordu (canlıda görüldü).
     const mean = (d: Uint8ClampedArray) => { const m = [0, 0, 0]; const n = d.length / 4; for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; } return m.map((v) => v / Math.max(1, n)); };
@@ -242,7 +263,7 @@ function FillPatch({ src, rect }: {
     octx.putImageData(img, 0, 0);
   }, [src, rect.left, rect.top, rect.width, rect.height]);
   return <canvas ref={ref} className="pointer-events-none absolute"
-    style={{ left: Math.floor(rect.left), top: Math.floor(rect.top), width: Math.ceil(rect.width), height: Math.ceil(rect.height) }} />;
+    style={box ?? { left: Math.floor(rect.left), top: Math.floor(rect.top), width: Math.ceil(rect.width), height: Math.ceil(rect.height) }} />;
 }
 
 /** Seçili metnin çerçevesinin 4 kenarında tutulabilir şeritler: yazının içine tıklamayı bozmadan çerçeveden tutup taşımaya yarar. */
@@ -345,8 +366,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [guides, setGuides] = useState<Guide[]>([]);
   // Boş alanda sürükleyerek çoklu seçim (kutu, overlay piksel koordinatı).
   const [marquee, setMarquee] = useState<{ sx: number; sy: number; cx: number; cy: number; add: boolean } | null>(null);
-  // Silme geçmişi (Geri Al / Ctrl+Z) — her giriş tek silme işlemindeki kimlikler.
-  const [delStack, setDelStack] = useState<string[][]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [addMode, setAddMode] = useState(false);
   const [color, setColor] = useState("#111111");
@@ -364,6 +383,9 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrPct, setOcrPct] = useState(0);
   const [ocrTried, setOcrTried] = useState(false);
+  const [scanNotice, setScanNotice] = useState(false);
+  // Silinecek görselin üstünde açık renkli yazı varsa bekleyen silme (ipucu kutusu: Yine de sil / İptal).
+  const [lightTextHint, setLightTextHint] = useState<{ ids: string[]; sel: string | null; multi: Set<string> } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [thumbs, setThumbs] = useState<string[]>([]);
   // Hazırlanan PDF (günlük hak «PDF'i Hazırla»da düşer; blob hemen alınır → ortak sonuç paneli).
@@ -475,14 +497,16 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       setEdits(new Map());
       setAdded([]);
       setAddedImages([]);
-      setDelStack([]);
+      clearHistory();
       setBgMap(new Map());
       setSelected(null);
       setMultiSel(new Set());
       setOcrTried(false);
       // Taranmış PDF + Plus ve üzeri plan → OCR kendiliğinden çalışır (ilerleme ekranı), bitince editör açılır.
       if (ocrAllowed && scannedPageIndexes(merged).length > 0) await autoOcr(d, merged);
-      setEditorOpen(true);
+      // Taranmış PDF + OCR'sız plan → editör açılmadan ÖNCE uyarı: Tamam → düzenleme, Kapat → vazgeç.
+      if (!ocrAllowed && scannedPageIndexes(merged).length > 0) setScanNotice(true);
+      else setEditorOpen(true);
     } catch (e) {
       setFile(null);
       setError(e instanceof Error ? e.message : tr ? "PDF açılamadı." : "Couldn't open the PDF.");
@@ -665,6 +689,21 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   function elAlign(el: PdfElement): AlignKey { return edits.get(el.id)?.align ?? "left"; }
   const isDeleted = (id: string) => edits.get(id)?.deleted === true;
   const bgFor = (id: string) => bgMap.get(id) ?? "#ffffff";
+  // Silinen görselin kutusuyla kesişen YAZILAR: yama (FillPatch) tuvaldeki yazıyı da örter, oysa indirilen PDF'te
+  // yalnız görsel kalkar, yazı kalır → bu yazılar önizlemede yamanın ÜSTÜNE yeniden çizilsin (aktif metin gibi).
+  const underDeletedImg = (() => {
+    const out = new Set<string>();
+    const pg = analysis?.pages[current];
+    if (!pg) return out;
+    const dels = pageEls.filter((e) => e.type === "image" && isDeleted(e.id) && (e.bbox[2] - e.bbox[0]) * (e.bbox[3] - e.bbox[1]) <= pg.width * pg.height * 0.5);
+    if (!dels.length) return out;
+    for (const t of pageEls) {
+      if (t.type !== "text" || isDeleted(t.id)) continue;
+      const [a0, b0, a1, b1] = t.bbox;
+      if (dels.some((d) => Math.min(a1, d.bbox[2]) - Math.max(a0, d.bbox[0]) > 0.5 && Math.min(b1, d.bbox[3]) - Math.max(b0, d.bbox[1]) > 0.5)) out.add(t.id);
+    }
+    return out;
+  })();
 
   // ── Seçim hedefleri + toplu uygulama (Ctrl+A / çoklu seçim) ──
   const isAddedId = (id: string) => added.some((a) => a.id === id);
@@ -985,7 +1024,13 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   function selectEl(el: PdfElement, additive = false) {
     if (additive) {
       // Ctrl/Shift ile tıkla → çoklu seçime ekle/çıkar.
-      setMultiSel((s) => { const n = new Set(s); if (n.has(el.id)) n.delete(el.id); else n.add(el.id); return n; });
+      // Önceden TEK seçili öğe (multiSel boş) varsa o da çoklu seçime katılır — yoksa ilk Ctrl+tık onu bırakıyordu.
+      setMultiSel((s) => {
+        const n = new Set(s);
+        if (!n.size && selected && selected !== el.id) n.add(selected);
+        if (n.has(el.id)) n.delete(el.id); else n.add(el.id);
+        return n;
+      });
       setSelected(el.id);
     } else {
       setMultiSel(new Set());
@@ -1036,23 +1081,68 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   // tıklamak artık geri getirmez — kazara tıklamada yazı geri geliyordu.)
   function markDeleted(ids: string[]) {
     if (!ids.length) return;
-    setEdits((m) => { const n = new Map(m); for (const id of ids) n.set(id, { ...n.get(id), deleted: true }); return n; });
-    setDelStack((s) => [...s, ids]);
-  }
-  function undoDelete() {
-    const last = delStack[delStack.length - 1];
-    if (!last) return;
-    setDelStack((s) => s.slice(0, -1));
-    setEdits((m) => {
-      const n = new Map(m);
-      for (const id of last) {
-        const cur = n.get(id);
-        if (!cur) continue;
-        const rest = { ...cur }; delete rest.deleted;
-        if (Object.keys(rest).length) n.set(id, rest); else n.delete(id);
+    // Silinecek görselin üstünde AÇIK renkli (ör. beyaz) yazı varsa: silmeden ÖNCE uyar (Yine de sil / İptal).
+    const gone = new Set(ids);
+    let light = 0;
+    for (const pg of analysis?.pages ?? []) {
+      const imgs = pg.elements.filter((e) => e.type === "image" && gone.has(e.id));
+      if (!imgs.length) continue;
+      for (const t of pg.elements) {
+        if (t.type !== "text" || gone.has(t.id) || edits.get(t.id)?.deleted || edits.get(t.id)?.color !== undefined) continue;
+        const m = /^#?([0-9a-f]{6})$/i.exec(t.color ?? "");
+        if (!m) continue;
+        const n = parseInt(m[1], 16), lum = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+        if (lum < 0.85) continue;
+        const [a0, b0, a1, b1] = t.bbox;
+        if (imgs.some((d) => Math.min(a1, d.bbox[2]) - Math.max(a0, d.bbox[0]) > 0.5 && Math.min(b1, d.bbox[3]) - Math.max(b0, d.bbox[1]) > 0.5)) light++;
       }
-      return n;
-    });
+    }
+    if (light > 0) { setLightTextHint({ ids, sel: selected, multi: multiSel }); return; }
+    applyDelete(ids);
+  }
+  // Seçili TÜM öğeleri sil (Delete tuşu ya da çoklu seçimde çöp kutusu). Açık renkli yazı uyarısı markDeleted'da.
+  function deleteSelection() {
+    const delIds: string[] = [];
+    for (const id of selTargets()) {
+      if (analysis?.pages[current]?.elements.some((x) => x.id === id)) delIds.push(id);
+      else if (added.some((x) => x.id === id)) setAdded((a) => a.filter((x) => x.id !== id));
+      else if (addedImages.some((x) => x.id === id)) setAddedImages((a) => a.filter((x) => x.id !== id));
+    }
+    markDeleted(delIds);
+    setMultiSel(new Set()); setSelected(null);
+  }
+  function cancelLightDelete() {
+    if (lightTextHint) { setSelected(lightTextHint.sel); setMultiSel(lightTextHint.multi); }
+    setLightTextHint(null);
+  }
+  function applyDelete(ids: string[]) {
+    setEdits((m) => { const n = new Map(m); for (const id of ids) n.set(id, { ...n.get(id), deleted: true }); return n; });
+  }
+
+  // Geri Al (Ctrl+Z): TÜM değişiklikler (silme, metin düzenleme, taşıma, renk, eklenen metin/görsel) için anlık görüntü yığını.
+  // Arka arkaya hızlı değişiklikler (yazı yazma, sürükleme) tek adımda birleşir; yığın sınırsız kez geri alır.
+  const histRef = useRef<{ stack: { edits: typeof edits; added: typeof added; addedImages: typeof addedImages }[]; last: { edits: typeof edits; added: typeof added; addedImages: typeof addedImages } | null; skip: boolean; rebase: boolean; t: number }>({ stack: [], last: null, skip: false, rebase: false, t: 0 });
+  const [histLen, setHistLen] = useState(0);
+  function clearHistory() { histRef.current.rebase = true; histRef.current.stack = []; setHistLen(0); }
+  useEffect(() => {
+    const h = histRef.current;
+    const cur = { edits, added, addedImages };
+    if (h.rebase || !h.last) { h.rebase = false; h.last = cur; return; }
+    if (h.skip) { h.skip = false; h.last = cur; return; }
+    if (h.last.edits === edits && h.last.added === added && h.last.addedImages === addedImages) return;
+    const now = Date.now();
+    if (now - h.t > 600) { h.stack.push(h.last); if (h.stack.length > 200) h.stack.shift(); setHistLen(h.stack.length); }
+    h.t = now;
+    h.last = cur;
+  }, [edits, added, addedImages]);
+  function undoDelete() {
+    const h = histRef.current;
+    const snap = h.stack.pop();
+    if (!snap) return;
+    setHistLen(h.stack.length);
+    h.skip = true;
+    setEdits(snap.edits); setAdded(snap.added); setAddedImages(snap.addedImages);
+    setSelected(null); setMultiSel(new Set());
   }
 
   // Klavye: Ctrl+A tümünü seç · Delete/Backspace sil · Ctrl+Z son silmeyi geri al · Esc seçimi bırak.
@@ -1062,7 +1152,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       const tag = (document.activeElement?.tagName || "").toLowerCase();
       const editing = tag === "textarea" || tag === "input" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable;
       if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey) {
-        if (editing || !delStack.length) return;
+        if (editing || !histRef.current.stack.length) return;
         e.preventDefault();
         undoDelete();
         return;
@@ -1084,22 +1174,14 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); return; }
       if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (editing) return;
-      const targets = selTargets();
-      if (!targets.length) return;
+      if (!selTargets().length) return;
       e.preventDefault();
-      const delIds: string[] = [];
-      for (const id of targets) {
-        if (analysis?.pages[current]?.elements.some((x) => x.id === id)) delIds.push(id);
-        else if (added.some((x) => x.id === id)) setAdded((a) => a.filter((x) => x.id !== id));
-        else if (addedImages.some((x) => x.id === id)) setAddedImages((a) => a.filter((x) => x.id !== id));
-      }
-      markDeleted(delIds);
-      setMultiSel(new Set()); setSelected(null);
+      deleteSelection();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorOpen, selected, current, analysis, added, addedImages, edits, multiSel, delStack]);
+  }, [editorOpen, selected, current, analysis, added, addedImages, edits, multiSel, histLen]);
 
   // «Metin Ekle» TEK SEFERLİK: bir yere tıklanınca kutu eklenir ve mod kapanır (art arda tıklama yeni kutu açmaz).
   function onCanvasClick(e: React.MouseEvent) {
@@ -1385,7 +1467,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     return { h: Math.floor(mins / 60), m: mins % 60, clock: clock === "00:00" ? (tr ? "gece 00:00" : "00:00") : clock };
   }
 
-  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setQuotaPopup(null); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); setSelected(null); setDelStack([]); setBgMap(new Map()); setOcrTried(false); setOcrBusy(false); }
+  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setQuotaPopup(null); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); setSelected(null); clearHistory(); setBgMap(new Map()); setOcrTried(false); setOcrBusy(false); setScanNotice(false); }
 
   // Yalnız altı/üstü çizgi değişmiş öğe: yazı yeniden çizilmez (orijinal font/ölçü korunur), çizgi üstüne bindirilir.
   const isDecoOnly = (el: PdfElement, ed: Edit | undefined): boolean =>
@@ -1591,6 +1673,46 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         document.body,
       )}
 
+      {/* Taranmış belge uyarısı (OCR'sız plan): yükleme sonrası, editör açılmadan önce. */}
+      {scanNotice && createPortal(
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={reset}>
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-orange-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={reset} aria-label={tr ? "Kapat" : "Close"} className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-500/15 text-orange-300 ring-1 ring-orange-400/30"><ScanText className="h-7 w-7" /></div>
+            <h3 className="mt-4 text-lg font-bold text-white">{tr ? "Taranmış belge algılandı" : "Scanned document detected"}</h3>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-slate-300">{tr
+              ? "Bu PDF taranmış görünüyor (sayfalar resim, içinde gerçek yazı yok). Normal, yazı içeren PDF'lerde her yazıya tıklayıp değiştirebilirsiniz; ancak bu belgedeki yazılar resim olduğu için tıklanamıyor. Bu planda görselleri silebilir ve «Metin Ekle» ile üzerine yeni yazı yazabilirsiniz. Plus ve üzeri planlarda yazı tanıma (OCR) taranmış belgeyi otomatik okur ve her satır tıklanıp değiştirilebilir hâle gelir."
+              : "This PDF looks scanned (pages are images). In regular PDFs with real text you can click and change any text, but the text in this document is part of an image, so it can't be clicked. On this plan you can delete images and type new text with «Add Text». On Plus and above, text recognition (OCR) reads scanned documents automatically and every line becomes clickable and editable."}</p>
+            <div className="mt-5 flex flex-col gap-2">
+              <a href={tr ? "/pricing" : "/en/pricing"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-5 py-2.5 text-[14px] font-bold text-white transition hover:brightness-110">
+                <Sparkles className="h-4 w-4" />{tr ? "Taranmış belgeleri otomatik düzenle — Plus'a geç" : "Edit scanned documents automatically — go Plus"}
+              </a>
+              <button type="button" onClick={() => { setScanNotice(false); setEditorOpen(true); }} className="rounded-xl border border-white/15 px-5 py-2.5 text-[13px] font-semibold text-slate-100 transition hover:bg-white/[0.06]">{tr ? "Tamam, düzenlemeye geç" : "OK, continue to editing"}</button>
+              <button type="button" onClick={reset} className="rounded-xl px-5 py-2 text-[13px] font-semibold text-slate-400 transition hover:text-white">{tr ? "Kapat" : "Close"}</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* İpucu: görsel silindi ama üstündeki açık renkli yazı kaldı (beyaz zeminde görünmez). Tamam → kullanıcı devam eder. */}
+      {lightTextHint && createPortal(
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={cancelLightDelete}>
+          <div className="w-full max-w-sm rounded-3xl border border-amber-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30"><Info className="h-6 w-6" /></div>
+            <h3 className="mt-3 text-base font-bold text-white">{tr ? "İpucu" : "Tip"}</h3>
+            <p className="mt-2 text-[13px] leading-relaxed text-slate-300">{tr
+              ? "Sildiğiniz kısmın üzerinde beyaz (açık renkli) yazı var. Bu kısmı silerseniz yazı ile arka plan aynı renk olacağı için yazı görünmez olabilir. Öncelikle yazı rengini değiştirmeniz daha uygun olabilir."
+              : "The part you deleted has white (light-colored) text on top of it. Once it's removed, the text and the background will be the same color, so the text may become invisible. It may be better to change the text color first."}</p>
+            <div className="mt-5 flex gap-2">
+              <button type="button" onClick={cancelLightDelete} autoFocus className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-[14px] font-semibold text-slate-100 transition hover:bg-white/[0.06]">{tr ? "İptal" : "Cancel"}</button>
+              <button type="button" onClick={() => { applyDelete(lightTextHint.ids); setLightTextHint(null); }} className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-[14px] font-bold text-white transition hover:brightness-110">{tr ? "Yine de sil" : "Delete anyway"}</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
       {editorOpen && doc && createPortal(
         <div className="fixed inset-0 z-[100] flex flex-col bg-[#0b1020]/97 backdrop-blur-sm">
           {/* Üst araç çubuğu — her grup kendi çerçevesinde: EKLE · BİÇİM · GÖRÜNÜM · BİTİR */}
@@ -1685,7 +1807,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
               <span className="mx-0.5 h-6 w-px bg-white/15" />
-              <button type="button" onClick={undoDelete} disabled={!delStack.length} title={tr ? "Son silmeyi geri al (Ctrl+Z)" : "Undo last delete (Ctrl+Z)"}
+              <button type="button" onClick={undoDelete} disabled={!histLen} title={tr ? "Son değişikliği geri al (Ctrl+Z)" : "Undo last change (Ctrl+Z)"}
                 className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
                 <Undo2 className="h-3.5 w-3.5" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
               </button>
@@ -1740,7 +1862,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     if (el.type !== "text" || isDeleted(el.id)) return null;
                     const shift = shifts.get(el.id) ?? 0;
                     const ed = edits.get(el.id);
-                    const activeCover = selected === el.id || multiSel.has(el.id) || (!!ed && !isDecoOnly(el, ed)) || shift > 0.5;
+                    const activeCover = selected === el.id || multiSel.has(el.id) || (!!ed && !isDecoOnly(el, ed)) || shift > 0.5 || underDeletedImg.has(el.id);
                     if (!activeCover) return null;
                     const [x0, , x1] = el.bbox;
                     const [cy0, cy1] = coverY(el);
@@ -1774,7 +1896,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                           {moved && <FillPatch src={canvasRef.current} rect={oldRect} />}
                           {moved && <MovedImage src={canvasRef.current} from={style} to={boxStyle} />}
                           <div data-bg={bgImg ? "1" : undefined}
-                            onPointerDown={canMove ? (e) => { if (!sel) selectEl(el, e.shiftKey || e.ctrlKey || e.metaKey); startFrameDrag(e, "el", el.id, x0 + mdx, y0 + mdy, x1 - x0, y1 - y0, mdx, mdy); } : undefined}
+                            onPointerDown={canMove ? (e) => { if (!sel && !(e.shiftKey || e.ctrlKey || e.metaKey)) selectEl(el, false); startFrameDrag(e, "el", el.id, x0 + mdx, y0 + mdy, x1 - x0, y1 - y0, mdx, mdy); } : undefined}
                             onClick={(e) => { e.stopPropagation(); selectEl(el, e.shiftKey || e.ctrlKey || e.metaKey); }}
                             className={`absolute rounded-sm ${canMove ? "cursor-move" : "cursor-pointer"} ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`}
                             style={{ ...boxStyle, touchAction: canMove ? "none" : undefined }}
@@ -1783,7 +1905,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                               <button
                                 type="button"
                                 onPointerDown={(e) => e.stopPropagation()}
-                                onClick={(e) => { e.stopPropagation(); markDeleted([el.id]); setSelected(null); }}
+                                onClick={(e) => { e.stopPropagation(); if (multiSel.size > 1) { deleteSelection(); } else { markDeleted([el.id]); setSelected(null); } }}
                                 className="absolute -right-2.5 -top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white shadow"
                                 title={tr ? "Sil" : "Delete"}
                               >
@@ -1805,7 +1927,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     // canvas'taki NET orijinal metin görünür (çift görüntü yok). Yalnız altı/üstü çizgi
                     // eklendiyse yazı yeniden çizilmez; çizgi üstüne bindirilir.
                     const decoOnly = isDecoOnly(el, ed);
-                    const active = sel || (!!ed && !decoOnly) || shift > 0.5;
+                    const active = sel || (!!ed && !decoOnly) || shift > 0.5 || underDeletedImg.has(el.id);
                     if (!active) {
                       const szp = elSize(el);
                       const baseY = ((el.by ?? y0 + szp) - y0) * scale;
