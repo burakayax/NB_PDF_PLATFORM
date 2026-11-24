@@ -53,6 +53,9 @@ export async function runIysReminder(now: Date = new Date()): Promise<boolean> {
 }
 
 export function registerIysReminderJobs() {
+  // Yalnız canlıda: yerel geliştirme veritabanındaki deneme kayıtları için gerçek yönetici
+  // adresine "süre doldu" e-postası gitmesin (yerel kayıtlar hiç İYS'ye yüklenmez).
+  if (env.NODE_ENV !== "production") return;
   // Her gün 09:30 (Türkiye saati = 06:30 UTC) — mesai başlarken.
   cron.schedule("30 6 * * *", () => {
     void runIysReminder().catch((err) => {

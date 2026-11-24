@@ -25,6 +25,8 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
     <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <!-- Açılış ekranının logosu sayfanın en büyük görseli (LCP): JS gelmeden indirmeye başlansın -->
+    <link rel="preload" as="image" type="image/webp" href="/navbar-logo.webp" fetchpriority="high" />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
     <link rel="stylesheet" href="/fonts/fonts.css" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />

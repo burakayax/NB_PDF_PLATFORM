@@ -10,6 +10,16 @@ export const COPY_2 = {
       ["Sık yapılan hatalar", "Ekran görüntüsü kullanmak, küçük fotoğrafı büyütüp bulanıklaştırmak, krem ya da gri duvarı beyaz sanmak."],
     ],
   },
+  "fotograf-kb-kucultme-20-50-100-kb": {
+    hook: "Fotoğraf 100 KB'a nasıl düşer?",
+    slides: [
+      ["KB ile MB arasındaki fark", "1 MB, 1024 KB eder. 3 MB'lık bir fotoğrafı 100 KB'a indirmek, dosyayı kabaca otuzda bire düşürmek demek."],
+      ["Hedef boyutu yazın", "Kalite yüzdesini tahmin etmeyin. Hedefi seçin; araç o sınırın altında kalan en yüksek kaliteyi kendisi bulur."],
+      ["Hazır düğmeler var", "20, 50, 100, 200, 500 KB ve 1 MB tek tıkla seçilir. Başka bir rakam gerekiyorsa KB cinsinden elle yazın."],
+      ["Hedefe inilemezse", "Araç bunu açıkça söyler. Önce piksel ölçüsünü düşürün, sonra sıkıştırın ya da hedefi biraz yükseltin."],
+      ["Kırpmayın", "Kırpmak görüntünün bir kısmını kalıcı atar. Dosyanız tarayıcınızda işlenir, sunucuya yüklenmez."],
+    ],
+  },
   "bordro-sayfalarini-ayirma": {
     hook: "Tek PDF'teki bordroyu kişi kişi ayırmak",
     slides: [

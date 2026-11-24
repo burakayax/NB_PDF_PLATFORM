@@ -1,6 +1,6 @@
 import { useOptionalSettings } from "../contexts/SettingsContext";
 import { TOOLS } from "./toolCatalog";
-import { ARAC_SAYISI, TOOL_SLUGS } from "../seo/seoContent.mjs";
+import { ARAC_SAYISI, TOOL_SLUGS } from "../seo/seoLight.mjs";
 
 /**
  * Sitede şu an kullanılabilir araç sayısı — ekranda ÇALIŞMA ANINDA hesaplanır.

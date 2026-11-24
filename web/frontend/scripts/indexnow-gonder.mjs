@@ -20,7 +20,7 @@ if (!adresler.length) {
 console.log(adresler.length + " adres" + (uygula ? " gönderiliyor" : " (prova, gönderilmedi)"));
 if (!uygula) process.exit(0);
 
-const yanit = await fetch("https://api.indexnow.org/indexnow", {
+const yanit = await fetch("https://www.bing.com/indexnow", {
   method: "POST",
   headers: { "Content-Type": "application/json; charset=utf-8" },
   body: JSON.stringify({

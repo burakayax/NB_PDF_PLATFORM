@@ -16,7 +16,7 @@ import type { Language } from "../../i18n/landing";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolResultPanel } from "../common/ToolResultPanel";
-import { getToolSeo } from "../../seo/seoContent.mjs";
+import { getToolSeo, useToolSeoReady } from "../../seo/toolSeoRuntime";
 import { expandPagesString } from "../../i18n/workspace";
 import {
   rotatePdf,
@@ -566,6 +566,7 @@ type Props = {
 /** Tam sayfa misafir aracı (SEO için /tools/<slug>). Çekirdek + sayfa çerçevesi. */
 export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initialFile }: Props) {
   const tr = language === "tr";
+  useToolSeoReady(); // araç metinleri geç yüklenirse yeniden çiz
   const seo = getToolSeo(slug, language);
 
   return (

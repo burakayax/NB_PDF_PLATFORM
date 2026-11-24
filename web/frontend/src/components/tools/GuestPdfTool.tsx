@@ -1,7 +1,7 @@
 import { ThemeToggle } from "../common/ThemeToggle";
 import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { getToolSeo } from "../../seo/seoContent.mjs";
+import { getToolSeo, useToolSeoReady } from "../../seo/toolSeoRuntime";
 import { GuestToolCore, type GuestToolId } from "./GuestToolCore";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolScore } from "../common/ToolScore";
@@ -29,6 +29,7 @@ export function GuestPdfTool({
   onRegister,
 }: GuestPdfToolProps) {
   const tr = language === "tr";
+  useToolSeoReady(); // araç metinleri geç yüklenirse yeniden çiz
   const seo = getToolSeo(slug, language);
 
   return (

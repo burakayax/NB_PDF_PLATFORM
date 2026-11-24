@@ -11,6 +11,7 @@ import { CV_PROFESSION_POSTS } from "./blogContentCv3.mjs";
 import { QR_TOC_POSTS } from "./blogContentQrToc.mjs";
 import { TIFF_POSTS } from "./blogContentTiff.mjs";
 import { YATAY_POSTS } from "./blogContentYatay.mjs";
+import { PDF_HEDEF_POSTS } from "./blogContentPdfHedef.mjs";
 
 export const BLOG_BASE = "/blog";
 
@@ -24,6 +25,7 @@ export const BLOG_POSTS = [
   ...QR_TOC_POSTS,
   ...TIFF_POSTS,
   ...YATAY_POSTS,
+  ...PDF_HEDEF_POSTS,
   post(
     {
       slug: "sozlesme-imzalamadan-once-kontrol-listesi",
@@ -6453,16 +6455,16 @@ export const BLOG_POSTS = [
     {
       slug: "edevlet-belgelerini-tek-pdf-yapma",
       date: "2026-09-22",
-      updated: "2026-09-22",
+      updated: "2026-11-24",
       readMinutes: 6,
       tags: { tr: ["e-Devlet", "Resmî Evrak", "Birleştirme"], en: ["e-Government", "Official Documents", "Merge"] },
       accent: "sky",
       tool: "/tools/merge-pdf",
     },
     {
-      title: "e-Devlet Belgelerini Tek PDF'te Birleştirme",
+      title: "e-Devlet Belgelerini Tek PDF Yap: Adli Sicil, İkametgâh, SGK",
       description:
-        "e-Devlet'ten indirdiğiniz belgeleri tek dosyada toplamanın doğru yolu: karekodu bozmadan birleştirme, sıralama ve boyutu sınırın altında tutma.",
+        "İkametgâh, adli sicil, nüfus kayıt örneği ve SGK dökümünü karekodu bozmadan tek PDF yapın; sıralama ve boyutu sınırın altında tutma rehberi.",
       excerpt:
         "Bir başvuru için e-Devlet'ten beş ayrı belge indirdiniz ve karşı taraf «hepsini tek PDF olarak gönderin» diyor. Bu işin bir inceliği var: barkodlu belgelerin doğrulanabilirliğini bozmamak.",
       blocks: [
@@ -7117,6 +7119,120 @@ export const BLOG_POSTS = [
         { q: "Can I use my phone photo directly?", a: "You need to crop it first. Camera photos are 4:3 or 16:9 while a passport photo is 3:4. Crop with the face centred, then resize." },
         { q: "Can I enlarge a small photo?", a: "You can, but the result will be blurry, because lost detail does not return. Start from the highest-resolution original you have." },
         { q: "Does this tool make a photo biometric?", a: "No. It only sets the size. A white background, the position of the face and a neutral expression depend on the photo itself and must be handled separately." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "fotograf-kb-kucultme-20-50-100-kb",
+      date: "2026-11-23",
+      updated: "2026-11-23",
+      readMinutes: 5,
+      tags: { tr: ["Başvuru", "Görsel", "Sıkıştırma"], en: ["Applications", "Images", "Compression"] },
+      accent: "amber",
+      tool: "/tools/gorsel-sikistir",
+    },
+    {
+      title: "Fotoğraf KB Küçültme: 20, 50, 100 KB'a Düşürme",
+      description:
+        "Başvuru formu «en fazla 100 KB» diyor ve fotoğrafınız megabaytlarca mı? Hedef boyutu yazıp fotoğrafı KB'a düşürmenin adım adım yolu — üyeliksiz, cihazınızda.",
+      excerpt:
+        "Telefonla çekilen fotoğraf birkaç MB tutar; başvuru ekranları ise çoğu zaman 20, 50 ya da 100 KB ister. Kalite yüzdesiyle uğraşmadan hedef boyuta inmenin yolu burada.",
+      blocks: [
+        { t: "lead", x: "Başvuru formunu doldurdunuz, fotoğrafı yüklüyorsunuz ve ekran «dosya boyutu çok büyük» diyor. Telefonla çekilmiş bir fotoğraf kolayca birkaç megabayt tutar; formlar ise çoğunlukla 20, 50 ya da 100 KB gibi çok küçük bir sınır ister. Çözüm fotoğrafı kırpmak değil, dosyayı sınırın altına sıkıştırmaktır." },
+
+        { t: "h2", x: "KB ve MB: aradaki fark" },
+        { t: "p", x: "1 MB, 1024 KB eder. Yani 3 MB'lık bir fotoğrafı 100 KB'a düşürmek, dosyayı kabaca otuzda bire indirmek demektir. Bu kadar büyük bir küçültme için kalite bir miktar feda edilir; önemli olan bu kaybın gözle fark edilmeyecek sınırda kalmasıdır." },
+
+        { t: "h2", x: "Hedef boyut modu: kalite ayarıyla uğraşmayın" },
+        { t: "p", x: "Klasik yöntemde kalite yüzdesini tahminle ayarlar, dosyayı indirir, boyutuna bakar ve tutmadıysa baştan denersiniz. Görsel Sıkıştır aracının hedef boyut modunda bunu siz yapmazsınız: hedefi yazarsınız, araç o sınırın altında kalan en yüksek kaliteyi kendisi bulur." },
+        { t: "steps", items: [
+          { title: "Fotoğrafı yükleyin", x: "Görseli araca ekleyin. Dosyanız sunucuya gönderilmez, tarayıcınızda işlenir." },
+          { title: "«Hedef boyuta göre» seçeneğini seçin", x: "20 KB, 50 KB, 100 KB, 200 KB, 500 KB ve 1 MB için hazır düğmeler vardır. Başka bir rakam gerekiyorsa KB cinsinden elle yazabilirsiniz." },
+          { title: "Sonuç ekranını okuyun", x: "Araç hangi kalitenin kullanıldığını yüzde olarak yazar ve bunun ne anlama geldiğini açıklar. Gerekirse ölçünün küçültüldüğünü de açıkça söyler." },
+          { title: "İndirin ve yükleyin", x: "Dosya hedefin altındaysa doğrudan başvuru ekranına yükleyebilirsiniz." },
+        ] },
+
+        { t: "cta", title: "Görsel Sıkıştır", x: "Hedef boyutu yazın, kaliteyi biz ayarlayalım — fotoğrafınız cihazınızdan çıkmaz.", btn: "Aracı aç", tool: "/tools/gorsel-sikistir" },
+
+        { t: "h2", x: "Kalite ne kadar düşer?" },
+        { t: "p", x: "Aracın verdiği kalite yüzdesini şöyle yorumlayabilirsiniz: %80 üzerindeki kayıp gözle fark edilmez. %45'in altına inildiğinde yazılar ve ince ayrıntılar bozulmaya başlar. Vesikalık gibi yüzün önemli olduğu fotoğraflarda sonucu tam boyutta açıp yüzün net göründüğünden emin olun." },
+
+        { t: "h2", x: "Hedefe inilemezse" },
+        { t: "p", x: "Çok küçük bir hedef (örneğin 20 KB) ve çok büyük bir fotoğraf birleşince yalnızca kaliteyi düşürmek yetmeyebilir. Bu durumda araç bunu açıkça söyler ve elde ettiği en küçük hâli verir; sessizce hedefin üstünde bir dosya vermez. Böyle bir durumda iki yol vardır:" },
+        { t: "ul", items: [
+          "Önce Görsel Boyutlandır aracıyla piksel ölçüsünü düşürün, sonra sıkıştırın. Küçük bir ölçü, aynı kalitede çok daha az KB tutar.",
+          "Formun izin veriyorsa hedefi biraz yükseltin.",
+        ] },
+
+        { t: "h2", x: "Sık yapılan hatalar" },
+        { t: "ul", items: [
+          "Boyutu düşürmek için fotoğrafı kırpmak. Kırpmak görüntünün bir kısmını kalıcı olarak atar ve çoğu zaman gereksizdir; hedef boyut modu görüntünün tamamını korur.",
+          "Aynı fotoğrafı üst üste defalarca sıkıştırmak. Her kayıplı kaydetme kaliteyi biraz daha düşürür. Her seferinde yüksek kaliteli aslından başlayın.",
+          "Piksel ölçüsü ile dosya boyutunu karıştırmak. 300 × 400 gibi bir ölçü ile 60 KB gibi bir boyut ayrı şartlardır; ikisini ayrı ayrı sağlamanız gerekir.",
+          "Ekran görüntüsünü fotoğraf yerine kullanmak. Ekran görüntüsü çoğu zaman gereğinden büyük ve yanlış ölçüdedir.",
+        ] },
+        { t: "tip", x: "Önce kırpın, sonra boyutlandırın, en son sıkıştırın. Bu sıra yüzün ezilmesini ve gereksiz kalite kaybını önler." },
+      ],
+      faq: [
+        { q: "Fotoğrafı 100 KB'a nasıl düşürürüm?", a: "Görsel Sıkıştır aracında fotoğrafı yükleyin, «Hedef boyuta göre» seçeneğine geçin ve 100 KB düğmesine basın. Araç, 100 KB'ın altında kalan en yüksek kaliteyi kendisi bulur." },
+        { q: "20 KB ya da 50 KB gibi çok küçük hedeflere inilir mi?", a: "20 KB ve 50 KB için de hazır düğmeler vardır. Fotoğraf çok büyükse yalnız kalite yetmeyebilir; bu durumda araç bunu açıkça söyler ve önce piksel ölçüsünü düşürmenizi önerir." },
+        { q: "1 MB kaç KB eder?", a: "1 MB, 1024 KB'dır." },
+        { q: "Boyutu düşürmek için fotoğrafı kırpmalı mıyım?", a: "Hayır. Kırpmak görüntünün bir kısmını kalıcı olarak atar. Hedef boyut modu görüntünün tamamını koruyarak dosyayı küçültür." },
+        { q: "Hedefe inilemezse ne olur?", a: "Araç bunu açıkça söyler ve elde ettiği en küçük hâli verir. Ardından piksel ölçüsünü düşürmeyi ya da hedefi biraz yükseltmeyi deneyebilirsiniz." },
+        { q: "Fotoğrafım sunucuya yüklenir mi?", a: "Hayır. Sıkıştırma tamamen tarayıcınızda çalışır; fotoğrafınız internete gönderilmez ve üyelik gerekmez." },
+      ],
+    },
+    {
+      title: "Reduce a Photo to 20, 50 or 100 KB for Application Forms",
+      description:
+        "A form says «100 KB maximum» but your photo is several megabytes? Type the target size and shrink the photo step by step — no signup, on your device.",
+      excerpt:
+        "A phone photo easily weighs a few MB, while application forms often ask for 20, 50 or 100 KB. Here is how to hit the target without guessing at quality percentages.",
+      blocks: [
+        { t: "lead", x: "You filled in the application form, you are uploading the photo, and the screen says the file is too large. A phone photo easily weighs several megabytes, while forms often set a tiny limit such as 20, 50 or 100 KB. The fix is not cropping the photo; it is compressing the file below the limit." },
+
+        { t: "h2", x: "KB versus MB" },
+        { t: "p", x: "1 MB is 1024 KB. Taking a 3 MB photo down to 100 KB therefore shrinks the file roughly thirtyfold. Some quality is traded for that, and the aim is to keep the loss below what the eye can see." },
+
+        { t: "h2", x: "Target-size mode: no quality guesswork" },
+        { t: "p", x: "The classic way is to guess a quality percentage, download, check the size and start over if it misses. In the target-size mode of Compress Image you skip all that: type the target and the tool finds the highest quality that stays under it." },
+        { t: "steps", items: [
+          { title: "Add your photo", x: "Drop the image into the tool. It is processed in your browser and never sent to a server." },
+          { title: "Choose «To a target size»", x: "There are one-click buttons for 20 KB, 50 KB, 100 KB, 200 KB, 500 KB and 1 MB. For any other figure, type it in KB." },
+          { title: "Read the result screen", x: "The tool states which quality was used as a percentage and explains what it means. If the dimensions had to be reduced, it says so plainly." },
+          { title: "Download and upload", x: "If the file is under the target, upload it straight to the application screen." },
+        ] },
+
+        { t: "cta", title: "Compress Image", x: "Type the target size and we pick the quality — your photo never leaves your device.", btn: "Open the tool", tool: "/tools/gorsel-sikistir" },
+
+        { t: "h2", x: "How much quality is lost?" },
+        { t: "p", x: "You can read the quality percentage the tool reports like this: above 80% the loss is invisible. Below 45% text and fine detail start to degrade. For photos where the face matters, open the result at full size and check that the face is still sharp." },
+
+        { t: "h2", x: "When the target cannot be reached" },
+        { t: "p", x: "A very small target (say 20 KB) combined with a very large photo may need more than lower quality. The tool then says so plainly and hands you the smallest version it achieved; it never quietly gives you a file above the target. Two ways forward:" },
+        { t: "ul", items: [
+          "First lower the pixel dimensions with Resize Image, then compress. A smaller size takes far fewer KB at the same quality.",
+          "Raise the target slightly, if the form allows it.",
+        ] },
+
+        { t: "h2", x: "Common mistakes" },
+        { t: "ul", items: [
+          "Cropping the photo to make it smaller. Cropping permanently discards part of the picture and is usually unnecessary; target-size mode keeps the whole image.",
+          "Compressing the same photo again and again. Every lossy save costs a little more quality. Always start from the high-quality original.",
+          "Mixing up pixel size and file size. A size such as 300 × 400 and a limit such as 60 KB are separate requirements, and you must meet both.",
+          "Using a screenshot instead of a photo. Screenshots are often larger than needed and the wrong size.",
+        ] },
+        { t: "tip", x: "Crop first, resize second, compress last. That order avoids squashing the face and needless quality loss." },
+      ],
+      faq: [
+        { q: "How do I reduce a photo to 100 KB?", a: "In Compress Image, upload the photo, switch to «To a target size» and click 100 KB. The tool finds the highest quality that stays under 100 KB." },
+        { q: "Can I get down to very small targets like 20 or 50 KB?", a: "There are one-click buttons for 20 KB and 50 KB too. With a very large photo, quality alone may not be enough; the tool then says so plainly and suggests lowering the pixel dimensions first." },
+        { q: "How many KB is 1 MB?", a: "1 MB is 1024 KB." },
+        { q: "Should I crop the photo to make it smaller?", a: "No. Cropping permanently discards part of the picture. Target-size mode shrinks the file while keeping the whole image." },
+        { q: "What if the target cannot be reached?", a: "The tool says so plainly and gives you the smallest version it achieved. You can then lower the pixel dimensions or raise the target slightly." },
+        { q: "Is my photo uploaded to a server?", a: "No. Compression runs entirely in your browser; your photo is never sent to the internet and no account is needed." },
       ],
     },
   ),

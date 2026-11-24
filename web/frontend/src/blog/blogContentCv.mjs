@@ -13,7 +13,7 @@ export const CV_PHOTO_POSTS = [
     {
       slug: "cv-nasil-hazirlanir",
       date: "2026-10-07",
-      updated: "2026-10-07",
+      updated: "2026-11-24",
       readMinutes: 7,
       tags: { tr: ["CV", "Özgeçmiş", "İş Başvurusu"], en: ["CV", "Resume", "Job Application"] },
       accent: "sky",
@@ -22,11 +22,21 @@ export const CV_PHOTO_POSTS = [
     {
       title: "CV Nasıl Hazırlanır? Adım Adım Rehber",
       description:
-        "İşe alımcının 30 saniyede okuyup hatırlayacağı bir CV'nin adımları: bölüm sırası, deneyimi rakamla anlatma, uzunluk, fotoğraf ve PDF kaydetme.",
+        "Basit CV nasıl hazırlanır? Altı adımda sade bir CV: bölüm sırası, deneyimi rakamla anlatma, uzunluk, fotoğraf ve PDF olarak kaydetme.",
       excerpt:
         "İyi bir CV her şeyi anlatan değil, doğru şeyleri hızlı gösteren CV'dir. Başlıkların sırasından deneyim maddelerinin nasıl yazılacağına kadar adım adım bir yol haritası.",
       blocks: [
         { t: "lead", x: "İşe alımcılar bir CV'ye çoğunlukla çok kısa bir süre ayırır; bu yüzden ilk bakışta işe yarar bilgiyi bulabilmeleri gerekir. İyi bir CV, yaptığınız her şeyi sıralayan değil, başvurduğunuz pozisyonla en ilgili olanları öne çıkaran belgedir. Aşağıdaki adımlar sıfırdan CV hazırlarken izleyebileceğiniz sade bir yol haritası." },
+        { t: "h2", x: "Basit CV nasıl hazırlanır? 6 adımda" },
+        { t: "p", x: "Hızlıca sade bir CV çıkarmak istiyorsanız şu sırayı izleyin. Her adım aşağıda ayrıntılı anlatılıyor." },
+        { t: "steps", items: [
+          { title: "Sade, tek sütunlu bir şablon seçin", x: "Süslü grafikler ve renk bloklarına gerek yok; okunaklı bir yazı tipi ve bol boşluk yeterli." },
+          { title: "Üst bilgiyi yazın", x: "Ad soyad, hedef unvan, telefon, e-posta ve şehir. T.C. kimlik numarası ve tam adres yazmayın." },
+          { title: "2–3 cümlelik profil özeti ekleyin", x: "Kim olduğunuzu, hangi alanda çalıştığınızı ve ne aradığınızı söyleyin." },
+          { title: "Deneyim veya eğitimi yazın", x: "İş deneyiminiz varsa en yeniden eskiye sıralayın; yoksa eğitim, staj, proje ve gönüllü çalışmaları öne alın." },
+          { title: "Becerileri kısa tutun", x: "İlanla ilgili 6–8 beceri ve bildiğiniz diller yeterli." },
+          { title: "PDF olarak kaydedin", x: "Dosyayı ad-soyad-cv.pdf gibi adlandırın ve metnin seçilebildiğini kontrol edin." },
+        ] },
         { t: "h2", x: "1. Önce hedefi belirleyin" },
         { t: "p", x: "Aynı CV'yi her ilana göndermek yerine, başvurduğunuz pozisyonun ilanını okuyun ve istenen becerileri not edin. CV'nizdeki deneyim ve becerilerden ilanla örtüşenleri öne alın, ilgisiz olanları kısaltın. Bu, CV'nizi her seferinde baştan yazmak demek değildir; yalnızca sıralamayı ve vurguyu ayarlamak yeterlidir." },
         { t: "h2", x: "2. Bölümleri doğru sırayla dizin" },
@@ -58,6 +68,7 @@ export const CV_PHOTO_POSTS = [
         { t: "p", x: "Son olarak CV'nizi bir arkadaşınıza gösterin ve 30 saniyede neyi hatırladığını sorun. Hatırladığı şey, öne çıkarmak istediğiniz şey değilse sıralamayı değiştirin." },
       ],
       faq: [
+        { q: "Basit CV nasıl hazırlanır?", a: "Tek sütunlu sade bir şablon seçin; üst bilgi, 2–3 cümlelik özet, deneyim veya eğitim ve kısa bir beceri listesi ekleyin, sonra PDF olarak kaydedin. Deneyiminiz yoksa eğitim, staj ve projeleri öne alın." },
         { q: "CV kaç sayfa olmalı?", a: "Birkaç yıllık deneyimde tek sayfa genellikle yeterli, uzun kariyerlerde iki sayfa makuldür. Önemli olan sayfa sayısı değil, en ilgili bilginin ilk yarım sayfada görünmesidir." },
         { q: "CV'de hangi bilgiler yer almamalı?", a: "Başvuruyla ilgisiz kişisel ayrıntılar (T.C. kimlik numarası, tam ev adresi, banka bilgisi vb.) yazılmamalıdır. Şehir ve iletişim bilgisi yeterlidir." },
         { q: "Referansları yazmalı mıyım?", a: "Zorunlu değildir. İlan istiyorsa ya da referansınız güçlüyse ekleyin; değilse bu bölümü boş bırakın. CV Oluştur'da boş bölümler PDF'e eklenmez." },
@@ -72,6 +83,16 @@ export const CV_PHOTO_POSTS = [
         "A good CV is not the one that says everything, but the one that shows the right things quickly. A step-by-step roadmap from section order to how to word each bullet.",
       blocks: [
         { t: "lead", x: "Recruiters tend to spend very little time on a first read of a CV, so the useful information has to be easy to find. A good CV doesn't list everything you've done; it puts the items most relevant to the role up front. These steps give you a simple route when starting from scratch." },
+        { t: "h2", x: "How to make a simple CV in 6 steps" },
+        { t: "p", x: "If you just want a clean CV quickly, follow this order. Each step is explained in detail below." },
+        { t: "steps", items: [
+          { title: "Pick a plain, single-column template", x: "You don't need graphics or colour blocks; a readable typeface and generous white space are enough." },
+          { title: "Write the header", x: "Name, target title, phone, email and city. Leave out your national ID number and full address." },
+          { title: "Add a two-to-three sentence summary", x: "Say who you are, what field you work in and what you're looking for." },
+          { title: "Add experience or education", x: "List jobs newest first; if you have none yet, lead with education, internships, projects and volunteering." },
+          { title: "Keep skills short", x: "Six to eight skills relevant to the ad, plus languages, are enough." },
+          { title: "Save as a PDF", x: "Name it first-last-cv.pdf and check that the text is selectable." },
+        ] },
         { t: "h2", x: "1. Start with the target" },
         { t: "p", x: "Instead of sending the same CV to every posting, read the job ad and note the skills it asks for. Move the matching experience and skills up and shorten the rest. This doesn't mean rewriting the CV each time; adjusting order and emphasis is enough." },
         { t: "h2", x: "2. Put the sections in the right order" },
@@ -103,6 +124,7 @@ export const CV_PHOTO_POSTS = [
         { t: "p", x: "Finally, show your CV to a friend and ask what they remember after 30 seconds. If it isn't what you want to stand out, change the order." },
       ],
       faq: [
+        { q: "How do I make a simple CV?", a: "Pick a plain single-column template, add a header, a two-to-three sentence summary, experience or education and a short skills list, then save it as a PDF. With no work history, lead with education, internships and projects." },
         { q: "How long should a CV be?", a: "One page is usually enough for a few years of experience; two is reasonable for a long career. What matters is that the most relevant information appears in the first half page." },
         { q: "What should not be on a CV?", a: "Personal details unrelated to the application (national ID number, full home address, bank details) should be left out. A city and contact details are enough." },
         { q: "Do I need to list references?", a: "Not necessarily. Add them if the ad asks or your references are strong; otherwise leave the section out. In CV Maker, empty sections are not added to the PDF." },

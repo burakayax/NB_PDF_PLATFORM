@@ -2,6 +2,7 @@ import { CV_PROFESSION_EN_SLUGS } from "../blog/blogContentCv3.mjs";
 import { QR_TOC_EN_SLUGS } from "../blog/blogContentQrToc.mjs";
 import { TIFF_EN_SLUGS } from "../blog/blogContentTiff.mjs";
 import { YATAY_EN_SLUGS } from "../blog/blogContentYatay.mjs";
+import { PDF_HEDEF_EN_SLUGS } from "../blog/blogContentPdfHedef.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 //  İNGİLİZCE URL SLUG'LARI — TEK GERÇEK KAYNAK
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export const EN_BLOG_SLUGS = {
   ...QR_TOC_EN_SLUGS,
   ...TIFF_EN_SLUGS,
   ...YATAY_EN_SLUGS,
+  ...PDF_HEDEF_EN_SLUGS,
   "cv-nasil-hazirlanir": "how-to-write-a-cv",
   "ats-uyumlu-cv-nasil-yazilir": "ats-friendly-cv",
   "cv-is-ilanina-gore-nasil-uyarlanir": "tailor-cv-to-job-ad",
@@ -103,6 +105,7 @@ export const EN_BLOG_SLUGS = {
   "ihale-dosyasi-pdf-hazirlama": "prepare-a-tender-submission-as-pdf",
   "bordro-sayfalarini-ayirma": "split-payslips-per-employee",
   "osym-sinav-basvurusu-fotograf-boyutu": "exam-application-photo-size",
+  "fotograf-kb-kucultme-20-50-100-kb": "reduce-photo-size-kb-application-form",
   "uyap-karari-word-e-aktarma": "court-decision-from-uyap-into-word",
   "universite-kayit-evraklarini-hazirlama": "prepare-university-enrolment-documents",
   "word-pdf-cevirme": "convert-word-to-pdf",

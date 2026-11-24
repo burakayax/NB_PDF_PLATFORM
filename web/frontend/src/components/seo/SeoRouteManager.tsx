@@ -7,6 +7,7 @@ import { getPublicSiteOrigin } from "../../lib/siteOrigin";
 import { landingTranslations } from "../../i18n/landing";
 import { useSettings } from "../../contexts/SettingsContext";
 import { SEO } from "./SEO";
+import { useToolSeoReady } from "../../seo/toolSeoRuntime";
 
 type SeoRouteManagerProps = {
   pathname: string;
@@ -29,6 +30,7 @@ export function SeoRouteManager({
   siteOrigin: siteOriginProp = "",
 }: SeoRouteManagerProps) {
   // Origin verilmediyse merkezi yardımcıdan al — hreflang her zaman üretilebilsin.
+  useToolSeoReady(); // araç başlıkları geç yüklenirse meta etiketleri yeniden hesaplansın
   const siteOrigin = siteOriginProp || getPublicSiteOrigin();
   // Admin panelinden yönetilen sosyal medya profilleri → Organization sameAs.
   const { site } = useSettings();
