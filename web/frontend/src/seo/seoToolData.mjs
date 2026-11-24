@@ -1,7 +1,7 @@
 // Araç başına SEO metinleri (TR+EN, sıkça sorulan sorular, ilgili araçlar) — AĞIR bölüm (~330 KB).
 // Ana sayfa açılışına girmesin diye seoLight.mjs'ten ayrıldı; tarayıcıda araç sayfası açılınca yüklenir
 // (src/seo/toolSeoRuntime.ts). Node betikleri ve testler seoContent.mjs üzerinden ikisini birlikte alır.
-import { CV_PROFESSION_SLUGS } from "../blog/blogContentCv3.mjs";
+import { CV_PROFESSION_SLUGS } from "../blog/blogSlugTables.mjs";
 import { TOOL_GUIDE, getToolGuide as _getToolGuide } from "./toolGuides.mjs";
 import { T } from "./seoLight.mjs";
 export const getToolGuide = _getToolGuide;

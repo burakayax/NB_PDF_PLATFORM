@@ -7,9 +7,8 @@
 
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
-export const TIFF_EN_SLUGS = {
-  "tiff-pdf-cevirme-cok-sayfali-tif": "convert-multi-page-tiff-to-pdf",
-};
+import { TIFF_EN_SLUGS } from "./blogSlugTables.mjs";
+export { TIFF_EN_SLUGS };
 
 export const TIFF_POSTS = [
   post(

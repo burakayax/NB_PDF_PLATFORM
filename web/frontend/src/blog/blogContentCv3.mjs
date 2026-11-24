@@ -10,23 +10,9 @@ import { cvFaq } from "./blogFaqCv.mjs";
 
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
-/** Meslek id → { TR slug, EN slug, TR başlık adı, EN başlık adı, TR yalın ad, EN yalın ad } */
-export const CV_PROFESSION_SLUGS = {
-  sales: ["satis-danismani-cv-ornegi", "sales-representative-cv-example", "Satış Danışmanı", "Sales Representative"],
-  accounting: ["muhasebeci-cv-ornegi", "accountant-cv-example", "Muhasebeci", "Accountant"],
-  software: ["yazilim-gelistirici-cv-ornegi", "software-developer-cv-example", "Yazılımcı", "Software Developer"],
-  teacher: ["ogretmen-cv-ornegi", "teacher-cv-example", "Öğretmen", "Teacher"],
-  health: ["hemsire-cv-ornegi", "nurse-cv-example", "Hemşire", "Nurse"],
-  support: ["musteri-temsilcisi-cv-ornegi", "customer-service-cv-example", "Müşteri Temsilcisi", "Customer Service Representative"],
-  hr: ["insan-kaynaklari-uzmani-cv-ornegi", "hr-specialist-cv-example", "İnsan Kaynakları Uzmanı", "HR Specialist"],
-  marketing: ["dijital-pazarlama-uzmani-cv-ornegi", "digital-marketing-cv-example", "Dijital Pazarlama Uzmanı", "Digital Marketing Specialist"],
-  engineer: ["muhendis-cv-ornegi", "engineer-cv-example", "Mühendis", "Engineer"],
-  hospitality: ["garson-otel-restoran-cv-ornegi", "hospitality-server-cv-example", "Garson / Otel / Restoran Çalışanı", "Hospitality & Restaurant Worker"],
-  logistics: ["depo-lojistik-cv-ornegi", "warehouse-logistics-cv-example", "Lojistik ve Depo Çalışanı", "Warehouse & Logistics Associate"],
-  manager: ["yonetici-cv-ornegi", "manager-cv-example", "Yönetici", "Manager"],
-  design: ["grafik-tasarimci-cv-ornegi", "graphic-designer-cv-example", "Grafik Tasarımcı", "Graphic Designer"],
-  admin: ["ofis-asistani-cv-ornegi", "office-administrator-cv-example", "Ofis Asistanı / Sekreter", "Office Administrator"],
-};
+import { CV_PROFESSION_SLUGS, CV_PROFESSION_EN_SLUGS } from "./blogSlugTables.mjs";
+// Küçük adres tabloları blogSlugTables.mjs'te (ana pakete girer); burada geriye dönük uyumluluk için yeniden dışa verilir.
+export { CV_PROFESSION_SLUGS, CV_PROFESSION_EN_SLUGS };
 
 const ACCENTS = ["sky", "emerald", "violet", "amber", "blue", "cyan", "fuchsia", "rose"];
 
@@ -119,8 +105,6 @@ export const CV_PROFESSION_POSTS = PROFESSIONS.filter((p) => CV_PROFESSION_SLUGS
   );
 });
 
-/** EN slug eşlemesi (enSlugs.mjs buradan beslenir). */
-export const CV_PROFESSION_EN_SLUGS = Object.fromEntries(Object.values(CV_PROFESSION_SLUGS).map(([tr, en]) => [tr, en]));
 
 /** Instagram kaydırmalı gönderi metni (carouselCopy.mjs kuralları: kapak ≤14 kelime, 4–6 slayt, metin 20–200 karakter). */
 const clip = (t, n) => (t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n - 1)).replace(/[,;:\s]+$/, "") + "…");

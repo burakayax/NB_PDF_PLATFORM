@@ -8,9 +8,8 @@
 
 const post = (meta, tr, en) => ({ ...meta, tr, en });
 
-export const PDF_HEDEF_EN_SLUGS = {
-  "pdf-1-mb-alti-kucultme-hedef-boyut": "compress-pdf-under-1-mb-target-size",
-};
+import { PDF_HEDEF_EN_SLUGS } from "./blogSlugTables.mjs";
+export { PDF_HEDEF_EN_SLUGS };
 
 export const PDF_HEDEF_POSTS = [
   post(
