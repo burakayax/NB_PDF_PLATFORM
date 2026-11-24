@@ -24,8 +24,9 @@ import { logger } from "../../lib/file-log.js";
 import { fetchPairedFeedItems } from "./rss.service.js";
 import { TOPIC_COOLDOWN, topicOf } from "./feed-topic.js";
 import { keywordsFor } from "./keywords.service.js";
-import { writePostBodies } from "./copy.service.js";
-import { facebookKindFor } from "./facebook-kind.js";
+import { closingQuestionOf, writePostBodies } from "./copy.service.js";
+import type { CopyRequest } from "./copy.service.js";
+import { facebookKindFor, facebookWithLink } from "./facebook-kind.js";
 import {
   MANUAL_MAX_AGE_MS,
   TOOL_REEL_PREFIX,
@@ -640,6 +641,45 @@ async function pickNextItem(
   return pickVaried(items.slice().sort((a, b) => (seenMap.get(a.guid) ?? 0) - (seenMap.get(b.guid) ?? 0))) ?? null;
 }
 
+/** Facebook: günde en fazla 1, 7 günde en fazla 5 gönderi. */
+const FB_MAX_PER_WEEK = 5;
+
+function shiftDayKey(dayKey: string, days: number): string {
+  const [y, m, d] = dayKey.slice(0, 10).split("-").map((v) => Number.parseInt(v, 10));
+  return new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days)).toISOString().slice(0, 10);
+}
+
+/** Facebook'a bugün yeni gönderi açılamıyorsa NEDENİ, açılabiliyorsa null. */
+export async function facebookQuotaReason(dayKey: string): Promise<string | null> {
+  const keys = Array.from({ length: 7 }, (_, i) => shiftDayKey(dayKey, -i));
+  const rows = await prisma.socialPost.findMany({
+    where: { platform: "FACEBOOK", status: { not: "FAILED" }, OR: keys.map((k) => ({ dayKey: { startsWith: k } })) },
+    select: { dayKey: true },
+  });
+  if (rows.some((r) => r.dayKey.startsWith(dayKey.slice(0, 10)))) {
+    return "Facebook: bugün zaten bir gönderi var (günde en fazla 1)";
+  }
+  if (rows.length >= FB_MAX_PER_WEEK) {
+    return `Facebook: son 7 günde ${FB_MAX_PER_WEEK} gönderi doldu (haftada en fazla ${FB_MAX_PER_WEEK})`;
+  }
+  return null;
+}
+
+/** Facebook metni için biçim, bağlantı payı ve kullanılmış kapanış soruları. */
+async function facebookCopyOptions(): Promise<Pick<CopyRequest, "fbKind" | "fbWithLink" | "fbUsedQuestions">> {
+  const blogCount = await prisma.socialPost.count({
+    where: { platform: "FACEBOOK", NOT: { guid: { startsWith: TOOL_REEL_PREFIX } } },
+  });
+  const past = await prisma.socialPost.findMany({
+    where: { platform: "FACEBOOK" },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+    select: { body: true },
+  });
+  const used = past.map((r) => closingQuestionOf(r.body)).filter((q): q is string => !!q);
+  return { fbKind: facebookKindFor(blogCount), fbWithLink: facebookWithLink(blogCount), fbUsedQuestions: [...new Set(used)] };
+}
+
 export type QueueResult = {
   queued: { platform: SocialPlatform; title: string; body: string; imageUrl: string | null; manual: boolean }[];
   /** `platform: null` → tüm platformları birden ilgilendiren sebep. */
@@ -678,6 +718,13 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
     if (PLATFORM_SPECS[platform].videoOnly) continue;
     // X kendi haftalık döngüsünden beslenir (queueXPost): blog hattı bu ağı atlar.
     if (PLATFORM_SPECS[platform].ownQueue) continue;
+    if (platform === "FACEBOOK") {
+      const blocked = await facebookQuotaReason(dayKey);
+      if (blocked) {
+        result.skipped.push({ platform, reason: blocked });
+        continue;
+      }
+    }
     const item = await pickNextItem(items, platform, config.recycleOldPosts);
     if (!item) {
       result.skipped.push({ platform, reason: "Paylaşılacak yeni yazı yok" });
@@ -711,7 +758,7 @@ async function queueBlogPosts(scheduledAt: Date, hold = false): Promise<QueueRes
       bilingual: config.bilingual,
       singleLang: config.singleLang,
       avoidTags: await lastInstagramTags(),
-      fbKind: facebookKindFor(await prisma.socialPost.count({ where: { platform: "FACEBOOK", NOT: { guid: { startsWith: TOOL_REEL_PREFIX } } } })),
+      ...(platforms.includes("FACEBOOK") ? await facebookCopyOptions() : {}),
     });
     // Son 30 Facebook gönderisiyle benzerlik: çok benzerse TASLAK kalır, admin görüp düzeltir.
     const recentFb = platforms.includes("FACEBOOK")
@@ -922,6 +969,13 @@ export async function queueToolReel(
     ? TOOL_REEL_PLATFORMS.filter((p) => options.platforms?.includes(p))
     : TOOL_REEL_PLATFORMS;
   for (const platform of targets) {
+    if (platform === "FACEBOOK" && !options?.repeat) {
+      const blocked = await facebookQuotaReason(dayKey);
+      if (blocked) {
+        result.skipped.push({ platform, reason: blocked });
+        continue;
+      }
+    }
     const manual = !accounts.has(platform);
     const direct = options?.directPlatforms?.includes(platform) === true;
     const status = manual ? "MANUAL" : hold && !direct ? "DRAFT" : "QUEUED";
@@ -1150,8 +1204,8 @@ export async function queueDailyPosts(
  * içinde rastgele bir dakika seçilir (başta/sonda 3 dk pay bırakılır).
  */
 export const FACEBOOK_WINDOWS = {
-  post: { from: 12, to: 13 },
-  reel: { from: 20, to: 22 },
+  post: { from: 12, to: 14 },
+  reel: { from: 19, to: 21 },
 } as const;
 
 /** Verilen takvim gününde, saat diliminde `hour:minute` anının gerçek zamanı. */

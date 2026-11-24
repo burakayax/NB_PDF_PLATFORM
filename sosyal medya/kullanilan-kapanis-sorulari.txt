@@ -1,0 +1,12 @@
+# Facebook gönderilerinde kullanılmış kapanış soruları (bir daha kullanılmaz).
+# Otomasyon son 200 gönderinin son sorusunu zaten veritabanından okuyup tekrar etmez;
+# bu dosya elle yazılan gönderiler ve geçmiş kalıplar içindir. Her satır bir soru.
+
+Sen ne düşünüyorsun?
+Sence bu iş neden hâlâ bu kadar zor?
+Sen bu işi şimdiye kadar nasıl hallettin?
+Sende en çok hangi PDF işi vakit alıyor?
+Bu sorunla sen de karşılaştın mı?
+Sen hangi yöntemi kullanıyorsun?
+En çok hangi PDF işi canını sıkıyor?
+Sen CV'ni Word mü PDF mi gönderiyorsun?

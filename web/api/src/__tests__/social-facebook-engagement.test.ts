@@ -6,17 +6,20 @@ vi.mock("../lib/site-config.service.js", () => ({
   setSetting: vi.fn(async () => undefined),
 }));
 
-import { facebookKindFor } from "../modules/social/facebook-kind.js";
+import { facebookKindFor, facebookWithLink } from "../modules/social/facebook-kind.js";
 import { isTooSimilar, similarity } from "../modules/social/facebook-similarity.js";
 import { isReplyWorthy, weekKeyOf } from "../modules/social/facebook-engagement.service.js";
 
 describe("Facebook içerik karışımı", () => {
-  it("7'lik döngüde 4 ipucu, 2 sorun→çözüm, 1 etkileşim çıkar", () => {
-    const kinds = Array.from({ length: 7 }, (_, i) => facebookKindFor(i));
-    expect(kinds.filter((k) => k === "tip")).toHaveLength(4);
-    expect(kinds.filter((k) => k === "problem")).toHaveLength(2);
-    expect(kinds.filter((k) => k === "engage")).toHaveLength(1);
-    expect(facebookKindFor(7)).toBe(facebookKindFor(0));
+  it("arka arkaya iki gönderi aynı biçimde olmaz (döngü dönerken de)", () => {
+    const kinds = Array.from({ length: 20 }, (_, i) => facebookKindFor(i));
+    for (let i = 1; i < kinds.length; i++) expect(kinds[i]).not.toBe(kinds[i - 1]);
+    expect(new Set(kinds.slice(0, 5)).size).toBe(5);
+  });
+
+  it("bağlantı satırı dört gönderiden yalnız birinde çıkar", () => {
+    const flags = Array.from({ length: 8 }, (_, i) => facebookWithLink(i));
+    expect(flags.filter(Boolean)).toHaveLength(2);
   });
 });
 

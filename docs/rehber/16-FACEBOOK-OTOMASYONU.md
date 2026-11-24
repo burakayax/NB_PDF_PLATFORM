@@ -1,13 +1,17 @@
 # Facebook otomasyonu (2026-10-20)
 
-## Gönderi kuralları (kodda uygulanan)
-- Yalnız Türkçe. Ana metinde bağlantı yok; "Link ilk yorumda 👇" yazar, bağlantı yayından hemen sonra sayfa adına ilk yorum olarak eklenir.
-- İlk satır kanca (en fazla 10–12 kelime), 60–120 kelime, sonda gerçek soru, etkileşim dilenen ifade yok.
-- 3–5 etiket, yalnız gönderinin konusundan (genel havuz ve marka etiketi yok).
-- Saatler (Europe/Istanbul, otomatik turda): normal gönderi 12:03–12:57, Reels 20:03–21:57; dakika her seferinde rastgele.
-- İçerik karışımı: blog hattı 7'lik döngü (4 ipucu, 2 sorun→çözüm, 1 etkileşim); demo payını araç videoları doldurur (`toolReelEveryDays` ayarı).
-- Zaman zaman 3–5 kartlık çoklu görsel (yazıların yaklaşık üçte biri).
+## Gönderi kuralları (kodda uygulanan — 2026-11-24 güncellemesi)
+- Yalnız Türkçe. Ana metinde bağlantı yok. "Link ilk yorumda 👇" yalnız her 4. gönderide; yalnız o gönderide ilk yoruma bağlantı eklenir.
+- Biçimler 5'li döngüde: kısa ipucu, 3 maddelik liste, önce/sonra, sık yapılan hata, mini hikâye (komşu iki gönderi aynı biçimde olmaz).
+- İlk satır kanca, 60–120 kelime. Soruyla bitmek zorunda değil; son 200 gönderide kullanılmış kapanış sorusu tekrar edilmez. Elle yazılanlar: `sosyal medya/kullanilan-kapanis-sorulari.txt`.
+- En fazla 3 etiket, yalnız gönderinin konusundan. Görselsiz gönderi atlanır (her gönderide görsel).
+- Günde en fazla 1, 7 günde en fazla 5 Facebook gönderisi (aşılırsa panelde "atlandı" nedeni görünür).
+- Saatler (Europe/Istanbul): normal gönderi 12:03–13:57, Reels 19:03–20:57.
 - Son 30 Facebook gönderisine çok benzeyen metin TASLAK kalır (panelde görülür).
+- Haftalık içerik paketi (3 Reels senaryosu + 4 grup metni): `sosyal medya/haftalik-icerik/`. Gruplara katılma/paylaşma otomatikleştirilmez.
+
+## Geri alma (eski kalıp)
+`facebook-kind.ts` içinde `facebookWithLink` her zaman `true` döndürürse ve `social.types.ts` FACEBOOK `hashtagCount: 4` yapılırsa eski davranış gelir.
 
 ## Yorum yanıt taslakları
 - Her 2 saatte bir kendi sayfamızdaki gönderilerin yorumları taranır; spam/emoji/tek kelime elenir.
