@@ -140,6 +140,7 @@ function renderShapePng(tool: DrawTool, pts: Pt[], o: DrawOpts): { dataUrl: stri
   return { dataUrl: cv.toDataURL("image/png"), bbox: [bx0, by0, bx0 + W, by0 + H], aspect: W / H };
 }
 
+type ClipItem = { kind: "text"; a: Added } | { kind: "img"; im: AddedImg };
 type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number };
 // Çerçeveden tutup taşıma (mevcut metin/görsel + eklenen metin/görsel). ox/oy = sürükleme başındaki
 // ofset (mevcut öğede dx/dy, eklenende sol-üst x/y); bx/by/w/h = öğenin SAYFADAKİ başlangıç kutusu.
@@ -450,6 +451,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [tableHov, setTableHov] = useState<{ r: number; c: number } | null>(null);
   const [draft, setDraft] = useState<Pt[] | null>(null);
   const drawLayerRef = useRef<HTMLDivElement>(null);
+  const clipRef = useRef<{ items: ClipItem[]; n: number } | null>(null); // uygulama içi kopya (metin kutusu / görsel / şekil)
   const draftRef = useRef<Pt[] | null>(null); // olaylar art arda gelince state yetişmesin diye eşzamanlı kopya
   const [color, setColor] = useState("#111111");
   const [size, setSize] = useState(14);
@@ -1267,6 +1269,76 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     setSelected(null); setMultiSel(new Set());
   }
 
+  // Ctrl+C / Ctrl+X / Ctrl+V: seçili öğeleri (eklenen metin, görsel, çizim; mevcut metin ve görseller de) kopyala-yapıştır.
+  function copySelection(): boolean {
+    const items: ClipItem[] = [];
+    const pg = analysis?.pages[current];
+    for (const id of selTargets()) {
+      const a = added.find((x) => x.id === id);
+      if (a) { items.push({ kind: "text", a }); continue; }
+      const im = addedImages.find((x) => x.id === id);
+      if (im) { items.push({ kind: "img", im }); continue; }
+      const el = pg?.elements.find((x) => x.id === id);
+      if (!el || isDeleted(id)) continue;
+      const ed = edits.get(id);
+      if (el.type === "text") {
+        items.push({ kind: "text", a: { id: "", page: current, bbox: el.bbox, text: elText(el), size: ed?.size ?? el.size ?? 12, color: ed?.color ?? el.color ?? "#000000", font: (ed?.font ?? "sans") as FontKey } as Added });
+      } else {
+        // Mevcut görsel/şekil: sayfa önizlemesinden o bölge kırpılıp yeni görsel olarak kopyalanır.
+        const cv = canvasRef.current;
+        if (!cv || !cv.clientWidth) continue;
+        const k = cv.width / cv.clientWidth, [x0, y0, x1, y1] = el.bbox;
+        const sx = Math.max(0, Math.floor(x0 * scale * k)), sy = Math.max(0, Math.floor(y0 * scale * k));
+        const w = Math.max(1, Math.min(cv.width - sx, Math.ceil((x1 - x0) * scale * k))), h = Math.max(1, Math.min(cv.height - sy, Math.ceil((y1 - y0) * scale * k)));
+        const t = document.createElement("canvas"); t.width = w; t.height = h;
+        t.getContext("2d")?.drawImage(cv, sx, sy, w, h, 0, 0, w, h);
+        items.push({ kind: "img", im: { id: "", page: current, bbox: el.bbox, dataUrl: t.toDataURL("image/png"), aspect: w / h, rotate: 0 } });
+      }
+    }
+    if (!items.length) return false;
+    clipRef.current = { items, n: 0 };
+    return true;
+  }
+  function pasteClip(): boolean {
+    const c = clipRef.current;
+    if (!c || !c.items.length) return false;
+    c.n += 1;
+    const off = 12 * c.n;
+    const pw = analysis?.pages[current]?.width ?? 600, ph = analysis?.pages[current]?.height ?? 800;
+    const moved = (b: [number, number, number, number]): [number, number, number, number] => {
+      const w = b[2] - b[0], h = b[3] - b[1];
+      const nx = Math.max(0, Math.min(b[0] + off, pw - w)), ny = Math.max(0, Math.min(b[1] + off, ph - h));
+      return [nx, ny, nx + w, ny + h];
+    };
+    const na: Added[] = [], ni: AddedImg[] = [], ids: string[] = [];
+    for (const it of c.items) {
+      const id = uid(); ids.push(id);
+      if (it.kind === "text") na.push({ ...it.a, id, page: current, bbox: moved(it.a.bbox) });
+      else ni.push({ ...it.im, id, page: current, bbox: moved(it.im.bbox) });
+    }
+    if (na.length) setAdded((a) => [...a, ...na]);
+    if (ni.length) setAddedImages((a) => [...a, ...ni]);
+    setSelected(ids[0]);
+    setMultiSel(ids.length > 1 ? new Set(ids) : new Set());
+    return true;
+  }
+  useEffect(() => {
+    if (!editorOpen) return;
+    const isEditing = () => { const ae = document.activeElement as HTMLElement | null; return !!ae && (ae.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(ae.tagName)); };
+    // Başka yerden kopyalama yapılınca eski uygulama-içi kopya geçersiz olur.
+    const onCopy = () => { clipRef.current = null; };
+    const onPaste = (e: ClipboardEvent) => {
+      if (isEditing()) return; // metin kutusunda normal yapıştırma
+      const img = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (img) { e.preventDefault(); addImageFile(img); return; } // ekran görüntüsü / kopyalanan resim
+      if (pasteClip()) e.preventDefault();
+    };
+    document.addEventListener("copy", onCopy);
+    document.addEventListener("paste", onPaste);
+    return () => { document.removeEventListener("copy", onCopy); document.removeEventListener("paste", onPaste); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorOpen, added, addedImages, current, analysis, scale, edits, selected, multiSel]);
+
   // Klavye: Ctrl+A tümünü seç · Delete/Backspace sil · Ctrl+Z son silmeyi geri al · Esc seçimi bırak.
   useEffect(() => {
     if (!editorOpen) return;
@@ -1291,6 +1363,13 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         ];
         setMultiSel(new Set(ids));
         setSelected(ids[0] ?? null);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && ["c", "C", "x", "X"].includes(e.key)) {
+        if (editing || !selTargets().length) return;
+        if (!copySelection()) return;
+        e.preventDefault();
+        if (e.key === "x" || e.key === "X") deleteSelection();
         return;
       }
       if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); setDrawTool(null); setDraft(null); setTablePick(false); return; }
@@ -1894,7 +1973,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                             className={`h-[18px] w-[18px] rounded-[3px] border ${on ? "border-cyan-300 bg-cyan-400/40" : "border-white/20 bg-white/[0.04]"}`} />;
                         })}
                       </div>
-                      <p className="mt-1.5 text-center text-[11px] text-slate-400">{tr ? "Seçince sayfada sürükleyerek çizin" : "Then drag on the page to draw"}</p>
                     </div>
                   )}
                 </span>
@@ -2020,11 +2098,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               {addMode && (
                 <div className="mx-auto mb-3 flex max-w-xl items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/[0.12] px-3 py-2 text-[12.5px] font-semibold text-cyan-100">
                   <Type className="h-4 w-4 shrink-0" />{tr ? "Yazı eklemek için sayfada bir yere tıklayın." : "Click anywhere on the page to add text."}
-                </div>
-              )}
-              {drawTool && (
-                <div className="mx-auto mb-3 flex max-w-xl items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/[0.12] px-3 py-2 text-[12.5px] font-semibold text-cyan-100">
-                  <Pencil className="h-4 w-4 shrink-0" />{drawTool === "free" ? (tr ? "Sayfada basılı tutup çizin. Bırakınca şekil seçilir; taşıyabilir, boyutlandırabilir, silebilirsiniz. (Esc: vazgeç)" : "Press and draw on the page. Release to select it; then move, resize or delete. (Esc: cancel)") : (tr ? "Sayfada sürükleyerek çizin. Bırakınca şekil seçilir; taşıyabilir, boyutlandırabilir, silebilirsiniz. (Esc: vazgeç)" : "Drag on the page to draw. Release to select it; then move, resize or delete. (Esc: cancel)")}
                 </div>
               )}
               <div data-tour="editor-canvas" className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
