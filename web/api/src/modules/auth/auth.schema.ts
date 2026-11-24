@@ -133,6 +133,9 @@ export const deleteAccountSchema = z.object({
 
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 
+/** POST /api/auth/resend-verification */
+export const resendVerificationSchema = z.object({ email: emailField });
+
 /** POST /api/auth/forgot-password/request */
 export const forgotPasswordRequestSchema = z.object({
   email: emailField,

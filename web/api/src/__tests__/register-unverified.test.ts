@@ -11,13 +11,15 @@ const m = vi.hoisted(() => ({
   update: vi.fn(async () => ({})),
   del: vi.fn(async () => ({})),
   tokenCreate: vi.fn(async () => ({})),
+  tokenFindFirst: vi.fn(async () => null as { createdAt: Date } | null),
+  tokenCount: vi.fn(async () => 0),
   sendMail: vi.fn(),
 }));
 
 vi.mock("../lib/prisma.js", () => ({
   prisma: {
     user: { findUnique: m.findUnique, create: m.create, update: m.update, delete: m.del, count: vi.fn(async () => 1) },
-    emailVerificationToken: { create: m.tokenCreate },
+    emailVerificationToken: { create: m.tokenCreate, findFirst: m.tokenFindFirst, count: m.tokenCount },
   },
 }));
 vi.mock("../lib/mailer.js", () => ({ sendMail: m.sendMail }));
@@ -26,7 +28,7 @@ vi.mock("../lib/password.js", () => ({ hashPassword: vi.fn(async () => "hash"), 
 vi.mock("../lib/file-log.js", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 vi.mock("../lib/auth-log.js", () => ({ authLog: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
-import { registerUser } from "../modules/auth/auth.service.js";
+import { registerUser, resendVerificationEmail } from "../modules/auth/auth.service.js";
 
 const input = {
   email: "kisi@example.com",
@@ -58,6 +60,8 @@ describe("registerUser — onaysız hesap", () => {
     m.update.mockResolvedValue({});
     m.del.mockResolvedValue({});
     m.tokenCreate.mockResolvedValue({});
+    m.tokenFindFirst.mockResolvedValue(null);
+    m.tokenCount.mockResolvedValue(0);
   });
 
   it("e-posta gönderilemezse kullanıcı silinmez, 503 döner", async () => {
@@ -81,6 +85,55 @@ describe("registerUser — onaysız hesap", () => {
   it("onaylı mevcut hesapla kayıt hâlâ 409", async () => {
     m.findUnique.mockResolvedValue({ ...baseUser, isVerified: true });
     await expect(registerUser(input as never)).rejects.toMatchObject({ statusCode: 409 });
+    expect(m.sendMail).not.toHaveBeenCalled();
+  });
+});
+
+describe("resendVerificationEmail — spam korumaları", () => {
+  beforeEach(() => {
+    Object.values(m).forEach((f) => f.mockReset());
+    m.update.mockResolvedValue({});
+    m.tokenCreate.mockResolvedValue({});
+    m.tokenFindFirst.mockResolvedValue(null);
+    m.tokenCount.mockResolvedValue(0);
+    m.sendMail.mockResolvedValue(undefined);
+  });
+
+  it("onaysız hesaba gönderir", async () => {
+    m.findUnique.mockResolvedValue(baseUser);
+    await resendVerificationEmail("kisi@example.com");
+    expect(m.sendMail).toHaveBeenCalledTimes(1);
+  });
+
+  it("olmayan, onaylı ve Google hesabına hiçbir şey göndermez (sessiz)", async () => {
+    m.findUnique.mockResolvedValueOnce(null);
+    await resendVerificationEmail("yok@example.com");
+    m.findUnique.mockResolvedValueOnce({ ...baseUser, isVerified: true });
+    await resendVerificationEmail("kisi@example.com");
+    m.findUnique.mockResolvedValueOnce({ ...baseUser, authProvider: "google" });
+    await resendVerificationEmail("kisi@example.com");
+    expect(m.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("son gönderimden 60 sn geçmediyse göndermez", async () => {
+    m.findUnique.mockResolvedValue(baseUser);
+    m.tokenFindFirst.mockResolvedValue({ createdAt: new Date(Date.now() - 10_000) });
+    await resendVerificationEmail("kisi@example.com");
+    expect(m.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("günde 5 gönderimden sonra göndermez", async () => {
+    m.findUnique.mockResolvedValue(baseUser);
+    m.tokenCount.mockResolvedValue(5);
+    await resendVerificationEmail("kisi@example.com");
+    expect(m.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("tekrar kayıt yolu da aynı sınırlara tabidir", async () => {
+    m.findUnique.mockResolvedValue(baseUser);
+    m.tokenFindFirst.mockResolvedValue({ createdAt: new Date(Date.now() - 5_000) });
+    const r = await registerUser(input as never);
+    expect(r.verificationRequired).toBe(true);
     expect(m.sendMail).not.toHaveBeenCalled();
   });
 });

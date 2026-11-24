@@ -454,6 +454,43 @@ async function sendVerificationEmail(user: User, rawToken: string) {
   });
 }
 
+/** "Tekrar gönder" sınırları: aynı hesaba 60 sn'de bir, günde en çok 5 doğrulama e-postası. */
+const RESEND_COOLDOWN_MS = 60_000;
+const RESEND_DAILY_MAX = 5;
+
+/**
+ * Onaysız bir hesaba yeni doğrulama bağlantısı gönderir — SINIRLARLA. Sınır doluysa sessizce göndermez (false döner).
+ * E-posta servisi hata verirse 503 fırlatır (kullanıcı kaydı silinmez).
+ */
+export async function sendVerificationWithLimits(user: User): Promise<boolean> {
+  const now = Date.now();
+  const [last, today] = await Promise.all([
+    prisma.emailVerificationToken.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    prisma.emailVerificationToken.count({ where: { userId: user.id, createdAt: { gte: new Date(now - 24 * 3600 * 1000) } } }),
+  ]);
+  if ((last && now - last.createdAt.getTime() < RESEND_COOLDOWN_MS) || today >= RESEND_DAILY_MAX) {
+    authLog.warn("verification resend skipped (cooldown or daily cap)", { userId: user.id, today });
+    return false;
+  }
+  const rawToken = await createEmailVerificationToken(user.id);
+  await prisma.user.update({ where: { id: user.id }, data: { verificationToken: rawToken } });
+  try {
+    await sendVerificationEmail(user, rawToken);
+  } catch (error) {
+    authLog.error("verification email resend failed (user kept)", { userId: user.id, error: String(error) });
+    throw new HttpError(503, "We could not send the verification email. Please try again in a few minutes.");
+  }
+  authLog.info("verification email re-sent to unverified user", { userId: user.id });
+  return true;
+}
+
+/** POST /api/auth/resend-verification: hesap yoksa/onaylıysa/Google hesabıysa hiçbir şey yapmaz; yanıt her durumda aynıdır. */
+export async function resendVerificationEmail(email: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || user.isVerified || user.authProvider !== "local") return;
+  await sendVerificationWithLimits(user);
+}
+
 async function sendAdminNotificationEmail(user: User) {
   // Yönetici e-postasında toplam/bugünkü üye sayısı da görünsün (büyümeyi bir bakışta izlemek için).
   // Sayım hatası bildirimi engellemesin.
@@ -594,18 +631,9 @@ export async function registerUser(
   // Doğrulama e-postası ulaşmadığı için onaysız kalmış hesap: şifre/ad DEĞİŞMEDEN yeni doğrulama bağlantısı gönderilir.
   // (Aynı adresle tekrar kayıt olmak "bağlantıyı tekrar gönder" işlevi görür; onaylı hesaplarda eski davranış: 409.)
   if (existingUser && !existingUser.isVerified && existingUser.authProvider === "local" && !options?.skipEmailVerification) {
-    const rawToken = await createEmailVerificationToken(existingUser.id);
-    await prisma.user.update({ where: { id: existingUser.id }, data: { verificationToken: rawToken } });
-    try {
-      await sendVerificationEmail(existingUser, rawToken);
-    } catch (error) {
-      authLog.error("register: verification email resend failed (user kept)", {
-        userId: existingUser.id,
-        error: String(error),
-      });
-      throw new HttpError(503, "We could not send the verification email. Please try again in a few minutes.");
-    }
-    authLog.info("register: verification email re-sent to unverified user", { userId: existingUser.id });
+    // Aynı sınırlar ("tekrar gönder" ile ortak): 60 sn bekleme + günde en çok 5 gönderim. Sınır doluysa e-posta GÖNDERİLMEZ
+    // ama yanıt aynıdır (başkasının adresine posta yağdırmak da, hesabın var olup olmadığını sezmek de mümkün olmaz).
+    await sendVerificationWithLimits(existingUser);
     return {
       message: "Verification email sent. Please verify your email before signing in.",
       verificationRequired: true,
