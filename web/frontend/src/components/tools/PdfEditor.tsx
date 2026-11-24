@@ -1975,11 +1975,36 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 ["free", Pencil, tr ? "Serbest çizim" : "Freehand"],
                 ["table", Table2, tr ? "Tablo" : "Table"],
               ] as [DrawTool, typeof Square, string][]).map(([k, Ico, label]) => (
-                <button key={k} type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
-                  onClick={() => { setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
-                  className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
-                  <Ico className="h-3.5 w-3.5" />
-                </button>
+                <span key={k} className="relative">
+                  <button type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
+                    onClick={() => { setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
+                    className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
+                    <Ico className="h-3.5 w-3.5" />
+                  </button>
+                  {k === "arrow" && drawTool === "arrow" && arrowPick && (
+                    <div className="absolute left-0 top-full z-[200] mt-1.5 w-64 whitespace-nowrap rounded-xl border border-white/15 bg-slate-900 p-1.5 shadow-2xl">
+                      {ARROW_STYLES.map((a) => (
+                        <button key={a.k} type="button" onClick={() => { setArrowStyle(a.k); setArrowPick(false); }}
+                          className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition hover:bg-white/[0.08] ${arrowStyle === a.k ? "bg-cyan-500/15 text-cyan-100" : "text-slate-200"}`}>
+                          <ArrowIcon style={a.k} />{tr ? a.tr : a.en}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {k === "table" && drawTool === "table" && tablePick && (
+                    <div className="absolute left-0 top-full z-[200] mt-1.5 rounded-xl border border-white/15 bg-slate-900 p-2.5 shadow-2xl" onMouseLeave={() => setTableHov(null)}>
+                      <p className="mb-1.5 text-center text-[12px] font-semibold tabular-nums text-cyan-200">{tableHov ? `${tableHov.r} × ${tableHov.c}` : (tr ? "Satır × sütun seçin" : "Pick rows × columns")}</p>
+                      <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(10, 18px)" }}>
+                        {Array.from({ length: 80 }, (_, n) => {
+                          const r = Math.floor(n / 10) + 1, c = (n % 10) + 1;
+                          const on = tableHov ? r <= tableHov.r && c <= tableHov.c : r <= tableRows && c <= tableCols;
+                          return <button key={n} type="button" aria-label={`${r} × ${c}`} onMouseEnter={() => setTableHov({ r, c })} onClick={() => { setTableRows(r); setTableCols(c); setTablePick(false); setTableHov(null); }}
+                            className={`h-[18px] w-[18px] rounded-[3px] border ${on ? "border-cyan-300 bg-cyan-400/40" : "border-white/20 bg-white/[0.04]"}`} />;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </span>
               ))}
               <input type="color" value={drawColor} onChange={(e) => setDrawColor(e.target.value)} title={tr ? "Çizgi rengi" : "Line color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />
               <select value={drawWidth} onChange={(e) => setDrawWidth(Number(e.target.value))} title={tr ? "Çizgi kalınlığı" : "Line width"} className="h-7 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100 [color-scheme:dark]">
@@ -1995,16 +2020,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-1.5 text-slate-100 hover:bg-slate-800">
                     <ArrowIcon style={arrowStyle} /><span className="text-[10px] text-slate-400">▾</span>
                   </button>
-                  {arrowPick && (
-                    <div className="absolute left-0 top-full z-[200] mt-1.5 w-64 whitespace-nowrap rounded-xl border border-white/15 bg-slate-900 p-1.5 shadow-2xl">
-                      {ARROW_STYLES.map((a) => (
-                        <button key={a.k} type="button" onClick={() => { setArrowStyle(a.k); setArrowPick(false); }}
-                          className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition hover:bg-white/[0.08] ${arrowStyle === a.k ? "bg-cyan-500/15 text-cyan-100" : "text-slate-200"}`}>
-                          <ArrowIcon style={a.k} />{tr ? a.tr : a.en}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </span>
               )}
               {drawTool === "table" && (
@@ -2013,19 +2028,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-2 text-[12px] font-semibold tabular-nums text-slate-100 hover:bg-slate-800">
                     {tableRows} × {tableCols}
                   </button>
-                  {tablePick && (
-                    <div className="absolute left-0 top-full z-[200] mt-1.5 rounded-xl border border-white/15 bg-slate-900 p-2.5 shadow-2xl" onMouseLeave={() => setTableHov(null)}>
-                      <p className="mb-1.5 text-center text-[12px] font-semibold tabular-nums text-cyan-200">{tableHov ? `${tableHov.r} × ${tableHov.c}` : (tr ? "Satır × sütun seçin" : "Pick rows × columns")}</p>
-                      <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(10, 18px)" }}>
-                        {Array.from({ length: 80 }, (_, n) => {
-                          const r = Math.floor(n / 10) + 1, c = (n % 10) + 1;
-                          const on = tableHov ? r <= tableHov.r && c <= tableHov.c : r <= tableRows && c <= tableCols;
-                          return <button key={n} type="button" aria-label={`${r} × ${c}`} onMouseEnter={() => setTableHov({ r, c })} onClick={() => { setTableRows(r); setTableCols(c); setTablePick(false); setTableHov(null); }}
-                            className={`h-[18px] w-[18px] rounded-[3px] border ${on ? "border-cyan-300 bg-cyan-400/40" : "border-white/20 bg-white/[0.04]"}`} />;
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </span>
               )}
             </div>
