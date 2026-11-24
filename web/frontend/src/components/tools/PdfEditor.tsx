@@ -1022,6 +1022,11 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   }
 
   function selectEl(el: PdfElement, additive = false) {
+    // Görsel/amblem seçilince açık metin kutusunun imleci bırakılsın; yoksa Delete tuşu yazının harfini siler.
+    if (el.type === "image") {
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && (ae.isContentEditable || ae.tagName === "INPUT" || ae.tagName === "TEXTAREA")) ae.blur();
+    }
     if (additive) {
       // Ctrl/Shift ile tıkla → çoklu seçime ekle/çıkar.
       // Önceden TEK seçili öğe (multiSel boş) varsa o da çoklu seçime katılır — yoksa ilk Ctrl+tık onu bırakıyordu.
