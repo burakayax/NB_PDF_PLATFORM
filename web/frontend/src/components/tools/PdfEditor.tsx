@@ -111,12 +111,15 @@ function drawGeom(tool: DrawTool, pts: Pt[]): { x0: number; y0: number; x1: numb
   if (tool === "square") { const m = Math.max(Math.abs(dx), Math.abs(dy)); dx = Math.sign(dx || 1) * m; dy = Math.sign(dy || 1) * m; }
   return { x0: Math.min(a[0], a[0] + dx), y0: Math.min(a[1], a[1] + dy), x1: Math.max(a[0], a[0] + dx), y1: Math.max(a[1], a[1] + dy) };
 }
+function padFor(tool: DrawTool, o: DrawOpts): number {
+  return o.width / 2 + 1 + (tool === "arrow" ? Math.max(8, o.width * 4) * 0.5 + (o.arrow === "dot" ? o.width * 1.6 : 0) : 0);
+}
 function renderShapePng(tool: DrawTool, pts: Pt[], o: DrawOpts): { dataUrl: string; bbox: [number, number, number, number]; aspect: number } | null {
   if (!pts.length) return null;
   const g = drawGeom(tool, pts);
   const gw = g.x1 - g.x0, gh = g.y1 - g.y0;
   if (Math.max(gw, gh) < 3) return null; // tıklama = çizim sayılmaz
-  const pad = o.width / 2 + 1 + (tool === "arrow" ? Math.max(8, o.width * 4) * 0.5 + (o.arrow === "dot" ? o.width * 1.6 : 0) : 0);
+  const pad = padFor(tool, o);
   const bx0 = g.x0 - pad, by0 = g.y0 - pad, W = gw + pad * 2, H = gh + pad * 2;
   const k = Math.min(4, 4000 / Math.max(W, H));
   const cv = document.createElement("canvas");
@@ -171,8 +174,30 @@ function renderShapePng(tool: DrawTool, pts: Pt[], o: DrawOpts): { dataUrl: stri
   return { dataUrl: cv.toDataURL("image/png"), bbox: [bx0, by0, bx0 + W, by0 + H], aspect: W / H };
 }
 
+function shapeSpecOf(tool: DrawTool, pts: Pt[], opts: DrawOpts): ShapeSpec {
+  const g = drawGeom(tool, pts), gw = g.x1 - g.x0, gh = g.y1 - g.y0;
+  const npts = pts.map(([x, y]) => [gw > 0 ? (x - g.x0) / gw : 0, gh > 0 ? (y - g.y0) / gh : 0] as Pt);
+  // Kare: noktalar kare kutuya göre değil çizilen geometriye göre normalize edilir (kare kenarı eşitlenmiş hâlde).
+  if (tool === "square") { const side = Math.max(gw, gh); return { tool, opts, npts: [[0, 0], [side > 0 ? 1 : 0, side > 0 ? 1 : 0]] }; }
+  return { tool, npts, opts };
+}
+// Seçili çizimi yeni biçimle (kalınlık, renk, dolgu, ok çeşidi, tablo boyutu) yeniden çizer; geometri sabit kalır.
+function restyleShape(im: AddedImg, patch: Partial<DrawOpts>): AddedImg {
+  const sh = im.shape;
+  if (!sh) return im;
+  const opts: DrawOpts = { ...sh.opts, ...patch };
+  const pad0 = padFor(sh.tool, sh.opts);
+  const gx0 = im.bbox[0] + pad0, gy0 = im.bbox[1] + pad0;
+  const gw = Math.max(0, im.bbox[2] - im.bbox[0] - 2 * pad0), gh = Math.max(0, im.bbox[3] - im.bbox[1] - 2 * pad0);
+  const pts = sh.npts.map(([nx, ny]) => [gx0 + nx * gw, gy0 + ny * gh] as Pt);
+  const r = renderShapePng(sh.tool === "square" ? "rect" : sh.tool, pts, opts);
+  if (!r) return im;
+  return { ...im, dataUrl: r.dataUrl, bbox: r.bbox, aspect: r.aspect, shape: { ...sh, opts } };
+}
 type ClipItem = { kind: "text"; a: Added } | { kind: "img"; im: AddedImg };
-type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number };
+// Çizimle üretilen görsellerin kaynağı: seçilince kalınlık/renk/dolgu/ok çeşidi sonradan değiştirilebilsin (yeniden çizilir).
+type ShapeSpec = { tool: DrawTool; npts: Pt[]; opts: DrawOpts };
+type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number; shape?: ShapeSpec };
 // Çerçeveden tutup taşıma (mevcut metin/görsel + eklenen metin/görsel). ox/oy = sürükleme başındaki
 // ofset (mevcut öğede dx/dy, eklenende sol-üst x/y); bx/by/w/h = öğenin SAYFADAKİ başlangıç kutusu.
 type FrameDrag = {
@@ -1112,6 +1137,19 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
 
   // Çizim katmanı: sürükleyerek çiz → bırakınca şeffaf PNG olarak sayfaya eklenir (seçili, taşınabilir).
   const drawOpts = (): DrawOpts => ({ color: drawColor, width: drawWidth, fill: drawFillOn ? drawFillColor : null, rows: tableRows, cols: tableCols, arrow: arrowStyle });
+  const selShapeTool: DrawTool | null = addedImages.find((x) => x.id === selected && x.shape)?.shape?.tool ?? null;
+  function restyleSel(patch: Partial<DrawOpts>) {
+    const ids = selTargets();
+    if (!ids.length || !addedImages.some((im) => im.shape && ids.includes(im.id))) return;
+    setAddedImages((arr) => arr.map((im) => (im.shape && ids.includes(im.id) ? restyleShape(im, patch) : im)));
+  }
+  useEffect(() => {
+    const o = addedImages.find((x) => x.id === selected && x.shape)?.shape?.opts;
+    if (!o) return;
+    setDrawColor(o.color); setDrawWidth(o.width); setDrawFillOn(!!o.fill); if (o.fill) setDrawFillColor(o.fill);
+    setArrowStyle(o.arrow); setTableRows(o.rows); setTableCols(o.cols);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
   function drawPt(e: React.PointerEvent): Pt {
     const b = drawLayerRef.current!.getBoundingClientRect();
     return [(e.clientX - b.left) / scale, (e.clientY - b.top) / scale];
@@ -1138,7 +1176,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     setDraft(null);
     if (!r) return;
     const id = uid();
-    setAddedImages((arr) => [...arr, { id, page: current, bbox: r.bbox, dataUrl: r.dataUrl, aspect: r.aspect, rotate: 0 }]);
+    setAddedImages((arr) => [...arr, { id, page: current, bbox: r.bbox, dataUrl: r.dataUrl, aspect: r.aspect, rotate: 0, shape: shapeSpecOf(drawTool, d, drawOpts()) }]);
     setSelected(id);
     setMultiSel(new Set());
     setDrawTool(null);
@@ -1981,24 +2019,24 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
                     <Ico className="h-3.5 w-3.5" />
                   </button>
-                  {k === "arrow" && drawTool === "arrow" && arrowPick && (
+                  {k === "arrow" && (drawTool === "arrow" || selShapeTool === "arrow") && arrowPick && (
                     <div className="absolute left-0 top-full z-[200] mt-1.5 w-64 whitespace-nowrap rounded-xl border border-white/15 bg-slate-900 p-1.5 shadow-2xl">
                       {ARROW_STYLES.map((a) => (
-                        <button key={a.k} type="button" onClick={() => { setArrowStyle(a.k); setArrowPick(false); }}
+                        <button key={a.k} type="button" onClick={() => { setArrowStyle(a.k); setArrowPick(false); restyleSel({ arrow: a.k }); }}
                           className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition hover:bg-white/[0.08] ${arrowStyle === a.k ? "bg-cyan-500/15 text-cyan-100" : "text-slate-200"}`}>
                           <ArrowIcon style={a.k} />{tr ? a.tr : a.en}
                         </button>
                       ))}
                     </div>
                   )}
-                  {k === "table" && drawTool === "table" && tablePick && (
+                  {k === "table" && (drawTool === "table" || selShapeTool === "table") && tablePick && (
                     <div className="absolute left-0 top-full z-[200] mt-1.5 rounded-xl border border-white/15 bg-slate-900 p-2.5 shadow-2xl" onMouseLeave={() => setTableHov(null)}>
                       <p className="mb-1.5 text-center text-[12px] font-semibold tabular-nums text-cyan-200">{tableHov ? `${tableHov.r} × ${tableHov.c}` : (tr ? "Satır × sütun seçin" : "Pick rows × columns")}</p>
                       <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(10, 18px)" }}>
                         {Array.from({ length: 80 }, (_, n) => {
                           const r = Math.floor(n / 10) + 1, c = (n % 10) + 1;
                           const on = tableHov ? r <= tableHov.r && c <= tableHov.c : r <= tableRows && c <= tableCols;
-                          return <button key={n} type="button" aria-label={`${r} × ${c}`} onMouseEnter={() => setTableHov({ r, c })} onClick={() => { setTableRows(r); setTableCols(c); setTablePick(false); setTableHov(null); }}
+                          return <button key={n} type="button" aria-label={`${r} × ${c}`} onMouseEnter={() => setTableHov({ r, c })} onClick={() => { setTableRows(r); setTableCols(c); restyleSel({ rows: r, cols: c }); setTablePick(false); setTableHov(null); }}
                             className={`h-[18px] w-[18px] rounded-[3px] border ${on ? "border-cyan-300 bg-cyan-400/40" : "border-white/20 bg-white/[0.04]"}`} />;
                         })}
                       </div>
@@ -2006,15 +2044,15 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                   )}
                 </span>
               ))}
-              <input type="color" value={drawColor} onChange={(e) => setDrawColor(e.target.value)} title={tr ? "Çizgi rengi" : "Line color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />
-              <select value={drawWidth} onChange={(e) => setDrawWidth(Number(e.target.value))} title={tr ? "Çizgi kalınlığı" : "Line width"} className="h-7 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100 [color-scheme:dark]">
+              <input type="color" value={drawColor} onChange={(e) => { setDrawColor(e.target.value); restyleSel({ color: e.target.value }); }} title={tr ? "Çizgi rengi" : "Line color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />
+              <select value={drawWidth} onChange={(e) => { const w = Number(e.target.value); setDrawWidth(w); restyleSel({ width: w }); }} title={tr ? "Çizgi kalınlığı" : "Line width"} className="h-7 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100 [color-scheme:dark]">
                 {[1, 2, 3, 5, 8].map((w) => <option key={w} value={w} className="bg-slate-900">{w} pt</option>)}
               </select>
               <label className="flex items-center gap-1 text-[11px] text-slate-300" title={tr ? "İçini boya" : "Fill"}>
-                <input type="checkbox" checked={drawFillOn} onChange={(e) => setDrawFillOn(e.target.checked)} />{tr ? "Dolgu" : "Fill"}
+                <input type="checkbox" checked={drawFillOn} onChange={(e) => { setDrawFillOn(e.target.checked); restyleSel({ fill: e.target.checked ? drawFillColor : null }); }} />{tr ? "Dolgu" : "Fill"}
               </label>
-              {drawFillOn && <input type="color" value={drawFillColor} onChange={(e) => setDrawFillColor(e.target.value)} title={tr ? "Dolgu rengi" : "Fill color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />}
-              {drawTool === "arrow" && (
+              {drawFillOn && <input type="color" value={drawFillColor} onChange={(e) => { setDrawFillColor(e.target.value); restyleSel({ fill: e.target.value }); }} title={tr ? "Dolgu rengi" : "Fill color"} className="h-6 w-6 cursor-pointer rounded border border-white/15 bg-transparent p-0" />}
+              {(drawTool === "arrow" || selShapeTool === "arrow") && (
                 <span className="relative">
                   <button type="button" onClick={() => setArrowPick((v) => !v)} title={tr ? "Ok çeşidini seç" : "Choose arrow style"}
                     className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-1.5 text-slate-100 hover:bg-slate-800">
@@ -2022,7 +2060,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                   </button>
                 </span>
               )}
-              {drawTool === "table" && (
+              {(drawTool === "table" || selShapeTool === "table") && (
                 <span className="relative">
                   <button type="button" onClick={() => { setTablePick((v) => !v); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
                     className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-slate-900 px-2 text-[12px] font-semibold tabular-nums text-slate-100 hover:bg-slate-800">
