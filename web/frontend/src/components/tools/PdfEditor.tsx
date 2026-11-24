@@ -1887,12 +1887,11 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
             {/* Biçimlendirme araçları HER ZAMAN görünür; metin seçili değilken PASİF (soluk). */}
             <div
               data-tour="editor-format"
-              className={`${grp} order-last transition-opacity`}
+              className={`${grp} transition-opacity`}
               style={{ opacity: selInfo?.kind === "text" ? 1 : 0.45, pointerEvents: selInfo?.kind === "text" ? "auto" : "none" }}
               aria-disabled={selInfo?.kind !== "text"}
               title={selInfo?.kind === "text" ? undefined : (tr ? "Bir yazıya tıklayın" : "Click a text")}
             >
-              <span className={grpLabel}>{tr ? "Biçim" : "Format"}</span>
               <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                 {tr ? "Renk" : "Color"}
                 <span className="flex items-center gap-1">
@@ -1952,15 +1951,16 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               </span>
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
-            <div className={grp}>
+            <div className={`${grp} ml-auto`}>
               <div data-tour="editor-zoom" className="flex items-center gap-1">
                 <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-16 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
                 <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
                 <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
-              <span className="mx-0.5 h-6 w-px bg-white/15" />
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+            <div className={grp}>
               <button type="button" onClick={undoDelete} disabled={!histLen} title={tr ? "Son değişikliği geri al (Ctrl+Z)" : "Undo last change (Ctrl+Z)"}
                 className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
                 <Undo2 className="h-3.5 w-3.5" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
