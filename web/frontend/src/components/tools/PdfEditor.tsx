@@ -1838,7 +1838,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
           {/* Üst araç çubuğu — her grup kendi çerçevesinde: EKLE · BİÇİM · GÖRÜNÜM · BİTİR */}
           <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-1.5">
             <div className={grp}>
-              <span className={grpLabel}>{tr ? "Ekle" : "Add"}</span>
               <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setDrawTool(null); setSelected(null); setMultiSel(new Set()); }} aria-pressed={addMode}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-bold ring-1 transition duration-200 hover:scale-[1.03] ${addMode ? "bg-gradient-to-r from-cyan-300 to-sky-400 text-slate-950 shadow-[0_10px_26px_-8px_rgba(34,211,238,0.95)] ring-white/60" : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_10px_24px_-12px_rgba(6,182,212,0.9)] ring-white/15 hover:brightness-110"}`}>
                 <Type className="h-3.5 w-3.5" />{tr ? "Metin Ekle" : "Add Text"}
@@ -1888,7 +1887,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
             {/* Biçimlendirme araçları HER ZAMAN görünür; metin seçili değilken PASİF (soluk). */}
             <div
               data-tour="editor-format"
-              className={`${grp} transition-opacity`}
+              className={`${grp} order-last transition-opacity`}
               style={{ opacity: selInfo?.kind === "text" ? 1 : 0.45, pointerEvents: selInfo?.kind === "text" ? "auto" : "none" }}
               aria-disabled={selInfo?.kind !== "text"}
               title={selInfo?.kind === "text" ? undefined : (tr ? "Bir yazıya tıklayın" : "Click a text")}
@@ -1953,8 +1952,8 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               </span>
             </div>
 
+            <div className="ml-auto flex items-center gap-2">
             <div className={grp}>
-              <span className={grpLabel}>{tr ? "Görünüm" : "View"}</span>
               <div data-tour="editor-zoom" className="flex items-center gap-1">
                 <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-16 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
@@ -1967,13 +1966,13 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <Undo2 className="h-3.5 w-3.5" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
               </button>
             </div>
-
-            <div className={`${grp} ml-auto`}>
+            <div className={grp}>
               <button type="button" onClick={() => setTourOpen(true)} title={tr ? "Hızlı turu başlat" : "Start the quick tour"}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[12px] font-bold text-slate-100 transition duration-200 hover:scale-[1.03] hover:bg-white/[0.1] hover:text-cyan-200">
                 <HelpCircle className="h-3.5 w-3.5" />{tr ? "Nasıl Yapılır" : "How To"}
               </button>
               <button data-tour="editor-done" type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-600 px-3.5 py-1 text-[12px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(16,185,129,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.04] hover:brightness-110"><Check className="h-3.5 w-3.5" />{tr ? "Tamam" : "Done"}</button>
+            </div>
             </div>
             <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
           </div>
