@@ -11,3 +11,4 @@
 2026-11-22 | /blog/uyap-belge-yukleme-boyut-hatasi | "Görüntülemek istediğiniz evrakın boyutu çok büyük" uyarısını açıklayan bölüm ve SSS maddesi eklendi (aranan hata cümlesi sitede hiç geçmiyordu). PR #135.
 2026-11-22 | /blog/pdf-sayfa-numarasi-ekleme | Kapağı atlayarak ve istenen numaradan başlayarak numaralandırma bölümü (örnekli) eklendi; SSS düzeltildi, "silme/değiştirme" ve "yazdırırken" soruları eklendi. PR #136.
 2026-11-22 | /blog/udf-dosyasi-nasil-acilir | "Telefonda UDF açma" ve "Birden fazla UDF'yi tek PDF yapma" bölümleri ve iki SSS maddesi eklendi. PR #137.
+2026-11-24 | /blog/edevlet-belgelerini-tek-pdf-yapma, /blog/cv-nasil-hazirlanir ve /blog/cv-on-yazi-nasil-yazilir | e-Devlet başlığına belge türleri (adli sicil, ikametgâh, SGK) ve karekod faydası eklendi; CV yazısına "Basit CV nasıl hazırlanır? 6 adımda" bölümü ve SSS maddesi eklendi; ön yazı yazısına "Cover letter nedir?" bölümü, ilk paragrafa cover letter ifadesi ve SSS maddesi eklendi.
