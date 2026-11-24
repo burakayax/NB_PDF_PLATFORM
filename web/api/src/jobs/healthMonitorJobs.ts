@@ -43,6 +43,7 @@ async function probePdfApi(): Promise<void> {
     clearTimeout(timer);
     if (r.ok) {
       await notePdfHeartbeat(true, Date.now() - t0);
+      await probeGotenberg(url);
       return;
     }
     throw new Error(`HTTP ${r.status}`);
@@ -51,6 +52,27 @@ async function probePdfApi(): Promise<void> {
     if (age === null || age > 2 * 60_000) {
       await recordHealth("pdf", false, { detail: `probe failed: ${err instanceof Error ? err.message : "unknown"}` });
     }
+  }
+}
+
+/**
+ * Office dönüştürücü (Gotenberg): PDF API'nin /api/health/deps ucu "gotenberg: up/down" bildirir.
+ * Uç, PDF_API_HEALTH_URL'deki /health son ekinden türetilir. Yanıtsızlık Gotenberg'in değil PDF API'nin sorunudur
+ * (o durum "pdf" bileşeninde görünür); bu yüzden yalnız yanıt GELİNCE Gotenberg durumu yazılır.
+ */
+async function probeGotenberg(healthUrl: string): Promise<void> {
+  const depsUrl = healthUrl.replace(/\/health\/?$/, "/health/deps");
+  if (depsUrl === healthUrl) return;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(depsUrl, { signal: ctrl.signal });
+    clearTimeout(timer);
+    const body = (await r.json().catch(() => null)) as { gotenberg?: string } | null;
+    if (!body || typeof body.gotenberg !== "string") return;
+    await recordHealth("gotenberg", body.gotenberg === "up", body.gotenberg === "up" ? {} : { detail: `gotenberg: ${body.gotenberg}` });
+  } catch {
+    /* PDF API'ye ulaşılamadı: bu Gotenberg bilgisi değildir, yazılmaz */
   }
 }
 

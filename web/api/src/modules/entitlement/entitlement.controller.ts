@@ -12,6 +12,7 @@ import {
 } from "../../lib/quota.js";
 import { canExecute } from "./entitlement.engine.js";
 import { notePdfHeartbeat, recordHttpFailure } from "../../lib/service-health.js";
+import { recordToolCall } from "../../lib/tool-call-log.js";
 import { consumeEditorDownload, peekEditorDownload } from "./editor-download.service.js";
 import { downloadLogCreateSchema, entitlementBodySchema } from "./entitlement.schema.js";
 
@@ -397,13 +398,30 @@ export async function outputRecordController(request: Request, response: Respons
 }
 
 const serviceEventSchema = z.object({
-  kind: z.enum(["heartbeat", "http_5xx"]),
+  kind: z.enum(["heartbeat", "http_5xx", "tool_call"]),
   component: z.literal("pdf"),
   ok: z.boolean().optional(),
   latencyMs: z.number().int().min(0).max(600_000).optional(),
   path: z.string().max(300).optional(),
-  status: z.number().int().min(500).max(599).optional(),
-});
+  status: z.number().int().min(100).max(599).optional(),
+  // Kalp atışı ekleri: süreç kimliği (yeniden başlatma tespiti), bellek, sürmekte olan işlemler.
+  bootId: z.string().max(64).optional(),
+  rssMb: z.number().min(0).max(100_000).optional(),
+  inflight: z
+    .array(
+      z.object({
+        tool: z.string().max(200),
+        ageSec: z.number().min(0).max(100_000),
+        sizeKb: z.number().min(0).max(10_000_000).nullable().optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
+  // Araç çağrısı: süre, dosya boyutu ve (doğrulanıp atılacak) oturum anahtarı.
+  durationMs: z.number().min(0).max(3_600_000).optional(),
+  sizeKb: z.number().min(0).max(10_000_000).optional(),
+  token: z.string().max(4000).optional(),
+}).refine((b) => b.kind !== "http_5xx" || b.status === undefined || b.status >= 500, { message: "http_5xx için durum 500+ olmalı." });
 
 /**
  * POST /api/entitlement/internal/service-event — PDF API'nin kalp atışı ve 5xx bildirimi (X-Internal-Secret).
@@ -418,8 +436,22 @@ export async function serviceEventController(request: Request, response: Respons
   }
   const body = serviceEventSchema.parse(request.body);
   if (body.kind === "heartbeat") {
-    await notePdfHeartbeat(body.ok !== false, body.latencyMs);
-  } else if (body.path && body.status) {
+    await notePdfHeartbeat(body.ok !== false, body.latencyMs, Date.now(), {
+      ...(body.bootId ? { bootId: body.bootId } : {}),
+      ...(body.rssMb !== undefined ? { rssMb: body.rssMb } : {}),
+      ...(body.inflight ? { inflight: body.inflight.map((i) => ({ tool: i.tool, ageSec: i.ageSec, sizeKb: i.sizeKb ?? null })) } : {}),
+    });
+  } else if (body.kind === "tool_call") {
+    if (body.path && body.status) {
+      await recordToolCall({
+        tool: body.path,
+        status: body.status,
+        ...(body.durationMs !== undefined ? { durationMs: body.durationMs } : {}),
+        ...(body.sizeKb !== undefined ? { sizeKb: body.sizeKb } : {}),
+        ...(body.token ? { token: body.token } : {}),
+      });
+    }
+  } else if (body.path && body.status && body.status >= 500) {
     await recordHttpFailure("pdf", body.path, body.status);
   }
   response.status(200).json({ ok: true });

@@ -6,6 +6,7 @@ import { adminPaytrStatusController } from "./payment-paytr-status.admin.js";
 import { adminCardListStatusController } from "./payment-card-list-status.admin.js";
 import { adminInvoiceActionController } from "./payment-invoice-action.admin.js";
 import { adminServiceStatusController } from "./service-status.admin.js";
+import { adminToolCallsController } from "./tool-calls.admin.js";
 import express, { Router } from "express";
 import multer from "multer";
 import { asyncHandler } from "../../lib/async-handler.js";
@@ -96,6 +97,7 @@ adminRouter.use(requireAdmin);
 adminRouter.get("/overview", asyncHandler(adminOverviewController));
 adminRouter.get("/stats", asyncHandler(adminOverviewController));
 
+adminRouter.get("/tool-calls", asyncHandler(adminToolCallsController));
 adminRouter.get("/users", asyncHandler(adminListUsersController));
 adminRouter.post("/users", asyncHandler(adminCreateUserController));
 adminRouter.get("/users/:id/detail", asyncHandler(adminGetUserDetailController));

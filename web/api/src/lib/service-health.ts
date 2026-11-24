@@ -11,7 +11,7 @@ import { prisma } from "./prisma.js";
  * Kayıt BOŞLUĞU da bilgidir: bu servis kapalıyken hiçbir kayıt yazılamaz; boşluk "sinyal yok" olarak raporlanır.
  */
 
-export type HealthComponent = "api" | "db" | "pdf";
+export type HealthComponent = "api" | "db" | "pdf" | "gotenberg";
 
 export const HEARTBEAT_WRITE_INTERVAL_MS = 10 * 60 * 1000;
 /** Bu süreden uzun sessizlik = "sinyal yok" (kesinti veya kayıt boşluğu). */
@@ -96,10 +96,45 @@ export function pdfHeartbeatAgeMs(now = Date.now()): number | null {
   return lastPdfHeartbeatAt === null ? null : now - lastPdfHeartbeatAt;
 }
 
-/** PDF API kalp atışı geldi. */
-export async function notePdfHeartbeat(ok = true, latencyMs?: number, now = Date.now()) {
+export type PdfHeartbeatExtra = {
+  bootId?: string;
+  rssMb?: number;
+  /** O anda sürmekte olan işlemler (yol, yaş sn, boyut KB). Süreç ölürse "neyin ortasında öldü" bilgisi bundan gelir. */
+  inflight?: Array<{ tool: string; ageSec: number; sizeKb?: number | null }>;
+};
+let lastBootId: string | null = null;
+let lastInflight: NonNullable<PdfHeartbeatExtra["inflight"]> = [];
+let lastRssMb: number | null = null;
+
+/** Son kalp atışındaki bellek kullanımı (MB); hiç gelmediyse null. */
+export function lastPdfRssMb(): number | null {
+  return lastRssMb;
+}
+
+/** PDF API kalp atışı geldi. bootId değişmişse süreç YENİDEN BAŞLAMIŞTIR → "restart" kaydı (önceki sürmekte olan işlemlerle). */
+export async function notePdfHeartbeat(ok = true, latencyMs?: number, now = Date.now(), extra?: PdfHeartbeatExtra) {
   lastPdfHeartbeatAt = now;
   await recordHealth("pdf", ok, { latencyMs }, now);
+  if (extra?.rssMb !== undefined) lastRssMb = extra.rssMb;
+  if (extra?.bootId) {
+    if (lastBootId !== null && lastBootId !== extra.bootId) {
+      const ne = lastInflight.length
+        ? ` Kapanmadan önceki son kalp atışında sürmekte olan işlemler: ${lastInflight.map((i) => `${i.tool} (${i.ageSec} sn${i.sizeKb ? `, ${i.sizeKb} KB` : ""})`).join("; ")}.`
+        : " Kapanmadan önceki son kalp atışında sürmekte olan işlem yoktu.";
+      await recordRestart("pdf", `PDF API yeniden başladı (olası bellek aşımı).${ne}`.slice(0, 300), now);
+    }
+    lastBootId = extra.bootId;
+  }
+  if (extra?.inflight) lastInflight = extra.inflight.slice(0, 10);
+}
+
+/** Yeniden başlatma olayını yazar (kısa kesintiler çalışma oranında görünmediği için ayrı kayıt). */
+export async function recordRestart(component: HealthComponent, detail: string, now = Date.now()): Promise<void> {
+  try {
+    await prisma.serviceHealthEvent.create({ data: { component, kind: "restart", ok: false, detail: detail.slice(0, 300), at: new Date(now) } });
+  } catch {
+    /* kayıt asla işi bozmaz */
+  }
 }
 
 /** Her dakika çağrılır: PDF API'den 3 dakikadır kalp atışı gelmiyorsa "kapalı" kaydı düşer. */
@@ -114,15 +149,18 @@ export async function checkPdfHeartbeatMissing(now = Date.now()): Promise<void> 
 
 // ───────────────── Hesaplama (saf fonksiyon)
 
-export type HealthEventRow = { at: Date; component: string; kind: string; ok: boolean; path?: string | null; status?: number | null };
+export type HealthEventRow = { at: Date; component: string; kind: string; ok: boolean; path?: string | null; status?: number | null; detail?: string | null };
 
 export type Incident = { start: string; end: string; minutes: number; type: "down" | "no-signal" };
 export type ComponentStatus = { uptimePct: number | null; okMinutes: number; downMinutes: number; noSignalMinutes: number; incidents: Incident[] };
+export type ServiceRestart = { at: string; component: string; detail: string | null };
 export type ServiceStatus = {
   from: string;
   to: string;
   components: Record<HealthComponent, ComponentStatus>;
   failures: Array<{ path: string; status: number; count: number; first: string; last: string }>;
+  /** Yeniden başlatmalar (bellek aşımı dahil): kısa kesintiler "çalışma oranı"nda görünmez, burada görünür. */
+  restarts: ServiceRestart[];
 };
 
 const min = (ms: number) => Math.round((ms / 60_000) * 10) / 10;
@@ -182,7 +220,7 @@ function computeComponent(events: HealthEventRow[], from: number, to: number): C
 export function computeServiceStatus(events: HealthEventRow[], from: Date, to: Date): ServiceStatus {
   const f = from.getTime();
   const t = to.getTime();
-  const comps: HealthComponent[] = ["api", "db", "pdf"];
+  const comps: HealthComponent[] = ["api", "db", "pdf", "gotenberg"];
   const components = Object.fromEntries(comps.map((c) => [c, computeComponent(events.filter((e) => e.component === c), f, t)])) as Record<HealthComponent, ComponentStatus>;
 
   const groups = new Map<string, { path: string; status: number; count: number; first: number; last: number }>();
@@ -199,7 +237,13 @@ export function computeServiceStatus(events: HealthEventRow[], from: Date, to: D
     .sort((a, b) => b.count - a.count)
     .map((g) => ({ path: g.path, status: g.status, count: g.count, first: new Date(g.first).toISOString(), last: new Date(g.last).toISOString() }));
 
-  return { from: from.toISOString(), to: to.toISOString(), components, failures };
+  const restarts = events
+    .filter((e) => e.kind === "restart" && e.at.getTime() >= f && e.at.getTime() <= t)
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, 100)
+    .map((e) => ({ at: e.at.toISOString(), component: e.component, detail: e.detail ?? null }));
+
+  return { from: from.toISOString(), to: to.toISOString(), components, failures, restarts };
 }
 
 /** Veritabanından çekip hesaplar (pencere başından 1 gün öncesine kadar bakarak durum devamını yakalar). */
@@ -209,7 +253,7 @@ export async function loadServiceStatus(from: Date, to: Date): Promise<ServiceSt
     where: { at: { gte: lookback, lte: to } },
     orderBy: { at: "asc" },
     take: 50_000,
-    select: { at: true, component: true, kind: true, ok: true, path: true, status: true },
+    select: { at: true, component: true, kind: true, ok: true, path: true, status: true, detail: true },
   });
   return computeServiceStatus(rows, from, to);
 }

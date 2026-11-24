@@ -8,17 +8,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  *  4. Dahili uç yalnız sırla çalışır ve kişisel veri kabul etmez.
  */
 
-const m = vi.hoisted(() => ({ create: vi.fn(async () => ({})), hasSecret: vi.fn(() => true) }));
+const m = vi.hoisted(() => ({ create: vi.fn(async () => ({})), toolCreate: vi.fn(async () => ({})), hasSecret: vi.fn(() => true) }));
 
-vi.mock("../lib/prisma.js", () => ({ prisma: { serviceHealthEvent: { create: m.create, findMany: vi.fn(async () => []) } } }));
+vi.mock("../lib/prisma.js", () => ({ prisma: { serviceHealthEvent: { create: m.create, findMany: vi.fn(async () => []) }, toolCallLog: { create: m.toolCreate } } }));
+vi.mock("../lib/jwt.js", () => ({
+  verifyAccessToken: (t: string) => {
+    if (t === "good") return { sub: "user-1" };
+    throw new Error("bad token");
+  },
+}));
 vi.mock("../middleware/api-security.middleware.js", () => ({ requestHasInternalServiceSecret: m.hasSecret }));
 vi.mock("../lib/quota.js", () => ({ checkQuota: vi.fn(), incrementQuota: vi.fn(), checkAndIncrementQuota: vi.fn(), getQuotaSummary: vi.fn() }));
 vi.mock("../modules/entitlement/entitlement.engine.js", () => ({ canExecute: vi.fn() }));
 vi.mock("../modules/entitlement/editor-download.service.js", () => ({ consumeEditorDownload: vi.fn() }));
 
+import { reasonForStatus } from "../lib/tool-call-log.js";
 import {
   __resetServiceHealthState,
   checkPdfHeartbeatMissing,
+  notePdfHeartbeat,
   computeServiceStatus,
   normalizePath,
   recordHealth,
@@ -135,5 +143,58 @@ describe("serviceEventController", () => {
     await serviceEventController({ body: { kind: "heartbeat", component: "pdf" } } as never, res());
     await serviceEventController({ body: { kind: "http_5xx", component: "pdf", path: "/api/compress", status: 503 } } as never, res());
     expect(m.create).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("araç çağrısı kaydı ve yeniden başlatma", () => {
+  function res() {
+    const r: Record<string, unknown> = {};
+    r["status"] = vi.fn(() => r);
+    r["json"] = vi.fn(() => r);
+    return r as never as import("express").Response;
+  }
+  beforeEach(() => {
+    m.create.mockClear();
+    m.toolCreate.mockClear();
+    m.hasSecret.mockReturnValue(true);
+    __resetServiceHealthState();
+  });
+
+  it("durum koduna göre okunur sebep verir", () => {
+    expect(reasonForStatus(200)).toBeNull();
+    expect(reasonForStatus(413)).toContain("büyük");
+    expect(reasonForStatus(502)).toBe("Sunucu hatası");
+  });
+
+  it("geçerli anahtar üye, anahtarsız/geçersiz anahtar misafir yazılır; anahtar saklanmaz", async () => {
+    await serviceEventController({ body: { kind: "tool_call", component: "pdf", path: "/api/merge", status: 200, durationMs: 1200, sizeKb: 300, token: "good" } } as never, res());
+    await serviceEventController({ body: { kind: "tool_call", component: "pdf", path: "/api/merge", status: 422 } } as never, res());
+    await serviceEventController({ body: { kind: "tool_call", component: "pdf", path: "/api/merge", status: 500, token: "expired" } } as never, res());
+    const rows = m.toolCreate.mock.calls.map((c) => (c as unknown as [{ data: Record<string, unknown> }])[0].data);
+    expect(rows[0]).toMatchObject({ userId: "user-1", guest: false, ok: true, tool: "/api/merge", durationMs: 1200, sizeKb: 300 });
+    expect(rows[1]).toMatchObject({ userId: null, guest: true, ok: false, status: 422 });
+    expect(rows[2]).toMatchObject({ userId: null, guest: true, ok: false, status: 500 });
+    expect(JSON.stringify(rows)).not.toContain("good");
+  });
+
+  it("http_5xx için 500 altı durum hâlâ reddedilir", async () => {
+    await expect(serviceEventController({ body: { kind: "http_5xx", component: "pdf", path: "/x", status: 200 } } as never, res())).rejects.toBeDefined();
+  });
+
+  it("kalp atışında süreç kimliği değişince 'restart' kaydı, sürmekte olan işlemlerle birlikte yazılır", async () => {
+    await notePdfHeartbeat(true, undefined, T0, { bootId: "A", inflight: [{ tool: "/api/pdf-to-word", ageSec: 40, sizeKb: 48000 }] });
+    m.create.mockClear();
+    await notePdfHeartbeat(true, undefined, T0 + 120_000, { bootId: "B" });
+    const kinds = m.create.mock.calls.map((c) => (c as unknown as [{ data: { kind: string; detail?: string } }])[0].data);
+    const restart = kinds.find((k) => k.kind === "restart");
+    expect(restart?.detail).toContain("/api/pdf-to-word");
+    expect(restart?.detail).toContain("48000 KB");
+  });
+
+  it("aynı süreç kimliğinde yeniden başlatma kaydı yazılmaz", async () => {
+    await notePdfHeartbeat(true, undefined, T0, { bootId: "A" });
+    m.create.mockClear();
+    await notePdfHeartbeat(true, undefined, T0 + 60_000, { bootId: "A" });
+    expect(m.create.mock.calls.map((c) => (c as unknown as [{ data: { kind: string } }])[0].data.kind)).not.toContain("restart");
   });
 });

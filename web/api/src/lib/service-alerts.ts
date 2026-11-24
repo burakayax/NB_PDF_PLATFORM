@@ -15,8 +15,8 @@ import { countRecentFailures, getComponentStates, type HealthComponent } from ".
 
 export type AlertSender = (subject: string, text: string, html: string) => Promise<void>;
 
-const DOWN_AFTER_MS: Record<HealthComponent, number> = { db: 2 * 60_000, pdf: 3 * 60_000, api: Number.POSITIVE_INFINITY };
-const NAMES: Record<HealthComponent, string> = { api: "Auth API", db: "Veritabanı", pdf: "PDF API" };
+const DOWN_AFTER_MS: Record<HealthComponent, number> = { db: 2 * 60_000, pdf: 3 * 60_000, api: Number.POSITIVE_INFINITY, gotenberg: 5 * 60_000 };
+const NAMES: Record<HealthComponent, string> = { api: "Auth API", db: "Veritabanı", pdf: "PDF API", gotenberg: "Office dönüştürücü (Gotenberg)" };
 const SPIKE_WINDOW_MS = 10 * 60_000;
 const SPIKE_THRESHOLD = 5;
 const SPIKE_COOLDOWN_MS = 60 * 60_000;
