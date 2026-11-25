@@ -1227,6 +1227,7 @@ export async function inspectPdf(
         } catch (err) {
           if (permanent && err instanceof Error) {
             (err as Error & { permanent?: boolean }).permanent = true;
+            (err as Error & { status?: number }).status = s;
           }
           throw err;
         }

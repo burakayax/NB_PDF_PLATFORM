@@ -19,6 +19,35 @@ const TOOL_NAME: Record<string, { tr: string; en: string }> = {
 };
 
 /** Seçili araç için belge çok uzunsa kullanıcıya gösterilecek mesaj; sorun yoksa null. */
+/**
+ * Planın dosya başına boyut sınırı (MB). 999999 = sınırsız.
+ *
+ * Hesap bilgisi henüz gelmediyse bilinen planın sınırı, o da yoksa en düşük sınır (80)
+ * kullanılır. Eskiden bu durumda 200 MB varsayılıyor, ücretsiz üyeye sınırı aşan dosya
+ * kabul ettiriliyordu.
+ */
+export function planFileLimitMB(
+  balanceLimitMB: number | null | undefined,
+  planLimitMB: number | null | undefined,
+  isAdmin: boolean,
+): number {
+  if (typeof balanceLimitMB === "number") return balanceLimitMB;
+  if (isAdmin) return 999999;
+  return planLimitMB ?? 80;
+}
+
+/** Dosya plan sınırını aşıyorsa satırda gösterilecek metin; aşmıyorsa null. */
+export function sizeLimitMessage(
+  bytes: number,
+  limitMB: number,
+  language: "tr" | "en",
+): string | null {
+  if (limitMB >= 999999 || bytes <= limitMB * 1024 * 1024) return null;
+  return language === "tr"
+    ? `${limitMB} MB sınırını aşıyor. Listeden kaldırın.`
+    : `Exceeds the ${limitMB} MB limit. Remove it from the list.`;
+}
+
 export function uploadLimitMessage(
   item: LimitCheckItem,
   featureId: string,

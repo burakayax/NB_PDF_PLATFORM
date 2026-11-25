@@ -262,7 +262,7 @@ import {
   type ToolProgressSuccessState,
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
-import { uploadLimitMessage } from "./lib/uploadLimits";
+import { uploadLimitMessage, planFileLimitMB, sizeLimitMessage } from "./lib/uploadLimits";
 import { DEFAULT_MINI_OPTIONS, type MiniToolOptions,
   buildToolFormData,
   buildBatchFormData,
@@ -475,6 +475,10 @@ type UploadItem = {
   corrupt: boolean;
   /** Sunucunun bildirdiği araç başına sayfa sınırları (yüklenirken uyarı için). */
   pageLimits: Record<string, number> | null;
+  /** Plan boyut sınırı aşıldı (dosya sunucuya gönderilmez). */
+  sizeError: string | null;
+  /** Sunucunun dosyayı reddetme gerekçesi; yalnız sunucu yolunda engeller. */
+  serverError?: string | null;
 };
 
 type Feature = WorkspaceFeatureUi;
@@ -3694,6 +3698,28 @@ function App() {
         item.encrypted &&
         (!item.password.trim() || !item.mergePasswordVerified),
     );
+  function currentFileLimitMB(): number {
+    const planId = subscriptionSummary?.currentPlan.name;
+    return planFileLimitMB(
+      userBalance?.fileSizeLimitMB,
+      PLANS.find((p) => p.id === planId)?.fileSizeMB,
+      user?.role === "ADMIN",
+    );
+  }
+  /**
+   * Dosya satırındaki engelleyici hata. Boyut sınırı her zaman geçerlidir. Sunucunun reddi
+   * (ör. sayfa sayısı) yalnız iş sunucuda yapılacaksa: cihazda işlenen küçük dosyalarda
+   * sunucunun sayfa sınırı uygulanmaz.
+   */
+  function rowError(item: UploadItem): string | null {
+    if (item.sizeError) return item.sizeError;
+    if (!item.serverError) return null;
+    const onDevice =
+      isWorkspaceClientTool(selectedFeature.id) &&
+      uploads.reduce((sum, u) => sum + u.file.size, 0) <= CLIENT_PDF_MAX_BYTES &&
+      !uploads.some((u) => u.password.trim().length > 0);
+    return onDevice ? null : item.serverError;
+  }
   const toolFilesStillInspecting =
     uploads.length > 0 &&
     uploads.some((u) => u.inspecting) &&
@@ -3999,6 +4025,7 @@ function App() {
     (selectedFeature.id === "merge" &&
       uploads.some((u) => u.pageCount === 0)) ||
     toolFilesStillInspecting ||
+    uploads.some((u) => rowError(u) !== null) ||
     uploads.some(
       (u) => uploadLimitMessage(u, selectedFeatureId, language) !== null,
     ) ||
@@ -4026,6 +4053,8 @@ function App() {
     previewItem.file.type === "application/pdf" &&
     !previewItem.inspecting &&
     selectedFeature.id !== "compress" &&
+    // Birleştirmede sayfa önizlemesi gereksiz: sıralanabilir dosya listesi yeterli.
+    selectedFeature.id !== "merge" &&
     // Dönüştürme araçlarında işlem tüm belgeye uygulanır; sayfaları göstermek bir şey katmıyor.
     !CONVERSION_FEATURES_WITHOUT_PREVIEW.has(selectedFeature.id);
 
@@ -5443,16 +5472,19 @@ function App() {
       }
     }
 
-    const fileSizeLimitMB = userBalance?.fileSizeLimitMB ?? 200;
+    const fileSizeLimitMB = currentFileLimitMB();
     const MAX_FILE_BYTES =
       fileSizeLimitMB >= 999999 ? Infinity : fileSizeLimitMB * 1024 * 1024;
+    // Birleştirme (misafir aracıyla aynı): büyük dosya listeye eklenir, satırında sınır
+    // yazılır ve sunucuya hiç gönderilmez. Diğer araçlar eskisi gibi listeye almaz.
+    const showSizeInRow = selectedFeature.id === "merge";
     const oversized =
-      MAX_FILE_BYTES === Infinity
+      MAX_FILE_BYTES === Infinity || showSizeInRow
         ? []
         : typeOkFiles.filter((f) => f.size > MAX_FILE_BYTES);
     // Boyutu aşan dosyaları sisteme hiç ekleme; uygun olanları eklemeye devam et.
     const sizeOkFiles =
-      MAX_FILE_BYTES === Infinity
+      oversized.length === 0
         ? typeOkFiles
         : typeOkFiles.filter((f) => f.size <= MAX_FILE_BYTES);
     if (oversized.length > 0) {
@@ -5486,7 +5518,10 @@ function App() {
       return;
     }
 
-    const incomingItems = createUploadItems(freshFiles);
+    const incomingItems = createUploadItems(freshFiles).map((item) => ({
+      ...item,
+      sizeError: sizeLimitMessage(item.file.size, fileSizeLimitMB, language),
+    }));
     const nextItems = selectedFeature.multiple
       ? [...uploads, ...incomingItems]
       : incomingItems;
@@ -5498,20 +5533,22 @@ function App() {
       return;
     }
 
-    if (!shouldInspectCurrentFeature) {
+    // Sınırı aşan dosya ön kontrole (sunucuya yükleme) gönderilmez.
+    const toInspect = incomingItems.filter((item) => !item.sizeError);
+    if (!shouldInspectCurrentFeature || toInspect.length === 0) {
       return;
     }
 
     const token = inspectRunRef.current + 1;
     inspectRunRef.current = token;
     const withLoading = nextItems.map((item) =>
-      incomingItems.some((incoming) => incoming.id === item.id)
+      toInspect.some((incoming) => incoming.id === item.id)
         ? { ...item, inspecting: true }
         : item,
     );
     setUploads(withLoading);
 
-    const inspectedNewItems = await inspectUploadItems(incomingItems, {
+    const inspectedNewItems = await inspectUploadItems(toInspect, {
       accessToken,
       language,
       showToast,
@@ -5545,7 +5582,7 @@ function App() {
           (i) => i.pageCount === 0 && !i.corrupt,
         );
         const inspectFailedItems = inspectedNewItems.filter(
-          (i) => i.pageCount === null && !i.corrupt,
+          (i) => i.pageCount === null && !i.corrupt && !i.serverError,
         );
         if (corruptItems.length > 0) {
           showToast(
@@ -7867,11 +7904,9 @@ function App() {
                                   language={language}
                                   disabled={submitting}
                                   maxFileBytes={
-                                    (userBalance?.fileSizeLimitMB ?? 200) >= 999999
+                                    currentFileLimitMB() >= 999999
                                       ? Infinity
-                                      : (userBalance?.fileSizeLimitMB ?? 200) *
-                                        1024 *
-                                        1024
+                                      : currentFileLimitMB() * 1024 * 1024
                                   }
                                   onRejectedType={(names) => {
                                     const label = allowedExtensionsLabel(
@@ -7890,8 +7925,7 @@ function App() {
                                     );
                                   }}
                                   onOversized={(names) => {
-                                    const limitMB =
-                                      userBalance?.fileSizeLimitMB ?? 200;
+                                    const limitMB = currentFileLimitMB();
                                     showToast(
                                       "error",
                                       language === "tr"
@@ -9395,6 +9429,15 @@ function App() {
                                                 </span>
                                               ) : null}
                                               {!item.inspecting &&
+                                              rowError(item) ? (
+                                                <span
+                                                  role="alert"
+                                                  style={{ color: "#f87171", fontWeight: 600 }}
+                                                >
+                                                  ⚠ {rowError(item)}
+                                                </span>
+                                              ) : null}
+                                              {!item.inspecting &&
                                               item.corrupt ? (
                                                 <span style={{ color: "#f87171", fontWeight: 600 }}>
                                                   {language === "tr" ? "⚠ Bozuk PDF" : "⚠ Corrupt PDF"}
@@ -9428,6 +9471,7 @@ function App() {
                                               {!item.inspecting &&
                                               !item.corrupt &&
                                               !item.encrypted &&
+                                              !rowError(item) &&
                                               !uploadLimitMessage(
                                                 item,
                                                 selectedFeatureId,

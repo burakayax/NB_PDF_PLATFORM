@@ -24,6 +24,8 @@ type InspectableItem = {
   mergePasswordVerified: boolean;
   corrupt: boolean;
   pageLimits?: Record<string, number> | null;
+  /** Sunucunun bu dosyayı kalıcı olarak reddetme gerekçesi (boyut, sayfa sayısı, tür). */
+  serverError?: string | null;
 };
 
 export type InspectUploadsOptions = {
@@ -31,6 +33,13 @@ export type InspectUploadsOptions = {
   language: Language;
   showToast: (kind: "error", title: string, detail: string) => void;
 };
+
+/** 400/413/415 = dosyanın kendisi reddedildi. Oturum, ağ ve sunucu hataları dosyaya yazılmaz. */
+function rejectionReason(err: unknown): string | null {
+  const status = (err as { status?: number } | null)?.status;
+  if (status !== 400 && status !== 413 && status !== 415) return null;
+  return err instanceof Error ? err.message.trim() || null : null;
+}
 
 export async function inspectUploadItems<T extends InspectableItem>(
   items: T[],
@@ -100,6 +109,7 @@ export async function inspectUploadItems<T extends InspectableItem>(
         pageCount: null,
         mergePasswordVerified: false,
         corrupt: false,
+        serverError: rejectionReason(err),
       };
     }
   }),
