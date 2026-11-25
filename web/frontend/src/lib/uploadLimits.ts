@@ -36,6 +36,18 @@ export function planFileLimitMB(
   return planLimitMB ?? 80;
 }
 
+/** Sınır uyarısının yanındaki dolaylı plan önerisi. En üst planda (1000 MB) öneri yok. */
+function upsell(limitMB: number, language: "tr" | "en"): string {
+  if (limitMB >= 1000) return "";
+  if (limitMB <= 80)
+    return language === "tr"
+      ? " Daha büyük dosyalar için ücretli planlarımızı tercih edebilirsiniz."
+      : " For larger files, you can choose one of our paid plans.";
+  return language === "tr"
+    ? " Daha büyük dosyalar için üst planlarımızı tercih edebilirsiniz."
+    : " For larger files, you can choose a higher plan.";
+}
+
 /** Dosya plan sınırını aşıyorsa satırda gösterilecek metin; aşmıyorsa null. */
 export function sizeLimitMessage(
   bytes: number,
@@ -44,8 +56,8 @@ export function sizeLimitMessage(
 ): string | null {
   if (limitMB >= 999999 || bytes <= limitMB * 1024 * 1024) return null;
   return language === "tr"
-    ? `${limitMB} MB sınırını aşıyor. Listeden kaldırın.`
-    : `Exceeds the ${limitMB} MB limit. Remove it from the list.`;
+    ? `${limitMB} MB sınırını aştınız.${upsell(limitMB, "tr")}`
+    : `You have exceeded the ${limitMB} MB limit.${upsell(limitMB, "en")}`;
 }
 
 export function uploadLimitMessage(

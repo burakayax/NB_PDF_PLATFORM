@@ -104,7 +104,7 @@ function FileRow({
     : f.status === "ok" ? (f.pages ? `${f.pages} ${tr ? "sayfa" : "pages"} · ${humanSize(f.file.size)}` : humanSize(f.file.size))
     : f.status === "empty" ? (tr ? "Boş dosya (0 KB) — kullanılamaz" : "Empty file (0 KB) — unusable")
     : f.status === "corrupt" ? (tr ? "Bozuk/okunamayan PDF" : "Corrupt/unreadable PDF")
-    : f.status === "toobig" ? (tr ? "80 MB sınırını aşıyor" : "Exceeds 80 MB limit")
+    : f.status === "toobig" ? (tr ? "80 MB sınırını aştınız. Daha büyük dosyalar için ücretli planlarımızı tercih edebilirsiniz." : "You have exceeded the 80 MB limit. For larger files, you can choose one of our paid plans.")
     : (tr ? "Şifre korumalı — cihazda açılamıyor" : "Password-protected — can't open on device");
 
   return (
@@ -343,8 +343,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     if (okFiles.reduce((s, f) => s + f.file.size, 0) > MAX_BYTES) {
       setError(
         tr
-          ? "Toplam boyut 80 MB'ı aşıyor. Daha büyüğü için ücretsiz üye olun."
-          : "Total exceeds 80 MB. Sign up free for larger files.",
+          ? "80 MB sınırını aştınız (dosyaların toplamı). Daha büyük dosyalar için ücretli planlarımızı tercih edebilirsiniz."
+          : "You have exceeded the 80 MB limit (all files combined). For larger files, you can choose one of our paid plans.",
       );
       return;
     }

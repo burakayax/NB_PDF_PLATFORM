@@ -2427,7 +2427,8 @@ textarea {
   gap: 12px;
   max-height: 420px;
   overflow-y: auto;
-  padding-right: 4px;
+  /* Üzerine gelince büyüyen kartın (scale 1.01, 2px yukarı) çerçevesi kaydırma kutusunda kesilmesin. */
+  padding: 5px 10px;
 }
 
 @keyframes merge-card-snap {
