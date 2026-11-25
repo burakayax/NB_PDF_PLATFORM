@@ -96,10 +96,11 @@ export async function fetchPublicRuntime(): Promise<PublicRuntimePayload> {
   const base = getSaasApiBase().replace(/\/$/, "");
   /** Bypass intermediary caches (CDN / SW) so maintenance toggles apply immediately after notifyRuntimeRefresh. */
   const cacheBust = `_=${Date.now()}`;
+  // Özel başlık (Cache-Control/Pragma) YOK: bunlar CORS "ön izin" (preflight) isteğini tetikleyip açılışı ~250 ms
+  // geciktiriyordu. Önbellek atlama zaten `cache: "no-store"` + zaman damgalı adresle sağlanır.
   const r = await fetch(`${base}/api/public/runtime?${cacheBust}`, {
     credentials: "include",
     cache: "no-store",
-    headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
   });
   const text = await r.text();
   let data: PublicRuntimePayload;

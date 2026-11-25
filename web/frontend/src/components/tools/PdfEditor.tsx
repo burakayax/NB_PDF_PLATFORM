@@ -13,8 +13,10 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  ArrowUpRight,
   Bold,
   Check,
+  Circle,
   FileText,
   HelpCircle,
   Info,
@@ -25,11 +27,14 @@ import {
   Move,
   Pencil,
   Plus,
+  RectangleHorizontal,
   RotateCw,
   ScanText,
   ShieldAlert,
   Sparkles,
+  Square,
   Strikethrough,
+  Table2,
   Trash2,
   Type,
   Underline,
@@ -69,7 +74,130 @@ type Fmt = { bold?: boolean; italic?: boolean; underline?: boolean; strike?: boo
 type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey; html?: string; dx?: number; dy?: number } & Fmt;
 type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey } & Fmt;
 // Kullanıcının eklediği resim — bbox (PDF pt, döndürülmemiş), aspect (w/h), açı (derece).
-type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number };
+// Çizim araçları: şekil/serbest çizim/tablo ŞEFFAF PNG olarak üretilir ve «eklenen görsel» gibi taşınır/boyutlanır/silinir.
+type DrawTool = "rect" | "square" | "ellipse" | "line" | "arrow" | "free" | "table";
+type ArrowStyle = "open" | "filled" | "double" | "dashed" | "dot";
+const ARROW_STYLES: { k: ArrowStyle; tr: string; en: string }[] = [
+  { k: "open", tr: "Düz ok", en: "Open arrow" },
+  { k: "filled", tr: "Dolu uçlu ok", en: "Filled arrow" },
+  { k: "double", tr: "Çift yönlü ok", en: "Double arrow" },
+  { k: "dashed", tr: "Kesikli ok", en: "Dashed arrow" },
+  { k: "dot", tr: "Noktadan başlayan ok", en: "Dot-start arrow" },
+];
+// Seçicideki küçük örnek çizim (40×16).
+function ArrowIcon({ style }: { style: ArrowStyle }) {
+  const head = (x: number, dir: 1 | -1, filled: boolean) => filled
+    ? <polygon points={`${x},8 ${x - 7 * dir},4 ${x - 7 * dir},12`} fill="currentColor" />
+    : <polyline points={`${x - 6 * dir},3.5 ${x},8 ${x - 6 * dir},12.5`} fill="none" />;
+  return (
+    <svg width="40" height="16" viewBox="0 0 40 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1={style === "double" ? 5 : 3} y1="8" x2={style === "double" ? 35 : 37} y2="8" strokeDasharray={style === "dashed" ? "4 3" : undefined} />
+      {head(37, 1, style === "filled")}
+      {style === "double" && head(3, -1, false)}
+      {style === "dot" && <circle cx="4" cy="8" r="2.6" fill="currentColor" />}
+    </svg>
+  );
+}
+type DrawOpts = { color: string; width: number; fill: string | null; rows: number; cols: number; arrow: ArrowStyle };
+type Pt = [number, number];
+// Fare noktalarından (sayfa pt) şeklin geometri kutusu; kare modunda kenarlar eşitlenir.
+function drawGeom(tool: DrawTool, pts: Pt[]): { x0: number; y0: number; x1: number; y1: number } {
+  if (tool === "free") {
+    const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+  }
+  const a = pts[0], b = pts[pts.length - 1];
+  let dx = b[0] - a[0], dy = b[1] - a[1];
+  if (tool === "square") { const m = Math.max(Math.abs(dx), Math.abs(dy)); dx = Math.sign(dx || 1) * m; dy = Math.sign(dy || 1) * m; }
+  return { x0: Math.min(a[0], a[0] + dx), y0: Math.min(a[1], a[1] + dy), x1: Math.max(a[0], a[0] + dx), y1: Math.max(a[1], a[1] + dy) };
+}
+function padFor(tool: DrawTool, o: DrawOpts): number {
+  return o.width / 2 + 1 + (tool === "arrow" ? Math.max(8, o.width * 4) * 0.5 + (o.arrow === "dot" ? o.width * 1.6 : 0) : 0);
+}
+function renderShapePng(tool: DrawTool, pts: Pt[], o: DrawOpts): { dataUrl: string; bbox: [number, number, number, number]; aspect: number } | null {
+  if (!pts.length) return null;
+  const g = drawGeom(tool, pts);
+  const gw = g.x1 - g.x0, gh = g.y1 - g.y0;
+  if (Math.max(gw, gh) < 3) return null; // tıklama = çizim sayılmaz
+  const pad = padFor(tool, o);
+  const bx0 = g.x0 - pad, by0 = g.y0 - pad, W = gw + pad * 2, H = gh + pad * 2;
+  const k = Math.min(4, 4000 / Math.max(W, H));
+  const cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.ceil(W * k)); cv.height = Math.max(1, Math.ceil(H * k));
+  const c = cv.getContext("2d");
+  if (!c) return null;
+  const X = (x: number) => (x - bx0) * k, Y = (y: number) => (y - by0) * k;
+  c.lineWidth = o.width * k; c.lineCap = "round"; c.lineJoin = "round"; c.strokeStyle = o.color;
+  const x0 = X(g.x0), y0 = Y(g.y0), x1 = X(g.x1), y1 = Y(g.y1);
+  if (tool === "rect" || tool === "square" || tool === "table") {
+    if (o.fill) { c.fillStyle = o.fill; c.fillRect(x0, y0, x1 - x0, y1 - y0); }
+    c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    if (tool === "table") {
+      c.beginPath();
+      for (let r = 1; r < o.rows; r++) { const y = y0 + ((y1 - y0) * r) / o.rows; c.moveTo(x0, y); c.lineTo(x1, y); }
+      for (let q = 1; q < o.cols; q++) { const x = x0 + ((x1 - x0) * q) / o.cols; c.moveTo(x, y0); c.lineTo(x, y1); }
+      c.stroke();
+    }
+  } else if (tool === "ellipse") {
+    c.beginPath(); c.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.max(1, (x1 - x0) / 2), Math.max(1, (y1 - y0) / 2), 0, 0, Math.PI * 2);
+    if (o.fill) { c.fillStyle = o.fill; c.fill(); }
+    c.stroke();
+  } else if (tool === "line" || tool === "arrow") {
+    const a = pts[0], b = pts[pts.length - 1];
+    const ax = X(a[0]), ay = Y(a[1]), bx = X(b[0]), by = Y(b[1]);
+    const dashed = tool === "arrow" && o.arrow === "dashed";
+    if (dashed) c.setLineDash([o.width * 3 * k, o.width * 2.5 * k]);
+    c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+    c.setLineDash([]);
+    if (tool === "arrow") {
+      const ang = Math.atan2(by - ay, bx - ax), hl = Math.max(8, o.width * 4) * k;
+      const head = (tx: number, ty: number, a: number, filled: boolean) => {
+        c.beginPath();
+        c.moveTo(tx - hl * Math.cos(a - Math.PI / 6), ty - hl * Math.sin(a - Math.PI / 6)); c.lineTo(tx, ty);
+        c.lineTo(tx - hl * Math.cos(a + Math.PI / 6), ty - hl * Math.sin(a + Math.PI / 6));
+        if (filled) { c.closePath(); c.fillStyle = o.color; c.fill(); }
+        c.stroke();
+      };
+      head(bx, by, ang, o.arrow === "filled");
+      if (o.arrow === "double") head(ax, ay, ang + Math.PI, false);
+      if (o.arrow === "dot") { c.beginPath(); c.arc(ax, ay, Math.max(2, o.width * 1.6) * k, 0, Math.PI * 2); c.fillStyle = o.color; c.fill(); }
+    }
+  } else if (tool === "free") {
+    c.beginPath(); c.moveTo(X(pts[0][0]), Y(pts[0][1]));
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (X(pts[i][0]) + X(pts[i + 1][0])) / 2, my = (Y(pts[i][1]) + Y(pts[i + 1][1])) / 2;
+      c.quadraticCurveTo(X(pts[i][0]), Y(pts[i][1]), mx, my);
+    }
+    const l = pts[pts.length - 1]; c.lineTo(X(l[0]), Y(l[1]));
+    c.stroke();
+  }
+  return { dataUrl: cv.toDataURL("image/png"), bbox: [bx0, by0, bx0 + W, by0 + H], aspect: W / H };
+}
+
+function shapeSpecOf(tool: DrawTool, pts: Pt[], opts: DrawOpts): ShapeSpec {
+  const g = drawGeom(tool, pts), gw = g.x1 - g.x0, gh = g.y1 - g.y0;
+  const npts = pts.map(([x, y]) => [gw > 0 ? (x - g.x0) / gw : 0, gh > 0 ? (y - g.y0) / gh : 0] as Pt);
+  // Kare: noktalar kare kutuya göre değil çizilen geometriye göre normalize edilir (kare kenarı eşitlenmiş hâlde).
+  if (tool === "square") { const side = Math.max(gw, gh); return { tool, opts, npts: [[0, 0], [side > 0 ? 1 : 0, side > 0 ? 1 : 0]] }; }
+  return { tool, npts, opts };
+}
+// Seçili çizimi yeni biçimle (kalınlık, renk, dolgu, ok çeşidi, tablo boyutu) yeniden çizer; geometri sabit kalır.
+function restyleShape(im: AddedImg, patch: Partial<DrawOpts>): AddedImg {
+  const sh = im.shape;
+  if (!sh) return im;
+  const opts: DrawOpts = { ...sh.opts, ...patch };
+  const pad0 = padFor(sh.tool, sh.opts);
+  const gx0 = im.bbox[0] + pad0, gy0 = im.bbox[1] + pad0;
+  const gw = Math.max(0, im.bbox[2] - im.bbox[0] - 2 * pad0), gh = Math.max(0, im.bbox[3] - im.bbox[1] - 2 * pad0);
+  const pts = sh.npts.map(([nx, ny]) => [gx0 + nx * gw, gy0 + ny * gh] as Pt);
+  const r = renderShapePng(sh.tool === "square" ? "rect" : sh.tool, pts, opts);
+  if (!r) return im;
+  return { ...im, dataUrl: r.dataUrl, bbox: r.bbox, aspect: r.aspect, shape: { ...sh, opts } };
+}
+type ClipItem = { kind: "text"; a: Added } | { kind: "img"; im: AddedImg };
+// Çizimle üretilen görsellerin kaynağı: seçilince kalınlık/renk/dolgu/ok çeşidi sonradan değiştirilebilsin (yeniden çizilir).
+type ShapeSpec = { tool: DrawTool; npts: Pt[]; opts: DrawOpts };
+type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number; shape?: ShapeSpec };
 // Çerçeveden tutup taşıma (mevcut metin/görsel + eklenen metin/görsel). ox/oy = sürükleme başındaki
 // ofset (mevcut öğede dx/dy, eklenende sol-üst x/y); bx/by/w/h = öğenin SAYFADAKİ başlangıç kutusu.
 type FrameDrag = {
@@ -194,11 +322,17 @@ function FillPatch({ src, rect }: {
   src: HTMLCanvasElement | null; rect: { left: number; top: number; width: number; height: number };
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [box, setBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   useEffect(() => {
     const out = ref.current;
     if (!src || !out) return;
+    // Kutu sayfa dışına taşabilir (ör. üst kenarı sayfanın üstünde kalan logo): SAĞ/ALT kenarı sayfaya kırp,
+    // sol/üst kırpılınca da boyutu küçült → örnekleme ve yerleşim aynı bölgede kalır (yoksa aşağıdaki yazı satırları
+    // kenar şeridine karışıp yamada anlamsız çizgiler çıkıyordu).
     const L = Math.max(1, Math.floor(rect.left)), T = Math.max(1, Math.floor(rect.top));
-    const W = Math.max(1, Math.min(src.width - L - 1, Math.ceil(rect.width))), H = Math.max(1, Math.min(src.height - T - 1, Math.ceil(rect.height)));
+    const R = Math.min(src.width - 1, Math.ceil(rect.left + rect.width)), B = Math.min(src.height - 1, Math.ceil(rect.top + rect.height));
+    const W = Math.max(1, R - L), H = Math.max(1, B - T);
+    setBox({ left: L, top: T, width: W, height: H });
     const sctx = src.getContext("2d", { willReadFrequently: true });
     const octx = out.getContext("2d");
     if (!sctx || !octx) return;
@@ -207,8 +341,23 @@ function FillPatch({ src, rect }: {
     // karmaşık, kirli bir zemin veriyordu → beyaz bırak (sunucuda da görsel kalkınca sayfa beyaz kalır).
     if (W * H > src.width * src.height * 0.5) { octx.fillStyle = "#ffffff"; octx.fillRect(0, 0, W, H); return; }
     // Kenar şeritleri (kutunun hemen DIŞI): sol/sağ sütun, üst/alt satır.
-    const left = sctx.getImageData(L - 1, T, 1, H).data, right = sctx.getImageData(L + W, T, 1, H).data;
-    const top = sctx.getImageData(L, T - 1, W, 1).data, bottom = sctx.getImageData(L, T + H, W, 1).data;
+    // Şeritler medyan süzgeçten geçer: kutuya yakın duran yazı/çizgi kenarı şeride girince (ör. logonun hemen
+    // altındaki satır) tek tek pikseller yamaya dikey/yatay çizgi olarak yayılıyordu; dar çıkıntı silinir, degrade kalır.
+    const medStrip = (d: Uint8ClampedArray): Uint8ClampedArray => {
+      const n = d.length / 4, r = Math.max(3, Math.round(n * 0.35));
+      const out = new Uint8ClampedArray(d.length);
+      for (let k = 0; k < 3; k++) {
+        for (let i = 0; i < n; i++) {
+          const win: number[] = [];
+          for (let j = Math.max(0, i - r); j <= Math.min(n - 1, i + r); j++) win.push(d[j * 4 + k]);
+          win.sort((a, b) => a - b);
+          out[i * 4 + k] = win[win.length >> 1];
+        }
+      }
+      return out;
+    };
+    const left = medStrip(sctx.getImageData(L - 1, T, 1, H).data), right = medStrip(sctx.getImageData(L + W, T, 1, H).data);
+    const top = medStrip(sctx.getImageData(L, T - 1, W, 1).data), bottom = medStrip(sctx.getImageData(L, T + H, W, 1).data);
     // Bir kenar diğerlerinden çok farklıysa (ör. logo bandın tam kenarında → dışı beyaz sayfa) o kenar
     // YOK sayılır; yoksa önizleme bantta açık renkli bir geçiş gösteriyordu (canlıda görüldü).
     const mean = (d: Uint8ClampedArray) => { const m = [0, 0, 0]; const n = d.length / 4; for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; } return m.map((v) => v / Math.max(1, n)); };
@@ -242,7 +391,7 @@ function FillPatch({ src, rect }: {
     octx.putImageData(img, 0, 0);
   }, [src, rect.left, rect.top, rect.width, rect.height]);
   return <canvas ref={ref} className="pointer-events-none absolute"
-    style={{ left: Math.floor(rect.left), top: Math.floor(rect.top), width: Math.ceil(rect.width), height: Math.ceil(rect.height) }} />;
+    style={box ?? { left: Math.floor(rect.left), top: Math.floor(rect.top), width: Math.ceil(rect.width), height: Math.ceil(rect.height) }} />;
 }
 
 /** Seçili metnin çerçevesinin 4 kenarında tutulabilir şeritler: yazının içine tıklamayı bozmadan çerçeveden tutup taşımaya yarar. */
@@ -345,10 +494,23 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [guides, setGuides] = useState<Guide[]>([]);
   // Boş alanda sürükleyerek çoklu seçim (kutu, overlay piksel koordinatı).
   const [marquee, setMarquee] = useState<{ sx: number; sy: number; cx: number; cy: number; add: boolean } | null>(null);
-  // Silme geçmişi (Geri Al / Ctrl+Z) — her giriş tek silme işlemindeki kimlikler.
-  const [delStack, setDelStack] = useState<string[][]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [addMode, setAddMode] = useState(false);
+  const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
+  const [drawColor, setDrawColor] = useState("#000000");
+  const [drawWidth, setDrawWidth] = useState(2);
+  const [drawFillOn, setDrawFillOn] = useState(false);
+  const [drawFillColor, setDrawFillColor] = useState("#fde68a");
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
+  const [arrowStyle, setArrowStyle] = useState<ArrowStyle>("open");
+  const [arrowPick, setArrowPick] = useState(false);
+  const [tablePick, setTablePick] = useState(false); // tablo boyutu seçici (aşağı açılır ızgara)
+  const [tableHov, setTableHov] = useState<{ r: number; c: number } | null>(null);
+  const [draft, setDraft] = useState<Pt[] | null>(null);
+  const drawLayerRef = useRef<HTMLDivElement>(null);
+  const clipRef = useRef<{ items: ClipItem[]; n: number } | null>(null); // uygulama içi kopya (metin kutusu / görsel / şekil)
+  const draftRef = useRef<Pt[] | null>(null); // olaylar art arda gelince state yetişmesin diye eşzamanlı kopya
   const [color, setColor] = useState("#111111");
   const [size, setSize] = useState(14);
   const [font, setFont] = useState<FontKey>("sans");
@@ -364,6 +526,9 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrPct, setOcrPct] = useState(0);
   const [ocrTried, setOcrTried] = useState(false);
+  const [scanNotice, setScanNotice] = useState(false);
+  // Silinecek görselin üstünde açık renkli yazı varsa bekleyen silme (ipucu kutusu: Yine de sil / İptal).
+  const [lightTextHint, setLightTextHint] = useState<{ ids: string[]; sel: string | null; multi: Set<string> } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [thumbs, setThumbs] = useState<string[]>([]);
   // Hazırlanan PDF (günlük hak «PDF'i Hazırla»da düşer; blob hemen alınır → ortak sonuç paneli).
@@ -475,14 +640,16 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       setEdits(new Map());
       setAdded([]);
       setAddedImages([]);
-      setDelStack([]);
+      clearHistory();
       setBgMap(new Map());
       setSelected(null);
       setMultiSel(new Set());
       setOcrTried(false);
       // Taranmış PDF + Plus ve üzeri plan → OCR kendiliğinden çalışır (ilerleme ekranı), bitince editör açılır.
       if (ocrAllowed && scannedPageIndexes(merged).length > 0) await autoOcr(d, merged);
-      setEditorOpen(true);
+      // Taranmış PDF + OCR'sız plan → editör açılmadan ÖNCE uyarı: Tamam → düzenleme, Kapat → vazgeç.
+      if (!ocrAllowed && scannedPageIndexes(merged).length > 0) setScanNotice(true);
+      else setEditorOpen(true);
     } catch (e) {
       setFile(null);
       setError(e instanceof Error ? e.message : tr ? "PDF açılamadı." : "Couldn't open the PDF.");
@@ -665,6 +832,21 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   function elAlign(el: PdfElement): AlignKey { return edits.get(el.id)?.align ?? "left"; }
   const isDeleted = (id: string) => edits.get(id)?.deleted === true;
   const bgFor = (id: string) => bgMap.get(id) ?? "#ffffff";
+  // Silinen görselin kutusuyla kesişen YAZILAR: yama (FillPatch) tuvaldeki yazıyı da örter, oysa indirilen PDF'te
+  // yalnız görsel kalkar, yazı kalır → bu yazılar önizlemede yamanın ÜSTÜNE yeniden çizilsin (aktif metin gibi).
+  const underDeletedImg = (() => {
+    const out = new Set<string>();
+    const pg = analysis?.pages[current];
+    if (!pg) return out;
+    const dels = pageEls.filter((e) => e.type === "image" && isDeleted(e.id) && (e.bbox[2] - e.bbox[0]) * (e.bbox[3] - e.bbox[1]) <= pg.width * pg.height * 0.5);
+    if (!dels.length) return out;
+    for (const t of pageEls) {
+      if (t.type !== "text" || isDeleted(t.id)) continue;
+      const [a0, b0, a1, b1] = t.bbox;
+      if (dels.some((d) => Math.min(a1, d.bbox[2]) - Math.max(a0, d.bbox[0]) > 0.5 && Math.min(b1, d.bbox[3]) - Math.max(b0, d.bbox[1]) > 0.5)) out.add(t.id);
+    }
+    return out;
+  })();
 
   // ── Seçim hedefleri + toplu uygulama (Ctrl+A / çoklu seçim) ──
   const isAddedId = (id: string) => added.some((a) => a.id === id);
@@ -953,6 +1135,53 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     setMarquee({ sx, sy, cx: sx, cy: sy, add: e.shiftKey || e.ctrlKey || e.metaKey });
   }
 
+  // Çizim katmanı: sürükleyerek çiz → bırakınca şeffaf PNG olarak sayfaya eklenir (seçili, taşınabilir).
+  const drawOpts = (): DrawOpts => ({ color: drawColor, width: drawWidth, fill: drawFillOn ? drawFillColor : null, rows: tableRows, cols: tableCols, arrow: arrowStyle });
+  const selShapeTool: DrawTool | null = addedImages.find((x) => x.id === selected && x.shape)?.shape?.tool ?? null;
+  function restyleSel(patch: Partial<DrawOpts>) {
+    const ids = selTargets();
+    if (!ids.length || !addedImages.some((im) => im.shape && ids.includes(im.id))) return;
+    setAddedImages((arr) => arr.map((im) => (im.shape && ids.includes(im.id) ? restyleShape(im, patch) : im)));
+  }
+  useEffect(() => {
+    const o = addedImages.find((x) => x.id === selected && x.shape)?.shape?.opts;
+    if (!o) return;
+    setDrawColor(o.color); setDrawWidth(o.width); setDrawFillOn(!!o.fill); if (o.fill) setDrawFillColor(o.fill);
+    setArrowStyle(o.arrow); setTableRows(o.rows); setTableCols(o.cols);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+  function drawPt(e: React.PointerEvent): Pt {
+    const b = drawLayerRef.current!.getBoundingClientRect();
+    return [(e.clientX - b.left) / scale, (e.clientY - b.top) / scale];
+  }
+  function onDrawDown(e: React.PointerEvent) {
+    if (!drawTool || e.button !== 0) return;
+    e.preventDefault();
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* yoksay */ }
+    draftRef.current = [drawPt(e)];
+    setDraft(draftRef.current);
+  }
+  function onDrawMove(e: React.PointerEvent) {
+    const d = draftRef.current;
+    if (!drawTool || !d) return;
+    const q = drawPt(e);
+    draftRef.current = drawTool === "free" ? [...d, q] : [d[0], q];
+    setDraft(draftRef.current);
+  }
+  function onDrawUp() {
+    const d = draftRef.current;
+    draftRef.current = null;
+    if (!drawTool || !d) { setDraft(null); return; }
+    const r = renderShapePng(drawTool, d, drawOpts());
+    setDraft(null);
+    if (!r) return;
+    const id = uid();
+    setAddedImages((arr) => [...arr, { id, page: current, bbox: r.bbox, dataUrl: r.dataUrl, aspect: r.aspect, rotate: 0, shape: shapeSpecOf(drawTool, d, drawOpts()) }]);
+    setSelected(id);
+    setMultiSel(new Set());
+    setDrawTool(null);
+  }
+
   function addImageFile(f: File | undefined) {
     if (!f || !f.type.startsWith("image/")) return;
     const rd = new FileReader();
@@ -983,9 +1212,20 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   }
 
   function selectEl(el: PdfElement, additive = false) {
+    // Görsel/amblem seçilince açık metin kutusunun imleci bırakılsın; yoksa Delete tuşu yazının harfini siler.
+    if (el.type === "image") {
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && (ae.isContentEditable || ae.tagName === "INPUT" || ae.tagName === "TEXTAREA")) ae.blur();
+    }
     if (additive) {
       // Ctrl/Shift ile tıkla → çoklu seçime ekle/çıkar.
-      setMultiSel((s) => { const n = new Set(s); if (n.has(el.id)) n.delete(el.id); else n.add(el.id); return n; });
+      // Önceden TEK seçili öğe (multiSel boş) varsa o da çoklu seçime katılır — yoksa ilk Ctrl+tık onu bırakıyordu.
+      setMultiSel((s) => {
+        const n = new Set(s);
+        if (!n.size && selected && selected !== el.id) n.add(selected);
+        if (n.has(el.id)) n.delete(el.id); else n.add(el.id);
+        return n;
+      });
       setSelected(el.id);
     } else {
       setMultiSel(new Set());
@@ -1036,24 +1276,151 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
   // tıklamak artık geri getirmez — kazara tıklamada yazı geri geliyordu.)
   function markDeleted(ids: string[]) {
     if (!ids.length) return;
-    setEdits((m) => { const n = new Map(m); for (const id of ids) n.set(id, { ...n.get(id), deleted: true }); return n; });
-    setDelStack((s) => [...s, ids]);
-  }
-  function undoDelete() {
-    const last = delStack[delStack.length - 1];
-    if (!last) return;
-    setDelStack((s) => s.slice(0, -1));
-    setEdits((m) => {
-      const n = new Map(m);
-      for (const id of last) {
-        const cur = n.get(id);
-        if (!cur) continue;
-        const rest = { ...cur }; delete rest.deleted;
-        if (Object.keys(rest).length) n.set(id, rest); else n.delete(id);
+    // Silinecek görselin üstünde AÇIK renkli (ör. beyaz) yazı varsa: silmeden ÖNCE uyar (Yine de sil / İptal).
+    const gone = new Set(ids);
+    let light = 0;
+    for (const pg of analysis?.pages ?? []) {
+      const imgs = pg.elements.filter((e) => e.type === "image" && gone.has(e.id));
+      if (!imgs.length) continue;
+      for (const t of pg.elements) {
+        if (t.type !== "text" || gone.has(t.id) || edits.get(t.id)?.deleted || edits.get(t.id)?.color !== undefined) continue;
+        const m = /^#?([0-9a-f]{6})$/i.exec(t.color ?? "");
+        if (!m) continue;
+        const n = parseInt(m[1], 16), lum = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+        if (lum < 0.85) continue;
+        const [a0, b0, a1, b1] = t.bbox;
+        if (imgs.some((d) => Math.min(a1, d.bbox[2]) - Math.max(a0, d.bbox[0]) > 0.5 && Math.min(b1, d.bbox[3]) - Math.max(b0, d.bbox[1]) > 0.5)) light++;
       }
-      return n;
-    });
+    }
+    if (light > 0) { setLightTextHint({ ids, sel: selected, multi: multiSel }); return; }
+    applyDelete(ids);
   }
+  // Seçili TÜM öğeleri sil (Delete tuşu ya da çoklu seçimde çöp kutusu). Açık renkli yazı uyarısı markDeleted'da.
+  function deleteSelection() {
+    const delIds: string[] = [];
+    for (const id of selTargets()) {
+      if (analysis?.pages[current]?.elements.some((x) => x.id === id)) delIds.push(id);
+      else if (added.some((x) => x.id === id)) setAdded((a) => a.filter((x) => x.id !== id));
+      else if (addedImages.some((x) => x.id === id)) setAddedImages((a) => a.filter((x) => x.id !== id));
+    }
+    markDeleted(delIds);
+    setMultiSel(new Set()); setSelected(null);
+  }
+  function cancelLightDelete() {
+    if (lightTextHint) { setSelected(lightTextHint.sel); setMultiSel(lightTextHint.multi); }
+    setLightTextHint(null);
+  }
+  function applyDelete(ids: string[]) {
+    setEdits((m) => { const n = new Map(m); for (const id of ids) n.set(id, { ...n.get(id), deleted: true }); return n; });
+  }
+
+  // Geri Al (Ctrl+Z): TÜM değişiklikler (silme, metin düzenleme, taşıma, renk, eklenen metin/görsel) için anlık görüntü yığını.
+  // Arka arkaya hızlı değişiklikler (yazı yazma, sürükleme) tek adımda birleşir; yığın sınırsız kez geri alır.
+  const histRef = useRef<{ stack: { edits: typeof edits; added: typeof added; addedImages: typeof addedImages }[]; last: { edits: typeof edits; added: typeof added; addedImages: typeof addedImages } | null; skip: boolean; rebase: boolean; t: number }>({ stack: [], last: null, skip: false, rebase: false, t: 0 });
+  const [histLen, setHistLen] = useState(0);
+  function clearHistory() { histRef.current.rebase = true; histRef.current.stack = []; setHistLen(0); }
+  useEffect(() => {
+    const h = histRef.current;
+    const cur = { edits, added, addedImages };
+    if (h.rebase || !h.last) { h.rebase = false; h.last = cur; return; }
+    if (h.skip) { h.skip = false; h.last = cur; return; }
+    if (h.last.edits === edits && h.last.added === added && h.last.addedImages === addedImages) return;
+    const now = Date.now();
+    if (now - h.t > 600) { h.stack.push(h.last); if (h.stack.length > 200) h.stack.shift(); setHistLen(h.stack.length); }
+    h.t = now;
+    h.last = cur;
+  }, [edits, added, addedImages]);
+  function undoDelete() {
+    const h = histRef.current;
+    const snap = h.stack.pop();
+    if (!snap) return;
+    setHistLen(h.stack.length);
+    h.skip = true;
+    setEdits(snap.edits); setAdded(snap.added); setAddedImages(snap.addedImages);
+    setSelected(null); setMultiSel(new Set());
+  }
+
+  // Ctrl+C / Ctrl+X / Ctrl+V: seçili öğeleri (eklenen metin, görsel, çizim; mevcut metin ve görseller de) kopyala-yapıştır.
+  function copySelection(): boolean {
+    const items: ClipItem[] = [];
+    const pg = analysis?.pages[current];
+    for (const id of selTargets()) {
+      const a = added.find((x) => x.id === id);
+      if (a) { items.push({ kind: "text", a }); continue; }
+      const im = addedImages.find((x) => x.id === id);
+      if (im) { items.push({ kind: "img", im }); continue; }
+      const el = pg?.elements.find((x) => x.id === id);
+      if (!el || isDeleted(id)) continue;
+      const ed = edits.get(id);
+      if (el.type === "text") {
+        items.push({ kind: "text", a: { id: "", page: current, bbox: el.bbox, text: elText(el), size: ed?.size ?? el.size ?? 12, color: ed?.color ?? el.color ?? "#000000", font: (ed?.font ?? "sans") as FontKey } as Added });
+      } else {
+        // Mevcut görsel/şekil: sayfa önizlemesinden o bölge kırpılıp yeni görsel olarak kopyalanır.
+        const cv = canvasRef.current;
+        if (!cv || !cv.clientWidth) continue;
+        const k = cv.width / cv.clientWidth, [x0, y0, x1, y1] = el.bbox;
+        const sx = Math.max(0, Math.floor(x0 * scale * k)), sy = Math.max(0, Math.floor(y0 * scale * k));
+        const w = Math.max(1, Math.min(cv.width - sx, Math.ceil((x1 - x0) * scale * k))), h = Math.max(1, Math.min(cv.height - sy, Math.ceil((y1 - y0) * scale * k)));
+        const t = document.createElement("canvas"); t.width = w; t.height = h;
+        t.getContext("2d")?.drawImage(cv, sx, sy, w, h, 0, 0, w, h);
+        items.push({ kind: "img", im: { id: "", page: current, bbox: el.bbox, dataUrl: t.toDataURL("image/png"), aspect: w / h, rotate: 0 } });
+      }
+    }
+    if (!items.length) return false;
+    clipRef.current = { items, n: 0 };
+    return true;
+  }
+  function pasteClip(): boolean {
+    const c = clipRef.current;
+    if (!c || !c.items.length) return false;
+    c.n += 1;
+    const off = 12 * c.n;
+    const pw = analysis?.pages[current]?.width ?? 600, ph = analysis?.pages[current]?.height ?? 800;
+    const moved = (b: [number, number, number, number]): [number, number, number, number] => {
+      const w = b[2] - b[0], h = b[3] - b[1];
+      const nx = Math.max(0, Math.min(b[0] + off, pw - w)), ny = Math.max(0, Math.min(b[1] + off, ph - h));
+      return [nx, ny, nx + w, ny + h];
+    };
+    const na: Added[] = [], ni: AddedImg[] = [], ids: string[] = [];
+    for (const it of c.items) {
+      const id = uid(); ids.push(id);
+      if (it.kind === "text") na.push({ ...it.a, id, page: current, bbox: moved(it.a.bbox) });
+      else ni.push({ ...it.im, id, page: current, bbox: moved(it.im.bbox) });
+    }
+    if (na.length) setAdded((a) => [...a, ...na]);
+    if (ni.length) setAddedImages((a) => [...a, ...ni]);
+    setSelected(ids[0]);
+    setMultiSel(ids.length > 1 ? new Set(ids) : new Set());
+    return true;
+  }
+  useEffect(() => {
+    if (!editorOpen) return;
+    const isEditing = () => { const ae = document.activeElement as HTMLElement | null; return !!ae && (ae.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(ae.tagName)); };
+    // Başka yerden kopyalama yapılınca eski uygulama-içi kopya geçersiz olur.
+    const onCopy = () => { clipRef.current = null; };
+    const onPaste = (e: ClipboardEvent) => {
+      if (isEditing()) return; // metin kutusunda normal yapıştırma
+      const img = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (img) { e.preventDefault(); addImageFile(img); return; } // ekran görüntüsü / kopyalanan resim
+      if (pasteClip()) e.preventDefault();
+    };
+    document.addEventListener("copy", onCopy);
+    document.addEventListener("paste", onPaste);
+    return () => { document.removeEventListener("copy", onCopy); document.removeEventListener("paste", onPaste); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorOpen, added, addedImages, current, analysis, scale, edits, selected, multiSel]);
+
+  // Alt + fare tekerleği: yakınlaştır / uzaklaştır (%50–%300).
+  useEffect(() => {
+    if (!editorOpen) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.altKey || !e.deltaY) return;
+      e.preventDefault();
+      setZoom((z) => Math.min(3, Math.max(0.5, Math.round((z + (e.deltaY < 0 ? 0.1 : -0.1)) * 100) / 100)));
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [editorOpen]);
 
   // Klavye: Ctrl+A tümünü seç · Delete/Backspace sil · Ctrl+Z son silmeyi geri al · Esc seçimi bırak.
   useEffect(() => {
@@ -1062,7 +1429,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
       const tag = (document.activeElement?.tagName || "").toLowerCase();
       const editing = tag === "textarea" || tag === "input" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable;
       if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey) {
-        if (editing || !delStack.length) return;
+        if (editing || !histRef.current.stack.length) return;
         e.preventDefault();
         undoDelete();
         return;
@@ -1081,25 +1448,24 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         setSelected(ids[0] ?? null);
         return;
       }
-      if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); return; }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && ["c", "C", "x", "X"].includes(e.key)) {
+        if (editing || !selTargets().length) return;
+        if (!copySelection()) return;
+        e.preventDefault();
+        if (e.key === "x" || e.key === "X") deleteSelection();
+        return;
+      }
+      if (e.key === "Escape") { setMultiSel(new Set()); setAddMode(false); setDrawTool(null); setDraft(null); setTablePick(false); setArrowPick(false); return; }
       if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (editing) return;
-      const targets = selTargets();
-      if (!targets.length) return;
+      if (!selTargets().length) return;
       e.preventDefault();
-      const delIds: string[] = [];
-      for (const id of targets) {
-        if (analysis?.pages[current]?.elements.some((x) => x.id === id)) delIds.push(id);
-        else if (added.some((x) => x.id === id)) setAdded((a) => a.filter((x) => x.id !== id));
-        else if (addedImages.some((x) => x.id === id)) setAddedImages((a) => a.filter((x) => x.id !== id));
-      }
-      markDeleted(delIds);
-      setMultiSel(new Set()); setSelected(null);
+      deleteSelection();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorOpen, selected, current, analysis, added, addedImages, edits, multiSel, delStack]);
+  }, [editorOpen, selected, current, analysis, added, addedImages, edits, multiSel, histLen]);
 
   // «Metin Ekle» TEK SEFERLİK: bir yere tıklanınca kutu eklenir ve mod kapanır (art arda tıklama yeni kutu açmaz).
   function onCanvasClick(e: React.MouseEvent) {
@@ -1385,7 +1751,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
     return { h: Math.floor(mins / 60), m: mins % 60, clock: clock === "00:00" ? (tr ? "gece 00:00" : "00:00") : clock };
   }
 
-  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setQuotaPopup(null); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); setSelected(null); setDelStack([]); setBgMap(new Map()); setOcrTried(false); setOcrBusy(false); }
+  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setQuotaPopup(null); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); setSelected(null); clearHistory(); setBgMap(new Map()); setOcrTried(false); setOcrBusy(false); setScanNotice(false); }
 
   // Yalnız altı/üstü çizgi değişmiş öğe: yazı yeniden çizilmez (orijinal font/ölçü korunur), çizgi üstüne bindirilir.
   const isDecoOnly = (el: PdfElement, ed: Edit | undefined): boolean =>
@@ -1591,13 +1957,52 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
         document.body,
       )}
 
+      {/* Taranmış belge uyarısı (OCR'sız plan): yükleme sonrası, editör açılmadan önce. */}
+      {scanNotice && createPortal(
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={reset}>
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-orange-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={reset} aria-label={tr ? "Kapat" : "Close"} className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-500/15 text-orange-300 ring-1 ring-orange-400/30"><ScanText className="h-7 w-7" /></div>
+            <h3 className="mt-4 text-lg font-bold text-white">{tr ? "Taranmış belge algılandı" : "Scanned document detected"}</h3>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-slate-300">{tr
+              ? "Bu PDF taranmış görünüyor (sayfalar resim, içinde gerçek yazı yok). Normal, yazı içeren PDF'lerde her yazıya tıklayıp değiştirebilirsiniz; ancak bu belgedeki yazılar resim olduğu için tıklanamıyor. Bu planda görselleri silebilir ve «Metin Ekle» ile üzerine yeni yazı yazabilirsiniz. Plus ve üzeri planlarda yazı tanıma (OCR) taranmış belgeyi otomatik okur ve her satır tıklanıp değiştirilebilir hâle gelir."
+              : "This PDF looks scanned (pages are images). In regular PDFs with real text you can click and change any text, but the text in this document is part of an image, so it can't be clicked. On this plan you can delete images and type new text with «Add Text». On Plus and above, text recognition (OCR) reads scanned documents automatically and every line becomes clickable and editable."}</p>
+            <div className="mt-5 flex flex-col gap-2">
+              <a href={tr ? "/pricing" : "/en/pricing"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-5 py-2.5 text-[14px] font-bold text-white transition hover:brightness-110">
+                <Sparkles className="h-4 w-4" />{tr ? "Taranmış belgeleri otomatik düzenle — Plus'a geç" : "Edit scanned documents automatically — go Plus"}
+              </a>
+              <button type="button" onClick={() => { setScanNotice(false); setEditorOpen(true); }} className="rounded-xl border border-white/15 px-5 py-2.5 text-[13px] font-semibold text-slate-100 transition hover:bg-white/[0.06]">{tr ? "Tamam, düzenlemeye geç" : "OK, continue to editing"}</button>
+              <button type="button" onClick={reset} className="rounded-xl px-5 py-2 text-[13px] font-semibold text-slate-400 transition hover:text-white">{tr ? "Kapat" : "Close"}</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* İpucu: görsel silindi ama üstündeki açık renkli yazı kaldı (beyaz zeminde görünmez). Tamam → kullanıcı devam eder. */}
+      {lightTextHint && createPortal(
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={cancelLightDelete}>
+          <div className="w-full max-w-sm rounded-3xl border border-amber-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30"><Info className="h-6 w-6" /></div>
+            <h3 className="mt-3 text-base font-bold text-white">{tr ? "İpucu" : "Tip"}</h3>
+            <p className="mt-2 text-[13px] leading-relaxed text-slate-300">{tr
+              ? "Sildiğiniz kısmın üzerinde beyaz (açık renkli) yazı var. Bu kısmı silerseniz yazı ile arka plan aynı renk olacağı için yazı görünmez olabilir. Öncelikle yazı rengini değiştirmeniz daha uygun olabilir."
+              : "The part you deleted has white (light-colored) text on top of it. Once it's removed, the text and the background will be the same color, so the text may become invisible. It may be better to change the text color first."}</p>
+            <div className="mt-5 flex gap-2">
+              <button type="button" onClick={cancelLightDelete} autoFocus className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-[14px] font-semibold text-slate-100 transition hover:bg-white/[0.06]">{tr ? "İptal" : "Cancel"}</button>
+              <button type="button" onClick={() => { applyDelete(lightTextHint.ids); setLightTextHint(null); }} className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-[14px] font-bold text-white transition hover:brightness-110">{tr ? "Yine de sil" : "Delete anyway"}</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
       {editorOpen && doc && createPortal(
         <div className="fixed inset-0 z-[100] flex flex-col bg-[#0b1020]/97 backdrop-blur-sm">
           {/* Üst araç çubuğu — her grup kendi çerçevesinde: EKLE · BİÇİM · GÖRÜNÜM · BİTİR */}
           <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-1.5">
             <div className={grp}>
-              <span className={grpLabel}>{tr ? "Ekle" : "Add"}</span>
-              <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); setMultiSel(new Set()); }} aria-pressed={addMode}
+              <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setDrawTool(null); setSelected(null); setMultiSel(new Set()); }} aria-pressed={addMode}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-bold ring-1 transition duration-200 hover:scale-[1.03] ${addMode ? "bg-gradient-to-r from-cyan-300 to-sky-400 text-slate-950 shadow-[0_10px_26px_-8px_rgba(34,211,238,0.95)] ring-white/60" : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_10px_24px_-12px_rgba(6,182,212,0.9)] ring-white/15 hover:brightness-110"}`}>
                 <Type className="h-3.5 w-3.5" />{tr ? "Metin Ekle" : "Add Text"}
               </button>
@@ -1608,6 +2013,80 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={(e) => { addImageFile(e.target.files?.[0]); e.target.value = ""; }} />
             </div>
 
+            {/* ÇİZ: hazır şekiller, serbest çizim, tablo — sayfada sürükleyerek çizilir */}
+            <div className={grp} data-tour="editor-draw">
+              <span className={grpLabel}>{tr ? "Çiz" : "Draw"}</span>
+              {([
+                ["rect", RectangleHorizontal, tr ? "Dikdörtgen" : "Rectangle"],
+                ["square", Square, tr ? "Kare" : "Square"],
+                ["ellipse", Circle, tr ? "Daire / elips" : "Circle / ellipse"],
+                ["line", Minus, tr ? "Çizgi" : "Line"],
+                ["arrow", ArrowUpRight, tr ? "Ok" : "Arrow"],
+                ["free", Pencil, tr ? "Serbest çizim" : "Freehand"],
+                ["table", Table2, tr ? "Tablo" : "Table"],
+              ] as [DrawTool, typeof Square, string][]).map(([k, Ico, label]) => (
+                <span key={k} className="relative">
+                  <button type="button" title={label} aria-label={label} aria-pressed={drawTool === k}
+                    onClick={() => { if (k === "arrow" && selShapeTool === "arrow" && drawTool !== "arrow") { setArrowPick((v) => !v); return; } setTablePick(k === "table" && drawTool !== "table"); setArrowPick(k === "arrow" && drawTool !== "arrow"); setTableHov(null); setDrawTool((v) => (v === k ? null : k)); setAddMode(false); setSelected(null); setMultiSel(new Set()); setDraft(null); }}
+                    className={`inline-flex h-7 w-6 items-center justify-center rounded-lg ring-1 transition ${drawTool === k ? "bg-cyan-400 text-slate-950 ring-white/60" : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/[0.12]"}`}>
+                    <Ico className="h-3.5 w-3.5" />
+                  </button>
+                  {k === "arrow" && (drawTool === "arrow" || selShapeTool === "arrow") && arrowPick && (
+                    <div className="absolute left-0 top-full z-[200] mt-1.5 w-64 whitespace-nowrap rounded-xl border border-white/15 bg-slate-900 p-1.5 shadow-2xl">
+                      {ARROW_STYLES.map((a) => (
+                        <button key={a.k} type="button" onClick={() => { setArrowStyle(a.k); setArrowPick(false); restyleSel({ arrow: a.k }); }}
+                          className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition hover:bg-white/[0.08] ${arrowStyle === a.k ? "bg-cyan-500/15 text-cyan-100" : "text-slate-200"}`}>
+                          <ArrowIcon style={a.k} />{tr ? a.tr : a.en}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {k === "table" && (drawTool === "table" || selShapeTool === "table") && !tablePick && (
+                    <button type="button" onClick={() => { setTablePick(true); setTableHov(null); }} title={tr ? "Tablo boyutunu seç" : "Choose table size"}
+                      className="absolute left-0 top-full z-[200] mt-1.5 inline-flex h-7 items-center whitespace-nowrap rounded-lg border border-white/15 bg-slate-900 px-2 text-[12px] font-semibold tabular-nums text-slate-100 shadow-lg hover:bg-slate-800">
+                      {tableRows} × {tableCols}
+                    </button>
+                  )}
+                  {k === "table" && (drawTool === "table" || selShapeTool === "table") && tablePick && (
+                    <div className="absolute left-0 top-full z-[200] mt-1.5 rounded-xl border border-white/15 bg-slate-900 p-2.5 shadow-2xl" onMouseLeave={() => setTableHov(null)}>
+                      <p className="mb-1.5 text-center text-[12px] font-semibold tabular-nums text-cyan-200">{tableHov ? `${tableHov.r} × ${tableHov.c}` : (tr ? "Satır × sütun seçin" : "Pick rows × columns")}</p>
+                      <div className="grid gap-[3px]" style={{ gridTemplateColumns: "repeat(10, 18px)" }}>
+                        {Array.from({ length: 80 }, (_, n) => {
+                          const r = Math.floor(n / 10) + 1, c = (n % 10) + 1;
+                          const on = tableHov ? r <= tableHov.r && c <= tableHov.c : r <= tableRows && c <= tableCols;
+                          return <button key={n} type="button" aria-label={`${r} × ${c}`} onMouseEnter={() => setTableHov({ r, c })} onClick={() => { setTableRows(r); setTableCols(c); restyleSel({ rows: r, cols: c }); setTablePick(false); setTableHov(null); }}
+                            className={`h-[18px] w-[18px] rounded-[3px] border ${on ? "border-cyan-300 bg-cyan-400/40" : "border-white/20 bg-white/[0.04]"}`} />;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </span>
+              ))}
+              <select value={drawWidth} onChange={(e) => { const w = Number(e.target.value); setDrawWidth(w); restyleSel({ width: w }); }} title={tr ? "Çizgi kalınlığı" : "Line width"} className="h-7 rounded-lg border border-white/10 bg-slate-900 px-1 text-[12px] text-slate-100 [color-scheme:dark]">
+                {[1, 2, 3, 5, 8].map((w) => <option key={w} value={w} className="bg-slate-900">{w} pt</option>)}
+              </select>
+              {/* KENAR ve DOLGU rengi: hazır renk kutuları + özel renk. Varsayılan: kenar siyah, dolgu boş. */}
+              <span className="flex items-center gap-1" title={tr ? "Kenar (çizgi) rengi" : "Border (line) color"}>
+                <span className="text-[11px] font-semibold text-slate-400">{tr ? "Kenar" : "Border"}</span>
+                {["#000000", "#dc2626", "#2563eb", "#16a34a"].map((c) => (
+                  <button key={c} type="button" aria-label={c} title={c} onClick={() => { setDrawColor(c); restyleSel({ color: c }); }}
+                    className={`h-3.5 w-3.5 rounded-[4px] border ${drawColor.toLowerCase() === c ? "border-white ring-2 ring-cyan-300" : "border-white/30"}`} style={{ backgroundColor: c }} />
+                ))}
+                <input type="color" value={drawColor} onChange={(e) => { setDrawColor(e.target.value); restyleSel({ color: e.target.value }); }} title={tr ? "Özel kenar rengi" : "Custom border color"} className="h-4 w-4 cursor-pointer rounded border border-white/20 bg-transparent p-0" />
+              </span>
+              <span className="flex items-center gap-1" title={tr ? "Dolgu (iç) rengi" : "Fill color"}>
+                <span className="text-[11px] font-semibold text-slate-400">{tr ? "Dolgu" : "Fill"}</span>
+                <button type="button" aria-label={tr ? "Dolgu yok" : "No fill"} title={tr ? "Dolgu yok" : "No fill"} onClick={() => { setDrawFillOn(false); restyleSel({ fill: null }); }}
+                  className={`h-3.5 w-3.5 rounded-[4px] border ${!drawFillOn ? "border-white ring-2 ring-cyan-300" : "border-white/30"}`}
+                  style={{ background: "linear-gradient(to top right, transparent 44%, #ef4444 44%, #ef4444 56%, transparent 56%), #ffffff" }} />
+                {["#fde68a", "#fecaca", "#bfdbfe", "#bbf7d0"].map((c) => (
+                  <button key={c} type="button" aria-label={c} title={c} onClick={() => { setDrawFillOn(true); setDrawFillColor(c); restyleSel({ fill: c }); }}
+                    className={`h-3.5 w-3.5 rounded-[4px] border ${drawFillOn && drawFillColor.toLowerCase() === c ? "border-white ring-2 ring-cyan-300" : "border-white/30"}`} style={{ backgroundColor: c }} />
+                ))}
+                <input type="color" value={drawFillColor} onChange={(e) => { setDrawFillOn(true); setDrawFillColor(e.target.value); restyleSel({ fill: e.target.value }); }} title={tr ? "Özel dolgu rengi" : "Custom fill color"} className="h-4 w-4 cursor-pointer rounded border border-white/20 bg-transparent p-0" />
+              </span>
+            </div>
+
             {/* Biçimlendirme araçları HER ZAMAN görünür; metin seçili değilken PASİF (soluk). */}
             <div
               data-tour="editor-format"
@@ -1616,7 +2095,6 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               aria-disabled={selInfo?.kind !== "text"}
               title={selInfo?.kind === "text" ? undefined : (tr ? "Bir yazıya tıklayın" : "Click a text")}
             >
-              <span className={grpLabel}>{tr ? "Biçim" : "Format"}</span>
               <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                 {tr ? "Renk" : "Color"}
                 <span className="flex items-center gap-1">
@@ -1676,27 +2154,27 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               </span>
             </div>
 
+            <div className="ml-auto flex items-center gap-2">
             <div className={grp}>
-              <span className={grpLabel}>{tr ? "Görünüm" : "View"}</span>
               <div data-tour="editor-zoom" className="flex items-center gap-1">
-                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır (Alt + fare tekerleği)" : "Zoom out (Alt + mouse wheel)"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-3.5 w-3.5" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-16 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
-                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır (Alt + fare tekerleği)" : "Zoom in (Alt + mouse wheel)"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-8 w-8 items-center sm:h-6 sm:w-6 justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-3.5 w-3.5" /></button>
                 <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[2.5rem] rounded-md px-1 py-0.5 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
               <span className="mx-0.5 h-6 w-px bg-white/15" />
-              <button type="button" onClick={undoDelete} disabled={!delStack.length} title={tr ? "Son silmeyi geri al (Ctrl+Z)" : "Undo last delete (Ctrl+Z)"}
+              <button type="button" onClick={undoDelete} disabled={!histLen} title={tr ? "Son değişikliği geri al (Ctrl+Z)" : "Undo last change (Ctrl+Z)"}
                 className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] font-semibold text-slate-200 transition hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent">
                 <Undo2 className="h-3.5 w-3.5" /><span className="hidden md:inline">{tr ? "Geri Al" : "Undo"}</span>
               </button>
             </div>
-
-            <div className={`${grp} ml-auto`}>
+            <div className={grp}>
               <button type="button" onClick={() => setTourOpen(true)} title={tr ? "Hızlı turu başlat" : "Start the quick tour"}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1 text-[12px] font-bold text-slate-100 transition duration-200 hover:scale-[1.03] hover:bg-white/[0.1] hover:text-cyan-200">
                 <HelpCircle className="h-3.5 w-3.5" />{tr ? "Nasıl Yapılır" : "How To"}
               </button>
               <button data-tour="editor-done" type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-600 px-3.5 py-1 text-[12px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(16,185,129,0.9)] ring-1 ring-white/15 transition duration-200 hover:scale-[1.04] hover:brightness-110"><Check className="h-3.5 w-3.5" />{tr ? "Tamam" : "Done"}</button>
+            </div>
             </div>
             <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
           </div>
@@ -1724,6 +2202,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                 <Info className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{tr ? "Önizleme notu: Bir yazıyı düzenlerken beliren beyaz örtü üst/alt çizgilere taşabilir — bu yalnızca önizlemedir; indirdiğiniz PDF'te o çizgiler korunur." : "Preview note: while editing a line, the white cover may overlap the lines above/below — this is preview only; those lines are kept in the downloaded PDF."}</p>
               </div>
+              <p className="mx-auto mb-3 max-w-xl text-center text-[12px] text-slate-400">{tr ? "İpucu: Alt tuşuna basılı tutup fare tekerleğini çevirerek yakınlaştırıp uzaklaştırabilirsiniz." : "Tip: hold Alt and scroll the mouse wheel to zoom in and out."}</p>
               {addMode && (
                 <div className="mx-auto mb-3 flex max-w-xl items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/[0.12] px-3 py-2 text-[12.5px] font-semibold text-cyan-100">
                   <Type className="h-4 w-4 shrink-0" />{tr ? "Yazı eklemek için sayfada bir yere tıklayın." : "Click anywhere on the page to add text."}
@@ -1732,6 +2211,35 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
               <div data-tour="editor-canvas" className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
                 <canvas ref={canvasRef} className="block rounded-lg" />
                 {rendering && <div className="absolute inset-0 flex items-center justify-center bg-black/10"><Loader2 className="h-6 w-6 animate-spin text-cyan-600" /></div>}
+                {drawTool && (
+                  <div ref={drawLayerRef} className="absolute inset-0 z-[60] cursor-crosshair" style={{ touchAction: "none" }}
+                    onPointerDown={onDrawDown} onPointerMove={onDrawMove} onPointerUp={onDrawUp} onPointerCancel={() => { draftRef.current = null; setDraft(null); }}>
+                    {draft && (() => {
+                      const g = drawGeom(drawTool, draft);
+                      const sw = drawWidth * scale, fill = drawFillOn && drawTool !== "line" && drawTool !== "arrow" && drawTool !== "free" ? drawFillColor : "none";
+                      const common = { stroke: drawColor, strokeWidth: sw, fill, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+                      const x0 = g.x0 * scale, y0 = g.y0 * scale, x1 = g.x1 * scale, y1 = g.y1 * scale;
+                      return (
+                        <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
+                          {(drawTool === "rect" || drawTool === "square" || drawTool === "table") && <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} {...common} />}
+                          {drawTool === "table" && (
+                            <g stroke={drawColor} strokeWidth={sw}>
+                              {Array.from({ length: Math.max(0, tableRows - 1) }, (_, i) => <line key={`r${i}`} x1={x0} x2={x1} y1={y0 + ((y1 - y0) * (i + 1)) / tableRows} y2={y0 + ((y1 - y0) * (i + 1)) / tableRows} />)}
+                              {Array.from({ length: Math.max(0, tableCols - 1) }, (_, i) => <line key={`c${i}`} y1={y0} y2={y1} x1={x0 + ((x1 - x0) * (i + 1)) / tableCols} x2={x0 + ((x1 - x0) * (i + 1)) / tableCols} />)}
+                            </g>
+                          )}
+                          {drawTool === "ellipse" && <ellipse cx={(x0 + x1) / 2} cy={(y0 + y1) / 2} rx={(x1 - x0) / 2} ry={(y1 - y0) / 2} {...common} />}
+                          {drawTool === "arrow" && (() => {
+                            const r = renderShapePng("arrow", draft, drawOpts());
+                            return r ? <image href={r.dataUrl} x={r.bbox[0] * scale} y={r.bbox[1] * scale} width={(r.bbox[2] - r.bbox[0]) * scale} height={(r.bbox[3] - r.bbox[1]) * scale} /> : null;
+                          })()}
+                          {drawTool === "line" && <line x1={draft[0][0] * scale} y1={draft[0][1] * scale} x2={draft[draft.length - 1][0] * scale} y2={draft[draft.length - 1][1] * scale} {...common} />}
+                          {drawTool === "free" && <polyline points={draft.map((q) => `${q[0] * scale},${q[1] * scale}`).join(" ")} {...common} />}
+                        </svg>
+                      );
+                    })()}
+                  </div>
+                )}
                 <div ref={overlayRef} onClick={onCanvasClick} onPointerDown={onOverlayPointerDown} className="absolute inset-0" style={{ cursor: addMode ? "text" : "default", touchAction: "pan-x pan-y" }}>
                   {/* KAPAK katmanı: aktif/kaydırılan metinlerin ORİJİNAL konumunu arka planla ört.
                       İçerik katmanının ALTINDA kalır → sağa kaydırılan komşu metin, örtülen orijinalin
@@ -1740,8 +2248,11 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     if (el.type !== "text" || isDeleted(el.id)) return null;
                     const shift = shifts.get(el.id) ?? 0;
                     const ed = edits.get(el.id);
-                    const activeCover = selected === el.id || multiSel.has(el.id) || (!!ed && !isDecoOnly(el, ed)) || shift > 0.5;
+                    const activeCover = selected === el.id || multiSel.has(el.id) || (!!ed && !isDecoOnly(el, ed)) || shift > 0.5 || underDeletedImg.has(el.id);
                     if (!activeCover) return null;
+                    // Yazısı boşaltılmış metin silinmiş bir görselin (rozet/zemin) altındaysa kapak çizilmez:
+                    // eski (görselden örneklenen) renkle kalan kapak, görsel silinince geride çizgi/bant gibi kalıyordu.
+                    if (underDeletedImg.has(el.id) && ed && typeof ed.text === "string" && ed.text.trim() === "") return null;
                     const [x0, , x1] = el.bbox;
                     const [cy0, cy1] = coverY(el);
                     const cx0 = el.ink ? Math.min(x0, el.ink[0]) : x0, cx1 = el.ink ? Math.max(x1, el.ink[2]) : x1;
@@ -1763,6 +2274,8 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                       // Silinmiş görsel → arka plan rengiyle kapat (tam sayfa görselde düz beyaz). Silgiyi bbox'tan ~3px taşır:
                       // amblem/logo kenarındaki ince hat çizgileri de örtülsün (indirmede zaten yok).
                       const oldRect = { left: style.left - 1, top: style.top - 1, width: style.width + 2, height: style.height + 2 };
+                      // İnce çizgi: tıklama kutusu (10px) değil gerçek çizgi kalınlığı örtülür; yoksa komşu yazının üst/altı da boyanır.
+                      if (del && el.shape) return <FillPatch key={el.id} src={canvasRef.current} rect={{ left: x0 * scale - 1.5, top: y0 * scale - 1.5, width: (x1 - x0) * scale + 3, height: Math.max((y1 - y0) * scale, 1) + 3 }} />;
                       if (del) return <FillPatch key={el.id} src={canvasRef.current} rect={oldRect} />;
                       // Tam sayfa/arka plan görseli: sürükleme-seçim (marquee) bunun üstünden de başlayabilsin, taşınmasın.
                       const bgImg = !!pgInfo && (x1 - x0) * (y1 - y0) > pgInfo.width * pgInfo.height * 0.5;
@@ -1774,7 +2287,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                           {moved && <FillPatch src={canvasRef.current} rect={oldRect} />}
                           {moved && <MovedImage src={canvasRef.current} from={style} to={boxStyle} />}
                           <div data-bg={bgImg ? "1" : undefined}
-                            onPointerDown={canMove ? (e) => { if (!sel) selectEl(el, e.shiftKey || e.ctrlKey || e.metaKey); startFrameDrag(e, "el", el.id, x0 + mdx, y0 + mdy, x1 - x0, y1 - y0, mdx, mdy); } : undefined}
+                            onPointerDown={canMove ? (e) => { if (!sel && !(e.shiftKey || e.ctrlKey || e.metaKey)) selectEl(el, false); startFrameDrag(e, "el", el.id, x0 + mdx, y0 + mdy, x1 - x0, y1 - y0, mdx, mdy); } : undefined}
                             onClick={(e) => { e.stopPropagation(); selectEl(el, e.shiftKey || e.ctrlKey || e.metaKey); }}
                             className={`absolute rounded-sm ${canMove ? "cursor-move" : "cursor-pointer"} ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`}
                             style={{ ...boxStyle, touchAction: canMove ? "none" : undefined }}
@@ -1783,7 +2296,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                               <button
                                 type="button"
                                 onPointerDown={(e) => e.stopPropagation()}
-                                onClick={(e) => { e.stopPropagation(); markDeleted([el.id]); setSelected(null); }}
+                                onClick={(e) => { e.stopPropagation(); if (multiSel.size > 1) { deleteSelection(); } else { markDeleted([el.id]); setSelected(null); } }}
                                 className="absolute -right-2.5 -top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white shadow"
                                 title={tr ? "Sil" : "Delete"}
                               >
@@ -1805,7 +2318,7 @@ export function PdfEditor({ language, accessToken, initialFile, belowHeader }: {
                     // canvas'taki NET orijinal metin görünür (çift görüntü yok). Yalnız altı/üstü çizgi
                     // eklendiyse yazı yeniden çizilmez; çizgi üstüne bindirilir.
                     const decoOnly = isDecoOnly(el, ed);
-                    const active = sel || (!!ed && !decoOnly) || shift > 0.5;
+                    const active = sel || (!!ed && !decoOnly) || shift > 0.5 || underDeletedImg.has(el.id);
                     if (!active) {
                       const szp = elSize(el);
                       const baseY = ((el.by ?? y0 + szp) - y0) * scale;

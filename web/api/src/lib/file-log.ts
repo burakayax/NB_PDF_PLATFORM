@@ -1,3 +1,4 @@
+import { mirrorToConsole } from "./console-log.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { env } from "../config/env.js";
@@ -88,6 +89,8 @@ export async function prepareLogFile(): Promise<void> {
 // Eşzamanlı isteklerde satırların birbirine karışmasını önlemek için gereklidir.
 // Gün değişiminde mevcut dosyayı tarihli isimle arşivler (günlük rotasyon).
 export function appendLogLine(line: string): void {
+  // Render konsolunda görünsün diye kişisel veriden arındırılmış kopya (yalnız üretimde; bkz. console-log.ts).
+  mirrorToConsole(line);
   if (!env.LOG_FILE_ENABLED) {
     return;
   }

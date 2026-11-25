@@ -9,7 +9,6 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { installProductionGuards, installChunkReloadGuard } from "./lib/productionGuards";
 import { getCountryCode } from "./lib/geoCountry";
 import { NotFoundPage } from "./components/common/NotFoundPage";
-import { SignDocumentPage } from "./components/tools/SignDocumentPage";
 import { GoogleSignupPage } from "./components/auth/GoogleSignupPage";
 import { TOOL_SLUGS } from "./seo/seoLight.mjs";
 import { isLandingPath, loadToolSeo } from "./seo/toolSeoRuntime";
@@ -18,6 +17,11 @@ import { getExplicitLanguage, isEnglishPath, isPublicSeoPath } from "./hooks/use
 import { getSaasApiBase } from "./api/saasBase";
 import { isKnownAppPath } from "./lib/appNavigation";
 import "./styles/app.css";
+
+// İmza sayfası yalnız imza bağlantısında gerekir; yasal metinleri (~100 KB) ana sayfaya yüklememek için tembel.
+const SignDocumentPage = React.lazy(() =>
+  import("./components/tools/SignDocumentPage").then((m) => ({ default: m.SignDocumentPage })),
+);
 
 // PayTR ödeme sayfası iframe içinde açılır; ödeme bitince PayTR bizim dönüş adresimizi (/workspace?payment=...)
 // aynı iframe'in İÇİNDE yükler. Uygulama iframe içinde kalmasın diye üst pencereyi o adrese götür.
@@ -138,7 +142,9 @@ if (googleKayitSayfasi) {
   kok.render(
     <React.StrictMode>
       <GlobalErrorBoundary>
-        <SignDocumentPage token={imzaToken} />
+        <React.Suspense fallback={null}>
+          <SignDocumentPage token={imzaToken} />
+        </React.Suspense>
       </GlobalErrorBoundary>
     </React.StrictMode>,
   );

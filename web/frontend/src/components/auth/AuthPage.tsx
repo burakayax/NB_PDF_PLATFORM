@@ -20,6 +20,7 @@ import { getGoogleOAuthStartUrl } from "../../api/auth";
 import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { authTranslations, getAuthCopy } from "../../i18n/auth";
 import type { Language } from "../../i18n/landing";
+import { ResendVerification } from "./ResendVerification";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
 import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
@@ -605,6 +606,7 @@ export function AuthPage({
                   </button>
                 ) : null}
               </div>
+              <ResendVerification language={language} defaultEmail={email} />
             </div>
           ) : null}
 
@@ -700,6 +702,9 @@ export function AuthPage({
                 </span>
               </label>
               <FieldError msg={emailErr || serverEmailErr} />
+              {mode === "login" && !registrationSuccessBanner && /doğrulay|verify your email/i.test(serverEmailErr) ? (
+                <ResendVerification language={language} defaultEmail={email} />
+              ) : null}
             </div>
 
             <div>

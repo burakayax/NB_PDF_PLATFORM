@@ -48,7 +48,7 @@ export const COPY_4 = {
       ["SmallPDF'in iyi yanları", "Arayüzü sade, araç yelpazesi geniş, masaüstü ve mobil uygulamaları var, ekip hesabı ve bulut entegrasyonları kurumsal kullanımda işe yarıyor."],
       ["Fark nerede?", "Özellik listesinde değil, işin nerede yapıldığında. Sunucuda çalışan her aracın maliyeti var ve bu yüzden sınır konur."],
       ["Gerçekten sınırsız olanlar", "Birleştirme, bölme, sayfa silme, sıralama, döndürme, kırpma, görselden PDF, belge tarama, imza. Cihazınızda çalışır, üyelik yok."],
-      ["Sınırı olanlar", "Word ve Excel'e dönüştürme, OCR ve sıkıştırma ücretsiz planda günlük hakla çalışır. Yapay zekâ araçları plana bağlıdır."],
+      ["Sınırı olanlar", "Word'e dönüştürme ve sıkıştırma ücretsiz planda günlük hakla çalışır (Excel dönüştürme ücretli planlarda). Yapay zekâ araçları plana bağlıdır."],
     ],
   },
   "cv-ozgecmis-word-pdf-cevirme": {
@@ -88,7 +88,7 @@ export const COPY_4 = {
       ["Telefonda rahat yapılanlar", "PDF birleştirme ve ayırma, sayfa silme, döndürme, sıralama, fotoğraflardan PDF yapma, kamerayla belge tarama."],
       ["Belge tarama", "Telefon kamerası belgenin köşelerini bulur, perspektifi düzeltir, temiz bir PDF üretir. Kimlik ve sözleşme buluta gitmez."],
       ["Çekim anında", "Belgeyi düz zemine koyun, ışığı karşıdan alın, dört kenarı kadraja sokun, telefonu sayfaya paralel tutun."],
-      ["Ağır işler", "Word ya da Excel'e dönüştürme, OCR ve sıkıştırma telefonda da çalışır ama dosya sunucuya yüklenir."],
+      ["Ağır işler", "Word ya da Excel'e dönüştürme ve sıkıştırma telefonda da çalışır ama dosya sunucuya yüklenir."],
     ],
   },
 };

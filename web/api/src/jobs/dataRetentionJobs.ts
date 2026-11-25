@@ -14,6 +14,8 @@ const ANALYTICS_RETENTION_DAYS = 395;
 const ERROR_LOG_RETENTION_DAYS = 30;
 /** Hizmet sağlık kaydı (kişisel veri yok): 400 gün. */
 const SERVICE_HEALTH_RETENTION_DAYS = 400;
+/** Sunucu araç çağrısı kaydı (kim hangi aracı kullandı) 30 gün saklanır. */
+const TOOL_CALL_RETENTION_DAYS = 30;
 /** Yapay zekâ istek defteri (içerik yok, yalnızca özet): aynı gerekçeyle 1 yıl. */
 const AI_REQUEST_LOG_RETENTION_DAYS = 365;
 /** VUK Madde 253: Faturalar 10 yıl arşivlenir (silinmez). */
@@ -165,6 +167,7 @@ export async function purgeArchivedLogs(): Promise<void> {
 /** Hizmet sağlık kayıtlarını 400 gün sonra siler. */
 export async function purgeOldServiceHealth(): Promise<void> {
   await prisma.serviceHealthEvent.deleteMany({ where: { at: { lt: daysAgo(SERVICE_HEALTH_RETENTION_DAYS) } } });
+  await prisma.toolCallLog.deleteMany({ where: { at: { lt: daysAgo(TOOL_CALL_RETENTION_DAYS) } } });
 }
 
 /** Sayfa görüntüleme + yolculuk olayları 13 ay, istemci hata günlüğü 30 gün sonra silinir. */

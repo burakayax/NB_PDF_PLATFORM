@@ -107,7 +107,8 @@ describe("Instagram açıklaması", () => {
     expect(bodies.FACEBOOK.includes("— — —")).toBe(false);
     expect(bodies.FACEBOOK.includes("Teacher CV")).toBe(false);
     expect(bodies.FACEBOOK).not.toMatch(/https?:\/\//);
-    expect(bodies.FACEBOOK).toContain("Link ilk yorumda");
+    // Bağlantı satırı yalnız 4 gönderiden birinde (fbWithLink) çıkar; varsayılan: çıkmaz.
+    expect(bodies.FACEBOOK).not.toContain("Link ilk yorumda");
     expect(bodies.FACEBOOK).not.toMatch(/OfficeTips|Dijitalleşme|OfisİpuçlarI/);
   });
 

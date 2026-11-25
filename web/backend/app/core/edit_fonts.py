@@ -597,6 +597,23 @@ def vector_lines(pdf: Any, page: Any, taken_rects: list[Any], max_items: int = 6
         if any(abs(r[0] - u[0]) < 0.5 and abs(r[1] - u[1]) < 0.5 and abs(r[2] - u[2]) < 0.5 and abs(r[3] - u[3]) < 0.5 for u in uniq):
             continue  # aynı yere çizilmiş yinelenen
         uniq.append(r)  # type: ignore[arg-type]
+    # Çizginin UCUNDAKİ küçük noktalar/daireler (eğri çizimli, vector_emblems'in 8 pt alt sınırının altında)
+    # ayrı öğe olmadığı için çizgi silinince geride kalıyordu → uca değen küçük şekiller çizgiye katılır.
+    dots: list[tuple[float, float, float, float]] = []
+    for d in sc.paths:
+        if "c" not in d.kinds or (d.fill_color is None and d.color is None):
+            continue
+        dr = tuple(float(v) for v in d.rect)
+        if 0 < dr[2] - dr[0] <= 12 and 0 < dr[3] - dr[1] <= 12:
+            dots.append(dr)  # type: ignore[arg-type]
+    if dots:
+        for i, r in enumerate(uniq):
+            if min(r[2] - r[0], r[3] - r[1]) > 4:
+                continue  # yalnız ince çizgiler (dikdörtgen/kutu değil)
+            for dr in dots:
+                if dr[0] - 2 < r[2] and dr[2] + 2 > r[0] and dr[1] - 2 < r[3] and dr[3] + 2 > r[1]:
+                    r = (min(r[0], dr[0]), min(r[1], dr[1]), max(r[2], dr[2]), max(r[3], dr[3]))
+            uniq[i] = r
     return uniq if len(uniq) <= max_items else []
 
 

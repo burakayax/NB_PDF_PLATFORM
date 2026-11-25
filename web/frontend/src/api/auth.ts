@@ -202,6 +202,11 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   return response;
 }
 
+/** Onaysız hesaba doğrulama e-postasını tekrar gönderir (sunucuda sınırlıdır; yanıt hesabın varlığını belli etmez). */
+export async function resendVerificationEmail(email: string): Promise<void> {
+  await sendAuthRequest<{ message: string }>("/resend-verification", { email: email.trim().toLowerCase() });
+}
+
 export async function loginAuthUser(email: string, password: string, isAdmin = false, rememberMe?: boolean) {
   const payload: Record<string, string | boolean> = { email: email.trim().toLowerCase(), password };
   // "Beni hatırla": yalnız normal girişte gönderilir; verilmezse sunucu eski davranışı uygular.

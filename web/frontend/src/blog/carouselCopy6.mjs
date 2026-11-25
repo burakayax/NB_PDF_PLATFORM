@@ -28,7 +28,7 @@ export const COPY_6 = {
       ["Uygulamalarda sık görülenler", "Üyelik, ücretsiz sürümde filigran, reklam ve belgeyi işlemek için bulutlarına yükleme. Hassas belgede sonuncusu tek başına yeterince rahatsız edici."],
       ["Tarayıcıda çalışıyor", "Telefonunuzun tarayıcısında açılır, kurulum yok. Kamera görüntüsü, kenar bulma, perspektif düzeltme ve PDF oluşturma cihazınızda yapılır."],
       ["Ücretsiz olanlar", "Tarama, kenar bulma, perspektif düzeltme, Renkli, Gri ve Siyah-Beyaz filtre, PDF kaydetme ve paylaşma. Üyelik istemez, tek taramada 3 sayfa."],
-      ["Pro ne ekler?", "Gölgeleri temizleyen «Otomatik» filtre, tek taramada sınırsız sayfa ve Ctrl+F ile aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır."],
+      ["Ücretli planlar ne ekler?", "Gölgeleri temizleyen «Otomatik» filtre, tek taramada sınırsız sayfa ve Ctrl+F ile aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır."],
       ["Kimler için?", "Ara sıra belge tarayan, telefona bir uygulama daha kurmak istemeyen, kimlik ve sözleşmeyi buluta yüklemeden dijitalleştirmek isteyenler için."],
     ],
   },

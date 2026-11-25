@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { legalDocuments } from "../../content/legal";
+import { cookieNoticeCopy } from "../../content/cookieNoticeCopy.mjs";
 import type { Language } from "../../i18n/landing";
 
 const COPY = {
@@ -76,7 +76,7 @@ export function CookieNotice({
 
   if (!visible) return null;
 
-  const copy = legalDocuments[language].cookieNotice;
+  const copy = cookieNoticeCopy[language];
   const t = COPY[language];
 
   const handleAcceptAll = () => { onAcceptAll(); onAccept?.(); };

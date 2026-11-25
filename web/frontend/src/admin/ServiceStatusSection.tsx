@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { fetchServiceStatus, type ComponentStatus, type ServiceStatus } from "../api/serviceStatus";
 import { BosDurum, Katlanir } from "./analytics/AdminAnalytics";
 
-const NAMES: Record<"api" | "db" | "pdf", string> = { api: "Auth API", db: "Veritabanı", pdf: "PDF API" };
+const KEYS = ["api", "pdf", "gotenberg", "db"] as const;
+const NAMES: Record<(typeof KEYS)[number], string> = { api: "Auth API", db: "Veritabanı", pdf: "PDF API", gotenberg: "Office dönüştürücü (Gotenberg)" };
 const ts = (iso: string) => iso.slice(0, 16).replace("T", " ");
 
 function pctClass(c: ComponentStatus) {
@@ -58,7 +59,7 @@ export function ServiceStatusSection({ accessToken }: { accessToken: string }) {
                 </tr>
               </thead>
               <tbody>
-                {(["api", "db", "pdf"] as const).map((k) => {
+                {KEYS.map((k) => {
                   const c = data.components[k];
                   return (
                     <tr key={k} className="border-b border-white/[0.04]">
@@ -74,11 +75,24 @@ export function ServiceStatusSection({ accessToken }: { accessToken: string }) {
             </table>
           </div>
 
-          {(["api", "db", "pdf"] as const).some((k) => data.components[k].incidents.length > 0) ? (
+          {data.restarts.length > 0 ? (
+            <div className="mt-4">
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">Yeniden başlatmalar (UTC)</p>
+              <ul className="space-y-1 text-[12px] text-slate-300">
+                {data.restarts.slice(0, 20).map((r, idx) => (
+                  <li key={`${r.at}-${idx}`}>
+                    <span className="text-amber-300">YENİDEN BAŞLADI</span> · {ts(r.at)} · {r.detail ?? ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {KEYS.some((k) => data.components[k].incidents.length > 0) ? (
             <div className="mt-4">
               <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">Dönemler (UTC)</p>
               <ul className="space-y-1 text-[12px] text-slate-300">
-                {(["api", "db", "pdf"] as const).flatMap((k) =>
+                {KEYS.flatMap((k) =>
                   data.components[k].incidents.slice(0, 15).map((i, idx) => (
                     <li key={`${k}-${idx}`}>
                       <span className={i.type === "down" ? "text-rose-300" : "text-amber-300"}>{i.type === "down" ? "KESİNTİ" : "SİNYAL YOK"}</span>{" "}
@@ -105,7 +119,8 @@ export function ServiceStatusSection({ accessToken }: { accessToken: string }) {
             </div>
           ) : null}
           <p className="mt-4 text-[11px] leading-relaxed text-slate-500">
-            Not: Bu kayıt sistem ayaktayken yazılır. Auth API tamamen kapalıysa kayıt yazılamaz; o dönem “sinyal yok” görünür. Bağımsız doğrulama için dış izleyici
+            Not: Bir dakikadan kısa kesintiler (ör. bellek aşımıyla yeniden başlama) çalışma oranını belirgin düşürmez; “Yeniden başlatmalar” listesinde görünür.
+            Bu kayıt sistem ayaktayken yazılır. Auth API tamamen kapalıysa kayıt yazılamaz; o dönem “sinyal yok” görünür. Bağımsız doğrulama için dış izleyici
             (UptimeRobot) geçmişiyle birlikte okuyun.
           </p>
         </>

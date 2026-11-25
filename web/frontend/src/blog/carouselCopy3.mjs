@@ -17,7 +17,7 @@ export const COPY_3 = {
       ["Mac ve Linux'ta ne kalıyor?", "Çevrimiçi araçlar, yani dosyanızın yüklendiği seçenek. Market fişi için sorun değil; sözleşme, kimlik ya da sağlık raporu için olabilir."],
       ["PDF24'ün iyi yanları", "Çevrimiçi araçlar ücretsiz, üyeliksiz ve günlük sınırsız. Windows'ta Creator gerçek bir masaüstü programı. Windows'taysanız alternatife gerek olmayabilir."],
       ["Boşluk nasıl kapanıyor?", "PDF Platform tarayıcıda çalışır; Mac, Linux, Windows ve telefonda aynı. Sayfa işlemleri cihazınızda yapılır, dosya yüklenmez."],
-      ["Hangi işler cihazda?", "Birleştirme, bölme, döndürme, kırpma, sayfa silme, sıralama, görselden PDF, imzalama. Word dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları sunucuda çalışır."],
+      ["Hangi işler cihazda?", "Birleştirme, bölme, döndürme, kırpma, sayfa silme, sıralama, görselden PDF, imzalama. Word dönüştürme, sıkıştırma ve yapay zekâ araçları sunucuda çalışır. OCR cihazınızda çalışır."],
       ["30 saniyede sınayın", "Birleştirme aracını açın, interneti kesin, birleştirin. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir."],
     ],
   },
@@ -92,7 +92,7 @@ export const COPY_3 = {
       ["Filigran ve üyelik", "Ücretsiz çıktıya damga ekleniyor mu? Basit bir birleştirme için hesap açmak gerekiyor mu?"],
       ["Sınır", "Belirli sayıda işlemden sonra bekletiliyor ya da ödeme isteniyor mu?"],
       ["Kurulum ve kapsam", "Tarayıcıda mı çalışıyor, program ya da eklenti mi istiyor? Birleştirmenin yanında böl, kırp, döndür, dönüştür, imza da var mı?"],
-      ["Her iş cihazda yapılamaz", "Birleştirme, bölme, döndürme, kırpma, sayfa silme ve imza cihazda olur. Word dönüştürme, OCR, sıkıştırma ve yapay zekâ sunucu ister. İyi araç bunu açıkça söyler."],
+      ["Her iş cihazda yapılamaz", "Birleştirme, bölme, döndürme, kırpma, sayfa silme ve imza cihazda olur. Word dönüştürme, sıkıştırma ve yapay zekâ sunucu ister. İyi araç bunu açıkça söyler."],
     ],
   },
 };
