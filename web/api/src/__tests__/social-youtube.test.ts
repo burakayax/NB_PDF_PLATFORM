@@ -10,8 +10,11 @@ const json = (body: unknown, init: ResponseInit = {}) =>
 
 afterEach(() => vi.unstubAllGlobals());
 
-thumbnailTiming.initialWait = 0;
+thumbnailTiming.pollInterval = 0;
 thumbnailTiming.retryBase = 0;
+
+const isStatusQuery = (url: string) => url.includes("part=processingDetails");
+const processed = (processingStatus: string) => json({ items: [{ processingDetails: { processingStatus } }] });
 
 describe("YouTube Shorts yayıncısı", () => {
   it("video değilse reddeder", async () => {
@@ -55,6 +58,7 @@ describe("YouTube Shorts yayıncısı", () => {
       calls.push({ url, init });
       if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
       if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (isStatusQuery(url)) return processed("succeeded");
       if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
       if (url === "https://upload.test/s1") return json({ id: "vid9", status: { privacyStatus: "public" } });
       if (url.endsWith("/reel-covers/compress.jpg")) {
@@ -99,6 +103,7 @@ describe("YouTube Shorts yayıncısı", () => {
     vi.stubGlobal("fetch", async (url: string) => {
       if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
       if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (isStatusQuery(url)) return processed("succeeded");
       if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
       if (url === "https://upload.test/s1") return json({ id: "vid7", status: { privacyStatus: "public" } });
       if (url.endsWith("/reel-covers/compress.jpg")) return new Response(new Uint8Array([9, 9]), { status: 200, headers: { "content-type": "image/jpeg" } });
@@ -118,6 +123,7 @@ describe("YouTube Shorts yayıncısı", () => {
     vi.stubGlobal("fetch", async (url: string) => {
       if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
       if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (isStatusQuery(url)) return processed("succeeded");
       if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
       if (url === "https://upload.test/s1") return json({ id: "vid8", status: { privacyStatus: "public" } });
       if (url.endsWith("/reel-covers/compress.jpg")) return new Response("yok", { status: 404 });
@@ -132,6 +138,7 @@ describe("YouTube Shorts yayıncısı", () => {
     vi.stubGlobal("fetch", async (url: string) => {
       if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
       if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (isStatusQuery(url)) return processed("succeeded");
       if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
       if (url === "https://upload.test/s1") {
         order.push("video-yuklendi");
@@ -148,5 +155,64 @@ describe("YouTube Shorts yayıncısı", () => {
     const out = await publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
     expect(order).toEqual(["video-yuklendi", "kapak", "kapak", "kapak"]);
     expect(out.warning).toBeUndefined();
+  });
+
+  // Yükleme adımlarını ortak taklit eder; durum sorgusu ve kapak yanıtı teste göre değişir.
+  function stubUpload(status: () => Response, order: string[]) {
+    vi.stubGlobal("fetch", async (url: string) => {
+      if (url.includes("oauth2.googleapis.com")) return json({ access_token: "AT" });
+      if (url === VIDEO) return new Response(new Uint8Array([1, 2, 3]));
+      if (url.includes("uploadType=resumable")) return new Response("", { status: 200, headers: { location: "https://upload.test/s1" } });
+      if (url === "https://upload.test/s1") return json({ id: "vid4", status: { privacyStatus: "public" } });
+      if (url.endsWith("/reel-covers/compress.jpg")) return new Response(new Uint8Array([9, 9]), { status: 200, headers: { "content-type": "image/jpeg" } });
+      if (isStatusQuery(url)) {
+        order.push("durum");
+        return status();
+      }
+      if (url.includes("thumbnails/set")) {
+        order.push("kapak");
+        return json({ items: [] });
+      }
+      throw new Error(`beklenmeyen: ${url}`);
+    });
+  }
+  const publish = () => publishToYouTube({ body: "x", imageUrl: VIDEO, item: ITEM, secrets: SECRETS });
+
+  it("küçük resim, video işlenmesi bitene kadar gönderilmez", async () => {
+    const order: string[] = [];
+    let polls = 0;
+    stubUpload(() => (++polls < 3 ? processed("processing") : processed("succeeded")), order);
+    const out = await publish();
+    expect(order).toEqual(["durum", "durum", "durum", "kapak"]);
+    expect(out.warning).toBeUndefined();
+  });
+
+  it("video işlenemezse küçük resim gönderilmez, uyarı döner", async () => {
+    const order: string[] = [];
+    stubUpload(() => processed("failed"), order);
+    const out = await publish();
+    expect(order).toEqual(["durum"]);
+    expect(out.warning).toContain("işleyemedi");
+  });
+
+  it("işlenme süresinde bitmezse küçük resim yine denenir ama doğrulanamadı uyarısı döner", async () => {
+    const order: string[] = [];
+    stubUpload(() => processed("processing"), order);
+    const out = await publish();
+    expect(order.filter((o) => o === "durum")).toHaveLength(thumbnailTiming.maxPolls);
+    expect(order.at(-1)).toBe("kapak");
+    expect(out.warning).toContain("bekleme süresi doldu");
+  });
+
+  it("durum üst üste okunamazsa beklemeyi bırakır, küçük resmi dener ve uyarır", async () => {
+    const order: string[] = [];
+    stubUpload(() => new Response("izin yok", { status: 403 }), order);
+    const out = await publish();
+    expect(order).toEqual(["durum", "durum", "durum", "kapak"]);
+    expect(out.warning).toContain("durum okunamadı");
+  });
+
+  it("toplam işlenme beklemesi, yarıda kalan yayını yeniden deneme penceresinin (15 dk) çok altındadır", () => {
+    expect(thumbnailTiming.maxPolls * 10_000).toBeLessThanOrEqual(5 * 60_000);
   });
 });

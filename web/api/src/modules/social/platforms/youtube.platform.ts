@@ -113,9 +113,45 @@ function toTags(terms: Terms | null): string[] {
  *
  * Kapak adresi HEAD ile önceden SINANMAZ (bazı sunucular HEAD'e farklı yanıt verir ve kapak sessizce atlanıyordu):
  * doğrudan GET ile indirilir. Yükleme, video işlenirken gelen geçici hatalarda (404/429/5xx) birkaç kez denenir.
+ *
+ * SIRA: `thumbnails.set` belgesi, Shorts'ta kapağın ancak video işlenmesi bitince (`processingStatus = succeeded`)
+ * gönderilmesini ister; erken çağrıda kapak videoya uygulanmayabilir. Bu yüzden önce işlenme durumu sorulur.
  */
-/** Bekleme süreleri (ms). Testlerde sıfırlanır. */
-export const thumbnailTiming = { initialWait: 20_000, retryBase: 15_000 };
+/**
+ * Bekleme ayarları (süreler ms). Testlerde sıfırlanır.
+ *
+ * İşlenme için en çok `maxPolls × pollInterval` (5 dk) beklenir. Bu üst sınır bilinçli: yayın 15 dakikayı aşarsa
+ * kuyruk kaydı "yarıda kaldı" sayılıp yeniden denenir (`STUCK_AFTER_MS`) ve video İKİNCİ KEZ yüklenir.
+ */
+export const thumbnailTiming = { pollInterval: 10_000, maxPolls: 30, retryBase: 15_000 };
+
+/** Durum sorgusu üst üste bu kadar hata verirse beklemekten vazgeçilir (izin/kota sorunu düzelmeyecektir). */
+const MAX_STATUS_ERRORS = 3;
+
+type Processing = "succeeded" | "failed" | "timeout" | "unknown";
+
+/** Videonun işlenmesi bitene kadar `videos.list?part=processingDetails` ile bekler. Hata fırlatmaz. */
+async function waitForProcessing(accessToken: string, videoId: string): Promise<Processing> {
+  let errors = 0;
+  for (let poll = 1; poll <= thumbnailTiming.maxPolls; poll++) {
+    if (thumbnailTiming.pollInterval > 0) await new Promise((r) => setTimeout(r, thumbnailTiming.pollInterval));
+    try {
+      const json = await requestJson("YouTube", `${API}/videos?part=processingDetails&id=${encodeURIComponent(videoId)}`, {
+        method: "GET",
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      errors = 0;
+      const items = Array.isArray(json.items) ? (json.items as { processingDetails?: { processingStatus?: string } }[]) : [];
+      const status = items[0]?.processingDetails?.processingStatus;
+      if (status === "succeeded") return "succeeded";
+      if (status === "failed" || status === "terminated") return "failed";
+    } catch (err) {
+      logger.warn("social", `YouTube işlenme durumu okunamadı: ${String(err)}`);
+      if (++errors >= MAX_STATUS_ERRORS) return "unknown";
+    }
+  }
+  return "timeout";
+}
 
 async function setThumbnail(accessToken: string, videoId: string, guid: string): Promise<string | null> {
   const toolId = toolIdFromGuid(guid);
@@ -131,8 +167,12 @@ async function setThumbnail(accessToken: string, videoId: string, guid: string):
     }
     const bytes = Buffer.from(await img.arrayBuffer());
     let last = "";
-    // Video yüklenir yüklenmez küçük resim koymak YouTube'da (özellikle Shorts'ta) işlenme bitmeden 403/404 verebilir.
-    if (thumbnailTiming.initialWait > 0) await new Promise((r) => setTimeout(r, thumbnailTiming.initialWait));
+    const processing = await waitForProcessing(accessToken, videoId);
+    if (processing === "failed") {
+      const why = "YouTube videoyu işleyemedi; küçük resim gönderilmedi. Videoyu YouTube Studio'dan kontrol edin.";
+      logger.warn("social", why);
+      return why;
+    }
     for (let attempt = 1; attempt <= 5; attempt++) {
       const res = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`, {
         method: "POST",
@@ -140,7 +180,15 @@ async function setThumbnail(accessToken: string, videoId: string, guid: string):
         body: new Uint8Array(bytes),
         signal: AbortSignal.timeout(60_000),
       });
-      if (res.ok) return null;
+      if (res.ok) {
+        if (processing === "succeeded") return null;
+        // İşlenmenin bittiği görülmeden gönderildi: YouTube "başarılı" dese de kapak uygulanmamış olabilir.
+        const why = `Küçük resim gönderildi ama videonun işlenmesinin bittiği doğrulanamadı (${
+          processing === "timeout" ? "bekleme süresi doldu" : "durum okunamadı"
+        }); YouTube Studio'dan kapağı kontrol edin.`;
+        logger.warn("social", why);
+        return why;
+      }
       last = `HTTP ${res.status}: ${(await res.text()).slice(0, 240)}`;
       logger.warn("social", `YouTube küçük resmi yüklenemedi (deneme ${attempt}/5, ${last})`);
       // 403 da denenir: video işlenirken ya da yeni doğrulanmış kanalda geçici olarak dönebilir. Sadece 400 (bozuk görsel) denenmez.
