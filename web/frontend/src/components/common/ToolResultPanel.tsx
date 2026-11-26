@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Download, ExternalLink, FileCheck2, Share2, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, CloudOff, Download, ExternalLink, FileCheck2, MonitorSmartphone, Share2, ShieldCheck, X } from "lucide-react";
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
 import { trackFunnelEvent, trackGAEvent } from "../../lib/analytics";
@@ -51,7 +52,7 @@ const L = {
   tr: {
     ready: "PDF hazır",
     readyGeneric: "Dosyan hazır",
-    subDevice: "Dosyan sunucuya yüklenmedi.",
+    deviceBadges: ["Cihazında işlendi", "Sunucuya yüklenmedi", "Gizli"],
     subServer: "İşlem tamamlandı. İndir'e basınca dosya doğrudan indirme klasörüne iner.",
     download: "İndir",
     downloaded: "İndirildi",
@@ -64,7 +65,7 @@ const L = {
   en: {
     ready: "Your PDF is ready",
     readyGeneric: "Your file is ready",
-    subDevice: "Your file was not uploaded to any server.",
+    deviceBadges: ["Processed on your device", "Never uploaded", "Private"],
     subServer: "All done — hit Download and the file goes straight to your downloads folder.",
     download: "Download",
     downloaded: "Downloaded",
@@ -288,9 +289,24 @@ export function ToolResultPanel({
         {heading ?? (isPdf ? t.ready : t.readyGeneric)}
         <FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden />
       </p>
-      <p className="mt-1 text-sm text-slate-400">
-        {subtitle ?? (processedOnDevice ? t.subDevice : t.subServer)}
-      </p>
+      {(subtitle || !processedOnDevice) && (
+        <p className="mt-1 text-sm text-slate-400">{subtitle ?? t.subServer}</p>
+      )}
+      {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz; güven versin diye yavaşça yanıp söner. */}
+      {processedOnDevice && (
+        <motion.div
+          className="mt-3 mb-2.5 flex flex-wrap items-center justify-center gap-2"
+          animate={{ opacity: [1, 0.55, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {[MonitorSmartphone, CloudOff, ShieldCheck].map((Icon, i) => (
+            <span key={t.deviceBadges[i]} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1.5 text-[12.5px] font-bold text-emerald-300">
+              <Icon className="h-4 w-4" aria-hidden />
+              {t.deviceBadges[i]}
+            </span>
+          ))}
+        </motion.div>
+      )}
       <p className="mt-1 truncate text-xs text-slate-400" title={filename}>
         {filename}
       </p>
