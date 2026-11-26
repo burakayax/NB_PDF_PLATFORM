@@ -85,9 +85,9 @@ export function AudienceMarquee({ tags, language }: { tags: AudienceTag[]; langu
         onClick={() => setPaused((p) => !p)}
         aria-label={label}
         title={label}
-        className="lp-audience-toggle mt-2.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-300 transition hover:bg-blue-500/20"
+        className="lp-audience-toggle ml-5 mt-1.5 flex h-5 w-5 items-center justify-center rounded-full text-blue-300 opacity-40 transition hover:bg-blue-500/20 hover:opacity-100 focus-visible:opacity-100"
       >
-        {paused ? <Play className="h-3.5 w-3.5" aria-hidden /> : <Pause className="h-3.5 w-3.5" aria-hidden />}
+        {paused ? <Play className="h-3 w-3" aria-hidden /> : <Pause className="h-3 w-3" aria-hidden />}
       </button>
     </div>
   );
