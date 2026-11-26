@@ -124,6 +124,7 @@ import { HERO_CATS, catOfFreeTool, firstRunnable, type HeroCatId } from "./heroT
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { HeroBackground } from "./HeroBackground";
+import { AudienceMarquee } from "./AudienceMarquee";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { RunsWhereBadge } from "../common/RunsWhereBadge";
 import { ProductGallery } from "./ProductGallery";
@@ -1385,23 +1386,11 @@ function Hero({
             koşulsuz "dosyan cihazından çıkmaz" diyerek yapay zekâ/PDF Düzenle
             araçları için yanlış bir söz veriyordu. */}
 
-        {/* Audience pills */}
-        <motion.div
-          {...stagger(5)}
-          className="mt-6 flex flex-wrap justify-center gap-2"
-        >
-          {copy.hero.audience.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-300"
-            >
-              <span
-                className="w-1 h-1 rounded-full bg-blue-400"
-                aria-hidden="true"
-              />
-              {tag}
-            </span>
-          ))}
+        {/* Hedef kitle şeridi: ekranın tüm genişliğine taşar (bölüm overflow-hidden, yana kaydırma çıkmaz). */}
+        <motion.div {...stagger(5)} className="mt-6">
+          <div style={{ width: "100vw", marginLeft: "calc(50% - 50vw)" }}>
+            <AudienceMarquee tags={copy.hero.audience} language={language} />
+          </div>
         </motion.div>
       </div>
     </section>

@@ -161,9 +161,24 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     hero: {
       audience: [
         "Office teams",
+        "Lawyers",
+        "Students",
+        "HR teams",
+        "Small businesses",
+        "Accountants",
+        "Teachers",
         "Tender departments",
+        "Engineers",
+        "Job applicants",
+        "Public sector staff",
+        "Online sellers",
         "Administrative staff",
+        "Tax advisors",
+        "Academics",
+        "Real estate agents",
+        "Freelancers",
         "Operations leads",
+        "Architects",
       ],
 
       // kicker: shown above H1, NOT a heading — use brand/intent framing
@@ -465,9 +480,24 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     hero: {
       audience: [
         "Ofis Ekipleri",
+        "Avukatlar",
+        "Öğrenciler",
+        "İnsan Kaynakları",
+        "KOBİ'ler",
+        "Muhasebeciler",
+        "Öğretmenler",
         "İhale Birimleri",
+        "Mühendisler",
+        "İş Başvurusu Yapanlar",
+        "Kamu Çalışanları",
+        "E-Ticaret Satıcıları",
         "İdari Personel",
+        "Mali Müşavirler",
+        "Akademisyenler",
+        "Emlak Danışmanları",
+        "Serbest Çalışanlar",
         "Operasyon Yöneticileri",
+        "Mimarlar",
       ],
 
       // kicker — intent/brand çerçevesi, başlık değil
