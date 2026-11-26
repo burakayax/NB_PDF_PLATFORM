@@ -27,6 +27,7 @@ import { TOOLS } from "../../lib/toolCatalog";
 import { fillToolCount, useGuestToolCount, useToolCount } from "../../lib/useToolCount";
 import { ToolPageContext } from "../common/toolPageContext";
 import {
+  ArrowDown,
   ArrowRightLeft,
   Camera,
   Eraser,
@@ -825,9 +826,23 @@ function Hero({
                 </>
               )}
             </span>
-            <span className="flex-shrink-0 text-[13px] font-bold text-cyan-300 transition group-hover:translate-y-0.5">
-              {tr ? "Tümünü gör ↓" : "See all ↓"}
-            </span>
+            <motion.span
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-cyan-700 to-indigo-700 py-2 pl-4 pr-2 text-[13.5px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(34,211,238,0.5)] ring-1 ring-white/10 transition-transform group-hover:scale-105"
+              animate={{ opacity: [1, 0.6, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {tr ? "Tümünü gör" : "See all"}
+              {/* Ok yukarıdan girip aşağıdan çıkar: "devamı aşağıda" yönünü gösterir. */}
+              <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full shadow-sm" style={{ backgroundColor: "#e2e8f0" }} aria-hidden="true">
+                <motion.span
+                  className="flex"
+                  animate={{ y: [-18, 0, 0, 18], opacity: [0, 1, 1, 0] }}
+                  transition={{ duration: 1.8, times: [0, 0.3, 0.7, 1], repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowDown className="h-4 w-4" strokeWidth={2.75} style={{ color: "#4f46e5" }} />
+                </motion.span>
+              </span>
+            </motion.span>
           </a>
 
           {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
