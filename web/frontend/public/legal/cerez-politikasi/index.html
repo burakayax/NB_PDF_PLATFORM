@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Çerez Politikası | PDF Platform</title>
+    <meta name="description" content="PDF Platform hangi çerezleri ve benzeri depolama öğelerini neden kullanır ve bunları nasıl yönetebilirsiniz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/legal/cerez-politikasi" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/legal/cerez-politikasi" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/legal/cerez-politikasi" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/legal/cerez-politikasi" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Çerez Politikası | PDF Platform" />
+    <meta property="og:description" content="PDF Platform hangi çerezleri ve benzeri depolama öğelerini neden kullanır ve bunları nasıl yönetebilirsiniz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Çerez Politikası | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/legal/cerez-politikasi" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Çerez Politikası | PDF Platform" />
+    <meta name="twitter:description" content="PDF Platform hangi çerezleri ve benzeri depolama öğelerini neden kullanır ve bunları nasıl yönetebilirsiniz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Çerez Politikası | PDF Platform" />
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve toplam 75 araç. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":["https://www.instagram.com/pdfplatformapp","https://www.facebook.com/pdfplatform","https://x.com/pdfplatformapp","https://www.linkedin.com/company/pdfplatform","https://www.youtube.com/@pdfplatformapp","https://www.tiktok.com/@pdfplatformapp","https://tr.pinterest.com/pdfplatformapp"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app"},{"@type":"ListItem","position":2,"name":"Yasal","item":"https://www.pdfplatform.app/terms"},{"@type":"ListItem","position":3,"name":"Çerez Politikası","item":"https://www.pdfplatform.app/legal/cerez-politikasi"}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Çerez Politikası</h1><p class="seo-intro">Kullandığımız çerezler, amaçları ve yönetme seçenekleriniz.</p><article class="seo-legal"><p>PDF Platform&#39;un hangi çerezleri ve benzeri depolama öğelerini neden kullandığı ve bunları nasıl yönetebileceğiniz.</p><p><strong>Yürürlük tarihi:</strong> 9 Kasım 2026</p><section><h2>1. Çerez nedir?</h2><p>Çerezler ve benzeri teknolojiler (ör. tarayıcınızın yerel depolaması), cihazınızda saklanan küçük veri parçalarıdır. Oturumunuzu açık tutar, tercihlerinizi hatırlar ve izin verirseniz hizmetin nasıl kullanıldığını ölçmemize yardımcı olur.</p></section><section><h2>2. Kategoriler ve onayınız</h2><p>Zorunlu (her zaman aktif): giriş oturumunuzu, dil tercihinizi ve çerez tercihinizi saklar. Hizmet bunlar olmadan çalışamaz; bu yüzden onay gerektirmez.</p><p>Ödeme işleme (her zaman aktif): abonelik ödemelerinin ödeme sağlayıcımız PayTR üzerinden güvenle işlenmesi için gereklidir.</p><p>Analitik (Google Analytics 4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri. Yalnızca kabul ederseniz çalışır.</p><p>Hata izleme (Sentry): hataları daha hızlı çözmek için tanı raporları. Yalnızca kabul ederseniz çalışır.</p><p>İsteğe bağlı her kategori için ayrı onayınız gerekir. Bunları reddetmeniz hizmeti kısıtlamaz.</p></section><section><h2>3. Kullanılan çerezler ve depolama öğeleri</h2><table><thead><tr><th scope="col">Çerez / Anahtar</th><th scope="col">Amaç</th><th scope="col">Yerleştiren</th><th scope="col">Saklama Süresi</th></tr></thead><tbody><tr><td>nbpdf-access-token</td><td>Kimlik doğrulama (JWT)</td><td>PDF Platform (birinci taraf)</td><td>Oturum</td></tr><tr><td>nbpdf-refresh-token</td><td>Kalıcı oturum</td><td>PDF Platform (birinci taraf)</td><td>7 gün (HttpOnly çerez)</td></tr><tr><td>nbpdf-language</td><td>Dil tercihi</td><td>PDF Platform (birinci taraf)</td><td>Süresiz (localStorage)</td></tr><tr><td>nbpdf-cookie-consent-v2</td><td>Çerez onay tercihlerinizi kaydeder</td><td>PDF Platform (birinci taraf)</td><td>Süresiz (localStorage)</td></tr><tr><td>nb_tool_ratings_v1</td><td>Hangi araca puan verdiğinizi hatırlar (aynı soruyu tekrar sormamak için)</td><td>PDF Platform (birinci taraf)</td><td>Süresiz (localStorage)</td></tr><tr><td>_ga, _ga_*</td><td>Google Analytics 4 — anonim kullanım istatistikleri</td><td>Google LLC</td><td>13 ay</td></tr><tr><td>sentry-*</td><td>Hata izleme ve tanı raporları (yalnızca onayınızla aktif)</td><td>Functional Software Inc. (Sentry)</td><td>Oturum</td></tr><tr><td>Cloudflare Turnstile (cf_*, doğrulama verisi)</td><td>Giriş ve kayıtta otomatik (bot) kullanım doğrulaması; hesap güvenliği için zorunludur, reklam amacıyla kullanılmaz</td><td>Cloudflare, Inc.</td><td>Oturum / kısa süreli</td></tr></tbody></table></section><section><h2>4. Tercihinizi değiştirme veya geri alma</h2><p>Tercihinizi istediğiniz zaman alt kısımdaki &#39;Çerez Ayarları&#39;ndan &#39;Yalnızca Zorunlu&#39; seçeneğini belirleyerek değiştirebilir veya geri alabilirsiniz. Tarayıcı ayarlarından çerezleri ve yerel depolamayı da silebilirsiniz; zorunlu öğeler bir sonraki girişinizde yeniden oluşturulur.</p></section><section><h2>5. Daha fazla bilgi</h2><p>Kişisel verileri nasıl işlediğimiz için Gizlilik Politikası&#39;na ve KVKK Aydınlatma Metni&#39;ne bakabilirsiniz. Sorularınız için: info@pdfplatform.app</p></section></article><nav aria-label="Site bölümleri" class="seo-sitenav"><h2>Site Haritası</h2><ul><li><a href="/">Ana Sayfa — Tüm PDF Araçları</a></li><li><a href="/blog">Blog — PDF Rehberleri</a></li><li><a href="/pricing">Fiyatlandırma ve Planlar</a></li><li><a href="/pdf-api">PDF ve Yapay Zekâ API</a></li><li><a href="/pdf-api/docs">API Dokümantasyonu</a></li><li><a href="/about">Hakkımızda</a></li><li><a href="/terms">Hizmet Şartları</a></li><li><a href="/privacy">Gizlilik Politikası</a></li><li><a href="/kvkk">KVKK Aydınlatma Metni</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

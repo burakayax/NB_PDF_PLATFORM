@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Cancellation and Refund Terms | PDF Platform</title>
+    <meta name="description" content="How to cancel a PDF Platform subscription, when refunds are available and how they are paid: the refund rules summarized on one page." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/legal/iptal-iade" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/legal/iptal-iade" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/legal/iptal-iade" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/legal/iptal-iade" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Cancellation and Refund Terms | PDF Platform" />
+    <meta property="og:description" content="How to cancel a PDF Platform subscription, when refunds are available and how they are paid: the refund rules summarized on one page." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Cancellation and Refund Terms | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/legal/iptal-iade" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Cancellation and Refund Terms | PDF Platform" />
+    <meta name="twitter:description" content="How to cancel a PDF Platform subscription, when refunds are available and how they are paid: the refund rules summarized on one page." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="Cancellation and Refund Terms | PDF Platform" />
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 75 tools in total. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":["https://www.instagram.com/pdfplatformapp","https://www.facebook.com/pdfplatform","https://x.com/pdfplatformapp","https://www.linkedin.com/company/pdfplatform","https://www.youtube.com/@pdfplatformapp","https://www.tiktok.com/@pdfplatformapp","https://tr.pinterest.com/pdfplatformapp"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Legal","item":"https://www.pdfplatform.app/en/terms"},{"@type":"ListItem","position":3,"name":"Cancellation and Refund Terms","item":"https://www.pdfplatform.app/en/legal/iptal-iade"}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Cancellation and Refund Terms</h1><p class="seo-intro">How subscriptions are cancelled and when refunds are available.</p><article class="seo-legal"><p>How subscriptions are cancelled, when refunds are available and how refunds are paid. This page summarizes the refund rules in the Distance Sales Agreement and the Pre-Purchase Information Form in one place.</p><p><strong>Effective date:</strong> 18 November 2026</p><section><h2>1. Cancelling your subscription</h2><p>Subscriptions do not renew automatically. You are reminded before the period ends, and a new payment is taken only after you confirm the renewal.</p><p>If you do not renew, paid features switch off when the paid period ends and your account moves to the free plan automatically. No cancellation fee applies.</p></section><section><h2>2. Statutory right of withdrawal</h2><p>Under the Distance Sales Regulation, consumers normally have 14 days to withdraw without giving a reason. This right does not apply to services performed instantly in electronic form, or whose performance starts with the consumer&#39;s approval before the withdrawal period ends (Article 15/1-ğ and 15/1-h).</p><p>At checkout you are asked to confirm that you want the service to start immediately and that you give up the statutory withdrawal right once it has started. The payment step cannot be completed without this confirmation.</p></section><section><h2>3. 7-day commercial refund guarantee</h2><p>Independently of the statutory rule, PDF Platform honours refund requests made within 7 days of the first payment, with no reason required. Reasonable limits apply to repeated or abusive requests.</p><p>After the 7 days there is no statutory refund obligation. If you cancel, you keep full access until the end of the period you paid for.</p></section><section><h2>4. How to request a refund</h2><p>Send your request from your account, or by email to info@pdfplatform.app from the address registered on your account. Please include the date of the payment.</p></section><section><h2>5. How refunds are paid</h2><p>Refunds are made to the payment method used for the purchase; no cash payments are made. After your request reaches us, the amount is returned to the payment institution within 14 days at the latest; in practice the refund is usually started within 3–5 business days.</p><p>For card payments the refund goes to the bank that issued the card. For instalment purchases the bank reflects the refund in line with the number of instalments. When the refund appears on the statement depends on the bank.</p><p>The service contains no physical goods, so nothing needs to be returned.</p></section><section><h2>6. Service problems and complaints</h2><p>If the service cannot be used at all, contact our support team; compensation (extra time or a refund) is assessed case by case. Wilful misuse of the service may exclude a refund.</p><p>For complaints write to info@pdfplatform.app. As a consumer you may also apply to the Consumer Arbitration Committee or the Consumer Court.</p></section><section><h2>7. Delivery and shipping</h2><p>PDF Platform is a digital service; no physical goods are shipped. There is therefore no shipping, delivery to an address or delivery fee.</p><p>As soon as your payment is confirmed, the subscription you bought (or extra AI credits, CV Pass, extra seats) is activated automatically on your account, usually within seconds and with no waiting period.</p><p>If your payment was received but the service did not activate on your account, write to info@pdfplatform.app and we will fix it promptly. Your invoice is issued as an e-invoice or an e-archive invoice, depending on whether the buyer is registered as an e-invoice taxpayer, and is delivered within the legal period (e-archive invoices are sent to your e-mail address).</p></section></article><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/about">About</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

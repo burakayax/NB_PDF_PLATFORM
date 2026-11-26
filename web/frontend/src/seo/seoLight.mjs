@@ -408,6 +408,62 @@ export const LEGAL_SEO = {
       intro: "Our privacy policy on how your personal data is processed and protected.",
     },
   },
+  "legal/on-bilgilendirme": {
+    tr: {
+      title: markaEkle(`Ön Bilgilendirme Formu`),
+      description: "Mesafeli Sözleşmeler Yönetmeliği kapsamında ödeme öncesinde sunulan Ön Bilgilendirme Formu: satıcı bilgileri, hizmetin nitelikleri, ücret ve cayma hakkı.",
+      h1: "Ön Bilgilendirme Formu",
+      intro: "Ödeme öncesinde tüketiciye sunulması zorunlu bilgilendirme formu.",
+    },
+    en: {
+      title: markaEkle(`Pre-Purchase Information Form`),
+      description: "Consumer information form shown before payment under the Distance Sales Regulation: seller details, service features, price and right of withdrawal.",
+      h1: "Pre-Purchase Information Form",
+      intro: "The mandatory consumer information form shown before payment.",
+    },
+  },
+  "legal/mesafeli-satis": {
+    tr: {
+      title: markaEkle(`Mesafeli Satış Sözleşmesi`),
+      description: "6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında düzenlenen PDF Platform mesafeli satış sözleşmesi.",
+      h1: "Mesafeli Satış Sözleşmesi",
+      intro: "Her abonelik satın alımında geçerli olan mesafeli satış sözleşmesi.",
+    },
+    en: {
+      title: markaEkle(`Distance Sales Agreement`),
+      description: "PDF Platform distance sales agreement drawn up under Law No. 6502 on the Protection of Consumers and the Distance Sales Regulation.",
+      h1: "Distance Sales Agreement",
+      intro: "The agreement that applies to each subscription purchase.",
+    },
+  },
+  "legal/iptal-iade": {
+    tr: {
+      title: markaEkle(`İptal ve İade Koşulları`),
+      description: "PDF Platform aboneliği nasıl iptal edilir, iade hangi durumlarda yapılır ve nasıl ödenir: iade kurallarının tek sayfada özeti.",
+      h1: "İptal ve İade Koşulları",
+      intro: "Aboneliğin iptali, iade koşulları ve iadenin ödenme biçimi.",
+    },
+    en: {
+      title: markaEkle(`Cancellation and Refund Terms`),
+      description: "How to cancel a PDF Platform subscription, when refunds are available and how they are paid: the refund rules summarized on one page.",
+      h1: "Cancellation and Refund Terms",
+      intro: "How subscriptions are cancelled and when refunds are available.",
+    },
+  },
+  "legal/cerez-politikasi": {
+    tr: {
+      title: markaEkle(`Çerez Politikası`),
+      description: "PDF Platform hangi çerezleri ve benzeri depolama öğelerini neden kullanır ve bunları nasıl yönetebilirsiniz.",
+      h1: "Çerez Politikası",
+      intro: "Kullandığımız çerezler, amaçları ve yönetme seçenekleriniz.",
+    },
+    en: {
+      title: markaEkle(`Cookie Policy`),
+      description: "Which cookies and similar storage items PDF Platform uses, why, and how you can control them.",
+      h1: "Cookie Policy",
+      intro: "The cookies we use, why we use them and how you can control them.",
+    },
+  },
   kvkk: {
     tr: {
       title: markaEkle(`KVKK Aydınlatma Metni`),
