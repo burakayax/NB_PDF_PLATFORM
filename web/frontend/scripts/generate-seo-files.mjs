@@ -420,11 +420,11 @@ function pageMetaForRoute(routePath, lang) {
     }
   }
 
-  for (const key of ["terms", "privacy", "kvkk"]) {
+  for (const key of YASAL_ANAHTARLAR) {
     if (routePath === `/${key}`) {
       const c = LEGAL_SEO[key][lang];
       // legalKey: gövdeyi üretirken tam metni okumak için (aşağıda renderVisibleBody)
-      return { ...c, kind: "legal", legalKey: key, index: true, follow: true };
+      return { ...c, kind: "legal", legalKey: key.replace(/^legal\//, ""), index: true, follow: true };
     }
   }
 
@@ -1066,6 +1066,14 @@ Sitemap: ${base}/sitemap.xml
 }
 
 // Mantıksal route listesi (dil-öneksiz). Her biri sitemap'te TR + EN olarak çıkar.
+/**
+ * Alt dizindeki yasal sayfalar (/legal/...). Önceden prerender EDİLMİYORDU: sunucu bu adreslere ana sayfanın
+ * kopyasını (aynı başlık + canonical=ana sayfa) döndürüyor, Google da bunları ana sayfa kopyası olarak
+ * dizine alıyordu. Anahtar = LEGAL_SEO anahtarı = URL yolu; metin legalContent.mjs'teki aynı adlı belgeden gelir.
+ */
+const YASAL_ALT_SAYFALAR = ["legal/on-bilgilendirme", "legal/mesafeli-satis", "legal/iptal-iade", "legal/cerez-politikasi"];
+const YASAL_ANAHTARLAR = ["terms", "privacy", "kvkk", ...YASAL_ALT_SAYFALAR];
+
 const LOGICAL_ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/pricing", changefreq: "weekly", priority: "0.8" },
@@ -1073,6 +1081,7 @@ const LOGICAL_ROUTES = [
   { path: "/terms", changefreq: "monthly", priority: "0.4" },
   { path: "/privacy", changefreq: "monthly", priority: "0.4" },
   { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
+  ...YASAL_ALT_SAYFALAR.map((k) => ({ path: `/${k}`, changefreq: "monthly", priority: "0.3" })),
   ...TOOL_SLUGS.map((slug) => ({ path: `/tools/${slug}`, changefreq: "weekly", priority: "0.9" })),
   { path: "/pdf-api", changefreq: "monthly", priority: "0.7" },
   { path: "/pdf-api/docs", changefreq: "monthly", priority: "0.7" },
@@ -1128,6 +1137,7 @@ const prerenderRoutes = [
   "/terms",
   "/privacy",
   "/kvkk",
+  ...YASAL_ALT_SAYFALAR.map((k) => `/${k}`),
   ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
   "/pdf-api",
   "/pdf-api/docs",
@@ -1209,7 +1219,7 @@ function pruneOrphanPrerenders(dir) {
     }
   }
 }
-for (const sub of ["en", "blog", "tools", "pricing", "about", "terms", "privacy", "kvkk", "pdf-api"]) {
+for (const sub of ["en", "blog", "tools", "pricing", "about", "terms", "privacy", "kvkk", "legal", "pdf-api"]) {
   pruneOrphanPrerenders(join(publicDir, sub));
 }
 

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Cookie Policy | PDF Platform</title>
+    <meta name="description" content="Which cookies and similar storage items PDF Platform uses, why, and how you can control them." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/legal/cerez-politikasi" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/legal/cerez-politikasi" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/legal/cerez-politikasi" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/legal/cerez-politikasi" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Cookie Policy | PDF Platform" />
+    <meta property="og:description" content="Which cookies and similar storage items PDF Platform uses, why, and how you can control them." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Cookie Policy | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/legal/cerez-politikasi" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Cookie Policy | PDF Platform" />
+    <meta name="twitter:description" content="Which cookies and similar storage items PDF Platform uses, why, and how you can control them." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="Cookie Policy | PDF Platform" />
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 75 tools in total. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":["https://www.instagram.com/pdfplatformapp","https://www.facebook.com/pdfplatform","https://x.com/pdfplatformapp","https://www.linkedin.com/company/pdfplatform","https://www.youtube.com/@pdfplatformapp","https://www.tiktok.com/@pdfplatformapp","https://tr.pinterest.com/pdfplatformapp"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Legal","item":"https://www.pdfplatform.app/en/terms"},{"@type":"ListItem","position":3,"name":"Cookie Policy","item":"https://www.pdfplatform.app/en/legal/cerez-politikasi"}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Cookie Policy</h1><p class="seo-intro">The cookies we use, why we use them and how you can control them.</p><article class="seo-legal"><p>Which cookies and similar storage items PDF Platform uses, why, and how you can control them.</p><p><strong>Effective date:</strong> 9 November 2026</p><section><h2>1. What are cookies?</h2><p>Cookies and similar technologies (such as your browser&#39;s local storage) are small pieces of data stored on your device. They keep you signed in, remember your choices and, if you allow it, help us measure how the service is used.</p></section><section><h2>2. Categories and your consent</h2><p>Essential (always on): keeps your login session, language preference and cookie choice. The service cannot work without them, so they need no consent.</p><p>Payment processing (always on): needed to process subscription payments securely through our payment provider PayTR.</p><p>Analytics (Google Analytics 4): page views and feature usage to improve the product. Active only if you accept.</p><p>Error monitoring (Sentry): diagnostic reports to fix bugs faster. Active only if you accept.</p><p>Each optional category needs your separate consent. Rejecting them does not limit the service.</p></section><section><h2>3. Cookies and storage items in use</h2><table><thead><tr><th scope="col">Cookie / Key</th><th scope="col">Purpose</th><th scope="col">Set by</th><th scope="col">Retention</th></tr></thead><tbody><tr><td>nbpdf-access-token</td><td>Authentication (JWT)</td><td>PDF Platform (first-party)</td><td>Session</td></tr><tr><td>nbpdf-refresh-token</td><td>Persistent session</td><td>PDF Platform (first-party)</td><td>7 days (HttpOnly cookie)</td></tr><tr><td>nbpdf-language</td><td>Language preference</td><td>PDF Platform (first-party)</td><td>Indefinite (localStorage)</td></tr><tr><td>nbpdf-cookie-consent-v2</td><td>Records your consent choices</td><td>PDF Platform (first-party)</td><td>Indefinite (localStorage)</td></tr><tr><td>_ga, _ga_*</td><td>Google Analytics 4 — anonymous usage statistics</td><td>Google LLC</td><td>13 months</td></tr><tr><td>sentry-*</td><td>Error monitoring and diagnostic reports (only with your consent)</td><td>Functional Software Inc. (Sentry)</td><td>Session</td></tr><tr><td>Cloudflare Turnstile (cf_*, challenge data)</td><td>Bot verification at sign-in and sign-up; essential for account security, not used for advertising</td><td>Cloudflare, Inc.</td><td>Session / short-lived</td></tr></tbody></table></section><section><h2>4. Changing or withdrawing your choice</h2><p>You can change or withdraw your choice at any time by clicking &#39;Cookie Settings&#39; in the footer and selecting &#39;Necessary Only&#39;. You can also delete cookies and local storage in your browser settings; essential items will then be created again when you next sign in.</p></section><section><h2>5. More information</h2><p>For how we process personal data, see the Privacy Policy and the KVKK Disclosure. Questions: info@pdfplatform.app</p></section></article><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/about">About</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
