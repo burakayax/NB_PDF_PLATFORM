@@ -446,8 +446,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       {files.length > 0 && (
         <>
         <div className="mt-4 mb-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+          <div className="grid grid-cols-1 items-center justify-items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] sm:justify-start sm:justify-self-start">
               <span className="font-bold text-white">{files.length} {tr ? "dosya" : "files"}</span>
               {okList.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-emerald-300"><Check className="h-3.5 w-3.5" />{okList.length} {tr ? "geçerli" : "valid"}</span>
@@ -458,10 +458,25 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               {checkingCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-cyan-300"><Loader2 className="h-3.5 w-3.5 animate-spin" />{tr ? "denetleniyor" : "checking"}</span>
               )}
-              {totalSize > 0 && <span className="text-slate-400">{tr ? "Eklenen dosyaların boyutu" : "Size of added files"}: {humanSize(totalSize)}</span>}
+              {totalSize > 0 && <span className="basis-full text-center text-slate-400 sm:text-left">{tr ? "Eklenen dosyaların boyutu" : "Size of added files"}: {humanSize(totalSize)}</span>}
             </div>
+            {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz; güven versin diye yavaşça yanıp söner. */}
+            {okList.length >= minFiles && !isImages && (
+              <motion.div
+                className="flex items-center justify-center gap-2 sm:col-start-2"
+                animate={{ opacity: [1, 0.45, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1.5 text-[12.5px] font-bold text-emerald-300">
+                  <MonitorSmartphone className="h-4 w-4" aria-hidden="true" />{tr ? "Cihazında işlenir" : "Processed on your device"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1.5 text-[12.5px] font-bold text-emerald-300">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />{tr ? "Gizli" : "Private"}
+                </span>
+              </motion.div>
+            )}
             <button type="button" onClick={clearAll}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition sm:col-start-3 sm:justify-self-end hover:bg-red-500/10 hover:text-red-300">
               <Trash2 className="h-3.5 w-3.5" />{tr ? "Tümünü sil" : "Clear all"}
             </button>
           </div>
@@ -471,17 +486,6 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               <ArrowDown className="h-3.5 w-3.5 -rotate-90 text-cyan-400" />
               {tr ? `${okList.length} görsel tek PDF'e dönüşecek (${okList.length} sayfa)` : `${okList.length} images → one PDF (${okList.length} pages)`}
             </p>
-          )}
-          {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz. */}
-          {okList.length >= minFiles && !isImages && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3.5 py-1.5 text-[13px] font-bold text-emerald-300">
-                <MonitorSmartphone className="h-4 w-4" aria-hidden="true" />{tr ? "Cihazında işlenir" : "Processed on your device"}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3.5 py-1.5 text-[13px] font-bold text-emerald-300">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />{tr ? "Gizli" : "Private"}
-              </span>
-            </div>
           )}
         </div>
         <Reorder.Group
