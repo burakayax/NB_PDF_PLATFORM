@@ -1,2 +1,2 @@
 # Optional: pip install -r requirements-build.txt before packaging
-pyinstaller>=6.0
+pyinstaller>=6.21.0
