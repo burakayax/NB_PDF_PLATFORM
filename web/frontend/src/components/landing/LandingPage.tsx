@@ -805,7 +805,7 @@ function Hero({
               not kendiliğinden güncellenir. */}
           <a
             href="#tools"
-            className="group mx-auto mb-4 flex max-w-2xl items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
+            className="group mb-4 flex w-full items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
           >
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
               <Sparkles className="h-4 w-4" />
