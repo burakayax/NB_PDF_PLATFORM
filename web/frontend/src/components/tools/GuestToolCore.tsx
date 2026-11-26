@@ -455,10 +455,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               {checkingCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-cyan-300"><Loader2 className="h-3.5 w-3.5 animate-spin" />{tr ? "denetleniyor" : "checking"}</span>
               )}
-              {!isImages && totalPages > 0 && (
-                <span className="text-slate-400">{totalPages} {tr ? "sayfa" : "pages"}</span>
-              )}
-              {totalSize > 0 && <span className="text-slate-400">{humanSize(totalSize)}</span>}
+              {totalSize > 0 && <span className="text-slate-400">{tr ? "Eklenen dosyaların boyutu" : "Size of added files"}: {humanSize(totalSize)}</span>}
             </div>
             <button type="button" onClick={clearAll}
               className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
