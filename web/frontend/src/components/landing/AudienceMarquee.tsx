@@ -16,7 +16,7 @@ import { localizedPath } from "../../seo/enSlugs.mjs";
 const CSS = `
 @keyframes lp-audience-flow { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
 .lp-audience-window { overflow: hidden; padding: 3px 0; -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); }
-.lp-audience-track { display: flex; width: max-content; animation: lp-audience-flow 95s linear infinite; }
+.lp-audience-track { display: flex; width: max-content; animation: lp-audience-flow 110s linear infinite; }
 .lp-audience-track[data-paused="true"], .lp-audience-window:focus-within .lp-audience-track { animation-play-state: paused; }
 @media (hover: hover) { .lp-audience-window:hover .lp-audience-track { animation-play-state: paused; } }
 .lp-audience-group { display: flex; flex-shrink: 0; gap: 0.75rem; padding-right: 0.75rem; }
