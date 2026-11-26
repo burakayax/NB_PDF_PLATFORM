@@ -77,21 +77,27 @@ const L = {
   },
 };
 
-/** Başlıkta soldan sağa geçen küçük dalga: harfler sırayla hafifçe yükselir, kısa bir aradan sonra tekrarlar. */
+/**
+ * Başlıkta soldan sağa geçen küçük dalga: harfler sırayla hafifçe yükselir, kısa bir aradan sonra tekrarlar.
+ * Tüm harfler aynı süreli CSS animasyonunu kullanır, yalnız başlangıçları kayar; böylece sıra her turda
+ * ilk harften başlar. İlk tur, sonuç ekranı yerine otursun diye kısa bir beklemeyle başlar.
+ */
+const WAVE_CSS = `
+@keyframes result-title-wave { 0%, 18%, 100% { transform: translateY(0); } 9% { transform: translateY(-5px); } }
+.result-title-wave { display: inline-block; white-space: pre; animation: result-title-wave 2.9s ease-in-out infinite both; }
+@media (prefers-reduced-motion: reduce) { .result-title-wave { animation: none; } }
+`;
+
 function WaveText({ text }: { text: string }) {
   return (
     <span>
+      <style>{WAVE_CSS}</style>
       <span className="sr-only">{text}</span>
       <span aria-hidden>
         {Array.from(text).map((ch, i) => (
-          <motion.span
-            key={`${i}-${ch}`}
-            className="inline-block whitespace-pre"
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 0.5, delay: i * 0.07, repeat: Infinity, repeatDelay: 2.4, ease: "easeInOut" }}
-          >
+          <span key={`${i}-${ch}`} className="result-title-wave" style={{ animationDelay: `${600 + i * 70}ms` }}>
             {ch}
-          </motion.span>
+          </span>
         ))}
       </span>
     </span>
