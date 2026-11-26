@@ -291,8 +291,8 @@ export function GuestPageToolCore({
         subtitle={
           resultIsZip
             ? tr
-              ? "Dosyaların hazır (ZIP) — sunucuya yüklenmedi."
-              : "Your files are ready (ZIP) — not uploaded to any server."
+              ? "Dosyaların hazır (ZIP)."
+              : "Your files are ready (ZIP)."
             : undefined
         }
         hideOpen={resultIsZip}

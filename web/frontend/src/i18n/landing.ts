@@ -1,3 +1,4 @@
+import { AUDIENCE_TAGS, type AudienceTag } from "../content/audienceTags.mjs";
 import { ARAC_SAYISI } from "../seo/seoLight.mjs";
 import { PRICING_FAQ_TR, PRICING_FAQ_EN } from "./pricingFaq";
 
@@ -46,7 +47,7 @@ export type LandingTranslation = {
     signedInFallback: string;
   };
   hero: {
-    audience: string[];
+    audience: AudienceTag[];
     kicker: string;
     headline: string;
     alternatives: string[];
@@ -159,12 +160,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     hero: {
-      audience: [
-        "Office teams",
-        "Tender departments",
-        "Administrative staff",
-        "Operations leads",
-      ],
+      audience: AUDIENCE_TAGS.en,
 
       // kicker: shown above H1, NOT a heading — use brand/intent framing
       kicker: "PDF Management for Business Workflows",
@@ -463,12 +459,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     hero: {
-      audience: [
-        "Ofis Ekipleri",
-        "İhale Birimleri",
-        "İdari Personel",
-        "Operasyon Yöneticileri",
-      ],
+      audience: AUDIENCE_TAGS.tr,
 
       // kicker — intent/brand çerçevesi, başlık değil
       kicker: "İş Süreçleri İçin PDF Yönetimi",

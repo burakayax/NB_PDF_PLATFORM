@@ -27,6 +27,7 @@ import { TOOLS } from "../../lib/toolCatalog";
 import { fillToolCount, useGuestToolCount, useToolCount } from "../../lib/useToolCount";
 import { ToolPageContext } from "../common/toolPageContext";
 import {
+  ArrowDown,
   ArrowRightLeft,
   Camera,
   Eraser,
@@ -123,6 +124,7 @@ import { HERO_CATS, catOfFreeTool, firstRunnable, type HeroCatId } from "./heroT
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { HeroBackground } from "./HeroBackground";
+import { AudienceMarquee } from "./AudienceMarquee";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { RunsWhereBadge } from "../common/RunsWhereBadge";
 import { ProductGallery } from "./ProductGallery";
@@ -788,7 +790,7 @@ function Hero({
         {/* Subheading */}
         <motion.p
           {...stagger(2)}
-          className="mt-6 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed"
+          className="mt-6 text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
           {fillToolCount(copy.hero.description, toolCount, freeCount)}
@@ -805,7 +807,7 @@ function Hero({
               not kendiliğinden güncellenir. */}
           <a
             href="#tools"
-            className="group mx-auto mb-4 flex max-w-2xl items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
+            className="group mb-4 flex w-full items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
           >
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
               <Sparkles className="h-4 w-4" />
@@ -825,9 +827,23 @@ function Hero({
                 </>
               )}
             </span>
-            <span className="flex-shrink-0 text-[13px] font-bold text-cyan-300 transition group-hover:translate-y-0.5">
-              {tr ? "Tümünü gör ↓" : "See all ↓"}
-            </span>
+            <motion.span
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-cyan-700 to-indigo-700 py-2 pl-4 pr-2 text-[13.5px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(34,211,238,0.5)] ring-1 ring-white/10 transition-transform group-hover:scale-105"
+              animate={{ opacity: [1, 0.6, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {tr ? "Tümünü gör" : "See all"}
+              {/* Ok yukarıdan girip aşağıdan çıkar: "devamı aşağıda" yönünü gösterir. */}
+              <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full shadow-sm" style={{ backgroundColor: "#e2e8f0" }} aria-hidden="true">
+                <motion.span
+                  className="flex"
+                  animate={{ y: [-18, 0, 0, 18], opacity: [0, 1, 1, 0] }}
+                  transition={{ duration: 1.8, times: [0, 0.3, 0.7, 1], repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowDown className="h-4 w-4" strokeWidth={2.75} style={{ color: "#4f46e5" }} />
+                </motion.span>
+              </span>
+            </motion.span>
           </a>
 
           {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
@@ -1370,23 +1386,11 @@ function Hero({
             koşulsuz "dosyan cihazından çıkmaz" diyerek yapay zekâ/PDF Düzenle
             araçları için yanlış bir söz veriyordu. */}
 
-        {/* Audience pills */}
-        <motion.div
-          {...stagger(5)}
-          className="mt-6 flex flex-wrap justify-center gap-2"
-        >
-          {copy.hero.audience.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-300"
-            >
-              <span
-                className="w-1 h-1 rounded-full bg-blue-400"
-                aria-hidden="true"
-              />
-              {tag}
-            </span>
-          ))}
+        {/* Hedef kitle şeridi: ekranın tüm genişliğine taşar (bölüm overflow-hidden, yana kaydırma çıkmaz). */}
+        <motion.div {...stagger(5)} className="mt-6">
+          <div style={{ width: "100vw", marginLeft: "calc(50% - 50vw)" }}>
+            <AudienceMarquee tags={copy.hero.audience} language={language} />
+          </div>
         </motion.div>
       </div>
     </section>

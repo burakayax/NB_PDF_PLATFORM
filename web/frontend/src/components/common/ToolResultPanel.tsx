@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Download, ExternalLink, FileCheck2, Share2, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, CloudOff, Download, ExternalLink, FileCheck2, FileText, MonitorSmartphone, Share2, ShieldCheck, X } from "lucide-react";
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
 import { trackFunnelEvent, trackGAEvent } from "../../lib/analytics";
@@ -49,9 +50,9 @@ export type ToolResultPanelProps = {
 
 const L = {
   tr: {
-    ready: "PDF hazır",
-    readyGeneric: "Dosyan hazır",
-    subDevice: "Dosyan sunucuya yüklenmedi.",
+    ready: "PDF'iniz Hazır",
+    readyGeneric: "Dosyanız Hazır",
+    deviceBadges: ["Cihazında işlendi", "Sunucuya yüklenmedi", "Gizli"],
     subServer: "İşlem tamamlandı. İndir'e basınca dosya doğrudan indirme klasörüne iner.",
     download: "İndir",
     downloaded: "İndirildi",
@@ -64,7 +65,7 @@ const L = {
   en: {
     ready: "Your PDF is ready",
     readyGeneric: "Your file is ready",
-    subDevice: "Your file was not uploaded to any server.",
+    deviceBadges: ["Processed on your device", "Never uploaded", "Private"],
     subServer: "All done — hit Download and the file goes straight to your downloads folder.",
     download: "Download",
     downloaded: "Downloaded",
@@ -75,6 +76,33 @@ const L = {
     close: "Close",
   },
 };
+
+/**
+ * Başlıkta soldan sağa geçen küçük dalga: harfler sırayla hafifçe yükselir, kısa bir aradan sonra tekrarlar.
+ * Tüm harfler aynı süreli CSS animasyonunu kullanır, yalnız başlangıçları kayar; böylece sıra her turda
+ * ilk harften başlar. İlk tur, sonuç ekranı yerine otursun diye kısa bir beklemeyle başlar.
+ */
+const WAVE_CSS = `
+@keyframes result-title-wave { 0%, 18%, 100% { transform: translateY(0); } 9% { transform: translateY(-5px); } }
+.result-title-wave { display: inline-block; white-space: pre; animation: result-title-wave 2.9s ease-in-out infinite both; }
+@media (prefers-reduced-motion: reduce) { .result-title-wave { animation: none; } }
+`;
+
+function WaveText({ text }: { text: string }) {
+  return (
+    <span>
+      <style>{WAVE_CSS}</style>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden>
+        {Array.from(text).map((ch, i) => (
+          <span key={`${i}-${ch}`} className="result-title-wave" style={{ animationDelay: `${600 + i * 70}ms` }}>
+            {ch}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
 
 function isShareSupported(blob: Blob, filename: string): boolean {
   const nav = navigator as Navigator & {
@@ -284,16 +312,34 @@ export function ToolResultPanel({
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
         <Check className="h-8 w-8" />
       </div>
-      <p className="mt-4 inline-flex items-center justify-center gap-2.5 text-xl font-bold text-white">
-        {heading ?? (isPdf ? t.ready : t.readyGeneric)}
+      <p className="mt-4 flex items-center justify-center gap-2.5 text-2xl font-extrabold tracking-tight text-white">
+        {typeof (heading ?? "") === "string" ? <WaveText text={String(heading ?? (isPdf ? t.ready : t.readyGeneric))} /> : heading}
         <FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden />
       </p>
-      <p className="mt-1 text-sm text-slate-400">
-        {subtitle ?? (processedOnDevice ? t.subDevice : t.subServer)}
-      </p>
-      <p className="mt-1 truncate text-xs text-slate-400" title={filename}>
-        {filename}
-      </p>
+      <div className="mt-2.5 flex justify-center">
+        <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-1.5" title={filename}>
+          <FileText className="h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
+          <span className="truncate text-[14px] font-semibold text-slate-200">{filename}</span>
+        </span>
+      </div>
+      {(subtitle || !processedOnDevice) && (
+        <p className="mt-1 text-sm text-slate-400">{subtitle ?? t.subServer}</p>
+      )}
+      {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz; güven versin diye yavaşça yanıp söner. */}
+      {processedOnDevice && (
+        <motion.div
+          className="mt-3 flex flex-wrap items-center justify-center gap-2"
+          animate={{ opacity: [1, 0.55, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {[MonitorSmartphone, CloudOff, ShieldCheck].map((Icon, i) => (
+            <span key={t.deviceBadges[i]} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1.5 text-[12.5px] font-bold text-emerald-300">
+              <Icon className="h-4 w-4" aria-hidden />
+              {t.deviceBadges[i]}
+            </span>
+          ))}
+        </motion.div>
+      )}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         {!hideFileActions && (
           <>

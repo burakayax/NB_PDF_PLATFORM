@@ -11,6 +11,9 @@ import {
   Loader2,
   Lock,
   Trash2,
+  MonitorSmartphone,
+  ShieldCheck,
+  FileCheck2,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
@@ -104,7 +107,7 @@ function FileRow({
     : f.status === "ok" ? (f.pages ? `${f.pages} ${tr ? "sayfa" : "pages"} · ${humanSize(f.file.size)}` : humanSize(f.file.size))
     : f.status === "empty" ? (tr ? "Boş dosya (0 KB) — kullanılamaz" : "Empty file (0 KB) — unusable")
     : f.status === "corrupt" ? (tr ? "Bozuk/okunamayan PDF" : "Corrupt/unreadable PDF")
-    : f.status === "toobig" ? (tr ? "80 MB sınırını aşıyor" : "Exceeds 80 MB limit")
+    : f.status === "toobig" ? (tr ? "80 MB sınırını aştınız. Daha büyük dosyalar için ücretli planlarımızı tercih edebilirsiniz." : "You have exceeded the 80 MB limit. For larger files, you can choose one of our paid plans.")
     : (tr ? "Şifre korumalı — cihazda açılamıyor" : "Password-protected — can't open on device");
 
   return (
@@ -230,7 +233,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
   const ctaLabel = isImages
     ? tr ? "PDF'e Çevir" : "Convert to PDF"
     : tr ? "Birleştir" : "Merge";
-  const outName = isImages ? "gorseller.pdf" : "birlestirilmis.pdf";
+  const outName = isImages ? (tr ? "Görseller.pdf" : "Images.pdf") : tr ? "Birleştirilmiş.pdf" : "Merged.pdf";
 
   // Zengin özet — kullanıcıya her şeyi anlat: kaç dosya, kaçı geçerli, toplam sayfa/boyut,
   // sonuçta ne oluşacak.
@@ -343,8 +346,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     if (okFiles.reduce((s, f) => s + f.file.size, 0) > MAX_BYTES) {
       setError(
         tr
-          ? "Toplam boyut 80 MB'ı aşıyor. Daha büyüğü için ücretsiz üye olun."
-          : "Total exceeds 80 MB. Sign up free for larger files.",
+          ? "80 MB sınırını aştınız (dosyaların toplamı). Daha büyük dosyalar için ücretli planlarımızı tercih edebilirsiniz."
+          : "You have exceeded the 80 MB limit (all files combined). For larger files, you can choose one of our paid plans.",
       );
       return;
     }
@@ -443,8 +446,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       {files.length > 0 && (
         <>
         <div className="mt-4 mb-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+          <div className="grid grid-cols-1 items-center justify-items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] sm:justify-start sm:justify-self-start">
               <span className="font-bold text-white">{files.length} {tr ? "dosya" : "files"}</span>
               {okList.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-emerald-300"><Check className="h-3.5 w-3.5" />{okList.length} {tr ? "geçerli" : "valid"}</span>
@@ -455,23 +458,33 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               {checkingCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-cyan-300"><Loader2 className="h-3.5 w-3.5 animate-spin" />{tr ? "denetleniyor" : "checking"}</span>
               )}
-              {!isImages && totalPages > 0 && (
-                <span className="text-slate-400">{totalPages} {tr ? "sayfa" : "pages"}</span>
-              )}
-              {totalSize > 0 && <span className="text-slate-400">{humanSize(totalSize)}</span>}
+              {totalSize > 0 && <span className="basis-full text-center text-slate-400 sm:text-left">{tr ? "Eklenen dosyaların boyutu" : "Size of added files"}: {humanSize(totalSize)}</span>}
             </div>
+            {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz; güven versin diye yavaşça yanıp söner. */}
+            {okList.length >= minFiles && !isImages && (
+              <motion.div
+                className="flex items-center justify-center gap-2 sm:col-start-2"
+                animate={{ opacity: [1, 0.45, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1.5 text-[12.5px] font-bold text-emerald-300">
+                  <MonitorSmartphone className="h-4 w-4" aria-hidden="true" />{tr ? "Cihazında işlenir" : "Processed on your device"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3 py-1.5 text-[12.5px] font-bold text-emerald-300">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />{tr ? "Gizli" : "Private"}
+                </span>
+              </motion.div>
+            )}
             <button type="button" onClick={clearAll}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition sm:col-start-3 sm:justify-self-end hover:bg-red-500/10 hover:text-red-300">
               <Trash2 className="h-3.5 w-3.5" />{tr ? "Tümünü sil" : "Clear all"}
             </button>
           </div>
           {/* Sonuç önizlemesi — ne oluşacağını önceden söyle */}
-          {okList.length >= minFiles && (
+          {okList.length >= minFiles && isImages && (
             <p className="mt-1.5 flex items-center gap-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">
               <ArrowDown className="h-3.5 w-3.5 -rotate-90 text-cyan-400" />
-              {isImages
-                ? tr ? `${okList.length} görsel tek PDF'e dönüşecek (${okList.length} sayfa)` : `${okList.length} images → one PDF (${okList.length} pages)`
-                : tr ? `Birleşince ${totalPages || "?"} sayfalık tek PDF oluşacak · cihazında işlenir, gizli` : `Merges into one ${totalPages || "?"}-page PDF · processed on-device, private`}
+              {tr ? `${okList.length} görsel tek PDF'e dönüşecek (${okList.length} sayfa)` : `${okList.length} images → one PDF (${okList.length} pages)`}
             </p>
           )}
         </div>
@@ -520,6 +533,28 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
           <>{ctaLabel} →</>
         )}
       </button>
+
+      {/* Sonuç önizlemesi: düğmeye basınca ne oluşacağı, hemen altında. */}
+      {!isImages && okList.length >= minFiles && (
+        <div className="mt-4 flex justify-center">
+          <p className="inline-flex items-center gap-3 rounded-2xl border border-indigo-400/35 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/15 py-2.5 pl-2.5 pr-5 shadow-[0_12px_32px_-16px_rgba(79,70,229,0.8)]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600">
+              <FileCheck2 className="h-5 w-5 text-white" aria-hidden="true" />
+            </span>
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[15px] font-semibold tracking-tight text-white">
+              {tr ? (
+                <>
+                  Birleşince <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 px-2.5 py-0.5 text-[15px] font-extrabold text-white shadow-sm">{totalPages || "?"} sayfalık</span> tek PDF oluşacak
+                </>
+              ) : (
+                <>
+                  Merges into one <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 px-2.5 py-0.5 text-[15px] font-extrabold text-white shadow-sm">{totalPages || "?"}-page</span> PDF
+                </>
+              )}
+            </span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
