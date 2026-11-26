@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowUpRight, Pause, Play } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import type { AudienceTag } from "../../content/audienceTags.mjs";
+import { audiencePath, type AudienceTag } from "../../content/audienceTags.mjs";
 import { localizedPath } from "../../seo/enSlugs.mjs";
 
 /**
@@ -10,7 +10,7 @@ import { localizedPath } from "../../seo/enSlugs.mjs";
  * - Döngü için liste iki kez yazılır; ikinci kopya ekran okuyuculardan gizlidir.
  * - Hareketi rahatsız edici bulan ziyaretçi düğmeyle durdurabilir; cihazında "hareketi azalt"
  *   seçili olanlarda şerit hiç akmaz, etiketler sabit ve tam liste olarak görünür.
- * - Uygun yazısı olan etiketler o yazıya bağlantıdır; tıklanabilsin diye fare üstüne gelince ya da
+ * - Etiketler ilgili yazıya ya da araca bağlantıdır; tıklanabilsin diye fare üstüne gelince ya da
  *   klavyeyle odaklanınca şerit durur.
  */
 const CSS = `
@@ -51,7 +51,8 @@ export function AudienceMarquee({ tags, language }: { tags: AudienceTag[]; langu
         <div className="lp-audience-track" data-paused={paused}>
           {[false, true].map((copy) => (
             <ul key={String(copy)} className="lp-audience-group" aria-hidden={copy || undefined}>
-              {tags.map(({ label: text, blog }) => {
+              {tags.map((tag) => {
+                const text = tag.label;
                 const inner = (
                   <>
                     <span className="w-1 h-1 rounded-full bg-blue-400" aria-hidden="true" />
@@ -60,10 +61,10 @@ export function AudienceMarquee({ tags, language }: { tags: AudienceTag[]; langu
                 );
                 return (
                   <li key={text} className="flex">
-                    {blog ? (
+                    {tag.blog || tag.tool ? (
                       // İkinci kopya da tıklanır (ekranda o da görünür); klavye sırasına girmez.
                       <a
-                        href={localizedPath(`/blog/${blog}`, language)}
+                        href={localizedPath(audiencePath(tag), language)}
                         tabIndex={copy ? -1 : undefined}
                         className={`${PILL} transition-colors hover:border-blue-400/70 hover:bg-blue-500/25`}
                       >

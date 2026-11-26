@@ -1,9 +1,12 @@
 /**
  * Ana sayfa hedef kitle şeridi — TEK KAYNAK: ekrandaki şerit de, arama motorlarına giden hazır sayfa
  * metni (scripts/generate-seo-files.mjs) de buradan okur.
- * `blog`: Türkçe (dil öneksiz) yazı kısa adı. Adres `localizedPath` ile dile göre kurulur.
- * Her etiket ayrı bir yazıya gider; eşlemeye SEO oturumu karar verir.
+ * `blog` ya da `tool`: Türkçe sitedeki (dil öneksiz) yazı / araç kısa adı. Adres `localizedPath` ile dile göre kurulur.
+ * Her etiket ayrı bir sayfaya gider; eşlemeye SEO oturumu karar verir.
  */
+/** Etiketin gittiği dil-öneksiz yol. */
+export const audiencePath = (tag) => (tag.tool ? `/tools/${tag.tool}` : `/blog/${tag.blog}`);
+
 export const AUDIENCE_TAGS = {
   tr: [
     { label: "Ofis Ekipleri", blog: "en-iyi-ucretsiz-pdf-araclari" },
@@ -14,17 +17,17 @@ export const AUDIENCE_TAGS = {
     { label: "Muhasebeciler", blog: "banka-ekstresi-excele-aktarma" },
     { label: "Öğretmenler", blog: "ogretmen-cv-ornegi" },
     { label: "İhale Birimleri", blog: "ihale-dosyasi-pdf-hazirlama" },
-    { label: "Mühendisler", blog: "pdf-karsilastirma-farklari-bulma" },
+    { label: "Mühendisler", tool: "pdf-karsilastir" },
     { label: "İş Başvurusu Yapanlar", blog: "cv-nasil-hazirlanir" },
     { label: "Kamu Çalışanları", blog: "edevlet-belgelerini-tek-pdf-yapma" },
-    { label: "E-Ticaret Satıcıları", blog: "gorsel-boyutlandirma-sosyal-medya" },
+    { label: "E-Ticaret Satıcıları", tool: "gorsel-boyutlandir" },
     { label: "İdari Personel", blog: "iki-pdf-birlestirme-ucretsiz" },
     { label: "Mali Müşavirler", blog: "faturadan-excele-veri-aktarma" },
     { label: "Akademisyenler", blog: "akademik-makale-ozetleme-literatur" },
     { label: "Emlak Danışmanları", blog: "kira-kontrati-dikkat-edilecek-maddeler" },
     { label: "Serbest Çalışanlar", blog: "pdf-e-imza-atma-nasil-yapilir" },
     { label: "Operasyon Yöneticileri", blog: "pdf-boyutu-kucultme-sikistirma" },
-    { label: "Mimarlar", blog: "pdf-yatay-yapma-dikey-pdf-yatay-sayfa" },
+    { label: "Mimarlar", tool: "resize-pdf" },
   ],
   en: [
     { label: "Office teams", blog: "en-iyi-ucretsiz-pdf-araclari" },
@@ -35,16 +38,16 @@ export const AUDIENCE_TAGS = {
     { label: "Accountants", blog: "banka-ekstresi-excele-aktarma" },
     { label: "Teachers", blog: "ogretmen-cv-ornegi" },
     { label: "Tender departments", blog: "ihale-dosyasi-pdf-hazirlama" },
-    { label: "Engineers", blog: "pdf-karsilastirma-farklari-bulma" },
+    { label: "Engineers", tool: "pdf-karsilastir" },
     { label: "Job applicants", blog: "cv-nasil-hazirlanir" },
     { label: "Public sector staff", blog: "edevlet-belgelerini-tek-pdf-yapma" },
-    { label: "Online sellers", blog: "gorsel-boyutlandirma-sosyal-medya" },
+    { label: "Online sellers", tool: "gorsel-boyutlandir" },
     { label: "Administrative staff", blog: "iki-pdf-birlestirme-ucretsiz" },
     { label: "Tax advisors", blog: "faturadan-excele-veri-aktarma" },
     { label: "Academics", blog: "akademik-makale-ozetleme-literatur" },
     { label: "Real estate agents", blog: "kira-kontrati-dikkat-edilecek-maddeler" },
     { label: "Freelancers", blog: "pdf-e-imza-atma-nasil-yapilir" },
     { label: "Operations leads", blog: "pdf-boyutu-kucultme-sikistirma" },
-    { label: "Architects", blog: "pdf-yatay-yapma-dikey-pdf-yatay-sayfa" },
+    { label: "Architects", tool: "resize-pdf" },
   ],
 };
