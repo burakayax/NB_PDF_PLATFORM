@@ -27,7 +27,7 @@ export const AUDIENCE_TAGS = {
     { label: "Emlak Danışmanları", blog: "kira-kontrati-dikkat-edilecek-maddeler" },
     { label: "Serbest Çalışanlar", blog: "pdf-e-imza-atma-nasil-yapilir" },
     { label: "Operasyon Yöneticileri", blog: "pdf-boyutu-kucultme-sikistirma" },
-    { label: "Mimarlar", tool: "resize-pdf" },
+    { label: "Mimarlar", blog: "pdf-yatay-yapma-dikey-pdf-yatay-sayfa" },
   ],
   en: [
     { label: "Office teams", blog: "en-iyi-ucretsiz-pdf-araclari" },
@@ -48,6 +48,6 @@ export const AUDIENCE_TAGS = {
     { label: "Real estate agents", blog: "kira-kontrati-dikkat-edilecek-maddeler" },
     { label: "Freelancers", blog: "pdf-e-imza-atma-nasil-yapilir" },
     { label: "Operations leads", blog: "pdf-boyutu-kucultme-sikistirma" },
-    { label: "Architects", tool: "resize-pdf" },
+    { label: "Architects", blog: "pdf-yatay-yapma-dikey-pdf-yatay-sayfa" },
   ],
 };
