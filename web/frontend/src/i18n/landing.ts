@@ -1,3 +1,4 @@
+import { AUDIENCE_TAGS, type AudienceTag } from "../content/audienceTags.mjs";
 import { ARAC_SAYISI } from "../seo/seoLight.mjs";
 import { PRICING_FAQ_TR, PRICING_FAQ_EN } from "./pricingFaq";
 
@@ -46,7 +47,7 @@ export type LandingTranslation = {
     signedInFallback: string;
   };
   hero: {
-    audience: string[];
+    audience: AudienceTag[];
     kicker: string;
     headline: string;
     alternatives: string[];
@@ -159,27 +160,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     hero: {
-      audience: [
-        "Office teams",
-        "Lawyers",
-        "Students",
-        "HR teams",
-        "Small businesses",
-        "Accountants",
-        "Teachers",
-        "Tender departments",
-        "Engineers",
-        "Job applicants",
-        "Public sector staff",
-        "Online sellers",
-        "Administrative staff",
-        "Tax advisors",
-        "Academics",
-        "Real estate agents",
-        "Freelancers",
-        "Operations leads",
-        "Architects",
-      ],
+      audience: AUDIENCE_TAGS.en,
 
       // kicker: shown above H1, NOT a heading — use brand/intent framing
       kicker: "PDF Management for Business Workflows",
@@ -478,27 +459,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     hero: {
-      audience: [
-        "Ofis Ekipleri",
-        "Avukatlar",
-        "Öğrenciler",
-        "İnsan Kaynakları",
-        "KOBİ'ler",
-        "Muhasebeciler",
-        "Öğretmenler",
-        "İhale Birimleri",
-        "Mühendisler",
-        "İş Başvurusu Yapanlar",
-        "Kamu Çalışanları",
-        "E-Ticaret Satıcıları",
-        "İdari Personel",
-        "Mali Müşavirler",
-        "Akademisyenler",
-        "Emlak Danışmanları",
-        "Serbest Çalışanlar",
-        "Operasyon Yöneticileri",
-        "Mimarlar",
-      ],
+      audience: AUDIENCE_TAGS.tr,
 
       // kicker — intent/brand çerçevesi, başlık değil
       kicker: "İş Süreçleri İçin PDF Yönetimi",

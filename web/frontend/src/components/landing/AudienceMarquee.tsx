@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { ArrowUpRight, Pause, Play } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import type { AudienceTag } from "../../content/audienceTags.mjs";
+import { localizedPath } from "../../seo/enSlugs.mjs";
 
 /**
  * Hedef kitle şeridi: etiketler ekranın tüm genişliğinde, sağdan sola kesintisiz akar.
@@ -8,13 +10,15 @@ import type { Language } from "../../i18n/landing";
  * - Döngü için liste iki kez yazılır; ikinci kopya ekran okuyuculardan gizlidir.
  * - Hareketi rahatsız edici bulan ziyaretçi düğmeyle durdurabilir; cihazında "hareketi azalt"
  *   seçili olanlarda şerit hiç akmaz, etiketler sabit ve tam liste olarak görünür.
- * - Etiketler tıklanmadığı için fare üstüne gelince durmaz.
+ * - Uygun yazısı olan etiketler o yazıya bağlantıdır; tıklanabilsin diye fare üstüne gelince ya da
+ *   klavyeyle odaklanınca şerit durur.
  */
 const CSS = `
 @keyframes lp-audience-flow { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
-.lp-audience-window { overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); }
+.lp-audience-window { overflow: hidden; padding: 3px 0; -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); }
 .lp-audience-track { display: flex; width: max-content; animation: lp-audience-flow 95s linear infinite; }
-.lp-audience-track[data-paused="true"] { animation-play-state: paused; }
+.lp-audience-track[data-paused="true"], .lp-audience-window:focus-within .lp-audience-track { animation-play-state: paused; }
+@media (hover: hover) { .lp-audience-window:hover .lp-audience-track { animation-play-state: paused; } }
 .lp-audience-group { display: flex; flex-shrink: 0; gap: 0.75rem; padding-right: 0.75rem; }
 @media (prefers-reduced-motion: reduce) {
   .lp-audience-window { -webkit-mask-image: none; mask-image: none; }
@@ -24,7 +28,10 @@ const CSS = `
 }
 `;
 
-export function AudienceMarquee({ tags, language }: { tags: string[]; language: Language }) {
+const PILL =
+  "inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-300";
+
+export function AudienceMarquee({ tags, language }: { tags: AudienceTag[]; language: Language }) {
   const tr = language === "tr";
   const [paused, setPaused] = useState(false);
   const label = paused
@@ -34,19 +41,41 @@ export function AudienceMarquee({ tags, language }: { tags: string[]; language: 
   return (
     <div>
       <style>{CSS}</style>
-      <div className="lp-audience-window">
+      <div
+        className="lp-audience-window"
+        onBlur={(e) => {
+          // Klavyeyle gezerken tarayıcı kutuyu kaydırabilir; odak şeritten çıkınca hizayı geri al.
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) e.currentTarget.scrollLeft = 0;
+        }}
+      >
         <div className="lp-audience-track" data-paused={paused}>
           {[false, true].map((copy) => (
             <ul key={String(copy)} className="lp-audience-group" aria-hidden={copy || undefined}>
-              {tags.map((tag) => (
-                <li
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-300"
-                >
-                  <span className="w-1 h-1 rounded-full bg-blue-400" aria-hidden="true" />
-                  {tag}
-                </li>
-              ))}
+              {tags.map(({ label: text, blog }) => {
+                const inner = (
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-blue-400" aria-hidden="true" />
+                    {text}
+                  </>
+                );
+                return (
+                  <li key={text} className="flex">
+                    {blog ? (
+                      // İkinci kopya da tıklanır (ekranda o da görünür); klavye sırasına girmez.
+                      <a
+                        href={localizedPath(`/blog/${blog}`, language)}
+                        tabIndex={copy ? -1 : undefined}
+                        className={`${PILL} transition-colors hover:border-blue-400/70 hover:bg-blue-500/25`}
+                      >
+                        {inner}
+                        <ArrowUpRight className="h-3 w-3 opacity-70" aria-hidden />
+                      </a>
+                    ) : (
+                      <span className={PILL}>{inner}</span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ))}
         </div>

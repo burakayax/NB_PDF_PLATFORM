@@ -38,6 +38,7 @@ import {
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
+import { AUDIENCE_TAGS } from "../src/content/audienceTags.mjs";
 import { BRAND_SOCIAL_LINKS } from "../src/seo/brandSocialLinks.mjs";
 import { relatedBlogPosts } from "../src/seo/relatedPosts.mjs";
 import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "../src/seo/toolRatings.mjs";
@@ -817,6 +818,18 @@ function renderVisibleBody(baseUrl, meta, lang) {
       })
       .join("");
     parts.push(`<nav aria-label="${t.ariaBlogPosts}" class="seo-posts"><h2>${t.allPosts}</h2><ul>${links}</ul></nav>`);
+  }
+
+  // Ana sayfa — hedef kitle şeridi. React şeridiyle aynı kaynak ve aynı bağlantılar (audienceTags.mjs).
+  if (routePathOf(meta) === "/") {
+    const kitle = AUDIENCE_TAGS[lang]
+      .map((e) =>
+        e.blog && routeHasLang(`/blog/${e.blog}`, lang)
+          ? `<li><a href="${href(`/blog/${e.blog}`, lang)}">${escapeHtml(e.label)}</a></li>`
+          : `<li>${escapeHtml(e.label)}</li>`,
+      )
+      .join("");
+    parts.push(`<ul class="seo-audience">${kitle}</ul>`);
   }
 
   // Araç ve landing sayfalarında tüm araçlara iç bağlantı
