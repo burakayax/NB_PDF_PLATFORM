@@ -11,6 +11,9 @@ import {
   Loader2,
   Lock,
   Trash2,
+  MonitorSmartphone,
+  ShieldCheck,
+  FileCheck2,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolUploadPanel } from "../common/ToolUploadPanel";
@@ -463,13 +466,22 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             </button>
           </div>
           {/* Sonuç önizlemesi — ne oluşacağını önceden söyle */}
-          {okList.length >= minFiles && (
+          {okList.length >= minFiles && isImages && (
             <p className="mt-1.5 flex items-center gap-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">
               <ArrowDown className="h-3.5 w-3.5 -rotate-90 text-cyan-400" />
-              {isImages
-                ? tr ? `${okList.length} görsel tek PDF'e dönüşecek (${okList.length} sayfa)` : `${okList.length} images → one PDF (${okList.length} pages)`
-                : tr ? `Birleşince ${totalPages || "?"} sayfalık tek PDF oluşacak · cihazında işlenir, gizli` : `Merges into one ${totalPages || "?"}-page PDF · processed on-device, private`}
+              {tr ? `${okList.length} görsel tek PDF'e dönüşecek (${okList.length} sayfa)` : `${okList.length} images → one PDF (${okList.length} pages)`}
             </p>
+          )}
+          {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz. */}
+          {okList.length >= minFiles && !isImages && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3.5 py-1.5 text-[13px] font-bold text-emerald-300">
+                <MonitorSmartphone className="h-4 w-4" aria-hidden="true" />{tr ? "Cihazında işlenir" : "Processed on your device"}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-500/15 px-3.5 py-1.5 text-[13px] font-bold text-emerald-300">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />{tr ? "Gizli" : "Private"}
+              </span>
+            </div>
           )}
         </div>
         <Reorder.Group
@@ -517,6 +529,28 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
           <>{ctaLabel} →</>
         )}
       </button>
+
+      {/* Sonuç önizlemesi: düğmeye basınca ne oluşacağı, hemen altında. */}
+      {!isImages && okList.length >= minFiles && (
+        <div className="mt-4 flex justify-center">
+          <p className="inline-flex items-center gap-3 rounded-2xl border border-indigo-400/35 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/15 py-2.5 pl-2.5 pr-5 shadow-[0_12px_32px_-16px_rgba(79,70,229,0.8)]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600">
+              <FileCheck2 className="h-5 w-5 text-white" aria-hidden="true" />
+            </span>
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[15px] font-semibold tracking-tight text-white">
+              {tr ? (
+                <>
+                  Birleşince <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 px-2.5 py-0.5 text-[15px] font-extrabold text-white shadow-sm">{totalPages || "?"} sayfalık</span> tek PDF oluşacak
+                </>
+              ) : (
+                <>
+                  Merges into one <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-500 px-2.5 py-0.5 text-[15px] font-extrabold text-white shadow-sm">{totalPages || "?"}-page</span> PDF
+                </>
+              )}
+            </span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
