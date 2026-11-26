@@ -14,7 +14,7 @@ wrapt==2.1.2
 pytesseract
 python-docx
 docx2pdf
-pywin32>=306; sys_platform == 'win32'
+pywin32>=312; sys_platform == 'win32'
 openpyxl
 reportlab
 pdfplumber
