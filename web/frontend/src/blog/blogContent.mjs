@@ -6508,6 +6508,8 @@ export const BLOG_POSTS = [
         { q: "Belgenin sırasını nasıl değiştiririm?", a: "Dosyaları ekledikten sonra listede sürükleyerek istediğiniz sıraya dizin; yeni belge o sırayla oluşur." },
         { q: "Ekran görüntüsü alıp birleştirebilir miyim?", a: "Önerilmez. Ekran görüntüsünde doğrulama barkodu çoğu zaman okunmaz ve belge geçersiz sayılabilir. e-Devlet'in «PDF olarak indir» seçeneğini kullanın." },
         { q: "Dosya boyutu büyükse ne yapmalıyım?", a: "Genelde araya karışan taranmış bir belge sebeptir. Yalnızca onu sıkıştırıp öyle birleştirin; e-Devlet çıktılarının netliğine dokunmayın." },
+        { q: "e-Devlet'ten PDF indirme: dosyayı nasıl kaydederim?", a: "Belgeyi e-Devlet'te oluşturduktan sonra ekrandaki PDF olarak indirme seçeneğini kullanın; ekran görüntüsü almayın. İndirdiğiniz dosya zaten dijital ve barkodludur, birleştirme ya da sıkıştırma için doğrudan kullanabilirsiniz." },
+        { q: "e-Devlet'ten indirdiğim PDF açılmıyor, ne yapmalıyım?", a: "Önce dosyayı yeniden indirin ve adını ya da uzantısını değiştirmeden açın. Hâlâ açılmıyorsa başka bir PDF okuyucuyla ya da tarayıcınızla deneyin; bazı okuyucular Türkçe karakterleri yanlış gösterebilir. Yeniden indirilen dosya da hiçbir okuyucuda açılmıyorsa e-Devlet'ten belgeyi yeniden oluşturun." },
       ],
     },
     {
