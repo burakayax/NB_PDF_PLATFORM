@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Pre-Purchase Information Form | PDF Platform</title>
+    <meta name="description" content="Consumer information form shown before payment under the Distance Sales Regulation: seller details, service features, price and right of withdrawal." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/legal/on-bilgilendirme" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/legal/on-bilgilendirme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/legal/on-bilgilendirme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/legal/on-bilgilendirme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Pre-Purchase Information Form | PDF Platform" />
+    <meta property="og:description" content="Consumer information form shown before payment under the Distance Sales Regulation: seller details, service features, price and right of withdrawal." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Pre-Purchase Information Form | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/legal/on-bilgilendirme" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Pre-Purchase Information Form | PDF Platform" />
+    <meta name="twitter:description" content="Consumer information form shown before payment under the Distance Sales Regulation: seller details, service features, price and right of withdrawal." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="Pre-Purchase Information Form | PDF Platform" />
+    <!-- Yazı tipleri sitenin kendi sunucusundan gelir (üçüncü tarafa IP gitmez). Yalnızca ilk ekranda görünen Inter önceden yüklenir. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-wght-normal.woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 75 tools in total. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":["https://www.instagram.com/pdfplatformapp","https://www.facebook.com/pdfplatform","https://x.com/pdfplatformapp","https://www.linkedin.com/company/pdfplatform","https://www.youtube.com/@pdfplatformapp","https://www.tiktok.com/@pdfplatformapp","https://tr.pinterest.com/pdfplatformapp"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Legal","item":"https://www.pdfplatform.app/en/terms"},{"@type":"ListItem","position":3,"name":"Pre-Purchase Information Form","item":"https://www.pdfplatform.app/en/legal/on-bilgilendirme"}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Pre-Purchase Information Form</h1><p class="seo-intro">The mandatory consumer information form shown before payment.</p><article class="seo-legal"><p>Mandatory consumer information form required before payment, pursuant to the Distance Sales Regulation.</p><p><strong>Effective date:</strong> 9 November 2026</p><section><h2>1. Seller Information</h2><p>Seller: Burak KAYA (sole proprietor; operates the PDF Platform / NB Global Studio brands)</p><p>Address: Toklu Mahallesi, Gürpınar Sk. No: 2 A İç Kapı No: 26, Ortahisar/Trabzon</p><p>Tax office / number: Hızırbey Tax Office (Ortahisar/Trabzon) — 5300847203</p><p>Phone: +90 541 784 9889</p><p>Email: info@pdfplatform.app</p><p>Website: pdfplatform.app</p><p>Service: PDF Platform — cloud-based PDF processing services</p></section><section><h2>2. Key Features of the Service</h2><p>PDF Platform is a cloud-based SaaS (Software as a Service) subscription offering tools for PDF merging, splitting, compression, conversion, encryption, and other PDF processing operations.</p><p>Different usage limits, file size limits, and features apply depending on the subscription plan. Visit pdfplatform.app/pricing for details.</p></section><section><h2>3. Price and Payment</h2><p>Prices are determined by the plan you select and the billing period (monthly/yearly). For users residing in Turkey, 20% VAT is included in the total amount charged.</p><p>Payment is made via credit card or debit card through the PayTR infrastructure.</p><p>The subscription period is monthly or yearly, depending on the plan you choose. The subscription does not renew automatically: a reminder is sent before the period ends, and a new payment is taken only if you confirm the renewal.</p><p>The service is delivered electronically. Once the payment is approved, the subscription is activated in your account immediately; there is no delivery or shipping. The total price including VAT is shown separately in the order summary on the payment screen.</p><p>While there is no statutory refund obligation for the remaining period once the subscription term has commenced, the SELLER honours, under its own commercial guarantee, any refund request made within 7 days of the first payment, with no reason required. Outside that window, access continues until the end of the paid period.</p></section><section><h2>4. Withdrawal Right Exception</h2><p>Pursuant to Article 15/1(h) of the Distance Sales Regulation, the right of withdrawal does not apply to services whose performance has begun with the consumer&#39;s consent.</p><p>Once payment is completed and the service performance (subscription activation) has begun, you will not be able to exercise your right of withdrawal. If you accept this condition, you may proceed to payment.</p><p>In case of technical issues or complete inability to use the service, please contact our support team.</p></section><section><h2>5. Complaints and Disputes</h2><p>For complaints, you may send an email to info@pdfplatform.app</p><p>Your right to apply to Consumer Arbitration Committees and Consumer Courts remains reserved.</p></section></article><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/about">About</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
