@@ -233,7 +233,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
   const ctaLabel = isImages
     ? tr ? "PDF'e Çevir" : "Convert to PDF"
     : tr ? "Birleştir" : "Merge";
-  const outName = isImages ? "gorseller.pdf" : "birlestirilmis.pdf";
+  const outName = isImages ? (tr ? "Görseller.pdf" : "Images.pdf") : tr ? "Birleştirilmiş.pdf" : "Merged.pdf";
 
   // Zengin özet — kullanıcıya her şeyi anlat: kaç dosya, kaçı geçerli, toplam sayfa/boyut,
   // sonuçta ne oluşacak.

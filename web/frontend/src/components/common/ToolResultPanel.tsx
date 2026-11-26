@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Check, CloudOff, Download, ExternalLink, FileCheck2, MonitorSmartphone, Share2, ShieldCheck, X } from "lucide-react";
+import { Check, CloudOff, Download, ExternalLink, FileCheck2, FileText, MonitorSmartphone, Share2, ShieldCheck, X } from "lucide-react";
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
 import { trackFunnelEvent, trackGAEvent } from "../../lib/analytics";
@@ -50,8 +50,8 @@ export type ToolResultPanelProps = {
 
 const L = {
   tr: {
-    ready: "PDF hazır",
-    readyGeneric: "Dosyan hazır",
+    ready: "PDF'iniz Hazır",
+    readyGeneric: "Dosyanız Hazır",
     deviceBadges: ["Cihazında işlendi", "Sunucuya yüklenmedi", "Gizli"],
     subServer: "İşlem tamamlandı. İndir'e basınca dosya doğrudan indirme klasörüne iner.",
     download: "İndir",
@@ -76,6 +76,27 @@ const L = {
     close: "Close",
   },
 };
+
+/** Başlıkta soldan sağa geçen küçük dalga: harfler sırayla hafifçe yükselir, kısa bir aradan sonra tekrarlar. */
+function WaveText({ text }: { text: string }) {
+  return (
+    <span>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden>
+        {Array.from(text).map((ch, i) => (
+          <motion.span
+            key={`${i}-${ch}`}
+            className="inline-block whitespace-pre"
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 0.5, delay: i * 0.07, repeat: Infinity, repeatDelay: 2.4, ease: "easeInOut" }}
+          >
+            {ch}
+          </motion.span>
+        ))}
+      </span>
+    </span>
+  );
+}
 
 function isShareSupported(blob: Blob, filename: string): boolean {
   const nav = navigator as Navigator & {
@@ -285,17 +306,23 @@ export function ToolResultPanel({
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
         <Check className="h-8 w-8" />
       </div>
-      <p className="mt-4 inline-flex items-center justify-center gap-2.5 text-xl font-bold text-white">
-        {heading ?? (isPdf ? t.ready : t.readyGeneric)}
+      <p className="mt-4 flex items-center justify-center gap-2.5 text-2xl font-extrabold tracking-tight text-white">
+        {typeof (heading ?? "") === "string" ? <WaveText text={String(heading ?? (isPdf ? t.ready : t.readyGeneric))} /> : heading}
         <FileCheck2 className="h-5 w-5 text-emerald-400" aria-hidden />
       </p>
+      <div className="mt-2.5 flex justify-center">
+        <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-1.5" title={filename}>
+          <FileText className="h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
+          <span className="truncate text-[14px] font-semibold text-slate-200">{filename}</span>
+        </span>
+      </div>
       {(subtitle || !processedOnDevice) && (
         <p className="mt-1 text-sm text-slate-400">{subtitle ?? t.subServer}</p>
       )}
       {/* Ana vaadimiz: düz yazıda kaybolmasın. Düğme görünümünde ama tıklanmaz; güven versin diye yavaşça yanıp söner. */}
       {processedOnDevice && (
         <motion.div
-          className="mt-3 mb-2.5 flex flex-wrap items-center justify-center gap-2"
+          className="mt-3 flex flex-wrap items-center justify-center gap-2"
           animate={{ opacity: [1, 0.55, 1] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
@@ -307,9 +334,6 @@ export function ToolResultPanel({
           ))}
         </motion.div>
       )}
-      <p className="mt-1 truncate text-xs text-slate-400" title={filename}>
-        {filename}
-      </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         {!hideFileActions && (
           <>
