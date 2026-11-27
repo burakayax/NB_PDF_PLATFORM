@@ -1,5 +1,6 @@
 /** PDF Birleştir: üç dosya seç → sırayı ayarla → birleştir → sonuç (cihazda işlenir). */
 
+import { RESULT_TITLE } from "../lib/result-title.mjs";
 import { makeResultCard } from "../lib/result-card.mjs";
 
 const FILES = ["Sozlesme.pdf", "Fatura.pdf", "Ekler.pdf"];
@@ -81,12 +82,12 @@ export default {
     await wait(1700);
     await hlOff();
     await pg.mouse.click(bp.x, bp.y);
-    await pg.getByText(/^PDF hazır/).first().waitFor({ timeout: 60000 });
+    await pg.getByText(RESULT_TITLE).first().waitFor({ timeout: 60000 });
     const swapAt = +(st.now() - st.startAt()).toFixed(2);
     await wait(200);
     const resultBox = await st.resultTop();
 
-    await hlText(pg.getByText(/sunucuya yüklenmedi/).first(), 8);
+    await hlText(pg.getByText(/sunucuya yüklenmedi/i).first(), 8);
     say("SONUÇ", "İşlem tamam", `${FILES.length} dosya tek PDF oldu`, `${processing[0]} · ${processing[1]}`, "green");
     await moveTo(700, 330);
     await wait(2300);
