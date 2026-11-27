@@ -8,6 +8,7 @@
  */
 
 import { makeResultCard } from "./result-card.mjs";
+import { RESULT_TITLE } from "./result-title.mjs";
 
 /** Dosya seçme penceresini açıp dosyaları verir (yavaş makinede sayfa yüklenirken tıklama boşa gidebilir: yeniden dener). */
 export async function chooseFiles(st, dropzone, paths) {
@@ -139,12 +140,12 @@ export async function waitEnabled(loc, ms = 60000) {
  * @param {Array<{title:string,l1?:string,l2?:string,run:(st,ctx)=>Promise<void>}>} [cfg.options]  ayar adımları
  * @param {(pg)=>any} cfg.button                    basılacak ana düğme
  * @param {{title:string,l1?:string,l2?:string}} cfg.press   düğme adımının yazısı
- * @param {RegExp} [cfg.resultText]                 sonuç başlığı (varsayılan PDF hazır / Dosyan hazır)
+ * @param {RegExp} [cfg.resultText]                 sonuç başlığı (varsayılan: lib/result-title.mjs)
  * @param {(st,ctx)=>Promise<[string,string,string]>} [cfg.result]  sonuç satırları
  * @param {number} [cfg.timeout]                    işlem en çok kaç ms sürebilir
  */
 export function simpleTool(cfg) {
-  const resultRe = cfg.resultText ?? /^(PDF hazır|Dosyan hazır)/;
+  const resultRe = cfg.resultText ?? RESULT_TITLE;
   return {
     id: cfg.id,
     toolPath: cfg.toolPath,

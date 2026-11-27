@@ -8,6 +8,7 @@
 
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
+import { RESULT_TITLE } from "./result-title.mjs";
 
 export async function createStage({ baseUrl, workDir, viewport = { width: 860, height: 1700 } }) {
   const VW = viewport.width;
@@ -243,7 +244,7 @@ export async function createStage({ baseUrl, workDir, viewport = { width: 860, h
   }
 
   /** Sonuç ekranının üst konumu (kurgu, geçişte bu noktadan keser). Gerekirse sayfa görünür alana kaydırılır. */
-  async function resultTop(re = /^(PDF hazır|Dosyan hazır)/) {
+  async function resultTop(re = RESULT_TITLE) {
     const loc = pg.getByText(re).first();
     let rb = await loc.boundingBox();
     if (rb.y > 900 || rb.y < 120) {
