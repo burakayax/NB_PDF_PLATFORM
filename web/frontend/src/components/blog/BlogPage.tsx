@@ -98,9 +98,9 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
         if (b.t === "ul") return <ul key={i} className="space-y-2 pl-1">{b.items.map((it, j) => <li key={j} className="flex gap-2.5 text-[15px] leading-relaxed text-slate-300"><span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r ${accent.grad}`} />{it}</li>)}</ul>;
         if (b.t === "ol") return <ol key={i} className="space-y-2 pl-1">{b.items.map((it, j) => <li key={j} className="flex gap-2.5 text-[15px] leading-relaxed text-slate-300"><span className={`shrink-0 font-bold ${accent.text}`}>{(b.start ?? 1) + j}.</span>{it}</li>)}</ol>;
         if (b.t === "tip") return (
-          <div key={i} className={`flex gap-3 rounded-2xl border ${accent.ring} bg-white/[0.03] p-4`}>
-            <Lightbulb className={`mt-0.5 h-5 w-5 shrink-0 ${accent.text}`} />
-            <p className="text-[14px] leading-relaxed text-slate-300"><b className="text-white">{tr ? "İpucu: " : "Tip: "}</b>{b.x}</p>
+          <div key={i} className="flex gap-3 rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4">
+            <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+            <p className="text-[14px] leading-relaxed text-amber-200"><b className="text-amber-100">{tr ? "İpucu: " : "Tip: "}</b>{b.x}</p>
           </div>
         );
         if (b.t === "steps") return (
@@ -117,12 +117,12 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
           </div>
         );
         if (b.t === "cta") return (
-          <a key={i} href={localize(b.tool)} className={`group flex items-center justify-between gap-4 rounded-2xl border ${accent.ring} bg-gradient-to-r ${accent.soft} p-5 transition hover:brightness-110`}>
+          <a key={i} href={localize(b.tool)} className={`group flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border ${accent.ring} bg-gradient-to-r ${accent.soft} p-5 transition hover:brightness-110`}>
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-[15px] font-black text-white"><Sparkles className={`h-4 w-4 ${accent.text}`} />{b.title}</p>
               <p className="mt-1 text-[13px] leading-relaxed text-slate-300">{b.x}</p>
             </div>
-            <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r ${accent.grad} px-4 py-2.5 text-[13px] font-bold text-white shadow-lg transition group-hover:gap-2.5`}>{b.btn}<ArrowRight className="h-4 w-4" /></span>
+            <span className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r ${accent.grad} px-4 py-2.5 text-[13px] font-bold text-white shadow-lg transition group-hover:gap-2.5`}>{b.btn}<ArrowRight className="h-4 w-4" /></span>
           </a>
         );
         return null;
