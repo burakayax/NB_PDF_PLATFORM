@@ -218,8 +218,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setGate("upgrade");
       setError(
         tr
-          ? "Yapay zekâ özellikleri Pro ve Business planlarına özeldir."
-          : "AI features are exclusive to Pro and Business plans.",
+          ? "Yapay zekâ özellikleri için Başlangıç ve üzeri bir plan ya da işlem kredisi gerekir."
+          : "AI features need a Starter plan or higher, or AI credits.",
       );
     } else if (err?.status === 429 || err?.code === "quota_exceeded") {
       if (err.quota) setQuota(err.quota);

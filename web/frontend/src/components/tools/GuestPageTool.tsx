@@ -31,6 +31,7 @@ import {
   PdfEncryptedError,
 } from "../../lib/clientPdfWorker";
 import { ValueMomentNudge } from "./ValueMomentNudge";
+import { sizeLimitMessage } from "../../lib/uploadLimits";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
 // Dashboard'ın görsel seçici modalının BİREBİR aynısı.
@@ -114,11 +115,7 @@ export function GuestPageToolCore({
       return;
     }
     if (f.size > MAX_BYTES) {
-      setError(
-        tr
-          ? "Dosya 80 MB'ı aşıyor. Daha büyüğü için ücretsiz üye olun."
-          : "File exceeds 80 MB. Sign up free for larger files.",
-      );
+      setError(sizeLimitMessage(f.size, MAX_BYTES / (1024 * 1024), tr ? "tr" : "en"));
       return;
     }
     try {
