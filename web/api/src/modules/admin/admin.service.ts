@@ -128,6 +128,16 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
 
+  // Yöneticinin tarayıcı oturumları "canlı oturum" sayısından çıkarılır. Sayfa görüntüsü kaydı, giriş belirteci henüz
+  // yenilenmemişken kimliksiz (misafir) gidebildiği için yalnız userId'ye bakmak yetmiyordu: yönetici kimlikli bir kayıt
+  // bırakan her oturum (son 6 saat) tümüyle dışlanır.
+  const adminSessionRows = await prisma.pageView.findMany({
+    where: { createdAt: { gte: new Date(Date.now() - 6 * 3600000) }, user: { role: "ADMIN" } },
+    select: { sessionId: true },
+    distinct: ["sessionId"],
+  });
+  const adminSessionIds = adminSessionRows.map((r) => r.sessionId);
+
   const [
     totalUsers,
     planGroups,
@@ -205,6 +215,9 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       where: {
         createdAt: { gte: activePresenceSince },
         OR: [{ userId: null }, { user: { role: { not: "ADMIN" } } }],
+        // Yönetici oturumları ve yönetim paneli sayfaları sayılmaz.
+        sessionId: { notIn: adminSessionIds },
+        NOT: [{ path: { startsWith: "/admin" } }, { path: { startsWith: "/nbadmin" } }, { path: { startsWith: "/en/admin" } }, { path: { startsWith: "/en/nbadmin" } }],
       },
       select: { userId: true, sessionId: true },
     }),
