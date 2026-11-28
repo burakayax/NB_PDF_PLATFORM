@@ -202,7 +202,8 @@ export function TeamDashboard({ language: _language, accessToken, isOwner = true
             {seatsUsed} / {seatsTotal} koltuk kullanımda
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Telefonda eşit boyda iki sütun; geniş ekranda yan yana. */}
+        <div className="grid w-full grid-cols-2 gap-2 [&>*]:w-full [&>div>button]:w-full [&>div>button]:justify-center sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3 sm:[&>*]:w-auto">
           <TeamReportButton accessToken={accessToken} teamName={team.name} />
           {isOwner && (
             <>

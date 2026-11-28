@@ -93,12 +93,13 @@ export function DailyPoolChip({
         className={`nb-transition inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-2 text-[12px] font-bold tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 sm:px-3 sm:text-[13px] ${tone}`}
       >
         <Gauge className="hidden h-3.5 w-3.5 shrink-0 sm:block" aria-hidden />
-        <span>
+        <span className="whitespace-nowrap">
           <span className="hidden md:inline">
             {monthlyMode ? (tr ? "Bu ay " : "This month ") : tr ? "Bugün " : "Today "}
           </span>
           {left}/{limit}
-          <span>{tr ? " hak kaldı" : " left"}</span>
+          {/* Telefonda üst çubuk dar: "kaldı" yalnız geniş ekranda görünür. */}
+          <span>{tr ? " hak" : ""}<span className={tr ? "hidden sm:inline" : ""}>{tr ? " kaldı" : " left"}</span></span>
         </span>
       </button>
 
