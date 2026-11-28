@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:pdfplatform.app:api:pdf-platform-api",
+      "displayName": "PDF Platform API",
+      "type": "application/vnd.oai.openapi+json",
+      "url": "https://api.pdfplatform.app/v1/openapi.json",
+      "description": "REST API for PDF and AI document processing: send text or a PDF and receive structured JSON (summaries and other AI document tasks). Authenticates with a bearer API key; available on the Pro and Business plans.",
+      "capabilities": ["pdf-summarize", "document-ai", "pdf-processing"],
+      "representativeQueries": [
+        "summarize a PDF document through an API",
+        "extract structured data from a PDF with a REST endpoint",
+        "process PDF files programmatically with an API key"
+      ]
+    }
+  ]
+}
