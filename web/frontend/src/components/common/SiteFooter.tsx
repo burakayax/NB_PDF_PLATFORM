@@ -46,7 +46,7 @@ export function SiteFooter({ language }: { language: Language }) {
         { label: tr ? "PDF Birleştir" : "Merge PDF", href: yol("/tools/merge-pdf") },
         { label: tr ? "PDF'ten Word'e" : "PDF to Word", href: yol("/tools/pdf-to-word") },
         { label: tr ? "PDF Sıkıştır" : "Compress PDF", href: yol("/tools/compress") },
-        { label: tr ? "PDF to JPG" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
+        { label: tr ? "PDF'den JPG'ye" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
       ],
     },
     {

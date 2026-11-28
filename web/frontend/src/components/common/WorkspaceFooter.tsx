@@ -119,7 +119,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
             <li><a className={linkClass} href={yol("/tools/merge-pdf")}>{tr ? "PDF Birleştir" : "Merge PDF"}</a></li>
             <li><a className={linkClass} href={yol("/tools/pdf-to-word")}>{tr ? "PDF'ten Word'e" : "PDF to Word"}</a></li>
             <li><a className={linkClass} href={yol("/tools/compress")}>{tr ? "PDF Sıkıştır" : "Compress PDF"}</a></li>
-            <li><a className={linkClass} href={yol("/tools/pdf-to-image")}>{tr ? "PDF'ten JPG'ye" : "PDF to JPG"}</a></li>
+            <li><a className={linkClass} href={yol("/tools/pdf-to-image")}>{tr ? "PDF'den JPG'ye" : "PDF to JPG"}</a></li>
           </FooterGroup>
           <FooterGroup title={tr ? "Destek" : "Support"}>
             <li>
