@@ -1,0 +1,278 @@
+<meta charset="utf-8">
+<style>
+/*FONTLAR*/
+/* FİNANS EKRANI: koyu zümrüt, bölünmüş ekran, hücreler; kesin ve düzenli hareket. */
+*{margin:0;padding:0;box-sizing:border-box;font-family:DMS,sans-serif}
+body{width:1080px;height:1920px;overflow:hidden;background:#06231c;color:#ecfdf5}
+.abs{position:absolute}
+#izgara{position:absolute;left:-120px;top:-120px;width:1320px;height:2160px;background-image:linear-gradient(rgba(110,231,183,.07) 2px,transparent 2px),linear-gradient(90deg,rgba(110,231,183,.07) 2px,transparent 2px);background-size:120px 72px}
+#baslik{position:absolute;left:70px;right:70px;top:220px}
+#hap{display:inline-block;border-radius:10px;background:#10b981;color:#042f23;font-size:30px;font-weight:800;padding:10px 22px;letter-spacing:1px}
+#ana{margin-top:24px;font-size:76px;line-height:1.12;font-weight:800;letter-spacing:-2px}
+#ana em{font-style:normal;color:#6ee7b7}#ana b{color:#fca5a5}
+.panel{position:absolute;left:60px;width:960px;border-radius:26px;overflow:hidden;box-shadow:0 36px 80px rgba(0,0,0,.45)}
+.bas{display:flex;align-items:center;gap:16px;padding:22px 30px;font-size:30px;font-weight:800}
+.tablo{display:grid;grid-template-columns:200px 420px 1fr;font-size:31px;font-variant-numeric:tabular-nums}
+.h{height:76px;line-height:76px;padding:0 24px;white-space:nowrap;overflow:hidden;border-bottom:2px solid #e2e8f0;border-right:2px solid #e2e8f0}
+.sag{text-align:right}
+</style>
+<div id="izgara"></div>
+<div id="baslik"><span id="hap"></span><div id="ana"></div></div>
+
+<div class="panel" id="pdf" style="top:560px;background:#fff;color:#0f172a">
+  <div class="bas" style="background:#f1f5f9"><span style="border-radius:8px;background:#dc2626;color:#fff;font-size:24px;padding:6px 14px">PDF</span>Kasım 2026 Hesap Hareketleri.pdf <span style="margin-left:auto;color:#64748b;font-size:26px">ÖRNEK VERİ</span></div>
+  <div class="tablo" id="pdfTablo"></div>
+</div>
+
+<div class="panel" id="xls" style="top:1130px;background:#fff;color:#0f172a">
+  <div class="bas" style="background:#107c41;color:#fff"><span style="border-radius:8px;background:#fff;color:#107c41;font-size:24px;padding:6px 14px">XLSX</span><span id="xlsAd">Yeni çalışma</span></div>
+  <div class="tablo" id="xlsTablo"></div>
+  <div id="toplamSatir" style="display:flex;justify-content:space-between;align-items:center;padding:0 30px;height:96px;background:#ecfdf5;font-size:34px;font-weight:800"><span id="formul" style="color:#047857"></span><span id="toplam" style="font-variant-numeric:tabular-nums"></span></div>
+</div>
+
+<div id="saat" class="abs" style="left:640px;top:1792px;width:380px;border-radius:99px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.18);text-align:center;font-size:36px;font-weight:700;padding:18px"></div>
+<div id="uyari" class="abs" style="left:120px;right:120px;top:1045px;text-align:center"><span id="uyariIc" style="display:inline-block;border-radius:20px;background:#dc2626;color:#fff;font-size:42px;font-weight:800;padding:28px 44px;box-shadow:0 26px 60px rgba(0,0,0,.5)"></span></div>
+<div id="tus" class="abs" style="left:300px;width:480px;top:980px;border-radius:24px;background:#10b981;color:#042f23;text-align:center;font-size:46px;font-weight:800;padding:34px;box-shadow:0 26px 60px rgba(0,0,0,.45)">Excel'e çevir</div>
+<div id="hucreler"></div>
+
+<div id="gizliCip" style="position:absolute;inset:0;opacity:0;z-index:55;pointer-events:none"><span class="gz" style="position:absolute;right:48px;top:492px;white-space:nowrap;border-radius:99px;background:#10b981;color:#fff;font-size:31px;line-height:1.3;font-weight:800;padding:22px 34px;box-shadow:0 20px 44px rgba(0,0,0,.38)">✓ PDF'in bizden silinir</span><span class="gz" style="position:absolute;left:40px;top:1695px;white-space:nowrap;border-radius:99px;background:#10b981;color:#fff;font-size:31px;line-height:1.3;font-weight:800;padding:22px 34px;box-shadow:0 20px 44px rgba(0,0,0,.38)">✓ Sendeki dosya kalır</span></div>
+<div id="marka" class="abs" style="left:70px;top:92px;display:flex;align-items:center;gap:18px"><img src="__EMBLEM__" style="width:76px;height:76px"><span style="font-size:36px;font-weight:800">PDF Platform</span></div>
+
+<div id="son" class="abs" style="inset:0;text-align:center;background:#06231c">
+  <div id="karolar"></div>
+  <div id="sonKart" class="abs" style="left:90px;right:90px;top:470px;border-radius:36px;background:#fff;color:#06231c;padding:80px 40px 70px;box-shadow:0 40px 90px rgba(0,0,0,.45)">
+    <img src="__EMBLEM__" style="width:200px;height:200px">
+    <div style="font-size:84px;font-weight:800;letter-spacing:-2px;margin-top:34px">PDF'ten Excel'e</div>
+    <div style="font-size:44px;color:#475569;margin-top:20px;line-height:1.5">Tabloyu yeniden yazma.<br>Hücrelere aktar.</div><div style="display:flex;align-items:center;justify-content:center;gap:22px;margin:40px auto 0;max-width:900px;border-radius:26px;padding:26px 30px;font-size:42px;font-weight:800;line-height:1.3;background:#ecfdf5;color:#047857;border:3px solid #6ee7b7;font-size:36px"><span style="flex:none;width:58px;height:64px"><svg viewBox="0 0 100 110" width="100%" height="100%"><path class="halka" d="M28 52V34a22 22 0 0 1 44 0v18" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"/><rect x="14" y="46" width="72" height="58" rx="14" fill="currentColor"/><circle cx="50" cy="71" r="8" fill="rgba(0,0,0,.45)"/><rect x="46" y="73" width="8" height="17" rx="4" fill="rgba(0,0,0,.45)"/></svg></span><span>Yüklediğin PDF bizden silinir.<br>Sendeki dosya aynen kalır.</span></div>
+    <div style="display:inline-block;margin-top:52px;border-radius:16px;background:#107c41;color:#fff;font-size:50px;font-weight:800;padding:30px 66px">pdfplatform.app</div>
+    <div style="margin:56px 20px 0;border-radius:20px;border:2px solid #f59e0b;background:#fffbeb;color:#92400e;font-size:32px;line-height:1.45;padding:24px">Kullanmadan önce rakamları ve sütunları kontrol et.</div>
+  </div>
+</div>
+
+<script>
+document.documentElement.lang = "tr";
+window.META = { sure: 35, kontrol: [2.4, 8.6, 12.6, 18.8, 21.4, 23.1, 25.2, 27.6, 30.2, 34] };
+const $ = (id) => document.getElementById(id);
+const kis = (x) => Math.max(0, Math.min(1, x));
+const gec = (t, a, b) => kis((t - a) / (b - a));
+const yum = (p) => 1 - (1 - p) ** 3;
+const yum2 = (p) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
+const ara = (a, b, p) => a + (b - a) * p;
+const hs = (n) => { const x = Math.sin(n * 91.7) * 43758.5453; return x - Math.floor(x); };
+
+const VERI = [
+  ["Tarih", "Açıklama", "Tutar (TL)"],
+  ["03.11", "Kira ödemesi", "-18.500,00"],
+  ["05.11", "Müşteri tahsilatı", "42.750,00"],
+  ["09.11", "Elektrik faturası", "-2.340,50"],
+  ["14.11", "Tedarikçi ödemesi", "-11.200,00"],
+  ["21.11", "Satış geliri", "27.900,00"],
+];
+const stil = (r, c) => `${r === 0 ? "font-weight:800;background:#f8fafc;" : ""}${c === 2 ? "text-align:right;" : ""}`;
+$("pdfTablo").innerHTML = VERI.flatMap((s, r) => s.map((v, c) => `<div class="h" data-r="${r}" data-c="${c}" style="${stil(r, c)}">${v}</div>`)).join("");
+$("xlsTablo").innerHTML = VERI.flatMap((s, r) => s.map((v, c) => `<div class="h x" data-r="${r}" data-c="${c}" style="${stil(r, c)}"></div>`)).join("");
+const x = [...document.querySelectorAll(".x")];
+const kaynak = [...document.querySelectorAll("#pdfTablo .h")];
+$("hucreler").innerHTML = VERI.flat().map((v) => `<div class="abs uc h" style="border:3px solid #10b981;border-radius:8px;background:#ecfdf5;color:#0f172a;font-size:31px;box-shadow:0 12px 28px rgba(0,0,0,.28)">${v}</div>`).join("");
+const uc = [...document.querySelectorAll(".uc")];
+$("karolar").innerHTML = Array.from({ length: 24 }, (_, i) => `<div class="abs karo" style="left:${(i % 4) * 270 + 14}px;top:${Math.floor(i / 4) * 320 + 20}px;width:242px;height:290px;border-radius:20px;background:rgba(110,231,183,.06)"></div>`).join("");
+
+const METIN = [
+  [0, 4.2, "AY SONU · 17:10", "Muhasebe tabloyu<br><em>Excel</em> istiyor."],
+  [4.2, 11.8, "ELDE VAR: PDF", "Mecbur, <em>tek tek</em><br>yazıyorsun."],
+  [11.8, 14.8, "TAKILDIĞIN YER", "Bir rakam yanlış.<br><b>Toplam tutmuyor.</b>"],
+  [14.8, 20.4, "BİR DE ŞUNU DENEDİN", "Kopyala, yapıştır…<br><b>Her şey tek sütunda.</b>"],
+  [20.4, 23.0, "ÇÖZÜM", "PDF'i yükle,<br><em>tabloyu çevir.</em>"],
+  [23.0, 26.2, "DOSYANA NE OLUYOR?", "Çevirmek için bize gelir.<br><em>İş bitince bizden silinir.</em>"],
+  [26.2, 31.2, "SONUÇ", "Satır satır,<br><em>sütun sütun.</em>"],
+];
+
+// elle yazma bölümünde hücre içerikleri: yavaş yavaş dolar, biri hatalı
+const ELLE = VERI.flat().slice(0, 12);
+const HATALI = 8; // 05.03 satırının tutarı
+ELLE[HATALI] = "47.250,00";
+function elle(t) {
+  const harfSay = Math.max(0, (t - 4.6) * 14);
+  let kalan = harfSay, imlec = -1;
+  return [x.map((_, i) => {
+    if (i >= ELLE.length) return "";
+    const m = ELLE[i], n = Math.min(m.length, Math.floor(kalan));
+    kalan -= m.length;
+    if (imlec < 0 && n < m.length) imlec = i;
+    return m.slice(0, Math.max(0, n));
+  }), imlec];
+}
+
+let yerler = null;
+function olc() {
+  const eski = $("pdf").style.transform, eski2 = $("xls").style.transform;
+  $("pdf").style.transform = $("xls").style.transform = "none";
+  const d = $("xls").style.display, d2 = $("pdf").style.display;
+  $("xls").style.display = $("pdf").style.display = "block";
+  yerler = kaynak.map((el, i) => [el.getBoundingClientRect(), x[i].getBoundingClientRect()].map((r) => ({ x: r.left, y: r.top, w: r.width, h: r.height })));
+  $("pdf").style.transform = eski; $("xls").style.transform = eski2; $("xls").style.display = d; $("pdf").style.display = d2;
+}
+
+window.render = (t) => {
+  if (!yerler) olc();
+  $("izgara").style.transform = `translate(${-(t * 14) % 120}px, ${-(t * 9) % 72}px)`;
+  const m = METIN.find(([a, b]) => t >= a && t < b);
+  if (m) { $("hap").textContent = m[2]; $("ana").innerHTML = m[3]; const p = yum(gec(t, m[0], m[0] + 0.45)); $("baslik").style.opacity = p * gec(m[1] - t, 0, 0.18); $("baslik").style.transform = `translateY(${(1 - p) * 60}px)`; }
+  else $("baslik").style.opacity = 0;
+
+  const g1 = yum(gec(t, 0.3, 1.2)), g2 = yum(gec(t, 2.0, 2.9));
+  const vurgu = 1 + 0.015 * Math.sin(t * 1.6);
+  $("pdf").style.transform = `translateX(${(1 - g1) * -1100}px) scale(${t < 4.2 ? vurgu : 1})`;
+  const sars = (a) => (t >= a && t < a + 0.55 ? Math.sin((t - a) * 56) * 24 * (1 - (t - a) / 0.55) : 0);
+  $("xls").style.transform = `translate(${(1 - g2) * 1100 + sars(12.0) + sars(18.3)}px,0)`;
+
+  // hücre içerikleri
+  let metin = x.map(() => ""), imlec = -1;
+  x.forEach((el) => { el.style.background = el.dataset.r === "0" ? "#f8fafc" : "#fff"; el.style.color = "#0f172a"; el.style.boxShadow = "none"; el.style.overflow = "hidden"; el.style.zIndex = 0; el.style.position = "relative"; });
+  kaynak.forEach((el) => { el.style.background = el.dataset.r === "0" ? "#f8fafc" : "#fff"; el.style.boxShadow = "none"; });
+  let toplam = "", formul = "", ad = "Yeni çalışma";
+  if (t < 14.8) {
+    [metin, imlec] = elle(Math.min(t, 11.2));
+    if (t >= 4.6 && t < 11.4 && imlec >= 0) {
+      x[imlec].style.boxShadow = "inset 0 0 0 5px #107c41";
+      kaynak[imlec].style.background = "#fef9c3";
+    }
+    if (t >= 12.0) {
+      x[HATALI].style.background = "#fee2e2"; x[HATALI].style.color = "#b91c1c"; x[HATALI].style.boxShadow = "inset 0 0 0 5px #dc2626";
+      kaynak[HATALI].style.boxShadow = "inset 0 0 0 5px #dc2626";
+      formul = "Toplam tutmuyor"; toplam = "Fark: 4.500,00";
+    }
+  } else if (t < 20.4) {
+    if (t >= 16.6) {
+      VERI.slice(1).concat([VERI[0]]).forEach((_, r) => {
+        const s = VERI[r];
+        if (t >= 16.6 + r * 0.22) { metin[r * 3] = s.join(" "); x[r * 3].style.overflow = "visible"; x[r * 3].style.zIndex = 5; }
+      });
+      formul = t >= 18.3 ? "Sütunlar kayboldu" : "";
+    }
+    if (t >= 15.2 && t < 16.6) kaynak.forEach((el) => (el.style.background = `rgba(59,130,246,${0.28 * yum(gec(t, 15.2, 16.1))})`));
+  } else {
+    ad = t >= 25.6 ? "Kasım 2026 Hesap Hareketleri.xlsx" : "Yeni çalışma";
+    VERI.flat().forEach((v, i) => { const bas = 23.0 + Math.floor(i / 3) * 0.28 + (i % 3) * 0.1; if (t >= bas + 0.65) { metin[i] = v; const parla = 1 - gec(t, bas + 0.65, bas + 1.5); if (parla > 0) x[i].style.background = `rgba(110,231,183,${0.55 * parla})`; } });
+    if (t >= 27.0) {
+      formul = "=TOPLA(C2:C6)";
+      const p = yum2(gec(t, 27.0, 28.6));
+      toplam = (38609.5 * p).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (t >= 28.8) x.forEach((el) => { if (el.dataset.c === "2" && el.dataset.r !== "0") el.style.boxShadow = "inset 0 0 0 4px #107c41"; });
+  }
+  x.forEach((el, i) => (el.textContent = metin[i]));
+  $("formul").textContent = formul; $("toplam").textContent = toplam; $("xlsAd").textContent = ad;
+  $("formul").style.color = t < 20.4 ? "#b91c1c" : "#047857";
+  $("toplamSatir").style.background = t >= 12 && t < 20.4 && formul ? "#fef2f2" : "#ecfdf5";
+
+  // dosyadan tabloya uçan hücreler
+  uc.forEach((el, i) => {
+    const bas = 23.0 + Math.floor(i / 3) * 0.28 + (i % 3) * 0.1;
+    const p = yum2(gec(t, bas, bas + 0.65));
+    const [a, b] = yerler[i];
+    el.style.display = t >= bas && t < bas + 0.65 ? "block" : "none";
+    Object.assign(el.style, { left: `${ara(a.x, b.x, p)}px`, top: `${ara(a.y, b.y, p) - Math.sin(Math.PI * p) * 40}px`, width: `${a.w}px`, height: `${a.h}px`, lineHeight: `${a.h - 6}px`, textAlign: i % 3 === 2 ? "right" : "left", transform: `scale(${1 + Math.sin(Math.PI * p) * 0.14})` });
+  });
+
+  const dk = t < 4.6 ? 10 : t < 14.8 ? Math.round(ara(10, 52, gec(t, 4.6, 11.8))) : 58;
+  $("saat").textContent = `17:${String(dk).padStart(2, "0")} (örnek)`; $("saat").style.opacity = t >= 4.4 && t < 20.4 ? 1 : 0;
+
+  const uy = t >= 12.4 && t < 14.7 ? ["Hangi satırda hata var?", 12.4] : t >= 18.7 && t < 20.3 ? ["Baştan düzenlemek gerek", 18.7] : null;
+  $("uyari").style.display = uy ? "block" : "none";
+  if (uy) { $("uyariIc").textContent = uy[0]; const p = yum(gec(t, uy[1], uy[1] + 0.35)); $("uyari").style.opacity = p; $("uyari").style.transform = `translateY(${(1 - p) * 50}px)`; }
+
+  const tg = yum(gec(t, 21.0, 21.6)), tc = gec(t, 22.5, 22.9);
+  $("tus").style.display = t >= 21.0 && t < 22.9 ? "block" : "none";
+  $("tus").style.opacity = tg * (1 - tc); $("tus").style.transform = `scale(${(0.8 + 0.2 * tg) * (1 - 0.08 * Math.sin(Math.PI * gec(t, 21.8, 22.2)))})`;
+  $("tus").textContent = t >= 22.1 ? "Dönüştürülüyor…" : "Excel'e çevir";
+
+  $("son").style.display = t >= 31.1 ? "block" : "none";
+  $("son").style.opacity = gec(t, 31.1, 31.35);
+  document.querySelectorAll(".karo").forEach((el, i) => { const p = yum(gec(t, 31.2 + hs(i) * 0.8, 31.9 + hs(i) * 0.8)); el.style.transform = `scale(${p})`; el.style.opacity = p * (0.5 + 0.5 * Math.sin(t * 1.8 + i)); });
+  const sk = yum(gec(t, 31.5, 32.4)); $("sonKart").style.opacity = sk; $("sonKart").style.transform = `translateY(${(1 - sk) * 200}px)`;
+};
+</script>
+
+
+<script>
+(() => {
+  const A = 23, B = 24.8, X = 1.8;
+  const asil = window.render;
+  const sahne = (v) => (v < A ? v : v < B + X ? A + ((v - A) * (B - A)) / (B - A + X) : v - X);
+  const video = (s) => (s < A ? s : s < B ? A + ((s - A) * (B - A + X)) / (B - A) : s + X);
+  const K = (p) => Math.max(0, Math.min(1, p));
+  const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+  window.META = { sure: window.META.sure + X, kontrol: [2.4,12.6,18.8,21.4,23.2,24,24.7,25.8,30.2,34].map(video) };
+  window.render = (v) => {
+    const s = sahne(v);
+    asil(s);
+    const c = document.getElementById("gizliCip");
+    c.style.opacity = s >= 23.05 && s < 26.5 ? K((26.5 - s) / 0.3) : 0;
+  };
+})();
+</script>
+
+<script>
+(() => {
+  const asil = window.render;
+  const K = (p) => Math.max(0, Math.min(1, p));
+  const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+  window.render = (v) => {
+    asil(v);
+    document.querySelectorAll(".gz").forEach((el, i) => {
+      const x = v - 23.07 - 0.15 - i * 0.7;
+      el.style.opacity = K(x / 0.15);
+      el.style.transform = "scale(" + yay(K(x / 0.8)) + ") translateY(" + Math.sin(v * 2 + i * 2) * 10 + "px)";
+    });
+  };
+})();
+</script>
+
+<div id="vitrin" style="position:absolute;inset:0;z-index:200;display:none;overflow:hidden;background:linear-gradient(#08291f,#041812);color:#fff;font-family:DMS,sans-serif;text-align:center">
+  <div id="vUst" style="position:absolute;left:40px;right:40px;top:170px;font-size:44px;font-weight:700;color:#6ee7b7">Ay sonu yalnız Excel değil.</div>
+  <div id="vBuyuk" style="position:absolute;left:0;right:0;top:250px;font-size:150px;font-weight:800;line-height:1.1;letter-spacing:-3px"><span id="vSay">0</span> araç</div>
+  <div id="vAlt" style="position:absolute;left:0;right:0;top:440px;font-size:48px;font-weight:700">tek sitede, tarayıcında.</div>
+  <div id="vTablo" style="position:absolute;left:60px;width:960px;top:640px;border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 40px 80px rgba(0,0,0,.45)"><div style="display:grid;grid-template-columns:90px 1fr 1fr;background:#107c41;color:#fff;font-size:30px;font-weight:800;text-align:center"><div style="padding:18px 0"></div><div style="padding:18px 0">A</div><div style="padding:18px 0">B</div></div><div style="display:grid;grid-template-columns:90px 1fr 1fr;height:128px"><div style="background:#f1f5f9;color:#64748b;font-size:30px;font-weight:800;text-align:center;line-height:128px">1</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">PDF Sıkıştır</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">PDF'ten Word'e</div></div><div style="display:grid;grid-template-columns:90px 1fr 1fr;height:128px"><div style="background:#f1f5f9;color:#64748b;font-size:30px;font-weight:800;text-align:center;line-height:128px">2</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">Word'den PDF'e</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">Excel'den PDF'e</div></div><div style="display:grid;grid-template-columns:90px 1fr 1fr;height:128px"><div style="background:#f1f5f9;color:#64748b;font-size:30px;font-weight:800;text-align:center;line-height:128px">3</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">PDF Şifrele</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">Filigran Ekle</div></div><div style="display:grid;grid-template-columns:90px 1fr 1fr;height:128px"><div style="background:#f1f5f9;color:#64748b;font-size:30px;font-weight:800;text-align:center;line-height:128px">4</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">Sayfa Numarası</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">PDF Düzenle</div></div><div style="display:grid;grid-template-columns:90px 1fr 1fr;height:128px"><div style="background:#f1f5f9;color:#64748b;font-size:30px;font-weight:800;text-align:center;line-height:128px">5</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">İmza İste</div><div class="vh" style="border:2px solid #e2e8f0;color:#0f172a;font-size:35px;font-weight:800;line-height:124px;text-align:center;white-space:nowrap">PDF Onar</div></div></div>
+  <div id="vCta" style="position:absolute;left:0;right:0;top:1380px"><span style="display:inline-block;white-space:nowrap;border-radius:99px;background:#10b981;color:#042f23;font-size:39px;font-weight:800;padding:28px 44px;box-shadow:0 24px 50px rgba(0,0,0,.3)">↗ Muhasebeyle uğraşan birine gönder</span></div>
+  <div id="vBag" style="position:absolute;left:0;right:0;top:1498px;font-size:36px;font-weight:700;opacity:0"></div>
+  <div id="vAdres" style="position:absolute;left:170px;right:170px;top:1562px;border-radius:99px;background:#fff;color:#06231c;font-size:52px;font-weight:800;padding:30px 0;height:128px;box-shadow:0 24px 50px rgba(0,0,0,.28)"></div>
+</div>
+<script>
+(() => {
+  const asil = window.render, S = 36.8, meta = window.META;
+  const K = (p) => Math.max(0, Math.min(1, p));
+  const yum = (p) => 1 - (1 - p) ** 3;
+  const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+  const $ = (i) => document.getElementById(i);
+  window.META = { sure: S + 5.5, kontrol: [meta.kontrol[4], meta.kontrol[5], meta.kontrol[6], meta.kontrol[7], meta.kontrol[9], S + 0.35, S + 1.0, S + 2.0, S + 3.2, S + 5.0] };
+  window.render = (v) => {
+    asil(Math.min(v, S - 0.001));
+    const x = v - S, el = $("vitrin");
+    el.style.display = x >= 0 ? "block" : "none";
+    if (x < 0) return;
+    el.style.clipPath = "circle(" + yum(K(x / 0.55)) * 1500 + "px at 540px 1150px)";
+    $("vSay").textContent = Math.round(window.ARAC_SAYISI * yum(K((x - 0.3) / 1.3)));
+    const gir = (id, a, dy) => { const p = yum(K((x - a) / 0.5)); $(id).style.opacity = p; $(id).style.transform = "translateY(" + (1 - p) * dy + "px)"; };
+    gir("vUst", 0.2, 40); gir("vBuyuk", 0.3, 60); gir("vAlt", 0.8, 40);
+    document.querySelectorAll(".va").forEach((e, i) => {
+      const a = 0.55 + i * 0.16, p = yay(K((x - a) / 0.8));
+      e.style.opacity = K((x - a) / 0.15);
+      e.style.transform = "translateX(-50%) translateY(" + Math.sin(x * 2.2 + i) * 9 + "px) scale(" + p + ")";
+    });
+    document.querySelectorAll(".vc").forEach((e, i) => { e.setAttribute("opacity", 0.55 * K((x - 0.5 - i * 0.16) / 0.3)); e.setAttribute("stroke-dashoffset", -x * 40); });
+    if ($("vLogo")) $("vLogo").style.transform = "scale(" + yay(K((x - 0.25) / 0.9)) * (1 + 0.04 * Math.sin(x * 4)) + ")";
+    document.querySelectorAll(".vs").forEach((e, r) => { const p = yum(K((x - 0.45 - r * 0.14) / 0.6)); e.style.opacity = p; e.style.transform = "translateX(" + ((r % 2 ? -1 : 1) * (x * 105 + (1 - p) * 500) - (r % 2 ? -0 : 720)) + "px)"; });
+    if ($("vTablo")) { const p = yum(K((x - 0.45) / 0.6)); $("vTablo").style.transform = "translateY(" + (1 - p) * 120 + "px)"; $("vTablo").style.opacity = p; }
+    document.querySelectorAll(".vh").forEach((e, i) => { const a = 0.85 + i * 0.17, y = x - a; e.style.color = y >= 0 ? "#0f172a" : "transparent"; e.style.background = y >= 0 ? "rgba(110,231,183," + 0.75 * (1 - K(y / 0.7)) + ")" : "#fff"; e.style.boxShadow = y >= 0 && y < 0.3 ? "inset 0 0 0 5px #107c41" : "none"; });
+    const c = yay(K((x - 2.6) / 0.8));
+    $("vCta").style.opacity = K((x - 2.6) / 0.15);
+    $("vCta").style.transform = "scale(" + c * (1 + 0.035 * Math.max(0, Math.sin((x - 3.4) * 5)) * (x > 3.4 ? 1 : 0)) + ")";
+    gir("vAdres", 3.0, 70);
+    $("vBag").textContent = window.BAGLANTI || "";
+    gir("vBag", 3.6, 24);
+    const metin = "pdfplatform.app";
+    $("vAdres").textContent = metin.slice(0, Math.round(metin.length * K((x - 3.25) / 1.0))) + (x < 4.6 && Math.floor(x * 3.5) % 2 === 0 ? "|" : "");
+  };
+})();
+</script>

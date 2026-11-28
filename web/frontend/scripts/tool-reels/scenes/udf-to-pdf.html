@@ -1,0 +1,271 @@
+<meta charset="utf-8">
+<style>
+/*FONTLAR*/
+/* GECE MAVİSİ TELEFON SİNEMASI: havada dönen 3B telefon, derinlik ışıkları. */
+*{margin:0;padding:0;box-sizing:border-box;font-family:PJS,sans-serif}
+body{width:1080px;height:1920px;overflow:hidden;background:#050b1a;color:#fff}
+.abs{position:absolute}
+.isik{position:absolute;border-radius:50%;filter:blur(110px)}
+#baslik{position:absolute;left:70px;right:70px;top:220px;text-align:center}
+#ust{font-size:34px;font-weight:700;letter-spacing:5px;color:#7dd3fc;text-transform:uppercase}
+#ana{margin-top:18px;font-size:70px;line-height:1.14;font-weight:800;letter-spacing:-1.5px}
+#sahne3b{position:absolute;left:0;top:0;width:1080px;height:1920px;perspective:2200px}
+#tel{position:absolute;left:240px;top:540px;width:600px;height:1180px;border-radius:84px;background:linear-gradient(145deg,#4b5568,#11182a 40%,#2c3548);padding:16px;box-shadow:0 70px 130px rgba(0,0,0,.65),0 0 0 2px rgba(255,255,255,.12) inset;transform-style:preserve-3d}
+#ekran{position:relative;width:100%;height:100%;border-radius:70px;overflow:hidden;background:#0d1526}
+#ada{position:absolute;left:50%;top:22px;width:170px;height:46px;margin-left:-85px;border-radius:30px;background:#000;z-index:9}
+.g{position:absolute;inset:0;padding:96px 34px 40px}
+.saat{font-size:130px;font-weight:300;text-align:center;margin-top:40px;letter-spacing:-3px}
+.kart{border-radius:34px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);padding:28px}
+.dosya{display:flex;align-items:center;gap:20px;border-radius:26px;background:#fff;color:#0f172a;padding:24px}
+.simge{flex:none;width:86px;height:104px;border-radius:14px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px;font-size:25px;font-weight:800;color:#fff;background:#7c3aed;clip-path:polygon(0 0,68% 0,100% 24%,100% 100%,0 100%)}
+.satir{height:13px;border-radius:8px;background:#cbd5e1;margin-top:17px}
+</style>
+<div class="isik" id="i1" style="width:720px;height:720px;background:#1d4ed8;opacity:.45"></div>
+<div class="isik" id="i2" style="width:600px;height:600px;background:#0e7490;opacity:.35"></div>
+
+<div id="baslik"><div id="ust"></div><div id="ana"></div></div>
+
+<div id="sahne3b"><div id="tel"><div id="ekran"><div id="ada"></div>
+  <div class="g" id="g1" style="background:linear-gradient(165deg,#1e2a52,#0b1020)">
+    <div class="saat">17:42</div><div style="text-align:center;font-size:32px;color:#aab6d3;margin-top:-6px">Cuma</div>
+    <div class="kart" id="bildirim" style="margin-top:80px">
+      <div style="font-size:25px;color:#a5b4fc;font-weight:700">MESAJ · şimdi</div>
+      <div style="font-size:35px;font-weight:800;margin-top:10px">Av. Demir</div>
+      <div style="font-size:31px;color:#e2e8f0;margin-top:6px;line-height:1.4">Karar UYAP'a düştü, ekte gönderiyorum. Bakabilir misin?</div>
+    </div>
+  </div>
+  <div class="g" id="g2">
+    <div style="font-size:36px;font-weight:800;padding-bottom:24px;border-bottom:1px solid #26324d">Av. Demir <span style="font-size:24px;color:#94a3b8;font-weight:600">(örnek)</span></div>
+    <div style="margin-top:44px;width:470px;border-radius:34px 34px 34px 10px;background:#1c2946;padding:18px">
+      <div class="dosya" id="balon"><div class="simge">UDF</div><div><div style="font-size:29px;font-weight:800;line-height:1.25">Gerekçeli Karar<br>2026-418 E.udf</div><div style="font-size:22px;color:#64748b;margin-top:4px">Örnek belge</div></div></div>
+      <div style="font-size:30px;padding:20px 10px 6px;line-height:1.4">Karar UYAP'a düştü, bakabilir misin?</div>
+    </div>
+    <div id="dokunus" class="abs" style="left:190px;top:310px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.35);border:4px solid #fff"></div>
+    <div id="perde" class="abs" style="inset:0;background:rgba(3,7,18,.72)"></div>
+    <div id="uyari" class="abs" style="left:46px;right:46px;top:360px;border-radius:44px;background:#fff;color:#0f172a;text-align:center;padding:50px 34px">
+      <div style="width:104px;height:104px;margin:0 auto;border-radius:50%;background:#fee2e2;color:#dc2626;font-size:64px;font-weight:800;line-height:104px">!</div>
+      <div style="font-size:42px;font-weight:800;margin-top:26px">Bu dosya açılamıyor</div>
+      <div style="font-size:29px;color:#475569;margin-top:14px;line-height:1.45">Dosya biçimi desteklenmiyor.</div>
+    </div>
+  </div>
+  <div class="g" id="g3">
+    <div style="font-size:38px;font-weight:800">Birlikte aç…</div>
+    <div id="denemeler"></div>
+  </div>
+  <div class="g" id="g4" style="background:#f1f5f9;color:#0f172a;padding-left:30px;padding-right:30px">
+    <div style="border-radius:30px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.1);padding:20px;text-align:center;font-size:29px;font-weight:700;color:#334155">pdfplatform.app</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:40px"><img src="__EMBLEM__" style="width:70px;height:70px"><div style="font-size:38px;font-weight:800">UDF'den PDF'e</div></div>
+    
+    <div id="birak" style="margin-top:36px;height:560px;border-radius:40px;border:4px dashed #93c5fd;background:#eff6ff;position:relative">
+      <div id="secBtn" class="abs" style="left:90px;right:90px;top:230px;border-radius:99px;background:#1d4ed8;color:#fff;font-size:36px;font-weight:800;text-align:center;padding:30px">Dosya Seç</div>
+      <div id="donusum" class="abs" style="left:0;right:0;top:70px;text-align:center">
+        <div id="kutu" style="width:230px;height:280px;margin:0 auto;border-radius:30px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:38px;font-size:62px;font-weight:800;color:#fff;clip-path:polygon(0 0,70% 0,100% 22%,100% 100%,0 100%)">UDF</div>
+        <div id="dosyaAd" style="font-size:29px;font-weight:800;margin-top:30px">Gerekçeli Karar 2026-418 E.udf</div>
+        <div style="margin:30px 70px 0;height:18px;border-radius:9px;background:#dbeafe"><div id="cubuk" style="height:18px;border-radius:9px;background:#1d4ed8;width:0"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g" id="g5" style="background:#e2e8f0;color:#0f172a;padding:88px 22px 24px">
+    <div id="belge" style="background:#fff;border-radius:18px;padding:40px 34px;height:900px;box-shadow:0 18px 40px rgba(15,23,42,.16)">
+      <div style="text-align:center;font-size:27px;font-weight:800">T.C. … MAHKEMESİ</div>
+      <div style="text-align:center;font-size:23px;font-weight:700;margin-top:8px">GEREKÇELİ KARAR (ÖRNEK)</div>
+      <div id="satirlar1"></div>
+      <div id="tablo" style="margin-top:34px;border:2px solid #334155"></div>
+      <div id="satirlar2"></div>
+    </div>
+    <div id="paylas" style="margin-top:24px;border-radius:99px;background:#1d4ed8;color:#fff;text-align:center;font-weight:800;padding:18px 10px"><div style="font-size:34px">Paylaş</div><div style="font-size:22px;font-weight:600;color:#bfdbfe;margin-top:4px">Gerekçeli Karar 2026-418 E.pdf</div></div>
+  </div>
+</div></div></div>
+
+<div id="rozetler"></div>
+<div id="gizliCip" style="position:absolute;inset:0;opacity:0;z-index:55;pointer-events:none"><span class="gz" style="position:absolute;left:56px;top:925px;white-space:nowrap;border-radius:99px;background:#10b981;color:#fff;font-size:31px;line-height:1.3;font-weight:800;padding:22px 34px;box-shadow:0 20px 44px rgba(0,0,0,.38)">✓ Telefonundan çıkmaz</span><span class="gz" style="position:absolute;right:48px;top:1400px;white-space:nowrap;border-radius:99px;background:#10b981;color:#fff;font-size:31px;line-height:1.3;font-weight:800;padding:22px 34px;box-shadow:0 20px 44px rgba(0,0,0,.38)">✓ Kontrol sende</span><span class="gz" style="position:absolute;left:56px;top:1545px;white-space:nowrap;border-radius:99px;background:#10b981;color:#fff;font-size:31px;line-height:1.3;font-weight:800;padding:22px 34px;box-shadow:0 20px 44px rgba(0,0,0,.38)">✓ Sadece sende kalır</span></div>
+<div id="marka" class="abs" style="left:70px;top:92px;display:flex;align-items:center;gap:18px"><img src="__EMBLEM__" style="width:76px;height:76px"><span style="font-size:36px;font-weight:800">PDF Platform</span></div>
+
+<div id="son" class="abs" style="inset:0;text-align:center">
+  <img src="__EMBLEM__" style="position:absolute;left:390px;top:480px;width:300px;height:300px" id="sonLogo">
+  <div id="sonMetin" class="abs" style="left:60px;right:60px;top:860px">
+    <div style="font-size:86px;font-weight:800;letter-spacing:-2px">UDF'den PDF'e</div>
+    <div style="font-size:42px;color:#bfdbfe;margin-top:22px;line-height:1.5">Kurulum yok. Telefondan da çalışır.</div><div style="display:flex;align-items:center;justify-content:center;gap:22px;margin:40px auto 0;max-width:900px;border-radius:26px;padding:26px 30px;font-size:42px;font-weight:800;line-height:1.3;background:#064e3b;color:#a7f3d0;border:3px solid #34d399;font-family:PJS"><span style="flex:none;width:58px;height:64px"><svg viewBox="0 0 100 110" width="100%" height="100%"><path class="halka" d="M28 52V34a22 22 0 0 1 44 0v18" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"/><rect x="14" y="46" width="72" height="58" rx="14" fill="currentColor"/><circle cx="50" cy="71" r="8" fill="rgba(0,0,0,.45)"/><rect x="46" y="73" width="8" height="17" rx="4" fill="rgba(0,0,0,.45)"/></svg></span><span>Dosyan telefonundan çıkmaz.<br>Kontrol sende.</span></div>
+    <div style="display:inline-block;margin-top:56px;border-radius:99px;background:#fff;color:#0b1a3a;font-size:50px;font-weight:800;padding:30px 66px">pdfplatform.app</div>
+    <div style="margin:70px auto 0;max-width:760px;border-radius:24px;border:2px solid rgba(251,191,36,.55);background:rgba(251,191,36,.12);color:#fde68a;font-size:31px;line-height:1.45;padding:24px 30px">Resmî işlemlerde imzalı UDF'nin aslını kullan.</div>
+  </div>
+</div>
+
+<script>
+document.documentElement.lang = "tr";
+window.META = { sure: 35, kontrol: [2.6, 6.2, 9.6, 12.2, 16.8, 20.6, 22.6, 25.4, 29.2, 34] };
+const $ = (id) => document.getElementById(id);
+const kis = (x) => Math.max(0, Math.min(1, x));
+const gec = (t, a, b) => kis((t - a) / (b - a));
+const yum = (p) => 1 - (1 - p) ** 3;
+const yum2 = (p) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
+const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+const ara = (a, b, p) => a + (b - a) * p;
+
+$("denemeler").innerHTML = [["PDF okuyucu", "Bu biçimi desteklemiyor", "#dc2626"], ["Word", "Dosya okunamadı", "#2563eb"], ["UYAP Doküman Editörü", "Önce kurulum gerekiyor", "#7c3aed"]].map(([a, b, r], i) => `<div class="kart dn" style="margin-top:34px;display:flex;gap:20px;align-items:center;position:relative"><div style="flex:none;width:86px;height:86px;border-radius:22px;background:${r}"></div><div><div style="font-size:31px;font-weight:800">${a}</div><div style="font-size:25px;color:#fca5a5;margin-top:6px">${b}</div></div><div class="xx" style="position:absolute;right:-14px;top:-18px;width:66px;height:66px;border-radius:50%;background:#ef4444;font-size:38px;line-height:64px;text-align:center;font-weight:800">✕</div></div>`).join("");
+const satirlar = (n, k) => Array.from({ length: n }, (_, i) => `<div class="satir s" style="width:${[100, 94, 98, 62, 96, 88][(i + k) % 6]}%"></div>`).join("");
+$("satirlar1").innerHTML = `<div style="height:14px"></div>` + satirlar(6, 0);
+$("satirlar2").innerHTML = `<div style="height:12px"></div>` + satirlar(5, 2);
+$("tablo").innerHTML = [["Esas No", "2026/418"], ["Karar No", "2026/532"], ["Tarih", "20.11.2026"]].map(([a, b]) => `<div class="tr" style="display:flex;border-bottom:2px solid #334155;font-size:22px"><div style="width:45%;padding:12px 16px;font-weight:800;background:#f1f5f9;border-right:2px solid #334155">${a}</div><div style="padding:12px 16px">${b}</div></div>`).join("");
+$("rozetler").innerHTML = ["Tablolar korunur", "Metin seçilebilir"].map((s, i) => `<div class="rz abs" style="left:${i ? 640 : 56}px;top:${i ? 1250 : 800}px;border-radius:99px;background:#10b981;font-size:31px;font-weight:800;padding:22px 34px;box-shadow:0 20px 44px rgba(0,0,0,.45);white-space:nowrap">✓ ${s}</div>`).join("");
+
+const METIN = [
+  [0, 4.4, "Cuma, 17:42", "Beklediğin belge<br>sonunda geldi."],
+  [4.4, 8.2, "Açmak istiyorsun", "Dokunuyorsun…"],
+  [8.2, 13.3, "Takıldığın yer", "Telefonun .udf<br>dosyasını tanımıyor."],
+  [13.3, 18.9, "Üç deneme, sonuç yok", "Bilgisayar da<br>yanında değil."],
+  [18.9, 21.1, "Çözüm", "Tarayıcıdan<br>PDF'e çevir."],
+  [21.1, 23.6, "Belgen sende kalıyor", "Telefonundan çıkmadan<br>çevriliyor."],
+  [23.6, 31.2, "Hazır", "Belgen artık<br>her cihazda açılır."],
+];
+const ekranlar = [["g1", 0, 4.4], ["g2", 4.4, 13.3], ["g3", 13.3, 18.9], ["g4", 18.9, 24.0], ["g5", 24.0, 99]];
+
+window.render = (t) => {
+  $("i1").style.transform = `translate(${-200 + Math.sin(t * 0.35) * 150}px, ${180 + Math.cos(t * 0.28) * 190}px)`;
+  $("i2").style.transform = `translate(${640 + Math.cos(t * 0.31) * 140}px, ${1220 + Math.sin(t * 0.4) * 170}px)`;
+  $("i1").style.background = t >= 8.2 && t < 18.9 ? "#7f1d1d" : t >= 23.6 && t < 31.2 ? "#047857" : "#1d4ed8";
+
+  let m = METIN.find(([a, b]) => t >= a && t < b);
+  if (m) {
+    $("ust").textContent = m[2]; $("ana").innerHTML = m[3];
+    const p = yum(gec(t, m[0], m[0] + 0.5)), c = gec(m[1] - t, 0, 0.22);
+    $("baslik").style.opacity = p * c; $("baslik").style.transform = `translateY(${(1 - p) * 55}px)`;
+    $("ust").style.color = t >= 8.2 && t < 18.9 ? "#fca5a5" : t >= 23.6 ? "#6ee7b7" : "#7dd3fc";
+  } else $("baslik").style.opacity = 0;
+
+  for (const [id, a, b] of ekranlar) {
+    const gorunur = t >= a - 0.001 && t < b + 0.4;
+    const el = $(id);
+    el.style.display = gorunur ? "block" : "none";
+    el.style.transform = `translateX(${(1 - yum2(gec(t, a, a + 0.45))) * (a ? 600 : 0)}px)`;
+  }
+
+  // telefonun 3B hareketi
+  const gir = yay(gec(t, 0.1, 1.5));
+  const cik = yum2(gec(t, 31.0, 32.0));
+  let ry = Math.sin(t * 0.55) * 9, rx = 4 + Math.cos(t * 0.43) * 3, rz = Math.sin(t * 0.37) * 1.4;
+  let olcek = 1 + 0.06 * (yum2(gec(t, 5.6, 6.6)) - yum2(gec(t, 13.0, 13.8))) + 0.05 * yum2(gec(t, 26.0, 28.0));
+  const sars = (a) => (t >= a && t < a + 0.55 ? Math.sin((t - a) * 62) * 26 * (1 - (t - a) / 0.55) : 0);
+  const donus = (1 - yum2(gec(t, 23.6, 24.6))) * (t >= 23.6 ? 1 : 0) * -28;
+  $("tel").style.transform = `translate(${sars(8.2) + sars(14.2) + sars(15.7) + sars(17.2)}px, ${(1 - gir) * 1500 + cik * 1600 + Math.sin(t * 1.3) * 9}px) rotateX(${rx}deg) rotateY(${ry + (1 - gir) * -40 + donus + cik * 35}deg) rotateZ(${rz}deg) scale(${olcek})`;
+
+  const b = yay(gec(t, 1.9, 2.8));
+  $("bildirim").style.transform = `translateY(${(1 - b) * -260}px) scale(${0.85 + 0.15 * b})`; $("bildirim").style.opacity = kis(b * 2);
+
+  const d = gec(t, 6.2, 6.9);
+  $("dokunus").style.opacity = d > 0 && d < 1 ? 1 - d : 0; $("dokunus").style.transform = `scale(${0.5 + d * 1.3})`;
+  $("balon").style.transform = `scale(${1 - 0.05 * Math.sin(Math.PI * gec(t, 6.2, 6.6))})`;
+  const u = yay(gec(t, 8.2, 9.1));
+  $("perde").style.opacity = gec(t, 8.1, 8.4); $("uyari").style.opacity = t >= 8.2 ? 1 : 0; $("uyari").style.transform = `scale(${0.6 + 0.4 * u})`;
+
+  document.querySelectorAll(".dn").forEach((el, i) => { const a = 13.7 + i * 1.5; const p = yay(gec(t, a, a + 0.7)); el.style.opacity = kis(p * 1.6); el.style.transform = `translateX(${(1 - p) * 420}px)`; const x = yay(gec(t, a + 0.5, a + 1.0)); el.querySelector(".xx").style.transform = `scale(${x})`; });
+
+  const basildi = gec(t, 19.9, 20.3);
+  $("secBtn").style.opacity = 1 - gec(t, 20.15, 20.4); $("secBtn").style.transform = `scale(${1 - 0.08 * Math.sin(Math.PI * basildi)})`;
+  const dk = yay(gec(t, 20.35, 21.1));
+  $("donusum").style.opacity = t >= 20.35 ? 1 : 0; $("kutu").style.transform = `translateY(${(1 - dk) * -420}px) rotateY(${((a) => (a < 90 ? a : a - 180))(yum2(gec(t, 22.2, 23.3)) * 180)}deg)`;
+  const yarim = gec(t, 22.2, 23.3) > 0.5;
+  $("kutu").style.background = yarim ? "#dc2626" : "#7c3aed"; $("kutu").textContent = yarim ? "PDF" : "UDF"; $("dosyaAd").textContent = "Gerekçeli Karar 2026-418 E" + (yarim ? ".pdf" : ".udf");
+  $("cubuk").style.width = `${yum2(gec(t, 21.2, 23.5)) * 100}%`;
+
+  document.querySelectorAll("#g5 .s").forEach((el, i) => (el.style.transform = `scaleX(${yum(gec(t, 24.3 + i * 0.09, 24.9 + i * 0.09))})`));
+  document.querySelectorAll("#g5 .s").forEach((el) => (el.style.transformOrigin = "left"));
+  document.querySelectorAll("#g5 .tr").forEach((el, i) => { const p = yum(gec(t, 25.0 + i * 0.22, 25.6 + i * 0.22)); el.style.opacity = p; el.style.transform = `translateX(${(1 - p) * -70}px)`; });
+  const ps = yay(gec(t, 29.0, 29.8)); $("paylas").style.transform = `scale(${t >= 29.0 ? ps * (1 - 0.06 * Math.sin(Math.PI * gec(t, 29.6, 30.0))) : 0})`;
+
+  document.querySelectorAll(".rz").forEach((el, i) => { const a = 26.2 + i * 0.8; const p = yay(gec(t, a, a + 0.8)); el.style.transform = `scale(${p}) translateY(${Math.sin(t * 2 + i * 2) * 10}px)`; el.style.opacity = t >= a ? 1 - gec(t, 30.8, 31.1) : 0; });
+
+  $("son").style.display = t >= 31.3 ? "block" : "none";
+  const sl = yay(gec(t, 31.5, 32.5)); $("sonLogo").style.transform = `scale(${sl}) rotate(${(1 - sl) * -25}deg)`;
+  const sm = yum(gec(t, 32.0, 32.8)); $("sonMetin").style.opacity = sm; $("sonMetin").style.transform = `translateY(${(1 - sm) * 70}px)`;
+  $("marka").style.opacity = 1 - gec(t, 31.0, 31.3);
+};
+</script>
+
+
+<script>
+(() => {
+  const A = 21.1, B = 22.2, X = 2;
+  const asil = window.render;
+  const sahne = (v) => (v < A ? v : v < B + X ? A + ((v - A) * (B - A)) / (B - A + X) : v - X);
+  const video = (s) => (s < A ? s : s < B ? A + ((s - A) * (B - A + X)) / (B - A) : s + X);
+  const K = (p) => Math.max(0, Math.min(1, p));
+  const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+  window.META = { sure: window.META.sure + X, kontrol: [2.6,8.9,16.8,20.6,21.25,21.7,22.15,23.1,27.5,34.5].map(video) };
+  window.render = (v) => {
+    const s = sahne(v);
+    asil(s);
+    const c = document.getElementById("gizliCip");
+    const p = yay(K((v - video(21.15)) / 0.7));
+    c.style.opacity = s >= 21.15 && s < 24 ? K(p * 2) * K((24 - s) / 0.3) : 0;
+    c.style.transform = "translateY(" + (1 - p) * 50 + "px)";
+    const parla = K((s - 21.15) / 0.2) * K((24.0 - s) / 0.4);
+    document.getElementById("tel").style.boxShadow = "0 70px 130px rgba(0,0,0,.65), 0 0 " + (90 * parla) + "px " + (22 * parla) + "px rgba(52,211,153," + 0.6 * parla + "), 0 0 0 " + (2 + 5 * parla) + "px rgba(52,211,153," + parla + ") inset";
+  };
+})();
+</script>
+
+<script>
+(() => {
+  const asil = window.render;
+  const K = (p) => Math.max(0, Math.min(1, p));
+  const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+  window.render = (v) => {
+    asil(v);
+    document.querySelectorAll(".gz").forEach((el, i) => {
+      const x = v - 21.3 - 0.15 - i * 0.7;
+      el.style.opacity = K(x / 0.15);
+      el.style.transform = "scale(" + yay(K(x / 0.8)) + ") translateY(" + Math.sin(v * 2 + i * 2) * 10 + "px)";
+    });
+  };
+})();
+</script>
+
+<div id="vitrin" style="position:absolute;inset:0;z-index:200;display:none;overflow:hidden;background:radial-gradient(circle at 50% 48%,#16306b,#060b1a 68%);color:#fff;font-family:PJS,sans-serif;text-align:center">
+  <div id="vUst" style="position:absolute;left:40px;right:40px;top:170px;font-size:44px;font-weight:700;color:#7dd3fc">UDF sadece biri.</div>
+  <div id="vBuyuk" style="position:absolute;left:0;right:0;top:250px;font-size:150px;font-weight:800;line-height:1.1;letter-spacing:-3px"><span id="vSay">0</span> araç</div>
+  <div id="vAlt" style="position:absolute;left:0;right:0;top:440px;font-size:48px;font-weight:700">tek sitede, tarayıcında.</div>
+  <svg style="position:absolute;left:0;top:0" width="1080" height="1920"><line class="vc" x1="540" y1="960" x2="540" y2="640" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="290" y2="770" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="790" y2="770" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="235" y2="960" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="845" y2="960" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="290" y2="1150" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="790" y2="1150" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/><line class="vc" x1="540" y1="960" x2="540" y2="1285" stroke="#7dd3fc" stroke-width="4" stroke-dasharray="10 12" opacity="0"/></svg>
+<img id="vLogo" src="__EMBLEM__" style="position:absolute;left:440px;top:860px;width:200px;height:200px"><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:540px;top:598px">PDF'ten UDF'ye</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:290px;top:728px">Word'den UDF'ye</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:790px;top:728px">UDF'den Word'e</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:235px;top:918px">UDF Görüntüleyici</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:845px;top:918px">Dilekçe Şablonları</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:290px;top:1108px">PDF İmzala</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:790px;top:1108px">PDF Birleştir</div><div class="va" style="position:absolute;white-space:nowrap;border-radius:99px;background:#fff;color:#0b1220;font-size:31px;font-weight:800;padding:22px 30px;box-shadow:0 20px 44px rgba(0,0,0,.28);left:540px;top:1243px">E-başvuru Kontrolü</div>
+  <div id="vCta" style="position:absolute;left:0;right:0;top:1380px"><span style="display:inline-block;white-space:nowrap;border-radius:99px;background:#10b981;color:#fff;font-size:39px;font-weight:800;padding:28px 44px;box-shadow:0 24px 50px rgba(0,0,0,.3)">↗ UYAP'tan belge alan birine gönder</span></div>
+  <div id="vBag" style="position:absolute;left:0;right:0;top:1498px;font-size:36px;font-weight:700;opacity:0"></div>
+  <div id="vAdres" style="position:absolute;left:170px;right:170px;top:1562px;border-radius:99px;background:#fff;color:#0b1220;font-size:52px;font-weight:800;padding:30px 0;height:128px;box-shadow:0 24px 50px rgba(0,0,0,.28)"></div>
+</div>
+<script>
+(() => {
+  const asil = window.render, S = 37, meta = window.META;
+  const K = (p) => Math.max(0, Math.min(1, p));
+  const yum = (p) => 1 - (1 - p) ** 3;
+  const yay = (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-6.5 * p) * Math.cos(9 * p));
+  const $ = (i) => document.getElementById(i);
+  window.META = { sure: S + 5.5, kontrol: [meta.kontrol[4], meta.kontrol[5], meta.kontrol[6], meta.kontrol[7], meta.kontrol[9], S + 0.35, S + 1.0, S + 2.0, S + 3.2, S + 5.0] };
+  window.render = (v) => {
+    asil(Math.min(v, S - 0.001));
+    const x = v - S, el = $("vitrin");
+    el.style.display = x >= 0 ? "block" : "none";
+    if (x < 0) return;
+    el.style.clipPath = "circle(" + yum(K(x / 0.55)) * 1500 + "px at 540px 1150px)";
+    $("vSay").textContent = Math.round(window.ARAC_SAYISI * yum(K((x - 0.3) / 1.3)));
+    const gir = (id, a, dy) => { const p = yum(K((x - a) / 0.5)); $(id).style.opacity = p; $(id).style.transform = "translateY(" + (1 - p) * dy + "px)"; };
+    gir("vUst", 0.2, 40); gir("vBuyuk", 0.3, 60); gir("vAlt", 0.8, 40);
+    document.querySelectorAll(".va").forEach((e, i) => {
+      const a = 0.55 + i * 0.16, p = yay(K((x - a) / 0.8));
+      e.style.opacity = K((x - a) / 0.15);
+      e.style.transform = "translateX(-50%) translateY(" + Math.sin(x * 2.2 + i) * 9 + "px) scale(" + p + ")";
+    });
+    document.querySelectorAll(".vc").forEach((e, i) => { e.setAttribute("opacity", 0.55 * K((x - 0.5 - i * 0.16) / 0.3)); e.setAttribute("stroke-dashoffset", -x * 40); });
+    if ($("vLogo")) $("vLogo").style.transform = "scale(" + yay(K((x - 0.25) / 0.9)) * (1 + 0.04 * Math.sin(x * 4)) + ")";
+    document.querySelectorAll(".vs").forEach((e, r) => { const p = yum(K((x - 0.45 - r * 0.14) / 0.6)); e.style.opacity = p; e.style.transform = "translateX(" + ((r % 2 ? -1 : 1) * (x * 105 + (1 - p) * 500) - (r % 2 ? -0 : 720)) + "px)"; });
+    if ($("vTablo")) { const p = yum(K((x - 0.45) / 0.6)); $("vTablo").style.transform = "translateY(" + (1 - p) * 120 + "px)"; $("vTablo").style.opacity = p; }
+    document.querySelectorAll(".vh").forEach((e, i) => { const a = 0.85 + i * 0.17, y = x - a; e.style.color = y >= 0 ? "#0f172a" : "transparent"; e.style.background = y >= 0 ? "rgba(110,231,183," + 0.75 * (1 - K(y / 0.7)) + ")" : "#fff"; e.style.boxShadow = y >= 0 && y < 0.3 ? "inset 0 0 0 5px #107c41" : "none"; });
+    const c = yay(K((x - 2.6) / 0.8));
+    $("vCta").style.opacity = K((x - 2.6) / 0.15);
+    $("vCta").style.transform = "scale(" + c * (1 + 0.035 * Math.max(0, Math.sin((x - 3.4) * 5)) * (x > 3.4 ? 1 : 0)) + ")";
+    gir("vAdres", 3.0, 70);
+    $("vBag").textContent = window.BAGLANTI || "";
+    gir("vBag", 3.6, 24);
+    const metin = "pdfplatform.app";
+    $("vAdres").textContent = metin.slice(0, Math.round(metin.length * K((x - 3.25) / 1.0))) + (x < 4.6 && Math.floor(x * 3.5) % 2 === 0 ? "|" : "");
+  };
+})();
+</script>

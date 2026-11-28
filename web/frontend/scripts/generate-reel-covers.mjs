@@ -1,7 +1,7 @@
 /**
  * Araç Reels/Shorts videoları için markalı KAPAK görselleri (1080×1920, dikey).
  *
- * Her araç senaryosu (`scripts/tool-reels/scenarios/<id>.mjs`) için bir kapak üretilir:
+ * `scripts/tool-reels/cover-specs.mjs` içindeki her araç için bir kapak üretilir:
  * `public/reel-covers/<id>.jpg`. Instagram Reels kapağı (profil ızgarasında görünen) ve YouTube küçük
  * resmi olarak kullanılır (API tarafı: `platforms/instagram-reels.ts`, `platforms/youtube.platform.ts`).
  *
@@ -13,22 +13,20 @@
  * GÜVENLİ ALAN: Instagram profil ızgarası kapağı 3:4 kırpar (üstten/alttan 240 px gider); tüm önemli
  * öğeler y=250..1670 arasında tutulur.
  *
- * YENİ ARAÇ: senaryo eklenince `cover-specs.mjs`e satır ekle, `node scripts/generate-reel-covers.mjs`
- * çalıştır, çıkan dosyayı commitle. Satır eklenmezse başlıktan sade bir poster üretilir.
+ * YENİ ARAÇ: `cover-specs.mjs`e satır ekle, `node scripts/generate-reel-covers.mjs` çalıştır, çıkan dosyayı commitle.
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { renderReelCover } from "./lib/cover-designs.mjs";
 import { assignLayouts, renderCover } from "./lib/cover-engine.mjs";
 import { heroFor } from "./lib/heroes.mjs";
-import { COVER_SPECS, fallbackSpec } from "./tool-reels/cover-specs.mjs";
+import { COVER_SPECS } from "./tool-reels/cover-specs.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "public", "reel-covers");
-const SCENARIOS_DIR = join(ROOT, "scripts", "tool-reels", "scenarios");
 const PUBLIC_DIR = join(ROOT, "public");
 
 /** Gerçek içerik taşıdığı için özel tasarımda kalan kapaklar (önce/sonra, gerçek adımlar, ızgara vurgusu). */
@@ -44,47 +42,9 @@ function engineSpec(id, spec) {
   return { title: spec.l1, tag: spec.l2, hero };
 }
 
-/**
- * Senaryo dosyalarını KAYNAK METİN olarak tarar (modül olarak çalıştırmaz): senaryolar Playwright gibi
- * yalnızca video üretim ortamında kurulu paketleri içe aktarır; derleme ortamında bunlar yoktur ve
- * içe aktarma derlemeyi çökertirdi. Tek senaryolu dosya da çok senaryolu harita da aynı kalıpla yakalanır:
- *   id: "x", ... intro: { title: "…", sub: "…" }
- */
-const SCENARIO_RE =
-  /\bid:\s*"([^"]+)"[\s\S]*?\bintro:\s*\{\s*title:\s*"((?:[^"\\]|\\.)*)"(?:\s*,\s*sub:\s*"((?:[^"\\]|\\.)*)")?/g;
-
-function loadScenarios() {
-  const found = new Map();
-  for (const f of readdirSync(SCENARIOS_DIR).filter((n) => n.endsWith(".mjs"))) {
-    const source = readFileSync(join(SCENARIOS_DIR, f), "utf8");
-    for (const m of source.matchAll(SCENARIO_RE)) {
-      const unescape = (v) => (v ? JSON.parse(`"${v}"`) : "");
-      found.set(m[1], { id: m[1], title: unescape(m[2]), sub: unescape(m[3]) });
-    }
-  }
-  return [...found.values()];
-}
-
-/** Katalogda (API) metni olmayan araçlar yayınlanamaz; derlemede uyarı olarak görünür. */
-function warnMissingCatalog(ids) {
-  try {
-    const catalog = readFileSync(join(ROOT, "..", "api", "src", "modules", "social", "tool-reel-catalog.ts"), "utf8");
-    const missing = ids.filter((id) => !catalog.includes(`id: "${id}"`));
-    if (missing.length > 0) {
-      console.warn(`UYARI: tool-reel-catalog.ts'te metni olmayan araç videoları (paylaşılmaz): ${missing.join(", ")}`);
-    }
-  } catch {
-    /* katalog okunamazsa (farklı yerleşim) uyarı atlanır */
-  }
-}
-
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
-  const scenarios = loadScenarios();
-  warnMissingCatalog(scenarios.map((x) => x.id));
-  // Senaryosu (video) olmayan araçlar da COVER_SPECS'te satırı varsa kapak alır: video eklendiği gün kapak hazır olsun.
-  const known = new Set(scenarios.map((x) => x.id));
-  for (const id of Object.keys(COVER_SPECS)) if (!known.has(id)) scenarios.push({ id, title: id, sub: "" });
+  const scenarios = Object.keys(COVER_SPECS).map((id) => ({ id, title: id, sub: "" }));
   // Derleme sunucusunda (Render/CI) kapaklar zaten depoda hazır: hepsi varsa yeniden üretmeyip ~15-40 sn kazanılır.
   // Kapak tasarımını değiştirdiysen yerelde `node scripts/generate-reel-covers.mjs` çalıştırıp dosyayı commitle
   // (ya da sunucuda zorlamak için FORCE_COVERS=1).
@@ -93,7 +53,7 @@ async function main() {
     console.log(`reel-covers: ${scenarios.length} kapak depoda hazır, yeniden üretilmedi.`);
     return;
   }
-  const specs = new Map(scenarios.map((x) => [x.id, COVER_SPECS[x.id] ?? fallbackSpec(x)]));
+  const specs = new Map(scenarios.map((x) => [x.id, COVER_SPECS[x.id]]));
   // Gerçek içerik taşıyan yedi özel tasarım dışındaki her araç düzen motoruna girer; düzenler yan yana tekrar etmesin diye atanır.
   const engineIds = [...specs.keys()].filter((id) => !CUSTOM_DESIGN.has(id));
   const layouts = assignLayouts(engineIds);

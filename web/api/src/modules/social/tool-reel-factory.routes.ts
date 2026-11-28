@@ -20,6 +20,7 @@ import { calendarDayKey, isPostingDay, readSocialConfig, runInstantOn } from "./
 import {
   findCatalogEntry,
   pickDueToolReel,
+  producibleTools,
   readToolVideo,
   saveToolVideo,
   unusedFreshVideoFor,
@@ -32,7 +33,7 @@ import {
  */
 const PRODUCE_LEAD_MS = 150 * 60_000;
 
-/** Yüklenebilecek en büyük video (üretilen videolar ~5 MB). */
+/** Yüklenebilecek en büyük video (üretilen videolar ~7-11 MB). */
 const MAX_VIDEO_BYTES = 40 * 1024 * 1024;
 
 function requireFactoryKey(request: Request, _response: Response, next: NextFunction) {
@@ -59,6 +60,7 @@ toolReelFactoryRouter.get(
     const forced = typeof request.query.tool === "string" ? request.query.tool : "";
     if (forced) {
       if (!findCatalogEntry(forced)) throw new HttpError(404, "Bilinmeyen araç.");
+      if (!producibleTools().some((t) => t.id === forced)) throw new HttpError(404, "Bu aracın video sahnesi henüz yok.");
       response.json({ needed: true, tool: forced, reason: "elle istendi" });
       return;
     }

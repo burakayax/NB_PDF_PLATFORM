@@ -183,24 +183,25 @@ describe("sıradaki araç", () => {
   });
 
   it("tur bitmeden aynı araç tekrar gelmez: paylaşılanlar elenir", async () => {
-    const { TOOL_REEL_CATALOG } = await import("../modules/social/tool-reel-catalog.js");
-    const { pickDueToolReel } = await import("../modules/social/tool-reels.service.js");
+    const { pickDueToolReel, producibleTools } = await import("../modules/social/tool-reels.service.js");
+    const tools = producibleTools();
     posts = [];
     const seen: string[] = [];
-    for (let i = 0; i < TOOL_REEL_CATALOG.length; i++) {
+    for (let i = 0; i < tools.length; i++) {
       const due = await pickDueToolReel(NOW, 3);
       expect(due).toBeTruthy();
       expect(seen).not.toContain(due!.id); // tekrar yok
       seen.push(due!.id);
-      posts.push(post(null, "PUBLISHED", (TOOL_REEL_CATALOG.length - i + 4) * DAY, `tool-reel:${due!.id}`));
+      posts.push(post(null, "PUBLISHED", (tools.length - i + 4) * DAY, `tool-reel:${due!.id}`));
     }
-    expect(new Set(seen).size).toBe(TOOL_REEL_CATALOG.length);
+    expect(new Set(seen).size).toBe(tools.length);
   });
 
   it("tüm araçlar paylaşıldıysa en son paylaşılan hemen tekrar gelmez", async () => {
-    const { TOOL_REEL_CATALOG } = await import("../modules/social/tool-reel-catalog.js");
-    posts = TOOL_REEL_CATALOG.map((e, i) => post(null, "PUBLISHED", (5 + i) * DAY, `tool-reel:${e.id}`));
-    const newest = TOOL_REEL_CATALOG[0]!.id; // i=0 → en yeni
+    const { producibleTools } = await import("../modules/social/tool-reels.service.js");
+    const tools = producibleTools();
+    posts = tools.map((e, i) => post(null, "PUBLISHED", (5 + i) * DAY, `tool-reel:${e.id}`));
+    const newest = tools[0]!.id; // i=0 → en yeni
     const { pickDueToolReel } = await import("../modules/social/tool-reels.service.js");
     expect((await pickDueToolReel(NOW, 3))?.id).not.toBe(newest);
   });

@@ -2,12 +2,12 @@ name: Arac videosu uretimi
 
 # Araç tanıtım videosu (Reels) PAYLAŞIMDAN ÖNCE üretilir ve paylaşıldıktan sonra silinir.
 #
-# Akış: API'ye "üretim gerekli mi?" diye sorulur → gerekliyse tarayıcı CANLI siteye özel bir deneme
-# hesabıyla girer, aracı gerçekten kullanarak ekranı kaydeder → MP4 API'ye yüklenir. Günlük paylaşım
-# turu videoyu Instagram + Facebook Reels'e çevirir; paylaşılınca API videoyu siler (bu iş hiçbir
-# şey saklamaz). Yapay zekâ kullanan araçlar bu işe EKLENMEZ (kredi/ücret keser).
+# Akış: API'ye "üretim gerekli mi?" diye sorulur → gerekliyse aracın animasyon sahnesi
+# (web/frontend/scripts/tool-reels/scenes/) kare kare videoya çevrilir, müziği sentezlenir → MP4 API'ye
+# yüklenir. Günlük paylaşım turu videoyu Reels gönderisine çevirir; paylaşılınca API videoyu siler
+# (bu iş hiçbir şey saklamaz). Siteye giriş ve ekran kaydı YOKTUR. Video kuralları: tool-reels/README.md
 #
-# ÜÇ SÜRÜM: Aynı çekimden iki video çıkar, yalnız son karedeki cümle farklıdır.
+# ÜÇ SÜRÜM: Aynı sahneden üç video çıkar, yalnız kapanıştaki yönlendirme cümlesi farklıdır.
 #   reel.mp4          → Instagram          ("Bağlantı profilde"; açıklamadaki adres tıklanmaz)
 #   reel-aciklama.mp4 → YouTube ("Bağlantı açıklamada"; açıklamadaki adres tıklanır)
 #   reel-yorum.mp4    → Facebook ("Bağlantı yorumlarda"; bağlantı ilk yoruma konur)
@@ -15,10 +15,7 @@ name: Arac videosu uretimi
 # GEREKLİ GİZLİ ANAHTARLAR (GitHub → Settings → Secrets and variables → Actions):
 #   TOOL_REEL_API_BASE     Kimlik API'nin dışarıdan erişilen kökü, ör. https://api.pdfplatform.app
 #   TOOL_REEL_FACTORY_KEY  Rastgele uzun parola; API'de AYNI değer TOOL_REEL_FACTORY_KEY olarak tanımlı olmalı
-#   REELS_SITE_URL         Kaydın yapılacağı canlı site, ör. https://pdfplatform.app
-#   REELS_DEMO_EMAIL       Canlıda açılmış, PRO yetkili özel deneme hesabının e-postası
-#   REELS_DEMO_PASSWORD    O hesabın şifresi
-# Biri yoksa iş sessizce atlanır (hata vermez).
+# Biri yoksa iş sessizce atlanır (hata vermez). Eski REELS_SITE_URL / REELS_DEMO_* anahtarları artık kullanılmaz.
 #
 # SAAT: Günde BİR kez, her sabah 08:30'da (Türkiye saati = 05:30 UTC) API'ye "video lazım mı?"
 # diye sorulur. Lazımsa o anda üretilir; değilse iş birkaç saniyede biter. Saati değiştirmek için
@@ -31,7 +28,7 @@ on:
   workflow_dispatch:
     inputs:
       tool:
-        description: "Elle üret: araç kimliği (ör. compress, merge, cv-olustur, pdf-to-word…). Boş bırakılırsa yalnızca sıradaki araç için, gerekiyorsa üretilir."
+        description: "Elle üret: sahnesi olan araç kimliği (udf-to-pdf, gorsel-sikistir, aranabilir-pdf, pdf-to-excel). Boş bırakılırsa yalnızca sıradaki araç için, gerekiyorsa üretilir."
         required: false
         default: ""
 
@@ -48,15 +45,12 @@ jobs:
       API_BASE: ${{ secrets.TOOL_REEL_API_BASE }}
       FACTORY_KEY: ${{ secrets.TOOL_REEL_FACTORY_KEY }}
       TOOL_INPUT: ${{ inputs.tool }}
-      SITE_URL: ${{ secrets.REELS_SITE_URL }}
-      REELS_DEMO_EMAIL: ${{ secrets.REELS_DEMO_EMAIL }}
-      REELS_DEMO_PASSWORD: ${{ secrets.REELS_DEMO_PASSWORD }}
     steps:
       - name: Uretim gerekli mi?
         id: need
         run: |
           set -euo pipefail
-          if [ -z "${API_BASE:-}" ] || [ -z "${FACTORY_KEY:-}" ] || [ -z "${SITE_URL:-}" ] || [ -z "${REELS_DEMO_EMAIL:-}" ] || [ -z "${REELS_DEMO_PASSWORD:-}" ]; then
+          if [ -z "${API_BASE:-}" ] || [ -z "${FACTORY_KEY:-}" ]; then
             echo "Gizli anahtarlar tanimli degil; atlandi."
             echo "needed=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -71,11 +65,6 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.need.outputs.needed == 'true'
 
-      - uses: actions/setup-python@v5
-        if: steps.need.outputs.needed == 'true'
-        with:
-          python-version: "3.11"
-
       - uses: actions/setup-node@v4
         if: steps.need.outputs.needed == 'true'
         with:
@@ -85,14 +74,9 @@ jobs:
         if: steps.need.outputs.needed == 'true'
         run: |
           set -euo pipefail
-          # Site kurulmaz: kayit CANLI siteye girilerek yapilir. Yalnizca ornek belge (python) + tarayici + ffmpeg gerekir.
-          # ffmpeg-static Linux derlemesinde yazi filtresi (drawtext) yok; sistemin ffmpeg'i yazi destekler.
+          # Yalnızca tarayıcı + ffmpeg + yedek yazı tipleri (✓ ★ gibi simgeler ve serif başlık için).
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-dejavu-core
-          ffmpeg -hide_banner -filters | grep -q drawtext
-          python -m pip install --upgrade pip
-          # Örnek belgeler: PDF/görsel (pillow, reportlab, pikepdf) + Word/Excel/PowerPoint dosyaları (python-docx, openpyxl, python-pptx)
-          pip install pillow reportlab pikepdf pypdfium2 fonttools python-docx openpyxl python-pptx
+          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-liberation
           (cd web/frontend && npm ci && npx playwright install --with-deps chromium)
 
       - name: Videoyu uret
@@ -104,7 +88,6 @@ jobs:
           set -euo pipefail
           node scripts/tool-reels/run.mjs \
             --tool "${{ steps.need.outputs.tool }}" \
-            --base "${SITE_URL}" \
             --out "$RUNNER_TEMP/reel.mp4" \
             --work "$RUNNER_TEMP/reel-work" | tee "$RUNNER_TEMP/reel.log"
           tail -n 1 "$RUNNER_TEMP/reel.log" | jq -r '.seconds' > "$RUNNER_TEMP/reel.seconds"
@@ -169,12 +152,3 @@ jobs:
             -H "x-video-seconds: $(cat "$RUNNER_TEMP/reel.seconds")" \
             --data-binary "@$RUNNER_TEMP/reel-yorum.mp4" \
             "${API_BASE%/}/api/tool-reel-factory/${{ steps.need.outputs.tool }}/video"
-
-      - name: Hata ekran goruntusu
-        if: failure() && steps.need.outputs.needed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: arac-videosu-hata
-          path: ${{ runner.temp }}/reel-work/hata.png
-          if-no-files-found: ignore
-          retention-days: 3
