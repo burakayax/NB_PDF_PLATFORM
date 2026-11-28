@@ -1,5 +1,5 @@
 /**
- * Araç tanıtım videoları (ekran kaydı Reels'leri): katalog, depolama, sıra ve temizlik.
+ * Araç tanıtım videoları (animasyonlu Reels): katalog, depolama, sıra ve temizlik.
  *
  * AKIŞ: Paylaşım zamanı yaklaşınca GitHub'daki iş akışı videoyu üretir ve API'ye yükler
  * (`tool-reel-factory.routes.ts`). Günlük tur o videoyu Instagram + Facebook Reels
@@ -17,6 +17,7 @@ import { prisma } from "../../lib/prisma.js";
 import { TOOL_REEL_CATALOG } from "./tool-reel-catalog.js";
 import type { ToolReelCatalogEntry } from "./tool-reel-catalog.js";
 import { TOOL_REEL_ABOUT } from "./tool-reel-about.js";
+import { REEL_SCENE_TOOL_IDS } from "./tool-reel-scenes.js";
 import type { FeedItem } from "./social.types.js";
 
 /** Araç videosu gönderilerinin `guid` öneki: blog yazılarıyla karışmasın. */
@@ -72,6 +73,10 @@ export const toolReelGuid = (toolId: string): string => `${TOOL_REEL_PREFIX}${to
 export const findCatalogEntry = (toolId: string): ToolReelCatalogEntry | undefined =>
   TOOL_REEL_CATALOG.find((t) => t.id === toolId);
 
+/** Video sahnesi hazır olan katalog satırları: sıra, panel ve üretim yalnız bunlarla çalışır. */
+export const producibleTools = (): ToolReelCatalogEntry[] =>
+  TOOL_REEL_CATALOG.filter((t) => REEL_SCENE_TOOL_IDS.includes(t.id));
+
 /** Videonun herkese açık adresi (Instagram/Facebook buradan indirir). */
 export function videoUrlFor(videoId: string): string {
   return `${env.APP_BASE_URL.replace(/\/$/, "")}/api/public/tool-reels/${videoId}.mp4`;
@@ -90,7 +95,7 @@ export async function loadToolReels(): Promise<ToolReel[]> {
     select: { id: true, toolId: true, seconds: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
-  return TOOL_REEL_CATALOG.map((entry) => {
+  return producibleTools().map((entry) => {
     const latest = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "profile");
     const latestCaption = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "caption");
     const latestComment = rows.find((r) => r.toolId === entry.id && variantOfId(r.id) === "comment");
@@ -159,7 +164,7 @@ export async function pickDueToolReel(
   now: Date,
   everyDays: number,
 ): Promise<ToolReelCatalogEntry | null> {
-  if (everyDays <= 0 || TOOL_REEL_CATALOG.length === 0) return null;
+  if (everyDays <= 0 || producibleTools().length === 0) return null;
   const rows = await prisma.socialPost.findMany({
     where: { guid: { startsWith: TOOL_REEL_PREFIX } },
     select: { guid: true, createdAt: true },
@@ -183,7 +188,7 @@ function rotationOrder(rows: { guid: string; createdAt: Date }[]): ToolReelCatal
   for (const r of rows) lastByGuid.set(r.guid, Math.max(lastByGuid.get(r.guid) ?? 0, r.createdAt.getTime()));
   const lastOf = (t: ToolReelCatalogEntry) => lastByGuid.get(toolReelGuid(t.id)) ?? 0;
 
-  const byAge = TOOL_REEL_CATALOG.slice().sort((a, b) => lastOf(a) - lastOf(b) || a.id.localeCompare(b.id));
+  const byAge = producibleTools().sort((a, b) => lastOf(a) - lastOf(b) || a.id.localeCompare(b.id));
   const never = byAge.filter((t) => lastOf(t) === 0);
   const candidates = never.length > 0 ? never : byAge.slice(0, Math.max(1, Math.ceil(byAge.length / 2)));
   const rest = byAge.filter((t) => !candidates.includes(t));

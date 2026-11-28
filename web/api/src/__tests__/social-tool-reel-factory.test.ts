@@ -149,7 +149,9 @@ describe("üretim gerekli mi", () => {
 
   it("elle istenen araç sıra/sıklık kuralını atlar; bilinmeyen araç 404", async () => {
     config = { toolReelEveryDays: 0 };
-    expect(await (await factory("/needed?tool=merge")).json()).toMatchObject({ needed: true, tool: "merge" });
+    expect(await (await factory("/needed?tool=udf-to-pdf")).json()).toMatchObject({ needed: true, tool: "udf-to-pdf" });
+    // Katalogda olup video sahnesi olmayan araç için üretim istenmez.
+    expect((await factory("/needed?tool=merge")).status).toBe(404);
     expect((await factory("/needed?tool=yok")).status).toBe(404);
   });
 });

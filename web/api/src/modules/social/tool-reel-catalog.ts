@@ -1,8 +1,8 @@
 /**
  * Araç tanıtım videolarının METİN kataloğu.
  *
- * Her satırın bir de ÇEKİM SENARYOSU vardır (frontend `scripts/tool-reels/scenarios/<id>.mjs`);
- * senaryosu olmayan araç buraya eklenmemeli, yoksa videosu hiç üretilemez.
+ * Video yalnız SAHNESİ hazır olan araçlar için üretilir (`tool-reel-scenes.ts`). Diğer satırlar
+ * eski gönderilerin metni ve Pinterest panoları için durur.
  *
  * Başlık/özet ELLE yazılır ve doğrulanmış olmalıdır: gönderi metni bunlardan şablonla kurulur
  * (yapay zekâ kullanılmaz; model özette olmayan iddialar ekleyebiliyordu). Özette "cihazında

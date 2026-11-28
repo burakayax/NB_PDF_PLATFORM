@@ -1,34 +1,20 @@
 /**
- * Araç tanıtım videosu üretici: aracı gerçekten kullanıp ekranı kaydeder, kurgular, MP4 yazar.
+ * Araç tanıtım videosu üretici: elle yazılmış animasyon sahnesinden MP4 üretir.
  *
- *   node scripts/tool-reels/run.mjs --tool compress --out video.mp4
+ *   node scripts/tool-reels/run.mjs --tool udf-to-pdf --out video.mp4
+ *   node scripts/tool-reels/run.mjs --tool udf-to-pdf --stills        # yalnız denetim kareleri
  *
- * Giriş yapılabilen bir site gerekir (`--base`; üretimde CANLI site) ve PRO yetkili bir deneme
- * hesabı (REELS_DEMO_EMAIL / REELS_DEMO_PASSWORD). Üretimde bunu GitHub iş akışı çalıştırır
- * (.github/workflows/tool-reels.yml); videoyu paylaşım zamanı yaklaşınca üretir, API'ye yükler,
- * paylaşıldıktan sonra silinir. Yapay zekâ kullanan araçlar eklenmez (senaryoda usesAi: true).
+ * Siteye giriş, deneme hesabı ve ekran kaydı YOKTUR; yalnız tarayıcı (Playwright) ve ffmpeg gerekir.
+ * Üretimde GitHub iş akışı çalıştırır (.github/workflows/tool-reels.yml); videoyu paylaşım zamanı
+ * yaklaşınca üretir, API'ye yükler, paylaşıldıktan sonra silinir.
  *
- * Yeni araç eklemek: scenarios/<id>.mjs yaz, aşağıdaki SCENARIOS listesine ekle ve
- * API tarafındaki araç kataloğuna (tool-reel-catalog.ts) metnini ekle.
+ * Yeni araç eklemek ve BAĞLAYICI video kuralları: README.md
  */
 
-import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, copyFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { compose } from "./lib/compose.mjs";
-import { createStage } from "./lib/stage.mjs";
-import compress from "./scenarios/compress.mjs";
-import merge from "./scenarios/merge.mjs";
-import cvOlustur from "./scenarios/cv-olustur.mjs";
-import { SIMPLE } from "./scenarios/simple-tools.mjs";
-import { CUSTOM } from "./scenarios/custom-tools.mjs";
-
-const SCENARIOS = { compress, merge, "cv-olustur": cvOlustur, ...SIMPLE, ...CUSTOM };
-
-const here = dirname(fileURLToPath(import.meta.url));
-const frontendRoot = resolve(here, "../..");
-const publicDir = resolve(frontendRoot, "public");
+import { resolve } from "node:path";
+import { TOOL_PROCESSING } from "../../src/content/toolProcessing.mjs";
+import { renderStills, renderVideos } from "./lib/record.mjs";
+import { LINK_LINES, SCENES, processingMismatch } from "./scenes/index.mjs";
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
@@ -36,95 +22,35 @@ function arg(name, fallback) {
 }
 
 const toolId = arg("tool");
-const scenario = SCENARIOS[toolId];
-if (!scenario) {
-  console.error(`Bilinmeyen araç: ${toolId}. Tanımlılar: ${Object.keys(SCENARIOS).join(", ")}`);
+if (!SCENES[toolId]) {
+  console.error(`Bu aracın video sahnesi yok: ${toolId}. Tanımlılar: ${Object.keys(SCENES).join(", ")}`);
   process.exit(2);
 }
-// Yapay zekâ araçları (kredi/ücret keser) video üretiminde kullanılmaz.
-if (scenario.usesAi) {
-  console.error(`${toolId} yapay zekâ kullanıyor; araç videosu üretiminde kullanılmaz.`);
+// Videodaki gizlilik sözü aracın gerçek çalışma biçimiyle uyuşmuyorsa üretilmez.
+const mismatch = processingMismatch(toolId, TOOL_PROCESSING);
+if (mismatch) {
+  console.error(mismatch);
   process.exit(2);
 }
+// Kapanıştaki araç sayısı her üretimde sitenin kendi listesinden okunur.
+const toolCount = TOOL_PROCESSING.length;
 const out = resolve(arg("out", `${toolId}-reel.mp4`));
-const baseUrl = arg("base", "http://localhost:5180").replace(/\/$/, "");
 const workDir = resolve(arg("work", `${process.env.RUNNER_TEMP || process.env.TEMP || "/tmp"}/tool-reel-${toolId}`));
-const email = process.env.REELS_DEMO_EMAIL;
-const password = process.env.REELS_DEMO_PASSWORD;
-if (!email || !password) {
-  console.error("REELS_DEMO_EMAIL ve REELS_DEMO_PASSWORD gerekli.");
-  process.exit(2);
-}
 
-// Gizlilik cümlesi araç durumuna göre: tek kaynak src/lib/onDeviceTools.ts (elle yazılmaz).
-const onDeviceSrc = readFileSync(resolve(frontendRoot, "src/lib/onDeviceTools.ts"), "utf8");
-const onDeviceIds = new Set([...onDeviceSrc.matchAll(/"([a-z0-9-]+)"/g)].map((m) => m[1]));
-const processing = onDeviceIds.has(scenario.id)
-  ? ["Cihazında işlenir", "dosyan sunucuya gitmez"]
-  : ["Sunucuda işlenir", "işlem sonrası silinir"];
-
-// Örnek belgeler (uydurma): python + pymupdf gerekir.
-mkdirSync(`${workDir}/fixtures`, { recursive: true });
-if (!scenario.files.every((f) => existsSync(`${workDir}/fixtures/${f}`))) {
-  const python = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
-  const r = spawnSync(
-    python,
-    ["-I", resolve(here, "fixtures/make-fixtures.py"), `${workDir}/fixtures`, resolve(publicDir, "fonts"), ...(scenario.files.includes("Arsiv-Taramasi-2025.pdf") ? ["big"] : [])],
-    { stdio: "inherit" },
-  );
-  if (r.status !== 0) throw new Error("Örnek belgeler üretilemedi");
+if (process.argv.includes("--stills")) {
+  console.log(await renderStills({ id: toolId, workDir: workDir, toolCount, linkLine: LINK_LINES.profile }));
+} else {
+  const outCaption = resolve(arg("out-aciklama", out.replace(/\.mp4$/, "-aciklama.mp4")));
+  const outComment = resolve(arg("out-yorum", out.replace(/\.mp4$/, "-yorum.mp4")));
+  const { seconds } = await renderVideos({
+    id: toolId,
+    workDir,
+    toolCount,
+    versions: [
+      { out, linkLine: LINK_LINES.profile },
+      { out: outCaption, linkLine: LINK_LINES.caption },
+      { out: outComment, linkLine: LINK_LINES.comment },
+    ],
+  });
+  console.log(JSON.stringify({ ok: true, tool: toolId, out, outCaption, outComment, seconds: Math.round(seconds) }));
 }
-const fixtures = (name) => `${workDir}/fixtures/${name}`;
-
-// PDF sunucusu uzun süre kullanılmazsa uyur; ilk istek ~50 sn sürüp videoda ölü bekleme olur. Çekimden ÖNCE uyandırılır
-// (kayıtta görünmez). Adres REELS_PDF_API ile değiştirilebilir.
-async function warmUpPdfServer() {
-  const base = (process.env.REELS_PDF_API || "https://nb-pdf-api.onrender.com").replace(/\/$/, "");
-  const t0 = Date.now();
-  while (Date.now() - t0 < 120000) {
-    try {
-      const r = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(25000) });
-      if (r.ok) {
-        console.log(`PDF sunucusu hazır (${Math.round((Date.now() - t0) / 1000)} sn)`);
-        return;
-      }
-    } catch {
-      /* uyanıyor */
-    }
-    await new Promise((r) => setTimeout(r, 3000));
-  }
-  console.log("PDF sunucusu ısınma süresi doldu; devam ediliyor");
-}
-
-const stage = await createStage({ baseUrl, workDir });
-let extra;
-try {
-  await stage.loginAndOpenTool({ email, password, toolPath: scenario.toolPath, readySelector: scenario.readySelector });
-  await warmUpPdfServer();
-  extra = await scenario.run(stage, { fixtures, processing });
-} catch (err) {
-  await stage.pg.screenshot({ path: `${workDir}/hata.png` }).catch(() => {});
-  await stage.finish({}).catch(() => {});
-  console.error(`Kayıt başarısız (ekran görüntüsü: ${workDir}/hata.png)`);
-  throw err;
-}
-await stage.finish(extra);
-
-mkdirSync(dirname(out), { recursive: true });
-// Aynı çekimden üç sürüm: yalnız son karedeki yönlendirme cümlesi farklı.
-//   out          → Instagram + TikTok (açıklamadaki adres tıklanmaz: "Bağlantı profilde")
-//   out-aciklama → YouTube (açıklamadaki adres tıklanır: "Bağlantı açıklamada")
-//   out-yorum    → Facebook (bağlantı ilk yoruma konur: "Bağlantı yorumlarda")
-const { total } = compose({ workDir, out, intro: scenario.intro, publicDir, linkLine: "Bağlantı profilde" });
-copyFileSync(out, out); // varlık denetimi (yazılmadıysa hata verir)
-const outCaption = resolve(arg("out-aciklama", out.replace(/\.mp4$/, "-aciklama.mp4")));
-compose({ workDir, out: outCaption, intro: scenario.intro, publicDir, linkLine: "Bağlantı açıklamada" });
-copyFileSync(outCaption, outCaption);
-const outComment = resolve(arg("out-yorum", out.replace(/\.mp4$/, "-yorum.mp4")));
-compose({ workDir, out: outComment, intro: scenario.intro, publicDir, linkLine: "Bağlantı yorumlarda" });
-copyFileSync(outComment, outComment);
-// Facebook Reels kuralı: 7-20 sn. Süre kayıttan geliyor; kaliteyi bozmamak için kesilmez, yalnız uyarılır.
-if (total > 20 || total < 7) {
-  console.warn(`UYARI: video ${total.toFixed(1)} sn; Facebook Reels hedefi 7-20 sn. Senaryoyu kısaltmayı düşün.`);
-}
-console.log(JSON.stringify({ ok: true, tool: toolId, out, outCaption, outComment, seconds: Math.round(total) }));

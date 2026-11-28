@@ -1,7 +1,7 @@
 # Araç Videoları (Instagram + Facebook Reels)
 
-Araçların tanıtım videoları **önceden hazır tutulmaz**. Paylaşım zamanı yaklaşınca aracın gerçek
-kullanımı kaydedilerek üretilir, Instagram ve Facebook'ta paylaşılır, **paylaşıldıktan sonra silinir**.
+Araçların tanıtım videoları **önceden hazır tutulmaz**. Paylaşım zamanı yaklaşınca aracın elle yazılmış
+animasyon sahnesinden üretilir, Instagram ve Facebook'ta paylaşılır, **paylaşıldıktan sonra silinir**.
 Blog yazıları için video yapılmaz (onlar görselle gider).
 
 ## Nasıl çalışıyor
@@ -10,16 +10,12 @@ Blog yazıları için video yapılmaz (onlar görselle gider).
    Sunucu, normal gönderilerle AYNI paylaşım saatine bakar ve yalnızca gönderilerin hazırlanmasından
    yaklaşık 2,5 saat önce "evet" der (araç videosu sıklığı açıksa ve sıra bu araçtaysa). Paylaşım
    saatini panelden değiştirdiğinde başka bir şey yapman gerekmez.
-2. Gerekliyse iş, geçici bir makinede tarayıcı açar, CANLI siteye özel deneme hesabıyla girer, aracı
-   gerçekten kullanıp ekranı kaydeder, videoyu kurgular ve sunucuya yükler. Makine işten sonra silinir;
-   hiçbir şey saklanmaz. Yapay zekâ kullanan araçlar bu işe eklenmez (kredi keser).
+2. Gerekliyse iş, geçici bir makinede aracın sahnesini kare kare videoya çevirir, müziğini üretir ve
+   sunucuya yükler. Siteye giriş yapılmaz. Makine işten sonra silinir; hiçbir şey saklanmaz.
 3. Günlük paylaşım turu videoyu Instagram + Facebook Reels gönderisine çevirir. "Önce onay"
    modundaysa taslak olarak bekler; sen izleyip onaylarsın.
-   **İki sürüm üretilir:** aynı çekimden iki video çıkar, yalnız son karedeki cümle farklıdır.
-   Instagram videosunda "Bağlantı profilde" yazar (Instagram'da açıklamadaki adres tıklanmaz).
-   YouTube + Facebook videosunda "Bağlantı açıklamada" yazar (orada açıklamadaki adres tıklanır).
-   Biri eksikse ikisi birlikte yeniden üretilir. "Açıklamada" sürümü bir sebeple yoksa YouTube/Facebook
-   Instagram sürümüyle gider (gönderi kaybolmasın diye); son karedeki cümle o zaman o platform için yanlış olur.
+   **Üç sürüm üretilir:** yalnız kapanıştaki cümle farklıdır: Instagram + TikTok "Bağlantı profilde",
+   YouTube "Bağlantı açıklamada", Facebook "Bağlantı yorumlarda". Biri eksikse üçü birlikte yeniden üretilir.
 4. Gönderiler yayınlanınca (ya da elle "paylaştım" işaretlenince) video sunucudan **otomatik silinir**.
    Hiç kullanılmayan video 36 saat, unutulmuş taslağın videosu 14 gün sonra silinir.
 
@@ -34,12 +30,6 @@ Aynı gizli anahtarı iki yere gireceksin.
 3. **GitHub → depo → Settings → Secrets and variables → Actions → New repository secret** ile iki anahtar ekle:
    - `TOOL_REEL_FACTORY_KEY` = aynı parola
    - `TOOL_REEL_API_BASE` = kimlik API'nin adresi (Render'daki `APP_BASE_URL` ile aynı, ör. `https://api.pdfplatform.app`)
-4. **Deneme hesabı:** canlı sitede özel bir hesap aç (gerçek bir kullanıcı gibi, e-posta doğrulaması dahil),
-   admin panelinden planını **PRO** yap. Aynı GitHub bölümüne üç anahtar daha ekle:
-   - `REELS_SITE_URL` = canlı site (ör. `https://pdfplatform.app`, sonunda `/` olmadan)
-   - `REELS_DEMO_EMAIL` = deneme hesabının e-postası
-   - `REELS_DEMO_PASSWORD` = şifresi
-   Bu hesapla yapay zekâ özelliği kullanılmaz; araç videolarında da yapay zekâ araçları yoktur.
 4. **Panel → Sosyal medya → Zamanlama → Araç videoları** sıklığını seç (ör. 3 günde bir).
    Başlangıçta Reels ayarını **"Önce onay"** bırak.
 
@@ -47,30 +37,20 @@ Anahtarlar yoksa iş sessizce atlanır, hata vermez.
 
 ## İlk denemeyi elle yapmak
 
-GitHub → **Actions → Araç videosu üretimi → Run workflow** → "tool" alanına `merge` yaz → çalıştır.
+GitHub → **Actions → Araç videosu üretimi → Run workflow** → "tool" alanına `udf-to-pdf` yaz → çalıştır.
 Birkaç dakika sonra panelde **Araç videoları** sekmesinde video görünür; "Reels taslağı hazırla" ile
 taslağı oluşturup Gönderi akışı'nda izleyebilirsin.
 
-## Yeni araç videosu eklemek
+## Video biçimi ve yeni araç eklemek
 
-Her aracın bir **çekim senaryosu** olması gerekir (aracın hangi adımlarını göstereceğimizi yazarız):
+Her videonun **kendine özgü bir sahnesi** vardır: gerçek hayattaki bir takılma noktasıyla başlar, çözümle biter,
+güvenlik mesajı hikâyenin içinde küçük etiketlerle verilir ve her videoda farklı biçimde bir araç vitriniyle kapanır.
+Eski ekran kaydı biçimi kaldırıldı. Bağlayıcı kurallar ve ekleme adımları:
+`web/frontend/scripts/tool-reels/README.md`.
 
-1. `web/frontend/scripts/tool-reels/scenarios/<araç>.mjs` yaz, `run.mjs` içindeki listeye ekle.
-2. `web/api/src/modules/social/tool-reel-catalog.ts` içine başlık/özet/arama terimlerini ekle
-   (metin elle yazılır ve doğrulanmış olmalı; yapay zekâ kullanılmaz).
-
-Şu an hazır senaryolar (31 araç): PDF Sıkıştır, PDF Birleştir, CV Oluştur, Gri Tonlama, Düzleştir, Word/Excel/PowerPoint ↔ PDF,
-PDF → Metin/Görsel/PDF-A, Eğri Tarama Düzeltme, PDF Onarma, Görsel Çıkar, Sayfa Boyutu, Ayna Çevirme, Şifreleme, Şifre Kaldırma,
-Görsel → PDF, Dönüşümlü Birleştirme, HTML → PDF, UDF → PDF, Görsel Sıkıştır/Boyutlandır, Üstveri Temizle, Form Doldur, OCR, Aranabilir PDF.
-**Senaryosu olmayanlar** (yapay zekâ araçları kredi keser; ayrıca): Sayfa Numarası ve Filigran (form çok uzun, tek pencereye sığmıyor),
-Böl / Sayfa Sil / Döndür / Sayfaları Düzenle / Sayfa Düzeni (tam ekran sayfa seçici açılıyor), Kesit Al, İmzala, İşaretle, PDF Düzenle
-(tam ekran editör), İmza İste (karşı tarafa e-posta gönderir), Belge Tara (kamera). Bunlar için kurgu motoruna üçüncü bir pencere
-desteği gerekir.
-Kodun ortak iskeleti `lib/kit.mjs` (`simpleTool`); araç ekranı düz formsa yeni senaryo ~15 satırdır (`scenarios/simple-tools.mjs`).
-Çekimden önce PDF sunucusu uyandırılır (sunucu uykudayken ilk istek ~50 sn sürüp videoya ölü bekleme koyuyordu).
-Araç tek formlu değilse (CV Oluştur gibi adım adım bir sihirbazsa) senaryo iki sabit pencere kullanır; örnek için `scenarios/cv-olustur.mjs`.
-Videoların arka plan müziği hazır bir parça DEĞİLDİR: ffmpeg ile sıfırdan üretilir (`lib/music.mjs`), bu yüzden telif hakkı sorunu yoktur.
-Sıra: hiç paylaşılmayan araç önce, sonra en eski paylaşılan.
+**Şu an sahnesi hazır olan 4 araç:** UDF → PDF, Görsel Sıkıştır, Aranabilir PDF, PDF → Excel.
+Otomatik sıra yalnız bu araçlar arasında döner; dördü de paylaşılınca baştan başlar (sıklığı buna göre seç).
+Yeni sahne ekledikçe sıraya kendiliğinden katılır. Videolar yaklaşık 40 saniyedir.
 
 ## Güvenlik ve dayanıklılık notları
 
