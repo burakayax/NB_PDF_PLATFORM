@@ -760,9 +760,11 @@ function Hero({
           </span>
         </motion.div>
 
-        {/* H1 */}
+        {/* H1: sayfanın en büyük öğesi (LCP). Opaklık-0'dan açılma animasyonu LCP'yi animasyon bitene kadar
+            geciktirdiği için başlık animasyonsuz, doğrudan görünür çizilir (initial={false}). */}
         <motion.h1
           {...stagger(1)}
+          initial={false}
           className="text-[2.6rem] sm:text-6xl md:text-7xl font-black leading-[1.08] tracking-tight text-white"
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
