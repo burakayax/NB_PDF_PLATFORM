@@ -674,7 +674,12 @@ export function ProductGallery({
             />
             {phone ? (
               <div className="mx-auto w-[min(100%,270px)] rounded-[2.4rem] border border-white/[0.14] bg-[#05080f] p-2 shadow-[0_40px_90px_-35px_rgba(0,0,0,0.95)] ring-1 ring-black/40">
-                <div className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-[#070d19]">
+                <div
+                  id={`shot-${shot.id}`}
+                  role="tabpanel"
+                  aria-labelledby={`tab-${shot.id}`}
+                  className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-[#070d19]"
+                >
                   <span
                     aria-hidden="true"
                     className="absolute left-1/2 top-2 z-10 h-[18px] w-[72px] -translate-x-1/2 rounded-full bg-black/80"
@@ -682,9 +687,6 @@ export function ProductGallery({
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={`${shot.id}-${language}-m`}
-                      id={`shot-${shot.id}`}
-                      role="tabpanel"
-                      aria-labelledby={`tab-${shot.id}`}
                       src={shot.mimg[language]}
                       alt={copy.alt}
                       width={780}
@@ -724,15 +726,15 @@ export function ProductGallery({
 
                 {/* Görsel + numaralı işaretler */}
                 <div
+                  id={`shot-${shot.id}`}
+                  role="tabpanel"
+                  aria-labelledby={`tab-${shot.id}`}
                   className="relative bg-[#070d19]"
                   style={{ aspectRatio: `${shot.w} / ${shot.h}` }}
                 >
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={`${shot.id}-${language}`}
-                      id={`shot-${shot.id}`}
-                      role="tabpanel"
-                      aria-labelledby={`tab-${shot.id}`}
                       src={src}
                       alt={copy.alt}
                       width={shot.w}
