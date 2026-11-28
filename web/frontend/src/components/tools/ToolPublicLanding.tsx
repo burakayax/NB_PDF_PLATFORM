@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchPlans, type PlanDefinition } from "../../api/subscription";
+import { lowestPlanFor, toolLandingCopy } from "../../lib/toolPlanAccess";
 import { getToolSeo, useToolSeoReady } from "../../seo/toolSeoRuntime";
 import { ToolHowTo } from "../common/ToolHowTo";
 import { ToolScore } from "../common/ToolScore";
@@ -7,8 +9,10 @@ import type { Language } from "../../i18n/landing";
 type ToolPublicLandingProps = {
   /** Araç slug'ı (örn. "merge-pdf") — seoContent ile birebir. */
   slug: string;
+  /** Aracın plan listesindeki kimliği (ör. "merge"). */
+  featureId: string;
   language: Language;
-  /** Birincil CTA — "Ücretsiz Kullan" (giriş/üyelik akışını başlatır; pending-tool saklanır). */
+  /** Birincil CTA (giriş/üyelik akışını başlatır; pending-tool saklanır). */
   onUse: () => void;
   /** İkincil — "Giriş yap". */
   onLogin: () => void;
@@ -23,6 +27,7 @@ type ToolPublicLandingProps = {
  */
 export function ToolPublicLanding({
   slug,
+  featureId,
   language,
   onUse,
   onLogin,
@@ -31,6 +36,14 @@ export function ToolPublicLanding({
   useToolSeoReady(); // araç metinleri geç yüklenirse yeniden çiz
   const seo = getToolSeo(slug, language);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [plans, setPlans] = useState<PlanDefinition[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    // Alınamazsa tarafsız metin kalır.
+    fetchPlans().then((p) => { if (alive) setPlans(p); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const copy = toolLandingCopy(lowestPlanFor(plans, featureId), language);
 
   // seo null ise (bilinmeyen slug) çağıran taraf bu bileşeni hiç render etmez;
   // yine de defansif bir geri dönüş bırakıyoruz.
@@ -62,7 +75,7 @@ export function ToolPublicLanding({
       {/* Hero */}
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-8 sm:pt-14">
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
-          ✦ {tr ? "Ücretsiz PDF aracı" : "Free PDF tool"}
+          ✦ {copy.badge}
         </span>
         <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl md:text-5xl">
           {seo.h1}
@@ -81,12 +94,10 @@ export function ToolPublicLanding({
             onClick={onUse}
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3.5 text-[15px] font-bold text-white shadow-[0_16px_40px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500"
           >
-            {tr ? "Ücretsiz Kullan →" : "Use it free →"}
+            {copy.cta}
           </button>
           <span className="text-sm text-slate-400">
-            {tr
-              ? "Kurulum yok · kart gerekmez"
-              : "No install · no card required"}
+            {copy.note}
           </span>
         </div>
 
@@ -141,16 +152,14 @@ export function ToolPublicLanding({
             {tr ? "Hemen denemeye hazır mısın?" : "Ready to try it now?"}
           </p>
           <p className="mt-1 text-sm text-slate-400">
-            {tr
-              ? "Ücretsiz hesabınla saniyeler içinde başla."
-              : "Get started in seconds with your free account."}
+            {copy.bottom}
           </p>
           <button
             type="button"
             onClick={onUse}
             className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3 text-sm font-bold text-white shadow-[0_16px_40px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500"
           >
-            {tr ? "Ücretsiz Kullan →" : "Use it free →"}
+            {copy.cta}
           </button>
         </div>
       </main>
