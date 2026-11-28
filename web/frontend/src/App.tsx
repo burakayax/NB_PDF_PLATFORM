@@ -6418,6 +6418,7 @@ function App() {
     return (
       <ToolPublicLanding
         slug={toolSlug}
+        featureId={selectedFeatureId}
         language={language}
         onUse={() => {
           savePendingTool(selectedFeatureId);

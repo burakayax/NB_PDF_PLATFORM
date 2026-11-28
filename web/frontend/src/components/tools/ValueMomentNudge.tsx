@@ -205,7 +205,10 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
           </span>
         </div>
 
-        <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <p className="mt-3 text-[12px] font-semibold text-slate-300">
+          {tr ? "Ayrıca ücretsiz hesapla:" : "Also with a free account:"}
+        </p>
+        <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {FREE_ACCOUNT_UNLOCKS.map((u) => {
             const Icon = u.icon;
             return (
