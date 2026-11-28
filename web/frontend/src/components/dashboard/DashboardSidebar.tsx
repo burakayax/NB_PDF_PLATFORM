@@ -1037,6 +1037,8 @@ export function DashboardSidebarMobileLauncher({
   const panelLabel =
     contentPanel === "profile" || contentPanel === "scans" || contentPanel === "api" || contentPanel === "subscription" || contentPanel === "team"
       ? ACCOUNT_PANEL_TITLES[contentPanel][tr ? "tr" : "en"]
+      : contentPanel === "scanner"
+      ? tr ? "Belge Tara" : "Document Scanner"
       : contentPanel === "layout"
       ? tr ? "Sayfa Düzeni" : "Page Layout"
       : contentPanel === "formfill"

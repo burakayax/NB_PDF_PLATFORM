@@ -1,3 +1,4 @@
+import { ToolLangLink } from "../common/ToolLangLink";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -35,24 +36,25 @@ export function GuestPdfTool({
   return (
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:px-5">
           <a href={tr ? "/" : "/en"} className="flex items-center gap-2">
             <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
-            <span className="text-sm font-bold tracking-tight">PDF Platform</span>
+            <span className="whitespace-nowrap text-sm font-bold tracking-tight max-[479px]:sr-only">PDF Platform</span>
           </a>
           <div className="flex items-center gap-2">
             <ThemeToggle tr={tr} />
+            <ToolLangLink slug={slug} language={language} />
             <button
               type="button"
               data-auth-cta onClick={onLogin}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white"
+              className="whitespace-nowrap rounded-lg px-2 py-1.5 sm:px-3 text-sm font-semibold text-slate-300 transition hover:text-white"
             >
               {tr ? "Giriş yap" : "Log in"}
             </button>
             <button
               type="button"
               data-auth-cta onClick={onRegister}
-              className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15"
+              className="whitespace-nowrap rounded-lg bg-white/10 px-3 sm:px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15"
             >
               {tr ? "Üye Ol" : "Sign up"}
             </button>

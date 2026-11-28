@@ -46,7 +46,7 @@ export function SiteFooter({ language }: { language: Language }) {
         { label: tr ? "PDF Birleştir" : "Merge PDF", href: yol("/tools/merge-pdf") },
         { label: tr ? "PDF'ten Word'e" : "PDF to Word", href: yol("/tools/pdf-to-word") },
         { label: tr ? "PDF Sıkıştır" : "Compress PDF", href: yol("/tools/compress") },
-        { label: tr ? "PDF to JPG" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
+        { label: tr ? "PDF'den JPG'ye" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
       ],
     },
     {
@@ -71,7 +71,7 @@ export function SiteFooter({ language }: { language: Language }) {
     <footer className="relative border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
       <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8 sm:py-14">
-        <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-12">
+        <div className="flex flex-col gap-10 lg:flex-row lg:justify-between lg:gap-12">
           {/* Brand */}
           <div className="max-w-sm">
             <CrawlableLink href={yol("/")} className="group inline-flex items-center">
@@ -115,7 +115,7 @@ export function SiteFooter({ language }: { language: Language }) {
           </div>
 
           {/* Link columns */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 md:flex md:gap-x-16">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 lg:flex lg:gap-x-16">
             {cols.map((col) => (
               <div key={col.heading} className="min-w-[7rem]">
                 <p className="mb-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-gray-400">
@@ -138,7 +138,7 @@ export function SiteFooter({ language }: { language: Language }) {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-2 border-t border-white/[0.06] pt-6 text-center text-[12px] text-gray-400 sm:flex-row sm:justify-between sm:text-left">
+        <div className="mt-10 flex flex-col items-center gap-2 border-t border-white/[0.06] pt-6 text-center text-[12px] text-gray-400 lg:flex-row lg:justify-between lg:pr-14 lg:text-left xl:pr-0">
           <div className="space-y-1">
             <p>
               © {new Date().getFullYear()} NB Global Studio. {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
@@ -150,7 +150,7 @@ export function SiteFooter({ language }: { language: Language }) {
           <div className="flex items-center gap-3">
             <PaytrBadge height={16} tr={tr} />
             <ThemeToggle tr={tr} />
-            <p>{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
+            <p className="whitespace-nowrap">{tr ? "Verimlilik için ❤️ ile yapıldı" : "Made with ❤️ for productivity"}</p>
           </div>
         </div>
       </div>

@@ -102,7 +102,7 @@ export function ApiKeysPanel({
 
       {/* Oluştur — Pro değilse buton AKTİF kalır ve yükseltmeye yönlendirir. */}
       <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr ? "Anahtar adı (ör. Muhasebe entegrasyonu)" : "Key name (e.g. Accounting integration)"}
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr ? "Anahtar adı (ör. Muhasebe)" : "Key name (e.g. Accounting)"}
           onKeyDown={(e) => { if (e.key === "Enter") void create(); }}
           disabled={!hasApiAccess}
           className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-400 disabled:opacity-60" />

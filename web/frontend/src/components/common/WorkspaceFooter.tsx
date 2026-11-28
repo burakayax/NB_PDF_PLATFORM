@@ -51,7 +51,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
 
   // Telefonda 44px dokunma alanı, masaüstünde kompakt.
   const linkClass =
-    "group inline-flex min-h-[44px] w-full items-center gap-1 text-[14px] text-slate-300 transition-colors hover:text-white focus:outline-none focus-visible:text-white focus-visible:underline md:min-h-[30px] md:text-[13px] md:text-slate-400";
+    "group inline-flex min-h-[44px] w-full items-center gap-1 !text-[14px] text-slate-300 transition-colors hover:text-white focus:outline-none focus-visible:text-white focus-visible:underline md:min-h-[30px] md:!text-[13px] md:text-slate-400";
 
   const trust = [
     { icon: <Lock className="h-3.5 w-3.5" />, text: tr ? "Şifreli bağlantı" : "Encrypted connection" },
@@ -119,7 +119,7 @@ export function WorkspaceFooter({ language, onOpenLegal, onContact }: Props) {
             <li><a className={linkClass} href={yol("/tools/merge-pdf")}>{tr ? "PDF Birleştir" : "Merge PDF"}</a></li>
             <li><a className={linkClass} href={yol("/tools/pdf-to-word")}>{tr ? "PDF'ten Word'e" : "PDF to Word"}</a></li>
             <li><a className={linkClass} href={yol("/tools/compress")}>{tr ? "PDF Sıkıştır" : "Compress PDF"}</a></li>
-            <li><a className={linkClass} href={yol("/tools/pdf-to-image")}>{tr ? "PDF to JPG" : "PDF to JPG"}</a></li>
+            <li><a className={linkClass} href={yol("/tools/pdf-to-image")}>{tr ? "PDF'den JPG'ye" : "PDF to JPG"}</a></li>
           </FooterGroup>
           <FooterGroup title={tr ? "Destek" : "Support"}>
             <li>

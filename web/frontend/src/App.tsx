@@ -8320,16 +8320,27 @@ function App() {
                                   ? "Logo / görsel (isteğe bağlı)"
                                   : "Logo / image (optional)"}
                               </span>
-                              <input
-                                type="file"
-                                accept="image/png,image/jpeg,image/webp"
-                                onChange={(e) => {
-                                  const f = e.target.files?.[0] ?? null;
-                                  setWatermarkImage(
-                                    f && f.size <= 5 * 1024 * 1024 ? f : null,
-                                  );
-                                }}
-                              />
+                              {/* Tarayıcının kendi dosya düğmesi sayfa diline uymaz ("Choose File"): gizlenip kendi düğmemiz gösterilir. */}
+                              <label className="flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 transition hover:bg-white/[0.06] focus-within:ring-2 focus-within:ring-cyan-400/40">
+                                <input
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/webp"
+                                  className="sr-only"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0] ?? null;
+                                    setWatermarkImage(
+                                      f && f.size <= 5 * 1024 * 1024 ? f : null,
+                                    );
+                                  }}
+                                />
+                                <span className="rounded-lg border border-white/15 bg-white/10 px-3 py-1.5">
+                                  {language === "tr" ? "Görsel seç" : "Choose image"}
+                                </span>
+                                <span className="min-w-0 break-all">
+                                  {watermarkImage?.name ??
+                                    (language === "tr" ? "Seçilmedi" : "None selected")}
+                                </span>
+                              </label>
                               <span className="field-hint">
                                 {language === "tr"
                                   ? "Bir görsel seçerseniz filigran metin yerine bu görsel olur (PNG, JPG veya WebP, en fazla 5 MB). Saydam PNG'lerin saydamlığı korunur. Açı, boyut, saydamlık ve sayfa aralığı görsel için de geçerlidir."
@@ -9762,7 +9773,10 @@ function App() {
           ) : null}
         </div>
 
-        <WorkspaceFooter language={language} onOpenLegal={openLegalPage} onContact={openContactModal} />
+        {/* Sol araç menüsü açıkken alt bölüm de içerik kadar içeriden başlar; yoksa solu menünün altında kalır. */}
+        <div className={`mt-auto flex w-full shrink-0 flex-col transition-[padding] duration-200 ease-out ${narrowShell || toolsCollapsed ? "" : "lg:pl-72"}`}>
+          <WorkspaceFooter language={language} onOpenLegal={openLegalPage} onContact={openContactModal} />
+        </div>
         </div>
 
         {contactModalEl}

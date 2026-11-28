@@ -35,6 +35,16 @@ export function getExplicitLanguage(): Language | null {
   }
 }
 
+/** Kullanıcının elle yaptığı dil seçimini saklar (sayfa yenilense de geçerli olur). */
+export function rememberLanguageChoice(next: Language): void {
+  try {
+    window.localStorage.setItem(EXPLICIT_KEY, "1");
+    window.localStorage.setItem(STORAGE_KEY, next);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** `/en` veya `/en/...` yolu mu? (İngilizce alt dizin) */
 export function isEnglishPath(pathname: string): boolean {
   return pathname === "/en" || pathname.startsWith("/en/");

@@ -12,6 +12,12 @@ const OP_LABELS: Record<string, { tr: string; en: string; emoji: string }> = {
   extract: { tr: "PDF Veri Çıkar", en: "Extract Data", emoji: "📋" },
   compare: { tr: "PDF Karşılaştır", en: "Compare PDFs", emoji: "⚖️" },
   redact: { tr: "Hassas Veri Gizle", en: "Redact Data", emoji: "🛡️" },
+  quiz: { tr: "Soru ve Test Oluştur", en: "Quiz Maker", emoji: "📝" },
+  "cv-summary": { tr: "CV: Özet yazımı", en: "CV: Summary", emoji: "📄" },
+  "cv-bullets": { tr: "CV: Deneyim maddeleri", en: "CV: Experience bullets", emoji: "📄" },
+  "cv-tailor": { tr: "CV: İlana uyarlama", en: "CV: Tailor to job ad", emoji: "📄" },
+  "cv-coverLetter": { tr: "CV: Ön yazı", en: "CV: Cover letter", emoji: "✉️" },
+  "cv-parse": { tr: "CV: Belgeden içe aktarma", en: "CV: Import from file", emoji: "📥" },
   "contract-review": { tr: "Sözleşme Denetçisi — detaylı", en: "Contract Auditor — detailed", emoji: "⚖️" },
   "contract-quick": { tr: "Sözleşme Denetçisi — hızlı tarama", en: "Contract Auditor — quick scan", emoji: "⚡" },
 };
