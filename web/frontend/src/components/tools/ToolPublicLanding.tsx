@@ -1,3 +1,4 @@
+import { ToolLangLink } from "../common/ToolLangLink";
 import { useState } from "react";
 import { getToolSeo, useToolSeoReady } from "../../seo/toolSeoRuntime";
 import { ToolHowTo } from "../common/ToolHowTo";
@@ -50,13 +51,16 @@ export function ToolPublicLanding({
             PDF Platform
           </span>
         </a>
-        <button
-          type="button"
-          onClick={onLogin}
-          className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
-        >
-          {tr ? "Giriş yap" : "Log in"}
-        </button>
+        <div className="flex items-center gap-2">
+          <ToolLangLink slug={slug} language={language} />
+          <button
+            type="button"
+            onClick={onLogin}
+            className="whitespace-nowrap rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
+          >
+            {tr ? "Giriş yap" : "Log in"}
+          </button>
+        </div>
       </header>
 
       {/* Hero */}

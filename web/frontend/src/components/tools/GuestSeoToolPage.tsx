@@ -1,3 +1,4 @@
+import { ToolLangLink } from "../common/ToolLangLink";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -87,10 +88,10 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
   return (
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3 sm:px-5">
           <a href={tr ? "/" : "/en"} className="flex items-center gap-2">
             <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
-            <span className="text-sm font-bold tracking-tight">PDF Platform</span>
+            <span className="whitespace-nowrap text-sm font-bold tracking-tight max-[479px]:sr-only">PDF Platform</span>
           </a>
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
@@ -107,14 +108,15 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <ThemeToggle tr={tr} />
+              <ToolLangLink slug={slug} language={language} />
               <button type="button" data-auth-cta onClick={onLogin}
-                className="inline-flex h-9 items-center rounded-full border border-white/15 bg-white/[0.03] px-5 text-sm font-semibold text-slate-200 transition duration-200 hover:border-white/30 hover:bg-white/[0.08] hover:text-white active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+                className="inline-flex h-9 items-center whitespace-nowrap rounded-full border border-white/15 bg-white/[0.03] px-3 text-[13px] sm:px-5 sm:text-sm font-semibold text-slate-200 transition duration-200 hover:border-white/30 hover:bg-white/[0.08] hover:text-white active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {tr ? "Giriş yap" : "Log in"}
               </button>
               <button type="button" data-auth-cta onClick={onRegister}
-                className="inline-flex h-9 items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 text-sm font-semibold text-white shadow-[0_8px_22px_-8px_rgba(6,182,212,0.65)] ring-1 ring-white/10 transition duration-200 hover:brightness-110 hover:shadow-[0_10px_26px_-8px_rgba(6,182,212,0.8)] active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+                className="inline-flex h-9 items-center whitespace-nowrap rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-3 text-[13px] sm:px-5 sm:text-sm font-semibold text-white shadow-[0_8px_22px_-8px_rgba(6,182,212,0.65)] ring-1 ring-white/10 transition duration-200 hover:brightness-110 hover:shadow-[0_10px_26px_-8px_rgba(6,182,212,0.8)] active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {tr ? "Üye Ol" : "Sign up"}
               </button>
             </div>

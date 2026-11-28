@@ -807,7 +807,7 @@ function Hero({
               not kendiliğinden güncellenir. */}
           <a
             href="#tools"
-            className="group mb-4 flex w-full items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
+            className="group mb-4 flex w-full flex-wrap items-center gap-3 rounded-2xl sm:flex-nowrap border border-cyan-400/20 bg-cyan-500/[0.06] px-4 py-3 text-left transition hover:border-cyan-400/40 hover:bg-cyan-500/[0.1]"
           >
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/25">
               <Sparkles className="h-4 w-4" />
@@ -828,7 +828,7 @@ function Hero({
               )}
             </span>
             <motion.span
-              className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-cyan-700 to-indigo-700 py-2 pl-4 pr-2 text-[13.5px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(34,211,238,0.5)] ring-1 ring-white/10 transition-transform group-hover:scale-105"
+              className="inline-flex w-full flex-shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-700 to-indigo-700 py-2 sm:w-auto pl-4 pr-2 text-[13.5px] font-bold text-white shadow-[0_8px_20px_-12px_rgba(34,211,238,0.5)] ring-1 ring-white/10 transition-transform group-hover:scale-105"
               animate={{ opacity: [1, 0.6, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -907,7 +907,7 @@ function Hero({
                   {tr ? "Kamerayla tara" : "Scan with camera"}
                 </button>
               ) : (
-                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-400 lg:absolute lg:right-1 lg:top-1/2 lg:inline-flex lg:-translate-y-1/2">
+                <span className="hidden items-center gap-1.5 text-[12px] font-semibold text-slate-400 lg:inline-flex">
                   <Lock className="h-3.5 w-3.5" />
                   {tr ? `${freeCount} araç üyeliksiz` : `${freeCount} tools need no account`}
                 </span>
